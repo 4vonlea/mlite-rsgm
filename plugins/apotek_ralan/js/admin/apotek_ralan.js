@@ -651,54 +651,6 @@ $("#rincian").on("click",".hapus_obat_racikan", function(event){
   });
 });
 
-$("#rincian").on("click", ".bayar_parsial_obat", function(event){
-  var baseURL = mlite.url + '/' + mlite.admin;
-  event.preventDefault();
-
-  var no_rawat = $(this).attr("data-no_rawat");
-  if(!no_rawat) {
-    no_rawat = $('input:hidden[name=no_rawat_parsial_obat]').val();
-  }
-  var metode = $('select[name=metode_parsial_obat]').val();
-  var jumlah = $('input[name=jumlah_bayar_parsial_obat]').val();
-
-  if(!jumlah || parseFloat(jumlah) <= 0) {
-    alert('Nominal bayar masih kosong!');
-    return;
-  }
-
-  var url = baseURL + '/apotek_ralan/bayarparsial?t=' + mlite.token;
-  $.post(url, {
-    no_rawat: no_rawat,
-    metode: metode,
-    jumlah_bayar: jumlah
-  }, function(data) {
-    var res = data;
-    try {
-      if (typeof data === 'string') {
-        res = JSON.parse(data);
-      }
-    } catch (e) {
-      res = {status: 'error', message: 'Respon tidak valid.'};
-    }
-
-    if (res.status === 'success') {
-      window.open(baseURL + '/apotek_ralan/notaparsial?show=kecil&pembayaran_id=' + res.pembayaran_id + '&t=' + mlite.token);
-      var url2 = baseURL + '/apotek_ralan/rincian?t=' + mlite.token;
-      $.post(url2, {no_rawat: no_rawat}, function(html) {
-        $("#rincian").html(html).show();
-      });
-      $('input[name=jumlah_bayar_parsial_obat]').val('');
-      $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-      (res.message ? res.message : "Pembayaran parsial berhasil disimpan.")+
-      "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
-      "</div>").show();
-    } else {
-      alert(res.message ? res.message : 'Gagal menyimpan pembayaran parsial.');
-    }
-  });
-});
-
 function bersih(){
   $('input:text[name=no_rawat]').val("");
   $('input:text[name=no_rkm_medis]').val("");
@@ -914,8 +866,8 @@ $(document).on("click", ".pilih_barang_modal", function(){
                         var $btn = $('button[data-no_resep="' + currentNoResep + '"][data-no_racik="' + currentNoRacik + '"][data-tipe="racikan"]');
                         var $tbody = $btn.closest('tbody.resep-group');
                         
-                        var totalHarga = parseFloat(result.total_harga !== undefined ? result.total_harga : result.ralan);
-                        var formattedRalan = isNaN(totalHarga) ? '0' : totalHarga.toLocaleString('id-ID');
+                        var ralan = parseFloat(result.ralan);
+                        var formattedRalan = isNaN(ralan) ? '0' : ralan.toLocaleString('id-ID');
                         
                         var newRow = '<tr class="item-row" data-nama_brng="' + result.nama_brng + '" data-stok="999" data-jml="' + result.jml + '" data-kandungan="' + result.kandungan + '" data-kapasitas="' + result.kapasitas + '" data-ralan="' + result.ralan + '">' +
                             '<td>' + result.nama_brng + '</td>' +
@@ -977,16 +929,16 @@ $(document).on("click", ".pilih_barang_modal", function(){
                                     var $tbody = $btn.closest('tbody.resep-group');
     
                                     // Buat baris baru
-                                    var totalHarga = parseFloat(result.total_harga !== undefined ? result.total_harga : result.ralan);
-                                    var formattedRalan = isNaN(totalHarga) ? '0' : totalHarga.toLocaleString('id-ID');
+                                    var ralan = parseFloat(result.ralan);
+                                    var formattedRalan = isNaN(ralan) ? '0' : ralan.toLocaleString('id-ID');
     
-                                    var newRow = '<tr class="item-row" data-nama_brng="' + result.nama_brng + '" data-stok="999" data-jml="' + result.jml + '" data-ralan="' + result.ralan + '">' +
+                                    var newRow = '<tr class="item-row" data-nama_brng="' + result.nama_brng + '" data-stok="999" data-jml="' + result.jml + '">' +
                                         '<td>' + result.nama_brng + '</td>' +
                                         '<td><input type="number" class="form-control input-sm jumlah_obat" data-kode_brng="' + result.kode_brng + '" value="' + result.jml + '" style="width: 50px;"></td>' +
                                         '<td>' + result.aturan_pakai + ' <button type="button" class="btn btn-danger btn-xs cetak_etiket" data-kode_brng="' + result.kode_brng + '" data-no_rawat="' + currentNoRawat + '" data-tgl_peresepan="' + currentTglPeresepan + '" data-jam_peresepan="' + currentJamPeresepan + '" data-tipe="nonracikan"><i class="fa fa-print"></i></button> <button type="button" class="btn btn-danger btn-xs hapus_obat" data-kode_brng="' + result.kode_brng + '" data-no_rawat="' + currentNoRawat + '" data-tgl_peresepan="' + currentTglPeresepan + '" data-jam_peresepan="' + currentJamPeresepan + '" data-jml="' + result.jml + '"><i class="fa fa-trash"></i></button></td>' +
                                         '<td><input type="text" class="form-control input-sm embalase" data-kode_brng="' + result.kode_brng + '" value="' + result.embalase + '" style="width: 80px;"></td>' +
                                         '<td><input type="text" class="form-control input-sm tuslah" data-kode_brng="' + result.kode_brng + '" value="' + result.tuslah + '" style="width: 80px;"></td>' +
-                                        '<td>Rp. <span class="pull-right total_harga_display">' + formattedRalan + '</span></td>' +
+                                        '<td>Rp. <span class="pull-right">' + formattedRalan + '</span></td>' +
                                         '</tr>';
                                         
                                     $tbody.append(newRow);

@@ -4,74 +4,6 @@ $("#notif").hide();
 $('#provider').hide();
 $('#aturan_pakai').hide();
 
-function parseKasirResponse(data) {
-  if (typeof data === 'object' && data !== null) {
-    return data;
-  }
-
-  if (typeof data === 'string') {
-    try {
-      return JSON.parse(data);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  return null;
-}
-
-function showKasirNotif(type, message) {
-  var alertType = type === 'success' ? 'success' : (type === 'warning' ? 'warning' : 'danger');
-  $("#notif").html("<div class=\"alert alert-" + alertType + " alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
-    message +
-    "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
-    "</div>").show();
-}
-
-function getKasirBillingState() {
-  var panel = $("#rincian .dokter_ralan_view").first();
-  return {
-    editLocked: panel.data("edit-locked") === true || panel.data("edit-locked") === 1 || panel.data("edit-locked") === "1",
-    printLocked: panel.data("print-locked") === true || panel.data("print-locked") === 1 || panel.data("print-locked") === "1",
-    message: panel.data("lock-message") || ""
-  };
-}
-
-function applyKasirFormLock() {
-  var state = getKasirBillingState();
-  var selectors = [
-    'input[name=tambahan_biaya]',
-    'input[name=layanan]',
-    'input[name=obat]',
-    'input[name=laboratorium]',
-    'input[name=radiologi]',
-    'input[name=nm_perawatan]',
-    'input[name=biaya]',
-    'input[name=nama_provider]',
-    'input[name=nama_provider2]',
-    'input[name=kode_provider]',
-    'input[name=kode_provider2]',
-    'input[name=aturan_pakai]',
-    'input[name=jml]',
-    'input[name=jml_tindakan]',
-    'select[name=provider]'
-  ].join(',');
-
-  $("#form_rincian").find(selectors).prop('disabled', state.editLocked);
-  $("#form_rincian #simpan_rincian").prop('disabled', state.editLocked);
-}
-
-function refreshKasirRincian(baseURL, no_rawat, callback) {
-  var url = baseURL + '/kasir_rawat_inap/rincian?t=' + mlite.token;
-  $.post(url, {no_rawat : no_rawat}, function(data) {
-    $("#rincian").html(data).show();
-    applyKasirFormLock();
-    if (typeof callback === 'function') {
-      callback();
-    }
-  });
-}
-
 $('#manage').on('click', '#submit_periode_rawat_inap', function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
@@ -230,7 +162,6 @@ $("#display").on("click", ".layanan_obat", function(event){
     $("#form").hide();
     $("#notif").hide();
     $("#rincian").html(data).show();
-    applyKasirFormLock();
   });
 });
 
@@ -482,14 +413,16 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
   jml            : jml,
   jml_tindakan   : jml_tindakan
   }, function(data) {
-    var response = parseKasirResponse(data);
-    if (response && response.status === 'error') {
-      showKasirNotif('danger', response.message);
-      return;
-    }
-
+    console.log(data);
+    // tampilkan data
     $("#display").hide();
-    refreshKasirRincian(baseURL, no_rawat);
+    var url = baseURL + '/kasir_rawat_inap/rincian?t=' + mlite.token;
+    $.post(url, {no_rawat : no_rawat,
+    }, function(data) {
+      // tampilkan data
+      // console.log(data);
+      $("#rincian").html(data).show();
+    });
     $("#rawat_inap_dr").hide();
     $("#rawat_inap_pr").hide();
     $('#biaya').attr("readonly", true);
@@ -503,7 +436,10 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
     $('input:text[name=kode_provider]').val("");
     $('input:text[name=kode_provider2]').val("");
     $('input:text[name=jml_tindakan]').val(1);
-    showKasirNotif('success', 'Data pasien telah disimpan!');
+    $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+    "Data pasien telah disimpan!"+
+    "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+    "</div>").show();
   });
 });
 
@@ -530,13 +466,16 @@ $("#rincian").on("click",".hapus_detail", function(event){
         jam_rawat: jam_rawat,
         provider: provider
       } ,function(data) {
-        var response = parseKasirResponse(data);
-        if (response && response.status === 'error') {
-          showKasirNotif('danger', response.message);
-          return;
-        }
-        refreshKasirRincian(baseURL, no_rawat);
-        showKasirNotif('success', 'Data rincian rawat inap telah dihapus!');
+        var url = baseURL + '/kasir_rawat_inap/rincian?t=' + mlite.token;
+        $.post(url, {no_rawat : no_rawat,
+        }, function(data) {
+          // tampilkan data
+          $("#rincian").html(data).show();
+        });
+        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+        "Data rincian rawat inap telah dihapus!"+
+        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+        "</div>").show();
       });
     }
   });
@@ -567,13 +506,16 @@ $("#rincian").on("click",".hapus_obat", function(event){
         jam_peresepan: jam_peresepan,
         jml: jml
       } ,function(data) {
-        var response = parseKasirResponse(data);
-        if (response && response.status === 'error') {
-          showKasirNotif('danger', response.message);
-          return;
-        }
-        refreshKasirRincian(baseURL, no_rawat);
-        showKasirNotif('success', 'Data rincian obat rawat inap telah dihapus!');
+        var url = baseURL + '/kasir_rawat_inap/rincian?t=' + mlite.token;
+        $.post(url, {no_rawat : no_rawat,
+        }, function(data) {
+          // tampilkan data
+          $("#rincian").html(data).show();
+        });
+        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+        "Data rincian obat rawat inap telah dihapus!"+
+        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+        "</div>").show();
       });
     }
   });
@@ -602,13 +544,16 @@ $("#rincian").on("click",".hapus_laboratorium", function(event){
         jam_rawat: jam_rawat,
         provider: provider
       } ,function(data) {
-        var response = parseKasirResponse(data);
-        if (response && response.status === 'error') {
-          showKasirNotif('danger', response.message);
-          return;
-        }
-        refreshKasirRincian(baseURL, no_rawat);
-        showKasirNotif('success', 'Data rincian laboratorium rawat inap telah dihapus!');
+        var url = baseURL + '/kasir_rawat_inap/rincian?t=' + mlite.token;
+        $.post(url, {no_rawat : no_rawat,
+        }, function(data) {
+          // tampilkan data
+          $("#rincian").html(data).show();
+        });
+        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+        "Data rincian rawat inap telah dihapus!"+
+        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+        "</div>").show();
       });
     }
   });
@@ -637,13 +582,16 @@ $("#rincian").on("click",".hapus_radiologi", function(event){
         jam_rawat: jam_rawat,
         provider: provider
       } ,function(data) {
-        var response = parseKasirResponse(data);
-        if (response && response.status === 'error') {
-          showKasirNotif('danger', response.message);
-          return;
-        }
-        refreshKasirRincian(baseURL, no_rawat);
-        showKasirNotif('success', 'Data rincian radiologi rawat inap telah dihapus!');
+        var url = baseURL + '/kasir_rawat_inap/rincian?t=' + mlite.token;
+        $.post(url, {no_rawat : no_rawat,
+        }, function(data) {
+          // tampilkan data
+          $("#rincian").html(data).show();
+        });
+        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+        "Data rincian rawat inap telah dihapus!"+
+        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+        "</div>").show();
       });
     }
   });
@@ -666,13 +614,16 @@ $("#rincian").on("click",".hapus_tambahan_biaya", function(event){
         nama_biaya: nama_biaya,
         no_rawat: no_rawat
       } ,function(data) {
-        var response = parseKasirResponse(data);
-        if (response && response.status === 'error') {
-          showKasirNotif('danger', response.message);
-          return;
-        }
-        refreshKasirRincian(baseURL, no_rawat);
-        showKasirNotif('success', 'Data tambahan biaya rawat inap telah dihapus!');
+        var url = baseURL + '/kasir_rawat_inap/rincian?t=' + mlite.token;
+        $.post(url, {no_rawat : no_rawat,
+        }, function(data) {
+          // tampilkan data
+          $("#rincian").html(data).show();
+        });
+        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+        "Data tambahan biaya rawat inap telah dihapus!"+
+        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+        "</div>").show();
       });
     }
   });
@@ -739,45 +690,6 @@ $("#rincian").on("input","#jumlah_bayar2", function(event){
 });
 // end jumlah bayar
 
-$("#rincian").on("keyup", ".split_amount", function(event){
-  event.preventDefault();
-  this.value = formatRupiah(this.value, 'Rp.');
-});
-
-$("#rincian").on("click", ".split_pay", function(event){
-  var baseURL = mlite.url + '/' + mlite.admin;
-  event.preventDefault();
-  var no_rawat = $('input:text[name=no_rawat]').val();
-  var kelompok = $(this).attr('data-kelompok');
-  var metode = $('#split_metode').val() || 'Tunai';
-  var jumlah_bayar = $(this).closest('.input-group').find('.split_amount').val();
-  jumlah_bayar = (jumlah_bayar || '0').replace(/\.|R|p/g,'');
-  if (Number(jumlah_bayar) <= 0) {
-    alert('Jumlah bayar wajib diisi.');
-    return;
-  }
-
-  bootbox.confirm("Simpan pembayaran split bill untuk kelompok ini?", function(result){
-    if (result) {
-      var url = baseURL + '/kasir_rawat_inap/splitpay?t=' + mlite.token;
-      $.post(url, {
-        no_rawat: no_rawat,
-        kelompok: kelompok,
-        metode: metode,
-        jumlah_bayar: jumlah_bayar
-      }, function(data) {
-        var response = parseKasirResponse(data);
-        if (response && response.status === 'error') {
-          showKasirNotif('danger', response.message);
-          return;
-        }
-        refreshKasirRincian(baseURL, no_rawat);
-        showKasirNotif('success', (response && response.message) ? response.message : 'Pembayaran split bill berhasil disimpan.');
-      });
-    }
-  });
-});
-
 // tombol simpan semua yang dibawah di klick
 $("#rincian").on("click","#simpan_billing", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
@@ -822,13 +734,17 @@ $("#rincian").on("click","#simpan_billing", function(event){
         jumlah_bayar       : jumlah_bayar,
         keterangan         : keterangan,
         } ,function(data) {
-          var response = parseKasirResponse(data);
-          if (response && response.status === 'error') {
-            showKasirNotif('danger', response.message);
-            return;
-          }
-          refreshKasirRincian(baseURL, no_rawat);
-          showKasirNotif('success', 'Data rincian faktur rawat inap telah disimpan!');
+          var url = baseURL + '/kasir_rawat_inap/rincian?t=' + mlite.token;
+          $.post(url, {no_rawat : no_rawat,
+          }, function(data) {
+            // tampilkan data
+            $("#rincian").html(data).show();
+          });
+          $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+          "Data rincian faktur rawat inap telah disimpan!"+
+          "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+          "</div>").show();
+
         });
       }
     });
@@ -845,15 +761,16 @@ $("#rincian").on("click","#cetak_billing", function(event){
   var no_rawat = $(this).attr("data-no_rawat");
   $.post(url, {no_rawat : no_rawat,
   }, function(data) {
-    var response = parseKasirResponse(data);
-    if((response && response.status === 'success') || data == 'OK') {
+    // tampilkan data
+    if(data == 'OK') {
       bootbox.confirm("Apakah data faktur sudah sesuai? Jika berbeda, silahkan simpan dulu sebelum mencetak!", function(result){
+        // ketika ditekan tombol ok
         if (result){
           window.open(baseURL + '/kasir_rawat_inap/faktur?show=besar&no_rawat=' + no_rawat + '&t=' + mlite.token);
         }
       });
     } else {
-      bootbox.alert(response && response.message ? response.message : "Data faktur belum disimpan. Silahkan simpan dulu sebelum mencetak.");
+      bootbox.alert("Data faktur belum disimpan. Silahkan simpan dulu sebelum mencetak?");
     }
   });
 });
@@ -866,15 +783,16 @@ $("#rincian").on("click","#cetak_billing_kecil", function(event){
   var no_rawat = $(this).attr("data-no_rawat");
   $.post(url, {no_rawat : no_rawat,
   }, function(data) {
-    var response = parseKasirResponse(data);
-    if((response && response.status === 'success') || data == 'OK') {
+    // tampilkan data
+    if(data == 'OK') {
       bootbox.confirm("Apakah data faktur sudah sesuai? Jika berbeda, silahkan simpan dulu sebelum mencetak!", function(result){
+        // ketika ditekan tombol ok
         if (result){
           window.open(baseURL + '/kasir_rawat_inap/faktur?show=kecil&no_rawat=' + no_rawat + '&t=' + mlite.token);
         }
       });
     } else {
-      bootbox.alert(response && response.message ? response.message : "Data faktur belum disimpan. Silahkan simpan dulu sebelum mencetak.");
+      bootbox.alert("Data faktur belum disimpan. Silahkan simpan dulu sebelum mencetak!");
     }
   });
 });

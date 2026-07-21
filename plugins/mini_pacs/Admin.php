@@ -536,22 +536,23 @@ class Admin extends AdminModule
 
             $isDuplicate = (isset($upload['status']) && $upload['status'] === 'duplicate');
 
-            $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $study['no_rawat'])->oneArray() ?: [];
-            $permintaan_radiologi = $this->db('permintaan_radiologi')->where('no_rawat', $study['no_rawat'])->oneArray() ?: [];
+            $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $study['no_rawat'])->oneArray();
+
+            $permintaan_radiologi = $this->db('permintaan_radiologi')->where('no_rawat', $study['no_rawat'])->oneArray();
 
             $pasien = $this->db('reg_periksa')
                 ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $study['no_rawat'])
-                ->oneArray() ?: [];
+                ->oneArray();
             $no_ktp_pasien = isset($pasien['no_ktp']) ? $pasien['no_ktp'] : '';
 
             // 2. Kirim ImagingStudy
             $fhirResult = $client->sendImagingStudy([
                 'patientId' => $this->getPatientID($no_ktp_pasien), // Mohon sesuaikan
-                'encounterId' => $mlite_satu_sehat_response['id_encounter'] ?? '', // Mohon sesuaikan
-                'serviceRequestId' => $mlite_satu_sehat_response['id_rad_request'] ?? '', // Mohon sesuaikan
+                'encounterId' => $mlite_satu_sehat_response['id_encounter'], // Mohon sesuaikan
+                'serviceRequestId' => $mlite_satu_sehat_response['id_rad_request'], // Mohon sesuaikan
                 'noRawat' => $study['no_rawat'],
-                'noOrder' => $permintaan_radiologi['noorder'] ?? '',
+                'noOrder' => $permintaan_radiologi['noorder'],
                 'studyUID' => $study['study_instance_uid'],
                 'seriesUID' => $series['series_instance_uid'],
                 'instanceUID' => $instance['sop_instance_uid']
@@ -564,15 +565,6 @@ class Admin extends AdminModule
             $fhirArr = json_decode($fhirString, true);
             $fhirPretty = $fhirArr ? json_encode($fhirArr, JSON_PRETTY_PRINT) : $fhirString;
 
-            $id_imaging_study = isset($fhirArr['id']) ? $fhirArr['id'] : '';
-            if (!empty($id_imaging_study)) {
-                $this->db('mlite_satu_sehat_response')
-                    ->where('no_rawat', $study['no_rawat'])
-                    ->save([
-                        'id_imaging_study' => $id_imaging_study
-                    ]);
-            }
-
             header('Content-Type: application/json');
             echo json_encode([
                 'status' => $isDuplicate ? 'duplicate' : 'success',
@@ -581,6 +573,13 @@ class Admin extends AdminModule
                 'fhir_payload' => $fhirPayload,
                 'fhir_raw' => $fhirPretty
             ]);
+
+            $id_imaging_study = isset_or(json_decode($response)->fhir_raw->id, '');
+            $this->db('mlite_satu_sehat_response')
+              ->where('no_rawat', $study['no_rawat'])
+              ->save([
+                'id_imaging_study' => $id_imaging_study
+              ]);
 
             exit();
         } catch (\Exception $e) {

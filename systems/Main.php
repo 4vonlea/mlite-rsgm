@@ -301,19 +301,6 @@ abstract class Main
             self::$userCache = is_array($userData) ? $userData : [];
         }
 
-        // Keep backward compatibility for legacy role checks (string comparison).
-        if ($field === 'role') {
-            $rawRole = self::$userCache['role'] ?? null;
-            if ($this->userHasRole($rawRole, 'admin')) {
-                return 'admin';
-            }
-
-            if (is_string($rawRole) && strpos($rawRole, ',') !== false) {
-                $roles = array_map('trim', explode(',', $rawRole));
-                return $roles[0] ?? '';
-            }
-        }
-
         // Safe field access with null coalescing
         return self::$userCache[$field] ?? null;
     }
@@ -321,78 +308,20 @@ abstract class Main
     public function getEnum($table_name, $column_name) {
       $driver = $this->db()->pdo()->getAttribute(\PDO::ATTR_DRIVER_NAME);
       if ($driver === 'sqlite') {
-          $parseEnumValues = function ($enumDefinition) {
-              $enumDefinition = trim((string) $enumDefinition);
-              if ($enumDefinition === '') {
-                  return [];
-              }
-
-              if (preg_match_all("/'([^']*)'/", $enumDefinition, $matches) && !empty($matches[1])) {
-                  return $matches[1];
-              }
-
-              $parts = array_map('trim', explode(',', $enumDefinition));
-              $parts = array_map(function ($value) {
-                  return trim($value, " \t\n\r\0\x0B'\"");
-              }, $parts);
-
-              return array_values(array_filter($parts, function ($value) {
-                  return $value !== '';
-              }));
-          };
-
-          // SQLite kadang menyimpan enum sebagai type: enum('A','B').
-          $safeTableName = str_replace('"', '""', $table_name);
-          $stmtPragma = $this->db()->pdo()->query('PRAGMA table_info("' . $safeTableName . '")');
-          if ($stmtPragma) {
-              $columns = $stmtPragma->fetchAll(\PDO::FETCH_ASSOC);
-              foreach ($columns as $column) {
-                  if (($column['name'] ?? '') !== $column_name) {
-                      continue;
-                  }
-
-                  $columnType = (string) ($column['type'] ?? '');
-                  if (preg_match("/(?:enum|set)\s*\((.+)\)/i", $columnType, $typeMatch)) {
-                      $enumValues = $parseEnumValues($typeMatch[1]);
-                      if (!empty($enumValues)) {
-                          return $enumValues;
-                      }
-                  }
-              }
-          }
-
-          // Jika tidak ada di type, coba parse langsung dari SQL CREATE TABLE.
           $sqlMaster = "SELECT sql FROM sqlite_master WHERE type='table' AND name='$table_name'";
           $stmtMaster = $this->db()->pdo()->prepare($sqlMaster);
           $stmtMaster->execute();
           $tableDef = $stmtMaster->fetchColumn();
-
-          if (is_string($tableDef) && preg_match('/`?' . preg_quote($column_name, '/') . '`?\s+(?:enum|set)\s*\(([^)]+)\)/i', $tableDef, $enumMatch)) {
-              $enumValues = $parseEnumValues($enumMatch[1]);
-              if (!empty($enumValues)) {
-                  return $enumValues;
-              }
-          }
           
           if (preg_match("/CHECK\s*\(\s*`?$column_name`?\s+IN\s*\(([^)]+)\)\s*\)/i", $tableDef, $matches)) {
-              $enumValues = $parseEnumValues($matches[1]);
-              if (!empty($enumValues)) {
-                  return $enumValues;
-              }
+               $enumStr = $matches[1];
+               $enumStr = str_replace("'", "", $enumStr);
+               return array_map('trim', explode(',', $enumStr));
           }
           
           // Fallback for common enums if not found in CHECK constraint
           if ($table_name === 'jadwal' && $column_name === 'hari_kerja') {
               return ['AKHAD', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'];
-          }
-          if ($table_name === 'operasi' && $column_name === 'kategori') {
-              return ['-', 'Khusus', 'Besar', 'Sedang', 'Kecil', 'Elektive', 'Emergency'];
-          }
-          if ($table_name === 'laporan_operasi' && $column_name === 'permintaan_pa') {
-              return ['Ya', 'Tidak'];
-          }
-          if ($table_name === 'booking_operasi' && $column_name === 'status') {
-              return ['Menunggu', 'Proses Operasi', 'Selesai'];
           }
           if ($table_name === 'paket_operasi' && $column_name === 'kategori') {
               return ['Kebidanan', 'Operasi'];
@@ -699,7 +628,7 @@ abstract class Main
         if(!$permissions) {
             $permissions = array('can_create' => 'true', 'can_read' => 'true', 'can_update' => 'true', 'can_delete' => 'true');
         }
-        if($this->userHasRole($this->getUserInfo('role', $_SESSION['mlite_user'], true), 'admin')) {
+        if($this->getUserInfo('role', $_SESSION['mlite_user'], true) == 'admin') {
             $permissions = array('can_create' => 'true', 'can_read' => 'true', 'can_update' => 'true', 'can_delete' => 'true');
         }    
 
@@ -920,7 +849,7 @@ abstract class Main
     public function checkPermission($username, $action, $module)
     {
         $user = $this->db('mlite_users')->where('username', $username)->oneArray();
-        if ($user && $this->userHasRole($user['role'] ?? '', 'admin')) {
+        if ($user && $user['role'] == 'admin') {
             return true;
         }
 
@@ -934,24 +863,6 @@ abstract class Main
         }
         
         return isset($mlite_crud_permissions[$action]) && $mlite_crud_permissions[$action] == 'true';
-    }
-
-    private function userHasRole($roleValue, string $targetRole): bool
-    {
-        $roles = [];
-        if (is_array($roleValue)) {
-            $roles = $roleValue;
-        } elseif (is_string($roleValue) && trim($roleValue) !== '') {
-            $decoded = json_decode($roleValue, true);
-            if (is_array($decoded)) {
-                $roles = $decoded;
-            } else {
-                $roles = explode(',', $roleValue);
-            }
-        }
-
-        $roles = array_map('trim', $roles);
-        return in_array($targetRole, $roles, true);
     }
 
 }

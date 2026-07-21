@@ -35,7 +35,7 @@ $(document).ready(function () {
                 { "data": "ser_inst" }
             ],
             "order": [[6, "desc"]],
-            "dom": "r<'row'<'col-sm-12'tr>><'row'<'col-sm-5'i><'col-sm-7'p>>"
+            "dom": "rti"
         });
 
         // Column filtering
@@ -160,24 +160,9 @@ $(document).ready(function () {
                         $('#satusehatModal').modal('show');
                     } else { alert('Gagal: ' + res.message); }
                 },
-                error: function (xhr, status, error) {
+                error: function () {
                     btn.html(oText).prop('disabled', false);
-                    var errorMessage = 'Terjadi kesalahan saat mengirim ke Satu Sehat.';
-                    if (xhr.responseText) {
-                        try {
-                            var jsonResponse = JSON.parse(xhr.responseText);
-                            if (jsonResponse.message) {
-                                errorMessage += '\nDetail: ' + jsonResponse.message;
-                            } else {
-                                errorMessage += '\nDetail: ' + xhr.responseText;
-                            }
-                        } catch (e) {
-                            errorMessage += '\nDetail: ' + xhr.responseText;
-                        }
-                    } else if (error) {
-                        errorMessage += '\nError: ' + error;
-                    }
-                    alert(errorMessage);
+                    alert('Terjadi kesalahan saat mengirim ke Satu Sehat.');
                 }
             });
         }

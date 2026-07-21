@@ -1269,7 +1269,7 @@ class Admin extends AdminModule
     $this->assign['searchUrl'] =  url([ADMIN, 'vedika', 'index', $type, $page . '?s=' . $phrase . '&start_date=' . $start_date . '&end_date=' . $end_date]);
     $this->assign['ralanUrl'] =  url([ADMIN, 'vedika', 'index', 'ralan', $page . '?s=' . $phrase . '&start_date=' . $start_date . '&end_date=' . $end_date]);
     $this->assign['ranapUrl'] =  url([ADMIN, 'vedika', 'index', 'ranap', $page . '?s=' . $phrase . '&start_date=' . $start_date . '&end_date=' . $end_date]);
-    return $this->draw('index.html', ['tab' => $type, 'vedika' => $this->assign]);
+    return $this->draw('index.html', ['tab' => $type, 'vedika' => htmlspecialchars_array($this->assign)]);
   }
 
   public function anyLengkap($type = 'ralan', $page = 1)
@@ -1483,7 +1483,6 @@ class Admin extends AdminModule
         $row['berkasPasien'] = url([ADMIN, 'vedika', 'berkaspasien', $this->getRegPeriksaInfo('no_rkm_medis', $row['no_rawat'])]);
         $row['berkasPerawatan'] = url([ADMIN, 'vedika', 'berkasperawatan', $this->convertNorawat($row['no_rawat'])]);
         $row['pegawai'] = $this->db('mlite_vedika_feedback')->join('pegawai','pegawai.nik=mlite_vedika_feedback.username')->where('nosep', $this->_getSEPInfo('no_sep', $row['no_rawat']))->desc('mlite_vedika_feedback.id')->limit(1)->toArray();
-        $row['mlite_bpjs_emr_logs'] = $this->db('mlite_bpjs_emr_logs')->where('no_rawat', $row['no_rawat'])->where('no_sep', $row['no_sep'])->oneArray();
         //$row['pegawai'] = $this->core->getPegawaiInfo('nama', $row['username']);
         if ($row['status_lanjut'] == 'Ranap') {
           $_get_kamar_inap = $this->db('kamar_inap')->where('no_rawat', $row['no_rawat'])->limit(1)->desc('tgl_keluar')->toArray();
@@ -2566,10 +2565,8 @@ class Admin extends AdminModule
     if (!empty($this->_getSEPInfo('no_sep', $no_rawat))) {
       $print_sep['bridging_sep'] = $this->db('bridging_sep')->where('no_sep', $this->_getSEPInfo('no_sep', $no_rawat))->oneArray();
       $print_sep['bpjs_prb'] = $this->db('bpjs_prb')->where('no_sep', $this->_getSEPInfo('no_sep', $no_rawat))->oneArray();
-      $print_sep['batas_rujukan'] = '';
-      if (!empty($print_sep['bridging_sep']['tglrujukan'])) {
-          $print_sep['batas_rujukan'] = date('Y-m-d', strtotime($print_sep['bridging_sep']['tglrujukan'] . ' +85 days'));
-      }
+      $batas_rujukan = $this->db('bridging_sep')->select('DATE_ADD(tglrujukan , INTERVAL 85 DAY) AS batas_rujukan')->where('no_sep', $id)->oneArray();
+      $print_sep['batas_rujukan'] = isset($batas_rujukan['batas_rujukan']) ? $batas_rujukan['batas_rujukan'] : '';
       switch ($print_sep['bridging_sep']['klsnaik']) {
         case '2':
           $print_sep['kelas_naik'] = 'Kelas VIP';
@@ -4014,7 +4011,7 @@ class Admin extends AdminModule
     }
     //echo json_encode($adl, true);
     $hide_input_data = false;
-    if ($get_claim_data && ($get_claim_data['response']['data']['grouper']['response_idrg']['status_cd'] ?? '') == 'final') {
+    if ($get_claim_data && $get_claim_data['response']['data']['grouper']['response_idrg']['status_cd'] == 'final') {
       $hide_input_data = true;
     }
     echo $this->draw('inacbgs.html', [
@@ -4041,7 +4038,7 @@ class Admin extends AdminModule
       'biaya_add_payment_pct' => $total_biaya_add_payment_pct,
       'get_claim_data' => $get_claim_data,
       'penyakit' => $penyakit,
-      'prosedur' => $prosedur,
+      'prosedur' => htmlspecialchars_array($prosedur),
       'adl' => $adl,
       'hide_input_data' => $hide_input_data
     ]);
@@ -5037,34 +5034,21 @@ class Admin extends AdminModule
       }
   }
 
-  public function postGroupingDRG()
-  {
-      $nomor_sep = $_POST['nomor_sep'];
-      $special_cmg = $_POST['special_cmg'] ?? '';
-      echo $this->GroupingDRG($nomor_sep, $special_cmg);
-      exit();
-  }
-
-  private function GroupingDRG($nomor_sep, $special_cmg = ''){	
-      $stage = ($special_cmg == '') ? "1" : "2";
+  private function GroupingDRG($nomor_sep){	
       $request ='{
                       "metadata": {
                           "method":"grouper",
-                          "stage":"'.$stage.'",
+                          "stage":"1",
                           "grouper":"idrg"
                       },
                       "data": {
-                          "nomor_sep":"'.$nomor_sep.'"';
-      if ($special_cmg != '') {
-          $request .= ', "special_cmg":"'.$special_cmg.'"';
-      }
-      $request .= '
+                          "nomor_sep":"'.$nomor_sep.'"
                       }
                   }';
       $msg= $this->Request($request);
       $this->db('mlite_eklaim_logs')->save([
           'nomor_sep' => $nomor_sep,
-          'method' => "grouper_idrg_stage_".$stage, 
+          'method' => "grouper_idrg", 
           'request_data' => $request,
           'response_data' => json_encode($msg), 
           'created_at' => date('Y-m-d H:i:s'),
@@ -5278,36 +5262,6 @@ class Admin extends AdminModule
         ]);
     }    
     exit();    
-  }
-
-  public function postGetIdrCodesByCodes()
-  {
-    header('Content-Type: application/json');
-    $input = json_decode(file_get_contents('php://input'), true);
-    $codes = $input['codes'] ?? [];
-    
-    if (empty($codes)) { 
-        echo json_encode(['success' => true, 'data' => []]); 
-        exit(); 
-    }
-    
-    $placeholders = str_repeat('?,', count($codes) - 1) . '?';
-    $sql = "SELECT id, code, code2, description, `system`, validcode, accpdx, asterisk, im 
-            FROM mlite_idr_codes 
-            WHERE code IN ($placeholders) OR code2 IN ($placeholders)";
-    
-    // Duplicate codes for both IN clauses
-    $allParams = array_merge($codes, $codes);
-    
-    $stmt = $this->db()->pdo()->prepare($sql);
-    $stmt->execute($allParams);
-    $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    
-    echo json_encode([
-        'success' => true, 
-        'data' => htmlspecialchars_array($results)
-    ]);
-    exit();
   }
 
   private function InacbgToDRG($nomor_sep,$diagnosainacbg,$procedureinacbg){	
@@ -5918,28 +5872,21 @@ class Admin extends AdminModule
         $array[] = str_getcsv($line);
     }
 
-    $value_query = [];
-    $pdo = $this->core->db()->pdo();
-    foreach ($array as $data){
-      if(!isset($data[8])) continue;
-      $id = $pdo->quote($data[0]);
-      $code = $pdo->quote($data[1]);
-      $code2 = $pdo->quote($data[2]);
-      $description = $pdo->quote($data[3]);
-      $system = $pdo->quote($data[4]);
-      $validcode = $pdo->quote($data[5]);
-      $accpdx = $pdo->quote($data[6]);
-      $asterisk = $pdo->quote($data[7]);
-      $im = $pdo->quote($data[8]);
-      $value_query[] = "($id,$code,$code2,$description,$system,$validcode,$accpdx,$asterisk,$im)";
-    }
-    if (empty($value_query)) {
-      echo '['.date('d-m-Y H:i:s').'][info] Tidak ada data untuk dimasukkan'."<br>";
-      exit();
+    foreach ($array as $data){   
+      $id = $data[0];
+      $code = $data[1];
+      $code2 = $data[2];
+      $description = $data[3];
+      $system = $data[4];
+      $validcode = $data[5];
+      $accpdx = $data[6];
+      $asterisk = $data[7];
+      $im = $data[8];
+      $value_query[] = "('".$id."','".$code."','".$code2."','".str_replace("'","\'",$description)."','".$system."','".$validcode."','".$accpdx."','".$asterisk."','".$im."')";
     }
     $str = implode(",", $value_query);
     echo '['.date('d-m-Y H:i:s').'][info] Memasukkan data'."<br>";
-    $result = $pdo->exec("REPLACE INTO mlite_idr_codes (id, code, code2, description, `system`, `validcode`, `accpdx`, `asterisk`, `im`) VALUES $str");
+    $result = $this->core->db()->pdo()->exec("INSERT INTO mlite_idr_codes (id, code, code2, description, `system`, `validcode`, `accpdx`, `asterisk`, `im`) VALUES $str ON DUPLICATE KEY UPDATE id=VALUES(id)");
     if($result) {
       echo '['.date('d-m-Y H:i:s').'][info] Impor selesai'."<br>";
     } else {
@@ -6047,25 +5994,18 @@ class Admin extends AdminModule
         $array[] = str_getcsv($line);
     }
 
-    $value_query = [];
-    $pdo = $this->core->db()->pdo();
-    foreach ($array as $data){
-      if(!isset($data[5])) continue;
-      $id = $pdo->quote($data[0]);
-      $code = $pdo->quote($data[1]);
-      $code2 = $pdo->quote($data[2]);
-      $description = $pdo->quote($data[3]);
-      $system = $pdo->quote($data[4]);
-      $validcode = $pdo->quote($data[5]);
-      $value_query[] = "($id,$code,$code2,$description,$system,$validcode)";
-    }
-    if (empty($value_query)) {
-      echo '['.date('d-m-Y H:i:s').'][info] Tidak ada data untuk dimasukkan'."<br>";
-      exit();
+    foreach ($array as $data){   
+      $id = $data[0];
+      $code = $data[1];
+      $code2 = $data[2];
+      $description = $data[3];
+      $system = $data[4];
+      $validcode = $data[5];
+      $value_query[] = "('".$id."','".$code."','".$code2."','".str_replace("'","\'",$description)."','".$system."','".$validcode."')";
     }
     $str = implode(",", $value_query);
     echo '['.date('d-m-Y H:i:s').'][info] Memasukkan data'."<br>";
-    $result = $pdo->exec("REPLACE INTO mlite_inacbg_codes (id, code, code2, description, `system`, `validcode`) VALUES $str");
+    $result = $this->core->db()->pdo()->exec("INSERT INTO mlite_inacbg_codes (id, code, code2, description, `system`, `validcode`) VALUES $str ON DUPLICATE KEY UPDATE id=VALUES(id)");
     if($result) {
       echo '['.date('d-m-Y H:i:s').'][info] Impor selesai'."<br>";
     } else {

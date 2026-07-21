@@ -290,8 +290,7 @@ File paling penting untuk setiap modul. Ini berisi informasi dasar dan instruksi
         'description'   =>  'Lorem ipsum....',
         'author'        =>  'Basoro',
         'version'       =>  '1.0',
-        'category'      =>  'main',
-        'compatibility' =>  '6.0.0*',                  // Kesesuaian dengan versi mLITE
+        'compatibility' =>  '2022*',                  // Kesesuaian dengan versi mLITE
         'icon'          =>  'bolt',
         'pages'         =>  ['Contoh' => 'contoh'],   // Berfungsi sebagai halaman (opsional)
         'install'       =>  function() use($core)     // Perintah install

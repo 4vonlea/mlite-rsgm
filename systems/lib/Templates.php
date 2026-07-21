@@ -122,20 +122,8 @@ class Templates
 
     private function execute($file, $counter = 0)
     {
-        $normalizedFile = str_replace('\\', '/', $file);
-        $normalizedTmp = rtrim(str_replace('\\', '/', $this->tmp), '/').'/';
         $pathInfo = pathinfo($file);
-
-        // Use a unique cache filename per source template path to avoid collisions
-        // between plugins that share the same basename (e.g. "rincian.html").
-        if (strpos($normalizedFile, $normalizedTmp) === 0) {
-            $tmpFile = $this->tmp.$pathInfo['basename'];
-        } else {
-            $extension = isset($pathInfo['extension']) ? '.'.$pathInfo['extension'] : '';
-            $fileName = isset($pathInfo['filename']) ? $pathInfo['filename'] : $pathInfo['basename'];
-            $templateKey = realpath($file) ?: $file;
-            $tmpFile = $this->tmp.$fileName.'_'.substr(sha1($templateKey), 0, 12).$extension;
-        }
+        $tmpFile = $this->tmp.$pathInfo['basename'];
 
         if (!is_file($file)) {
             echo "Template '$file' not found.";

@@ -16,11 +16,13 @@ class Icd9
     public function getIndex()
     {
 
-      $totalRecords = $this->db('icd9')->count();
+      $totalRecords = $this->db('icd9')
+        ->select('kode')
+        ->toArray();
       $offset         = 10;
       $return['halaman']    = 1;
-      $return['jml_halaman']    = ceil($totalRecords / $offset);
-      $return['jumlah_data']    = $totalRecords;
+      $return['jml_halaman']    = ceil(count($totalRecords) / $offset);
+      $return['jumlah_data']    = count($totalRecords);
 
       $return['list'] = $this->db('icd9')
         ->desc('kode')
@@ -50,11 +52,13 @@ class Icd9
     {
 
         $perpage = '10';
-        $totalRecords = $this->db('icd9')->count();
+        $totalRecords = $this->db('icd9')
+          ->select('kode')
+          ->toArray();
         $offset         = 10;
         $return['halaman']    = 1;
-        $return['jml_halaman']    = ceil($totalRecords / $offset);
-        $return['jumlah_data']    = $totalRecords;
+        $return['jml_halaman']    = ceil(count($totalRecords) / $offset);
+        $return['jumlah_data']    = count($totalRecords);
 
         $return['list'] = $this->db('icd9')
           ->desc('kode')
@@ -63,20 +67,16 @@ class Icd9
           ->toArray();
 
         if(isset($_POST['cari'])) {
-          $query = $this->db('icd9')
+          $return['list'] = $this->db('icd9')
             ->like('kode', '%'.htmlspecialchars($_POST['cari'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'%')
             ->orLike('deskripsi_panjang', '%'.htmlspecialchars($_POST['cari'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'%')
-            ->orLike('deskripsi_pendek', '%'.htmlspecialchars($_POST['cari'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'%');
-            
-          $jumlah_data = $query->count();
-          
-          $return['list'] = $query->desc('kode')
+            ->orLike('deskripsi_pendek', '%'.htmlspecialchars($_POST['cari'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'%')
+            ->desc('kode')
             ->offset(0)
             ->limit($perpage)
             ->toArray();
-            
-          $return['jumlah_data'] = $jumlah_data;
-          $return['jml_halaman'] = ceil($jumlah_data / $offset);
+          $jumlah_data = count($return['list']);
+          $jml_halaman = ceil($jumlah_data / $offset);
         }
         if(isset($_POST['halaman'])){
           $offset     = (($_POST['halaman'] - 1) * $perpage);

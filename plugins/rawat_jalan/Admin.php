@@ -231,23 +231,6 @@ class Admin extends AdminModule
 
         $input['tgl_registrasi'] = $input['tgl_registrasi'] ?? date('Y-m-d');
         $input['jam_reg'] = $input['jam_reg'] ?? date('H:i:s');
-        $input['kd_pj'] = $input['kd_pj'] ?? '-';
-
-        // Validasi master data dulu agar tidak menghasilkan warning/fatal dan JSON tetap bersih.
-        $pasien = $this->db('pasien')->where('no_rkm_medis', $input['no_rkm_medis'])->oneArray();
-        if (!$pasien) {
-            return ['status' => 'error', 'message' => 'No. RM tidak ditemukan'];
-        }
-
-        $poliklinik = $this->db('poliklinik')->where('kd_poli', $input['kd_poli'])->oneArray();
-        if (!$poliklinik) {
-            return ['status' => 'error', 'message' => 'Kode poli tidak valid'];
-        }
-
-        $dokter = $this->db('dokter')->where('kd_dokter', $input['kd_dokter'])->oneArray();
-        if (!$dokter) {
-            return ['status' => 'error', 'message' => 'Kode dokter tidak valid'];
-        }
 
         $maxRetries = 5;
         $retryCount = 0;
@@ -267,14 +250,14 @@ class Admin extends AdminModule
                         'kd_dokter' => $input['kd_dokter'],
                         'kd_poli' => $input['kd_poli'],
                         'no_reg' => $input['no_reg'],
-                        'kd_pj' => $input['kd_pj'],
+                        'kd_pj' => $input['kd_pj'] ?? '-',
                         'limit_reg' => '0',
                         'waktu_kunjungan' => $input['tgl_registrasi'] . ' ' . $input['jam_reg'],
                         'status' => 'Belum'
                     ];
                     $this->db('booking_registrasi')->save($booking);
                     $this->db()->pdo()->commit();
-                    return ['status' => 'success', 'result' => 'created', 'data' => $booking];
+                    return ['status' => 'created', 'data' => $booking];
                 }
 
                 $input['no_rawat'] = $this->setNoRawat($input['tgl_registrasi']);
@@ -299,8 +282,11 @@ class Admin extends AdminModule
                 $input['almt_pj'] = $input['almt_pj'] ?? '-';
                 $input['hubunganpj'] = $input['hubunganpj'] ?? '-';
 
-                $input['biaya_reg'] = $poliklinik['registrasi'] ?? 0;
+                $poliklinik = $this->db('poliklinik')->where('kd_poli', $input['kd_poli'])->oneArray();
+                $input['biaya_reg'] = $poliklinik['registrasi'];
 
+                $pasien = $this->db('pasien')->where('no_rkm_medis', $input['no_rkm_medis'])->oneArray();
+                
                 // Calculate Age
                 $birthDate = new \DateTime($pasien['tgl_lahir']);
                 $today = new \DateTime("today");
@@ -317,31 +303,16 @@ class Admin extends AdminModule
                     $input['umurdaftar'] = $m;
                     $input['sttsumur'] = "Bl";
                 }
-                $existingVisit = $this->db('reg_periksa')
-                    ->where('no_rkm_medis', $input['no_rkm_medis'])
-                    ->oneArray();
-                $input['stts_daftar'] = $existingVisit ? 'Lama' : 'Baru';
                 $input['status_poli'] = 'Lama';
 
                 $this->db('reg_periksa')->save($input);
                 $this->db()->pdo()->commit();
                 $success = true;
-                return ['status' => 'success', 'result' => 'created', 'data' => $input];
+                return ['status' => 'created', 'data' => $input];
 
-            } catch (\Throwable $e) {
+            } catch (\Exception $e) {
                 $this->db()->pdo()->rollBack();
                 if ($e->getCode() == '23000') {
-                    $errMsg = strtolower((string) $e->getMessage());
-                    $rawErr = trim((string) $e->getMessage());
-                    if (strpos($errMsg, 'foreign key') !== false) {
-                        $lastError = 'Validasi referensi gagal (pasien/poli/dokter/penjamin tidak valid). Detail: ' . $rawErr;
-                    } elseif (strpos($errMsg, 'booking_registrasi.no_rkm_medis') !== false && strpos($errMsg, 'booking_registrasi.tanggal_periksa') !== false) {
-                        $lastError = 'Booking pasien pada tanggal tersebut sudah ada. Detail: ' . $rawErr;
-                    } elseif (strpos($errMsg, 'unique') !== false || strpos($errMsg, 'primary') !== false) {
-                        $lastError = 'Data duplikat atau bentrok nomor registrasi. Detail: ' . $rawErr;
-                    } else {
-                        $lastError = 'Constraint database gagal saat membuat booking. Detail: ' . $rawErr;
-                    }
                     $retryCount++;
                     usleep(100000);
                     continue;
@@ -351,10 +322,7 @@ class Admin extends AdminModule
             }
         }
 
-        if (trim((string) $lastError) === '') {
-            $lastError = 'Gagal membuat rawat jalan. Periksa no_rkm_medis, kd_poli, kd_dokter, kd_pj, dan konflik nomor registrasi.';
-        }
-        return ['status' => 'error', 'message' => htmlspecialchars($lastError, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')];
+        return ['status' => 'error', 'message' => htmlspecialchars($lastError ?: 'Terjadi kesalahan sistem.', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')];
     }
 
     public function apiUpdate($no_rawat = null)
@@ -420,17 +388,14 @@ class Admin extends AdminModule
                             'p_jawab' => $pasien['namakeluarga'] ?? '-',
                             'almt_pj' => $pasien['alamatpj'] ?? '-',
                             'hubunganpj' => $pasien['keluarga'] ?? '-',
-                            'biaya_reg' => $poliklinik['registrasi'] ?? 0,
+                            'biaya_reg' => $poliklinik['registrasi'],
                             'stts' => 'Belum',
                             'status_lanjut' => 'Ralan',
                             'kd_pj' => $booking['kd_pj'],
                             'umurdaftar' => $umurdaftar,
                             'sttsumur' => $sttsumur,
                             'status_bayar' => 'Belum Bayar',
-                            'status_poli' => 'Lama',
-                            'stts_daftar' => $this->db('reg_periksa')
-                                ->where('no_rkm_medis', $booking['no_rkm_medis'])
-                                ->oneArray() ? 'Lama' : 'Baru'
+                            'status_poli' => 'Lama'
                         ];
                         
                         if(!$this->db('reg_periksa')->where('no_rkm_medis', $booking['no_rkm_medis'])->where('tgl_registrasi', $booking['tanggal_periksa'])->oneArray()) {
@@ -1340,7 +1305,7 @@ class Admin extends AdminModule
             $_POST['hubunganpj'] = '-';
 
             $poliklinik = $this->db('poliklinik')->where('kd_poli', $_POST['kd_poli'])->oneArray();
-            $_POST['biaya_reg'] = $poliklinik['registrasi'] ?? 0;
+            $_POST['biaya_reg'] = $poliklinik['registrasi'];
 
             $pasien = $this->db('pasien')->where('no_rkm_medis', $_POST['no_rkm_medis'])->oneArray();
 
@@ -1430,7 +1395,7 @@ class Admin extends AdminModule
                   }
 
                   $biaya_reg = $this->db('poliklinik')->where('kd_poli', $row['kd_poli'])->oneArray();
-                  $_POST['biaya_reg'] = $biaya_reg['registrasi'] ?? 0;
+                  $_POST['biaya_reg'] = $biaya_reg['registrasi'];
                   if($_POST['stts_daftar'] == 'Lama') {
                     $_POST['biaya_reg'] = $biaya_reg['registrasilama'];
                   }

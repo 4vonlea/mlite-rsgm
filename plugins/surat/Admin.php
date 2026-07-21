@@ -69,7 +69,6 @@ class Admin extends AdminModule
         if (count($rows)) {
             foreach ($rows as $row) {
                 $row = htmlspecialchars_array($row);
-                $row['printURL'] = url([ADMIN, 'surat', 'suratrujukan', convertNorawat($row['no_rawat'])]);
                 $row['editURL'] = url([ADMIN, 'surat', 'rujukanedit', $row['id']]);
                 $row['deleteURL'] = url([ADMIN, 'surat', 'rujukanhapus', $row['id']]);
                 $this->assign['list'][] = $row;
@@ -79,9 +78,7 @@ class Admin extends AdminModule
         $this->assign['searchURL'] = url([ADMIN, 'surat', 'rujukan']);
         $this->assign['addURL'] = url([ADMIN, 'surat', 'rujukanadd']);
         $this->assign['phrase'] = $phrase;
-        $assign = htmlspecialchars_array($this->assign);
-        $assign['pagination'] = $this->assign['pagination'];
-        return $this->draw('rujukan.manage.html', ['rujukan' => $assign]);
+        return $this->draw('rujukan.manage.html', ['rujukan' => htmlspecialchars_array($this->assign)]);
     }
 
     public function getRujukanAdd()
@@ -223,7 +220,6 @@ class Admin extends AdminModule
         if (count($rows)) {
             foreach ($rows as $row) {
                 $row = htmlspecialchars_array($row);
-                $row['printURL'] = url([ADMIN, 'surat', 'suratsakit', convertNorawat($row['no_rawat'])]);
                 $row['editURL'] = url([ADMIN, 'surat', 'sakitedit', $row['id']]);
                 $row['deleteURL'] = url([ADMIN, 'surat', 'sakithapus', $row['id']]);
                 $this->assign['list'][] = $row;
@@ -233,9 +229,7 @@ class Admin extends AdminModule
         $this->assign['searchURL'] = url([ADMIN, 'surat', 'sakit']);
         $this->assign['addURL'] = url([ADMIN, 'surat', 'sakitadd']);
         $this->assign['phrase'] = $phrase;
-        $assign = htmlspecialchars_array($this->assign);
-        $assign['pagination'] = $this->assign['pagination'];
-        return $this->draw('sakit.manage.html', ['sakit' => $assign]);
+        return $this->draw('sakit.manage.html', ['sakit' => htmlspecialchars_array($this->assign)]);
     }
 
     public function getSakitAdd()
@@ -375,7 +369,6 @@ class Admin extends AdminModule
         if (count($rows)) {
             foreach ($rows as $row) {
                 $row = htmlspecialchars_array($row);
-                $row['printURL'] = url([ADMIN, 'surat', 'suratsehat', convertNorawat($row['no_rawat'])]);
                 $row['editURL'] = url([ADMIN, 'surat', 'sehatedit', $row['id']]);
                 $row['deleteURL'] = url([ADMIN, 'surat', 'sehathapus', $row['id']]);
                 $this->assign['list'][] = $row;
@@ -385,9 +378,7 @@ class Admin extends AdminModule
         $this->assign['searchURL'] = url([ADMIN, 'surat', 'sehat']);
         $this->assign['addURL'] = url([ADMIN, 'surat', 'sehatadd']);
         $this->assign['phrase'] = $phrase;
-        $assign = htmlspecialchars_array($this->assign);
-        $assign['pagination'] = $this->assign['pagination'];
-        return $this->draw('sehat.manage.html', ['sehat' => $assign]);
+        return $this->draw('sehat.manage.html', ['sehat' => htmlspecialchars_array($this->assign)]);
     }
 
     public function getSehatAdd()

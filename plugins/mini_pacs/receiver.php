@@ -33,11 +33,6 @@ $binPath = 'export PATH=$PATH:/usr/local/bin:/usr/bin:/opt/homebrew/bin && ';
 
 // EKSTRAKSI METADATA VIA DCMDUMP
 $patientId = trim((string) shell_exec($binPath . "dcmdump +P 0010,0020 -q " . escapeshellarg($filepath) . " | grep -o '\\[.*\\]' | tr -d '[]' | head -n 1"));
-
-if (empty($patientId)) {
-    $patientId = str_replace('.', '', trim((string) shell_exec($binPath . "dcmdump +P 0010,0020 -q " . escapeshellarg($filepath) . " | grep -o '\\[.*\\]' | tr -d '[]' | head -n 1")));
-}
-
 $accessionNumber = trim((string) shell_exec($binPath . "dcmdump +P 0008,0050 -q " . escapeshellarg($filepath) . " | grep -o '\\[.*\\]' | tr -d '[]' | head -n 1"));
 $studyUid = trim((string) shell_exec($binPath . "dcmdump +P 0020,000D -q " . escapeshellarg($filepath) . " | grep -o '\\[.*\\]' | tr -d '[]' | head -n 1"));
 $seriesUid = trim((string) shell_exec($binPath . "dcmdump +P 0020,000E -q " . escapeshellarg($filepath) . " | grep -o '\\[.*\\]' | tr -d '[]' | head -n 1"));

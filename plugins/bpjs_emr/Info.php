@@ -1,7 +1,7 @@
 <?php
 
 return [
-  'name' => 'BPJS E-MR',
+  'name' => 'BPJS E-Medical Records',
   'description' => 'Modul bridging E-Medical Records (Rekam Medis Elektronik) BPJS',
   'author' => 'Basoro',
   'category' => 'bridging',
@@ -9,6 +9,7 @@ return [
   'compatibility' => '6.*.*',
   'icon' => 'file-text',
   'install' => function () use ($core) {
+    // Add any necessary installation logic here, such as settings initialization
     $core->db()->pdo()->exec("INSERT INTO `mlite_settings` (`module`, `field`, `value`) VALUES ('bpjs_emr', 'consid', '')");
     $core->db()->pdo()->exec("INSERT INTO `mlite_settings` (`module`, `field`, `value`) VALUES ('bpjs_emr', 'secretkey', '')");
     $core->db()->pdo()->exec("INSERT INTO `mlite_settings` (`module`, `field`, `value`) VALUES ('bpjs_emr', 'userkey', '')");
@@ -17,6 +18,38 @@ return [
     $core->db()->pdo()->exec("INSERT INTO `mlite_settings` (`module`, `field`, `value`) VALUES ('bpjs_emr', 'kecamatan', '')");
     $core->db()->pdo()->exec("INSERT INTO `mlite_settings` (`module`, `field`, `value`) VALUES ('bpjs_emr', 'kodepos', '')");    
     $core->db()->pdo()->exec("INSERT INTO `mlite_settings` (`module`, `field`, `value`) VALUES ('bpjs_emr', 'baseurl', 'https://apijkn-dev.bpjs-kesehatan.go.id/erekammedis_dev/')");
+    $core->db()->pdo()->exec("CREATE TABLE IF NOT EXISTS `mlite_bpjs_emr_mapping_prosedur_ranap` (
+      `kd_jenis_prw` varchar(20) NOT NULL,
+      `snomed_code` varchar(20) NOT NULL,
+      `snomed_display` varchar(255) DEFAULT NULL,
+      `focal_device_code` varchar(20) DEFAULT NULL,
+      `focal_device_display` varchar(255) DEFAULT NULL,
+      PRIMARY KEY (`kd_jenis_prw`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC");
+    $core->db()->pdo()->exec("CREATE TABLE IF NOT EXISTS `mlite_bpjs_emr_mapping_operasi` (
+      `kode_paket` varchar(20) NOT NULL,
+      `snomed_code` varchar(20) NOT NULL,
+      `snomed_display` varchar(255) DEFAULT NULL,
+      `focal_device_code` varchar(20) DEFAULT NULL,
+      `focal_device_display` varchar(255) DEFAULT NULL,
+      PRIMARY KEY (`kode_paket`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC");
+
+    $alterStatements = [
+      "ALTER TABLE `mlite_bpjs_emr_mapping_prosedur` ADD COLUMN `focal_device_code` varchar(20) DEFAULT NULL",
+      "ALTER TABLE `mlite_bpjs_emr_mapping_prosedur` ADD COLUMN `focal_device_display` varchar(255) DEFAULT NULL",
+      "ALTER TABLE `mlite_bpjs_emr_mapping_prosedur_ranap` ADD COLUMN `focal_device_code` varchar(20) DEFAULT NULL",
+      "ALTER TABLE `mlite_bpjs_emr_mapping_prosedur_ranap` ADD COLUMN `focal_device_display` varchar(255) DEFAULT NULL",
+      "ALTER TABLE `mlite_bpjs_emr_mapping_operasi` ADD COLUMN `focal_device_code` varchar(20) DEFAULT NULL",
+      "ALTER TABLE `mlite_bpjs_emr_mapping_operasi` ADD COLUMN `focal_device_display` varchar(255) DEFAULT NULL"
+    ];
+    foreach ($alterStatements as $sql) {
+      try {
+        $core->db()->pdo()->exec($sql);
+      } catch (\Throwable $e) {
+        // ignore if column already exists or table not available
+      }
+    }
   },
   'uninstall' => function () use ($core) {
     $core->db()->pdo()->exec("DELETE FROM `mlite_settings` WHERE `module` = 'bpjs_emr'");

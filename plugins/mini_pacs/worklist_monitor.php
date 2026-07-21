@@ -26,8 +26,8 @@ $db->pdo()->exec("CREATE TABLE IF NOT EXISTS `mlite_mini_pacs_worklist_status` (
   PRIMARY KEY (`noorder`)
 )");
 
-$worklist_dir = __DIR__ . '/../../uploads/pacs/';
-$request_dir = $worklist_dir . 'worklist/';
+$worklist_dir = __DIR__ . '/../../uploads/pacs/worklist/';
+$request_dir = $worklist_dir . 'requests/';
 
 if (!is_dir($request_dir)) {
     mkdir($request_dir, 0755, true);

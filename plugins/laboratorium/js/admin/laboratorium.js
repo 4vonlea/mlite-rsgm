@@ -141,62 +141,6 @@ $("#rincian").on("click",".cetak_permintaan", function(event){
   window.open(baseURL + '/laboratorium/cetakpermintaan?noorder=' + noorder + '&no_rawat=' + no_rawat + '&status=' + status + '&t=' + mlite.token);
 });
 
-$("#rincian").on("keyup", ".parsial_amount_lab", function(event){
-  event.preventDefault();
-  var v = (this.value || '').replace(/[^0-9]/g, '');
-  this.value = v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-});
-
-$("#rincian").on("click", ".bayar_parsial_lab", function(event){
-  var baseURL = mlite.url + '/' + mlite.admin;
-  event.preventDefault();
-  var no_rawat = $('input:text[name=no_rawat]').val();
-  var status = $('input:text[name=status]').val();
-  var kd_jenis_prw = $(this).attr("data-kd_jenis_prw");
-  var tgl_periksa = $(this).attr("data-tgl_periksa");
-  var jam = $(this).attr("data-jam");
-  var metode = $('#parsial_metode_lab').val() || 'Tunai';
-  var jumlah_bayar = $(this).closest('.input-group').find('.parsial_amount_lab').val();
-  jumlah_bayar = (jumlah_bayar || '0').replace(/[^0-9]/g,'');
-  if (Number(jumlah_bayar) <= 0) {
-    alert('Jumlah bayar wajib diisi.');
-    return;
-  }
-
-  bootbox.confirm("Simpan pembayaran parsial untuk tindakan laboratorium ini?", function(result){
-    if (result) {
-      var url = baseURL + '/laboratorium/bayarparsial?t=' + mlite.token;
-      $.post(url, {
-        no_rawat: no_rawat,
-        kd_jenis_prw: kd_jenis_prw,
-        tgl_periksa: tgl_periksa,
-        jam: jam,
-        status: status,
-        metode: metode,
-        jumlah_bayar: jumlah_bayar
-      }, function(data) {
-        var response = {};
-        try { response = (typeof data === 'string') ? JSON.parse(data) : data; } catch(e) { response = data; }
-        if (response && response.status === 'error') {
-          alert(response.message || 'Gagal menyimpan pembayaran parsial.');
-          return;
-        }
-        if (response && response.pembayaran_id) {
-          window.open(baseURL + '/laboratorium/notaparsial?show=kecil&pembayaran_id=' + response.pembayaran_id + '&t=' + mlite.token);
-        }
-        var refreshUrl = baseURL + '/laboratorium/rincian?t=' + mlite.token;
-        $.post(refreshUrl, {no_rawat : no_rawat, status: status}, function(html) {
-          $("#rincian").html(html).show();
-        });
-        $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-          (response && response.message ? response.message : "Pembayaran parsial berhasil disimpan.")+
-          "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
-          "</div>").show();
-      });
-    }
-  });
-});
-
 $("#display").on("click",".riwayat_perawatan", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
@@ -497,6 +441,45 @@ $('input:text[name=layanan]').on('input',function(e){
 });
 // end pencarian
 
+function parseBiayaLaboratorium(value) {
+  if (typeof value === 'number') {
+    return value;
+  }
+
+  var normalizedValue = (value || '')
+    .toString()
+    .replace(/\./g, '')
+    .replace(',', '.')
+    .replace(/[^\d.]/g, '');
+  var parsedValue = parseFloat(normalizedValue);
+
+  return isNaN(parsedValue) ? 0 : parsedValue;
+}
+
+function formatBiayaLaboratorium(value) {
+  return parseBiayaLaboratorium(value).toLocaleString('id-ID', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function updateBiayaLaboratorium() {
+  var biayaDasar = $('#biaya').data('baseBiaya');
+  var jumlahTindakan = parseInt($('#jml_tindakan').val(), 10);
+
+  if (isNaN(jumlahTindakan) || jumlahTindakan < 1) {
+    jumlahTindakan = 1;
+    $('#jml_tindakan').val(jumlahTindakan);
+  }
+
+  if (typeof biayaDasar === 'undefined' || biayaDasar === null || biayaDasar === '') {
+    $('#biaya').val('');
+    return;
+  }
+
+  $('#biaya').val(formatBiayaLaboratorium(parseBiayaLaboratorium(biayaDasar) * jumlahTindakan));
+}
+
 // ketika baris data diklik
 $("#layanan").on("click", ".pilih_layanan", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
@@ -509,12 +492,18 @@ $("#layanan").on("click", ".pilih_layanan", function(event){
 
   $('input:hidden[name=kd_jenis_prw]').val(kd_jenis_prw);
   $('input:text[name=nm_perawatan]').val(nm_perawatan);
-  $('input:text[name=biaya]').val(biaya);
+  $('#biaya').data('baseBiaya', biaya);
+  $('#jml_tindakan').val(1);
+  updateBiayaLaboratorium();
   $('input:hidden[name=kat]').val(kat);
 
   $("#layanan").hide();
   $('#provider').show();
   $('#aturan_pakai').hide();
+});
+
+$("#form_rincian").on("input change", "#jml_tindakan", function() {
+  updateBiayaLaboratorium();
 });
 
 // ketika tombol simpan diklik
@@ -531,7 +520,7 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
   var biaya           = $('input:text[name=biaya]').val();
   var aturan_pakai    = $('input:text[name=aturan_pakai]').val();
   var kat             = $('input:hidden[name=kat]').val();
-  var jml_tindakan    = $('input:text[name=jml_tindakan]').val();
+  var jml_tindakan    = $('#jml_tindakan').val();
   var status          = $('input:text[name=status]').val();
 
   var url = baseURL + '/laboratorium/savedetail?t=' + mlite.token;
@@ -558,10 +547,10 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
     $('input:hidden[name=kd_jenis_prw]').val("");
     $('input:text[name=nm_perawatan]').val("");
     $('input:hidden[name=kat]').val("");
-    $('input:text[name=biaya]').val("");
+    $('#biaya').removeData('baseBiaya').val("");
     $('input:text[name=nama_provider]').val("");
     $('input:text[name=kode_provider]').val("");
-    $('input:text[name=jml_tindakan]').val("");
+    $('#jml_tindakan').val(1);
     $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
     "Data pasien telah disimpan!"+
     "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+

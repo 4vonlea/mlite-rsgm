@@ -4,8 +4,7 @@ if (!version_compare(PHP_VERSION, '8.0.0', '>=')) {
     exit("mLITE requires at least <b>PHP 8.0.0</b> (Current: " . PHP_VERSION . ")");
 }
 
-function env(string $key, $default = null)
-{
+function env(string $key, $default = null) {
     return $_ENV[$key] ?? $_SERVER[$key] ?? $default;
 }
 
@@ -26,14 +25,14 @@ if (file_exists(BASE_DIR . '/.env')) {
         }
 
         [$name, $value] = explode('=', $line, 2);
-        $name = trim($name);
+        $name  = trim($name);
         $value = trim($value);
 
         // Hapus tanda kutip jika ada
         $value = trim($value, "\"'");
 
         if (!isset($_ENV[$name]) && !isset($_SERVER[$name])) {
-            $_ENV[$name] = $value;
+            $_ENV[$name]    = $value;
             $_SERVER[$name] = $value;
         }
     }
@@ -41,19 +40,19 @@ if (file_exists(BASE_DIR . '/.env')) {
 
 
 // Database Driver: 'mysql' or 'sqlite'
-define('DBDRIVER', env('DBDRIVER') ?: '');
+define('DBDRIVER', env('DBDRIVER') ?: 'mysql');
 
 if (DBDRIVER == 'sqlite') {
     $db_host = '';
     $db_user = '';
     $db_pass = '';
-    $db_name = BASE_DIR . '/systems/data/mlite.sdb';
+    $db_name = BASE_DIR . '/mlite.sdb';
     $db_port = '';
 } else {
-    $db_host = env('MYSQLHOST') ?: 'localhost';
+    $db_host = env('MYSQLHOST') ?: '127.0.0.1';
     $db_user = env('MYSQLUSER') ?: 'root';
-    $db_pass = env('MYSQLPASSWORD') ?: '';
-    $db_name = env('MYSQLDATABASE') ?: 'mlite';
+    $db_pass = env('MYSQLPASSWORD') ?: 'root';
+    $db_name = env('MYSQLDATABASE') ?: 'mlitersgm';
     $db_port = env('MYSQLPORT') ?: '3306';
 }
 
@@ -64,12 +63,12 @@ define('DBPASS', $db_pass);
 define('DBNAME', $db_name);
 
 // URL Webapps
-define('WEBAPPS_URL', env('APPURL') ?: 'http://localhost:8000/uploads'); // Sesuaikan http://mlite.loc dengan domain atau IP Address server
+define('WEBAPPS_URL', 'https://rsgmha.web.id/uploads'); // Sesuaikan http://mlite.loc dengan domain atau IP Address server
 define('WEBAPPS_PATH', BASE_DIR . '/uploads');
 
 // Multi APP
-define('MULTI_APP', env('MULTIAPP') ?: 'false');
-define('MULTI_APP_REDIRECT', env('MULTIAPP_REDIRECT') ?: '');
+define('MULTI_APP', false);
+define('MULTI_APP_REDIRECT', '');
 
 // Admin cat name
 define('ADMIN', 'admin');
@@ -87,7 +86,7 @@ define('UPLOADS', BASE_DIR . '/uploads');
 define('FILE_LOCK', false);
 
 // Basic modules
-define('BASIC_MODULES', json_encode([
+define('BASIC_MODULES', serialize([
     9 => 'settings',
     0 => 'dashboard',
     1 => 'master',
@@ -98,11 +97,11 @@ define('BASIC_MODULES', json_encode([
     6 => 'farmasi',
     8 => 'users',
     7 => 'modules',
-    10 => 'wagateway'
+   10 => 'wagateway'
 ]));
 
-// Developer mode, mendukung `DEV_MODE` dan key lama `DEVMODE` di .env
-define('DEV_MODE', filter_var(env('DEV_MODE', env('DEVMODE', true)), FILTER_VALIDATE_BOOLEAN));
+// Developer mode
+define('DEV_MODE', false);
 
 define('JWT_SECRET', 'mlite_secret_key_change_me');
 

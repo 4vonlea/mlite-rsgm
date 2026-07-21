@@ -7,15 +7,8 @@ if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROT
     $_SERVER['HTTPS'] = 'on';
 }
 
-if (!defined('BASE_DIR')) {
-    define('BASE_DIR', __DIR__);
-}
+define('BASE_DIR', __DIR__);
 require_once('config.php');
-
-if (!file_exists(BASE_DIR . '/.env')) {
-    header('Location: /install.php');
-    exit;
-}
 
 // Error reporting configuration
 if (DEV_MODE) {
@@ -35,31 +28,18 @@ ob_start(base64_decode('XFN5c3RlbXNcTWFpbjo6dmVyaWZ5TGljZW5zZQ=='));
 try {
     $core = new Systems\Site();
 } catch (Throwable $e) {
-    error_log('mLITE Error: ' . $e->getMessage());
-    http_response_code(500);
-    $message = 'System Error. Please contact administrator.';
-    
-    // Auto-rescue untuk lingkungan PaaS (Papuyu/Docker) jika .env terbuat tapi database belum di-import
-    $errMsg = $e->getMessage();
-    if (strpos($errMsg, 'Base table or view not found') !== false || strpos($errMsg, 'no such table') !== false || strpos($errMsg, 'Unknown database') !== false) {
-        header('Location: /install.php');
+    if (DEV_MODE) {
+        throw $e;
+    } else {
+        error_log('mLITE Error: ' . $e->getMessage());
+        http_response_code(500);
+        // Clean error message for production
+        $message = $e->getMessage();
+        // Remove database name pattern `dbname`.
+        $message = preg_replace('/`[^`]+`\./', '', $message);
+        echo json_encode(['status' => 'error', 'message' => $message]);
         exit;
     }
-    
-    $response = ['status' => 'error', 'message' => $message];
-    
-    if (DEV_MODE) {
-        $devMessage = preg_replace('/`[^`]+`\./', '', $e->getMessage());
-        $response['message'] .= ' Detail: ' . $devMessage;
-        $response['debug'] = [
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-            'trace' => explode("\n", $e->getTraceAsString())
-        ];
-    }
-    
-    echo json_encode($response);
-    exit;
 }
 
 ob_end_flush();

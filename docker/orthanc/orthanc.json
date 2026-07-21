@@ -1,0 +1,24 @@
+{
+  "Name": "OrthancHeadless",
+  "HttpServerEnabled": true,
+  "HttpPort": 8042,
+  "RemoteAccessAllowed": true,
+  "AuthenticationEnabled": true,
+  "RegisteredUsers": {
+    "orthanc": "orthanc"
+  },
+  "DicomWeb": {
+    "Enable": true,
+    "Root": "/dicom-web/",
+    "StowRS": true,
+    "WadoRS": true,
+    "QidoRS": true
+  },
+  "HttpServer": {
+    "EnableCors": true 
+  },
+  "OrthancExplorer": {
+    "Enable": false
+  },
+  "StorageDirectory": "/var/lib/orthanc/db"
+}

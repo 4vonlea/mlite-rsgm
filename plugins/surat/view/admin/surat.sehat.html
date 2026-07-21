@@ -13,7 +13,7 @@
     font-family: georgia;
   }
   @media print {
-    #saveButton, #printPageButton, #signButton {
+    #saveButton, #printPageButton {
       display: none;
     }
     textarea {
@@ -138,7 +138,7 @@
       <tr>
         <td width="200">Jenis Kelamin</td>
         <td> : </td>
-        <td>{if: $pasien.jk == 'L'}Laki-Laki{else}Perempuan{/if}</td>
+        <td>{if: $pasien.jk}Laki-Laki{else}Perempuan{/if}</td>
       </tr>
       <tr>
         <td width="200">Alamat</td>
@@ -207,4 +207,3 @@
 </script>
 <br><br>
 <button id="saveButton" onclick="Simpan()">&#9635; Simpan</button> <button id="printPageButton" onclick="Cetak()">&#128424; Cetak</button>
-<button id="signButton" onclick="window.open('{?=url([ADMIN, 'esignature', 'sign', 'surat.sehat', parseUrl(3)])?}', 'signwindow', 'width=600,height=800'); return false;"> &#x1F4CB; e-Signature</button>

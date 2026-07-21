@@ -241,7 +241,7 @@ class Admin extends AdminModule
 
     $statusMap = [];
     $statusRows = $this->db('mlite_veronisa')
-      ->in('no_rawat', $noRawatList)
+      ->where('no_rawat', $noRawatList)
       ->desc('id')
       ->toArray();
     foreach ($statusRows as $st) {
@@ -249,13 +249,13 @@ class Admin extends AdminModule
     }
 
     $sepMap = [];
-    $sepRows = $this->db('bridging_sep')->in('no_rawat', $noRawatList)->toArray();
+    $sepRows = $this->db('bridging_sep')->where('no_rawat', $noRawatList)->toArray();
     foreach ($sepRows as $s) {
       $sepMap[$s['no_rawat']] = $s['no_sep'] ?? '';
     }
 
     $logRows = $this->db('mlite_apotek_online_resep_response_log')
-      ->in('no_rawat', $noRawatList)
+      ->where('no_rawat', $noRawatList)
       ->select('no_rawat')
       ->toArray();
     $logMap = array_flip(array_column($logRows, 'no_rawat'));
@@ -1635,10 +1635,8 @@ public function postHapusResepResponse()
     if (!empty($this->_getSEPInfo('no_sep', $no_rawat))) {
       $print_sep['bridging_sep'] = $this->db('bridging_sep')->where('no_sep', $this->_getSEPInfo('no_sep', $no_rawat))->oneArray();
       $print_sep['bpjs_prb'] = $this->db('bpjs_prb')->where('no_sep', $this->_getSEPInfo('no_sep', $no_rawat))->oneArray();
-      $print_sep['batas_rujukan'] = '';
-      if (!empty($print_sep['bridging_sep']['tglrujukan'])) {
-          $print_sep['batas_rujukan'] = date('Y-m-d', strtotime($print_sep['bridging_sep']['tglrujukan'] . ' +85 days'));
-      }
+      $batas_rujukan = $this->db('bridging_sep')->select('DATE_ADD(tglrujukan , INTERVAL 85 DAY) AS batas_rujukan')->where('no_sep', $id)->oneArray();
+      $print_sep['batas_rujukan'] = $batas_rujukan['batas_rujukan'];
       switch ($print_sep['bridging_sep']['klsnaik']) {
         case '2':
           $print_sep['kelas_naik'] = 'Kelas VIP';

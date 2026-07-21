@@ -597,18 +597,10 @@ class Admin extends AdminModule
       $stmtPengajuan->execute();
       $pengajuan = $stmtPengajuan->fetchAll(\PDO::FETCH_ASSOC);
 
-      $stmtSupplier = $this->db()->pdo()->prepare("SELECT kode_industri, nama_industri
-        FROM industrifarmasi
-        WHERE kode_industri <> '-'
-        ORDER BY nama_industri ASC");
-      $stmtSupplier->execute();
-      $supplier_master = $stmtSupplier->fetchAll(\PDO::FETCH_ASSOC);
-
       return $this->draw('pemesanan.obat.bmhp.html', [
         'mlite_crud_permissions' => htmlspecialchars_array($this->_crudPermissionsFarmasi()),
         'pemesanan' => htmlspecialchars_array($pemesanan),
         'pengajuan' => htmlspecialchars_array($pengajuan),
-        'supplier_master' => htmlspecialchars_array($supplier_master),
         'action' => url([ADMIN, 'farmasi', 'pemesananobatbmhpsave']),
         'default_no_pemesanan' => htmlspecialchars($this->_generateDocumentNumber('mlite_farmasi_pemesanan_obat', 'no_pemesanan', 'PSN'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
       ]);
@@ -620,7 +612,7 @@ class Admin extends AdminModule
 
       $pengajuan_id = (int)($_POST['pengajuan_id'] ?? 0);
       $jumlah_pesan = (int)($_POST['jumlah_pesan'] ?? 0);
-      $supplier_kode = trim($_POST['supplier_kode'] ?? '');
+      $supplier = trim($_POST['supplier'] ?? '');
 
       $pengajuan = $this->db('mlite_farmasi_pengajuan_obat')->where('id', $pengajuan_id)->oneArray();
       if (!$pengajuan) {
@@ -628,11 +620,8 @@ class Admin extends AdminModule
         redirect(url([ADMIN, 'farmasi', 'pemesananobatbmhp']));
       }
 
-      $supplier_master = $this->db('industrifarmasi')->where('kode_industri', $supplier_kode)->oneArray();
-      $supplier = trim((string)($supplier_master['nama_industri'] ?? ''));
-
-      if ($jumlah_pesan <= 0 || $supplier_kode === '' || $supplier === '') {
-        $this->notify('failure', 'Jumlah pesan dan supplier wajib diisi dari master industri farmasi.');
+      if ($jumlah_pesan <= 0 || $supplier === '') {
+        $this->notify('failure', 'Jumlah pesan dan supplier wajib diisi.');
         redirect(url([ADMIN, 'farmasi', 'pemesananobatbmhp']));
       }
 
@@ -647,7 +636,7 @@ class Admin extends AdminModule
         'pengajuan_id' => $pengajuan_id,
         'kode_brng' => $pengajuan['kode_brng'],
         'tanggal_pemesanan' => $_POST['tanggal_pemesanan'] ?? date('Y-m-d'),
-        'supplier_kode' => $supplier_kode,
+        'supplier_kode' => $_POST['supplier_kode'] ?? '',
         'supplier' => $supplier,
         'jumlah_pengajuan' => (int)$pengajuan['jumlah'],
         'jumlah_pesan' => $jumlah_pesan,
@@ -869,14 +858,6 @@ class Admin extends AdminModule
             $this->notify('failure', 'Anda tidak memiliki hak akses untuk halaman ini.');
             redirect(url([ADMIN, 'farmasi', 'mutasi']));
         }
-
-        if (isset($_POST['farmasi']['pajak_obat_persen'])) {
-            $taxPercent = str_replace(',', '.', trim((string) $_POST['farmasi']['pajak_obat_persen']));
-            $taxPercent = is_numeric($taxPercent) ? (float) $taxPercent : 0;
-            $taxPercent = max(0, min(100, $taxPercent));
-            $_POST['farmasi']['pajak_obat_persen'] = rtrim(rtrim(number_format($taxPercent, 2, '.', ''), '0'), '.');
-        }
-
         foreach ($_POST['farmasi'] as $key => $val) {
             $this->settings('farmasi', $key, $val);
         }
@@ -1232,7 +1213,6 @@ class Admin extends AdminModule
     {
         header('Content-type: text/javascript');
         echo $this->draw(MODULES.'/farmasi/js/admin/daruratstok.js');
-        // echo $this->draw(MODULES.'/farmasi/js/admin/farmasi.js');
         exit();
     }
     /* End Darurat Stok Section */

@@ -87,11 +87,9 @@ class Admin extends Main
     public function loadModule($name, $method, $params = [])
     {
         $row = $this->module->{$name};
-        $userAccess = (string) ($this->getUserInfo('access') ?? '');
-        $userAccessList = array_filter(explode(',', $userAccess));
 
         if ($row && ($details = $this->getModuleInfo($name))) {
-            if (($userAccess === 'all') || in_array($name, $userAccessList, true)) {
+            if (($this->getUserInfo('access') == 'all') || in_array($name, explode(',', $this->getUserInfo('access')))) {
                 $anyMethod = 'any'.ucfirst($method);
                 $method = strtolower($_SERVER['REQUEST_METHOD']).ucfirst($method);
 
@@ -109,22 +107,10 @@ class Admin extends Main
 
                 $this->tpl->set('module', $details);
             } else {
-                http_response_code(403);
-                $this->setNotify('failure', "Akses ke modul '{$name}' ditolak.");
-                $this->tpl->set('module', [
-                    'name' => 'Forbidden',
-                    'dir' => $name,
-                    'content' => '<div class="alert alert-danger">Akses modul ditolak.</div>',
-                ]);
+                exit;
             }
         } else {
-            http_response_code(404);
-            $this->setNotify('failure', "Modul '{$name}' tidak ditemukan.");
-            $this->tpl->set('module', [
-                'name' => 'Not Found',
-                'dir' => $name,
-                'content' => '<div class="alert alert-danger">Modul tidak ditemukan.</div>',
-            ]);
+            exit;
         }
     }
 
@@ -139,10 +125,8 @@ class Admin extends Main
           $id = $_SESSION['mlite_user'];
         }
 
-        $userAccess = (string) ($this->getUserInfo('access', $id, $refresh = false) ?? '');
-        $userAccessList = array_filter(explode(',', $userAccess));
-        if ($userAccess !== 'all') {
-            $modules = array_intersect_key($modules, array_fill_keys($userAccessList, null));
+        if ($this->getUserInfo('access', $id, $refresh = false) != 'all') {
+            $modules = array_intersect_key($modules, array_fill_keys(explode(',', $this->getUserInfo('access')), null));
         }
 
         foreach ($modules as $dir => $module) {
