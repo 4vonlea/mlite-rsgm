@@ -1,3 +1,16 @@
+<style>
+body {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    margin: 20px;
+}
+@media print {
+    body {
+        margin: 0;
+    }
+}
+</style>
+
 <div>
     <table>
         <tr>
@@ -14,20 +27,83 @@
     <hr>
     <table>
         <tr>
-            <td><h3><center>Salinan e-Resep</center></h3></td>
+            <td><h3><center>Resep Elektronik (e-Resep)</center></h3></td>
         </tr>
     </table>
     <div align="right">{?=isset_or($settings.kota)?}, {?=isset_or($tanggal)?}</div>
     <hr>
     <br>
-    Nama   : <b>{?=isset_or($pasien)?}</b><br>
-    Umur   : <b>{?=isset_or($umur)?}</b><br>
-    Alamat : <b>{?=isset_or($alamat)?}</b><br>
+    
+    <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px;">
+        <tr>
+            <td style="width: 80px; padding: 3px 0;">Nama Pasien</td>
+            <td style="padding: 3px 0;">: <b>{?=isset_or($pasien)?}</b></td>
+            <td style="width: 100px; padding: 3px 0; padding-left: 20px;">Dokter Penersep</td>
+            <td style="padding: 3px 0;">: <b>{?=isset_or($dokter.nm_dokter)?}</b></td>
+        </tr>
+        <tr>
+            <td style="padding: 3px 0;">Umur</td>
+            <td style="padding: 3px 0;">: <b>{?=isset_or($umur)?}</b></td>
+            <td style="padding: 3px 0; padding-left: 20px;">SIP Dokter</td>
+            <td style="padding: 3px 0;">: <b>{?=isset_or($dokter.no_ijn_praktek)?}</b></td>
+        </tr>
+        <tr>
+            <td style="padding: 3px 0;">Alamat</td>
+            <td style="padding: 3px 0;">: <b>{?=isset_or($alamat)?}</b></td>
+            <td style="padding: 3px 0; padding-left: 20px;">No. Resep</td>
+            <td style="padding: 3px 0;">: <b>{?=isset_or($resep_obat.no_resep)?}</b></td>
+        </tr>
+    </table>
+    
     <hr>
     {loop: $detail}
     <h3>R/</h3>
           {?=isset_or($value.nama_brng)?} - {?=isset_or($value.jml)?}<br>
           {?=isset_or($value.aturan_pakai)?}<br>
     {/loop}
-    <br><br><br>
+    
+    <hr style="margin: 15px 0; border: 0; border-top: 1px dashed #000;">
+    
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 11px;">
+        <tr>
+            <td style="width: 48%; vertical-align: top; padding-right: 2%;">
+                <table style="width: 100%; border: 1px solid #000; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background-color: #f2f2f2;">
+                            <th colspan="2" style="border: 1px solid #000; padding: 5px; text-align: left; font-weight: bold;">Skrining Resep & Validasi Farmasi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 5px; width: 100px;">Apoteker</td>
+                            <td style="border: 1px solid #000; padding: 5px;">: {if: !empty($resep_obat.petugas_validasi)}<b>{?= $resep_obat.petugas_validasi ?}</b>{else}-{/if}</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 5px; vertical-align: top;">Catatan Skrining</td>
+                            <td style="border: 1px solid #000; padding: 5px;">: {if: !empty($resep_obat.catatan_skrining)}{?= $resep_obat.catatan_skrining ?}{else}-{/if}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+            <td style="width: 48%; vertical-align: top; padding-left: 2%;">
+                <table style="width: 100%; border: 1px solid #000; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background-color: #f2f2f2;">
+                            <th colspan="2" style="border: 1px solid #000; padding: 5px; text-align: left; font-weight: bold;">Tanda Serah Terima Obat</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 5px; width: 100px;">Petugas Penyerahan</td>
+                            <td style="border: 1px solid #000; padding: 5px;">: {if: !empty($resep_obat.petugas_penyerahan)}<b>{?= $resep_obat.petugas_penyerahan ?}</b>{else}-{/if}</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 5px;">Waktu Penyerahan</td>
+                            <td style="border: 1px solid #000; padding: 5px;">: {if: !empty($resep_obat.tgl_penyerahan) && $resep_obat.tgl_penyerahan != '0000-00-00'}{?= dateIndonesia($resep_obat.tgl_penyerahan) ?} {?= $resep_obat.jam_penyerahan ?}{else}-{/if}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </table>
 </div>

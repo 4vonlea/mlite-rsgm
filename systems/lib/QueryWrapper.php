@@ -75,6 +75,9 @@ class QueryWrapper
             ], $options);
         static::$db = new \PDO($dsn, $user, $pass);
         static::$db->setAttribute(\PDO::ATTR_ERRMODE, static::$options['error_mode']);
+        if (strpos($dsn, 'mysql') !== false) {
+            static::$db->exec("SET SESSION sql_mode = (SELECT REPLACE(REPLACE(@@sql_mode, 'NO_ZERO_DATE', ''), 'NO_ZERO_IN_DATE', ''))");
+        }
     }
     
     public static function close()

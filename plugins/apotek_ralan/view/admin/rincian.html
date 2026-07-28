@@ -1,4 +1,107 @@
-<h4>Pemberian Obat</h4>
+<div id="rincian-data"
+  data-nm-pasien="{?= htmlspecialchars($pasien.nm_pasien, ENT_QUOTES) ?}"
+  data-no-rm="{?= htmlspecialchars($pasien.no_rkm_medis, ENT_QUOTES) ?}"
+  data-jk-umur="{?= htmlspecialchars($pasien.jk.' / '.$pasien.umur, ENT_QUOTES) ?}"
+  data-alergi="{?= htmlspecialchars($pasien.alergi, ENT_QUOTES) ?}"
+  data-petugas="{?= htmlspecialchars($this->core->getUserInfo('fullname', null, true), ENT_QUOTES) ?}"
+  style="display:none;"></div>
+<div class="panel panel-info" style="margin-top: 15px; border-color: #31708f;">
+  <div class="panel-heading" style="background-color: #d9edf7; border-color: #bce8f1; color: #31708f;">
+    <h3 class="panel-title"><i class="fa fa-user-md"></i> Skrining Resep & Informasi Klinis Pasien</h3>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-md-4" style="border-right: 1px solid #eee;">
+        <strong><i class="fa fa-id-card"></i> Identitas Pasien</strong>
+        <table class="table table-condensed table-hover" style="margin-top: 10px; margin-bottom: 0;">
+          <tr><td width="110">Nama Pasien</td><td>: <strong>{?= $pasien.nm_pasien ?}</strong></td></tr>
+          <tr><td>No. RM</td><td>: {?= $pasien.no_rkm_medis ?}</td></tr>
+          <tr><td>JK / Umur</td><td>: {?= $pasien.jk ?} / {?= $pasien.umur ?}</td></tr>
+          <tr><td>Alamat</td><td>: {?= $pasien.alamat ?}</td></tr>
+        </table>
+      </div>
+      <div class="col-md-4" style="border-right: 1px solid #eee;">
+        <strong><i class="fa fa-balance-scale"></i> Antropometri & Alergi</strong>
+        <table class="table table-condensed table-hover" style="margin-top: 10px; margin-bottom: 0;">
+          <tr><td width="130">Berat Badan (BB)</td><td>: <span class="label label-primary" style="font-size:12px;">{?= $pasien.berat ?} Kg</span></td></tr>
+          <tr><td>Tinggi Badan (TB)</td><td>: <span class="label label-primary" style="font-size:12px;">{?= $pasien.tinggi ?} Cm</span></td></tr>
+          <tr><td>Riwayat Alergi</td><td>: 
+            {if: $pasien.alergi == 'Tidak Ada Alergi'}
+              <span class="label label-success" style="font-size:12px;">Tidak Ada Alergi</span>
+            {else}
+              <span class="label label-danger" style="font-size:12px; white-space: normal; display: inline-block; text-align: left;">{?= $pasien.alergi ?}</span>
+            {/if}
+          </td></tr>
+        </table>
+      </div>
+      <div class="col-md-4">
+        <strong><i class="fa fa-stethoscope"></i> Riwayat Diagnosa (ICD-10)</strong>
+        <div style="max-height: 120px; overflow-y: auto; margin-top: 10px;">
+          <ul class="list-unstyled" style="margin-bottom: 0; padding-left: 0;">
+            {if: !empty($diagnosa)}
+              {loop: $diagnosa}
+              <li style="margin-bottom: 5px;"><span class="label label-info">{?= $value.kd_penyakit ?}</span> {?= $value.nm_penyakit ?} <small class="text-muted">({?= $value.tgl_registrasi ?})</small></li>
+              {/loop}
+            {else}
+              <li class="text-muted" style="font-style: italic;">Tidak ada riwayat diagnosa</li>
+            {/if}
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row" style="margin-top: 15px;">
+      <div class="col-md-12">
+        <div class="panel-group" id="accordion-screening" style="margin-bottom: 0;">
+          <div class="panel panel-default" style="border-color: #ddd;">
+            <div class="panel-heading" style="background-color: #f5f5f5; padding: 6px 15px;">
+              <h4 class="panel-title" style="font-size: 13px;">
+                <a data-toggle="collapse" data-parent="#accordion-screening" href="#collapse-riwayat-obat" style="display: block; text-decoration: none;">
+                  <i class="fa fa-history"></i> <strong>Riwayat Pengobatan Pasien (50 Obat Terakhir - Klik untuk Detail)</strong>
+                  <span class="pull-right"><i class="fa fa-chevron-down"></i></span>
+                </a>
+              </h4>
+            </div>
+            <div id="collapse-riwayat-obat" class="panel-collapse collapse">
+              <div class="panel-body" style="max-height: 250px; overflow-y: auto; padding: 10px;">
+                <div class="table-responsive">
+                  <table class="table table-striped table-bordered table-condensed" style="margin-bottom: 0;">
+                    <thead>
+                      <tr class="info">
+                        <th width="100">Tanggal</th>
+                        <th>Nama Obat / Alkes</th>
+                        <th width="80">Jumlah</th>
+                        <th>Aturan Pakai</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {if: !empty($riwayat_obat)}
+                        {loop: $riwayat_obat}
+                        <tr>
+                          <td>{?= $value.tgl_perawatan ?}</td>
+                          <td><strong>{?= $value.nama_brng ?}</strong></td>
+                          <td>{?= $value.jml ?}</td>
+                          <td>{?= empty($value.aturan_pakai) ? '-' : $value.aturan_pakai ?}</td>
+                        </tr>
+                        {/loop}
+                      {else}
+                        <tr>
+                          <td colspan="4" class="text-center text-muted" style="font-style: italic; padding: 10px;">Belum ada riwayat pengobatan</td>
+                        </tr>
+                      {/if}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h4>Pemberian Obat <button type="button" class="btn btn-success btn-xs cetak_semua_etiket" data-no_rawat="{?=convertNoRawat($no_rawat)?}"><i class="fa fa-print"></i> Cetak Semua Etiket</button></h4>
 <h5>Non Racikan</h5>
 <div class="table-responsive no-margin">
   <table class="table table-striped table-bordered no-padding" width="100%">
@@ -99,11 +202,23 @@
         <td>{?=isset_or($value.tgl_peresepan)?} {?=isset_or($value.jam_peresepan)?}</td>
         <td colspan="3">
           <button type="button" class="btn btn-danger btn-xs {if: $value.tgl_perawatan !== '0000-00-00' || $this->core->getUserInfo('role') != 'admin'}disabled{else}hapus_resep_obat{/if}" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_peresepan)?}" data-jam_peresepan="{?=isset_or($value.jam_peresepan)?}" data-no_resep="{?=isset_or($value.no_resep)?}"><i class="fa fa-close"></i><span class="hidden-xs"> Hapus</span></button>
-          <button type="button" class="btn btn-success btn-xs {if: $value.tgl_perawatan !== '0000-00-00' && $value.tgl_penyerahan !== '0000-00-00'}disabled{else}validasi_resep_obat{/if}" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_peresepan)?}" data-jam_peresepan="{?=isset_or($value.jam_peresepan)?}" data-no_resep="{?=isset_or($value.no_resep)?}" data-penyerahan="{if: $value.tgl_perawatan !== '0000-00-00' && $value.tgl_penyerahan == '0000-00-00'}penyerahan{/if}"><i class="fa fa-check"></i><span class="hidden-xs"> {if: $value.tgl_perawatan !== '0000-00-00' && $value.tgl_penyerahan == '0000-00-00'}Penyerahan{else}Validasi{/if}</span></button>
+          {if: $value.tgl_perawatan === '0000-00-00'}
+          <button type="button" class="btn btn-success btn-xs buka_modal_validasi" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_peresepan)?}" data-jam_peresepan="{?=isset_or($value.jam_peresepan)?}" data-no_resep="{?=isset_or($value.no_resep)?}" data-penyerahan=""><i class="fa fa-search"></i><span class="hidden-xs"> Skrining &amp; Validasi</span></button>
+          {else}{if: $value.tgl_penyerahan === '0000-00-00'}
+          <button type="button" class="btn btn-warning btn-xs buka_modal_penyerahan" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_peresepan)?}" data-jam_peresepan="{?=isset_or($value.jam_peresepan)?}" data-no_resep="{?=isset_or($value.no_resep)?}" data-penyerahan="penyerahan"><i class="fa fa-hand-paper-o"></i><span class="hidden-xs"> Serahkan Obat</span></button>
+          {/if}{/if}
           <button type="button" class="btn btn-danger btn-xs cetak_eresep" data-no_rawat="{?=convertNoRawat($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_perawatan)?}" data-jam_peresepan="{?=isset_or($value.jam)?}" data-tipe="nonracikan"><i class="fa fa-print"></i><span class="hidden-xs"> e-Resep</span></button>
           {if: $value.tgl_perawatan !== '0000-00-00'}
           <button type="button" class="btn btn-primary btn-xs tambah_item_barang" data-no_resep="{?=isset_or($value.no_resep)?}" data-no_rawat="{?=convertNoRawat($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_perawatan)?}" data-jam_peresepan="{?=isset_or($value.jam)?}" data-tipe="nonracikan"><i class="fa fa-plus"></i></button>
           {/if}
+          <div style="margin-top:5px;">
+            {if: $value.tgl_perawatan !== '0000-00-00'}
+            <small class="text-success"><i class="fa fa-check-circle"></i> <strong>Divalidasi:</strong> {?= $value.tgl_perawatan ?} {?= $value.jam ?} &mdash; oleh <strong>{?= isset_or($value.petugas_validasi) ?}</strong></small><br>
+            {/if}
+            {if: $value.tgl_penyerahan !== '0000-00-00'}
+            <small class="text-primary"><i class="fa fa-check-circle"></i> <strong>Diserahkan:</strong> {?= $value.tgl_penyerahan ?} {?= $value.jam_penyerahan ?} &mdash; oleh <strong>{?= isset_or($value.petugas_penyerahan) ?}</strong></small>
+            {/if}
+          </div>
         </td>
       </tr>
       <tr>
@@ -172,13 +287,27 @@
         <td>{?=isset_or($value.tgl_peresepan)?} {?=isset_or($value.jam_peresepan)?}</td>
         <td colspan="3">
           {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_delete', 'apotek_ralan') == true}<button type="button" class="btn btn-danger btn-xs {if: $value.tgl_perawatan !== '0000-00-00'}disabled{else}hapus_resep_obat{/if}" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_peresepan)?}" data-jam_peresepan="{?=isset_or($value.jam_peresepan)?}" data-no_resep="{?=isset_or($value.no_resep)?}"><i class="fa fa-close"></i><span class="hidden-xs"> Hapus</span></button>{/if}
-          {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_update', 'apotek_ralan') == true}<button type="button" class="btn btn-success btn-xs {if: $value.tgl_perawatan !== '0000-00-00' && $value.tgl_penyerahan !== '0000-00-00'}disabled{else}validasi_resep_obat{/if}" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_peresepan)?}" data-jam_peresepan="{?=isset_or($value.jam_peresepan)?}" data-no_resep="{?=isset_or($value.no_resep)?}" data-penyerahan="{if: $value.tgl_perawatan !== '0000-00-00' && $value.tgl_penyerahan == '0000-00-00'}penyerahan{/if}"><i class="fa fa-check"></i><span class="hidden-xs"> {if: $value.tgl_perawatan !== '0000-00-00' && $value.tgl_penyerahan == '0000-00-00'}Penyerahan{else}Validasi{/if}</span></button>{/if}
+          {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_update', 'apotek_ralan') == true}
+          {if: $value.tgl_perawatan === '0000-00-00'}
+          <button type="button" class="btn btn-success btn-xs buka_modal_validasi" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_peresepan)?}" data-jam_peresepan="{?=isset_or($value.jam_peresepan)?}" data-no_resep="{?=isset_or($value.no_resep)?}" data-penyerahan=""><i class="fa fa-search"></i><span class="hidden-xs"> Skrining &amp; Validasi</span></button>
+          {else}{if: $value.tgl_penyerahan === '0000-00-00'}
+          <button type="button" class="btn btn-warning btn-xs buka_modal_penyerahan" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_peresepan)?}" data-jam_peresepan="{?=isset_or($value.jam_peresepan)?}" data-no_resep="{?=isset_or($value.no_resep)?}" data-penyerahan="penyerahan"><i class="fa fa-hand-paper-o"></i><span class="hidden-xs"> Serahkan Obat</span></button>
+          {/if}{/if}
+          {/if}
           <button type="button" class="btn btn-danger btn-xs cetak_eresep" data-no_rawat="{?=convertNoRawat($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_perawatan)?}" data-jam_peresepan="{?=isset_or($value.jam)?}" data-tipe="racikan"><i class="fa fa-print"></i><span class="hidden-xs"> e-Resep</span></button>
           {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_create', 'apotek_ralan') == true}
           {if: $value.tgl_perawatan !== '0000-00-00'}
           <button type="button" class="btn btn-primary btn-xs tambah_item_barang" data-no_resep="{?=isset_or($value.no_resep)?}" data-no_racik="{?=isset_or($value.no_racik)?}" data-jml_dr="{?=isset_or($value.jml_dr)?}" data-no_rawat="{?=convertNoRawat($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_perawatan)?}" data-jam_peresepan="{?=isset_or($value.jam)?}" data-tipe="racikan"><i class="fa fa-plus"></i></button>
           {/if}
           {/if}
+          <div style="margin-top:5px;">
+            {if: $value.tgl_perawatan !== '0000-00-00'}
+            <small class="text-success"><i class="fa fa-check-circle"></i> <strong>Divalidasi:</strong> {?= $value.tgl_perawatan ?} {?= $value.jam ?} &mdash; oleh <strong>{?= isset_or($value.petugas_validasi) ?}</strong></small><br>
+            {/if}
+            {if: $value.tgl_penyerahan !== '0000-00-00'}
+            <small class="text-primary"><i class="fa fa-check-circle"></i> <strong>Diserahkan:</strong> {?= $value.tgl_penyerahan ?} {?= $value.jam_penyerahan ?} &mdash; oleh <strong>{?= isset_or($value.petugas_penyerahan) ?}</strong></small>
+            {/if}
+          </div>
         </td>
       </tr>
       <tr>
@@ -287,6 +416,166 @@
     </div>
   </div>
 </div>
+<!-- Modal Skrining & Validasi Resep -->
+<div class="modal fade" id="modal-validasi-resep" tabindex="-1" role="dialog" aria-labelledby="modalValidasiLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color:#dff0d8; border-bottom:2px solid #3c763d;">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" style="color:#3c763d;"><i class="fa fa-search"></i> <strong>Skrining & Validasi Resep</strong></h4>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="panel panel-default" style="border-left:4px solid #337ab7;">
+              <div class="panel-heading" style="background:#f5f5f5; padding:8px 15px;"><strong><i class="fa fa-id-card"></i> Identitas Pasien</strong></div>
+              <div class="panel-body" style="padding:10px 15px;">
+                <table class="table table-condensed" style="margin-bottom:0;">
+                  <tr><td width="110"><small>Nama</small></td><td><strong id="val-nm-pasien">-</strong></td></tr>
+                  <tr><td><small>No. RM</small></td><td id="val-no-rm">-</td></tr>
+                  <tr><td><small>JK / Umur</small></td><td id="val-jk-umur">-</td></tr>
+                  <tr><td><small>Alergi</small></td><td id="val-alergi">-</td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="panel panel-default" style="border-left:4px solid #f0ad4e;">
+              <div class="panel-heading" style="background:#f5f5f5; padding:8px 15px;"><strong><i class="fa fa-medkit"></i> Daftar Obat yang Diresepkan</strong></div>
+              <div class="panel-body" style="padding:5px;">
+                <table class="table table-condensed table-bordered table-striped" style="margin-bottom:0; font-size:12px;">
+                  <thead><tr><th>Nama Obat</th><th>Jml</th><th>Aturan Pakai</th></tr></thead>
+                  <tbody id="val-tabel-obat"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel panel-warning" style="border-left:4px solid #d9534f;">
+          <div class="panel-heading" style="background:#fcf8e3; padding:8px 15px;"><strong><i class="fa fa-clipboard"></i> Checklist Skrining Apoteker</strong></div>
+          <div class="panel-body" style="padding:10px 20px;">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="checkbox"><label><input type="checkbox" class="skrining-check" id="sk1"> Identitas pasien telah diverifikasi dan sesuai</label></div>
+                <div class="checkbox"><label><input type="checkbox" class="skrining-check" id="sk2"> Nama obat, dosis, dan bentuk sediaan sesuai resep</label></div>
+                <div class="checkbox"><label><input type="checkbox" class="skrining-check" id="sk3"> Riwayat alergi telah diperhatikan</label></div>
+              </div>
+              <div class="col-md-6">
+                <div class="checkbox"><label><input type="checkbox" class="skrining-check" id="sk4"> Tidak ada kontraindikasi atau interaksi obat signifikan</label></div>
+                <div class="checkbox"><label><input type="checkbox" class="skrining-check" id="sk5"> Stok obat mencukupi di depo farmasi</label></div>
+                <div class="checkbox"><label><input type="checkbox" class="skrining-check" id="sk6"> Instruksi/aturan pakai sudah jelas dan lengkap</label></div>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top:10px;">
+              <label for="catatan-validasi-input"><i class="fa fa-pencil"></i> Catatan Apoteker (opsional):</label>
+              <textarea class="form-control" id="catatan-validasi-input" rows="2" placeholder="Tulis catatan skrining jika diperlukan..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div id="val-alert-skrining" class="alert alert-danger" style="display:none; margin-bottom:0;">
+          <i class="fa fa-exclamation-triangle"></i> Semua checklist skrining harus dicentang sebelum melakukan validasi resep.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span class="text-muted pull-left"><i class="fa fa-user"></i> Apoteker: <strong id="val-nama-apoteker"></strong></span>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Batal</button>
+        <button type="button" class="btn btn-success" id="btn-validasi-submit"><i class="fa fa-check-circle"></i> <strong>Validasi Resep</strong></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Double-Check & Penyerahan Obat -->
+<div class="modal fade" id="modal-penyerahan-obat" tabindex="-1" role="dialog" aria-labelledby="modalPenyerahanLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color:#d9edf7; border-bottom:2px solid #31708f;">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" style="color:#31708f;"><i class="fa fa-hand-paper-o"></i> <strong>Double-Check &amp; Penyerahan Obat</strong></h4>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="panel panel-default" style="border-left:4px solid #337ab7;">
+              <div class="panel-heading" style="background:#f5f5f5; padding:8px 15px;"><strong><i class="fa fa-id-card"></i> Verifikasi Identitas (Double Check)</strong></div>
+              <div class="panel-body" style="padding:10px 15px;">
+                <table class="table table-condensed" style="margin-bottom:0;">
+                  <tr><td width="110"><small>Nama</small></td><td><strong id="peny-nm-pasien">-</strong></td></tr>
+                  <tr><td><small>No. RM</small></td><td id="peny-no-rm">-</td></tr>
+                  <tr><td><small>JK / Umur</small></td><td id="peny-jk-umur">-</td></tr>
+                  <tr><td><small>Alergi</small></td><td id="peny-alergi">-</td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="panel panel-default" style="border-left:4px solid #5cb85c;">
+              <div class="panel-heading" style="background:#f5f5f5; padding:8px 15px;"><strong><i class="fa fa-medkit"></i> Obat yang Diserahkan</strong></div>
+              <div class="panel-body" style="padding:5px;">
+                <table class="table table-condensed table-bordered table-striped" style="margin-bottom:0; font-size:12px;">
+                  <thead><tr><th>Nama Obat</th><th>Jml</th><th>Aturan Pakai</th></tr></thead>
+                  <tbody id="peny-tabel-obat"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel panel-info" style="border-left:4px solid #5bc0de;">
+          <div class="panel-heading" style="background:#d9edf7; padding:8px 15px;"><strong><i class="fa fa-handshake-o"></i> Tanda Serah Terima Obat</strong></div>
+          <div class="panel-body" style="padding:10px 20px;">
+            <p class="text-muted" style="font-style:italic; font-size:12px; margin-bottom:10px;">Petugas farmasi menyatakan telah menyerahkan obat dan memberikan edukasi penggunaan kepada pasien/keluarga.</p>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="checkbox"><label><input type="checkbox" class="penyerahan-check" id="ps1"> Pasien/keluarga telah menerima semua obat</label></div>
+                <div class="checkbox"><label><input type="checkbox" class="penyerahan-check" id="ps2"> Informasi cara penggunaan obat telah diberikan</label></div>
+              </div>
+              <div class="col-md-6">
+                <div class="checkbox"><label><input type="checkbox" class="penyerahan-check" id="ps3"> Informasi penyimpanan obat telah diberikan</label></div>
+                <div class="checkbox"><label><input type="checkbox" class="penyerahan-check" id="ps4"> Efek samping yang perlu diwaspadai telah dijelaskan</label></div>
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px;">
+              <div class="col-md-5">
+                <div class="form-group">
+                  <label for="nama-penerima-input"><i class="fa fa-user"></i> Nama Penerima Obat: <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="nama-penerima-input" placeholder="Nama lengkap penerima obat">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label for="hubungan-penerima-input"><i class="fa fa-users"></i> Hubungan dengan Pasien:</label>
+                  <select class="form-control" id="hubungan-penerima-input">
+                    <option value="Pasien Sendiri">Pasien Sendiri</option>
+                    <option value="Keluarga (Suami/Istri)">Keluarga (Suami/Istri)</option>
+                    <option value="Keluarga (Anak)">Keluarga (Anak)</option>
+                    <option value="Keluarga (Orang Tua)">Keluarga (Orang Tua)</option>
+                    <option value="Keluarga (Saudara)">Keluarga (Saudara)</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label for="catatan-penyerahan-input"><i class="fa fa-pencil"></i> Catatan:</label>
+                  <textarea class="form-control" id="catatan-penyerahan-input" rows="1" placeholder="Catatan tambahan..."></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="peny-alert-skrining" class="alert alert-danger" style="display:none; margin-bottom:0;">
+          <i class="fa fa-exclamation-triangle"></i> Semua checklist dan nama penerima harus diisi sebelum menyerahkan obat.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span class="text-muted pull-left"><i class="fa fa-user"></i> Petugas: <strong id="peny-nama-petugas"></strong></span>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Batal</button>
+        <button type="button" class="btn btn-primary" id="btn-penyerahan-submit"><i class="fa fa-hand-paper-o"></i> <strong>Serahkan Obat</strong></button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="cetakEtiket" tabindex="-1" role="dialog" aria-labelledby="waModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -315,7 +604,24 @@
       var tgl_peresepan = $(this).attr("data-tgl_peresepan");
       var jam_peresepan = $(this).attr("data-jam_peresepan");
       var tipe = $(this).attr("data-tipe");
-      $("#cetakEtiket").modal('show').html('<div style="text-align:center;margin:20px auto;width:500px;height:360px;"><iframe src="' + baseURL + '/apotek_ralan/cetaklabel/' + kode_brng +'/' + no_rawat +'/' + tgl_peresepan +'/' + jam_peresepan + '/' + tipe +'?t=' + mlite.token + '" frameborder="no" width="100%" height="100%"></iframe></div>');
+      var $iframe = $('<iframe src="' + baseURL + '/apotek_ralan/cetaklabel/' + kode_brng +'/' + no_rawat +'/' + tgl_peresepan +'/' + jam_peresepan + '/' + tipe +'?t=' + mlite.token + '" frameborder="no" width="100%" height="100%"></iframe>');
+      $("#cetakEtiket .cetak-kartu").html('<div style="text-align:center;margin:0 auto;width:100%;height:360px;"></div>').find('div').append($iframe);
+      $("#cetakEtiket").modal('show');
+      $iframe.on('load', function() {
+          this.contentWindow.focus();
+          this.contentWindow.print();
+      });
+  })
+  $(".cetak_semua_etiket").click(function(){
+      var baseURL = mlite.url + '/' + mlite.admin;
+      var no_rawat = $(this).attr("data-no_rawat");
+      var $iframe = $('<iframe src="' + baseURL + '/apotek_ralan/cetaklabel/all/' + no_rawat + '/0/0/all?t=' + mlite.token + '" frameborder="no" width="100%" height="100%"></iframe>');
+      $("#cetakEtiket .cetak-kartu").html('<div style="text-align:center;margin:0 auto;width:100%;height:360px;"></div>').find('div').append($iframe);
+      $("#cetakEtiket").modal('show');
+      $iframe.on('load', function() {
+          this.contentWindow.focus();
+          this.contentWindow.print();
+      });
   })
   $(".cetak_eresep").click(function(){
       var baseURL = mlite.url + '/' + mlite.admin;
@@ -323,6 +629,13 @@
       var tgl_peresepan = $(this).attr("data-tgl_peresepan");
       var jam_peresepan = $(this).attr("data-jam_peresepan");
       var tipe = $(this).attr("data-tipe");
-      $("#cetakEtiket").modal('show').html('<div style="text-align:center;margin:20px auto;width:700px;height:900px;"><iframe src="' + baseURL + '/apotek_ralan/cetakeresep/' + no_rawat +'/' + tipe +'/' + tgl_peresepan + '/' + jam_peresepan + '?t=' + mlite.token + '" frameborder="no" width="100%" height="100%"></iframe></div>');
+      var $iframe = $('<iframe src="' + baseURL + '/apotek_ralan/cetakeresep/' + no_rawat +'/' + tipe +'/' + tgl_peresepan + '/' + jam_peresepan + '?t=' + mlite.token + '" frameborder="no" width="100%" height="100%"></iframe>');
+      $("#cetakEtiket .cetak-kartu").html('<div style="text-align:center;margin:0 auto;width:100%;height:600px;"></div>').find('div').append($iframe);
+      $("#cetakEtiket").modal('show');
+      $iframe.on('load', function() {
+          this.contentWindow.focus();
+          this.contentWindow.print();
+      });
   })
+
 </script>
