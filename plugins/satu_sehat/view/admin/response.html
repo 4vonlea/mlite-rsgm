@@ -38,12 +38,11 @@
                 <form action="">
                     <li style="padding-left:5px;padding-right:5px;">
                         <label style="font-size:12px;margin-bottom:2px;">Tanggal Awal</label>
-                        <input type="text" id="tanggal_awal" class="form-control tanggal" name="tanggal_awal" required>
+                        <input type="text" id="tanggal_awal" class="form-control tanggal" name="tanggal_awal" value="{?=(isset($_GET['tanggal_awal']) && $_GET['tanggal_awal'] !== '') ? $_GET['tanggal_awal'] : date('Y-m-d')?}" required>
                     </li>
                     <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
                         <label style="font-size:12px;margin-bottom:2px;">Tanggal Akhir</label>
-                        <input type="text" id="tanggal_akhir" class="form-control tanggal" name="tanggal_akhir"
-                            required>
+                        <input type="text" id="tanggal_akhir" class="form-control tanggal" name="tanggal_akhir" value="{?=(isset($_GET['tanggal_akhir']) && $_GET['tanggal_akhir'] !== '') ? $_GET['tanggal_akhir'] : date('Y-m-d')?}" required>
                     </li>
                     <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
                         <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
@@ -52,8 +51,10 @@
                 </form>
             </ul>
         </div>
-        <h3 class="panel-title">Data Response Satu Sehat <a href="{?=url('/satu-sehat/forward-tanggal')?}"
-                class="btn btn-info btn-xs" target="_blank"><i class="fa fa-send"></i> Kirim Massal</a></h3>
+        <h3 class="panel-title">Data Response Satu Sehat 
+            <a href="{?=url('/satu-sehat/forward-tanggal')?}" class="btn btn-info btn-xs" target="_blank"><i class="fa fa-send"></i> Kirim Massal</a>
+            <a href="{?=url([ADMIN, 'satu_sehat', 'rekap'])?}?t={?=$_SESSION['token']?}&tanggal_awal={?=(isset($_GET['tanggal_awal']) && $_GET['tanggal_awal'] !== '') ? $_GET['tanggal_awal'] : date('Y-m-d')?}&tanggal_akhir={?=(isset($_GET['tanggal_akhir']) && $_GET['tanggal_akhir'] !== '') ? $_GET['tanggal_akhir'] : date('Y-m-d')?}" class="btn btn-success btn-xs" id="btn-rekap-excel" target="_blank"><i class="fa fa-file-excel-o"></i> Rekap Excel</a>
+        </h3>
     </div>
     <div class="panel-body">
         <div class="row">
@@ -137,10 +138,27 @@
         const urlParams = new URLSearchParams(window.location.search);
         const tanggal_awal = urlParams.get('tanggal_awal') || '';
         const tanggal_akhir = urlParams.get('tanggal_akhir') || '';
+        $('.tanggal').datetimepicker({
+            defaultDate: '{?=date('Y-m-d')?}',
+            format: 'YYYY-MM-DD',
+            locale: 'id'
+        });
+
         // Prefill inputs when available
         if (tanggal_awal) $('#tanggal_awal').val(tanggal_awal);
         if (tanggal_akhir) $('#tanggal_akhir').val(tanggal_akhir);
         var baseURL = mlite.url + '/' + mlite.admin;
+        
+        function updateRekapUrl() {
+            var tgl_awal = $('#tanggal_awal').val() || '';
+            var tgl_akhir = $('#tanggal_akhir').val() || '';
+            var url = baseURL + '/satu_sehat/rekap?t=' + mlite.token + '&tanggal_awal=' + encodeURIComponent(tgl_awal) + '&tanggal_akhir=' + encodeURIComponent(tgl_akhir);
+            $('#btn-rekap-excel').attr('href', url);
+        }
+        $('#tanggal_awal, #tanggal_akhir').on('change dp.change', function() {
+            updateRekapUrl();
+        });
+        updateRekapUrl();
         var urlapi = baseURL + '/satu_sehat/responseapi?t=' + mlite.token + '&tanggal_awal=' + encodeURIComponent(tanggal_awal) + '&tanggal_akhir=' + encodeURIComponent(tanggal_akhir);
         table = $('.display').DataTable({
             processing: true,
@@ -631,12 +649,4 @@
         });
     });
 </script>
-<script type="text/javascript">
-    $(function () {
-        $('.tanggal').datetimepicker({
-            defaultDate: '{?=date('Y-m-d')?}',
-            format: 'YYYY-MM-DD',
-            locale: 'id'
-        });
-    });
-</script>
+

@@ -6969,6 +6969,201 @@ class Admin extends AdminModule
     return $response;
   }
 
+  public function getRekap()
+  {
+    $start_date = isset($_GET['tanggal_awal']) && $_GET['tanggal_awal'] !== '' ? $_GET['tanggal_awal'] : date('Y-m-d');
+    $end_date = isset($_GET['tanggal_akhir']) && $_GET['tanggal_akhir'] !== '' ? $_GET['tanggal_akhir'] : $start_date;
+
+    // Validasi format YYYY-MM-DD
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start_date)) {
+      $start_date = date('Y-m-d');
+    }
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $end_date)) {
+      $end_date = $start_date;
+    }
+    // Pastikan urutan start <= end
+    if ($start_date > $end_date) {
+      $tmp = $start_date;
+      $start_date = $end_date;
+      $end_date = $tmp;
+    }
+
+    $query = $this->db('reg_periksa')
+      ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+      ->join('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
+      ->leftJoin('pegawai', 'pegawai.nik = reg_periksa.kd_dokter')
+      ->where('reg_periksa.tgl_registrasi', '>=', $start_date)
+      ->where('reg_periksa.tgl_registrasi', '<=', $end_date)
+      ->where('stts', '!=', 'Batal')
+      ->where('status_lanjut', 'Ralan')
+      ->asc('reg_periksa.tgl_registrasi')
+      ->asc('reg_periksa.jam_reg');
+
+    $rows = $query->select(['reg_periksa.*', 'nm_pasien' => 'pasien.nm_pasien', 'no_ktp_pasien' => 'pasien.no_ktp', 'nm_dokter' => 'dokter.nm_dokter', 'no_ktp_dokter' => 'pegawai.no_ktp'])
+      ->toArray();
+
+    $rekap_data = [];
+    $last_date = '';
+    $no = 1;
+
+    // Initialize totals
+    $totals = [
+        'id_encounter' => 0,
+        'id_condition' => 0,
+        'id_clinical_impression' => 0,
+        'id_observation_ttvtensi' => 0,
+        'id_observation_ttvnadi' => 0,
+        'id_observation_ttvrespirasi' => 0,
+        'id_observation_ttvsuhu' => 0,
+        'id_observation_ttvspo2' => 0,
+        'id_observation_ttvgcs' => 0,
+        'id_observation_ttvtinggi' => 0,
+        'id_observation_ttvberat' => 0,
+        'id_observation_ttvperut' => 0,
+        'id_observation_ttvkesadaran' => 0,
+        'id_procedure' => 0,
+        'id_composition' => 0,
+        'id_immunization' => 0,
+        'id_medication_request' => 0,
+        'id_medication_dispense' => 0,
+        'id_medication_statement' => 0,
+        'id_rad_request' => 0,
+        'id_rad_specimen' => 0,
+        'id_rad_observation' => 0,
+        'id_rad_diagnostic' => 0,
+        'id_imaging_study' => 0,
+        'id_lab_pk_request' => 0,
+        'id_lab_pk_specimen' => 0,
+        'id_lab_pk_observation' => 0,
+        'id_lab_pk_diagnostic' => 0,
+        'id_careplan' => 0,
+        'id_allergy' => 0,
+        'id_questionnaire' => 0,
+    ];
+
+    foreach ($rows as $row) {
+      $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $row['no_rawat'])->oneArray();
+      
+      $row['no_rawat_converted'] = convertNoRawat($row['no_rawat']);
+      $row['nm_poli'] = $this->core->getPoliklinikInfo('nm_poli', $row['kd_poli']);
+      
+      $mlite_billing = $this->db('mlite_billing')->where('no_rawat', $row['no_rawat'])->oneArray();
+      $pemeriksaan_ralan = $this->db('pemeriksaan_ralan')->where('no_rawat', $row['no_rawat'])->oneArray();
+      $tgl_pulang = isset_or($mlite_billing['tgl_billing'], isset_or($pemeriksaan_ralan['tgl_perawatan'], ''));
+
+      $diagnosa_pasien = $this->db('diagnosa_pasien')
+        ->join('penyakit', 'penyakit.kd_penyakit=diagnosa_pasien.kd_penyakit')
+        ->where('no_rawat', $row['no_rawat'])
+        ->where('diagnosa_pasien.status', $row['status_lanjut'])
+        ->where('prioritas', '1')
+        ->oneArray();
+
+      // Determine Status/Keterangan
+      $id_encounter = isset_or($mlite_satu_sehat_response['id_encounter'], '');
+      $id_condition = isset_or($mlite_satu_sehat_response['id_condition'], '');
+      
+      $ket = '';
+      if ($id_encounter == '') {
+          if ($tgl_pulang == '' && empty($diagnosa_pasien)) {
+              $ket = 'Belum Closing & Belum Input Diagnosa';
+          } elseif ($tgl_pulang == '') {
+              $ket = 'Belum Closing';
+          } elseif ($tgl_pulang != '' && empty($diagnosa_pasien)) {
+              $ket = 'Belum Input Diagnosa';
+          } else {
+              $ket = 'Belum di Kirim';
+          }
+      } else {
+          if ($id_condition != '') {
+              $ket = 'Sudah di Kirim';
+          } else {
+              $ket = 'Sudah di Kirim Sebagian';
+          }
+      }
+
+      // Check fields
+      $fields = [
+        'id_encounter' => isset_or($mlite_satu_sehat_response['id_encounter'], ''),
+        'id_condition' => isset_or($mlite_satu_sehat_response['id_condition'], ''),
+        'id_clinical_impression' => isset_or($mlite_satu_sehat_response['id_clinical_impression'], ''),
+        'id_observation_ttvtensi' => isset_or($mlite_satu_sehat_response['id_observation_ttvtensi'], ''),
+        'id_observation_ttvnadi' => isset_or($mlite_satu_sehat_response['id_observation_ttvnadi'], ''),
+        'id_observation_ttvrespirasi' => isset_or($mlite_satu_sehat_response['id_observation_ttvrespirasi'], ''),
+        'id_observation_ttvsuhu' => isset_or($mlite_satu_sehat_response['id_observation_ttvsuhu'], ''),
+        'id_observation_ttvspo2' => isset_or($mlite_satu_sehat_response['id_observation_ttvspo2'], ''),
+        'id_observation_ttvgcs' => isset_or($mlite_satu_sehat_response['id_observation_ttvgcs'], ''),
+        'id_observation_ttvtinggi' => isset_or($mlite_satu_sehat_response['id_observation_ttvtinggi'], ''),
+        'id_observation_ttvberat' => isset_or($mlite_satu_sehat_response['id_observation_ttvberat'], ''),
+        'id_observation_ttvperut' => isset_or($mlite_satu_sehat_response['id_observation_ttvperut'], ''),
+        'id_observation_ttvkesadaran' => isset_or($mlite_satu_sehat_response['id_observation_ttvkesadaran'], ''),
+        'id_procedure' => isset_or($mlite_satu_sehat_response['id_procedure'], ''),
+        'id_composition' => isset_or($mlite_satu_sehat_response['id_composition'], ''),
+        'id_immunization' => isset_or($mlite_satu_sehat_response['id_immunization'], ''),
+        'id_medication_request' => isset_or($mlite_satu_sehat_response['id_medication_request'], ''),
+        'id_medication_dispense' => isset_or($mlite_satu_sehat_response['id_medication_dispense'], ''),
+        'id_medication_statement' => isset_or($mlite_satu_sehat_response['id_medication_statement'], ''),
+        'id_rad_request' => isset_or($mlite_satu_sehat_response['id_rad_request'], ''),
+        'id_rad_specimen' => isset_or($mlite_satu_sehat_response['id_rad_specimen'], ''),
+        'id_rad_observation' => isset_or($mlite_satu_sehat_response['id_rad_observation'], ''),
+        'id_rad_diagnostic' => isset_or($mlite_satu_sehat_response['id_rad_diagnostic'], ''),
+        'id_imaging_study' => isset_or($mlite_satu_sehat_response['id_imaging_study'], ''),
+        'id_lab_pk_request' => isset_or($mlite_satu_sehat_response['id_lab_pk_request'], ''),
+        'id_lab_pk_specimen' => isset_or($mlite_satu_sehat_response['id_lab_pk_specimen'], ''),
+        'id_lab_pk_observation' => isset_or($mlite_satu_sehat_response['id_lab_pk_observation'], ''),
+        'id_lab_pk_diagnostic' => isset_or($mlite_satu_sehat_response['id_lab_pk_diagnostic'], ''),
+        'id_careplan' => isset_or($mlite_satu_sehat_response['id_careplan'], ''),
+        'id_allergy' => isset_or($mlite_satu_sehat_response['id_allergy'], ''),
+        'id_questionnaire' => isset_or($mlite_satu_sehat_response['id_questionnaire'], '')
+      ];
+
+      $sent_count = 0;
+      $row_flat = [
+        'no' => $no++,
+        'tanggal' => '',
+        'no_rkm_medis' => $row['no_rkm_medis'],
+        'nm_poli' => $row['nm_poli'],
+        'nm_dokter' => $row['nm_dokter'],
+        'ket' => $ket,
+      ];
+
+      foreach ($fields as $key => $val) {
+          $is_sent = ($val !== '') ? 1 : 0;
+          if ($is_sent) {
+              $sent_count++;
+          }
+          $row_flat[$key] = $is_sent;
+          $totals[$key] += $is_sent;
+      }
+
+      $total_fields = count($fields);
+      $percentage = $total_fields > 0 ? round(($sent_count / $total_fields) * 100) : 0;
+      $row_flat['total_str'] = "{$sent_count} dari {$total_fields} ({$percentage}%)";
+
+      // Date Grouping logic
+      $current_date = date('d-m-Y', strtotime($row['tgl_registrasi']));
+      if ($current_date !== $last_date) {
+          $row_flat['tanggal'] = $current_date;
+          $last_date = $current_date;
+      }
+
+      $rekap_data[] = $row_flat;
+    }
+
+    // Calculate overall totals
+    $overall_sent = array_sum($totals);
+    $overall_total_fields = count($rekap_data) * 31;
+    $overall_percentage = $overall_total_fields > 0 ? round(($overall_sent / $overall_total_fields) * 100) : 0;
+    $totals['overall_total_str'] = "{$overall_sent} dari {$overall_total_fields} ({$overall_percentage}%)";
+
+    header("Content-type: application/vnd-ms-excel");
+    header("Content-Disposition: attachment; filename=REKAP_SATU_SEHAT_" . $start_date . "_to_" . $end_date . ".xls");
+    header("Pragma: no-cache");
+    header("Expires: 0");
+
+    echo $this->draw('rekap.html', ['rekap_data' => $rekap_data, 'start_date' => $start_date, 'end_date' => $end_date, 'totals' => $totals]);
+    exit();
+  }
+
   private function _addHeaderFiles()
   {
     $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));

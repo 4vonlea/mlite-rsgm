@@ -1,0 +1,146 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style>
+  table { border-collapse: collapse; }
+  th { background-color: #2e6e3f; color: #ffffff; font-weight: bold; border: 1px solid #000000; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; padding: 5px; }
+  td { border: 1px solid #000000; font-family: Arial, sans-serif; font-size: 10pt; padding: 4px; }
+  .text { mso-number-format:"\@"; }
+  .center { text-align: center; }
+</style>
+</head>
+<body>
+<table>
+    <thead>
+        <tr>
+            <th>No</th>
+            <th>Tanggal</th>
+            <th>No RM</th>
+            <th>Unit</th>
+            <th>Dokter</th>
+            <th>Ket</th>
+            <th>ID Encounter</th>
+            <th>ID Condition</th>
+            <th>ID Clinical Impression</th>
+            <th>ID Observation Tensi</th>
+            <th>ID Observation Nadi</th>
+            <th>ID Observation RR</th>
+            <th>ID Observation Suhu</th>
+            <th>ID Observation SPO2</th>
+            <th>ID Observation GCS</th>
+            <th>ID Observation Tinggi</th>
+            <th>ID Observation Berat</th>
+            <th>ID Observation Perut</th>
+            <th>ID Observation Kesadaran</th>
+            <th>ID Procedure</th>
+            <th>ID Composition</th>
+            <th>ID Vaksin/Imunisasi</th>
+            <th>ID Medication Request</th>
+            <th>ID Medication Dispense</th>
+            <th>ID Medication Statement</th>
+            <th>ID Service Request Radiologi</th>
+            <th>ID Specimen Radiologi</th>
+            <th>ID Observation Radiologi</th>
+            <th>ID Diagnostic Report Radiologi</th>
+            <th>Image Study</th>
+            <th>ID Service Request Lab PK</th>
+            <th>ID Specimen Lab PK</th>
+            <th>ID Observation Lab PK</th>
+            <th>ID Diagnostic Report Lab PK</th>
+            <th>ID Care Plan</th>
+            <th>ID Allergy</th>
+            <th>ID Questionnaire</th>
+            <th>TOTAL</th>
+        </tr>
+    </thead>
+    <tbody>
+        {loop: $rekap_data}
+        <tr>
+            <td class="center">{$value.no}</td>
+            <td class="center">{$value.tanggal}</td>
+            <td class="text center">{$value.no_rkm_medis}</td>
+            <td>{$value.nm_poli}</td>
+            <td>{$value.nm_dokter}</td>
+            <td>{$value.ket}</td>
+            
+            <td class="center">{$value.id_encounter}</td>
+            <td class="center">{$value.id_condition}</td>
+            <td class="center">{$value.id_clinical_impression}</td>
+            <td class="center">{$value.id_observation_ttvtensi}</td>
+            <td class="center">{$value.id_observation_ttvnadi}</td>
+            <td class="center">{$value.id_observation_ttvrespirasi}</td>
+            <td class="center">{$value.id_observation_ttvsuhu}</td>
+            <td class="center">{$value.id_observation_ttvspo2}</td>
+            <td class="center">{$value.id_observation_ttvgcs}</td>
+            <td class="center">{$value.id_observation_ttvtinggi}</td>
+            <td class="center">{$value.id_observation_ttvberat}</td>
+            <td class="center">{$value.id_observation_ttvperut}</td>
+            <td class="center">{$value.id_observation_ttvkesadaran}</td>
+            <td class="center">{$value.id_procedure}</td>
+            <td class="center">{$value.id_composition}</td>
+            <td class="center">{$value.id_immunization}</td>
+            <td class="center">{$value.id_medication_request}</td>
+            <td class="center">{$value.id_medication_dispense}</td>
+            <td class="center">{$value.id_medication_statement}</td>
+            <td class="center">{$value.id_rad_request}</td>
+            <td class="center">{$value.id_rad_specimen}</td>
+            <td class="center">{$value.id_rad_observation}</td>
+            <td class="center">{$value.id_rad_diagnostic}</td>
+            <td class="center">{$value.id_imaging_study}</td>
+            <td class="center">{$value.id_lab_pk_request}</td>
+            <td class="center">{$value.id_lab_pk_specimen}</td>
+            <td class="center">{$value.id_lab_pk_observation}</td>
+            <td class="center">{$value.id_lab_pk_diagnostic}</td>
+            <td class="center">{$value.id_careplan}</td>
+            <td class="center">{$value.id_allergy}</td>
+            <td class="center">{$value.id_questionnaire}</td>
+            
+            <td>{$value.total_str}</td>
+        </tr>
+        {/loop}
+    </tbody>
+    <tfoot>
+        <tr>
+            <td></td>
+            <td class="center">TOTAL</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="center">{$totals.id_encounter}</td>
+            <td class="center">{$totals.id_condition}</td>
+            <td class="center">{$totals.id_clinical_impression}</td>
+            <td class="center">{$totals.id_observation_ttvtensi}</td>
+            <td class="center">{$totals.id_observation_ttvnadi}</td>
+            <td class="center">{$totals.id_observation_ttvrespirasi}</td>
+            <td class="center">{$totals.id_observation_ttvsuhu}</td>
+            <td class="center">{$totals.id_observation_ttvspo2}</td>
+            <td class="center">{$totals.id_observation_ttvgcs}</td>
+            <td class="center">{$totals.id_observation_ttvtinggi}</td>
+            <td class="center">{$totals.id_observation_ttvberat}</td>
+            <td class="center">{$totals.id_observation_ttvperut}</td>
+            <td class="center">{$totals.id_observation_ttvkesadaran}</td>
+            <td class="center">{$totals.id_procedure}</td>
+            <td class="center">{$totals.id_composition}</td>
+            <td class="center">{$totals.id_immunization}</td>
+            <td class="center">{$totals.id_medication_request}</td>
+            <td class="center">{$totals.id_medication_dispense}</td>
+            <td class="center">{$totals.id_medication_statement}</td>
+            <td class="center">{$totals.id_rad_request}</td>
+            <td class="center">{$totals.id_rad_specimen}</td>
+            <td class="center">{$totals.id_rad_observation}</td>
+            <td class="center">{$totals.id_rad_diagnostic}</td>
+            <td class="center">{$totals.id_imaging_study}</td>
+            <td class="center">{$totals.id_lab_pk_request}</td>
+            <td class="center">{$totals.id_lab_pk_specimen}</td>
+            <td class="center">{$totals.id_lab_pk_observation}</td>
+            <td class="center">{$totals.id_lab_pk_diagnostic}</td>
+            <td class="center">{$totals.id_careplan}</td>
+            <td class="center">{$totals.id_allergy}</td>
+            <td class="center">{$totals.id_questionnaire}</td>
+            <td>{$totals.overall_total_str}</td>
+        </tr>
+    </tfoot>
+</table>
+</body>
+</html>
