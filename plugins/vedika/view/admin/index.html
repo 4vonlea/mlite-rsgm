@@ -182,7 +182,7 @@
       							</tbody>
       						</table>
       					</div>
-                {?=isset_or($vedika.pagination)?}
+                {?=htmlspecialchars_decode(isset_or($vedika.pagination))?}
             </div>
         </div>
     </div>
