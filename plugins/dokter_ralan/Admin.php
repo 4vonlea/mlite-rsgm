@@ -113,7 +113,7 @@ class Admin extends AdminModule
         $params[] = $tgl_kunjungan_akhir;
 
         if ($this->core->getUserInfo('role') != 'admin') {
-          if($this->settings->get('settings.dokter_ralan_per_dokter') == 'true') {
+          if($this->core->getUserInfo('role') == 'medis' || $this->settings->get('settings.dokter_ralan_per_dokter') == 'true') {
             $sql .= " AND reg_periksa.kd_dokter = ?";
             $params[] = $username;
           } else {
@@ -134,16 +134,33 @@ class Admin extends AdminModule
         $stmt->execute($params);
         $rows = $stmt->fetchAll();
 
+        // N+1 Query Optimization untuk bpjs_prb
+        $no_rawat_list = array_column($rows, 'no_rawat');
+        $prb_map = [];
+        
+        if (!empty($no_rawat_list)) {
+            // Karena SQLite atau MySQL mungkin memiliki batasan jumlah parameter IN, 
+            // lebih aman memecahnya jika sangat besar, tapi biasanya 1000-5000 aman di MySQL.
+            // Untuk lebih aman, kita chunk arraynya:
+            $chunks = array_chunk($no_rawat_list, 1000);
+            foreach($chunks as $chunk) {
+                $inQuery = implode(',', array_fill(0, count($chunk), '?'));
+                $prb_sql = "SELECT bridging_sep.no_rawat, bpjs_prb.prb 
+                            FROM bpjs_prb 
+                            JOIN bridging_sep ON bridging_sep.no_sep = bpjs_prb.no_sep 
+                            WHERE bridging_sep.no_rawat IN ($inQuery)";
+                $prb_stmt = $this->db()->pdo()->prepare($prb_sql);
+                $prb_stmt->execute($chunk);
+                $prb_rows = $prb_stmt->fetchAll();
+                foreach ($prb_rows as $prb) {
+                    $prb_map[$prb['no_rawat']] = $prb['prb'];
+                }
+            }
+        }
+
         $this->assign['list'] = [];
         foreach ($rows as $row) {
-          $row['potensi_prb'] = '';
-          $bpjs_prb = $this->db('bpjs_prb')
-            ->join('bridging_sep', 'bridging_sep.no_sep', 'bpjs_prb.no_sep')
-            ->where('bridging_sep.no_rawat', $row['no_rawat'])
-            ->oneArray();
-          if(!empty($bpjs_prb)) {
-            $row['potensi_prb'] = $bpjs_prb['prb'];
-          }
+          $row['potensi_prb'] = isset($prb_map[$row['no_rawat']]) ? $prb_map[$row['no_rawat']] : '';
           $this->assign['list'][] = $row;
         }
 
@@ -177,7 +194,7 @@ class Admin extends AdminModule
         $params_rujukan[] = $tgl_kunjungan_akhir;
 
         if ($this->core->getUserInfo('role') != 'admin') {
-          if($this->settings->get('settings.dokter_ralan_per_dokter') == 'true') {
+          if($this->core->getUserInfo('role') == 'medis' || $this->settings->get('settings.dokter_ralan_per_dokter') == 'true') {
             $sql_rujukan_internal .= " AND reg_periksa.kd_dokter = ?";
             $params_rujukan[] = $username;
           } else {

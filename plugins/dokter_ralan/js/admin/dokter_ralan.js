@@ -46,7 +46,7 @@ $('#manage').on('click', '#submit_periode_rawat_jalan', function(event){
     alert('Tanggal akhir masih kosong!')
   }
 
-  $.post(url, {periode_rawat_jalan: periode_rawat_jalan, periode_rawat_jalan_akhir: periode_rawat_jalan_akhir} ,function(data) {
+  $.post(url, {periode_rawat_jalan: periode_rawat_jalan, periode_rawat_jalan_akhir: periode_rawat_jalan_akhir, status_periksa: status_periksa} ,function(data) {
   // tampilkan data
     $("#form").show();
     $("#display").html(data).show();
@@ -54,7 +54,7 @@ $('#manage').on('click', '#submit_periode_rawat_jalan', function(event){
     $("#form_soap").hide();
     $("#form_sep").hide();
     $("#notif").hide();
-    $("#rincian").show();
+    $("#rincian").hide();
     $("#sep").hide();
     $("#soap").hide();
     $('.periode_rawat_jalan').datetimepicker('remove');
