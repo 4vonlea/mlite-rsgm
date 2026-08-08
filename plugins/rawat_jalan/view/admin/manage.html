@@ -75,6 +75,7 @@
    var currentPage = 1;
    var baseUrl = '{?=url()?}/{?=ADMIN?}/api/rawat_jalan';
    var token = '{?=$_SESSION['token']?}';
+   var isDataLoaded = false;
 
    $(function () {
        $('.periode_rawat_jalan').datetimepicker({
@@ -83,7 +84,51 @@
          locale: 'id'
        });
        
-       loadData();
+        let searchParams = new URLSearchParams(window.location.search);
+        if (searchParams.has('no_rawat')) {
+            var q_no_rawat = searchParams.get('no_rawat');
+            $.ajax({
+                url: baseUrl + '/show/' + q_no_rawat,
+                method: 'GET',
+                data: { t: token },
+                success: function(response) {
+                    if (typeof response === 'string') response = JSON.parse(response);
+                    if (response.status === 'success') {
+                        var item = response.data;
+                        var raw_no_rawat = item.no_rawat;
+                        var no_rkm_medis = item.no_rkm_medis;
+                        var nm_pasien = item.nm_pasien;
+                        var umur = item.umurdaftar + ' ' + item.sttsumur;
+                        var tgl_registrasi = item.tgl_registrasi;
+
+                        $('input:text[name=no_rawat]').val(raw_no_rawat);
+                        $('input:text[name=no_rkm_medis]').val(no_rkm_medis);
+                        $('input:text[name=nm_pasien]').val(nm_pasien);
+                        $('input:text[name=umur]').val(umur);
+                        $('input:text[name=tgl_registrasi]').val(tgl_registrasi);
+                        $("#display").hide();
+
+                        var soapUrl = '{?=url()?}/{?=ADMIN?}/rawat_jalan/soap?t=' + token;
+                        $.post(soapUrl, {no_rawat : raw_no_rawat}, function(data) {
+                            $("#form_rincian").hide();
+                            $("#form").hide();
+                            $("#notif").hide();
+                            $("#form_soap").show();
+                            $("#soap").html(data).show();
+                        });
+                    }
+                }
+            });
+        } else {
+            loadData();
+        }
+
+        // Load data on exit if not loaded yet
+        $(document).on('click', '#selesai_soap', function() {
+            if (!isDataLoaded) {
+                loadData();
+            }
+        });
 
        $('#searchInput').on('keypress', function (e) {
           if(e.which === 13){
@@ -108,8 +153,9 @@
        });
    });
 
-   function loadData(page = 1, status_periksa = '') {
-      currentPage = page;
+    function loadData(page = 1, status_periksa = '') {
+       isDataLoaded = true;
+       currentPage = page;
       var search = $('#searchInput').val();
       var tgl_awal = $('#periode_rawat_jalan').val();
       var tgl_akhir = $('#periode_rawat_jalan_akhir').val();
