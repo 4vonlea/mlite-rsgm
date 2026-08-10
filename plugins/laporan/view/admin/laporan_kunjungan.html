@@ -115,7 +115,17 @@
                                 <input type="date" name="tgl_akhir" class="form-control" value="{$laporan.tgl_akhir}">
                             </div>
                         </div>
-                        <div class="col-md-4 col-sm-12">
+                        <div class="col-md-2 col-sm-6">
+                            <div class="form-group">
+                                <label style="font-weight: 600; color: #475569; margin-bottom: 6px;">Kelengkapan RM</label>
+                                <select name="status_rm" class="form-control">
+                                    <option value="tidak_lengkap" {if: $laporan.req_status_rm == 'tidak_lengkap'}selected{/if}>Belum Lengkap</option>
+                                    <option value="lengkap" {if: $laporan.req_status_rm == 'lengkap'}selected{/if}>Lengkap</option>
+                                    <option value="semua" {if: $laporan.req_status_rm == 'semua'}selected{/if}>Semua</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
                             <div class="form-group">
                                 <label style="font-weight: 600; color: #475569; margin-bottom: 6px;">Poliklinik</label>
                                 <select name="kd_poli[]" class="form-control" multiple="multiple">
@@ -126,7 +136,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-4 col-sm-12" style="margin-top: 25px;">
+                        <div class="col-md-3 col-sm-12" style="margin-top: 25px;">
                             <div style="display: flex; gap: 10px;">
                                 <button type="submit" class="btn btn-primary" style="flex: 1;"><i
                                         class="fa fa-filter"></i> Filter</button>
@@ -744,6 +754,26 @@
                                         </tbody>
                                     </table>
                                 </div>
+                                <div class="row" style="margin-top: 15px;">
+                                    <div class="col-md-6" style="padding-top: 8px;">
+                                        <div style="background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 4px; display: inline-block; font-size: 11px;">
+                                            <i class="fa fa-database"></i> Memuat Blok Data ke-<strong>{?=$laporan.page?}</strong> dari <strong>{?=$laporan.total_pages?}</strong> (Total Keseluruhan: <strong>{?=$laporan.total_pasien_list?}</strong> kunjungan)
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 text-right">
+                                        <ul class="pagination" style="margin: 0;">
+                                            {if: $laporan.page > 1}
+                                            <li><a href="{?=url([ADMIN, 'laporan', 'laporankunjungan'])?}&{?=$laporan.query_string?}&page={?=$laporan.page - 1?}"><i class="fa fa-angle-double-left"></i> Blok Data Sebelumnya</a></li>
+                                            {/if}
+                                            
+                                            <li class="active"><span>Blok {?=$laporan.page?}</span></li>
+                                            
+                                            {if: $laporan.page < $laporan.total_pages}
+                                            <li><a href="{?=url([ADMIN, 'laporan', 'laporankunjungan'])?}&{?=$laporan.query_string?}&page={?=$laporan.page + 1?}">Muat Data Selanjutnya <i class="fa fa-angle-double-right"></i></a></li>
+                                            {/if}
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -762,7 +792,7 @@
                     "url": "{?=url('assets/jscripts/dataTables-id.json')?}"
                 },
                 "pageLength": 10,
-                "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
+                "lengthMenu": [[10, 25, 50], [10, 25, 50]],
                 "order": [[1, "desc"]]
             });
         });

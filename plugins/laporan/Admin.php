@@ -544,6 +544,7 @@ class Admin extends AdminModule
         $tgl_awal = isset($_POST['tgl_awal']) ? $_POST['tgl_awal'] : (isset($_GET['tgl_awal']) ? $_GET['tgl_awal'] : date('Y-m-01'));
         $tgl_akhir = isset($_POST['tgl_akhir']) ? $_POST['tgl_akhir'] : (isset($_GET['tgl_akhir']) ? $_GET['tgl_akhir'] : date('Y-m-t'));
         $req_poli = isset($_POST['kd_poli']) ? $_POST['kd_poli'] : (isset($_GET['kd_poli']) ? $_GET['kd_poli'] : '');
+        $req_status_rm = isset($_POST['status_rm']) ? $_POST['status_rm'] : (isset($_GET['status_rm']) ? $_GET['status_rm'] : 'tidak_lengkap');
 
         $req_poli_array = [];
         if (!empty($req_poli)) {
@@ -1313,13 +1314,49 @@ class Admin extends AdminModule
         // Get poliklinik for dropdown
         $poliklinik = $pdo->query("SELECT kd_poli, nm_poli FROM poliklinik WHERE status = '1' ORDER BY nm_poli")->fetchAll(\PDO::FETCH_ASSOC);
 
+        // Filter for table presentation based on Kelengkapan RM
+        $filtered_pasien_list = [];
+        foreach ($pasien_list as $p) {
+            if ($req_status_rm === 'semua') {
+                $filtered_pasien_list[] = $p;
+            } elseif ($req_status_rm === 'lengkap' && $p['rm_status'] === 'lengkap') {
+                $filtered_pasien_list[] = $p;
+            } elseif ($req_status_rm === 'tidak_lengkap' && $p['rm_status'] === 'tidak') {
+                $filtered_pasien_list[] = $p;
+            }
+        }
+        $pasien_list = $filtered_pasien_list;
+
+        // Pagination logic
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        if ($page < 1) $page = 1;
+        $limit = 50;
+        $total_data = count($pasien_list);
+        $total_pages = ceil($total_data / $limit);
+        $offset = ($page - 1) * $limit;
+        
+        $queryParams = [
+            'tgl_awal' => $tgl_awal,
+            'tgl_akhir' => $tgl_akhir,
+            'status_rm' => $req_status_rm
+        ];
+        if (!empty($req_poli_array)) {
+            $queryParams['kd_poli'] = $req_poli_array;
+        }
+        $queryString = http_build_query($queryParams);
+
         $viewData = [
             'stats' => $stats,
             'tgl_awal' => $tgl_awal,
             'tgl_akhir' => $tgl_akhir,
             'req_poli' => $req_poli_array,
+            'req_status_rm' => $req_status_rm,
             'poliklinik' => $poliklinik,
-            'pasien_list' => $pasien_list
+            'pasien_list' => array_slice($pasien_list, $offset, $limit),
+            'total_pasien_list' => $total_data,
+            'page' => $page,
+            'total_pages' => $total_pages,
+            'query_string' => $queryString
         ];
 
         if (isset($_GET['export']) && $_GET['export'] == 'excel') {
