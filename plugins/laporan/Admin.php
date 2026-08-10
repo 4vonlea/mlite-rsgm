@@ -16,6 +16,7 @@ class Admin extends AdminModule
             'Laporan Antrian Online' => 'laporanantrian',
             '10 Besar Penyakit Ralan' => 'laporanpenyakitralan',
             '10 Besar Penyakit Ranap' => 'laporanpenyakitranap',
+            'Laporan Radiologi PACS' => 'laporanradiologipacs',
             'Statistik Kunjungan' => 'laporankunjungan'
         ];
     }
@@ -28,6 +29,7 @@ class Admin extends AdminModule
             ['name' => 'Laporan Antrian Online', 'url' => url([ADMIN, 'laporan', 'laporanantrian']), 'icon' => 'fa fa-file-text-o', 'desc' => 'Laporan antrian online'],
             ['name' => '10 Besar Penyakit Ralan', 'url' => url([ADMIN, 'laporan', 'laporanpenyakitralan']), 'icon' => 'fa fa-bar-chart', 'desc' => 'Laporan 10 besar penyakit rawat jalan'],
             ['name' => '10 Besar Penyakit Ranap', 'url' => url([ADMIN, 'laporan', 'laporanpenyakitranap']), 'icon' => 'fa fa-bar-chart', 'desc' => 'Laporan 10 besar penyakit rawat inap'],
+            ['name' => 'Laporan Radiologi PACS', 'url' => url([ADMIN, 'laporan', 'laporanradiologipacs']), 'icon' => 'fa fa-picture-o', 'desc' => 'Laporan status pengiriman rontgen ke Mini PACS'],
             ['name' => 'Statistik Kunjungan', 'url' => url([ADMIN, 'laporan', 'laporankunjungan']), 'icon' => 'fa fa-chart-line', 'desc' => 'Laporan statistik kunjungan pasien lengkap']
         ];
 
@@ -518,6 +520,122 @@ class Admin extends AdminModule
                 $row['kd_penyakit'],
                 $row['nm_penyakit'],
                 $row['jumlah']
+            ];
+
+            $output .= implode("\t", $dataRow) . "\n";
+        }
+
+        echo $output;
+        exit;
+    }
+
+    public function anyLaporanRadiologiPacs()
+    {
+        $this->_addHeaderFiles();
+        $tgl_awal = isset_or($_POST['tgl_awal'], date('Y-m-01'));
+        $tgl_akhir = isset_or($_POST['tgl_akhir'], date('Y-m-t'));
+        $status_pacs = isset_or($_POST['status_pacs'], 'semua');
+
+        $query = $this->db('periksa_radiologi')
+            ->join('reg_periksa', 'reg_periksa.no_rawat = periksa_radiologi.no_rawat')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->join('jns_perawatan_radiologi', 'jns_perawatan_radiologi.kd_jenis_prw = periksa_radiologi.kd_jenis_prw')
+            ->leftJoin('mlite_mini_pacs_study', 'mlite_mini_pacs_study.no_rawat = periksa_radiologi.no_rawat')
+            ->leftJoin('dokter AS dr_rad', 'dr_rad.kd_dokter = periksa_radiologi.kd_dokter')
+            ->leftJoin('dokter AS dr_perujuk', 'dr_perujuk.kd_dokter = periksa_radiologi.dokter_perujuk')
+            ->leftJoin('petugas', 'petugas.nip = periksa_radiologi.nip')
+            ->leftJoin('penjab', 'penjab.kd_pj = reg_periksa.kd_pj')
+            ->leftJoin('poliklinik', 'poliklinik.kd_poli = reg_periksa.kd_poli')
+            ->select('periksa_radiologi.no_rawat')
+            ->select('reg_periksa.no_rkm_medis')
+            ->select('pasien.nm_pasien')
+            ->select('periksa_radiologi.tgl_periksa')
+            ->select('jns_perawatan_radiologi.nm_perawatan')
+            ->select('mlite_mini_pacs_study.id AS pacs_id')
+            ->select('dr_rad.nm_dokter AS nm_dokter_rad')
+            ->select('petugas.nama AS nm_petugas')
+            ->select('dr_perujuk.nm_dokter AS nm_dokter_perujuk')
+            ->select('reg_periksa.umurdaftar')
+            ->select('reg_periksa.sttsumur')
+            ->select('periksa_radiologi.biaya')
+            ->select('penjab.png_jawab')
+            ->select('poliklinik.nm_poli')
+            ->where('periksa_radiologi.tgl_periksa', '>=', $tgl_awal)
+            ->where('periksa_radiologi.tgl_periksa', '<=', $tgl_akhir)
+            ->desc('periksa_radiologi.tgl_periksa');
+        
+        $data_radiologi = $query->toArray();
+        $filtered_data = [];
+
+        foreach ($data_radiologi as $row) {
+            $is_terkirim = !empty($row['pacs_id']);
+            $row['status_pacs'] = $is_terkirim ? 'Terkirim' : 'Belum Terkirim';
+            
+            if ($status_pacs == 'terkirim' && !$is_terkirim) continue;
+            if ($status_pacs == 'belum' && $is_terkirim) continue;
+            
+            $filtered_data[] = $row;
+        }
+
+        if (isset($_POST['export_excel'])) {
+            $this->exportRadiologiPacsToExcel($filtered_data, "Laporan_Radiologi_PACS_{$tgl_awal}_{$tgl_akhir}.xls");
+            exit;
+        }
+
+        return $this->draw('laporan_radiologi_pacs.html', [
+            'tgl_awal' => $tgl_awal,
+            'tgl_akhir' => $tgl_akhir,
+            'status_pacs' => $status_pacs,
+            'data_radiologi' => $filtered_data,
+            'title' => 'Laporan Radiologi (Status Mini PACS)'
+        ]);
+    }
+
+    private function exportRadiologiPacsToExcel($data, $filename)
+    {
+        header("Content-type: application/vnd-ms-excel");
+        header("Content-Disposition: attachment; filename=$filename");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+
+        $output = "LAPORAN RADIOLOGI & STATUS MINI PACS\n\n";
+        
+        $headers = [
+            'No',
+            'No. Rawat',
+            'No. RM',
+            'Nama Pasien',
+            'Umur',
+            'Tgl Periksa',
+            'Pemeriksaan',
+            'Poli Asal',
+            'Dokter Perujuk',
+            'Dokter Radiologi',
+            'Petugas Radiologi',
+            'Tarif / Biaya',
+            'Cara Bayar',
+            'Status PACS'
+        ];
+
+        $output .= implode("\t", $headers) . "\n";
+
+        $no = 1;
+        foreach ($data as $row) {
+            $dataRow = [
+                $no++,
+                $row['no_rawat'],
+                $row['no_rkm_medis'],
+                $row['nm_pasien'],
+                $row['umurdaftar'] . ' ' . $row['sttsumur'],
+                $row['tgl_periksa'],
+                $row['nm_perawatan'],
+                $row['nm_poli'],
+                $row['nm_dokter_perujuk'],
+                $row['nm_dokter_rad'],
+                $row['nm_petugas'],
+                'Rp ' . number_format($row['biaya'], 0, ',', '.'),
+                $row['png_jawab'],
+                $row['status_pacs']
             ];
 
             $output .= implode("\t", $dataRow) . "\n";

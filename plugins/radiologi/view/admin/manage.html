@@ -108,9 +108,34 @@
 <script type="text/javascript">
    $(function () {
        $('.periode_rawat_jalan').datetimepicker({
-         defaultDate: '{?=date('Y-m-d')?}',
+         defaultDate: '{?=isset_or($rawat_jalan.tgl_kunjungan, date('Y-m-d'))?}',
          format: 'YYYY-MM-DD',
          locale: 'id'
        });
    });
+
+   {if: $rawat_jalan.post_no_rawat != ''}
+   $(window).on('load', function() {
+       setTimeout(function() {
+           var baseURL = mlite.url + '/' + mlite.admin;
+           var no_rawat = '{?=isset_or($rawat_jalan.post_no_rawat)?}';
+           var status = $('input:text[name=status]').val();
+           
+           $('input:text[name=no_rawat]').val(no_rawat);
+           $("#display").hide();
+
+           var url = baseURL + '/radiologi/rincian?t=' + mlite.token;
+           $.post(url, {no_rawat : no_rawat, status: status}, function(data) {
+               $("#form_rincian").show();
+               $("#form").hide();
+               $("#notif").hide();
+               $("#rincian").html(data).show();
+               $.post(baseURL + '/radiologi/cekwaktu?t=' + mlite.token, {
+               } ,function(data) {
+                   $("#form_rincian #jam_reg").val(data);
+               });
+           });
+       }, 500);
+   });
+   {/if}
 </script>

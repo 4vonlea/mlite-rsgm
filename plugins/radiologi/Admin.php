@@ -130,7 +130,7 @@ class Admin extends AdminModule
     $stmt->execute($params);
     $totalRecords = $stmt->rowCount();
 
-    $sql .= " ORDER BY $columnName $columnSortOrder LIMIT $start, $length";
+    $sql .= " ORDER BY (SELECT COUNT(noorder) FROM permintaan_radiologi WHERE no_rawat = reg_periksa.no_rawat AND tgl_hasil < '2000-01-01') DESC, $columnName $columnSortOrder LIMIT $start, $length";
 
     $stmt = $this->db()->pdo()->prepare($sql);
     $stmt->execute($params);
@@ -629,6 +629,9 @@ class Admin extends AdminModule
     $this->assign['no_reg'] = '';
     $this->assign['no_rawat_baru'] = '';
     $this->assign['no_reg_baru'] = '';
+    $this->assign['tgl_kunjungan'] = $tgl_kunjungan;
+    $this->assign['tgl_kunjungan_akhir'] = $tgl_kunjungan_akhir;
+    $this->assign['post_no_rawat'] = isset($_POST['no_rawat']) ? $_POST['no_rawat'] : '';
     $this->assign['tgl_registrasi'] = date('Y-m-d');
     $this->assign['jam_reg'] = date('H:i:s');
 
@@ -732,6 +735,25 @@ class Admin extends AdminModule
         ->where('no_rawat', $row['no_rawat'])
         ->toArray();
       $row['dokter'] = $dpjp_ranap;
+      
+      $cek_permintaan = $this->db('permintaan_radiologi')
+        ->where('no_rawat', $row['no_rawat'])
+        ->where('tgl_hasil', '<', '2000-01-01')
+        ->toArray();
+      
+      $status_rad = '-';
+      if (!empty($cek_permintaan)) {
+          $status_rad = 'Diproses'; // Default if validated but not finished
+          foreach ($cek_permintaan as $p) {
+              if ($p['tgl_sampel'] == '0000-00-00' || $p['tgl_sampel'] < '2000-01-01') {
+                  $status_rad = 'Order Baru';
+                  break; // Highest priority
+              }
+          }
+      }
+      
+      $row['status_radiologi'] = $status_rad;
+      
       $this->assign['list'][] = $row;
     }
 

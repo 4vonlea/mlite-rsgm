@@ -14,6 +14,7 @@
           <th style="white-space: nowrap;">Dokter</th>
           <th style="white-space: nowrap;">Penjamin</th>
           <th style="white-space: nowrap;">No. Asuransi</th>
+          <th style="white-space: nowrap;">Order Radiologi</th>
           <th style="white-space: nowrap;">Tgl. Kunjungan</th>
           <th style="white-space: nowrap;">Stts. Periksa</th>
           <th style="white-space: nowrap;">Stts. Lanjut</th>
@@ -84,6 +85,15 @@
           {/if}
           </td>
           <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}" style="white-space: nowrap;">{?=isset_or($value.no_peserta)?}</td>
+          <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}" style="white-space: nowrap; text-align: center;">
+            {if: $value.status_radiologi == 'Order Baru'}
+              <span class="label label-danger" style="font-size: 11px;"><i class="fa fa-bell"></i> Order Baru</span>
+            {elseif: $value.status_radiologi == 'Diproses'}
+              <span class="label label-warning" style="font-size: 11px;"><i class="fa fa-spinner fa-spin"></i> Diproses</span>
+            {else}
+              -
+            {/if}
+          </td>
           <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}" style="white-space: nowrap;">{?=isset_or($value.tgl_registrasi)?} {?=isset_or($value.jam_reg)?}</td>
           <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}" style="white-space: nowrap;">{?=isset_or($value.stts)?}</td>
           <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}" style="white-space: nowrap;">{?=isset_or($value.status_lanjut)?}</td>
@@ -142,7 +152,11 @@
 
   $(".alert-dismissible").fadeTo(3000, 500).slideUp(500);
   $('.dataTables').DataTable({
-    "order": [[ 3, "desc" ]],
+    {if: $type == 'ranap'}
+    "order": [[ 7, "desc" ], [ 2, "desc" ]],
+    {else}
+    "order": [[ 8, "desc" ], [ 3, "desc" ]],
+    {/if}
     "pagingType": "full",
     "language": {
       "paginate": {
