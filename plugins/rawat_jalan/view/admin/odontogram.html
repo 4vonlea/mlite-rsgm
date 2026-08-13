@@ -3,6 +3,14 @@
   table th {
     padding: 5px;
   }
+  #tabs-odontogram:not(.active),
+  #tabs-ohis:not(.active) {
+      display: none !important;
+  }
+  #tabs-odontogram.active,
+  #tabs-ohis.active {
+      display: block !important;
+  }
   .table-odontogram {
   	width: 100%;
   	overflow-x: auto;
@@ -97,7 +105,7 @@
     <h4 class="modal-title">Riwayat Odontogram</h4>
 </div>
 <div class="modal-body">
-  <ul class="nav nav-tabs" id="tabContent">
+  <ul class="nav nav-tabs" id="odontogram-tabs">
     <li class="active"><a href="#tabs-odontogram" data-toggle="tab">Odontogram</a></li>
     <li><a href="#tabs-ohis" data-toggle="tab">OHIS</a></li>
   </ul>
@@ -121,9 +129,14 @@
                 <option value="une">⊘ Un-Erupted (une)</option>
                 <option value="pre">◬ Partial Erupt (pre)</option>
                 <option value="ano">❓ Anomali (ano)</option>
-                <option value="cfr"># Fracture (cfr)</option>
+                <option value="imv">⊘ Impaksi (imv)</option>
+                <option value="att">◬ Atrisi (att)</option>
+                <option value="abr">◬ Abrasi (abr)</option>
+                <option value="cfr"># Fraktur Mahkota (cfr)</option>
                 <option value="fmc">🔲 Full Metal Crown (fmc)</option>
                 <option value="poc">⏸ Porcelain Crown (poc)</option>
+                <option value="mpc">⏸ Metal Porcelain Crown (mpc)</option>
+                <option value="gmc">🔲 Gold Metal Crown (gmc)</option>
                 <option value="rrx">V Sisa Akar (rrx)</option>
                 <option value="mis">❌ Gigi Hilang (mis)</option>
                 <option value="ipx">🔩 Implant (ipx)</option>
@@ -132,6 +145,10 @@
                 <option value="pon">━ Pontic (pon)</option>
                 <option value="frm">≚ Frame Denture (frm)</option>
                 <option value="acr">≚ Acrylic Denture (acr)</option>
+                <option value="prd">≚ Partial Denture (prd)</option>
+                <option value="fld">≚ Full Denture (fld)</option>
+                <option value="gif">⚪ GIC/Silika (gif)</option>
+                <option value="dia">↔ Diastema (dia)</option>
             </select>
             <button id="btn-reset-odontogram" class="btn btn-danger" style="margin-left: 10px;">Reset Semua</button>
         </div>
@@ -182,6 +199,7 @@
             {/loop}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
     <div class="tab-pane" id="tabs-ohis">
@@ -301,25 +319,24 @@ $(document).ready(function(){
       if (state.includes('tambalan') || state.includes('amf')) return '#1e293b';
       if (state.includes('cof')) return 'url(#cof-pattern)';
       if (state.includes('fis')) return 'url(#fis-pattern)';
-      if (state.includes('poc') || state.includes('ipx')) return 'url(#poc-pattern)';
+      if (state.includes('poc') || state.includes('ipx') || state.includes('pob')) return 'url(#poc-pattern)';
       if (state.includes('scaling')) return 'url(#scaling-pattern)';
       return 'white';
   }
 
   function getStroke(tooth, surface) {
       const centerState = gigiSelection[tooth] && gigiSelection[tooth]['center'] ? gigiSelection[tooth]['center'] : [];
-      if (Array.isArray(centerState) && centerState.includes('fmc')) return 'stroke="#1e293b" stroke-width="3"';
+      if (Array.isArray(centerState) && (centerState.includes('fmc') || centerState.includes('meb'))) return 'stroke="#1e293b" stroke-width="3"';
       return 'stroke="#94a3b8" stroke-width="1"';
   }
 
-  function renderTooth(t, isBottom) {
+  function renderTooth(t, isBottom, rowArray = null, index = -1) {
       const isAnterior = anteriorTeeth.includes(t);
       const centerState = gigiSelection[t] && gigiSelection[t]['center'] ? gigiSelection[t]['center'] : [];
       const topState = gigiSelection[t] && gigiSelection[t]['top'] ? gigiSelection[t]['top'] : [];
       
       const isMissing = (Array.isArray(centerState) && (centerState.includes('missing') || centerState.includes('mis'))) || (Array.isArray(topState) && topState.includes('mis'));
       const isRrx = (Array.isArray(centerState) && centerState.includes('rrx')) || (Array.isArray(topState) && topState.includes('rrx'));
-      const isCfr = (Array.isArray(centerState) && centerState.includes('cfr')) || (Array.isArray(topState) && topState.includes('cfr'));
       
       let polygons = '';
       if (isAnterior) {
@@ -339,11 +356,11 @@ $(document).ready(function(){
       if (isMissing) {
           overlays += `<line x1="0" y1="0" x2="40" y2="40" stroke="#ef4444" stroke-width="5" pointer-events="none"/><line x1="40" y1="0" x2="0" y2="40" stroke="#ef4444" stroke-width="5" pointer-events="none"/>`;
       }
+      if (Array.isArray(centerState) && centerState.includes('pon')) {
+          overlays += `<line x1="0" y1="0" x2="40" y2="40" stroke="#1e293b" stroke-width="5" pointer-events="none"/><line x1="40" y1="0" x2="0" y2="40" stroke="#1e293b" stroke-width="5" pointer-events="none"/>`;
+      }
       if (isRrx) {
           overlays += `<line x1="0" y1="0" x2="20" y2="40" stroke="#ef4444" stroke-width="5" pointer-events="none"/><line x1="40" y1="0" x2="20" y2="40" stroke="#ef4444" stroke-width="5" pointer-events="none"/>`;
-      }
-      if (isCfr) {
-          overlays += `<text x="20" y="32" font-size="34" font-weight="bold" fill="#ef4444" text-anchor="middle" pointer-events="none">#</text>`;
       }
 
       let rootMarker = '';
@@ -357,7 +374,7 @@ $(document).ready(function(){
       }
 
       let textAnnotation = '';
-      const textStates = ['non', 'une', 'pre', 'ano', 'meb', 'pob', 'pon', 'frm', 'acr', 'ipx'];
+      const textStates = ['non', 'une', 'pre', 'ano', 'meb', 'pob', 'pon', 'frm', 'acr', 'ipx', 'imv', 'att', 'abr', 'cfr', 'gif', 'mpc', 'gmc', 'prd', 'fld', 'dia'];
       let foundTexts = [];
       if (Array.isArray(centerState)) {
           textStates.forEach(ts => {
@@ -370,14 +387,56 @@ $(document).ready(function(){
           textAnnotation = `<text x="20" y="${isBottom ? 65 : -10}" font-size="11" font-weight="bold" fill="#1e293b" text-anchor="middle" pointer-events="none">${foundTexts.join('-')}</text>`;
       }
 
+      let bridgeLine = '';
+      if (rowArray && index >= 0 && Array.isArray(centerState) && (centerState.includes('meb') || centerState.includes('pob') || centerState.includes('pon'))) {
+          let isLeftConnected = false;
+          let isRightConnected = false;
+          let gapLeft = 5;
+          let gapRight = 5;
+          
+          if (index > 0) {
+              let leftTooth = rowArray[index - 1];
+              let leftCenterState = gigiSelection[leftTooth] && gigiSelection[leftTooth]['center'] ? gigiSelection[leftTooth]['center'] : [];
+              if (leftCenterState.includes('meb') || leftCenterState.includes('pob') || leftCenterState.includes('pon')) {
+                  isLeftConnected = true;
+                  if (leftTooth == 11 || leftTooth == 51 || leftTooth == 81 || leftTooth == 41) {
+                      gapLeft = 25;
+                  }
+              }
+          }
+          
+          if (index < rowArray.length - 1) {
+              let rightTooth = rowArray[index + 1];
+              let rightCenterState = gigiSelection[rightTooth] && gigiSelection[rightTooth]['center'] ? gigiSelection[rightTooth]['center'] : [];
+              if (rightCenterState.includes('meb') || rightCenterState.includes('pob') || rightCenterState.includes('pon')) {
+                  isRightConnected = true;
+                  if (t == 11 || t == 51 || t == 81 || t == 41) {
+                      gapRight = 25;
+                  }
+              }
+          }
+          
+          let yPos = isBottom ? 75 : -35;
+          let startX = isLeftConnected ? -gapLeft : 20;
+          let endX = isRightConnected ? 40 + gapRight : 20;
+          let isPon = centerState.includes('pon');
+          
+          bridgeLine += `<line x1="${startX}" y1="${yPos}" x2="${endX}" y2="${yPos}" stroke="#1e293b" stroke-width="4" stroke-linecap="round" pointer-events="none"/>`;
+          
+          if (!isPon) {
+              bridgeLine += `<line x1="20" y1="${yPos}" x2="20" y2="${isBottom ? 45 : -5}" stroke="#1e293b" stroke-width="4" stroke-linecap="round" pointer-events="none"/>`;
+          }
+      }
+
       const labelTop = !isBottom ? `<div class="tooth-label">${t}</div>` : '';
       const labelBot = isBottom ? `<div class="tooth-label tooth-label-bot">${t}</div>` : '';
 
       return `
-        <div class="tooth-wrapper" style="margin-bottom: 25px; margin-top: 25px;">
+        <div class="tooth-wrapper" style="margin-bottom: 35px; margin-top: 35px;">
           ${labelTop}
           <div class="tooth-svg-wrapper">
               <svg viewBox="0 0 40 40" class="w-full h-full drop-shadow-sm" style="overflow: visible;">
+                  ${bridgeLine}
                   ${polygons}
                   ${overlays}
                   ${rootMarker}
@@ -391,29 +450,29 @@ $(document).ready(function(){
   
   function renderOdontogram() {
       let topAdultHtml = '';
-      topAdult.forEach(t => {
-          topAdultHtml += renderTooth(t, false);
+      topAdult.forEach((t, i) => {
+          topAdultHtml += renderTooth(t, false, topAdult, i);
           if (t == 11) topAdultHtml += `<div class="tooth-gap"></div>`;
       });
       $('#row-top-adult').html(topAdultHtml);
 
       let topChildHtml = '';
-      topChild.forEach(t => {
-          topChildHtml += renderTooth(t, false);
+      topChild.forEach((t, i) => {
+          topChildHtml += renderTooth(t, false, topChild, i);
           if (t == 51) topChildHtml += `<div class="tooth-gap"></div>`;
       });
       $('#row-top-child').html(topChildHtml);
 
       let botChildHtml = '';
-      botChild.forEach(t => {
-          botChildHtml += renderTooth(t, true);
+      botChild.forEach((t, i) => {
+          botChildHtml += renderTooth(t, true, botChild, i);
           if (t == 81) botChildHtml += `<div class="tooth-gap"></div>`;
       });
       $('#row-bot-child').html(botChildHtml);
 
       let botAdultHtml = '';
-      botAdult.forEach(t => {
-          botAdultHtml += renderTooth(t, true);
+      botAdult.forEach((t, i) => {
+          botAdultHtml += renderTooth(t, true, botAdult, i);
           if (t == 41) botAdultHtml += `<div class="tooth-gap"></div>`;
       });
       $('#row-bot-adult').html(botAdultHtml);
@@ -479,7 +538,7 @@ $(document).ready(function(){
       var url = baseURL + '/rawat_jalan/odontogramsave/?t=' + mlite.token;
       
       var pemeriksaanVal = 'gg_' + tooth + '_' + surface;
-      const centerTools = ['mis', 'rrx', 'cfr', 'fmc', 'poc', 'nvt', 'rct', 'non', 'une', 'pre', 'ano', 'ipx', 'meb', 'pob', 'pon', 'frm', 'acr'];
+      const centerTools = ['mis', 'rrx', 'cfr', 'fmc', 'poc', 'nvt', 'rct', 'non', 'une', 'pre', 'ano', 'ipx', 'meb', 'pob', 'pon', 'frm', 'acr', 'imv', 'att', 'abr', 'gif', 'mpc', 'gmc', 'prd', 'fld', 'dia'];
       var targetSurface = surface;
       if (centerTools.includes(activeTool)) {
           pemeriksaanVal = 'gg_' + tooth + '_center';

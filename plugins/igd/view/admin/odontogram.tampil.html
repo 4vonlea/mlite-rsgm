@@ -15,7 +15,8 @@
         <td>{?=isset_or($value.tgl_input)?}</td>
         <td>{?=str_replace('gg_','Gigi ',$value.pemeriksaan)?}</td>
         <td>{?=isset_or($value.kondisi)?}</td>
-        <td>{?=isset_or($value.catatan)?}</td>
+        <td class="edit-catatan" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}"><span class="catatan-text">{?=isset_or($value.catatan)?}</span><input type="text" class="form-control input-sm input-catatan" value="{?=isset_or($value.catatan)?}" style="display:none;" /></td>
+
         <td><a href="#" class="btn btn-xs btn-danger delete" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}" data-catatan="{?=isset_or($value.catatan)?}"><span class="fa fa-trash"></span><span class="hidden-xs">Hapus</span></a></td>
       </tr>
     {/loop}
@@ -23,6 +24,46 @@
 </table>
 <script type="text/javascript">
 $(document).ready(function(){
+  $(".edit-catatan").dblclick(function() {
+      var $td = $(this);
+      $td.find(".catatan-text").hide();
+      var $input = $td.find(".input-catatan");
+      $input.show().focus();
+  });
+  $(".input-catatan").blur(function() {
+      var $input = $(this);
+      var $td = $input.closest("td");
+      var newCatatan = $input.val();
+      var oldCatatan = $td.find(".catatan-text").text();
+      
+      if (newCatatan !== oldCatatan) {
+          var baseURL = mlite.url + '/' + mlite.admin;
+          var id_pasien = $('input:text[name=no_rkm_medis]').val();
+          var url = baseURL + '/igd/odontogramupdatecatatan/?t=' + mlite.token;
+          
+          $.post(url, {
+              no_rkm_medis: id_pasien,
+              pemeriksaan: $td.attr("data-pemeriksaan"),
+              kondisi: $td.attr("data-kondisi"),
+              tgl_input: $td.attr("data-tgl_input"),
+              catatan: newCatatan
+          }, function(data) {
+              $td.find(".catatan-text").text(newCatatan);
+              $td.find(".catatan-text").show();
+              $input.hide();
+              $td.next('td').find('.delete').attr('data-catatan', newCatatan);
+          });
+      } else {
+          $td.find(".catatan-text").show();
+          $input.hide();
+      }
+  });
+  $(".input-catatan").keypress(function(e) {
+      if (e.which == 13) {
+          $(this).blur();
+      }
+  });
+
   $(".delete").click(function(){
     var baseURL = mlite.url + '/' + mlite.admin;
     var id_pasien = $('input:text[name=no_rkm_medis]').val();
@@ -43,3 +84,4 @@ $(document).ready(function(){
   });
 });
 </script>
+
