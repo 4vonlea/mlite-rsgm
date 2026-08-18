@@ -1,30 +1,226 @@
 <style>
+    /* ===== Base Table ===== */
     #tbl_response th,
     #tbl_response td {
         white-space: nowrap;
     }
-
     .dataTables_wrapper th,
     .dataTables_wrapper td {
         white-space: nowrap;
     }
-
     .pmd-datatable-pagination {
         padding-top: 10px !important;
     }
-
     .dataTables_length {
         display: inline;
     }
-
     .dataTables_paginate {
         display: inline;
         float: right;
     }
+    /* Override table-striped milik Bootstrap — pakai striping sendiri */
+    #tbl_response .table-striped > tbody > tr:nth-child(odd) > td {
+        background-color: #fff;
+    }
+    #tbl_response .table-striped > tbody > tr:nth-child(even) > td {
+        background-color: #f8f9fb;
+    }
 
+    /* ===== Group Header (Row 1) ===== */
+    #tbl_response thead tr:first-child th {
+        font-size: 11px;
+        font-weight: 700;
+        text-align: center;
+        padding: 10px 14px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        border-right: 1px solid #fff;
+        border-bottom: 2px solid #fff;
+    }
+    #tbl_response thead tr:first-child th:last-child {
+        border-right: none;
+    }
+    .grp-identitas { background: #edf2f7; color: #4a5568; }
+    .grp-encounter { background: #e6fffa; color: #285e61; }
+    .grp-vital    { background: #ebf8ff; color: #2b6cb0; }
+    .grp-klinis   { background: #faf5ff; color: #6b46c1; }
+    .grp-obat     { background: #fffaf0; color: #c05621; }
+    .grp-radio    { background: #fff5f5; color: #c53030; }
+    .grp-lab      { background: #e6fffa; color: #285e61; }
+    .grp-lain     { background: #f7fafc; color: #718096; }
+
+    /* ===== Column Header (Row 2) ===== */
+    #tbl_response thead tr:nth-child(2) th {
+        background: #ecf0f1;
+        color: #2c3e50;
+        font-size: 11px;
+        font-weight: 700;
+        text-align: center;
+        padding: 8px 10px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    /* ===== Table Rows ===== */
+    #tbl_response tbody tr:hover > td {
+        background-color: #edf2f7 !important;
+    }
+    #tbl_response tbody td {
+        vertical-align: middle;
+        font-size: 12px;
+        padding: 6px 8px;
+        border: 1px solid #e2e8f0;
+    }
+    #tbl_response table.table-bordered {
+        border: 1px solid #e2e8f0;
+    }
+    #tbl_response table.table-bordered > thead > tr > th {
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    /* ===== Badge (override theme) ===== */
+    .badge {
+        padding: 4px 10px;
+        font-size: 10px;
+        font-weight: 700;
+        border-radius: 10px;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        display: inline-block;
+        line-height: 1.4;
+    }
+    .badge-error {
+        background-color: #fed7d7;
+        color: #c53030;
+    }
+    .badge-error:hover {
+        background-color: #feb2b2;
+    }
+    .badge-success {
+        background-color: #c6f6d5;
+        color: #276749;
+    }
+    .badge-success:hover {
+        background-color: #9ae6b4;
+    }
+    .badge-warning {
+        background-color: #fefcbf;
+        color: #975a16;
+    }
+    .badge-warning:hover {
+        background-color: #fef08a;
+    }
+
+    /* ===== Tooltip (badge & blocker only) ===== */
+    .badge[data-tip],
+    .blocker-info[data-tip] {
+        position: relative;
+        cursor: help;
+    }
+    .badge[data-tip]:hover::after,
+    .blocker-info[data-tip]:hover::after {
+        content: attr(data-tip);
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 8px);
+        transform: translateX(-50%);
+        background: #4a5568;
+        color: #edf2f1;
+        padding: 8px 12px;
+        border-radius: 6px;
+        white-space: normal;
+        width: 280px;
+        max-width: 320px;
+        z-index: 99999;
+        font-size: 12px;
+        font-weight: normal;
+        line-height: 1.5;
+        box-shadow: 0 4px 12px rgba(0,0,0,.45);
+        pointer-events: none;
+    }
+    .badge[data-tip]:hover::before,
+    .blocker-info[data-tip]:hover::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 3px);
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: #4a5568;
+        z-index: 99999;
+        pointer-events: none;
+    }
+
+    /* ===== Filter Status ===== */
+    .filter-btn {
+        background: #f8f9fa;
+        border: 1px solid #e2e6ea;
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin-bottom: 14px;
+    }
+    .filter-btn .text-muted {
+        font-weight: 700;
+        font-size: 12px;
+        vertical-align: middle;
+    }
+    .filter-btn .btn-group {
+        margin-left: 8px;
+    }
+    .filter-btn .btn-sm {
+        font-size: 12px;
+        padding: 5px 14px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    .filter-btn .btn-default.active {
+        background-color: #4299e1;
+        color: #fff;
+        border-color: #3182ce;
+        box-shadow: 0 1px 3px rgba(66,153,225,.25);
+    }
+    .filter-btn .btn-default:not(.active):hover {
+        background-color: #e9ecef;
+    }
+
+    /* ===== UUID (terkirim) ===== */
+    .uuid {
+        font-size: 10px;
+        font-family: 'Consolas', 'Courier New', monospace;
+        color: #566573;
+        word-break: break-all;
+        line-height: 1.3;
+        display: inline-block;
+    }
+
+    /* ===== Send Buttons ===== */
+    .btn-xs { border-radius: 3px; }
+    .btn-xs i { font-size: 12px; }
+
+    /* ===== Blocker Indicator ===== */
+    .blocker-info {
+        color: #c53030;
+        font-size: 11px;
+        font-weight: 600;
+        font-style: italic;
+        cursor: help;
+        display: inline-block;
+        margin-top: 2px;
+    }
+    .blocker-info:hover {
+        color: #9b2c2c;
+    }
+
+    /* ===== Panel Title ===== */
+    .panel-heading h3 { margin: 0; }
+    .panel-heading .btn-xs { margin-left: 4px; }
+
+    /* ===== Responsive ===== */
     @media (max-width:767px) {
-        .dataTables_length {
-            display: none !important;
+        .dataTables_length { display: none !important; }
+        .filter-btn .btn-group {
+            display: block;
+            margin-left: 0;
+            margin-top: 6px;
         }
     }
 </style>
@@ -58,9 +254,33 @@
     </div>
     <div class="panel-body">
         <div class="row">
+            <div class="col-md-12">
+                <div class="filter-btn">
+                    <span class="text-muted" style="font-size:12px;">Filter Status:</span>
+                    <div class="btn-group" id="status-filter">
+                        <button type="button" class="btn btn-sm btn-default active" data-filter="">Semua</button>
+                        <button type="button" class="btn btn-sm btn-default" data-filter="not_sent">Belum Terkirim</button>
+                        <button type="button" class="btn btn-sm btn-default" data-filter="ready">Siap Kirim</button>
+                        <button type="button" class="btn btn-sm btn-default" data-filter="sent">Sudah Terkirim</button>
+                        <button type="button" class="btn btn-sm btn-default" data-filter="blocked">Ada Masalah</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
             <div class="col-md-12" id="tbl_response">
                 <table class="table display table-bordered table-striped" width="100%">
                     <thead>
+                        <tr>
+                            <th class="grp-identitas" colspan="16">Identitas Pasien</th>
+                            <th class="grp-encounter" colspan="3">Encounter &amp; Diagnosa</th>
+                            <th class="grp-vital" colspan="10">Vital Signs (Observation)</th>
+                            <th class="grp-klinis" colspan="3">Klinis</th>
+                            <th class="grp-obat" colspan="3">Obat</th>
+                            <th class="grp-radio" colspan="5">Radiologi</th>
+                            <th class="grp-lab" colspan="4">Laboratorium</th>
+                            <th class="grp-lain" colspan="3">Lainnya</th>
+                        </tr>
                         <tr>
                             <th style="white-space: nowrap;">Tgl. Rawat</th>
                             <th style="white-space: nowrap;">No. Rawat</th>
@@ -133,6 +353,18 @@
 </div>
 <script type="text/javascript">
     let table;
+    let statusFilter = '';
+
+    function badgeError(label, tipText) {
+        return `<span class="badge badge-error" data-tip="${tipText}">${label}</span>`;
+    }
+    function badgeWarn(label, tipText) {
+        return `<span class="badge badge-warning" data-tip="${tipText}">${label}</span>`;
+    }
+    function badgeOk(label) {
+        return `<span class="badge badge-success">${label}</span>`;
+    }
+
     $(document).ready(function () {
         // console.log($('.display').length);
         const urlParams = new URLSearchParams(window.location.search);
@@ -159,16 +391,72 @@
             updateRekapUrl();
         });
         updateRekapUrl();
-        var urlapi = baseURL + '/satu_sehat/responseapi?t=' + mlite.token + '&tanggal_awal=' + encodeURIComponent(tanggal_awal) + '&tanggal_akhir=' + encodeURIComponent(tanggal_akhir);
+        function buildApiUrl() {
+            var tgl_awal = $('#tanggal_awal').val() || '';
+            var tgl_akhir = $('#tanggal_akhir').val() || '';
+            var url = baseURL + '/satu_sehat/responseapi?t=' + mlite.token + '&tanggal_awal=' + encodeURIComponent(tgl_awal) + '&tanggal_akhir=' + encodeURIComponent(tgl_akhir);
+            if (statusFilter) url += '&status_filter=' + encodeURIComponent(statusFilter);
+            return url;
+        }
+        var urlapi = buildApiUrl();
         table = $('.display').DataTable({
             processing: true,
             serverSide: true,
-            stateSave: true,
+            autoWidth: false,
             scrollX: true,
             scrollCollapse: true,
             fixedColumns: {
-                left: 4
+                left: 3
             },
+            columnDefs: [
+                { targets: 0,  width: '90px' },
+                { targets: 1,  width: '155px' },
+                { targets: 2,  width: '185px' },
+                { targets: 3,  width: '135px' },
+                { targets: 4,  width: '160px' },
+                { targets: 5,  width: '145px' },
+                { targets: 6,  width: '135px' },
+                { targets: 7,  width: '160px' },
+                { targets: 8,  width: '80px' },
+                { targets: 9,  width: '125px' },
+                { targets: 10, width: '75px' },
+                { targets: 11, width: '85px' },
+                { targets: 12, width: '85px' },
+                { targets: 13, width: '90px' },
+                { targets: 14, width: '85px' },
+                { targets: 15, width: '85px' },
+                { targets: 16, width: '100px' },
+                { targets: 17, width: '100px' },
+                { targets: 18, width: '100px' },
+                { targets: 19, width: '100px' },
+                { targets: 20, width: '100px' },
+                { targets: 21, width: '100px' },
+                { targets: 22, width: '100px' },
+                { targets: 23, width: '100px' },
+                { targets: 24, width: '100px' },
+                { targets: 25, width: '100px' },
+                { targets: 26, width: '100px' },
+                { targets: 27, width: '100px' },
+                { targets: 28, width: '100px' },
+                { targets: 29, width: '100px' },
+                { targets: 30, width: '100px' },
+                { targets: 31, width: '100px' },
+                { targets: 32, width: '100px' },
+                { targets: 33, width: '100px' },
+                { targets: 34, width: '100px' },
+                { targets: 35, width: '100px' },
+                { targets: 36, width: '100px' },
+                { targets: 37, width: '100px' },
+                { targets: 38, width: '100px' },
+                { targets: 39, width: '100px' },
+                { targets: 40, width: '100px' },
+                { targets: 41, width: '100px' },
+                { targets: 42, width: '100px' },
+                { targets: 43, width: '100px' },
+                { targets: 44, width: '100px' },
+                { targets: 45, width: '100px' },
+                { targets: 46, width: '100px' },
+            ],
             ajax: {
                 url: urlapi,
                 type: 'POST',
@@ -181,28 +469,32 @@
                 }
             },
             "language": { "search": "", "searchPlaceholder": "Search..." },
-            "fixedColumns": {
-                "left": 4
-            },
             columns: [
                 { data: 'tgl_registrasi' },
                 { data: 'no_rawat' },
                 {
                     data: 'no_rkm_medis',
                     render: function (data, type, row) {
+                        let out = `${data}`;
                         if (row.id_encounter == '' && row.diagnosa_pasien != '' && row.tgl_pulang != '') {
-                            return `${data} <br><a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="encounterbundle" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-plus"></i></a> <a href="" class="btn btn-xs btn-danger" data-id="${row.no_rawat_converted}" data-tipe="forwardnorawat" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-send"></i></a>`;
+                            out += ` <br><a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="encounterbundle" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-plus"></i></a> <a href="" class="btn btn-xs btn-danger" data-id="${row.no_rawat_converted}" data-tipe="forwardnorawat" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-send"></i></a>`;
                         } else if (row.id_encounter == '' && row.tgl_pulang == '') {
-                            return `${data} <br><span class="badge badge-error">Belum Closing</span>`;
-                        } else if (row.id_encounter == '' && row.tgl_pulang == '' && row.diagnosa_pasien == '') {
-                            return `${data} <br><span class="badge badge-error">Belum Closing & Belum Input Diagnosa</span>`;
+                            if (row.diagnosa_pasien == '') {
+                                out += ` <br>${badgeError('Belum Closing & Belum Input Diagnosa', 'Pasien belum closing (billing/tgl. pulang belum diinput) dan diagnosa utama belum diinput.')}`;
+                            } else {
+                                out += ` <br>${badgeError('Belum Closing', 'Pasien belum closing. Lakukan billing / input tgl. pulang terlebih dahulu.')}`;
+                            }
                         } else if (row.id_encounter == '' && row.tgl_pulang != '' && row.diagnosa_pasien == '') {
-                            return `${data} <br><span class="badge badge-error">Belum Input Diagnosa</span>`;
+                            out += ` <br>${badgeError('Belum Input Diagnosa', 'Diagnosa utama (prioritas 1) belum diinput di menu Pemeriksaan → Diagnosa Pasien.')}`;
                         } else if (row.id_encounter != '' && row.id_condition != '') {
-                            return `${data} <br><span class="badge badge-success">Sudah di Kirim</span>`;
+                            out += ` <br>${badgeOk('Sudah di Kirim')}`;
                         } else if (row.id_encounter != '' && row.id_condition == '') {
-                            return `${data} <br><span class="badge badge-warning">Sudah di Kirim Sebagian</span>`;
-                        } else { return `${data}` }
+                            out += ` <br>${badgeWarn('Sudah di Kirim Sebagian', 'Beberapa resource belum terkirim. Periksa kolom yang masih kosong di baris ini.')}`;
+                        } else { return out }
+                        if (row.blockers && row.blockers.length) {
+                            out += ` <br><small class="blocker-info" data-tip="${row.blockers.join(' • ')}">ⓘ ${row.blockers.length} masalah</small>`;
+                        }
+                        return out;
                     }
                 },
                 { data: 'nm_pasien' },
@@ -229,8 +521,8 @@
                         if (row.id_encounter == '' && row.tgl_pulang != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="encounter" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_encounter == '' && row.tgl_pulang == '') {
-                            return `<span class="badge badge-error">Belum Closing</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Belum Closing', 'Pasien belum closing. Lakukan billing / input tgl. pulang terlebih dahulu.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -239,8 +531,8 @@
                         if (row.id_condition == '' && row.diagnosa_pasien != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="condition" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_condition == '' && row.diagnosa_pasien == '') {
-                            return `<span class="badge badge-error">Diagnosa Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Diagnosa Kosong', 'Diagnosa utama (prioritas 1) belum diinput di menu Pemeriksaan → Diagnosa Pasien.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -250,8 +542,8 @@
                         if (row.id_clinical_impression === '' && keluhan !== '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="clinicalimpression" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_clinical_impression === '' && keluhan === '') {
-                            return `<span class="badge badge-error">Penilaian Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Penilaian Kosong', 'Kolom penilaian/asesmen klinis kosong di menu Pemeriksaan → Pemeriksaan Ralan.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -261,8 +553,8 @@
                         if (row.id_observation_ttvtensi === '' && !['-', ''].includes(tensi)) {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="observation" data-ttv="tensi" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_observation_ttvtensi === '' && ['-', ''].includes(tensi)) {
-                            return `<span class="badge badge-error">Tensi Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Tensi Kosong', 'Data tensi belum diinput di menu Pemeriksaan → Pemeriksaan Ralan.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -272,8 +564,8 @@
                         if (row.id_observation_ttvnadi === '' && !['-', ''].includes(nadi)) {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="observation" data-ttv="nadi" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_observation_ttvnadi === '' && ['-', ''].includes(nadi)) {
-                            return `<span class="badge badge-error">Nadi Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Nadi Kosong', 'Data nadi belum diinput di menu Pemeriksaan → Pemeriksaan Ralan.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -283,8 +575,8 @@
                         if (row.id_observation_ttvrespirasi == '' && respirasi !== '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="observation" data-ttv="respirasi" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_observation_ttvrespirasi == '' && respirasi === '') {
-                            return `<span class="badge badge-error">Respirasi Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Respirasi Kosong', 'Data respirasi (RR) belum diinput di menu Pemeriksaan → Pemeriksaan Ralan.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -294,8 +586,8 @@
                         if (row.id_observation_ttvsuhu == '' && suhu_tubuh != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="observation" data-ttv="suhu" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_observation_ttvsuhu == '' && suhu_tubuh == '') {
-                            return `<span class="badge badge-error">Suhu Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Suhu Kosong', 'Data suhu tubuh belum diinput di menu Pemeriksaan → Pemeriksaan Ralan.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -305,8 +597,8 @@
                         if (row.id_observation_ttvspo2 == '' && spo2 != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="observation" data-ttv="spo2" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_observation_ttvspo2 == '' && spo2 == '') {
-                            return `<span class="badge badge-error">Sp02 Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('SPO2 Kosong', 'Data SPO2 belum diinput di menu Pemeriksaan → Pemeriksaan Ralan.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -316,8 +608,8 @@
                         if (row.id_observation_ttvgcs == '' && gcs != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="observation" data-ttv="gcs" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_observation_ttvgcs == '' && gcs == '') {
-                            return `<span class="badge badge-error">GCS Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('GCS Kosong', 'Data GCS belum diinput di menu Pemeriksaan → Pemeriksaan Ralan.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -327,8 +619,8 @@
                         if (row.id_observation_ttvtinggi == '' && tinggi != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="observation" data-ttv="tinggi" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_observation_ttvtinggi == '' && tinggi == '') {
-                            return `<span class="badge badge-error">Tinggi Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Tinggi Kosong', 'Data tinggi badan belum diinput di menu Pemeriksaan → Pemeriksaan Ralan.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -338,8 +630,8 @@
                         if (row.id_observation_ttvberat == '' && berat != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="observation" data-ttv="berat" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_observation_ttvberat == '' && berat == '') {
-                            return `<span class="badge badge-error">Berat Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Berat Kosong', 'Data berat badan belum diinput di menu Pemeriksaan → Pemeriksaan Ralan.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -349,8 +641,8 @@
                         if (row.id_observation_ttvperut == '' && lingkar_perut != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="observation" data-ttv="perut" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_observation_ttvperut == '' && lingkar_perut == '') {
-                            return `<span class="badge badge-error">Lingkar Perut Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Lingkar Perut Kosong', 'Data lingkar perut belum diinput di menu Pemeriksaan → Pemeriksaan Ralan.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -359,8 +651,8 @@
                         if (row.id_observation_ttvkesadaran == '' && row.pemeriksaan.kesadaran != undefined) {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="observation" data-ttv="kesadaran" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_observation_ttvkesadaran == '' && row.pemeriksaan.kesadaran == undefined) {
-                            return `<span class="badge badge-error">Kesadaran Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Kesadaran Kosong', 'Data kesadaran belum diinput di menu Pemeriksaan → Pemeriksaan Ralan.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -369,8 +661,8 @@
                         if (row.id_procedure == '' && row.prosedur_pasien != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="procedure" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_procedure == '' && row.prosedur_pasien == '') {
-                            return `<span class="badge badge-error">Prosedur Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Prosedur Kosong', 'Prosedur/tindakan utama (prioritas 1) belum diinput di menu Pemeriksaan → Prosedur Pasien.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -379,8 +671,8 @@
                         if (row.id_composition == '' && row.adime_gizi != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="dietgizi" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_composition == '' && row.adime_gizi == '') {
-                            return `<span class="badge badge-error">Adime Gizi Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Adime Gizi Kosong', 'Catatan ADIME gizi belum diinput di menu Pemeriksaan → Catatan ADIME Gizi.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 { data: 'id_immunization', 
@@ -388,8 +680,8 @@
                     if(row.id_immunization == '' && row.immunization != ''){
                         return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="vaksin" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                     }else if(row.id_immunization == '' && row.immunization == ''){
-                        return `<span class="badge badge-error">Vaksin/Imunisasi Kosong</span>`; 
-                    }else{return `${data}`}
+                        return badgeError('Vaksin/Imunisasi Kosong', 'Tidak ada resep vaksin. Input resep obat tipe Vaksin di menu Peresepan → Resep Obat.'); 
+                    }else{return `<span class="uuid">${data}</span>`}
                 }
                 },
                 {
@@ -398,8 +690,8 @@
                         if (row.id_medication_request == '' && row.medication_request != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="medication" data-ttv="request" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_medication_request == '' && row.medication_request == '') {
-                            return `<span class="badge badge-error">Permintaan Resep Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Permintaan Resep Kosong', 'Tidak ada resep obat. Input di menu Peresepan → Resep Obat.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -408,8 +700,8 @@
                         if (row.id_medication_dispense == '' && row.medication_dispense != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="medication" data-ttv="dispense" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_medication_dispense == '' && row.medication_dispense == '') {
-                            return `<span class="badge badge-error">Validasi Resep Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Validasi Resep Kosong', 'Resep belum divalidasi. Validasi di menu Peresepan → Resep Obat.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -418,8 +710,8 @@
                         if (row.id_medication_statement == '' && row.medication_statement != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="medication" data-ttv="statement" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_medication_statement == '' && row.medication_statement == '') {
-                            return `<span class="badge badge-error">Statemen Resep Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Statemen Resep Kosong', 'Resep belum diserahkan ke pasien. Proses penyerahan di menu Peresepan → Resep Obat.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -428,8 +720,8 @@
                         if (row.id_rad_request == '' && row.service_request_radiologi != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="radiology" data-ttv="request" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_rad_request == '' && row.service_request_radiologi == '') {
-                            return `<span class="badge badge-error">Service Request Radiologi Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Service Request Radiologi Kosong', 'Tidak ada permintaan radiologi. Input di menu Radiologi → Permintaan Radiologi.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -438,8 +730,8 @@
                         if (row.id_rad_specimen == '' && row.specimen_radiologi != '0000-00-00' && row.specimen_radiologi != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="radiology" data-ttv="specimen" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_rad_specimen == '' && (row.specimen_radiologi == '0000-00-00' || row.specimen_radiologi == '')) {
-                            return `<span class="badge badge-error">Specimen Radiologi Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Specimen Radiologi Kosong', 'Tanggal sampel radiologi belum diisi di menu Radiologi → Permintaan Radiologi.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -448,8 +740,8 @@
                         if (row.id_rad_observation == '' && row.observation_radiologi != '0000-00-00' && row.observation_radiologi != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="radiology" data-ttv="observation" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_rad_observation == '' && (row.observation_radiologi == '0000-00-00' || row.observation_radiologi == '')) {
-                            return `<span class="badge badge-error">Observation Radiologi Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Observation Radiologi Kosong', 'Hasil radiologi belum diinput di menu Radiologi → Hasil Radiologi.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -458,8 +750,8 @@
                         if (row.id_rad_diagnostic == '' && row.diagnostic_report_radiologi != '0000-00-00' && row.diagnostic_report_radiologi != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="radiology" data-ttv="diagnostic" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_rad_diagnostic == '' && (row.diagnostic_report_radiologi == '0000-00-00' || row.diagnostic_report_radiologi == '')) {
-                            return `<span class="badge badge-error">Diagnostic Report Radiologi Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Diagnostic Report Radiologi Kosong', 'Laporan hasil radiologi belum diinput di menu Radiologi → Hasil Radiologi.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -468,8 +760,8 @@
                         if (row.id_imaging_study == '' && row.imaging_study_radiologi != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="radiology" data-ttv="image" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_imaging_study == '' && row.imaging_study_radiologi == '') {
-                            return `<span class="badge badge-error">Imaging Study Radiologi Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Imaging Study Radiologi Kosong', 'Tidak ada data PACS study. Pastikan gambar radiologi sudah di-upload ke Mini PACS.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -478,8 +770,8 @@
                         if (row.id_lab_pk_request == '' && row.service_request_lab_pk != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="laboratory" data-ttv="request" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_lab_pk_request == '' && row.service_request_lab_pk == '') {
-                            return `<span class="badge badge-error">Request Lab PK Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Request Lab PK Kosong', 'Tidak ada permintaan lab. Input di menu Laboratorium → Permintaan Lab.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 // { data: 'id_service_request_lab_pa', 
@@ -506,8 +798,8 @@
                         if (row.id_lab_pk_specimen == '' && (row.specimen_lab_pk != '0000-00-00' && row.specimen_lab_pk != '')) {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="laboratory" data-ttv="specimen" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_lab_pk_specimen == '' && (row.specimen_lab_pk == '0000-00-00' || row.specimen_lab_pk == '')) {
-                            return `<span class="badge badge-error">Specimen Lab PK Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Specimen Lab PK Kosong', 'Tanggal sampel lab belum diisi di menu Laboratorium → Permintaan Lab.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 // { data: 'id_specimen_lab_pa', 
@@ -534,8 +826,8 @@
                         if (row.id_lab_pk_observation == '' && (row.observation_lab_pk != '0000-00-00' && row.observation_lab_pk != '')) {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="laboratory" data-ttv="observation" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_lab_pk_observation == '' && (row.observation_lab_pk == '0000-00-00' || row.observation_lab_pk == '')) {
-                            return `<span class="badge badge-error">Observation Lab PK Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Observation Lab PK Kosong', 'Hasil lab belum diinput di menu Laboratorium → Hasil Lab.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 // { data: 'id_observation_lab_pa', 
@@ -562,8 +854,8 @@
                         if (row.id_lab_pk_diagnostic == '' && (row.diagnostic_report_lab_pk != '0000-00-00' && row.diagnostic_report_lab_pk != '')) {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="laboratory" data-ttv="diagnostic" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_lab_pk_diagnostic == '' && (row.diagnostic_report_lab_pk == '0000-00-00' || row.diagnostic_report_lab_pk == '')) {
-                            return `<span class="badge badge-error">Diagnostic Lab PK Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Diagnostic Lab PK Kosong', 'Laporan hasil lab belum diinput di menu Laboratorium → Hasil Lab.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 // { data: 'id_diagnostic_report_lab_pa', 
@@ -590,8 +882,8 @@
                         if (row.id_careplan == '' && row.care_plan != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="careplan" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_careplan == '' && row.care_plan == '') {
-                            return `<span class="badge badge-error">Care Plan Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Care Plan Kosong', 'Rencana tindak lanjut (RTL) kosong di menu Pemeriksaan → Pemeriksaan Ralan.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -600,8 +892,8 @@
                         if (row.id_allergy == '' && row.allergy != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="allergy" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_allergy == '' && row.allergy == '') {
-                            return `<span class="badge badge-error">Allergy Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Allergy Kosong', 'Tidak ada diagnosa alergi (kode T78.1, T88.7, J30.1, J30.8, T78.4) di menu Diagnosa Pasien.');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
                 {
@@ -610,8 +902,8 @@
                         if (row.id_questionnaire == '' && row.questionnaire != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="questionnaire" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_questionnaire == '' && row.questionnaire == '') {
-                            return `<span class="badge badge-error">Questionnaire Kosong</span>`;
-                        } else { return `${data}` }
+                            return badgeError('Questionnaire Kosong', 'Data KPS belum diinput di menu Pemeriksaan → Catatan Perawatan (catatan: KPS).');
+                        } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
             ],
@@ -621,6 +913,15 @@
 
         $('#asuransiModal').on('hidden.bs.modal', function () {
             table.ajax.reload(null, false);
+        });
+
+        // Tombol filter status
+        $('#status-filter .btn').on('click', function () {
+            var $btn = $(this);
+            $('#status-filter .btn').removeClass('active');
+            $btn.addClass('active');
+            statusFilter = $btn.data('filter') || '';
+            table.ajax.url(buildApiUrl()).load();
         });
 
     });

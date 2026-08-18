@@ -6490,6 +6490,9 @@ class Admin extends AdminModule
 
     $searchTerm = $_POST['search']['value'] ?? '';
 
+    // Filter status (all | not_sent | ready | sent | blocked)
+    $statusFilter = $_GET['status_filter'] ?? $_POST['status_filter'] ?? '';
+
     $total = $this->db('reg_periksa')
       ->where('reg_periksa.tgl_registrasi', '>=', $start_date)
       ->where('reg_periksa.tgl_registrasi', '<=', $end_date)
@@ -6522,8 +6525,6 @@ class Admin extends AdminModule
     $filteredTotal = $query->count();
 
     $query_data = $query->select(['reg_periksa.*', 'nm_pasien' => 'pasien.nm_pasien', 'no_ktp_pasien' => 'pasien.no_ktp', 'nm_dokter' => 'dokter.nm_dokter', 'no_ktp_dokter' => 'pegawai.no_ktp'])
-      ->limit($length)
-      ->offset($start)
       ->toArray();
 
     $data_response = [];
@@ -6745,9 +6746,62 @@ class Admin extends AdminModule
       $row['id_careplan'] = isset_or($mlite_satu_sehat_response['id_careplan'], '');
       $row['id_allergy'] = isset_or($mlite_satu_sehat_response['id_allergy'], '');
       $row['id_questionnaire'] = isset_or($mlite_satu_sehat_response['id_questionnaire'], '');
+
+      // Hitung status keseluruhan & blocker (alasan kenapa tidak bisa dikirim)
+      if ($row['tgl_pulang'] == '' || $row['tgl_pulang'] === null) {
+        $status = 'not_closed';
+      } elseif ($row['id_encounter'] != '') {
+        $status = ($row['id_condition'] != '') ? 'sent' : 'partial';
+      } elseif (empty($row['diagnosa_pasien']) || $row['praktisi_id'] == '' || $row['id_lokasi'] == '' || $row['id_organisasi'] == '') {
+        $status = 'blocked';
+      } else {
+        $status = 'ready';
+      }
+
+      $blockers = [];
+      if ($row['tgl_pulang'] == '' || $row['tgl_pulang'] === null) {
+        $blockers[] = 'Pasien belum closing: tgl. pulang / billing belum diinput.';
+      }
+      if (empty($row['diagnosa_pasien'])) {
+        $blockers[] = 'Diagnosa utama (prioritas 1) belum diinput.';
+      }
+      if ($row['praktisi_id'] == '') {
+        $blockers[] = 'Dokter belum di-mapping ke Satu Sehat (menu Mapping Praktisi).';
+      }
+      if ($row['id_lokasi'] == '') {
+        $blockers[] = 'Unit/Poli belum di-mapping lokasi Satu Sehat (menu Mapping Lokasi).';
+      }
+      if ($row['id_organisasi'] == '') {
+        $blockers[] = 'Unit/Poli belum di-mapping organisasi Satu Sehat (menu Mapping Lokasi).';
+      }
+
+      $row['status'] = $status;
+      $row['blockers'] = $blockers;
       $data_response[] = $row;
     }
-    // Format hasil
+
+    // Terapkan filter status (dari status_filter: all/not_sent/ready/sent/blocked)
+    if ($statusFilter !== '') {
+      $data_response = array_values(array_filter($data_response, function ($row) use ($statusFilter) {
+        switch ($statusFilter) {
+          case 'not_sent':
+            return in_array($row['status'], ['not_closed', 'blocked', 'ready']);
+          case 'ready':
+            return $row['status'] === 'ready';
+          case 'sent':
+            return in_array($row['status'], ['sent', 'partial']);
+          case 'blocked':
+            return in_array($row['status'], ['blocked', 'not_closed']);
+          default:
+            return true;
+        }
+      }));
+    }
+
+    // Format hasil (pagination manual setelah filter)
+    $filteredTotal = count($data_response);
+    $data_response = array_slice($data_response, $start, $length);
+
     echo json_encode([
       "draw" => $draw,
       "recordsFiltered" => $filteredTotal,

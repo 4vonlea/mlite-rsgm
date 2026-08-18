@@ -303,7 +303,7 @@ class Site extends SiteModule
                 'display' => htmlspecialchars($r['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
                 'url' => str_replace('/', '', htmlspecialchars($r['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'))
             ];
-        }
+        }   
         $encBase = '/satu-sehat/encounter/';
         $condBase = '/satu-sehat/condition/';
         $obsBase = '/satu-sehat/observation/';
@@ -497,7 +497,7 @@ class Site extends SiteModule
                     );
                 }
 
-                // Radiology (request/result)
+                // Radiology (request/specimen/observation/diagnostic/image)
                 const radTypes = ["request", "specimen", "observation", "diagnostic", "image"];
                 const radRes = {};
                 for (const rt of radTypes) {
