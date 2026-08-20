@@ -465,6 +465,8 @@ $("#soap").on("click",".copy_soap", function(event){
   $('textarea[name=instruksi]').val(instruksi);
   $('textarea[name=evaluasi]').val(evaluasi);
   $('input:text[name=spo2]').val(spo2);
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 // Handler untuk edit data SOAP
@@ -643,6 +645,7 @@ $("#soap").on("click",".copy_soap", function(event){
   $('textarea[name=evaluasi]').val(evaluasi);
   $('input:text[name=spo2]').val(spo2);
 
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 $("#soap").on("click",".edit_soap", function(event){

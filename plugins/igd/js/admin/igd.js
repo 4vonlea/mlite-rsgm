@@ -590,6 +590,7 @@ $("#soap").on("click",".copy_soap", function(event){
   $('textarea[name=evaluasi]').val(evaluasi);
   $('input:text[name=spo2]').val(spo2);
 
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 // ketika tombol hapus ditekan
