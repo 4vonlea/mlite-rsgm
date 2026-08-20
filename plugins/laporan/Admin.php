@@ -672,8 +672,8 @@ class Admin extends AdminModule
     {
         $this->_addHeaderFiles();
 
-        $tgl_awal = isset($_POST['tgl_awal']) ? $_POST['tgl_awal'] : (isset($_GET['tgl_awal']) ? $_GET['tgl_awal'] : date('Y-m-01'));
-        $tgl_akhir = isset($_POST['tgl_akhir']) ? $_POST['tgl_akhir'] : (isset($_GET['tgl_akhir']) ? $_GET['tgl_akhir'] : date('Y-m-t'));
+        $tgl_awal = isset($_POST['tgl_awal']) ? $_POST['tgl_awal'] : (isset($_GET['tgl_awal']) ? $_GET['tgl_awal'] : date('Y-m-d'));
+        $tgl_akhir = isset($_POST['tgl_akhir']) ? $_POST['tgl_akhir'] : (isset($_GET['tgl_akhir']) ? $_GET['tgl_akhir'] : date('Y-m-d'));
         $req_poli = isset($_POST['kd_poli']) ? $_POST['kd_poli'] : (isset($_GET['kd_poli']) ? $_GET['kd_poli'] : '');
         $req_status_rm = isset($_POST['status_rm']) ? $_POST['status_rm'] : (isset($_GET['status_rm']) ? $_GET['status_rm'] : 'tidak_lengkap');
 
@@ -707,10 +707,21 @@ class Admin extends AdminModule
         ];
 
         // Base Query using raw SQL for efficiency
+        // Separate 'OD' from regular poli because reg_periksa.kd_poli is overwritten for OD patients
+        $has_od = in_array('OD', $req_poli_array);
+        $regular_poli = array_values(array_diff($req_poli_array, ['OD']));
         $where = "WHERE reg_periksa.tgl_registrasi >= '$startDate' AND reg_periksa.tgl_registrasi <= '$endDate' AND reg_periksa.stts <> 'Batal'";
-        if (!empty($req_poli_array)) {
-            $in_poli = "'" . implode("','", array_map('addslashes', $req_poli_array)) . "'";
+        if (!empty($regular_poli) && $has_od) {
+            // Both OD and regular poli selected: include regular poli patients AND OD patients
+            $in_poli = "'" . implode("','", array_map('addslashes', $regular_poli)) . "'";
+            $where .= " AND (reg_periksa.kd_poli IN ($in_poli) OR EXISTS (SELECT 1 FROM mlite_pendaftaran_oral_diagnostic od WHERE od.no_rawat = reg_periksa.no_rawat))";
+        } elseif (!empty($regular_poli)) {
+            // Only regular poli selected
+            $in_poli = "'" . implode("','", array_map('addslashes', $regular_poli)) . "'";
             $where .= " AND reg_periksa.kd_poli IN ($in_poli)";
+        } elseif ($has_od) {
+            // Only OD selected: only include patients that went through OD
+            $where .= " AND EXISTS (SELECT 1 FROM mlite_pendaftaran_oral_diagnostic od WHERE od.no_rawat = reg_periksa.no_rawat)";
         }
 
         $pdo = \Systems\Lib\QueryWrapper::pdo();
@@ -817,7 +828,7 @@ class Admin extends AdminModule
         $stats['dokter'] = $q_dokter;
 
         // 7. Kunjungan per Unit
-        $q_unit = $pdo->query("SELECT p.nm_poli, reg_periksa.stts_daftar, COUNT(*) as jml FROM reg_periksa JOIN poliklinik p ON p.kd_poli = reg_periksa.kd_poli $where GROUP BY p.nm_poli, reg_periksa.stts_daftar")->fetchAll(\PDO::FETCH_ASSOC);
+        $q_unit = $pdo->query("SELECT IF(od.no_rawat IS NOT NULL, 'OD (Oral Diagnosa)', p.nm_poli) as nm_poli, reg_periksa.stts_daftar, COUNT(*) as jml FROM reg_periksa JOIN poliklinik p ON p.kd_poli = reg_periksa.kd_poli LEFT JOIN mlite_pendaftaran_oral_diagnostic od ON od.no_rawat = reg_periksa.no_rawat $where GROUP BY IF(od.no_rawat IS NOT NULL, 'OD (Oral Diagnosa)', p.nm_poli), reg_periksa.stts_daftar")->fetchAll(\PDO::FETCH_ASSOC);
         $kunjungan_unit = [];
         $total_unit = ['Lama' => 0, 'Baru' => 0, 'Total' => 0];
         foreach ($q_unit as $row) {
@@ -848,15 +859,17 @@ class Admin extends AdminModule
         $stats['total_unit'] = $total_unit;
 
         // 8. Diagnosa per Unit
+        $od_poli_expr = "IF(od.no_rawat IS NOT NULL, 'OD (Oral Diagnosa)', p.nm_poli)";
         $q_diagnosa = $pdo->query("
-            SELECT p.nm_poli, py.kd_penyakit, py.nm_penyakit, COUNT(*) as jml 
+            SELECT $od_poli_expr as nm_poli, py.kd_penyakit, py.nm_penyakit, COUNT(*) as jml 
             FROM reg_periksa 
             JOIN poliklinik p ON p.kd_poli = reg_periksa.kd_poli 
+            LEFT JOIN mlite_pendaftaran_oral_diagnostic od ON od.no_rawat = reg_periksa.no_rawat
             JOIN diagnosa_pasien dp ON dp.no_rawat = reg_periksa.no_rawat 
             JOIN penyakit py ON py.kd_penyakit = dp.kd_penyakit 
             $where 
-            GROUP BY p.nm_poli, py.kd_penyakit, py.nm_penyakit 
-            ORDER BY p.nm_poli, jml DESC
+            GROUP BY $od_poli_expr, py.kd_penyakit, py.nm_penyakit 
+            ORDER BY nm_poli, jml DESC
         ")->fetchAll(\PDO::FETCH_ASSOC);
 
         $limit_data = empty($req_poli_array) ? 10 : PHP_INT_MAX;
@@ -886,16 +899,17 @@ class Admin extends AdminModule
         $stats['diagnosa_per_poli'] = $diagnosa_per_poli;
 
         // 9. Tindakan per Unit
+        $od_poli_expr_t = "IF(od.no_rawat IS NOT NULL, 'OD (Oral Diagnosa)', p.nm_poli)";
         $q_tindakan = $pdo->query("
             SELECT poli, kd_jenis_prw, nm_perawatan, SUM(jml) as jml FROM (
-                SELECT p.nm_poli as poli, jp.kd_jenis_prw, jp.nm_perawatan, COUNT(*) as jml 
-                FROM reg_periksa JOIN poliklinik p ON p.kd_poli = reg_periksa.kd_poli JOIN rawat_jl_dr t ON t.no_rawat = reg_periksa.no_rawat JOIN jns_perawatan jp ON jp.kd_jenis_prw = t.kd_jenis_prw $where GROUP BY p.nm_poli, jp.kd_jenis_prw, jp.nm_perawatan
+                SELECT $od_poli_expr_t as poli, jp.kd_jenis_prw, jp.nm_perawatan, COUNT(*) as jml 
+                FROM reg_periksa JOIN poliklinik p ON p.kd_poli = reg_periksa.kd_poli LEFT JOIN mlite_pendaftaran_oral_diagnostic od ON od.no_rawat = reg_periksa.no_rawat JOIN rawat_jl_dr t ON t.no_rawat = reg_periksa.no_rawat JOIN jns_perawatan jp ON jp.kd_jenis_prw = t.kd_jenis_prw $where GROUP BY $od_poli_expr_t, jp.kd_jenis_prw, jp.nm_perawatan
                 UNION ALL
-                SELECT p.nm_poli as poli, jp.kd_jenis_prw, jp.nm_perawatan, COUNT(*) as jml 
-                FROM reg_periksa JOIN poliklinik p ON p.kd_poli = reg_periksa.kd_poli JOIN rawat_jl_pr t ON t.no_rawat = reg_periksa.no_rawat JOIN jns_perawatan jp ON jp.kd_jenis_prw = t.kd_jenis_prw $where GROUP BY p.nm_poli, jp.kd_jenis_prw, jp.nm_perawatan
+                SELECT $od_poli_expr_t as poli, jp.kd_jenis_prw, jp.nm_perawatan, COUNT(*) as jml 
+                FROM reg_periksa JOIN poliklinik p ON p.kd_poli = reg_periksa.kd_poli LEFT JOIN mlite_pendaftaran_oral_diagnostic od ON od.no_rawat = reg_periksa.no_rawat JOIN rawat_jl_pr t ON t.no_rawat = reg_periksa.no_rawat JOIN jns_perawatan jp ON jp.kd_jenis_prw = t.kd_jenis_prw $where GROUP BY $od_poli_expr_t, jp.kd_jenis_prw, jp.nm_perawatan
                 UNION ALL
-                SELECT p.nm_poli as poli, jp.kd_jenis_prw, jp.nm_perawatan, COUNT(*) as jml 
-                FROM reg_periksa JOIN poliklinik p ON p.kd_poli = reg_periksa.kd_poli JOIN rawat_jl_drpr t ON t.no_rawat = reg_periksa.no_rawat JOIN jns_perawatan jp ON jp.kd_jenis_prw = t.kd_jenis_prw $where GROUP BY p.nm_poli, jp.kd_jenis_prw, jp.nm_perawatan
+                SELECT $od_poli_expr_t as poli, jp.kd_jenis_prw, jp.nm_perawatan, COUNT(*) as jml 
+                FROM reg_periksa JOIN poliklinik p ON p.kd_poli = reg_periksa.kd_poli LEFT JOIN mlite_pendaftaran_oral_diagnostic od ON od.no_rawat = reg_periksa.no_rawat JOIN rawat_jl_drpr t ON t.no_rawat = reg_periksa.no_rawat JOIN jns_perawatan jp ON jp.kd_jenis_prw = t.kd_jenis_prw $where GROUP BY $od_poli_expr_t, jp.kd_jenis_prw, jp.nm_perawatan
             ) AS all_tindakan
             GROUP BY poli, kd_jenis_prw, nm_perawatan
             ORDER BY poli, jml DESC
@@ -999,7 +1013,7 @@ class Admin extends AdminModule
                 pasien.tgl_lahir,
                 pasien.jk,
                 pasien.alamat,
-                p.nm_poli,
+                IF(od.no_rawat IS NOT NULL, 'OD (Oral Diagnosa)', p.nm_poli) as nm_poli,
                 reg_periksa.stts_daftar,
                 reg_periksa.status_poli,
                 d.nm_dokter,
@@ -1008,6 +1022,7 @@ class Admin extends AdminModule
             FROM reg_periksa
             JOIN pasien ON pasien.no_rkm_medis = reg_periksa.no_rkm_medis
             JOIN poliklinik p ON p.kd_poli = reg_periksa.kd_poli
+            LEFT JOIN mlite_pendaftaran_oral_diagnostic od ON od.no_rawat = reg_periksa.no_rawat
             JOIN dokter d ON d.kd_dokter = reg_periksa.kd_dokter
             JOIN penjab ON penjab.kd_pj = reg_periksa.kd_pj
             $where
@@ -1019,8 +1034,11 @@ class Admin extends AdminModule
         $perawat_map = [];
         $catatan_map = [];
         $soap_map = [];
+        $soap_count = [];
         $earliest_exam = [];
         $icd9_map = [];
+        $od_records = [];
+        $od_patient_nos = [];
         $all_no_rawat = array_column($q_pasien, 'no_rawat');
 
         if (!empty($all_no_rawat)) {
@@ -1101,6 +1119,18 @@ class Admin extends AdminModule
                 }
             }
 
+            // Fetch OD (Oral Diagnosa) patient records
+            $q_od = $pdo->query("
+                SELECT no_rawat, no_rkm_medis, kd_dokter, tgl_registrasi, stts_daftar, status_poli, kd_pj
+                FROM mlite_pendaftaran_oral_diagnostic
+                WHERE tgl_registrasi >= '$startDate' AND tgl_registrasi <= '$endDate'
+            ")->fetchAll(\PDO::FETCH_ASSOC);
+            $od_records = [];
+            foreach ($q_od as $r) {
+                $od_records[$r['no_rawat']] = $r;
+            }
+            $od_patient_nos = array_keys($od_records);
+
             $qc = $pdo->query("SELECT no_rawat, catatan FROM catatan_perawatan WHERE no_rawat IN ($in_clause)")->fetchAll(\PDO::FETCH_ASSOC);
             foreach ($qc as $r) {
                 $catatan_map[$r['no_rawat']][] = $r['catatan'];
@@ -1133,9 +1163,13 @@ class Admin extends AdminModule
                 WHERE p.no_rawat IN ($in_clause)
             ")->fetchAll(\PDO::FETCH_ASSOC);
 
+            $soap_count = [];
             foreach ($q_soap as $row) {
                 $nr = $row['no_rawat'];
                 $role = $row['role'];
+
+                // Track SOAP count per role (for OD completeness check)
+                $soap_count[$nr][$role] = ($soap_count[$nr][$role] ?? 0) + 1;
 
                 // Track earliest exam date/time for waiting time calculation
                 if (!empty($row['tgl_perawatan']) && !empty($row['jam_rawat'])) {
@@ -1241,6 +1275,9 @@ class Admin extends AdminModule
             // Calculate medical record completeness detailed missing items
             $dokter_soap = $soap_map[$nr]['Dokter'] ?? null;
             $perawat_soap = $soap_map[$nr]['Perawat'] ?? null;
+            $is_od = in_array($nr, $od_patient_nos);
+            $dokter_soap_count = $soap_count[$nr]['Dokter'] ?? 0;
+            $perawat_soap_count = $soap_count[$nr]['Perawat'] ?? 0;
 
             $missing_dokter = [];
             if (!$dokter_soap) {
@@ -1317,11 +1354,29 @@ class Admin extends AdminModule
                 }
             }
 
-            $rm_status = (empty($missing_dokter) && empty($missing_perawat)) ? 'lengkap' : 'tidak';
+            // RM completeness: OD patients need 2 dokter + 2 perawat SOAP entries (OD + tujuan)
+            if ($is_od) {
+                $rm_status = ($dokter_soap_count >= 2 && $perawat_soap_count >= 2) ? 'lengkap' : 'tidak';
+                // Even if SOAP count is sufficient, still check individual field completeness for the merged data
+                if ($rm_status === 'lengkap') {
+                    // Still mark as tidak if any required field is missing in merged SOAP
+                    if (empty($missing_dokter) && empty($missing_perawat)) {
+                        $rm_status = 'lengkap';
+                    } else {
+                        $rm_status = 'tidak';
+                    }
+                }
+            } else {
+                $rm_status = (empty($missing_dokter) && empty($missing_perawat)) ? 'lengkap' : 'tidak';
+            }
 
             // Pre-render HTML for missing doctor items
             $dokter_soap_info = '';
-            if (empty($missing_dokter)) {
+            if ($is_od && $dokter_soap_count < 2) {
+                $dokter_soap_info = '<div style="margin-bottom: 5px;"><strong>Dokter:</strong><ul style="margin: 0; padding-left: 12px; color: #f43f5e; list-style-type: square;">';
+                $dokter_soap_info .= '<li>SOAP Dokter OD/Poli: ' . $dokter_soap_count . '/2 entri</li>';
+                $dokter_soap_info .= '</ul></div>';
+            } elseif (empty($missing_dokter)) {
                 $dokter_soap_info = '<div style="margin-bottom: 5px; color: #10b981;"><i class="fa fa-check-circle"></i> Dokter: Lengkap</div>';
             } else {
                 $dokter_soap_info = '<div style="margin-bottom: 5px;"><strong>Dokter:</strong><ul style="margin: 0; padding-left: 12px; color: #f43f5e; list-style-type: square;">';
@@ -1333,7 +1388,11 @@ class Admin extends AdminModule
 
             // Pre-render HTML for missing perawat items
             $perawat_soap_info = '';
-            if (empty($missing_perawat)) {
+            if ($is_od && $perawat_soap_count < 2) {
+                $perawat_soap_info = '<div><strong>Perawat:</strong><ul style="margin: 0; padding-left: 12px; color: #f43f5e; list-style-type: square;">';
+                $perawat_soap_info .= '<li>SOAP Perawat OD/Poli: ' . $perawat_soap_count . '/2 entri</li>';
+                $perawat_soap_info .= '</ul></div>';
+            } elseif (empty($missing_perawat)) {
                 $perawat_soap_info = '<div style="color: #10b981;"><i class="fa fa-check-circle"></i> Perawat: Lengkap</div>';
             } else {
                 $perawat_soap_info = '<div><strong>Perawat:</strong><ul style="margin: 0; padding-left: 12px; color: #f43f5e; list-style-type: square;">';
@@ -1352,6 +1411,9 @@ class Admin extends AdminModule
                 'waktu_tunggu' => $waktu_tunggu_text,
                 'waktu_tunggu_menit' => $waktu_tunggu_menit,
                 'rm_status' => $rm_status,
+                'is_od' => $is_od,
+                'dokter_soap_count' => $dokter_soap_count,
+                'perawat_soap_count' => $perawat_soap_count,
                 'dokter_soap_info' => $dokter_soap_info,
                 'perawat_soap_info' => $perawat_soap_info,
                 'no_rkm_medis' => $row['no_rkm_medis'],
@@ -1442,8 +1504,16 @@ class Admin extends AdminModule
             ]
         ];
 
-        // Get poliklinik for dropdown
+        // Get poliklinik for dropdown (including OD)
         $poliklinik = $pdo->query("SELECT kd_poli, nm_poli FROM poliklinik WHERE status = '1' ORDER BY nm_poli")->fetchAll(\PDO::FETCH_ASSOC);
+        // Add OD only if not already in the list
+        $has_od_poli = false;
+        foreach ($poliklinik as $p) {
+            if ($p['kd_poli'] === 'OD') { $has_od_poli = true; break; }
+        }
+        if (!$has_od_poli) {
+            array_unshift($poliklinik, ['kd_poli' => 'OD', 'nm_poli' => 'OD (Oral Diagnosa)']);
+        }
 
         // Filter for table presentation based on Kelengkapan RM
         $filtered_pasien_list = [];
@@ -1458,23 +1528,7 @@ class Admin extends AdminModule
         }
         $pasien_list = $filtered_pasien_list;
 
-        // Pagination logic
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        if ($page < 1) $page = 1;
-        $limit = 50;
         $total_data = count($pasien_list);
-        $total_pages = ceil($total_data / $limit);
-        $offset = ($page - 1) * $limit;
-        
-        $queryParams = [
-            'tgl_awal' => $tgl_awal,
-            'tgl_akhir' => $tgl_akhir,
-            'status_rm' => $req_status_rm
-        ];
-        if (!empty($req_poli_array)) {
-            $queryParams['kd_poli'] = $req_poli_array;
-        }
-        $queryString = http_build_query($queryParams);
 
         $viewData = [
             'stats' => $stats,
@@ -1483,11 +1537,8 @@ class Admin extends AdminModule
             'req_poli' => $req_poli_array,
             'req_status_rm' => $req_status_rm,
             'poliklinik' => $poliklinik,
-            'pasien_list' => array_slice($pasien_list, $offset, $limit),
+            'pasien_list' => $pasien_list,
             'total_pasien_list' => $total_data,
-            'page' => $page,
-            'total_pages' => $total_pages,
-            'query_string' => $queryString
         ];
 
         if (isset($_GET['export']) && $_GET['export'] == 'excel') {

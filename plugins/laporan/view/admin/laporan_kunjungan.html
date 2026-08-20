@@ -726,6 +726,9 @@
                                                     {/if}
                                                 </td>
                                                 <td style="font-size: 11px; min-width: 170px;">
+                                                    {if: $value.is_od}
+                                                    <span class="label label-info" style="background-color: #6366f1 !important; color: #fff !important; padding: 2px 6px; font-size: 10px;">OD</span>
+                                                    {/if}
                                                     {if: $value.rm_status == 'lengkap'}
                                                     <span class="label label-success"
                                                         style="background-color: #10b981 !important; color: #fff !important; padding: 2px 6px;">Lengkap</span>
@@ -755,23 +758,10 @@
                                     </table>
                                 </div>
                                 <div class="row" style="margin-top: 15px;">
-                                    <div class="col-md-6" style="padding-top: 8px;">
+                                    <div class="col-md-12" style="padding-top: 8px;">
                                         <div style="background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 4px; display: inline-block; font-size: 11px;">
-                                            <i class="fa fa-database"></i> Memuat Blok Data ke-<strong>{?=$laporan.page?}</strong> dari <strong>{?=$laporan.total_pages?}</strong> (Total Keseluruhan: <strong>{?=$laporan.total_pasien_list?}</strong> kunjungan)
+                                            <i class="fa fa-database"></i> Total: <strong>{?=$laporan.total_pasien_list?}</strong> kunjungan
                                         </div>
-                                    </div>
-                                    <div class="col-md-6 text-right">
-                                        <ul class="pagination" style="margin: 0;">
-                                            {if: $laporan.page > 1}
-                                            <li><a href="{?=url([ADMIN, 'laporan', 'laporankunjungan'])?}&{?=$laporan.query_string?}&page={?=$laporan.page - 1?}"><i class="fa fa-angle-double-left"></i> Blok Data Sebelumnya</a></li>
-                                            {/if}
-                                            
-                                            <li class="active"><span>Blok {?=$laporan.page?}</span></li>
-                                            
-                                            {if: $laporan.page < $laporan.total_pages}
-                                            <li><a href="{?=url([ADMIN, 'laporan', 'laporankunjungan'])?}&{?=$laporan.query_string?}&page={?=$laporan.page + 1?}">Muat Data Selanjutnya <i class="fa fa-angle-double-right"></i></a></li>
-                                            {/if}
-                                        </ul>
                                     </div>
                                 </div>
                             </div>
