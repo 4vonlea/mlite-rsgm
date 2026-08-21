@@ -74,3 +74,4 @@ themes/atilamedika
 api/
 docker/.env
 mobile-react/node_modules/.package-lock.json
+config.php

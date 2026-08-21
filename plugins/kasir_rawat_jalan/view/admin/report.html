@@ -5,6 +5,7 @@
   <div class="panel-body">
     <form method="get" action="{?= url([ADMIN,'kasir_rawat_jalan','report']) ?}">
       <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+      <input type="hidden" name="penjamin" id="penjamin_filter" value="{?=isset_or($penjamin)?}">
       <div class="row">
         <div class="col-md-4">
           <label>Mulai</label>
@@ -17,9 +18,11 @@
         <div class="col-md-4">
           <label>&nbsp;</label>
           <div>
-            <button type="submit" class="btn btn-primary">Terapkan</button>
-            <a class="btn btn-default" href="{?= url([ADMIN,'kasir_rawat_jalan','reportexport']) ?}&awal={?=isset_or($awal)?}&akhir={?=isset_or($akhir)?}">Export CSV</a>
-            <button type="button" class="btn btn-warning" onclick="printContent('laporan')">Cetak</button>
+            <button type="submit" class="btn btn-primary" onclick="document.getElementById('penjamin_filter').value=''">Terapkan</button>
+            <button type="button" class="btn btn-info" onclick="filterTable('UMUM')">Umum</button>
+            <button type="button" class="btn btn-success" onclick="filterTable('BPJ')">BPJS</button>
+            <a class="btn btn-default" id="btn-export" href="{?= url([ADMIN,'kasir_rawat_jalan','reportexport']) ?}&awal={?=isset_or($awal)?}&akhir={?=isset_or($akhir)?}&penjamin={?=isset_or($penjamin)?}">Export CSV</a>
+            <a class="btn btn-warning" id="btn-print" href="{?= url([ADMIN,'kasir_rawat_jalan','cetakreport']) ?}&awal={?=isset_or($awal)?}&akhir={?=isset_or($akhir)?}&penjamin={?=isset_or($penjamin)?}" target="_blank">Cetak</a>
           </div>
         </div>
       </div>
@@ -27,6 +30,7 @@
 
     <hr>
     <div id="laporan">
+    <div class="table-responsive">
     <table class="table table-striped">
       <thead>
         <tr>
@@ -40,12 +44,18 @@
       </thead>
       <tbody id="rows"></tbody>
     </table>
+    </div>
     <hr>
+    <div class="table-responsive">
     <table class="table table-bordered">
       <thead>
         <tr>
           <th>Kode Faktur</th>
           <th>No. Rawat</th>
+          <th>No. RM & Nama Pasien</th>
+          <th>Unit</th>
+          <th>DPJP</th>
+          <th>Penjamin</th>
           <th>Kasir</th>
           <th>Total Bayar</th>
           <th>Waktu</th>
@@ -55,38 +65,97 @@
       <tbody id="details"></tbody>
     </table>
     </div>
+    </div>
     <script>
-      (function(){
-        var data = {?= json_encode($rows) ?};
+      var allData = {?= json_encode($rows) ?};
+      var allDetails = {?= json_encode($details ?? []) ?};
+
+      function filterTable(penjamin) {
+        document.getElementById('penjamin_filter').value = penjamin;
+        
+        var exportBtn = document.getElementById('btn-export');
+        if (exportBtn) {
+           var href = "{?= url([ADMIN,'kasir_rawat_jalan','reportexport']) ?}&awal={?=isset_or($awal)?}&akhir={?=isset_or($akhir)?}";
+           if (penjamin === 'UMUM') href += "&penjamin=UMU";
+           else if (penjamin === 'BPJ') href += "&penjamin=BPJ";
+           exportBtn.href = href;
+        }
+
+        var printBtn = document.getElementById('btn-print');
+        if (printBtn) {
+           var href = "{?= url([ADMIN,'kasir_rawat_jalan','cetakreport']) ?}&awal={?=isset_or($awal)?}&akhir={?=isset_or($akhir)?}";
+           if (penjamin === 'UMUM') href += "&penjamin=UMU";
+           else if (penjamin === 'BPJ') href += "&penjamin=BPJ";
+           printBtn.href = href;
+        }
+
+        var filteredDetails = allDetails;
+        if (penjamin === 'UMUM') {
+          filteredDetails = allDetails.filter(function(d) { return d.png_jawab && d.png_jawab.toUpperCase().indexOf('BPJS') === -1; }); 
+        } else if (penjamin === 'BPJ') {
+          filteredDetails = allDetails.filter(function(d) { return d.png_jawab && d.png_jawab.toUpperCase().indexOf('BPJS') !== -1; });
+        }
+
+        var dtbody = document.getElementById('details');
+        dtbody.innerHTML = '';
+        var summaryMap = {};
+        
+        filteredDetails.forEach(function(d){
+          var tr = document.createElement('tr');
+          var bayar = Number(d.jumlah_harus_bayar || 0);
+          tr.innerHTML = '<td>'+ (d.kd_billing || '') +'</td>'+
+                         '<td>'+ (d.no_rawat || '') +'</td>'+
+                         '<td>'+ (d.no_rkm_medis || '') + ' - ' + (d.nm_pasien || '') +'</td>'+
+                         '<td>'+ (d.nm_poli || '') +'</td>'+
+                         '<td>'+ (d.nm_dokter || '') +'</td>'+
+                         '<td>'+ (d.png_jawab || '') +'</td>'+
+                         '<td>'+ (d.nama_kasir || '') +'</td>'+
+                         '<td>'+ bayar.toLocaleString('id-ID',{minimumFractionDigits:2, maximumFractionDigits:2}) +'</td>'+
+                         '<td>'+ (d.waktu || '') +'</td>'+
+                         '<td>'+ (d.keterangan || '') +'</td>';
+          dtbody.appendChild(tr);
+
+          var key = d.id_user;
+          if (!summaryMap[key]) {
+              summaryMap[key] = {
+                  id_user: d.id_user,
+                  nama_kasir: d.nama_kasir,
+                  transaksi: 0,
+                  total: 0,
+                  mulai: d.waktu,
+                  selesai: d.waktu
+              };
+          }
+          summaryMap[key].transaksi++;
+          summaryMap[key].total += bayar;
+          if (d.waktu < summaryMap[key].mulai) summaryMap[key].mulai = d.waktu;
+          if (d.waktu > summaryMap[key].selesai) summaryMap[key].selesai = d.waktu;
+        });
+
         var tbody = document.getElementById('rows');
-        if (Array.isArray(data)) {
-          data.forEach(function(r){
+        tbody.innerHTML = '';
+        Object.keys(summaryMap).forEach(function(key) {
+            var r = summaryMap[key];
             var tr = document.createElement('tr');
-            var total = Number(r.total || 0);
             tr.innerHTML = '<td>'+ (r.id_user || '') +'</td>'+
                            '<td>'+ (r.nama_kasir || '') +'</td>'+
                            '<td>'+ (r.transaksi || 0) +'</td>'+
-                           '<td>'+ total.toLocaleString('id-ID',{minimumFractionDigits:2, maximumFractionDigits:2}) +'</td>'+
+                           '<td>'+ r.total.toLocaleString('id-ID',{minimumFractionDigits:2, maximumFractionDigits:2}) +'</td>'+
                            '<td>'+ (r.mulai || '') +'</td>'+
                            '<td>'+ (r.selesai || '') +'</td>';
             tbody.appendChild(tr);
-          });
+        });
+        
+        if (filteredDetails.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Tidak ada data</td></tr>';
+            dtbody.innerHTML = '<tr><td colspan="10" class="text-center">Tidak ada data</td></tr>';
         }
-        var details = {?= json_encode($details ?? []) ?};
-        var dtbody = document.getElementById('details');
-        if (Array.isArray(details)) {
-          details.forEach(function(d){
-            var tr = document.createElement('tr');
-            var bayar = Number(d.jumlah_harus_bayar || 0);
-            tr.innerHTML = '<td>'+ (d.kd_billing || '') +'</td>'+
-                           '<td>'+ (d.no_rawat || '') +'</td>'+
-                           '<td>'+ (d.nama_kasir || '') +'</td>'+
-                           '<td>'+ bayar.toLocaleString('id-ID',{minimumFractionDigits:2, maximumFractionDigits:2}) +'</td>'+
-                           '<td>'+ (d.waktu || '') +'</td>'+
-                           '<td>'+ (d.keterangan || '') +'</td>';
-            dtbody.appendChild(tr);
-          });
-        }
+      }
+
+      (function(){
+        var initPenjamin = "{?=isset_or($penjamin)?}";
+        if (initPenjamin === 'UMU') initPenjamin = 'UMUM';
+        filterTable(initPenjamin);
       })();
 
       function printContent(el){

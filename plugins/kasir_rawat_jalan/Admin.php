@@ -2289,26 +2289,37 @@ class Admin extends AdminModule
         $this->_addHeaderFiles();
         $awal = isset($_GET['awal']) ? $_GET['awal'] : date('Y-m-d').' 00:00:00';
         $akhir = isset($_GET['akhir']) ? $_GET['akhir'] : date('Y-m-d').' 23:59:59';
+        $penjamin = isset($_GET['penjamin']) ? $_GET['penjamin'] : '';
+
         $pdo = $this->db()->pdo();
-        $stmt = $pdo->prepare("SELECT b.id_user, COALESCE(p.nama, u.fullname) AS nama_kasir, COUNT(*) transaksi, IFNULL(SUM(b.jumlah_harus_bayar),0) total, MIN(CONCAT(b.tgl_billing,' ',b.jam_billing)) mulai, MAX(CONCAT(b.tgl_billing,' ',b.jam_billing)) selesai FROM mlite_billing b INNER JOIN ( SELECT no_rawat, MAX(CONCAT(tgl_billing,' ',jam_billing)) AS max_waktu FROM mlite_billing WHERE kd_billing LIKE 'RJ%' AND CONCAT(tgl_billing,' ',jam_billing) BETWEEN ? AND ? GROUP BY no_rawat ) latest ON latest.no_rawat=b.no_rawat AND CONCAT(b.tgl_billing,' ',b.jam_billing)=latest.max_waktu LEFT JOIN mlite_users u ON u.id=b.id_user LEFT JOIN pegawai p ON p.nik=u.username WHERE b.kd_billing LIKE 'RJ%' GROUP BY b.id_user, nama_kasir");
+        $stmt = $pdo->prepare("SELECT b.id_user, COALESCE(p.nama, u.fullname) AS nama_kasir, COUNT(*) transaksi, IFNULL(SUM(b.jumlah_harus_bayar),0) total, MIN(CONCAT(b.tgl_billing,' ',b.jam_billing)) mulai, MAX(CONCAT(b.tgl_billing,' ',b.jam_billing)) selesai FROM mlite_billing b INNER JOIN ( SELECT no_rawat, MAX(CONCAT(tgl_billing,' ',jam_billing)) AS max_waktu FROM mlite_billing WHERE kd_billing LIKE 'RJ%' AND CONCAT(tgl_billing,' ',jam_billing) BETWEEN ? AND ? GROUP BY no_rawat ) latest ON latest.no_rawat=b.no_rawat AND CONCAT(b.tgl_billing,' ',b.jam_billing)=latest.max_waktu LEFT JOIN reg_periksa rp ON rp.no_rawat=b.no_rawat LEFT JOIN mlite_users u ON u.id=b.id_user LEFT JOIN pegawai p ON p.nik=u.username WHERE b.kd_billing LIKE 'RJ%' GROUP BY b.id_user, nama_kasir");
         $stmt->execute([$awal, $akhir]);
         $rows = $stmt->fetchAll();
 
-        $detailStmt = $pdo->prepare("SELECT b.id_user, COALESCE(p.nama, u.fullname) AS nama_kasir, b.kd_billing, b.no_rawat, b.jumlah_harus_bayar, CONCAT(b.tgl_billing,' ',b.jam_billing) AS waktu, b.keterangan FROM mlite_billing b INNER JOIN ( SELECT no_rawat, MAX(CONCAT(tgl_billing,' ',jam_billing)) AS max_waktu FROM mlite_billing WHERE kd_billing LIKE 'RJ%' AND CONCAT(tgl_billing,' ',jam_billing) BETWEEN ? AND ? GROUP BY no_rawat ) latest ON latest.no_rawat=b.no_rawat AND CONCAT(b.tgl_billing,' ',b.jam_billing)=latest.max_waktu LEFT JOIN mlite_users u ON u.id=b.id_user LEFT JOIN pegawai p ON p.nik=u.username WHERE b.kd_billing LIKE 'RJ%' ORDER BY waktu ASC");
+        $detailStmt = $pdo->prepare("SELECT b.id_user, COALESCE(p.nama, u.fullname) AS nama_kasir, b.kd_billing, b.no_rawat, rp.no_rkm_medis, pas.nm_pasien, pol.nm_poli, dok.nm_dokter, pj.png_jawab, b.jumlah_harus_bayar, CONCAT(b.tgl_billing,' ',b.jam_billing) AS waktu, b.keterangan FROM mlite_billing b INNER JOIN ( SELECT no_rawat, MAX(CONCAT(tgl_billing,' ',jam_billing)) AS max_waktu FROM mlite_billing WHERE kd_billing LIKE 'RJ%' AND CONCAT(tgl_billing,' ',jam_billing) BETWEEN ? AND ? GROUP BY no_rawat ) latest ON latest.no_rawat=b.no_rawat AND CONCAT(b.tgl_billing,' ',b.jam_billing)=latest.max_waktu LEFT JOIN reg_periksa rp ON rp.no_rawat=b.no_rawat LEFT JOIN pasien pas ON pas.no_rkm_medis=rp.no_rkm_medis LEFT JOIN poliklinik pol ON pol.kd_poli=rp.kd_poli LEFT JOIN dokter dok ON dok.kd_dokter=rp.kd_dokter LEFT JOIN penjab pj ON pj.kd_pj=rp.kd_pj LEFT JOIN mlite_users u ON u.id=b.id_user LEFT JOIN pegawai p ON p.nik=u.username WHERE b.kd_billing LIKE 'RJ%' ORDER BY waktu ASC");
         $detailStmt->execute([$awal, $akhir]);
         $details = $detailStmt->fetchAll();
 
-        return $this->draw('report.html', ['awal' => $awal, 'akhir' => $akhir, 'rows' => $rows, 'details' => $details]);
+        return $this->draw('report.html', ['awal' => $awal, 'akhir' => $akhir, 'penjamin' => $penjamin, 'rows' => $rows, 'details' => $details]);
     }
 
     public function anyReportExport()
     {
         $awal = isset($_GET['awal']) ? $_GET['awal'] : date('Y-m-d').' 00:00:00';
         $akhir = isset($_GET['akhir']) ? $_GET['akhir'] : date('Y-m-d').' 23:59:59';
+        $penjamin = isset($_GET['penjamin']) ? $_GET['penjamin'] : '';
+
+        $where_penjamin = "";
+        if ($penjamin == 'UMU') {
+            $where_penjamin = " AND rp.kd_pj IN ('UMU', '-')";
+        } elseif ($penjamin == 'BPJ') {
+            $where_penjamin = " AND rp.kd_pj = 'BPJ'";
+        }
+
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="laporan_kasir.csv"');
         $pdo = $this->db()->pdo();
-        $stmt = $pdo->prepare("SELECT b.id_user, COALESCE(p.nama, u.fullname) AS nama_kasir, b.kd_billing, b.jumlah_harus_bayar, CONCAT(b.tgl_billing,' ',b.jam_billing) waktu FROM mlite_billing b INNER JOIN ( SELECT no_rawat, MAX(CONCAT(tgl_billing,' ',jam_billing)) AS max_waktu FROM mlite_billing WHERE kd_billing LIKE 'RJ%' AND CONCAT(tgl_billing,' ',jam_billing) BETWEEN ? AND ? GROUP BY no_rawat ) latest ON latest.no_rawat=b.no_rawat AND CONCAT(b.tgl_billing,' ',b.jam_billing)=latest.max_waktu LEFT JOIN mlite_users u ON u.id=b.id_user LEFT JOIN pegawai p ON p.nik=u.username WHERE b.kd_billing LIKE 'RJ%' ORDER BY waktu ASC");
+        $stmt = $pdo->prepare("SELECT b.id_user, COALESCE(p.nama, u.fullname) AS nama_kasir, b.kd_billing, b.jumlah_harus_bayar, CONCAT(b.tgl_billing,' ',b.jam_billing) waktu FROM mlite_billing b INNER JOIN ( SELECT no_rawat, MAX(CONCAT(tgl_billing,' ',jam_billing)) AS max_waktu FROM mlite_billing WHERE kd_billing LIKE 'RJ%' AND CONCAT(tgl_billing,' ',jam_billing) BETWEEN ? AND ? GROUP BY no_rawat ) latest ON latest.no_rawat=b.no_rawat AND CONCAT(b.tgl_billing,' ',b.jam_billing)=latest.max_waktu LEFT JOIN reg_periksa rp ON rp.no_rawat=b.no_rawat LEFT JOIN mlite_users u ON u.id=b.id_user LEFT JOIN pegawai p ON p.nik=u.username WHERE b.kd_billing LIKE 'RJ%' $where_penjamin ORDER BY waktu ASC");
         $stmt->execute([$awal, $akhir]);
         echo "id_user,nama_kasir,kd_billing,jumlah_harus_bayar,waktu\n";
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
@@ -2317,4 +2328,105 @@ class Admin extends AdminModule
         exit();
     }
 
+    public function anyCetakReport()
+    {
+        $awal = isset($_GET['awal']) ? $_GET['awal'] : date('Y-m-d').' 00:00:00';
+        $akhir = isset($_GET['akhir']) ? $_GET['akhir'] : date('Y-m-d').' 23:59:59';
+        $penjamin = isset($_GET['penjamin']) ? $_GET['penjamin'] : '';
+
+        $where_penjamin = "";
+        if ($penjamin == 'UMU') {
+            $where_penjamin = " AND rp.kd_pj IN ('UMU', '-')";
+        } elseif ($penjamin == 'BPJ') {
+            $where_penjamin = " AND rp.kd_pj = 'BPJ'";
+        }
+
+        $pdo = $this->db()->pdo();
+        
+        $sql = "SELECT 
+            b.kd_billing,
+            b.no_rawat,
+            rp.no_rkm_medis,
+            pas.nm_pasien,
+            pol.nm_poli,
+            dok.nm_dokter,
+            b.keterangan AS pembayaran,
+            MIN(CONCAT(b.tgl_billing,' ',b.jam_billing)) AS tgl_kunjungan,
+            MAX(CONCAT(b.tgl_billing,' ',b.jam_billing)) AS tgl_tagihan,
+            SUM(b.jumlah_harus_bayar) AS tagihan,
+            (
+                (SELECT IFNULL(SUM(besar_biaya),0) FROM tambahan_biaya WHERE no_rawat=b.no_rawat AND (nama_biaya LIKE '%CSU%' OR nama_biaya LIKE '%CSSD%')) +
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_pr WHERE no_rawat=b.no_rawat AND (kd_jenis_prw LIKE 'SDD%' OR kd_jenis_prw LIKE 'SL%' OR kd_jenis_prw LIKE 'STD%' OR kd_jenis_prw LIKE 'STDU%' OR kd_jenis_prw LIKE 'STP%' OR kd_jenis_prw LIKE 'SB%')) +
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_dr WHERE no_rawat=b.no_rawat AND (kd_jenis_prw LIKE 'SDD%' OR kd_jenis_prw LIKE 'SL%' OR kd_jenis_prw LIKE 'STD%' OR kd_jenis_prw LIKE 'STDU%' OR kd_jenis_prw LIKE 'STP%' OR kd_jenis_prw LIKE 'SB%')) +
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_drpr WHERE no_rawat=b.no_rawat AND (kd_jenis_prw LIKE 'SDD%' OR kd_jenis_prw LIKE 'SL%' OR kd_jenis_prw LIKE 'STD%' OR kd_jenis_prw LIKE 'STDU%' OR kd_jenis_prw LIKE 'STP%' OR kd_jenis_prw LIKE 'SB%'))
+            ) AS csu,
+            (
+                (SELECT IFNULL(SUM(besar_biaya),0) FROM tambahan_biaya WHERE no_rawat=b.no_rawat AND LOWER(nama_biaya) LIKE '%laundry%') +
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_pr WHERE no_rawat=b.no_rawat AND kd_jenis_prw LIKE 'ULA%') +
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_dr WHERE no_rawat=b.no_rawat AND kd_jenis_prw LIKE 'ULA%') +
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_drpr WHERE no_rawat=b.no_rawat AND kd_jenis_prw LIKE 'ULA%')
+            ) AS laundry,
+            (SELECT IFNULL(SUM(biaya),0) FROM periksa_radiologi WHERE no_rawat=b.no_rawat AND status='Ralan') AS radiologi,
+            (
+                (SELECT IFNULL(SUM(total+embalase+tuslah),0) FROM detail_pemberian_obat WHERE no_rawat=b.no_rawat AND status='Ralan') +
+                (SELECT IFNULL(SUM(total),0) FROM resep_pulang WHERE no_rawat=b.no_rawat) +
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_pr WHERE no_rawat=b.no_rawat AND kd_jenis_prw LIKE 'FART%') +
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_dr WHERE no_rawat=b.no_rawat AND kd_jenis_prw LIKE 'FART%') +
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_drpr WHERE no_rawat=b.no_rawat AND kd_jenis_prw LIKE 'FART%')
+            ) AS apotek,
+            (SELECT IFNULL(SUM(pl.biaya),0) FROM periksa_lab pl WHERE pl.no_rawat=b.no_rawat AND pl.status='Ralan' AND pl.kd_jenis_prw LIKE 'LABK%') AS lab_klinik,
+            (SELECT IFNULL(SUM(pl.biaya),0) FROM periksa_lab pl WHERE pl.no_rawat=b.no_rawat AND pl.status='Ralan' AND pl.kd_jenis_prw LIKE 'LABG%') AS lab_gigi
+        FROM mlite_billing b
+        LEFT JOIN reg_periksa rp ON rp.no_rawat = b.no_rawat
+        LEFT JOIN pasien pas ON pas.no_rkm_medis = rp.no_rkm_medis
+        LEFT JOIN poliklinik pol ON pol.kd_poli = rp.kd_poli
+        LEFT JOIN dokter dok ON dok.kd_dokter = rp.kd_dokter
+        WHERE b.kd_billing LIKE 'RJ%' 
+        AND CONCAT(b.tgl_billing,' ',b.jam_billing) BETWEEN ? AND ?
+        $where_penjamin
+        GROUP BY b.no_rawat, b.kd_billing, rp.no_rkm_medis, pas.nm_pasien, pol.nm_poli, dok.nm_dokter, b.keterangan
+        ORDER BY tgl_tagihan ASC";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$awal, $akhir]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $tot_tagihan = 0;
+        $tot_csu = 0;
+        $tot_laundry = 0;
+        $tot_rad = 0;
+        $tot_apt = 0;
+        $tot_lab_klinik = 0;
+        $tot_lab_gigi = 0;
+        $tot_bersih = 0;
+
+        foreach ($rows as &$row) {
+            $bersih = $row['tagihan'] - $row['csu'] - $row['laundry'] - $row['radiologi'] - $row['apotek'] - $row['lab_klinik'] - $row['lab_gigi'];
+            $row['nilai_bersih'] = $bersih;
+
+            $tot_tagihan += $row['tagihan'];
+            $tot_csu += $row['csu'];
+            $tot_laundry += $row['laundry'];
+            $tot_rad += $row['radiologi'];
+            $tot_apt += $row['apotek'];
+            $tot_lab_klinik += $row['lab_klinik'];
+            $tot_lab_gigi += $row['lab_gigi'];
+            $tot_bersih += $bersih;
+        }
+
+        echo $this->draw('cetak_report.html', [
+            'awal' => $awal, 
+            'akhir' => $akhir, 
+            'rows' => $rows,
+            'tot_tagihan' => $tot_tagihan,
+            'tot_csu' => $tot_csu,
+            'tot_laundry' => $tot_laundry,
+            'tot_rad' => $tot_rad,
+            'tot_apt' => $tot_apt,
+            'tot_lab_klinik' => $tot_lab_klinik,
+            'tot_lab_gigi' => $tot_lab_gigi,
+            'tot_bersih' => $tot_bersih
+        ]);
+        exit();
+    }
 }
