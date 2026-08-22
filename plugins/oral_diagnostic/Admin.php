@@ -110,6 +110,12 @@ class Admin extends AdminModule
         foreach ($rows as $row) {
           $bridging_sep = $this->db('bridging_sep')->where('no_rawat', $row['no_rawat'])->oneArray();
           $row['no_sep'] = isset_or($bridging_sep['no_sep']);
+          
+          $tgl_kunjungan = new \DateTime($row['tgl_registrasi']);
+          $tgl_lahir = new \DateTime($row['tgl_lahir']);
+          $diff = $tgl_lahir->diff($tgl_kunjungan);
+          $row['umur_kunjungan'] = $diff->y . ' Tahun ' . $diff->m . ' Bulan ' . $diff->d . ' Hari';
+          
           $this->assign['list'][] = $row;
         }
 
