@@ -81,6 +81,7 @@ class Admin extends AdminModule
 
         $sql = "SELECT mlite_pendaftaran_oral_diagnostic.*,
             pasien.*,
+            pasien.tgl_lahir AS tgl_lahir_pasien,
             dokter.*,
             poliklinik.*,
             penjab.*
@@ -112,7 +113,7 @@ class Admin extends AdminModule
           $row['no_sep'] = isset_or($bridging_sep['no_sep']);
           
           $tgl_kunjungan = new \DateTime($row['tgl_registrasi']);
-          $tgl_lahir = new \DateTime($row['tgl_lahir']);
+          $tgl_lahir = new \DateTime($row['tgl_lahir_pasien']);
           $diff = $tgl_lahir->diff($tgl_kunjungan);
           $row['umur_kunjungan'] = $diff->y . ' Tahun ' . $diff->m . ' Bulan ' . $diff->d . ' Hari';
           

@@ -1436,6 +1436,11 @@ class Admin extends AdminModule
 
   public function postHapusLaboratorium()
   {
+    $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->oneArray();
+    if ($reg_periksa['status_bayar'] == 'Sudah Bayar' && $this->core->getUserInfo('role') != 'admin') {
+      exit();
+    }
+
     $periksa_lab = $this->db('periksa_lab')
       ->where('no_rawat', $_POST['no_rawat'])
       ->where('kd_jenis_prw', $_POST['kd_jenis_prw'])
