@@ -74,8 +74,8 @@
   .tooth-svg-wrapper {
     position: relative;
     cursor: pointer;
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     transition: transform 0.2s;
   }
   .tooth-svg-wrapper:hover {
@@ -90,7 +90,7 @@
     stroke-width: 2;
   }
   .tooth-gap {
-    width: 24px;
+    width: 14px;
   }
   .tooth-separator {
     height: 4px;
@@ -98,6 +98,55 @@
     background-color: #e2e8f0;
     border-radius: 4px;
     margin-bottom: 20px;
+  }
+
+  .odontogram-flex-wrap {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .odontogram-col-left {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .table-peta-mukosa {
+    flex: 0 0 600px;
+    width: 600px;
+    overflow-x: auto;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .mukosa-region {
+    stroke: #94a3b8;
+    stroke-width: 1;
+    transition: fill 0.2s;
+    cursor: pointer;
+  }
+  .mukosa-region:hover {
+    stroke: #0f172a;
+    stroke-width: 2;
+  }
+  .mukosa-label {
+    font-size: 10px;
+    font-weight: 700;
+    fill: #334155;
+    pointer-events: none;
+    text-anchor: middle;
+  }
+  @media (max-width: 1500px) {
+    .odontogram-flex-wrap {
+      flex-direction: column;
+    }
+    .table-peta-mukosa {
+      flex: 1 1 auto;
+      width: 100%;
+    }
+  }
+  #odontogramModal .modal-dialog {
+    width: 96%;
+    max-width: 1600px;
   }
 </style>
 <div class="modal-header">
@@ -114,7 +163,8 @@
   
     <div class="tab-pane active" id="tabs-odontogram">
       <h4>Odontogram</h4>
-      <div class="table-odontogram">
+      <div class="odontogram-flex-wrap">
+      <div class="table-odontogram odontogram-col-left">
         <div class="odontogram-toolbar" style="align-items: center;">
             <label for="tool-select" style="margin-right: 10px; font-weight: bold; margin-bottom: 0;">Kondisi / Tindakan:</label>
             <select id="tool-select" class="form-control" style="width: 350px; display: inline-block;">
@@ -164,10 +214,15 @@
                 <pattern id="poc-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
                     <line x1="4" y1="0" x2="4" y2="8" stroke="#1e293b" stroke-width="2" />
                 </pattern>
+                <pattern id="knd-pattern" width="10" height="10" patternUnits="userSpaceOnUse">
+                    <rect width="10" height="10" fill="#fefce8"/>
+                    <circle cx="3" cy="3" r="1.7" fill="#ffffff"/>
+                    <circle cx="8" cy="8" r="1.7" fill="#ffffff"/>
+                </pattern>
             </defs>
         </svg>
 
-        <div style="min-width: 700px; padding: 20px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <div style="min-width: 580px; padding: 20px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;">
             <div id="row-top-adult" class="odontogram-row"></div>
             <div id="row-top-child" class="odontogram-row"></div>
             <div class="tooth-separator"></div>
@@ -199,6 +254,33 @@
             {/loop}
           </tbody>
         </table>
+      </div>
+      </div>
+
+      <div class="table-peta-mukosa">
+        <h4 style="margin-top:0;">Peta Mukosa Rongga Mulut</h4>
+        <div class="odontogram-toolbar" style="align-items: center;">
+            <label for="mukosa-tool-select" style="margin-right: 10px; font-weight: bold; margin-bottom: 0;">Kelainan:</label>
+            <select id="mukosa-tool-select" class="form-control" style="width: 240px; display: inline-block;">
+                <option value="nrm">⚪ Normal / Hapus (nrm)</option>
+                <option value="uls" selected>🟡 Ulserasi / Afta (uls)</option>
+                <option value="lpk">⬜ Leukoplakia (lpk)</option>
+                <option value="eri">🟥 Eritroplakia (eri)</option>
+                <option value="knd">❄️ Kandidiasis (knd)</option>
+                <option value="bjk">🟣 Benjolan / Tumor (bjk)</option>
+                <option value="pmb">🌸 Pembengkakan (pmb)</option>
+                <option value="pig">🟤 Pigmentasi / Melanin (pig)</option>
+                <option value="trm">🟠 Trauma / Luka (trm)</option>
+                <option value="vrs">🔵 Varises (vrs)</option>
+            </select>
+            <button id="btn-reset-mukosa" class="btn btn-warning" style="margin-left: 10px;">Set DBN / Reset</button>
+        </div>
+
+        <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; min-width: 360px;">
+            <svg id="svg-peta-mukosa" viewBox="0 0 750 780" style="width:100%; height:auto; display:block;"></svg>
+        </div>
+
+        <div class="tampildata-mukosa"></div>
       </div>
       </div>
     </div>
@@ -708,6 +790,207 @@ $(document).ready(function(){
     } ,function(data) {
       $('.tampildataohis').load(baseURL + '/rawat_jalan/ohistampil/' + id_pasien + '?t=' + mlite.token);
     });
-  });  
+  });
+
+  // ===== Peta Mukosa Rongga Mulut =====
+  var activeMukosaTool = 'uls';
+  var mukosaSelection = {};
+
+  const MUKOSA_CONDITIONS = {
+      nrm: { name: 'Normal', fill: null },
+      uls: { name: 'Ulserasi/Afta', fill: '#fde047' },
+      lpk: { name: 'Leukoplakia', fill: '#ffffff' },
+      eri: { name: 'Eritroplakia', fill: '#ef4444' },
+      knd: { name: 'Kandidiasis', fill: 'url(#knd-pattern)' },
+      bjk: { name: 'Benjolan/Tumor', fill: '#a855f7' },
+      pmb: { name: 'Pembengkakan', fill: '#f9a8d4' },
+      pig: { name: 'Pigmentasi', fill: '#78350f' },
+      trm: { name: 'Trauma/Luka', fill: '#fb923c' },
+      vrs: { name: 'Varises', fill: '#3b82f6' }
+  };
+
+  const MUKOSA_REGIONS = [
+      { id: '42', el: 'path', attr: 'd="M 130 90 Q 200 40 270 90 Q 200 70 130 90 Z"', label: '42', lx: 200, ly: 75 },
+      { id: '5', el: 'path', attr: 'd="M 135 100 Q 200 75 265 100 Q 200 115 135 100 Z"', label: '5', lx: 200, ly: 95 },
+      { id: '8', el: 'path', attr: 'd="M 145 125 Q 200 115 255 125 Q 200 135 145 125 Z"', label: '8', lx: 200, ly: 127 },
+      { id: '14', el: 'path', attr: 'd="M 155 145 Q 200 135 245 145 Q 200 155 155 145 Z"', label: '14', lx: 200, ly: 147 },
+      { id: '20', el: 'path', attr: 'd="M 165 165 Q 200 155 235 165 Q 200 175 165 165 Z"', label: '20', lx: 200, ly: 167 },
+      { id: '36', el: 'path', attr: 'd="M 170 180 L 200 180 L 200 300 Q 150 280 170 180 Z"', label: '36', lx: 185, ly: 240 },
+      { id: '37', el: 'path', attr: 'd="M 200 180 L 230 180 Q 250 280 200 300 Z"', label: '37', lx: 215, ly: 240 },
+      { id: '38', el: 'path', attr: 'd="M 175 305 L 200 305 L 200 350 Q 160 340 175 305 Z"', label: '38', lx: 185, ly: 325 },
+      { id: '39', el: 'path', attr: 'd="M 200 305 L 225 305 Q 240 340 200 350 Z"', label: '39', lx: 215, ly: 325 },
+      { id: '40', el: 'path', attr: 'd="M 150 365 L 180 365 C 160 380 160 400 180 430 Q 140 390 150 365 Z"', label: '40', lx: 165, ly: 390 },
+      { id: '41', el: 'path', attr: 'd="M 220 365 L 250 365 Q 260 390 220 430 C 240 400 240 380 220 365 Z"', label: '41', lx: 235, ly: 390 },
+      { id: '19', el: 'path', attr: 'd="M 165 185 L 155 185 Q 135 240 160 300 L 170 300 Q 145 240 165 185 Z"', label: '19', lx: 155, ly: 240 },
+      { id: '13', el: 'path', attr: 'd="M 150 185 L 140 185 Q 120 240 150 310 L 160 310 Q 130 240 150 185 Z"', label: '13', lx: 140, ly: 240 },
+      { id: '7', el: 'path', attr: 'd="M 135 185 L 125 185 Q 105 240 135 320 L 145 320 Q 115 240 135 185 Z"', label: '7', lx: 125, ly: 240 },
+      { id: '21', el: 'path', attr: 'd="M 235 185 L 245 185 Q 265 240 240 300 L 230 300 Q 255 240 235 185 Z"', label: '21', lx: 245, ly: 240 },
+      { id: '15', el: 'path', attr: 'd="M 250 185 L 260 185 Q 280 240 250 310 L 240 310 Q 270 240 250 185 Z"', label: '15', lx: 260, ly: 240 },
+      { id: '9', el: 'path', attr: 'd="M 265 185 L 275 185 Q 295 240 265 320 L 255 320 Q 285 240 265 185 Z"', label: '9', lx: 275, ly: 240 },
+      { id: '2', el: 'ellipse', attr: 'cx="70" cy="250" rx="40" ry="60"', label: '2', lx: 70, ly: 255 },
+      { id: '4', el: 'ellipse', attr: 'cx="330" cy="250" rx="40" ry="60"', label: '4', lx: 330, ly: 255 },
+      { id: '1', el: 'rect', attr: 'x="10" y="240" width="20" height="20" rx="5"', label: '1', lx: 20, ly: 255 },
+      { id: '3', el: 'rect', attr: 'x="370" y="240" width="20" height="20" rx="5"', label: '3', lx: 380, ly: 255 },
+      { id: '35', el: 'path', attr: 'd="M 170 410 Q 200 430 230 410 C 230 460 170 460 170 410 Z"', label: '35', lx: 200, ly: 440 },
+      { id: '33', el: 'path', attr: 'd="M 170 470 L 200 470 L 200 600 C 160 550 160 510 170 470 Z"', label: '33', lx: 185, ly: 540 },
+      { id: '34', el: 'path', attr: 'd="M 200 470 L 230 470 C 240 510 240 550 200 600 Z"', label: '34', lx: 215, ly: 540 },
+      { id: '30_{left}', el: 'path', attr: 'd="M 160 500 C 140 540 160 600 185 615 L 195 605 C 170 590 155 540 160 500 Z"', label: '30', lx: 160, ly: 560 },
+      { id: '31_{left}', el: 'path', attr: 'd="M 240 500 C 260 540 240 600 215 615 L 205 605 C 230 590 245 540 240 500 Z"', label: '31', lx: 240, ly: 560 },
+      { id: '32_{left}', el: 'path', attr: 'd="M 185 620 Q 200 640 215 620 C 205 610 195 610 185 620 Z"', label: '32', lx: 200, ly: 625 },
+      { id: '32', el: 'path', attr: 'd="M 530 220 Q 550 190 570 220 Q 550 240 530 220 Z"', label: '32', lx: 550, ly: 218 },
+      { id: '28', el: 'path', attr: 'd="M 520 230 L 550 230 L 550 380 C 510 350 510 280 520 230 Z"', label: '28', lx: 535, ly: 300 },
+      { id: '29', el: 'path', attr: 'd="M 550 230 L 580 230 C 590 280 590 350 550 380 Z"', label: '29', lx: 565, ly: 300 },
+      { id: '30_{right}', el: 'path', attr: 'd="M 515 250 C 495 300 510 370 540 395 L 550 385 C 520 360 505 300 515 250 Z"', label: '30', lx: 510, ly: 320 },
+      { id: '31_{right}', el: 'path', attr: 'd="M 585 250 C 605 300 590 370 560 395 L 550 385 C 580 360 595 300 585 250 Z"', label: '31', lx: 590, ly: 320 },
+      { id: '26', el: 'path', attr: 'd="M 525 395 Q 550 420 575 395 Q 550 440 525 395 Z"', label: '26', lx: 550, ly: 415 },
+      { id: '25', el: 'path', attr: 'd="M 500 360 C 520 390 535 390 520 415 Q 490 390 500 360 Z"', label: '25', lx: 510, ly: 390 },
+      { id: '27', el: 'path', attr: 'd="M 600 360 C 580 390 565 390 580 415 Q 610 390 600 360 Z"', label: '27', lx: 590, ly: 390 },
+      { id: '23', el: 'path', attr: 'd="M 520 445 Q 550 465 580 445 Q 550 485 520 445 Z"', label: '23', lx: 550, ly: 463 },
+      { id: '22', el: 'path', attr: 'd="M 480 380 Q 500 430 515 450 Q 485 440 480 380 Z"', label: '22', lx: 495, ly: 425 },
+      { id: '24', el: 'path', attr: 'd="M 620 380 Q 600 430 585 450 Q 615 440 620 380 Z"', label: '24', lx: 605, ly: 425 },
+      { id: '17', el: 'path', attr: 'd="M 510 490 Q 550 510 590 490 Q 550 530 510 490 Z"', label: '17', lx: 550, ly: 508 },
+      { id: '16', el: 'path', attr: 'd="M 465 390 Q 485 450 505 495 Q 470 470 465 390 Z"', label: '16', lx: 480, ly: 450 },
+      { id: '18', el: 'path', attr: 'd="M 635 390 Q 615 450 595 495 Q 630 470 635 390 Z"', label: '18', lx: 620, ly: 450 },
+      { id: '11', el: 'path', attr: 'd="M 500 535 Q 550 560 600 535 Q 550 580 500 535 Z"', label: '11', lx: 550, ly: 555 },
+      { id: '10', el: 'path', attr: 'd="M 450 400 Q 470 470 495 540 Q 455 500 450 400 Z"', label: '10', lx: 468, ly: 480 },
+      { id: '12', el: 'path', attr: 'd="M 650 400 Q 630 470 605 540 Q 645 500 650 400 Z"', label: '12', lx: 632, ly: 480 },
+      { id: '6', el: 'path', attr: 'd="M 480 585 Q 550 620 620 585 Q 550 645 480 585 Z"', label: '6', lx: 550, ly: 610 },
+      { id: '43', el: 'path', attr: 'd="M 470 650 Q 550 700 630 650 Q 550 730 470 650 Z"', label: '43', lx: 550, ly: 685 }
+  ];
+
+  const MUKOSA_NAMES = {
+      '42': 'Labium superior', '5': 'Bibir permukaan dalam, atas', '8': 'Mucobucofold rahang atas anterior',
+      '14': 'Gingiva labialis anterior rahang atas', '20': 'Gingiva lingualis anterior rahang atas',
+      '36': 'Palatum durum dextra', '37': 'Palatum durum sinistra', '38': 'Palatum molle dextra',
+      '39': 'Palatum molle sinistra', '40': 'Arcus palatoglosus dextra', '41': 'Arcus palatoglosus sinistra',
+      '19': 'Gingiva lingualis posterior-dextra rahang atas', '13': 'Gingiva bukalis posterior-dextra rahang atas',
+      '7': 'Mucobucofold rahang atas posterior-dextra', '21': 'Gingiva lingualis posterior-sinistra rahang atas',
+      '15': 'Gingiva bukalis posterior-sinistra rahang atas', '9': 'Mucobucofold rahang atas posterior-sinistra',
+      '2': 'Mukosa bukal dextra', '4': 'Mukosa bukal sinistra', '1': 'Sudut mulut dextra', '3': 'Sudut mulut sinistra',
+      '35': '1/3 posterior lidah', '33': '2/3 anterior dorsum lidah dextra', '34': '2/3 anterior dorsum lidah sinistra',
+      '30_{left}': 'Lateral dextra lidah', '31_{left}': 'Lateral sinistra lidah', '32_{left}': 'Anterior/apex lidah (dorsum)',
+      '32': 'Anterior/apex lidah', '28': 'Ventral lidah dextra', '29': 'Ventral lidah sinistra',
+      '30_{right}': 'Lateral dextra lidah (ventral)', '31_{right}': 'Lateral sinistra lidah (ventral)',
+      '26': 'Dasar mulut anterior', '25': 'Dasar mulut posterior dextra', '27': 'Dasar mulut posterior sinistra',
+      '23': 'Gingiva lingualis anterior rahang bawah', '22': 'Gingiva lingualis posterior dextra rahang bawah',
+      '24': 'Gingiva lingualis posterior sinistra rahang bawah', '17': 'Gingiva labialis anterior rahang bawah',
+      '16': 'Gingiva bukalis posterior-dextra rahang bawah', '18': 'Gingiva bukalis posterior-sinistra rahang bawah',
+      '11': 'Mucobucofold rahang bawah anterior', '10': 'Mucobucofold rahang bawah posterior-dextra',
+      '12': 'Mucobucofold rahang bawah posterior-sinistra', '6': 'Bibir permukaan dalam bawah', '43': 'Labium inferior'
+  };
+
+  function getMukosaFill(regionId) {
+      var st = mukosaSelection[regionId];
+      if (Array.isArray(st)) {
+          for (var i = st.length - 1; i >= 0; i--) {
+              var c = MUKOSA_CONDITIONS[st[i]];
+              if (c && c.fill) return c.fill;
+          }
+      }
+      return '#fee2e2';
+  }
+
+  function renderMukosaMap() {
+      let shapes = '';
+      let labels = '';
+      MUKOSA_REGIONS.forEach(function(r){
+          shapes += `<${r.el} class="mukosa-region" data-region="${r.id}" ${r.attr} fill="${getMukosaFill(r.id)}"><title>${MUKOSA_NAMES[r.id]}</title></${r.el}>`;
+          labels += `<text class="mukosa-label" x="${r.lx}" y="${r.ly}" font-size="12" font-weight="bold" alignment-baseline="middle">${r.label}</text>`;
+      });
+      $('#svg-peta-mukosa').html(shapes + labels);
+  }
+
+  function parseMukosaData(jsonStr) {
+      mukosaSelection = {};
+      if (jsonStr) {
+          try {
+              var parsed = JSON.parse(jsonStr);
+              if (parsed && typeof parsed === 'object') mukosaSelection = parsed;
+          } catch(e) {
+              mukosaSelection = {};
+          }
+      }
+      renderMukosaMap();
+  }
+
+  function buildKelainanSummary() {
+      var parts = [];
+      Object.keys(mukosaSelection).forEach(function(region){
+          var arr = mukosaSelection[region];
+          if (Array.isArray(arr) && arr.length) {
+              var names = arr.map(function(c){ return MUKOSA_CONDITIONS[c] ? MUKOSA_CONDITIONS[c].name : c; });
+              parts.push(MUKOSA_NAMES[region] + ': ' + names.join(', '));
+          }
+      });
+      return parts.length > 0 ? parts.join('; ') : 'Dalam Batas Normal (DBN)';
+  }
+
+  function savePetaMukosa() {
+      var baseURL = mlite.url + '/' + mlite.admin;
+      var no_rawat = $('input:text[name=no_rawat]').val();
+      var id_pasien = $('input:text[name=no_rkm_medis]').val();
+      if (!no_rawat) {
+          alert('No Rawat tidak ditemukan.');
+          return;
+      }
+      Object.keys(mukosaSelection).forEach(function(k){
+          if (!Array.isArray(mukosaSelection[k]) || !mukosaSelection[k].length) delete mukosaSelection[k];
+      });
+      
+      $.post(baseURL + '/rawat_jalan/petamukosasave/?t=' + mlite.token, {
+          no_rawat: no_rawat,
+          gambar: Object.keys(mukosaSelection).length > 0 ? JSON.stringify(mukosaSelection) : '{}',
+          kelainan: buildKelainanSummary()
+      }, function(data) {
+          $('.tampildata-mukosa').load(baseURL + '/rawat_jalan/petamukosatampil/' + id_pasien + '?t=' + mlite.token);
+      });
+  }
+
+  var rawPetaMukosaState = {?=json_encode(!empty($peta_mukosa_gambar) ? $peta_mukosa_gambar : '')?};
+  parseMukosaData(rawPetaMukosaState);
+
+  $('#mukosa-tool-select').change(function(){
+      activeMukosaTool = $(this).val();
+  });
+
+  $("#tabs-odontogram").on('click', '.mukosa-region', function(){
+      var region = $(this).attr('data-region');
+      if (activeMukosaTool === 'nrm') {
+          mukosaSelection[region] = [];
+      } else {
+          if (!mukosaSelection[region]) mukosaSelection[region] = [];
+          if (mukosaSelection[region].includes(activeMukosaTool)) {
+              mukosaSelection[region] = mukosaSelection[region].filter(c => c !== activeMukosaTool);
+          } else {
+              mukosaSelection[region].push(activeMukosaTool);
+          }
+      }
+      renderMukosaMap();
+      savePetaMukosa();
+  });
+
+  $("#btn-reset-mukosa").click(function(e){
+      e.preventDefault();
+      var baseURL = mlite.url + '/' + mlite.admin;
+      var no_rawat = $('input:text[name=no_rawat]').val();
+      var id_pasien = $('input:text[name=no_rkm_medis]').val();
+      if (!no_rawat) {
+          alert('Pilih pasien terlebih dahulu.');
+          return;
+      }
+      if (confirm('Apakah Anda yakin ingin mengatur peta mukosa menjadi Dalam Batas Normal (DBN)?')) {
+          mukosaSelection = {};
+          renderMukosaMap();
+          savePetaMukosa();
+      }
+  });
+
+  (function(){
+      var baseURL = mlite.url + '/' + mlite.admin;
+      var id_pasien = $('input:text[name=no_rkm_medis]').val();
+      if (id_pasien) {
+          $('.tampildata-mukosa').load(baseURL + '/rawat_jalan/petamukosatampil/' + id_pasien + '?t=' + mlite.token);
+      }
+  })();
 });
 </script>

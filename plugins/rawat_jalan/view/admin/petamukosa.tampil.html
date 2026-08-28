@@ -1,0 +1,23 @@
+<h4>History Peta Mukosa</h4>
+<table class="table table-bordered table-striped table-hover display nowrap" width="100%">
+  <thead>
+    <tr>
+      <th>Tanggal Kunjungan</th>
+      <th>No.Rawat</th>
+      <th>Tanggal Input</th>
+      <th>Kelainan</th>
+      <th>Diperiksa Oleh</th>
+    </tr>
+  </thead>
+  <tbody>
+    {loop: $riwayat}
+      <tr>
+        <td>{?=isset_or($value.tgl_registrasi)?}</td>
+        <td>{?=isset_or($value.no_rawat)?}</td>
+        <td>{?=isset_or($value.tanggal)?}</td>
+        <td>{if: empty($value.kelainan)}-{/if}{?=isset_or($value.kelainan)?}</td>
+        <td>{?=isset_or($value.nm_dokter)?}</td>
+      </tr>
+    {/loop}
+  </tbody>
+</table>
