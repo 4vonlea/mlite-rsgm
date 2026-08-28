@@ -1,39 +1,31 @@
 <div class="row" id="manage" style="margin-bottom:100px;">
   <div class="col-md-12">
     <div class="panel panel-default">
-      <div class="panel-heading">       
-        <div class="btn-group pull-right" style="height: 38px;margin-top:-8px;background-color: #ffffff; border-left: 1px solid #dddddd;border-top: 1px solid #dddddd;border-right: 1px solid #dddddd;border-bottom: 1px solid #ffffff;">
-          <span class="btn btn-sm dropdown-toggle" data-toggle="dropdown">
-            <i class="fa fa-calendar"></i><span class="hidden-xs" style="font-size: 14px;"> Periode Rawat</span>
-          </span>
-          <ul class="dropdown-menu dropdown-menu-right">
-            <li style="padding-left:5px;padding-right:5px;">
-              <input type="text" id="periode_rawat_jalan" class="form-control periode_rawat_jalan" name="periode_rawat_jalan" required>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <input type="text" id="periode_rawat_jalan_akhir" class="form-control periode_rawat_jalan" name="periode_rawat_jalan_akhir" required>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="submit_periode_rawat_jalan" class="btn btn-primary btn-block" style="text-align: left !important;">Semua</div>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="belum_periode_rawat_jalan" class="btn btn-primary btn-block" style="text-align: left !important;">Belum Diperiksa</div>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="selesai_periode_rawat_jalan" class="btn btn-primary btn-block" style="text-align: left !important;">Selesai Diperiksa</div>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="lunas_periode_rawat_jalan" class="btn btn-primary btn-block" style="text-align: left !important;">Sudah Bayar</div>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="btn_cetak" class="btn btn-primary btn-block" data-toggle="modal" style="text-align: left !important;">Export PDF</div>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div class="btn btn-primary btn-block" style="text-align: left !important;"><a href="{?=url([ADMIN,'rawat_jalan','excel'])?}" target="_blank" style="color: #ffffff !important;">Export XLS</a></div>
-            </li>
-          </ul>
+      <div class="panel-heading clearfix" style="padding-bottom: 0px;">
+        <h3 class="panel-title pull-left" style="padding-top: 7px; margin-bottom: 10px;">Kelola Pasien</h3>
+        
+        <div class="pull-right" style="margin-bottom: 10px;">
+          <div class="form-inline">
+            <div class="form-group">
+              <div class="input-group">
+                <span class="input-group-addon" style="padding: 5px;"><i class="fa fa-calendar"></i></span>
+                <input type="text" id="periode_rawat_jalan" class="form-control periode_rawat_jalan input-sm" name="periode_rawat_jalan" required style="width: 100px;">
+                <span class="input-group-addon" style="padding: 5px;">-</span>
+                <input type="text" id="periode_rawat_jalan_akhir" class="form-control periode_rawat_jalan input-sm" name="periode_rawat_jalan_akhir" required style="width: 100px;">
+              </div>
+            </div>
+            <div class="form-group" style="margin-left: 5px;">
+              <div class="btn-group">
+                <button type="button" id="submit_periode_rawat_jalan" class="btn btn-default btn-sm">Semua</button>
+                <button type="button" id="belum_periode_rawat_jalan" class="btn btn-warning btn-sm">Belum Diperiksa</button>
+                <button type="button" id="selesai_periode_rawat_jalan" class="btn btn-success btn-sm">Selesai Diperiksa</button>
+                <button type="button" id="lunas_periode_rawat_jalan" class="btn btn-info btn-sm">Sudah Bayar</button>
+                <button type="button" id="btn_cetak" class="btn btn-danger btn-sm" data-toggle="modal">Export PDF</button>
+                <a href="{?=url([ADMIN,'rawat_jalan','excel'])?}" target="_blank" class="btn btn-primary btn-sm">Export XLS</a>
+              </div>
+            </div>
+          </div>
         </div>
-        <h3 class="panel-title">Kelola Pasien</h3>
       </div>
       <div class="panel-body">
         <div class="row">
@@ -82,6 +74,10 @@
          defaultDate: '{?=date('Y-m-d')?}',
          format: 'YYYY-MM-DD',
          locale: 'id'
+       });
+       
+       $('#periode_rawat_jalan').on('dp.change', function(e) {
+           $('#periode_rawat_jalan_akhir').data('DateTimePicker').date(e.date);
        });
        
         let searchParams = new URLSearchParams(window.location.search);
