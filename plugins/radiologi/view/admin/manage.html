@@ -1,73 +1,42 @@
 <div class="row" id="manage" style="margin-bottom:100px;">
   <div class="col-md-12">
     <div class="panel panel-default">
-      <div class="panel-heading">
-        {if: $type == 'ranap'}
-        <div class="btn-group pull-right" style="height: 38px;margin-top:-8px;background-color: #ffffff; border-left: 1px solid #dddddd;border-top: 1px solid #dddddd;border-right: 1px solid #dddddd;border-bottom: 1px solid #ffffff;">
-          <span class="btn btn-sm dropdown-toggle" data-toggle="dropdown">
-            <i class="fa fa-calendar"></i><span class="hidden-xs"> Periode Rawat Inap</span>
-          </span>
-          <ul class="dropdown-menu dropdown-menu-right">
-            <li style="padding-left:5px;padding-right:5px;">
+      <div class="panel-heading clearfix" style="padding-bottom: 0px;">
+        <h3 class="panel-title pull-left" style="padding-top: 7px; margin-bottom: 10px;">Kelola Pasien</h3>
+        
+        <div class="pull-left" style="margin-left: 15px; margin-bottom: 10px;">
+          <div class="form-inline">
+            <div class="form-group">
               <input type="hidden" name="status" value="{?=isset_or($type)?}">
-              <input type="text" id="periode_rawat_jalan" class="form-control periode_rawat_jalan" name="periode_rawat_jalan" required>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <input type="text" id="periode_rawat_jalan_akhir" class="form-control periode_rawat_jalan" name="periode_rawat_jalan_akhir" required>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="submit_periode_rawat_jalan" class="btn btn-primary btn-block" style="text-align: left !important;">Semua</div>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="belum_periode_rawat_jalan" class="btn btn-primary btn-block" style="text-align: left !important;">Dirawat</div>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="selesai_periode_rawat_jalan" class="btn btn-primary btn-block" style="text-align: left !important;">Tanggal Masuk</div>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="lunas_periode_rawat_jalan" class="btn btn-primary btn-block" style="text-align: left !important;">Tanggal Pulang</div>
-            </li>
-          </ul>
+              <div class="input-group">
+                <span class="input-group-addon" style="padding: 5px;"><i class="fa fa-calendar"></i></span>
+                <input type="text" id="periode_rawat_jalan" class="form-control periode_rawat_jalan input-sm" name="periode_rawat_jalan" required style="width: 100px;">
+                <span class="input-group-addon" style="padding: 5px;">-</span>
+                <input type="text" id="periode_rawat_jalan_akhir" class="form-control periode_rawat_jalan input-sm" name="periode_rawat_jalan_akhir" required style="width: 100px;">
+              </div>
+            </div>
+            <div class="form-group" style="margin-left: 5px;">
+              <div class="btn-group">
+                {if: $type == 'ranap'}
+                <button type="button" id="submit_periode_rawat_jalan" class="btn btn-default btn-sm">Semua</button>
+                <button type="button" id="belum_periode_rawat_jalan" class="btn btn-warning btn-sm">Dirawat</button>
+                <button type="button" id="selesai_periode_rawat_jalan" class="btn btn-success btn-sm">Tanggal Masuk</button>
+                <button type="button" id="lunas_periode_rawat_jalan" class="btn btn-info btn-sm">Tanggal Pulang</button>
+                {else}
+                <button type="button" id="submit_periode_rawat_jalan" class="btn btn-default btn-sm">Semua</button>
+                <button type="button" id="belum_periode_rawat_jalan" class="btn btn-warning btn-sm">Belum Diperiksa</button>
+                <button type="button" id="selesai_periode_rawat_jalan" class="btn btn-success btn-sm">Selesai Diperiksa</button>
+                <button type="button" id="lunas_periode_rawat_jalan" class="btn btn-info btn-sm">Sudah Bayar</button>
+                {/if}
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="btn-group pull-right" style="height: 38px;margin-top:-8px;margin-right: 5px;border-left: 1px solid #dddddd;border-top: 1px solid #dddddd;border-right: 1px solid #dddddd;border-bottom: 1px solid #dddddd;">
-          <span class="btn btn-sm">
-            <a href="{?=url([ADMIN,'radiologi','manage'])?}"><i class="fa fa-wheelchair"></i><span class="hidden-xs" style="font-size: 14px;"> Rawat Jalan</span></a>
-          </span>
-        </div>
-        {else}
-        <div class="btn-group pull-right" style="height: 38px;margin-top:-8px;background-color: #ffffff; border-left: 1px solid #dddddd;border-top: 1px solid #dddddd;border-right: 1px solid #dddddd;border-bottom: 1px solid #ffffff;">
-          <span class="btn btn-sm dropdown-toggle" data-toggle="dropdown">
-            <i class="fa fa-calendar"></i><span class="hidden-xs"> Periode Rawat Jalan</span>
-          </span>
-          <ul class="dropdown-menu dropdown-menu-right">
-            <li style="padding-left:5px;padding-right:5px;">
-              <input type="hidden" name="status" value="{?=isset_or($type)?}">
-              <input type="text" id="periode_rawat_jalan" class="form-control periode_rawat_jalan" name="periode_rawat_jalan" required>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <input type="text" id="periode_rawat_jalan_akhir" class="form-control periode_rawat_jalan" name="periode_rawat_jalan_akhir" required>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="submit_periode_rawat_jalan" class="btn btn-primary btn-block" style="text-align: left !important;">Semua</div>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="belum_periode_rawat_jalan" class="btn btn-primary btn-block" style="text-align: left !important;">Belum Diperiksa</div>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="selesai_periode_rawat_jalan" class="btn btn-primary btn-block" style="text-align: left !important;">Selesai Diperiksa</div>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="lunas_periode_rawat_jalan" class="btn btn-primary btn-block" style="text-align: left !important;">Sudah Bayar</div>
-            </li>
-          </ul>
-        </div>
-        <div class="btn-group pull-right" style="height: 38px;margin-top:-8px;margin-right: 5px;border-left: 1px solid #dddddd;border-top: 1px solid #dddddd;border-right: 1px solid #dddddd;border-bottom: 1px solid #dddddd;">
-          <span class="btn btn-sm">
-            <a href="{?=url([ADMIN,'radiologi','manage','ranap'])?}"><i class="fa fa-hotel"></i><span class="hidden-xs" style="font-size: 14px;"> Rawat Inap</span></a>
-          </span>
-        </div>
-        {/if}
-        <h3 class="panel-title">Kelola Pasien</h3>
+
+        <ul class="nav nav-tabs pull-right" style="margin-top: -10px; margin-bottom: -1px; border-bottom: 0;">
+          <li class="{if: $type != 'ranap'}active{/if}"><a href="{?=url([ADMIN,'radiologi','manage'])?}"><i class="fa fa-wheelchair"></i> Rawat Jalan</a></li>
+          <li class="{if: $type == 'ranap'}active{/if}"><a href="{?=url([ADMIN,'radiologi','manage','ranap'])?}"><i class="fa fa-hotel"></i> Rawat Inap</a></li>
+        </ul>
       </div>
       <div class="panel-body">
         <div class="row">
@@ -111,6 +80,10 @@
          defaultDate: '{?=isset_or($rawat_jalan.tgl_kunjungan, date('Y-m-d'))?}',
          format: 'YYYY-MM-DD',
          locale: 'id'
+       });
+       
+       $('#periode_rawat_jalan').on('dp.change', function(e) {
+           $('#periode_rawat_jalan_akhir').data('DateTimePicker').date(e.date);
        });
    });
 

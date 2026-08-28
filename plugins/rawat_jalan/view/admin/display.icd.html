@@ -4,26 +4,26 @@
     padding: 5px;
   }
 </style>
-<h4>ICD 9 dan ICD 10</h4>
-<div class="table-responsive no-margin">
-  <table class="table table-bordered no-padding icd" width="100%">
+<h4 class="text-primary" style="border-bottom: 2px solid #3498db; padding-bottom: 5px; display: inline-block; margin-top: 10px;">ICD 9 dan ICD 10</h4>
+<div class="table-responsive no-margin" style="margin-bottom: 20px;">
+  <table class="table table-bordered no-padding icd" width="100%" style="background-color: #fcfcfc;">
     <tr class="isi">
-      <td valign="top" width="200px">Diagnosa/Penyakit/ICD 10</td>
-      <td valign="top" width="1px" align="center">:</td>
-      <td valign="top">
-        <table width="100%" align="center" cellpadding="3px" cellspacing="0" class="icd">
-           <tr align="center">
-             <td valign="top" width="100px" bgcolor="#eee">Kode</td>
-             <td valign="top" bgcolor="#eee">Nama Penyakit</td>
-             <td valign="top" width="10px" bgcolor="#eee">Prioritas</td>
-             <td valign="top" width="10px" bgcolor="#eee">Aksi</td>
+      <td valign="top" width="200px" style="font-weight: 600; padding: 15px;">Diagnosa/Penyakit/ICD 10</td>
+      <td valign="top" width="1px" align="center" style="padding: 15px;">:</td>
+      <td valign="top" style="padding: 0;">
+        <table width="100%" align="center" class="table table-striped" style="margin-bottom: 0; background-color: transparent;">
+           <tr align="center" style="background-color: #f2f2f2;">
+             <th valign="top" width="100px" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Kode</th>
+             <th valign="top" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Nama Penyakit</th>
+             <th valign="top" width="80px" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Prioritas</th>
+             <th valign="top" width="80px" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Aksi</th>
            </tr>
            {loop: $diagnosa}
            <tr>
-             <td valign="top" width="100px">{?=isset_or($value.kd_penyakit)?}</td>
+             <td valign="top" width="100px" align="center">{?=isset_or($value.kd_penyakit)?}</td>
              <td valign="top">{?=isset_or($value.nama)?}</td>
-             <td valign="top" width="10px">{?=isset_or($value.prioritas)?}</td>
-             <td valign="top" width="10px">
+             <td valign="top" width="80px" align="center">{?=isset_or($value.prioritas)?}</td>
+             <td valign="top" width="80px" align="center">
                <button type="button" name="button" class="btn btn-danger btn-xs hapus_icd10" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-prioritas="{?=isset_or($value.prioritas)?}"><span class="fa fa-trash"></span><span class="hidden-xs"> Hapus</span></button>
              </td>
            </tr>
@@ -32,22 +32,22 @@
       </td>
     </tr>
     <tr class="isi">
-      <td valign="top" width="200px">Prosedur Tindakan/ICD 9</td>
-      <td valign="top" width="1px" align="center">:</td>
-      <td valign="top">
-        <table width="100%" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-           <tr align="center">
-             <td valign="top" width="100px" bgcolor="#eee">Kode</td>
-             <td valign="top" bgcolor="#eee">Nama Tindakan</td>
-             <td valign="top" width="10px" bgcolor="#eee">Prioritas</td>
-             <td valign="top" width="10px" bgcolor="#eee">Aksi</td>
+      <td valign="top" width="200px" style="font-weight: 600; padding: 15px;">Prosedur Tindakan/ICD 9</td>
+      <td valign="top" width="1px" align="center" style="padding: 15px;">:</td>
+      <td valign="top" style="padding: 0;">
+        <table width="100%" align="center" class="table table-striped" style="margin-bottom: 0; background-color: transparent;">
+           <tr align="center" style="background-color: #f2f2f2;">
+             <th valign="top" width="100px" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Kode</th>
+             <th valign="top" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Nama Tindakan</th>
+             <th valign="top" width="80px" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Prioritas</th>
+             <th valign="top" width="80px" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Aksi</th>
            </tr>
            {loop: $prosedur}
            <tr>
-             <td valign="top" width="100px">{?=isset_or($value.kode)?}</td>
+             <td valign="top" width="100px" align="center">{?=isset_or($value.kode)?}</td>
              <td valign="top">{?=isset_or($value.nama)?}</td>
-             <td valign="top" width="10px">{?=isset_or($value.prioritas)?}</td>
-             <td valign="top" width="10px">
+             <td valign="top" width="80px" align="center">{?=isset_or($value.prioritas)?}</td>
+             <td valign="top" width="80px" align="center">
                <button type="button" name="button" class="btn btn-danger btn-xs hapus_icd9" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-prioritas="{?=isset_or($value.prioritas)?}"><span class="fa fa-trash"></span><span class="hidden-xs"> Hapus</span></button>
              </td>
            </tr>

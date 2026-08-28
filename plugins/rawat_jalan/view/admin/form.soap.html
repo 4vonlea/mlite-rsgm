@@ -2,28 +2,29 @@
   <div class="col-md-3">
     <div class="panel panel-default">
       <div class="panel-body">
-          <div class="form-group">
-            <label for="tanggal">Tanggal</label>
+          <h4 class="text-primary" style="border-bottom: 2px solid #3498db; padding-bottom: 5px; display: inline-block; margin-top: 0;">Data Pasien</h4>
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="control-label">Tanggal</label>
             <input type="text" id="soap_tgl_perawatan" name="tgl_perawatan" class="form-control tanggal" value="{?=date('Y-m-d')?}">
           </div>
-          <div class="form-group">
-            <label for="jam">Jam</label>
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="control-label">Jam</label>
             <input type="text" id="soap_jam_rawat" name="jam_rawat" class="form-control jam" value="{?=date('H:i:s')?}">
           </div>
-          <div class="form-group">
-            <label for="id_pendaftaran">Id Rawat</label>
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="control-label">Id Rawat</label>
             <input type="text" name="no_rawat" placeholder="ID Pendaftaran" class="form-control" value="" readonly>
           </div>
-          <div class="form-group">
-            <label for="id_pasien">Nomor RM</label>
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="control-label">Nomor RM</label>
             <input type="text" name="no_rkm_medis" class="form-control" placeholder="Nomor Rekam Medik" value="" readonly>
           </div>
-          <div class="form-group">
-            <label for="nama_pasien">Nama Pasien</label>
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="control-label">Nama Pasien</label>
             <input type="text" name="nm_pasien" class="form-control" placeholder="Nama pasien" value="" readonly>
           </div>
-          <div class="form-group">
-            <label for="nama_pasien">Umur</label>
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="control-label">Umur</label>
             <input type="text" name="umur" class="form-control" placeholder="Umur pasien" value="" readonly>
           </div>
       </div>
@@ -32,100 +33,88 @@
   <div class="col-md-9">
     <div class="panel panel-default">
       <div class="panel-body">
-        <h4 class="{if: $admin_mode == 'simple'}hidden{/if}">Pemeriksaan</h4>
-        <div class="form-group {if: $admin_mode == 'simple'}hidden{/if}">
+        <h4 class="{if: $admin_mode == 'simple'}hidden{/if} text-primary" style="border-bottom: 2px solid #3498db; padding-bottom: 5px; display: inline-block; margin-top: 0;">Pemeriksaan Vitals</h4>
+        <div class="{if: $admin_mode == 'simple'}hidden{/if}" style="background-color: #fcfcfc; border: 1px solid #eaeaea; padding: 15px; margin-bottom: 20px;">
           <div class="row">
-            <div class="col-sm-2">
-              <label for="nama_pasien">Tensi(mmHg)</label>
+            <div class="col-sm-2 form-group" style="margin-bottom: 10px;">
+              <label class="control-label">Tensi (mmHg)</label>
               <input type="text" name="tensi" class="form-control" placeholder="" value="-">
             </div>
-            <div class="col-sm-2">
-              <label for="nama_pasien">Suhu(C)</label>
+            <div class="col-sm-2 form-group" style="margin-bottom: 10px;">
+              <label class="control-label">Suhu (°C)</label>
               <input type="text" name="suhu_tubuh" class="form-control" placeholder="" value="">
             </div>
-            <div class="col-sm-2">
-              <label for="nama_pasien">Nadi(/mnt)</label>
+            <div class="col-sm-2 form-group" style="margin-bottom: 10px;">
+              <label class="control-label">Nadi (/mnt)</label>
               <input type="text" name="nadi" class="form-control" placeholder="" value="">
             </div>
-            <div class="col-sm-2">
-              <label for="nama_pasien">RR(/mnt)</label>
+            <div class="col-sm-2 form-group" style="margin-bottom: 10px;">
+              <label class="control-label">RR (/mnt)</label>
               <input type="text" name="respirasi" class="form-control" placeholder="" value="">
             </div>
-            <div class="col-sm-2">
-              <label for="nama_pasien">Tinggi(cm)</label>
+            <div class="col-sm-2 form-group" style="margin-bottom: 10px;">
+              <label class="control-label">Tinggi (cm)</label>
               <input type="text" name="tinggi" class="form-control" placeholder="" value="">
             </div>
-            <div class="col-sm-2">
-              <label for="nama_pasien">Berat(kg)</label>
+            <div class="col-sm-2 form-group" style="margin-bottom: 10px;">
+              <label class="control-label">Berat (kg)</label>
               <input type="text" name="berat" class="form-control" placeholder="" value="">
             </div>
           </div>
-        </div>
-        <div class="form-group {if: $admin_mode == 'simple'}hidden{/if}">
           <div class="row">
-            <div class="col-sm-3">
-              <label for="nama_pasien">Kesadaran</label>
+            <div class="col-sm-3 form-group" style="margin-bottom: 0;">
+              <label class="control-label">Kesadaran</label>
               <input type="text" name="kesadaran" class="form-control" placeholder="" value="Compos Mentis">
               <ul class="list-group" id="kesadaranList" style="z-index:1000;position:absolute;width:100%;"></ul>
             </div>
-            <div class="col-sm-2">
-              <label for="nama_pasien">SPO2</label>
+            <div class="col-sm-2 form-group" style="margin-bottom: 0;">
+              <label class="control-label">SPO2</label>
               <input type="text" name="spo2" class="form-control" placeholder="" value="">
             </div>
-            <div class="col-sm-2">
-              <label for="nama_pasien">GCS(E,V,M)</label>
+            <div class="col-sm-2 form-group" style="margin-bottom: 0;">
+              <label class="control-label">GCS (E,V,M)</label>
               <input type="text" name="gcs" class="form-control" placeholder="" value="">
             </div>
-            <div class="col-sm-2">
-              <label for="nama_pasien">Alergi</label>
+            <div class="col-sm-2 form-group" style="margin-bottom: 0;">
+              <label class="control-label">Alergi</label>
               <input type="text" name="alergi" class="form-control" placeholder="" value="">
             </div>
-            <div class="col-sm-3">
-              <label for="lingkar_perut">Lingkar Perut</label>
+            <div class="col-sm-3 form-group" style="margin-bottom: 0;">
+              <label class="control-label">Lingkar Perut</label>
               <input type="text" name="lingkar_perut" class="form-control" placeholder="" value="-">
             </div>
           </div>
         </div>
-        <h4>SOAP</h4>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="jenis">Subyektif</label>
-              <textarea name="keluhan" id="keluhan" rows="2" class="form-control"></textarea>
+        <h4 class="text-primary" style="border-bottom: 2px solid #3498db; padding-bottom: 5px; display: inline-block; margin-top: 10px;">Catatan SOAP</h4>
+        <div style="background-color: #fcfcfc; border: 1px solid #eaeaea; padding: 15px; margin-bottom: 20px;">
+          <div class="row">
+            <div class="col-md-6 form-group">
+              <label class="control-label">Subyektif</label>
+              <textarea name="keluhan" id="keluhan" rows="3" class="form-control"></textarea>
+            </div>
+            <div class="col-md-6 form-group">
+              <label class="control-label">Obyektif</label>
+              <textarea name="pemeriksaan" id="pemeriksaan" rows="3" class="form-control"></textarea>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="jenis">Obyektif</label>
-              <textarea name="pemeriksaan" id="pemeriksaan" rows="2" class="form-control"></textarea>
+          <div class="row">
+            <div class="col-md-6 form-group">
+              <label class="control-label">Assesment</label>
+              <textarea name="penilaian" id="penilaian" rows="3" class="form-control"></textarea>
+            </div>
+            <div class="col-md-6 form-group">
+              <label class="control-label">Plan</label>
+              <textarea name="rtl" id="rtl" rows="3" class="form-control"></textarea>
             </div>
           </div>
-        </div>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="jenis">Assesment</label>
-              <textarea name="penilaian" id="penilaian" rows="2" class="form-control"></textarea>
+          <div class="row">
+            <div class="col-md-6 form-group {if: $admin_mode == 'simple'}hidden{/if}">
+              <label class="control-label">Instruksi</label>
+              <textarea name="instruksi" id="instruksi" rows="3" class="form-control" value="-">-</textarea>
             </div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="jenis">Plan</label>
-              <textarea name="rtl" id="rtl" rows="2" class="form-control"></textarea>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group {if: $admin_mode == 'simple'}hidden{/if}">
-              <label for="jenis">Instruksi</label>
-              <textarea name="instruksi" id="instruksi" rows="2" class="form-control" value="-"></textarea>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group {if: $admin_mode == 'simple'}hidden{/if}">
-              <label for="jenis">Evaluasi</label>
-              <textarea name="evaluasi" id="evaluasi" rows="2" class="form-control" value="-"></textarea>
+            <div class="col-md-6 form-group {if: $admin_mode == 'simple'}hidden{/if}">
+              <label class="control-label">Evaluasi</label>
+              <textarea name="evaluasi" id="evaluasi" rows="3" class="form-control" value="-">-</textarea>
             </div>
           </div>
         </div>

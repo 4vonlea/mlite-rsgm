@@ -11,26 +11,26 @@
   {include: ../plugins/rawat_jalan/view/admin/display.icd.html}
 </div>
 </div>
-<h4>Rincian Riwayat</h4>
-<div class="table-responsive no-margin">
-  <table class="table table-bordered no-padding" width="100%">
+<h4 class="text-primary" style="border-bottom: 2px solid #3498db; padding-bottom: 5px; display: inline-block; margin-top: 10px;">Rincian Riwayat</h4>
+<div class="table-responsive no-margin" style="border: 1px solid #eaeaea; margin-bottom: 20px;">
+  <table class="table table-striped table-bordered no-padding" width="100%" style="margin-bottom: 0;">
     <thead>
-      <tr>
-        <th width="20">No</th>
-        <th width="200">Tanggal</th>
+      <tr style="background-color: #f2f2f2; color: #555;">
+        <th width="20" style="text-align: center; border-bottom: 2px solid #e0e0e0;">No</th>
+        <th width="200" style="border-bottom: 2px solid #e0e0e0;">Tanggal</th>
         {if: $admin_mode == 'complex'}
-        <th>Suhu(C)</th>
-        <th>Tensi(mmHg)</th>
-        <th>Nadi(/menit)</th>
-        <th>RR(/menit)</th>
-        <th>Tinggi(cm)</th>
-        <th>Berat(Kg)</th>
-        <th>GCS(E,V,M)</th>
-        <th>SPO2</th>
-        <th>Alergi</th>
-        <th>Instruksi & Evaluasi</th>
+        <th style="border-bottom: 2px solid #e0e0e0;">Suhu(C)</th>
+        <th style="border-bottom: 2px solid #e0e0e0;">Tensi(mmHg)</th>
+        <th style="border-bottom: 2px solid #e0e0e0;">Nadi(/menit)</th>
+        <th style="border-bottom: 2px solid #e0e0e0;">RR(/menit)</th>
+        <th style="border-bottom: 2px solid #e0e0e0;">Tinggi(cm)</th>
+        <th style="border-bottom: 2px solid #e0e0e0;">Berat(Kg)</th>
+        <th style="border-bottom: 2px solid #e0e0e0;">GCS(E,V,M)</th>
+        <th style="border-bottom: 2px solid #e0e0e0;">SPO2</th>
+        <th style="border-bottom: 2px solid #e0e0e0;">Alergi</th>
+        <th style="border-bottom: 2px solid #e0e0e0;">Instruksi & Evaluasi</th>
         {else}
-        <th colspan="3">SOAP</th>
+        <th colspan="3" style="border-bottom: 2px solid #e0e0e0;">SOAP</th>
         {/if}
       </tr>
     </thead>
