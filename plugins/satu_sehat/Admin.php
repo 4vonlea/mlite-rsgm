@@ -2804,6 +2804,26 @@ class Admin extends AdminModule
     $tgl_pulang = isset_or($mlite_billing['tgl_billing'], $pemeriksaan_ralan['tgl_perawatan']);
     $jam_pulang = isset_or($mlite_billing['jam_billing'], $pemeriksaan_ralan['jam_rawat']);
 
+    if (empty($tgl_pulang) || $tgl_pulang == '0000-00-00' || empty($jam_pulang)) {
+      $resp = json_encode(['error' => 'Data tidak lengkap untuk Procedure', 'missing' => ['waktu_selesai' => 'Pasien belum selesai perawatan atau belum melakukan pembayaran (Billing).']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render) {
+        echo $this->draw('procedure.html', ['pesan' => 'Gagal mengirim procedure platform Satu Sehat!!', 'response' => $resp]);
+      } else {
+        echo $resp;
+      }
+      exit();
+    }
+    
+    if (strtotime($tgl_pulang . ' ' . $jam_pulang) < strtotime($tgl_registrasi . ' ' . $jam_reg)) {
+      $resp = json_encode(['error' => 'Data waktu tidak valid untuk Procedure', 'invalid' => ['waktu_selesai' => 'Waktu selesai perawatan tidak boleh lebih awal dari waktu registrasi.']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render) {
+        echo $this->draw('procedure.html', ['pesan' => 'Gagal mengirim procedure platform Satu Sehat!!', 'response' => $resp]);
+      } else {
+        echo $resp;
+      }
+      exit();
+    }
+
     $kunjungan = 'Kunjungan';
     if ($status_lanjut == 'Ranap') {
       $kunjungan = 'Perawatan';
@@ -4177,16 +4197,46 @@ class Admin extends AdminModule
       ));
 
       $response = curl_exec($curl);
+      $result = json_decode($response);
 
-      $id_medication = isset_or(json_decode($response)->id, '');
+      $id_medication = isset_or($result->id, '');
       $pesan = 'Gagal mengirim mapping medication platform Satu Sehat!!';
+
+      if (isset($result->issue[0]->code) && $result->issue[0]->code == 'duplicate') {
+        $system = "http://sys-ids.kemkes.go.id/medication/" . $this->organizationid;
+        $value = $satu_sehat_mapping_obat['kode_brng'];
+        $url_get = $this->fhirurl . '/Medication?identifier=' . $system . '|' . $value;
+        
+        $curl_get = curl_init();
+        curl_setopt_array($curl_get, array(
+          CURLOPT_URL => $url_get,
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 0,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_HTTPHEADER => array('Authorization: Bearer ' . $this->getAccessToken()),
+          CURLOPT_CUSTOMREQUEST => 'GET',
+        ));
+        $response_get = curl_exec($curl_get);
+        $result_get = json_decode($response_get);
+        if (isset($result_get->entry[0]->resource->id)) {
+          $id_medication = $result_get->entry[0]->resource->id;
+          $pesan = 'Sukses memperbarui ID mapping medication dari platform Satu Sehat (Duplicate Teratasi)!!';
+        }
+        curl_close($curl_get);
+      }
+
       if ($id_medication) {
         $this->db('mlite_satu_sehat_mapping_obat')
           ->where('kode_brng', $kode_brng)
           ->save([
             'id_medication' => $id_medication
           ]);
-        $pesan = 'Sukses mengirim mapping medication platform Satu Sehat!!';
+        if ($pesan == 'Gagal mengirim mapping medication platform Satu Sehat!!') {
+          $pesan = 'Sukses mengirim mapping medication platform Satu Sehat!!';
+        }
       }
 
       curl_close($curl);

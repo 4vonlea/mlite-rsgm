@@ -1189,3 +1189,8 @@ body { background-color: #ffffff !important; color: #333333 !important; }
 .single .selectator_selected_items .selectator_selected_item { margin: 0 !important; padding: 0 !important; width: 100%; }
 .single .selectator_selected_items .selectator_selected_item .selectator_selected_item_title { line-height: normal !important; height: auto !important; margin: 0 !important; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
 
+
+/* Pagination Overrides for Flat UI */
+.pagination > li > a, .pagination > li > span { color: #444444 !important; background-color: #ffffff !important; border: 1px solid #e0e0e0 !important; font-weight: 600; }
+.pagination > li > a:hover, .pagination > li > span:hover, .pagination > li > a:focus, .pagination > li > span:focus { color: #111111 !important; background-color: #f2f2f2 !important; border-color: #d0d0d0 !important; }
+.pagination > .active > a, .pagination > .active > span, .pagination > .active > a:hover, .pagination > .active > span:hover, .pagination > .active > a:focus, .pagination > .active > span:focus { color: #ffffff !important; background-color: #3498db !important; border-color: #3498db !important; }
