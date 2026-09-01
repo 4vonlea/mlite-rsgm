@@ -526,6 +526,7 @@ $(document).on("click", "#rincian .buka_modal_validasi", function(event) {
   var nmPasien = $rd.data('nm-pasien') || '-';
   var noRm = $rd.data('no-rm') || '-';
   var jkUmur = $rd.data('jk-umur') || '-';
+  var tglLahir = $rd.data('tgl-lahir') || '-';
   var alergi = $rd.data('alergi') || '-';
   var namaApoteker = $rd.data('petugas') || 'Petugas Farmasi';
 
@@ -533,6 +534,7 @@ $(document).on("click", "#rincian .buka_modal_validasi", function(event) {
   $('#val-nm-pasien').text(nmPasien);
   $('#val-no-rm').text(noRm);
   $('#val-jk-umur').text(jkUmur);
+  $('#val-tgl-lahir').text(tglLahir);
   var alergiHtml = alergi && alergi.toLowerCase() !== 'tidak ada alergi'
     ? '<span class="label label-danger">' + alergi + '</span>'
     : '<span class="label label-success">Tidak Ada Alergi</span>';
@@ -617,12 +619,14 @@ $(document).on("click", "#rincian .buka_modal_penyerahan", function(event) {
   var nmPasien = $rd2.data('nm-pasien') || '-';
   var noRm = $rd2.data('no-rm') || '-';
   var jkUmur = $rd2.data('jk-umur') || '-';
+  var tglLahir = $rd2.data('tgl-lahir') || '-';
   var alergi = $rd2.data('alergi') || '-';
   var namaPetugas = $rd2.data('petugas') || 'Petugas Farmasi';
 
   $('#peny-nm-pasien').text(nmPasien);
   $('#peny-no-rm').text(noRm);
   $('#peny-jk-umur').text(jkUmur);
+  $('#peny-tgl-lahir').text(tglLahir);
   var alergiHtml2 = alergi && alergi.toLowerCase() !== 'tidak ada alergi'
     ? '<span class="label label-danger">' + alergi + '</span>'
     : '<span class="label label-success">Tidak Ada Alergi</span>';
@@ -635,10 +639,8 @@ $(document).on("click", "#rincian .buka_modal_penyerahan", function(event) {
   // Set nama petugas
   $('#peny-nama-petugas').text(namaPetugas);
 
-  // Reset form
+  // Reset checklist
   $('.penyerahan-check').prop('checked', false);
-  $('#nama-penerima-input').val('');
-  $('#catatan-penyerahan-input').val('');
   $('#peny-alert-skrining').hide();
 
   $('#modal-penyerahan-obat').modal('show');
@@ -650,17 +652,14 @@ $(document).on("click", "#rincian .buka_modal_penyerahan", function(event) {
 $(document).on("click", "#btn-penyerahan-submit", function() {
   var totalCheck = $('.penyerahan-check').length;
   var checkedCount = $('.penyerahan-check:checked').length;
-  var namaPenerima = $('#nama-penerima-input').val().trim();
 
-  if (checkedCount < totalCheck || !namaPenerima) {
+  if (checkedCount < totalCheck) {
     $('#peny-alert-skrining').show();
     return false;
   }
   $('#peny-alert-skrining').hide();
 
   var d = _modalPenyerahanData;
-  var catatan = $('#catatan-penyerahan-input').val();
-  var hubungan = $('#hubungan-penerima-input').val();
   var baseURL = mlite.url + '/' + mlite.admin;
   var url = baseURL + '/apotek_ralan/validasiresep?t=' + mlite.token;
 
@@ -670,10 +669,7 @@ $(document).on("click", "#btn-penyerahan-submit", function() {
     no_rawat: d.no_rawat,
     tgl_peresepan: d.tgl_peresepan,
     jam_peresepan: d.jam_peresepan,
-    penyerahan: 'penyerahan',
-    nama_penerima: namaPenerima,
-    hubungan_penerima: hubungan,
-    catatan_skrining: catatan
+    penyerahan: 'penyerahan'
   }, function(data) {
     $('#modal-penyerahan-obat').modal('hide');
     $('#btn-penyerahan-submit').prop('disabled', false).html('<i class="fa fa-hand-paper-o"></i> <strong>Serahkan Obat</strong>');
@@ -681,7 +677,7 @@ $(document).on("click", "#btn-penyerahan-submit", function() {
       $("#rincian").html(html).show();
     });
     $('#notif').html('<div class="alert alert-info alert-dismissible fade in" role="alert" style="border-radius:0px;margin-top:-15px;">'+
-      '<i class="fa fa-check-circle"></i> Obat telah berhasil diserahkan kepada ' + namaPenerima + '!'+
+      '<i class="fa fa-check-circle"></i> Obat telah berhasil diserahkan!'+
       '<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>'+
       '</div>').show();
   });
@@ -1020,12 +1016,14 @@ $(document).on("click", ".pilih_barang_modal", function(){
                         var ralan = parseFloat(result.ralan);
                         var formattedRalan = isNaN(ralan) ? '0' : ralan.toLocaleString('id-ID');
                         
+                        var racikAturan = $tbody.find('.aturan_pakai').first().val() || '';
                         var newRow = '<tr class="item-row" data-nama_brng="' + result.nama_brng + '" data-stok="999" data-jml="' + result.jml + '" data-kandungan="' + result.kandungan + '" data-kapasitas="' + result.kapasitas + '" data-ralan="' + result.ralan + '">' +
                             '<td>' + result.nama_brng + '</td>' +
                             '<td><input type="number" class="form-control input-sm kandungan_obat" data-kode_brng="' + result.kode_brng + '" value="' + result.kandungan + '" style="width: 100px;"></td>' +
                             '<td><span class="jml_obat_display">' + result.jml + '</span></td>' +
-                            '<td><input type="text" class="form-control input-sm embalase" data-kode_brng="' + result.kode_brng + '" value="' + result.embalase + '" style="width: 80px;"></td>' +
-                            '<td><input type="text" class="form-control input-sm tuslah" data-kode_brng="' + result.kode_brng + '" value="' + result.tuslah + '" style="width: 80px;"></td>' +
+                            '<td><input type="text" class="form-control input-sm aturan_pakai" data-kode_brng="' + result.kode_brng + '" value="' + racikAturan + '" style="width: 180px;"></td>' +
+                            '<td><input type="text" class="form-control input-sm embalase" data-kode_brng="' + result.kode_brng + '" value="' + (parseFloat(result.embalase) ? result.embalase : '') + '" placeholder="' + (parseFloat(result.embalase) ? '' : '0') + '" style="width: 80px;"></td>' +
+                            '<td><input type="text" class="form-control input-sm tuslah" data-kode_brng="' + result.kode_brng + '" value="' + (parseFloat(result.tuslah) ? result.tuslah : '') + '" placeholder="' + (parseFloat(result.tuslah) ? '' : '0') + '" style="width: 80px;"></td>' +
                             '<td>Rp. <span class="pull-right total_harga_display">' + formattedRalan + '</span></td>' +
                             '</tr>';
                             
@@ -1087,8 +1085,8 @@ $(document).on("click", ".pilih_barang_modal", function(){
                                         '<td>' + result.nama_brng + '</td>' +
                                         '<td><input type="number" class="form-control input-sm jumlah_obat" data-kode_brng="' + result.kode_brng + '" value="' + result.jml + '" style="width: 50px;"></td>' +
                                         '<td>' + result.aturan_pakai + ' <button type="button" class="btn btn-danger btn-xs cetak_etiket" data-kode_brng="' + result.kode_brng + '" data-no_rawat="' + currentNoRawat + '" data-tgl_peresepan="' + currentTglPeresepan + '" data-jam_peresepan="' + currentJamPeresepan + '" data-tipe="nonracikan"><i class="fa fa-print"></i></button> <button type="button" class="btn btn-danger btn-xs hapus_obat" data-kode_brng="' + result.kode_brng + '" data-no_rawat="' + currentNoRawat + '" data-tgl_peresepan="' + currentTglPeresepan + '" data-jam_peresepan="' + currentJamPeresepan + '" data-jml="' + result.jml + '"><i class="fa fa-trash"></i></button></td>' +
-                                        '<td><input type="text" class="form-control input-sm embalase" data-kode_brng="' + result.kode_brng + '" value="' + result.embalase + '" style="width: 80px;"></td>' +
-                                        '<td><input type="text" class="form-control input-sm tuslah" data-kode_brng="' + result.kode_brng + '" value="' + result.tuslah + '" style="width: 80px;"></td>' +
+                                        '<td><input type="text" class="form-control input-sm embalase" data-kode_brng="' + result.kode_brng + '" value="' + (parseFloat(result.embalase) ? result.embalase : '') + '" placeholder="' + (parseFloat(result.embalase) ? '' : '0') + '" style="width: 80px;"></td>' +
+                                        '<td><input type="text" class="form-control input-sm tuslah" data-kode_brng="' + result.kode_brng + '" value="' + (parseFloat(result.tuslah) ? result.tuslah : '') + '" placeholder="' + (parseFloat(result.tuslah) ? '' : '0') + '" style="width: 80px;"></td>' +
                                         '<td>Rp. <span class="pull-right">' + formattedRalan + '</span></td>' +
                                         '</tr>';
                                         

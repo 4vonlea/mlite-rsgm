@@ -1,3 +1,83 @@
+<div class="panel panel-info" style="margin-top: 0; border-color: #31708f;">
+  <div class="panel-heading" style="background-color: #d9edf7; border-color: #bce8f1; color: #31708f;">
+    <h3 class="panel-title"><i class="fa fa-user-md"></i> Skrining Resep & Informasi Klinis Pasien</h3>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-md-4" style="border-right: 1px solid #eee;">
+        <strong><i class="fa fa-id-card"></i> Identitas Pasien</strong>
+        <table class="table table-condensed table-hover" style="margin-top: 10px; margin-bottom: 0;">
+          <tr><td width="110">Nama Pasien</td><td>: <strong>{?= $pasien.nm_pasien ?}</strong></td></tr>
+          <tr><td>No. RM</td><td>: {?= $pasien.no_rkm_medis ?}</td></tr>
+          <tr><td>JK / Umur</td><td>: {?= $pasien.jk ?} / {?= $pasien.umur ?} <small class="text-muted">(Lahir: {?= $pasien.tgl_lahir ?})</small></td></tr>
+          <tr><td>Alamat</td><td>: {?= $pasien.alamat ?}</td></tr>
+        </table>
+      </div>
+      <div class="col-md-4" style="border-right: 1px solid #eee;">
+        <strong><i class="fa fa-balance-scale"></i> Antropometri</strong>
+        <table class="table table-condensed table-hover" style="margin-top: 10px; margin-bottom: 0;">
+          <tr><td width="130">Berat Badan (BB)</td><td>: <span class="label label-primary" style="font-size:12px;">{?= $pasien.berat ?} Kg</span></td></tr>
+          <tr><td>Tinggi Badan (TB)</td><td>: <span class="label label-primary" style="font-size:12px;">{?= $pasien.tinggi ?} Cm</span></td></tr>
+        </table>
+      </div>
+      <div class="col-md-4">
+        <strong><i class="fa fa-history"></i> Riwayat Pengobatan Pasien (Klik untuk Detail)</strong>
+        <div class="panel-group" id="accordion-screening" style="margin-bottom: 0; margin-top: 10px;">
+          <div class="panel panel-default" style="border-color: #ddd;">
+            <div class="panel-heading" style="background-color: #f5f5f5; padding: 6px 15px;">
+              <h4 class="panel-title" style="font-size: 13px;">
+                <a data-toggle="collapse" data-parent="#accordion-screening" href="#collapse-riwayat-obat" style="display: block; text-decoration: none;">
+                  <i class="fa fa-chevron-down pull-right"></i> Detail Riwayat
+                </a>
+              </h4>
+            </div>
+            <div id="collapse-riwayat-obat" class="panel-collapse collapse">
+              <div class="panel-body" style="max-height: 250px; overflow-y: auto; padding: 10px;">
+                <div class="table-responsive">
+                  <table class="table table-striped table-bordered table-condensed" style="margin-bottom: 0;">
+                    <thead>
+                      <tr class="info">
+                        <th width="100">Tanggal</th>
+                        <th>Nama Obat / Alkes</th>
+                        <th width="80">Jumlah</th>
+                        <th>Aturan Pakai</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {if: !empty($riwayat_obat)}
+                        {loop: $riwayat_obat}
+                        <tr class="active">
+                          <td colspan="4" style="background:#d9edf7;">
+                            <strong><i class="fa fa-folder-open"></i> No. Rawat: {?= isset_or($value.no_rawat) ?}</strong>
+                            {if: !empty($value.tgl_registrasi)} <small class="text-muted">| Tanggal Registrasi: {?= $value.tgl_registrasi ?}</small>{/if}
+                          </td>
+                        </tr>
+                          {loop: $value.items as $item}
+                          <tr>
+                            <td>{?= $item.tgl_perawatan ?} {?= !empty($item.jam) && $item.jam != '00:00:00' ? $item.jam : '' ?}</td>
+                            <td><strong>{?= $item.nama_brng ?}</strong></td>
+                            <td>{?= $item.jml ?}</td>
+                            <td>{?= empty($item.aturan_pakai) ? '-' : $item.aturan_pakai ?}</td>
+                          </tr>
+                          {/loop}
+                        {/loop}
+                      {else}
+                        <tr>
+                          <td colspan="4" class="text-center text-muted" style="font-style: italic; padding: 10px;">Belum ada riwayat pengobatan</td>
+                        </tr>
+                      {/if}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <h4>Pemberian Obat</h4>
 <h5>Non Racikan</h5>
 <div class="table-responsive no-margin">
@@ -165,8 +245,8 @@
           <td>{?=isset_or($data.nama_brng)?}</td>
           <td><input type="number" class="form-control input-sm jumlah_obat" value="{?=isset_or($data.jml)?}" style="width: 80px;" {if: $value.tgl_perawatan !== '0000-00-00'}disabled{/if}></td>
           <td>{if: isset($data.aturan_pakai)}{?=isset_or($data.aturan_pakai)?}{else}-{/if} <button type="button" class="btn btn-danger btn-xs cetak_etiket" data-kode_brng="{if: isset($data.kode_brng)}{?=isset_or($data.kode_brng)?}{else}{/if}" data-no_rawat="{?=convertNoRawat($value.no_rawat)?}" data-tgl_peresepan="{if: isset($value.tgl_perawatan)}{?=isset_or($value.tgl_perawatan)?}{else}{/if}" data-jam_peresepan="{if: isset($value.jam)}{?=isset_or($value.jam)?}{else}{/if}" data-tipe="nonracikan"><i class="fa fa-print"></i></button></td>
-          <td><input type="text" class="form-control input-sm embalase" data-kode_brng="{?=isset_or($data.kode_brng)?}" value="{?= $this->core->settings->get('farmasi.embalase')?}" style="width: 80px;" {if: $value.tgl_perawatan !== '0000-00-00'}disabled{/if}></td>
-          <td><input type="text" class="form-control input-sm tuslah" data-kode_brng="{?=isset_or($data.kode_brng)?}" value="{?= $this->core->settings->get('farmasi.tuslah')?}" style="width: 80px;" {if: $value.tgl_perawatan !== '0000-00-00'}disabled{/if}></td>
+          <td><input type="text" class="form-control input-sm embalase" data-kode_brng="{?=isset_or($data.kode_brng)?}" value="{?=(isset($data.embalase) && $data.embalase != '' && $data.embalase != 0) ? $data.embalase : ''?}" placeholder="{?=(isset($data.embalase) && $data.embalase != '' && $data.embalase != 0) ? '' : ($this->core->settings->get('farmasi.embalase') !== '' ? $this->core->settings->get('farmasi.embalase') : '0')?}" style="width: 80px;" {if: $value.tgl_perawatan !== '0000-00-00'}disabled{/if}></td>
+          <td><input type="text" class="form-control input-sm tuslah" data-kode_brng="{?=isset_or($data.kode_brng)?}" value="{?=(isset($data.tuslah) && $data.tuslah != '' && $data.tuslah != 0) ? $data.tuslah : ''?}" placeholder="{?=(isset($data.tuslah) && $data.tuslah != '' && $data.tuslah != 0) ? '' : ($this->core->settings->get('farmasi.tuslah') !== '' ? $this->core->settings->get('farmasi.tuslah') : '0')?}" style="width: 80px;" {if: $value.tgl_perawatan !== '0000-00-00'}disabled{/if}></td>
           <td>Rp. <span class="pull-right total_harga_display">{?= number_format(($data.ralan * $data.jml),2,',','.')?}</span></td>
         </tr>
       {/loop}
@@ -223,13 +303,24 @@
       <tr>
         <td>{if: isset($value.nama_racik)}{?=isset_or($value.nama_racik)?}{else}-{/if}</td>
         <td>{if: isset($value.jml_dr)}{?=isset_or($value.jml_dr)?}{else}-{/if}</td>
-        <td>{if: isset($value.aturan_pakai)}{?=isset_or($value.aturan_pakai)?}{else}-{/if} <button type="button" class="btn btn-danger btn-xs cetak_etiket" data-kode_brng="{if: isset($value.kd_racik)}{?=isset_or($value.kd_racik)?}{else}{/if}" data-no_rawat="{?=convertNoRawat($value.no_rawat)?}" data-tgl_peresepan="{if: isset($value.tgl_perawatan)}{?=isset_or($value.tgl_perawatan)?}{else}{/if}" data-jam_peresepan="{if: isset($value.jam)}{?=isset_or($value.jam)?}{else}{/if}" data-tipe="racikan"><i class="fa fa-print"></i></button></td>
+        <td style="white-space: nowrap;">
+          <input
+            type="text"
+            class="form-control input-sm aturan_pakai"
+            data-kode_brng="{?=isset_or($value.kd_racik)?}"
+            value="{?=isset_or($value.aturan_pakai)?}"
+            style="width:200px; display:inline-block; vertical-align:middle;"
+            {if: $value.tgl_perawatan !== '0000-00-00'}disabled{/if}
+          >
+          <button type="button" class="btn btn-danger btn-xs cetak_etiket" data-kode_brng="{if: isset($value.kd_racik)}{?=isset_or($value.kd_racik)?}{else}{/if}" data-no_rawat="{?=convertNoRawat($value.no_rawat)?}" data-tgl_peresepan="{if: isset($value.tgl_perawatan)}{?=isset_or($value.tgl_perawatan)?}{else}{/if}" data-jam_peresepan="{if: isset($value.jam)}{?=isset_or($value.jam)?}{else}{/if}" data-tipe="racikan"><i class="fa fa-print"></i></button>
+        </td>
         <td colspan="3">{if: isset($value.keterangan)}{?=isset_or($value.keterangan)?}{else}-{/if}</td>
       </tr>
       <tr>
         <th>Nama Obat</th>
         <th>Kandungan</th>
         <th>Jumlah</th>
+        <th>Aturan Pakai</th>
         <th>Embalase</th>
         <th>Tuslah</th>
         <th>Harga</th>
@@ -239,8 +330,9 @@
           <td>{?=isset_or($data.nama_brng)?}</td>
           <td><input type="number" class="form-control input-sm kandungan_obat" data-kode_brng="{?=isset_or($data.kode_brng)?}" value="{?=isset_or($data.kandungan)?}" style="width: 100px;" {if: $value.tgl_perawatan !== '0000-00-00'}disabled{/if}></td>
           <td><span class="jml_obat_display">{?=isset_or($data.jml)?}</span></td>
-          <td><input type="text" class="form-control input-sm embalase" data-kode_brng="{?=isset_or($data.kode_brng)?}" value="{?= $this->core->settings->get('farmasi.embalase')?}" style="width: 80px;" {if: $value.tgl_perawatan !== '0000-00-00'}disabled{/if}></td>
-          <td><input type="text" class="form-control input-sm tuslah" data-kode_brng="{?=isset_or($data.kode_brng)?}" value="{?= $this->core->settings->get('farmasi.tuslah')?}" style="width: 80px;" {if: $value.tgl_perawatan !== '0000-00-00'}disabled{/if}></td>
+          <td><input type="text" class="form-control input-sm aturan_pakai" data-kode_brng="{?=isset_or($data.kode_brng)?}" value="{?=isset_or($data.aturan_pakai, $value.aturan_pakai)?}" style="width: 180px;" {if: $value.tgl_perawatan !== '0000-00-00'}disabled{/if}></td>
+          <td><input type="text" class="form-control input-sm embalase" data-kode_brng="{?=isset_or($data.kode_brng)?}" value="{?=(isset($data.embalase) && $data.embalase != '' && $data.embalase != 0) ? $data.embalase : ''?}" placeholder="{?=(isset($data.embalase) && $data.embalase != '' && $data.embalase != 0) ? '' : ($this->core->settings->get('farmasi.embalase') !== '' ? $this->core->settings->get('farmasi.embalase') : '0')?}" style="width: 80px;" {if: $value.tgl_perawatan !== '0000-00-00'}disabled{/if}></td>
+          <td><input type="text" class="form-control input-sm tuslah" data-kode_brng="{?=isset_or($data.kode_brng)?}" value="{?=(isset($data.tuslah) && $data.tuslah != '' && $data.tuslah != 0) ? $data.tuslah : ''?}" placeholder="{?=(isset($data.tuslah) && $data.tuslah != '' && $data.tuslah != 0) ? '' : ($this->core->settings->get('farmasi.tuslah') !== '' ? $this->core->settings->get('farmasi.tuslah') : '0')?}" style="width: 80px;" {if: $value.tgl_perawatan !== '0000-00-00'}disabled{/if}></td>
           <td>Rp. <span class="pull-right">{?= number_format($data.ranap,2,',','.')?}</span></td>
         </tr>
       {/loop}
@@ -248,7 +340,7 @@
       {/loop}
     <tfoot>
       <tr>
-        <th colspan="3">Total Biaya Obat Racikan</th>
+        <th colspan="4">Total Biaya Obat Racikan</th>
         <th colspan="3">Rp. <span class="pull-right">{?= number_format($jumlah_total_resep_racikan,2,',','.')?}</span></th>
       </tr>
     </tfoot>
@@ -270,11 +362,11 @@
           <div class="row">
             <div class="col-md-6">
               <label for="embalase_item">Embalase</label>
-              <input type="number" class="form-control" name="embalase_item" id="embalase_item" value="{?= $this->core->settings->get('farmasi.embalase')?}">
+              <input type="number" class="form-control" name="embalase_item" id="embalase_item" value="" placeholder="{?=($this->core->settings->get('farmasi.embalase') !== '' ? $this->core->settings->get('farmasi.embalase') : '0')?}">
             </div>
             <div class="col-md-6">
               <label for="tuslah_item">Tuslah</label>
-              <input type="number" class="form-control" name="tuslah_item" id="tuslah_item" value="{?= $this->core->settings->get('farmasi.tuslah')?}">
+              <input type="number" class="form-control" name="tuslah_item" id="tuslah_item" value="" placeholder="{?=($this->core->settings->get('farmasi.tuslah') !== '' ? $this->core->settings->get('farmasi.tuslah') : '0')?}">
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@
     <table class="table table-striped no-padding dataTables" width="100%">
       <thead>
         <tr>
+          <th style="white-space: nowrap;">Orderan</th>
           <th style="white-space: nowrap;">No. RM</th>
           <th style="white-space: nowrap;">Nama Pasien</th>
           <th style="white-space: nowrap;">ID Kunjungan</th>
@@ -20,6 +21,7 @@
       <tbody>
         {loop: $rawat_jalan.list}
         <tr class="layanan_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}">
+          <td style="white-space: nowrap; text-align: center;" data-order="{?=isset_or($value.orderan,0)?}">{if: $value.orderan == 1}<span class="label label-danger"><i class="fa fa-bell"></i> Order</span>{else}<span class="label label-default">-</span>{/if}</td>
           <td style="white-space: nowrap;">{?=isset_or($value.no_rkm_medis)?}</td>
           <td style="white-space: nowrap;"><b>{?=isset_or($value.nm_pasien)?}</b></td>
           <td style="white-space: nowrap;"><b>{?=isset_or($value.no_rawat)?}</b></td>
@@ -55,7 +57,7 @@
 <script type="text/javascript">
   $(".alert-dismissible").fadeTo(3000, 500).slideUp(500);
   $('.dataTables').DataTable({
-    "order": [[ 3, "desc" ]],
+    "order": [[ 0, "desc" ], [ 4, "desc" ]],
     "pagingType": "full",
     "language": {
       "paginate": {

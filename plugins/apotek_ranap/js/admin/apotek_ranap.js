@@ -715,13 +715,15 @@ $(document).on("click", ".pilih_barang_modal", function(){
                         
                         var ralan = parseFloat(result.ralan);
                         var formattedRalan = isNaN(ralan) ? '0' : ralan.toLocaleString('id-ID');
-                        
+
+                        var racikAturan = $tbody.find('.aturan_pakai').first().val() || '';
                         var newRow = '<tr class="item-row" data-nama_brng="' + result.nama_brng + '" data-stok="999" data-jml="' + result.jml + '" data-kandungan="' + result.kandungan + '" data-kapasitas="' + result.kapasitas + '" data-ralan="' + result.ralan + '">' +
                             '<td>' + result.nama_brng + '</td>' +
                             '<td><input type="number" class="form-control input-sm kandungan_obat" data-kode_brng="' + result.kode_brng + '" value="' + result.kandungan + '" style="width: 100px;"></td>' +
                             '<td><span class="jml_obat_display">' + result.jml + '</span></td>' +
-                            '<td><input type="text" class="form-control input-sm embalase" data-kode_brng="' + result.kode_brng + '" value="' + result.embalase + '" style="width: 80px;"></td>' +
-                            '<td><input type="text" class="form-control input-sm tuslah" data-kode_brng="' + result.kode_brng + '" value="' + result.tuslah + '" style="width: 80px;"></td>' +
+                            '<td><input type="text" class="form-control input-sm aturan_pakai" data-kode_brng="' + result.kode_brng + '" value="' + racikAturan + '" style="width: 180px;"></td>' +
+                            '<td><input type="text" class="form-control input-sm embalase" data-kode_brng="' + result.kode_brng + '" value="' + (parseFloat(result.embalase) ? result.embalase : '') + '" placeholder="' + (parseFloat(result.embalase) ? '' : '0') + '" style="width: 80px;"></td>' +
+                            '<td><input type="text" class="form-control input-sm tuslah" data-kode_brng="' + result.kode_brng + '" value="' + (parseFloat(result.tuslah) ? result.tuslah : '') + '" placeholder="' + (parseFloat(result.tuslah) ? '' : '0') + '" style="width: 80px;"></td>' +
                             '<td>Rp. <span class="pull-right total_harga_display">' + formattedRalan + '</span></td>' +
                             '</tr>';
                             
@@ -783,8 +785,8 @@ $(document).on("click", ".pilih_barang_modal", function(){
                                         '<td>' + result.nama_brng + '</td>' +
                                         '<td><input type="number" class="form-control input-sm jumlah_obat" data-kode_brng="' + result.kode_brng + '" value="' + result.jml + '" style="width: 50px;"></td>' +
                                         '<td>' + result.aturan_pakai + ' <button type="button" class="btn btn-danger btn-xs cetak_etiket" data-kode_brng="' + result.kode_brng + '" data-no_rawat="' + currentNoRawat + '" data-tgl_peresepan="' + currentTglPeresepan + '" data-jam_peresepan="' + currentJamPeresepan + '" data-tipe="nonracikan"><i class="fa fa-print"></i></button></td>' +
-                                        '<td><input type="text" class="form-control input-sm embalase" data-kode_brng="' + result.kode_brng + '" value="' + result.embalase + '" style="width: 80px;"></td>' +
-                                        '<td><input type="text" class="form-control input-sm tuslah" data-kode_brng="' + result.kode_brng + '" value="' + result.tuslah + '" style="width: 80px;"></td>' +
+                                        '<td><input type="text" class="form-control input-sm embalase" data-kode_brng="' + result.kode_brng + '" value="' + (parseFloat(result.embalase) ? result.embalase : '') + '" placeholder="' + (parseFloat(result.embalase) ? '' : '0') + '" style="width: 80px;"></td>' +
+                                        '<td><input type="text" class="form-control input-sm tuslah" data-kode_brng="' + result.kode_brng + '" value="' + (parseFloat(result.tuslah) ? result.tuslah : '') + '" placeholder="' + (parseFloat(result.tuslah) ? '' : '0') + '" style="width: 80px;"></td>' +
                                         '<td>Rp. <span class="pull-right total_harga_display">' + formattedRalan + '</span></td>' +
                                         '</tr>';
                                         
