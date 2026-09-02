@@ -574,29 +574,62 @@ $(document).on("click", "#btn-validasi-submit", function() {
   var url = baseURL + '/apotek_ralan/validasiresep?t=' + mlite.token;
 
   $('#btn-validasi-submit').prop('disabled', true).html('<i class="fa fa-spin fa-spinner"></i> Memvalidasi...');
-  $.post(url, {
-    no_resep: d.no_resep,
-    no_rawat: d.no_rawat,
-    tgl_peresepan: d.tgl_peresepan,
-    jam_peresepan: d.jam_peresepan,
-    penyerahan: '',
-    catatan_skrining: catatan,
-    embalase: JSON.stringify(d.obatData.embalase),
-    tuslah: JSON.stringify(d.obatData.tuslah),
-    jumlah: JSON.stringify(d.obatData.jumlah),
-    kandungan: JSON.stringify(d.obatData.kandungan),
-    aturan_pakai: JSON.stringify(d.obatData.aturan_pakai)
-  }, function(data) {
+  $.ajax({
+    url: url,
+    method: 'POST',
+    timeout: 65000,
+    data: {
+      no_resep: d.no_resep,
+      no_rawat: d.no_rawat,
+      tgl_peresepan: d.tgl_peresepan,
+      jam_peresepan: d.jam_peresepan,
+      penyerahan: '',
+      catatan_skrining: catatan,
+      embalase: JSON.stringify(d.obatData.embalase),
+      tuslah: JSON.stringify(d.obatData.tuslah),
+      jumlah: JSON.stringify(d.obatData.jumlah),
+      kandungan: JSON.stringify(d.obatData.kandungan),
+      aturan_pakai: JSON.stringify(d.obatData.aturan_pakai)
+    }
+  }).done(function(data) {
     $('#modal-validasi-resep').modal('hide');
     $('#btn-validasi-submit').prop('disabled', false).html('<i class="fa fa-check-circle"></i> <strong>Validasi Resep</strong>');
-    // Refresh panel rincian
+    // Cek jika server mengembalikan error (validasi gagal tersimpan)
+    var isError = false;
+    if (typeof data === 'string' && data.indexOf('{"error":') === 0) {
+      try { isError = !!JSON.parse(data).error; } catch (e) { isError = false; }
+    } else if (typeof data === 'object' && data && data.error) {
+      isError = true;
+    }
+    if (isError) {
+      $('#notif').html('<div class="alert alert-danger alert-dismissible fade in" role="alert" style="border-radius:0px;margin-top:-15px;">'+
+        '<i class="fa fa-times-circle"></i> Validasi GAGAL: ' + (typeof data === 'object' && data ? (data.error || 'Terjadi kesalahan') : '') +
+        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>'+
+        '</div>').show();
+    } else {
+      // Refresh panel rincian
+      $.post(baseURL + '/apotek_ralan/rincian?t=' + mlite.token, { no_rawat: d.no_rawat }, function(html) {
+        $("#rincian").html(html).show();
+      });
+      $('#notif').html('<div class="alert alert-success alert-dismissible fade in" role="alert" style="border-radius:0px;margin-top:-15px;">'+
+        '<i class="fa fa-check-circle"></i> Resep telah berhasil divalidasi!'+
+        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>'+
+        '</div>').show();
+    }
+  }).fail(function(xhr, status, error) {
+    $('#modal-validasi-resep').modal('hide');
+    $('#btn-validasi-submit').prop('disabled', false).html('<i class="fa fa-check-circle"></i> <strong>Validasi Resep</strong>');
+    var pesan = (status === 'timeout')
+      ? 'Server terlalu lama merespons (mungkin ada proses/lock database lain). Silakan coba lagi sebentar.'
+      : (error ? error : status);
+    $('#notif').html('<div class="alert alert-danger alert-dismissible fade in" role="alert" style="border-radius:0px;margin-top:-15px;">'+
+      '<i class="fa fa-times-circle"></i> Validasi gagal: ' + pesan +
+      '<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>'+
+      '</div>').show();
+    // Segarkan rincian agar mencerminkan status terbaru di database
     $.post(baseURL + '/apotek_ralan/rincian?t=' + mlite.token, { no_rawat: d.no_rawat }, function(html) {
       $("#rincian").html(html).show();
     });
-    $('#notif').html('<div class="alert alert-success alert-dismissible fade in" role="alert" style="border-radius:0px;margin-top:-15px;">'+
-      '<i class="fa fa-check-circle"></i> Resep telah berhasil divalidasi!'+
-      '<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>'+
-      '</div>').show();
   });
 });
 
@@ -642,6 +675,7 @@ $(document).on("click", "#rincian .buka_modal_penyerahan", function(event) {
   // Reset checklist
   $('.penyerahan-check').prop('checked', false);
   $('#peny-alert-skrining').hide();
+  $('#peny-catatan-petugas').val('');
 
   $('#modal-penyerahan-obat').modal('show');
 });
@@ -664,22 +698,56 @@ $(document).on("click", "#btn-penyerahan-submit", function() {
   var url = baseURL + '/apotek_ralan/validasiresep?t=' + mlite.token;
 
   $('#btn-penyerahan-submit').prop('disabled', true).html('<i class="fa fa-spin fa-spinner"></i> Menyerahkan...');
-  $.post(url, {
-    no_resep: d.no_resep,
-    no_rawat: d.no_rawat,
-    tgl_peresepan: d.tgl_peresepan,
-    jam_peresepan: d.jam_peresepan,
-    penyerahan: 'penyerahan'
-  }, function(data) {
+  $.ajax({
+    url: url,
+    method: 'POST',
+    timeout: 65000,
+    data: {
+      no_resep: d.no_resep,
+      no_rawat: d.no_rawat,
+      tgl_peresepan: d.tgl_peresepan,
+      jam_peresepan: d.jam_peresepan,
+      penyerahan: 'penyerahan',
+      catatan_penyerahan: $('#peny-catatan-petugas').val()
+    }
+  }).done(function(data) {
     $('#modal-penyerahan-obat').modal('hide');
     $('#btn-penyerahan-submit').prop('disabled', false).html('<i class="fa fa-hand-paper-o"></i> <strong>Serahkan Obat</strong>');
+    // Cek jika server mengembalikan error (penyerahan gagal tersimpan)
+    var isError = false;
+    if (typeof data === 'string' && data.indexOf('{"error":') === 0) {
+      try { isError = !!JSON.parse(data).error; } catch (e) { isError = false; }
+    } else if (typeof data === 'object' && data && data.error) {
+      isError = true;
+    }
+    if (isError) {
+      $('#notif').html('<div class="alert alert-danger alert-dismissible fade in" role="alert" style="border-radius:0px;margin-top:-15px;">'+
+        '<i class="fa fa-times-circle"></i> Serah Obat GAGAL: ' + (typeof data === 'object' && data ? (data.error || 'Terjadi kesalahan') : '') +
+        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>'+
+        '</div>').show();
+    } else {
+      $.post(baseURL + '/apotek_ralan/rincian?t=' + mlite.token, { no_rawat: d.no_rawat }, function(html) {
+        $("#rincian").html(html).show();
+      });
+      $('#notif').html('<div class="alert alert-info alert-dismissible fade in" role="alert" style="border-radius:0px;margin-top:-15px;">'+
+        '<i class="fa fa-check-circle"></i> Obat telah berhasil diserahkan!'+
+        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>'+
+        '</div>').show();
+    }
+  }).fail(function(xhr, status, error) {
+    $('#modal-penyerahan-obat').modal('hide');
+    $('#btn-penyerahan-submit').prop('disabled', false).html('<i class="fa fa-hand-paper-o"></i> <strong>Serahkan Obat</strong>');
+    var pesan = (status === 'timeout')
+      ? 'Server terlalu lama merespons (mungkin ada proses/lock database lain). Silakan coba lagi sebentar.'
+      : (error ? error : status);
+    $('#notif').html('<div class="alert alert-danger alert-dismissible fade in" role="alert" style="border-radius:0px;margin-top:-15px;">'+
+      '<i class="fa fa-times-circle"></i> Serah Obat gagal: ' + pesan +
+      '<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>'+
+      '</div>').show();
+    // Segarkan rincian agar mencerminkan status terbaru di database
     $.post(baseURL + '/apotek_ralan/rincian?t=' + mlite.token, { no_rawat: d.no_rawat }, function(html) {
       $("#rincian").html(html).show();
     });
-    $('#notif').html('<div class="alert alert-info alert-dismissible fade in" role="alert" style="border-radius:0px;margin-top:-15px;">'+
-      '<i class="fa fa-check-circle"></i> Obat telah berhasil diserahkan!'+
-      '<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>'+
-      '</div>').show();
   });
 });
 

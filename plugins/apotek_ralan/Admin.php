@@ -101,24 +101,48 @@ class Admin extends AdminModule
           $no_rawats[] = $row['no_rawat'];
         }
 
-        $pending = [];
+        // Status apotek per no_rawat:
+        // 3 = Order (ada resep belum divalidasi)
+        // 2 = Skrining / Sudah Validasi (belum diserahkan)
+        // 1 = Selesai (sudah serah terima)
+        // 0 = Belum ada resep apotek
+        $apotek_status = [];
         if (!empty($no_rawats)) {
           $placeholders = implode(',', array_fill(0, count($no_rawats), '?'));
-          $stmt = $this->db()->pdo()->prepare("SELECT DISTINCT no_rawat FROM resep_obat WHERE tgl_perawatan = '0000-00-00' AND status = 'ralan' AND no_rawat IN ($placeholders)");
+          $sql_status = "SELECT no_rawat,
+              SUM(CASE WHEN tgl_perawatan IS NULL OR YEAR(tgl_perawatan) < 1970 THEN 1 ELSE 0 END) AS jml_order,
+              SUM(CASE WHEN NOT (tgl_perawatan IS NULL OR YEAR(tgl_perawatan) < 1970)
+                       AND (tgl_penyerahan IS NULL OR YEAR(tgl_penyerahan) < 1970) THEN 1 ELSE 0 END) AS jml_validasi,
+              SUM(CASE WHEN NOT (tgl_penyerahan IS NULL OR YEAR(tgl_penyerahan) < 1970) THEN 1 ELSE 0 END) AS jml_selesai
+            FROM resep_obat
+            WHERE status = 'ralan' AND no_rawat IN ($placeholders)
+            GROUP BY no_rawat";
+          $stmt = $this->db()->pdo()->prepare($sql_status);
           $stmt->execute($no_rawats);
-          foreach ($stmt->fetchAll() as $pr) {
-            $pending[$pr['no_rawat']] = true;
+          foreach ($stmt->fetchAll() as $sr) {
+            $no_rawat = $sr['no_rawat'];
+            if ($sr['jml_order'] > 0) {
+              $apotek_status[$no_rawat] = ['prioritas' => 3, 'status' => 'Order', 'warna' => 'danger'];
+            } elseif ($sr['jml_validasi'] > 0) {
+              $apotek_status[$no_rawat] = ['prioritas' => 2, 'status' => 'Skrining', 'warna' => 'warning'];
+            } elseif ($sr['jml_selesai'] > 0) {
+              $apotek_status[$no_rawat] = ['prioritas' => 1, 'status' => 'Selesai', 'warna' => 'success'];
+            }
           }
         }
 
         $this->assign['list'] = [];
         foreach ($rows as $row) {
-          $row['orderan'] = isset($pending[$row['no_rawat']]) ? 1 : 0;
+          $st = $apotek_status[$row['no_rawat']] ?? null;
+          $row['orderan'] = $st ? $st['prioritas'] : 0;
+          $row['apotek_prioritas'] = $row['orderan'];
+          $row['apotek_status'] = $st ? $st['status'] : 'Belum';
+          $row['apotek_warna'] = $st ? $st['warna'] : 'default';
           $this->assign['list'][] = $row;
         }
         usort($this->assign['list'], function ($a, $b) {
-          if ($a['orderan'] != $b['orderan']) {
-            return $b['orderan'] - $a['orderan'];
+          if ($a['apotek_prioritas'] != $b['apotek_prioritas']) {
+            return $b['apotek_prioritas'] - $a['apotek_prioritas'];
           }
           return strcmp(isset($b['tgl_registrasi']) ? $b['tgl_registrasi'] : '', isset($a['tgl_registrasi']) ? $a['tgl_registrasi'] : '');
         });
@@ -151,11 +175,11 @@ class Admin extends AdminModule
             'jam' => $_POST['jam_rawat'],
             'petugas' => $this->core->getUserInfo('fullname', null, true),
             'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
-            'status' => 'Simpan',
-            'no_batch' => $get_gudangbarang['no_batch'],
-            'no_faktur' => $get_gudangbarang['no_faktur'],
-            'keterangan' => $_POST['no_rawat'] . ' ' . $this->core->getRegPeriksaInfo('no_rkm_medis', $_POST['no_rawat']) . ' ' . $this->core->getPasienInfo('nm_pasien', $this->core->getRegPeriksaInfo('no_rkm_medis', $_POST['no_rawat']))
-          ]);
+              'status' => 'Simpan',
+              'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
+              'no_faktur' => isset($get_gudangbarang['no_faktur']) ? $get_gudangbarang['no_faktur'] : '',
+              'keterangan' => substr($_POST['no_rawat'] . ' ' . $this->core->getRegPeriksaInfo('no_rkm_medis', $_POST['no_rawat']) . ' ' . $this->core->getPasienInfo('nm_pasien', $this->core->getRegPeriksaInfo('no_rkm_medis', $_POST['no_rawat'])), 0, 100)
+            ]);
 
         $this->db('detail_pemberian_obat')
           ->save([
@@ -169,13 +193,13 @@ class Admin extends AdminModule
             'embalase' => ($_POST['embalase'] !== '' ? $_POST['embalase'] : 0),
             'tuslah' => ($_POST['tuslah'] !== '' ? $_POST['tuslah'] : 0),
             'total' => $_POST['biaya'] * $_POST['jml'],
-            'status' => 'Ralan',
-            'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
-            'no_batch' => $get_gudangbarang['no_batch'],
-            'no_faktur' => $get_gudangbarang['no_faktur']
-          ]);
+              'status' => 'Ralan',
+              'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
+              'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
+              'no_faktur' => isset($get_gudangbarang['no_faktur']) ? $get_gudangbarang['no_faktur'] : ''
+            ]);
 
-        $this->db('aturan_pakai')
+          $this->db('aturan_pakai')
           ->save([
             'tgl_perawatan' => $_POST['tgl_perawatan'],
             'jam' => $_POST['jam_rawat'],
@@ -227,8 +251,8 @@ class Admin extends AdminModule
               'petugas' => $this->core->getUserInfo('fullname', null, true),
               'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
               'status' => 'Simpan',
-              'no_batch' => $get_gudangbarang['no_batch'],
-              'no_faktur' => $get_gudangbarang['no_faktur'],
+              'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
+              'no_faktur' => isset($get_gudangbarang['no_faktur']) ? $get_gudangbarang['no_faktur'] : '',
               'keterangan' => $_POST['no_rawat'] . ' ' . $this->core->getRegPeriksaInfo('no_rkm_medis', $_POST['no_rawat']) . ' ' . $this->core->getPasienInfo('nm_pasien', $this->core->getRegPeriksaInfo('no_rkm_medis', $_POST['no_rawat']))
             ]);
 
@@ -246,7 +270,7 @@ class Admin extends AdminModule
               'total' => $kapasitas['dasar'] * $jml,
               'status' => 'Ralan',
               'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
-              'no_batch' => $get_gudangbarang['no_batch'],
+              'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
               'no_faktur' => $get_gudangbarang['no_faktur']
             ]);
 
@@ -266,6 +290,8 @@ class Admin extends AdminModule
 
     public function postValidasiResep()
     {
+      try {
+      $this->db()->pdo()->exec("SET SESSION innodb_lock_wait_timeout = 20");
       $tgl_rawat = date('Y-m-d');
       $jam_rawat = date('H:i:s');
       $petugas_login = $this->core->getUserInfo('fullname', null, true);
@@ -274,10 +300,18 @@ class Admin extends AdminModule
       $hubungan_penerima = isset($_POST['hubungan_penerima']) ? strip_tags($_POST['hubungan_penerima']) : '';
 
       if($_POST['penyerahan'] == 'penyerahan') {
+        $catatan_penyerahan = isset($_POST['catatan_penyerahan']) ? strip_tags($_POST['catatan_penyerahan']) : '';
+        $existing_resep = $this->db('resep_obat')->where('no_resep', $_POST['no_resep'])->oneArray();
+        $catatan_sebelum = isset($existing_resep['catatan_skrining']) ? trim($existing_resep['catatan_skrining']) : '';
+        $combined_catatan = $catatan_sebelum;
+        if ($catatan_penyerahan !== '') {
+          $combined_catatan = $catatan_sebelum !== '' ? $catatan_sebelum . ' || Verifikasi: ' . $catatan_penyerahan : 'Verifikasi: ' . $catatan_penyerahan;
+        }
         $this->db('resep_obat')->where('no_resep', $_POST['no_resep'])->save([
           'tgl_penyerahan' => $tgl_rawat,
           'jam_penyerahan' => $jam_rawat,
-          'petugas_penyerahan' => $petugas_login
+          'petugas_penyerahan' => $petugas_login,
+          'catatan_skrining' => $combined_catatan
         ]);
       } else {
         $get_resep_dokter_nonracikan = $this->db('resep_dokter')
@@ -403,8 +437,8 @@ class Admin extends AdminModule
               'petugas' => $this->core->getUserInfo('fullname', null, true),
               'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
               'status' => 'Simpan',
-              'no_batch' => $get_gudangbarang['no_batch'],
-              'no_faktur' => $get_gudangbarang['no_faktur'],
+              'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
+              'no_faktur' => isset($get_gudangbarang['no_faktur']) ? $get_gudangbarang['no_faktur'] : '',
               'keterangan' => $_POST['no_rawat'] . ' ' . $this->core->getRegPeriksaInfo('no_rkm_medis', $_POST['no_rawat']) . ' ' . $this->core->getPasienInfo('nm_pasien', $this->core->getRegPeriksaInfo('no_rkm_medis', $_POST['no_rawat']))
             ]);
 
@@ -425,7 +459,7 @@ class Admin extends AdminModule
               'total' => ($get_databarang['dasar'] * $jumlah) + $embalase + $tuslah,
               'status' => 'Ralan',
               'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
-              'no_batch' => $get_gudangbarang['no_batch'],
+              'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
               'no_faktur' => $get_gudangbarang['no_faktur']
             ]);
 
@@ -459,6 +493,15 @@ class Admin extends AdminModule
         ]);
       }
       exit();
+      } catch (\Throwable $e) {
+        $logs = date('Y-m-d H:i:s') . ' | no_resep=' . (isset($_POST['no_resep']) ? $_POST['no_resep'] : '-')
+          . ' | no_rawat=' . (isset($_POST['no_rawat']) ? $_POST['no_rawat'] : '-')
+          . ' | ' . $e->getMessage() . PHP_EOL;
+        @file_put_contents(__DIR__ . '/../../tmp/validasi_debug.log', $logs, FILE_APPEND);
+        http_response_code(500);
+        try { echo json_encode(['error' => $e->getMessage()]); } catch (\Throwable $ignored) {}
+        exit();
+      }
     }
 
     public function postValidasiSemuaResep()
@@ -555,8 +598,8 @@ class Admin extends AdminModule
               'petugas' => $this->core->getUserInfo('fullname', null, true),
               'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
               'status' => 'Simpan',
-              'no_batch' => $get_gudangbarang['no_batch'],
-              'no_faktur' => $get_gudangbarang['no_faktur'],
+              'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
+              'no_faktur' => isset($get_gudangbarang['no_faktur']) ? $get_gudangbarang['no_faktur'] : '',
               'keterangan' => $no_rawat_real . ' ' . $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat_real) . ' ' . $this->core->getPasienInfo('nm_pasien', $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat_real))
             ]);
 
@@ -577,7 +620,7 @@ class Admin extends AdminModule
               'total' => ($get_databarang['dasar'] * $jumlah) + $embalase + $tuslah,
               'status' => 'Ralan',
               'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
-              'no_batch' => $get_gudangbarang['no_batch'],
+              'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
               'no_faktur' => $get_gudangbarang['no_faktur']
             ]);
 
@@ -698,8 +741,8 @@ class Admin extends AdminModule
               'petugas' => $this->core->getUserInfo('fullname', null, true),
               'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
               'status' => 'Simpan',
-              'no_batch' => $get_gudangbarang['no_batch'],
-              'no_faktur' => $get_gudangbarang['no_faktur'],
+              'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
+              'no_faktur' => isset($get_gudangbarang['no_faktur']) ? $get_gudangbarang['no_faktur'] : '',
               'keterangan' => $_POST['no_rawat'] . ' ' . $this->core->getRegPeriksaInfo('no_rkm_medis', $_POST['no_rawat']) . ' ' . $this->core->getPasienInfo('nm_pasien', $this->core->getRegPeriksaInfo('no_rkm_medis', $_POST['no_rawat']))
             ]);
 
@@ -730,7 +773,7 @@ class Admin extends AdminModule
               'total' => ($get_databarang['dasar'] * $jml) + $embalase + $tuslah,
               'status' => 'Ralan',
               'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
-              'no_batch' => $get_gudangbarang['no_batch'],
+              'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
               'no_faktur' => $get_gudangbarang['no_faktur']
             ]);
 
@@ -781,8 +824,8 @@ class Admin extends AdminModule
               'petugas' => $this->core->getUserInfo('fullname', null, true),
               'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
               'status' => 'Simpan',
-              'no_batch' => $get_gudangbarang['no_batch'],
-              'no_faktur' => $get_gudangbarang['no_faktur'],
+              'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
+              'no_faktur' => isset($get_gudangbarang['no_faktur']) ? $get_gudangbarang['no_faktur'] : '',
               'keterangan' => $_POST['no_rawat'] . ' ' . $this->core->getRegPeriksaInfo('no_rkm_medis', $_POST['no_rawat']) . ' ' . $this->core->getPasienInfo('nm_pasien', $this->core->getRegPeriksaInfo('no_rkm_medis', $_POST['no_rawat']))
             ]);
 
@@ -800,7 +843,7 @@ class Admin extends AdminModule
               'total' => ($get_databarang['dasar'] * $jml) + $embalase + $tuslah,
               'status' => 'Ralan',
               'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
-              'no_batch' => $get_gudangbarang['no_batch'],
+              'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
               'no_faktur' => $get_gudangbarang['no_faktur']
             ]);
 
@@ -871,8 +914,8 @@ class Admin extends AdminModule
           'petugas' => $this->core->getUserInfo('fullname', null, true),
           'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
           'status' => 'Hapus',
-          'no_batch' => $get_gudangbarang['no_batch'],
-          'no_faktur' => $get_gudangbarang['no_faktur'],
+          'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
+          'no_faktur' => isset($get_gudangbarang['no_faktur']) ? $get_gudangbarang['no_faktur'] : '',
           'keterangan' => $_POST['no_rawat'] . ' ' . $this->core->getRegPeriksaInfo('no_rkm_medis', $_POST['no_rawat']) . ' ' . $this->core->getPasienInfo('nm_pasien', $this->core->getRegPeriksaInfo('no_rkm_medis', $_POST['no_rawat']))
         ]);
 
@@ -936,8 +979,8 @@ class Admin extends AdminModule
                 'petugas' => $this->core->getUserInfo('fullname', null, true),
                 'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
                 'status' => 'Hapus',
-                'no_batch' => $get_gudangbarang['no_batch'],
-                'no_faktur' => $get_gudangbarang['no_faktur'],
+                'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
+                'no_faktur' => isset($get_gudangbarang['no_faktur']) ? $get_gudangbarang['no_faktur'] : '',
                 'keterangan' => $no_rawat . ' ' . $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat) . ' ' . $this->core->getPasienInfo('nm_pasien', $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat))
               ]);
         }
@@ -1630,13 +1673,97 @@ class Admin extends AdminModule
       $umur    = $this->core->getRegPeriksaInfo('umurdaftar', $no_rawat_real);
       $sttsumur= $this->core->getRegPeriksaInfo('sttsumur', $no_rawat_real);
       $alamat  = $this->core->getPasienInfo('alamat', $no_rm);
+      $tgl_lahir = $this->core->getPasienInfo('tgl_lahir', $no_rm);
+      if (empty($tgl_lahir) || $tgl_lahir === '0000-00-00') {
+        $tgl_lahir = '-';
+      }
+
+      $bb  = '';
+      $tb  = '';
+      $pemeriksaan = $this->db('pemeriksaan_ralan')
+        ->where('no_rawat', $no_rawat_real)
+        ->oneArray();
+      if (!$pemeriksaan) {
+        $pemeriksaan = $this->db('pemeriksaan_ranap')
+          ->where('no_rawat', $no_rawat_real)
+          ->oneArray();
+      }
+      if ($pemeriksaan) {
+        $bb = !empty($pemeriksaan['berat']) ? $pemeriksaan['berat'] : '';
+        $tb = !empty($pemeriksaan['tinggi']) ? $pemeriksaan['tinggi'] : '';
+      }
+
+      /* ================= ALERGI PASIEN ================= */
+      $alergi = '';
+      if (!empty($no_rm)) {
+        $alergi_list = [];
+        $alergi_ralan = $this->db('pemeriksaan_ralan')
+          ->join('reg_periksa', 'reg_periksa.no_rawat=pemeriksaan_ralan.no_rawat')
+          ->where('reg_periksa.no_rkm_medis', $no_rm)
+          ->where('pemeriksaan_ralan.alergi', '!=', '')
+          ->where('pemeriksaan_ralan.alergi', '!=', '-')
+          ->toArray();
+        foreach ($alergi_ralan as $a) {
+          $alergi_list[] = $a['alergi'];
+        }
+        $alergi_ranap = $this->db('pemeriksaan_ranap')
+          ->join('reg_periksa', 'reg_periksa.no_rawat=pemeriksaan_ranap.no_rawat')
+          ->where('reg_periksa.no_rkm_medis', $no_rm)
+          ->where('pemeriksaan_ranap.alergi', '!=', '')
+          ->where('pemeriksaan_ranap.alergi', '!=', '-')
+          ->toArray();
+        foreach ($alergi_ranap as $a) {
+          $alergi_list[] = $a['alergi'];
+        }
+        $alergi_unique = array_unique(array_filter($alergi_list));
+        $alergi = !empty($alergi_unique) ? implode(', ', $alergi_unique) : 'Tidak Ada Alergi';
+      }
+
+      /* ================= CARA BAYAR (BPJS / UMUM) ================= */
+      $cara_bayar = '';
+      $kd_pj = $this->core->getRegPeriksaInfo('kd_pj', $no_rawat_real);
+      if ($kd_pj) {
+        $cara_bayar = $this->core->getPenjabInfo('png_jawab', $kd_pj);
+      }
+
+      $kd_poli = $this->core->getRegPeriksaInfo('kd_poli', $no_rawat_real);
+      $nm_poli = $kd_poli ? $this->core->getPoliklinikInfo('nm_poli', $kd_poli) : '';
+
+      $tgl_peresepan = $resep_obat['tgl_peresepan'] ?? '';
+      if (empty($tgl_peresepan) || $tgl_peresepan === '0000-00-00') {
+        $tgl_peresepan = $tgl_resep_db;
+      }
+      $jam_peresepan = $resep_obat['jam_peresepan'] ?? '';
+
+      /* ================= PISAHKAN CATATAN SKRINING & PENYERAHAN ================= */
+      $catatan_full = isset($resep_obat['catatan_skrining']) ? $resep_obat['catatan_skrining'] : '';
+      $catatan_penyerahan = '';
+      if (strpos($catatan_full, ' || Verifikasi: ') !== false) {
+        list($catatan_skrining_cetak, $catatan_penyerahan) = explode(' || Verifikasi: ', $catatan_full, 2);
+      } elseif (strpos($catatan_full, 'Verifikasi: ') === 0) {
+        $catatan_skrining_cetak = '';
+        $catatan_penyerahan = substr($catatan_full, strlen('Verifikasi: '));
+      } else {
+        $catatan_skrining_cetak = $catatan_full;
+      }
+      $resep_obat['catatan_skrining'] = trim($catatan_skrining_cetak);
 
       /* ================= RENDER HTML ================= */
       $html = $this->draw('cetak.eresep.html', [
         'pasien'   => $pasien,
         'no_rm'    => $no_rm,
         'umur'     => $umur . ' ' . $sttsumur,
+        'tgl_lahir'=> $tgl_lahir,
         'alamat'   => $alamat,
+        'bb'       => $bb,
+        'tb'       => $tb,
+        'alergi'   => $alergi,
+        'cara_bayar' => $cara_bayar,
+        'nm_poli'  => $nm_poli,
+        'catatan_penyerahan' => htmlspecialchars($catatan_penyerahan, ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+        'judul'    => 'Resep Rawat Jalan',
+        'tgl_peresepan'  => $tgl_peresepan,
+        'jam_peresepan'  => $jam_peresepan,
         'tanggal'  => $tanggal,
         'settings' => $this->settings('settings'),
         'detail'   => htmlspecialchars_array($detail_pemberian_obat),
@@ -1993,8 +2120,8 @@ class Admin extends AdminModule
                   'petugas' => $this->core->getUserInfo('fullname', null, true),
                   'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
                   'status' => 'Simpan',
-                  'no_batch' => $get_gudangbarang['no_batch'],
-                  'no_faktur' => $get_gudangbarang['no_faktur'],
+                  'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
+                  'no_faktur' => isset($get_gudangbarang['no_faktur']) ? $get_gudangbarang['no_faktur'] : '',
                   'keterangan' => $no_rawat . ' ' . $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat) . ' ' . $this->core->getPasienInfo('nm_pasien', $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat))
                 ]);
 
@@ -2015,7 +2142,7 @@ class Admin extends AdminModule
                   'total' => ($get_databarang['dasar'] * $jumlah) + $embalase + $tuslah,
                   'status' => 'Ralan',
                   'kd_bangsal' => $this->settings->get('farmasi.deporalan'),
-                  'no_batch' => $get_gudangbarang['no_batch'],
+                  'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
                   'no_faktur' => $get_gudangbarang['no_faktur']
                 ]);
 
