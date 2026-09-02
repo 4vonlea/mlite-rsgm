@@ -36,45 +36,55 @@ body {
 
     <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 5px;">
         <tr>
-            <td style="width: 130px; padding: 1px 0;"><b>Identitas Pasien</b></td>
+            <td style="padding: 1px 0 4px 0;" colspan="3"><b>Identitas Pasien</b></td>
+            <td style="padding: 1px 0 4px 0;" colspan="3"><b>Dokter Penulis Resep</b></td>
+        </tr>
+        <tr>
+            <td style="padding: 1px 0; vertical-align: top;">Nama</td>
+            <td style="width: 10px; padding: 1px 0; vertical-align: top;">:</td>
+            <td style="width: 30%; padding: 1px 0; vertical-align: top; word-wrap: break-word;"><b>{?=isset_or($pasien)?}</b></td>
+            <td style="padding: 1px 0; vertical-align: top;">Nama Dokter</td>
+            <td style="width: 10px; padding: 1px 0; vertical-align: top;">:</td>
+            <td style="padding: 1px 0; vertical-align: top;"><b>{?=isset_or($dokter.nm_dokter)?}</b></td>
+        </tr>
+        <tr>
+            <td style="padding: 1px 0; vertical-align: top;">Tgl Lahir / Umur</td>
+            <td style="width: 10px; padding: 1px 0; vertical-align: top;">:</td>
+            <td style="padding: 1px 0; vertical-align: top;">{?=isset_or($tgl_lahir)?} / <b>{?=isset_or($umur)?}</b></td>
+            <td style="padding: 1px 0; vertical-align: top;">SIP Dokter</td>
+            <td style="width: 10px; padding: 1px 0; vertical-align: top;">:</td>
+            <td style="padding: 1px 0; vertical-align: top;"><b>{?=isset_or($dokter.no_ijn_praktek)?}</b></td>
+        </tr>
+        <tr>
+            <td style="padding: 1px 0; vertical-align: top;">Berat / Tinggi Badan</td>
+            <td style="width: 10px; padding: 1px 0; vertical-align: top;">:</td>
+            <td style="padding: 1px 0; vertical-align: top;">{?=isset_or($tb)?} Cm / {?=isset_or($bb)?} Kg</td>
+            <td style="padding: 1px 0; vertical-align: top;">No. Resep</td>
+            <td style="width: 10px; padding: 1px 0; vertical-align: top;">:</td>
+            <td style="padding: 1px 0; vertical-align: top;"><b>{?=isset_or($resep_obat.no_resep)?}</b></td>
+        </tr>
+        <tr>
+            <td style="padding: 1px 0; vertical-align: top;">Alamat</td>
+            <td style="width: 10px; padding: 1px 0; vertical-align: top;">:</td>
+            <td style="padding: 1px 0; vertical-align: top; word-wrap: break-word;">{?=isset_or($alamat)?}</td>
+            <td style="padding: 1px 0; vertical-align: top;">Unit / Poliklinik</td>
+            <td style="width: 10px; padding: 1px 0; vertical-align: top;">:</td>
+            <td style="padding: 1px 0; vertical-align: top;">{?=isset_or($nm_poli)?}</td>
+        </tr>
+        <tr>
+            <td style="padding: 1px 0; vertical-align: top;">Alergi</td>
+            <td style="width: 10px; padding: 1px 0; vertical-align: top;">:</td>
+            <td style="padding: 1px 0; vertical-align: top;">{?=isset_or($alergi)?}</td>
             <td style="padding: 1px 0;"></td>
-            <td style="width: 150px; padding: 1px 0; padding-left: 20px;"><b>Dokter Penulis Resep</b></td>
+            <td style="width: 10px; padding: 1px 0;"></td>
             <td style="padding: 1px 0;"></td>
         </tr>
         <tr>
-            <td style="padding: 1px 0;">Nama</td>
-            <td style="padding: 1px 0;">: <b>{?=isset_or($pasien)?}</b></td>
-            <td style="padding: 1px 0; padding-left: 20px;">Nama Dokter</td>
-            <td style="padding: 1px 0;">: <b>{?=isset_or($dokter.nm_dokter)?}</b></td>
-        </tr>
-        <tr>
-            <td style="padding: 1px 0;">Tgl Lahir / Umur</td>
-            <td style="padding: 1px 0;">: {?=isset_or($tgl_lahir)?} / <b>{?=isset_or($umur)?}</b></td>
-            <td style="padding: 1px 0; padding-left: 20px;">SIP Dokter</td>
-            <td style="padding: 1px 0;">: <b>{?=isset_or($dokter.no_ijn_praktek)?}</b></td>
-        </tr>
-        <tr>
-            <td style="padding: 1px 0;">Berat / Tinggi Badan</td>
-            <td style="padding: 1px 0;">: {?=isset_or($tb)?} Cm / {?=isset_or($bb)?} Kg</td>
-            <td style="padding: 1px 0; padding-left: 20px;">No. Resep</td>
-            <td style="padding: 1px 0;">: <b>{?=isset_or($resep_obat.no_resep)?}</b></td>
-        </tr>
-        <tr>
-            <td style="padding: 1px 0;">Alamat</td>
-            <td style="padding: 1px 0;">: {?=isset_or($alamat)?}</td>
-            <td style="padding: 1px 0; padding-left: 20px;">Unit / Poliklinik</td>
-            <td style="padding: 1px 0;">: {?=isset_or($nm_poli)?}</td>
-        </tr>
-        <tr>
-            <td style="padding: 1px 0;">Alergi</td>
-            <td style="padding: 1px 0;">: {?=isset_or($alergi)?}</td>
-            <td style="padding: 1px 0; padding-left: 20px;"></td>
+            <td style="padding: 1px 0; vertical-align: top;">Status Pasien</td>
+            <td style="width: 10px; padding: 1px 0; vertical-align: top;">:</td>
+            <td style="padding: 1px 0; vertical-align: top;"><b>{?=isset_or($cara_bayar)?}</b></td>
             <td style="padding: 1px 0;"></td>
-        </tr>
-        <tr>
-            <td style="padding: 1px 0;">Status Pasien</td>
-            <td style="padding: 1px 0;">: <b>{?=isset_or($cara_bayar)?}</b></td>
-            <td style="padding: 1px 0; padding-left: 20px;"></td>
+            <td style="width: 10px; padding: 1px 0;"></td>
             <td style="padding: 1px 0;"></td>
         </tr>
     </table>
