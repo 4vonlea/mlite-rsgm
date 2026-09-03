@@ -923,6 +923,125 @@ class Admin extends AdminModule
       exit();
     }
 
+    public function postAutofillpemeriksaan()
+    {
+      $no_rawat = $_POST['no_rawat'];
+      $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+
+      if (empty($reg)) {
+        header('Content-Type: application/json');
+        echo json_encode([]);
+        exit();
+      }
+
+      $no_rkm_medis = $reg['no_rkm_medis'];
+      $status_poli = $reg['status_poli'];
+      $data = [];
+
+      $source = 'none';
+      $source_info = '';
+
+      $mapPemeriksaan = function ($row) {
+        return [
+          'tensi' => $row['tensi'] ?? '',
+          'suhu_tubuh' => $row['suhu_tubuh'] ?? '',
+          'nadi' => $row['nadi'] ?? '',
+          'respirasi' => $row['respirasi'] ?? '',
+          'tinggi' => $row['tinggi'] ?? '',
+          'berat' => $row['berat'] ?? '',
+          'kesadaran' => $row['kesadaran'] ?? '',
+          'spo2' => $row['spo2'] ?? '',
+          'gcs' => $row['gcs'] ?? '',
+          'alergi' => $row['alergi'] ?? '',
+          'lingkar_perut' => $row['lingkar_perut'] ?? '-',
+          'keluhan' => $row['keluhan'] ?? '',
+          'pemeriksaan' => $row['pemeriksaan'] ?? '',
+          'penilaian' => $row['penilaian'] ?? '',
+          'rtl' => $row['rtl'] ?? ''
+        ];
+      };
+
+      $namaPegawai = function ($nip) {
+        if (empty($nip)) return '';
+        return $this->core->getPegawaiInfo('nama', $nip) ?: '';
+      };
+
+      // 1. Sudah ada record untuk no_rawat saat ini -> ambil record terbaru milik no_rawat itu
+      $current = $this->db('pemeriksaan_ranap')
+        ->where('no_rawat', $no_rawat)
+        ->desc('tgl_perawatan')
+        ->desc('jam_rawat')
+        ->oneArray();
+
+      if (!empty($current)) {
+        $data = $mapPemeriksaan($current);
+        $source = 'today';
+        $tgl = date('d/m/Y', strtotime($current['tgl_perawatan']));
+        $jam = $current['jam_rawat'] ?? '';
+        $nama = $namaPegawai($current['nip'] ?? '');
+        $source_info = "Data diambil dari pemeriksaan hari ini (" . trim($tgl . ' ' . $jam) . ")";
+        if (!empty($nama)) {
+          $source_info .= " oleh " . $nama;
+        }
+      } else {
+        // 2. Belum ada record hari itu
+        if ($status_poli == 'Lama') {
+          // Pasien lama -> ambil data terakhir dari kunjungan sebelumnya
+          $sql = "SELECT p.tensi, p.suhu_tubuh, p.nadi, p.respirasi, p.tinggi, p.berat, p.kesadaran, p.spo2, p.gcs, p.alergi, p.lingkar_perut, p.keluhan, p.pemeriksaan, p.penilaian, p.rtl, p.tgl_perawatan, p.jam_rawat
+                  FROM pemeriksaan_ranap p
+                  INNER JOIN reg_periksa r ON p.no_rawat = r.no_rawat
+                  WHERE r.no_rkm_medis = ? AND p.no_rawat != ?
+                  ORDER BY p.tgl_perawatan DESC, p.jam_rawat DESC
+                  LIMIT 1";
+          $stmt = $this->db()->pdo()->prepare($sql);
+          $stmt->execute([$no_rkm_medis, $no_rawat]);
+          $last = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+          if (!empty($last)) {
+            $data = $mapPemeriksaan($last);
+            $source = 'previous';
+            $tgl = date('d/m/Y', strtotime($last['tgl_perawatan']));
+            $jam = $last['jam_rawat'] ?? '';
+            $source_info = "Data diambil dari perawatan sebelumnya (" . trim($tgl . ' ' . $jam) . ")";
+          }
+        } else {
+          // Pasien baru -> ambil dari assessment (Penilaian Awal Medis Dokter)
+          $assessment = $this->db('penilaian_medis_ranap')
+            ->where('no_rawat', $no_rawat)
+            ->oneArray();
+
+          if (!empty($assessment)) {
+            $data = [
+              'tensi' => $assessment['td'] ?? '',
+              'suhu_tubuh' => $assessment['suhu'] ?? '',
+              'nadi' => $assessment['nadi'] ?? '',
+              'respirasi' => $assessment['rr'] ?? '',
+              'tinggi' => $assessment['tb'] ?? '',
+              'berat' => $assessment['bb'] ?? '',
+              'kesadaran' => $assessment['kesadaran'] ?? '',
+              'spo2' => $assessment['spo'] ?? '',
+              'gcs' => $assessment['gcs'] ?? '',
+              'alergi' => $assessment['alergi'] ?? '',
+              'lingkar_perut' => '-',
+              'keluhan' => $assessment['keluhan_utama'] ?? '',
+              'pemeriksaan' => $assessment['ket_fisik'] ?? '',
+              'penilaian' => $assessment['diagnosis'] ?? '',
+              'rtl' => $assessment['tata'] ?? ''
+            ];
+            $source = 'assessment';
+            $source_info = "Data diambil dari Penilaian Awal Medis Dokter";
+          }
+        }
+      }
+
+      $data['source'] = $source;
+      $data['source_info'] = $source_info;
+
+      header('Content-Type: application/json');
+      echo json_encode($data);
+      exit();
+    }
+
     public function anyLayanan()
     {
       $layanan = $this->db('jns_perawatan_inap')

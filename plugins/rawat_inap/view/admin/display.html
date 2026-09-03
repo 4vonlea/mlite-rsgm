@@ -266,6 +266,32 @@
     }, function(data) {
       $("#form_soap").html(data).show();
       checkAndLoadChart();
+
+      // Auto-fill kolom pemeriksaan (vital signs)
+      var autoFillUrl = baseURL + '/rawat_inap/autofillpemeriksaan?t=' + mlite.token;
+      $.post(autoFillUrl, {no_rawat: no_rawat}, function(response) {
+        if (response && Object.keys(response).length > 0) {
+          if (response.tensi) $('input:text[name=tensi]').val(response.tensi);
+          if (response.suhu_tubuh) $('input:text[name=suhu_tubuh]').val(response.suhu_tubuh);
+          if (response.nadi) $('input:text[name=nadi]').val(response.nadi);
+          if (response.respirasi) $('input:text[name=respirasi]').val(response.respirasi);
+          if (response.tinggi) $('input:text[name=tinggi]').val(response.tinggi);
+          if (response.berat) $('input:text[name=berat]').val(response.berat);
+          if (response.kesadaran) $('input:text[name=kesadaran]').val(response.kesadaran);
+          if (response.spo2) $('input:text[name=spo2]').val(response.spo2);
+          if (response.gcs) $('input:text[name=gcs]').val(response.gcs);
+          if (response.alergi) $('input:text[name=alergi]').val(response.alergi);
+          if (response.lingkar_perut) $('input:text[name=lingkar_perut]').val(response.lingkar_perut);
+          if (response.keluhan) $('textarea[name=keluhan]').val(response.keluhan);
+          if (response.pemeriksaan) $('textarea[name=pemeriksaan]').val(response.pemeriksaan);
+          if (response.penilaian) $('textarea[name=penilaian]').val(response.penilaian);
+          if (response.rtl) $('textarea[name=rtl]').val(response.rtl);
+        }
+        if (response.source_info) {
+          $('#autofill_info_text').text(response.source_info);
+          $('#autofill_info').show();
+        }
+      }, 'json');
     });
     
     var url = baseURL + '/rawat_inap/soap?t=' + mlite.token;

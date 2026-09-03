@@ -32,6 +32,9 @@
   <div class="col-md-9">
     <div class="panel panel-default">
       <div class="panel-body">
+        <div id="autofill_info" class="alert alert-info" style="display:none; padding:8px 12px; margin-bottom:12px;">
+          <strong>Data otomatis:</strong> <span id="autofill_info_text"></span>
+        </div>
         <h4 class="{if: $admin_mode == 'simple'}hidden{/if}">Pemeriksaan</h4>
         <div class="form-group {if: $admin_mode == 'simple'}hidden{/if}">
           <div class="row">
