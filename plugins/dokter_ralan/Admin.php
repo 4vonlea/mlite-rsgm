@@ -1277,7 +1277,7 @@ class Admin extends AdminModule
         // 2. Belum ada record hari itu
         if ($status_poli == 'Lama') {
           // Pasien lama -> ambil data terakhir dari kunjungan sebelumnya
-          $sql = "SELECT p.tensi, p.suhu_tubuh, p.nadi, p.respirasi, p.tinggi, p.berat, p.kesadaran, p.spo2, p.gcs, p.alergi, p.lingkar_perut, p.keluhan, p.pemeriksaan, p.penilaian, p.rtl, p.tgl_perawatan, p.jam_rawat
+          $sql = "SELECT p.tensi, p.suhu_tubuh, p.nadi, p.respirasi, p.tinggi, p.berat, p.kesadaran, p.spo2, p.gcs, p.alergi, p.lingkar_perut, p.keluhan, p.pemeriksaan, p.penilaian, p.rtl, p.tgl_perawatan, p.jam_rawat, p.no_rawat, p.nip
                   FROM pemeriksaan_ralan p
                   INNER JOIN reg_periksa r ON p.no_rawat = r.no_rawat
                   WHERE r.no_rkm_medis = ? AND p.no_rawat != ?
@@ -1292,7 +1292,11 @@ class Admin extends AdminModule
             $source = 'previous';
             $tgl = date('d/m/Y', strtotime($last['tgl_perawatan']));
             $jam = $last['jam_rawat'] ?? '';
-            $source_info = "Data diambil dari perawatan sebelumnya (" . trim($tgl . ' ' . $jam) . ")";
+            $nama = $namaPegawai($last['nip'] ?? '');
+            $source_info = "Data diambil dari perawatan sebelumnya (no rawat: " . $last['no_rawat'] . ", " . trim($tgl . ' ' . $jam) . ")";
+            if (!empty($nama)) {
+              $source_info .= " oleh " . $nama;
+            }
           }
         } else {
           // Pasien baru -> ambil dari assessment (Penilaian Awal Medis Dokter)
