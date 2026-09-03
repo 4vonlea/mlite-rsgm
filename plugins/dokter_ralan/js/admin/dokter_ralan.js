@@ -187,6 +187,7 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
     var instruksi       = $('textarea[name=instruksi]').val();
     var evaluasi        = $('textarea[name=evaluasi]').val();
     var spo2            = $('input:text[name=spo2]').val();
+    var status_poli     = $('#soap_status_poli').val();
 
     var url = baseURL + '/dokter_ralan/savesoap?t=' + mlite.token;
     $.post(url, {no_rawat : no_rawat,
@@ -208,7 +209,8 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
     rtl : rtl,
     instruksi : instruksi,
     evaluasi : evaluasi,
-    spo2 : spo2
+    spo2 : spo2,
+    status_poli : status_poli
     }, function(data) {
       // tampilkan data
       $("#display").hide();
