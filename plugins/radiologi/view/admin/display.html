@@ -3,6 +3,7 @@
     <table class="table table-striped no-padding dataTables" width="100%">
       <thead>
         <tr>
+          <th style="white-space: nowrap;">Order Radiologi</th>
           <th style="white-space: nowrap;">No. RM</th>
           <th style="white-space: nowrap;">Nama Pasien</th>
           <th style="white-space: nowrap;">ID Kunjungan</th>
@@ -14,7 +15,6 @@
           <th style="white-space: nowrap;">Dokter</th>
           <th style="white-space: nowrap;">Penjamin</th>
           <th style="white-space: nowrap;">No. Asuransi</th>
-          <th style="white-space: nowrap;">Order Radiologi</th>
           <th style="white-space: nowrap;">Tgl. Kunjungan</th>
           <th style="white-space: nowrap;">Stts. Periksa</th>
           <th style="white-space: nowrap;">Stts. Lanjut</th>
@@ -24,6 +24,17 @@
       <tbody>
         {loop: $rawat_jalan.list}
         <tr>
+          <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}" style="white-space: nowrap; text-align: center;" data-order="{?=isset_or($value.status_radiologi_prioritas,0)?}">
+            {if: $value.status_radiologi == 'Order Baru'}
+              <span class="label label-danger" style="font-size: 11px;"><i class="fa fa-bell"></i> Order Baru</span>
+            {elseif: $value.status_radiologi == 'Diproses'}
+              <span class="label label-warning" style="font-size: 11px;"><i class="fa fa-spinner fa-spin"></i> Diproses</span>
+            {elseif: $value.status_radiologi == 'Selesai'}
+              <span class="label label-success" style="font-size: 11px;"><i class="fa fa-check-circle"></i> Selesai</span>
+            {else}
+              -
+            {/if}
+          </td>
           <td style="white-space: nowrap;">
             <span class="dropdown-toggle" data-toggle="dropdown" data-disabled="true" aria-expanded="true"><button type="button" name="button" class="btn btn-sm btn-default">{?=isset_or($value.no_rkm_medis)?} <span class="caret"></span></button></span>
             <ul class="dropdown-menu" role="menu">
@@ -85,15 +96,6 @@
           {/if}
           </td>
           <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}" style="white-space: nowrap;">{?=isset_or($value.no_peserta)?}</td>
-          <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}" style="white-space: nowrap; text-align: center;">
-            {if: $value.status_radiologi == 'Order Baru'}
-              <span class="label label-danger" style="font-size: 11px;"><i class="fa fa-bell"></i> Order Baru</span>
-            {elseif: $value.status_radiologi == 'Diproses'}
-              <span class="label label-warning" style="font-size: 11px;"><i class="fa fa-spinner fa-spin"></i> Diproses</span>
-            {else}
-              -
-            {/if}
-          </td>
           <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}" style="white-space: nowrap;">{?=isset_or($value.tgl_registrasi)?} {?=isset_or($value.jam_reg)?}</td>
           <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}" style="white-space: nowrap;">{?=isset_or($value.stts)?}</td>
           <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}" style="white-space: nowrap;">{?=isset_or($value.status_lanjut)?}</td>
@@ -153,9 +155,9 @@
   $(".alert-dismissible").fadeTo(3000, 500).slideUp(500);
   $('.dataTables').DataTable({
     {if: $type == 'ranap'}
-    "order": [[ 7, "desc" ], [ 2, "desc" ]],
+    "order": [[ 0, "desc" ], [ 3, "desc" ]],
     {else}
-    "order": [[ 8, "desc" ], [ 3, "desc" ]],
+    "order": [[ 0, "desc" ], [ 4, "desc" ]],
     {/if}
     "pagingType": "full",
     "language": {

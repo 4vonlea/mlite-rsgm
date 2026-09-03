@@ -738,24 +738,51 @@ class Admin extends AdminModule
       
       $cek_permintaan = $this->db('permintaan_radiologi')
         ->where('no_rawat', $row['no_rawat'])
-        ->where('tgl_hasil', '<', '2000-01-01')
         ->toArray();
       
+      // Status radiologi per no_rawat (mirip tampilan status apotek):
+      // 3 = Order Baru (ada permintaan belum divalidasi / tgl_sampel kosong)
+      // 2 = Diproses (sudah divalidasi, hasil belum keluar)
+      // 1 = Selesai (semua permintaan sudah ada tgl_hasil)
+      // 0 = Belum ada permintaan
       $status_rad = '-';
+      $status_prioritas = 0;
+      $status_warna = 'default';
       if (!empty($cek_permintaan)) {
-          $status_rad = 'Diproses'; // Default if validated but not finished
+          $status_rad = 'Selesai';
+          $status_prioritas = 1;
+          $status_warna = 'success';
           foreach ($cek_permintaan as $p) {
+              if (!empty($p['tgl_hasil']) && $p['tgl_hasil'] >= '2000-01-01') {
+                  continue;
+              }
               if ($p['tgl_sampel'] == '0000-00-00' || $p['tgl_sampel'] < '2000-01-01') {
                   $status_rad = 'Order Baru';
-                  break; // Highest priority
+                  $status_prioritas = 3;
+                  $status_warna = 'danger';
+                  break;
               }
+              $status_rad = 'Diproses';
+              $status_prioritas = 2;
+              $status_warna = 'warning';
           }
       }
       
       $row['status_radiologi'] = $status_rad;
+      $row['status_radiologi_prioritas'] = $status_prioritas;
+      $row['status_radiologi_warna'] = $status_warna;
       
       $this->assign['list'][] = $row;
     }
+
+    usort($this->assign['list'], function ($a, $b) {
+      $pa = isset($a['status_radiologi_prioritas']) ? $a['status_radiologi_prioritas'] : 0;
+      $pb = isset($b['status_radiologi_prioritas']) ? $b['status_radiologi_prioritas'] : 0;
+      if ($pa != $pb) {
+        return $pb - $pa;
+      }
+      return strcmp(isset($b['tgl_registrasi']) ? $b['tgl_registrasi'] : '', isset($a['tgl_registrasi']) ? $a['tgl_registrasi'] : '');
+    });
 
     if (isset($_POST['no_rawat'])) {
       $this->assign['reg_periksa'] = $this->db('reg_periksa')
