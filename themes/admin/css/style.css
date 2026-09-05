@@ -1194,3 +1194,16 @@ body { background-color: #ffffff !important; color: #333333 !important; }
 .pagination > li > a, .pagination > li > span { color: #444444 !important; background-color: #ffffff !important; border: 1px solid #e0e0e0 !important; font-weight: 600; }
 .pagination > li > a:hover, .pagination > li > span:hover, .pagination > li > a:focus, .pagination > li > span:focus { color: #111111 !important; background-color: #f2f2f2 !important; border-color: #d0d0d0 !important; }
 .pagination > .active > a, .pagination > .active > span, .pagination > .active > a:hover, .pagination > .active > span:hover, .pagination > .active > a:focus, .pagination > .active > span:focus { color: #ffffff !important; background-color: #3498db !important; border-color: #3498db !important; }
+
+/* --- FIX WARNA SAKIT MATA --- */
+/* Mengganti warna default link dan heading ke biru elegan dan abu-abu gelap */
+a {
+    color: #2980b9; /* Biru yang adem dan profesional */
+    text-decoration: none;
+}
+a:hover, a:focus {
+    color: #1a5276; /* Biru gelap saat di-hover */
+}
+h1, h2, h3, h4, h5, h6, .text-success {
+    color: #2c3e50; /* Warna slate / abu-abu gelap kebiruan yang sangat nyaman di mata */
+}

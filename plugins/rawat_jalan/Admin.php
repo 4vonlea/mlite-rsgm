@@ -1907,7 +1907,75 @@ class Admin extends AdminModule
 
     public function postHapus()
     {
-      $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->delete();
+      $no_rawat = $_POST['no_rawat'] ?? '';
+      if (empty($no_rawat)) {
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'message' => 'No rawat tidak ditemukan']);
+        exit();
+      }
+
+      // Tabel yang tidak punya ON DELETE CASCADE — harus dihapus manual dulu
+      $checkTables = [
+        'rawat_jl_dr'       => 'Tindakan Dokter Rawat Jalan',
+        'rawat_jl_pr'       => 'Tindakan Paramedis Rawat Jalan',
+        'rawat_jl_drpr'     => 'Tindakan Dokter & Paramedis Rawat Jalan',
+        'rawat_inap_dr'     => 'Tindakan Dokter Rawat Inap',
+        'rawat_inap_pr'     => 'Tindakan Paramedis Rawat Inap',
+        'rawat_inap_drpr'   => 'Tindakan Dokter & Paramedis Rawat Inap',
+        'resep_obat'        => 'Resep Obat',
+        'resep_pulang'      => 'Resep Pulang',
+        'obat_racikan'      => 'Obat Racikan',
+        'operasi'           => 'Data Operasi',
+        'periksa_lab'       => 'Pemeriksaan Laboratorium',
+        'periksa_radiologi' => 'Pemeriksaan Radiologi',
+        'permintaan_lab'    => 'Permintaan Laboratorium',
+        'tambahan_biaya'    => 'Tambahan Biaya',
+        'bridging_sep'      => 'SEP / Bridging BPJS',
+        'nota_inap'         => 'Nota Rawat Inap',
+        'nota_jalan'        => 'Nota Rawat Jalan',
+      ];
+
+      $blocked = [];
+      $pdo = $this->db()->pdo();
+      foreach ($checkTables as $table => $label) {
+        try {
+          $stmt = $pdo->prepare("SELECT COUNT(*) FROM `$table` WHERE no_rawat = ?");
+          $stmt->execute([$no_rawat]);
+          $count = (int)$stmt->fetchColumn();
+          if ($count > 0) {
+            $blocked[] = "$label ($count data)";
+          }
+        } catch (\Exception $e) {
+          // tabel tidak ada, skip
+        }
+      }
+
+      if (!empty($blocked)) {
+        header('Content-Type: application/json');
+        echo json_encode([
+          'status'  => 'blocked',
+          'message' => 'Data kunjungan ini tidak dapat dihapus karena masih memiliki data terkait',
+          'data'    => $blocked,
+        ]);
+        exit();
+      }
+
+      // Tidak ada data terkait — aman untuk dihapus
+      try {
+        $stmt = $pdo->prepare("DELETE FROM reg_periksa WHERE no_rawat = ?");
+        $stmt->execute([$no_rawat]);
+        $deleted = $stmt->rowCount();
+
+        header('Content-Type: application/json');
+        if ($deleted > 0) {
+          echo json_encode(['status' => 'success', 'message' => 'Data berhasil dihapus']);
+        } else {
+          echo json_encode(['status' => 'error', 'message' => 'Data tidak ditemukan atau sudah dihapus']);
+        }
+      } catch (\Exception $e) {
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'message' => 'Gagal menghapus: ' . $e->getMessage()]);
+      }
       exit();
     }
 

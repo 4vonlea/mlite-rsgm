@@ -646,7 +646,8 @@ class Admin extends AdminModule
           AND reg_periksa.tgl_registrasi BETWEEN ? AND ?
           AND reg_periksa.kd_dokter = dokter.kd_dokter
           AND reg_periksa.kd_poli = poliklinik.kd_poli
-          AND reg_periksa.kd_pj = penjab.kd_pj";
+          AND reg_periksa.kd_pj = penjab.kd_pj
+          AND (reg_periksa.no_rawat IN (SELECT no_rawat FROM permintaan_radiologi) OR reg_periksa.kd_poli = '" . $this->settings('settings', 'radiologi') . "')";
     $params[] = $tgl_kunjungan;
     $params[] = $tgl_kunjungan_akhir;
 

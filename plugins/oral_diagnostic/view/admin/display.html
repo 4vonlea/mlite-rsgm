@@ -17,9 +17,19 @@
           <th style="white-space: nowrap;">Stts. Bayar</th>
         </tr>
       </thead>
+      <style>
+        .table-striped > tbody > tr.bg-dirujuk > td,
+        .table-hover > tbody > tr.bg-dirujuk:hover > td {
+            background-color: #fcf8e3 !important;
+        }
+        .table-striped > tbody > tr.bg-sudah > td,
+        .table-hover > tbody > tr.bg-sudah:hover > td {
+            background-color: #dff0d8 !important;
+        }
+      </style>
       <tbody>
         {loop: $rawat_jalan.list}
-        <tr{if: $value.stts == 'Sudah'} style="background-color: #dff0d8 !important;"{/if}>
+        <tr class="{if: $value.is_referred}bg-dirujuk{elseif: $value.stts == 'Sudah'}bg-sudah{/if}">
           <td style="white-space: nowrap;">
             <span class="dropdown-toggle" data-toggle="dropdown" data-disabled="true" aria-expanded="true"><button type="button" name="button" class="btn btn-sm btn-default">{?=isset_or($value.no_rkm_medis)?} <span class="caret"></span></button></span>
             <ul class="dropdown-menu" role="menu">
@@ -39,7 +49,10 @@
               {/if}
             </ul>
           </td>
-          <td style="white-space: nowrap;"><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal">{?=isset_or($value.nm_pasien)?}</a><br><small>{?=isset_or($value.umur_kunjungan)?}</small></td>
+          <td style="white-space: nowrap;">
+            <a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal">{?=isset_or($value.nm_pasien)?}</a><br>
+            <small>{?=isset_or($value.umur_kunjungan)?}</small>
+          </td>
           <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}">{?=isset_or($value.no_rawat)?}</td>
           <td style="white-space: nowrap;">
             <button type="button" name="button" class="btn btn-xs btn-warning antrian"
@@ -48,7 +61,12 @@
               disabled
               {/if}
             ><span class="fa fa-print"></span> {?=isset_or($value.no_reg)?}</button></td>
-          <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}" style="white-space: nowrap;">{?=isset_or($value.nm_poli)?}</td>
+          <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}" style="white-space: nowrap;">
+            {?=isset_or($value.nm_poli)?}
+            {if: $value.poli_rujukan != ''}
+            <br><small class="text-danger" style="font-weight: 600;"><i class="fa fa-share"></i> {$value.poli_rujukan}</small>
+            {/if}
+          </td>
           <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}" style="white-space: nowrap;">{?=isset_or($value.nm_dokter)?}</td>
           <td style="white-space: nowrap;">
           {if: $value.kd_pj == 'BPJ'}

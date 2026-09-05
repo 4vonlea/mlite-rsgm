@@ -202,28 +202,108 @@ $("#form").on("click","#hapus", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
   var url = baseURL + '/rawat_jalan/hapus?t=' + mlite.token;
-  //var no_rawat = $(this).attr("data-no_rawat");
   var no_rawat = $('input:text[name=no_rawat]').val();
 
-  // tampilkan dialog konfirmasi
-  bootbox.confirm("Apakah Anda yakin ingin menghapus data ini?", function(result){
-    // ketika ditekan tombol ok
-    if (result){
-      // mengirimkan perintah penghapusan
-      $.post(url, {
-        no_rawat: no_rawat
-      } ,function(data) {
-        // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
-        $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
-        bersih();
-        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-        "Data pasien telah dihapus!"+
-        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
-        "</div>").show();
-      });
+  var customStyle = '<style>.bootbox-center { display: flex !important; align-items: center; justify-content: center; } .bootbox-center .modal-dialog { margin: auto; max-width: 450px; width: 100%; } .bootbox-center .modal-content { border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15); } .bootbox-center .modal-footer { text-align: center; border-top: none; padding-top: 0; padding-bottom: 25px; } .bootbox-center .btn { padding: 8px 25px; font-weight: 600; border-radius: 6px; margin: 0 5px; }</style>';
+
+  bootbox.confirm({
+    message: customStyle +
+             '<div style="text-align:center; padding: 20px 10px 0 10px;">' +
+             '<i class="fa fa-question-circle text-info" style="font-size: 70px; margin-bottom:20px; text-shadow: 0 4px 10px rgba(23,162,184,0.2);"></i>' +
+             '<h3 style="margin-top: 0; font-weight: 600; color: #333;">Konfirmasi Hapus</h3>' +
+             '<p style="font-size: 15px; color: #666; margin-bottom: 0;">Apakah Anda yakin ingin menghapus data kunjungan ini? Tindakan ini tidak dapat dibatalkan.</p>' +
+             '</div>',
+    className: 'bootbox-center',
+    buttons: {
+      confirm: {
+        label: '<i class="fa fa-trash"></i> Ya, Hapus',
+        className: 'btn-danger'
+      },
+      cancel: {
+        label: 'Batal',
+        className: 'btn-default'
+      }
+    },
+    callback: function(result){
+      if (result){
+        $.post(url, {
+          no_rawat: no_rawat
+        }, function(data) {
+          var res = {};
+          try { res = (typeof data === 'string') ? JSON.parse(data) : data; } catch(e) {}
+
+          if (res.status === 'success') {
+            $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+            bersih();
+            bootbox.alert({
+              message: customStyle +
+                       '<div style="text-align:center; padding: 30px 20px 10px 20px;">' +
+                       '<i class="fa fa-check-circle text-success" style="font-size: 70px; margin-bottom:20px; text-shadow: 0 4px 10px rgba(40,167,69,0.2);"></i>' +
+                       '<h3 style="margin-top: 0; font-weight: 600; color: #333;">Berhasil!</h3>' +
+                       '<p style="font-size: 15px; color: #666; margin-bottom: 0;">Data kunjungan pasien telah berhasil dihapus.</p>' +
+                       '</div>',
+              className: 'bootbox-center',
+              backdrop: true,
+              buttons: {
+                ok: {
+                  label: 'Tutup',
+                  className: 'btn-success'
+                }
+              }
+            });
+
+          } else if (res.status === 'blocked') {
+            var listHtml = '';
+            if (res.data && res.data.length > 0) {
+              listHtml = '<ul style="margin:20px 0 10px 0; padding-left: 0; list-style: none; text-align: left;">';
+              $.each(res.data, function(i, item) {
+                listHtml += '<li style="background: #fff3cd; color: #856404; padding: 10px 15px; margin-bottom: 8px; border-radius: 6px; border-left: 4px solid #ffc107; font-size: 14px;"><i class="fa fa-exclamation-circle"></i>&nbsp; ' + item + '</li>';
+              });
+              listHtml += '</ul>';
+            }
+            bootbox.alert({
+              message: customStyle +
+                       '<div style="text-align:center; padding: 30px 20px 10px 20px;">' +
+                       '<i class="fa fa-exclamation-triangle text-warning" style="font-size: 70px; margin-bottom:20px; text-shadow: 0 4px 10px rgba(255,193,7,0.2);"></i>' +
+                       '<h3 style="margin-top: 0; font-weight: 600; color: #333;">Tidak Dapat Dihapus</h3>' +
+                       '<p style="font-size: 15px; color: #666; margin-bottom: 0;">Data kunjungan ini masih memiliki data terkait yang harus dihapus terlebih dahulu.</p>' +
+                       listHtml +
+                       '</div>',
+              className: 'bootbox-center',
+              backdrop: true,
+              buttons: {
+                ok: {
+                  label: 'Mengerti',
+                  className: 'btn-warning'
+                }
+              }
+            });
+
+          } else {
+            var errMsg = (res && res.message) ? res.message : 'Terjadi kesalahan saat menghapus data';
+            bootbox.alert({
+              message: customStyle +
+                       '<div style="text-align:center; padding: 30px 20px 10px 20px;">' +
+                       '<i class="fa fa-times-circle text-danger" style="font-size: 70px; margin-bottom:20px; text-shadow: 0 4px 10px rgba(220,53,69,0.2);"></i>' +
+                       '<h3 style="margin-top: 0; font-weight: 600; color: #333;">Gagal Menghapus</h3>' +
+                       '<p style="font-size: 15px; color: #666; margin-bottom: 0;">' + errMsg + '</p>' +
+                       '</div>',
+              className: 'bootbox-center',
+              backdrop: true,
+              buttons: {
+                ok: {
+                  label: 'Tutup',
+                  className: 'btn-danger'
+                }
+              }
+            });
+          }
+        });
+      }
     }
   });
 });
+
 
 $("#display").on("click", ".sep", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
