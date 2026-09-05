@@ -555,7 +555,8 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
     var instruksi       = $('textarea[name=instruksi]').val();
     var evaluasi        = $('textarea[name=evaluasi]').val();
     var spo2            = $('input:text[name=spo2]').val();
-    var status_poli     = $('#soap_status_poli').val();
+    var status_poli     = $('input[name=status_poli]:checked').val();
+    var stts_daftar     = $('input[name=stts_daftar]:checked').val();
 
     var url = baseURL + '/rawat_jalan/savesoap?t=' + mlite.token;
     $.post(url, {no_rawat : no_rawat,
@@ -578,7 +579,8 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
     instruksi : instruksi,
     evaluasi : evaluasi,
     spo2 : spo2,
-    status_poli : status_poli
+    status_poli : status_poli,
+    stts_daftar : stts_daftar
     }, function(data) {
       // tampilkan data
       $("#display").hide();

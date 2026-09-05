@@ -2253,11 +2253,17 @@ class Admin extends AdminModule
     {
       $_POST['nip'] = $this->core->getUserInfo('username', null, true);
 
-      // Pisahkan status_poli untuk diupdate ke tabel reg_periksa
+      // Pisahkan status_poli dan stts_daftar untuk diupdate ke tabel reg_periksa
       $status_poli = '';
       if(isset($_POST['status_poli'])) {
           $status_poli = $_POST['status_poli'];
           unset($_POST['status_poli']);
+      }
+
+      $stts_daftar = '';
+      if(isset($_POST['stts_daftar'])) {
+          $stts_daftar = $_POST['stts_daftar'];
+          unset($_POST['stts_daftar']);
       }
 
       if(!$this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->oneArray()) {
@@ -2266,8 +2272,11 @@ class Admin extends AdminModule
         $this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->save($_POST);
       }
 
-      if($status_poli != '') {
-          $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save(['status_poli' => $status_poli]);
+      $save_reg = [];
+      if($status_poli != '') $save_reg['status_poli'] = $status_poli;
+      if($stts_daftar != '') $save_reg['stts_daftar'] = $stts_daftar;
+      if(!empty($save_reg)) {
+          $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($save_reg);
       }
 
       exit();
