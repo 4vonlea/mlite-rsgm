@@ -863,67 +863,68 @@ class Admin extends AdminModule
     }
 
     $curl = curl_init();
-    $json = '{
-      "resourceType": "Encounter",
-      "status": "arrived",
-      "class": {
-          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
-          "code": "' . $code . '",
-          "display": "' . $display . '"
-      },
-      "subject": {
-          "reference": "Patient/' . $ihs_patient . '",
-          "display": "' . $nama_pasien . '"
-      },
-      "participant": [
-          {
-              "type": [
-                  {
-                      "coding": [
-                          {
-                              "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
-                              "code": "ATND",
-                              "display": "attender"
-                          }
-                      ]
-                  }
-              ],
-              "individual": {
-                  "reference": "Practitioner/' . $praktisi_id . '",
-                  "display": "' . $nama_dokter . '"
-              }
-          }
+    $json = [
+      "resourceType" => "Encounter",
+      "status" => "arrived",
+      "class" => [
+        "system" => "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code" => $code,
+        "display" => $display
       ],
-      "period": {
-          "start": "' . $tgl_registrasi . 'T' . $jam_reg . '' . $zonawaktu . '"
-      },
-      "location": [
-          {
-              "location": {
-                  "reference": "Location/' . $lokasi_id . '",
-                  "display": "' . $kd_poli . ' ' . $nm_poli . '"
-              }
-          }
+      "subject" => [
+        "reference" => "Patient/" . $ihs_patient,
+        "display" => $nama_pasien
       ],
-      "statusHistory": [
-          {
-              "status": "arrived",
-              "period": {
-                  "start": "' . $tgl_registrasi . 'T' . $jam_reg . '' . $zonawaktu . '",
-                  "end": "' . $tgl_registrasi . 'T' . $endTime . '' . $zonawaktu . '"
-              }
-          }
+      "participant" => [
+        [
+          "type" => [
+            [
+              "coding" => [
+                [
+                  "system" => "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                  "code" => "ATND",
+                  "display" => "attender"
+                ]
+              ]
+            ]
+          ],
+          "individual" => [
+            "reference" => "Practitioner/" . $praktisi_id,
+            "display" => $nama_dokter
+          ]
+        ]
       ],
-      "serviceProvider": {
-          "reference": "Organization/' . $this->organizationid . '"
-      },
-      "identifier": [
-          {
-              "system": "http://sys-ids.kemkes.go.id/encounter/' . $this->organizationid . '",
-              "value": "' . $no_rawat . '"
-          }
+      "period" => [
+        "start" => $tgl_registrasi . 'T' . $jam_reg . $zonawaktu
+      ],
+      "location" => [
+        [
+          "location" => [
+            "reference" => "Location/" . $lokasi_id,
+            "display" => $kd_poli . ' ' . $nm_poli
+          ]
+        ]
+      ],
+      "statusHistory" => [
+        [
+          "status" => "arrived",
+          "period" => [
+            "start" => $tgl_registrasi . 'T' . $jam_reg . $zonawaktu,
+            "end" => $tgl_registrasi . 'T' . $endTime . $zonawaktu
+          ]
+        ]
+      ],
+      "serviceProvider" => [
+        "reference" => "Organization/" . $this->organizationid
+      ],
+      "identifier" => [
+        [
+          "system" => "http://sys-ids.kemkes.go.id/encounter/" . $this->organizationid,
+          "value" => $no_rawat
+        ]
       ]
-    }';
+    ];
+    $json = json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     curl_setopt_array($curl, array(
       CURLOPT_URL => $this->fhirurl . '/Encounter',
       CURLOPT_RETURNTRANSFER => true,
@@ -1069,137 +1070,139 @@ class Admin extends AdminModule
     // $this->db('pasien')->where('no_rkm_medis',$no_rkm_medis)->update('nip',$ihs_patient);
     // }
 
-    $sistole = strtok($inProg['tensi'], '/');
-    $diastole = substr($inProg['tensi'], strpos($inProg['tensi'], '/') + 1);
+    $nilai_sistole = strtok($inProg['tensi'], '/');
+    $nilai_diastole = substr($inProg['tensi'], strpos($inProg['tensi'], '/') + 1);
 
+    $diastole_json = [];
+    $sistole_json = [];
     if ($inProg['tensi'] != '') {
-      $diastole = '{
-        "fullUrl": "urn:uuid:' . $uuid_diastolik . '",
-        "resource": {
-            "resourceType": "Observation",
-            "status": "final",
-            "category": [
-                {
-                    "coding": [
-                        {
-                            "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-                            "code": "vital-signs",
-                            "display": "Vital Signs"
-                        }
+      $diastole_json = [
+        "fullUrl" => "urn:uuid:" . $uuid_diastolik,
+        "resource" => [
+            "resourceType" => "Observation",
+            "status" => "final",
+            "category" => [
+                [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                            "code" => "vital-signs",
+                            "display" => "Vital Signs"
+                        ]
                     ]
-                }
-            ],
-            "code": {
-                "coding": [
-                    {
-                      "system": "http://loinc.org",
-                      "code": "8462-4",
-                      "display": "Diastolic blood pressure"
-                    }
                 ]
-            },
-            "subject": {
-                "reference": "Patient/' . $ihs_patient . '"
-            },
-            "performer": [
-                {
-                    "reference": "Practitioner/' . $no_ktp_dokter['practitioner_id'] . '"
-                }
             ],
-            "encounter": {
-                "reference": "urn:uuid:' . $uuid_encounter . '",
-                "display": "Pemeriksaan Fisik Diastolik ' . $nama_pasien . ' di ' . $tgl_registrasi . '"
-            },
-            "effectiveDateTime": "' . $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . '' . $zonawaktu . '",
-            "issued": "' . $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . '' . $zonawaktu . '",
-            "bodySite": {
-              "coding": [
-                  {
-                      "system": "http://snomed.info/sct",
-                      "code": "368209003",
-                      "display": "Right arm"
-                  }
-              ]
-            },
-            "valueQuantity": {
-                "value": ' . $diastole . ',
-                "unit": "mm[Hg]",
-                "system": "http://unitsofmeasure.org",
-                "code": "mm[Hg]"
-            },
-            "interpretation": [
-              {
-                  "coding": [
-                      {
-                          "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
-                          "code": "L",
-                          "display": "low"
-                      }
-                  ],
-                  "text": "Di bawah nilai referensi"
-              }
+            "code" => [
+                "coding" => [
+                    [
+                        "system" => "http://loinc.org",
+                        "code" => "8462-4",
+                        "display" => "Diastolic blood pressure"
+                    ]
+                ]
+            ],
+            "subject" => [
+                "reference" => "Patient/" . $ihs_patient
+            ],
+            "performer" => [
+                [
+                    "reference" => "Practitioner/" . $no_ktp_dokter['practitioner_id']
+                ]
+            ],
+            "encounter" => [
+                "reference" => "urn:uuid:" . $uuid_encounter,
+                "display" => "Pemeriksaan Fisik Diastolik " . $nama_pasien . " di " . $tgl_registrasi
+            ],
+            "effectiveDateTime" => $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . $zonawaktu,
+            "issued" => $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . $zonawaktu,
+            "bodySite" => [
+                "coding" => [
+                    [
+                        "system" => "http://snomed.info/sct",
+                        "code" => "368209003",
+                        "display" => "Right arm"
+                    ]
+                ]
+            ],
+            "valueQuantity" => [
+                "value" => (float) $nilai_diastole,
+                "unit" => "mm[Hg]",
+                "system" => "http://unitsofmeasure.org",
+                "code" => "mm[Hg]"
+            ],
+            "interpretation" => [
+                [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                            "code" => "L",
+                            "display" => "low"
+                        ]
+                    ],
+                    "text" => "Di bawah nilai referensi"
+                ]
             ]
-        },
-        "request": {
-            "method": "POST",
-            "url": "Observation"
-        }
-      },';
-      $sistole = '{
-        "fullUrl": "urn:uuid:' . $sistole . '",
-        "resource": {
-            "resourceType": "Observation",
-            "status": "final",
-            "category": [
-                {
-                    "coding": [
-                        {
-                            "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-                            "code": "vital-signs",
-                            "display": "Vital Signs"
-                        }
+        ],
+        "request" => [
+            "method" => "POST",
+            "url" => "Observation"
+        ]
+      ];
+      $sistole_json = [
+        "fullUrl" => "urn:uuid:" . $uuid_sistolik,
+        "resource" => [
+            "resourceType" => "Observation",
+            "status" => "final",
+            "category" => [
+                [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                            "code" => "vital-signs",
+                            "display" => "Vital Signs"
+                        ]
                     ]
-                }
-            ],
-            "code": {
-                "coding": [
-                    {
-                      "system": "http://loinc.org",
-                      "code": "8462-4",
-                      "display": "Diastolic blood pressure"
-                    }
                 ]
-            },
-            "subject": {
-                "reference": "Patient/' . $ihs_patient . '"
-            },
-            "performer": [
-                {
-                    "reference": "Practitioner/' . $no_ktp_dokter['practitioner_id'] . '"
-                }
             ],
-            "encounter": {
-                "reference": "urn:uuid:' . $uuid_encounter . '",
-                "display": "Pemeriksaan Fisik Sistole ' . $nama_pasien . ' di ' . $tgl_registrasi . '"
-            },
-            "effectiveDateTime": "' . $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . '' . $zonawaktu . '",
-            "issued": "' . $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . '' . $zonawaktu . '",
-            "valueQuantity": {
-                "value": ' . $inProg['respirasi'] . ',
-                "unit": "breaths/minute",
-                "system": "http://unitsofmeasure.org",
-                "code": "/min"
-            }
-        },
-        "request": {
-            "method": "POST",
-            "url": "Observation"
-        }
-      },';
+            "code" => [
+                "coding" => [
+                    [
+                        "system" => "http://loinc.org",
+                        "code" => "8480-6",
+                        "display" => "Systolic blood pressure"
+                    ]
+                ]
+            ],
+            "subject" => [
+                "reference" => "Patient/" . $ihs_patient
+            ],
+            "performer" => [
+                [
+                    "reference" => "Practitioner/" . $no_ktp_dokter['practitioner_id']
+                ]
+            ],
+            "encounter" => [
+                "reference" => "urn:uuid:" . $uuid_encounter,
+                "display" => "Pemeriksaan Fisik Sistole " . $nama_pasien . " di " . $tgl_registrasi
+            ],
+            "effectiveDateTime" => $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . $zonawaktu,
+            "issued" => $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . $zonawaktu,
+            "valueQuantity" => [
+                "value" => (float) $nilai_sistole,
+                "unit" => "mm[Hg]",
+                "system" => "http://unitsofmeasure.org",
+                "code" => "mm[Hg]"
+            ]
+        ],
+        "request" => [
+            "method" => "POST",
+            "url" => "Observation"
+        ]
+      ];
     }
 
-    $composition_json = '';
-    $display_composition = "Kunjungan ' . $nama_pasien . ' di tanggal ' . $tgl_registrasi . '";
+    $composition_json = [];
+    $display_composition = "Kunjungan " . $nama_pasien . " di tanggal " . $tgl_registrasi;
     $zonaWaktu_composition = $this->convertTimeSatset($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing']) . '' . $zonawaktu;
     $composition = new Composition(
       $uuid_encounter,
@@ -1215,10 +1218,10 @@ class Admin extends AdminModule
     );
     $composition_json = $composition->toJson();
 
-    $respiratory_json = '';
+    $respiratory_json = [];
     if (!in_array($inProg['respirasi'], ['', '-'])) {
       $zonaWaktu = $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . '' . $zonawaktu;
-      $display_respiratory = "Pemeriksaan Fisik Pernafasan ' . $nama_pasien . ' di ' . $tgl_registrasi . '";
+      $display_respiratory = "Pemeriksaan Fisik Pernafasan " . $nama_pasien . " di " . $tgl_registrasi;
       $respiratory = new Respiratory(
         $uuid_encounter,
         $uuid_respiration,
@@ -1231,7 +1234,7 @@ class Admin extends AdminModule
       $respiratory_json = $respiratory->toJson();
     }
 
-    $temperatur_json = '';
+    $temperatur_json = [];
     if ($inProg['suhu'] != '') {
       $value_temp = 'N';
       $display_temp = 'Normal';
@@ -1246,7 +1249,7 @@ class Admin extends AdminModule
         $display_temp = 'Low';
         $text_temp = 'bawah';
       }
-      $display_encounter_temp = "Pemeriksaan Fisik Suhu ' . $nama_pasien . ' di ' . $tgl_registrasi . '";
+      $display_encounter_temp = "Pemeriksaan Fisik Suhu " . $nama_pasien . " di " . $tgl_registrasi;
       $zonaWaktu = $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . '' . $zonawaktu;
       $suhu = new Temperature(
         $uuid_encounter,
@@ -1263,15 +1266,15 @@ class Admin extends AdminModule
       $temperatur_json = $suhu->toJson();
     }
 
-    $heart_rate_json = '';
+    $heart_rate_json = [];
     if (!in_array($inProg['nadi'], ['', '-'])) {
       $zonaWaktu = $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . '' . $zonawaktu;
-      $display_nadi = "Pemeriksaan Fisik Nadi ' . $nama_pasien . ' di ' . $tgl_registrasi . '";
+      $display_nadi = "Pemeriksaan Fisik Nadi " . $nama_pasien . " di " . $tgl_registrasi;
       $nadi = new Observation($uuid_encounter, $uuid_nadi, $ihs_patient, $no_ktp_dokter['practitioner_id'], $inProg['nadi'], $zonaWaktu, $display_nadi, 'nadi');
-      $heart_rate_json = $nadi->toJsonBundle() . ',';
+      $heart_rate_json = $nadi->toJsonBundle();
     }
 
-    $condition_json = '';
+    $condition_json = [];
     if ($diagnosa_pasien['kd_penyakit'] != '') {
       $display_condition = $kunjungan . ' ' . $nama_pasien . ' dari tanggal ' . $tgl_registrasi;
       $condition = new Condition(
@@ -1286,9 +1289,9 @@ class Admin extends AdminModule
       $condition_json = $condition->toJson();
     }
 
-    $procedure_json = '';
+    $procedure_json = [];
     if ($prosedure_pasien) {
-      $display_procedure = "Tindakan pada ' . $nama_pasien . ' di tanggal ' . $tgl_registrasi . '";
+      $display_procedure = "Tindakan pada " . $nama_pasien . " di tanggal " . $tgl_registrasi;
       $zonaWaktu = $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . '' . $zonawaktu;
       $procedure = new Procedure(
         $uuid_encounter,
@@ -1307,16 +1310,16 @@ class Admin extends AdminModule
       $procedure_json = $procedure->toJson();
     }
 
-    $careplan_json = '';
+    $careplan_json = [];
     $cek_ranap = $this->db('kamar_inap')->where('no_rawat', $no_rawat)->oneArray();
     if ($cek_ranap) {
       $uuid_careplan = $this->gen_uuid();
       $careplan = new CarePlan($ihs_patient, $uuid_encounter, $uuid_careplan, "Pasien Dirawat Inapkan", "Rawat Inap", $no_ktp_dokter['practitioner_id']);
-      $careplan_json = $careplan->toJsonBundle() . ',';
+      $careplan_json = $careplan->toJsonBundle();
     }
 
-    $medicationforrequest_json = '';
-    $medicationrequest_json = '';
+    $medicationforrequest_json = [];
+    $medicationrequest_json = [];
     // map of MedicationRequest UUIDs by drug code for later linking
     $medicationrequest_ids = [];
     $no = 1;
@@ -1348,7 +1351,7 @@ class Admin extends AdminModule
           $value['jml'],
           $no . $this->ran_char()
         );
-        $medicationforrequest_json .= $medication->toJson();
+        $medicationforrequest_json[] = $medication->toJson();
 
         $time_authored = $this->convertTimeSatset($value['tgl_peresepan'] . ' ' . $value['jam_peresepan']) . $zonawaktu;
         $medicationrequest = new MedicationRequest(
@@ -1374,7 +1377,7 @@ class Admin extends AdminModule
           $cek_obat['satuan_den'],
           $no . $this->ran_char()
         );
-        $medicationrequest_json .= $medicationrequest->toJson();
+        $medicationrequest_json[] = $medicationrequest->toJson();
         // store MR id by drug code for linking in dispense section
         if (!empty($value['kode_brng'])) {
           $medicationrequest_ids[$value['kode_brng']] = $uuid_medicationrequest;
@@ -1384,8 +1387,8 @@ class Admin extends AdminModule
       }
     }
 
-    $medicationfordispense_json = '';
-    $medicationdispense_json = '';
+    $medicationfordispense_json = [];
+    $medicationdispense_json = [];
     $no = 1;
     $cek_detail = $this->db('detail_pemberian_obat')->where('no_rawat', $no_rawat)->toArray();
     $praktisi_apoteker = $this->db('mlite_satu_sehat_mapping_praktisi')->select('practitioner_id', 'kd_dokter')->where('jenis_praktisi', 'Apoteker')->toArray();
@@ -1428,7 +1431,7 @@ class Admin extends AdminModule
           $value['jml'],
           $no . $this->ran_char()
         );
-        $medicationfordispense_json .= $medication_for_dispense->toJson();
+        $medicationfordispense_json[] = $medication_for_dispense->toJson();
 
         $time_prepared_handed = $this->convertTimeSatset($value['tgl_perawatan'] . ' ' . $value['jam']) . $zonawaktu;
         // find matching MedicationRequest id by drug code; fallback to new UUID
@@ -1455,14 +1458,14 @@ class Admin extends AdminModule
           $cek_obat['satuan_den'],
           $no . $this->ran_char()
         );
-        $medicationdispense_json .= $medication_dispense->toJson();
+        $medicationdispense_json[] = $medication_dispense->toJson();
 
         $no++;
       }
     }
 
-    $questionare_json = '';
-    $careplan_medication_json = '';
+    $questionare_json = [];
+    $careplan_medication_json = [];
     if ($medicationdispense_json) {
       $uuid_questionare = $this->gen_uuid();
       $questionare = new QuestionareMedication($uuid_questionare, $uuid_encounter, $ihs_patient, $nama_pasien, $id_praktisi_apoteker['practitioner_id'], $nama_praktisi_apoteker);
@@ -1470,10 +1473,10 @@ class Admin extends AdminModule
 
       $uuid_careplan = $this->gen_uuid();
       $careplan = new CarePlan($ihs_patient, $uuid_encounter, $uuid_careplan, "Pasien Mendapatkan Resep Obat", "Resep Obat", $no_ktp_dokter['practitioner_id']);
-      $careplan_medication_json = $careplan->toJsonBundle() . ',';
+      $careplan_medication_json = $careplan->toJsonBundle();
     }
 
-    $clinical_impression_json_history = '';
+    $clinical_impression_json_history = [];
     if ($inProg['keluhan'] != '') {
       $clinicalimpression_history = new ClinicalImpression(
         $this->organizationid,
@@ -1485,10 +1488,10 @@ class Admin extends AdminModule
         $inProg['keluhan'],
         "in-progress"
       );
-      $clinical_impression_json_history = $clinicalimpression_history->toJsonBundle() . ',';
+      $clinical_impression_json_history = $clinicalimpression_history->toJsonBundle();
     }
 
-    $clinical_impression_json_prognosis = '';
+    $clinical_impression_json_prognosis = [];
     if ($inProg['penilaian'] != '') {
       $clinicalimpression = new ClinicalImpression(
         $this->organizationid,
@@ -1500,7 +1503,7 @@ class Admin extends AdminModule
         $inProg['penilaian'],
         "completed"
       );
-      $clinical_impression_json_prognosis = $clinicalimpression->toJsonBundle() . ',';
+      $clinical_impression_json_prognosis = $clinicalimpression->toJsonBundle();
     }
 
     $service_request_lab_json = [];
@@ -1512,8 +1515,12 @@ class Admin extends AdminModule
       $check_mapping_lab = $this->db('mlite_satu_sehat_mapping_lab')->where('kd_jenis_prw', $value['kd_jenis_prw'])->oneArray();
       if ($check_mapping_lab && $check_mapping_lab['id_template'] != '' && $check_mapping_lab['jenis_pemeriksaan'] == 'tunggal') {
         $praktisi_lab = $this->db('mlite_satu_sehat_mapping_praktisi')->select('practitioner_id', 'kd_dokter')->where('jenis_praktisi', 'Laboratorium')->toArray();
-        $id_praktisi_lab = $praktisi_lab[array_rand($praktisi_lab)];
-        $nama_praktisi_lab = $this->core->getPegawaiInfo('nama', $id_praktisi_lab['kd_dokter']);
+        if (!is_array($praktisi_lab) || empty($praktisi_lab)) {
+          $id_praktisi_lab = ['practitioner_id' => $no_ktp_dokter['practitioner_id'] ?? '', 'kd_dokter' => $kd_dokter];
+        } else {
+          $id_praktisi_lab = $praktisi_lab[array_rand($praktisi_lab)];
+        }
+        $nama_praktisi_lab = $this->core->getPegawaiInfo('nama', $id_praktisi_lab['kd_dokter'] ?? $kd_dokter);
         $no_ktp_dokter_perujuk = $this->db('mlite_satu_sehat_mapping_praktisi')->select('practitioner_id')->where('kd_dokter', $value['dokter_perujuk'])->oneArray();
         $nama_dokter_perujuk = $this->core->getPegawaiInfo('nama', $value['dokter_perujuk']);
         $nama_tindakan = $this->db('jns_perawatan_lab')->select('nm_perawatan')->where('kd_jenis_prw', $value['kd_jenis_prw'])->oneArray();
@@ -1532,7 +1539,7 @@ class Admin extends AdminModule
           $no_rawat,
           $ihs_patient,
           $uuid_encounter,
-          $no_ktp_dokter_perujuk['practitioner_id'],
+          $no_ktp_dokter_perujuk['practitioner_id'] ?? '',
           $nama_dokter_perujuk,
           $check_mapping_lab['code_loinc'],
           $check_mapping_lab['display_loinc'],
@@ -1540,17 +1547,17 @@ class Admin extends AdminModule
           $check_mapping_lab['display_kptl'],
           $nama_tindakan['nm_perawatan']
         );
-        $service_request_lab_json[] = $service_request_lab->toJsonBundle() . ',';
+        $service_request_lab_json[] = $service_request_lab->toJsonBundle();
 
         $specimen_lab = new Specimen($uuid_specimen_lab, $this->organizationid, $ihs_patient, $nama_pasien, $uuid_service_request_lab, $no_rawat, $time_sampled);
-        $specimen_json[] = $specimen_lab->toJsonBundle() . ',';
+        $specimen_json[] = $specimen_lab->toJsonBundle();
 
         $cek_hasil_lab = $this->db('detail_periksa_lab')->where('no_rawat', $no_rawat)->where('kd_jenis_prw', $value['kd_jenis_prw'])->where('tgl_periksa', $value['tgl_hasil'])->where('jam', $value['jam_hasil'])->oneArray();
         $observation_lab = new Observation(
           $uuid_encounter,
           $uuid_observation_lab,
           $ihs_patient,
-          $id_praktisi_lab,
+          $id_praktisi_lab['practitioner_id'] ?? '',
           $cek_hasil_lab['nilai'],
           $time_result,
           "",
@@ -1560,7 +1567,7 @@ class Admin extends AdminModule
           $check_mapping_lab['code_loinc'],
           $check_mapping_lab['display_loinc']
         );
-        $observation_lab_json[] = $observation_lab->toJsonBundle() . ',';
+        $observation_lab_json[] = $observation_lab->toJsonBundle();
 
         $diagnostic_report_lab = new DiagnosticReport(
           $uuid_diagnostic_report,
@@ -1568,155 +1575,150 @@ class Admin extends AdminModule
           $uuid_encounter,
           $uuid_service_request_lab,
           $uuid_observation_lab,
-          $id_praktisi_lab,
+          $id_praktisi_lab['practitioner_id'] ?? '',
           $ihs_patient,
           $check_mapping_lab['code_loinc'],
           $check_mapping_lab['display_loinc'],
           $time_result
         );
-        $diagnostic_report_json[] = $diagnostic_report_lab->toJsonBundle() . ',';
+        $diagnostic_report_json[] = $diagnostic_report_lab->toJsonBundle();
       }
     }
-    $service_request_lab_json_decode = implode("\n", $service_request_lab_json);
-    $specimen_lab_json_decode = implode("\n", $specimen_json);
-    $observation_lab_json_decode = implode("\n", $observation_lab_json);
-    $diagnostic_report_json_decode = implode("\n", $diagnostic_report_json);
-
-    $careplan_service_request_lab_json = '';
-    if ($service_request_lab_json_decode) {
+    $careplan_service_request_lab_json = [];
+    if (!empty($service_request_lab_json)) {
       $uuid_careplan = $this->gen_uuid();
       $careplan = new CarePlan($ihs_patient, $uuid_encounter, $uuid_careplan, "Pasien Mendapatkan Pemeriksaan Laboratorium", "Pemeriksaan Laboratorium", $no_ktp_dokter['practitioner_id']);
-      $careplan_service_request_lab_json = $careplan->toJsonBundle() . ',';
+      $careplan_service_request_lab_json = $careplan->toJsonBundle();
     }
 
     // Bundle dari sini ----------------------------------------------------------------------
-    $json_bundle = '{
-    "resourceType": "Bundle",
-    "type": "transaction",
-    "entry": [
-        {
-            "fullUrl": "urn:uuid:' . $uuid_encounter . '",
-            "resource": {
-                "resourceType": "Encounter",
-                "status": "finished",
-                "class": {
-                    "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
-                    "code": "' . $code . '",
-                    "display": "' . $display . '"
-                },
-                "subject": {
-                    "reference": "Patient/' . $ihs_patient . '",
-                    "display": "' . $nama_pasien . '"
-                },
-                "participant": [
-                    {
-                        "type": [
-                            {
-                                "coding": [
-                                    {
-                                        "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
-                                        "code": "ATND",
-                                        "display": "attender"
-                                    }
-                                ]
-                            }
-                        ],
-                        "individual": {
-                            "reference": "Practitioner/' . $no_ktp_dokter['practitioner_id'] . '",
-                            "display": "' . $nama_dokter . '"
-                        }
-                    }
-                ],
-                "period": {
-                    "start": "' . $this->convertTimeSatset($tgl_registrasi . ' ' . $jam_reg) . '' . $zonawaktu . '",
-                    "end": "' . $this->convertTimeSatset($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing']) . '' . $zonawaktu . '"
-                },
-                "location": [
-                    {
-                        "location": {
-                            "reference": "Location/' . $mlite_satu_sehat_lokasi['id_lokasi_satusehat'] . '",
-                            "display": "' . $kd_poli . ' ' . $nm_poli . '"
-                        }
-                    }
-                ],
-                "diagnosis": [
-                    {
-                        "condition": {
-                            "reference": "urn:uuid:' . $uuid_condition . '",
-                            "display": "' . $diagnosa_pasien['nm_penyakit'] . '"
-                        },
-                        "use": {
-                            "coding": [
-                                {
-                                    "system": "http://terminology.hl7.org/CodeSystem/diagnosis-role",
-                                    "code": "DD",
-                                    "display": "Discharge diagnosis"
-                                }
-                            ]
-                        },
-                        "rank": 1
-                    }
-                ],
-                "statusHistory": [
-                    {
-                        "status": "arrived",
-                        "period": {
-                            "start": "' . $this->convertTimeSatset($tgl_registrasi . ' ' . $jam_reg) . '' . $zonawaktu . '",
-                            "end": "' . $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . '' . $zonawaktu . '"
-                        }
-                    },
-                    {
-                        "status": "in-progress",
-                        "period": {
-                            "start": "' . $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . '' . $zonawaktu . '",
-                            "end": "' . $this->convertTimeSatset($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing']) . '' . $zonawaktu . '"
-                        }
-                    },
-                    {
-                        "status": "finished",
-                        "period": {
-                            "start": "' . $this->convertTimeSatset($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing']) . '' . $zonawaktu . '",
-                            "end": "' . $this->convertTimeSatset($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing']) . '' . $zonawaktu . '"
-                        }
-                    }
-                ],
-                "serviceProvider": {
-                    "reference": "Organization/' . $this->organizationid . '"
-                },
-                "identifier": [
-                    {
-                        "system": "http://sys-ids.kemkes.go.id/encounter/' . $this->organizationid . '",
-                        "value": "' . $no_rawat . '"
-                    }
+    $entry = [];
+    $entry[] = [
+      "fullUrl" => "urn:uuid:" . $uuid_encounter,
+      "resource" => [
+        "resourceType" => "Encounter",
+        "status" => "finished",
+        "class" => [
+          "system" => "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code" => $code,
+          "display" => $display
+        ],
+        "subject" => [
+          "reference" => "Patient/" . $ihs_patient,
+          "display" => $nama_pasien
+        ],
+        "participant" => [
+          [
+            "type" => [
+              [
+                "coding" => [
+                  [
+                    "system" => "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                    "code" => "ATND",
+                    "display" => "attender"
+                  ]
                 ]
-            },
-            "request": {
-                "method": "POST",
-                "url": "Encounter"
-            }
-        },' .
-      $respiratory_json .
-      $temperatur_json .
-      $heart_rate_json .
-      $clinical_impression_json_history .
-      $careplan_json .
-      $careplan_service_request_lab_json .
-      $service_request_lab_json_decode .
-      $specimen_lab_json_decode .
-      $observation_lab_json_decode .
-      $diagnostic_report_json_decode .
-      $condition_json .
-      $procedure_json .
-      $careplan_medication_json .
-      $medicationforrequest_json .
-      $medicationrequest_json .
-      $questionare_json .
-      $medicationfordispense_json .
-      $medicationdispense_json .
-      $clinical_impression_json_prognosis .
-      $composition_json .
-      ']
-    }';
+              ]
+            ],
+            "individual" => [
+              "reference" => "Practitioner/" . $no_ktp_dokter['practitioner_id'],
+              "display" => $nama_dokter
+            ]
+          ]
+        ],
+        "period" => [
+          "start" => $this->convertTimeSatset($tgl_registrasi . ' ' . $jam_reg) . $zonawaktu,
+          "end" => $this->convertTimeSatset($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing']) . $zonawaktu
+        ],
+        "location" => [
+          [
+            "location" => [
+              "reference" => "Location/" . $mlite_satu_sehat_lokasi['id_lokasi_satusehat'],
+              "display" => $kd_poli . ' ' . $nm_poli
+            ]
+          ]
+        ],
+        "diagnosis" => [
+          [
+            "condition" => [
+              "reference" => "urn:uuid:" . $uuid_condition,
+              "display" => $diagnosa_pasien['nm_penyakit']
+            ],
+            "use" => [
+              "coding" => [
+                [
+                  "system" => "http://terminology.hl7.org/CodeSystem/diagnosis-role",
+                  "code" => "DD",
+                  "display" => "Discharge diagnosis"
+                ]
+              ]
+            ],
+            "rank" => 1
+          ]
+        ],
+        "statusHistory" => [
+          [
+            "status" => "arrived",
+            "period" => [
+              "start" => $this->convertTimeSatset($tgl_registrasi . ' ' . $jam_reg) . $zonawaktu,
+              "end" => $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . $zonawaktu
+            ]
+          ],
+          [
+            "status" => "in-progress",
+            "period" => [
+              "start" => $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . $zonawaktu,
+              "end" => $this->convertTimeSatset($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing']) . $zonawaktu
+            ]
+          ],
+          [
+            "status" => "finished",
+            "period" => [
+              "start" => $this->convertTimeSatset($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing']) . $zonawaktu,
+              "end" => $this->convertTimeSatset($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing']) . $zonawaktu
+            ]
+          ]
+        ],
+        "serviceProvider" => [
+          "reference" => "Organization/" . $this->organizationid
+        ],
+        "identifier" => [
+          [
+            "system" => "http://sys-ids.kemkes.go.id/encounter/" . $this->organizationid,
+            "value" => $no_rawat
+          ]
+        ]
+      ],
+      "request" => [
+        "method" => "POST",
+        "url" => "Encounter"
+      ]
+    ];
+
+    foreach (array_merge(
+      [$sistole_json, $diastole_json, $respiratory_json, $temperatur_json, $heart_rate_json, $clinical_impression_json_history, $careplan_json, $careplan_service_request_lab_json],
+      $service_request_lab_json,
+      $specimen_json,
+      $observation_lab_json,
+      $diagnostic_report_json,
+      [$condition_json, $procedure_json, $careplan_medication_json],
+      $medicationforrequest_json,
+      $medicationrequest_json,
+      [$questionare_json],
+      $medicationfordispense_json,
+      $medicationdispense_json,
+      [$clinical_impression_json_prognosis, $composition_json]
+    ) as $entry_data) {
+      if ($entry_data) {
+        $entry[] = $entry_data;
+      }
+    }
+
+    $json_bundle = json_encode([
+      "resourceType" => "Bundle",
+      "type" => "transaction",
+      "entry" => $entry
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     $curl = curl_init();
     curl_setopt_array($curl, array(
       CURLOPT_URL => $this->fhirurl,
@@ -1840,7 +1842,7 @@ class Admin extends AdminModule
       if ($resourceType == 'Specimen') {
         $id_specimen_lab = $value->response->resourceID;
       }
-      if ($resourceType == 'Observation' && $observation_lab_json_decode) {
+      if ($resourceType == 'Observation' && !empty($observation_lab_json)) {
         $id_observation_lab = $value->response->resourceID;
       }
       if ($resourceType == 'DiagnosticReport') {
@@ -1955,6 +1957,48 @@ class Admin extends AdminModule
 
     $curl = curl_init();
 
+    $data = [
+      "resourceType" => "Condition",
+      "clinicalStatus" => [
+        "coding" => [
+          [
+            "system" => "http://terminology.hl7.org/CodeSystem/condition-clinical",
+            "code" => "active",
+            "display" => "Active"
+          ]
+        ]
+      ],
+      "category" => [
+        [
+          "coding" => [
+            [
+              "system" => "http://terminology.hl7.org/CodeSystem/condition-category",
+              "code" => "encounter-diagnosis",
+              "display" => "Encounter Diagnosis"
+            ]
+          ]
+        ]
+      ],
+      "code" => [
+        "coding" => [
+          [
+            "system" => "http://hl7.org/fhir/sid/icd-10",
+            "code" => $kd_penyakit,
+            "display" => $nm_penyakit
+          ]
+        ]
+      ],
+      "subject" => [
+        "reference" => "Patient/" . $ihs_patient,
+        "display" => $nama_pasien
+      ],
+      "encounter" => [
+        "reference" => "Encounter/" . $encounter_id,
+        "display" => $kunjungan . ' ' . $nama_pasien . ' dari tanggal ' . $tgl_registrasi
+      ]
+    ];
+    $data = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+
     curl_setopt_array($curl, array(
       CURLOPT_URL => $this->fhirurl . '/Condition',
       CURLOPT_RETURNTRANSFER => true,
@@ -1965,46 +2009,7 @@ class Admin extends AdminModule
       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
       CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . json_decode($this->getToken())->access_token),
       CURLOPT_CUSTOMREQUEST => 'POST',
-      CURLOPT_POSTFIELDS => '{
-       "resourceType": "Condition",
-       "clinicalStatus": {
-          "coding": [
-             {
-                "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
-                "code": "active",
-                "display": "Active"
-             }
-          ]
-       },
-       "category": [
-          {
-             "coding": [
-                {
-                   "system": "http://terminology.hl7.org/CodeSystem/condition-category",
-                   "code": "encounter-diagnosis",
-                   "display": "Encounter Diagnosis"
-                }
-             ]
-          }
-       ],
-       "code": {
-          "coding": [
-             {
-                "system": "http://hl7.org/fhir/sid/icd-10",
-                "code": "' . $kd_penyakit . '",
-                "display": "' . $nm_penyakit . '"
-             }
-          ]
-       },
-       "subject": {
-          "reference": "Patient/' . $ihs_patient . '",
-          "display": "' . $nama_pasien . '"
-       },
-       "encounter": {
-          "reference": "Encounter/' . $encounter_id . '",
-          "display": "' . $kunjungan . ' ' . $nama_pasien . ' dari tanggal ' . $tgl_registrasi . '"
-       }
-    }',
+      CURLOPT_POSTFIELDS => $data,
     ));
 
     $response = curl_exec($curl);
@@ -2335,6 +2340,48 @@ class Admin extends AdminModule
     $curl = curl_init();
 
     if ($ttv == 'kesadaran') {
+      $data_observation = [
+        "resourceType" => "Observation",
+        "status" => "final",
+        "category" => [
+          [
+            "coding" => [
+              [
+                "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code" => $ttv_hl7_code,
+                "display" => $ttv_hl7_display
+              ]
+            ]
+          ]
+        ],
+        "code" => [
+          "coding" => [
+            [
+              "system" => "http://snomed.info/sct",
+              "code" => "1104441000000107",
+              "display" => "ACVPU (Alert Confusion Voice Pain Unresponsive) scale score"
+            ]
+          ]
+        ],
+        "subject" => [
+          "reference" => "Patient/" . $ihs_patient
+        ],
+        "performer" => [
+          [
+            "reference" => "Practitioner/" . $practitioner_id
+          ]
+        ],
+        "encounter" => [
+          "reference" => "Encounter/" . $encounter_id,
+          "display" => "Pemeriksaan fisik " . $ttv . ' ' . $nama_pasien . ' tanggal ' . $tgl_registrasi
+        ],
+        "effectiveDateTime" => $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . $zonawaktu,
+        "issued" => $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . $zonawaktu,
+        "valueCodeableConcept" => [
+          "text" => $ttv_unitsofmeasure_value
+        ]
+      ];
+      $data_observation = json_encode($data_observation, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
       curl_setopt_array($curl, array(
         CURLOPT_URL => $this->fhirurl . '/Observation',
         CURLOPT_RETURNTRANSFER => true,
@@ -2345,49 +2392,85 @@ class Admin extends AdminModule
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . $this->getAccessToken()),
         CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => '{
-          "resourceType": "Observation",
-          "status": "final",
-          "category": [
-              {
-                  "coding": [
-                      {
-                          "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-                          "code": "' . $ttv_hl7_code . '",
-                          "display": "' . $ttv_hl7_display . '"
-                      }
-                  ]
-              }
-          ],
-          "code": {
-              "coding": [
-                  {
-                      "system": "http://snomed.info/sct",
-                      "code": "1104441000000107",
-                      "display": "ACVPU (Alert Confusion Voice Pain Unresponsive) scale score"
-                  }
-              ]
-          },
-          "subject": {
-              "reference": "Patient/' . $ihs_patient . '"
-          },
-          "performer": [
-              {
-                  "reference": "Practitioner/' . $practitioner_id . '"
-              }
-          ],
-          "encounter": {
-              "reference": "Encounter/' . $encounter_id . '",
-              "display": "Pemeriksaan fisik ' . $ttv . ' ' . $nama_pasien . ' tanggal ' . $tgl_registrasi . '"
-          },
-          "effectiveDateTime": "' . $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . '' . $zonawaktu . '",
-          "issued": "' . $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . '' . $zonawaktu . '",
-          "valueCodeableConcept": {
-              "text": "' . $ttv_unitsofmeasure_value . '"
-          }
-        }',
+        CURLOPT_POSTFIELDS => $data_observation,
       ));
     } elseif ($ttv == 'tensi') {
+      $data_observation = [
+        "resourceType" => "Observation",
+        "status" => "final",
+        "category" => [
+          [
+            "coding" => [
+              [
+                "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code" => $ttv_hl7_code,
+                "display" => $ttv_hl7_display
+              ]
+            ]
+          ]
+        ],
+        "code" => [
+          "coding" => [
+            [
+              "system" => "http://loinc.org",
+              "code" => $ttv_loinc_code,
+              "display" => $ttv_loinc_display
+            ]
+          ],
+          "text" => "Blood pressure systolic & diastolic"
+        ],
+        "subject" => [
+          "reference" => "Patient/" . $ihs_patient
+        ],
+        "performer" => [
+          [
+            "reference" => "Practitioner/" . $practitioner_id
+          ]
+        ],
+        "encounter" => [
+          "reference" => "Encounter/" . $encounter_id,
+          "display" => "Pemeriksaan fisik " . $ttv . ' ' . $nama_pasien . ' tanggal ' . $tgl_registrasi
+        ],
+        "effectiveDateTime" => $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . $zonawaktu,
+        "issued" => $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . $zonawaktu,
+        "component" => [
+          [
+            "code" => [
+              "coding" => [
+                [
+                  "system" => "http://loinc.org",
+                  "code" => "8480-6",
+                  "display" => "Systolic blood pressure"
+                ]
+              ]
+            ],
+            "valueQuantity" => [
+              "value" => intval($sistole),
+              "unit" => $ttv_unitsofmeasure_unit,
+              "system" => "http://unitsofmeasure.org",
+              "code" => $ttv_unitsofmeasure_code
+            ]
+          ],
+          [
+            "code" => [
+              "coding" => [
+                [
+                  "system" => "http://loinc.org",
+                  "code" => "8462-4",
+                  "display" => "Diastolic blood pressure"
+                ]
+              ]
+            ],
+            "valueQuantity" => [
+              "value" => intval($diastole),
+              "unit" => $ttv_unitsofmeasure_unit,
+              "system" => "http://unitsofmeasure.org",
+              "code" => $ttv_unitsofmeasure_code
+            ]
+          ]
+        ]
+      ];
+      $data_observation = json_encode($data_observation, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
       curl_setopt_array($curl, array(
         CURLOPT_URL => $this->fhirurl . '/Observation',
         CURLOPT_RETURNTRANSFER => true,
@@ -2398,83 +2481,54 @@ class Admin extends AdminModule
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . $this->getAccessToken()),
         CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => '{
-          "resourceType": "Observation",
-          "status": "final",
-          "category": [
-              {
-                  "coding": [
-                      {
-                          "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-                          "code": "' . $ttv_hl7_code . '",
-                          "display": "' . $ttv_hl7_display . '"
-                      }
-                  ]
-              }
-          ],
-          "code": {
-            "coding": [
-                {
-                    "system": "http://loinc.org",
-                    "code": "' . $ttv_loinc_code . '",
-                    "display": "' . $ttv_loinc_display . '"
-                }
-            ],
-            "text": "Blood pressure systolic & diastolic"
-          },
-          "subject": {
-              "reference": "Patient/' . $ihs_patient . '"
-          },
-          "performer": [
-              {
-                  "reference": "Practitioner/' . $practitioner_id . '"
-              }
-          ],
-          "encounter": {
-              "reference": "Encounter/' . $encounter_id . '",
-              "display": "Pemeriksaan fisik ' . $ttv . ' ' . $nama_pasien . ' tanggal ' . $tgl_registrasi . '"
-          },
-          "effectiveDateTime": "' . $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . '' . $zonawaktu . '",
-          "issued": "' . $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . '' . $zonawaktu . '",
-          "component": [
-            {
-              "code": {
-                "coding": [
-                    {
-                        "system": "http://loinc.org",
-                        "code": "8480-6",
-                        "display": "Systolic blood pressure"
-                    }
-                ]
-              },
-              "valueQuantity": {
-                "value": ' . intval($sistole) . ',
-                "unit": "' . $ttv_unitsofmeasure_unit . '",
-                "system": "http://unitsofmeasure.org",
-                "code": "' . $ttv_unitsofmeasure_code . '"
-              }  
-            }, 
-            {
-              "code": {
-                "coding": [
-                    {
-                        "system": "http://loinc.org",
-                        "code": "8462-4",
-                        "display": "Diastolic blood pressure"
-                    }
-                ]
-              },
-              "valueQuantity": {
-                "value": ' . intval($diastole) . ',
-                "unit": "' . $ttv_unitsofmeasure_unit . '",
-                "system": "http://unitsofmeasure.org",
-                "code": "' . $ttv_unitsofmeasure_code . '"
-              } 
-            }
-          ]
-        }',
+        CURLOPT_POSTFIELDS => $data_observation,
       ));
     } else {
+      $data_observation = [
+        "resourceType" => "Observation",
+        "status" => "final",
+        "category" => [
+          [
+            "coding" => [
+              [
+                "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code" => $ttv_hl7_code,
+                "display" => $ttv_hl7_display
+              ]
+            ]
+          ]
+        ],
+        "code" => [
+          "coding" => [
+            [
+              "system" => "http://loinc.org",
+              "code" => $ttv_loinc_code,
+              "display" => $ttv_loinc_display
+            ]
+          ]
+        ],
+        "subject" => [
+          "reference" => "Patient/" . $ihs_patient
+        ],
+        "performer" => [
+          [
+            "reference" => "Practitioner/" . $practitioner_id
+          ]
+        ],
+        "encounter" => [
+          "reference" => "Encounter/" . $encounter_id,
+          "display" => "Pemeriksaan fisik " . $ttv . ' ' . $nama_pasien . ' tanggal ' . $tgl_registrasi
+        ],
+        "effectiveDateTime" => $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . $zonawaktu,
+        "issued" => $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . $zonawaktu,
+        "valueQuantity" => [
+          "value" => intval($ttv_unitsofmeasure_value),
+          "unit" => $ttv_unitsofmeasure_unit,
+          "system" => "http://unitsofmeasure.org",
+          "code" => $ttv_unitsofmeasure_code
+        ]
+      ];
+      $data_observation = json_encode($data_observation, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
       curl_setopt_array($curl, array(
         CURLOPT_URL => $this->fhirurl . '/Observation',
         CURLOPT_RETURNTRANSFER => true,
@@ -2485,50 +2539,7 @@ class Admin extends AdminModule
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . $this->getAccessToken()),
         CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => '{
-          "resourceType": "Observation",
-          "status": "final",
-          "category": [
-              {
-                  "coding": [
-                      {
-                          "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-                          "code": "' . $ttv_hl7_code . '",
-                          "display": "' . $ttv_hl7_display . '"
-                      }
-                  ]
-              }
-          ],
-          "code": {
-              "coding": [
-                  {
-                      "system": "http://loinc.org",
-                      "code": "' . $ttv_loinc_code . '",
-                      "display": "' . $ttv_loinc_display . '"
-                  }
-              ]
-          },
-          "subject": {
-              "reference": "Patient/' . $ihs_patient . '"
-          },
-          "performer": [
-              {
-                  "reference": "Practitioner/' . $practitioner_id . '"
-              }
-          ],
-          "encounter": {
-              "reference": "Encounter/' . $encounter_id . '",
-              "display": "Pemeriksaan fisik ' . $ttv . ' ' . $nama_pasien . ' tanggal ' . $tgl_registrasi . '"
-          },
-          "effectiveDateTime": "' . $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . '' . $zonawaktu . '",
-          "issued": "' . $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . '' . $zonawaktu . '",
-          "valueQuantity": {
-              "value": ' . intval($ttv_unitsofmeasure_value) . ',
-              "unit": "' . $ttv_unitsofmeasure_unit . '",
-              "system": "http://unitsofmeasure.org",
-              "code": "' . $ttv_unitsofmeasure_code . '"
-          }
-        }',
+        CURLOPT_POSTFIELDS => $data_observation,
       ));
     }
 
@@ -2800,7 +2811,7 @@ class Admin extends AdminModule
       }
       exit();
     }
-    $id_encounter = $mlite_satu_sehat_response['id_encounter'];
+    $id_encounter = isset_or($mlite_satu_sehat_response['id_encounter'], '');
     $tgl_pulang = isset_or($mlite_billing['tgl_billing'], $pemeriksaan_ralan['tgl_perawatan']);
     $jam_pulang = isset_or($mlite_billing['jam_billing'], $pemeriksaan_ralan['jam_rawat']);
 
@@ -2831,6 +2842,43 @@ class Admin extends AdminModule
 
     $curl = curl_init();
 
+    $data_procedure = [
+      "resourceType" => "Procedure",
+      "status" => "completed",
+      "category" => [
+        "coding" => [
+          [
+            "system" => "http://snomed.info/sct",
+            "code" => "103693007",
+            "display" => "Diagnostic procedure"
+          ]
+        ],
+        "text" => "Diagnostic procedure"
+      ],
+      "code" => [
+        "coding" => [
+          [
+            "system" => "http://hl7.org/fhir/sid/icd-9-cm",
+            "code" => $kode_icd9,
+            "display" => $deskripsi_icd9
+          ]
+        ]
+      ],
+      "subject" => [
+        "reference" => "Patient/" . $id_pasien,
+        "display" => $nama_pasien
+      ],
+      "encounter" => [
+        "reference" => "Encounter/" . $id_encounter,
+        "display" => "Prosedur kepada " . $nama_pasien . ' selama ' . $kunjungan . ' dari tanggal ' . $tgl_registrasi . 'T' . $jam_reg . $zonawaktu . ' sampai ' . $tgl_pulang . 'T' . $jam_pulang . $zonawaktu
+      ],
+      "performedPeriod" => [
+        "start" => $tgl_registrasi . 'T' . $jam_reg . $zonawaktu,
+        "end" => $tgl_pulang . 'T' . $jam_pulang . $zonawaktu
+      ]
+    ];
+    $data_procedure = json_encode($data_procedure, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+
     curl_setopt_array($curl, array(
       CURLOPT_URL => $this->fhirurl . '/Procedure',
       CURLOPT_RETURNTRANSFER => true,
@@ -2841,42 +2889,7 @@ class Admin extends AdminModule
       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
       CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . $this->getAccessToken()),
       CURLOPT_CUSTOMREQUEST => 'POST',
-      CURLOPT_POSTFIELDS => '{
-        "resourceType": "Procedure", 
-        "status": "completed",
-        "category": {
-            "coding": [
-                {
-                    "system": "http://snomed.info/sct", 
-                    "code": "103693007", 
-                    "display": "Diagnostic procedure"
-                }
-            ], 
-            "text":"Diagnostic procedure"
-        }, 
-        "code": {
-            "coding": [
-                {
-                    "system": "http://hl7.org/fhir/sid/icd-9-cm", 
-                    "code": "' . $kode_icd9 . '", 
-                    "display": "' . $deskripsi_icd9 . '"
-                
-                }
-            ]
-        }, 
-        "subject": {
-            "reference": "Patient/' . $id_pasien . '", 
-            "display": "' . $nama_pasien . '"
-        }, 
-        "encounter": {
-            "reference": "Encounter/' . $id_encounter . '", 
-            "display": "Prosedur kepada ' . $nama_pasien . ' selama ' . $kunjungan . ' dari tanggal ' . $tgl_registrasi . 'T' . $jam_reg . '' . $zonawaktu . ' sampai ' . $tgl_pulang . 'T' . $jam_pulang . '' . $zonawaktu . '"
-        }, 
-        "performedPeriod": {
-            "start": "' . $tgl_registrasi . 'T' . $jam_reg . '' . $zonawaktu . '",
-            "end": "' . $tgl_pulang . 'T' . $jam_pulang . '' . $zonawaktu . '"
-        }
-      }',
+      CURLOPT_POSTFIELDS => $data_procedure,
     ));
 
     $response = curl_exec($curl);
@@ -2940,7 +2953,8 @@ class Admin extends AdminModule
     $mlite_billing = $this->db('mlite_billing')->where('no_rawat', $no_rawat)->oneArray();
     $kd_dokter = $this->core->getRegPeriksaInfo('kd_dokter', $no_rawat);
 
-    $id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')->select('practitioner_id')->where('kd_dokter', $kd_dokter)->oneArray();
+    $data_id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')->select('practitioner_id')->where('kd_dokter', $kd_dokter)->oneArray();
+    $id_dokter = isset_or($data_id_dokter['practitioner_id'], '');
 
     $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
 
@@ -2959,7 +2973,7 @@ class Admin extends AdminModule
       }
       exit();
     }
-    $id_encounter = $mlite_satu_sehat_response['id_encounter'];
+    $id_encounter = isset_or($mlite_satu_sehat_response['id_encounter'], '');
 
     $date = date('Y-m-d');
     $time = date('H:i:s');
@@ -2971,70 +2985,72 @@ class Admin extends AdminModule
 
     $curl = curl_init();
 
-    $data = '{
-      "resourceType" : "Composition",
-      "identifier" : {
-          "system" : "http://sys-ids.kemkes.go.id/composition/' . $this->organizationid . '",
-          "value" : "' . $no_rawat . '"
-      },
-      "status" : "final",
-      "type" : {
-          "coding" : [
-              {
-                  "system" : "http://loinc.org",
-                  "code" : "18842-5",
-                  "display" : "Discharge summary"
-              }
+    $data = [
+      "resourceType" => "Composition",
+      "identifier" => [
+        "system" => "http://sys-ids.kemkes.go.id/composition/" . $this->organizationid,
+        "value" => $no_rawat
+      ],
+      "status" => "final",
+      "type" => [
+        "coding" => [
+          [
+            "system" => "http://loinc.org",
+            "code" => "18842-5",
+            "display" => "Discharge summary"
           ]
-      },
-      "category" : [
-          {
-              "coding" : [
-                  {
-                      "system" : "http://loinc.org",
-                      "code" : "LP173421-1",
-                      "display" : "Report"
-                  }
+        ]
+      ],
+      "category" => [
+        [
+          "coding" => [
+            [
+              "system" => "http://loinc.org",
+              "code" => "LP173421-1",
+              "display" => "Report"
+            ]
+          ]
+        ]
+      ],
+      "subject" => [
+        "reference" => "Patient/" . $id_pasien,
+        "display" => $nama_pasien
+      ],
+      "encounter" => [
+        "reference" => "Encounter/" . $id_encounter,
+        "display" => "Kunjungan " . $nama_pasien . " pada tanggal " . $tgl_registrasi . " dengan nomor kunjungan " . $no_rawat
+      ],
+      "date" => $date . 'T' . $time . $zonawaktu,
+      "author" => [
+        [
+          "reference" => "Practitioner/" . $id_dokter,
+          "display" => $nama_dokter
+        ]
+      ],
+      "title" => "Modul Gizi",
+      "custodian" => [
+        "reference" => "Organization/" . $this->organizationid
+      ],
+      "section" => [
+        [
+          "code" => [
+            "coding" => [
+              [
+                "system" => "http://loinc.org",
+                "code" => "42344-2",
+                "display" => "Discharge diet (narrative)"
               ]
-          }
-      ],
-      "subject" : {
-          "reference" : "Patient/' . $id_pasien . '",
-          "display" : "' . $nama_pasien . '"
-      },
-      "encounter" : {
-          "reference" : "Encounter/' . $id_encounter . '", 
-          "display" : "Kunjungan ' . $nama_pasien . ' pada tanggal ' . $tgl_registrasi . ' dengan nomor kunjungan ' . $no_rawat . '"
-      },
-      "date" : "' . $date . 'T' . $time . '' . $zonawaktu . '", 
-      "author" : [
-          {
-              "reference" : "Practitioner/' . $id_dokter['practitioner_id'] . '",
-              "display" : "' . $nama_dokter . '"
-          }
-      ],
-      "title" : "Modul Gizi",
-      "custodian" : {
-          "reference" : "Organization/' . $this->organizationid . '" 
-      },
-      "section" : [
-          {
-              "code" : {
-                  "coding" : [
-                      {
-                          "system" : "http://loinc.org",
-                          "code" : "42344-2",
-                          "display" : "Discharge diet (narrative)"
-                      }
-                  ]
-              },
-              "text" : {
-                  "status" : "additional",
-                  "div" : "' . $instruksi . '"
-              }
-          }
+            ]
+          ],
+          "text" => [
+            "status" => "additional",
+            "div" => $instruksi
+          ]
+        ]
       ]
-    }';
+    ];
+
+    $data = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 
     curl_setopt_array($curl, array(
       CURLOPT_URL => $this->fhirurl . '/Composition',
@@ -3143,36 +3159,38 @@ class Admin extends AdminModule
 
     $curl = curl_init();
 
-    $data = '{
-        "resourceType": "QuestionnaireResponse",
-        "questionnaire": "https://fhir.kemkes.go.id/Questionnaire/Q0002",
-        "status": "completed",
-        "subject": {
-            "reference" : "Patient/' . $id_pasien . '",
-            "display" : "' . $nama_pasien . '"
-        },
-        "encounter": {
-            "reference" : "Encounter/' . $id_encounter . '"
-        },
-        "authored": "' . $catatan_perawatan['tanggal'] . 'T' . $catatan_perawatan['jam'] . '' . $zonawaktu . '",
-        "author": {
-            "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '"
-        },
-        "source": {
-            "reference": "Patient/' . $id_pasien . '"
-        },
-        "item": [
-            {
-                "linkId": "1",
-                "text": "Status Kesejahteraan",
-                "answer": [
-                    {
-                        "valueString": "Keluarga Pra Sejahtera (KPS)"
-                    }
-                ]
-            }
+    $data = [
+      "resourceType" => "QuestionnaireResponse",
+      "questionnaire" => "https://fhir.kemkes.go.id/Questionnaire/Q0002",
+      "status" => "completed",
+      "subject" => [
+        "reference" => "Patient/" . $id_pasien,
+        "display" => $nama_pasien
+      ],
+      "encounter" => [
+        "reference" => "Encounter/" . $id_encounter
+      ],
+      "authored" => $catatan_perawatan['tanggal'] . 'T' . $catatan_perawatan['jam'] . $zonawaktu,
+      "author" => [
+        "reference" => "Practitioner/" . $id_dokter['practitioner_id']
+      ],
+      "source" => [
+        "reference" => "Patient/" . $id_pasien
+      ],
+      "item" => [
+        [
+          "linkId" => "1",
+          "text" => "Status Kesejahteraan",
+          "answer" => [
+            [
+              "valueString" => "Keluarga Pra Sejahtera (KPS)"
+            ]
+          ]
         ]
-    }';
+      ]
+    ];
+
+    $data = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 
     // echo '<pre>' . $data . '</pre>';
 
@@ -3308,81 +3326,83 @@ class Admin extends AdminModule
           ? $gudangbarang['no_batch'] 
           : 'BATCH-' . date('YmdHis');
 
-      $data = '{
-        "resourceType": "Immunization",
-        "status": "completed",
-        "vaccineCode": {
-            "coding": [
-                {
-                    "system": "http://sys-ids.kemkes.go.id/kfa",
-                    "code": "' . $obat['kode_kfa'] . '",
-                    "display": "' . $obat['nama_kfa'] . '"
-                }
+      $data = [
+        "resourceType" => "Immunization",
+        "status" => "completed",
+        "vaccineCode" => [
+          "coding" => [
+            [
+              "system" => "http://sys-ids.kemkes.go.id/kfa",
+              "code" => $obat['kode_kfa'],
+              "display" => $obat['nama_kfa']
             ]
-        },
-        "patient": {
-            "reference": "Patient/' . $id_pasien . '"
-        },
-        "encounter": {
-            "reference": "Encounter/' . $id_encounter . '"
-        },
-        "occurrenceDateTime": "' . $obat['tgl_perawatan'] . 'T' . $obat['jam'] . '' . $zonawaktu . '",
-        "expirationDate": "' . $databarang['expire'] . '",
-        "recorded": "' . $obat['tgl_perawatan'] . 'T' . $obat['jam'] . '' . $zonawaktu . '",
-        "primarySource": true,
-        "location": {
-            "reference": "Location/' . $mlite_satu_sehat_lokasi['id_lokasi_satusehat'] . '",
-            "display": "' . $mlite_satu_sehat_lokasi['lokasi'] . '"
-        },
-        "lotNumber": "' . $batch['no_batch'] . '",
-        "route": {
-            "coding": [
-                {
-                      "system": "http://www.whocc.no/atc",  
-                      "code": "' . $obat['kode_route'] . '",
-                      "display": "' . $obat['nama_route'] . '"
-                }
-            ]
-        },
-        "doseQuantity": {
-            "value": ' . (int) $obat['jml'] . ',
-            "unit": "' . $obat['satuan_num'] . '",
-            "system": "' . $obat['system_num'] . '",
-            "code": "' . $obat['satuan_num'] . '"
-        },
-        "performer": [
-            {
-                "function": {
-                    "coding": [
-                        {
-                            "system": "http://terminology.hl7.org/CodeSystem/v2-0443",
-                            "code": "AP",
-                            "display": "Administering Provider"
-                        }
-                    ]
-                },
-                "actor": {
-                    "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '"
-                }
-            }
+          ]
         ],
-        "reasonCode": [
-            {
-                "coding": [
-                    {
-                        "system": "http://terminology.kemkes.go.id/CodeSystem/immunization-reason",
-                        "code": "IM-Program",
-                        "display" : "Imunisasi Program"
-                    }
+        "patient" => [
+          "reference" => "Patient/" . $id_pasien
+        ],
+        "encounter" => [
+          "reference" => "Encounter/" . $id_encounter
+        ],
+        "occurrenceDateTime" => $obat['tgl_perawatan'] . 'T' . $obat['jam'] . $zonawaktu,
+        "expirationDate" => $databarang['expire'],
+        "recorded" => $obat['tgl_perawatan'] . 'T' . $obat['jam'] . $zonawaktu,
+        "primarySource" => true,
+        "location" => [
+          "reference" => "Location/" . $mlite_satu_sehat_lokasi['id_lokasi_satusehat'],
+          "display" => $mlite_satu_sehat_lokasi['lokasi']
+        ],
+        "lotNumber" => $batch['no_batch'],
+        "route" => [
+          "coding" => [
+            [
+              "system" => "http://www.whocc.no/atc",
+              "code" => $obat['kode_route'],
+              "display" => $obat['nama_route']
+            ]
+          ]
+        ],
+        "doseQuantity" => [
+          "value" => (int) $obat['jml'],
+          "unit" => $obat['satuan_num'],
+          "system" => $obat['system_num'],
+          "code" => $obat['satuan_num']
+        ],
+        "performer" => [
+          [
+            "function" => [
+              "coding" => [
+                [
+                  "system" => "http://terminology.hl7.org/CodeSystem/v2-0443",
+                  "code" => "AP",
+                  "display" => "Administering Provider"
                 ]
-            }
+              ]
+            ],
+            "actor" => [
+              "reference" => "Practitioner/" . $id_dokter['practitioner_id']
+            ]
+          ]
         ],
-        "protocolApplied" : [
-            {
-                "doseNumberPositiveInt" : ' . (int) $doseValue . '
-            }
+        "reasonCode" => [
+          [
+            "coding" => [
+              [
+                "system" => "http://terminology.kemkes.go.id/CodeSystem/immunization-reason",
+                "code" => "IM-Program",
+                "display" => "Imunisasi Program"
+              ]
+            ]
+          ]
+        ],
+        "protocolApplied" => [
+          [
+            "doseNumberPositiveInt" => (int) $doseValue
+          ]
         ]
-      }';
+      ];
+
+      $data = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 
       $url = $this->fhirurl . '/Immunization';
       $curl = curl_init();
@@ -3452,9 +3472,11 @@ class Admin extends AdminModule
     $kd_dokter = $this->core->getRegPeriksaInfo('kd_dokter', $no_rawat);
     $tgl_perawatan = isset_or($pemeriksaan_ralan['tgl_perawatan'], date('Y-m-d'));
     $jam_rawat = isset_or($pemeriksaan_ralan['jam_rawat'], date('H:i:s'));
-    $id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')->select('practitioner_id')->where('kd_dokter', $kd_dokter)->oneArray();
+    $data_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')->select('practitioner_id')->where('kd_dokter', $kd_dokter)->oneArray();
+    $id_dokter = isset_or($data_dokter['practitioner_id'], '');
     $nama_dokter = $this->db('dokter')->where('kd_dokter', $kd_dokter)->oneArray();
     $id_condition = isset_or($mlite_satu_sehat_response['id_condition'], '');
+    $id_encounter = isset_or($mlite_satu_sehat_response['id_encounter'], '');
     $diagnosa_pasien = $this->db('diagnosa_pasien')
       ->join('penyakit', 'penyakit.kd_penyakit=diagnosa_pasien.kd_penyakit')
       ->where('no_rawat', $no_rawat)
@@ -3481,52 +3503,73 @@ class Admin extends AdminModule
       exit();
     }
 
-    $id_encounter = $mlite_satu_sehat_response['id_encounter'];
+    $missing = [];
+    if ($id_encounter === '') $missing['id_encounter'] = 'missing';
+    if ($id_dokter === '') $missing['practitioner_id'] = 'missing';
+    if ($id_condition === '') $missing['id_condition'] = 'missing';
+    if ($penilaian === '') $missing['penilaian'] = 'missing';
 
-    $data = '{
-      "resourceType": "ClinicalImpression",
-      "status": "completed",
-      "description": "Evaluasi klinis untuk pasien dengan ' . $keluhan . ', ' . $pemeriksaan . '.",
-      "subject": {
-        "reference": "Patient/' . $id_pasien . '"
-      },
-      "encounter": {
-        "reference": "Encounter/' . $id_encounter . '"
-      },
-      "effectiveDateTime": "' . $tgl_perawatan . 'T' . $jam_rawat . '' . $zonawaktu . '",
-      "date": "' . $tgl_perawatan . 'T' . $jam_rawat . '' . $zonawaktu . '",
-      "assessor": {
-        "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '"
-      },
-      "summary": "' . $penilaian . '", 
-      "finding": [
-        {
-          "itemCodeableConcept": {
-            "coding": [
-              {
-                "system": "http://hl7.org/fhir/sid/icd-10",
-                "code": "' . $kd_penyakit . '",
-                "display": "' . $nm_penyakit . '"
-              }
+    if (!empty($missing)) {
+      $resp = json_encode(['error' => 'Data tidak lengkap untuk Clinical Impression', 'missing' => $missing], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render) {
+        echo $this->draw('clinical.impression.html', ['pesan' => 'Gagal mengirim clinical impression platform Satu Sehat!!', 'response' => $resp]);
+      } else {
+        echo $resp;
+      }
+      exit();
+    }
+
+    $finding = [
+      [
+        "itemCodeableConcept" => [
+          "coding" => [
+            [
+              "system" => "http://hl7.org/fhir/sid/icd-10",
+              "code" => $kd_penyakit,
+              "display" => $nm_penyakit
             ]
-          },
-          "itemReference": {
-              "reference": "Condition/' . $id_condition . '" 
-          }
-        }
-      ],
-      "prognosisCodeableConcept": [
-        {
-          "coding": [
-            {
-              "system": "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
-              "code": "PR000001",
-              "display": "Prognosis"
-            }
           ]
-        }
+        ]
       ]
-    }';
+    ];
+
+    if ($id_condition !== '') {
+      $finding[0]["itemReference"] = [
+        "reference" => "Condition/" . $id_condition
+      ];
+    }
+
+    $data = [
+      "resourceType" => "ClinicalImpression",
+      "status" => "completed",
+      "description" => "Evaluasi klinis untuk pasien dengan " . $keluhan . ", " . $pemeriksaan . ".",
+      "subject" => [
+        "reference" => "Patient/" . $id_pasien
+      ],
+      "encounter" => [
+        "reference" => "Encounter/" . $id_encounter
+      ],
+      "effectiveDateTime" => $tgl_perawatan . 'T' . $jam_rawat . $zonawaktu,
+      "date" => $tgl_perawatan . 'T' . $jam_rawat . $zonawaktu,
+      "assessor" => [
+        "reference" => "Practitioner/" . $id_dokter
+      ],
+      "summary" => $penilaian,
+      "finding" => $finding,
+      "prognosisCodeableConcept" => [
+        [
+          "coding" => [
+            [
+              "system" => "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+              "code" => "PR000001",
+              "display" => "Prognosis"
+            ]
+          ]
+        ]
+      ]
+    ];
+
+    $data = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 
     $curl = curl_init();
 
@@ -3651,93 +3694,95 @@ class Admin extends AdminModule
 
         $satu_sehat_mapping_obat = $this->db('mlite_satu_sehat_mapping_obat')->where('kode_brng', $obat['kode_brng'])->oneArray();
 
-        $data = '{
-              "resourceType": "MedicationRequest",
-              "identifier": [
-                  {
-                      "system": "http://sys-ids.kemkes.go.id/prescription/' . $this->organizationid . '",
-                      "use": "official",
-                      "value": "' . $obat['no_resep'] . '"
-                  },
-                  {
-                      "system": "http://sys-ids.kemkes.go.id/prescription-item/' . $this->organizationid . '",
-                      "use": "official",
-                      "value": "' . $obat['kode_brng'] . '"
-                  }
+        $data = [
+          "resourceType" => "MedicationRequest",
+          "identifier" => [
+            [
+              "system" => "http://sys-ids.kemkes.go.id/prescription/" . $this->organizationid,
+              "use" => "official",
+              "value" => $obat['no_resep']
+            ],
+            [
+              "system" => "http://sys-ids.kemkes.go.id/prescription-item/" . $this->organizationid,
+              "use" => "official",
+              "value" => $obat['kode_brng']
+            ]
+          ],
+          "status" => "completed",
+          "intent" => "order",
+          "category" => [
+            [
+              "coding" => [
+                [
+                  "system" => "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
+                  "code" => "outpatient",
+                  "display" => "Outpatient"
+                ]
+              ]
+            ]
+          ],
+          "medicationReference" => [
+            "reference" => "Medication/" . $satu_sehat_mapping_obat['id_medication'],
+            "display" => $obat['nama_kfa']
+          ],
+          "subject" => [
+            "reference" => "Patient/" . $id_pasien,
+            "display" => $nm_pasien
+          ],
+          "encounter" => [
+            "reference" => "Encounter/" . $mlite_satu_sehat_response['id_encounter']
+          ],
+          "authoredOn" => $obat['tgl_peresepan'] . 'T' . $obat['jam_peresepan'] . $zonawaktu,
+          "requester" => [
+            "reference" => "Practitioner/" . $id_dokter['practitioner_id'],
+            "display" => $nm_dokter
+          ],
+          "dosageInstruction" => [
+            [
+              "sequence" => 1,
+              "patientInstruction" => $obat['aturan_pakai'],
+              "timing" => [
+                "repeat" => [
+                  "frequency" => $doseValue,
+                  "period" => 1,
+                  "periodUnit" => "d"
+                ]
               ],
-              "status": "completed",
-              "intent": "order",
-              "category": [
-                  {
-                      "coding": [
-                          {
-                              "system": "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
-                              "code": "outpatient",
-                              "display": "Outpatient"
-                          }
-                      ]
-                  }
+              "route" => [
+                "coding" => [
+                  [
+                    "system" => "http://www.whocc.no/atc",
+                    "code" => $obat['kode_route'],
+                    "display" => $obat['nama_route']
+                  ]
+                ]
               ],
-              "medicationReference": {
-                  "reference": "Medication/' . $satu_sehat_mapping_obat['id_medication'] . '",
-                  "display": "' . $obat['nama_kfa'] . '"
-              },
-              "subject": {
-                  "reference": "Patient/' . $id_pasien . '",
-                  "display": "' . $nm_pasien . '"
-              },
-              "encounter": {
-                  "reference": "Encounter/' . $mlite_satu_sehat_response['id_encounter'] . '"
-              },
-              "authoredOn": "' . $obat['tgl_peresepan'] . 'T' . $obat['jam_peresepan'] . '' . $zonawaktu . '",
-              "requester": {
-                  "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '",
-                  "display": "' . $nm_dokter . '"
-              },
-              "dosageInstruction": [
-                  {
-                      "sequence": 1,
-                      "patientInstruction": "' . $obat['aturan_pakai'] . '",
-                      "timing": {
-                          "repeat": {
-                              "frequency": ' . $doseValue . ',
-                              "period": 1,
-                              "periodUnit": "d"
-                          }
-                      },
-                      "route": {
-                          "coding": [
-                              {
-                                  "system": "http://www.whocc.no/atc",
-                                  "code": "' . $obat['kode_route'] . '",
-                                  "display": "' . $obat['nama_route'] . '"
-                              }
-                          ]
-                      },
-                      "doseAndRate": [
-                          {
-                              "doseQuantity": {
-                                  "value": ' . $frequency . ',
-                                  "unit": "' . $obat['satuan_den'] . '",
-                                  "system": "' . $system_cek . '",
-                                  "code": "' . $obat['satuan_den'] . '"
-                              }
-                          }
-                      ]
-                  }
-              ],
-              "dispenseRequest": {
-                  "quantity": {
-                      "value": ' . $obat['jml'] . ',
-                      "unit": "' . $obat['satuan_den'] . '",
-                      "system": "' . $system_cek . '",
-                      "code": "' . $obat['satuan_den'] . '"
-                  },
-                  "performer": {
-                      "reference": "Organization/' . $this->organizationid . '"
-                  }
-              }
-            }';
+              "doseAndRate" => [
+                [
+                  "doseQuantity" => [
+                    "value" => $frequency,
+                    "unit" => $obat['satuan_den'],
+                    "system" => $system_cek,
+                    "code" => $obat['satuan_den']
+                  ]
+                ]
+              ]
+            ]
+          ],
+          "dispenseRequest" => [
+            "quantity" => [
+              "value" => $obat['jml'],
+              "unit" => $obat['satuan_den'],
+              "system" => $system_cek,
+              "code" => $obat['satuan_den']
+            ],
+            "performer" => [
+              "reference" => "Organization/" . $this->organizationid
+            ]
+          ]
+        ];
+
+        $data = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 
         $url = $this->fhirurl . '/MedicationRequest';
         $curl = curl_init();
@@ -3835,96 +3880,102 @@ class Admin extends AdminModule
 
         $satu_sehat_mapping_obat = $this->db('mlite_satu_sehat_mapping_obat')->where('kode_brng', $obat['kode_brng'])->oneArray();
 
-        $data = '{
-              "resourceType": "MedicationDispense",
-              "identifier": [
-                  {
-                      "system": "http://sys-ids.kemkes.go.id/prescription/' . $this->organizationid . '",
-                      "use": "official",
-                      "value": "' . $obat['no_resep'] . '"
-                  },
-                  {
-                      "system": "http://sys-ids.kemkes.go.id/prescription-item/' . $this->organizationid . '",
-                      "use": "official",
-                      "value": "' . $obat['kode_brng'] . '"
-                  }
-              ],
-              "status": "completed",
-              "category": {
-                  "coding": [
-                      {
-                          "system": "http://terminology.hl7.org/fhir/CodeSystem/medicationdispense-category",
-                          "code": "outpatient",
-                          "display": "Outpatient"
-                      }
-                  ]
-              },
-              "medicationReference": {
-                  "reference": "Medication/' . $satu_sehat_mapping_obat['id_medication'] . '",
-                  "display": "' . $obat['nama_kfa'] . '"
-              },
-              "subject": {
-                  "reference": "Patient/' . $id_pasien . '",
-                  "display": "' . $nm_pasien . '"
-              },
-              "context": {
-                  "reference": "Encounter/' . $mlite_satu_sehat_response['id_encounter'] . '"
-              },
-              "performer": [
-                  {
-                      "actor": {
-                          "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '",
-                          "display": "' . $nm_dokter . '"
-                      }
-                  }
-              ],
-              "location": {
-                  "reference": "Location/' . $mlite_satu_sehat_lokasi['id_lokasi_satusehat'] . '",
-                  "display": "' . $mlite_satu_sehat_lokasi['lokasi'] . '"
-              },
-              "authorizingPrescription": [{
-                  "reference": "MedicationRequest/' . $mlite_satu_sehat_response['id_medication_request'] . '"
-              }],
-              "quantity": {
-                  "system": "' . $system_cek . '",
-                  "code": "' . $obat['satuan_den'] . '",
-                  "value": ' . $obat['jml'] . '
-              },
-              "whenPrepared": "' . $obat['tgl_peresepan'] . 'T' . $obat['jam_peresepan'] . '' . $zonawaktu . '",
-              "whenHandedOver": "' . $obat['tgl_perawatan'] . 'T' . $obat['jam'] . '' . $zonawaktu . '",
-              "dosageInstruction": [
-                  {
-                      "sequence": 1,
-                      "text": "' . $obat['aturan_pakai'] . '",
-                      "timing": {
-                          "repeat": {
-                              "frequency": ' . $doseValue . ',
-                              "period": 1,
-                              "periodUnit": "d"
-                          }
-                      },
-                      "route": {
-                          "coding": [
-                              {
-                                  "system": "http://www.whocc.no/atc",
-                                  "code": "' . $obat['kode_route'] . '",
-                                  "display": "' . $obat['nama_route'] . '"
-                              }
-                          ]
-                      },
-                      "doseAndRate": [
-                          {
-                              "doseQuantity": {
-                                  "value": ' . $frequency . ',
-                                  "unit": "' . $obat['satuan_den'] . '",
-                                  "system": "' . $system_cek . '",
-                                  "code": "' . $obat['satuan_den'] . '"
-                              }
-                          }
-                      ]
-                  }
+        $data = [
+          "resourceType" => "MedicationDispense",
+          "identifier" => [
+            [
+              "system" => "http://sys-ids.kemkes.go.id/prescription/" . $this->organizationid,
+              "use" => "official",
+              "value" => $obat['no_resep']
+            ],
+            [
+              "system" => "http://sys-ids.kemkes.go.id/prescription-item/" . $this->organizationid,
+              "use" => "official",
+              "value" => $obat['kode_brng']
+            ]
+          ],
+          "status" => "completed",
+          "category" => [
+            [
+              "coding" => [
+                [
+                  "system" => "http://terminology.hl7.org/fhir/CodeSystem/medicationdispense-category",
+                  "code" => "outpatient",
+                  "display" => "Outpatient"
+                ]
               ]
-            }';
+            ]
+          ],
+          "medicationReference" => [
+            "reference" => "Medication/" . $satu_sehat_mapping_obat['id_medication'],
+            "display" => $obat['nama_kfa']
+          ],
+          "subject" => [
+            "reference" => "Patient/" . $id_pasien,
+            "display" => $nm_pasien
+          ],
+          "context" => [
+            "reference" => "Encounter/" . $mlite_satu_sehat_response['id_encounter']
+          ],
+          "performer" => [
+            [
+              "actor" => [
+                "reference" => "Practitioner/" . $id_dokter['practitioner_id'],
+                "display" => $nm_dokter
+              ]
+            ]
+          ],
+          "location" => [
+            "reference" => "Location/" . $mlite_satu_sehat_lokasi['id_lokasi_satusehat'],
+            "display" => $mlite_satu_sehat_lokasi['lokasi']
+          ],
+          "authorizingPrescription" => [
+            [
+              "reference" => "MedicationRequest/" . $mlite_satu_sehat_response['id_medication_request']
+            ]
+          ],
+          "quantity" => [
+            "system" => $system_cek,
+            "code" => $obat['satuan_den'],
+            "value" => $obat['jml']
+          ],
+          "whenPrepared" => $obat['tgl_peresepan'] . 'T' . $obat['jam_peresepan'] . $zonawaktu,
+          "whenHandedOver" => $obat['tgl_perawatan'] . 'T' . $obat['jam'] . $zonawaktu,
+          "dosageInstruction" => [
+            [
+              "sequence" => 1,
+              "text" => $obat['aturan_pakai'],
+              "timing" => [
+                "repeat" => [
+                  "frequency" => $doseValue,
+                  "period" => 1,
+                  "periodUnit" => "d"
+                ]
+              ],
+              "route" => [
+                "coding" => [
+                  [
+                    "system" => "http://www.whocc.no/atc",
+                    "code" => $obat['kode_route'],
+                    "display" => $obat['nama_route']
+                  ]
+                ]
+              ],
+              "doseAndRate" => [
+                [
+                  "doseQuantity" => [
+                    "value" => $frequency,
+                    "unit" => $obat['satuan_den'],
+                    "system" => $system_cek,
+                    "code" => $obat['satuan_den']
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ];
+
+        $data = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 
         $url = $this->fhirurl . '/MedicationDispense';
         $curl = curl_init();
@@ -4024,76 +4075,82 @@ class Admin extends AdminModule
 
         $satu_sehat_mapping_obat = $this->db('mlite_satu_sehat_mapping_obat')->where('kode_brng', $obat['kode_brng'])->oneArray();
 
-        $data = '{
-              "resourceType": "MedicationStatement",
-              "identifier": [
-                  {
-                      "system": "http://sys-ids.kemkes.go.id/medicationstatement/' . $this->organizationid . '",
-                      "use": "official",
-                      "value": "' . $obat['no_resep'] . '-' . $obat['kode_brng'] . '"
-                  }
+        $data = [
+          "resourceType" => "MedicationStatement",
+          "identifier" => [
+            [
+              "system" => "http://sys-ids.kemkes.go.id/medicationstatement/" . $this->organizationid,
+              "use" => "official",
+              "value" => $obat['no_resep'] . '-' . $obat['kode_brng']
+            ]
+          ],
+          "status" => "completed",
+          "category" => [
+            [
+              "coding" => [
+                [
+                  "system" => "http://terminology.hl7.org/CodeSystem/medication-statement-category",
+                  "code" => "outpatient",
+                  "display" => "Outpatient"
+                ]
+              ]
+            ]
+          ],
+          "medicationReference" => [
+            "reference" => "Medication/" . $satu_sehat_mapping_obat['id_medication'],
+            "display" => $obat['nama_kfa']
+          ],
+          "subject" => [
+            "reference" => "Patient/" . $id_pasien,
+            "display" => $nm_pasien
+          ],
+          "dosage" => [
+            [
+              "text" => $obat['aturan_pakai'],
+              "timing" => [
+                "repeat" => [
+                  "frequency" => $doseValue,
+                  "period" => 1,
+                  "periodUnit" => "d"
+                ]
               ],
-              "status": "completed",
-              "category": {
-                  "coding": [
-                      {
-                          "system": "http://terminology.hl7.org/CodeSystem/medication-statement-category",
-                          "code": "outpatient",
-                          "display": "Outpatient"
-                      }
+              "route" => [
+                "coding" => [
+                  [
+                    "system" => "http://www.whocc.no/atc",
+                    "code" => $obat['kode_route'],
+                    "display" => $obat['nama_route']
                   ]
-              },
-              "medicationReference": {
-                  "reference": "Medication/' . $satu_sehat_mapping_obat['id_medication'] . '",
-                  "display": "' . $obat['nama_kfa'] . '"
-              },
-              "subject": {
-                  "reference": "Patient/' . $id_pasien . '",
-                  "display": "' . $nm_pasien . '"
-              },
-              "dosage": [
-                  {
-                      "text": "' . $obat['aturan_pakai'] . '",
-                      "timing": {
-                          "repeat": {
-                              "frequency": ' . $doseValue . ',
-                              "period": 1,
-                              "periodUnit": "d"
-                          }
-                      },
-                      "route": {
-                          "coding": [
-                              {
-                                  "system": "http://www.whocc.no/atc",
-                                  "code": "' . $obat['kode_route'] . '",
-                                  "display": "' . $obat['nama_route'] . '"
-                              }
-                          ]
-                      },
-                      "doseAndRate": [
-                          {
-                              "doseQuantity": {
-                                  "value": ' . $frequency . ',
-                                  "unit": "' . $obat['satuan_den'] . '",
-                                  "system": "' . $system_cek . '",
-                                  "code": "' . $obat['satuan_den'] . '"
-                              }
-                          }
-                      ]
-                  }
+                ]
               ],
-              "dateAsserted": "' . $obat['tgl_penyerahan'] . 'T' . $obat['jam_penyerahan'] . '' . $zonawaktu . '",
-              "informationSource": {
-                  "reference": "Patient/' . $id_pasien . '",
-                  "display": "' . $nm_pasien . '"
-              },
-              "context": {
-                  "reference": "Encounter/' . $mlite_satu_sehat_response['id_encounter'] . '"
-              },
-              "note": [{
-                  "text": "Sudah dilakukan proses telaah obat oleh petugas dan obat sudah diserahkan ke pasien."
-              }]
-            }';
+              "doseAndRate" => [
+                [
+                  "doseQuantity" => [
+                    "value" => $frequency,
+                    "unit" => $obat['satuan_den'],
+                    "system" => $system_cek,
+                    "code" => $obat['satuan_den']
+                  ]
+                ]
+              ]
+            ]
+          ],
+          "dateAsserted" => $obat['tgl_penyerahan'] . 'T' . $obat['jam_penyerahan'] . $zonawaktu,
+          "informationSource" => [
+            "reference" => "Patient/" . $id_pasien,
+            "display" => $nm_pasien
+          ],
+          "context" => [
+            "reference" => "Encounter/" . $mlite_satu_sehat_response['id_encounter']
+          ],
+          "note" => [
+            [
+              "text" => "Sudah dilakukan proses telaah obat oleh petugas dan obat sudah diserahkan ke pasien."
+            ]
+          ]
+        ];
+
+        $data = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 
         // echo '<pre>'. $data. '</pre>';
 
@@ -4131,54 +4188,56 @@ class Admin extends AdminModule
       }
     } else if ($tipe == 'mapping') {
       $satu_sehat_mapping_obat = $this->db('mlite_satu_sehat_mapping_obat')->where('kode_brng', $kode_brng)->oneArray();
-      $data = '{
-              "resourceType": "Medication",
-              "meta": {
-                  "profile": [
-                      "https://fhir.kemkes.go.id/r4/StructureDefinition/Medication"
-                  ]
-              },
-              "identifier": [
-                  {
-                      "system" : "http://sys-ids.kemkes.go.id/medication/' . $this->organizationid . '",
-                      "use": "official",
-                      "value" : "' . $satu_sehat_mapping_obat['kode_brng'] . '"
-                  }
-              ],
-              "code": {
-                  "coding": [
-                      {
-                          "system": "http://sys-ids.kemkes.go.id/kfa",
-                          "code": "' . $satu_sehat_mapping_obat['kode_kfa'] . '",
-                          "display": "' . $satu_sehat_mapping_obat['nama_kfa'] . '"
-                      }
-                  ]
-              },
-              "status": "active",
-              "form": {
-                  "coding": [
-                      {
-                          "system": "http://terminology.kemkes.go.id/CodeSystem/medication-form",
-                          "code": "' . $satu_sehat_mapping_obat['kode_sediaan'] . '",
-                          "display": "' . $satu_sehat_mapping_obat['nama_sediaan'] . '"
-                      }
-                  ]
-              },
-              "extension": [
-                  {
-                      "url": "https://fhir.kemkes.go.id/r4/StructureDefinition/MedicationType",
-                          "valueCodeableConcept": {
-                          "coding": [
-                              {
-                                  "system": "http://terminology.kemkes.go.id/CodeSystem/medication-type",
-                                  "code": "NC",
-                                  "display": "Non-compound"
-                              }
-                          ]
-                      }
-                  }
+      $data = [
+        "resourceType" => "Medication",
+        "meta" => [
+          "profile" => [
+            "https://fhir.kemkes.go.id/r4/StructureDefinition/Medication"
+          ]
+        ],
+        "identifier" => [
+          [
+            "system" => "http://sys-ids.kemkes.go.id/medication/" . $this->organizationid,
+            "use" => "official",
+            "value" => $satu_sehat_mapping_obat['kode_brng']
+          ]
+        ],
+        "code" => [
+          "coding" => [
+            [
+              "system" => "http://sys-ids.kemkes.go.id/kfa",
+              "code" => $satu_sehat_mapping_obat['kode_kfa'],
+              "display" => $satu_sehat_mapping_obat['nama_kfa']
+            ]
+          ]
+        ],
+        "status" => "active",
+        "form" => [
+          "coding" => [
+            [
+              "system" => "http://terminology.kemkes.go.id/CodeSystem/medication-form",
+              "code" => $satu_sehat_mapping_obat['kode_sediaan'],
+              "display" => $satu_sehat_mapping_obat['nama_sediaan']
+            ]
+          ]
+        ],
+        "extension" => [
+          [
+            "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/MedicationType",
+            "valueCodeableConcept" => [
+              "coding" => [
+                [
+                  "system" => "http://terminology.kemkes.go.id/CodeSystem/medication-type",
+                  "code" => "NC",
+                  "display" => "Non-compound"
+                ]
               ]
-        }';
+            ]
+          ]
+        ]
+      ];
+
+      $data = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 
       $url = $this->fhirurl . '/Medication';
       $curl = curl_init();
@@ -5583,10 +5642,11 @@ class Admin extends AdminModule
 
     $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
 
-    $id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')
+    $data_id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')
       ->select('practitioner_id')
       ->where('kd_dokter', $kd_dokter)
       ->oneArray();
+    $id_dokter = isset_or($data_id_dokter['practitioner_id'], '');
 
     $kunjungan = 'Kunjungan';
     if ($status_lanjut == 'Ranap') {
@@ -5626,41 +5686,43 @@ class Admin extends AdminModule
       exit();
     }
 
-    $careplan = '{
-        "resourceType" : "CarePlan", 
-        "identifier" : {
-            "system" : "http://sys-ids.kemkes.go.id/careplan/' . $this->organizationid . '", 
-            "value" : "' . $no_rawat . '"
-        }, 
-        "title" : "Instruksi Medik dan Keperawatan Pasien", 
-        "status" : "active", 
-        "category" : [
-            {
-                "coding" : [
-                    {
-                        "system" : "http://snomed.info/sct", 
-                        "code" : "736271009", 
-                        "display" : "Outpatient care plan"
-                    }
-                ]
-            }
-        ], 
-        "intent" : "plan", 
-        "description" : "' . $rtl . '", 
-        "subject" : {
-            "reference" : "Patient/' . $ihs_patient . '", 
-            "display" : "' . $nama_pasien . '"
-        }, 
-        "encounter" : {
-            "reference": "Encounter/' . $encounter_id . '",
-            "display": "' . $kunjungan . ' ' . $nama_pasien . ' dari tanggal ' . $tgl_registrasi . '"
-        }, 
-        "created" : "' . $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . $zonawaktu . '", 
-        "author" : {
-            "reference" : "Practitioner/' . $id_dokter['practitioner_id'] . '", 
-            "display" : "' . $nama_dokter . '"
-        }
-      }';
+    $careplan = [
+      "resourceType" => "CarePlan",
+      "identifier" => [
+        "system" => "http://sys-ids.kemkes.go.id/careplan/" . $this->organizationid,
+        "value" => $no_rawat
+      ],
+      "title" => "Instruksi Medik dan Keperawatan Pasien",
+      "status" => "active",
+      "category" => [
+        [
+          "coding" => [
+            [
+              "system" => "http://snomed.info/sct",
+              "code" => "736271009",
+              "display" => "Outpatient care plan"
+            ]
+          ]
+        ]
+      ],
+      "intent" => "plan",
+      "description" => $rtl,
+      "subject" => [
+        "reference" => "Patient/" . $ihs_patient,
+        "display" => $nama_pasien
+      ],
+      "encounter" => [
+        "reference" => "Encounter/" . $encounter_id,
+        "display" => $kunjungan . ' ' . $nama_pasien . ' dari tanggal ' . $tgl_registrasi
+      ],
+      "created" => $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . $zonawaktu,
+      "author" => [
+        "reference" => "Practitioner/" . $id_dokter,
+        "display" => $nama_dokter
+      ]
+    ];
+
+    $careplan = json_encode($careplan, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 
     // echo '<pre>'.$careplan.'</pre>';
 
@@ -5837,58 +5899,60 @@ class Admin extends AdminModule
       $row['allergy'] = $allergy_map[$allergy['kd_penyakit']];
     }
 
-    $allergy = '{
-        "resourceType" : "AllergyIntolerance", 
-        "identifier" : {
-            "system" : "http://sys-ids.kemkes.go.id/allergy/' . $this->organizationid . '", 
-            "use" : "official",
-            "value" : "' . $no_rawat . '"
-        }, 
-        "clinicalStatus": {
-            "coding": [
-                {
-                    "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
-                    "code": "active",
-                    "display": "Active"
-                }
-            ]
-        },
-        "verificationStatus": {
-            "coding": [
-                {
-                    "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification",
-                    "code": "confirmed",
-                    "display": "Confirmed"
-                }
-            ]
-        },
-        "category": [
-            "food"
+    $allergy = [
+      "resourceType" => "AllergyIntolerance",
+      "identifier" => [
+        "system" => "http://sys-ids.kemkes.go.id/allergy/" . $this->organizationid,
+        "use" => "official",
+        "value" => $no_rawat
+      ],
+      "clinicalStatus" => [
+        "coding" => [
+          [
+            "system" => "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
+            "code" => "active",
+            "display" => "Active"
+          ]
+        ]
+      ],
+      "verificationStatus" => [
+        "coding" => [
+          [
+            "system" => "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification",
+            "code" => "confirmed",
+            "display" => "Confirmed"
+          ]
+        ]
+      ],
+      "category" => [
+        "food"
+      ],
+      "code" => [
+        "coding" => [
+          [
+            "system" => "http://snomed.info/sct",
+            "code" => $row['allergy']['snomed_ct'],
+            "display" => $row['allergy']['deskripsi']
+          ]
         ],
-        "code": {
-            "coding": [
-                {
-                    "system": "http://snomed.info/sct",
-                    "code": "' . $row['allergy']['snomed_ct'] . '",
-                    "display": "' . $row['allergy']['deskripsi'] . '"
-                }
-            ],
-            "text": "' . $row['allergy']['deskripsi'] . '"
-        },
-        "patient": {
-            "reference": "Patient/' . $ihs_patient . '",
-            "display": "' . $nama_pasien . '"
-        },
-        "encounter": {
-            "reference": "Encounter/' . $encounter_id . '",
-            "display": "' . $kunjungan . ' ' . $nama_pasien . ' dari tanggal ' . $tgl_registrasi . '"
-        },
-        "recordedDate": "' . $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . $zonawaktu . '",
-        "recorder": {
-            "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '",
-            "display": "' . $nama_dokter . '"
-        }
-      }';
+        "text" => $row['allergy']['deskripsi']
+      ],
+      "patient" => [
+        "reference" => "Patient/" . $ihs_patient,
+        "display" => $nama_pasien
+      ],
+      "encounter" => [
+        "reference" => "Encounter/" . $encounter_id,
+        "display" => $kunjungan . ' ' . $nama_pasien . ' dari tanggal ' . $tgl_registrasi
+      ],
+      "recordedDate" => $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . $zonawaktu,
+      "recorder" => [
+        "reference" => "Practitioner/" . $id_dokter['practitioner_id'],
+        "display" => $nama_dokter
+      ]
+    ];
+
+    $allergy = json_encode($allergy, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 
     $curl = curl_init();
     // echo '<pre>' . $allergy . '</pre>';

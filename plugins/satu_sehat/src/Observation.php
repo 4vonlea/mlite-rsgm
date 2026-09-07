@@ -35,57 +35,57 @@ class Observation
 
     public function toJson()
     {
-        return '{
-        "fullUrl": "urn:uuid:' . $this->uuid_observation . '",
-        "resource": {
-            "resourceType": "Observation",
-            "status": "final",
-            "category": [
-                {
-                    "coding": [
-                        {
-                            "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-                            "code": "vital-signs",
-                            "display": "Vital Signs"
-                        }
+        return [
+            "fullUrl" => "urn:uuid:".$this->uuid_observation,
+            "resource" => [
+                "resourceType" => "Observation",
+                "status" => "final",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code" => "vital-signs",
+                                "display" => "Vital Signs"
+                            ]
+                        ]
                     ]
-                }
-            ],
-            "code": {
-                "coding": [
-                    {
-                        "system": "http://loinc.org",
-                        "code": "8867-4",
-                        "display": "Heart rate"
-                    }
+                ],
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "8867-4",
+                            "display" => "Heart rate"
+                        ]
+                    ]
+                ],
+                "subject" => [
+                    "reference" => "Patient/".$this->ihs_patient
+                ],
+                "performer" => [
+                    [
+                        "reference" => "Practitioner/".$this->no_ktp_dokter
+                    ]
+                ],
+                "encounter" => [
+                    "reference" => "urn:uuid:".$this->uuid_encounter,
+                    "display" => $this->display_nadi
+                ],
+                "effectiveDateTime" => $this->zonawaktu,
+                "issued" => $this->zonawaktu,
+                "valueQuantity" => [
+                    "value" => (float) $this->inProg,
+                    "unit" => "beats/minute",
+                    "system" => "http://unitsofmeasure.org",
+                    "code" => "/min"
                 ]
-            },
-            "subject": {
-                "reference": "Patient/' . $this->ihs_patient . '"
-            },
-            "performer": [
-                {
-                    "reference": "Practitioner/' . $this->no_ktp_dokter . '"
-                }
             ],
-            "encounter": {
-                "reference": "urn:uuid:' . $this->uuid_encounter . '",
-                "display": "' . $this->display_nadi . '"
-            },
-            "effectiveDateTime": "' . $this->zonawaktu . '",
-            "issued": "' . $this->zonawaktu . '",
-            "valueQuantity": {
-                "value": '.$this->inProg.',
-                "unit": "beats/minute",
-                "system": "http://unitsofmeasure.org",
-                "code": "/min"
-            }
-        },
-        "request": {
-            "method": "POST",
-            "url": "Observation"
-        }
-      },';
+            "request" => [
+                "method" => "POST",
+                "url" => "Observation"
+            ]
+        ];
     }
 
     public function toJsonObservation()
@@ -143,7 +143,7 @@ class Observation
             ];
         }
 
-        $data = array_merge(
+        return array_merge(
             [
                 "resourceType" => "Observation",
                 "status" => "final",
@@ -171,20 +171,17 @@ class Observation
             ],
             $value_additional
         );
-
-        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
     public function toJsonBundle()
     {
-        $data = [
+        return [
             "fullUrl" => "urn:uuid:" . $this->uuid_observation,
-            "resource" => json_decode($this->toJsonObservation(), true),
+            "resource" => $this->toJsonObservation(),
             "request" => [
                 "method" => "POST",
                 "url" => "Observation"
             ]
         ];
-        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 }

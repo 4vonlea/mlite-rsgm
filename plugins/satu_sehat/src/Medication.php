@@ -44,86 +44,86 @@ class Medication
 
     public function toJson()
     {
-        return '{
-            "fullUrl": "urn:uuid:'.$this->uuid_medication.'",
-            "resource": {
-                "resourceType": "Medication",
-                "meta": {
-                    "profile": [
+        return [
+            "fullUrl" => "urn:uuid:".$this->uuid_medication,
+            "resource" => [
+                "resourceType" => "Medication",
+                "meta" => [
+                    "profile" => [
                         "https://fhir.kemkes.go.id/r4/StructureDefinition/Medication"
                     ]
-                },
-                "extension": [
-                    {
-                        "url": "https://fhir.kemkes.go.id/r4/StructureDefinition/MedicationType",
-                        "valueCodeableConcept": {
-                            "coding": [
-                                {
-                                    "system": "http://terminology.kemkes.go.id/CodeSystem/medication-type",
-                                    "code": "NC",
-                                    "display": "Non-compound"
-                                }
-                            ]
-                        }
-                    }
                 ],
-                "identifier": [
-                    {
-                        "use": "official",
-                        "system": "http://sys-ids.kemkes.go.id/medication/'. $this->identifier_org . '",
-                        "value": "'.$this->identifier_value.'-'.$this->no.'"
-                    }
-                ],
-                "code": {
-                    "coding": [
-                        {
-                            "system": "http://sys-ids.kemkes.go.id/kfa",
-                            "code": "'.$this->kfa_coding.'",
-                            "display": "'.$this->kfa_display.'"
-                        }
-                    ]
-                },
-                "status": "active",
-                "form": {
-                    "coding": [
-                        {
-                            "system": "http://terminology.kemkes.go.id/CodeSystem/medication-form",
-                            "code": "'.$this->form_coding.'",
-                            "display": "'.$this->form_display.'"
-                        }
-                    ]
-                },
-                "ingredient": [
-                    {
-                        "itemCodeableConcept": {
-                            "coding": [
-                                {
-                                    "system": "http://sys-ids.kemkes.go.id/kfa",
-                                    "code": "'.$this->ingredient_coding.'",
-                                    "display": "'.$this->ingredient_display.'"
-                                }
+                "extension" => [
+                    [
+                        "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/MedicationType",
+                        "valueCodeableConcept" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://terminology.kemkes.go.id/CodeSystem/medication-type",
+                                    "code" => "NC",
+                                    "display" => "Non-compound"
+                                ]
                             ]
-                        },
-                        "isActive": true,
-                        "strength": {
-                            "numerator": {
-                                "value": '.$this->numerator_value.',
-                                "system": "http://unitsofmeasure.org",
-                                "code": "'.$this->numerator_code.'"
-                            },
-                            "denominator": {
-                                "value": '.$this->denominator_value.',
-                                "system": "'.$this->denominator_system.'",
-                                "code": "'.$this->denominator_code.'"
-                            }
-                        }
-                    }
+                        ]
+                    ]
+                ],
+                "identifier" => [
+                    [
+                        "use" => "official",
+                        "system" => "http://sys-ids.kemkes.go.id/medication/".$this->identifier_org,
+                        "value" => $this->identifier_value."-".$this->no
+                    ]
+                ],
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://sys-ids.kemkes.go.id/kfa",
+                            "code" => $this->kfa_coding,
+                            "display" => $this->kfa_display
+                        ]
+                    ]
+                ],
+                "status" => "active",
+                "form" => [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.kemkes.go.id/CodeSystem/medication-form",
+                            "code" => $this->form_coding,
+                            "display" => $this->form_display
+                        ]
+                    ]
+                ],
+                "ingredient" => [
+                    [
+                        "itemCodeableConcept" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://sys-ids.kemkes.go.id/kfa",
+                                    "code" => $this->ingredient_coding,
+                                    "display" => $this->ingredient_display
+                                ]
+                            ]
+                        ],
+                        "isActive" => true,
+                        "strength" => [
+                            "numerator" => [
+                                "value" => (float) $this->numerator_value,
+                                "system" => "http://unitsofmeasure.org",
+                                "code" => $this->numerator_code
+                            ],
+                            "denominator" => [
+                                "value" => (float) $this->denominator_value,
+                                "system" => $this->denominator_system,
+                                "code" => $this->denominator_code
+                            ]
+                        ]
+                    ]
                 ]
-            },
-            "request": {
-                "method": "POST",
-                "url": "Medication"
-            }
-        },';
+            ],
+            "request" => [
+                "method" => "POST",
+                "url" => "Medication"
+            ]
+        ];
     }
 }

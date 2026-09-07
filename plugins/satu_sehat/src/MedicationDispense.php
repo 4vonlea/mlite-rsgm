@@ -56,115 +56,115 @@ class MedicationDispense
 
     public function toJson()
     {
-        return '{
-            "fullUrl": "urn:uuid:'.$this->uuid_medication_dispense.'",
-            "resource": {
-                "resourceType": "MedicationDispense",
-                "identifier": [
-                    {
-                        "use": "official",
-                        "system": "http://sys-ids.kemkes.go.id/prescription/'.$this->organization_id.'",
-                        "value": "'.$this->identifier_value.'"
-                    },
-                    {
-                        "use": "official",
-                        "system": "http://sys-ids.kemkes.go.id/prescription-item/'.$this->organization_id.'",
-                        "value": "'.$this->identifier_value.'-'.$this->no.'"
-                    }
-                ],
-                "status": "completed",
-                "category": {
-                    "coding": [
-                        {
-                            "system": "http://terminology.hl7.org/fhir/CodeSystem/medicationdispense-category",
-                            "code": "outpatient",
-                            "display": "Outpatient"
-                        }
+        return [
+            "fullUrl" => "urn:uuid:".$this->uuid_medication_dispense,
+            "resource" => [
+                "resourceType" => "MedicationDispense",
+                "identifier" => [
+                    [
+                        "use" => "official",
+                        "system" => "http://sys-ids.kemkes.go.id/prescription/".$this->organization_id,
+                        "value" => $this->identifier_value
+                    ],
+                    [
+                        "use" => "official",
+                        "system" => "http://sys-ids.kemkes.go.id/prescription-item/".$this->organization_id,
+                        "value" => $this->identifier_value."-".$this->no
                     ]
-                },
-                "medicationReference": {
-                    "reference": "urn:uuid:'.$this->uuid_medication_for_dispense.'",
-                    "display": "'.$this->medication_name.'"
-                },
-                "subject": {
-                    "reference": "Patient/'.$this->ihs_patient.'",
-                    "display": "'.$this->ihs_patient_name.'"
-                },
-                "context": {
-                    "reference": "urn:uuid:'.$this->uuid_encounter.'"
-                },
-                "performer": [
-                    {
-                        "actor": {
-                            "reference": "Practitioner/'.$this->practitioner_id.'",
-                            "display": "Apoteker '.$this->practitioner_name.'"
-                        }
-                    }
                 ],
-                "location": {
-                    "reference": "Location/'.$this->location_id.'",
-                    "display": "Farmasi"
-                },
-                "authorizingPrescription": [
-                    {
-                        "reference": "urn:uuid:'.$this->uuid_medication_request.'"
-                    }
-                ],
-                "quantity": {
-                    "value": '.$this->dose_value.',
-                    "system": "'.$this->dose_system.'",
-                    "code": "'.$this->dose_code.'"
-                },
-                "whenPrepared": "'.$this->whenPrepared.'",
-                "whenHandedOver": "'.$this->whenHanded.'",
-                "dosageInstruction": [
-                    {
-                        "sequence": 1,
-                        "additionalInstruction": [
-                            {
-                                "coding": [
-                                    {
-                                        "system": "http://snomed.info/sct",
-                                        "code": "418577003",
-                                        "display": "Take at regular intervals. Complete the prescribed course unless otherwise directed"
-                                    }
-                                ]
-                            }
-                        ],
-                        "patientInstruction": "'.$this->patient_instruction.'",
-                        "timing": {
-                            "repeat": {
-                                "frequency": 1,
-                                "period": 1,
-                                "periodUnit": "d"
-                            }
-                        },
-                        "doseAndRate": [
-                            {
-                                "type": {
-                                    "coding": [
-                                        {
-                                            "system": "http://terminology.hl7.org/CodeSystem/dose-rate-type",
-                                            "code": "ordered",
-                                            "display": "Ordered"
-                                        }
-                                    ]
-                                },
-                                "doseQuantity": {
-                                    "value": '.$this->dose_value.',
-                                    "unit": "'.$this->dose_unit.'",
-                                    "system": "'.$this->dose_system.'",
-                                    "code": "'.$this->dose_code.'"
-                                }
-                            }
+                "status" => "completed",
+                "category" => [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/fhir/CodeSystem/medicationdispense-category",
+                            "code" => "outpatient",
+                            "display" => "Outpatient"
                         ]
-                    }
+                    ]
+                ],
+                "medicationReference" => [
+                    "reference" => "urn:uuid:".$this->uuid_medication_for_dispense,
+                    "display" => $this->medication_name
+                ],
+                "subject" => [
+                    "reference" => "Patient/".$this->ihs_patient,
+                    "display" => $this->ihs_patient_name
+                ],
+                "context" => [
+                    "reference" => "urn:uuid:".$this->uuid_encounter
+                ],
+                "performer" => [
+                    [
+                        "actor" => [
+                            "reference" => "Practitioner/".$this->practitioner_id,
+                            "display" => "Apoteker ".$this->practitioner_name
+                        ]
+                    ]
+                ],
+                "location" => [
+                    "reference" => "Location/".$this->location_id,
+                    "display" => "Farmasi"
+                ],
+                "authorizingPrescription" => [
+                    [
+                        "reference" => "urn:uuid:".$this->uuid_medication_request
+                    ]
+                ],
+                "quantity" => [
+                    "value" => (float) $this->dose_value,
+                    "system" => $this->dose_system,
+                    "code" => $this->dose_code
+                ],
+                "whenPrepared" => $this->whenPrepared,
+                "whenHandedOver" => $this->whenHanded,
+                "dosageInstruction" => [
+                    [
+                        "sequence" => 1,
+                        "additionalInstruction" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => "418577003",
+                                        "display" => "Take at regular intervals. Complete the prescribed course unless otherwise directed"
+                                    ]
+                                ]
+                            ]
+                        ],
+                        "patientInstruction" => $this->patient_instruction,
+                        "timing" => [
+                            "repeat" => [
+                                "frequency" => 1,
+                                "period" => 1,
+                                "periodUnit" => "d"
+                            ]
+                        ],
+                        "doseAndRate" => [
+                            [
+                                "type" => [
+                                    "coding" => [
+                                        [
+                                            "system" => "http://terminology.hl7.org/CodeSystem/dose-rate-type",
+                                            "code" => "ordered",
+                                            "display" => "Ordered"
+                                        ]
+                                    ]
+                                ],
+                                "doseQuantity" => [
+                                    "value" => (float) $this->dose_value,
+                                    "unit" => $this->dose_unit,
+                                    "system" => $this->dose_system,
+                                    "code" => $this->dose_code
+                                ]
+                            ]
+                        ]
+                    ]
                 ]
-            },
-            "request": {
-                "method": "POST",
-                "url": "MedicationDispense"
-            }
-        },';
+            ],
+            "request" => [
+                "method" => "POST",
+                "url" => "MedicationDispense"
+            ]
+        ];
     }
 }

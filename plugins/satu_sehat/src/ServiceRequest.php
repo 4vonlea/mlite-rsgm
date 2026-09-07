@@ -84,18 +84,17 @@ class ServiceRequest
                 ]
             ],
         ];
-        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        return $data;
     }
     public function toJsonBundle()
     {
-        $data = [
+        return [
             "fullUrl" => "urn:uuid:" . $this->uuid_service_request,
-            "resource" => json_decode($this->toJson(), true),
+            "resource" => $this->toJson(),
             "request" => [
                 "method" => "POST",
                 "url" => "ServiceRequest"
             ]
         ];
-        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 }

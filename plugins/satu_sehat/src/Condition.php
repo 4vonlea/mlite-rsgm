@@ -25,52 +25,52 @@ class Condition
 
     public function toJson()
     {
-        return '{
-            "fullUrl": "urn:uuid:' . $this->uuid_condition . '",
-            "resource": {
-                "resourceType": "Condition",
-                "clinicalStatus": {
-                    "coding": [
-                        {
-                            "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
-                            "code": "active",
-                            "display": "Active"
-                        }
-                    ]
-                },
-                "category": [
-                    {
-                        "coding": [
-                            {
-                                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
-                                "code": "encounter-diagnosis",
-                                "display": "Encounter Diagnosis"
-                            }
+        return [
+            "fullUrl" => "urn:uuid:".$this->uuid_condition,
+            "resource" => [
+                "resourceType" => "Condition",
+                "clinicalStatus" => [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/condition-clinical",
+                            "code" => "active",
+                            "display" => "Active"
                         ]
-                    }
-                ],
-                "code": {
-                    "coding": [
-                        {
-                            "system": "http://hl7.org/fhir/sid/icd-10",
-                            "code": "' . $this->code . '",
-                            "display": "' . $this->display . '"
-                        }
                     ]
-                },
-                "subject": {
-                    "reference": "Patient/' . $this->patient_ihs . '",
-                    "display": "' . $this->patient_display . '"
-                },
-                "encounter": {
-                    "reference": "urn:uuid:' . $this->uuid_encounter . '",
-                    "display": "' . $this->display_encounter . '"
-                }
-            },
-            "request": {
-                "method": "POST",
-                "url": "Condition"
-            }
-        },';
+                ],
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/condition-category",
+                                "code" => "encounter-diagnosis",
+                                "display" => "Encounter Diagnosis"
+                            ]
+                        ]
+                    ]
+                ],
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://hl7.org/fhir/sid/icd-10",
+                            "code" => $this->code,
+                            "display" => $this->display
+                        ]
+                    ]
+                ],
+                "subject" => [
+                    "reference" => "Patient/".$this->patient_ihs,
+                    "display" => $this->patient_display
+                ],
+                "encounter" => [
+                    "reference" => "urn:uuid:".$this->uuid_encounter,
+                    "display" => $this->display_encounter
+                ]
+            ],
+            "request" => [
+                "method" => "POST",
+                "url" => "Condition"
+            ]
+        ];
     }
 }

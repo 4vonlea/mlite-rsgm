@@ -23,7 +23,7 @@ class CarePlan
 
     public function toJson()
     {
-        $data = [
+        return [
             "resourceType" => "CarePlan",
             "status" => "active",
             "intent" => "plan",
@@ -50,18 +50,16 @@ class CarePlan
                 "reference" => "Practitioner/".$this->no_ktp_dokter,
             ]
         ];
-        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
     public function toJsonBundle()
     {
-        $data = [
+        return [
             "fullUrl" => "urn:uuid:" . $this->uuid_careplan,
-            "resource" => json_decode($this->toJson(), true),
+            "resource" => $this->toJson(),
             "request" => [
                 "method" => "POST",
                 "url" => "CarePlan"
             ]
         ];
-        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 }

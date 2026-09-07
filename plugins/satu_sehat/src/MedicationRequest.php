@@ -57,114 +57,114 @@ class MedicationRequest
 
     public function toJson()
     {
-        return '{
-            "fullUrl": "urn:uuid:'.$this->uuid_medicationrequest.'",
-            "resource": {
-                "resourceType": "MedicationRequest",
-                "identifier": [
-                    {
-                        "use": "official",
-                        "system": "http://sys-ids.kemkes.go.id/prescription/'. $this->organization_id . '",
-                        "value": "'.$this->identifier_value.'"
-                    },
-                    {
-                        "use": "official",
-                        "system": "http://sys-ids.kemkes.go.id/prescription-item/'. $this->organization_id . '",
-                        "value": "'.$this->identifier_value.'-'.$this->no.'"
-                    }
+        return [
+            "fullUrl" => "urn:uuid:".$this->uuid_medicationrequest,
+            "resource" => [
+                "resourceType" => "MedicationRequest",
+                "identifier" => [
+                    [
+                        "use" => "official",
+                        "system" => "http://sys-ids.kemkes.go.id/prescription/".$this->organization_id,
+                        "value" => $this->identifier_value
+                    ],
+                    [
+                        "use" => "official",
+                        "system" => "http://sys-ids.kemkes.go.id/prescription-item/".$this->organization_id,
+                        "value" => $this->identifier_value."-".$this->no
+                    ]
                 ],
-                "status": "completed",
-                "intent": "order",
-                "category": [
-                    {
-                        "coding": [
-                            {
-                                "system": "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
-                                "code": "outpatient",
-                                "display": "Outpatient"
-                            }
-                        ]
-                    }
-                ],
-                "priority": "routine",
-                "medicationReference": {
-                    "reference": "Medication/'.$this->uuid_medication.'",
-                    "display": "'.$this->medication_reference.'"
-                },
-                "subject": {
-                    "reference": "Patient/' . $this->ihs_patient . '",
-                    "display": "' . $this->nama_pasien . '"
-                },
-                "encounter": {
-                    "reference": "Encounter/' . $this->uuid_encounter . '"
-                },
-                "authoredOn": "'.$this->time_authored.'",
-                "requester": {
-                    "reference": "Practitioner/' . $this->no_ktp_dokter . '",
-                    "display": "' . $this->nama_dokter . '"
-                },
-                "reasonReference": [
-                    {
-                        "reference": "Condition/' . $this->uuid_condition . '",
-                        "display": "' . $this->reason_reference . '"
-                    }
-                ],
-                "dosageInstruction": [
-                    {
-                        "sequence": 1,
-                        "patientInstruction": "'.$this->patient_instruction.'",
-                        "route": {
-                            "coding": [
-                                {
-                                    "system": "http://www.whocc.no/atc",
-                                    "code": "'.$this->route_code.'",
-                                    "display": "'.$this->route_display.'"
-                                }
+                "status" => "completed",
+                "intent" => "order",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
+                                "code" => "outpatient",
+                                "display" => "Outpatient"
                             ]
-                        },
-                        "doseAndRate": [
-                            {
-                                "type": {
-                                    "coding": [
-                                        {
-                                            "system": "http://terminology.hl7.org/CodeSystem/dose-rate-type",
-                                            "code": "ordered",
-                                            "display": "Ordered"
-                                        }
-                                    ]
-                                },
-                                "doseQuantity": {
-                                    "value": '.$this->dose_value.',
-                                    "unit": "'.$this->dose_unit.'",
-                                    "system": "'.$this->dose_system.'",
-                                    "code": "'.$this->dose_code.'"
-                                }
-                            }
                         ]
-                    }
+                    ]
                 ],
-                "dispenseRequest": {
-                    "dispenseInterval": {
-                        "value": 1,
-                        "unit": "days",
-                        "system": "http://unitsofmeasure.org",
-                        "code": "d"
-                    },
-                    "quantity": {
-                        "value": '.$this->dose_value.',
-                        "unit": "'.$this->dose_unit.'",
-                        "system": "'.$this->dose_system.'",
-                        "code": "'.$this->dose_code.'"
-                    },
-                    "performer": {
-                        "reference": "Organization/'. $this->organization_id . '"
-                    }
-                }
-            },
-            "request": {
-                "method": "POST",
-                "url": "MedicationRequest"
-            }
-        },';
+                "priority" => "routine",
+                "medicationReference" => [
+                    "reference" => "Medication/".$this->uuid_medication,
+                    "display" => $this->medication_reference
+                ],
+                "subject" => [
+                    "reference" => "Patient/".$this->ihs_patient,
+                    "display" => $this->nama_pasien
+                ],
+                "encounter" => [
+                    "reference" => "Encounter/".$this->uuid_encounter
+                ],
+                "authoredOn" => $this->time_authored,
+                "requester" => [
+                    "reference" => "Practitioner/".$this->no_ktp_dokter,
+                    "display" => $this->nama_dokter
+                ],
+                "reasonReference" => [
+                    [
+                        "reference" => "Condition/".$this->uuid_condition,
+                        "display" => $this->reason_reference
+                    ]
+                ],
+                "dosageInstruction" => [
+                    [
+                        "sequence" => 1,
+                        "patientInstruction" => $this->patient_instruction,
+                        "route" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://www.whocc.no/atc",
+                                    "code" => $this->route_code,
+                                    "display" => $this->route_display
+                                ]
+                            ]
+                        ],
+                        "doseAndRate" => [
+                            [
+                                "type" => [
+                                    "coding" => [
+                                        [
+                                            "system" => "http://terminology.hl7.org/CodeSystem/dose-rate-type",
+                                            "code" => "ordered",
+                                            "display" => "Ordered"
+                                        ]
+                                    ]
+                                ],
+                                "doseQuantity" => [
+                                    "value" => (float) $this->dose_value,
+                                    "unit" => $this->dose_unit,
+                                    "system" => $this->dose_system,
+                                    "code" => $this->dose_code
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                "dispenseRequest" => [
+                    "dispenseInterval" => [
+                        "value" => 1,
+                        "unit" => "days",
+                        "system" => "http://unitsofmeasure.org",
+                        "code" => "d"
+                    ],
+                    "quantity" => [
+                        "value" => (float) $this->dose_value,
+                        "unit" => $this->dose_unit,
+                        "system" => $this->dose_system,
+                        "code" => $this->dose_code
+                    ],
+                    "performer" => [
+                        "reference" => "Organization/".$this->organization_id
+                    ]
+                ]
+            ],
+            "request" => [
+                "method" => "POST",
+                "url" => "MedicationRequest"
+            ]
+        ];
     }
 }

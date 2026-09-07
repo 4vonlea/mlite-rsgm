@@ -115,7 +115,7 @@ class ClinicalImpression
 
     public function toJsonBundle()
     {
-        $data = [
+        return [
             "fullUrl" => "urn:uuid:" . $this->uuid_clinical_impression,
             "resource" => $this->toJson(),
             "request" => [
@@ -123,6 +123,5 @@ class ClinicalImpression
                 "url" => "ClinicalImpression"
             ]
         ];
-        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 }

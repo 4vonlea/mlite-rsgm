@@ -31,68 +31,68 @@ class Temperature
 
     public function toJson()
     {
-        return '{
-        "fullUrl": "urn:uuid:' . $this->uuid_suhu . '",
-        "resource": {
-            "resourceType": "Observation",
-            "status": "final",
-            "category": [
-                {
-                    "coding": [
-                        {
-                            "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-                            "code": "vital-signs",
-                            "display": "Vital Signs"
-                        }
+        return [
+            "fullUrl" => "urn:uuid:".$this->uuid_suhu,
+            "resource" => [
+                "resourceType" => "Observation",
+                "status" => "final",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code" => "vital-signs",
+                                "display" => "Vital Signs"
+                            ]
+                        ]
                     ]
-                }
-            ],
-            "code": {
-                "coding": [
-                    {
-                      "system": "http://loinc.org",
-                      "code": "8310-5",
-                      "display": "Body temperature"
-                    }
+                ],
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "8310-5",
+                            "display" => "Body temperature"
+                        ]
+                    ]
+                ],
+                "subject" => [
+                    "reference" => "Patient/".$this->ihs_patient
+                ],
+                "performer" => [
+                    [
+                        "reference" => "Practitioner/".$this->no_ktp_dokter
+                    ]
+                ],
+                "encounter" => [
+                    "reference" => "urn:uuid:".$this->uuid_encounter,
+                    "display" => $this->display_encounter_temp
+                ],
+                "effectiveDateTime" => $this->zonawaktu,
+                "issued" => $this->zonawaktu,
+                "valueQuantity" => [
+                    "value" => (float) $this->suhu,
+                    "unit" => "C",
+                    "system" => "http://unitsofmeasure.org",
+                    "code" => "Cel"
+                ],
+                "interpretation" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                                "code" => $this->code_interpretation,
+                                "display" => $this->display_interpretation
+                            ]
+                        ],
+                        "text" => "Di ".$this->text_interpretation." nilai referensi"
+                    ]
                 ]
-            },
-            "subject": {
-                "reference": "Patient/' . $this->ihs_patient . '"
-            },
-            "performer": [
-                {
-                    "reference": "Practitioner/' . $this->no_ktp_dokter . '"
-                }
             ],
-            "encounter": {
-                "reference": "urn:uuid:' . $this->uuid_encounter . '",
-                "display": "'.$this->display_encounter_temp.'"
-            },
-            "effectiveDateTime": "' . $this->zonawaktu . '",
-            "issued": "' . $this->zonawaktu . '",
-            "valueQuantity": {
-                "value": '.$this->suhu.',
-                "unit": "C",
-                "system": "http://unitsofmeasure.org",
-                "code": "Cel"
-            },
-            "interpretation": [
-              {
-                  "coding": [
-                      {
-                          "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
-                          "code": "'.$this->code_interpretation.'",
-                          "display": "'.$this->display_interpretation.'"
-                      }
-                  ],
-                  "text": "Di '.$this->text_interpretation.' nilai referensi"
-              }
-          ]
-        },
-        "request": {
-            "method": "POST",
-            "url": "Observation"
-        }
-      },';
+            "request" => [
+                "method" => "POST",
+                "url" => "Observation"
+            ]
+        ];
     }
 }

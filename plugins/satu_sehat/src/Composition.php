@@ -31,59 +31,59 @@ class Composition
 
     public function toJson()
     {
-        return '{
-            "fullUrl": "urn:uuid:' . $this->uuid_composition . '",
-            "resource": {
-                "resourceType": "Composition",
-                "identifier": {
-                    "system": "http://sys-ids.kemkes.go.id/composition/' . $this->org_id . '",
-                    "value": "' . $this->no_rawat . '"
-                },
-                "status": "final",
-                "type": {
-                    "coding": [
-                        {
-                            "system": "http://loinc.org",
-                            "code": "18842-5",
-                            "display": "Discharge summary"
-                        }
-                    ]
-                },
-                "category": [
-                    {
-                        "coding": [
-                            {
-                                "system": "http://loinc.org",
-                                "code": "LP173421-1",
-                                "display": "Report"
-                            }
+        return [
+            "fullUrl" => "urn:uuid:".$this->uuid_composition,
+            "resource" => [
+                "resourceType" => "Composition",
+                "identifier" => [
+                    "system" => "http://sys-ids.kemkes.go.id/composition/".$this->org_id,
+                    "value" => $this->no_rawat
+                ],
+                "status" => "final",
+                "type" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "18842-5",
+                            "display" => "Discharge summary"
                         ]
-                    }
+                    ]
                 ],
-                "subject": {
-                    "reference": "Patient/' . $this->ihs_patient . '",
-                    "display": "' . $this->nama_pasien . '"
-                },
-                "encounter": {
-                    "reference": "urn:uuid:' . $this->uuid_encounter . '",
-                    "display": "'.$this->display_encounter.'"
-                },
-                "date": "' . $this->zonawaktu . '",
-                "author": [
-                    {
-                        "reference": "Practitioner/' . $this->no_ktp_dokter . '",
-                        "display": "' . $this->nama_dokter . '"
-                    }
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://loinc.org",
+                                "code" => "LP173421-1",
+                                "display" => "Report"
+                            ]
+                        ]
+                    ]
                 ],
-                "title": "Resume Medis Rawat Jalan",
-                "custodian": {
-                    "reference": "Organization/' . $this->org_id . '"
-                }
-            },
-            "request": {
-                "method": "POST",
-                "url": "Composition"
-            }
-        }';
+                "subject" => [
+                    "reference" => "Patient/".$this->ihs_patient,
+                    "display" => $this->nama_pasien
+                ],
+                "encounter" => [
+                    "reference" => "urn:uuid:".$this->uuid_encounter,
+                    "display" => $this->display_encounter
+                ],
+                "date" => $this->zonawaktu,
+                "author" => [
+                    [
+                        "reference" => "Practitioner/".$this->no_ktp_dokter,
+                        "display" => $this->nama_dokter
+                    ]
+                ],
+                "title" => "Resume Medis Rawat Jalan",
+                "custodian" => [
+                    "reference" => "Organization/".$this->org_id
+                ]
+            ],
+            "request" => [
+                "method" => "POST",
+                "url" => "Composition"
+            ]
+        ];
     }
 }

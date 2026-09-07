@@ -73,19 +73,18 @@ class DiagnosticReport
                 ]
             ],
         ];
-        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        return $data;
     }
 
     public function toJsonBundle()
     {
-        $data = [
+        return [
             "fullUrl" => "urn:uuid:" . $this->uuid_diagnostic_report,
-            "resource" => json_decode($this->toJson(), true),
+            "resource" => $this->toJson(),
             "request" => [
                 "method" => "POST",
                 "url" => "DiagnosticReport"
             ]
         ];
-        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 }

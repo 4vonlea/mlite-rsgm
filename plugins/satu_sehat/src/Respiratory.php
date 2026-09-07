@@ -25,56 +25,56 @@ class Respiratory
 
     public function toJson()
     {
-        return '{
-            "fullUrl": "urn:uuid:' . $this->uuid_respiration . '",
-            "resource": {
-                "resourceType": "Observation",
-                "status": "final",
-                "category": [
-                    {
-                        "coding": [
-                            {
-                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-                                "code": "vital-signs",
-                                "display": "Vital Signs"
-                            }
+        return [
+            "fullUrl" => "urn:uuid:".$this->uuid_respiration,
+            "resource" => [
+                "resourceType" => "Observation",
+                "status" => "final",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code" => "vital-signs",
+                                "display" => "Vital Signs"
+                            ]
                         ]
-                    }
-                ],
-                "code": {
-                    "coding": [
-                        {
-                            "system": "http://loinc.org",
-                            "code": "9279-1",
-                            "display": "Respiratory rate"
-                        }
                     ]
-                },
-                "subject": {
-                    "reference": "Patient/' . $this->ihs_patient . '"
-                },
-                "performer": [
-                    {
-                        "reference": "Practitioner/' . $this->no_ktp_dokter . '"
-                    }
                 ],
-                "encounter": {
-                    "reference": "urn:uuid:' . $this->uuid_encounter . '",
-                    "display": "'.$this->display_respiration.'"
-                },
-                "effectiveDateTime": "' . $this->zonawaktu . '",
-                "issued": "' . $this->zonawaktu . '",
-                "valueQuantity": {
-                    "value": '.$this->inProg.',
-                    "unit": "breaths/minute",
-                    "system": "http://unitsofmeasure.org",
-                    "code": "/min"
-                }
-            },
-            "request": {
-                "method": "POST",
-                "url": "Observation"
-            }
-        },';
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "9279-1",
+                            "display" => "Respiratory rate"
+                        ]
+                    ]
+                ],
+                "subject" => [
+                    "reference" => "Patient/".$this->ihs_patient
+                ],
+                "performer" => [
+                    [
+                        "reference" => "Practitioner/".$this->no_ktp_dokter
+                    ]
+                ],
+                "encounter" => [
+                    "reference" => "urn:uuid:".$this->uuid_encounter,
+                    "display" => $this->display_respiration
+                ],
+                "effectiveDateTime" => $this->zonawaktu,
+                "issued" => $this->zonawaktu,
+                "valueQuantity" => [
+                    "value" => (float) $this->inProg,
+                    "unit" => "breaths/minute",
+                    "system" => "http://unitsofmeasure.org",
+                    "code" => "/min"
+                ]
+            ],
+            "request" => [
+                "method" => "POST",
+                "url" => "Observation"
+            ]
+        ];
     }
 }

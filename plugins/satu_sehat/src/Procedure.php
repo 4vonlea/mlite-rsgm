@@ -37,66 +37,66 @@ class Procedure
     }
 
     public function toJson(){
-        return '{
-            "fullUrl": "urn:uuid:' . $this->uuid_procedure . '",
-            "resource": {
-                "resourceType": "Procedure",
-                "status": "completed",
-                "category": {
-                    "coding": [
-                        {
-                            "system": "http://snomed.info/sct",
-                            "code": "103693007",
-                            "display": "Diagnostic procedure"
-                        }
-                    ],
-                    "text": "Diagnostic procedure"
-                },
-                "code": {
-                    "coding": [
-                        {
-                            "system": "http://hl7.org/fhir/sid/icd-9-cm",
-                            "code": "'.$this->code_procedure.'",
-                            "display": "'.$this->display_procedure.'"
-                        }
-                    ]
-                },
-                "subject": {
-                    "reference": "Patient/' . $this->ihs_patient . '",
-                    "display": "' . $this->patient_name . '"
-                },
-                "encounter": {
-                    "reference": "urn:uuid:' . $this->uuid_encounter . '",
-                    "display": "'. $this->display_encounter . '"
-                },
-                "performedPeriod": {
-                    "start": "' . $this->zonawaktu . '",
-                    "end": "' . $this->zonawaktu . '"
-                },
-                "performer": [
-                    {
-                        "actor": {
-                            "reference": "Practitioner/' . $this->no_ktp_dokter . '",
-                            "display": "' . $this->nama_dokter . '"
-                        }
-                    }
-                ],
-                "reasonCode": [
-                    {
-                        "coding": [
-                            {
-                                "system": "http://hl7.org/fhir/sid/icd-10",
-                                "code": "' . $this->coding_code . '",
-                                "display": "' . $this->coding_display . '"
-                            }
+        return [
+            "fullUrl" => "urn:uuid:".$this->uuid_procedure,
+            "resource" => [
+                "resourceType" => "Procedure",
+                "status" => "completed",
+                "category" => [
+                    "coding" => [
+                        [
+                            "system" => "http://snomed.info/sct",
+                            "code" => "103693007",
+                            "display" => "Diagnostic procedure"
                         ]
-                    }
+                    ],
+                    "text" => "Diagnostic procedure"
+                ],
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://hl7.org/fhir/sid/icd-9-cm",
+                            "code" => $this->code_procedure,
+                            "display" => $this->display_procedure
+                        ]
+                    ]
+                ],
+                "subject" => [
+                    "reference" => "Patient/".$this->ihs_patient,
+                    "display" => $this->patient_name
+                ],
+                "encounter" => [
+                    "reference" => "urn:uuid:".$this->uuid_encounter,
+                    "display" => $this->display_encounter
+                ],
+                "performedPeriod" => [
+                    "start" => $this->zonawaktu,
+                    "end" => $this->zonawaktu
+                ],
+                "performer" => [
+                    [
+                        "actor" => [
+                            "reference" => "Practitioner/".$this->no_ktp_dokter,
+                            "display" => $this->nama_dokter
+                        ]
+                    ]
+                ],
+                "reasonCode" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://hl7.org/fhir/sid/icd-10",
+                                "code" => $this->coding_code,
+                                "display" => $this->coding_display
+                            ]
+                        ]
+                    ]
                 ]
-            },
-            "request": {
-                "method": "POST",
-                "url": "Procedure"
-            }
-        },';
+            ],
+            "request" => [
+                "method" => "POST",
+                "url" => "Procedure"
+            ]
+        ];
     }
 }
