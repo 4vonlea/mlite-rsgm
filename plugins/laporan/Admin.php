@@ -1904,12 +1904,12 @@ class Admin extends AdminModule
         }
 
         echo '<table border="1" cellpadding="3" cellspacing="0">';
-        echo '<tr><td colspan="17"><strong>REKAPITULASI SENSUS HARIAN</strong></td></tr>';
-        echo '<tr><td colspan="17"><strong>RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</strong></td></tr>';
+        echo '<tr><td colspan="18"><strong>REKAPITULASI SENSUS HARIAN</strong></td></tr>';
+        echo '<tr><td colspan="18"><strong>RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</strong></td></tr>';
         echo '<tr>';
         echo '<td colspan="3">Hari: ' . $hari_ini . '</td>';
         echo '<td colspan="7">Poliklinik: ' . $nama_poli . '</td>';
-        echo '<td colspan="7">Periode: ' . $periode_text . '</td>';
+        echo '<td colspan="8">Periode: ' . $periode_text . '</td>';
         echo '</tr>';
 
         echo '<tr>';
@@ -1923,6 +1923,7 @@ class Admin extends AdminModule
         echo '<td align="center" style="background:#e2e8f0;"><strong>ALAMAT</strong></td>';
         echo '<td align="center" style="background:#e2e8f0;"><strong>UNIT</strong></td>';
         echo '<td align="center" style="background:#e2e8f0;"><strong>JENIS KUNJUNGAN</strong></td>';
+        echo '<td align="center" style="background:#e2e8f0;"><strong>JENIS KASUS</strong></td>';
         echo '<td align="center" style="background:#e2e8f0;"><strong>DIAGNOSA</strong></td>';
         echo '<td align="center" style="background:#e2e8f0;"><strong>TINDAKAN</strong></td>';
         echo '<td align="center" style="background:#e2e8f0;"><strong>DOKTER POLI</strong></td>';
@@ -1964,6 +1965,7 @@ class Admin extends AdminModule
             echo '<td valign="top">' . $row['alamat'] . '</td>';
             echo '<td valign="top">' . $row['nm_poli'] . '</td>';
             echo '<td valign="top">' . strtolower($row['stts_daftar']) . '</td>';
+            echo '<td valign="top" align="center">' . strtolower($row['status_poli']) . '</td>';
             echo '<td valign="top">' . nl2br(htmlspecialchars($diagnosa)) . '</td>';
             echo '<td valign="top">' . nl2br(htmlspecialchars($tindakan)) . '</td>';
             echo '<td valign="top">' . $row['nm_dokter'] . '</td>';
@@ -2024,6 +2026,7 @@ class Admin extends AdminModule
                 kl.nm_kel as kelurahan,
                 p.nm_poli,
                 reg_periksa.stts_daftar,
+                reg_periksa.status_poli,
                 penjab.png_jawab,
                 TIMESTAMPDIFF(YEAR, pasien.tgl_lahir, reg_periksa.tgl_registrasi) as umur
             FROM reg_periksa
@@ -2041,11 +2044,11 @@ class Admin extends AdminModule
         $results = $pdo->query($query)->fetchAll(\PDO::FETCH_ASSOC);
 
         echo '<table border="1" cellpadding="3" cellspacing="0">';
-        echo '<tr><td colspan="14"><strong>REKAPITULASI DATA WILAYAH PASIEN</strong></td></tr>';
-        echo '<tr><td colspan="14"><strong>RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</strong></td></tr>';
+        echo '<tr><td colspan="15"><strong>REKAPITULASI DATA WILAYAH PASIEN</strong></td></tr>';
+        echo '<tr><td colspan="15"><strong>RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</strong></td></tr>';
         echo '<tr>';
         echo '<td colspan="7">Poliklinik: ' . $nama_poli . '</td>';
-        echo '<td colspan="7">Periode: ' . $periode_text . '</td>';
+        echo '<td colspan="8">Periode: ' . $periode_text . '</td>';
         echo '</tr>';
 
         echo '<tr>';
@@ -2062,6 +2065,7 @@ class Admin extends AdminModule
         echo '<td align="center" style="background:#e2e8f0;"><strong>KELURAHAN/DESA</strong></td>';
         echo '<td align="center" style="background:#e2e8f0;"><strong>POLIKLINIK</strong></td>';
         echo '<td align="center" style="background:#e2e8f0;"><strong>JENIS KUNJUNGAN</strong></td>';
+        echo '<td align="center" style="background:#e2e8f0;"><strong>JENIS KASUS</strong></td>';
         echo '<td align="center" style="background:#e2e8f0;"><strong>PEMBAYARAN</strong></td>';
         echo '</tr>';
 
@@ -2089,6 +2093,7 @@ class Admin extends AdminModule
             echo '<td valign="top">' . $row['kelurahan'] . '</td>';
             echo '<td valign="top">' . $row['nm_poli'] . '</td>';
             echo '<td valign="top" align="center">' . strtolower($row['stts_daftar']) . '</td>';
+            echo '<td valign="top" align="center">' . strtolower($row['status_poli']) . '</td>';
             echo '<td valign="top" align="center">' . $pembayaran . '</td>';
             echo '</tr>';
         }

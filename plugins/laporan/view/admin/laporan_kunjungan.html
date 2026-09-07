@@ -695,6 +695,7 @@
                                                 <th>Alamat</th>
                                                 <th>Poli/Unit</th>
                                                 <th>Jenis Kunjungan</th>
+                                                <th>Jenis Kasus</th>
                                                 <th>Kelengkapan RM</th>
                                                 <th>Diagnosa</th>
                                                 <th>Tindakan</th>
@@ -723,6 +724,13 @@
                                                     <span class="label label-primary">Baru</span>
                                                     {else}
                                                     <span class="label label-default">Lama</span>
+                                                    {/if}
+                                                </td>
+                                                <td class="text-center">
+                                                    {if: $value.status_poli == 'baru'}
+                                                    <span class="label label-success">Kasus Baru</span>
+                                                    {else}
+                                                    <span class="label label-warning">Kasus Lama</span>
                                                     {/if}
                                                 </td>
                                                 <td style="font-size: 11px; min-width: 170px;">
