@@ -3675,8 +3675,27 @@ class Admin extends AdminModule
         $medId = $obat['no_resep'] . '' . $obat['kode_brng'];
         $medUuid = "urn:uuid:" . $this->gen_uuid();
         $system_cek = 'http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm';
-        if (ctype_digit($obat['satuan_den'])) {
+        $satuan_code = trim(isset($obat['satuan_den']) ? $obat['satuan_den'] : '');
+        $satuan_unit = $satuan_code;
+        if (ctype_digit($satuan_code)) {
           $system_cek = 'http://snomed.info/sct';
+        }
+        if ($satuan_code === '') {
+          $satuan_code = rtrim(isset($obat['satuan_num']) ? trim($obat['satuan_num']) : '', '/');
+          $system_cek = 'http://snomed.info/sct';
+          $snomed_map = [
+            'mg' => '258684004',
+            'ug' => '258685003',
+            '%' => '118582008',
+            'g' => '258682000',
+            'ml' => '258773002',
+          ];
+          if (isset($snomed_map[$satuan_code])) {
+            $satuan_unit = $satuan_code;
+            $satuan_code = $snomed_map[$satuan_code];
+          } else {
+            $satuan_code = '';
+          }
         }
 
         // Parsing aturan pakai
@@ -3761,9 +3780,9 @@ class Admin extends AdminModule
                 [
                   "doseQuantity" => [
                     "value" => $frequency,
-                    "unit" => $obat['satuan_den'],
+                    "unit" => $satuan_unit,
                     "system" => $system_cek,
-                    "code" => $obat['satuan_den']
+                    "code" => $satuan_code
                   ]
                 ]
               ]
@@ -3772,9 +3791,9 @@ class Admin extends AdminModule
           "dispenseRequest" => [
             "quantity" => [
               "value" => $obat['jml'],
-              "unit" => $obat['satuan_den'],
+              "unit" => $satuan_unit,
               "system" => $system_cek,
-              "code" => $obat['satuan_den']
+              "code" => $satuan_code
             ],
             "performer" => [
               "reference" => "Organization/" . $this->organizationid
@@ -3861,8 +3880,27 @@ class Admin extends AdminModule
         $medId = $obat['no_resep'] . '' . $obat['kode_brng'];
         $medUuid = "urn:uuid:" . $this->gen_uuid();
         $system_cek = 'http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm';
-        if (ctype_digit($obat['satuan_den'])) {
+        $satuan_code = trim(isset($obat['satuan_den']) ? $obat['satuan_den'] : '');
+        $satuan_unit = $satuan_code;
+        if (ctype_digit($satuan_code)) {
           $system_cek = 'http://snomed.info/sct';
+        }
+        if ($satuan_code === '') {
+          $satuan_code = rtrim(isset($obat['satuan_num']) ? trim($obat['satuan_num']) : '', '/');
+          $system_cek = 'http://snomed.info/sct';
+          $snomed_map = [
+            'mg' => '258684004',
+            'ug' => '258685003',
+            '%' => '118582008',
+            'g' => '258682000',
+            'ml' => '258773002',
+          ];
+          if (isset($snomed_map[$satuan_code])) {
+            $satuan_unit = $satuan_code;
+            $satuan_code = $snomed_map[$satuan_code];
+          } else {
+            $satuan_code = '';
+          }
         }
 
         // Parsing aturan pakai
@@ -3896,13 +3934,11 @@ class Admin extends AdminModule
           ],
           "status" => "completed",
           "category" => [
-            [
-              "coding" => [
-                [
-                  "system" => "http://terminology.hl7.org/fhir/CodeSystem/medicationdispense-category",
-                  "code" => "outpatient",
-                  "display" => "Outpatient"
-                ]
+            "coding" => [
+              [
+                "system" => "http://terminology.hl7.org/fhir/CodeSystem/medicationdispense-category",
+                "code" => "outpatient",
+                "display" => "Outpatient"
               ]
             ]
           ],
@@ -3935,8 +3971,9 @@ class Admin extends AdminModule
             ]
           ],
           "quantity" => [
+            "unit" => $satuan_unit,
             "system" => $system_cek,
-            "code" => $obat['satuan_den'],
+            "code" => $satuan_code,
             "value" => $obat['jml']
           ],
           "whenPrepared" => $obat['tgl_peresepan'] . 'T' . $obat['jam_peresepan'] . $zonawaktu,
@@ -3965,9 +4002,9 @@ class Admin extends AdminModule
                 [
                   "doseQuantity" => [
                     "value" => $frequency,
-                    "unit" => $obat['satuan_den'],
+                    "unit" => $satuan_unit,
                     "system" => $system_cek,
-                    "code" => $obat['satuan_den']
+                    "code" => $satuan_code
                   ]
                 ]
               ]
@@ -4056,8 +4093,27 @@ class Admin extends AdminModule
         $medId = $obat['no_resep'] . '' . $obat['kode_brng'];
         $medUuid = "urn:uuid:" . $this->gen_uuid();
         $system_cek = 'http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm';
-        if (ctype_digit($obat['satuan_den'])) {
+        $satuan_code = trim(isset($obat['satuan_den']) ? $obat['satuan_den'] : '');
+        $satuan_unit = $satuan_code;
+        if (ctype_digit($satuan_code)) {
           $system_cek = 'http://snomed.info/sct';
+        }
+        if ($satuan_code === '') {
+          $satuan_code = rtrim(isset($obat['satuan_num']) ? trim($obat['satuan_num']) : '', '/');
+          $system_cek = 'http://snomed.info/sct';
+          $snomed_map = [
+            'mg' => '258684004',
+            'ug' => '258685003',
+            '%' => '118582008',
+            'g' => '258682000',
+            'ml' => '258773002',
+          ];
+          if (isset($snomed_map[$satuan_code])) {
+            $satuan_unit = $satuan_code;
+            $satuan_code = $snomed_map[$satuan_code];
+          } else {
+            $satuan_code = '';
+          }
         }
 
         // Parsing aturan pakai
@@ -4086,13 +4142,11 @@ class Admin extends AdminModule
           ],
           "status" => "completed",
           "category" => [
-            [
-              "coding" => [
-                [
-                  "system" => "http://terminology.hl7.org/CodeSystem/medication-statement-category",
-                  "code" => "outpatient",
-                  "display" => "Outpatient"
-                ]
+            "coding" => [
+              [
+                "system" => "http://terminology.hl7.org/CodeSystem/medication-statement-category",
+                "code" => "outpatient",
+                "display" => "Outpatient"
               ]
             ]
           ],
@@ -4120,16 +4174,6 @@ class Admin extends AdminModule
                     "system" => "http://www.whocc.no/atc",
                     "code" => $obat['kode_route'],
                     "display" => $obat['nama_route']
-                  ]
-                ]
-              ],
-              "doseAndRate" => [
-                [
-                  "doseQuantity" => [
-                    "value" => $frequency,
-                    "unit" => $obat['satuan_den'],
-                    "system" => $system_cek,
-                    "code" => $obat['satuan_den']
                   ]
                 ]
               ]
@@ -4250,42 +4294,21 @@ class Admin extends AdminModule
         CURLOPT_TIMEOUT => 0,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . $this->getAccessToken()),
+        CURLOPT_HTTPHEADER => array(
+          'Content-Type: application/json',
+          'Authorization: Bearer ' . $this->getAccessToken(),
+          'If-None-Exist: identifier=http://sys-ids.kemkes.go.id/medication/' . $this->organizationid . '|' . $satu_sehat_mapping_obat['kode_brng'],
+        ),
         CURLOPT_CUSTOMREQUEST => 'POST',
         CURLOPT_POSTFIELDS => $data,
       ));
 
       $response = curl_exec($curl);
+      $http_code = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
       $result = json_decode($response);
 
       $id_medication = isset_or($result->id, '');
       $pesan = 'Gagal mengirim mapping medication platform Satu Sehat!!';
-
-      if (isset($result->issue[0]->code) && $result->issue[0]->code == 'duplicate') {
-        $system = "http://sys-ids.kemkes.go.id/medication/" . $this->organizationid;
-        $value = $satu_sehat_mapping_obat['kode_brng'];
-        $url_get = $this->fhirurl . '/Medication?identifier=' . $system . '|' . $value;
-        
-        $curl_get = curl_init();
-        curl_setopt_array($curl_get, array(
-          CURLOPT_URL => $url_get,
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 0,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_HTTPHEADER => array('Authorization: Bearer ' . $this->getAccessToken()),
-          CURLOPT_CUSTOMREQUEST => 'GET',
-        ));
-        $response_get = curl_exec($curl_get);
-        $result_get = json_decode($response_get);
-        if (isset($result_get->entry[0]->resource->id)) {
-          $id_medication = $result_get->entry[0]->resource->id;
-          $pesan = 'Sukses memperbarui ID mapping medication dari platform Satu Sehat (Duplicate Teratasi)!!';
-        }
-        curl_close($curl_get);
-      }
 
       if ($id_medication) {
         $this->db('mlite_satu_sehat_mapping_obat')
@@ -4293,7 +4316,9 @@ class Admin extends AdminModule
           ->save([
             'id_medication' => $id_medication
           ]);
-        if ($pesan == 'Gagal mengirim mapping medication platform Satu Sehat!!') {
+        if ($http_code == 200) {
+          $pesan = 'Sukses memperbarui ID mapping medication dari platform Satu Sehat (Duplicate Teratasi)!!';
+        } else {
           $pesan = 'Sukses mengirim mapping medication platform Satu Sehat!!';
         }
       }
