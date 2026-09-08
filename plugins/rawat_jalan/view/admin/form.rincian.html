@@ -179,6 +179,10 @@
                 $('#biaya').val(total_byrdr);
                 $('#rawat_jl_dr').show();
                 $('#rawat_jl_pr').hide();
+                if($('#nama_provider').val() == '') {
+                    $('#nama_provider').val($('#nm_dokter_kunjungan').val());
+                    $('#kode_provider').val($('#kd_dokter_kunjungan').val());
+                }
             } else if($('#pilih_provider').val() == 'rawat_jl_pr') {
                 $('#biaya').val(total_byrpr);
                 $('#rawat_jl_dr').hide();
@@ -187,6 +191,10 @@
                 $('#biaya').val(total_byrdrpr);
                 $('#rawat_jl_dr').show();
                 $('#rawat_jl_pr').show();
+                if($('#nama_provider').val() == '') {
+                    $('#nama_provider').val($('#nm_dokter_kunjungan').val());
+                    $('#kode_provider').val($('#kd_dokter_kunjungan').val());
+                }
             }
 
           });
@@ -194,3 +202,5 @@
       });
   });
 </script>
+
+
