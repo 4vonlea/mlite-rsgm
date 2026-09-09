@@ -7393,7 +7393,7 @@ class Admin extends AdminModule
     // Baris per tanggal (termasuk hari tanpa kunjungan → 0)
     for ($d = $start_date; $d <= $end_date; $d = date('Y-m-d', strtotime($d . ' +1 day'))) {
       $agg = isset($day_agg[$d]) ? $day_agg[$d] : null;
-      $serial = (strtotime($d . ' 00:00:00') / 86400) + 25569;
+      $serial = (strtotime($d . ' 00:00:00 UTC') / 86400) + 25569;
       $r = [['v' => $serial, 's' => 6]];
       $dayTotal = 0;
       foreach ($RESOURCE_KEYS as $key) {
