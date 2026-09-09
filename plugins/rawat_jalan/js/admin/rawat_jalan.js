@@ -1020,6 +1020,36 @@ $("#rincian").on("click",".hapus_detail", function(event){
   });
 });
 
+// ketika tombol hapus semua ditekan
+$("#rincian").on("click",".hapus_semua_detail", function(event){
+  var baseURL = mlite.url + '/' + mlite.admin;
+  event.preventDefault();
+  var url = baseURL + '/rawat_jalan/hapussemuadetail?t=' + mlite.token;
+  var no_rawat = $(this).attr("data-no_rawat");
+
+  // tampilkan dialog konfirmasi
+  bootbox.confirm("Apakah Anda yakin ingin menghapus semua rincian tindakan ini?", function(result){
+    // ketika ditekan tombol ok
+    if (result){
+      // mengirimkan perintah penghapusan
+      $.post(url, {
+        no_rawat: no_rawat
+      } ,function(data) {
+        var url = baseURL + '/rawat_jalan/rincian?t=' + mlite.token;
+        $.post(url, {no_rawat : no_rawat,
+        }, function(data) {
+          // tampilkan data
+          $("#rincian").html(data).show();
+        });
+        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+        "Semua data rincian rawat jalan telah dihapus!"+
+        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+        "</div>").show();
+      });
+    }
+  });
+});
+
 // ketika tombol simpan diklik
 $("#form_kontrol").on("click", "#simpan_kontrol", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
@@ -1461,6 +1491,55 @@ $(document).on('click', 'a[href="#hapus_rujukan_internal"]', function(event){
   event.stopPropagation();
   return false;
 });
+
+$(document).on('click', 'a[href="#ubah_dokter"]', function(event){
+  var baseURL = mlite.url + '/' + mlite.admin;
+  event.preventDefault();
+  var no_rawat = $(this).attr("data-no_rawat");
+  var kd_dokter = $(this).attr("data-kd_dokter");
+  var url = baseURL + '/rawat_jalan/ubahdokter?t=' + mlite.token;
+
+  var selectHtml = $('#hidden_dokter_select').html();
+  
+  bootbox.dialog({
+    title: "Ubah Dokter Kunjungan",
+    message: "<p>Silahkan pilih dokter pengganti:</p>" + selectHtml,
+    buttons: {
+      cancel: {
+        label: "Batal",
+        className: 'btn-default'
+      },
+      ok: {
+        label: "Simpan",
+        className: 'btn-primary',
+        callback: function() {
+          var new_kd_dokter = $('.bootbox #pilih_ubah_dokter').val();
+          $.post(url, {
+            no_rawat: no_rawat,
+            kd_dokter: new_kd_dokter
+          }, function(data) {
+            var res = JSON.parse(data);
+            if(res.status == 'success') {
+              $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+              res.message+
+              "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+              "</div>").show();
+              $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+            } else {
+              bootbox.alert(res.message);
+            }
+          });
+        }
+      }
+    }
+  });
+  
+  $('.bootbox #pilih_ubah_dokter').val(kd_dokter);
+  $('.bootbox select').selectator();
+  event.stopPropagation();
+  return false;
+});
+
 
 {if: $mlite.websocket == 'ya'}
 
