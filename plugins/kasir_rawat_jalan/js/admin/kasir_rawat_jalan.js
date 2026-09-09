@@ -4,22 +4,22 @@ $("#notif").hide();
 $('#provider').hide();
 $('#aturan_pakai').hide();
 
-$('#manage').on('click', '#submit_periode_rawat_jalan', function(event){
+$('#manage').on('click', '#submit_periode_rawat_jalan', function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
-  var url    = baseURL + '/kasir_rawat_jalan/display?t=' + mlite.token;
-  var periode_rawat_jalan  = $('input:text[name=periode_rawat_jalan]').val();
-  var periode_rawat_jalan_akhir  = $('input:text[name=periode_rawat_jalan_akhir]').val();
+  var url = baseURL + '/kasir_rawat_jalan/display?t=' + mlite.token;
+  var periode_rawat_jalan = $('input:text[name=periode_rawat_jalan]').val();
+  var periode_rawat_jalan_akhir = $('input:text[name=periode_rawat_jalan_akhir]').val();
 
-  if(periode_rawat_jalan == '') {
+  if (periode_rawat_jalan == '') {
     alert('Tanggal awal masih kosong!')
   }
-  if(periode_rawat_jalan_akhir == '') {
+  if (periode_rawat_jalan_akhir == '') {
     alert('Tanggal akhir masih kosong!')
   }
 
-  $.post(url, {periode_rawat_jalan: periode_rawat_jalan, periode_rawat_jalan_akhir: periode_rawat_jalan_akhir} ,function(data) {
-  // tampilkan data
+  $.post(url, { periode_rawat_jalan: periode_rawat_jalan, periode_rawat_jalan_akhir: periode_rawat_jalan_akhir }, function (data) {
+    // tampilkan data
     $("#form").show();
     $("#display").html(data).show();
     $("#form_rincian").hide();
@@ -34,23 +34,23 @@ $('#manage').on('click', '#submit_periode_rawat_jalan', function(event){
 
 });
 
-$('#manage').on('click', '#belum_periode_rawat_jalan', function(event){
+$('#manage').on('click', '#belum_periode_rawat_jalan', function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
-  var url    = baseURL + '/kasir_rawat_jalan/display?t=' + mlite.token;
-  var periode_rawat_jalan  = $('input:text[name=periode_rawat_jalan]').val();
-  var periode_rawat_jalan_akhir  = $('input:text[name=periode_rawat_jalan_akhir]').val();
+  var url = baseURL + '/kasir_rawat_jalan/display?t=' + mlite.token;
+  var periode_rawat_jalan = $('input:text[name=periode_rawat_jalan]').val();
+  var periode_rawat_jalan_akhir = $('input:text[name=periode_rawat_jalan_akhir]').val();
   var status_periksa = 'belum';
 
-  if(periode_rawat_jalan == '') {
+  if (periode_rawat_jalan == '') {
     alert('Tanggal awal masih kosong!')
   }
-  if(periode_rawat_jalan_akhir == '') {
+  if (periode_rawat_jalan_akhir == '') {
     alert('Tanggal akhir masih kosong!')
   }
 
-  $.post(url, {periode_rawat_jalan: periode_rawat_jalan, periode_rawat_jalan_akhir: periode_rawat_jalan_akhir, status_periksa: status_periksa} ,function(data) {
-  // tampilkan data
+  $.post(url, { periode_rawat_jalan: periode_rawat_jalan, periode_rawat_jalan_akhir: periode_rawat_jalan_akhir, status_periksa: status_periksa }, function (data) {
+    // tampilkan data
     $("#form").show();
     $("#display").html(data).show();
     $("#form_rincian").hide();
@@ -65,23 +65,23 @@ $('#manage').on('click', '#belum_periode_rawat_jalan', function(event){
 
 });
 
-$('#manage').on('click', '#selesai_periode_rawat_jalan', function(event){
+$('#manage').on('click', '#selesai_periode_rawat_jalan', function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
-  var url    = baseURL + '/kasir_rawat_jalan/display?t=' + mlite.token;
-  var periode_rawat_jalan  = $('input:text[name=periode_rawat_jalan]').val();
-  var periode_rawat_jalan_akhir  = $('input:text[name=periode_rawat_jalan_akhir]').val();
+  var url = baseURL + '/kasir_rawat_jalan/display?t=' + mlite.token;
+  var periode_rawat_jalan = $('input:text[name=periode_rawat_jalan]').val();
+  var periode_rawat_jalan_akhir = $('input:text[name=periode_rawat_jalan_akhir]').val();
   var status_periksa = 'selesai';
 
-  if(periode_rawat_jalan == '') {
+  if (periode_rawat_jalan == '') {
     alert('Tanggal awal masih kosong!')
   }
-  if(periode_rawat_jalan_akhir == '') {
+  if (periode_rawat_jalan_akhir == '') {
     alert('Tanggal akhir masih kosong!')
   }
 
-  $.post(url, {periode_rawat_jalan: periode_rawat_jalan, periode_rawat_jalan_akhir: periode_rawat_jalan_akhir, status_periksa: status_periksa} ,function(data) {
-  // tampilkan data
+  $.post(url, { periode_rawat_jalan: periode_rawat_jalan, periode_rawat_jalan_akhir: periode_rawat_jalan_akhir, status_periksa: status_periksa }, function (data) {
+    // tampilkan data
     $("#form").show();
     $("#display").html(data).show();
     $("#form_rincian").hide();
@@ -96,23 +96,23 @@ $('#manage').on('click', '#selesai_periode_rawat_jalan', function(event){
 
 });
 
-$('#manage').on('click', '#lunas_periode_rawat_jalan', function(event){
+$('#manage').on('click', '#lunas_periode_rawat_jalan', function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
-  var url    = baseURL + '/kasir_rawat_jalan/display?t=' + mlite.token;
-  var periode_rawat_jalan  = $('input:text[name=periode_rawat_jalan]').val();
-  var periode_rawat_jalan_akhir  = $('input:text[name=periode_rawat_jalan_akhir]').val();
+  var url = baseURL + '/kasir_rawat_jalan/display?t=' + mlite.token;
+  var periode_rawat_jalan = $('input:text[name=periode_rawat_jalan]').val();
+  var periode_rawat_jalan_akhir = $('input:text[name=periode_rawat_jalan_akhir]').val();
   var status_periksa = 'lunas';
 
-  if(periode_rawat_jalan == '') {
+  if (periode_rawat_jalan == '') {
     alert('Tanggal awal masih kosong!')
   }
-  if(periode_rawat_jalan_akhir == '') {
+  if (periode_rawat_jalan_akhir == '') {
     alert('Tanggal akhir masih kosong!')
   }
 
-  $.post(url, {periode_rawat_jalan: periode_rawat_jalan, periode_rawat_jalan_akhir: periode_rawat_jalan_akhir, status_periksa: status_periksa} ,function(data) {
-  // tampilkan data
+  $.post(url, { periode_rawat_jalan: periode_rawat_jalan, periode_rawat_jalan_akhir: periode_rawat_jalan_akhir, status_periksa: status_periksa }, function (data) {
+    // tampilkan data
     $("#form").show();
     $("#display").html(data).show();
     $("#form_rincian").hide();
@@ -128,7 +128,7 @@ $('#manage').on('click', '#lunas_periode_rawat_jalan', function(event){
 });
 
 // tombol batal diklik
-$("#rincian").on("click", "#selesai", function(event){
+$("#rincian").on("click", "#selesai", function (event) {
   bersih();
   $("#form_rincian").hide();
   $("#form_soap").hide();
@@ -139,22 +139,27 @@ $("#rincian").on("click", "#selesai", function(event){
 });
 
 // ketika baris data diklik
-$("#display").on("click", ".layanan_obat", function(event){
+$("#display").on("click", ".layanan_obat", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
 
   var no_rawat = $(this).attr("data-no_rawat");
   var no_rkm_medis = $(this).attr("data-no_rkm_medis");
   var nm_pasien = $(this).attr("data-nm_pasien");
+  var tgl_registrasi = $(this).attr("data-tgl_registrasi");
+  var jam_reg = $(this).attr("data-jam_reg");
 
   $('input:text[name=no_rawat]').val(no_rawat);
   $('input:text[name=no_rkm_medis]').val(no_rkm_medis);
   $('input:text[name=nm_pasien]').val(nm_pasien);
+  $('#tgl_registrasi_hidden').val(tgl_registrasi);
+  $('#jam_reg_hidden').val(jam_reg);
   $("#display").hide();
 
   var url = baseURL + '/kasir_rawat_jalan/rincian?t=' + mlite.token;
-  $.post(url, {no_rawat : no_rawat,
-  }, function(data) {
+  $.post(url, {
+    no_rawat: no_rawat,
+  }, function (data) {
     // tampilkan data
     $("#form_rincian").show();
     $("#form").hide();
@@ -164,91 +169,91 @@ $("#display").on("click", ".layanan_obat", function(event){
 });
 
 // ketika inputbox pencarian diisi
-$('input:text[name=layanan]').on('input',function(e){
+$('input:text[name=layanan]').on('input', function (e) {
   var baseURL = mlite.url + '/' + mlite.admin;
-  var url    = baseURL + '/kasir_rawat_jalan/layanan?t=' + mlite.token;
+  var url = baseURL + '/kasir_rawat_jalan/layanan?t=' + mlite.token;
   var layanan = $('input:text[name=layanan]').val();
 
-  if(layanan!="") {
-      $.post(url, {layanan: layanan} ,function(data) {
+  if (layanan != "") {
+    $.post(url, { layanan: layanan }, function (data) {
       // tampilkan data yang sudah di perbaharui
-        $("#layanan").html(data).show();
-        $("#obat").hide();
-        $("#radiologi").hide();
-        $("#laboratorium").hide();
-        $('#biaya').attr("readonly", true);
-        $('#nm_perawatan').attr("readonly", true);
-      });
+      $("#layanan").html(data).show();
+      $("#obat").hide();
+      $("#radiologi").hide();
+      $("#laboratorium").hide();
+      $('#biaya').attr("readonly", true);
+      $('#nm_perawatan').attr("readonly", true);
+    });
   }
 
 });
 // end pencarian
 
 // ketika inputbox pencarian diisi
-$('input:text[name=obat]').on('input',function(e){
+$('input:text[name=obat]').on('input', function (e) {
   var baseURL = mlite.url + '/' + mlite.admin;
-  var url    = baseURL + '/kasir_rawat_jalan/obat?t=' + mlite.token;
+  var url = baseURL + '/kasir_rawat_jalan/obat?t=' + mlite.token;
   var obat = $('input:text[name=obat]').val();
 
-  if(obat!="") {
-      $.post(url, {obat: obat} ,function(data) {
+  if (obat != "") {
+    $.post(url, { obat: obat }, function (data) {
       // tampilkan data yang sudah di perbaharui
-        $("#obat").html(data).show();
-        $("#layanan").hide();
-        $("#radiologi").hide();
-        $("#laboratorium").hide();
-        $('#biaya').attr("readonly", true);
-        $('#nm_perawatan').attr("readonly", true);
-      });
+      $("#obat").html(data).show();
+      $("#layanan").hide();
+      $("#radiologi").hide();
+      $("#laboratorium").hide();
+      $('#biaya').attr("readonly", true);
+      $('#nm_perawatan').attr("readonly", true);
+    });
   }
 
 });
 // end pencarian
 
 // ketika inputbox pencarian diisi
-$('input:text[name=laboratorium]').on('input',function(e){
+$('input:text[name=laboratorium]').on('input', function (e) {
   var baseURL = mlite.url + '/' + mlite.admin;
-  var url    = baseURL + '/kasir_rawat_jalan/laboratorium?t=' + mlite.token;
+  var url = baseURL + '/kasir_rawat_jalan/laboratorium?t=' + mlite.token;
   var laboratorium = $('input:text[name=laboratorium]').val();
 
-  if(laboratorium!="") {
-      $.post(url, {laboratorium: laboratorium} ,function(data) {
+  if (laboratorium != "") {
+    $.post(url, { laboratorium: laboratorium }, function (data) {
       // tampilkan data yang sudah di perbaharui
-        $("#laboratorium").html(data).show();
-        $("#layanan").hide();
-        $("#obat").hide();
-        $("#radiologi").hide();
-        $('#biaya').attr("readonly", true);
-        $('#nm_perawatan').attr("readonly", true);
-      });
+      $("#laboratorium").html(data).show();
+      $("#layanan").hide();
+      $("#obat").hide();
+      $("#radiologi").hide();
+      $('#biaya').attr("readonly", true);
+      $('#nm_perawatan').attr("readonly", true);
+    });
   }
 
 });
 // end pencarian
 
 // ketika inputbox pencarian diisi
-$('input:text[name=radiologi]').on('input',function(e){
+$('input:text[name=radiologi]').on('input', function (e) {
   var baseURL = mlite.url + '/' + mlite.admin;
-  var url    = baseURL + '/kasir_rawat_jalan/radiologi?t=' + mlite.token;
+  var url = baseURL + '/kasir_rawat_jalan/radiologi?t=' + mlite.token;
   var radiologi = $('input:text[name=radiologi]').val();
 
-  if(radiologi!="") {
-      $.post(url, {radiologi: radiologi} ,function(data) {
+  if (radiologi != "") {
+    $.post(url, { radiologi: radiologi }, function (data) {
       // tampilkan data yang sudah di perbaharui
-        $("#radiologi").html(data).show();
-        $("#layanan").hide();
-        $("#obat").hide();
-        $("#laboratorium").hide();
-        $('#biaya').attr("readonly", true);
-        $('#nm_perawatan').attr("readonly", true);
-      });
+      $("#radiologi").html(data).show();
+      $("#layanan").hide();
+      $("#obat").hide();
+      $("#laboratorium").hide();
+      $('#biaya').attr("readonly", true);
+      $('#nm_perawatan').attr("readonly", true);
+    });
   }
 
 });
 // end pencarian
 
 // ketika baris data diklik
-$("#layanan").on("click", ".pilih_layanan", function(event){
+$("#layanan").on("click", ".pilih_layanan", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
 
@@ -268,7 +273,7 @@ $("#layanan").on("click", ".pilih_layanan", function(event){
 });
 
 // ketika baris data diklik
-$("#obat").on("click", ".pilih_obat", function(event){
+$("#obat").on("click", ".pilih_obat", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
 
@@ -298,7 +303,7 @@ $("#obat").on("click", ".pilih_obat", function(event){
 });
 
 // ketika baris data diklik
-$("#laboratorium").on("click", ".pilih_laboratorium", function(event){
+$("#laboratorium").on("click", ".pilih_laboratorium", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
 
@@ -318,7 +323,7 @@ $("#laboratorium").on("click", ".pilih_laboratorium", function(event){
 });
 
 // ketika baris data diklik
-$("#radiologi").on("click", ".pilih_radiologi", function(event){
+$("#radiologi").on("click", ".pilih_radiologi", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
 
@@ -338,45 +343,47 @@ $("#radiologi").on("click", ".pilih_radiologi", function(event){
 });
 
 // ketika tombol simpan diklik
-$("#form_rincian").on("click", "#simpan_rincian", function(event){
+$("#form_rincian").on("click", "#simpan_rincian", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
 
-  var no_rawat        = $('input:text[name=no_rawat]').val();
-  var kd_jenis_prw 	  = $('input:hidden[name=kd_jenis_prw]').val();
-  var nm_perawatan    = $('input:text[name=nm_perawatan]').val();
-  var provider        = $('select[name=provider]').val();
-  var kode_provider   = $('input:text[name=kode_provider]').val();
-  var kode_provider2   = $('input:text[name=kode_provider2]').val();
-  var tgl_perawatan   = $('input:text[name=tgl_billing]').val();
-  var jam_rawat       = $('input:text[name=jam_billing]').val();
-  var biaya           = $('input:text[name=biaya]').val();
-  var aturan_pakai    = $('input:text[name=aturan_pakai]').val();
-  var kat             = $('input:hidden[name=kat]').val();
-  var jml             = $('input:text[name=jml]').val();
-  var jml_tindakan    = $('input:text[name=jml_tindakan]').val();
+  var no_rawat = $('input:text[name=no_rawat]').val();
+  var kd_jenis_prw = $('input:hidden[name=kd_jenis_prw]').val();
+  var nm_perawatan = $('input:text[name=nm_perawatan]').val();
+  var provider = $('select[name=provider]').val();
+  var kode_provider = $('input:text[name=kode_provider]').val();
+  var kode_provider2 = $('input:text[name=kode_provider2]').val();
+  var tgl_perawatan = $('input:text[name=tgl_billing]').val();
+  var jam_rawat = $('input:text[name=jam_billing]').val();
+  var biaya = $('input:text[name=biaya]').val();
+  var aturan_pakai = $('input:text[name=aturan_pakai]').val();
+  var kat = $('input:hidden[name=kat]').val();
+  var jml = $('input:text[name=jml]').val();
+  var jml_tindakan = $('input:text[name=jml_tindakan]').val();
   // console.log(jml_tindakan);
   var url = baseURL + '/kasir_rawat_jalan/savedetail?t=' + mlite.token;
-  $.post(url, {no_rawat : no_rawat,
-  kd_jenis_prw   : kd_jenis_prw,
-  nm_perawatan   : nm_perawatan,
-  provider       : provider,
-  kode_provider  : kode_provider,
-  kode_provider2 : kode_provider2,
-  tgl_perawatan  : tgl_perawatan,
-  jam_rawat      : jam_rawat,
-  biaya          : biaya,
-  aturan_pakai   : aturan_pakai,
-  kat            : kat,
-  jml            : jml,
-  jml_tindakan   : jml_tindakan
-  }, function(data) {
+  $.post(url, {
+    no_rawat: no_rawat,
+    kd_jenis_prw: kd_jenis_prw,
+    nm_perawatan: nm_perawatan,
+    provider: provider,
+    kode_provider: kode_provider,
+    kode_provider2: kode_provider2,
+    tgl_perawatan: tgl_perawatan,
+    jam_rawat: jam_rawat,
+    biaya: biaya,
+    aturan_pakai: aturan_pakai,
+    kat: kat,
+    jml: jml,
+    jml_tindakan: jml_tindakan
+  }, function (data) {
     console.log(data);
     // tampilkan data
     $("#display").hide();
     var url = baseURL + '/kasir_rawat_jalan/rincian?t=' + mlite.token;
-    $.post(url, {no_rawat : no_rawat,
-    }, function(data) {
+    $.post(url, {
+      no_rawat: no_rawat,
+    }, function (data) {
       // tampilkan data
       $("#rincian").html(data).show();
     });
@@ -393,15 +400,15 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
     $('input:text[name=kode_provider]').val("");
     $('input:text[name=kode_provider2]').val("");
     $('input:text[name=jml_tindakan]').val(1);
-    $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-    "Data pasien telah disimpan!"+
-    "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
-    "</div>").show();
+    $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
+      "Data pasien telah disimpan!" +
+      "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
+      "</div>").show();
   });
 });
 
 // ketika tombol hapus ditekan
-$("#rincian").on("click",".hapus_detail", function(event){
+$("#rincian").on("click", ".hapus_detail", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
   var url = baseURL + '/kasir_rawat_jalan/hapusdetail?t=' + mlite.token;
@@ -412,9 +419,9 @@ $("#rincian").on("click",".hapus_detail", function(event){
   var provider = $(this).attr("data-provider");
 
   // tampilkan dialog konfirmasi
-  bootbox.confirm("Apakah Anda yakin ingin menghapus data ini?", function(result){
+  bootbox.confirm("Apakah Anda yakin ingin menghapus data ini?", function (result) {
     // ketika ditekan tombol ok
-    if (result){
+    if (result) {
       // mengirimkan perintah penghapusan
       $.post(url, {
         no_rawat: no_rawat,
@@ -422,24 +429,25 @@ $("#rincian").on("click",".hapus_detail", function(event){
         tgl_perawatan: tgl_perawatan,
         jam_rawat: jam_rawat,
         provider: provider
-      } ,function(data) {
+      }, function (data) {
         var url = baseURL + '/kasir_rawat_jalan/rincian?t=' + mlite.token;
-        $.post(url, {no_rawat : no_rawat,
-        }, function(data) {
+        $.post(url, {
+          no_rawat: no_rawat,
+        }, function (data) {
           // tampilkan data
           $("#rincian").html(data).show();
         });
-        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-        "Data rincian rawat jalan telah dihapus!"+
-        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
-        "</div>").show();
+        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
+          "Data rincian rawat jalan telah dihapus!" +
+          "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
+          "</div>").show();
       });
     }
   });
 });
 
 // ketika tombol hapus ditekan
-$("#rincian").on("click",".hapus_obat", function(event){
+$("#rincian").on("click", ".hapus_obat", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
   var url = baseURL + '/kasir_rawat_jalan/hapusobat?t=' + mlite.token;
@@ -451,9 +459,9 @@ $("#rincian").on("click",".hapus_obat", function(event){
   var jml = $(this).attr("data-jml");
 
   // tampilkan dialog konfirmasi
-  bootbox.confirm("Apakah Anda yakin ingin menghapus data ini?", function(result){
+  bootbox.confirm("Apakah Anda yakin ingin menghapus data ini?", function (result) {
     // ketika ditekan tombol ok
-    if (result){
+    if (result) {
       // mengirimkan perintah penghapusan
       $.post(url, {
         kode_brng: kode_brng,
@@ -462,24 +470,25 @@ $("#rincian").on("click",".hapus_obat", function(event){
         tgl_peresepan: tgl_peresepan,
         jam_peresepan: jam_peresepan,
         jml: jml
-      } ,function(data) {
+      }, function (data) {
         var url = baseURL + '/kasir_rawat_jalan/rincian?t=' + mlite.token;
-        $.post(url, {no_rawat : no_rawat,
-        }, function(data) {
+        $.post(url, {
+          no_rawat: no_rawat,
+        }, function (data) {
           // tampilkan data
           $("#rincian").html(data).show();
         });
-        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-        "Data rincian obat rawat jalan telah dihapus!"+
-        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
-        "</div>").show();
+        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
+          "Data rincian obat rawat jalan telah dihapus!" +
+          "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
+          "</div>").show();
       });
     }
   });
 });
 
 // ketika tombol hapus ditekan
-$("#rincian").on("click",".hapus_laboratorium", function(event){
+$("#rincian").on("click", ".hapus_laboratorium", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
   var url = baseURL + '/kasir_rawat_jalan/hapuslaboratorium?t=' + mlite.token;
@@ -490,9 +499,9 @@ $("#rincian").on("click",".hapus_laboratorium", function(event){
   var provider = $(this).attr("data-provider");
 
   // tampilkan dialog konfirmasi
-  bootbox.confirm("Apakah Anda yakin ingin menghapus data ini?", function(result){
+  bootbox.confirm("Apakah Anda yakin ingin menghapus data ini?", function (result) {
     // ketika ditekan tombol ok
-    if (result){
+    if (result) {
       // mengirimkan perintah penghapusan
       $.post(url, {
         no_rawat: no_rawat,
@@ -500,24 +509,25 @@ $("#rincian").on("click",".hapus_laboratorium", function(event){
         tgl_perawatan: tgl_perawatan,
         jam_rawat: jam_rawat,
         provider: provider
-      } ,function(data) {
+      }, function (data) {
         var url = baseURL + '/kasir_rawat_jalan/rincian?t=' + mlite.token;
-        $.post(url, {no_rawat : no_rawat,
-        }, function(data) {
+        $.post(url, {
+          no_rawat: no_rawat,
+        }, function (data) {
           // tampilkan data
           $("#rincian").html(data).show();
         });
-        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-        "Data rincian rawat jalan telah dihapus!"+
-        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
-        "</div>").show();
+        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
+          "Data rincian rawat jalan telah dihapus!" +
+          "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
+          "</div>").show();
       });
     }
   });
 });
 
 // ketika tombol hapus ditekan
-$("#rincian").on("click",".hapus_radiologi", function(event){
+$("#rincian").on("click", ".hapus_radiologi", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
   var url = baseURL + '/kasir_rawat_jalan/hapusradiologi?t=' + mlite.token;
@@ -528,9 +538,9 @@ $("#rincian").on("click",".hapus_radiologi", function(event){
   var provider = $(this).attr("data-provider");
 
   // tampilkan dialog konfirmasi
-  bootbox.confirm("Apakah Anda yakin ingin menghapus data ini?", function(result){
+  bootbox.confirm("Apakah Anda yakin ingin menghapus data ini?", function (result) {
     // ketika ditekan tombol ok
-    if (result){
+    if (result) {
       // mengirimkan perintah penghapusan
       $.post(url, {
         no_rawat: no_rawat,
@@ -538,50 +548,49 @@ $("#rincian").on("click",".hapus_radiologi", function(event){
         tgl_perawatan: tgl_perawatan,
         jam_rawat: jam_rawat,
         provider: provider
-      } ,function(data) {
+      }, function (data) {
         var url = baseURL + '/kasir_rawat_jalan/rincian?t=' + mlite.token;
-        $.post(url, {no_rawat : no_rawat,
-        }, function(data) {
+        $.post(url, {
+          no_rawat: no_rawat,
+        }, function (data) {
           // tampilkan data
           $("#rincian").html(data).show();
         });
-        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-        "Data rincian rawat jalan telah dihapus!"+
-        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
-        "</div>").show();
+        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
+          "Data rincian rawat jalan telah dihapus!" +
+          "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
+          "</div>").show();
       });
     }
   });
 });
 
 // ketika inputbox potongan faktur diisi
-$("#rincian").on("input","#potongan_faktur2", function(event){
+$("#rincian").on("input", "#potongan_faktur2", function (event) {
   event.preventDefault();
 
   var jumlah_total_belanja = $('input:text[name=jumlah_total]').val()
-  var potongan_faktur      = $('input:text[name=potongan_faktur]').val();
-  potongan_faktur = potongan_faktur.replace(/\.|R|p/g,'');
-  var jumlah_diskon               = (Number(jumlah_total_belanja)) - (Number(potongan_faktur));
+  var potongan_faktur = $('input:text[name=potongan_faktur]').val();
+  potongan_faktur = potongan_faktur.replace(/\.|R|p/g, '');
+  var jumlah_diskon = (Number(jumlah_total_belanja)) - (Number(potongan_faktur));
 
   $('input:text[name=jumlah_harus_bayar]').val(jumlah_diskon);
   $('input:text[name=terbilang_jumlah_harus_bayar]').val(terbilang(Number(jumlah_diskon)));
 
 
-  var jumlah_bayar        = $('input:text[name=jumlah_bayar]').val();
-  jumlah_bayar = jumlah_bayar.replace(/\.|R|p/g,'')
-  var kembalian           = (Number(jumlah_bayar)) - (Number(jumlah_diskon));
+  var jumlah_bayar = $('input:text[name=jumlah_bayar]').val();
+  jumlah_bayar = jumlah_bayar.replace(/\.|R|p/g, '')
+  var kembalian = (Number(jumlah_bayar)) - (Number(jumlah_diskon));
 
-  if (kembalian  < 0 ){
+  if (kembalian < 0) {
     $('input:text[name=kembalian]').val("");
     $('input:text[name=terbilang_kembalian]').val("Kurang Bayar");
   }
-  else if (jumlah_bayar == "" || jumlah_bayar == 0)
-  {
+  else if (jumlah_bayar == "" || jumlah_bayar == 0) {
     $('input:text[name=kembalian]').val(0);
     $('input:text[name=jumlah_bayar]').val(0);
     $('input:text[name=terbilang_kembalian]').val("");
-  } else
-  {
+  } else {
     $('input:text[name=kembalian]').val(kembalian);
     $('input:text[name=terbilang_kembalian]').val(terbilang(Number(kembalian)));
   }
@@ -589,25 +598,23 @@ $("#rincian").on("input","#potongan_faktur2", function(event){
 // end potongan faktur
 
 // ketika inputbox jumlah bayar diisi
-$("#rincian").on("input","#jumlah_bayar2", function(event){
+$("#rincian").on("input", "#jumlah_bayar2", function (event) {
   event.preventDefault();
 
-  var jumlah_harus_bayar  = $('input:text[name=jumlah_harus_bayar]').val();
-  var jumlah_bayar        = $('input:text[name=jumlah_bayar]').val();
-    jumlah_bayar = jumlah_bayar.replace(/\.|R|p/g,'')
-  var kembalian           = (Number(jumlah_bayar)) - (Number(jumlah_harus_bayar));
+  var jumlah_harus_bayar = $('input:text[name=jumlah_harus_bayar]').val();
+  var jumlah_bayar = $('input:text[name=jumlah_bayar]').val();
+  jumlah_bayar = jumlah_bayar.replace(/\.|R|p/g, '')
+  var kembalian = (Number(jumlah_bayar)) - (Number(jumlah_harus_bayar));
 
-  if (kembalian  < 0 ){
+  if (kembalian < 0) {
     $('input:text[name=kembalian]').val("");
     $('input:text[name=terbilang_kembalian]').val("Kurang Bayar");
   }
-  else if (jumlah_bayar == "" || jumlah_bayar == 0)
-  {
+  else if (jumlah_bayar == "" || jumlah_bayar == 0) {
     $('input:text[name=kembalian]').val(0);
     $('input:text[name=jumlah_bayar]').val(0);
     $('input:text[name=terbilang_kembalian]').val("");
-  } else
-  {
+  } else {
     $('input:text[name=kembalian]').val(kembalian);
     $('input:text[name=terbilang_kembalian]').val(terbilang(Number(kembalian)));
   }
@@ -616,69 +623,81 @@ $("#rincian").on("input","#jumlah_bayar2", function(event){
 // end jumlah bayar
 
 // tombol simpan semua yang dibawah di klick
-$("#rincian").on("click","#simpan_billing", function(event){
+$("#rincian").on("click", "#simpan_billing", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
-  var kd_billing        = $('input:text[name=kd_billing]').val();
-  var no_rawat          = $('input:text[name=no_rawat]').val();
-  var jumlah_total       = $('input:text[name=jumlah_total]').val();
-  var potongan_faktur    = $('input:text[name=potongan_faktur]').val();
-    potongan_faktur = potongan_faktur.replace(/\.|R|p/g,'')
+  var kd_billing = $('input:text[name=kd_billing]').val();
+  var no_rawat = $('input:text[name=no_rawat]').val();
+  var jumlah_total = $('input:text[name=jumlah_total]').val();
+  var potongan_faktur = $('input:text[name=potongan_faktur]').val();
+  potongan_faktur = potongan_faktur.replace(/\.|R|p/g, '')
   var jumlah_harus_bayar = $('input:text[name=jumlah_harus_bayar]').val();
-  var jumlah_bayar       = $('input:text[name=jumlah_bayar]').val();
-    jumlah_bayar = jumlah_bayar.replace(/\.|R|p/g,'')
-  var tgl_billing            = $('#tgl_billing').val();
-  var jam_billing            = $('#jam_billing').val();
-  var keterangan         = $('select[name=keterangan]').val();
-  var jurnal_pendaftaran            = $('#jurnal_pendaftaran').text();
-  var jurnal_tindakan_ralan            = $('#jurnal_tindakan_ralan').text();
-  var jurnal_obat_bhp           = $('#jurnal_obat_bhp').text();
-  var jurnal_laboratorium            = $('#jurnal_laboratorium').text();
-  var jurnal_radiologi            = $('#jurnal_radiologi').text();
-  if 	(potongan_faktur == "" )
-  {
-    alert ("potongan belum diisi ");
+  var jumlah_bayar = $('input:text[name=jumlah_bayar]').val();
+  jumlah_bayar = jumlah_bayar.replace(/\.|R|p/g, '')
+  var tgl_billing = $('#tgl_billing').val();
+  var jam_billing = $('#jam_billing').val();
+  var keterangan = $('select[name=keterangan]').val();
+  var jurnal_pendaftaran = $('#jurnal_pendaftaran').text();
+  var jurnal_tindakan_ralan = $('#jurnal_tindakan_ralan').text();
+  var jurnal_obat_bhp = $('#jurnal_obat_bhp').text();
+  var jurnal_laboratorium = $('#jurnal_laboratorium').text();
+  var jurnal_radiologi = $('#jurnal_radiologi').text();
+
+  var tgl_registrasi = $('#tgl_registrasi_hidden').val();
+  var jam_reg = $('#jam_reg_hidden').val();
+  var datetime_billing = new Date(tgl_billing + 'T' + jam_billing);
+  var datetime_reg = new Date(tgl_registrasi + 'T' + jam_reg);
+
+  if (potongan_faktur == "") {
+    alert("potongan belum diisi ");
     $('input:text[name=potongan_faktur]').focus();
 
   }
-  else if ( Number(jumlah_bayar) < Number(jumlah_harus_bayar && keterangan != 'Tunai'))
-  {
-    alert ("Jumlah bayar masih kurang ! ");
+  else if (Number(jumlah_bayar) < Number(jumlah_harus_bayar && keterangan != 'Tunai')) {
+    alert("Jumlah bayar masih kurang ! ");
     $('input:text[name=jumlah_bayar]').focus();
   }
-  else
-  {
+  else if (datetime_billing < datetime_reg) {
+    $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
+      "Tanggal dan jam faktur tidak boleh sebelum tanggal dan jam kunjungan!" +
+      "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
+      "</div>").show();
+    $('html, body').animate({ scrollTop: 0 }, 'fast');
+  }
+  else {
     // tampilkan dialog konfirmasi
-    bootbox.confirm("Apakah data faktur sudah sesuai?", function(result){
+    bootbox.confirm("Apakah data faktur sudah sesuai?", function (result) {
       // ketika ditekan tombol ok
-      if (result){
+      if (result) {
         // mengirimkan perintah penghapusan
         var url = baseURL + '/kasir_rawat_jalan/save?t=' + mlite.token;
-        $.post(url, {kd_billing : kd_billing,
-        no_rawat              : no_rawat,
-        jumlah_total       : jumlah_total,
-        potongan    : potongan_faktur,
-        tgl_billing   		   : tgl_billing,
-        jam_billing: jam_billing,
-        jumlah_harus_bayar : jumlah_harus_bayar,
-        jumlah_bayar       : jumlah_bayar,
-        keterangan         : keterangan,
-        jurnal_pendaftaran : jurnal_pendaftaran,
-        jurnal_tindakan_ralan : jurnal_tindakan_ralan,
-        jurnal_obat_bhp : jurnal_obat_bhp,
-        jurnal_laboratorium : jurnal_laboratorium,
-        jurnal_radiologi : jurnal_radiologi,
-        } ,function(data) {
+        $.post(url, {
+          kd_billing: kd_billing,
+          no_rawat: no_rawat,
+          jumlah_total: jumlah_total,
+          potongan: potongan_faktur,
+          tgl_billing: tgl_billing,
+          jam_billing: jam_billing,
+          jumlah_harus_bayar: jumlah_harus_bayar,
+          jumlah_bayar: jumlah_bayar,
+          keterangan: keterangan,
+          jurnal_pendaftaran: jurnal_pendaftaran,
+          jurnal_tindakan_ralan: jurnal_tindakan_ralan,
+          jurnal_obat_bhp: jurnal_obat_bhp,
+          jurnal_laboratorium: jurnal_laboratorium,
+          jurnal_radiologi: jurnal_radiologi,
+        }, function (data) {
           var url = baseURL + '/kasir_rawat_jalan/rincian?t=' + mlite.token;
-          $.post(url, {no_rawat : no_rawat,
-          }, function(data) {
+          $.post(url, {
+            no_rawat: no_rawat,
+          }, function (data) {
             // tampilkan data
             $("#rincian").html(data).show();
           });
-          $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-          "Data rincian faktur rawat jalan telah disimpan!"+
-          "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
-          "</div>").show();
+          $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
+            "Data rincian faktur rawat jalan telah disimpan!" +
+            "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
+            "</div>").show();
 
         });
       }
@@ -689,18 +708,19 @@ $("#rincian").on("click","#simpan_billing", function(event){
 });
 
 // ketika tombol antrian ditekan
-$("#rincian").on("click","#cetak_billing", function(event){
+$("#rincian").on("click", "#cetak_billing", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
   var url = baseURL + '/kasir_rawat_jalan/faktur?t=' + mlite.token;
   var no_rawat = $(this).attr("data-no_rawat");
-  $.post(url, {no_rawat : no_rawat,
-  }, function(data) {
+  $.post(url, {
+    no_rawat: no_rawat,
+  }, function (data) {
     // tampilkan data
-    if(data == 'OK') {
-      bootbox.confirm("Apakah data faktur sudah sesuai? Jika berbeda, silahkan simpan dulu sebelum mencetak!", function(result){
+    if (data == 'OK') {
+      bootbox.confirm("Apakah data faktur sudah sesuai? Jika berbeda, silahkan simpan dulu sebelum mencetak!", function (result) {
         // ketika ditekan tombol ok
-        if (result){
+        if (result) {
           window.open(baseURL + '/kasir_rawat_jalan/faktur?show=besar&no_rawat=' + no_rawat + '&t=' + mlite.token);
         }
       });
@@ -711,18 +731,19 @@ $("#rincian").on("click","#cetak_billing", function(event){
 });
 
 // ketika tombol antrian ditekan
-$("#rincian").on("click","#cetak_billing_kecil", function(event){
+$("#rincian").on("click", "#cetak_billing_kecil", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
   var url = baseURL + '/kasir_rawat_jalan/faktur?t=' + mlite.token;
   var no_rawat = $(this).attr("data-no_rawat");
-  $.post(url, {no_rawat : no_rawat,
-  }, function(data) {
+  $.post(url, {
+    no_rawat: no_rawat,
+  }, function (data) {
     // tampilkan data
-    if(data == 'OK') {
-      bootbox.confirm("Apakah data faktur sudah sesuai? Jika berbeda, silahkan simpan dulu sebelum mencetak!", function(result){
+    if (data == 'OK') {
+      bootbox.confirm("Apakah data faktur sudah sesuai? Jika berbeda, silahkan simpan dulu sebelum mencetak!", function (result) {
         // ketika ditekan tombol ok
-        if (result){
+        if (result) {
           window.open(baseURL + '/kasir_rawat_jalan/faktur?show=kecil&no_rawat=' + no_rawat + '&t=' + mlite.token);
         }
       });
@@ -732,7 +753,7 @@ $("#rincian").on("click","#cetak_billing_kecil", function(event){
   });
 });
 
-$("#rincian").on("click", "#selesai_billing", function(event){
+$("#rincian").on("click", "#selesai_billing", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
   $("#layanan").hide();
@@ -741,16 +762,16 @@ $("#rincian").on("click", "#selesai_billing", function(event){
   //$("#display").show();
   $("#rincian").hide();
   $("#form_rincian").hide();
-  var url    = baseURL + '/kasir_rawat_jalan/display?t=' + mlite.token;
-  $.post(url, {} ,function(data) {
-  // tampilkan data
+  var url = baseURL + '/kasir_rawat_jalan/display?t=' + mlite.token;
+  $.post(url, {}, function (data) {
+    // tampilkan data
     $("#display").html(data).show();
     $("#notif").hide();
   });
 
 });
 
-function bersih(){
+function bersih() {
   $('input:text[name=no_rawat]').val("");
   $('input:text[name=no_rkm_medis]').val("");
   $('input:text[name=nm_pasien]').val("");
@@ -772,148 +793,148 @@ function bersih(){
 }
 
 /* Fungsi formatRupiah */
-function formatRupiah(angka, prefix){
-	var number_string = angka.replace(/[^,\d]/g, '').toString(),
-	split   		= number_string.split(','),
-	sisa     		= split[0].length % 3,
-	rupiah     		= split[0].substr(0, sisa),
-	ribuan     		= split[0].substr(sisa).match(/\d{3}/gi);
+function formatRupiah(angka, prefix) {
+  var number_string = angka.replace(/[^,\d]/g, '').toString(),
+    split = number_string.split(','),
+    sisa = split[0].length % 3,
+    rupiah = split[0].substr(0, sisa),
+    ribuan = split[0].substr(sisa).match(/\d{3}/gi);
 
-	// tambahkan titik jika yang di input sudah menjadi angka ribuan
-	if(ribuan){
-		separator = sisa ? '.' : '';
-		rupiah += separator + ribuan.join('.');
-	}
+  // tambahkan titik jika yang di input sudah menjadi angka ribuan
+  if (ribuan) {
+    separator = sisa ? '.' : '';
+    rupiah += separator + ribuan.join('.');
+  }
 
-	rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-	return prefix == undefined ? rupiah : (rupiah ? 'Rp.' + rupiah : '');
+  rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+  return prefix == undefined ? rupiah : (rupiah ? 'Rp.' + rupiah : '');
 }
 
-function terbilang(a){
-	var bilangan = ['','Satu','Dua','Tiga','Empat','Lima','Enam','Tujuh','Delapan','Sembilan','Sepuluh','Sebelas'];
+function terbilang(a) {
+  var bilangan = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
 
-	// 1 - 11
-	if(a < 12){
-		var kalimat = bilangan[a];
-	}
-	// 12 - 19
-	else if(a < 20){
-		var kalimat = bilangan[a-10]+' Belas';
-	}
-	// 20 - 99
-	else if(a < 100){
-		var utama = a/10;
-		var depan = parseInt(String(utama).substr(0,1));
-		var belakang = a%10;
-		var kalimat = bilangan[depan]+' Puluh '+bilangan[belakang];
-	}
-	// 100 - 199
-	else if(a < 200){
-		var kalimat = 'Seratus '+ terbilang(a - 100);
-	}
-	// 200 - 999
-	else if(a < 1000){
-		var utama = a/100;
-		var depan = parseInt(String(utama).substr(0,1));
-		var belakang = a%100;
-		var kalimat = bilangan[depan] + ' Ratus '+ terbilang(belakang);
-	}
-	// 1,000 - 1,999
-	else if(a < 2000){
-		var kalimat = 'Seribu '+ terbilang(a - 1000);
-	}
-	// 2,000 - 9,999
-	else if(a < 10000){
-		var utama = a/1000;
-		var depan = parseInt(String(utama).substr(0,1));
-		var belakang = a%1000;
-		var kalimat = bilangan[depan] + ' Ribu '+ terbilang(belakang);
-	}
-	// 10,000 - 99,999
-	else if(a < 100000){
-		var utama = a/100;
-		var depan = parseInt(String(utama).substr(0,2));
-		var belakang = a%1000;
-		var kalimat = terbilang(depan) + ' Ribu '+ terbilang(belakang);
-	}
-	// 100,000 - 999,999
-	else if(a < 1000000){
-		var utama = a/1000;
-		var depan = parseInt(String(utama).substr(0,3));
-		var belakang = a%1000;
-		var kalimat = terbilang(depan) + ' Ribu '+ terbilang(belakang);
-	}
-	// 1,000,000 - 	99,999,999
-	else if(a < 100000000){
-		var utama = a/1000000;
-		var depan = parseInt(String(utama).substr(0,4));
-		var belakang = a%1000000;
-		var kalimat = terbilang(depan) + ' Juta '+ terbilang(belakang);
-	}
-	else if(a < 1000000000){
-		var utama = a/1000000;
-		var depan = parseInt(String(utama).substr(0,4));
-		var belakang = a%1000000;
-		var kalimat = terbilang(depan) + ' Juta '+ terbilang(belakang);
-	}
-	else if(a < 10000000000){
-		var utama = a/1000000000;
-		var depan = parseInt(String(utama).substr(0,1));
-		var belakang = a%1000000000;
-		var kalimat = terbilang(depan) + ' Milyar '+ terbilang(belakang);
-	}
-	else if(a < 100000000000){
-		var utama = a/1000000000;
-		var depan = parseInt(String(utama).substr(0,2));
-		var belakang = a%1000000000;
-		var kalimat = terbilang(depan) + ' Milyar '+ terbilang(belakang);
-	}
-	else if(a < 1000000000000){
-		var utama = a/1000000000;
-		var depan = parseInt(String(utama).substr(0,3));
-		var belakang = a%1000000000;
-		var kalimat = terbilang(depan) + ' Milyar '+ terbilang(belakang);
-	}
-	else if(a < 10000000000000){
-		var utama = a/10000000000;
-		var depan = parseInt(String(utama).substr(0,1));
-		var belakang = a%10000000000;
-		var kalimat = terbilang(depan) + ' Triliun '+ terbilang(belakang);
-	}
-	else if(a < 100000000000000){
-		var utama = a/1000000000000;
-		var depan = parseInt(String(utama).substr(0,2));
-		var belakang = a%1000000000000;
-		var kalimat = terbilang(depan) + ' Triliun '+ terbilang(belakang);
-	}
+  // 1 - 11
+  if (a < 12) {
+    var kalimat = bilangan[a];
+  }
+  // 12 - 19
+  else if (a < 20) {
+    var kalimat = bilangan[a - 10] + ' Belas';
+  }
+  // 20 - 99
+  else if (a < 100) {
+    var utama = a / 10;
+    var depan = parseInt(String(utama).substr(0, 1));
+    var belakang = a % 10;
+    var kalimat = bilangan[depan] + ' Puluh ' + bilangan[belakang];
+  }
+  // 100 - 199
+  else if (a < 200) {
+    var kalimat = 'Seratus ' + terbilang(a - 100);
+  }
+  // 200 - 999
+  else if (a < 1000) {
+    var utama = a / 100;
+    var depan = parseInt(String(utama).substr(0, 1));
+    var belakang = a % 100;
+    var kalimat = bilangan[depan] + ' Ratus ' + terbilang(belakang);
+  }
+  // 1,000 - 1,999
+  else if (a < 2000) {
+    var kalimat = 'Seribu ' + terbilang(a - 1000);
+  }
+  // 2,000 - 9,999
+  else if (a < 10000) {
+    var utama = a / 1000;
+    var depan = parseInt(String(utama).substr(0, 1));
+    var belakang = a % 1000;
+    var kalimat = bilangan[depan] + ' Ribu ' + terbilang(belakang);
+  }
+  // 10,000 - 99,999
+  else if (a < 100000) {
+    var utama = a / 100;
+    var depan = parseInt(String(utama).substr(0, 2));
+    var belakang = a % 1000;
+    var kalimat = terbilang(depan) + ' Ribu ' + terbilang(belakang);
+  }
+  // 100,000 - 999,999
+  else if (a < 1000000) {
+    var utama = a / 1000;
+    var depan = parseInt(String(utama).substr(0, 3));
+    var belakang = a % 1000;
+    var kalimat = terbilang(depan) + ' Ribu ' + terbilang(belakang);
+  }
+  // 1,000,000 - 	99,999,999
+  else if (a < 100000000) {
+    var utama = a / 1000000;
+    var depan = parseInt(String(utama).substr(0, 4));
+    var belakang = a % 1000000;
+    var kalimat = terbilang(depan) + ' Juta ' + terbilang(belakang);
+  }
+  else if (a < 1000000000) {
+    var utama = a / 1000000;
+    var depan = parseInt(String(utama).substr(0, 4));
+    var belakang = a % 1000000;
+    var kalimat = terbilang(depan) + ' Juta ' + terbilang(belakang);
+  }
+  else if (a < 10000000000) {
+    var utama = a / 1000000000;
+    var depan = parseInt(String(utama).substr(0, 1));
+    var belakang = a % 1000000000;
+    var kalimat = terbilang(depan) + ' Milyar ' + terbilang(belakang);
+  }
+  else if (a < 100000000000) {
+    var utama = a / 1000000000;
+    var depan = parseInt(String(utama).substr(0, 2));
+    var belakang = a % 1000000000;
+    var kalimat = terbilang(depan) + ' Milyar ' + terbilang(belakang);
+  }
+  else if (a < 1000000000000) {
+    var utama = a / 1000000000;
+    var depan = parseInt(String(utama).substr(0, 3));
+    var belakang = a % 1000000000;
+    var kalimat = terbilang(depan) + ' Milyar ' + terbilang(belakang);
+  }
+  else if (a < 10000000000000) {
+    var utama = a / 10000000000;
+    var depan = parseInt(String(utama).substr(0, 1));
+    var belakang = a % 10000000000;
+    var kalimat = terbilang(depan) + ' Triliun ' + terbilang(belakang);
+  }
+  else if (a < 100000000000000) {
+    var utama = a / 1000000000000;
+    var depan = parseInt(String(utama).substr(0, 2));
+    var belakang = a % 1000000000000;
+    var kalimat = terbilang(depan) + ' Triliun ' + terbilang(belakang);
+  }
 
-	else if(a < 1000000000000000){
-		var utama = a/1000000000000;
-		var depan = parseInt(String(utama).substr(0,3));
-		var belakang = a%1000000000000;
-		var kalimat = terbilang(depan) + ' Triliun '+ terbilang(belakang);
-	}
+  else if (a < 1000000000000000) {
+    var utama = a / 1000000000000;
+    var depan = parseInt(String(utama).substr(0, 3));
+    var belakang = a % 1000000000000;
+    var kalimat = terbilang(depan) + ' Triliun ' + terbilang(belakang);
+  }
 
-  else if(a < 10000000000000000){
-		var utama = a/1000000000000000;
-		var depan = parseInt(String(utama).substr(0,1));
-		var belakang = a%1000000000000000;
-		var kalimat = terbilang(depan) + ' Kuadriliun '+ terbilang(belakang);
-	}
+  else if (a < 10000000000000000) {
+    var utama = a / 1000000000000000;
+    var depan = parseInt(String(utama).substr(0, 1));
+    var belakang = a % 1000000000000000;
+    var kalimat = terbilang(depan) + ' Kuadriliun ' + terbilang(belakang);
+  }
 
-	var pisah = kalimat.split(' ');
-	var full = [];
-	for(var i=0;i<pisah.length;i++){
-	 if(pisah[i] != ""){full.push(pisah[i]);}
-	}
-	return full.join(' ');
+  var pisah = kalimat.split(' ');
+  var full = [];
+  for (var i = 0; i < pisah.length; i++) {
+    if (pisah[i] != "") { full.push(pisah[i]); }
+  }
+  return full.join(' ');
 }
 
-$("#form_rincian").on("click","#jam_billing", function(event){
-    var baseURL = mlite.url + '/' + mlite.admin;
-    var url = baseURL + '/kasir_rawat_jalan/cekwaktu?t=' + mlite.token;
-    $.post(url, {
-    } ,function(data) {
-      $("#form_rincian #jam_billing").val(data);
-    });
+$("#form_rincian").on("click", "#jam_billing", function (event) {
+  var baseURL = mlite.url + '/' + mlite.admin;
+  var url = baseURL + '/kasir_rawat_jalan/cekwaktu?t=' + mlite.token;
+  $.post(url, {
+  }, function (data) {
+    $("#form_rincian #jam_billing").val(data);
+  });
 });
