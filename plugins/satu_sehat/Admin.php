@@ -18,6 +18,7 @@ use SatuSehat\Src\QuestionareMedication;
 use SatuSehat\Src\ServiceRequest;
 use SatuSehat\Src\Temperature;
 use SatuSehat\Src\Specimen;
+use SatuSehat\Src\Xlsx;
 
 class Admin extends AdminModule
 {
@@ -3675,8 +3676,27 @@ class Admin extends AdminModule
         $medId = $obat['no_resep'] . '' . $obat['kode_brng'];
         $medUuid = "urn:uuid:" . $this->gen_uuid();
         $system_cek = 'http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm';
-        if (ctype_digit($obat['satuan_den'])) {
+        $satuan_code = trim(isset($obat['satuan_den']) ? $obat['satuan_den'] : '');
+        $satuan_unit = $satuan_code;
+        if (ctype_digit($satuan_code)) {
           $system_cek = 'http://snomed.info/sct';
+        }
+        if ($satuan_code === '') {
+          $satuan_code = rtrim(isset($obat['satuan_num']) ? trim($obat['satuan_num']) : '', '/');
+          $system_cek = 'http://snomed.info/sct';
+          $snomed_map = [
+            'mg' => '258684004',
+            'ug' => '258685003',
+            '%' => '118582008',
+            'g' => '258682000',
+            'ml' => '258773002',
+          ];
+          if (isset($snomed_map[$satuan_code])) {
+            $satuan_unit = $satuan_code;
+            $satuan_code = $snomed_map[$satuan_code];
+          } else {
+            $satuan_code = '';
+          }
         }
 
         // Parsing aturan pakai
@@ -3761,9 +3781,9 @@ class Admin extends AdminModule
                 [
                   "doseQuantity" => [
                     "value" => $frequency,
-                    "unit" => $obat['satuan_den'],
+                    "unit" => $satuan_unit,
                     "system" => $system_cek,
-                    "code" => $obat['satuan_den']
+                    "code" => $satuan_code
                   ]
                 ]
               ]
@@ -3772,9 +3792,9 @@ class Admin extends AdminModule
           "dispenseRequest" => [
             "quantity" => [
               "value" => $obat['jml'],
-              "unit" => $obat['satuan_den'],
+              "unit" => $satuan_unit,
               "system" => $system_cek,
-              "code" => $obat['satuan_den']
+              "code" => $satuan_code
             ],
             "performer" => [
               "reference" => "Organization/" . $this->organizationid
@@ -3861,8 +3881,27 @@ class Admin extends AdminModule
         $medId = $obat['no_resep'] . '' . $obat['kode_brng'];
         $medUuid = "urn:uuid:" . $this->gen_uuid();
         $system_cek = 'http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm';
-        if (ctype_digit($obat['satuan_den'])) {
+        $satuan_code = trim(isset($obat['satuan_den']) ? $obat['satuan_den'] : '');
+        $satuan_unit = $satuan_code;
+        if (ctype_digit($satuan_code)) {
           $system_cek = 'http://snomed.info/sct';
+        }
+        if ($satuan_code === '') {
+          $satuan_code = rtrim(isset($obat['satuan_num']) ? trim($obat['satuan_num']) : '', '/');
+          $system_cek = 'http://snomed.info/sct';
+          $snomed_map = [
+            'mg' => '258684004',
+            'ug' => '258685003',
+            '%' => '118582008',
+            'g' => '258682000',
+            'ml' => '258773002',
+          ];
+          if (isset($snomed_map[$satuan_code])) {
+            $satuan_unit = $satuan_code;
+            $satuan_code = $snomed_map[$satuan_code];
+          } else {
+            $satuan_code = '';
+          }
         }
 
         // Parsing aturan pakai
@@ -3896,13 +3935,11 @@ class Admin extends AdminModule
           ],
           "status" => "completed",
           "category" => [
-            [
-              "coding" => [
-                [
-                  "system" => "http://terminology.hl7.org/fhir/CodeSystem/medicationdispense-category",
-                  "code" => "outpatient",
-                  "display" => "Outpatient"
-                ]
+            "coding" => [
+              [
+                "system" => "http://terminology.hl7.org/fhir/CodeSystem/medicationdispense-category",
+                "code" => "outpatient",
+                "display" => "Outpatient"
               ]
             ]
           ],
@@ -3935,8 +3972,9 @@ class Admin extends AdminModule
             ]
           ],
           "quantity" => [
+            "unit" => $satuan_unit,
             "system" => $system_cek,
-            "code" => $obat['satuan_den'],
+            "code" => $satuan_code,
             "value" => $obat['jml']
           ],
           "whenPrepared" => $obat['tgl_peresepan'] . 'T' . $obat['jam_peresepan'] . $zonawaktu,
@@ -3965,9 +4003,9 @@ class Admin extends AdminModule
                 [
                   "doseQuantity" => [
                     "value" => $frequency,
-                    "unit" => $obat['satuan_den'],
+                    "unit" => $satuan_unit,
                     "system" => $system_cek,
-                    "code" => $obat['satuan_den']
+                    "code" => $satuan_code
                   ]
                 ]
               ]
@@ -4056,8 +4094,27 @@ class Admin extends AdminModule
         $medId = $obat['no_resep'] . '' . $obat['kode_brng'];
         $medUuid = "urn:uuid:" . $this->gen_uuid();
         $system_cek = 'http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm';
-        if (ctype_digit($obat['satuan_den'])) {
+        $satuan_code = trim(isset($obat['satuan_den']) ? $obat['satuan_den'] : '');
+        $satuan_unit = $satuan_code;
+        if (ctype_digit($satuan_code)) {
           $system_cek = 'http://snomed.info/sct';
+        }
+        if ($satuan_code === '') {
+          $satuan_code = rtrim(isset($obat['satuan_num']) ? trim($obat['satuan_num']) : '', '/');
+          $system_cek = 'http://snomed.info/sct';
+          $snomed_map = [
+            'mg' => '258684004',
+            'ug' => '258685003',
+            '%' => '118582008',
+            'g' => '258682000',
+            'ml' => '258773002',
+          ];
+          if (isset($snomed_map[$satuan_code])) {
+            $satuan_unit = $satuan_code;
+            $satuan_code = $snomed_map[$satuan_code];
+          } else {
+            $satuan_code = '';
+          }
         }
 
         // Parsing aturan pakai
@@ -4086,13 +4143,11 @@ class Admin extends AdminModule
           ],
           "status" => "completed",
           "category" => [
-            [
-              "coding" => [
-                [
-                  "system" => "http://terminology.hl7.org/CodeSystem/medication-statement-category",
-                  "code" => "outpatient",
-                  "display" => "Outpatient"
-                ]
+            "coding" => [
+              [
+                "system" => "http://terminology.hl7.org/CodeSystem/medication-statement-category",
+                "code" => "outpatient",
+                "display" => "Outpatient"
               ]
             ]
           ],
@@ -4120,16 +4175,6 @@ class Admin extends AdminModule
                     "system" => "http://www.whocc.no/atc",
                     "code" => $obat['kode_route'],
                     "display" => $obat['nama_route']
-                  ]
-                ]
-              ],
-              "doseAndRate" => [
-                [
-                  "doseQuantity" => [
-                    "value" => $frequency,
-                    "unit" => $obat['satuan_den'],
-                    "system" => $system_cek,
-                    "code" => $obat['satuan_den']
                   ]
                 ]
               ]
@@ -4250,42 +4295,21 @@ class Admin extends AdminModule
         CURLOPT_TIMEOUT => 0,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . $this->getAccessToken()),
+        CURLOPT_HTTPHEADER => array(
+          'Content-Type: application/json',
+          'Authorization: Bearer ' . $this->getAccessToken(),
+          'If-None-Exist: identifier=http://sys-ids.kemkes.go.id/medication/' . $this->organizationid . '|' . $satu_sehat_mapping_obat['kode_brng'],
+        ),
         CURLOPT_CUSTOMREQUEST => 'POST',
         CURLOPT_POSTFIELDS => $data,
       ));
 
       $response = curl_exec($curl);
+      $http_code = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
       $result = json_decode($response);
 
       $id_medication = isset_or($result->id, '');
       $pesan = 'Gagal mengirim mapping medication platform Satu Sehat!!';
-
-      if (isset($result->issue[0]->code) && $result->issue[0]->code == 'duplicate') {
-        $system = "http://sys-ids.kemkes.go.id/medication/" . $this->organizationid;
-        $value = $satu_sehat_mapping_obat['kode_brng'];
-        $url_get = $this->fhirurl . '/Medication?identifier=' . $system . '|' . $value;
-        
-        $curl_get = curl_init();
-        curl_setopt_array($curl_get, array(
-          CURLOPT_URL => $url_get,
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 0,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_HTTPHEADER => array('Authorization: Bearer ' . $this->getAccessToken()),
-          CURLOPT_CUSTOMREQUEST => 'GET',
-        ));
-        $response_get = curl_exec($curl_get);
-        $result_get = json_decode($response_get);
-        if (isset($result_get->entry[0]->resource->id)) {
-          $id_medication = $result_get->entry[0]->resource->id;
-          $pesan = 'Sukses memperbarui ID mapping medication dari platform Satu Sehat (Duplicate Teratasi)!!';
-        }
-        curl_close($curl_get);
-      }
 
       if ($id_medication) {
         $this->db('mlite_satu_sehat_mapping_obat')
@@ -4293,7 +4317,9 @@ class Admin extends AdminModule
           ->save([
             'id_medication' => $id_medication
           ]);
-        if ($pesan == 'Gagal mengirim mapping medication platform Satu Sehat!!') {
+        if ($http_code == 200) {
+          $pesan = 'Sukses memperbarui ID mapping medication dari platform Satu Sehat (Duplicate Teratasi)!!';
+        } else {
           $pesan = 'Sukses mengirim mapping medication platform Satu Sehat!!';
         }
       }
@@ -6574,7 +6600,9 @@ class Admin extends AdminModule
   public function getResponse()
   {
     $this->_addHeaderFiles();
-    return $this->draw('response.html');
+    $dokter = $this->db('dokter')->where('status', '1')->asc('nm_dokter')->toArray();
+    $poliklinik = $this->db('poliklinik')->where('status', '1')->asc('nm_poli')->toArray();
+    return $this->draw('response.html', ['dokter_list' => $dokter, 'poli_list' => $poliklinik]);
   }
 
   public function postResponseApi()
@@ -7156,6 +7184,67 @@ class Admin extends AdminModule
       $end_date = $tmp;
     }
 
+    // Filter rekap (opsional, default kosong = semua)
+    $filter_dokter = isset($_GET['filter_dokter']) && $_GET['filter_dokter'] !== '' ? $_GET['filter_dokter'] : '';
+    $filter_poli = isset($_GET['filter_poli']) && $_GET['filter_poli'] !== '' ? $_GET['filter_poli'] : '';
+    $filter_ket = isset($_GET['filter_ket']) && $_GET['filter_ket'] !== '' ? $_GET['filter_ket'] : '';
+    $filter_bayar = isset($_GET['filter_bayar']) && $_GET['filter_bayar'] !== '' ? $_GET['filter_bayar'] : '';
+
+    // Status bayar default: Sudah Bayar (jika belum pernah dipilih)
+    if ($filter_bayar === '') {
+      $filter_bayar = 'Sudah Bayar';
+    }
+
+    // Daftar resource Satu Sehat beserta labelnya (31 item)
+    $RESOURCE_KEYS = [
+      'id_encounter', 'id_condition', 'id_clinical_impression',
+      'id_observation_ttvtensi', 'id_observation_ttvnadi', 'id_observation_ttvrespirasi',
+      'id_observation_ttvsuhu', 'id_observation_ttvspo2', 'id_observation_ttvgcs',
+      'id_observation_ttvtinggi', 'id_observation_ttvberat', 'id_observation_ttvperut',
+      'id_observation_ttvkesadaran', 'id_procedure', 'id_composition',
+      'id_immunization', 'id_medication_request', 'id_medication_dispense',
+      'id_medication_statement', 'id_rad_request', 'id_rad_specimen',
+      'id_rad_observation', 'id_rad_diagnostic', 'id_imaging_study',
+      'id_lab_pk_request', 'id_lab_pk_specimen', 'id_lab_pk_observation',
+      'id_lab_pk_diagnostic', 'id_careplan', 'id_allergy', 'id_questionnaire',
+    ];
+    $RESOURCE_LABELS = [
+      'ID Encounter', 'ID Condition', 'ID Clinical Impression',
+      'ID Observation Tensi', 'ID Observation Nadi', 'ID Observation RR',
+      'ID Observation Suhu', 'ID Observation SPO2', 'ID Observation GCS',
+      'ID Observation Tinggi', 'ID Observation Berat', 'ID Observation Perut',
+      'ID Observation Kesadaran', 'ID Procedure', 'ID Composition',
+      'ID Vaksin/Imunisasi', 'ID Medication Request', 'ID Medication Dispense',
+      'ID Medication Statement', 'ID Service Request Radiologi', 'ID Specimen Radiologi',
+      'ID Observation Radiologi', 'ID Diagnostic Report Radiologi', 'Image Study',
+      'ID Service Request Lab PK', 'ID Specimen Lab PK', 'ID Observation Lab PK',
+      'ID Diagnostic Report Lab PK', 'ID Care Plan', 'ID Allergy', 'ID Questionnaire',
+    ];
+    $RES_COUNT = count($RESOURCE_KEYS);
+
+    // Cek prasyarat untuk menghasilkan file .xlsx (ZipArchive wajib ada)
+    if (!class_exists('ZipArchive')) {
+      echo '<div style="font-family:Segoe UI,Arial,sans-serif;padding:28px;max-width:720px;margin:40px auto;border:1px solid #ddd;border-radius:8px;">'
+        . '<h2 style="margin-top:0;color:#b02a37;">Rekap Gagal Dihasilkan</h2>'
+        . '<p style="font-size:14px;line-height:1.7;">Ekstensi PHP <b>zip</b> tidak aktif di server.<br>Langkah: aktifkan ekstensi <code>php_zip</code> (misalnya lewat <b>cPanel → PHP Settings → Extension: zip</b>, lalu Restart PHP), atau minta penyedia hosting/admin server mengaktifkannya.</p>'
+        . '<p style="font-size:13px;color:#666;">Cek cepat: <code>php -m | grep zip</code> di server.</p>'
+        . '</div>';
+      exit();
+    }
+    if (!class_exists('SatuSehat\\Src\\Xlsx')) {
+      $xlsxPath = __DIR__ . '/src/Xlsx.php';
+      if (is_file($xlsxPath)) {
+        require_once $xlsxPath;
+      }
+    }
+    if (!class_exists('SatuSehat\\Src\\Xlsx')) {
+      echo '<div style="font-family:Segoe UI,Arial,sans-serif;padding:28px;max-width:720px;margin:40px auto;border:1px solid #ddd;border-radius:8px;">'
+        . '<h2 style="margin-top:0;color:#b02a37;">File Belum Ter-upload</h2>'
+        . '<p style="font-size:14px;line-height:1.7;">File <code>plugins/satu_sehat/src/Xlsx.php</code> belum ada di server. Pastikan file tersebut ter-upload tepat di folder yang sama dengan file <code>CarePlan.php</code> (di dalam <code>plugins/satu_sehat/src/</code>), lalu muat ulang halaman ini.</p>'
+        . '</div>';
+      exit();
+    }
+
     $query = $this->db('reg_periksa')
       ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
       ->join('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
@@ -7163,9 +7252,20 @@ class Admin extends AdminModule
       ->where('reg_periksa.tgl_registrasi', '>=', $start_date)
       ->where('reg_periksa.tgl_registrasi', '<=', $end_date)
       ->where('stts', '!=', 'Batal')
-      ->where('status_lanjut', 'Ralan')
-      ->asc('reg_periksa.tgl_registrasi')
-      ->asc('reg_periksa.jam_reg');
+      ->where('status_lanjut', 'Ralan');
+
+    if ($filter_dokter !== '') {
+      $query->where('reg_periksa.kd_dokter', $filter_dokter);
+    }
+    if ($filter_poli !== '') {
+      $query->where('reg_periksa.kd_poli', $filter_poli);
+    }
+    // Status bayar: filter "Semua" (tidak diberi query) atau nilai 'Sudah Bayar'/'Belum Bayar'
+    if ($filter_bayar !== '' && strtolower($filter_bayar) !== 'semua') {
+      $query->where('reg_periksa.status_bayar', $filter_bayar);
+    }
+
+    $query->asc('reg_periksa.tgl_registrasi')->asc('reg_periksa.jam_reg');
 
     $rows = $query->select(['reg_periksa.*', 'nm_pasien' => 'pasien.nm_pasien', 'no_ktp_pasien' => 'pasien.no_ktp', 'nm_dokter' => 'dokter.nm_dokter', 'no_ktp_dokter' => 'pegawai.no_ktp'])
       ->toArray();
@@ -7174,40 +7274,10 @@ class Admin extends AdminModule
     $last_date = '';
     $no = 1;
 
-    // Initialize totals
-    $totals = [
-        'id_encounter' => 0,
-        'id_condition' => 0,
-        'id_clinical_impression' => 0,
-        'id_observation_ttvtensi' => 0,
-        'id_observation_ttvnadi' => 0,
-        'id_observation_ttvrespirasi' => 0,
-        'id_observation_ttvsuhu' => 0,
-        'id_observation_ttvspo2' => 0,
-        'id_observation_ttvgcs' => 0,
-        'id_observation_ttvtinggi' => 0,
-        'id_observation_ttvberat' => 0,
-        'id_observation_ttvperut' => 0,
-        'id_observation_ttvkesadaran' => 0,
-        'id_procedure' => 0,
-        'id_composition' => 0,
-        'id_immunization' => 0,
-        'id_medication_request' => 0,
-        'id_medication_dispense' => 0,
-        'id_medication_statement' => 0,
-        'id_rad_request' => 0,
-        'id_rad_specimen' => 0,
-        'id_rad_observation' => 0,
-        'id_rad_diagnostic' => 0,
-        'id_imaging_study' => 0,
-        'id_lab_pk_request' => 0,
-        'id_lab_pk_specimen' => 0,
-        'id_lab_pk_observation' => 0,
-        'id_lab_pk_diagnostic' => 0,
-        'id_careplan' => 0,
-        'id_allergy' => 0,
-        'id_questionnaire' => 0,
-    ];
+    // Initialize totals & agregasi harian
+    $totals = array_fill_keys($RESOURCE_KEYS, 0);
+    $day_agg = [];
+    $total_kunjungan = 0;
 
     foreach ($rows as $row) {
       $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $row['no_rawat'])->oneArray();
@@ -7249,40 +7319,24 @@ class Admin extends AdminModule
           }
       }
 
+      // Filter berdasarkan status keterangan (opsional)
+      if ($filter_ket !== '' && $ket !== $filter_ket) {
+          continue;
+      }
+
+      // Agregasi per tanggal
+      $date = $row['tgl_registrasi'];
+      if (!isset($day_agg[$date])) {
+        $day_agg[$date] = array_fill_keys($RESOURCE_KEYS, 0) + ['kunjungan' => 0, 'total' => 0];
+      }
+      $day_agg[$date]['kunjungan']++;
+      $total_kunjungan++;
+
       // Check fields
-      $fields = [
-        'id_encounter' => isset_or($mlite_satu_sehat_response['id_encounter'], ''),
-        'id_condition' => isset_or($mlite_satu_sehat_response['id_condition'], ''),
-        'id_clinical_impression' => isset_or($mlite_satu_sehat_response['id_clinical_impression'], ''),
-        'id_observation_ttvtensi' => isset_or($mlite_satu_sehat_response['id_observation_ttvtensi'], ''),
-        'id_observation_ttvnadi' => isset_or($mlite_satu_sehat_response['id_observation_ttvnadi'], ''),
-        'id_observation_ttvrespirasi' => isset_or($mlite_satu_sehat_response['id_observation_ttvrespirasi'], ''),
-        'id_observation_ttvsuhu' => isset_or($mlite_satu_sehat_response['id_observation_ttvsuhu'], ''),
-        'id_observation_ttvspo2' => isset_or($mlite_satu_sehat_response['id_observation_ttvspo2'], ''),
-        'id_observation_ttvgcs' => isset_or($mlite_satu_sehat_response['id_observation_ttvgcs'], ''),
-        'id_observation_ttvtinggi' => isset_or($mlite_satu_sehat_response['id_observation_ttvtinggi'], ''),
-        'id_observation_ttvberat' => isset_or($mlite_satu_sehat_response['id_observation_ttvberat'], ''),
-        'id_observation_ttvperut' => isset_or($mlite_satu_sehat_response['id_observation_ttvperut'], ''),
-        'id_observation_ttvkesadaran' => isset_or($mlite_satu_sehat_response['id_observation_ttvkesadaran'], ''),
-        'id_procedure' => isset_or($mlite_satu_sehat_response['id_procedure'], ''),
-        'id_composition' => isset_or($mlite_satu_sehat_response['id_composition'], ''),
-        'id_immunization' => isset_or($mlite_satu_sehat_response['id_immunization'], ''),
-        'id_medication_request' => isset_or($mlite_satu_sehat_response['id_medication_request'], ''),
-        'id_medication_dispense' => isset_or($mlite_satu_sehat_response['id_medication_dispense'], ''),
-        'id_medication_statement' => isset_or($mlite_satu_sehat_response['id_medication_statement'], ''),
-        'id_rad_request' => isset_or($mlite_satu_sehat_response['id_rad_request'], ''),
-        'id_rad_specimen' => isset_or($mlite_satu_sehat_response['id_rad_specimen'], ''),
-        'id_rad_observation' => isset_or($mlite_satu_sehat_response['id_rad_observation'], ''),
-        'id_rad_diagnostic' => isset_or($mlite_satu_sehat_response['id_rad_diagnostic'], ''),
-        'id_imaging_study' => isset_or($mlite_satu_sehat_response['id_imaging_study'], ''),
-        'id_lab_pk_request' => isset_or($mlite_satu_sehat_response['id_lab_pk_request'], ''),
-        'id_lab_pk_specimen' => isset_or($mlite_satu_sehat_response['id_lab_pk_specimen'], ''),
-        'id_lab_pk_observation' => isset_or($mlite_satu_sehat_response['id_lab_pk_observation'], ''),
-        'id_lab_pk_diagnostic' => isset_or($mlite_satu_sehat_response['id_lab_pk_diagnostic'], ''),
-        'id_careplan' => isset_or($mlite_satu_sehat_response['id_careplan'], ''),
-        'id_allergy' => isset_or($mlite_satu_sehat_response['id_allergy'], ''),
-        'id_questionnaire' => isset_or($mlite_satu_sehat_response['id_questionnaire'], '')
-      ];
+      $fields = [];
+      foreach ($RESOURCE_KEYS as $key) {
+        $fields[$key] = isset_or($mlite_satu_sehat_response[$key], '');
+      }
 
       $sent_count = 0;
       $row_flat = [
@@ -7301,9 +7355,11 @@ class Admin extends AdminModule
           }
           $row_flat[$key] = $is_sent;
           $totals[$key] += $is_sent;
+          $day_agg[$date][$key] += $is_sent;
+          $day_agg[$date]['total'] += $is_sent;
       }
 
-      $total_fields = count($fields);
+      $total_fields = $RES_COUNT;
       $percentage = $total_fields > 0 ? round(($sent_count / $total_fields) * 100) : 0;
       $row_flat['total_str'] = "{$sent_count} dari {$total_fields} ({$percentage}%)";
 
@@ -7318,17 +7374,173 @@ class Admin extends AdminModule
     }
 
     // Calculate overall totals
-    $overall_sent = array_sum($totals);
-    $overall_total_fields = count($rekap_data) * 31;
-    $overall_percentage = $overall_total_fields > 0 ? round(($overall_sent / $overall_total_fields) * 100) : 0;
-    $totals['overall_total_str'] = "{$overall_sent} dari {$overall_total_fields} ({$overall_percentage}%)";
+    $grand_total = array_sum($totals);
+    $overall_total_fields = count($rekap_data) * $RES_COUNT;
+    $overall_percentage = $overall_total_fields > 0 ? round(($grand_total / $overall_total_fields) * 100) : 0;
+    $overall_total_str = "{$grand_total} dari {$overall_total_fields} ({$overall_percentage}%)";
 
-    header("Content-type: application/vnd-ms-excel");
-    header("Content-Disposition: attachment; filename=REKAP_SATU_SEHAT_" . $start_date . "_to_" . $end_date . ".xls");
-    header("Pragma: no-cache");
-    header("Expires: 0");
+    // ============ SHEET 1: AGREGASI (per-hari + ringkasan) ============
+    $sheetAgg = [];
 
-    echo $this->draw('rekap.html', ['rekap_data' => $rekap_data, 'start_date' => $start_date, 'end_date' => $end_date, 'totals' => $totals]);
+    // Header
+    $hdr = [['v' => 'Tanggal', 's' => 1]];
+    foreach ($RESOURCE_LABELS as $lbl) {
+      $hdr[] = ['v' => $lbl, 's' => 1];
+    }
+    $hdr[] = ['v' => 'TOTAL', 's' => 1];
+    $sheetAgg[] = $hdr;
+
+    // Baris per tanggal (termasuk hari tanpa kunjungan → 0)
+    for ($d = $start_date; $d <= $end_date; $d = date('Y-m-d', strtotime($d . ' +1 day'))) {
+      $agg = isset($day_agg[$d]) ? $day_agg[$d] : null;
+      $serial = (strtotime($d . ' 00:00:00') / 86400) + 25569;
+      $r = [['v' => $serial, 's' => 6]];
+      $dayTotal = 0;
+      foreach ($RESOURCE_KEYS as $key) {
+        $n = $agg ? $agg[$key] : 0;
+        $dayTotal += $n;
+        $r[] = ['v' => $n, 's' => 3];
+      }
+      $r[] = ['v' => $dayTotal, 's' => 3];
+      $sheetAgg[] = $r;
+    }
+
+    // TOTAL per resource
+    $rowTotal = [['v' => 'TOTAL', 's' => 5]];
+    foreach ($RESOURCE_KEYS as $key) {
+      $rowTotal[] = ['v' => $totals[$key], 's' => 5];
+    }
+    $rowTotal[] = ['v' => $grand_total, 's' => 5];
+    $sheetAgg[] = $rowTotal;
+
+    // KUNJUNGAN PASIEN
+    $rowKunj = [['v' => 'KUNJUNGAN PASIEN', 's' => 8]];
+    for ($i = 0; $i < $RES_COUNT; $i++) {
+      $rowKunj[] = ['v' => $total_kunjungan, 's' => 3];
+    }
+    $rowKunj[] = ['v' => '', 's' => 3];
+    $sheetAgg[] = $rowKunj;
+
+    // (-) Kekurangan = Kunjungan - Terkirim
+    $rowKurang = [['v' => '(-)', 's' => 8]];
+    foreach ($RESOURCE_KEYS as $key) {
+      $rowKurang[] = ['v' => $total_kunjungan - $totals[$key], 's' => 3];
+    }
+    $rowKurang[] = ['v' => '', 's' => 3];
+    $sheetAgg[] = $rowKurang;
+
+    // % per resource
+    $rowPersen = [['v' => '%', 's' => 8]];
+    foreach ($RESOURCE_KEYS as $key) {
+      $pct = $total_kunjungan > 0 ? round(($totals[$key] / $total_kunjungan) * 100, 2) : 0;
+      $rowPersen[] = ['v' => $pct, 's' => 10];
+    }
+    $rowPersen[] = ['v' => '', 's' => 3];
+    $sheetAgg[] = [];
+    $sheetAgg[] = $rowPersen;
+    $sheetAgg[] = [];
+
+    // Metrik keseluruhan
+    $jml_items = $total_kunjungan * $RES_COUNT;
+    $pct_ttl = $jml_items > 0 ? round(($grand_total / $jml_items) * 100, 2) : 0;
+    $pct_dec = $jml_items > 0 ? round(($grand_total / $jml_items), 4) : 0;
+    $sheetAgg[] = [['v' => 'JMLH KUNJUNGAN PASIEN * ' . $RES_COUNT . ' ITEM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $jml_items, 's' => 7]];
+    $sheetAgg[] = [['v' => 'TOTAL ITEM TERKIRIM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $grand_total, 's' => 7]];
+    $sheetAgg[] = [['v' => 'TTL ITEM TERKIRIM / ' . $jml_items . ' * 100', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $pct_ttl, 's' => 10], ['v' => '%', 's' => 8]];
+    $sheetAgg[] = [['v' => 'PERSENTASE TOTAL DATA YG BERHASIL TERKIRIM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $pct_dec, 's' => 3]];
+
+    // ============ SHEET 2: DETAIL PASIEN (per-kunjungan 0/1) ============
+    $sheetDetail = [];
+
+    $hdr2 = [['v' => 'No', 's' => 1], ['v' => 'Tanggal', 's' => 1], ['v' => 'No RM', 's' => 1], ['v' => 'Unit', 's' => 1], ['v' => 'Dokter', 's' => 1], ['v' => 'Ket', 's' => 1]];
+    foreach ($RESOURCE_LABELS as $lbl) {
+      $hdr2[] = ['v' => $lbl, 's' => 1];
+    }
+    $hdr2[] = ['v' => 'TOTAL', 's' => 1];
+    $sheetDetail[] = $hdr2;
+
+    foreach ($rekap_data as $rd) {
+      $r = [];
+      $r[] = ['v' => $rd['no'], 's' => 3];
+      $r[] = ['v' => $rd['tanggal'], 's' => 3];
+      $r[] = ['v' => $rd['no_rkm_medis'], 's' => 4];
+      $r[] = ['v' => $rd['nm_poli'], 's' => 4];
+      $r[] = ['v' => $rd['nm_dokter'], 's' => 4];
+      $r[] = ['v' => $rd['ket'], 's' => 4];
+      foreach ($RESOURCE_KEYS as $key) {
+        $r[] = ['v' => $rd[$key], 's' => 3];
+      }
+      $r[] = ['v' => $rd['total_str'], 's' => 3];
+      $sheetDetail[] = $r;
+    }
+
+    $foot = [];
+    $foot[] = ['v' => 'TOTAL', 's' => 5];
+    for ($i = 0; $i < 5; $i++) {
+      $foot[] = ['v' => '', 's' => 5];
+    }
+    foreach ($RESOURCE_KEYS as $key) {
+      $foot[] = ['v' => $totals[$key], 's' => 5];
+    }
+    $foot[] = ['v' => $overall_total_str, 's' => 5];
+    $sheetDetail[] = $foot;
+
+    // ============ BUILD XLSX ============
+    $aggWidths = array_merge([20], array_fill(0, $RES_COUNT, 22), [10]);
+    $detailWidths = array_merge([6, 13, 15, 20, 20, 32], array_fill(0, $RES_COUNT, 14), [16]);
+
+    $periode_label = date('d/m/Y', strtotime($start_date)) . ' s/d ' . date('d/m/Y', strtotime($end_date));
+
+    // Label filter untuk judul & nama file
+    $filter_label = '';
+    if ($filter_dokter !== '') {
+      $nm_dok = $this->db('dokter')->where('kd_dokter', $filter_dokter)->oneArray();
+      $filter_label .= 'Dokter: ' . isset_or($nm_dok['nm_dokter'], $filter_dokter) . '; ';
+    }
+    if ($filter_poli !== '') {
+      $nm_pol = $this->db('poliklinik')->where('kd_poli', $filter_poli)->oneArray();
+      $filter_label .= 'Poli: ' . isset_or($nm_pol['nm_poli'], $filter_poli) . '; ';
+    }
+    if ($filter_ket !== '') {
+      $filter_label .= 'Status: ' . $filter_ket . '; ';
+    }
+    // Status bayar selalu muncul di label (default: Sudah Bayar)
+    if ($filter_bayar !== '' && strtolower($filter_bayar) !== 'semua') {
+      $filter_label .= 'Bayar: ' . $filter_bayar . '; ';
+    } else {
+      $filter_label .= 'Bayar: Semua; ';
+    }
+    if ($filter_label !== '') {
+      $periode_label .= ' | ' . rtrim($filter_label, '; ');
+    }
+
+    $file_suffix = '';
+    if ($filter_dokter !== '') {
+      $file_suffix .= '_DOK_' . $filter_dokter;
+    }
+    if ($filter_poli !== '') {
+      $file_suffix .= '_POLI_' . $filter_poli;
+    }
+    if ($filter_ket !== '') {
+      $file_suffix .= '_KET_' . preg_replace('/[^A-Za-z0-9]+/', '_', $filter_ket);
+    }
+    if ($filter_bayar !== '' && strtolower($filter_bayar) !== 'semua') {
+      $file_suffix .= '_BAYAR_' . preg_replace('/[^A-Za-z0-9]+/', '_', $filter_bayar);
+    }
+
+    $excel = new Xlsx;
+    try {
+      $excel->addSheet('Agregasi', $sheetAgg, $aggWidths, 'REKAP PENGIRIMAN SATU SEHAT — ' . $periode_label);
+      $excel->addSheet('Detail Pasien', $sheetDetail, $detailWidths, 'REKAP DETAIL PENGIRIMAN SATU SEHAT — ' . $periode_label);
+      $excel->download('REKAP_SATU_SEHAT_' . $start_date . '_to_' . $end_date . $file_suffix . '.xlsx');
+    } catch (\Throwable $e) {
+      echo '<div style="font-family:Segoe UI,Arial,sans-serif;padding:28px;max-width:720px;margin:40px auto;border:1px solid #ddd;border-radius:8px;">'
+        . '<h2 style="margin-top:0;color:#b02a37;">Rekap Gagal Dihasilkan</h2>'
+        . '<p style="font-size:14px;line-height:1.7;">Terjadi kesalahan saat membangun file Excel:<br><code style="background:#f6f6f6;padding:6px 10px;border-radius:4px;display:inline-block;margin-top:6px;">' . htmlspecialchars($e->getMessage(), ENT_QUOTES) . '</code></p>'
+        . '<p style="font-size:13px;color:#666;">Periksa log PHP server, atau set sementara <code>DEV_MODE = true</code> di <code>config.php</code> untuk detail lebih lanjut.</p>'
+        . '</div>';
+      exit();
+    }
     exit();
   }
 
