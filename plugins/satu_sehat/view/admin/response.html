@@ -249,7 +249,7 @@
         </div>
         <h3 class="panel-title">Data Response Satu Sehat 
             <a href="{?=url('/satu-sehat/forward-tanggal')?}" class="btn btn-info btn-xs" target="_blank"><i class="fa fa-send"></i> Kirim Massal</a>
-            <a href="{?=url([ADMIN, 'satu_sehat', 'rekap'])?}?t={?=$_SESSION['token']?}&tanggal_awal={?=(isset($_GET['tanggal_awal']) && $_GET['tanggal_awal'] !== '') ? $_GET['tanggal_awal'] : date('Y-m-d')?}&tanggal_akhir={?=(isset($_GET['tanggal_akhir']) && $_GET['tanggal_akhir'] !== '') ? $_GET['tanggal_akhir'] : date('Y-m-d')?}" class="btn btn-success btn-xs" id="btn-rekap-excel" target="_blank"><i class="fa fa-file-excel-o"></i> Rekap Excel</a>
+            <a href="#" class="btn btn-success btn-xs" data-toggle="modal" data-target="#rekapModal" id="btn-rekap-excel"><i class="fa fa-file-excel-o"></i> Rekap Excel</a>
         </h3>
     </div>
     <div class="panel-body">
@@ -351,6 +351,79 @@
         </div>
     </div>
 </div>
+<!-- Modal Rekap Data -->
+<div class="modal fade" id="rekapModal" tabindex="-1" role="dialog" aria-labelledby="rekapModalLabel">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="rekapModalLabel"><i class="fa fa-file-excel-o"></i> Rekap Data Satu Sehat</h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info" style="font-size:12px;padding:8px 12px;">
+                    <i class="fa fa-info-circle"></i>
+                    Biarkan semua filter <b>Semua</b> untuk rekap lengkap sesuai default. Atur filter bila ingin rekap per dokter / poli / status.
+                </div>
+                <div class="form-group">
+                    <label style="font-size:12px;margin-bottom:2px;">Tanggal Awal</label>
+                    <div class="input-group">
+                        <input type="text" id="rekap_tanggal_awal" class="form-control tanggal" placeholder="YYYY-MM-DD">
+                        <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label style="font-size:12px;margin-bottom:2px;">Tanggal Akhir</label>
+                    <div class="input-group">
+                        <input type="text" id="rekap_tanggal_akhir" class="form-control tanggal" placeholder="YYYY-MM-DD">
+                        <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label style="font-size:12px;margin-bottom:2px;">Dokter</label>
+                    <select id="rekap_filter_dokter" class="form-control">
+                        <option value="">Semua Dokter</option>
+                        {loop: $dokter_list}
+                        <option value="{?=$value.kd_dokter?}">{?=$value.kd_dokter?} - {?=$value.nm_dokter?}</option>
+                        {/loop}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="font-size:12px;margin-bottom:2px;">Poli/Unit</label>
+                    <select id="rekap_filter_poli" class="form-control">
+                        <option value="">Semua Poli</option>
+                        {loop: $poli_list}
+                        <option value="{?=$value.kd_poli?}">{?=$value.kd_poli?} - {?=$value.nm_poli?}</option>
+                        {/loop}
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label style="font-size:12px;margin-bottom:2px;">Status Keterangan</label>
+                    <select id="rekap_filter_ket" class="form-control">
+                        <option value="">Semua Status</option>
+                        <option value="Belum Closing & Belum Input Diagnosa">Belum Closing & Belum Input Diagnosa</option>
+                        <option value="Belum Closing">Belum Closing</option>
+                        <option value="Belum Input Diagnosa">Belum Input Diagnosa</option>
+                        <option value="Belum di Kirim">Belum di Kirim</option>
+                        <option value="Sudah di Kirim">Sudah di Kirim</option>
+                        <option value="Sudah di Kirim Sebagian">Sudah di Kirim Sebagian</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label style="font-size:12px;margin-bottom:2px;">Status Bayar</label>
+                    <select id="rekap_filter_bayar" class="form-control">
+                        <option value="Sudah Bayar" selected>Sudah Bayar</option>
+                        <option value="Belum Bayar">Belum Bayar</option>
+                        <option value="Semua">Semua (Sudah + Belum)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-success" id="btn-rekap-download"><i class="fa fa-download"></i> Download Rekap</button>
+            </div>
+        </div>
+    </div>
+</div>
 <script type="text/javascript">
     let table;
     let statusFilter = '';
@@ -381,16 +454,32 @@
         if (tanggal_akhir) $('#tanggal_akhir').val(tanggal_akhir);
         var baseURL = mlite.url + '/' + mlite.admin;
         
-        function updateRekapUrl() {
-            var tgl_awal = $('#tanggal_awal').val() || '';
-            var tgl_akhir = $('#tanggal_akhir').val() || '';
-            var url = baseURL + '/satu_sehat/rekap?t=' + mlite.token + '&tanggal_awal=' + encodeURIComponent(tgl_awal) + '&tanggal_akhir=' + encodeURIComponent(tgl_akhir);
-            $('#btn-rekap-excel').attr('href', url);
+        function syncRekapDates() {
+            var tgl_awal = $('#tanggal_awal').val();
+            var tgl_akhir = $('#tanggal_akhir').val();
+            if (tgl_awal) $('#rekap_tanggal_awal').val(tgl_awal);
+            if (tgl_akhir) $('#rekap_tanggal_akhir').val(tgl_akhir);
         }
-        $('#tanggal_awal, #tanggal_akhir').on('change dp.change', function() {
-            updateRekapUrl();
+        $('#tanggal_awal, #tanggal_akhir').on('change dp.change', syncRekapDates);
+        $('#rekapModal').on('show.bs.modal', syncRekapDates);
+
+        $('#btn-rekap-download').on('click', function () {
+            var tgl_awal = $('#rekap_tanggal_awal').val() || '';
+            var tgl_akhir = $('#rekap_tanggal_akhir').val() || '';
+            var dokter = $('#rekap_filter_dokter').val() || '';
+            var poli = $('#rekap_filter_poli').val() || '';
+            var ket = $('#rekap_filter_ket').val() || '';
+            var bayar = $('#rekap_filter_bayar').val() || 'Sudah Bayar';
+            var params = ['t=' + encodeURIComponent(mlite.token)];
+            if (tgl_awal) params.push('tanggal_awal=' + encodeURIComponent(tgl_awal));
+            if (tgl_akhir) params.push('tanggal_akhir=' + encodeURIComponent(tgl_akhir));
+            if (dokter) params.push('filter_dokter=' + encodeURIComponent(dokter));
+            if (poli) params.push('filter_poli=' + encodeURIComponent(poli));
+            if (ket) params.push('filter_ket=' + encodeURIComponent(ket));
+            if (bayar && bayar !== 'Sudah Bayar') params.push('filter_bayar=' + encodeURIComponent(bayar));
+            window.open(baseURL + '/satu_sehat/rekap?' + params.join('&'), '_blank');
         });
-        updateRekapUrl();
+        syncRekapDates();
         function buildApiUrl() {
             var tgl_awal = $('#tanggal_awal').val() || '';
             var tgl_akhir = $('#tanggal_akhir').val() || '';
