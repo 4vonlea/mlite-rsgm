@@ -1220,30 +1220,34 @@ class Admin extends AdminModule
     /* =======================
      * mPDF
      * ======================= */
-    $mpdf = new \Mpdf\Mpdf([
-      'mode' => 'utf-8',
-      'format' => 'A4',
-      'orientation' => 'P'
-    ]);
+    try {
+      $mpdf = new \Mpdf\Mpdf([
+        'mode' => 'utf-8',
+        'format' => 'A4',
+        'orientation' => 'P'
+      ]);
 
-    $mpdf->SetHTMLHeader($this->core->setPrintHeader());
-    $mpdf->SetHTMLFooter($this->core->setPrintFooter());
+      $mpdf->SetHTMLHeader($this->core->setPrintHeader());
+      $mpdf->SetHTMLFooter($this->core->setPrintFooter());
 
-    $css = '
-            del { display:none; }
-            table { padding-top:1cm; padding-bottom:1cm; }
-            td, th { border-bottom:1px solid #ddd; padding:5px; }
-        ';
+      $css = '
+              del { display:none; }
+              table { padding-top:1cm; padding-bottom:1cm; }
+              td, th { border-bottom:1px solid #ddd; padding:5px; }
+          ';
 
-    $mpdf->WriteHTML(
-      $this->core->setPrintCss(),
-      \Mpdf\HTMLParserMode::HEADER_CSS
-    );
-    $mpdf->WriteHTML('<style>' . $css . '</style>');
-    $mpdf->WriteHTML($html);
+      $mpdf->WriteHTML(
+        $this->core->setPrintCss(),
+        \Mpdf\HTMLParserMode::HEADER_CSS
+      );
+      $mpdf->WriteHTML('<style>' . $css . '</style>');
+      $mpdf->WriteHTML($html);
 
-    // simpan ke server
-    $mpdf->Output($pdfPath, 'F');
+      // simpan ke server
+      $mpdf->Output($pdfPath, 'F');
+    } catch (\Exception $e) {
+      echo "<pre>mPDF Error: " . $e->getMessage() . "</pre>";
+    }
     exit;
   }
 

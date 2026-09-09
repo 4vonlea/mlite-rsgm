@@ -48,23 +48,18 @@
 		<center>
 			<table width="740px">
 				<tr style="border:none;">
-					<td width="80px">
-						<img width="70px" src='{?=url()?}/{$settings.logo}' />
-					</td>
 					<td>
-						<span style="font-size:24px">{$settings.nama_instansi}</span><br>
-						{$settings.alamat} - {$settings.nomor_telepon} - {$settings.email}<br>
-						{$settings.kota} - {$settings.propinsi}
+						<img width="740px" src='{?=url()?}/assets/img/KOP-SURAT.png' />
 					</td>
 				</tr>
 			</table>
-			<hr style="border-top: 3px double #8c8b8b;width:740px;">
+			<br>
 			<table width="740px">
 				<tr style="border:none;">
 					<td width="150px">Nama Pasien/RM</td>
 					<td>:</td>
 					<td width="600px">
-						{$pasien.nm_pasien}
+						{$pasien.nm_pasien} / {$pasien.no_rkm_medis}
 					</td>
 				</tr>
 				<tr style="border:none;">
@@ -104,37 +99,41 @@
 				</tr>
 			</table>
 			<br>
-			<h4>Hasil Pemeriksaan Radiologi</h4>
+			<h4>Pemeriksaan Radiologi</h4>
 		  <table width="740px">
 		    <thead>
 		      <tr style="border-top: 1px solid #8c8b8b">
-		        <th width="100">Pemeriksaan</th>
+		        <th>Pemeriksaan</th>
+		        <th width="150">Nominal (Rp)</th>
 		      </tr>
 		    </thead>
 		    <tbody>
 		      {loop: $periksa_radiologi}
 						<tr>
 							<td >{$value.nm_perawatan}</td>
+							<td>{?=number_format($value.biaya, 0, ',', '.')?}</td>
 						</tr>
 		      {/loop}
 					{if: $hasil_radiologi}
 					<tr style="border-top: 1px solid #8c8b8b">
-		        <th width="100">Hasil</th>
+		        <th>Hasil</th>
+		        <th></th>
 		      </tr>
 					{/if}
 					{loop: $hasil_radiologi}
 					<tr>
-						<td>{?=nl2br($value.hasil)?}</td>
+						<td colspan="2">{?=nl2br($value.hasil)?}</td>
 					</tr>
 					{/loop}
 					{if: $gambar_radiologi}
 					<tr style="border-top: 1px solid #8c8b8b">
-		        <th width="100">Gambar</th>
+		        <th>Gambar</th>
+		        <th></th>
 		      </tr>
 					{/if}
 					{loop: $gambar_radiologi}
 					<tr>
-						<td><img src="{?=WEBAPPS_URL.'/radiologi/'.$value.lokasi_gambar?}" height="400px"></td>
+						<td colspan="2"><img src="{?=WEBAPPS_URL.'/radiologi/'.$value.lokasi_gambar?}" height="400px"></td>
 					</tr>
 					{/loop}
 		    </tbody>
