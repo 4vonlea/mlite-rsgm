@@ -73,12 +73,16 @@ class Admin extends AdminModule
     $agama = array('ISLAM', 'KRISTEN', 'PROTESTAN', 'HINDU', 'BUDHA', 'KONGHUCU', 'KEPERCAYAAN');
     $pnd = array('TS', 'TK', 'SD', 'SMP', 'SMA', 'SLTA/SEDERAJAT', 'D1', 'D2', 'D3', 'D4', 'S1', 'S2', 'S3', '-');
     $keluarga = array('AYAH', 'IBU', 'ISTRI', 'SUAMI', 'SAUDARA', 'ANAK');
+    $propinsi = $this->db('propinsi')->where('kd_prop', '!=', 1)->asc('nm_prop')->toArray();
     if (isset($_POST['no_rkm_medis'])) {
       $pasien = $this->db('pasien')->where('no_rkm_medis', $_POST['no_rkm_medis'])->oneArray();
       $pasien['propinsi'] = $this->db('propinsi')->where('kd_prop', $pasien['kd_prop'])->oneArray();
       $pasien['kabupaten'] = $this->db('kabupaten')->where('kd_kab', $pasien['kd_kab'])->oneArray();
       $pasien['kecamatan'] = $this->db('kecamatan')->where('kd_kec', $pasien['kd_kec'])->oneArray();
       $pasien['kelurahan'] = $this->db('kelurahan')->where('kd_kel', $pasien['kd_kel'])->oneArray();
+      $kabupaten_list = $this->db('kabupaten')->where('kd_prop', $pasien['kd_prop'])->asc('nm_kab')->toArray();
+      $kecamatan_list = $this->db('kecamatan')->where('kd_kab', $pasien['kd_kab'])->asc('nm_kec')->toArray();
+      $kelurahan_list = $this->db('kelurahan')->where('kd_kec', $pasien['kd_kec'])->asc('nm_kel')->toArray();
       echo $this->draw('form.html', [
         'pasien' => htmlspecialchars_array($pasien),
         'penjab' => htmlspecialchars_array($penjab),
@@ -86,6 +90,10 @@ class Admin extends AdminModule
         'agama' => htmlspecialchars_array($agama),
         'pnd' => htmlspecialchars_array($pnd),
         'keluarga' => htmlspecialchars_array($keluarga),
+        'propinsi' => $propinsi,
+        'kabupaten_list' => $kabupaten_list,
+        'kecamatan_list' => $kecamatan_list,
+        'kelurahan_list' => $kelurahan_list,
         'no_rkm_medis_baru' => htmlspecialchars($this->core->setNoRM(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
         'waapitoken' => htmlspecialchars($this->settings->get('wagateway.token'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
         'waapiphonenumber' => htmlspecialchars($this->settings->get('wagateway.phonenumber'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
@@ -145,6 +153,10 @@ class Admin extends AdminModule
         'agama' => $agama,
         'pnd' => $pnd,
         'keluarga' => $keluarga,
+        'propinsi' => $propinsi,
+        'kabupaten_list' => [],
+        'kecamatan_list' => [],
+        'kelurahan_list' => [],
         'no_rkm_medis_baru' => $this->core->setNoRM(),
         'waapitoken' => $this->settings->get('wagateway.token'),
         'waapiphonenumber' => $this->settings->get('wagateway.phonenumber'),
@@ -1286,6 +1298,25 @@ class Admin extends AdminModule
         break;
     }
     exit();
+  }
+
+  public function apiWilayahjson()
+  {
+    $show = isset($_GET['show']) ? $_GET['show'] : "";
+    switch ($show) {
+      case "propinsi":
+        return $this->db('propinsi')->where('kd_prop', '!=', 1)->asc('nm_prop')->toArray();
+      case "kabupaten":
+        $kd_prop = isset($_GET['kd_prop']) ? intval($_GET['kd_prop']) : 0;
+        return $this->db('kabupaten')->where('kd_prop', $kd_prop)->asc('nm_kab')->toArray();
+      case "kecamatan":
+        $kd_kab = isset($_GET['kd_kab']) ? intval($_GET['kd_kab']) : 0;
+        return $this->db('kecamatan')->where('kd_kab', $kd_kab)->asc('nm_kec')->toArray();
+      case "kelurahan":
+        $kd_kec = isset($_GET['kd_kec']) ? $_GET['kd_kec'] : "";
+        return $this->db('kelurahan')->where('kd_kec', $kd_kec)->asc('nm_kel')->toArray();
+    }
+    return [];
   }
 
   public function hitungUmur($tanggal_lahir)

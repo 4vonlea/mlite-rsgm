@@ -464,17 +464,7 @@ footer a, footer a:hover {
     display: none;
 }
 .single .selectator_selected_items .selectator_selected_item .selectator_selected_item_remove {
-    display: block;
-    position: absolute;
-    right: 16px;
-    cursor: pointer;
-    font-size: 75%;
-    font-weight: bold;
-    color: rgba(0, 0, 0, 0.75);
-    padding: 2px;
-    line-height: 0;
-    top: 50%;
-    transform: scaleX(1.2);
+    display: none;
 }
 .multiple .selectator_selected_items .selectator_selected_item .selectator_selected_item_remove {
     display: inline-block;

@@ -1,4 +1,7 @@
 <div id="form">
+  <style>
+    .single .selectator_selected_items .selectator_selected_item_remove { display: none !important; }
+  </style>
   <div class="col-md-6">
     <div class="panel panel-default">
       <div class="panel-body">
@@ -139,29 +142,51 @@
             <div class="form-group">
               <label for="propinsi" class="col-sm-3 control-label">Propinsi</label>
               <div class="col-sm-4">
-                <input type="text" name="nm_prop" id="nm_prop" class="form-control" value="{$pasien.propinsi.nm_prop}" />
-                <input type="hidden" name="kd_prop" id="kd_prop" class="form-control" value="{$pasien.kd_prop}" />
-                <ul class="list-group" id="propinsiList" style="z-index:1000;position:absolute;width:100%;"></ul>
+                <select name="kd_prop" id="kd_prop" class="form-control">
+                  <option value="">Pilih Propinsi</option>
+                  {loop: $propinsi as $prov}
+                  <option value="{$prov.kd_prop}" {if: $pasien.kd_prop == $prov.kd_prop}selected{/if}>{$prov.nm_prop}</option>
+                  {/loop}
+                </select>
+                <input type="hidden" name="nm_prop" id="nm_prop" value="{$pasien.propinsi.nm_prop}" />
               </div>
               <label for="kota" class="col-sm-1 control-label">Kota</label>
               <div class="col-sm-4">
-                <input type="text" name="nm_kab" id="nm_kab" class="form-control" value="{$pasien.kabupaten.nm_kab}" />
-                <input type="hidden" name="kd_kab" id="kd_kab" class="form-control" value="{$pasien.kd_kab}" />
-                <ul class="list-group" id="kabupatenList" style="z-index:1000;position:absolute;width:100%;"></ul>
+                <select name="kd_kab" id="kd_kab" class="form-control" {if: $pasien.kd_prop == '1'}disabled{/if}>
+                  <option value="">Pilih Kota</option>
+                  {if: isset($kabupaten_list) && count($kabupaten_list) > 0}
+                  {loop: $kabupaten_list as $kab}
+                  <option value="{$kab.kd_kab}" {if: $pasien.kd_kab == $kab.kd_kab}selected{/if}>{$kab.nm_kab}</option>
+                  {/loop}
+                  {/if}
+                </select>
+                <input type="hidden" name="nm_kab" id="nm_kab" value="{$pasien.kabupaten.nm_kab}" />
               </div>
             </div>
             <div class="form-group">
               <label for="kecamatan" class="col-sm-3 control-label">Kecamatan</label>
               <div class="col-sm-4">
-                <input type="text" name="nm_kec" id="nm_kec" class="form-control" value="{$pasien.kecamatan.nm_kec}" />
-                <input type="hidden" name="kd_kec" id="kd_kec" class="form-control" value="{$pasien.kd_kec}" />
-                <ul class="list-group" id="kecamatanList" style="z-index:1000;position:absolute;width:100%;"></ul>
+                <select name="kd_kec" id="kd_kec" class="form-control" {if: $pasien.kd_kab == '1' || $pasien.kd_kab == ''}disabled{/if}>
+                  <option value="">Pilih Kecamatan</option>
+                  {if: isset($kecamatan_list) && count($kecamatan_list) > 0}
+                  {loop: $kecamatan_list as $kec}
+                  <option value="{$kec.kd_kec}" {if: $pasien.kd_kec == $kec.kd_kec}selected{/if}>{$kec.nm_kec}</option>
+                  {/loop}
+                  {/if}
+                </select>
+                <input type="hidden" name="nm_kec" id="nm_kec" value="{$pasien.kecamatan.nm_kec}" />
               </div>
               <label for="desa" class="col-sm-1 control-label">Desa</label>
               <div class="col-sm-4">
-                <input type="text" name="nm_kel" id="nm_kel" class="form-control" value="{$pasien.kelurahan.nm_kel}" />
-                <input type="hidden" name="kd_kel" id="kd_kel" class="form-control" value="{$pasien.kd_kel}" />
-                <ul class="list-group" id="kelurahanList" style="z-index:1000;position:absolute;width:100%;"></ul>
+                <select name="kd_kel" id="kd_kel" class="form-control" {if: $pasien.kd_kec == '1' || $pasien.kd_kec == ''}disabled{/if}>
+                  <option value="">Pilih Desa</option>
+                  {if: isset($kelurahan_list) && count($kelurahan_list) > 0}
+                  {loop: $kelurahan_list as $kel}
+                  <option value="{$kel.kd_kel}" {if: $pasien.kd_kel == $kel.kd_kel}selected{/if}>{$kel.nm_kel}</option>
+                  {/loop}
+                  {/if}
+                </select>
+                <input type="hidden" name="nm_kel" id="nm_kel" value="{$pasien.kelurahan.nm_kel}" />
               </div>
             </div>
           </div>
@@ -253,89 +278,117 @@
    });
 </script>
 <script>
-  $('#nm_prop').keyup(function(){
-     var query = $(this).val();
-     if(query != '')
-     {
-        $.ajax({
-           url: "{?=url([ADMIN, 'pasien', 'wilayah?show=caripropinsi'])?}",
-           method:"POST",
-           data:{query:query},
-           success:function(data)
-           {
-              $('#propinsiList').fadeIn();
-              $('#propinsiList').html(data);
-           }
-        });
-     }
-  });
-  $('#propinsiList').on('click', 'li', function(){
-     $('#nm_prop').val($(this).text().split(': ')[1]);
-     $('#kd_prop').val($(this).text().split(': ')[0]);
-     $('#propinsiList').fadeOut();
-  });
-  $('#nm_kab').keyup(function(){
-     var query = $(this).val();
-     if(query != '')
-     {
-        $.ajax({
-           url: "{?=url([ADMIN, 'pasien', 'wilayah?show=carikabupaten'])?}",
-           method:"POST",
-           data:{query:query},
-           success:function(data)
-           {
-              $('#kabupatenList').fadeIn();
-              $('#kabupatenList').html(data);
-           }
-        });
-     }
-  });
-  $('#kabupatenList').on('click', 'li', function(){
-       $('#nm_kab').val($(this).text().split(': ')[1]);
-       $('#kd_kab').val($(this).text().split(': ')[0]);
-       $('#kabupatenList').fadeOut();
-  });
-  $('#nm_kec').keyup(function(){
-       var query = $(this).val();
-       if(query != '')
-       {
-            $.ajax({
-                 url: "{?=url([ADMIN, 'pasien', 'wilayah?show=carikecamatan'])?}",
-                 method:"POST",
-                 data:{query:query},
-                 success:function(data)
-                 {
-                      $('#kecamatanList').fadeIn();
-                      $('#kecamatanList').html(data);
-                 }
+  var baseURL = mlite.url + '/' + mlite.admin;
+  var wilayahURL = baseURL + '/api/pasien/wilayahjson';
+
+  function refreshWilayahSelect(selector, html, value, disabled) {
+    var $sel = $(selector);
+    if ($sel.data('selectator')) {
+      $sel.selectator('destroy');
+    }
+    $sel.html(html);
+    if (value) {
+      $sel.val(value);
+    }
+    $sel.prop('disabled', disabled);
+    $sel.selectator();
+    return $sel;
+  }
+
+  function resetWilayahDownstream(level) {
+    if (level <= 2) {
+      $('#nm_kab').val('');
+      refreshWilayahSelect('#kd_kab', '<option value="">Pilih Kota</option>', '', true);
+    }
+    if (level <= 3) {
+      $('#nm_kec').val('');
+      refreshWilayahSelect('#kd_kec', '<option value="">Pilih Kecamatan</option>', '', true);
+    }
+    if (level <= 4) {
+      $('#nm_kel').val('');
+      refreshWilayahSelect('#kd_kel', '<option value="">Pilih Desa</option>', '', true);
+    }
+  }
+
+  $('#kd_prop').on('change', function() {
+    var kd_prop = $(this).val();
+    var nm_prop = $(this).find('option:selected').text();
+    $('#nm_prop').val(kd_prop ? nm_prop : '');
+    resetWilayahDownstream(2);
+    if (kd_prop) {
+      $.ajax({
+        url: wilayahURL + '?show=kabupaten&kd_prop=' + kd_prop + '&t=' + mlite.token,
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+          var options = '<option value="">Pilih Kota</option>';
+          if (data && data.length > 0) {
+            $.each(data, function(i, row) {
+              options += '<option value="' + row.kd_kab + '">' + row.nm_kab + '</option>';
             });
-       }
+            refreshWilayahSelect('#kd_kab', options, '', false);
+          } else {
+            refreshWilayahSelect('#kd_kab', options, '', true);
+          }
+        }
+      });
+    }
   });
-  $('#kecamatanList').on('click', 'li', function(){
-       $('#nm_kec').val($(this).text().split(': ')[1]);
-       $('#kd_kec').val($(this).text().split(': ')[0]);
-       $('#kecamatanList').fadeOut();
-  });
-  $('#nm_kel').keyup(function(){
-       var query = $(this).val();
-       if(query != '')
-       {
-            $.ajax({
-                 url: "{?=url([ADMIN, 'pasien', 'wilayah?show=carikelurahan'])?}",
-                 method:"POST",
-                 data:{query:query},
-                 success:function(data)
-                 {
-                      $('#kelurahanList').fadeIn();
-                      $('#kelurahanList').html(data);
-                 }
+
+  $('#kd_kab').on('change', function() {
+    var kd_kab = $(this).val();
+    var nm_kab = $(this).find('option:selected').text();
+    $('#nm_kab').val(kd_kab ? nm_kab : '');
+    resetWilayahDownstream(3);
+    if (kd_kab) {
+      $.ajax({
+        url: wilayahURL + '?show=kecamatan&kd_kab=' + kd_kab + '&t=' + mlite.token,
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+          var options = '<option value="">Pilih Kecamatan</option>';
+          if (data && data.length > 0) {
+            $.each(data, function(i, row) {
+              options += '<option value="' + row.kd_kec + '">' + row.nm_kec + '</option>';
             });
-       }
+            refreshWilayahSelect('#kd_kec', options, '', false);
+          } else {
+            refreshWilayahSelect('#kd_kec', options, '', true);
+          }
+        }
+      });
+    }
   });
-  $('#kelurahanList').on('click', 'li', function(){
-       $('#nm_kel').val($(this).text().split(': ')[1]);
-       $('#kd_kel').val($(this).text().split(': ')[0]);
-       $('#kelurahanList').fadeOut();
+
+  $('#kd_kec').on('change', function() {
+    var kd_kec = $(this).val();
+    var nm_kec = $(this).find('option:selected').text();
+    $('#nm_kec').val(kd_kec ? nm_kec : '');
+    resetWilayahDownstream(4);
+    if (kd_kec) {
+      $.ajax({
+        url: wilayahURL + '?show=kelurahan&kd_kec=' + kd_kec + '&t=' + mlite.token,
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+          var options = '<option value="">Pilih Desa</option>';
+          if (data && data.length > 0) {
+            $.each(data, function(i, row) {
+              options += '<option value="' + row.kd_kel + '">' + row.nm_kel + '</option>';
+            });
+            refreshWilayahSelect('#kd_kel', options, '', false);
+          } else {
+            refreshWilayahSelect('#kd_kel', options, '', true);
+          }
+        }
+      });
+    }
+  });
+
+  $('#kd_kel').on('change', function() {
+    var kd_kel = $(this).val();
+    var nm_kel = $(this).find('option:selected').text();
+    $('#nm_kel').val(kd_kel ? nm_kel : '');
   });
 
  </script>
