@@ -7449,6 +7449,42 @@ class Admin extends AdminModule
     $sheetAgg[] = [['v' => 'TTL ITEM TERKIRIM / ' . $jml_items . ' * 100', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $pct_ttl, 's' => 10], ['v' => '%', 's' => 8]];
     $sheetAgg[] = [['v' => 'PERSENTASE TOTAL DATA YG BERHASIL TERKIRIM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $pct_dec, 's' => 3]];
 
+    // ============ PERSENTASE MODUL WAJIB SATUSEHAT + KETERANGAN ============
+    $AGG_COLS = $RES_COUNT + 2;
+
+    $sheetAgg[] = [];
+    $sheetAgg[] = [['v' => 'PERSENTASE PENGIRIMAN MODUL WAJIB SATUSEHAT (%)', 's' => 2, 'm' => $AGG_COLS]];
+    $sheetAgg[] = [['v' => 'MODUL / RESOURCE', 's' => 1], ['v' => '% TERTERKIRIM', 's' => 1]];
+
+    $modul_wajib = [
+      ['Pendaftaran (Encounter)', 'id_encounter'],
+      ['Diagnostik (Condition)', 'id_condition'],
+      ['Obat - Medication Request', 'id_medication_request'],
+      ['Obat - Medication Dispense', 'id_medication_dispense'],
+      ['Laboratorium (Specimen)', 'id_lab_pk_specimen'],
+      ['Radiologi (Imaging Study)', 'id_imaging_study'],
+    ];
+    foreach ($modul_wajib as $m) {
+      $pct = $total_kunjungan > 0 ? round(($totals[$m[1]] / $total_kunjungan) * 100, 2) : 0;
+      $sheetAgg[] = [['v' => $m[0], 's' => 4], ['v' => $pct, 's' => 10], ['v' => '%', 's' => 8]];
+    }
+
+    // Catatan: pembanding = total kunjungan pasien pada periode & filter terpilih
+    $sheetAgg[] = [['v' => 'Pembanding persen: jumlah total kunjungan (' . $total_kunjungan . ') pada periode/ filter terpilih.', 's' => 4, 'm' => $AGG_COLS]];
+
+    $sheetAgg[] = [];
+    $sheetAgg[] = [['v' => 'KETERANGAN / CATATAN', 's' => 2, 'm' => $AGG_COLS]];
+    $catatan = [
+      '- Modul wajib berdasarkan surat RS Online Kemenkes: Pendaftaran (Encounter), Diagnostik (Condition), Obat (Medication Request dan Medication Dispense), Laboratorium (Specimen), dan Radiologi (Imaging Study).',
+      '- ID Composition (administrasi gizi): untuk rawat jalan memang tidak ada, hanya untuk rawat inap saja.',
+      '- ID Vaksin/Imunisasi: di RSGM tidak ada layanan vaksin/imunisasi.',
+      '- ID Questionnaire (pasien tidak mampu / KPS): hanya diisi jika pasien memiliki surat keterangan tidak mampu.',
+      '- ID Allergy: hanya terisi jika ada diagnosa alergi; selama ini dokter umum tidak memeriksa langsung terkait alergi sehingga 0%.',
+    ];
+    foreach ($catatan as $c) {
+      $sheetAgg[] = [['v' => $c, 's' => 4, 'm' => $AGG_COLS]];
+    }
+
     // ============ SHEET 2: DETAIL PASIEN (per-kunjungan 0/1) ============
     $sheetDetail = [];
 

@@ -211,6 +211,9 @@ class Xlsx
                 if ($cell === null) {
                     $cell = '';
                 }
+                if (is_array($cell) && !empty($cell['m']) && (int)$cell['m'] > 1) {
+                    $mergeRanges[] = $this->colLetter($c) . $rn . ':' . $this->colLetter($c + (int)$cell['m'] - 1) . $rn;
+                }
                 $rowXml .= $this->buildCell($cell, $this->colLetter($c), $rn);
             }
             $rowXml .= '</row>';
