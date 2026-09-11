@@ -1476,6 +1476,18 @@ class Admin extends AdminModule
         }
         ksort($poli_breakdown);
 
+        // Exclude supporting units (penunjang) from RM completeness breakdown
+        $penunjang_terms = ['laboratorium', 'radiologi', 'dental'];
+        foreach ($poli_breakdown as $nm_p => $data) {
+            $nm_lower = strtolower($nm_p);
+            foreach ($penunjang_terms as $term) {
+                if (strpos($nm_lower, $term) !== false) {
+                    unset($poli_breakdown[$nm_p]);
+                    break;
+                }
+            }
+        }
+
         $persen_wt = $total_diperiksa > 0 ? round(($kurang_60 / $total_diperiksa) * 100, 2) : 0;
         $persen_rm = $total_kunjungan > 0 ? round(($rm_lengkap / $total_kunjungan) * 100, 2) : 0;
 

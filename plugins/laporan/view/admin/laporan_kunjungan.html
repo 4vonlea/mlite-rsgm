@@ -90,17 +90,393 @@
     .grid-item .stat-label {
         font-size: 9px;
     }
+
+    /* Indikator Mutu Styles */
+    .indikator-panel {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+        overflow: hidden;
+    }
+    .indikator-panel .panel-heading {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+        color: #fff;
+        padding: 16px 24px;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        border: none;
+    }
+    .indikator-panel .panel-heading i {
+        margin-right: 8px;
+    }
+    .indikator-panel .panel-body {
+        padding: 24px;
+        background: #f8fafc;
+    }
+    .indikator-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 24px;
+        border: 1px solid #e2e8f0;
+        position: relative;
+        overflow: hidden;
+        transition: box-shadow 0.2s;
+    }
+    .indikator-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    .indikator-card-top {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+    .indikator-card-top.top-green {
+        background: linear-gradient(90deg, #10b981, #34d399);
+    }
+    .indikator-card-top.top-blue {
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    }
+    .indikator-card-top.top-red {
+        background: linear-gradient(90deg, #ef4444, #f87171);
+    }
+    .indikator-card-top.top-yellow {
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+    .indikator-card-top.top-gray {
+        background: linear-gradient(90deg, #94a3b8, #cbd5e1);
+    }
+    .indikator-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+    .indikator-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        color: #fff;
+        margin-right: 14px;
+        flex-shrink: 0;
+    }
+    .indikator-icon.icon-green {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+    .indikator-icon.icon-blue {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+    .indikator-icon.icon-gray {
+        background: linear-gradient(135deg, #94a3b8, #64748b);
+    }
+    .indikator-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #334155;
+        margin: 0;
+    }
+    .indikator-subtitle {
+        font-size: 11px;
+        color: #94a3b8;
+        margin: 2px 0 0 0;
+    }
+    .indikator-big-number {
+        font-size: 32px;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+    .indikator-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 20px;
+        margin-bottom: 14px;
+    }
+    .indikator-status.status-ok {
+        background: #ecfdf5;
+        color: #059669;
+    }
+    .indikator-status.status-warn {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+    .indikator-status.status-info {
+        background: #fffbeb;
+        color: #b45309;
+    }
+    .indikator-center-empty {
+        text-align: center;
+        padding: 32px 12px;
+        color: #94a3b8;
+    }
+    .indikator-progress-track {
+        width: 100%;
+        height: 10px;
+        background: #e2e8f0;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 16px;
+    }
+    .indikator-progress-bar {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.6s ease;
+    }
+    .indikator-progress-bar.bar-green {
+        background: linear-gradient(90deg, #10b981, #34d399);
+    }
+    .indikator-progress-bar.bar-blue {
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    }
+    .indikator-progress-bar.bar-red {
+        background: linear-gradient(90deg, #ef4444, #f87171);
+    }
+    .indikator-progress-bar.bar-yellow {
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+    .indikator-meta {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0 0 0;
+        border-top: 1px solid #f1f5f9;
+    }
+    .indikator-meta-item {
+        text-align: center;
+        flex: 1;
+    }
+    .indikator-meta-label {
+        font-size: 10px;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .indikator-meta-value {
+        font-size: 14px;
+        font-weight: 700;
+        color: #334155;
+    }
+    .breakdown-section {
+        margin-top: 16px;
+        border-top: 1px solid #f1f5f9;
+        padding-top: 14px;
+    }
+    .breakdown-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .breakdown-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 7px 10px;
+        border-radius: 6px;
+        margin-bottom: 4px;
+        background: #f8fafc;
+        font-size: 12px;
+    }
+    .breakdown-item:hover {
+        background: #f1f5f9;
+    }
+    .breakdown-name {
+        color: #475569;
+        font-weight: 500;
+    }
+    .breakdown-badge {
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+    }
+    .breakdown-badge.badge-green {
+        background: #ecfdf5;
+        color: #059669;
+    }
+    .breakdown-badge.badge-yellow {
+        background: #fffbeb;
+        color: #d97706;
+    }
+    .breakdown-badge.badge-red {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+    .breakdown-progress {
+        flex: 1;
+        margin: 0 10px;
+        height: 4px;
+        background: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .breakdown-progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        min-width: 2px;
+    }
+    .breakdown-progress-fill.bar-green {
+        background: linear-gradient(90deg, #10b981, #34d399);
+    }
+    .breakdown-progress-fill.bar-yellow {
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+
+    /* Consolidated Report Layout */
+    .report-section {
+        margin-bottom: 20px;
+    }
+    .row-eq-stats {
+        display: flex;
+        align-items: flex-start;
+    }
+    .row-eq-stats> [class*="col-md-"] {
+        display: flex;
+    }
+    .row-eq-stats .report-panel {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .row-eq-stats .report-panel-body {
+        flex: 1;
+        overflow-y: auto;
+    }
+    .report-panel {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+        margin-bottom: 20px;
+    }
+    .report-panel-heading {
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        border-radius: 10px 10px 0 0;
+        padding: 12px 20px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .report-panel-heading i {
+        color: #2563eb;
+        font-size: 14px;
+    }
+    .report-panel-heading .heading-badge {
+        margin-left: auto;
+    }
+    .report-panel-body {
+        padding: 16px 20px;
+    }
+    .report-panel-body.no-pad {
+        padding: 0;
+    }
+    .panel-scroll {
+        max-height: 340px;
+        overflow-y: auto;
+    }
+    .panel-scroll-lg {
+        max-height: 620px;
+        overflow-y: auto;
+        padding: 0;
+        margin: 0;
+    }
+    .filter-form {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 16px;
+    }
+    .indikator-panel .report-panel-heading {
+        background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+        border-bottom: 1px solid #dbeafe;
+        color: #1e3a8a;
+        font-size: 14px;
+    }
+    .indikator-panel .report-panel-heading i {
+        color: #2563eb;
+    }
+    .indikator-panel .report-panel-body {
+        padding: 20px;
+        background: #f8fafc;
+    }
+    .report-total-bar {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        gap: 10px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 14px;
+        font-weight: 600;
+        font-size: 13px;
+    }
+    .badge-total-all {
+        background: #334155;
+    }
+    .badge-male {
+        background: #6366f1;
+    }
+    .badge-female {
+        background: #f43f5e;
+    }
+    .report-info-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 14px;
+    }
+    .report-geo-col {
+        border-left: 1px solid #e2e8f0;
+    }
+    .report-geo-col:first-child {
+        border-left: none;
+    }
+    .report-geo-col > div {
+        max-height: 260px;
+        overflow-y: auto;
+    }
+    .report-geo-heading {
+        font-weight: 700;
+        margin-bottom: 15px;
+        font-size: 13px;
+    }
 </style>
 
 <article class="row">
     <div class="col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Statistik Kunjungan Pasien</h3>
+        <div class="report-panel">
+            <div class="report-panel-heading">
+                <i class="fa fa-filter"></i> Filter &amp; Export Laporan
             </div>
-            <div class="panel-body">
+            <div class="report-panel-body">
                 <form id="formLaporanKunjungan" action="{?=url([ADMIN, 'laporan', 'laporankunjungan'])?}" method="POST"
-                    style="margin-bottom: 25px; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    class="filter-form">
                     <input type="hidden" name="export" id="exportInput" value="">
                     <div class="row">
                         <div class="col-md-2 col-sm-6">
@@ -162,8 +538,10 @@
                         </div>
                     </div>
                 </form>
+            </div>
+        </div>
 
-                <div class="row">
+        <div class="row report-section">
                     <!-- JENIS KUNJUNGAN -->
                     <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
@@ -235,62 +613,58 @@
                 </div>
             </div>
 
-            <!-- INDIKATOR MUTU PELAYANAN -->
-            <div class="row" style="margin-top: 10px; margin-bottom: 25px;">
-                <div class="col-md-12">
-                    <div class="panel panel-default"
-                        style="border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                        <div class="panel-heading"
-                            style="background-color: #f8fafc; font-weight: bold; border-bottom: 1px solid #e2e8f0; color: #1e293b;">
-                            <i class="fa fa-line-chart"></i> Indikator Mutu Pelayanan Rawat Jalan
-                        </div>
-                        <div class="panel-body">
+        <!-- INDIKATOR MUTU PELAYANAN -->
+        <div class="report-panel indikator-panel">
+            <div class="report-panel-heading">
+                <i class="fa fa-shield"></i> Indikator Mutu Pelayanan Rawat Jalan
+            </div>
+            <div class="report-panel-body">
                             <div class="row">
                                 <!-- Kelengkapan Rekam Medis -->
-                                <div class="col-md-6">
-                                    <div
-                                        style="padding: 15px; border-radius: 6px; background-color: #fafafa; border: 1px solid #f0f0f0;">
-                                        <h5 style="margin-top: 0; font-weight: bold; color: #334155; font-size: 13px;">
-                                            Kelengkapan Rekam Medis</h5>
-                                        <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;"
-                                            class="{if: $laporan.stats.indikator_mutu.rekam_medis.persentase >= $laporan.stats.indikator_mutu.rekam_medis.target}color-green{else}color-teal{/if}">
-                                            {$laporan.stats.indikator_mutu.rekam_medis.persentase}%
-                                        </div>
-                                        <div class="progress"
-                                            style="height: 8px; margin-bottom: 10px; background-color: #e2e8f0;">
-                                            <div class="progress-bar {if: $laporan.stats.indikator_mutu.rekam_medis.persentase >= $laporan.stats.indikator_mutu.rekam_medis.target}progress-bar-success{else}progress-bar-info{/if}"
-                                                role="progressbar"
-                                                style="width: {$laporan.stats.indikator_mutu.rekam_medis.persentase}%;">
+                                <div class="col-md-8">
+                                    <div class="indikator-card">
+                                        {if: $laporan.stats.indikator_mutu.rekam_medis.persentase >= $laporan.stats.indikator_mutu.rekam_medis.target}
+                                        <div class="indikator-card-top top-green"></div>
+                                        {else}
+                                        <div class="indikator-card-top top-yellow"></div>
+                                        {/if}
+                                        <div class="indikator-header">
+                                            <div class="indikator-icon {if: $laporan.stats.indikator_mutu.rekam_medis.persentase >= $laporan.stats.indikator_mutu.rekam_medis.target}icon-green{else}icon-blue{/if}">
+                                                <i class="fa fa-folder-open"></i>
+                                            </div>
+                                            <div>
+                                                <p class="indikator-title">Kelengkapan Rekam Medis</p>
+                                                <p class="indikator-subtitle">Persentase berkas RM lengkap</p>
                                             </div>
                                         </div>
-                                        <p style="font-size: 11px; color: #64748b; margin-bottom: 0;">
-                                            Target: {$laporan.stats.indikator_mutu.rekam_medis.target}% (Asesmen
-                                            Lengkap)<br>
-                                            Capaian:
-                                            <strong>{$laporan.stats.indikator_mutu.rekam_medis.lengkap}</strong> dari
-                                            <strong>{$laporan.stats.indikator_mutu.rekam_medis.total}</strong> berkas
-                                            rekam medis rawat jalan lengkap.
-                                        </p>
+                                        <div class="indikator-big-number {if: $laporan.stats.indikator_mutu.rekam_medis.persentase >= $laporan.stats.indikator_mutu.rekam_medis.target}color-green{else}color-blue{/if}">
+                                            {$laporan.stats.indikator_mutu.rekam_medis.persentase}%
+                                        </div>
+                                        <div class="indikator-progress-track">
+                                            <div class="indikator-progress-bar {if: $laporan.stats.indikator_mutu.rekam_medis.persentase >= $laporan.stats.indikator_mutu.rekam_medis.target}bar-green{else}bar-yellow{/if}" style="width: {?=min(100, $laporan['stats']['indikator_mutu']['rekam_medis']['persentase'])?}%;"></div>
+                                        </div>
+                                        <div class="indikator-meta">
+                                            <div class="indikator-meta-item">
+                                                <div class="indikator-meta-label">Lengkap</div>
+                                                <div class="indikator-meta-value" style="color: #10b981;">{$laporan.stats.indikator_mutu.rekam_medis.lengkap}</div>
+                                            </div>
+                                            <div class="indikator-meta-item">
+                                                <div class="indikator-meta-label">Total</div>
+                                                <div class="indikator-meta-value">{$laporan.stats.indikator_mutu.rekam_medis.total}</div>
+                                            </div>
+                                        </div>
                                         {if: !empty($laporan.stats.indikator_mutu.rekam_medis.breakdown)}
-                                        <div
-                                            style="margin-top: 10px; border-top: 1px solid #e2e8f0; padding-top: 8px; max-height: 150px; overflow-y: auto; font-size: 11px;">
-                                            <strong style="color: #475569; display: block; margin-bottom: 5px;"><i
-                                                    class="fa fa-university"></i> Rincian per Poliklinik:</strong>
+                                        <div class="breakdown-section">
+                                            <div class="breakdown-title"><i class="fa fa-hospital-o"></i> Rincian per Poliklinik</div>
                                             {loop: $laporan.stats.indikator_mutu.rekam_medis.breakdown}
-                                            <div style="margin-bottom: 6px;">
-                                                <div
-                                                    style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                                                    <span style="color: #334155; font-weight: 500;">{$key}</span>
-                                                    <span style="font-weight: bold;"
-                                                        class="{if: $value.persentase >= 100}color-green{else}color-pink{/if}">{$value.persentase}%
-                                                        ({$value.lengkap}/{$value.total})</span>
+                                            <div class="breakdown-item">
+                                                <span class="breakdown-name">{$key}</span>
+                                                <div class="breakdown-progress">
+                                                    <div class="breakdown-progress-fill {if: $value.persentase >= 100}bar-green{else}bar-yellow{/if}" style="width: {?=min(100, $value['persentase'])?}%;"></div>
                                                 </div>
-                                                <div class="progress"
-                                                    style="height: 4px; margin-bottom: 0; background-color: #e2e8f0; border-radius: 2px;">
-                                                    <div class="progress-bar {if: $value.persentase >= 100}progress-bar-success{else}progress-bar-warning{/if}"
-                                                        role="progressbar"
-                                                        style="width: {$value.persentase}%; border-radius: 2px;"></div>
-                                                </div>
+                                                <span class="breakdown-badge {if: $value.persentase >= 100}badge-green{elseif: $value.persentase >= 80}badge-yellow{else}badge-red{/if}">
+                                                    {$value.persentase}% ({$value.lengkap}/{$value.total})
+                                                </span>
                                             </div>
                                             {/loop}
                                         </div>
@@ -298,45 +672,65 @@
                                     </div>
                                 </div>
 
-                                <!-- Pembatalan -->
-                                <div class="col-md-6">
-                                    <div
-                                        style="padding: 15px; border-radius: 6px; background-color: #fafafa; border: 1px solid #f0f0f0;">
-                                        <h5 style="margin-top: 0; font-weight: bold; color: #334155; font-size: 13px;">
-                                            Rasio Pembatalan Registrasi</h5>
-                                        <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;"
-                                            class="{if: $laporan.stats.indikator_mutu.pembatalan.persentase <= $laporan.stats.indikator_mutu.pembatalan.target}color-green{else}color-pink{/if}">
-                                            {$laporan.stats.indikator_mutu.pembatalan.persentase}%
-                                        </div>
-                                        <div class="progress"
-                                            style="height: 8px; margin-bottom: 10px; background-color: #e2e8f0;">
-                                            <div class="progress-bar {if: $laporan.stats.indikator_mutu.pembatalan.persentase <= $laporan.stats.indikator_mutu.pembatalan.target}progress-bar-success{else}progress-bar-danger{/if}"
-                                                role="progressbar"
-                                                style="width: {?=(100 - $laporan['stats']['indikator_mutu']['pembatalan']['persentase'])?}%;">
+                                <div class="col-md-4">
+                                    <div class="row">
+                                        <!-- Pembatalan Registrasi -->
+                                        <div class="col-md-12">
+                                            {if: $laporan.stats.indikator_mutu.pembatalan.total > 0}
+                                            <div class="indikator-card">
+                                                <div class="indikator-card-top {if: $laporan.stats.indikator_mutu.pembatalan.persentase <= $laporan.stats.indikator_mutu.pembatalan.target}top-green{else}top-red{/if}"></div>
+                                                <div class="indikator-header">
+                                                    <div class="indikator-icon {if: $laporan.stats.indikator_mutu.pembatalan.persentase <= $laporan.stats.indikator_mutu.pembatalan.target}icon-green{else}icon-blue{/if}">
+                                                        <i class="fa fa-times-circle"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="indikator-title">Rasio Pembatalan Registrasi</p>
+                                                        <p class="indikator-subtitle">Persentase pembatalan dari total registrasi</p>
+                                                    </div>
+                                                </div>
+                                                <div class="indikator-big-number {if: $laporan.stats.indikator_mutu.pembatalan.persentase <= $laporan.stats.indikator_mutu.pembatalan.target}color-green{else}color-pink{/if}">
+                                                    {$laporan.stats.indikator_mutu.pembatalan.persentase}%
+                                                </div>
+                                                <div class="indikator-progress-track">
+                                                    <div class="indikator-progress-bar {if: $laporan.stats.indikator_mutu.pembatalan.persentase <= $laporan.stats.indikator_mutu.pembatalan.target}bar-green{else}bar-red{/if}" style="width: {?=max(2, 100 - $laporan['stats']['indikator_mutu']['pembatalan']['persentase'])?}%;"></div>
+                                                </div>
+                                                <div class="indikator-meta">
+                                                    <div class="indikator-meta-item">
+                                                        <div class="indikator-meta-label">Dibatalkan</div>
+                                                        <div class="indikator-meta-value" style="color: #ef4444;">{$laporan.stats.indikator_mutu.pembatalan.batal}</div>
+                                                    </div>
+                                                    <div class="indikator-meta-item">
+                                                        <div class="indikator-meta-label">Total Reg</div>
+                                                        <div class="indikator-meta-value">{$laporan.stats.indikator_mutu.pembatalan.total}</div>
+                                                    </div>
+                                                </div>
                                             </div>
+                                            {else}
+                                            <div class="indikator-card">
+                                                <div class="indikator-card-top top-gray"></div>
+                                                <div class="indikator-header">
+                                                    <div class="indikator-icon icon-gray"><i class="fa fa-times-circle"></i></div>
+                                                    <div>
+                                                        <p class="indikator-title">Rasio Pembatalan Registrasi</p>
+                                                        <p class="indikator-subtitle">Persentase pembatalan dari total registrasi</p>
+                                                    </div>
+                                                </div>
+                                                <div class="indikator-center-empty">
+                                                    <i class="fa fa-exclamation-circle"></i>
+                                                    <div>Belum ada data registrasi</div>
+                                                </div>
+                                            </div>
+                                            {/if}
                                         </div>
-                                        <p style="font-size: 11px; color: #64748b; margin-bottom: 0;">
-                                            Target: &le; {$laporan.stats.indikator_mutu.pembatalan.target}%
-                                            (Maksimal)<br>
-                                            Capaian: <strong>{$laporan.stats.indikator_mutu.pembatalan.batal}</strong>
-                                            pembatalan dari
-                                            <strong>{$laporan.stats.indikator_mutu.pembatalan.total}</strong> total
-                                            registrasi pendaftaran.
-                                        </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="row">
-                <!-- Distribusi Usia -->
-                <div class="col-md-12">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">Distribusi Usia Pasien</div>
-                        <div class="panel-body">
+        <div class="report-panel">
+            <div class="report-panel-heading"><i class="fa fa-pie-chart"></i> Distribusi Usia Pasien</div>
+            <div class="report-panel-body">
                             <div class="table-responsive">
                                 <table class="table text-center" style="font-size: 13px;">
                                     <thead>
@@ -404,26 +798,21 @@
                                     </tbody>
                                 </table>
 
-                                <div class="mt-3"
-                                    style="margin-top: 15px; padding: 15px; background: #fafafa; display: flex; justify-content: space-around; font-weight: 600;">
-                                    <div>Total Seluruh: <span class="badge"
-                                            style="background: #334155;">{?=$laporan['stats']['gender']['L'] +
-                                            $laporan['stats']['gender']['P']?}</span></div>
-                                    <div>Total Laki-laki: <span class="badge"
-                                            style="background: #6366f1;">{$laporan.stats.gender.L}</span></div>
-                                    <div>Total Perempuan: <span class="badge"
-                                            style="background: #f43f5e;">{$laporan.stats.gender.P}</span></div>
+                                <div class="report-total-bar">
+                                    <div>Total Seluruh: <span class="badge badge-total-all">{?=$laporan['stats']['gender']['L'] +
+                                        $laporan['stats']['gender']['P']?}</span></div>
+                                    <div>Total Laki-laki: <span class="badge badge-male">{$laporan.stats.gender.L}</span></div>
+                                    <div>Total Perempuan: <span class="badge badge-female">{$laporan.stats.gender.P}</span></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="row">
-                    <!-- Kunjungan per Unit -->
-                    <div class="col-md-12">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">Statistik Kunjungan per Unit</div>
-                            <div class="panel-body">
+
+        <div class="row row-eq-stats">
+            <div class="col-md-7">
+                <div class="report-panel" id="panelPerUnit">
+                    <div class="report-panel-heading"><i class="fa fa-hospital-o"></i> Statistik Kunjungan per Unit</div>
+                    <div class="report-panel-body">
                                 <div class="table-responsive">
                                     <table class="table table-striped text-center"
                                         style="font-size: 13px; margin-bottom: 0;">
@@ -461,14 +850,11 @@
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="row">
-                    <!-- Dokter -->
-                    <div class="col-md-12">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">Kunjungan Dokter</div>
-                            <div class="panel-body" style="max-height: 300px; overflow-y: auto;">
+            <div class="col-md-5">
+                <div class="report-panel" id="panelDokter">
+                    <div class="report-panel-heading"><i class="fa fa-user-md"></i> Kunjungan Dokter</div>
+                    <div class="report-panel-body">
                                 <table class="table table-striped table-hover">
                                     <tbody>
                                         {loop: $laporan.stats.dokter}
@@ -484,14 +870,11 @@
                     </div>
                 </div>
 
-                <div class="row">
-                    <!-- Diagnosa per Unit -->
-                    <div class="col-md-6">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">Diagnosa per Unit {if: empty($laporan.req_poli)}<span
-                                    class="badge" style="background:#5eead4;color:#0f766e;">Top 10</span>{else}<span
-                                    class="badge" style="background:#5eead4;color:#0f766e;">Semua Data</span>{/if}</div>
-                            <div class="panel-body" style="max-height: 600px; overflow-y: auto; padding: 0;">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="report-panel">
+                    <div class="report-panel-heading">Diagnosa per Unit {if: empty($laporan.req_poli)}<span class="heading-badge badge" style="background:#5eead4;color:#0f766e;">Top 10</span>{else}<span class="heading-badge badge" style="background:#5eead4;color:#0f766e;">Semua Data</span>{/if}</div>
+                    <div class="report-panel-body panel-scroll-lg">
                                 {loop: $laporan.stats.diagnosa_per_poli}
                                 <div
                                     style="background: #f1f5f9; padding: 10px; font-weight: bold; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;">
@@ -532,13 +915,10 @@
                         </div>
                     </div>
 
-                    <!-- Tindakan per Unit -->
-                    <div class="col-md-6">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">Tindakan per Unit {if: empty($laporan.req_poli)}<span
-                                    class="badge" style="background:#5eead4;color:#0f766e;">Top 10</span>{else}<span
-                                    class="badge" style="background:#5eead4;color:#0f766e;">Semua Data</span>{/if}</div>
-                            <div class="panel-body" style="max-height: 600px; overflow-y: auto; padding: 0;">
+            <div class="col-md-6">
+                <div class="report-panel">
+                    <div class="report-panel-heading">Tindakan per Unit {if: empty($laporan.req_poli)}<span class="heading-badge badge" style="background:#5eead4;color:#0f766e;">Top 10</span>{else}<span class="heading-badge badge" style="background:#5eead4;color:#0f766e;">Semua Data</span>{/if}</div>
+                    <div class="report-panel-body panel-scroll-lg">
                                 {loop: $laporan.stats.tindakan_per_poli}
                                 <div
                                     style="background: #f1f5f9; padding: 10px; font-weight: bold; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;">
@@ -576,18 +956,16 @@
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">Statistik Geografis Pasien</div>
-                            <div class="panel-body">
+        <div class="report-panel">
+            <div class="report-panel-heading"><i class="fa fa-map-marker"></i> Statistik Geografis Pasien</div>
+            <div class="report-panel-body">
                                 <div class="row">
                                     <!-- Provinsi -->
-                                    <div class="col-md-3">
-                                        <h5 style="font-weight:bold; margin-bottom: 15px; font-size: 13px;">Provinsi
+                                    <div class="col-md-3 report-geo-col">
+                                        <h5 class="report-geo-heading">Provinsi
                                             <span class="badge"
                                                 style="background:#64748b;color:#fff;font-size:10px;">Top 10</span></h5>
-                                        <div style="max-height: 250px; overflow-y: auto; padding-right: 5px;">
+                                        <div class="report-geo-scroll">
                                             <table class="table table-hover table-striped"
                                                 style="font-size: 12px; margin-bottom: 0;">
                                                 <tbody>
@@ -604,11 +982,11 @@
                                         </div>
                                     </div>
                                     <!-- Kabupaten -->
-                                    <div class="col-md-3" style="border-left: 1px solid #e2e8f0;">
-                                        <h5 style="font-weight:bold; margin-bottom: 15px; font-size: 13px;">
+                                    <div class="col-md-3 report-geo-col">
+                                        <h5 class="report-geo-heading">
                                             Kabupaten/Kota <span class="badge"
                                                 style="background:#64748b;color:#fff;font-size:10px;">Top 10</span></h5>
-                                        <div style="max-height: 250px; overflow-y: auto; padding-right: 5px;">
+                                        <div class="report-geo-scroll">
                                             <table class="table table-hover table-striped"
                                                 style="font-size: 12px; margin-bottom: 0;">
                                                 <tbody>
@@ -625,11 +1003,11 @@
                                         </div>
                                     </div>
                                     <!-- Kecamatan -->
-                                    <div class="col-md-3" style="border-left: 1px solid #e2e8f0;">
-                                        <h5 style="font-weight:bold; margin-bottom: 15px; font-size: 13px;">Kecamatan
+                                    <div class="col-md-3 report-geo-col">
+                                        <h5 class="report-geo-heading">Kecamatan
                                             <span class="badge"
                                                 style="background:#64748b;color:#fff;font-size:10px;">Top 10</span></h5>
-                                        <div style="max-height: 250px; overflow-y: auto; padding-right: 5px;">
+                                        <div class="report-geo-scroll">
                                             <table class="table table-hover table-striped"
                                                 style="font-size: 12px; margin-bottom: 0;">
                                                 <tbody>
@@ -646,11 +1024,11 @@
                                         </div>
                                     </div>
                                     <!-- Kelurahan -->
-                                    <div class="col-md-3" style="border-left: 1px solid #e2e8f0;">
-                                        <h5 style="font-weight:bold; margin-bottom: 15px; font-size: 13px;">
+                                    <div class="col-md-3 report-geo-col">
+                                        <h5 class="report-geo-heading">
                                             Kelurahan/Desa <span class="badge"
                                                 style="background:#64748b;color:#fff;font-size:10px;">Top 10</span></h5>
-                                        <div style="max-height: 250px; overflow-y: auto; padding-right: 5px;">
+                                        <div class="report-geo-scroll">
                                             <table class="table table-hover table-striped"
                                                 style="font-size: 12px; margin-bottom: 0;">
                                                 <tbody>
@@ -669,16 +1047,10 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="row" style="margin-top: 20px;">
-                    <div class="col-md-12">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h3 class="panel-title">Detail Pasien Kunjungan</h3>
-                            </div>
-                            <div class="panel-body">
+            <div class="report-panel">
+                <div class="report-panel-heading"><i class="fa fa-list-alt"></i> Detail Pasien Kunjungan</div>
+                <div class="report-panel-body">
                                 <div class="table-responsive">
                                     <table id="tabelPasienKunjungan"
                                         class="table table-striped table-bordered table-hover"
@@ -765,24 +1137,24 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                <div class="row" style="margin-top: 15px;">
-                                    <div class="col-md-12" style="padding-top: 8px;">
-                                        <div style="background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 4px; display: inline-block; font-size: 11px;">
-                                            <i class="fa fa-database"></i> Total: <strong>{?=$laporan.total_pasien_list?}</strong> kunjungan
-                                        </div>
-                                    </div>
+                                <div class="report-info-badge">
+                                    <i class="fa fa-database"></i> Total: <strong>{?=$laporan.total_pasien_list?}</strong> kunjungan
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-    </div>
 
     <script>
+        function equalizeStatsPanels() {
+            var a = document.getElementById('panelPerUnit');
+            var b = document.getElementById('panelDokter');
+            if (a && b) {
+                var h = a.offsetHeight;
+                b.style.height = h + 'px';
+                b.style.maxHeight = h + 'px';
+            }
+        }
+
         $(document).ready(function () {
             $('select').selectator();
             $('#tabelPasienKunjungan').DataTable({
@@ -792,6 +1164,12 @@
                 "pageLength": 10,
                 "lengthMenu": [[10, 25, 50], [10, 25, 50]],
                 "order": [[1, "desc"]]
+            });
+            equalizeStatsPanels();
+            $(window).on('resize', function () {
+                var b = document.getElementById('panelDokter');
+                if (b) { b.style.height = ''; b.style.maxHeight = ''; }
+                equalizeStatsPanels();
             });
         });
 
@@ -803,21 +1181,21 @@
 
     <style>
         /* Custom scrollbar for geographic stats to match design */
-        .col-md-3>div::-webkit-scrollbar {
+        .report-geo-col>div::-webkit-scrollbar {
             width: 6px;
         }
 
-        .col-md-3>div::-webkit-scrollbar-track {
+        .report-geo-col>div::-webkit-scrollbar-track {
             background: #f1f5f9;
             border-radius: 4px;
         }
 
-        .col-md-3>div::-webkit-scrollbar-thumb {
+        .report-geo-col>div::-webkit-scrollbar-thumb {
             background: #94a3b8;
             border-radius: 4px;
         }
 
-        .col-md-3>div::-webkit-scrollbar-thumb:hover {
+        .report-geo-col>div::-webkit-scrollbar-thumb:hover {
             background: #64748b;
         }
     </style>
