@@ -1542,10 +1542,10 @@ class Admin extends AdminModule
           $uuid_encounter,
           $no_ktp_dokter_perujuk['practitioner_id'] ?? '',
           $nama_dokter_perujuk,
-          $check_mapping_lab['code_loinc'],
-          $check_mapping_lab['display_loinc'],
-          $check_mapping_lab['code_kptl'],
-          $check_mapping_lab['display_kptl'],
+          $check_mapping_lab['code'],
+          $check_mapping_lab['display'],
+          $check_mapping_lab['code'],
+          $check_mapping_lab['display'],
           $nama_tindakan['nm_perawatan']
         );
         $service_request_lab_json[] = $service_request_lab->toJsonBundle();
@@ -1565,8 +1565,8 @@ class Admin extends AdminModule
           "lab",
           $uuid_specimen_lab,
           $uuid_service_request_lab,
-          $check_mapping_lab['code_loinc'],
-          $check_mapping_lab['display_loinc']
+          $check_mapping_lab['code'],
+          $check_mapping_lab['display']
         );
         $observation_lab_json[] = $observation_lab->toJsonBundle();
 
@@ -1578,8 +1578,8 @@ class Admin extends AdminModule
           $uuid_observation_lab,
           $id_praktisi_lab['practitioner_id'] ?? '',
           $ihs_patient,
-          $check_mapping_lab['code_loinc'],
-          $check_mapping_lab['display_loinc'],
+          $check_mapping_lab['code'],
+          $check_mapping_lab['display'],
           $time_result
         );
         $diagnostic_report_json[] = $diagnostic_report_lab->toJsonBundle();
@@ -4376,6 +4376,10 @@ class Admin extends AdminModule
         exit();
       }
       $mapping_lab = $this->db('mlite_satu_sehat_mapping_lab')->where('kd_jenis_prw', $row['permintaan_pemeriksaan_lab']['kd_jenis_prw'])->oneArray();
+      if (!$mapping_lab || empty($mapping_lab['code'])) {
+        echo json_encode(['error' => 'Mapping LOINC untuk pemeriksaan lab belum dikonfigurasi. Silakan setup mapping lab terlebih dahulu.', 'kd_jenis_prw' => $row['permintaan_pemeriksaan_lab']['kd_jenis_prw']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        exit();
+      }
 
       // Data pasien dan dokter
       $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
@@ -4511,6 +4515,10 @@ class Admin extends AdminModule
         exit();
       }
       $mapping_lab = $this->db('mlite_satu_sehat_mapping_lab')->where('kd_jenis_prw', $row['permintaan_pemeriksaan_lab']['kd_jenis_prw'])->oneArray();
+      if (!$mapping_lab || empty($mapping_lab['code'])) {
+        echo json_encode(['error' => 'Mapping LOINC untuk pemeriksaan lab belum dikonfigurasi. Silakan setup mapping lab terlebih dahulu.', 'kd_jenis_prw' => $row['permintaan_pemeriksaan_lab']['kd_jenis_prw']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        exit();
+      }
 
       // Data pasien dan dokter
       $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
@@ -4618,6 +4626,10 @@ class Admin extends AdminModule
         ->where('noorder', $row['permintaan_lab']['noorder'])
         ->oneArray();
       $mapping_lab = $this->db('mlite_satu_sehat_mapping_lab')->where('kd_jenis_prw', $row['permintaan_pemeriksaan_lab']['kd_jenis_prw'])->oneArray();
+      if (!$mapping_lab || empty($mapping_lab['code'])) {
+        echo json_encode(['error' => 'Mapping LOINC untuk pemeriksaan lab belum dikonfigurasi. Silakan setup mapping lab terlebih dahulu.', 'kd_jenis_prw' => $row['permintaan_pemeriksaan_lab']['kd_jenis_prw']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        exit();
+      }
 
       // Data pasien dan dokter
       $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
@@ -4752,6 +4764,10 @@ class Admin extends AdminModule
         ->where('noorder', $row['permintaan_lab']['noorder'])
         ->oneArray();
       $mapping_lab = $this->db('mlite_satu_sehat_mapping_lab')->where('kd_jenis_prw', $row['permintaan_pemeriksaan_lab']['kd_jenis_prw'])->oneArray();
+      if (!$mapping_lab || empty($mapping_lab['code'])) {
+        echo json_encode(['error' => 'Mapping LOINC untuk pemeriksaan lab belum dikonfigurasi. Silakan setup mapping lab terlebih dahulu.', 'kd_jenis_prw' => $row['permintaan_pemeriksaan_lab']['kd_jenis_prw']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        exit();
+      }
 
       // Data pasien dan dokter
       $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
