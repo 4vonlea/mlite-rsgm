@@ -2678,6 +2678,20 @@ CREATE TABLE `mlite_satu_sehat_response` (
   CONSTRAINT `mlite_satu_sehat_response_ibfk_1` FOREIGN KEY (`no_rawat`) REFERENCES `reg_periksa` (`no_rawat`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+CREATE TABLE `mlite_satu_sehat_lab_response` (
+  `no_rawat` varchar(17) NOT NULL,
+  `noorder` varchar(15) NOT NULL,
+  `kd_jenis_prw` varchar(15) NOT NULL,
+  `id_service_request` varchar(50) DEFAULT NULL,
+  `id_specimen` varchar(50) DEFAULT NULL,
+  `id_observation` varchar(50) DEFAULT NULL,
+  `id_diagnostic` varchar(50) DEFAULT NULL,
+  `status` varchar(15) NOT NULL DEFAULT 'pending',
+  `raw_response` text,
+  `tgl_kirim` datetime DEFAULT NULL,
+  PRIMARY KEY (`no_rawat`,`noorder`,`kd_jenis_prw`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
 
 CREATE TABLE `mlite_set_nomor_surat` (
   `nomor_surat` varchar(10) NOT NULL

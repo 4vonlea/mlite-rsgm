@@ -11,8 +11,9 @@ class Specimen
     private $uuid_service_request;
     private $no_rawat;
     private $waktu_pengambilan;
+    private $identifier_value;
 
-    public function __construct($uuid_specimen, $org_id, $patient_id, $patient_name, $uuid_service_request, $no_rawat, $waktu_pengambilan)
+    public function __construct($uuid_specimen, $org_id, $patient_id, $patient_name, $uuid_service_request, $no_rawat, $waktu_pengambilan, $identifier_value = null)
     {
         $this->uuid_specimen = $uuid_specimen;
         $this->org_id = $org_id;
@@ -21,6 +22,7 @@ class Specimen
         $this->uuid_service_request = $uuid_service_request;
         $this->no_rawat = $no_rawat;
         $this->waktu_pengambilan = $waktu_pengambilan;
+        $this->identifier_value = $identifier_value;
     }
 
     public function toJson()
@@ -30,7 +32,7 @@ class Specimen
             "identifier" => [
                 [
                     "system" => "http://sys-ids.kemkes.go.id/specimen/" . $this->org_id,
-                    "value" => $this->no_rawat,
+                    "value" => $this->identifier_value !== null ? $this->identifier_value : $this->no_rawat,
                     "assigner" => [
                         "reference" => "Organization/" . $this->org_id,
                     ]

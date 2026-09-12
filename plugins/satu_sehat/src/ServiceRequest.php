@@ -17,8 +17,9 @@ class ServiceRequest
     private $display_kptl;
     private $pemeriksaan;
     private $practitioner_lab;
+    private $identifier_value;
 
-    public function __construct($uuid_service_request, $org_id, $lab_srid_ordinal, $patient_id, $encounter_id, $practitioner_id, $practitioner_name ,$code_loinc, $display_loinc, $code_kptl, $display_kptl,$pemeriksaan,$practitioner_lab = null)
+    public function __construct($uuid_service_request, $org_id, $lab_srid_ordinal, $patient_id, $encounter_id, $practitioner_id, $practitioner_name ,$code_loinc, $display_loinc, $code_kptl, $display_kptl,$pemeriksaan,$practitioner_lab = null,$identifier_value = null)
     {
         $this->uuid_service_request = $uuid_service_request;
         $this->org_id = $org_id;
@@ -33,6 +34,7 @@ class ServiceRequest
         $this->display_kptl = $display_kptl;
         $this->pemeriksaan = $pemeriksaan;
         $this->practitioner_lab = $practitioner_lab;
+        $this->identifier_value = $identifier_value;
     }
 
     public function toJson()
@@ -42,7 +44,7 @@ class ServiceRequest
             "identifier" => [
                 [
                     "system" => "http://sys-ids.kemkes.go.id/servicerequest/" . $this->org_id,
-                    "value" => $this->lab_srid_ordinal
+                    "value" => $this->identifier_value !== null ? $this->identifier_value : $this->lab_srid_ordinal
                 ]
             ],
             "status" => "active",

@@ -2007,10 +2007,42 @@ switch ($version) {
         }
         $return = '6.3.0';
         break;
+    case '6.3.0':
+        if (defined('DBDRIVER') && DBDRIVER == 'sqlite') {
+            $this->core->db()->pdo()->exec("CREATE TABLE IF NOT EXISTS `mlite_satu_sehat_lab_response` (
+              `no_rawat` TEXT NOT NULL,
+              `noorder` TEXT NOT NULL,
+              `kd_jenis_prw` TEXT NOT NULL,
+              `id_service_request` TEXT DEFAULT NULL,
+              `id_specimen` TEXT DEFAULT NULL,
+              `id_observation` TEXT DEFAULT NULL,
+              `id_diagnostic` TEXT DEFAULT NULL,
+              `status` TEXT NOT NULL DEFAULT 'pending',
+              `raw_response` TEXT,
+              `tgl_kirim` TEXT DEFAULT NULL,
+              PRIMARY KEY (`no_rawat`,`noorder`,`kd_jenis_prw`)
+            );");
+        } else {
+            $this->core->db()->pdo()->exec("CREATE TABLE IF NOT EXISTS `mlite_satu_sehat_lab_response` (
+              `no_rawat` varchar(17) NOT NULL,
+              `noorder` varchar(15) NOT NULL,
+              `kd_jenis_prw` varchar(15) NOT NULL,
+              `id_service_request` varchar(50) DEFAULT NULL,
+              `id_specimen` varchar(50) DEFAULT NULL,
+              `id_observation` varchar(50) DEFAULT NULL,
+              `id_diagnostic` varchar(50) DEFAULT NULL,
+              `status` varchar(15) NOT NULL DEFAULT 'pending',
+              `raw_response` text DEFAULT NULL,
+              `tgl_kirim` datetime DEFAULT NULL,
+              PRIMARY KEY (`no_rawat`,`noorder`,`kd_jenis_prw`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=latin1;");
+        }
+        $return = '6.4.0';
+        break;
     }
 
     if (!isset($return) || !$return) {
-        $return = '6.3.0';
+        $return = '6.4.0';
     }
 
 return $return;

@@ -1512,9 +1512,11 @@ class Admin extends AdminModule
     $observation_lab_json = [];
     $diagnostic_report_json = [];
     $permintaan_lab = $this->db('permintaan_lab')->join('permintaan_pemeriksaan_lab', 'permintaan_lab.noorder = permintaan_pemeriksaan_lab.noorder')->where('no_rawat', $no_rawat)->toArray();
+    $lab_items_built = [];
     foreach ($permintaan_lab as $value) {
       $check_mapping_lab = $this->db('mlite_satu_sehat_mapping_lab')->where('kd_jenis_prw', $value['kd_jenis_prw'])->oneArray();
       if ($check_mapping_lab && $check_mapping_lab['id_template'] != '' && $check_mapping_lab['jenis_pemeriksaan'] == 'tunggal') {
+        $lab_items_built[] = ['kd_jenis_prw' => $value['kd_jenis_prw'], 'noorder' => $value['noorder']];
         $praktisi_lab = $this->db('mlite_satu_sehat_mapping_praktisi')->select('practitioner_id', 'kd_dokter')->where('jenis_praktisi', 'Laboratorium')->toArray();
         if (!is_array($praktisi_lab) || empty($praktisi_lab)) {
           $id_praktisi_lab = ['practitioner_id' => $no_ktp_dokter['practitioner_id'] ?? '', 'kd_dokter' => $kd_dokter];
@@ -1533,6 +1535,7 @@ class Admin extends AdminModule
         $uuid_observation_lab = $this->gen_uuid();
         $uuid_diagnostic_report = $this->gen_uuid();
 
+        $identifier_value_lab = $value['noorder'] . '-' . $value['kd_jenis_prw'];
 
         $service_request_lab = new ServiceRequest(
           $uuid_service_request_lab,
@@ -1546,11 +1549,13 @@ class Admin extends AdminModule
           $check_mapping_lab['display'],
           $check_mapping_lab['code'],
           $check_mapping_lab['display'],
-          $nama_tindakan['nm_perawatan']
+          $nama_tindakan['nm_perawatan'],
+          null,
+          $identifier_value_lab
         );
         $service_request_lab_json[] = $service_request_lab->toJsonBundle();
 
-        $specimen_lab = new Specimen($uuid_specimen_lab, $this->organizationid, $ihs_patient, $nama_pasien, $uuid_service_request_lab, $no_rawat, $time_sampled);
+        $specimen_lab = new Specimen($uuid_specimen_lab, $this->organizationid, $ihs_patient, $nama_pasien, $uuid_service_request_lab, $no_rawat, $time_sampled, $identifier_value_lab);
         $specimen_json[] = $specimen_lab->toJsonBundle();
 
         $cek_hasil_lab = $this->db('detail_periksa_lab')->where('no_rawat', $no_rawat)->where('kd_jenis_prw', $value['kd_jenis_prw'])->where('tgl_periksa', $value['tgl_hasil'])->where('jam', $value['jam_hasil'])->oneArray();
@@ -1751,6 +1756,10 @@ class Admin extends AdminModule
     $id_observation_lab = NULL;
     $id_diagnostic_report_lab = NULL;
     $id_careplan = NULL;
+    $lab_ids_service_request = [];
+    $lab_ids_specimen = [];
+    $lab_ids_observation = [];
+    $lab_ids_diagnostic = [];
 
     $decodedResponse = json_decode($response);
     $entry = (is_object($decodedResponse) && isset($decodedResponse->entry) && is_array($decodedResponse->entry)) ? $decodedResponse->entry : [];
@@ -1839,15 +1848,19 @@ class Admin extends AdminModule
       }
       if ($resourceType == 'ServiceRequest') {
         $id_service_request_lab = $value->response->resourceID;
+        $lab_ids_service_request[] = $value->response->resourceID;
       }
       if ($resourceType == 'Specimen') {
         $id_specimen_lab = $value->response->resourceID;
+        $lab_ids_specimen[] = $value->response->resourceID;
       }
-      if ($resourceType == 'Observation' && !empty($observation_lab_json)) {
+      if ($resourceType == 'Observation' && !empty($lab_ids_service_request) && !empty($observation_lab_json)) {
         $id_observation_lab = $value->response->resourceID;
+        $lab_ids_observation[] = $value->response->resourceID;
       }
       if ($resourceType == 'DiagnosticReport') {
         $id_diagnostic_report_lab = $value->response->resourceID;
+        $lab_ids_diagnostic[] = $value->response->resourceID;
       }
       if ($resourceType == 'CarePlan') {
         $id_careplan = $value->response->resourceID;
@@ -1874,6 +1887,54 @@ class Admin extends AdminModule
         'id_lab_pk_diagnostic' => $id_diagnostic_report_lab,
         'id_careplan' => $id_careplan,
       ]);
+
+      // Simpan ID resource lab per item pemeriksaan ke tabel detail
+      if (!empty($lab_items_built)) {
+        try {
+          foreach ($lab_items_built as $i => $item_lab) {
+          $kd_jenis_prw = $item_lab['kd_jenis_prw'];
+          $noorder_lab = isset_or($item_lab['noorder'], '');
+          $id_sr   = isset_or($lab_ids_service_request[$i], '');
+          $id_spec = isset_or($lab_ids_specimen[$i], '');
+          $id_obs  = isset_or($lab_ids_observation[$i], '');
+          $id_diag = isset_or($lab_ids_diagnostic[$i], '');
+          if ($id_sr === '' && $id_spec === '' && $id_obs === '' && $id_diag === '') {
+            continue;
+          }
+          $data_item = [
+            'status'       => ($id_sr !== '' && $id_spec !== '' && $id_obs !== '' && $id_diag !== '') ? 'sent' : 'partial',
+            'raw_response' => $response,
+            'tgl_kirim'    => date('Y-m-d H:i:s'),
+          ];
+          if ($id_sr !== '')   { $data_item['id_service_request'] = $id_sr; }
+          if ($id_spec !== '') { $data_item['id_specimen'] = $id_spec; }
+          if ($id_obs !== '')  { $data_item['id_observation'] = $id_obs; }
+          if ($id_diag !== '') { $data_item['id_diagnostic'] = $id_diag; }
+
+          $ada_lab = $this->db('mlite_satu_sehat_lab_response')
+            ->where('no_rawat', $no_rawat)
+            ->where('noorder', $noorder_lab)
+            ->where('kd_jenis_prw', $kd_jenis_prw)
+            ->oneArray();
+          if (!empty($ada_lab)) {
+            $this->db('mlite_satu_sehat_lab_response')
+              ->where('no_rawat', $no_rawat)
+              ->where('noorder', $noorder_lab)
+              ->where('kd_jenis_prw', $kd_jenis_prw)
+              ->save($data_item);
+          } else {
+            $this->db('mlite_satu_sehat_lab_response')->save(array_merge([
+              'no_rawat'     => $no_rawat,
+              'noorder'      => $noorder_lab,
+              'kd_jenis_prw' => $kd_jenis_prw,
+            ], $data_item));
+          }
+        }
+      } catch (Throwable $e) {
+        // Abaikan jika tabel detail lab belum ada di database
+      }
+      }
+
       $pesan = 'Sukses mengirim pasien dengan No Rawat : ' . $no_rawat . ' ' . $index . ' ke platform Satu Sehat!! ';
     }
 
@@ -2576,9 +2637,14 @@ class Admin extends AdminModule
   public function getMappingLab()
   {
     $this->_addHeaderFiles();
-    $mapping_lab = $this->db('mlite_satu_sehat_mapping_lab')
-      ->join('template_laboratorium', 'template_laboratorium.id_template = mlite_satu_sehat_mapping_lab.id_template')
+    $mapping_lab = $this->db('template_laboratorium')
+      ->leftJoin('mlite_satu_sehat_mapping_lab', 'mlite_satu_sehat_mapping_lab.id_template = template_laboratorium.id_template')
+      ->asc('template_laboratorium.id_template')
       ->toArray();
+    foreach ($mapping_lab as &$ml) {
+      $ml['status_map'] = (isset($ml['code']) && $ml['code'] !== null && trim($ml['code']) !== '') ? 'mapped' : 'unmapped';
+    }
+    unset($ml);
     $template_laboratorium = $this->db('template_laboratorium')->toArray();
     return $this->draw('mapping.lab.html', ['mapping_lab_satu_sehat' => $mapping_lab, 'template_laboratorium' => $template_laboratorium]);
   }
@@ -4349,7 +4415,8 @@ class Admin extends AdminModule
       $zonawaktu = '+09:00';
     }
 
-    $permintaan_lab = $this->db('permintaan_lab')
+    // Temukan permintaan lab (pola disamakan dengan implementasi sebelumnya)
+    $cek_permintaan_lab = $this->db('permintaan_lab')
       ->where('no_rawat', $no_rawat)
       ->oneArray();
 
@@ -4358,61 +4425,129 @@ class Admin extends AdminModule
     $response = '';
     $laboratory = '';
 
+    $label_tipe = [
+      'request'     => 'Laboratory request',
+      'specimen'    => 'Laboratory specimen',
+      'observation' => 'Laboratory observation',
+      'diagnostic'  => 'Laboratory diagnostic report',
+    ];
+    $label = isset_or($label_tipe[$tipe], 'Laboratory');
+
+    $row['permintaan_lab'] = $this->db('permintaan_lab')
+      ->where('no_rawat', $no_rawat)
+      ->oneArray();
+    if (!is_array($row['permintaan_lab']) || !isset($row['permintaan_lab']['noorder'])) {
+      echo json_encode(['error' => 'Data tidak lengkap untuk ' . $label, 'missing' => ['permintaan_lab.noorder' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      exit();
+    }
+    $noorder = $row['permintaan_lab']['noorder'];
+
+    // Seluruh item pemeriksaan lab pada permintaan ini (bukan hanya satu)
+    $list_pemeriksaan = $this->db('permintaan_pemeriksaan_lab')
+      ->join('jns_perawatan_lab', 'jns_perawatan_lab.kd_jenis_prw = permintaan_pemeriksaan_lab.kd_jenis_prw')
+      ->where('noorder', $noorder)
+      ->asc('permintaan_pemeriksaan_lab.kd_jenis_prw')
+      ->toArray();
+    if (!is_array($list_pemeriksaan) || count($list_pemeriksaan) === 0) {
+      echo json_encode(['error' => 'Data tidak lengkap untuk ' . $label, 'missing' => ['permintaan_pemeriksaan_lab.kd_jenis_prw' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      exit();
+    }
+
+    // Mapping LOINC per item (item tanpa mapping tidak menghalangi item lain)
+    $map_mapping = [];
+    foreach ($list_pemeriksaan as $periksa) {
+      $kd_jenis_prw = $periksa['kd_jenis_prw'];
+      $mapping_lab = $this->db('mlite_satu_sehat_mapping_lab')->where('kd_jenis_prw', $kd_jenis_prw)->oneArray();
+      if (!$mapping_lab || empty($mapping_lab['code'])) {
+        $mapping_lab = [];
+      }
+      $map_mapping[$kd_jenis_prw] = $mapping_lab;
+    }
+
+    // Data pasien dan dokter
+    $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
+    $nm_pasien = $this->core->getPasienInfo('nm_pasien', $no_rkm_medis);
+    $no_ktp_pasien = $this->core->getPasienInfo('no_ktp', $no_rkm_medis);
+    $kd_dokter = $this->core->getRegPeriksaInfo('kd_dokter', $no_rawat);
+    $nm_dokter = $this->core->getPegawaiInfo('nama', $kd_dokter);
+    $id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')
+      ->select('practitioner_id')
+      ->where('kd_dokter', $kd_dokter)
+      ->oneArray();
+
+    $__patientResp = $this->getPatient($no_ktp_pasien);
+    $__patientJson = json_decode($__patientResp);
+    $id_pasien = '';
+    if (is_object($__patientJson) && isset($__patientJson->entry) && is_array($__patientJson->entry) && isset($__patientJson->entry[0]) && isset($__patientJson->entry[0]->resource) && isset($__patientJson->entry[0]->resource->id)) {
+      $id_pasien = $__patientJson->entry[0]->resource->id;
+    }
+    if ($id_pasien === '') {
+      echo json_encode(['error' => 'Data tidak lengkap untuk ' . $label, 'missing' => ['patient_id' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      exit();
+    }
+
+    $token = $this->getAccessToken();
+    if ($token === '') {
+      echo json_encode(['error' => 'Gagal mendapatkan access token SATU SEHAT', 'missing' => ['token' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      exit();
+    }
+
+    $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
+    $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $this->core->getSettings('satu_sehat', 'laboratorium'))->oneArray();
+
+    // Seed: pastikan setiap item punya baris di tabel detail (termasuk yang belum di-mapping)
+    foreach ($list_pemeriksaan as $periksa) {
+      $kd_jenis_prw = $periksa['kd_jenis_prw'];
+      $ada = $this->db('mlite_satu_sehat_lab_response')
+        ->where('no_rawat', $no_rawat)
+        ->where('noorder', $noorder)
+        ->where('kd_jenis_prw', $kd_jenis_prw)
+        ->oneArray();
+      if (empty($ada)) {
+        $status_awal = ($map_mapping[$kd_jenis_prw] && !empty($map_mapping[$kd_jenis_prw]['code'])) ? 'pending' : 'no_mapping';
+        $this->db('mlite_satu_sehat_lab_response')->save([
+          'no_rawat'     => $no_rawat,
+          'noorder'      => $noorder,
+          'kd_jenis_prw' => $kd_jenis_prw,
+          'status'       => $status_awal,
+        ]);
+      }
+    }
+
+    $hasil = ['sukses' => [], 'gagal' => [], 'skip' => []];
+    $responses_raw = [];
+
     if ($tipe == 'request') {
 
-      $row['permintaan_lab'] = $this->db('permintaan_lab')
-        ->where('no_rawat', $no_rawat)
-        ->oneArray();
-      if (!is_array($row['permintaan_lab']) || !isset($row['permintaan_lab']['noorder'])) {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Laboratory request', 'missing' => ['permintaan_lab.noorder' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-      $row['permintaan_pemeriksaan_lab'] = $this->db('permintaan_pemeriksaan_lab')
-        ->join('jns_perawatan_lab', 'jns_perawatan_lab.kd_jenis_prw = permintaan_pemeriksaan_lab.kd_jenis_prw')
-        ->where('noorder', $row['permintaan_lab']['noorder'])
-        ->oneArray();
-      if (!is_array($row['permintaan_pemeriksaan_lab']) || !isset($row['permintaan_pemeriksaan_lab']['kd_jenis_prw'])) {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Laboratory request', 'missing' => ['permintaan_pemeriksaan_lab.kd_jenis_prw' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-      $mapping_lab = $this->db('mlite_satu_sehat_mapping_lab')->where('kd_jenis_prw', $row['permintaan_pemeriksaan_lab']['kd_jenis_prw'])->oneArray();
-      if (!$mapping_lab || empty($mapping_lab['code'])) {
-        echo json_encode(['error' => 'Mapping LOINC untuk pemeriksaan lab belum dikonfigurasi. Silakan setup mapping lab terlebih dahulu.', 'kd_jenis_prw' => $row['permintaan_pemeriksaan_lab']['kd_jenis_prw']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
+      foreach ($list_pemeriksaan as $periksa) {
 
-      // Data pasien dan dokter
-      $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
-      $nm_pasien = $this->core->getPasienInfo('nm_pasien', $no_rkm_medis);
-      $no_ktp_pasien = $this->core->getPasienInfo('no_ktp', $no_rkm_medis);
-      $kd_dokter = $this->core->getRegPeriksaInfo('kd_dokter', $no_rawat);
-      $nm_dokter = $this->core->getPegawaiInfo('nama', $kd_dokter);
-      $id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')
-        ->select('practitioner_id')
-        ->where('kd_dokter', $kd_dokter)
-        ->oneArray();
+        $kd_jenis_prw = $periksa['kd_jenis_prw'];
+        $nm_perawatan = isset_or($periksa['nm_perawatan'], '');
+        $mapping_lab = $map_mapping[$kd_jenis_prw];
 
-      $__patientResp = $this->getPatient($no_ktp_pasien);
-      $__patientJson = json_decode($__patientResp);
-      $id_pasien = '';
-      if (is_object($__patientJson) && isset($__patientJson->entry) && is_array($__patientJson->entry) && isset($__patientJson->entry[0]) && isset($__patientJson->entry[0]->resource) && isset($__patientJson->entry[0]->resource->id)) {
-        $id_pasien = $__patientJson->entry[0]->resource->id;
-      }
-      if ($id_pasien === '') {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Laboratory request', 'missing' => ['patient_id' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
+        if (empty($mapping_lab['code'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Mapping LOINC belum dikonfigurasi)';
+          continue;
+        }
 
-      $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
-      $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $this->core->getSettings('satu_sehat', 'laboratorium'))->oneArray();
+        // Idempoten: sudah terkirim tidak dikirim ulang
+        $detail = $this->db('mlite_satu_sehat_lab_response')
+          ->where('no_rawat', $no_rawat)
+          ->where('noorder', $noorder)
+          ->where('kd_jenis_prw', $kd_jenis_prw)
+          ->oneArray();
+        if (!empty($detail['id_service_request'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (ServiceRequest sudah terkirim: ' . $detail['id_service_request'] . ')';
+          continue;
+        }
 
-      $laboratory = '
+        $laboratory = '
         {
           "resourceType": "ServiceRequest",
           "identifier": [
             {
               "system": "http://sys-ids.kemkes.go.id/servicerequest/' . $this->organizationid . '",
-              "value": "' . $row['permintaan_pemeriksaan_lab']['noorder'] . '"
+              "value": "' . $noorder . '-' . $kd_jenis_prw . '"
             }
           ],
           "status": "active",
@@ -4437,7 +4572,7 @@ class Admin extends AdminModule
                 "display": "' . $mapping_lab['display'] . '"
               }
             ],
-            "text": "' . $row['permintaan_pemeriksaan_lab']['nm_perawatan'] . '"
+            "text": "' . $nm_perawatan . '"
           },
           "subject": {
             "reference": "Patient/' . $id_pasien . '",
@@ -4449,7 +4584,7 @@ class Admin extends AdminModule
           "occurrenceDateTime": "' . $row['permintaan_lab']['tgl_permintaan'] . 'T' . $row['permintaan_lab']['jam_permintaan'] . $zonawaktu . '",
           "requester": {
             "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '",
-            "display": "' . $nm_dokter . '"  
+            "display": "' . $nm_dokter . '"
           },
           "performer": [
             {
@@ -4463,96 +4598,56 @@ class Admin extends AdminModule
             }
           ]
         }
-      ';
+        ';
 
-      $url = $this->fhirurl . '/ServiceRequest';
-      $curl = curl_init();
-
-      curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . $this->getAccessToken()),
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => $laboratory,
-      ));
-
-      $response = curl_exec($curl);
-
-      $id_laboratory_request = isset_or(json_decode($response)->id, '');
-      $pesan = 'Gagal mengirim laboratory request lab PK platform Satu Sehat!!';
-      if ($id_laboratory_request) {
-        $this->db('mlite_satu_sehat_response')
-          ->where('no_rawat', $no_rawat)
-          ->save([
-            'id_lab_pk_request' => $id_laboratory_request
-          ]);
-        $pesan = 'Sukses mengirim laboratory request lab PK platform Satu Sehat!!';
+        list($http_code, $response_body) = $this->postSatuSehat($this->fhirurl . '/ServiceRequest', $laboratory, $token);
+        $decoded = json_decode($response_body);
+        if ($decoded !== null && isset($decoded->id) && $http_code >= 200 && $http_code < 300) {
+          $this->simpanDetailLab($no_rawat, $noorder, $kd_jenis_prw, 'id_service_request', $decoded->id, $response_body, $detail);
+          $hasil['sukses'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' => ServiceRequest/' . $decoded->id;
+        } else {
+          $hasil['gagal'][] = $kd_jenis_prw . ' - ' . $nm_perawatan;
+        }
+        $responses_raw[] = is_object($decoded) ? $decoded : (object)['resourceType' => 'OperationOutcome', 'raw' => $response_body];
       }
 
-      curl_close($curl);
+      $pesan = count($hasil['sukses']) . ' ServiceRequest terkirim, ' . count($hasil['gagal']) . ' gagal, ' . count($hasil['skip']) . ' dilewati.';
 
     }
     if ($tipe == 'specimen') {
 
-      $row['permintaan_lab'] = $this->db('permintaan_lab')
-        ->where('no_rawat', $no_rawat)
-        ->oneArray();
-      if (!is_array($row['permintaan_lab']) || !isset($row['permintaan_lab']['noorder'])) {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Laboratory specimen', 'missing' => ['permintaan_lab.noorder' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-      $row['permintaan_pemeriksaan_lab'] = $this->db('permintaan_pemeriksaan_lab')
-        ->join('jns_perawatan_lab', 'jns_perawatan_lab.kd_jenis_prw = permintaan_pemeriksaan_lab.kd_jenis_prw')
-        ->where('noorder', $row['permintaan_lab']['noorder'])
-        ->oneArray();
-      if (!is_array($row['permintaan_pemeriksaan_lab']) || !isset($row['permintaan_pemeriksaan_lab']['kd_jenis_prw'])) {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Laboratory specimen', 'missing' => ['permintaan_pemeriksaan_lab.kd_jenis_prw' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-      $mapping_lab = $this->db('mlite_satu_sehat_mapping_lab')->where('kd_jenis_prw', $row['permintaan_pemeriksaan_lab']['kd_jenis_prw'])->oneArray();
-      if (!$mapping_lab || empty($mapping_lab['code'])) {
-        echo json_encode(['error' => 'Mapping LOINC untuk pemeriksaan lab belum dikonfigurasi. Silakan setup mapping lab terlebih dahulu.', 'kd_jenis_prw' => $row['permintaan_pemeriksaan_lab']['kd_jenis_prw']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
+      foreach ($list_pemeriksaan as $periksa) {
 
-      // Data pasien dan dokter
-      $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
-      $nm_pasien = $this->core->getPasienInfo('nm_pasien', $no_rkm_medis);
-      $no_ktp_pasien = $this->core->getPasienInfo('no_ktp', $no_rkm_medis);
-      $kd_dokter = $this->core->getRegPeriksaInfo('kd_dokter', $no_rawat);
-      $nm_dokter = $this->core->getPegawaiInfo('nama', $kd_dokter);
-      $id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')
-        ->select('practitioner_id')
-        ->where('kd_dokter', $kd_dokter)
-        ->oneArray();
+        $kd_jenis_prw = $periksa['kd_jenis_prw'];
+        $nm_perawatan = isset_or($periksa['nm_perawatan'], '');
+        $mapping_lab = $map_mapping[$kd_jenis_prw];
 
-      $__patientResp = $this->getPatient($no_ktp_pasien);
-      $__patientJson = json_decode($__patientResp);
-      $id_pasien = '';
-      if (is_object($__patientJson) && isset($__patientJson->entry) && is_array($__patientJson->entry) && isset($__patientJson->entry[0]) && isset($__patientJson->entry[0]->resource) && isset($__patientJson->entry[0]->resource->id)) {
-        $id_pasien = $__patientJson->entry[0]->resource->id;
-      }
-      if ($id_pasien === '') {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Laboratory specimen', 'missing' => ['patient_id' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
+        if (empty($mapping_lab['code'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Mapping LOINC belum dikonfigurasi)';
+          continue;
+        }
 
+        $detail = $this->db('mlite_satu_sehat_lab_response')
+          ->where('no_rawat', $no_rawat)
+          ->where('noorder', $noorder)
+          ->where('kd_jenis_prw', $kd_jenis_prw)
+          ->oneArray();
+        if (!empty($detail['id_specimen'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Specimen sudah terkirim: ' . $detail['id_specimen'] . ')';
+          continue;
+        }
+        if (empty($detail['id_service_request'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (ServiceRequest belum terkirim. Kirim tipe request terlebih dahulu.)';
+          continue;
+        }
 
-      $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
-      $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $this->core->getSettings('satu_sehat', 'laboratorium'))->oneArray();
-
-      $laboratory = '
+        $laboratory = '
         {
           "resourceType": "Specimen",
           "identifier": [
             {
               "system": "http://sys-ids.kemkes.go.id/specimen/' . $this->organizationid . '",
-              "value": "' . $row['permintaan_pemeriksaan_lab']['noorder'] . '"
+              "value": "' . $noorder . '-' . $kd_jenis_prw . '"
             }
           ],
           "status": "available",
@@ -4566,111 +4661,77 @@ class Admin extends AdminModule
             ]
           },
           "subject": {
-            "reference": "Patient/' . $id_pasien . '", 
+            "reference": "Patient/' . $id_pasien . '",
             "display": "' . $nm_pasien . '"
           },
           "receivedTime": "' . $row['permintaan_lab']['tgl_permintaan'] . 'T' . $row['permintaan_lab']['jam_permintaan'] . $zonawaktu . '",
           "request": [
             {
-              "reference": "ServiceRequest/' . $mlite_satu_sehat_response['id_lab_pk_request'] . '"
+              "reference": "ServiceRequest/' . $detail['id_service_request'] . '"
             }
           ]
         }
-      ';
+        ';
 
-      // echo json_decode(json_encode($laboratory));
-
-      $url = $this->fhirurl . '/Specimen';
-      $curl = curl_init();
-
-      curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . json_decode($this->getToken())->access_token),
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => $laboratory,
-      ));
-
-      $response = curl_exec($curl);
-
-      $id_laboratory_specimen = isset_or(json_decode($response)->id, '');
-      $pesan = 'Gagal mengirim laboratory specimen lab PK platform Satu Sehat!!';
-      if ($id_laboratory_specimen) {
-        $this->db('mlite_satu_sehat_response')
-          ->where('no_rawat', $no_rawat)
-          ->save([
-            'id_lab_pk_specimen' => $id_laboratory_specimen
-          ]);
-        $pesan = 'Sukses mengirim laboratory specimen lab PK platform Satu Sehat!!';
+        list($http_code, $response_body) = $this->postSatuSehat($this->fhirurl . '/Specimen', $laboratory, $token);
+        $decoded = json_decode($response_body);
+        if ($decoded !== null && isset($decoded->id) && $http_code >= 200 && $http_code < 300) {
+          $this->simpanDetailLab($no_rawat, $noorder, $kd_jenis_prw, 'id_specimen', $decoded->id, $response_body, $detail);
+          $hasil['sukses'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' => Specimen/' . $decoded->id;
+        } else {
+          $hasil['gagal'][] = $kd_jenis_prw . ' - ' . $nm_perawatan;
+        }
+        $responses_raw[] = is_object($decoded) ? $decoded : (object)['resourceType' => 'OperationOutcome', 'raw' => $response_body];
       }
 
-      curl_close($curl);
+      $pesan = count($hasil['sukses']) . ' Specimen terkirim, ' . count($hasil['gagal']) . ' gagal, ' . count($hasil['skip']) . ' dilewati.';
 
     }
     if ($tipe == 'observation') {
 
-      $row['permintaan_lab'] = $this->db('permintaan_lab')
-        ->where('no_rawat', $no_rawat)
-        ->oneArray();
-      if (!is_array($row['permintaan_lab']) || !isset($row['permintaan_lab']['noorder'])) {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Laboratory observation', 'missing' => ['permintaan_lab.noorder' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-      $row['permintaan_pemeriksaan_lab'] = $this->db('permintaan_pemeriksaan_lab')
-        ->join('jns_perawatan_lab', 'jns_perawatan_lab.kd_jenis_prw = permintaan_pemeriksaan_lab.kd_jenis_prw')
-        ->where('noorder', $row['permintaan_lab']['noorder'])
-        ->oneArray();
-      $mapping_lab = $this->db('mlite_satu_sehat_mapping_lab')->where('kd_jenis_prw', $row['permintaan_pemeriksaan_lab']['kd_jenis_prw'])->oneArray();
-      if (!$mapping_lab || empty($mapping_lab['code'])) {
-        echo json_encode(['error' => 'Mapping LOINC untuk pemeriksaan lab belum dikonfigurasi. Silakan setup mapping lab terlebih dahulu.', 'kd_jenis_prw' => $row['permintaan_pemeriksaan_lab']['kd_jenis_prw']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
+      foreach ($list_pemeriksaan as $periksa) {
 
-      // Data pasien dan dokter
-      $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
-      $nm_pasien = $this->core->getPasienInfo('nm_pasien', $no_rkm_medis);
-      $no_ktp_pasien = $this->core->getPasienInfo('no_ktp', $no_rkm_medis);
-      $kd_dokter = $this->core->getRegPeriksaInfo('kd_dokter', $no_rawat);
-      $nm_dokter = $this->core->getPegawaiInfo('nama', $kd_dokter);
-      $id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')
-        ->select('practitioner_id')
-        ->where('kd_dokter', $kd_dokter)
-        ->oneArray();
+        $kd_jenis_prw = $periksa['kd_jenis_prw'];
+        $nm_perawatan = isset_or($periksa['nm_perawatan'], '');
+        $mapping_lab = $map_mapping[$kd_jenis_prw];
 
-      $__patientResp = $this->getPatient($no_ktp_pasien);
-      $__patientJson = json_decode($__patientResp);
-      $id_pasien = '';
-      if (is_object($__patientJson) && isset($__patientJson->entry) && is_array($__patientJson->entry) && isset($__patientJson->entry[0]) && isset($__patientJson->entry[0]->resource) && isset($__patientJson->entry[0]->resource->id)) {
-        $id_pasien = $__patientJson->entry[0]->resource->id;
-      }
-      if ($id_pasien === '') {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Laboratory observation', 'missing' => ['patient_id' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
+        if (empty($mapping_lab['code'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Mapping LOINC belum dikonfigurasi)';
+          continue;
+        }
 
+        $detail = $this->db('mlite_satu_sehat_lab_response')
+          ->where('no_rawat', $no_rawat)
+          ->where('noorder', $noorder)
+          ->where('kd_jenis_prw', $kd_jenis_prw)
+          ->oneArray();
+        if (!empty($detail['id_observation'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Observation sudah terkirim: ' . $detail['id_observation'] . ')';
+          continue;
+        }
+        if (empty($detail['id_service_request'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (ServiceRequest belum terkirim. Kirim tipe request terlebih dahulu.)';
+          continue;
+        }
+        if (empty($detail['id_specimen'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Specimen belum terkirim. Kirim tipe specimen terlebih dahulu.)';
+          continue;
+        }
 
-      $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
-      $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $this->core->getSettings('satu_sehat', 'laboratorium'))->oneArray();
+        $detail_periksa_lab = $this->db('detail_periksa_lab')
+          ->where('no_rawat', $no_rawat)
+          ->where('kd_jenis_prw', $kd_jenis_prw)
+          ->where('tgl_periksa', $row['permintaan_lab']['tgl_hasil'])
+          ->where('jam', $row['permintaan_lab']['jam_hasil'])
+          ->oneArray();
 
-      $detail_periksa_lab = $this->db('detail_periksa_lab')
-        ->where('no_rawat', $no_rawat)
-        ->where('kd_jenis_prw', $row['permintaan_pemeriksaan_lab']['kd_jenis_prw'])
-        ->where('tgl_periksa', $row['permintaan_lab']['tgl_hasil'])
-        ->where('jam', $row['permintaan_lab']['jam_hasil'])
-        ->oneArray();
-
-      $laboratory = '
+        $laboratory = '
         {
           "resourceType": "Observation",
           "identifier": [
             {
               "system": "http://sys-ids.kemkes.go.id/observation/' . $this->organizationid . '",
-              "value": "' . $row['permintaan_pemeriksaan_lab']['noorder'] . '"
+              "value": "' . $noorder . '-' . $kd_jenis_prw . '"
             }
           ],
           "status": "final",
@@ -4701,116 +4762,85 @@ class Admin extends AdminModule
           "performer": [
             {
               "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '",
-              "display": "' . $nm_dokter . '"  
+              "display": "' . $nm_dokter . '"
             }
           ],
           "encounter": {
-            "reference": "Encounter/' . $mlite_satu_sehat_response['id_encounter'] . '", 
-            "display": "Hasil Pemeriksaan Lab ' . $row['permintaan_pemeriksaan_lab']['nm_perawatan'] . ' dengan No.Rawat ' . $no_rawat . ', Atas Nama Pasien ' . $nm_pasien . ', Nomor RM ' . $no_rkm_medis . ', Pada Tanggal ' . $row['permintaan_lab']['tgl_hasil'] . ' jam ' . $row['permintaan_lab']['jam_hasil'] . '"
+            "reference": "Encounter/' . $mlite_satu_sehat_response['id_encounter'] . '",
+            "display": "Hasil Pemeriksaan Lab ' . $nm_perawatan . ' dengan No.Rawat ' . $no_rawat . ', Atas Nama Pasien ' . $nm_pasien . ', Nomor RM ' . $no_rkm_medis . ', Pada Tanggal ' . $row['permintaan_lab']['tgl_hasil'] . ' jam ' . $row['permintaan_lab']['jam_hasil'] . '"
           },
           "specimen": {
-            "reference": "Specimen/' . $mlite_satu_sehat_response['id_lab_pk_specimen'] . '"
-          }, 
+            "reference": "Specimen/' . $detail['id_specimen'] . '"
+          },
           "effectiveDateTime": "' . $row['permintaan_lab']['tgl_hasil'] . 'T' . $row['permintaan_lab']['jam_hasil'] . $zonawaktu . '",
-          "valueString": "Hasil Lab ' . $row['permintaan_pemeriksaan_lab']['nm_perawatan'] . ' dengan Nilai ' . isset_or($detail_periksa_lab['nilai'], '') . ' pada Tanggal ' . $row['permintaan_lab']['tgl_hasil'] . ' jam ' . $row['permintaan_lab']['jam_hasil'] . '"
+          "valueString": "Hasil Lab ' . $nm_perawatan . ' dengan Nilai ' . isset_or($detail_periksa_lab['nilai'], '') . ' pada Tanggal ' . $row['permintaan_lab']['tgl_hasil'] . ' jam ' . $row['permintaan_lab']['jam_hasil'] . '"
         }
-      ';
+        ';
 
-      // echo json_decode(json_encode($laboratory));
-
-      $url = $this->fhirurl . '/Observation';
-      $curl = curl_init();
-
-      curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . json_decode($this->getToken())->access_token),
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => $laboratory,
-      ));
-
-      $response = curl_exec($curl);
-
-      $id_laboratory_observation = isset_or(json_decode($response)->id, '');
-      $pesan = 'Gagal mengirim laboratory observation lab PK platform Satu Sehat!!';
-      if ($id_laboratory_observation) {
-        $this->db('mlite_satu_sehat_response')
-          ->where('no_rawat', $no_rawat)
-          ->save([
-            'id_lab_pk_observation' => $id_laboratory_observation
-          ]);
-        $pesan = 'Sukses mengirim laboratory observation lab PK platform Satu Sehat!!';
+        list($http_code, $response_body) = $this->postSatuSehat($this->fhirurl . '/Observation', $laboratory, $token);
+        $decoded = json_decode($response_body);
+        if ($decoded !== null && isset($decoded->id) && $http_code >= 200 && $http_code < 300) {
+          $this->simpanDetailLab($no_rawat, $noorder, $kd_jenis_prw, 'id_observation', $decoded->id, $response_body, $detail);
+          $hasil['sukses'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' => Observation/' . $decoded->id;
+        } else {
+          $hasil['gagal'][] = $kd_jenis_prw . ' - ' . $nm_perawatan;
+        }
+        $responses_raw[] = is_object($decoded) ? $decoded : (object)['resourceType' => 'OperationOutcome', 'raw' => $response_body];
       }
 
-      curl_close($curl);
+      $pesan = count($hasil['sukses']) . ' Observation terkirim, ' . count($hasil['gagal']) . ' gagal, ' . count($hasil['skip']) . ' dilewati.';
 
     }
     if ($tipe == 'diagnostic') {
 
-      $row['permintaan_lab'] = $this->db('permintaan_lab')
-        ->where('no_rawat', $no_rawat)
-        ->oneArray();
-      if (!is_array($row['permintaan_lab']) || !isset($row['permintaan_lab']['noorder'])) {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Laboratory diagnostic report', 'missing' => ['permintaan_lab.noorder' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-      $row['permintaan_pemeriksaan_lab'] = $this->db('permintaan_pemeriksaan_lab')
-        ->join('jns_perawatan_lab', 'jns_perawatan_lab.kd_jenis_prw = permintaan_pemeriksaan_lab.kd_jenis_prw')
-        ->where('noorder', $row['permintaan_lab']['noorder'])
-        ->oneArray();
-      $mapping_lab = $this->db('mlite_satu_sehat_mapping_lab')->where('kd_jenis_prw', $row['permintaan_pemeriksaan_lab']['kd_jenis_prw'])->oneArray();
-      if (!$mapping_lab || empty($mapping_lab['code'])) {
-        echo json_encode(['error' => 'Mapping LOINC untuk pemeriksaan lab belum dikonfigurasi. Silakan setup mapping lab terlebih dahulu.', 'kd_jenis_prw' => $row['permintaan_pemeriksaan_lab']['kd_jenis_prw']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
+      foreach ($list_pemeriksaan as $periksa) {
 
-      // Data pasien dan dokter
-      $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
-      $nm_pasien = $this->core->getPasienInfo('nm_pasien', $no_rkm_medis);
-      $no_ktp_pasien = $this->core->getPasienInfo('no_ktp', $no_rkm_medis);
-      $kd_dokter = $this->core->getRegPeriksaInfo('kd_dokter', $no_rawat);
-      $nm_dokter = $this->core->getPegawaiInfo('nama', $kd_dokter);
-      $id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')
-        ->select('practitioner_id')
-        ->where('kd_dokter', $kd_dokter)
-        ->oneArray();
+        $kd_jenis_prw = $periksa['kd_jenis_prw'];
+        $nm_perawatan = isset_or($periksa['nm_perawatan'], '');
+        $mapping_lab = $map_mapping[$kd_jenis_prw];
 
+        if (empty($mapping_lab['code'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Mapping LOINC belum dikonfigurasi)';
+          continue;
+        }
 
-      $__patientResp = $this->getPatient($no_ktp_pasien);
-      $__patientJson = json_decode($__patientResp);
-      $id_pasien = '';
-      if (is_object($__patientJson) && isset($__patientJson->entry) && is_array($__patientJson->entry) && isset($__patientJson->entry[0]) && isset($__patientJson->entry[0]->resource) && isset($__patientJson->entry[0]->resource->id)) {
-        $id_pasien = $__patientJson->entry[0]->resource->id;
-      }
-      if ($id_pasien === '') {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Laboratory diagnostic report', 'missing' => ['patient_id' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
+        $detail = $this->db('mlite_satu_sehat_lab_response')
+          ->where('no_rawat', $no_rawat)
+          ->where('noorder', $noorder)
+          ->where('kd_jenis_prw', $kd_jenis_prw)
+          ->oneArray();
+        if (!empty($detail['id_diagnostic'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (DiagnosticReport sudah terkirim: ' . $detail['id_diagnostic'] . ')';
+          continue;
+        }
+        if (empty($detail['id_service_request'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (ServiceRequest belum terkirim. Kirim tipe request terlebih dahulu.)';
+          continue;
+        }
+        if (empty($detail['id_specimen'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Specimen belum terkirim. Kirim tipe specimen terlebih dahulu.)';
+          continue;
+        }
+        if (empty($detail['id_observation'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Observation belum terkirim. Kirim tipe observation terlebih dahulu.)';
+          continue;
+        }
 
+        $detail_periksa_lab = $this->db('detail_periksa_lab')
+          ->where('no_rawat', $no_rawat)
+          ->where('kd_jenis_prw', $kd_jenis_prw)
+          ->where('tgl_periksa', $row['permintaan_lab']['tgl_hasil'])
+          ->where('jam', $row['permintaan_lab']['jam_hasil'])
+          ->oneArray();
 
-      $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
-      $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $this->core->getSettings('satu_sehat', 'laboratorium'))->oneArray();
-
-      $detail_periksa_lab = $this->db('detail_periksa_lab')
-        ->where('no_rawat', $no_rawat)
-        ->where('kd_jenis_prw', $row['permintaan_pemeriksaan_lab']['kd_jenis_prw'])
-        ->where('tgl_periksa', $row['permintaan_lab']['tgl_hasil'])
-        ->where('jam', $row['permintaan_lab']['jam_hasil'])
-        ->oneArray();
-
-      $laboratory = '
+        $laboratory = '
         {
           "resourceType": "DiagnosticReport",
           "identifier": [
             {
               "system": "http://sys-ids.kemkes.go.id/diagnostic/' . $this->organizationid . '/lab",
               "use": "official",
-              "value": "' . $row['permintaan_pemeriksaan_lab']['noorder'] . '"
+              "value": "' . $noorder . '-' . $kd_jenis_prw . '"
             }
           ],
           "status": "final",
@@ -4839,70 +4869,56 @@ class Admin extends AdminModule
             "display": "' . $nm_pasien . '"
           },
           "encounter": {
-            "reference": "Encounter/' . $mlite_satu_sehat_response['id_encounter'] . '" 
+            "reference": "Encounter/' . $mlite_satu_sehat_response['id_encounter'] . '"
           },
           "effectiveDateTime": "' . $row['permintaan_lab']['tgl_hasil'] . 'T' . $row['permintaan_lab']['jam_hasil'] . $zonawaktu . '",
           "issued": "' . $row['permintaan_lab']['tgl_hasil'] . 'T' . $row['permintaan_lab']['jam_hasil'] . $zonawaktu . '",
           "performer": [
             {
-              "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '", 
+              "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '",
               "display": "' . $nm_dokter . '"
             }
           ],
           "specimen": [
             {
-              "reference": "Specimen/' . $mlite_satu_sehat_response['id_lab_pk_specimen'] . '"
+              "reference": "Specimen/' . $detail['id_specimen'] . '"
             }
           ],
           "result": [
             {
-              "reference": "Observation/' . $mlite_satu_sehat_response['id_lab_pk_observation'] . '"
+              "reference": "Observation/' . $detail['id_observation'] . '"
             }
           ],
           "basedOn": [
             {
-              "reference": "ServiceRequest/' . $mlite_satu_sehat_response['id_lab_pk_request'] . '"
+              "reference": "ServiceRequest/' . $detail['id_service_request'] . '"
             }
           ],
-          "conclusion": "Hasil pemeriksaan menunjukkan kadar glukosa darah tinggi, konsisten dengan diagnosis diabetes mellitus."
+          "conclusion": "Hasil pemeriksaan ' . $nm_perawatan . ' (LOINC ' . $mapping_lab['code'] . '): ' . isset_or($detail_periksa_lab['nilai'], '') . '"
         }
-      ';
+        ';
 
-      //  echo json_decode(json_encode($laboratory));
-
-      $url = $this->fhirurl . '/DiagnosticReport';
-      $curl = curl_init();
-
-      curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . json_decode($this->getToken())->access_token),
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => $laboratory,
-      ));
-
-      $response = curl_exec($curl);
-
-      $id_laboratory_diagnostic = isset_or(json_decode($response)->id, '');
-      $pesan = 'Gagal mengirim laboratory diagnostic lab PK platform Satu Sehat!!';
-      if ($id_laboratory_diagnostic) {
-        $this->db('mlite_satu_sehat_response')
-          ->where('no_rawat', $no_rawat)
-          ->save([
-            'id_lab_pk_diagnostic' => $id_laboratory_diagnostic
-          ]);
-        $pesan = 'Sukses mengirim laboratory diagnostic lab PK platform Satu Sehat!!';
+        list($http_code, $response_body) = $this->postSatuSehat($this->fhirurl . '/DiagnosticReport', $laboratory, $token);
+        $decoded = json_decode($response_body);
+        if ($decoded !== null && isset($decoded->id) && $http_code >= 200 && $http_code < 300) {
+          $this->simpanDetailLab($no_rawat, $noorder, $kd_jenis_prw, 'id_diagnostic', $decoded->id, $response_body, $detail);
+          $hasil['sukses'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' => DiagnosticReport/' . $decoded->id;
+        } else {
+          $hasil['gagal'][] = $kd_jenis_prw . ' - ' . $nm_perawatan;
+        }
+        $responses_raw[] = is_object($decoded) ? $decoded : (object)['resourceType' => 'OperationOutcome', 'raw' => $response_body];
       }
 
-      curl_close($curl);
+      $pesan = count($hasil['sukses']) . ' DiagnosticReport terkirim, ' . count($hasil['gagal']) . ' gagal, ' . count($hasil['skip']) . ' dilewati.';
 
     }
-    ;
+
+    $response = json_encode([
+      'tipe'      => $tipe,
+      'pesan'     => $pesan,
+      'responses' => $responses_raw,
+      'detail'    => $hasil,
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
     if ($render) {
       echo $this->draw('laboratory.html', ['pesan' => $pesan, 'response' => $response]);
@@ -4912,6 +4928,64 @@ class Admin extends AdminModule
     exit();
   }
 
+  private function postSatuSehat(string $url, string $payload, string $token)
+  {
+    $curl = curl_init();
+
+    curl_setopt_array($curl, array(
+      CURLOPT_URL => $url,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_ENCODING => '',
+      CURLOPT_MAXREDIRS => 10,
+      CURLOPT_TIMEOUT => 0,
+      CURLOPT_FOLLOWLOCATION => true,
+      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+      CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . $token),
+      CURLOPT_CUSTOMREQUEST => 'POST',
+      CURLOPT_POSTFIELDS => $payload,
+    ));
+
+    $body = curl_exec($curl);
+    $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+    curl_close($curl);
+    return array($code, is_string($body) ? $body : '');
+  }
+
+  private function simpanDetailLab($no_rawat, $noorder, $kd_jenis_prw, $kolom, $id, $response_body, $detail = [])
+  {
+    $data = [
+      $kolom         => $id,
+      'raw_response' => $response_body,
+      'tgl_kirim'    => date('Y-m-d H:i:s'),
+    ];
+
+    $all = [
+      'id_service_request' => $kolom == 'id_service_request' ? $id : isset_or($detail['id_service_request'], ''),
+      'id_specimen'        => $kolom == 'id_specimen' ? $id : isset_or($detail['id_specimen'], ''),
+      'id_observation'     => $kolom == 'id_observation' ? $id : isset_or($detail['id_observation'], ''),
+      'id_diagnostic'      => $kolom == 'id_diagnostic' ? $id : isset_or($detail['id_diagnostic'], ''),
+    ];
+    if ($all['id_service_request'] !== '' && $all['id_specimen'] !== '' && $all['id_observation'] !== '' && $all['id_diagnostic'] !== '') {
+      $data['status'] = 'sent';
+    } else {
+      $data['status'] = 'partial';
+    }
+
+    if (!empty($detail)) {
+      $this->db('mlite_satu_sehat_lab_response')
+        ->where('no_rawat', $no_rawat)
+        ->where('noorder', $noorder)
+        ->where('kd_jenis_prw', $kd_jenis_prw)
+        ->save($data);
+    } else {
+      $this->db('mlite_satu_sehat_lab_response')->save(array_merge([
+        'no_rawat'     => $no_rawat,
+        'noorder'      => $noorder,
+        'kd_jenis_prw' => $kd_jenis_prw,
+      ], $data));
+    }
+  }
   public function getRadiology($no_rawat = '', $tipe = '', $render = true)
   {
 
@@ -6686,6 +6760,15 @@ class Admin extends AdminModule
       ->toArray();
 
     $data_response = [];
+
+    // Cek apakah tabel detail lab sudah ada (mencegah halaman error total jika migrasi belum dijalankan)
+    $lab_table_ok = true;
+    try {
+      $this->db('mlite_satu_sehat_lab_response')->where('no_rawat', '')->count();
+    } catch (Throwable $e) {
+      $lab_table_ok = false;
+    }
+
     foreach ($query_data as $row) {
 
       $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $row['no_rawat'])->oneArray();
@@ -6780,6 +6863,13 @@ class Admin extends AdminModule
       $row['permintaan_lab'] = $this->db('permintaan_lab')
         ->where('no_rawat', $row['no_rawat'])
         ->oneArray();
+
+      $row['lab_total'] = 0;
+      if (!empty($row['permintaan_lab']['noorder'])) {
+        $row['lab_total'] = (int) $this->db('permintaan_pemeriksaan_lab')
+          ->where('noorder', $row['permintaan_lab']['noorder'])
+          ->count();
+      }
 
       $row['service_request_lab_pk'] = isset_or($row['permintaan_lab']['tgl_permintaan'], '');
 
@@ -6904,6 +6994,24 @@ class Admin extends AdminModule
       $row['id_careplan'] = isset_or($mlite_satu_sehat_response['id_careplan'], '');
       $row['id_allergy'] = isset_or($mlite_satu_sehat_response['id_allergy'], '');
       $row['id_questionnaire'] = isset_or($mlite_satu_sehat_response['id_questionnaire'], '');
+
+      // Item pemeriksaan lab beserta status per resource (tabel detail)
+      $row['lab_items'] = [];
+      $row['lab_total'] = 0;
+      if ($lab_table_ok) {
+        $row['lab_items'] = $this->db('mlite_satu_sehat_lab_response')
+          ->where('no_rawat', $row['no_rawat'])
+          ->asc('kd_jenis_prw')
+          ->toArray();
+        if (!is_array($row['lab_items'])) {
+          $row['lab_items'] = [];
+        }
+        if (!empty($row['permintaan_lab']['noorder'])) {
+          $row['lab_total'] = (int) $this->db('permintaan_pemeriksaan_lab')
+            ->where('noorder', $row['permintaan_lab']['noorder'])
+            ->count();
+        }
+      }
 
       // Hitung status keseluruhan & blocker (alasan kenapa tidak bisa dikirim)
       if ($row['tgl_pulang'] == '' || $row['tgl_pulang'] === null) {
@@ -7352,6 +7460,39 @@ class Admin extends AdminModule
       $fields = [];
       foreach ($RESOURCE_KEYS as $key) {
         $fields[$key] = isset_or($mlite_satu_sehat_response[$key], '');
+      }
+
+      // Lab per-item: dihitung dari tabel detail (id per pemeriksaan), bukan kolom id terakhir
+      $lab_detail = $this->db('mlite_satu_sehat_lab_response')->where('no_rawat', $row['no_rawat'])->toArray();
+      if (!empty($lab_detail)) {
+        $lab_map_fields = [
+          'id_lab_pk_request' => 'id_service_request',
+          'id_lab_pk_specimen' => 'id_specimen',
+          'id_lab_pk_observation' => 'id_observation',
+          'id_lab_pk_diagnostic' => 'id_diagnostic',
+        ];
+        $lab_total_mapped = 0;
+        foreach ($lab_detail as $ld) {
+          if (isset_or($ld['status'], '') !== 'no_mapping') {
+            $lab_total_mapped++;
+          }
+        }
+        foreach ($lab_map_fields as $resKey => $col) {
+          if ($lab_total_mapped === 0) {
+            $fields[$resKey] = '';
+            continue;
+          }
+          $sent_lab = 0;
+          foreach ($lab_detail as $ld) {
+            if (isset_or($ld['status'], '') === 'no_mapping') {
+              continue;
+            }
+            if (isset_or($ld[$col], '') !== '') {
+              $sent_lab++;
+            }
+          }
+          $fields[$resKey] = ($sent_lab >= $lab_total_mapped) ? '1' : '';
+        }
       }
 
       $sent_count = 0;

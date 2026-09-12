@@ -437,6 +437,32 @@
     function badgeOk(label) {
         return `<span class="badge badge-success">${label}</span>`;
     }
+    function escAttr(str) {
+        return String(str == null ? '' : str).replace(/"/g, '&quot;').replace(/\n/g, ' ');
+    }
+    function labCell(row, resField, ttv, label) {
+        var items = Array.isArray(row.lab_items) ? row.lab_items : [];
+        var total = parseInt(row.lab_total, 10) || items.length || 0;
+        if (total === 0) {
+            return badgeError(label + ' Kosong', 'Tidak ada item permintaan lab PK (menu Laboratorium &rarr; Permintaan Lab).');
+        }
+        var sent = 0;
+        var tips = [];
+        items.forEach(function (it) {
+            if (!it) { tips.push('? -> -'); return; }
+            var idx = it.kd_jenis_prw || '?';
+            var id = it[resField] || '';
+            var st;
+            if (id) { sent++; st = id; }
+            else if (it.status === 'no_mapping') { st = 'Mapping LOINC belum dikonfigurasi'; }
+            else { st = 'Belum terkirim'; }
+            tips.push(idx + ' -> ' + st);
+        });
+        var body = sent + '/' + total;
+        var tip = label + ': ' + body + ' item terkirim\n' + tips.join('\n');
+        var cls = (sent >= total && sent > 0) ? 'badge badge-success' : (sent > 0 ? 'badge badge-warning' : 'badge badge-error');
+        return `<a href="" class="lab-cell-send" data-id="${row.no_rawat_converted}" data-tipe="laboratory" data-ttv="${ttv}" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn" title="${escAttr(tip)}"><span class="${cls}">${body}</span></a>`;
+    }
 
     $(document).ready(function () {
         // console.log($('.display').length);
@@ -856,11 +882,7 @@
                 {
                     data: 'id_lab_pk_request',
                     render: function (data, type, row) {
-                        if (row.id_lab_pk_request == '' && row.service_request_lab_pk != '') {
-                            return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="laboratory" data-ttv="request" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
-                        } else if (row.id_lab_pk_request == '' && row.service_request_lab_pk == '') {
-                            return badgeError('Request Lab PK Kosong', 'Tidak ada permintaan lab. Input di menu Laboratorium → Permintaan Lab.');
-                        } else { return `<span class="uuid">${data}</span>` }
+                        return labCell(row, 'id_service_request', 'request', 'ServiceRequest');
                     }
                 },
                 // { data: 'id_service_request_lab_pa', 
@@ -884,11 +906,7 @@
                 {
                     data: 'id_lab_pk_specimen',
                     render: function (data, type, row) {
-                        if (row.id_lab_pk_specimen == '' && (row.specimen_lab_pk != '0000-00-00' && row.specimen_lab_pk != '')) {
-                            return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="laboratory" data-ttv="specimen" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
-                        } else if (row.id_lab_pk_specimen == '' && (row.specimen_lab_pk == '0000-00-00' || row.specimen_lab_pk == '')) {
-                            return badgeError('Specimen Lab PK Kosong', 'Tanggal sampel lab belum diisi di menu Laboratorium → Permintaan Lab.');
-                        } else { return `<span class="uuid">${data}</span>` }
+                        return labCell(row, 'id_specimen', 'specimen', 'Specimen');
                     }
                 },
                 // { data: 'id_specimen_lab_pa', 
@@ -912,11 +930,7 @@
                 {
                     data: 'id_lab_pk_observation',
                     render: function (data, type, row) {
-                        if (row.id_lab_pk_observation == '' && (row.observation_lab_pk != '0000-00-00' && row.observation_lab_pk != '')) {
-                            return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="laboratory" data-ttv="observation" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
-                        } else if (row.id_lab_pk_observation == '' && (row.observation_lab_pk == '0000-00-00' || row.observation_lab_pk == '')) {
-                            return badgeError('Observation Lab PK Kosong', 'Hasil lab belum diinput di menu Laboratorium → Hasil Lab.');
-                        } else { return `<span class="uuid">${data}</span>` }
+                        return labCell(row, 'id_observation', 'observation', 'Observation');
                     }
                 },
                 // { data: 'id_observation_lab_pa', 
@@ -940,11 +954,7 @@
                 {
                     data: 'id_lab_pk_diagnostic',
                     render: function (data, type, row) {
-                        if (row.id_lab_pk_diagnostic == '' && (row.diagnostic_report_lab_pk != '0000-00-00' && row.diagnostic_report_lab_pk != '')) {
-                            return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="laboratory" data-ttv="diagnostic" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
-                        } else if (row.id_lab_pk_diagnostic == '' && (row.diagnostic_report_lab_pk == '0000-00-00' || row.diagnostic_report_lab_pk == '')) {
-                            return badgeError('Diagnostic Lab PK Kosong', 'Laporan hasil lab belum diinput di menu Laboratorium → Hasil Lab.');
-                        } else { return `<span class="uuid">${data}</span>` }
+                        return labCell(row, 'id_diagnostic', 'diagnostic', 'DiagnosticReport');
                     }
                 },
                 // { data: 'id_diagnostic_report_lab_pa', 

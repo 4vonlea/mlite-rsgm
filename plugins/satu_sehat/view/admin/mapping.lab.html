@@ -4,9 +4,13 @@
     }
     .selected {
         background-color: #d0ebff !important;
-    }    
+    }
+    .row-unmapped > td {
+        background-color: #fff3cd !important;
+    }
 </style>
 <h4>Mapping Laboratorium Satu Sehat</h4>
+<p class="text-muted">Baris <span class="badge badge-warning">Belum Mapping</span> = template yang belum diisi LOINC. Klik baris untuk memilih template di dropdown, lalu cari terminologi LOINC dan tekan Simpan.</p>
 <form action="{?=url(ADMIN.'/satu_sehat/savelab')?}" method="POST">
     <input type="hidden" name="id_organisasi_satusehat">
     <div class="panel panel-default">
@@ -51,21 +55,27 @@
             <th>Sample Code</th>
             <th>Sample System</th>
             <th>Sample Display</th>
+            <th>Status</th>
         </tr>
         </thead>
         <tbody>
         {loop: $mapping_lab_satu_sehat}
-        <tr class="mapping_lab_satu_sehat"
+        <tr class="mapping_lab_satu_sehat {?=($value.status_map=='unmapped') ? 'row-unmapped' : ''?}"
         data-id_template="{?=isset_or($value.id_template)?}"
+        data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}"
         >
             <td>{?=isset_or($value.id_template)?}</td>
             <td>{?=isset_or($value.kd_jenis_prw)?}</td>
             <td>{?=isset_or($value.Pemeriksaan)?}</td>
-            <td>{?=isset_or($value.code)?}</td>
-            <td>{?=isset_or($value.display)?}</td>
+            <td>{?=isset_or($value.code, '-')?}</td>
+            <td>{?=isset_or($value.display, '-')?}</td>
             <td>{?=isset_or($value.sampel_code, '-')?}</td>
             <td>{?=isset_or($value.sampel_system, '-')?}</td>
             <td>{?=isset_or($value.sampel_display, '-')?}</td>
+            <td>
+                {if: ($value.status_map=='mapped')}<span class="badge badge-success">Sudah Mapping</span>{/if}
+                {if: ($value.status_map!='mapped')}<span class="badge badge-warning">Belum Mapping</span>{/if}
+            </td>
         </tr>
         {/loop}
         </tbody>
@@ -85,7 +95,8 @@ $('#mapping_lab_satu_sehat table tbody').on('click', 'tr.mapping_lab_satu_sehat'
 
     // Example: Get data attribute
     var id_template = $(this).data('id_template');
-    $('#id_template').val(id_template).change();
+    var kd_jenis_prw = $(this).data('kd_jenis_prw') || '';
+    $('#id_template').val(id_template + ' : ' + kd_jenis_prw).change();
     console.log('Selected ID Template:', id_template);
 });
 
@@ -124,12 +135,13 @@ $select.selectator({
           dataLab = data; // Simpan data di variabel global
           console.log(dataLab);
           const filtered = data.filter(item =>
-            item.Nama_Pemeriksaan && item.Nama_Pemeriksaan.toLowerCase().includes(search.toLowerCase())
+            (item.Nama_Pemeriksaan && item.Nama_Pemeriksaan.toLowerCase().includes(search.toLowerCase())) ||
+            (item.Code && String(item.Code).toLowerCase().includes(search.toLowerCase()))
           );
 
           const options = filtered.map(item => ({
             value: item.Code,
-            text: item.Nama_Pemeriksaan
+            text: item.Code + ' - ' + item.Nama_Pemeriksaan
           }));
 
           callback(options.slice(0, 100)); // Batasi maksimal 100 hasil
