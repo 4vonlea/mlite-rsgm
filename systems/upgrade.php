@@ -2039,6 +2039,38 @@ switch ($version) {
         }
         $return = '6.4.0';
         break;
+    case '6.4.0':
+        if (defined('DBDRIVER') && DBDRIVER == 'sqlite') {
+            $this->core->db()->pdo()->exec("CREATE TABLE IF NOT EXISTS `mlite_satu_sehat_med_response` (
+              `no_rawat` TEXT NOT NULL,
+              `no_resep` TEXT NOT NULL,
+              `kode_brng` TEXT NOT NULL,
+              `nama_obat` TEXT DEFAULT NULL,
+              `id_medication_request` TEXT DEFAULT NULL,
+              `id_medication_dispense` TEXT DEFAULT NULL,
+              `id_medication_statement` TEXT DEFAULT NULL,
+              `status` TEXT NOT NULL DEFAULT 'pending',
+              `raw_response` TEXT,
+              `tgl_kirim` TEXT DEFAULT NULL,
+              PRIMARY KEY (`no_rawat`,`no_resep`,`kode_brng`)
+            );");
+        } else {
+            $this->core->db()->pdo()->exec("CREATE TABLE IF NOT EXISTS `mlite_satu_sehat_med_response` (
+              `no_rawat` varchar(17) NOT NULL,
+              `no_resep` varchar(14) NOT NULL,
+              `kode_brng` varchar(15) NOT NULL,
+              `nama_obat` varchar(255) DEFAULT NULL,
+              `id_medication_request` varchar(50) DEFAULT NULL,
+              `id_medication_dispense` varchar(50) DEFAULT NULL,
+              `id_medication_statement` varchar(50) DEFAULT NULL,
+              `status` varchar(15) NOT NULL DEFAULT 'pending',
+              `raw_response` text DEFAULT NULL,
+              `tgl_kirim` datetime DEFAULT NULL,
+              PRIMARY KEY (`no_rawat`,`no_resep`,`kode_brng`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=latin1;");
+        }
+        $return = '6.5.0';
+        break;
     }
 
     if (!isset($return) || !$return) {

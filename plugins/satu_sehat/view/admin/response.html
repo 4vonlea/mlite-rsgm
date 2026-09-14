@@ -150,6 +150,34 @@
         pointer-events: none;
     }
 
+    /* ===== Popover detail sel (badge terkirim/total) ===== */
+    .popover-content {
+        max-width: 460px;
+        max-height: 320px;
+        overflow-y: auto;
+        word-wrap: break-word;
+    }
+    .cell-pop-row {
+        padding: 3px 0;
+        border-bottom: 1px dashed #e9ecef;
+    }
+    .cell-pop-row:last-child {
+        border-bottom: none;
+    }
+    .cell-pop-tok {
+        display: block;
+        font-family: Consolas, Menlo, monospace;
+        font-size: 11px;
+        color: #0d6efd;
+        word-break: break-all;
+        user-select: all;
+        cursor: text;
+    }
+    .cell-pop-muted {
+        color: #b02a37;
+        font-style: italic;
+    }
+
     /* ===== Filter Status ===== */
     .filter-btn {
         background: #f8f9fa;
@@ -447,21 +475,56 @@
             return badgeError(label + ' Kosong', 'Tidak ada item permintaan lab PK (menu Laboratorium &rarr; Permintaan Lab).');
         }
         var sent = 0;
-        var tips = [];
+        var rows = [];
         items.forEach(function (it) {
-            if (!it) { tips.push('? -> -'); return; }
+            if (!it) { return; }
             var idx = it.kd_jenis_prw || '?';
             var id = it[resField] || '';
             var st;
-            if (id) { sent++; st = id; }
-            else if (it.status === 'no_mapping') { st = 'Mapping LOINC belum dikonfigurasi'; }
-            else { st = 'Belum terkirim'; }
-            tips.push(idx + ' -> ' + st);
+            if (id) { sent++; st = `<code class="cell-pop-tok">${escAttr(id)}</code>`; }
+            else if (it.status === 'no_mapping') { st = '<span class="cell-pop-muted">Mapping LOINC belum dikonfigurasi</span>'; }
+            else { st = '<span class="cell-pop-muted">Belum terkirim</span>'; }
+            rows.push(`<div class="cell-pop-row">${escAttr(idx)}: ${st}</div>`);
         });
         var body = sent + '/' + total;
-        var tip = label + ': ' + body + ' item terkirim\n' + tips.join('\n');
+        var pop = `<strong>${escAttr(label)}</strong> — ${body} item terkirim` + rows.join('');
         var cls = (sent >= total && sent > 0) ? 'badge badge-success' : (sent > 0 ? 'badge badge-warning' : 'badge badge-error');
-        return `<a href="" class="lab-cell-send" data-id="${row.no_rawat_converted}" data-tipe="laboratory" data-ttv="${ttv}" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn" title="${escAttr(tip)}"><span class="${cls}">${body}</span></a>`;
+        return `<a href="" class="lab-cell-send" data-id="${row.no_rawat_converted}" data-tipe="laboratory" data-ttv="${ttv}" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn" data-pop="${escAttr(pop)}"><span class="${cls}">${body}</span></a>`;
+    }
+    function medCell(row, resField, ttv, label) {
+        var items = Array.isArray(row.med_items) ? row.med_items : [];
+        var total = parseInt(row.med_total, 10) || items.length || 0;
+        var availKey = { request: 'medication_request', dispense: 'medication_dispense', statement: 'medication_statement' }[ttv] || '';
+        var id = row[resField] || '';
+        if (total === 0) {
+            if (id !== '') { return `<span class="uuid">${id}</span>`; }
+            if (availKey && row[availKey] != '') {
+                return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="medication" data-ttv="${ttv}" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
+            }
+            var emptyMsg = {
+                request: 'Tidak ada resep obat. Input di menu Peresepan → Resep Obat.',
+                dispense: 'Resep belum divalidasi. Proses validasi di menu Peresepan → Resep Obat.',
+                statement: 'Resep belum diserahkan ke pasien. Proses penyerahan di menu Peresepan → Resep Obat.'
+            }[ttv] || '';
+            return badgeError(label + ' Kosong', emptyMsg);
+        }
+        var sent = 0;
+        var rows = [];
+        items.forEach(function (it) {
+            if (!it) { return; }
+            var idx = it.kode_brng || '?';
+            if (it.nama_obat) { idx = (it.kode_brng || '?') + ' ' + it.nama_obat; }
+            var rid = it[resField] || '';
+            var st;
+            if (rid) { sent++; st = `<code class="cell-pop-tok">${escAttr(rid)}</code>`; }
+            else if (it.status === 'no_mapping') { st = '<span class="cell-pop-muted">Mapping KFA belum dikonfigurasi</span>'; }
+            else { st = '<span class="cell-pop-muted">Belum terkirim</span>'; }
+            rows.push(`<div class="cell-pop-row">${escAttr(idx)}: ${st}</div>`);
+        });
+        var body = sent + '/' + total;
+        var pop = `<strong>${escAttr(label)}</strong> — ${body} item terkirim` + rows.join('');
+        var cls = (sent >= total && sent > 0) ? 'badge badge-success' : (sent > 0 ? 'badge badge-warning' : 'badge badge-error');
+        return `<a href="" class="med-cell-send" data-id="${row.no_rawat_converted}" data-tipe="medication" data-ttv="${ttv}" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn" data-pop="${escAttr(pop)}"><span class="${cls}">${body}</span></a>`;
     }
 
     $(document).ready(function () {
@@ -802,31 +865,19 @@
                 {
                     data: 'id_medication_request',
                     render: function (data, type, row) {
-                        if (row.id_medication_request == '' && row.medication_request != '') {
-                            return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="medication" data-ttv="request" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
-                        } else if (row.id_medication_request == '' && row.medication_request == '') {
-                            return badgeError('Permintaan Resep Kosong', 'Tidak ada resep obat. Input di menu Peresepan → Resep Obat.');
-                        } else { return `<span class="uuid">${data}</span>` }
+                        return medCell(row, 'id_medication_request', 'request', 'Permintaan Resep');
                     }
                 },
                 {
                     data: 'id_medication_dispense',
                     render: function (data, type, row) {
-                        if (row.id_medication_dispense == '' && row.medication_dispense != '') {
-                            return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="medication" data-ttv="dispense" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
-                        } else if (row.id_medication_dispense == '' && row.medication_dispense == '') {
-                            return badgeError('Validasi Resep Kosong', 'Resep belum divalidasi. Validasi di menu Peresepan → Resep Obat.');
-                        } else { return `<span class="uuid">${data}</span>` }
+                        return medCell(row, 'id_medication_dispense', 'dispense', 'Validasi Resep');
                     }
                 },
                 {
                     data: 'id_medication_statement',
                     render: function (data, type, row) {
-                        if (row.id_medication_statement == '' && row.medication_statement != '') {
-                            return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="medication" data-ttv="statement" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
-                        } else if (row.id_medication_statement == '' && row.medication_statement == '') {
-                            return badgeError('Statemen Resep Kosong', 'Resep belum diserahkan ke pasien. Proses penyerahan di menu Peresepan → Resep Obat.');
-                        } else { return `<span class="uuid">${data}</span>` }
+                        return medCell(row, 'id_medication_statement', 'statement', 'Penyerahan Resep');
                     }
                 },
                 {
@@ -1043,9 +1094,52 @@
         }
         console.log(url);
 
-        $('#modalcontent').html('<div class="p-3 text-muted">Loading...</div>');
-        $.get(url, function (response) {
-            $('#modalcontent').html(response);
+        $('#modalcontent').html('<div class="p-3 text-muted"><i class="fa fa-spinner fa-spin"></i> Mengirim / memuat data, mohon tunggu...</div>');
+        $.ajax({
+            url: url,
+            method: 'GET',
+            timeout: 120000,
+            dataType: 'html',
+            success: function (response) {
+                if (typeof response === 'string' && response.trim() === '') {
+                    $('#modalcontent').html('<div class="p-3 text-danger"><b>Response kosong.</b><br>Request mungkin terputus (batas waktu server).<br>Coba muat ulang halaman lalu klik lagi.</div>');
+                    return;
+                }
+                // Respons error JSON dari pembungkus AJAX admin (mis. koneksi DB gagal)
+                if (typeof response === 'string' && response.trim().charAt(0) === '{') {
+                    try {
+                        var parsed = JSON.parse(response);
+                        if (parsed && parsed.error) {
+                            var errMsg = parsed.message || '';
+                            var errBox = '<b>Error:</b> ' + escAttr(parsed.error);
+                            if (errMsg) { errBox += '<br><b>Keterangan:</b> ' + escAttr(errMsg); }
+                            errBox += '<br><small style="opacity:.8">Keterangan di atas menampilkan pesan error sebenarnya (MySQL tidak/belum jalan, koneksi DB terputus/sibuk, tabel atau kolom belum ada, dsb.). Jika tulisan berbahasa "technical", kirimkan teksnya ke pengembang untuk analisis lebih lanjut.</small>';
+                            $('#modalcontent').html('<div class="p-3 text-danger">' + errBox + '</div>');
+                            return;
+                        }
+                    } catch (e) { /* JSON valid namun bukan {error} → render apa adanya */ }
+                }
+                $('#modalcontent').html(response);
+            },
+            error: function (xhr, status) {
+                var msg = 'Gagal mengirim/memuat data (status: ' + status + (xhr.status ? ', HTTP ' + xhr.status : '') + '). Coba lagi.';
+                $('#modalcontent').html('<div class="p-3 text-danger">' + msg + '</div>');
+            }
+        });
+    });
+
+    // Popover rincian per item (token/ID yang dikembalikan SATU SEHAT).
+    // Pakai trigger 'hover' bawaan Bootstrap: otomatis terbuka saat kursor di atas badge,
+    // tetap terbuka selama kursor masih di atas popover, dan menutup sendiri saat kursor pergi.
+    $(document).on('mouseenter', '.lab-cell-send, .med-cell-send', function () {
+        var $el = $(this);
+        if ($el.data('bs.popover')) return;
+        $el.popover({
+            trigger: 'hover',
+            html: true,
+            container: 'body',
+            placement: 'auto top',
+            content: $el.data('pop') || ''
         });
     });
 </script>

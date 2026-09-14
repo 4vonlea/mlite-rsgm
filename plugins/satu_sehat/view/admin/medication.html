@@ -5,15 +5,67 @@
 <div class="modal-body">
   <h4>{?=isset_or($pesan)?}</h4>
   <div id="response" style="display:none;">{?=isset_or($response)?}</div>
-  <pre></pre>
+  <div id="med-info"></div>
 </div>
 <div class="modal-footer">
     <button type="button" class="btn btn-primary" data-dismiss="modal">Tutup</button>
 </div>
+<style>
+    .med-ok { color: #2d7d46; font-weight: bold; }
+    .med-warn { color: #b7791f; font-weight: bold; }
+    .med-err { color: #b02a37; font-weight: bold; }
+    .med-tbl { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+    .med-tbl th, .med-tbl td { border: 1px solid #dee2e6; padding: 5px 8px; text-align: left; vertical-align: top; }
+    .med-tbl th { background: #f5f6f7; }
+    .med-tok { font-family: Consolas, Menlo, monospace; font-size: 11px; color: #0d6efd; word-break: break-all; }
+</style>
 <script>
-    var response = $('#response').text();
-    var data = JSON.parse(response);
-    var jsonPretty = JSON.stringify(data, null, '\t');
-    $("pre").text(jsonPretty);
+    var $info = $('#med-info');
+    var respText = $('#response').text().trim();
+    var data = {};
+    if (respText !== '') {
+        try { data = JSON.parse(respText); } catch (e) { data = { pesan: respText }; }
+    }
+    if (data.pesan) {
+        $('<div class="alert alert-info" style="margin:0 0 6px;"></div>').text(data.pesan).appendTo($info);
+    }
+    if (data.items && data.items.length > 0) {
+        var r = data.ringkasan || {};
+        var chips = '';
+        if (r.terkirim) chips += '<span class="med-ok">' + r.terkirim + ' terkirim</span> ';
+        if (r.sudah) chips += '<span class="med-warn">' + r.sudah + ' sudah pernah terkirim</span> ';
+        if (r.belum_mapping) chips += '<span class="med-err">' + r.belum_mapping + ' belum mapping KFA</span> ';
+        if (r.gagal) chips += '<span class="med-err">' + r.gagal + ' gagal</span> ';
+        var html = '<div style="margin:8px 0 0;">' + chips + '</div>';
+        html += '<table class="med-tbl"><thead><tr><th>No. Resep</th><th>Kode</th><th>Nama Obat</th><th>Status</th><th>Token (ID SATU SEHAT)</th></tr></thead><tbody>';
+        data.items.forEach(function (it) {
+            var st;
+            if (it.status === 'sent') { st = '<span class="med-ok">Terkirim</span>'; }
+            else if (it.status === 'no_mapping') { st = '<span class="med-err">Belum mapping KFA</span>'; }
+            else { st = '<span class="med-warn">Belum terkirim</span>'; }
+            var tok = it.id ? '<code class="med-tok">' + esc(it.id) + '</code>' : '-';
+            html += '<tr><td>' + esc(it.no_resep) + '</td><td>' + esc(it.kode_brng) + '</td><td>' + esc(it.nama_obat) + '</td><td>' + st + '</td><td>' + tok + '</td></tr>';
+        });
+        html += '</tbody></table>';
+        $info.append($(html));
+    }
+    if (data.responses && data.responses.length > 0) {
+        var block = '<div style="margin-top:12px;"><div style="font-weight:bold;font-size:12px;">Response Satu Sehat (lengkap per item):</div>';
+        data.responses.forEach(function (rp) {
+            var label = esc(rp.no_resep) + ' / ' + esc(rp.kode_brng) + ' — ' + (rp.status_send === 'sukses' ? '<span class="med-ok">sukses</span>' : (rp.status_send === 'skip' ? '<span class="med-warn">skip</span>' : '<span class="med-err">gagal</span>'));
+            var body = '';
+            if (String(rp.body || '').indexOf('{') === 0) {
+                try { body = JSON.stringify(JSON.parse(rp.body), null, 2); } catch (e) { body = String(rp.body); }
+            } else {
+                body = String(rp.body == null ? '' : rp.body);
+            }
+            block += '<div style="margin:6px 0;"><div>' + label + '</div><pre style="white-space:pre-wrap;font-size:11px;background:#f7f7f9;border:1px solid #e1e1e8;border-radius:4px;max-height:240px;overflow:auto;padding:6px;margin:2px 0 0;">' + esc(body) + '</pre></div>';
+        });
+        block += '</div>';
+        $info.append($(block));
+    }
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
 </script>
-

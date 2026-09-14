@@ -283,6 +283,8 @@ class Site extends SiteModule
 
     public function forwardByDate($tanggal = null)
     {
+        @set_time_limit(300);
+
         if ($tanggal === null && isset($_GET['tanggal'])) {
             $tanggal = $_GET['tanggal'];
         }

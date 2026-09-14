@@ -3687,8 +3687,65 @@ class Admin extends AdminModule
     exit();
   }
 
+  private function saveMedDetail(string $no_rawat, string $no_resep, string $kode_brng, array $data): void
+  {
+    try {
+      $ada = $this->db('mlite_satu_sehat_med_response')
+        ->where('no_rawat', $no_rawat)
+        ->where('no_resep', $no_resep)
+        ->where('kode_brng', $kode_brng)
+        ->oneArray();
+      if (!empty($ada)) {
+        $this->db('mlite_satu_sehat_med_response')
+          ->where('no_rawat', $no_rawat)
+          ->where('no_resep', $no_resep)
+          ->where('kode_brng', $kode_brng)
+          ->save($data);
+      } else {
+        $this->db('mlite_satu_sehat_med_response')->save(array_merge([
+          'no_rawat'  => $no_rawat,
+          'no_resep'  => $no_resep,
+          'kode_brng' => $kode_brng,
+        ], $data));
+      }
+    } catch (Throwable $e) {
+      // Abaikan jika tabel detail medication belum ada (tetap kirim, tapi tanpa tracking)
+    }
+  }
+
+  private function getMedResourceByIdentifier(string $resource, array $identifiers): string
+  {
+    $params = [];
+    foreach ($identifiers as $system => $value) {
+      $params[] = 'identifier=' . urlencode($system . '|' . $value);
+    }
+    $curl = curl_init();
+    curl_setopt_array($curl, array(
+      CURLOPT_URL => $this->fhirurl . '/' . $resource . '?' . implode('&', $params),
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_ENCODING => '',
+      CURLOPT_MAXREDIRS => 10,
+      CURLOPT_TIMEOUT => 20,
+      CURLOPT_CONNECTTIMEOUT => 10,
+      CURLOPT_FOLLOWLOCATION => true,
+      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+      CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . $this->getAccessToken()),
+      CURLOPT_CUSTOMREQUEST => 'GET'
+    ));
+    $response = curl_exec($curl);
+    curl_close($curl);
+    $obj = json_decode($response);
+    if (is_object($obj) && isset($obj->entry) && is_array($obj->entry) && isset($obj->entry[0]) && isset($obj->entry[0]->resource) && isset($obj->entry[0]->resource->id)) {
+      return $obj->entry[0]->resource->id;
+    }
+    return '';
+  }
+
   public function getMedication(string $no_rawat = '', string $tipe = 'request', $render = true)
   {
+    // Kiriman bisa memakan waktu (beberapa obat + beberapa panggilan API); jangan biarkan dibunuh batas waktu PHP
+    @set_time_limit(300);
+
     // Zona waktu
     $zonawaktu = match ($this->settings->get('satu_sehat.zonawaktu')) {
       'WITA' => '+08:00',
@@ -3696,6 +3753,14 @@ class Admin extends AdminModule
       default => '+07:00',
     };
 
+    $med_report = [];
+    $med_responses = [];
+    $sent_med = 0;
+    $skipped_med = 0;
+    $no_mapping_med = 0;
+    $fail_med = 0;
+
+    try {
     $kode_brng = $no_rawat;
     $no_rawat = revertNoRawat($no_rawat);
 
@@ -3704,10 +3769,18 @@ class Admin extends AdminModule
       // Data resep dan mapping obat
       $row['medications'] = $this->db('resep_obat')
         ->join('resep_dokter', 'resep_dokter.no_resep = resep_obat.no_resep')
-        ->join('mlite_satu_sehat_mapping_obat', 'mlite_satu_sehat_mapping_obat.kode_brng = resep_dokter.kode_brng')
-        ->where('mlite_satu_sehat_mapping_obat.type', 'obat')
-        ->where('no_rawat', $no_rawat)
+        ->leftJoin('mlite_satu_sehat_mapping_obat', 'mlite_satu_sehat_mapping_obat.kode_brng = resep_dokter.kode_brng')
+        ->where('resep_obat.no_rawat', $no_rawat)
         ->toArray();
+      $row['medications'] = is_array($row['medications']) ? $row['medications'] : [];
+      // Lewati obat yang ter-mapping sebagai Vaksin (jalur Immunization terpisah)
+      $row['medications'] = array_values(array_filter($row['medications'], function ($m) {
+        return !(isset($m['type']) && $m['type'] === 'vaksin');
+      }));
+      $sent_med = 0;
+      $skipped_med = 0;
+      $no_mapping_med = 0;
+      $fail_med = 0;
 
       if (count($row['medications']) === 0) {
         echo json_encode(['error' => 'Data tidak lengkap untuk Medication Request', 'missing' => ['noresep' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -3779,6 +3852,56 @@ class Admin extends AdminModule
         // $endDate = date('Y-m-d', strtotime("$startDate +{$duration} days"));
 
         $satu_sehat_mapping_obat = $this->db('mlite_satu_sehat_mapping_obat')->where('kode_brng', $obat['kode_brng'])->oneArray();
+
+        $detailCol = 'id_medication_request';
+        $ada_item = [];
+        try {
+          $ada_item = $this->db('mlite_satu_sehat_med_response')
+            ->where('no_rawat', $no_rawat)
+            ->where('no_resep', $obat['no_resep'])
+            ->where('kode_brng', $obat['kode_brng'])
+            ->oneArray();
+        } catch (Throwable $e) {}
+        // Lewati item yang sudah pernah terkirim untuk tipe ini (idempoten)
+        if (!empty($ada_item) && isset_or($ada_item[$detailCol], '') !== '') {
+          $skipped_med++;
+          $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => 'skip', 'body' => '(skip: item sudah pernah terkirim untuk tipe ini)'];
+          continue;
+        }
+        // Tanpa mapping KFA: catat status no_mapping lalu lanjut item berikutnya
+        if (empty($satu_sehat_mapping_obat) || isset_or($satu_sehat_mapping_obat['id_medication'], '') === '') {
+          $no_mapping_med++;
+          $this->saveMedDetail($no_rawat, $obat['no_resep'], $obat['kode_brng'], [
+            'status' => 'no_mapping',
+            'nama_obat' => isset_or($obat['nama_kfa'], isset_or($obat['nama_brng'], '')),
+            'tgl_kirim' => null,
+          ]);
+          $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => 'skip', 'body' => '(tidak dikirim: obat belum mapping KFA)'];
+          continue;
+        }
+
+        // Cek duplikat: hanya jalankan bila pernah ada kiriman versi lama (hemat panggilan API)
+        $existing_id = '';
+        if (isset_or($mlite_satu_sehat_response['id_medication_request'], '') !== '') {
+          $existing_id = $this->getMedResourceByIdentifier('MedicationRequest', [
+            'http://sys-ids.kemkes.go.id/prescription/' . $this->organizationid => $obat['no_resep'],
+            'http://sys-ids.kemkes.go.id/prescription-item/' . $this->organizationid => $obat['kode_brng'],
+          ]);
+        }
+        if ($existing_id !== '') {
+          $this->saveMedDetail($no_rawat, $obat['no_resep'], $obat['kode_brng'], [
+            'id_medication_request' => $existing_id,
+            'status' => 'sent',
+            'nama_obat' => isset_or($obat['nama_kfa'], isset_or($obat['nama_brng'], '')),
+            'tgl_kirim' => date('Y-m-d H:i:s'),
+          ]);
+          try {
+            $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->save(['id_medication_request' => $existing_id]);
+          } catch (Throwable $e) {}
+          $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => 'skip', 'body' => '(duplikat: sudah pernah terkirim, dipakai ID lama ' . $existing_id . ')'];
+          $skipped_med++;
+          continue;
+        }
 
         $data = [
           "resourceType" => "MedicationRequest",
@@ -3878,7 +4001,8 @@ class Admin extends AdminModule
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 0,
+          CURLOPT_TIMEOUT => 90,
+          CURLOPT_CONNECTTIMEOUT => 15,
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . $this->getAccessToken()),
@@ -3891,15 +4015,27 @@ class Admin extends AdminModule
         $id_medication_request = isset_or(json_decode($response)->id, '');
         $pesan = 'Gagal mengirim medication request platform Satu Sehat!!';
         if ($id_medication_request) {
-          $this->db('mlite_satu_sehat_response')
-            ->where('no_rawat', $no_rawat)
-            ->save([
-              'id_medication_request' => $id_medication_request
-            ]);
+          try {
+            $this->db('mlite_satu_sehat_response')
+              ->where('no_rawat', $no_rawat)
+              ->save(['id_medication_request' => $id_medication_request]);
+          } catch (Throwable $e) {}
+          $this->saveMedDetail($no_rawat, $obat['no_resep'], $obat['kode_brng'], [
+            'id_medication_request' => $id_medication_request,
+            'status' => 'sent',
+            'raw_response' => $response,
+            'tgl_kirim' => date('Y-m-d H:i:s'),
+            'nama_obat' => isset_or($obat['nama_kfa'], isset_or($obat['nama_brng'], '')),
+          ]);
+          $sent_med++;
           $pesan = 'Sukses mengirim medication request platform Satu Sehat!!';
+        } else {
+          $fail_med++;
         }
 
         curl_close($curl);
+
+        $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => ($id_medication_request !== '') ? 'sukses' : 'gagal', 'body' => $response];
 
         // echo '<pre>'. $data. '</pre>';
 
@@ -3908,10 +4044,18 @@ class Admin extends AdminModule
       // Data resep dan mapping obat
       $row['medications'] = $this->db('resep_obat')
         ->join('resep_dokter', 'resep_dokter.no_resep = resep_obat.no_resep')
-        ->join('mlite_satu_sehat_mapping_obat', 'mlite_satu_sehat_mapping_obat.kode_brng = resep_dokter.kode_brng')
-        ->where('mlite_satu_sehat_mapping_obat.type', 'obat')
-        ->where('no_rawat', $no_rawat)
+        ->leftJoin('mlite_satu_sehat_mapping_obat', 'mlite_satu_sehat_mapping_obat.kode_brng = resep_dokter.kode_brng')
+        ->where('resep_obat.no_rawat', $no_rawat)
         ->toArray();
+      $row['medications'] = is_array($row['medications']) ? $row['medications'] : [];
+      // Lewati obat yang ter-mapping sebagai Vaksin (jalur Immunization terpisah)
+      $row['medications'] = array_values(array_filter($row['medications'], function ($m) {
+        return !(isset($m['type']) && $m['type'] === 'vaksin');
+      }));
+      $sent_med = 0;
+      $skipped_med = 0;
+      $no_mapping_med = 0;
+      $fail_med = 0;
 
       if (count($row['medications']) === 0) {
         echo json_encode(['error' => 'Data tidak lengkap untuk Medication Dispense', 'missing' => ['noresep' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -3985,6 +4129,69 @@ class Admin extends AdminModule
 
         $satu_sehat_mapping_obat = $this->db('mlite_satu_sehat_mapping_obat')->where('kode_brng', $obat['kode_brng'])->oneArray();
 
+        $detailCol = 'id_medication_dispense';
+        $ada_item = [];
+        try {
+          $ada_item = $this->db('mlite_satu_sehat_med_response')
+            ->where('no_rawat', $no_rawat)
+            ->where('no_resep', $obat['no_resep'])
+            ->where('kode_brng', $obat['kode_brng'])
+            ->oneArray();
+        } catch (Throwable $e) {}
+        // Lewati item yang sudah pernah terkirim untuk tipe ini (idempoten)
+        if (!empty($ada_item) && isset_or($ada_item[$detailCol], '') !== '') {
+          $skipped_med++;
+          $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => 'skip', 'body' => '(skip: item sudah pernah terkirim untuk tipe ini)'];
+          continue;
+        }
+        // Tanpa mapping KFA: catat status no_mapping lalu lanjut item berikutnya
+        if (empty($satu_sehat_mapping_obat) || isset_or($satu_sehat_mapping_obat['id_medication'], '') === '') {
+          $no_mapping_med++;
+          $this->saveMedDetail($no_rawat, $obat['no_resep'], $obat['kode_brng'], [
+            'status' => 'no_mapping',
+            'nama_obat' => isset_or($obat['nama_kfa'], isset_or($obat['nama_brng'], '')),
+            'tgl_kirim' => null,
+          ]);
+          $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => 'skip', 'body' => '(tidak dikirim: obat belum mapping KFA)'];
+          continue;
+        }
+        // Dispense wajib merujuk MedicationRequest item ini; lewati jika belum ada
+        $rek_id_mr = '';
+        if (!empty($ada_item)) {
+          $rek_id_mr = isset_or($ada_item['id_medication_request'], '');
+        }
+        if ($rek_id_mr === '') {
+          $rek_id_mr = isset_or($mlite_satu_sehat_response['id_medication_request'], '');
+        }
+        if ($rek_id_mr === '') {
+          $skipped_med++;
+          $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => 'skip', 'body' => '(skip: MedicationRequest item belum terkirim)'];
+          continue;
+        }
+
+        // Cek duplikat: hanya jalankan bila pernah ada kiriman versi lama (hemat panggilan API)
+        $existing_id = '';
+        if (isset_or($mlite_satu_sehat_response['id_medication_dispense'], '') !== '') {
+          $existing_id = $this->getMedResourceByIdentifier('MedicationDispense', [
+            'http://sys-ids.kemkes.go.id/prescription/' . $this->organizationid => $obat['no_resep'],
+            'http://sys-ids.kemkes.go.id/prescription-item/' . $this->organizationid => $obat['kode_brng'],
+          ]);
+        }
+        if ($existing_id !== '') {
+          $this->saveMedDetail($no_rawat, $obat['no_resep'], $obat['kode_brng'], [
+            'id_medication_dispense' => $existing_id,
+            'status' => 'sent',
+            'nama_obat' => isset_or($obat['nama_kfa'], isset_or($obat['nama_brng'], '')),
+            'tgl_kirim' => date('Y-m-d H:i:s'),
+          ]);
+          try {
+            $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->save(['id_medication_dispense' => $existing_id]);
+          } catch (Throwable $e) {}
+          $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => 'skip', 'body' => '(duplikat: sudah pernah terkirim, dipakai ID lama ' . $existing_id . ')'];
+          $skipped_med++;
+          continue;
+        }
+
         $data = [
           "resourceType" => "MedicationDispense",
           "identifier" => [
@@ -4034,7 +4241,7 @@ class Admin extends AdminModule
           ],
           "authorizingPrescription" => [
             [
-              "reference" => "MedicationRequest/" . $mlite_satu_sehat_response['id_medication_request']
+              "reference" => "MedicationRequest/" . $rek_id_mr
             ]
           ],
           "quantity" => [
@@ -4089,7 +4296,8 @@ class Admin extends AdminModule
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 0,
+          CURLOPT_TIMEOUT => 90,
+          CURLOPT_CONNECTTIMEOUT => 15,
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . json_decode($this->getToken())->access_token),
@@ -4102,15 +4310,27 @@ class Admin extends AdminModule
         $id_medication_dispense = isset_or(json_decode($response)->id, '');
         $pesan = 'Gagal mengirim medication dispense platform Satu Sehat!!';
         if ($id_medication_dispense) {
-          $this->db('mlite_satu_sehat_response')
-            ->where('no_rawat', $no_rawat)
-            ->save([
-              'id_medication_dispense' => $id_medication_dispense
-            ]);
+          try {
+            $this->db('mlite_satu_sehat_response')
+              ->where('no_rawat', $no_rawat)
+              ->save(['id_medication_dispense' => $id_medication_dispense]);
+          } catch (Throwable $e) {}
+          $this->saveMedDetail($no_rawat, $obat['no_resep'], $obat['kode_brng'], [
+            'id_medication_dispense' => $id_medication_dispense,
+            'status' => 'sent',
+            'raw_response' => $response,
+            'tgl_kirim' => date('Y-m-d H:i:s'),
+            'nama_obat' => isset_or($obat['nama_kfa'], isset_or($obat['nama_brng'], '')),
+          ]);
+          $sent_med++;
           $pesan = 'Sukses mengirim medication dispense platform Satu Sehat!!';
+        } else {
+          $fail_med++;
         }
 
         curl_close($curl);
+
+        $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => ($id_medication_dispense !== '') ? 'sukses' : 'gagal', 'body' => $response];
 
         // echo '<pre>'. $data. '</pre>';
 
@@ -4120,10 +4340,18 @@ class Admin extends AdminModule
       // Data resep dan mapping obat
       $row['medications'] = $this->db('resep_obat')
         ->join('resep_dokter', 'resep_dokter.no_resep = resep_obat.no_resep')
-        ->join('mlite_satu_sehat_mapping_obat', 'mlite_satu_sehat_mapping_obat.kode_brng = resep_dokter.kode_brng')
-        ->where('mlite_satu_sehat_mapping_obat.type', 'obat')
-        ->where('no_rawat', $no_rawat)
+        ->leftJoin('mlite_satu_sehat_mapping_obat', 'mlite_satu_sehat_mapping_obat.kode_brng = resep_dokter.kode_brng')
+        ->where('resep_obat.no_rawat', $no_rawat)
         ->toArray();
+      $row['medications'] = is_array($row['medications']) ? $row['medications'] : [];
+      // Lewati obat yang ter-mapping sebagai Vaksin (jalur Immunization terpisah)
+      $row['medications'] = array_values(array_filter($row['medications'], function ($m) {
+        return !(isset($m['type']) && $m['type'] === 'vaksin');
+      }));
+      $sent_med = 0;
+      $skipped_med = 0;
+      $no_mapping_med = 0;
+      $fail_med = 0;
 
       if (count($row['medications']) === 0) {
         echo json_encode(['error' => 'Data tidak lengkap untuk Medication Dispense', 'missing' => ['noresep' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -4197,6 +4425,62 @@ class Admin extends AdminModule
         // $endDate = date('Y-m-d', strtotime("$startDate +{$duration} days"));
 
         $satu_sehat_mapping_obat = $this->db('mlite_satu_sehat_mapping_obat')->where('kode_brng', $obat['kode_brng'])->oneArray();
+
+        $detailCol = 'id_medication_statement';
+        $ada_item = [];
+        try {
+          $ada_item = $this->db('mlite_satu_sehat_med_response')
+            ->where('no_rawat', $no_rawat)
+            ->where('no_resep', $obat['no_resep'])
+            ->where('kode_brng', $obat['kode_brng'])
+            ->oneArray();
+        } catch (Throwable $e) {}
+        // Lewati item yang sudah pernah terkirim untuk tipe ini (idempoten)
+        if (!empty($ada_item) && isset_or($ada_item[$detailCol], '') !== '') {
+          $skipped_med++;
+          $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => 'skip', 'body' => '(skip: item sudah pernah terkirim untuk tipe ini)'];
+          continue;
+        }
+        // Tanpa mapping KFA: catat status no_mapping lalu lanjut item berikutnya
+        if (empty($satu_sehat_mapping_obat) || isset_or($satu_sehat_mapping_obat['id_medication'], '') === '') {
+          $no_mapping_med++;
+          $this->saveMedDetail($no_rawat, $obat['no_resep'], $obat['kode_brng'], [
+            'status' => 'no_mapping',
+            'nama_obat' => isset_or($obat['nama_kfa'], isset_or($obat['nama_brng'], '')),
+            'tgl_kirim' => null,
+          ]);
+          $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => 'skip', 'body' => '(tidak dikirim: obat belum mapping KFA)'];
+          continue;
+        }
+        // Statement hanya bisa dikirim jika resep sudah diserahkan ke pasien
+        $tgl_penyerahan = trim(isset_or($obat['tgl_penyerahan'], ''));
+        if ($tgl_penyerahan === '' || $tgl_penyerahan === '0000-00-00') {
+          $skipped_med++;
+          $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => 'skip', 'body' => '(skip: resep belum diserahkan ke pasien)'];
+          continue;
+        }
+
+        // Cek duplikat: hanya jalankan bila pernah ada kiriman versi lama (hemat panggilan API)
+        $existing_id = '';
+        if (isset_or($mlite_satu_sehat_response['id_medication_statement'], '') !== '') {
+          $existing_id = $this->getMedResourceByIdentifier('MedicationStatement', [
+            'http://sys-ids.kemkes.go.id/medicationstatement/' . $this->organizationid => $obat['no_resep'] . '-' . $obat['kode_brng'],
+          ]);
+        }
+        if ($existing_id !== '') {
+          $this->saveMedDetail($no_rawat, $obat['no_resep'], $obat['kode_brng'], [
+            'id_medication_statement' => $existing_id,
+            'status' => 'sent',
+            'nama_obat' => isset_or($obat['nama_kfa'], isset_or($obat['nama_brng'], '')),
+            'tgl_kirim' => date('Y-m-d H:i:s'),
+          ]);
+          try {
+            $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->save(['id_medication_statement' => $existing_id]);
+          } catch (Throwable $e) {}
+          $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => 'skip', 'body' => '(duplikat: sudah pernah terkirim, dipakai ID lama ' . $existing_id . ')'];
+          $skipped_med++;
+          continue;
+        }
 
         $data = [
           "resourceType" => "MedicationStatement",
@@ -4273,7 +4557,8 @@ class Admin extends AdminModule
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 0,
+          CURLOPT_TIMEOUT => 90,
+          CURLOPT_CONNECTTIMEOUT => 15,
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . json_decode($this->getToken())->access_token),
@@ -4286,15 +4571,27 @@ class Admin extends AdminModule
         $id_medication_statement = isset_or(json_decode($response)->id, '');
         $pesan = 'Gagal mengirim medication statement platform Satu Sehat!!';
         if ($id_medication_statement) {
-          $this->db('mlite_satu_sehat_response')
-            ->where('no_rawat', $no_rawat)
-            ->save([
-              'id_medication_statement' => $id_medication_statement
-            ]);
+          try {
+            $this->db('mlite_satu_sehat_response')
+              ->where('no_rawat', $no_rawat)
+              ->save(['id_medication_statement' => $id_medication_statement]);
+          } catch (Throwable $e) {}
+          $this->saveMedDetail($no_rawat, $obat['no_resep'], $obat['kode_brng'], [
+            'id_medication_statement' => $id_medication_statement,
+            'status' => 'sent',
+            'raw_response' => $response,
+            'tgl_kirim' => date('Y-m-d H:i:s'),
+            'nama_obat' => isset_or($obat['nama_kfa'], isset_or($obat['nama_brng'], '')),
+          ]);
+          $sent_med++;
           $pesan = 'Sukses mengirim medication statement platform Satu Sehat!!';
+        } else {
+          $fail_med++;
         }
 
         curl_close($curl);
+
+        $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => ($id_medication_statement !== '') ? 'sukses' : 'gagal', 'body' => $response];
 
       }
     } else if ($tipe == 'mapping') {
@@ -4393,13 +4690,101 @@ class Admin extends AdminModule
       curl_close($curl);
     }
 
+    // Ringkasan hasil pengiriman per item
+    if (in_array($tipe, ['request', 'dispense', 'statement'], true)) {
+      $ringkasan = '(' . $sent_med . ' terkirim';
+      if ($skipped_med > 0) { $ringkasan .= ', ' . $skipped_med . ' sudah pernah terkirim'; }
+      if ($no_mapping_med > 0) { $ringkasan .= ', ' . $no_mapping_med . ' belum mapping KFA'; }
+      if ($fail_med > 0) { $ringkasan .= ', ' . $fail_med . ' gagal'; }
+      $ringkasan .= ')';
+      $pesan = isset_or($pesan, '');
+      $pesan = trim($pesan) === '' ? $ringkasan : trim($pesan) . ' ' . $ringkasan;
+    }
+
+    // Kumpulkan rincian per item dari tabel detail (status + token) untuk ditampilkan di modal
+    $med_report = [];
+    if (in_array($tipe, ['request', 'dispense', 'statement'], true)) {
+      $detailColFinal = [
+        'request' => 'id_medication_request',
+        'dispense' => 'id_medication_dispense',
+        'statement' => 'id_medication_statement',
+      ][$tipe];
+      $med_rows = [];
+      try {
+        $med_rows = $this->db('mlite_satu_sehat_med_response')
+          ->where('no_rawat', $no_rawat)
+          ->asc('kode_brng')
+          ->toArray();
+      } catch (Throwable $e) {}
+      if (!is_array($med_rows)) { $med_rows = []; }
+      foreach ($med_rows as $mr) {
+        $id_item = isset_or($mr[$detailColFinal], '');
+        if ($id_item !== '') {
+          $status_item = 'sent';
+        } elseif (isset_or($mr['status'], '') === 'no_mapping') {
+          $status_item = 'no_mapping';
+        } else {
+          $status_item = 'pending';
+        }
+        $med_report[] = [
+          'no_resep' => isset_or($mr['no_resep'], ''),
+          'kode_brng' => isset_or($mr['kode_brng'], ''),
+          'nama_obat' => isset_or($mr['nama_obat'], ''),
+          'status' => $status_item,
+          'id' => $id_item,
+        ];
+      }
+      $response = json_encode([
+        'pesan' => isset_or($pesan, ''),
+        'ringkasan' => [
+          'terkirim' => $sent_med,
+          'sudah' => $skipped_med,
+          'belum_mapping' => $no_mapping_med,
+          'gagal' => $fail_med,
+        ],
+        'items' => $med_report,
+        'responses' => $med_responses,
+      ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    } else {
+      $response = json_encode(['pesan' => isset_or($pesan, '')], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    }
+
     if ($render) {
       echo $this->draw('medication.html', [
         'pesan' => isset_or($pesan, ''),
         'response' => isset_or($response, '')
       ]);
     } else {
-      echo isset($response) ? $response : '';
+      echo $response;
+    }
+    } catch (Throwable $e) {
+      // Jangan biarkan satu item / satu kesalahan mematikan seluruh kiriman
+      $raw = $e->getMessage();
+      if (class_exists('\QueryWrapper') && is_callable(['\QueryWrapper', 'lastSqls'])) {
+        try {
+          $sqls = \QueryWrapper::lastSqls();
+          if (is_array($sqls) && !empty($sqls)) {
+            $raw .= ' | SQL: ' . implode(' ; ', array_slice($sqls, -3));
+          }
+        } catch (Throwable $e2) {}
+      }
+      $resp = json_encode([
+        'pesan' => 'Sebagian item tidak terkirim. ' . $raw,
+        'ringkasan' => [
+          'terkirim' => $sent_med,
+          'sudah' => $skipped_med,
+          'belum_mapping' => $no_mapping_med,
+          'gagal' => $fail_med,
+        ],
+        'items' => $med_report,
+        'responses' => $med_responses,
+        'error' => $raw,
+      ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+      if ($render) {
+        echo $this->draw('medication.html', ['pesan' => 'Gagal mengirim sebagian: ' . $raw, 'response' => $resp]);
+      } else {
+        echo $resp;
+      }
     }
     exit();
   }
@@ -6769,6 +7154,14 @@ class Admin extends AdminModule
       $lab_table_ok = false;
     }
 
+    // Cek apakah tabel detail medication sudah ada
+    $med_table_ok = true;
+    try {
+      $this->db('mlite_satu_sehat_med_response')->where('no_rawat', '')->count();
+    } catch (Throwable $e) {
+      $med_table_ok = false;
+    }
+
     foreach ($query_data as $row) {
 
       $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $row['no_rawat'])->oneArray();
@@ -7010,6 +7403,35 @@ class Admin extends AdminModule
           $row['lab_total'] = (int) $this->db('permintaan_pemeriksaan_lab')
             ->where('noorder', $row['permintaan_lab']['noorder'])
             ->count();
+        }
+      }
+
+      // Item obat beserta status per resource (tabel detail medication)
+      $row['med_items'] = [];
+      $row['med_total'] = 0;
+      if ($med_table_ok) {
+        $row['med_items'] = $this->db('mlite_satu_sehat_med_response')
+          ->where('no_rawat', $row['no_rawat'])
+          ->asc('kode_brng')
+          ->toArray();
+        if (!is_array($row['med_items'])) {
+          $row['med_items'] = [];
+        }
+        $med_src = $this->db('resep_obat')
+          ->join('resep_dokter', 'resep_dokter.no_resep = resep_obat.no_resep')
+          ->leftJoin('mlite_satu_sehat_mapping_obat', 'mlite_satu_sehat_mapping_obat.kode_brng = resep_dokter.kode_brng')
+          ->where('resep_obat.no_rawat', $row['no_rawat'])
+          ->select(['no_resep' => 'resep_obat.no_resep', 'kode_brng' => 'resep_dokter.kode_brng', 'type' => 'mlite_satu_sehat_mapping_obat.type'])
+          ->toArray();
+        if (is_array($med_src)) {
+          $count_med_src = 0;
+          foreach ($med_src as $ms) {
+            if (isset($ms['type']) && $ms['type'] === 'vaksin') {
+              continue;
+            }
+            $count_med_src++;
+          }
+          $row['med_total'] = $count_med_src;
         }
       }
 
@@ -7291,6 +7713,8 @@ class Admin extends AdminModule
 
   public function getRekap()
   {
+    @set_time_limit(300);
+
     $start_date = isset($_GET['tanggal_awal']) && $_GET['tanggal_awal'] !== '' ? $_GET['tanggal_awal'] : date('Y-m-d');
     $end_date = isset($_GET['tanggal_akhir']) && $_GET['tanggal_akhir'] !== '' ? $_GET['tanggal_akhir'] : $start_date;
 
@@ -7403,6 +7827,20 @@ class Admin extends AdminModule
     $day_agg = [];
     $total_kunjungan = 0;
 
+    // Probe tabel detail (lab & obat) agar halaman rekap tidak rusak bila tabel belum dibuat di server
+    $lab_table_ok = true;
+    $med_table_ok = true;
+    try {
+      $this->db('mlite_satu_sehat_lab_response')->limit(1)->oneArray();
+    } catch (Throwable $e) {
+      $lab_table_ok = false;
+    }
+    try {
+      $this->db('mlite_satu_sehat_med_response')->limit(1)->oneArray();
+    } catch (Throwable $e) {
+      $med_table_ok = false;
+    }
+
     foreach ($rows as $row) {
       $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $row['no_rawat'])->oneArray();
       
@@ -7463,7 +7901,7 @@ class Admin extends AdminModule
       }
 
       // Lab per-item: dihitung dari tabel detail (id per pemeriksaan), bukan kolom id terakhir
-      $lab_detail = $this->db('mlite_satu_sehat_lab_response')->where('no_rawat', $row['no_rawat'])->toArray();
+      $lab_detail = $lab_table_ok ? $this->db('mlite_satu_sehat_lab_response')->where('no_rawat', $row['no_rawat'])->toArray() : [];
       if (!empty($lab_detail)) {
         $lab_map_fields = [
           'id_lab_pk_request' => 'id_service_request',
@@ -7492,6 +7930,38 @@ class Admin extends AdminModule
             }
           }
           $fields[$resKey] = ($sent_lab >= $lab_total_mapped) ? '1' : '';
+        }
+      }
+
+      // Obat per-item: dihitung dari tabel detail (id per item obat), bukan kolom id terakhir
+      $med_detail = $med_table_ok ? $this->db('mlite_satu_sehat_med_response')->where('no_rawat', $row['no_rawat'])->toArray() : [];
+      if (!empty($med_detail)) {
+        $med_map_fields = [
+          'id_medication_request' => 'id_medication_request',
+          'id_medication_dispense' => 'id_medication_dispense',
+          'id_medication_statement' => 'id_medication_statement',
+        ];
+        $med_total_mapped = 0;
+        foreach ($med_detail as $md) {
+          if (isset_or($md['status'], '') !== 'no_mapping') {
+            $med_total_mapped++;
+          }
+        }
+        foreach ($med_map_fields as $resKey => $col) {
+          if ($med_total_mapped === 0) {
+            $fields[$resKey] = '';
+            continue;
+          }
+          $sent_med = 0;
+          foreach ($med_detail as $md) {
+            if (isset_or($md['status'], '') === 'no_mapping') {
+              continue;
+            }
+            if (isset_or($md[$col], '') !== '') {
+              $sent_med++;
+            }
+          }
+          $fields[$resKey] = ($sent_med >= $med_total_mapped) ? '1' : '';
         }
       }
 
