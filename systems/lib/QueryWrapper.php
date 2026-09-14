@@ -36,6 +36,10 @@ class QueryWrapper
 
     protected static $query_logs = [];
 
+    protected static $last_error_sql = '';
+
+    protected static $last_error_binds = [];
+
     public function __construct($table = null)
     {
         if ($table) {
@@ -51,6 +55,16 @@ class QueryWrapper
     public static function lastSqls()
     {
         return static::$last_sqls;
+    }
+
+    public static function lastSqlError()
+    {
+        return static::$last_error_sql;
+    }
+
+    public static function lastSqlErrorBinds()
+    {
+        return static::$last_error_binds;
     }
 
     public static function queryLogs()
@@ -580,7 +594,9 @@ class QueryWrapper
         } catch (\PDOException $e) {
             // Simpan log jika terjadi error
             self::logQueryToDatabase($sql, $binds, $e->getMessage());
-            
+            self::$last_error_sql = $sql;
+            self::$last_error_binds = $binds;
+
             // Check for integrity constraint violation
             if ($e->getCode() == '23000') {
                 // Optionally append detailed info: $errorMessage .= " (" . $e->getMessage() . ")";
@@ -589,8 +605,14 @@ class QueryWrapper
 
                 throw new \Exception($errorMessage, 23000);
             }
-            
-            throw $e; // lempar ulang agar error tetap ditangani di luar
+
+            // Sertakan SQL yang gagal ke dalam pesan agar penyebab mudah dilacak
+            $sqlOneLine = trim(preg_replace('/\s+/', ' ', $sql));
+            $bindsText = json_encode($binds, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $msg = $e->getMessage() . " [SQL: $sqlOneLine] [BINDS: $bindsText]";
+            $pdoEx = new \PDOException($msg, (int) $e->getCode(), $e->getPrevious());
+            $pdoEx->errorInfo = $e->errorInfo;
+            throw $pdoEx; // lempar ulang agar error tetap ditangani di luar
         }
 
         $settings = $this->pdo()->query("SELECT * FROM mlite_settings WHERE module = 'settings' AND field = 'log_query'")->fetchAll();

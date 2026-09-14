@@ -3383,7 +3383,9 @@ class Admin extends AdminModule
       // $startDate = $obat['tgl_peresepan'];
       // $endDate = date('Y-m-d', strtotime("$startDate +{$duration} days"));
 
-      // $satu_sehat_mapping_obat = $this->db('mlite_satu_sehat_mapping_obat')->where('kode_brng', $obat['kode_brng'])->oneArray();
+      // // kode_brng bisa NULL ketika item belum ter-mapping (kolom LEFT JOIN menimpanya); jangan sampai bernilai null saat dipakai query
+        $obat['kode_brng'] = (isset($obat['kode_brng']) && $obat['kode_brng'] !== null) ? (string) $obat['kode_brng'] : '';
+        $satu_sehat_mapping_obat = $this->db('mlite_satu_sehat_mapping_obat')->where('kode_brng', $obat['kode_brng'])->oneArray();
       $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $kd_poli)->oneArray();
       $databarang = $this->db('databarang')->where('kode_brng', $obat['kode_brng'])->oneArray();
       $gudangbarang = $this->db('gudangbarang')->where('kode_brng', $obat['kode_brng'])->where('kd_bangsal', $this->core->getSettings('satu_sehat', 'farmasi'))->oneArray();
@@ -3851,6 +3853,8 @@ class Admin extends AdminModule
         // $startDate = $obat['tgl_peresepan'];
         // $endDate = date('Y-m-d', strtotime("$startDate +{$duration} days"));
 
+        // kode_brng bisa NULL ketika item belum ter-mapping (kolom LEFT JOIN menimpanya); jangan sampai bernilai null saat dipakai query
+        $obat['kode_brng'] = (isset($obat['kode_brng']) && $obat['kode_brng'] !== null) ? (string) $obat['kode_brng'] : '';
         $satu_sehat_mapping_obat = $this->db('mlite_satu_sehat_mapping_obat')->where('kode_brng', $obat['kode_brng'])->oneArray();
 
         $detailCol = 'id_medication_request';
@@ -4128,6 +4132,8 @@ class Admin extends AdminModule
         // $startDate = $obat['tgl_peresepan'];
         // $endDate = date('Y-m-d', strtotime("$startDate +{$duration} days"));
 
+        // kode_brng bisa NULL ketika item belum ter-mapping (kolom LEFT JOIN menimpanya); jangan sampai bernilai null saat dipakai query
+        $obat['kode_brng'] = (isset($obat['kode_brng']) && $obat['kode_brng'] !== null) ? (string) $obat['kode_brng'] : '';
         $satu_sehat_mapping_obat = $this->db('mlite_satu_sehat_mapping_obat')->where('kode_brng', $obat['kode_brng'])->oneArray();
 
         $detailCol = 'id_medication_dispense';
@@ -4426,6 +4432,8 @@ class Admin extends AdminModule
         // $startDate = $obat['tgl_peresepan'];
         // $endDate = date('Y-m-d', strtotime("$startDate +{$duration} days"));
 
+        // kode_brng bisa NULL ketika item belum ter-mapping (kolom LEFT JOIN menimpanya); jangan sampai bernilai null saat dipakai query
+        $obat['kode_brng'] = (isset($obat['kode_brng']) && $obat['kode_brng'] !== null) ? (string) $obat['kode_brng'] : '';
         $satu_sehat_mapping_obat = $this->db('mlite_satu_sehat_mapping_obat')->where('kode_brng', $obat['kode_brng'])->oneArray();
 
         $detailCol = 'id_medication_statement';
