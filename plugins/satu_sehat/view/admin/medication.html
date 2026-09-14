@@ -53,13 +53,32 @@
         var block = '<div style="margin-top:12px;"><div style="font-weight:bold;font-size:12px;">Response Satu Sehat (lengkap per item):</div>';
         data.responses.forEach(function (rp) {
             var label = esc(rp.no_resep) + ' / ' + esc(rp.kode_brng) + ' — ' + (rp.status_send === 'sukses' ? '<span class="med-ok">sukses</span>' : (rp.status_send === 'skip' ? '<span class="med-warn">skip</span>' : '<span class="med-err">gagal</span>'));
+            var isGagal = rp.status_send === 'gagal';
             var body = '';
+            var parsed = null;
             if (String(rp.body || '').indexOf('{') === 0) {
-                try { body = JSON.stringify(JSON.parse(rp.body), null, 2); } catch (e) { body = String(rp.body); }
+                try { parsed = JSON.parse(rp.body); } catch (e) { parsed = null; }
+                try { body = JSON.stringify(parsed, null, 2); } catch (e) { body = String(rp.body); }
             } else {
                 body = String(rp.body == null ? '' : rp.body);
             }
-            block += '<div style="margin:6px 0;"><div>' + label + '</div><pre style="white-space:pre-wrap;font-size:11px;background:#f7f7f9;border:1px solid #e1e1e8;border-radius:4px;max-height:240px;overflow:auto;padding:6px;margin:2px 0 0;">' + esc(body) + '</pre></div>';
+            block += '<div style="margin:8px 0;padding:8px;border:1px solid #dee2e6;border-radius:5px;' + (isGagal ? 'border-color:#b02a37;background:#fff5f5;' : '') + '">';
+            block += '<div style="font-size:12px;">' + label + '</div>';
+            var details = '';
+            if (parsed && Array.isArray(parsed.issue) && parsed.issue.length) {
+                details = '<div style="margin:2px 0 4px;"><b>Alasan ditolak SATU SEHAT:</b><ul style="margin:4px 0 6px 18px;font-size:12px;">';
+                parsed.issue.forEach(function (iss) {
+                    var sev = (iss.severity || '') + ' ' + (iss.code || '');
+                    var txt = iss.diagnostics || (iss.details && iss.details.text) || '';
+                    details += '<li><b>' + esc(sev) + '</b> — ' + esc(txt) + '</li>';
+                });
+                details += '</ul></div>';
+            }
+            if (isGagal && rp.curl_error) {
+                details += '<div style="margin:2px 0 4px;font-size:12px;color:#b02a37;"><b>Kesalahan koneksi/curl:</b> ' + esc(rp.curl_error) + '</div>';
+            }
+            if (details) { block += details; }
+            block += '<pre style="white-space:pre-wrap;font-size:11px;' + (isGagal ? 'background:#fff;' : 'background:#f7f7f9;max-height:240px;') + 'border:1px solid ' + (isGagal ? '#b02a37;' : '#e1e1e8;') + 'border-radius:4px;overflow:auto;padding:6px;margin:2px 0 0;">' + esc(body === '' ? '(tidak ada respons/body kosong — lihat kesalahan di atas atau token/koneksi belum valid)' : body) + '</pre></div>';
         });
         block += '</div>';
         $info.append($(block));

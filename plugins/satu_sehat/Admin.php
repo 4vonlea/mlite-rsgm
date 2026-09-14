@@ -4033,9 +4033,10 @@ class Admin extends AdminModule
           $fail_med++;
         }
 
+        $curl_err = curl_error($curl);
         curl_close($curl);
 
-        $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => ($id_medication_request !== '') ? 'sukses' : 'gagal', 'body' => $response];
+        $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => ($id_medication_request !== '') ? 'sukses' : 'gagal', 'body' => ($response === false) ? '' : $response, 'curl_error' => $curl_err];
 
         // echo '<pre>'. $data. '</pre>';
 
@@ -4328,9 +4329,10 @@ class Admin extends AdminModule
           $fail_med++;
         }
 
+        $curl_err = curl_error($curl);
         curl_close($curl);
 
-        $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => ($id_medication_dispense !== '') ? 'sukses' : 'gagal', 'body' => $response];
+        $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => ($id_medication_dispense !== '') ? 'sukses' : 'gagal', 'body' => ($response === false) ? '' : $response, 'curl_error' => $curl_err];
 
         // echo '<pre>'. $data. '</pre>';
 
@@ -4589,9 +4591,10 @@ class Admin extends AdminModule
           $fail_med++;
         }
 
+        $curl_err = curl_error($curl);
         curl_close($curl);
 
-        $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => ($id_medication_statement !== '') ? 'sukses' : 'gagal', 'body' => $response];
+        $med_responses[] = ['no_resep' => $obat['no_resep'], 'kode_brng' => $obat['kode_brng'], 'status_send' => ($id_medication_statement !== '') ? 'sukses' : 'gagal', 'body' => ($response === false) ? '' : $response, 'curl_error' => $curl_err];
 
       }
     } else if ($tipe == 'mapping') {
