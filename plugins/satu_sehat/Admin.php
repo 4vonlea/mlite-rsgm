@@ -6806,8 +6806,25 @@ class Admin extends AdminModule
   {
     $this->_addHeaderFiles();
     $databarang = $this->db('databarang')->where('status', '1')->toArray();
-    $mapping_obat = $this->db('mlite_satu_sehat_mapping_obat')->toArray();
-    return $this->draw('mapping.obat.html', ['databarang' => $databarang, 'mapping_obat_satu_sehat' => $mapping_obat]);
+    $mapping_rows = $this->db('mlite_satu_sehat_mapping_obat')->toArray();
+
+    // Petakan mapping per kode obat untuk digabung dengan seluruh daftar obat aktif
+    $map_by_code = [];
+    foreach ($mapping_rows as $m) {
+      $map_by_code[isset_or($m['kode_brng'], '')] = $m;
+    }
+
+    $rows = [];
+    foreach ($databarang as $db) {
+      $code = isset_or($db['kode_brng'], '');
+      $mapped = (isset($map_by_code[$code]) && trim(isset_or($map_by_code[$code]['id_medication'], '')) !== '') ? $map_by_code[$code] : [];
+      $row = array_merge($db, $mapped);
+      $row['kode_brng'] = $code;
+      $row['status_map'] = empty($mapped) ? 'unmapped' : 'mapped';
+      $rows[] = $row;
+    }
+
+    return $this->draw('mapping.obat.html', ['databarang' => $databarang, 'mapping_obat_satu_sehat' => $rows]);
   }
 
   public function getMappingObatSearch()
