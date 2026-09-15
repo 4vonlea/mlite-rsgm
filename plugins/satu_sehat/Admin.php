@@ -5382,6 +5382,107 @@ class Admin extends AdminModule
       ], $data));
     }
   }
+
+  private function simpanDetailRad($no_rawat, $noorder, $kd_jenis_prw, $kolom, $id, $response_body, $detail = [])
+  {
+    $data = [
+      $kolom         => $id,
+      'raw_response' => $response_body,
+      'tgl_kirim'    => date('Y-m-d H:i:s'),
+    ];
+
+    $all = [
+      'id_service_request' => $kolom == 'id_service_request' ? $id : isset_or($detail['id_service_request'], ''),
+      'id_specimen'        => $kolom == 'id_specimen' ? $id : isset_or($detail['id_specimen'], ''),
+      'id_observation'     => $kolom == 'id_observation' ? $id : isset_or($detail['id_observation'], ''),
+      'id_diagnostic'      => $kolom == 'id_diagnostic' ? $id : isset_or($detail['id_diagnostic'], ''),
+    ];
+    if ($all['id_service_request'] !== '' && $all['id_specimen'] !== '' && $all['id_observation'] !== '' && $all['id_diagnostic'] !== '') {
+      $data['status'] = 'sent';
+    } else {
+      $data['status'] = 'partial';
+    }
+
+    if (!empty($detail)) {
+      $this->db('mlite_satu_sehat_rad_response')
+        ->where('no_rawat', $no_rawat)
+        ->where('noorder', $noorder)
+        ->where('kd_jenis_prw', $kd_jenis_prw)
+        ->save($data);
+    } else {
+      $this->db('mlite_satu_sehat_rad_response')->save(array_merge([
+        'no_rawat'     => $no_rawat,
+        'noorder'      => $noorder,
+        'kd_jenis_prw' => $kd_jenis_prw,
+      ], $data));
+    }
+  }
+
+  private function recoverRadDuplicate($resourceType, $identifierValue, $token, $decoded = null)
+  {
+    // Hanya jalankan recovery jika server menandai resource sebagai duplikat
+    if (is_object($decoded) && isset($decoded->issue) && is_array($decoded->issue)) {
+      $dup = false;
+      foreach ($decoded->issue as $iss) {
+        $text = isset($iss->details->text) ? $iss->details->text : '';
+        if (isset($iss->code) && strtolower($iss->code) === 'duplicate') {
+          $dup = true;
+          break;
+        }
+        if (stripos($text, 'duplicate') !== false || stripos($text, 'already exist') !== false) {
+          $dup = true;
+          break;
+        }
+      }
+      if (!$dup) {
+        return '';
+      }
+    } else {
+      return '';
+    }
+
+    if ($identifierValue == '') {
+      return '';
+    }
+
+    // Cari resource yang sudah terkirim berdasarkan identifier ACSN
+    $sys = 'http://sys-ids.kemkes.go.id/acsn/' . $this->organizationid;
+    $url = $this->fhirurl . '/' . $resourceType . '?identifier=' . urlencode($sys . '|' . $identifierValue);
+
+    $curl = curl_init();
+    curl_setopt_array($curl, array(
+      CURLOPT_URL => $url,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . $token),
+    ));
+    $body = curl_exec($curl);
+    curl_close($curl);
+
+    $json = json_decode($body);
+    if (is_object($json) && isset($json->entry) && is_array($json->entry) && isset($json->entry[0]->resource) && isset($json->entry[0]->resource->id)) {
+      return $json->entry[0]->resource->id;
+    }
+    return '';
+  }
+
+  private function toSatusehatUtc($tanggal, $jam, $zonawaktu = '+07:00')
+  {
+    if ($tanggal == '' || $tanggal === null || $jam == '') {
+      return '';
+    }
+    $jam = trim($jam);
+    if (strlen($jam) == 5) {
+      $jam .= ':00';
+    }
+    try {
+      $dt = new \DateTime($tanggal . 'T' . $jam . $zonawaktu);
+      $dt->setTimezone(new \DateTimeZone('UTC'));
+      return $dt->format('Y-m-d\TH:i:s') . '+00:00';
+    } catch (\Exception $e) {
+      return $tanggal . 'T' . $jam . '+00:00';
+    }
+  }
+
   public function getRadiology($no_rawat = '', $tipe = '', $render = true)
   {
 
@@ -5398,524 +5499,10 @@ class Admin extends AdminModule
     $pesan = '';
     $response = '';
 
-    $radiologi = '';
+    try {
 
-    if ($tipe == 'request') {
-
-      $row['permintaan_radiologi'] = $this->db('permintaan_radiologi')
-        ->where('no_rawat', $no_rawat)
-        ->oneArray();
-      if (!is_array($row['permintaan_radiologi']) || !isset($row['permintaan_radiologi']['noorder'])) {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Radiology request', 'missing' => ['permintaan_radiologi.noorder' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-      $row['permintaan_pemeriksaan_radiologi'] = $this->db('permintaan_pemeriksaan_radiologi')
-        ->join('jns_perawatan_radiologi', 'jns_perawatan_radiologi.kd_jenis_prw = permintaan_pemeriksaan_radiologi.kd_jenis_prw')
-        ->where('noorder', $row['permintaan_radiologi']['noorder'])
-        ->oneArray();
-      if (!is_array($row['permintaan_pemeriksaan_radiologi']) || !isset($row['permintaan_pemeriksaan_radiologi']['kd_jenis_prw'])) {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Radiology request', 'missing' => ['permintaan_pemeriksaan_radiologi.kd_jenis_prw' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-      $mapping_radiologi = $this->db('mlite_satu_sehat_mapping_rad')->where('kd_jenis_prw', $row['permintaan_pemeriksaan_radiologi']['kd_jenis_prw'])->oneArray();
-
-      // Data pasien dan dokter
-      $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
-      $nm_pasien = $this->core->getPasienInfo('nm_pasien', $no_rkm_medis);
-      $no_ktp_pasien = $this->core->getPasienInfo('no_ktp', $no_rkm_medis);
-      $kd_dokter = $this->core->getRegPeriksaInfo('kd_dokter', $no_rawat);
-      $nm_dokter = $this->core->getPegawaiInfo('nama', $kd_dokter);
-      $id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')
-        ->select('practitioner_id')
-        ->where('kd_dokter', $kd_dokter)
-        ->oneArray();
-
-      $__patientResp = $this->getPatient($no_ktp_pasien);
-      $__patientJson = json_decode($__patientResp);
-      $id_pasien = '';
-      if (is_object($__patientJson) && isset($__patientJson->entry) && is_array($__patientJson->entry) && isset($__patientJson->entry[0]) && isset($__patientJson->entry[0]->resource) && isset($__patientJson->entry[0]->resource->id)) {
-        $id_pasien = $__patientJson->entry[0]->resource->id;
-      }
-      if ($id_pasien === '') {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Radiology request', 'missing' => ['patient_id' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-
-      $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
-      $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $this->core->getSettings('satu_sehat', 'radiologi'))->oneArray();
-
-      $radiologi = '{
-        "resourceType": "ServiceRequest",
-        "identifier": [
-          {
-            "system": "http://sys-ids.kemkes.go.id/acsn/' . $this->organizationid . '",
-            "value": "' . $row['permintaan_radiologi']['noorder'] . '"
-          }
-        ],
-        "status": "active",
-        "intent": "order",
-        "priority": "routine",
-        "category": [
-          {
-            "coding": [
-              {
-                "system": "http://snomed.info/sct",
-                "code": "363679005",
-                "display": "Imaging"
-              }
-            ]
-          }
-        ],
-        "code": {
-          "coding": [
-            {
-              "system": "' . isset_or($mapping_radiologi['system'], 'http://loinc.org') . '",
-              "code": "' . $mapping_radiologi['code'] . '",
-              "display": "' . $mapping_radiologi['display'] . '"
-            }
-          ], 
-          "text": "' . $row['permintaan_pemeriksaan_radiologi']['nm_perawatan'] . '"
-        },
-        "subject": {
-          "reference": "Patient/' . $id_pasien . '",
-          "display": "' . $nm_pasien . '"
-        },
-        "encounter": {
-          "reference": "Encounter/' . $mlite_satu_sehat_response['id_encounter'] . '", 
-          "display": "Permintaan ' . $row['permintaan_pemeriksaan_radiologi']['nm_perawatan'] . ' Atas nama ' . $nm_pasien . ' No.RM ' . $no_rkm_medis . ' No. Rawat ' . $no_rawat . ' pada tangga ' . $row['permintaan_radiologi']['tgl_permintaan'] . ' jam ' . $row['permintaan_radiologi']['jam_permintaan'] . '"
-        },
-        "occurrenceDateTime": "' . $row['permintaan_radiologi']['tgl_permintaan'] . 'T' . $row['permintaan_radiologi']['jam_permintaan'] . $zonawaktu . '",
-        "requester": {
-          "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '",
-          "display": "' . $nm_dokter . '"  
-        },
-        "performer": [
-          {
-            "reference": "Organization/' . $mlite_satu_sehat_lokasi['id_organisasi_satusehat'] . '",
-            "display": "' . $mlite_satu_sehat_lokasi['lokasi'] . '"
-          }
-        ],
-        "reasonCode": [
-          {
-            "text": "Permintaan pemeriksaan radiologi dengan Accession Number ' . $row['permintaan_radiologi']['noorder'] . ' dan diagnosa klinis: ' . $row['permintaan_radiologi']['diagnosa_klinis'] . '"
-          }
-        ]
-      }';
-
-      // echo json_decode(json_encode($radiologi));
-
-      $url = $this->fhirurl . '/ServiceRequest';
-      $curl = curl_init();
-
-      curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . json_decode($this->getToken())->access_token),
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => $radiologi,
-      ));
-
-      $response = curl_exec($curl);
-
-      $id_radiologi_request = isset_or(json_decode($response)->id, '');
-      $pesan = 'Gagal mengirim radiologi request platform Satu Sehat!!';
-      if ($id_radiologi_request) {
-        $this->db('mlite_satu_sehat_response')
-          ->where('no_rawat', $no_rawat)
-          ->save([
-            'id_rad_request' => $id_radiologi_request
-          ]);
-        $pesan = 'Sukses mengirim radiologi request platform Satu Sehat!!';
-      }
-
-      curl_close($curl);
-
-    } elseif ($tipe == 'specimen') {
-      $row['permintaan_radiologi'] = $this->db('permintaan_radiologi')
-        ->where('no_rawat', $no_rawat)
-        ->oneArray();
-      if (!is_array($row['permintaan_radiologi']) || !isset($row['permintaan_radiologi']['noorder'])) {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Radiology specimen', 'missing' => ['permintaan_radiologi.noorder' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-      $row['permintaan_pemeriksaan_radiologi'] = $this->db('permintaan_pemeriksaan_radiologi')
-        ->join('jns_perawatan_radiologi', 'jns_perawatan_radiologi.kd_jenis_prw = permintaan_pemeriksaan_radiologi.kd_jenis_prw')
-        ->where('noorder', $row['permintaan_radiologi']['noorder'])
-        ->oneArray();
-      if (!is_array($row['permintaan_pemeriksaan_radiologi']) || !isset($row['permintaan_pemeriksaan_radiologi']['kd_jenis_prw'])) {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Radiology specimen', 'missing' => ['permintaan_pemeriksaan_radiologi.kd_jenis_prw' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-      $mapping_radiologi = $this->db('mlite_satu_sehat_mapping_rad')->where('kd_jenis_prw', $row['permintaan_pemeriksaan_radiologi']['kd_jenis_prw'])->oneArray();
-
-      // Data pasien dan dokter
-      $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
-      $nm_pasien = $this->core->getPasienInfo('nm_pasien', $no_rkm_medis);
-      $no_ktp_pasien = $this->core->getPasienInfo('no_ktp', $no_rkm_medis);
-      $kd_dokter = $this->core->getRegPeriksaInfo('kd_dokter', $no_rawat);
-      $nm_dokter = $this->core->getPegawaiInfo('nama', $kd_dokter);
-      $id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')
-        ->select('practitioner_id')
-        ->where('kd_dokter', $kd_dokter)
-        ->oneArray();
-
-      $__patientResp = $this->getPatient($no_ktp_pasien);
-      $__patientJson = json_decode($__patientResp);
-      $id_pasien = '';
-      if (is_object($__patientJson) && isset($__patientJson->entry) && is_array($__patientJson->entry) && isset($__patientJson->entry[0]) && isset($__patientJson->entry[0]->resource) && isset($__patientJson->entry[0]->resource->id)) {
-        $id_pasien = $__patientJson->entry[0]->resource->id;
-      }
-      if ($id_pasien === '') {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Radiology specimen', 'missing' => ['patient_id' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-
-
-      $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
-      $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $this->core->getSettings('satu_sehat', 'radiologi'))->oneArray();
-
-
-      $radiologi = '{ 
-        "resourceType": "Specimen",
-        "identifier": [
-          {
-            "system": "http://sys-ids.kemkes.go.id/specimen/' . $this->organizationid . '",
-            "value": "' . $row['permintaan_radiologi']['noorder'] . '"
-          }
-        ],
-        "status": "available",
-        "type": {
-          "coding": [
-            {
-              "system": "' . isset_or($mapping_radiologi['sampel_system'], 'http://snomed.info/sct') . '",
-              "code": "' . isset_or($mapping_radiologi['sampel_code'], '') . '",
-              "display": "' . isset_or($mapping_radiologi['sampel_display'], '') . '"
-            }
-          ]
-        },
-        "subject": {
-          "reference": "Patient/' . $id_pasien . '",
-          "display": "' . $nm_pasien . '"
-        },
-        "receivedTime": "' . $row['permintaan_radiologi']['tgl_permintaan'] . 'T' . $row['permintaan_radiologi']['jam_permintaan'] . $zonawaktu . '",
-        "request": [
-          {
-            "reference": "ServiceRequest/' . $mlite_satu_sehat_response['id_rad_request'] . '"
-          }
-        ]
-      }';
-
-      // echo json_decode(json_encode($radiologi));
-
-      $url = $this->fhirurl . '/Specimen';
-      $curl = curl_init();
-
-      curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . json_decode($this->getToken())->access_token),
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => $radiologi,
-      ));
-
-      $response = curl_exec($curl);
-
-      $id_radiologi_specimen = isset_or(json_decode($response)->id, '');
-      $pesan = 'Gagal mengirim radiologi specimen platform Satu Sehat!!';
-      if ($id_radiologi_specimen) {
-        $this->db('mlite_satu_sehat_response')
-          ->where('no_rawat', $no_rawat)
-          ->save([
-            'id_rad_specimen' => $id_radiologi_specimen
-          ]);
-        $pesan = 'Sukses mengirim radiologi specimen platform Satu Sehat!!';
-      }
-
-      curl_close($curl);
-
-    } elseif ($tipe == 'observation') {
-
-      $row['permintaan_radiologi'] = $this->db('permintaan_radiologi')
-        ->where('no_rawat', $no_rawat)
-        ->oneArray();
-      if (!is_array($row['permintaan_radiologi']) || !isset($row['permintaan_radiologi']['noorder'])) {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Radiology result', 'missing' => ['permintaan_radiologi.noorder' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-      $row['permintaan_pemeriksaan_radiologi'] = $this->db('permintaan_pemeriksaan_radiologi')
-        ->join('jns_perawatan_radiologi', 'jns_perawatan_radiologi.kd_jenis_prw = permintaan_pemeriksaan_radiologi.kd_jenis_prw')
-        ->where('noorder', $row['permintaan_radiologi']['noorder'])
-        ->oneArray();
-      if (!is_array($row['permintaan_pemeriksaan_radiologi']) || !isset($row['permintaan_pemeriksaan_radiologi']['kd_jenis_prw'])) {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Radiology result', 'missing' => ['permintaan_pemeriksaan_radiologi.kd_jenis_prw' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-      $mapping_radiologi = $this->db('mlite_satu_sehat_mapping_rad')->where('kd_jenis_prw', $row['permintaan_pemeriksaan_radiologi']['kd_jenis_prw'])->oneArray();
-
-      $hasil_radiologi = $this->db('hasil_radiologi')
-        ->where('no_rawat', $no_rawat)
-        ->oneArray();
-
-      // Data pasien dan dokter
-      $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
-      $nm_pasien = $this->core->getPasienInfo('nm_pasien', $no_rkm_medis);
-      $no_ktp_pasien = $this->core->getPasienInfo('no_ktp', $no_rkm_medis);
-      $kd_dokter = $this->core->getRegPeriksaInfo('kd_dokter', $no_rawat);
-      $nm_dokter = $this->core->getPegawaiInfo('nama', $kd_dokter);
-      $id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')
-        ->select('practitioner_id')
-        ->where('kd_dokter', $kd_dokter)
-        ->oneArray();
-
-      $__patientResp = $this->getPatient($no_ktp_pasien);
-      $__patientJson = json_decode($__patientResp);
-      $id_pasien = '';
-      if (is_object($__patientJson) && isset($__patientJson->entry) && is_array($__patientJson->entry) && isset($__patientJson->entry[0]) && isset($__patientJson->entry[0]->resource) && isset($__patientJson->entry[0]->resource->id)) {
-        $id_pasien = $__patientJson->entry[0]->resource->id;
-      }
-      if ($id_pasien === '') {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Radiology observation', 'missing' => ['patient_id' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-
-      $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
-      $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $this->core->getSettings('satu_sehat', 'radiologi'))->oneArray();
-
-
-      $radiologi = '{ 
-        "resourceType": "Observation",
-        "identifier": [
-          {
-            "system": "http://sys-ids.kemkes.go.id/observation/' . $this->organizationid . '",
-            "value": "' . $row['permintaan_radiologi']['noorder'] . '"
-          }
-        ],
-        "status": "final",
-        "category": [
-          {
-            "coding": [
-              {
-                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-                "code": "imaging",
-                "display": "Imaging"
-              }
-            ]
-          }
-        ],
-        "code": {
-          "coding": [
-            {
-              "system": "' . isset_or($mapping_radiologi['system'], 'http://loinc.org') . '",
-              "code": "' . $mapping_radiologi['code'] . '",
-              "display": "' . $mapping_radiologi['display'] . '"
-            }
-          ]
-        },
-        "subject": {
-          "reference": "Patient/' . $id_pasien . '",
-          "display": "' . $nm_pasien . '"
-        },
-        "encounter": {
-          "reference": "Encounter/' . $mlite_satu_sehat_response['id_encounter'] . '"
-        },
-        "effectiveDateTime": "' . $row['permintaan_radiologi']['tgl_hasil'] . 'T' . $row['permintaan_radiologi']['jam_hasil'] . $zonawaktu . '",
-        "performer": [
-          {
-            "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '",
-            "display": "dr. ' . $nm_dokter . ', Sp.Rad"
-          }
-        ],
-        "valueString": "' . isset_or($hasil_radiologi['hasil'], '') . '"
-      }';
-
-
-      // echo json_decode(json_encode($radiologi));
-
-      $url = $this->fhirurl . '/Observation';
-      $curl = curl_init();
-
-      curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . json_decode($this->getToken())->access_token),
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => $radiologi,
-      ));
-
-      $response = curl_exec($curl);
-
-      $id_radiologi_observation = isset_or(json_decode($response)->id, '');
-      $pesan = 'Gagal mengirim radiologi observation platform Satu Sehat!!';
-      if ($id_radiologi_observation) {
-        $this->db('mlite_satu_sehat_response')
-          ->where('no_rawat', $no_rawat)
-          ->save([
-            'id_rad_observation' => $id_radiologi_observation
-          ]);
-        $pesan = 'Sukses mengirim radiologi observation platform Satu Sehat!!';
-      }
-
-      curl_close($curl);
-
-    } elseif ($tipe == 'diagnostic') {
-
-      $row['permintaan_radiologi'] = $this->db('permintaan_radiologi')
-        ->where('no_rawat', $no_rawat)
-        ->oneArray();
-      if (!is_array($row['permintaan_radiologi']) || !isset($row['permintaan_radiologi']['noorder'])) {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Radiology result', 'missing' => ['permintaan_radiologi.noorder' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-      $row['permintaan_pemeriksaan_radiologi'] = $this->db('permintaan_pemeriksaan_radiologi')
-        ->join('jns_perawatan_radiologi', 'jns_perawatan_radiologi.kd_jenis_prw = permintaan_pemeriksaan_radiologi.kd_jenis_prw')
-        ->where('noorder', $row['permintaan_radiologi']['noorder'])
-        ->oneArray();
-      if (!is_array($row['permintaan_pemeriksaan_radiologi']) || !isset($row['permintaan_pemeriksaan_radiologi']['kd_jenis_prw'])) {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Radiology result', 'missing' => ['permintaan_pemeriksaan_radiologi.kd_jenis_prw' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-      $mapping_radiologi = $this->db('mlite_satu_sehat_mapping_rad')->where('kd_jenis_prw', $row['permintaan_pemeriksaan_radiologi']['kd_jenis_prw'])->oneArray();
-
-      $hasil_radiologi = $this->db('hasil_radiologi')
-        ->where('no_rawat', $no_rawat)
-        ->oneArray();
-
-      // Data pasien dan dokter
-      $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
-      $nm_pasien = $this->core->getPasienInfo('nm_pasien', $no_rkm_medis);
-      $no_ktp_pasien = $this->core->getPasienInfo('no_ktp', $no_rkm_medis);
-      $kd_dokter = $this->core->getRegPeriksaInfo('kd_dokter', $no_rawat);
-      $nm_dokter = $this->core->getPegawaiInfo('nama', $kd_dokter);
-      $id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')
-        ->select('practitioner_id')
-        ->where('kd_dokter', $kd_dokter)
-        ->oneArray();
-
-      $__patientResp = $this->getPatient($no_ktp_pasien);
-      $__patientJson = json_decode($__patientResp);
-      $id_pasien = '';
-      if (is_object($__patientJson) && isset($__patientJson->entry) && is_array($__patientJson->entry) && isset($__patientJson->entry[0]) && isset($__patientJson->entry[0]->resource) && isset($__patientJson->entry[0]->resource->id)) {
-        $id_pasien = $__patientJson->entry[0]->resource->id;
-      }
-      if ($id_pasien === '') {
-        echo json_encode(['error' => 'Data tidak lengkap untuk Radilogy diagnostic report', 'missing' => ['patient_id' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        exit();
-      }
-
-      $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
-      $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $this->core->getSettings('satu_sehat', 'radiologi'))->oneArray();
-
-
-      $radiologi = '{        
-        "resourceType": "DiagnosticReport",
-        "identifier": [
-          {
-            "system": "http://sys-ids.kemkes.go.id/diagnostic/' . $this->organizationid . '/rad",
-            "value": "' . $row['permintaan_radiologi']['noorder'] . '"
-          }
-        ],
-        "status": "final",
-        "category": [
-          {
-            "coding": [
-              {
-                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
-                "code": "RAD",
-                "display": "Radiology"
-              }
-            ]
-          }
-        ],
-        "code": {
-          "coding": [
-            {
-              "system": "' . isset_or($mapping_radiologi['system'], 'http://loinc.org') . '",
-              "code": "' . $mapping_radiologi['code'] . '",
-              "display": "' . $mapping_radiologi['display'] . '"
-            }
-          ]
-        },
-        "subject": {
-          "reference": "Patient/' . $id_pasien . '",
-          "display": "' . $nm_pasien . '"
-        },
-        "encounter": {
-          "reference": "Encounter/' . $mlite_satu_sehat_response['id_encounter'] . '"
-        },
-        "effectiveDateTime": "' . $row['permintaan_radiologi']['tgl_hasil'] . 'T' . $row['permintaan_radiologi']['jam_hasil'] . $zonawaktu . '",
-        "issued": "' . $row['permintaan_radiologi']['tgl_hasil'] . 'T' . $row['permintaan_radiologi']['jam_hasil'] . $zonawaktu . '",
-        "performer": [
-          {
-            "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '",
-            "display": "dr. ' . $nm_dokter . ', Sp.Rad"
-          }
-        ],
-        "specimen": [
-          {
-            "reference": "Specimen/' . $mlite_satu_sehat_response['id_rad_specimen'] . '"
-          }
-        ],
-        "result": [
-          {
-            "reference": "Observation/' . $mlite_satu_sehat_response['id_rad_observation'] . '"
-          }
-        ],
-        "basedOn": [
-          {
-            "reference": "ServiceRequest/' . $mlite_satu_sehat_response['id_rad_request'] . '"
-          }
-        ]
-      }';
-
-      // echo json_decode(json_encode($radiologi));
-
-      $url = $this->fhirurl . '/DiagnosticReport';
-      $curl = curl_init();
-
-      curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . json_decode($this->getToken())->access_token),
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => $radiologi,
-      ));
-
-      $response = curl_exec($curl);
-
-      $id_radiologi_diagnostic = isset_or(json_decode($response)->id, '');
-      $pesan = 'Gagal mengirim radiologi diagnostic platform Satu Sehat!!';
-      if ($id_radiologi_diagnostic) {
-        $this->db('mlite_satu_sehat_response')
-          ->where('no_rawat', $no_rawat)
-          ->save([
-            'id_rad_diagnostic' => $id_radiologi_diagnostic
-          ]);
-        $pesan = 'Sukses mengirim radiologi diagnostic platform Satu Sehat!!';
-      }
-
-      curl_close($curl);
-
-    } elseif ($tipe == 'image') {
+    // ==== TIPE IMAGE — sekali per pasien (alur PACS) ====
+    if ($tipe == 'image') {
 
       $row['permintaan_radiologi'] = $this->db('permintaan_radiologi')
         ->where('no_rawat', $no_rawat)
@@ -5942,7 +5529,7 @@ class Admin extends AdminModule
         } else {
           // Panggil SatusehatDicomClient langsung — hindari nested HTTP (504)
           try {
-            require_once '../plugins/mini_pacs/SatusehatDicomClient.php';
+            require_once __DIR__ . '/../mini_pacs/SatusehatDicomClient.php';
 
             $config = [
               'base_url' => 'https://api-satusehat.kemkes.go.id',
@@ -5952,26 +5539,74 @@ class Admin extends AdminModule
             ];
             $client = new \Plugins\Mini_Pacs\SatusehatDicomClient($config);
 
-            // Ambil series & instance pertama
-            $pacs_series = $this->db('mlite_mini_pacs_series')
+            // Ambil semua series & instance dari studi
+            $allSeries = $this->db('mlite_mini_pacs_series')
               ->where('study_id', $pacs_study['id'])
-              ->oneArray();
+              ->toArray();
 
-            if (!$pacs_series) {
+            if (!$allSeries) {
               throw new \Exception('Series Mini PACS tidak ditemukan untuk study_id ' . $pacs_study['id']);
             }
 
-            $pacs_instance = $this->db('mlite_mini_pacs_instance')
-              ->where('series_id', $pacs_series['id'])
-              ->oneArray();
+            // Upload DICOM semua instance & susun daftar series (multi image)
+            $seriesData = [];
+            $totalInstances = 0;
+            $uploadCount = 0;
+            $duplicateCount = 0;
+            $upload = [];
 
-            if (!$pacs_instance ) {
-              throw new \Exception('File DICOM tidak ditemukan atau belum dikonversi');
+            foreach ($allSeries as $serIdx => $pacs_series) {
+              $allInstances = $this->db('mlite_mini_pacs_instance')
+                ->where('series_id', $pacs_series['id'])
+                ->toArray();
+
+              if (!$allInstances) {
+                continue;
+              }
+
+              $instancesData = [];
+              foreach ($allInstances as $insIdx => $pacs_instance) {
+                // 1. Upload DICOM per instance (idempotent bila sudah pernah dikirim)
+                $upload = $client->uploadDicom($pacs_instance['file_path']);
+                $uploadCount++;
+                if (isset($upload['status']) && $upload['status'] === 'duplicate') {
+                  $duplicateCount++;
+                }
+
+                // SOP Class per instance dari metadata DICOM (fallback default)
+                $sop_instance = '1.2.840.10008.5.1.4.1.1.77.1.5.1';
+                try {
+                  $meta_sop = $this->db('mlite_mini_pacs_instance_metadata')
+                    ->where('instance_id', $pacs_instance['id'])
+                    ->where('tag', '0008,0016')
+                    ->oneArray();
+                  if (is_array($meta_sop) && !empty($meta_sop['value'])) {
+                    $sop_instance = str_replace('urn:oid:', '', trim($meta_sop['value']));
+                  }
+                } catch (Throwable $e) {
+                  $sop_instance = '1.2.840.10008.5.1.4.1.1.77.1.5.1';
+                }
+
+                $instancesData[] = [
+                  'uid' => $pacs_instance['sop_instance_uid'] ?? '',
+                  'number' => $insIdx + 1,
+                  'sopClass' => $sop_instance,
+                ];
+                $totalInstances++;
+              }
+
+              $seriesData[] = [
+                'uid' => $pacs_series['series_instance_uid'] ?? '',
+                'number' => $serIdx + 1,
+                'instances' => $instancesData,
+              ];
             }
 
-            // 1. Upload DICOM
-            $upload = $client->uploadDicom($pacs_instance['file_path']);
-            $isDuplicate = (isset($upload['status']) && $upload['status'] === 'duplicate');
+            if ($totalInstances == 0) {
+              throw new \Exception('Tidak ada file DICOM yang bisa dikirim pada studi');
+            }
+
+            $isDuplicate = ($uploadCount > 0 && $duplicateCount === $uploadCount);
 
             // 2. Data penunjang
             $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')
@@ -6000,7 +5635,13 @@ class Admin extends AdminModule
               $id_pasien = $__patientJson->entry[0]->resource->id;
             }
 
-            // 3. Kirim ImagingStudy ke FHIR
+            // Modality & SOP Class dinamis dari data Mini PACS
+            $modality = strtoupper(trim($pacs_study['modality'] ?? ''));
+            if ($modality == '' || $modality == 'UNKNOWN') {
+              $modality = 'CR';
+            }
+
+            // 3. Kirim ImagingStudy ke FHIR (semua series & instance sekaligus)
             $fhirResult = $client->sendImagingStudy([
               'patientId' => $id_pasien,
               'encounterId' => $mlite_satu_sehat_response['id_encounter'] ?? '',
@@ -6008,8 +5649,8 @@ class Admin extends AdminModule
               'noRawat' => $no_rawat,
               'noOrder' => $permintaan_radiologi['noorder'] ?? '',
               'studyUID' => $pacs_study['study_instance_uid'] ?? '',
-              'seriesUID' => $pacs_series['series_instance_uid'] ?? '',
-              'instanceUID' => $pacs_instance['sop_instance_uid'] ?? '',
+              'modality' => $modality,
+              'series' => $seriesData,
             ]);
 
             $fhirString = $fhirResult['response'];
@@ -6026,8 +5667,16 @@ class Admin extends AdminModule
 
             $id_imaging_study = isset_or(json_decode($response)->fhir_raw->id, '');
 
+            // Jika FHIR membalas duplikat (ImagingStudy sudah ada), ambil ID dari data yang sudah terkirim
+            if ($id_imaging_study == '') {
+              $rec_study = $this->recoverRadDuplicate('ImagingStudy', $permintaan_radiologi['noorder'] ?? '', $token, json_decode($fhirString));
+              if ($rec_study != '') {
+                $id_imaging_study = $rec_study;
+              }
+            }
+
             $pesan = $isDuplicate
-              ? 'DICOM sudah ada di Satu Sehat (Duplicate) — Mini PACS'
+              ? 'DICOM sudah ada di Satu Sehat (Duplicate) — Mini PACS' . ($id_imaging_study != '' ? ' — ID ImagingStudy: ' . $id_imaging_study : '')
               : 'Sukses mengirim image ke Satu Sehat via Mini PACS!! — ID ImagingStudy: ' . $id_imaging_study;
 
             // 4. Simpan ID ImagingStudy ke database
@@ -6036,7 +5685,7 @@ class Admin extends AdminModule
               ->save([
                 'id_imaging_study' => $id_imaging_study
               ]);
-                         
+
 
           } catch (\Exception $e) {
             $response = json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT);
@@ -6083,13 +5732,592 @@ class Admin extends AdminModule
         curl_close($curl);
 
       }
+      if ($render) {
+        echo $this->draw('radiology.html', ['pesan' => $pesan, 'response' => $response]);
+      } else {
+        echo $response;
+      }
+      exit();
     }
+
+    // ==== TIPE request / specimen / observation / diagnostic — per item pemeriksaan ====
+    $row['permintaan_radiologi'] = $this->db('permintaan_radiologi')
+      ->where('no_rawat', $no_rawat)
+      ->oneArray();
+    if (!is_array($row['permintaan_radiologi']) || !isset($row['permintaan_radiologi']['noorder'])) {
+      echo json_encode(['error' => 'Data tidak lengkap untuk Radiology ' . $tipe, 'missing' => ['permintaan_radiologi.noorder' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      exit();
+    }
+    $noorder = $row['permintaan_radiologi']['noorder'];
+
+    // Semua pemeriksaan radiologi pada permintaan ini
+    $list_pemeriksaan = $this->db('permintaan_pemeriksaan_radiologi')
+      ->join('jns_perawatan_radiologi', 'jns_perawatan_radiologi.kd_jenis_prw = permintaan_pemeriksaan_radiologi.kd_jenis_prw')
+      ->where('noorder', $noorder)
+      ->toArray();
+    if (!is_array($list_pemeriksaan) || empty($list_pemeriksaan)) {
+      echo json_encode(['error' => 'Data tidak lengkap untuk Radiology ' . $tipe, 'missing' => ['permintaan_pemeriksaan_radiologi' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      exit();
+    }
+
+    // Mapping per kd_jenis_prw
+    $list_mapping = $this->db('mlite_satu_sehat_mapping_rad')->toArray();
+    $map_mapping = [];
+    foreach ($list_mapping as $mapping_row) {
+      if (!empty($mapping_row['kd_jenis_prw'])) {
+        $map_mapping[$mapping_row['kd_jenis_prw']] = $mapping_row;
+      }
+    }
+    foreach ($list_pemeriksaan as $periksa) {
+      if (!isset($map_mapping[$periksa['kd_jenis_prw']])) {
+        $map_mapping[$periksa['kd_jenis_prw']] = [];
+      }
+    }
+
+    // Data pasien dan dokter
+    $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
+    $nm_pasien = $this->core->getPasienInfo('nm_pasien', $no_rkm_medis);
+    $no_ktp_pasien = $this->core->getPasienInfo('no_ktp', $no_rkm_medis);
+    $kd_dokter = $this->core->getRegPeriksaInfo('kd_dokter', $no_rawat);
+    $nm_dokter = $this->core->getPegawaiInfo('nama', $kd_dokter);
+    $id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')
+      ->select('practitioner_id')
+      ->where('kd_dokter', $kd_dokter)
+      ->oneArray();
+
+    $__patientResp = $this->getPatient($no_ktp_pasien);
+    $__patientJson = json_decode($__patientResp);
+    $id_pasien = '';
+    if (is_object($__patientJson) && isset($__patientJson->entry) && is_array($__patientJson->entry) && isset($__patientJson->entry[0]) && isset($__patientJson->entry[0]->resource) && isset($__patientJson->entry[0]->resource->id)) {
+      $id_pasien = $__patientJson->entry[0]->resource->id;
+    }
+    if ($id_pasien === '') {
+      echo json_encode(['error' => 'Data tidak lengkap untuk Radiology ' . $tipe, 'missing' => ['patient_id' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      exit();
+    }
+
+    $token = $this->getAccessToken();
+    if ($token == '') {
+      echo json_encode(['error' => 'Gagal mendapatkan access token Satu Sehat'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      exit();
+    }
+
+    $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
+    $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $this->core->getSettings('satu_sehat', 'radiologi'))->oneArray();
+
+    // Probe tabel detail radiologi: kalau migrasi belum dijalankan, kirim tanpa pencatatan detail
+    // (sama seperti perilaku medication), supaya tidak error "Database connection failed".
+    $rad_table_ok = true;
+    try {
+      $this->db('mlite_satu_sehat_rad_response')->where('no_rawat', '')->count();
+    } catch (Throwable $e) {
+      $rad_table_ok = false;
+    }
+
+    // Idempotent: pastikan baris detail tersedia untuk tiap item
+    if ($rad_table_ok) {
+      foreach ($list_pemeriksaan as $periksa) {
+      $kd_seed = $periksa['kd_jenis_prw'];
+      $ada = $this->db('mlite_satu_sehat_rad_response')
+        ->where('no_rawat', $no_rawat)
+        ->where('noorder', $noorder)
+        ->where('kd_jenis_prw', $kd_seed)
+        ->oneArray();
+      if (empty($ada)) {
+        $this->db('mlite_satu_sehat_rad_response')->save([
+          'no_rawat' => $no_rawat,
+          'noorder' => $noorder,
+          'kd_jenis_prw' => $kd_seed,
+          'status' => 'pending',
+        ]);
+      }
+      }
+    }
+
+    $hasil = ['sukses' => [], 'gagal' => [], 'skip' => []];
+    $responses_raw = [];
+
+    $waktu_permintaan = $this->toSatusehatUtc($row['permintaan_radiologi']['tgl_permintaan'], $row['permintaan_radiologi']['jam_permintaan'], $zonawaktu);
+    if ($waktu_permintaan == '') {
+      $waktu_permintaan = gmdate('Y-m-d\TH:i:s') . '+00:00';
+    }
+    $waktu_hasil = $this->toSatusehatUtc($row['permintaan_radiologi']['tgl_hasil'], $row['permintaan_radiologi']['jam_hasil'], $zonawaktu);
+    if ($waktu_hasil == '') {
+      $waktu_hasil = gmdate('Y-m-d\TH:i:s') . '+00:00';
+    }
+
+    if ($tipe == 'request') {
+
+      foreach ($list_pemeriksaan as $periksa) {
+
+        $kd_jenis_prw = $periksa['kd_jenis_prw'];
+        $nm_perawatan = isset_or($periksa['nm_perawatan'], '');
+        $mapping_radiologi = $map_mapping[$kd_jenis_prw] ?? [];
+
+        $detail = $rad_table_ok ? $this->db('mlite_satu_sehat_rad_response')
+          ->where('no_rawat', $no_rawat)
+          ->where('noorder', $noorder)
+          ->where('kd_jenis_prw', $kd_jenis_prw)
+          ->oneArray() : [];
+        if ($rad_table_ok && !empty($detail['id_service_request'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (ServiceRequest sudah terkirim: ' . $detail['id_service_request'] . ')';
+          continue;
+        }
+
+        $radiologi = '{
+        "resourceType": "ServiceRequest",
+        "identifier": [
+          {
+            "system": "http://sys-ids.kemkes.go.id/acsn/' . $this->organizationid . '",
+            "value": "' . $noorder . '-' . $kd_jenis_prw . '"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "priority": "routine",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "363679005",
+                "display": "Imaging"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "' . isset_or($mapping_radiologi['system'], 'http://loinc.org') . '",
+              "code": "' . isset_or($mapping_radiologi['code'], '') . '",
+              "display": "' . isset_or($mapping_radiologi['display'], '') . '"
+            }
+          ], 
+          "text": "' . $nm_perawatan . '"
+        },
+        "subject": {
+          "reference": "Patient/' . $id_pasien . '",
+          "display": "' . $nm_pasien . '"
+        },
+        "encounter": {
+          "reference": "Encounter/' . $mlite_satu_sehat_response['id_encounter'] . '", 
+          "display": "Permintaan ' . $nm_perawatan . ' Atas nama ' . $nm_pasien . ' No.RM ' . $no_rkm_medis . ' No. Rawat ' . $no_rawat . ' pada tangga ' . $row['permintaan_radiologi']['tgl_permintaan'] . ' jam ' . $row['permintaan_radiologi']['jam_permintaan'] . '"
+        },
+        "occurrenceDateTime": "' . $waktu_permintaan . '",
+        "requester": {
+          "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '",
+          "display": "' . $nm_dokter . '"  
+        },
+        "performer": [
+          {
+            "reference": "Organization/' . $mlite_satu_sehat_lokasi['id_organisasi_satusehat'] . '",
+            "display": "' . $mlite_satu_sehat_lokasi['lokasi'] . '"
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "Permintaan pemeriksaan radiologi dengan Accession Number ' . $row['permintaan_radiologi']['noorder'] . ' dan diagnosa klinis: ' . $row['permintaan_radiologi']['diagnosa_klinis'] . '"
+          }
+        ]
+      }';
+
+        list($http_code, $response_body) = $this->postSatuSehat($this->fhirurl . '/ServiceRequest', $radiologi, $token);
+        $decoded = json_decode($response_body);
+        if ($decoded !== null && isset($decoded->id) && $http_code >= 200 && $http_code < 300) {
+          if ($rad_table_ok) {
+            $this->simpanDetailRad($no_rawat, $noorder, $kd_jenis_prw, 'id_service_request', $decoded->id, $response_body, $detail);
+          }
+          $this->db('mlite_satu_sehat_response')
+            ->where('no_rawat', $no_rawat)
+            ->save(['id_rad_request' => $decoded->id]);
+          $hasil['sukses'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' => ServiceRequest/' . $decoded->id;
+        } else {
+          $rec_id = $this->recoverRadDuplicate('ServiceRequest', $noorder . '-' . $kd_jenis_prw, $token, $decoded);
+          if ($rec_id != '') {
+            if ($rad_table_ok) {
+              $this->simpanDetailRad($no_rawat, $noorder, $kd_jenis_prw, 'id_service_request', $rec_id, $response_body, $detail);
+            }
+            $this->db('mlite_satu_sehat_response')
+              ->where('no_rawat', $no_rawat)
+              ->save(['id_rad_request' => $rec_id]);
+            $hasil['sukses'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' => ServiceRequest/' . $rec_id . ' (sudah ada di Satu Sehat)';
+          } else {
+            $hasil['gagal'][] = $kd_jenis_prw . ' - ' . $nm_perawatan;
+          }
+        }
+        $responses_raw[] = is_object($decoded) ? $decoded : (object)['resourceType' => 'OperationOutcome', 'raw' => $response_body];
+      }
+
+      $pesan = count($hasil['sukses']) . ' ServiceRequest radiologi terkirim, ' . count($hasil['gagal']) . ' gagal, ' . count($hasil['skip']) . ' dilewati.';
+
+    }
+
+    if ($tipe == 'specimen') {
+
+      foreach ($list_pemeriksaan as $periksa) {
+
+        $kd_jenis_prw = $periksa['kd_jenis_prw'];
+        $nm_perawatan = isset_or($periksa['nm_perawatan'], '');
+        $mapping_radiologi = $map_mapping[$kd_jenis_prw] ?? [];
+
+        $detail = $rad_table_ok ? $this->db('mlite_satu_sehat_rad_response')
+          ->where('no_rawat', $no_rawat)
+          ->where('noorder', $noorder)
+          ->where('kd_jenis_prw', $kd_jenis_prw)
+          ->oneArray() : [];
+        if ($rad_table_ok && !empty($detail['id_specimen'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Specimen sudah terkirim: ' . $detail['id_specimen'] . ')';
+          continue;
+        }
+        if ($rad_table_ok && empty($detail['id_service_request'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (ServiceRequest belum terkirim. Kirim tipe request terlebih dahulu.)';
+          continue;
+        }
+
+        $ref_request = $rad_table_ok ? isset_or($detail['id_service_request'], '') : isset_or($mlite_satu_sehat_response['id_rad_request'], '');
+        if (!$rad_table_ok && $ref_request == '') {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (ServiceRequest belum terkirim. Kirim tipe request terlebih dahulu.)';
+          continue;
+        }
+
+        $radiologi = '{ 
+        "resourceType": "Specimen",
+        "identifier": [
+          {
+            "system": "http://sys-ids.kemkes.go.id/specimen/' . $this->organizationid . '",
+            "value": "' . $noorder . '-' . $kd_jenis_prw . '"
+          }
+        ],
+        "status": "available",
+        "type": {
+          "coding": [
+            {
+              "system": "' . isset_or($mapping_radiologi['sampel_system'], 'http://snomed.info/sct') . '",
+              "code": "' . isset_or($mapping_radiologi['sampel_code'], '') . '",
+              "display": "' . isset_or($mapping_radiologi['sampel_display'], '') . '"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/' . $id_pasien . '",
+          "display": "' . $nm_pasien . '"
+        },
+        "receivedTime": "' . $waktu_permintaan . '",
+        "request": [
+          {
+            "reference": "ServiceRequest/' . $ref_request . '"
+          }
+        ]
+      }';
+
+        list($http_code, $response_body) = $this->postSatuSehat($this->fhirurl . '/Specimen', $radiologi, $token);
+        $decoded = json_decode($response_body);
+        if ($decoded !== null && isset($decoded->id) && $http_code >= 200 && $http_code < 300) {
+          if ($rad_table_ok) {
+            $this->simpanDetailRad($no_rawat, $noorder, $kd_jenis_prw, 'id_specimen', $decoded->id, $response_body, $detail);
+          }
+          $this->db('mlite_satu_sehat_response')
+            ->where('no_rawat', $no_rawat)
+            ->save(['id_rad_specimen' => $decoded->id]);
+          $hasil['sukses'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' => Specimen/' . $decoded->id;
+        } else {
+          $rec_id = $this->recoverRadDuplicate('Specimen', $noorder . '-' . $kd_jenis_prw, $token, $decoded);
+          if ($rec_id != '') {
+            if ($rad_table_ok) {
+              $this->simpanDetailRad($no_rawat, $noorder, $kd_jenis_prw, 'id_specimen', $rec_id, $response_body, $detail);
+            }
+            $this->db('mlite_satu_sehat_response')
+              ->where('no_rawat', $no_rawat)
+              ->save(['id_rad_specimen' => $rec_id]);
+            $hasil['sukses'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' => Specimen/' . $rec_id . ' (sudah ada di Satu Sehat)';
+          } else {
+            $hasil['gagal'][] = $kd_jenis_prw . ' - ' . $nm_perawatan;
+          }
+        }
+        $responses_raw[] = is_object($decoded) ? $decoded : (object)['resourceType' => 'OperationOutcome', 'raw' => $response_body];
+      }
+
+      $pesan = count($hasil['sukses']) . ' Specimen radiologi terkirim, ' . count($hasil['gagal']) . ' gagal, ' . count($hasil['skip']) . ' dilewati.';
+
+    }
+
+    if ($tipe == 'observation') {
+
+      $hasil_radiologi = $this->db('hasil_radiologi')
+        ->where('no_rawat', $no_rawat)
+        ->oneArray();
+
+      foreach ($list_pemeriksaan as $periksa) {
+
+        $kd_jenis_prw = $periksa['kd_jenis_prw'];
+        $nm_perawatan = isset_or($periksa['nm_perawatan'], '');
+        $mapping_radiologi = $map_mapping[$kd_jenis_prw] ?? [];
+
+        $detail = $rad_table_ok ? $this->db('mlite_satu_sehat_rad_response')
+          ->where('no_rawat', $no_rawat)
+          ->where('noorder', $noorder)
+          ->where('kd_jenis_prw', $kd_jenis_prw)
+          ->oneArray() : [];
+        if ($rad_table_ok && !empty($detail['id_observation'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Observation sudah terkirim: ' . $detail['id_observation'] . ')';
+          continue;
+        }
+        if ($rad_table_ok && empty($detail['id_service_request'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (ServiceRequest belum terkirim. Kirim tipe request terlebih dahulu.)';
+          continue;
+        }
+        if ($rad_table_ok && empty($detail['id_specimen'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Specimen belum terkirim. Kirim tipe specimen terlebih dahulu.)';
+          continue;
+        }
+
+        $radiologi = '{ 
+        "resourceType": "Observation",
+        "identifier": [
+          {
+            "system": "http://sys-ids.kemkes.go.id/observation/' . $this->organizationid . '",
+            "value": "' . $noorder . '-' . $kd_jenis_prw . '"
+          }
+        ],
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "imaging",
+                "display": "Imaging"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "' . isset_or($mapping_radiologi['system'], 'http://loinc.org') . '",
+              "code": "' . isset_or($mapping_radiologi['code'], '') . '",
+              "display": "' . isset_or($mapping_radiologi['display'], '') . '"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/' . $id_pasien . '",
+          "display": "' . $nm_pasien . '"
+        },
+        "encounter": {
+          "reference": "Encounter/' . $mlite_satu_sehat_response['id_encounter'] . '"
+        },
+        "effectiveDateTime": "' . $waktu_hasil . '",
+        "performer": [
+          {
+            "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '",
+            "display": "dr. ' . $nm_dokter . ', Sp.Rad"
+          }
+        ],
+        "valueString": "' . isset_or($hasil_radiologi['hasil'], '') . '"
+      }';
+
+        list($http_code, $response_body) = $this->postSatuSehat($this->fhirurl . '/Observation', $radiologi, $token);
+        $decoded = json_decode($response_body);
+        if ($decoded !== null && isset($decoded->id) && $http_code >= 200 && $http_code < 300) {
+          if ($rad_table_ok) {
+            $this->simpanDetailRad($no_rawat, $noorder, $kd_jenis_prw, 'id_observation', $decoded->id, $response_body, $detail);
+          }
+          $this->db('mlite_satu_sehat_response')
+            ->where('no_rawat', $no_rawat)
+            ->save(['id_rad_observation' => $decoded->id]);
+          $hasil['sukses'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' => Observation/' . $decoded->id;
+        } else {
+          $rec_id = $this->recoverRadDuplicate('Observation', $noorder . '-' . $kd_jenis_prw, $token, $decoded);
+          if ($rec_id != '') {
+            if ($rad_table_ok) {
+              $this->simpanDetailRad($no_rawat, $noorder, $kd_jenis_prw, 'id_observation', $rec_id, $response_body, $detail);
+            }
+            $this->db('mlite_satu_sehat_response')
+              ->where('no_rawat', $no_rawat)
+              ->save(['id_rad_observation' => $rec_id]);
+            $hasil['sukses'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' => Observation/' . $rec_id . ' (sudah ada di Satu Sehat)';
+          } else {
+            $hasil['gagal'][] = $kd_jenis_prw . ' - ' . $nm_perawatan;
+          }
+        }
+        $responses_raw[] = is_object($decoded) ? $decoded : (object)['resourceType' => 'OperationOutcome', 'raw' => $response_body];
+      }
+
+      $pesan = count($hasil['sukses']) . ' Observation radiologi terkirim, ' . count($hasil['gagal']) . ' gagal, ' . count($hasil['skip']) . ' dilewati.';
+
+    }
+
+    if ($tipe == 'diagnostic') {
+
+      $hasil_radiologi = $this->db('hasil_radiologi')
+        ->where('no_rawat', $no_rawat)
+        ->oneArray();
+
+      // imagingStudy (best effort): hanya jika ImagingStudy sudah terkirim
+      $id_imaging_study = isset_or($mlite_satu_sehat_response['id_imaging_study'], '');
+      $imagingStudyJson = ($id_imaging_study != '')
+        ? ', "imagingStudy": [ { "reference": "ImagingStudy/' . $id_imaging_study . '" } ]'
+        : '';
+
+      foreach ($list_pemeriksaan as $periksa) {
+
+        $kd_jenis_prw = $periksa['kd_jenis_prw'];
+        $nm_perawatan = isset_or($periksa['nm_perawatan'], '');
+        $mapping_radiologi = $map_mapping[$kd_jenis_prw] ?? [];
+
+        $detail = $rad_table_ok ? $this->db('mlite_satu_sehat_rad_response')
+          ->where('no_rawat', $no_rawat)
+          ->where('noorder', $noorder)
+          ->where('kd_jenis_prw', $kd_jenis_prw)
+          ->oneArray() : [];
+        if ($rad_table_ok && !empty($detail['id_diagnostic'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (DiagnosticReport sudah terkirim: ' . $detail['id_diagnostic'] . ')';
+          continue;
+        }
+        if ($rad_table_ok && empty($detail['id_service_request'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (ServiceRequest belum terkirim. Kirim tipe request terlebih dahulu.)';
+          continue;
+        }
+        if ($rad_table_ok && empty($detail['id_specimen'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Specimen belum terkirim. Kirim tipe specimen terlebih dahulu.)';
+          continue;
+        }
+        if ($rad_table_ok && empty($detail['id_observation'])) {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Observation belum terkirim. Kirim tipe observation terlebih dahulu.)';
+          continue;
+        }
+
+        $ref_specimen = $rad_table_ok ? isset_or($detail['id_specimen'], '') : isset_or($mlite_satu_sehat_response['id_rad_specimen'], '');
+        $ref_observation = $rad_table_ok ? isset_or($detail['id_observation'], '') : isset_or($mlite_satu_sehat_response['id_rad_observation'], '');
+        $ref_request = $rad_table_ok ? isset_or($detail['id_service_request'], '') : isset_or($mlite_satu_sehat_response['id_rad_request'], '');
+        if ($ref_request == '' || $ref_specimen == '' || $ref_observation == '') {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Salah satu resource pendukung belum terkirim: ServiceRequest/Specimen/Observation.)';
+          continue;
+        }
+
+        $radiologi = '{        
+        "resourceType": "DiagnosticReport",
+        "identifier": [
+          {
+            "system": "http://sys-ids.kemkes.go.id/diagnostic/' . $this->organizationid . '/rad",
+            "value": "' . $noorder . '-' . $kd_jenis_prw . '"
+          }
+        ],
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "' . isset_or($mapping_radiologi['system'], 'http://loinc.org') . '",
+              "code": "' . isset_or($mapping_radiologi['code'], '') . '",
+              "display": "' . isset_or($mapping_radiologi['display'], '') . '"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/' . $id_pasien . '",
+          "display": "' . $nm_pasien . '"
+        },
+        "encounter": {
+          "reference": "Encounter/' . $mlite_satu_sehat_response['id_encounter'] . '"
+        },
+        "effectiveDateTime": "' . $waktu_hasil . '",
+        "issued": "' . $waktu_hasil . '",
+        "performer": [
+          {
+            "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '",
+            "display": "dr. ' . $nm_dokter . ', Sp.Rad"
+          }
+        ],
+        "specimen": [
+          {
+            "reference": "Specimen/' . $ref_specimen . '"
+          }
+        ],
+        "result": [
+          {
+            "reference": "Observation/' . $ref_observation . '"
+          }
+        ],
+        "basedOn": [
+          {
+            "reference": "ServiceRequest/' . $ref_request . '"
+          }
+        ]
+        ' . $imagingStudyJson . '
+      }';
+
+        list($http_code, $response_body) = $this->postSatuSehat($this->fhirurl . '/DiagnosticReport', $radiologi, $token);
+        $decoded = json_decode($response_body);
+        if ($decoded !== null && isset($decoded->id) && $http_code >= 200 && $http_code < 300) {
+          if ($rad_table_ok) {
+            $this->simpanDetailRad($no_rawat, $noorder, $kd_jenis_prw, 'id_diagnostic', $decoded->id, $response_body, $detail);
+          }
+          $this->db('mlite_satu_sehat_response')
+            ->where('no_rawat', $no_rawat)
+            ->save(['id_rad_diagnostic' => $decoded->id]);
+          $hasil['sukses'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' => DiagnosticReport/' . $decoded->id;
+        } else {
+          $rec_id = $this->recoverRadDuplicate('DiagnosticReport', $noorder . '-' . $kd_jenis_prw, $token, $decoded);
+          if ($rec_id != '') {
+            if ($rad_table_ok) {
+              $this->simpanDetailRad($no_rawat, $noorder, $kd_jenis_prw, 'id_diagnostic', $rec_id, $response_body, $detail);
+            }
+            $this->db('mlite_satu_sehat_response')
+              ->where('no_rawat', $no_rawat)
+              ->save(['id_rad_diagnostic' => $rec_id]);
+            $hasil['sukses'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' => DiagnosticReport/' . $rec_id . ' (sudah ada di Satu Sehat)';
+          } else {
+            $hasil['gagal'][] = $kd_jenis_prw . ' - ' . $nm_perawatan;
+          }
+        }
+        $responses_raw[] = is_object($decoded) ? $decoded : (object)['resourceType' => 'OperationOutcome', 'raw' => $response_body];
+      }
+
+      $pesan = count($hasil['sukses']) . ' DiagnosticReport radiologi terkirim, ' . count($hasil['gagal']) . ' gagal, ' . count($hasil['skip']) . ' dilewati.';
+
+    }
+
+    $response = json_encode([
+      'tipe' => $tipe,
+      'pesan' => $pesan,
+      'responses' => $responses_raw,
+      'detail' => $hasil,
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
     if ($render) {
       echo $this->draw('radiology.html', ['pesan' => $pesan, 'response' => $response]);
     } else {
       echo $response;
     }
     exit();
+    } catch (\Throwable $e) {
+    $pesan_error = 'Error teknis: ' . $e->getMessage() . ' — ' . $e->getFile() . ':' . $e->getLine();
+    $response_error = json_encode([
+      'error' => 'Terjadi kesalahan teknis saat memproses data radiologi',
+      'keterangan' => $e->getMessage(),
+      'file' => $e->getFile(),
+      'line' => $e->getLine(),
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    if ($render) {
+      echo $this->draw('radiology.html', ['pesan' => $pesan_error, 'response' => $response_error]);
+    } else {
+      echo $response_error;
+    }
+    exit();
+    }
   }
 
   public function getStudiIdByNoOrder($noorder)
@@ -7190,6 +7418,14 @@ class Admin extends AdminModule
       $med_table_ok = false;
     }
 
+    // Cek apakah tabel detail radiologi sudah ada
+    $rad_table_ok = true;
+    try {
+      $this->db('mlite_satu_sehat_rad_response')->where('no_rawat', '')->count();
+    } catch (Throwable $e) {
+      $rad_table_ok = false;
+    }
+
     foreach ($query_data as $row) {
 
       $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $row['no_rawat'])->oneArray();
@@ -7460,6 +7696,24 @@ class Admin extends AdminModule
             $count_med_src++;
           }
           $row['med_total'] = $count_med_src;
+        }
+      }
+
+      // Item pemeriksaan radiologi beserta status per resource (tabel detail)
+      $row['rad_items'] = [];
+      $row['rad_total'] = 0;
+      if ($rad_table_ok) {
+        $row['rad_items'] = $this->db('mlite_satu_sehat_rad_response')
+          ->where('no_rawat', $row['no_rawat'])
+          ->asc('kd_jenis_prw')
+          ->toArray();
+        if (!is_array($row['rad_items'])) {
+          $row['rad_items'] = [];
+        }
+        if (!empty($row['permintaan_radiologi']['noorder'])) {
+          $row['rad_total'] = (int) $this->db('permintaan_pemeriksaan_radiologi')
+            ->where('noorder', $row['permintaan_radiologi']['noorder'])
+            ->count();
         }
       }
 
@@ -7858,6 +8112,7 @@ class Admin extends AdminModule
     // Probe tabel detail (lab & obat) agar halaman rekap tidak rusak bila tabel belum dibuat di server
     $lab_table_ok = true;
     $med_table_ok = true;
+    $rad_table_ok = true;
     try {
       $this->db('mlite_satu_sehat_lab_response')->limit(1)->oneArray();
     } catch (Throwable $e) {
@@ -7867,6 +8122,11 @@ class Admin extends AdminModule
       $this->db('mlite_satu_sehat_med_response')->limit(1)->oneArray();
     } catch (Throwable $e) {
       $med_table_ok = false;
+    }
+    try {
+      $this->db('mlite_satu_sehat_rad_response')->limit(1)->oneArray();
+    } catch (Throwable $e) {
+      $rad_table_ok = false;
     }
 
     foreach ($rows as $row) {
@@ -7992,6 +8252,41 @@ class Admin extends AdminModule
           $fields[$resKey] = ($sent_med >= $med_total_mapped) ? '1' : '';
         }
       }
+
+      // Radiologi per-item: dihitung dari tabel detail (id per pemeriksaan), bukan kolom id terakhir
+      $rad_detail = $rad_table_ok ? $this->db('mlite_satu_sehat_rad_response')->where('no_rawat', $row['no_rawat'])->toArray() : [];
+      if (!empty($rad_detail)) {
+        $rad_map_fields = [
+          'id_rad_request' => 'id_service_request',
+          'id_rad_specimen' => 'id_specimen',
+          'id_rad_observation' => 'id_observation',
+          'id_rad_diagnostic' => 'id_diagnostic',
+        ];
+        $rad_total_mapped = 0;
+        foreach ($rad_detail as $rd) {
+          if (isset_or($rd['status'], '') !== 'no_mapping') {
+            $rad_total_mapped++;
+          }
+        }
+        foreach ($rad_map_fields as $resKey => $col) {
+          if ($rad_total_mapped === 0) {
+            $fields[$resKey] = '';
+            continue;
+          }
+          $sent_rad = 0;
+          foreach ($rad_detail as $rd) {
+            if (isset_or($rd['status'], '') === 'no_mapping') {
+              continue;
+            }
+            if (isset_or($rd[$col], '') !== '') {
+              $sent_rad++;
+            }
+          }
+          $fields[$resKey] = ($sent_rad >= $rad_total_mapped) ? '1' : '';
+        }
+      }
+
+      // ImagingStudy tetap per pasien (satu studi PACS), tidak dihitung per item
 
       $sent_count = 0;
       $row_flat = [

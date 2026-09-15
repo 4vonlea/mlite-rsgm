@@ -526,6 +526,29 @@
         var cls = (sent >= total && sent > 0) ? 'badge badge-success' : (sent > 0 ? 'badge badge-warning' : 'badge badge-error');
         return `<a href="" class="med-cell-send" data-id="${row.no_rawat_converted}" data-tipe="medication" data-ttv="${ttv}" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn" data-pop="${escAttr(pop)}"><span class="${cls}">${body}</span></a>`;
     }
+    function radCell(row, resField, ttv, label) {
+        var items = Array.isArray(row.rad_items) ? row.rad_items : [];
+        var total = parseInt(row.rad_total, 10) || items.length || 0;
+        if (total === 0) {
+            return badgeError(label + ' Kosong', 'Tidak ada item permintaan radiologi (menu Radiologi &rarr; Permintaan Radiologi).');
+        }
+        var sent = 0;
+        var rows = [];
+        items.forEach(function (it) {
+            if (!it) { return; }
+            var idx = it.kd_jenis_prw || '?';
+            var rid = it[resField] || '';
+            var st;
+            if (rid) { sent++; st = `<code class="cell-pop-tok">${escAttr(rid)}</code>`; }
+            else if (it.status === 'no_mapping') { st = '<span class="cell-pop-muted">Mapping LOINC belum dikonfigurasi</span>'; }
+            else { st = '<span class="cell-pop-muted">Belum terkirim</span>'; }
+            rows.push(`<div class="cell-pop-row">${escAttr(idx)}: ${st}</div>`);
+        });
+        var body = sent + '/' + total;
+        var pop = `<strong>${escAttr(label)}</strong> — ${body} item terkirim` + rows.join('');
+        var cls = (sent >= total && sent > 0) ? 'badge badge-success' : (sent > 0 ? 'badge badge-warning' : 'badge badge-error');
+        return `<a href="" class="rad-cell-send" data-id="${row.no_rawat_converted}" data-tipe="radiology" data-ttv="${ttv}" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn" data-pop="${escAttr(pop)}"><span class="${cls}">${body}</span></a>`;
+    }
 
     $(document).ready(function () {
         // console.log($('.display').length);
@@ -883,41 +906,25 @@
                 {
                     data: 'id_rad_request',
                     render: function (data, type, row) {
-                        if (row.id_rad_request == '' && row.service_request_radiologi != '') {
-                            return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="radiology" data-ttv="request" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
-                        } else if (row.id_rad_request == '' && row.service_request_radiologi == '') {
-                            return badgeError('Service Request Radiologi Kosong', 'Tidak ada permintaan radiologi. Input di menu Radiologi → Permintaan Radiologi.');
-                        } else { return `<span class="uuid">${data}</span>` }
+                        return radCell(row, 'id_service_request', 'request', 'ServiceRequest');
                     }
                 },
                 {
                     data: 'id_rad_specimen',
                     render: function (data, type, row) {
-                        if (row.id_rad_specimen == '' && row.specimen_radiologi != '0000-00-00' && row.specimen_radiologi != '') {
-                            return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="radiology" data-ttv="specimen" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
-                        } else if (row.id_rad_specimen == '' && (row.specimen_radiologi == '0000-00-00' || row.specimen_radiologi == '')) {
-                            return badgeError('Specimen Radiologi Kosong', 'Tanggal sampel radiologi belum diisi di menu Radiologi → Permintaan Radiologi.');
-                        } else { return `<span class="uuid">${data}</span>` }
+                        return radCell(row, 'id_specimen', 'specimen', 'Specimen');
                     }
                 },
                 {
                     data: 'id_rad_observation',
                     render: function (data, type, row) {
-                        if (row.id_rad_observation == '' && row.observation_radiologi != '0000-00-00' && row.observation_radiologi != '') {
-                            return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="radiology" data-ttv="observation" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
-                        } else if (row.id_rad_observation == '' && (row.observation_radiologi == '0000-00-00' || row.observation_radiologi == '')) {
-                            return badgeError('Observation Radiologi Kosong', 'Hasil radiologi belum diinput di menu Radiologi → Hasil Radiologi.');
-                        } else { return `<span class="uuid">${data}</span>` }
+                        return radCell(row, 'id_observation', 'observation', 'Observation');
                     }
                 },
                 {
                     data: 'id_rad_diagnostic',
                     render: function (data, type, row) {
-                        if (row.id_rad_diagnostic == '' && row.diagnostic_report_radiologi != '0000-00-00' && row.diagnostic_report_radiologi != '') {
-                            return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="radiology" data-ttv="diagnostic" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
-                        } else if (row.id_rad_diagnostic == '' && (row.diagnostic_report_radiologi == '0000-00-00' || row.diagnostic_report_radiologi == '')) {
-                            return badgeError('Diagnostic Report Radiologi Kosong', 'Laporan hasil radiologi belum diinput di menu Radiologi → Hasil Radiologi.');
-                        } else { return `<span class="uuid">${data}</span>` }
+                        return radCell(row, 'id_diagnostic', 'diagnostic', 'Diagnostic Report');
                     }
                 },
                 {
@@ -1131,7 +1138,7 @@
     // Popover rincian per item (token/ID yang dikembalikan SATU SEHAT).
     // Pakai trigger 'hover' bawaan Bootstrap: otomatis terbuka saat kursor di atas badge,
     // tetap terbuka selama kursor masih di atas popover, dan menutup sendiri saat kursor pergi.
-    $(document).on('mouseenter', '.lab-cell-send, .med-cell-send', function () {
+    $(document).on('mouseenter', '.lab-cell-send, .med-cell-send, .rad-cell-send', function () {
         var $el = $(this);
         if ($el.data('bs.popover')) return;
         $el.popover({

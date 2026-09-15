@@ -177,9 +177,11 @@ class SatusehatDicomClient
         $serviceRequestId = $data['serviceRequestId'];
         $noRawat = $data['noRawat'];
         $noOrder = $data['noOrder'];
-        $studyUID = $data['studyUID'];
-        $seriesUID = $data['seriesUID'];
-        $instanceUID = $data['instanceUID'];
+        $studyUID = isset($data['studyUID']) ? $data['studyUID'] : '';
+        $seriesUID = isset($data['seriesUID']) ? $data['seriesUID'] : '';
+        $instanceUID = isset($data['instanceUID']) ? $data['instanceUID'] : '';
+        $modality = isset($data['modality']) && trim($data['modality']) != '' ? strtoupper(trim($data['modality'])) : 'OP';
+        $sopClass = isset($data['sopClass']) && trim($data['sopClass']) != '' ? trim($data['sopClass']) : '1.2.840.10008.5.1.4.1.1.77.1.5.1';
 
         $payload = [
             "resourceType" => "ImagingStudy",
@@ -206,121 +208,94 @@ class SatusehatDicomClient
             "modality" => [
                 [
                     "system" => "http://dicom.nema.org/resources/ontology/DCM",
-                    "code" => "OP"
+                    "code" => $modality
                 ]
             ],
             "subject" => [
                 "reference" => "Patient/" . $patientId
             ],
-            "started" => date('c'),
-            "basedOn" => [
+            "started" => gmdate('c')
+        ];
+
+        // basedOn hanya disertakan jika ServiceRequest sudah terkirim (hindari "ServiceRequest/" kosong)
+        if (!empty($serviceRequestId)) {
+            $payload['basedOn'] = [
                 [
                     "reference" => "ServiceRequest/" . $serviceRequestId
                 ]
-            ],
-            "numberOfSeries" => 1,
-            "numberOfInstances" => 1,
-            "series" => [
+            ];
+        }
+
+        // ==== Siapkan daftar series & instance ====
+        if (isset($data['series']) && is_array($data['series']) && count($data['series']) > 0) {
+            $seriesList = $data['series'];
+        } else {
+            // Legacy: satu series satu instance
+            $seriesList = [
                 [
-                    "uid" => trim($seriesUID, "'"),
-                    "number" => 1,
-                    "modality" => [
-                        "system" => "http://dicom.nema.org/resources/ontology/DCM",
-                        "code" => "OP"
-                    ],
-                    "numberOfInstances" => 1,
-                    "started" => date('c'),
-                    "instance" => [
+                    'uid' => $seriesUID,
+                    'number' => 1,
+                    'modality' => $modality,
+                    'instances' => [
                         [
-                            "uid" => trim($instanceUID, "'"),
-                            "sopClass" => [
-                                "system" => "urn:ietf:rfc:3986",
-                                "code" => "urn:oid:1.2.840.10008.5.1.4.1.1.77.1.5.1"
-                            ],
-                            "number" => 1,
-                            "title" => "ORIGINAL\\\\PRIMARY"
+                            'uid' => $instanceUID,
+                            'number' => 1,
+                            'sopClass' => $sopClass,
+                            'title' => 'ORIGINAL\\\\PRIMARY'
                         ]
                     ]
                 ]
-            ]
-        ];
+            ];
+        }
 
-        // Sertakan basedOn hanya jika serviceRequestId tidak kosong
-        // if (!empty($serviceRequestId)) {
-        //     $payload['basedOn'] = [
-        //         [
-        //             "reference" => "ServiceRequest/" . $serviceRequestId
-        //         ]
-        //     ];
-        // }
+        $seriesPayload = [];
+        $numberOfSeries = 0;
+        $numberOfInstances = 0;
 
+        foreach ($seriesList as $i => $series) {
+            $seriesUid = isset($series['uid']) ? trim((string)$series['uid'], "'") : '';
+            $seriesNum = isset($series['number']) ? (int)$series['number'] : ($i + 1);
+            $seriesModality = (isset($series['modality']) && trim($series['modality']) != '') ? strtoupper(trim($series['modality'])) : $modality;
+            $instances = isset($series['instances']) && is_array($series['instances']) ? $series['instances'] : [];
 
-        // $payload = [
-        //     "resourceType" => "ImagingStudy",
-        //     "status" => "available",
+            $instancesPayload = [];
 
-        //     "subject" => [
-        //         "reference" => "Patient/" . $patientId
-        //     ],
+            foreach ($instances as $j => $inst) {
+                $refSop = isset($inst['sopClass']) && trim($inst['sopClass']) != '' ? trim($inst['sopClass']) : $sopClass;
+                $instancesPayload[] = [
+                    "uid" => trim(isset($inst['uid']) ? (string)$inst['uid'] : '', "'"),
+                    "sopClass" => [
+                        "system" => "urn:ietf:rfc:3986",
+                        "code" => "urn:oid:" . $refSop
+                    ],
+                    "number" => isset($inst['number']) ? (int)$inst['number'] : ($j + 1),
+                    "title" => (isset($inst['title']) && $inst['title'] != '') ? $inst['title'] : 'ORIGINAL\\\\PRIMARY'
+                ];
+            }
 
-        //     "encounter" => [
-        //         "reference" => "Encounter/" . $encounterId
-        //     ],
+            if ($seriesUid == '' || count($instancesPayload) == 0) {
+                continue;
+            }
 
-        //     "basedOn" => [
-        //         [
-        //             "reference" => "ServiceRequest/" . $serviceRequestId
-        //         ]
-        //     ],
+            $seriesPayload[] = [
+                "uid" => $seriesUid,
+                "number" => $seriesNum,
+                "modality" => [
+                    "system" => "http://dicom.nema.org/resources/ontology/DCM",
+                    "code" => $seriesModality
+                ],
+                "numberOfInstances" => count($instancesPayload),
+                "started" => gmdate('c'),
+                "instance" => $instancesPayload
+            ];
 
-        //     "identifier" => [
-        //         [
-        //             "system" => "http://sys-ids.kemkes.go.id/acsn/" . $this->organizationId,
-        //             "value" => $noOrder // noorder radiologi
-        //         ],
-        //         [
-        //             "system" => "urn:dicom:uid",
-        //             "value" => "urn:oid:" . trim($data['studyUID'], "'")
-        //         ]
-        //     ],
+            $numberOfSeries++;
+            $numberOfInstances += count($instancesPayload);
+        }
 
-        //     "started" => date('c'),
-
-        //     "modality" => [
-        //         [
-        //             "system" => "http://dicom.nema.org/resources/ontology/DCM",
-        //             "code" => "DX"
-        //         ]
-        //     ],
-
-        //     "numberOfSeries" => 1,
-        //     "numberOfInstances" => 1,
-
-        //     "series" => [
-        //         [
-        //             "uid" => $seriesUID,
-        //             "number" => 1,
-
-        //             "modality" => [
-        //                 "system" => "http://dicom.nema.org/resources/ontology/DCM",
-        //                 "code" => "DX"
-        //             ],
-
-        //             "numberOfInstances" => 1,
-
-        //             "instance" => [
-        //                 [
-        //                     "uid" => $instanceUID,
-        //                     "number" => 1,
-        //                     "sopClass" => [
-        //                         "system" => "urn:ietf:rfc:3986",
-        //                         "code" => "urn:oid:1.2.840.10008.5.1.4.1.1.1"
-        //                     ]
-        //                 ]
-        //             ]
-        //         ]
-        //     ]
-        // ];        
+        $payload['numberOfSeries'] = $numberOfSeries;
+        $payload['numberOfInstances'] = $numberOfInstances;
+        $payload['series'] = $seriesPayload;
 
         $ch = curl_init();
         curl_setopt_array($ch, [
