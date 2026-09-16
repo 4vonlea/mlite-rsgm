@@ -5445,8 +5445,17 @@ class Admin extends AdminModule
       return '';
     }
 
-    // Cari resource yang sudah terkirim berdasarkan identifier ACSN
-    $sys = 'http://sys-ids.kemkes.go.id/acsn/' . $this->organizationid;
+    // System identifier sesuai resource type (identifier tiap resource beda system)
+    $identifierSys = [
+      'ServiceRequest'    => 'http://sys-ids.kemkes.go.id/acsn/' . $this->organizationid,
+      'ImagingStudy'      => 'http://sys-ids.kemkes.go.id/acsn/' . $this->organizationid,
+      'Specimen'          => 'http://sys-ids.kemkes.go.id/specimen/' . $this->organizationid,
+      'Observation'       => 'http://sys-ids.kemkes.go.id/observation/' . $this->organizationid,
+      'DiagnosticReport'  => 'http://sys-ids.kemkes.go.id/diagnostic/' . $this->organizationid . '/rad',
+    ];
+    $sys = isset($identifierSys[$resourceType]) ? $identifierSys[$resourceType] : 'http://sys-ids.kemkes.go.id/acsn/' . $this->organizationid;
+
+    // Cari resource yang sudah terkirim berdasarkan identifier
     $url = $this->fhirurl . '/' . $resourceType . '?identifier=' . urlencode($sys . '|' . $identifierValue);
 
     $curl = curl_init();
@@ -5817,20 +5826,47 @@ class Admin extends AdminModule
     // Idempotent: pastikan baris detail tersedia untuk tiap item
     if ($rad_table_ok) {
       foreach ($list_pemeriksaan as $periksa) {
-      $kd_seed = $periksa['kd_jenis_prw'];
-      $ada = $this->db('mlite_satu_sehat_rad_response')
-        ->where('no_rawat', $no_rawat)
-        ->where('noorder', $noorder)
-        ->where('kd_jenis_prw', $kd_seed)
-        ->oneArray();
-      if (empty($ada)) {
-        $this->db('mlite_satu_sehat_rad_response')->save([
-          'no_rawat' => $no_rawat,
-          'noorder' => $noorder,
-          'kd_jenis_prw' => $kd_seed,
-          'status' => 'pending',
-        ]);
-      }
+        $kd_seed = $periksa['kd_jenis_prw'];
+        $ada = $this->db('mlite_satu_sehat_rad_response')
+          ->where('no_rawat', $no_rawat)
+          ->where('noorder', $noorder)
+          ->where('kd_jenis_prw', $kd_seed)
+          ->oneArray();
+        // Backfill id lama dari kolom agregat (mlite_satu_sehat_response.id_rad_*) 
+        // supaya data yang pernah terkirim tidak dianggap "belum pernah dikirim".
+        $backfillRad = [];
+        foreach ([
+          'id_service_request' => 'id_rad_request',
+          'id_specimen' => 'id_rad_specimen',
+          'id_observation' => 'id_rad_observation',
+          'id_diagnostic' => 'id_rad_diagnostic',
+        ] as $col => $aggr) {
+          if (isset_or($mlite_satu_sehat_response[$aggr], '') != '') {
+            $backfillRad[$col] = $mlite_satu_sehat_response[$aggr];
+          }
+        }
+        if (empty($ada)) {
+          $this->db('mlite_satu_sehat_rad_response')->save(array_merge([
+            'no_rawat' => $no_rawat,
+            'noorder' => $noorder,
+            'kd_jenis_prw' => $kd_seed,
+            'status' => 'pending',
+          ], $backfillRad));
+        } elseif (!empty($backfillRad)) {
+          $need = [];
+          foreach ($backfillRad as $col => $val) {
+            if (isset_or($ada[$col], '') == '') {
+              $need[$col] = $val;
+            }
+          }
+          if (!empty($need)) {
+            $this->db('mlite_satu_sehat_rad_response')
+              ->where('no_rawat', $no_rawat)
+              ->where('noorder', $noorder)
+              ->where('kd_jenis_prw', $kd_seed)
+              ->save($need);
+          }
+        }
       }
     }
 
@@ -5853,6 +5889,12 @@ class Admin extends AdminModule
         $kd_jenis_prw = $periksa['kd_jenis_prw'];
         $nm_perawatan = isset_or($periksa['nm_perawatan'], '');
         $mapping_radiologi = $map_mapping[$kd_jenis_prw] ?? [];
+
+        // Guard: jangan kirim bila kode pemeriksaan belum di-mapping (hindari payload invalid)
+        if (isset_or($mapping_radiologi['code'], '') == '') {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Kode pemeriksaan belum di-mapping ke Satu Sehat. Mapping terlebih dahulu di menu mapping pemeriksaan radiologi.)';
+          continue;
+        }
 
         $detail = $rad_table_ok ? $this->db('mlite_satu_sehat_rad_response')
           ->where('no_rawat', $no_rawat)
@@ -5966,6 +6008,11 @@ class Admin extends AdminModule
           ->where('noorder', $noorder)
           ->where('kd_jenis_prw', $kd_jenis_prw)
           ->oneArray() : [];
+        // Guard: jangan kirim bila kode jenis specimen belum di-mapping (hindari payload invalid)
+        if (isset_or($mapping_radiologi['sampel_code'], '') == '') {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Kode jenis specimen belum di-mapping. Mapping terlebih dahulu di menu mapping pemeriksaan radiologi.)';
+          continue;
+        }
         if ($rad_table_ok && !empty($detail['id_specimen'])) {
           $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Specimen sudah terkirim: ' . $detail['id_specimen'] . ')';
           continue;
@@ -6044,9 +6091,22 @@ class Admin extends AdminModule
 
     if ($tipe == 'observation') {
 
-      $hasil_radiologi = $this->db('hasil_radiologi')
+      // Ambil hasil sesi pemeriksaan terbaru (hasil_radiologi dikunci per no_rawat+tgl_periksa+jam,
+      // bukan sembarang baris) supaya guard "hasil belum diisi" tidak salah men-skip.
+      $periksa_rad = $this->db('periksa_radiologi')
         ->where('no_rawat', $no_rawat)
+        ->desc('tgl_periksa')
+        ->desc('jam')
+        ->limit(1)
         ->oneArray();
+      $hasil_radiologi = [];
+      if (is_array($periksa_rad) && !empty($periksa_rad['tgl_periksa'])) {
+        $hasil_radiologi = $this->db('hasil_radiologi')
+          ->where('no_rawat', $no_rawat)
+          ->where('tgl_periksa', $periksa_rad['tgl_periksa'])
+          ->where('jam', $periksa_rad['jam'])
+          ->oneArray();
+      }
 
       foreach ($list_pemeriksaan as $periksa) {
 
@@ -6059,6 +6119,11 @@ class Admin extends AdminModule
           ->where('noorder', $noorder)
           ->where('kd_jenis_prw', $kd_jenis_prw)
           ->oneArray() : [];
+        // Guard: jangan kirim bila kode belum di-mapping (hindari payload invalid)
+        if (isset_or($mapping_radiologi['code'], '') == '') {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Kode pemeriksaan belum di-mapping ke Satu Sehat. Mapping terlebih dahulu di menu mapping pemeriksaan radiologi.)';
+          continue;
+        }
         if ($rad_table_ok && !empty($detail['id_observation'])) {
           $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Observation sudah terkirim: ' . $detail['id_observation'] . ')';
           continue;
@@ -6071,6 +6136,7 @@ class Admin extends AdminModule
           $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Specimen belum terkirim. Kirim tipe specimen terlebih dahulu.)';
           continue;
         }
+        $hasil_text = (!empty($hasil_radiologi) && is_array($hasil_radiologi)) ? isset_or($hasil_radiologi['hasil'], '') : '';
 
         $radiologi = '{ 
         "resourceType": "Observation",
@@ -6115,7 +6181,7 @@ class Admin extends AdminModule
             "display": "dr. ' . $nm_dokter . ', Sp.Rad"
           }
         ],
-        "valueString": "' . isset_or($hasil_radiologi['hasil'], '') . '"
+        "valueString": "' . $hasil_text . '"
       }';
 
         list($http_code, $response_body) = $this->postSatuSehat($this->fhirurl . '/Observation', $radiologi, $token);
@@ -6172,6 +6238,11 @@ class Admin extends AdminModule
           ->where('noorder', $noorder)
           ->where('kd_jenis_prw', $kd_jenis_prw)
           ->oneArray() : [];
+        // Guard: jangan kirim bila kode belum di-mapping (hindari payload invalid)
+        if (isset_or($mapping_radiologi['code'], '') == '') {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Kode pemeriksaan belum di-mapping ke Satu Sehat. Mapping terlebih dahulu di menu mapping pemeriksaan radiologi.)';
+          continue;
+        }
         if ($rad_table_ok && !empty($detail['id_diagnostic'])) {
           $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (DiagnosticReport sudah terkirim: ' . $detail['id_diagnostic'] . ')';
           continue;
