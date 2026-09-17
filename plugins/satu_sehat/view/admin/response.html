@@ -546,24 +546,43 @@
         const urlParams = new URLSearchParams(window.location.search);
         const tanggal_awal = urlParams.get('tanggal_awal') || '';
         const tanggal_akhir = urlParams.get('tanggal_akhir') || '';
-        $('.tanggal').datetimepicker({
-            defaultDate: '{?=date('Y-m-d')?}',
-            format: 'YYYY-MM-DD',
-            locale: 'id'
+        // Inisialisasi datepicker dengan menghormati nilai input yang sudah ada
+        // (mis. tanggal lampau dari query string), agar tidak selalu jatuh ke hari ini.
+        $('.tanggal').each(function () {
+            var opts = {
+                format: 'YYYY-MM-DD',
+                locale: 'id'
+            };
+            var val = $(this).val();
+            if (val) { opts.defaultDate = val; }
+            $(this).datetimepicker(opts);
         });
 
         // Prefill inputs when available
         if (tanggal_awal) $('#tanggal_awal').val(tanggal_awal);
         if (tanggal_akhir) $('#tanggal_akhir').val(tanggal_akhir);
         var baseURL = mlite.url + '/' + mlite.admin;
-        
+
+        // Pertahankan rentang tanggal di URL agar saat refresh tidak kembali ke hari ini
+        function syncUrlDates() {
+            var tgl_awal = $('#tanggal_awal').val();
+            var tgl_akhir = $('#tanggal_akhir').val();
+            var url = new URL(window.location.href);
+            if (tgl_awal) { url.searchParams.set('tanggal_awal', tgl_awal); } else { url.searchParams.delete('tanggal_awal'); }
+            if (tgl_akhir) { url.searchParams.set('tanggal_akhir', tgl_akhir); } else { url.searchParams.delete('tanggal_akhir'); }
+            history.replaceState(null, '', url.toString());
+        }
+
         function syncRekapDates() {
             var tgl_awal = $('#tanggal_awal').val();
             var tgl_akhir = $('#tanggal_akhir').val();
             if (tgl_awal) $('#rekap_tanggal_awal').val(tgl_awal);
             if (tgl_akhir) $('#rekap_tanggal_akhir').val(tgl_akhir);
         }
-        $('#tanggal_awal, #tanggal_akhir').on('change dp.change', syncRekapDates);
+        $('#tanggal_awal, #tanggal_akhir').on('change dp.change', function () {
+            syncRekapDates();
+            syncUrlDates();
+        });
         $('#rekapModal').on('show.bs.modal', syncRekapDates);
 
         $('#tanggal_awal').on('dp.change', function(e) {
@@ -572,6 +591,7 @@
 
         $('#form-periode').on('submit', function (e) {
             e.preventDefault();
+            syncUrlDates();
             table.ajax.url(buildApiUrl()).load();
         });
 

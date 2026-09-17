@@ -5169,6 +5169,7 @@ class Admin extends AdminModule
             "reference": "Specimen/' . $detail['id_specimen'] . '"
           },
           "effectiveDateTime": "' . $row['permintaan_lab']['tgl_hasil'] . 'T' . $row['permintaan_lab']['jam_hasil'] . $zonawaktu . '",
+          "issued": "' . $row['permintaan_lab']['tgl_hasil'] . 'T' . $row['permintaan_lab']['jam_hasil'] . $zonawaktu . '",
           "valueString": "Hasil Lab ' . $nm_perawatan . ' dengan Nilai ' . isset_or($detail_periksa_lab['nilai'], '') . ' pada Tanggal ' . $row['permintaan_lab']['tgl_hasil'] . ' jam ' . $row['permintaan_lab']['jam_hasil'] . '"
         }
         ';
@@ -6132,10 +6133,6 @@ class Admin extends AdminModule
           $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (ServiceRequest belum terkirim. Kirim tipe request terlebih dahulu.)';
           continue;
         }
-        if ($rad_table_ok && empty($detail['id_specimen'])) {
-          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Specimen belum terkirim. Kirim tipe specimen terlebih dahulu.)';
-          continue;
-        }
         $hasil_text = (!empty($hasil_radiologi) && is_array($hasil_radiologi)) ? isset_or($hasil_radiologi['hasil'], '') : '';
 
         $radiologi = '{ 
@@ -6175,6 +6172,7 @@ class Admin extends AdminModule
           "reference": "Encounter/' . $mlite_satu_sehat_response['id_encounter'] . '"
         },
         "effectiveDateTime": "' . $waktu_hasil . '",
+        "issued": "' . $waktu_hasil . '",
         "performer": [
           {
             "reference": "Practitioner/' . $id_dokter['practitioner_id'] . '",
@@ -6251,10 +6249,6 @@ class Admin extends AdminModule
           $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (ServiceRequest belum terkirim. Kirim tipe request terlebih dahulu.)';
           continue;
         }
-        if ($rad_table_ok && empty($detail['id_specimen'])) {
-          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Specimen belum terkirim. Kirim tipe specimen terlebih dahulu.)';
-          continue;
-        }
         if ($rad_table_ok && empty($detail['id_observation'])) {
           $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Observation belum terkirim. Kirim tipe observation terlebih dahulu.)';
           continue;
@@ -6263,10 +6257,13 @@ class Admin extends AdminModule
         $ref_specimen = $rad_table_ok ? isset_or($detail['id_specimen'], '') : isset_or($mlite_satu_sehat_response['id_rad_specimen'], '');
         $ref_observation = $rad_table_ok ? isset_or($detail['id_observation'], '') : isset_or($mlite_satu_sehat_response['id_rad_observation'], '');
         $ref_request = $rad_table_ok ? isset_or($detail['id_service_request'], '') : isset_or($mlite_satu_sehat_response['id_rad_request'], '');
-        if ($ref_request == '' || $ref_specimen == '' || $ref_observation == '') {
-          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Salah satu resource pendukung belum terkirim: ServiceRequest/Specimen/Observation.)';
+        if ($ref_request == '' || $ref_observation == '') {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Salah satu resource pendukung belum terkirim: ServiceRequest/Observation.)';
           continue;
         }
+        $specimenJson = ($ref_specimen != '')
+          ? '"specimen": [ { "reference": "Specimen/' . $ref_specimen . '" } ],'
+          : '';
 
         $radiologi = '{        
         "resourceType": "DiagnosticReport",
@@ -6312,11 +6309,7 @@ class Admin extends AdminModule
             "display": "dr. ' . $nm_dokter . ', Sp.Rad"
           }
         ],
-        "specimen": [
-          {
-            "reference": "Specimen/' . $ref_specimen . '"
-          }
-        ],
+        ' . $specimenJson . '
         "result": [
           {
             "reference": "Observation/' . $ref_observation . '"
