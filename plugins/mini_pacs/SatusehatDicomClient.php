@@ -174,7 +174,16 @@ class SatusehatDicomClient
 
         $patientId = $data['patientId'];
         $encounterId = $data['encounterId'];
-        $serviceRequestId = $data['serviceRequestId'];
+        $serviceRequestIds = isset($data['serviceRequestId']) ? $data['serviceRequestId'] : '';
+        if (!is_array($serviceRequestIds)) {
+          $serviceRequestIds = trim((string)$serviceRequestIds) !== '' ? [(string)$serviceRequestIds] : [];
+        }
+        foreach ($serviceRequestIds as $iKey => $srIdTmp) {
+          if (trim((string)$srIdTmp) === '') {
+            unset($serviceRequestIds[$iKey]);
+          }
+        }
+        $serviceRequestIds = array_values($serviceRequestIds);
         $noRawat = $data['noRawat'];
         $noOrder = $data['noOrder'];
         $studyUID = isset($data['studyUID']) ? $data['studyUID'] : '';
@@ -182,6 +191,7 @@ class SatusehatDicomClient
         $instanceUID = isset($data['instanceUID']) ? $data['instanceUID'] : '';
         $modality = isset($data['modality']) && trim($data['modality']) != '' ? strtoupper(trim($data['modality'])) : 'OP';
         $sopClass = isset($data['sopClass']) && trim($data['sopClass']) != '' ? trim($data['sopClass']) : '1.2.840.10008.5.1.4.1.1.77.1.5.1';
+        $studyStarted = isset($data['studyStarted']) ? trim($data['studyStarted']) : '';
 
         $payload = [
             "resourceType" => "ImagingStudy",
@@ -214,15 +224,17 @@ class SatusehatDicomClient
             "subject" => [
                 "reference" => "Patient/" . $patientId
             ],
-            "started" => gmdate('c')
+            "started" => ($studyStarted != '') ? $studyStarted : gmdate('c')
         ];
 
-        // basedOn hanya disertakan jika ServiceRequest sudah terkirim (hindari "ServiceRequest/" kosong)
-        if (!empty($serviceRequestId)) {
-            $payload['basedOn'] = [
-                [
-                    "reference" => "ServiceRequest/" . $serviceRequestId
-                ]
+        // *ImagingStudy.basedOn WAJIB per SATUSEHAT: tolak kirim bila ServiceRequest belum terkirim
+        if (count($serviceRequestIds) === 0) {
+            throw new Exception('ImagingStudy.basedOn wajib diisi. Kirim ServiceRequest (tipe request) terlebih dahulu.');
+        }
+        $payload['basedOn'] = [];
+        foreach ($serviceRequestIds as $srId) {
+            $payload['basedOn'][] = [
+                "reference" => "ServiceRequest/" . $srId
             ];
         }
 
@@ -285,7 +297,7 @@ class SatusehatDicomClient
                     "code" => $seriesModality
                 ],
                 "numberOfInstances" => count($instancesPayload),
-                "started" => gmdate('c'),
+                "started" => ($studyStarted != '') ? $studyStarted : gmdate('c'),
                 "instance" => $instancesPayload
             ];
 

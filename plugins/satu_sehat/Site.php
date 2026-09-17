@@ -499,8 +499,8 @@ class Site extends SiteModule
                     );
                 }
 
-                // Radiology (request/specimen/observation/diagnostic/image)
-                const radTypes = ["request", "specimen", "observation", "diagnostic", "image"];
+                // Radiology (request/specimen/observation/image/diagnostic) — urutan resmi SATUSEHAT
+                const radTypes = ["request", "specimen", "observation", "image", "diagnostic"];
                 const radRes = {};
                 for (const rt of radTypes) {
                     const rtTxt = await call("' . $radBase . '" + nrUrl + "/" + rt);
@@ -755,7 +755,7 @@ class Site extends SiteModule
                 }
 
                 // Radiology (request/result)
-                const radTypes = ["request", "specimen", "observation", "diagnostic", "image"];
+                const radTypes = ["request", "specimen", "observation", "image", "diagnostic"];
                 const radRes = {};
                 for (const rt of radTypes) {
                     const rtTxt = await call("' . $radBase . '" + nrUrl + "/" + rt);

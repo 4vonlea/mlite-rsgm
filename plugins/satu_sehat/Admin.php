@@ -5349,6 +5349,31 @@ class Admin extends AdminModule
     return array($code, is_string($body) ? $body : '');
   }
 
+  private function findImagingStudyIdByAccession($noorder, $token)
+  {
+    if ($noorder == '' || $token == '') {
+      return '';
+    }
+
+    $sys = 'http://sys-ids.kemkes.go.id/acsn/' . $this->organizationid;
+    $url = $this->fhirurl . '/ImagingStudy?identifier=' . urlencode($sys . '|' . $noorder);
+
+    $curl = curl_init();
+    curl_setopt_array($curl, array(
+      CURLOPT_URL => $url,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . $token),
+    ));
+    $body = curl_exec($curl);
+    curl_close($curl);
+
+    $json = json_decode($body);
+    if ($json !== null && isset($json->entry[0]->resource->id)) {
+      return $json->entry[0]->resource->id;
+    }
+    return '';
+  }
+
   private function simpanDetailLab($no_rawat, $noorder, $kd_jenis_prw, $kolom, $id, $response_body, $detail = [])
   {
     $data = [
@@ -5652,10 +5677,43 @@ class Admin extends AdminModule
             }
 
             // 3. Kirim ImagingStudy ke FHIR (semua series & instance sekaligus)
+            //
+            // basedOn (ServiceRequest) WAJIB pada ImagingStudy: kumpulkan SEMUA
+            // ServiceRequest yang sudah terkirim untuk noorder ini (multi-item).
+            $srIds = [];
+            try {
+              $srRowList = $this->db('mlite_satu_sehat_rad_response')
+                ->where('no_rawat', $no_rawat)
+                ->where('noorder', $noorder)
+                ->toArray();
+              foreach ($srRowList as $srRow) {
+                if (!empty($srRow['id_service_request'])) {
+                  $srIds[] = $srRow['id_service_request'];
+                }
+              }
+            } catch (Throwable $e) {
+              $srIds = [];
+            }
+            if (empty($srIds) && !empty($mlite_satu_sehat_response['id_rad_request'])) {
+              $srIds = [$mlite_satu_sehat_response['id_rad_request']];
+            }
+
+            // started = waktu mulai studi sesungguhnya dari DICOM (StudyDate+StudyTime
+            // tersimpan di mlite_mini_pacs_study.study_date), dikonversi ke UTC.
+            $studyStarted = '';
+            if (!empty($pacs_study['study_date'])) {
+              $studyStarted = $this->toSatusehatUtc(
+                substr($pacs_study['study_date'], 0, 10),
+                substr($pacs_study['study_date'], 11, 8),
+                $zonawaktu
+              );
+            }
+
             $fhirResult = $client->sendImagingStudy([
               'patientId' => $id_pasien,
               'encounterId' => $mlite_satu_sehat_response['id_encounter'] ?? '',
-              'serviceRequestId' => $mlite_satu_sehat_response['id_rad_request'] ?? '',
+              'serviceRequestId' => $srIds,
+              'studyStarted' => $studyStarted,
               'noRawat' => $no_rawat,
               'noOrder' => $permintaan_radiologi['noorder'] ?? '',
               'studyUID' => $pacs_study['study_instance_uid'] ?? '',
@@ -5679,6 +5737,7 @@ class Admin extends AdminModule
 
             // Jika FHIR membalas duplikat (ImagingStudy sudah ada), ambil ID dari data yang sudah terkirim
             if ($id_imaging_study == '') {
+              $token = $this->getAccessToken();
               $rec_study = $this->recoverRadDuplicate('ImagingStudy', $permintaan_radiologi['noorder'] ?? '', $token, json_decode($fhirString));
               if ($rec_study != '') {
                 $id_imaging_study = $rec_study;
@@ -6219,8 +6278,17 @@ class Admin extends AdminModule
         ->where('no_rawat', $no_rawat)
         ->oneArray();
 
-      // imagingStudy (best effort): hanya jika ImagingStudy sudah terkirim
+      // imagingStudy WAJIB pada pemeriksaan radiologi: pakai ID tersimpan, atau
+      // lookup ke SATUSEHAT berdasarkan accession number bila belum tersimpan.
       $id_imaging_study = isset_or($mlite_satu_sehat_response['id_imaging_study'], '');
+      if ($id_imaging_study == '') {
+        $id_imaging_study = $this->findImagingStudyIdByAccession($noorder, $token);
+        if ($id_imaging_study != '') {
+          $this->db('mlite_satu_sehat_response')
+            ->where('no_rawat', $no_rawat)
+            ->save(['id_imaging_study' => $id_imaging_study]);
+        }
+      }
       $imagingStudyJson = ($id_imaging_study != '')
         ? ', "imagingStudy": [ { "reference": "ImagingStudy/' . $id_imaging_study . '" } ]'
         : '';
@@ -6251,6 +6319,10 @@ class Admin extends AdminModule
         }
         if ($rad_table_ok && empty($detail['id_observation'])) {
           $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Observation belum terkirim. Kirim tipe observation terlebih dahulu.)';
+          continue;
+        }
+        if ($id_imaging_study == '') {
+          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Image Study belum terkirim. Kirim tipe image terlebih dahulu.)';
           continue;
         }
 
