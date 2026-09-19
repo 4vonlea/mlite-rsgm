@@ -4678,11 +4678,15 @@ class Admin extends AdminModule
         CURLOPT_POSTFIELDS => $data,
       ));
 
+      $curl_err = '';
       $response = curl_exec($curl);
+      if ($response === false) {
+        $curl_err = curl_error($curl);
+      }
       $http_code = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
       $result = json_decode($response);
 
-      $id_medication = isset_or($result->id, '');
+      $id_medication = (is_object($result) && isset($result->id)) ? $result->id : '';
       $pesan = 'Gagal mengirim mapping medication platform Satu Sehat!!';
 
       if ($id_medication) {
@@ -4692,13 +4696,66 @@ class Admin extends AdminModule
             'id_medication' => $id_medication
           ]);
         if ($http_code == 200) {
-          $pesan = 'Sukses memperbarui ID mapping medication dari platform Satu Sehat (Duplicate Teratasi)!!';
+          $pesan = 'Sukses memperbarui ID mapping medication dari platform Satu Sehat (Duplicate Teratasi). ID: ' . $id_medication;
         } else {
-          $pesan = 'Sukses mengirim mapping medication platform Satu Sehat!!';
+          $pesan = 'Sukses mengirim mapping medication platform Satu Sehat. ID: ' . $id_medication;
+        }
+      } else {
+        // Jika resource sudah ada di SATU SEHAT (duplicate), ambil kembali id_medication lama lewat pencarian identifier
+        $duplicate = false;
+        if (is_object($result) && isset($result->issue) && is_array($result->issue)) {
+          foreach ($result->issue as $iss) {
+            if (is_object($iss) && isset($iss->code) && strtolower($iss->code) === 'duplicate') {
+              $duplicate = true;
+              break;
+            }
+          }
+        }
+        if ($duplicate && $kode_brng !== '') {
+          $old_id = $this->getMedResourceByIdentifier('Medication', [
+            'http://sys-ids.kemkes.go.id/medication/' . $this->organizationid => $kode_brng,
+          ]);
+          if ($old_id !== '') {
+            $this->db('mlite_satu_sehat_mapping_obat')
+              ->where('kode_brng', $kode_brng)
+              ->save([
+                'id_medication' => $old_id
+              ]);
+            $id_medication = $old_id;
+            $pesan = 'Sukses mengambil kembali ID mapping medication lama dari platform Satu Sehat (Duplicate Teratasi). ID: ' . $id_medication;
+          }
+        }
+        if ($id_medication === '' || $pesan === 'Gagal mengirim mapping medication platform Satu Sehat!!') {
+        // Kumpulkan detail kegagalan agar penyebabnya bisa diketahui
+        $detail_gagal = ['HTTP ' . $http_code];
+        if ($curl_err !== '') {
+          $detail_gagal[] = 'curl: ' . $curl_err;
+        }
+        if (is_object($result)) {
+          if (isset($result->issue) && is_array($result->issue)) {
+            foreach ($result->issue as $iss) {
+              $txt = '';
+              if (is_object($iss)) {
+                $txt = (isset($iss->severity) ? $iss->severity . ' ' : '') . (isset($iss->code) ? $iss->code . ': ' : '');
+                if (isset($iss->diagnostics)) { $txt .= $iss->diagnostics; }
+                if (isset($iss->details->text)) {
+                  $txt .= (trim($txt) !== '' && substr($txt, -1) !== ' ' ? ' ' : '') . $iss->details->text;
+                }
+              }
+              if (trim($txt) !== '') {
+                $detail_gagal[] = trim($txt);
+              }
+            }
+          } elseif (isset($result->error)) {
+            $detail_gagal[] = is_string($result->error) ? $result->error : json_encode($result->error);
+          }
+        }
+        $pesan = 'Gagal mengirim mapping medication platform Satu Sehat!! (' . implode('; ', $detail_gagal) . ')';
         }
       }
 
       curl_close($curl);
+      $raw_body_mapping = ($response === false) ? '' : $response;
     }
 
     // Ringkasan hasil pengiriman per item
@@ -4757,7 +4814,11 @@ class Admin extends AdminModule
         'responses' => $med_responses,
       ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     } else {
-      $response = json_encode(['pesan' => isset_or($pesan, '')], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+      $json_out = ['pesan' => isset_or($pesan, '')];
+      if (isset($raw_body_mapping) && $raw_body_mapping !== '') {
+        $json_out['raw'] = $raw_body_mapping;
+      }
+      $response = json_encode($json_out, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 
     if ($render) {
@@ -7099,17 +7160,23 @@ class Admin extends AdminModule
     $url = 'https://terminology.hl7.org/6.4.0/CodeSystem-v3-orderableDrugForm.json';
 
     // Get JSON data from the URL
-    $json = file_get_contents($url);
+    $json = @file_get_contents($url);
 
     // Decode JSON to PHP array
     $data = json_decode($json, true);
 
+    if (!is_array($data) || !isset($data['concept'])) {
+      return '';
+    }
+
     // Access values
     foreach ($data['concept'] as $value) {
-      if ($value['display'] === $keyword) {
+      if (isset($value['display']) && $value['display'] === $keyword) {
         return $value['code'];
       }
     }
+
+    return '';
   }
 
   public function searchObat($keyword)
@@ -7181,7 +7248,7 @@ class Admin extends AdminModule
     $rows = [];
     foreach ($databarang as $db) {
       $code = isset_or($db['kode_brng'], '');
-      $mapped = (isset($map_by_code[$code]) && trim(isset_or($map_by_code[$code]['id_medication'], '')) !== '') ? $map_by_code[$code] : [];
+      $mapped = isset($map_by_code[$code]) ? $map_by_code[$code] : [];
       $row = array_merge($db, $mapped);
       $row['kode_brng'] = $code;
       $row['status_map'] = empty($mapped) ? 'unmapped' : 'mapped';
@@ -7214,37 +7281,86 @@ class Admin extends AdminModule
     if (isset($_POST['simpan'])) {
 
       $cari_obat = $this->searchIdentifierObat($_POST['select_kfa']);
-      $get_drug_form = $this->getCodeDrugForm($cari_obat['result']['uom']['name']);
-      $nama_satuan_den = $cari_obat['result']['uom']['name'];
-      if ($get_drug_form == '') {
-        $get_drug_form = $this->getCodeDrugForm(ucfirst($cari_obat['result']['rute_pemberian']['code']));
-        $nama_satuan_den = ucfirst($cari_obat['result']['rute_pemberian']['code']);
+      if (!isset($cari_obat['result']) || !is_array($cari_obat['result'])) {
+        $this->notify('danger', 'Data obat KFA tidak ditemukan, periksa kembali kode KFA yang dipilih.');
+        redirect(url([ADMIN, 'satu_sehat', 'mappingobat']));
       }
-      $numerator_value = $this->regexZatAktif($cari_obat['result']['active_ingredients'][0]['kekuatan_zat_aktif']);
 
-      $query = $this->db('mlite_satu_sehat_mapping_obat')->save(
-        [
-          'kode_brng' => $_POST['kode_brng'],
-          'kode_kfa' => $_POST['select_kfa'],
-          'nama_kfa' => $cari_obat['result']['name'],
-          'kode_bahan' => $cari_obat['result']['active_ingredients'][0]['kfa_code'],
-          'nama_bahan' => $cari_obat['result']['active_ingredients'][0]['zat_aktif'],
-          'numerator' => $numerator_value['value'],
-          'satuan_num' => $numerator_value['unit'],
-          'denominator' => 1,
-          'satuan_den' => $get_drug_form,
-          'nama_satuan_den' => $nama_satuan_den,
-          'kode_sediaan' => $cari_obat['result']['dosage_form']['code'],
-          'nama_sediaan' => $cari_obat['result']['dosage_form']['name'],
-          'kode_route' => $cari_obat['result']['rute_pemberian']['code'],
-          'nama_route' => $cari_obat['result']['rute_pemberian']['name'],
-          'type' => $_POST['type'],
-        ]
-      );
-      if ($query) {
-        $this->notify('success', 'Mapping obat telah disimpan');
-      } else {
-        $this->notify('danger', 'Mapping obat gagal disimpan');
+      $get_drug_form = $this->getCodeDrugForm(isset_or($cari_obat['result']['uom']['name'], ''));
+      $nama_satuan_den = isset_or($cari_obat['result']['uom']['name'], '');
+      if ($get_drug_form == '') {
+        $get_drug_form = $this->getCodeDrugForm(ucfirst(isset_or($cari_obat['result']['rute_pemberian']['code'], '')));
+        $nama_satuan_den = ucfirst(isset_or($cari_obat['result']['rute_pemberian']['code'], ''));
+      }
+      $numerator_value = $this->regexZatAktif(isset_or($cari_obat['result']['active_ingredients'][0]['kekuatan_zat_aktif'], ''));
+
+      $data_obat = [
+        'kode_brng' => $_POST['kode_brng'],
+        'kode_kfa' => $_POST['select_kfa'],
+        'nama_kfa' => $cari_obat['result']['name'],
+        'kode_bahan' => isset_or($cari_obat['result']['active_ingredients'][0]['kfa_code'], ''),
+        'nama_bahan' => isset_or($cari_obat['result']['active_ingredients'][0]['zat_aktif'], ''),
+        'numerator' => isset_or($numerator_value['value'], ''),
+        'satuan_num' => isset_or($numerator_value['unit'], ''),
+        'denominator' => 1,
+        'satuan_den' => $get_drug_form,
+        'nama_satuan_den' => $nama_satuan_den,
+        'kode_sediaan' => isset_or($cari_obat['result']['dosage_form']['code'], ''),
+        'nama_sediaan' => isset_or($cari_obat['result']['dosage_form']['name'], ''),
+        'kode_route' => isset_or($cari_obat['result']['rute_pemberian']['code'], ''),
+        'nama_route' => isset_or($cari_obat['result']['rute_pemberian']['name'], ''),
+        'type' => $_POST['type'],
+      ];
+
+      // Batasi panjang nilai sesuai kapasitas kolom agar mysql strict mode tidak melempar error (SQLSTATE 22001)
+      $col_limit = [
+        'kode_brng' => 15,
+        'kode_kfa' => 50,
+        'nama_kfa' => 500,
+        'kode_bahan' => 50,
+        'nama_bahan' => 100,
+        'numerator' => 10,
+        'satuan_num' => 10,
+        'denominator' => 10,
+        'satuan_den' => 10,
+        'nama_satuan_den' => 20,
+        'kode_sediaan' => 50,
+        'nama_sediaan' => 100,
+        'kode_route' => 20,
+        'nama_route' => 50,
+      ];
+      foreach ($col_limit as $k => $max) {
+        if (isset($data_obat[$k])) {
+          $data_obat[$k] = function_exists('mb_substr')
+            ? mb_substr((string) $data_obat[$k], 0, $max)
+            : substr((string) $data_obat[$k], 0, $max);
+        }
+      }
+
+      // Cek apakah obat lokal benar-benar ada di databarang (karena ada FK ke databarang)
+      $cek_lokal = $this->db('databarang')->where('kode_brng', $data_obat['kode_brng'])->oneArray();
+      if (!$cek_lokal) {
+        $this->notify('danger', 'Obat lokal dengan kode ' . $data_obat['kode_brng'] . ' tidak ditemukan di databarang.');
+        redirect(url([ADMIN, 'satu_sehat', 'mappingobat']));
+      }
+
+      try {
+        // Jika mapping sudah pernah dibuat (mis. id_medication masih kosong), lakukan UPDATE,
+        // bukan INSERT, supaya tidak terjadi error duplicate key (SQLSTATE 23000).
+        $cek_mapping = $this->db('mlite_satu_sehat_mapping_obat')->where('kode_brng', $data_obat['kode_brng'])->oneArray();
+        if ($cek_mapping) {
+          $this->db('mlite_satu_sehat_mapping_obat')->where('kode_brng', $data_obat['kode_brng'])->update($data_obat);
+          $this->notify('success', 'Mapping obat telah disimpan');
+        } else {
+          $query = $this->db('mlite_satu_sehat_mapping_obat')->save($data_obat);
+          if ($query) {
+            $this->notify('success', 'Mapping obat telah disimpan');
+          } else {
+            $this->notify('danger', 'Mapping obat gagal disimpan');
+          }
+        }
+      } catch (\Throwable $e) {
+        $this->notify('danger', 'Mapping obat gagal disimpan: ' . $e->getMessage());
       }
     }
 

@@ -122,21 +122,19 @@
 <script type="text/javascript">
 
     $(document).ready(function(){
-        $('.display_mapping_obat').DataTable({
-        "language": { "search": "", "searchPlaceholder": "Search..." },
-        "fixedColumns": {
-            "left": 3
-        },
-        "lengthChange": false,
-        "scrollX": true,
-        dom: "<<'data-table-title'><'datatable-search'f>><'row'<'col-sm-12'tr>><<'pmd-datatable-pagination' l i p>>"
+        var table = $('.display_mapping_obat').DataTable({
+            "language": { "search": "", "searchPlaceholder": "Search..." },
+            "lengthChange": false,
+            "scrollX": true,
+            "autoWidth": false,
+            dom: "<<'data-table-title'><'datatable-search'f>><'row'<'col-sm-12'tr>><<'pmd-datatable-pagination' l i p>>"
         });
-        var t = $(".display_mapping_obat").DataTable().rows().count();
+        var t = table.rows().count();
         $(".data-table-title").html('<h3 style="display:inline;float:left;margin-top:0;" class="hidden-xs">Total: ' + t + '</h3>');
     });
 
     $("#mapping_obat_satu_sehat tbody").on("click", "tr.mapping_obat_satu_sehat", function(event){
-        if ($(event.target).is("a")) { return; }
+        if ($(event.target).closest("a").length) { return; }
         $("#mapping_obat_satu_sehat tbody tr").removeClass('selected');
         $(this).addClass('selected');
         var kode_brng  = $(this).attr("data-kode_brng");

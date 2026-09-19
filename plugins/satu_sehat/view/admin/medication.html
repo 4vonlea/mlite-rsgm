@@ -29,6 +29,11 @@
     if (data.pesan) {
         $('<div class="alert alert-info" style="margin:0 0 6px;"></div>').text(data.pesan).appendTo($info);
     }
+    if (data.raw) {
+        var rawTxt = String(data.raw);
+        $info.append($('<div style="margin:8px 0 4px;font-weight:bold;font-size:12px;">Response Satu Sehat:</div>'));
+        $('<pre style="white-space:pre-wrap;background:#f7f7f9;border:1px solid #e1e1e8;border-radius:4px;overflow:auto;padding:6px;font-size:11px;max-height:320px;"></pre>').text(rawTxt).appendTo($info);
+    }
     if (data.items && data.items.length > 0) {
         var r = data.ringkasan || {};
         var chips = '';

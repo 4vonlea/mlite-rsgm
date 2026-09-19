@@ -1032,7 +1032,7 @@ switch ($version) {
         $this->core->db()->pdo()->exec("CREATE TABLE IF NOT EXISTS `mlite_satu_sehat_mapping_obat` (
           `kode_brng` varchar(15) NOT NULL DEFAULT '',
           `kode_kfa` varchar(50) DEFAULT NULL,
-          `nama_kfa` varchar(100) DEFAULT NULL,
+          `nama_kfa` varchar(500) DEFAULT NULL,
           `kode_bahan` varchar(50) DEFAULT NULL,
           `nama_bahan` varchar(100) DEFAULT NULL,
           `numerator` varchar(10) DEFAULT NULL,
@@ -2109,6 +2109,10 @@ switch ($version) {
         $return = '6.6.0';
         break;
     }
+
+        // Self-heal: pastikan kolom nama_kfa cukup lebar untuk nama produk KFA yang panjang (mis. kombinasi multivitamin).
+        // Nama produk KFA bisa melebihi 200 karakter (400+), sehingga mysql strict mode menolak INSERT jika kolom terlalu sempit.
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_satu_sehat_mapping_obat` MODIFY `nama_kfa` varchar(500) DEFAULT NULL"); } catch (\Throwable $e) {}
 
     if (!isset($return) || !$return) {
         $return = '6.6.0';
