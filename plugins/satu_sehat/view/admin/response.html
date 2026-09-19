@@ -286,6 +286,82 @@
         </div>
     </div>
     <div class="panel-body">
+        <div class="filter-btn" id="filter-item-bar">
+            <span class="text-muted"><i class="fa fa-filter"></i> Filter Kategori/Item:</span>
+            <div class="form-group" style="margin-left:8px; display:inline-block;">
+                <select id="item_filter" class="form-control input-sm" style="width:auto; min-width:210px; display:inline-block;">
+                    <option value="">-- Pilih Kategori / Item --</option>
+                    <optgroup label="Per Kategori">
+                        <option value="cat_encounter">Encounter &amp; Diagnosa</option>
+                        <option value="cat_vital">Vital Signs (Observation)</option>
+                        <option value="cat_klinis">Klinis</option>
+                        <option value="cat_obat">Obat</option>
+                        <option value="cat_radiologi">Radiologi</option>
+                        <option value="cat_lab">Laboratorium</option>
+                        <option value="cat_lainnya">Lainnya</option>
+                    </optgroup>
+                    <optgroup label="Per Item — Encounter &amp; Diagnosa">
+                        <option value="encounter">ID Encounter</option>
+                        <option value="condition">ID Condition (Diagnosa)</option>
+                        <option value="clinical_impression">ID Clinical Impression</option>
+                    </optgroup>
+                    <optgroup label="Per Item — Vital Signs">
+                        <option value="obs_tensi">Observation Tensi</option>
+                        <option value="obs_nadi">Observation Nadi</option>
+                        <option value="obs_rr">Observation RR</option>
+                        <option value="obs_suhu">Observation Suhu</option>
+                        <option value="obs_spo2">Observation SPO2</option>
+                        <option value="obs_gcs">Observation GCS</option>
+                        <option value="obs_tinggi">Observation Tinggi</option>
+                        <option value="obs_berat">Observation Berat</option>
+                        <option value="obs_perut">Observation Lingkar Perut</option>
+                        <option value="obs_kesadaran">Observation Kesadaran</option>
+                    </optgroup>
+                    <optgroup label="Per Item — Klinis">
+                        <option value="procedure">ID Procedure</option>
+                        <option value="composition">ID Composition (ADIME)</option>
+                        <option value="vaksin">ID Vaksin/Imunisasi</option>
+                    </optgroup>
+                    <optgroup label="Per Item — Obat">
+                        <option value="med_req">Medication Request</option>
+                        <option value="med_disp">Medication Dispense</option>
+                        <option value="med_stmt">Medication Statement</option>
+                    </optgroup>
+                    <optgroup label="Per Item — Radiologi">
+                        <option value="rad_req">ServiceRequest Radiologi</option>
+                        <option value="rad_spec">Specimen Radiologi</option>
+                        <option value="rad_obs">Observation Radiologi</option>
+                        <option value="rad_diag">DiagnosticReport Radiologi</option>
+                        <option value="imaging">Image Study (PACS)</option>
+                    </optgroup>
+                    <optgroup label="Per Item — Laboratorium">
+                        <option value="lab_req">ServiceRequest Lab PK</option>
+                        <option value="lab_spec">Specimen Lab PK</option>
+                        <option value="lab_obs">Observation Lab PK</option>
+                        <option value="lab_diag">DiagnosticReport Lab PK</option>
+                    </optgroup>
+                    <optgroup label="Per Item — Lainnya">
+                        <option value="careplan">ID Care Plan</option>
+                        <option value="allergy">ID Allergy</option>
+                        <option value="questionnaire">ID Questionnaire</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="form-group" style="margin-left:8px; display:inline-block;">
+                <select id="item_state" class="form-control input-sm" style="width:auto; display:inline-block;">
+                    <option value="">-- Status Item --</option>
+                    <option value="unsent">Belum Terkirim</option>
+                    <option value="ready">Siap Kirim</option>
+                    <option value="sent">Sudah Terkirim</option>
+                    <option value="partial">Sebagian Terkirim</option>
+                    <option value="empty">Kosong (data belum diisi)</option>
+                    <option value="blocked">Ada Masalah (closing/mapping)</option>
+                </select>
+            </div>
+            <button type="button" class="btn btn-sm btn-primary" id="btn-item-apply" style="margin-left:8px;"><i class="fa fa-search"></i> Terapkan</button>
+            <button type="button" class="btn btn-sm btn-default" id="btn-item-reset"><i class="fa fa-undo"></i> Reset</button>
+            <span id="item-filter-info" class="text-muted" style="margin-left:8px;"></span>
+        </div>
         <div class="row">
             <div class="col-md-12" id="tbl_response">
                 <table class="table display table-bordered table-striped" width="100%">
@@ -446,6 +522,8 @@
 <script type="text/javascript">
     let table;
     let statusFilter = '';
+    let itemFilter = '';
+    let itemState = '';
 
     function badgeError(label, tipText) {
         return `<span class="badge badge-error" data-tip="${tipText}">${label}</span>`;
@@ -561,7 +639,26 @@
         // Prefill inputs when available
         if (tanggal_awal) $('#tanggal_awal').val(tanggal_awal);
         if (tanggal_akhir) $('#tanggal_akhir').val(tanggal_akhir);
+        // Prefill filter item dari URL
+        itemFilter = urlParams.get('item_filter') || '';
+        itemState = urlParams.get('item_state') || '';
+        if (itemFilter) $('#item_filter').val(itemFilter);
+        if (itemState) $('#item_state').val(itemState);
+        updateItemFilterInfo();
         var baseURL = mlite.url + '/' + mlite.admin;
+
+        function updateItemFilterInfo() {
+            var tip = $('#item-filter-info');
+            if (itemFilter && itemState) {
+                var label = $('#item_filter option:selected').text() || itemFilter;
+                var stLabel = $('#item_state option:selected').text() || itemState;
+                tip.html('Filter aktif: <b>' + label + '</b> = <b>' + stLabel + '</b> <a href="#" id="btn-item-clear" style="margin-left:4px;"><i class="fa fa-times-circle"></i> hapus</a>');
+            } else if (itemFilter && !itemState) {
+                tip.html('<i class="fa fa-info-circle" style="color:#c05621;"></i> Pilih status item juga.');
+            } else {
+                tip.html('');
+            }
+        }
 
         // Pertahankan rentang tanggal di URL agar saat refresh tidak kembali ke hari ini
         function syncUrlDates() {
@@ -570,6 +667,8 @@
             var url = new URL(window.location.href);
             if (tgl_awal) { url.searchParams.set('tanggal_awal', tgl_awal); } else { url.searchParams.delete('tanggal_awal'); }
             if (tgl_akhir) { url.searchParams.set('tanggal_akhir', tgl_akhir); } else { url.searchParams.delete('tanggal_akhir'); }
+            if (itemFilter) { url.searchParams.set('item_filter', itemFilter); } else { url.searchParams.delete('item_filter'); }
+            if (itemState) { url.searchParams.set('item_state', itemState); } else { url.searchParams.delete('item_state'); }
             history.replaceState(null, '', url.toString());
         }
 
@@ -617,6 +716,7 @@
             var tgl_akhir = $('#tanggal_akhir').val() || '';
             var url = baseURL + '/satu_sehat/responseapi?t=' + mlite.token + '&tanggal_awal=' + encodeURIComponent(tgl_awal) + '&tanggal_akhir=' + encodeURIComponent(tgl_akhir);
             if (statusFilter) url += '&status_filter=' + encodeURIComponent(statusFilter);
+            if (itemFilter && itemState) url += '&item_filter=' + encodeURIComponent(itemFilter) + '&item_state=' + encodeURIComponent(itemState);
             return url;
         }
         var urlapi = buildApiUrl();
@@ -1098,6 +1198,34 @@
             $('#status-filter .btn').removeClass('active');
             $btn.addClass('active');
             statusFilter = $btn.data('filter') || '';
+            table.ajax.url(buildApiUrl()).load();
+        });
+
+        // Tombol filter per item
+        $('#btn-item-apply').on('click', function () {
+            itemFilter = $('#item_filter').val() || '';
+            itemState = $('#item_state').val() || '';
+            updateItemFilterInfo();
+            syncUrlDates();
+            table.ajax.url(buildApiUrl()).load();
+        });
+        $('#btn-item-reset').on('click', function () {
+            itemFilter = '';
+            itemState = '';
+            $('#item_filter').val('');
+            $('#item_state').val('');
+            updateItemFilterInfo();
+            syncUrlDates();
+            table.ajax.url(buildApiUrl()).load();
+        });
+        $(document).on('click', '#btn-item-clear', function (e) {
+            e.preventDefault();
+            itemFilter = '';
+            itemState = '';
+            $('#item_filter').val('');
+            $('#item_state').val('');
+            updateItemFilterInfo();
+            syncUrlDates();
             table.ajax.url(buildApiUrl()).load();
         });
 

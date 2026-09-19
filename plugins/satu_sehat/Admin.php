@@ -7472,6 +7472,230 @@ class Admin extends AdminModule
     return $this->draw('response.html', ['dokter_list' => $dokter, 'poli_list' => $poliklinik]);
   }
 
+  /**
+   * Hitung status per item/resource Satu Sehat untuk satu baris (satu kunjungan).
+   * Status yang mungkin: done (terkirim), pending (belum terkirim & data siap),
+   * partial (sebagian item detail terkirim), empty (tidak ada data sumber),
+   * blocked (masalah: belum closing / mapping belum dikonfigurasi).
+   */
+  private function _computeItemStates($row)
+  {
+    $s = [];
+    $p = isset($row['pemeriksaan']) && is_array($row['pemeriksaan']) ? $row['pemeriksaan'] : [];
+
+    // Encounter & Diagnosa
+    $encBlocked = ($row['tgl_pulang'] == '' || $row['tgl_pulang'] === null)
+      || $row['praktisi_id'] == '' || $row['id_organisasi'] == '' || $row['id_lokasi'] == '';
+    $s['encounter'] = $row['id_encounter'] != '' ? 'done' : ($encBlocked ? 'blocked' : 'ready');
+
+    $s['condition'] = $row['id_condition'] != '' ? 'done'
+      : (empty($row['diagnosa_pasien']) ? 'empty' : 'ready');
+
+    $penilaian = trim((string) isset_or($row['clinical_impression'], ''));
+    $s['clinical_impression'] = $row['id_clinical_impression'] != '' ? 'done'
+      : ($penilaian === '' ? 'empty' : 'ready');
+
+    // Vital signs (Observation)
+    $ttvMap = [
+      'obs_tensi'     => ['id_observation_ttvtensi', 'tensi'],
+      'obs_nadi'      => ['id_observation_ttvnadi', 'nadi'],
+      'obs_rr'        => ['id_observation_ttvrespirasi', 'respirasi'],
+      'obs_suhu'      => ['id_observation_ttvsuhu', 'suhu_tubuh'],
+      'obs_spo2'      => ['id_observation_ttvspo2', 'spo2'],
+      'obs_gcs'       => ['id_observation_ttvgcs', 'gcs'],
+      'obs_tinggi'    => ['id_observation_ttvtinggi', 'tinggi'],
+      'obs_berat'     => ['id_observation_ttvberat', 'berat'],
+      'obs_perut'     => ['id_observation_ttvperut', 'lingkar_perut'],
+      'obs_kesadaran' => ['id_observation_ttvkesadaran', 'kesadaran'],
+    ];
+    foreach ($ttvMap as $key => $cfg) {
+      $idVal = isset_or($row[$cfg[0]], '');
+      $srcVal = array_key_exists($cfg[1], $p) ? $p[$cfg[1]] : null;
+      if ($idVal !== '') {
+        $s[$key] = 'done';
+      } elseif ($srcVal === null || trim((string) $srcVal) === '' || trim((string) $srcVal) === '-') {
+        $s[$key] = 'empty';
+      } else {
+        $s[$key] = 'ready';
+      }
+    }
+
+    // Klinis
+    $s['procedure'] = $row['id_procedure'] != '' ? 'done'
+      : (empty($row['prosedur_pasien']) ? 'empty' : 'ready');
+
+    $s['composition'] = $row['id_composition'] != '' ? 'done'
+      : (empty($row['adime_gizi']) ? 'empty' : 'ready');
+
+    $s['vaksin'] = $row['id_immunization'] != '' ? 'done'
+      : (empty($row['immunization']) ? 'empty' : 'ready');
+
+    // Obat (per item detail, fallback ke kolom agregat)
+    $medItems = is_array($row['med_items']) ? $row['med_items'] : [];
+    $medTotal = (int) isset_or($row['med_total'], 0);
+    if ($medTotal === 0 && count($medItems) > 0) {
+      $medTotal = count($medItems);
+    }
+    $medDefs = [
+      'med_req'  => ['id_medication_request',  'id_medication_request',  'medication_request'],
+      'med_disp' => ['id_medication_dispense', 'id_medication_dispense', 'medication_dispense'],
+      'med_stmt' => ['id_medication_statement', 'id_medication_statement', 'medication_statement'],
+    ];
+    foreach ($medDefs as $key => $cfg) {
+      $idVal = isset_or($row[$cfg[0]], '');
+      if ($medTotal === 0) {
+        if ($idVal !== '') {
+          $s[$key] = 'done';
+        } elseif (isset_or($row[$cfg[2]], '') !== '') {
+          $s[$key] = 'ready';
+        } else {
+          $s[$key] = 'empty';
+        }
+        continue;
+      }
+      $mapped = 0;
+      $sent = 0;
+      $hasNoMap = false;
+      foreach ($medItems as $mi) {
+        if (isset_or($mi['status'], '') === 'no_mapping') {
+          $hasNoMap = true;
+          continue;
+        }
+        $mapped++;
+        if (isset_or($mi[$cfg[1]], '') !== '') {
+          $sent++;
+        }
+      }
+      if ($mapped === 0) {
+        $s[$key] = 'blocked';
+      } elseif ($sent >= $mapped) {
+        $s[$key] = 'done';
+      } elseif ($sent === 0) {
+        $s[$key] = $hasNoMap ? 'blocked' : 'ready';
+      } else {
+        $s[$key] = 'partial';
+      }
+    }
+
+    // Helper untuk detail ber-item (rad & lab)
+    $detailState = function ($total, $items, $field) {
+      $total = (int) $total;
+      $items = is_array($items) ? $items : [];
+      if ($total === 0 && count($items) > 0) {
+        $total = count($items);
+      }
+      if ($total === 0) {
+        return 'empty';
+      }
+      $mapped = 0;
+      $sent = 0;
+      $hasNoMap = false;
+      foreach ($items as $it) {
+        if (isset_or($it['status'], '') === 'no_mapping') {
+          $hasNoMap = true;
+          continue;
+        }
+        $mapped++;
+        if (isset_or($it[$field], '') !== '') {
+          $sent++;
+        }
+      }
+      if ($mapped === 0) {
+        return 'blocked';
+      }
+      if ($sent >= $mapped) {
+        return 'done';
+      }
+      if ($sent === 0) {
+        return $hasNoMap ? 'blocked' : 'ready';
+      }
+      return 'partial';
+    };
+
+    // Radiologi
+    $radItems = isset_or($row['rad_items'], []);
+    $radTotal = (int) isset_or($row['rad_total'], 0);
+    $radDefs = [
+      'rad_req'  => 'id_service_request',
+      'rad_spec' => 'id_specimen',
+      'rad_obs'  => 'id_observation',
+      'rad_diag' => 'id_diagnostic',
+    ];
+    foreach ($radDefs as $key => $field) {
+      $s[$key] = $detailState($radTotal, $radItems, $field);
+    }
+    $s['imaging'] = $row['id_imaging_study'] != '' ? 'done'
+      : (empty($row['imaging_study_radiologi']) ? 'empty' : 'ready');
+
+    // Laboratorium
+    $labItems = isset_or($row['lab_items'], []);
+    $labTotal = (int) isset_or($row['lab_total'], 0);
+    $labDefs = [
+      'lab_req'  => 'id_service_request',
+      'lab_spec' => 'id_specimen',
+      'lab_obs'  => 'id_observation',
+      'lab_diag' => 'id_diagnostic',
+    ];
+    foreach ($labDefs as $key => $field) {
+      $s[$key] = $detailState($labTotal, $labItems, $field);
+    }
+
+    // Lainnya
+    $s['careplan'] = $row['id_careplan'] != '' ? 'done'
+      : (empty($row['care_plan']) ? 'empty' : 'ready');
+
+    $s['allergy'] = $row['id_allergy'] != '' ? 'done'
+      : (empty($row['allergy']) ? 'empty' : 'ready');
+
+    $s['questionnaire'] = $row['id_questionnaire'] != '' ? 'done'
+      : (empty($row['questionnaire']) ? 'empty' : 'ready');
+
+    return $s;
+  }
+
+  /**
+   * Peta kategori -> daftar id item (untuk filter per kategori).
+   */
+  private function _itemCategories()
+  {
+    return [
+      'cat_encounter' => ['encounter', 'condition', 'clinical_impression'],
+      'cat_vital'     => ['obs_tensi', 'obs_nadi', 'obs_rr', 'obs_suhu', 'obs_spo2', 'obs_gcs', 'obs_tinggi', 'obs_berat', 'obs_perut', 'obs_kesadaran'],
+      'cat_klinis'    => ['procedure', 'composition', 'vaksin'],
+      'cat_obat'      => ['med_req', 'med_disp', 'med_stmt'],
+      'cat_radiologi' => ['rad_req', 'rad_spec', 'rad_obs', 'rad_diag', 'imaging'],
+      'cat_lab'       => ['lab_req', 'lab_spec', 'lab_obs', 'lab_diag'],
+      'cat_lainnya'   => ['careplan', 'allergy', 'questionnaire'],
+    ];
+  }
+
+  /**
+   * Gabungkan status item menjadi satu status kategori.
+   * Prioritas: blocked > partial > ready > done > empty.
+   */
+  private function _computeCategoryStates($itemStates)
+  {
+    $result = [];
+    foreach ($this->_itemCategories() as $cat => $items) {
+      $states = [];
+      foreach ($items as $it) {
+        $states[] = isset($itemStates[$it]) ? $itemStates[$it] : 'empty';
+      }
+      if (in_array('blocked', $states, true)) {
+        $result[$cat] = 'blocked';
+      } elseif (in_array('partial', $states, true)) {
+        $result[$cat] = 'partial';
+      } elseif (in_array('ready', $states, true)) {
+        $result[$cat] = 'ready';
+      } elseif (in_array('done', $states, true)) {
+        $result[$cat] = 'done';
+      } else {
+        $result[$cat] = 'empty';
+      }
+    }
+    return $result;
+  }
+
   public function postResponseApi()
   {
     $this->_addHeaderFiles();
@@ -7501,6 +7725,10 @@ class Admin extends AdminModule
 
     // Filter status (all | not_sent | ready | sent | blocked)
     $statusFilter = $_GET['status_filter'] ?? $_POST['status_filter'] ?? '';
+
+    // Filter per item (item_filter = id item, item_state = ready/unsent/sent/partial/empty/blocked)
+    $itemFilter = $_GET['item_filter'] ?? $_POST['item_filter'] ?? '';
+    $itemState = $_GET['item_state'] ?? $_POST['item_state'] ?? '';
 
     $total = $this->db('reg_periksa')
       ->where('reg_periksa.tgl_registrasi', '>=', $start_date)
@@ -7883,7 +8111,35 @@ class Admin extends AdminModule
 
       $row['status'] = $status;
       $row['blockers'] = $blockers;
+      // Status per item & per kategori untuk filter rinci (item_filter + item_state)
+      $row['item_state'] = $this->_computeItemStates($row);
+      $row['item_category_state'] = $this->_computeCategoryStates($row['item_state']);
       $data_response[] = $row;
+    }
+
+    // Terapkan filter per kategori/item (item_filter: cat_* atau id item, item_state: ready/unsent/sent/partial/empty/blocked)
+    // Semantik mengikuti filter status global: ready=Siap Kirim, unsent=Belum Terkirim (ready+blocked),
+    // sent=Sudah Terkirim (done+partial), partial=Sebagian, empty=Kosong, blocked=Ada Masalah.
+    $itemStateMap = [
+      'ready'   => ['ready'],
+      'unsent'  => ['ready', 'blocked'],
+      'sent'    => ['done', 'partial'],
+      'partial' => ['partial'],
+      'empty'   => ['empty'],
+      'blocked' => ['blocked'],
+    ];
+    if ($itemFilter !== '' && $itemState !== '') {
+      $itemAllowed = isset($itemStateMap[$itemState]) ? $itemStateMap[$itemState] : [$itemState];
+      $isCategory = strpos($itemFilter, 'cat_') === 0;
+      $data_response = array_values(array_filter($data_response, function ($row) use ($itemFilter, $itemAllowed, $isCategory) {
+        $source = $isCategory
+          ? (isset($row['item_category_state']) ? $row['item_category_state'] : [])
+          : (isset($row['item_state']) ? $row['item_state'] : []);
+        if (!isset($source[$itemFilter])) {
+          return false;
+        }
+        return in_array($source[$itemFilter], $itemAllowed, true);
+      }));
     }
 
     // Terapkan filter status (dari status_filter: all/not_sent/ready/sent/blocked)
