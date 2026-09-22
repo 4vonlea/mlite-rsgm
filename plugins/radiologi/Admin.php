@@ -1417,23 +1417,7 @@ class Admin extends AdminModule
         'periksa_radiologi.kd_dokter',
         'periksa_radiologi.kd_jenis_prw',
         'periksa_radiologi.dokter_perujuk',
-        'periksa_radiologi.bagian_rs',
-        'periksa_radiologi.bhp',
-        'periksa_radiologi.tarif_perujuk',
-        'periksa_radiologi.tarif_tindakan_dokter',
-        'periksa_radiologi.tarif_tindakan_petugas',
-        'periksa_radiologi.kso',
-        'periksa_radiologi.menejemen',
-        'periksa_radiologi.biaya',
         'periksa_radiologi.status',
-        'periksa_radiologi.proyeksi',
-        'periksa_radiologi.kV',
-        'periksa_radiologi.mAS',
-        'periksa_radiologi.FFD',
-        'periksa_radiologi.BSF',
-        'periksa_radiologi.inak',
-        'periksa_radiologi.jml_penyinaran',
-        'periksa_radiologi.dosis',
         'dokter.nm_dokter',
         'penjab.png_jawab',
         'petugas.nama as nama_petugas'
@@ -1450,6 +1434,8 @@ class Admin extends AdminModule
       ->group('periksa_radiologi.nip')
       ->group('periksa_radiologi.kd_dokter')
       ->group('periksa_radiologi.kd_jenis_prw')
+      ->group('periksa_radiologi.dokter_perujuk')
+      ->group('periksa_radiologi.status')
       ->group('dokter.nm_dokter')
       ->group('penjab.png_jawab')
       ->group('petugas.nama')
@@ -1459,7 +1445,6 @@ class Admin extends AdminModule
     $jumlah_total_radiologi = 0;
     $no_radiologi = 1;
     foreach ($rows_periksa_radiologi as $row) {
-      $jumlah_total_radiologi += $row['biaya'];
       $row['nomor'] = $no_radiologi++;
       $row['status_periksa'] = $_POST['status'];
       $row['periksa_radiologi'] = $this->db('periksa_radiologi')
@@ -1468,7 +1453,12 @@ class Admin extends AdminModule
         ->where('no_rawat', $_POST['no_rawat'])
         ->where('tgl_periksa', $row['tgl_periksa'])
         ->where('jam', $row['jam'])
+        ->where('periksa_radiologi.kd_jenis_prw', $row['kd_jenis_prw'])
         ->toArray();
+        
+      foreach ($row['periksa_radiologi'] as $detail) {
+          $jumlah_total_radiologi += $detail['biaya'];
+      }
       $row['hasil_radiologi'] = $this->db('hasil_radiologi')
         ->where('no_rawat', $_POST['no_rawat'])
         ->where('tgl_periksa', $row['tgl_periksa'])
