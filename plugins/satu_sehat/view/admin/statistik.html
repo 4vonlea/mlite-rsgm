@@ -1,0 +1,792 @@
+<style>
+    .stat-wrap { font-family: 'Segoe UI', Arial, sans-serif; }
+
+    .stat-cards { margin-bottom: 18px; }
+    .stat-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 16px 18px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        height: 100%;
+    }
+    .stat-card .sc-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: #718096;
+        margin-bottom: 6px;
+    }
+    .stat-card .sc-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1a202c;
+        line-height: 1.2;
+    }
+    .stat-card .sc-sub {
+        font-size: 11px;
+        color: #a0aec0;
+        margin-top: 4px;
+    }
+
+    .stat-panel {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 18px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .stat-panel .sp-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 4px;
+    }
+    .stat-panel .sp-sub {
+        font-size: 11px;
+        color: #a0aec0;
+        margin-bottom: 10px;
+    }
+
+    /* ===== Tabel agregasi per tanggal ===== */
+    .stat-scroll {
+        overflow-x: auto;
+        max-height: 480px;
+        overflow-y: auto;
+    }
+    #tbl_stat {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 11px;
+    }
+    #tbl_stat th,
+    #tbl_stat td {
+        white-space: nowrap;
+        padding: 6px 8px;
+        border: 1px solid #e2e8f0;
+        text-align: center;
+    }
+    #tbl_stat thead th {
+        background: #ecf0f1;
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 10px;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+    #tbl_stat tbody tr:hover td {
+        background-color: #edf2f7;
+    }
+    #tbl_stat td.frst {
+        background: #f7fafc;
+        font-weight: 600;
+        color: #4a5568;
+    }
+    #tbl_stat tr.foot-row td {
+        background: #fffbeb;
+        font-weight: 700;
+        color: #744210;
+    }
+    #tbl_stat tr.foot-row.kunj td {
+        background: #f7fafc;
+        font-weight: 600;
+        color: #718096;
+    }
+    #tbl_stat tr.foot-row.hdr td {
+        background: #fff;
+        font-weight: 600;
+        color: #2d3748;
+        border-top: 2px solid #cbd5e0;
+    }
+    #tbl_stat td.res-0 { background: #fff5f5; color: #c53030; }
+    #tbl_stat td.res-ok { background: #f0fff4; color: #276749; }
+
+    /* ===== Modul wajib ===== */
+    .mw-item { margin-bottom: 14px; }
+    .mw-item .mw-top {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+    .mw-item .mw-top b { color: #2d3748; }
+    .mw-item .mw-top span { font-weight: 700; color: #4a5568; }
+    .mw-bar {
+        height: 10px;
+        background: #edf2f7;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    .mw-bar > div {
+        height: 100%;
+        border-radius: 6px;
+        background: linear-gradient(90deg, #48bb78, #38a169);
+    }
+    .mw-bar.low > div { background: linear-gradient(90deg, #fc8181, #e53e3e); }
+    .mw-bar.mid > div { background: linear-gradient(90deg, #f6ad55, #ed8936); }
+
+    /* ===== Catatan ===== */
+    .stat-notes { font-size: 11.5px; color: #4a5568; line-height: 1.7; }
+    .stat-notes li { margin-bottom: 6px; }
+
+    #stat_loading { text-align: center; padding: 40px; color: #a0aec0; }
+    #stat_error {
+        display: none;
+        background: #fed7d7;
+        color: #c53030;
+        border: 1px solid #feb2b2;
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 13px;
+        margin-bottom: 14px;
+    }
+    .chart-box { position: relative; height: 320px; }
+</style>
+
+<div class="stat-wrap">
+    <div class="stat-panel">
+        <form class="form-inline" id="form_stat" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">
+            <div class="form-group" style="margin:0;">
+                <label style="display:block;font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.5px;">Tanggal Awal</label>
+                <input type="text" name="tanggal_awal" id="tanggal_awal" class="form-control tanggal" value="" autocomplete="off" style="width:150px;" />
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label style="display:block;font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.5px;">Tanggal Akhir</label>
+                <input type="text" name="tanggal_akhir" id="tanggal_akhir" class="form-control tanggal" value="" autocomplete="off" style="width:150px;" />
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label style="display:block;font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.5px;">Dokter</label>
+                <select id="stat_filter_dokter" class="form-control" style="width:180px;">
+                    <option value="">Semua Dokter</option>
+                    {loop: $dokter_list}
+                    <option value="{?=$value.kd_dokter?}">{?=$value.kd_dokter?} - {?=$value.nm_dokter?}</option>
+                    {/loop}
+                </select>
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label style="display:block;font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.5px;">Poli/Unit</label>
+                <select id="stat_filter_poli" class="form-control" style="width:160px;">
+                    <option value="">Semua Poli</option>
+                    {loop: $poli_list}
+                    <option value="{?=$value.kd_poli?}">{?=$value.kd_poli?} - {?=$value.nm_poli?}</option>
+                    {/loop}
+                </select>
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label style="display:block;font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.5px;">Status Keterangan</label>
+                <select id="stat_filter_ket" class="form-control" style="width:200px;">
+                    <option value="">Semua Status</option>
+                    <option value="Belum Closing & Belum Input Diagnosa">Belum Closing & Belum Input Diagnosa</option>
+                    <option value="Belum Closing">Belum Closing</option>
+                    <option value="Belum Input Diagnosa">Belum Input Diagnosa</option>
+                    <option value="Belum di Kirim">Belum di Kirim</option>
+                    <option value="Sudah di Kirim">Sudah di Kirim</option>
+                    <option value="Sudah di Kirim Sebagian">Sudah di Kirim Sebagian</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label style="display:block;font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.5px;">Status Bayar</label>
+                <select id="stat_filter_bayar" class="form-control" style="width:150px;">
+                    <option value="Sudah Bayar" selected>Sudah Bayar</option>
+                    <option value="Belum Bayar">Belum Bayar</option>
+                    <option value="Semua">Semua (Sudah + Belum)</option>
+                </select>
+            </div>
+            <button type="button" class="btn btn-primary" id="btn_lihat">
+                <i class="fa fa-search"></i> Lihat
+            </button>
+            <button type="button" class="btn btn-success" id="btn_rekap_excel" data-toggle="modal" data-target="#rekapModal">
+                <i class="fa fa-file-excel-o"></i> Rekap Excel
+            </button>
+            <button type="button" class="btn btn-default" id="btn_refresh" title="Muat ulang (abaikan cache)">
+                <i class="fa fa-refresh"></i>
+            </button>
+            <span style="font-size:11px;color:#a0aec0;margin-left:2px;width:100%;">
+                Rentang tanggal maksimal 31 hari. Filter mengikuti default rekap (rawat jalan, tidak batal); status bayar default <b>Sudah Bayar</b>.
+            </span>
+        </form>
+    </div>
+
+    <div id="stat_error"></div>
+
+    <div id="stat_loading">
+        <i class="fa fa-spinner fa-spin" style="font-size:28px;"></i>
+        <div style="margin-top:8px;">Memuat statistik pengiriman Satu Sehat...</div>
+    </div>
+
+    <div id="stat_content" style="display:none;">
+        <div class="row stat-cards">
+            <div class="col-md-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="sc-label">Total Kunjungan</div>
+                    <div class="sc-value" id="stat_kunjungan">0</div>
+                    <div class="sc-sub" id="stat_kunjungan_sub">-</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="sc-label">Total Item Terkirim</div>
+                    <div class="sc-value" id="stat_terkirim">0</div>
+                    <div class="sc-sub" id="stat_terkirim_sub">-</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="sc-label">Persentase Terkirim</div>
+                    <div class="sc-value" id="stat_persen">0%</div>
+                    <div class="sc-sub" id="stat_persen_sub">-</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="sc-label">Target Item (Kunjungan x 31)</div>
+                    <div class="sc-value" id="stat_target">0</div>
+                    <div class="sc-sub">Jumlah ideal seluruh item terisi</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="stat_warning" style="display:none;background:#fefcbf;color:#744210;border:1px solid #f6e05e;border-radius:8px;padding:12px 16px;font-size:13px;margin-bottom:14px;"></div>
+
+        <div class="stat-panel">
+            <div class="sp-title">Tren Pengiriman per Tanggal</div>
+            <div class="sp-sub" id="chart_sub">-</div>
+            <div class="chart-box">
+                <canvas id="statChart"></canvas>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="stat-panel">
+                    <div class="sp-title">Tren Status Pengiriman per Tanggal</div>
+                    <div class="sp-sub">Sudah di Kirim / Sebagian / Belum Terkirim (jumlah kunjungan).</div>
+                    <div class="chart-box" style="height:280px;">
+                        <canvas id="chart_status"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-panel">
+                    <div class="sp-title">Distribusi Kunjungan per Poli</div>
+                    <div class="sp-sub">Proporsi kunjungan per poli; tooltip menampilkan % item terkirim.</div>
+                    <div class="chart-box" style="height:280px;">
+                        <canvas id="chart_poli"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-panel">
+            <div class="sp-title">Agregasi per Tanggal</div>
+            <div class="sp-sub">Kolom = 31 resource Satu Sehat. Isi = jumlah item terkirim pada tanggal tersebut; warna semakin pekat = semakin tinggi persentasenya terhadap kunjungan.</div>
+            <div class="stat-scroll">
+                <table id="tbl_stat"></table>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="stat-panel">
+                    <div class="sp-title">Persentase Modul Wajib Satusehat</div>
+                    <div class="sp-sub">Dibandingkan dengan jumlah kunjungan <b id="mw_base">-</b> pada periode terpilih.</div>
+                    <div id="mw_list"></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-panel">
+                    <div class="sp-title">Keterangan / Catatan</div>
+                    <ol class="stat-notes" id="stat_catatan"></ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Rekap Data (sama seperti di Data Response Satu Sehat) -->
+<div class="modal fade" id="rekapModal" tabindex="-1" role="dialog" aria-labelledby="rekapModalLabel">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="rekapModalLabel"><i class="fa fa-file-excel-o"></i> Rekap Data Satu Sehat</h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info" style="font-size:12px;padding:8px 12px;">
+                    <i class="fa fa-info-circle"></i>
+                    Biarkan semua filter <b>Semua</b> untuk rekap lengkap sesuai default. Atur filter bila ingin rekap per dokter / poli / status.
+                </div>
+                <div class="form-group">
+                    <label style="font-size:12px;margin-bottom:2px;">Tanggal Awal</label>
+                    <div class="input-group">
+                        <input type="text" id="rekap_tanggal_awal" class="form-control tanggal" placeholder="YYYY-MM-DD">
+                        <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label style="font-size:12px;margin-bottom:2px;">Tanggal Akhir</label>
+                    <div class="input-group">
+                        <input type="text" id="rekap_tanggal_akhir" class="form-control tanggal" placeholder="YYYY-MM-DD">
+                        <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label style="font-size:12px;margin-bottom:2px;">Dokter</label>
+                    <select id="rekap_filter_dokter" class="form-control">
+                        <option value="">Semua Dokter</option>
+                        {loop: $dokter_list}
+                        <option value="{?=$value.kd_dokter?}">{?=$value.kd_dokter?} - {?=$value.nm_dokter?}</option>
+                        {/loop}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="font-size:12px;margin-bottom:2px;">Poli/Unit</label>
+                    <select id="rekap_filter_poli" class="form-control">
+                        <option value="">Semua Poli</option>
+                        {loop: $poli_list}
+                        <option value="{?=$value.kd_poli?}">{?=$value.kd_poli?} - {?=$value.nm_poli?}</option>
+                        {/loop}
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label style="font-size:12px;margin-bottom:2px;">Status Keterangan</label>
+                    <select id="rekap_filter_ket" class="form-control">
+                        <option value="">Semua Status</option>
+                        <option value="Belum Closing & Belum Input Diagnosa">Belum Closing & Belum Input Diagnosa</option>
+                        <option value="Belum Closing">Belum Closing</option>
+                        <option value="Belum Input Diagnosa">Belum Input Diagnosa</option>
+                        <option value="Belum di Kirim">Belum di Kirim</option>
+                        <option value="Sudah di Kirim">Sudah di Kirim</option>
+                        <option value="Sudah di Kirim Sebagian">Sudah di Kirim Sebagian</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label style="font-size:12px;margin-bottom:2px;">Status Bayar</label>
+                    <select id="rekap_filter_bayar" class="form-control">
+                        <option value="Sudah Bayar" selected>Sudah Bayar</option>
+                        <option value="Belum Bayar">Belum Bayar</option>
+                        <option value="Semua">Semua (Sudah + Belum)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-success" id="btn-rekap-download"><i class="fa fa-download"></i> Download Rekap</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var baseURL = mlite.url + '/' + mlite.admin + '/satu_sehat';
+    var statChart = null;
+    var statusChart = null;
+    var poliChart = null;
+    var labelsCache = null;
+
+    function nf(x) {
+        if (x === null || x === undefined || isNaN(x)) return '0';
+        try { return Number(x).toLocaleString('id-ID'); } catch (e) { return String(x); }
+    }
+
+    function loadStat(force) {
+        $('#stat_loading').show();
+        $('#stat_content').hide();
+        $('#stat_error').hide();
+        $('#stat_warning').hide();
+
+        var awal = $('#tanggal_awal').val();
+        var akhir = $('#tanggal_akhir').val();
+        var dokter = $('#stat_filter_dokter').val() || '';
+        var poli = $('#stat_filter_poli').val() || '';
+        var ket = $('#stat_filter_ket').val() || '';
+        var bayar = $('#stat_filter_bayar').val() || 'Sudah Bayar';
+        var url = baseURL + '/statisticapi?t=' + encodeURIComponent(mlite.token)
+            + '&tanggal_awal=' + encodeURIComponent(awal || '')
+            + '&tanggal_akhir=' + encodeURIComponent(akhir || '')
+            + '&filter_dokter=' + encodeURIComponent(dokter)
+            + '&filter_poli=' + encodeURIComponent(poli)
+            + '&filter_ket=' + encodeURIComponent(ket)
+            + '&filter_bayar=' + encodeURIComponent(bayar);
+        if (force) url += '&force=1';
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            dataType: 'json',
+            timeout: 300000
+        }).done(function (res) {
+            if (!res || res.ok !== true) {
+                $('#stat_loading').hide();
+                $('#stat_error').show().html('Respons server tidak valid dari endpoint statistik.');
+                return;
+            }
+            renderStat(res);
+        }).fail(function (xhr, status, err) {
+            $('#stat_loading').hide();
+            var msg = 'Gagal memuat statistik (' + status + (xhr.status ? ', HTTP ' + xhr.status : '') + '). Coba lagi.';
+            if (xhr.responseText) {
+                var t = String(xhr.responseText).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                if (t) msg += '<div style="margin-top:6px;font-size:11px;">' + t.substring(0, 250) + '</div>';
+            }
+            $('#stat_error').html(msg).show();
+        });
+    }
+
+    function renderStat(res) {
+        labelsCache = res.resource_labels;
+
+        // Kartu
+        $('#stat_kunjungan').text(nf(res.total_kunjungan));
+        var bayar = $('#stat_filter_bayar').val() || 'Sudah Bayar';
+        $('#stat_kunjungan_sub').text(res.periode.label + ' \u00b7 ' + (bayar === 'Semua' ? 'Semua Status Bayar' : bayar));
+
+        var jml = Number(res.jml_items) || 0;
+        var target = nf(jml);
+        $('#stat_terkirim').text(nf(res.grand_total));
+        $('#stat_terkirim_sub').text('dari target ' + target + ' item');
+
+        $('#stat_persen').text(Number(res.pct_ttl).toFixed(2).replace('.', ',') + '%');
+        $('#stat_persen_sub').text(Number(res.pct_dec).toLocaleString('id-ID') + ' (desimal, ' + res.overall_percentage + '%)');
+
+        $('#stat_target').text(target);
+        $('#chart_sub').text('Periode ' + res.periode.label + ' — sumbu kiri: jumlah, sumbu kanan: persentase terkirim.');
+
+        // Chart
+        var labels = res.dates.map(function (d) { return d.label; });
+        var kunjungan = res.dates.map(function (d) { return d.kunjungan; });
+        var terkirim = res.dates.map(function (d) { return d.total; });
+        var persen = res.dates.map(function (d) { return d.persen; });
+
+        if (statChart) { statChart.destroy(); statChart = null; }
+        var ctx = document.getElementById('statChart');
+        statChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Kunjungan',
+                        data: kunjungan,
+                        borderColor: '#3182ce',
+                        backgroundColor: 'rgba(49,130,206,0.12)',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        fill: true,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Item Terkirim',
+                        data: terkirim,
+                        borderColor: '#38a169',
+                        backgroundColor: 'rgba(56,161,105,0.12)',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        fill: true,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: '% Terkirim',
+                        data: persen,
+                        borderColor: '#e53e3e',
+                        backgroundColor: 'rgba(229,62,62,0.05)',
+                        borderWidth: 2,
+                        borderDash: [5, 4],
+                        pointRadius: 0,
+                        fill: false,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: { ticks: { maxRotation: 60, minRotation: 0, font: { size: 10 } } },
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Jumlah' },
+                        ticks: { font: { size: 10 } },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        max: 100,
+                        title: { display: true, text: '%' },
+                        ticks: { callback: function (v) { return v + '%'; }, font: { size: 10 } },
+                        grid: { drawOnChartArea: false }
+                    }
+                },
+                plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 14, font: { size: 11 } } } }
+            }
+        });
+
+        // Tabel agregasi
+        renderTable(res);
+
+        // Chart tren status (stacked bar)
+        renderStatusChart(res);
+
+        // Chart distribusi per poli (doughnut)
+        renderPoliChart(res);
+
+        // Modul wajib
+        renderModul(res);
+
+        // Catatan
+        var cat = res.catatan || [];
+        var html = '';
+        cat.forEach(function (c) { html += '<li>' + c + '</li>'; });
+        $('#stat_catatan').html(html || '<li style="color:#a0aec0;">Tidak ada catatan.</li>');
+
+        // Warning rentang tanggal dibatasi
+        $('#stat_warning').hide().empty();
+        if (res.warning) {
+            $('#stat_warning').append('<i class="fa fa-exclamation-triangle"></i> ' + res.warning).show();
+        }
+
+        $('#stat_loading').hide();
+        $('#stat_content').show();
+    }
+
+    function renderStatusChart(res) {
+        var labels = res.dates.map(function (d) { return d.label; });
+        var sudah = res.dates.map(function (d) { return (d.status && d.status.sudah) || 0; });
+        var sebagian = res.dates.map(function (d) { return (d.status && d.status.sebagian) || 0; });
+        var belum = res.dates.map(function (d) { return (d.status && d.status.belum) || 0; });
+
+        if (statusChart) { statusChart.destroy(); statusChart = null; }
+        var ctx = document.getElementById('chart_status');
+        statusChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Sudah di Kirim', data: sudah, backgroundColor: '#38a169' },
+                    { label: 'Sudah Sebagian', data: sebagian, backgroundColor: '#ed8936' },
+                    { label: 'Belum Terkirim', data: belum, backgroundColor: '#e53e3e' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: { stacked: true, ticks: { maxRotation: 60, minRotation: 0, font: { size: 10 } } },
+                    y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Kunjungan' }, ticks: { font: { size: 10 } } }
+                },
+                plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 14, font: { size: 11 } } } }
+            }
+        });
+    }
+
+    function renderPoliChart(res) {
+        var poli = res.poli_agg || [];
+        $('#chart_poli').closest('.chart-box').find('.poli-empty').remove();
+
+        if (poliChart) { poliChart.destroy(); poliChart = null; }
+        var ctx = document.getElementById('chart_poli');
+
+        if (!poli.length) {
+            polichartEmpty(ctx);
+            return;
+        }
+
+        var labels = poli.map(function (p) {
+            var nm = p.nm_poli || p.kd_poli || '-';
+            return nm + ' (' + p.pct + '%)';
+        });
+        var data = poli.map(function (p) { return p.kunjungan; });
+
+        var palette = ['#3182ce', '#38a169', '#ed8936', '#805ad5', '#d53f8c', '#dd6b20', '#2c7a7b', '#718096', '#c53030', '#975a16', '#275e8f', '#234e52'];
+        var colors = poli.map(function (_, i) { return palette[i % palette.length]; });
+
+        poliChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{ data: data, backgroundColor: colors, borderColor: '#fff', borderWidth: 2 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '55%',
+                plugins: {
+                    legend: { display: true, position: 'bottom', labels: { boxWidth: 14, font: { size: 10 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: function (item) {
+                                var p = poli[item.dataIndex];
+                                return p.nm_poli + ': ' + nf(p.kunjungan) + ' kunjungan \u00b7 ' + nf(p.total) + ' item terkirim (' + p.pct + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function polichartEmpty(ctx) {
+        if (poliChart) { poliChart.destroy(); poliChart = null; }
+        $(ctx).closest('.chart-box').append('<div class="poli-empty" style="position:absolute;top:0;left:0;right:0;bottom:0;text-align:center;color:#a0aec0;padding-top:100px;background:#fff;">Tidak ada data poli pada periode/filter terpilih.</div>');
+    }
+
+    function renderTable(res) {
+        var keys = res.resource_keys;
+        var labels = res.resource_labels;
+        var colCount = keys.length + 2;
+
+        var h = '<thead><tr><th rowspan="2">Tanggal</th>';
+        for (var i = 0; i < keys.length; i++) {
+            h += '<th>' + labels[i] + '</th>';
+        }
+        h += '<th rowspan="2">TOTAL</th></tr></thead>';
+
+        var body = '<tbody>';
+        res.dates.forEach(function (d) {
+            body += '<tr>';
+            body += '<td class="frst">' + d.label + '</td>';
+            for (var i = 0; i < keys.length; i++) {
+                var v = d.resource[keys[i]] || 0;
+                var bg = '';
+                var tip = '';
+                if (d.kunjungan > 0) {
+                    var ratio = v / d.kunjungan;
+                    if (v > 0) {
+                        var alpha = Math.min(0.06 + ratio * 0.85, 0.95);
+                        bg = 'background:rgba(56,161,105,' + alpha.toFixed(2) + ');';
+                    } else {
+                        bg = 'background:rgba(229,62,62,0.08);';
+                    }
+                    tip = ' title="' + nf(v) + ' / ' + nf(d.kunjungan) + ' kunjungan (' + Math.round(ratio * 100) + '%)"';
+                }
+                body += '<td style="' + bg + '"' + tip + '>' + v + '</td>';
+            }
+            body += '<td class="frst">' + nf(d.total) + ' <small>(' + d.persen + '%)</small></td>';
+            body += '</tr>';
+        });
+        body += '</tbody>';
+
+        var foot = '<tfoot>';
+        // TOTAL per resource
+        foot += '<tr class="foot-row"><td>Total</td>';
+        for (var i = 0; i < keys.length; i++) {
+            var tv = res.totals[keys[i]] || 0;
+            foot += '<td>' + nf(tv) + '</td>';
+        }
+        foot += '<td>' + nf(res.grand_total) + '</td></tr>';
+
+        // KUNJUNGAN PASIEN
+        foot += '<tr class="foot-row kunj"><td>Kunjungan Pasien</td>';
+        for (var i = 0; i < keys.length; i++) {
+            foot += '<td>' + nf(res.total_kunjungan) + '</td>';
+        }
+        foot += '<td>-</td></tr>';
+
+        // Kekurangan
+        foot += '<tr class="foot-row hdr"><td>(-) Kekurangan</td>';
+        for (var i = 0; i < keys.length; i++) {
+            foot += '<td>' + nf(res.kekurangan[keys[i]] || 0) + '</td>';
+        }
+        foot += '<td>-</td></tr>';
+
+        // %
+        foot += '<tr class="foot-row hdr"><td>% (Terkirim/Kunjungan)</td>';
+        for (var i = 0; i < keys.length; i++) {
+            foot += '<td>' + (res.persen[keys[i]] || 0) + '%</td>';
+        }
+        foot += '<td>-</td></tr>';
+        foot += '</tfoot>';
+
+        var html = '<table id="tbl_stat" class="table-bordered">' + h + body + foot + '</table>';
+        $('#tbl_stat').replaceWith(html);
+    }
+
+    function renderModul(res) {
+        $('#mw_base').text(nf(res.total_kunjungan));
+        var list = res.modul_wajib || [];
+        var html = '';
+        list.forEach(function (m) {
+            var pct = Number(m.persen) || 0;
+            var cls = pct < 60 ? 'low' : (pct < 90 ? 'mid' : '');
+            html += '<div class="mw-item">'
+                + '<div class="mw-top"><b>' + m.modul + '</b><span>' + nf(m.terkirim) + ' / ' + nf(m.kunjungan) + ' = ' + pct + '%</span></div>'
+                + '<div class="mw-bar ' + cls + '"><div style="width:' + Math.min(pct, 100) + '%"></div></div>'
+                + '</div>';
+        });
+        $('#mw_list').html(html || '<div style="color:#a0aec0;font-size:12px;">Tidak ada data.</div>');
+    }
+
+    $(document).ready(function () {
+        if (typeof mlite === 'undefined' || !mlite.url || !mlite.token) {
+            $('#stat_loading').hide();
+            $('#stat_error').html('Konfigurasi mlite tidak tersedia. Muat ulang halaman.').show();
+            return;
+        }
+
+        $('.tanggal').each(function () {
+            var opts = {
+                format: 'YYYY-MM-DD',
+                locale: 'id'
+            };
+            var val = $(this).val();
+            if (val) { opts.defaultDate = val; }
+            $(this).datetimepicker(opts);
+        });
+
+        $('#btn_lihat').on('click', function () { loadStat(false); });
+        $('#btn_refresh').on('click', function () { loadStat(true); });
+
+        // Sinkronkan tanggal & filter statistik ke modal rekap
+        function syncRekapDates() {
+            var tgl_awal = $('#tanggal_awal').val();
+            var tgl_akhir = $('#tanggal_akhir').val();
+            if (tgl_awal) $('#rekap_tanggal_awal').val(tgl_awal);
+            if (tgl_akhir) $('#rekap_tanggal_akhir').val(tgl_akhir);
+            $('#rekap_filter_dokter').val($('#stat_filter_dokter').val());
+            $('#rekap_filter_poli').val($('#stat_filter_poli').val());
+            $('#rekap_filter_ket').val($('#stat_filter_ket').val());
+            $('#rekap_filter_bayar').val($('#stat_filter_bayar').val());
+        }
+        $('#tanggal_awal, #tanggal_akhir').on('change dp.change', syncRekapDates);
+        $('#stat_filter_dokter, #stat_filter_poli, #stat_filter_ket, #stat_filter_bayar').on('change', syncRekapDates);
+        $('#rekapModal').on('show.bs.modal', syncRekapDates);
+
+        $('#btn-rekap-download').on('click', function () {
+            var tgl_awal = $('#rekap_tanggal_awal').val() || '';
+            var tgl_akhir = $('#rekap_tanggal_akhir').val() || '';
+            var dokter = $('#rekap_filter_dokter').val() || '';
+            var poli = $('#rekap_filter_poli').val() || '';
+            var ket = $('#rekap_filter_ket').val() || '';
+            var bayar = $('#rekap_filter_bayar').val() || 'Sudah Bayar';
+            var params = ['t=' + encodeURIComponent(mlite.token)];
+            if (tgl_awal) params.push('tanggal_awal=' + encodeURIComponent(tgl_awal));
+            if (tgl_akhir) params.push('tanggal_akhir=' + encodeURIComponent(tgl_akhir));
+            if (dokter) params.push('filter_dokter=' + encodeURIComponent(dokter));
+            if (poli) params.push('filter_poli=' + encodeURIComponent(poli));
+            if (ket) params.push('filter_ket=' + encodeURIComponent(ket));
+            if (bayar && bayar !== 'Sudah Bayar') params.push('filter_bayar=' + encodeURIComponent(bayar));
+            window.open(baseURL + '/rekap?' + params.join('&'), '_blank');
+        });
+
+        // Tanggal akhir default = hari ini, awal = 1 hari sebelumnya (agar langsung terlihat data)
+        var today = new Date();
+        var yes = new Date(today.getTime() - 86400000);
+        function fmt(d) {
+            var mm = ('0' + (d.getMonth() + 1)).slice(-2);
+            var dd = ('0' + d.getDate()).slice(-2);
+            return d.getFullYear() + '-' + mm + '-' + dd;
+        }
+        $('#tanggal_awal').val(fmt(yes)).data('date', fmt(yes));
+        $('#tanggal_akhir').val(fmt(today)).data('date', fmt(today));
+
+        loadStat();
+    });
+})();
+</script>

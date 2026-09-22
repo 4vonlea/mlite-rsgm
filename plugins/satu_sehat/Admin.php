@@ -77,6 +77,7 @@ class Admin extends AdminModule
       'Mapping Laboratorium' => 'mappinglab',
       'Mapping Radiologi' => 'mappingrad',
       'Data Response' => 'response',
+      'Statistik Pengiriman' => 'statistik',
       'Verifikasi KYC' => 'kyc',
       'Pengaturan' => 'settings',
     ];
@@ -94,6 +95,7 @@ class Admin extends AdminModule
       ['name' => 'Mapping Laboratorium', 'url' => url([ADMIN, 'satu_sehat', 'mappinglab']), 'icon' => 'heart', 'desc' => 'Mapping laboratorium satu sehat'],
       ['name' => 'Mapping Radiologi', 'url' => url([ADMIN, 'satu_sehat', 'mappingrad']), 'icon' => 'heart', 'desc' => 'Mapping radiologi satu sehat'],
       ['name' => 'Data Response', 'url' => url([ADMIN, 'satu_sehat', 'response']), 'icon' => 'heart', 'desc' => 'Data encounter satu sehat'],
+      ['name' => 'Statistik Pengiriman', 'url' => url([ADMIN, 'satu_sehat', 'statistik']), 'icon' => 'heartbeat', 'desc' => 'Statistik pengiriman data satu sehat'],
       ['name' => 'Verifikasi KYC', 'url' => url([ADMIN, 'satu_sehat', 'kyc']), 'icon' => 'heart', 'desc' => 'Verifikasi KYC satu sehat'],
       ['name' => 'Pengaturan', 'url' => url([ADMIN, 'satu_sehat', 'settings']), 'icon' => 'heart', 'desc' => 'Pengaturan satu sehat'],
     ];
@@ -7588,6 +7590,15 @@ class Admin extends AdminModule
     return $this->draw('response.html', ['dokter_list' => $dokter, 'poli_list' => $poliklinik]);
   }
 
+  public function getStatistik()
+  {
+    $this->_addHeaderFiles();
+    $this->core->addJS(url('assets/jscripts/chart.js'));
+    $dokter = $this->db('dokter')->where('status', '1')->asc('nm_dokter')->toArray();
+    $poliklinik = $this->db('poliklinik')->where('status', '1')->asc('nm_poli')->toArray();
+    return $this->draw('statistik.html', ['dokter_list' => $dokter, 'poli_list' => $poliklinik]);
+  }
+
   /**
    * Hitung status per item/resource Satu Sehat untuk satu baris (satu kunjungan).
    * Status yang mungkin: done (terkirim), pending (belum terkirim & data siap),
@@ -8533,6 +8544,264 @@ class Admin extends AdminModule
       $filter_bayar = 'Sudah Bayar';
     }
 
+    // Daftar resource Satu Sehat beserta labelnya (31 item) dipindah ke _buildRekapData()
+
+    // Cek prasyarat untuk menghasilkan file .xlsx (ZipArchive wajib ada)
+    if (!class_exists('ZipArchive')) {
+      echo '<div style="font-family:Segoe UI,Arial,sans-serif;padding:28px;max-width:720px;margin:40px auto;border:1px solid #ddd;border-radius:8px;">'
+        . '<h2 style="margin-top:0;color:#b02a37;">Rekap Gagal Dihasilkan</h2>'
+        . '<p style="font-size:14px;line-height:1.7;">Ekstensi PHP <b>zip</b> tidak aktif di server.<br>Langkah: aktifkan ekstensi <code>php_zip</code> (misalnya lewat <b>cPanel → PHP Settings → Extension: zip</b>, lalu Restart PHP), atau minta penyedia hosting/admin server mengaktifkannya.</p>'
+        . '<p style="font-size:13px;color:#666;">Cek cepat: <code>php -m | grep zip</code> di server.</p>'
+        . '</div>';
+      exit();
+    }
+    if (!class_exists('SatuSehat\\Src\\Xlsx')) {
+      $xlsxPath = __DIR__ . '/src/Xlsx.php';
+      if (is_file($xlsxPath)) {
+        require_once $xlsxPath;
+      }
+    }
+    if (!class_exists('SatuSehat\\Src\\Xlsx')) {
+      echo '<div style="font-family:Segoe UI,Arial,sans-serif;padding:28px;max-width:720px;margin:40px auto;border:1px solid #ddd;border-radius:8px;">'
+        . '<h2 style="margin-top:0;color:#b02a37;">File Belum Ter-upload</h2>'
+        . '<p style="font-size:14px;line-height:1.7;">File <code>plugins/satu_sehat/src/Xlsx.php</code> belum ada di server. Pastikan file tersebut ter-upload tepat di folder yang sama dengan file <code>CarePlan.php</code> (di dalam <code>plugins/satu_sehat/src/</code>), lalu muat ulang halaman ini.</p>'
+        . '</div>';
+      exit();
+    }
+
+    // Agregasi data dihitung oleh helper yang sama dipakai statistik on-screen
+    $agg = $this->_buildRekapData($start_date, $end_date, [
+      'filter_dokter' => $filter_dokter,
+      'filter_poli' => $filter_poli,
+      'filter_ket' => $filter_ket,
+      'filter_bayar' => $filter_bayar,
+    ]);
+    extract($agg);
+
+    // ============ SHEET 1: AGREGASI (per-hari + ringkasan) ============
+    $sheetAgg = [];
+
+    // Header
+    $hdr = [['v' => 'Tanggal', 's' => 1]];
+    foreach ($RESOURCE_LABELS as $lbl) {
+      $hdr[] = ['v' => $lbl, 's' => 1];
+    }
+    $hdr[] = ['v' => 'TOTAL', 's' => 1];
+    $sheetAgg[] = $hdr;
+
+    // Baris per tanggal (termasuk hari tanpa kunjungan → 0)
+    for ($d = $start_date; $d <= $end_date; $d = date('Y-m-d', strtotime($d . ' +1 day'))) {
+      $agg = isset($day_agg[$d]) ? $day_agg[$d] : null;
+      $serial = (strtotime($d . ' 00:00:00 UTC') / 86400) + 25569;
+      $r = [['v' => $serial, 's' => 6]];
+      $dayTotal = 0;
+      foreach ($RESOURCE_KEYS as $key) {
+        $n = $agg ? $agg[$key] : 0;
+        $dayTotal += $n;
+        $r[] = ['v' => $n, 's' => 3];
+      }
+      $r[] = ['v' => $dayTotal, 's' => 3];
+      $sheetAgg[] = $r;
+    }
+
+    // TOTAL per resource
+    $rowTotal = [['v' => 'TOTAL', 's' => 5]];
+    foreach ($RESOURCE_KEYS as $key) {
+      $rowTotal[] = ['v' => $totals[$key], 's' => 5];
+    }
+    $rowTotal[] = ['v' => $grand_total, 's' => 5];
+    $sheetAgg[] = $rowTotal;
+
+    // KUNJUNGAN PASIEN
+    $rowKunj = [['v' => 'KUNJUNGAN PASIEN', 's' => 8]];
+    for ($i = 0; $i < $RES_COUNT; $i++) {
+      $rowKunj[] = ['v' => $total_kunjungan, 's' => 3];
+    }
+    $rowKunj[] = ['v' => '', 's' => 3];
+    $sheetAgg[] = $rowKunj;
+
+    // (-) Kekurangan = Kunjungan - Terkirim
+    $rowKurang = [['v' => '(-)', 's' => 8]];
+    foreach ($RESOURCE_KEYS as $key) {
+      $rowKurang[] = ['v' => $total_kunjungan - $totals[$key], 's' => 3];
+    }
+    $rowKurang[] = ['v' => '', 's' => 3];
+    $sheetAgg[] = $rowKurang;
+
+    // % per resource
+    $rowPersen = [['v' => '%', 's' => 8]];
+    foreach ($RESOURCE_KEYS as $key) {
+      $pct = $total_kunjungan > 0 ? round(($totals[$key] / $total_kunjungan) * 100, 2) : 0;
+      $rowPersen[] = ['v' => $pct, 's' => 10];
+    }
+    $rowPersen[] = ['v' => '', 's' => 3];
+    $sheetAgg[] = [];
+    $sheetAgg[] = $rowPersen;
+    $sheetAgg[] = [];
+
+    $sheetAgg[] = [['v' => 'JMLH KUNJUNGAN PASIEN * ' . $RES_COUNT . ' ITEM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $jml_items, 's' => 7]];
+    $sheetAgg[] = [['v' => 'TOTAL ITEM TERKIRIM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $grand_total, 's' => 7]];
+    $sheetAgg[] = [['v' => 'TTL ITEM TERKIRIM / ' . $jml_items . ' * 100', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $pct_ttl, 's' => 10], ['v' => '%', 's' => 8]];
+    $sheetAgg[] = [['v' => 'PERSENTASE TOTAL DATA YG BERHASIL TERKIRIM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $pct_dec, 's' => 3]];
+
+    // ============ PERSENTASE MODUL WAJIB SATUSEHAT + KETERANGAN ============
+    $AGG_COLS = $RES_COUNT + 2;
+
+    $sheetAgg[] = [];
+    $sheetAgg[] = [['v' => 'PERSENTASE PENGIRIMAN MODUL WAJIB SATUSEHAT (%)', 's' => 2, 'm' => $AGG_COLS]];
+    $sheetAgg[] = [['v' => 'MODUL / RESOURCE', 's' => 1], ['v' => '% TERTERKIRIM', 's' => 1]];
+
+    foreach ($modul_wajib as $m) {
+      $pct = $total_kunjungan > 0 ? round(($totals[$m[1]] / $total_kunjungan) * 100, 2) : 0;
+      $sheetAgg[] = [['v' => $m[0], 's' => 4], ['v' => $pct, 's' => 10], ['v' => '%', 's' => 8]];
+    }
+
+    // Catatan: pembanding = total kunjungan pasien pada periode & filter terpilih
+    $sheetAgg[] = [['v' => 'Pembanding persen: jumlah total kunjungan (' . $total_kunjungan . ') pada periode/ filter terpilih.', 's' => 4, 'm' => $AGG_COLS]];
+
+    $sheetAgg[] = [];
+    $sheetAgg[] = [['v' => 'KETERANGAN / CATATAN', 's' => 2, 'm' => $AGG_COLS]];
+    $catatan = [
+      '- Modul wajib berdasarkan surat RS Online Kemenkes: Pendaftaran (Encounter), Diagnostik (Condition), Obat (Medication Request dan Medication Dispense), Laboratorium (Specimen), dan Radiologi (Imaging Study).',
+      '- ID Composition (administrasi gizi): untuk rawat jalan memang tidak ada, hanya untuk rawat inap saja.',
+      '- ID Vaksin/Imunisasi: di RSGM tidak ada layanan vaksin/imunisasi.',
+      '- ID Questionnaire (pasien tidak mampu / KPS): hanya diisi jika pasien memiliki surat keterangan tidak mampu.',
+      '- ID Allergy: hanya terisi jika ada diagnosa alergi; selama ini dokter umum tidak memeriksa langsung terkait alergi sehingga 0%.',
+    ];
+    foreach ($catatan as $c) {
+      $sheetAgg[] = [['v' => $c, 's' => 4, 'm' => $AGG_COLS]];
+    }
+
+    // ============ SHEET 2: DETAIL PASIEN (per-kunjungan 0/1) ============
+    $sheetDetail = [];
+
+    $hdr2 = [['v' => 'No', 's' => 1], ['v' => 'Tanggal', 's' => 1], ['v' => 'No RM', 's' => 1], ['v' => 'Unit', 's' => 1], ['v' => 'Dokter', 's' => 1], ['v' => 'Ket', 's' => 1]];
+    foreach ($RESOURCE_LABELS as $lbl) {
+      $hdr2[] = ['v' => $lbl, 's' => 1];
+    }
+    $hdr2[] = ['v' => 'TOTAL', 's' => 1];
+    $sheetDetail[] = $hdr2;
+
+    foreach ($rekap_data as $rd) {
+      $r = [];
+      $r[] = ['v' => $rd['no'], 's' => 3];
+      $r[] = ['v' => $rd['tanggal'], 's' => 3];
+      $r[] = ['v' => $rd['no_rkm_medis'], 's' => 4];
+      $r[] = ['v' => $rd['nm_poli'], 's' => 4];
+      $r[] = ['v' => $rd['nm_dokter'], 's' => 4];
+      $r[] = ['v' => $rd['ket'], 's' => 4];
+      foreach ($RESOURCE_KEYS as $key) {
+        $r[] = ['v' => $rd[$key], 's' => 3];
+      }
+      $r[] = ['v' => $rd['total_str'], 's' => 3];
+      $sheetDetail[] = $r;
+    }
+
+    $foot = [];
+    $foot[] = ['v' => 'TOTAL', 's' => 5];
+    for ($i = 0; $i < 5; $i++) {
+      $foot[] = ['v' => '', 's' => 5];
+    }
+    foreach ($RESOURCE_KEYS as $key) {
+      $foot[] = ['v' => $totals[$key], 's' => 5];
+    }
+    $foot[] = ['v' => $overall_total_str, 's' => 5];
+    $sheetDetail[] = $foot;
+
+    // ============ BUILD XLSX ============
+    $aggWidths = array_merge([20], array_fill(0, $RES_COUNT, 22), [10]);
+    $detailWidths = array_merge([6, 13, 15, 20, 20, 32], array_fill(0, $RES_COUNT, 14), [16]);
+
+    $periode_label = date('d/m/Y', strtotime($start_date)) . ' s/d ' . date('d/m/Y', strtotime($end_date));
+
+    // Label filter untuk judul & nama file
+    $filter_label = '';
+    if ($filter_dokter !== '') {
+      $nm_dok = $this->db('dokter')->where('kd_dokter', $filter_dokter)->oneArray();
+      $filter_label .= 'Dokter: ' . isset_or($nm_dok['nm_dokter'], $filter_dokter) . '; ';
+    }
+    if ($filter_poli !== '') {
+      $nm_pol = $this->db('poliklinik')->where('kd_poli', $filter_poli)->oneArray();
+      $filter_label .= 'Poli: ' . isset_or($nm_pol['nm_poli'], $filter_poli) . '; ';
+    }
+    if ($filter_ket !== '') {
+      $filter_label .= 'Status: ' . $filter_ket . '; ';
+    }
+    // Status bayar selalu muncul di label (default: Sudah Bayar)
+    if ($filter_bayar !== '' && strtolower($filter_bayar) !== 'semua') {
+      $filter_label .= 'Bayar: ' . $filter_bayar . '; ';
+    } else {
+      $filter_label .= 'Bayar: Semua; ';
+    }
+    if ($filter_label !== '') {
+      $periode_label .= ' | ' . rtrim($filter_label, '; ');
+    }
+
+    $file_suffix = '';
+    if ($filter_dokter !== '') {
+      $file_suffix .= '_DOK_' . $filter_dokter;
+    }
+    if ($filter_poli !== '') {
+      $file_suffix .= '_POLI_' . $filter_poli;
+    }
+    if ($filter_ket !== '') {
+      $file_suffix .= '_KET_' . preg_replace('/[^A-Za-z0-9]+/', '_', $filter_ket);
+    }
+    if ($filter_bayar !== '' && strtolower($filter_bayar) !== 'semua') {
+      $file_suffix .= '_BAYAR_' . preg_replace('/[^A-Za-z0-9]+/', '_', $filter_bayar);
+    }
+
+    $excel = new Xlsx;
+    try {
+      $excel->addSheet('Agregasi', $sheetAgg, $aggWidths, 'REKAP PENGIRIMAN SATU SEHAT — ' . $periode_label);
+      $excel->addSheet('Detail Pasien', $sheetDetail, $detailWidths, 'REKAP DETAIL PENGIRIMAN SATU SEHAT — ' . $periode_label);
+      $excel->download('REKAP_SATU_SEHAT_' . $start_date . '_to_' . $end_date . $file_suffix . '.xlsx');
+    } catch (\Throwable $e) {
+      echo '<div style="font-family:Segoe UI,Arial,sans-serif;padding:28px;max-width:720px;margin:40px auto;border:1px solid #ddd;border-radius:8px;">'
+        . '<h2 style="margin-top:0;color:#b02a37;">Rekap Gagal Dihasilkan</h2>'
+        . '<p style="font-size:14px;line-height:1.7;">Terjadi kesalahan saat membangun file Excel:<br><code style="background:#f6f6f6;padding:6px 10px;border-radius:4px;display:inline-block;margin-top:6px;">' . htmlspecialchars($e->getMessage(), ENT_QUOTES) . '</code></p>'
+        . '<p style="font-size:13px;color:#666;">Periksa log PHP server, atau set sementara <code>DEV_MODE = true</code> di <code>config.php</code> untuk detail lebih lanjut.</p>'
+        . '</div>';
+      exit();
+    }
+    exit();
+  }
+
+  /**
+   * Bangun agregasi rekap Satu Sehat (satu sumber kebenaran untuk Rekap Excel
+   * dan halaman Statistik on-screen). Memakai default yang sama dengan rekap:
+   * reg_periksa.status_lanjut = 'Ralan', stts != 'Batal', status_bayar = 'Sudah Bayar'.
+   */
+  private function _buildRekapData($start_date, $end_date, $filters = [])
+  {
+    $filter_dokter = isset($filters['filter_dokter']) ? $filters['filter_dokter'] : '';
+    $filter_poli = isset($filters['filter_poli']) ? $filters['filter_poli'] : '';
+    $filter_ket = isset($filters['filter_ket']) ? $filters['filter_ket'] : '';
+    $filter_bayar = isset($filters['filter_bayar']) ? $filters['filter_bayar'] : '';
+
+// Status bayar default: Sudah Bayar (jika belum pernah dipilih)
+    if ($filter_bayar === '') {
+      $filter_bayar = 'Sudah Bayar';
+    }
+
+    // Cache hasil agregasi (TTL 5 menit). Dipakai bersama Rekap Excel & Statistik;
+    // dipaksa fresh tiap ada upload baru lewat param force=1.
+    $cache_file = null;
+    try {
+      if (!isset($_GET['force'])) {
+        $cache_key = md5(serialize([$start_date, $end_date, $filter_dokter, $filter_poli, $filter_ket, $filter_bayar]));
+        $cache_file = sys_get_temp_dir() . '/satu_sehat_rekap_v1_' . $cache_key . '.tmp';
+        if (is_file($cache_file) && (time() - filemtime($cache_file)) < 300) {
+          $cached = unserialize(file_get_contents($cache_file));
+          if (is_array($cached)) {
+            return $cached;
+          }
+        }
+      }
+    } catch (Throwable $e) {
+      $cache_file = null;
+    }
+
     // Daftar resource Satu Sehat beserta labelnya (31 item)
     $RESOURCE_KEYS = [
       'id_encounter', 'id_condition', 'id_clinical_impression',
@@ -8559,29 +8828,6 @@ class Admin extends AdminModule
       'ID Diagnostic Report Lab PK', 'ID Care Plan', 'ID Allergy', 'ID Questionnaire',
     ];
     $RES_COUNT = count($RESOURCE_KEYS);
-
-    // Cek prasyarat untuk menghasilkan file .xlsx (ZipArchive wajib ada)
-    if (!class_exists('ZipArchive')) {
-      echo '<div style="font-family:Segoe UI,Arial,sans-serif;padding:28px;max-width:720px;margin:40px auto;border:1px solid #ddd;border-radius:8px;">'
-        . '<h2 style="margin-top:0;color:#b02a37;">Rekap Gagal Dihasilkan</h2>'
-        . '<p style="font-size:14px;line-height:1.7;">Ekstensi PHP <b>zip</b> tidak aktif di server.<br>Langkah: aktifkan ekstensi <code>php_zip</code> (misalnya lewat <b>cPanel → PHP Settings → Extension: zip</b>, lalu Restart PHP), atau minta penyedia hosting/admin server mengaktifkannya.</p>'
-        . '<p style="font-size:13px;color:#666;">Cek cepat: <code>php -m | grep zip</code> di server.</p>'
-        . '</div>';
-      exit();
-    }
-    if (!class_exists('SatuSehat\\Src\\Xlsx')) {
-      $xlsxPath = __DIR__ . '/src/Xlsx.php';
-      if (is_file($xlsxPath)) {
-        require_once $xlsxPath;
-      }
-    }
-    if (!class_exists('SatuSehat\\Src\\Xlsx')) {
-      echo '<div style="font-family:Segoe UI,Arial,sans-serif;padding:28px;max-width:720px;margin:40px auto;border:1px solid #ddd;border-radius:8px;">'
-        . '<h2 style="margin-top:0;color:#b02a37;">File Belum Ter-upload</h2>'
-        . '<p style="font-size:14px;line-height:1.7;">File <code>plugins/satu_sehat/src/Xlsx.php</code> belum ada di server. Pastikan file tersebut ter-upload tepat di folder yang sama dengan file <code>CarePlan.php</code> (di dalam <code>plugins/satu_sehat/src/</code>), lalu muat ulang halaman ini.</p>'
-        . '</div>';
-      exit();
-    }
 
     $query = $this->db('reg_periksa')
       ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
@@ -8616,6 +8862,7 @@ class Admin extends AdminModule
     $totals = array_fill_keys($RESOURCE_KEYS, 0);
     $day_agg = [];
     $total_kunjungan = 0;
+    $poli_agg = [];
 
     // Probe tabel detail (lab & obat) agar halaman rekap tidak rusak bila tabel belum dibuat di server
     $lab_table_ok = true;
@@ -8685,10 +8932,17 @@ class Admin extends AdminModule
       // Agregasi per tanggal
       $date = $row['tgl_registrasi'];
       if (!isset($day_agg[$date])) {
-        $day_agg[$date] = array_fill_keys($RESOURCE_KEYS, 0) + ['kunjungan' => 0, 'total' => 0];
+        $day_agg[$date] = array_fill_keys($RESOURCE_KEYS, 0) + ['kunjungan' => 0, 'total' => 0, 'status' => ['sudah' => 0, 'sebagian' => 0, 'belum' => 0]];
       }
       $day_agg[$date]['kunjungan']++;
       $total_kunjungan++;
+      if ($ket === 'Sudah di Kirim') {
+        $day_agg[$date]['status']['sudah']++;
+      } elseif ($ket === 'Sudah di Kirim Sebagian') {
+        $day_agg[$date]['status']['sebagian']++;
+      } else {
+        $day_agg[$date]['status']['belum']++;
+      }
 
       // Check fields
       $fields = [];
@@ -8817,6 +9071,14 @@ class Admin extends AdminModule
           $day_agg[$date]['total'] += $is_sent;
       }
 
+      // Agregasi per poli (untuk breakdown di halaman statistik)
+      $kd_poli = isset($row['kd_poli']) ? $row['kd_poli'] : '';
+      if (!isset($poli_agg[$kd_poli])) {
+        $poli_agg[$kd_poli] = ['kd_poli' => $kd_poli, 'nm_poli' => $row['nm_poli'], 'kunjungan' => 0, 'total' => 0];
+      }
+      $poli_agg[$kd_poli]['kunjungan']++;
+      $poli_agg[$kd_poli]['total'] += $sent_count;
+
       $total_fields = $RES_COUNT;
       $percentage = $total_fields > 0 ? round(($sent_count / $total_fields) * 100) : 0;
       $row_flat['total_str'] = "{$sent_count} dari {$total_fields} ({$percentage}%)";
@@ -8837,82 +9099,10 @@ class Admin extends AdminModule
     $overall_percentage = $overall_total_fields > 0 ? round(($grand_total / $overall_total_fields) * 100) : 0;
     $overall_total_str = "{$grand_total} dari {$overall_total_fields} ({$overall_percentage}%)";
 
-    // ============ SHEET 1: AGREGASI (per-hari + ringkasan) ============
-    $sheetAgg = [];
-
-    // Header
-    $hdr = [['v' => 'Tanggal', 's' => 1]];
-    foreach ($RESOURCE_LABELS as $lbl) {
-      $hdr[] = ['v' => $lbl, 's' => 1];
-    }
-    $hdr[] = ['v' => 'TOTAL', 's' => 1];
-    $sheetAgg[] = $hdr;
-
-    // Baris per tanggal (termasuk hari tanpa kunjungan → 0)
-    for ($d = $start_date; $d <= $end_date; $d = date('Y-m-d', strtotime($d . ' +1 day'))) {
-      $agg = isset($day_agg[$d]) ? $day_agg[$d] : null;
-      $serial = (strtotime($d . ' 00:00:00 UTC') / 86400) + 25569;
-      $r = [['v' => $serial, 's' => 6]];
-      $dayTotal = 0;
-      foreach ($RESOURCE_KEYS as $key) {
-        $n = $agg ? $agg[$key] : 0;
-        $dayTotal += $n;
-        $r[] = ['v' => $n, 's' => 3];
-      }
-      $r[] = ['v' => $dayTotal, 's' => 3];
-      $sheetAgg[] = $r;
-    }
-
-    // TOTAL per resource
-    $rowTotal = [['v' => 'TOTAL', 's' => 5]];
-    foreach ($RESOURCE_KEYS as $key) {
-      $rowTotal[] = ['v' => $totals[$key], 's' => 5];
-    }
-    $rowTotal[] = ['v' => $grand_total, 's' => 5];
-    $sheetAgg[] = $rowTotal;
-
-    // KUNJUNGAN PASIEN
-    $rowKunj = [['v' => 'KUNJUNGAN PASIEN', 's' => 8]];
-    for ($i = 0; $i < $RES_COUNT; $i++) {
-      $rowKunj[] = ['v' => $total_kunjungan, 's' => 3];
-    }
-    $rowKunj[] = ['v' => '', 's' => 3];
-    $sheetAgg[] = $rowKunj;
-
-    // (-) Kekurangan = Kunjungan - Terkirim
-    $rowKurang = [['v' => '(-)', 's' => 8]];
-    foreach ($RESOURCE_KEYS as $key) {
-      $rowKurang[] = ['v' => $total_kunjungan - $totals[$key], 's' => 3];
-    }
-    $rowKurang[] = ['v' => '', 's' => 3];
-    $sheetAgg[] = $rowKurang;
-
-    // % per resource
-    $rowPersen = [['v' => '%', 's' => 8]];
-    foreach ($RESOURCE_KEYS as $key) {
-      $pct = $total_kunjungan > 0 ? round(($totals[$key] / $total_kunjungan) * 100, 2) : 0;
-      $rowPersen[] = ['v' => $pct, 's' => 10];
-    }
-    $rowPersen[] = ['v' => '', 's' => 3];
-    $sheetAgg[] = [];
-    $sheetAgg[] = $rowPersen;
-    $sheetAgg[] = [];
-
     // Metrik keseluruhan
     $jml_items = $total_kunjungan * $RES_COUNT;
     $pct_ttl = $jml_items > 0 ? round(($grand_total / $jml_items) * 100, 2) : 0;
     $pct_dec = $jml_items > 0 ? round(($grand_total / $jml_items), 4) : 0;
-    $sheetAgg[] = [['v' => 'JMLH KUNJUNGAN PASIEN * ' . $RES_COUNT . ' ITEM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $jml_items, 's' => 7]];
-    $sheetAgg[] = [['v' => 'TOTAL ITEM TERKIRIM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $grand_total, 's' => 7]];
-    $sheetAgg[] = [['v' => 'TTL ITEM TERKIRIM / ' . $jml_items . ' * 100', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $pct_ttl, 's' => 10], ['v' => '%', 's' => 8]];
-    $sheetAgg[] = [['v' => 'PERSENTASE TOTAL DATA YG BERHASIL TERKIRIM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $pct_dec, 's' => 3]];
-
-    // ============ PERSENTASE MODUL WAJIB SATUSEHAT + KETERANGAN ============
-    $AGG_COLS = $RES_COUNT + 2;
-
-    $sheetAgg[] = [];
-    $sheetAgg[] = [['v' => 'PERSENTASE PENGIRIMAN MODUL WAJIB SATUSEHAT (%)', 's' => 2, 'm' => $AGG_COLS]];
-    $sheetAgg[] = [['v' => 'MODUL / RESOURCE', 's' => 1], ['v' => '% TERTERKIRIM', 's' => 1]];
 
     $modul_wajib = [
       ['Pendaftaran (Encounter)', 'id_encounter'],
@@ -8922,119 +9112,180 @@ class Admin extends AdminModule
       ['Laboratorium (Specimen)', 'id_lab_pk_specimen'],
       ['Radiologi (Imaging Study)', 'id_imaging_study'],
     ];
-    foreach ($modul_wajib as $m) {
-      $pct = $total_kunjungan > 0 ? round(($totals[$m[1]] / $total_kunjungan) * 100, 2) : 0;
-      $sheetAgg[] = [['v' => $m[0], 's' => 4], ['v' => $pct, 's' => 10], ['v' => '%', 's' => 8]];
+
+    $result = [
+      'RESOURCE_KEYS' => $RESOURCE_KEYS,
+      'RESOURCE_LABELS' => $RESOURCE_LABELS,
+      'RES_COUNT' => $RES_COUNT,
+      'rekap_data' => $rekap_data,
+      'totals' => $totals,
+      'day_agg' => $day_agg,
+      'total_kunjungan' => $total_kunjungan,
+      'grand_total' => $grand_total,
+      'overall_total_fields' => $overall_total_fields,
+      'overall_percentage' => $overall_percentage,
+      'overall_total_str' => $overall_total_str,
+      'jml_items' => $jml_items,
+      'pct_ttl' => $pct_ttl,
+      'pct_dec' => $pct_dec,
+      'modul_wajib' => $modul_wajib,
+      'poli_agg' => $poli_agg,
+    ];
+
+    // Simpan hasil ke cache (bila tersedia) agar reload cepat
+    if ($cache_file !== null) {
+      try {
+        file_put_contents($cache_file, serialize($result));
+      } catch (Throwable $e) {
+        // abaikan; cache bersifat opsional
+      }
     }
 
-    // Catatan: pembanding = total kunjungan pasien pada periode & filter terpilih
-    $sheetAgg[] = [['v' => 'Pembanding persen: jumlah total kunjungan (' . $total_kunjungan . ') pada periode/ filter terpilih.', 's' => 4, 'm' => $AGG_COLS]];
+    return $result;
+  }
 
-    $sheetAgg[] = [];
-    $sheetAgg[] = [['v' => 'KETERANGAN / CATATAN', 's' => 2, 'm' => $AGG_COLS]];
+  /**
+   * Endpoint AJAX untuk halaman Statistik (URL: satu_sehat/statisticapi).
+   * Menghasilkan agregasi yang SAMA dengan Rekap Excel tanpa perlu download.
+   */
+  public function postStatisticApi()
+  {
+    @set_time_limit(300);
+
+    $start_date = isset($_GET['tanggal_awal']) && $_GET['tanggal_awal'] !== '' ? $_GET['tanggal_awal'] : date('Y-m-d');
+    $end_date = isset($_GET['tanggal_akhir']) && $_GET['tanggal_akhir'] !== '' ? $_GET['tanggal_akhir'] : $start_date;
+
+    // Validasi format YYYY-MM-DD
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start_date)) {
+      $start_date = date('Y-m-d');
+    }
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $end_date)) {
+      $end_date = $start_date;
+    }
+    // Pastikan urutan start <= end
+    if ($start_date > $end_date) {
+      $tmp = $start_date;
+      $start_date = $end_date;
+      $end_date = $tmp;
+    }
+
+    // Batasi rentang agar query tidak terlalu berat (maks 31 hari)
+    $warning = '';
+    $diff_days = (strtotime($end_date) - strtotime($start_date)) / 86400;
+    if ($diff_days > 30) {
+      $end_date = date('Y-m-d', strtotime($start_date . ' +30 day'));
+      $warning = 'Rentang tanggal dibatasi maksimal 31 hari (dari ' . date('d/m/Y', strtotime($start_date)) . ' s/d ' . date('d/m/Y', strtotime($end_date)) . '). Pilih rentang lebih pendek untuk data yang lebih lengkap.';
+    }
+
+    // Filter on-screen (mengikuti filter Rekap Excel)
+    $filter_dokter = isset($_GET['filter_dokter']) && $_GET['filter_dokter'] !== '' ? $_GET['filter_dokter'] : '';
+    $filter_poli = isset($_GET['filter_poli']) && $_GET['filter_poli'] !== '' ? $_GET['filter_poli'] : '';
+    $filter_ket = isset($_GET['filter_ket']) && $_GET['filter_ket'] !== '' ? $_GET['filter_ket'] : '';
+    $filter_bayar = isset($_GET['filter_bayar']) && $_GET['filter_bayar'] !== '' ? $_GET['filter_bayar'] : '';
+
+    // Statistik on-screen mengikuti default rekap: Ralan, tidak Batal, Sudah Bayar (bila filter bayar kosong)
+    $agg = $this->_buildRekapData($start_date, $end_date, [
+      'filter_dokter' => $filter_dokter,
+      'filter_poli' => $filter_poli,
+      'filter_ket' => $filter_ket,
+      'filter_bayar' => $filter_bayar,
+    ]);
+    extract($agg);
+
+    // Baris per tanggal (termasuk hari tanpa kunjungan → 0)
+    $dates = [];
+    for ($d = $start_date; $d <= $end_date; $d = date('Y-m-d', strtotime($d . ' +1 day'))) {
+      $present = isset($day_agg[$d]) ? $day_agg[$d] : null;
+      $per = [];
+      $day_total = 0;
+      foreach ($RESOURCE_KEYS as $key) {
+        $n = $present ? $present[$key] : 0;
+        $per[$key] = $n;
+        $day_total += $n;
+      }
+      $kunjungan = $present ? $present['kunjungan'] : 0;
+      $dates[] = [
+        'tanggal' => $d,
+        'label' => date('d-m-Y', strtotime($d)),
+        'kunjungan' => $kunjungan,
+        'total' => $day_total,
+        'persen' => $kunjungan > 0 ? round(($day_total / ($kunjungan * $RES_COUNT)) * 100, 2) : 0,
+        'resource' => $per,
+        'status' => $present && isset($present['status']) ? $present['status'] : ['sudah' => 0, 'sebagian' => 0, 'belum' => 0],
+      ];
+    }
+
+    // Breakdown per poli (urut kunjungan terbanyak)
+    $poli_arr = [];
+    foreach ($poli_agg as $poli) {
+      $poli_arr[] = [
+        'kd_poli' => $poli['kd_poli'],
+        'nm_poli' => $poli['nm_poli'],
+        'kunjungan' => $poli['kunjungan'],
+        'total' => $poli['total'],
+        'pct' => $poli['kunjungan'] > 0 ? round(($poli['total'] / ($poli['kunjungan'] * $RES_COUNT)) * 100, 2) : 0,
+      ];
+    }
+    usort($poli_arr, function ($a, $b) {
+      return $b['kunjungan'] - $a['kunjungan'];
+    });
+
+    // Ringkasan per resource: terkirim, kekurangan, persen
+    $totals_arr = [];
+    $kekurangan = [];
+    $persen = [];
+    foreach ($RESOURCE_KEYS as $key) {
+      $totals_arr[$key] = $totals[$key];
+      $kekurangan[$key] = $total_kunjungan - $totals[$key];
+      $persen[$key] = $total_kunjungan > 0 ? round(($totals[$key] / $total_kunjungan) * 100, 2) : 0;
+    }
+
+    // Modul wajib + persen
+    $modul_wajib_arr = [];
+    foreach ($modul_wajib as $m) {
+      $modul_wajib_arr[] = [
+        'modul' => $m[0],
+        'key' => $m[1],
+        'terkirim' => $totals[$m[1]],
+        'kunjungan' => $total_kunjungan,
+        'persen' => $total_kunjungan > 0 ? round(($totals[$m[1]] / $total_kunjungan) * 100, 2) : 0,
+      ];
+    }
+
     $catatan = [
       '- Modul wajib berdasarkan surat RS Online Kemenkes: Pendaftaran (Encounter), Diagnostik (Condition), Obat (Medication Request dan Medication Dispense), Laboratorium (Specimen), dan Radiologi (Imaging Study).',
       '- ID Composition (administrasi gizi): untuk rawat jalan memang tidak ada, hanya untuk rawat inap saja.',
       '- ID Vaksin/Imunisasi: di RSGM tidak ada layanan vaksin/imunisasi.',
       '- ID Questionnaire (pasien tidak mampu / KPS): hanya diisi jika pasien memiliki surat keterangan tidak mampu.',
       '- ID Allergy: hanya terisi jika ada diagnosa alergi; selama ini dokter umum tidak memeriksa langsung terkait alergi sehingga 0%.',
+      '- Angka di halaman ini mengikuti filter yang dipilih (default rekap: kunjungan rawat jalan (status_lanjut = Ralan), tidak Batal, dan status bayar = Sudah Bayar).',
     ];
-    foreach ($catatan as $c) {
-      $sheetAgg[] = [['v' => $c, 's' => 4, 'm' => $AGG_COLS]];
-    }
 
-    // ============ SHEET 2: DETAIL PASIEN (per-kunjungan 0/1) ============
-    $sheetDetail = [];
-
-    $hdr2 = [['v' => 'No', 's' => 1], ['v' => 'Tanggal', 's' => 1], ['v' => 'No RM', 's' => 1], ['v' => 'Unit', 's' => 1], ['v' => 'Dokter', 's' => 1], ['v' => 'Ket', 's' => 1]];
-    foreach ($RESOURCE_LABELS as $lbl) {
-      $hdr2[] = ['v' => $lbl, 's' => 1];
-    }
-    $hdr2[] = ['v' => 'TOTAL', 's' => 1];
-    $sheetDetail[] = $hdr2;
-
-    foreach ($rekap_data as $rd) {
-      $r = [];
-      $r[] = ['v' => $rd['no'], 's' => 3];
-      $r[] = ['v' => $rd['tanggal'], 's' => 3];
-      $r[] = ['v' => $rd['no_rkm_medis'], 's' => 4];
-      $r[] = ['v' => $rd['nm_poli'], 's' => 4];
-      $r[] = ['v' => $rd['nm_dokter'], 's' => 4];
-      $r[] = ['v' => $rd['ket'], 's' => 4];
-      foreach ($RESOURCE_KEYS as $key) {
-        $r[] = ['v' => $rd[$key], 's' => 3];
-      }
-      $r[] = ['v' => $rd['total_str'], 's' => 3];
-      $sheetDetail[] = $r;
-    }
-
-    $foot = [];
-    $foot[] = ['v' => 'TOTAL', 's' => 5];
-    for ($i = 0; $i < 5; $i++) {
-      $foot[] = ['v' => '', 's' => 5];
-    }
-    foreach ($RESOURCE_KEYS as $key) {
-      $foot[] = ['v' => $totals[$key], 's' => 5];
-    }
-    $foot[] = ['v' => $overall_total_str, 's' => 5];
-    $sheetDetail[] = $foot;
-
-    // ============ BUILD XLSX ============
-    $aggWidths = array_merge([20], array_fill(0, $RES_COUNT, 22), [10]);
-    $detailWidths = array_merge([6, 13, 15, 20, 20, 32], array_fill(0, $RES_COUNT, 14), [16]);
-
-    $periode_label = date('d/m/Y', strtotime($start_date)) . ' s/d ' . date('d/m/Y', strtotime($end_date));
-
-    // Label filter untuk judul & nama file
-    $filter_label = '';
-    if ($filter_dokter !== '') {
-      $nm_dok = $this->db('dokter')->where('kd_dokter', $filter_dokter)->oneArray();
-      $filter_label .= 'Dokter: ' . isset_or($nm_dok['nm_dokter'], $filter_dokter) . '; ';
-    }
-    if ($filter_poli !== '') {
-      $nm_pol = $this->db('poliklinik')->where('kd_poli', $filter_poli)->oneArray();
-      $filter_label .= 'Poli: ' . isset_or($nm_pol['nm_poli'], $filter_poli) . '; ';
-    }
-    if ($filter_ket !== '') {
-      $filter_label .= 'Status: ' . $filter_ket . '; ';
-    }
-    // Status bayar selalu muncul di label (default: Sudah Bayar)
-    if ($filter_bayar !== '' && strtolower($filter_bayar) !== 'semua') {
-      $filter_label .= 'Bayar: ' . $filter_bayar . '; ';
-    } else {
-      $filter_label .= 'Bayar: Semua; ';
-    }
-    if ($filter_label !== '') {
-      $periode_label .= ' | ' . rtrim($filter_label, '; ');
-    }
-
-    $file_suffix = '';
-    if ($filter_dokter !== '') {
-      $file_suffix .= '_DOK_' . $filter_dokter;
-    }
-    if ($filter_poli !== '') {
-      $file_suffix .= '_POLI_' . $filter_poli;
-    }
-    if ($filter_ket !== '') {
-      $file_suffix .= '_KET_' . preg_replace('/[^A-Za-z0-9]+/', '_', $filter_ket);
-    }
-    if ($filter_bayar !== '' && strtolower($filter_bayar) !== 'semua') {
-      $file_suffix .= '_BAYAR_' . preg_replace('/[^A-Za-z0-9]+/', '_', $filter_bayar);
-    }
-
-    $excel = new Xlsx;
-    try {
-      $excel->addSheet('Agregasi', $sheetAgg, $aggWidths, 'REKAP PENGIRIMAN SATU SEHAT — ' . $periode_label);
-      $excel->addSheet('Detail Pasien', $sheetDetail, $detailWidths, 'REKAP DETAIL PENGIRIMAN SATU SEHAT — ' . $periode_label);
-      $excel->download('REKAP_SATU_SEHAT_' . $start_date . '_to_' . $end_date . $file_suffix . '.xlsx');
-    } catch (\Throwable $e) {
-      echo '<div style="font-family:Segoe UI,Arial,sans-serif;padding:28px;max-width:720px;margin:40px auto;border:1px solid #ddd;border-radius:8px;">'
-        . '<h2 style="margin-top:0;color:#b02a37;">Rekap Gagal Dihasilkan</h2>'
-        . '<p style="font-size:14px;line-height:1.7;">Terjadi kesalahan saat membangun file Excel:<br><code style="background:#f6f6f6;padding:6px 10px;border-radius:4px;display:inline-block;margin-top:6px;">' . htmlspecialchars($e->getMessage(), ENT_QUOTES) . '</code></p>'
-        . '<p style="font-size:13px;color:#666;">Periksa log PHP server, atau set sementara <code>DEV_MODE = true</code> di <code>config.php</code> untuk detail lebih lanjut.</p>'
-        . '</div>';
-      exit();
-    }
+    header('Content-Type: application/json');
+    echo json_encode([
+      'ok' => true,
+      'periode' => [
+        'awal' => $start_date,
+        'akhir' => $end_date,
+        'label' => date('d/m/Y', strtotime($start_date)) . ' s/d ' . date('d/m/Y', strtotime($end_date)),
+      ],
+      'total_kunjungan' => $total_kunjungan,
+      'grand_total' => $grand_total,
+      'jml_items' => $jml_items,
+      'pct_ttl' => $pct_ttl,
+      'pct_dec' => $pct_dec,
+      'overall_percentage' => $overall_percentage,
+      'resource_keys' => $RESOURCE_KEYS,
+      'resource_labels' => $RESOURCE_LABELS,
+      'dates' => $dates,
+      'totals' => $totals_arr,
+      'kekurangan' => $kekurangan,
+      'persen' => $persen,
+      'modul_wajib' => $modul_wajib_arr,
+      'poli_agg' => $poli_arr,
+      'warning' => $warning,
+      'catatan' => $catatan,
+    ]);
     exit();
   }
 
