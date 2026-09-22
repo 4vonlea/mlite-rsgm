@@ -502,16 +502,18 @@ class Admin extends AdminModule
         $maxRetries = 5;
         $retryCount = 0;
         $success = false;
+        $lastRadError = null;
 
         while ($retryCount < $maxRetries && !$success) {
           $this->db()->pdo()->beginTransaction();
           try {
-            $cek_rad = $this->db('permintaan_radiologi')->where('no_rawat', $_POST['no_rawat'])->where('tgl_permintaan', date('Y-m-d'))->where('tgl_sampel', '<>', '0000-00-00')->where('status', 'ralan')->oneArray();
+            $cek_rad = $this->db('permintaan_radiologi')->where('no_rawat', $_POST['no_rawat'])->where('tgl_permintaan', date('Y-m-d'))->where('tgl_sampel', '=', '0000-00-00')->where('status', 'ralan')->oneArray();
             if(!$cek_rad) {
+              $prefix_rad = 'PR' . date('Ymd');
               $urut = $this->db('permintaan_radiologi')
-                  ->where('tgl_permintaan', date('Y-m-d'))
+                  ->like('noorder', $prefix_rad . '%')
                   ->nextRightNumber('noorder', 4);
-              $noorder = 'PR' . date('Ymd') . sprintf('%04d', $urut);
+              $noorder = $prefix_rad . sprintf('%04d', $urut + $retryCount);
 
               $permintaan_rad = $this->db('permintaan_radiologi')
                 ->save([
@@ -537,24 +539,36 @@ class Admin extends AdminModule
 
             } else {
               $noorder = $cek_rad['noorder'];
-              $this->db('permintaan_pemeriksaan_radiologi')
-                ->save([
-                  'noorder' => $noorder,
-                  'kd_jenis_prw' => $_POST['kd_jenis_prw'],
-                  'stts_bayar' => 'Belum'
-                ]);
+              $sudah_ada = $this->db('permintaan_pemeriksaan_radiologi')->where('noorder', $noorder)->where('kd_jenis_prw', $_POST['kd_jenis_prw'])->oneArray();
+              if(!$sudah_ada) {
+                $this->db('permintaan_pemeriksaan_radiologi')
+                  ->save([
+                    'noorder' => $noorder,
+                    'kd_jenis_prw' => $_POST['kd_jenis_prw'],
+                    'stts_bayar' => 'Belum'
+                  ]);
+              }
             }
             $this->db()->pdo()->commit();
             $success = true;
           } catch (\Exception $e) {
             $this->db()->pdo()->rollBack();
             if ($e->getCode() == '23000') {
+              $lastRadError = $e;
               $retryCount++;
               usleep(100000);
               continue;
             }
             throw $e;
           }
+        }
+        if (!$success) {
+          $detail = $lastRadError ? $lastRadError->getMessage() : 'data sudah ada pada order dan tidak dapat ditambahkan ulang.';
+          echo json_encode([
+            'status' => 'error',
+            'message' => 'Gagal menyimpan permintaan radiologi: ' . $detail
+          ]);
+          exit();
         }
       }
 
@@ -698,15 +712,16 @@ class Admin extends AdminModule
           }
           $this->db()->pdo()->commit();
           $success = true;
-        } catch (\Exception $e) {
-          $this->db()->pdo()->rollBack();
-          if ($e->getCode() == '23000') {
-            $retryCount++;
-            usleep(100000);
-            continue;
+          } catch (\Exception $e) {
+            $this->db()->pdo()->rollBack();
+            if ($e->getCode() == '23000') {
+              $lastRadError = $e;
+              $retryCount++;
+              usleep(100000);
+              continue;
+            }
+            throw $e;
           }
-          throw $e;
-        }
       }
 
       if (isset($_POST['nama_racik'])) {

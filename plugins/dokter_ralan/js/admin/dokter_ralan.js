@@ -831,6 +831,16 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
   diagnosa_klinis      : diagnosa_klinis
   }, function(data) {
     console.log(data);
+    if(typeof data === 'string' && data.indexOf('"status":"error"') !== -1){
+      try { data = $.parseJSON(data); } catch(e){}
+    }
+    if(data && data.status === 'error'){
+      $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+      (data.message || 'Gagal menyimpan data permintaan.')+
+      "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+      "</div>").show();
+      return;
+    }
     if(typeof ws != 'undefined' && typeof ws.readyState != 'undefined' && ws.readyState == 1){
       if(kat == 'obat' || kat == 'racikan') {
         let payload = {
@@ -858,16 +868,16 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
     $("#display").hide();
     var url = baseURL + '/dokter_ralan/rincian?t=' + mlite.token;
     $.post(url, {no_rawat : no_rawat,
-    }, function(data) {
+    }, function(result) {
       // tampilkan data
-      $("#rincian").html(data).show();
+      $("#rincian").html(result).show();
     });
     $('input:hidden[name=kd_jenis_prw]').val("");
     $('input:text[name=nm_perawatan]').val("");
     $.post(baseURL + '/dokter_ralan/cekwaktu?t=' + mlite.token, {
-    } ,function(data) {
-      $("#form_rincian #rincian_jam_reg").val(data);
-      $('input:text[name=jam_rawat]').last().val(data).focus();
+    } ,function(result) {
+      $("#form_rincian #rincian_jam_reg").val(result);
+      $('input:text[name=jam_rawat]').last().val(result).focus();
     });
     $('input:hidden[name=kat]').val("");
     $('input:text[name=biaya]').val("");
@@ -885,6 +895,17 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
     $('.row_racikan').remove();
     $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
     "Data pasien telah disimpan!"+
+    "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+    "</div>").show();
+  }).fail(function(xhr) {
+    console.error(xhr);
+    var msg = "Gagal terhubung ke server saat menyimpan data.";
+    try {
+      var parsed = $.parseJSON(xhr.responseText);
+      if(parsed && parsed.message) msg = parsed.message;
+    } catch(e){}
+    $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+    msg+
     "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
     "</div>").show();
   });
