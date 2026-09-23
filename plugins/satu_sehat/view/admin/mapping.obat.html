@@ -53,6 +53,7 @@
         <thead>
             <tr>
                 <th>Kode Obat Lokal</th>
+                <th>Nama Obat Lokal</th>
                 <th>Kode Obat KFA</th>
                 <th>Nama Obat KFA</th>
                 <th>Kode Bahan</th>
@@ -77,6 +78,7 @@
             data-kode_brng="{?=isset_or($value.kode_brng)?}"
             >
                 <td>{?=isset_or($value.kode_brng)?}</td>
+                <td>{?=isset_or($value.nama_brng, '-')?}</td>
                 <td>{?=isset_or($value.kode_kfa, '-')?}</td>
                 <td>{?=isset_or($value.nama_kfa, '-')?}</td>
                 <td>{?=isset_or($value.kode_bahan, '-')?}</td>
