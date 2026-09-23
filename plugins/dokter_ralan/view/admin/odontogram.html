@@ -1,0 +1,770 @@
+<style media="screen">
+  table td,
+  table th {
+    padding: 5px;
+  }
+  #tabs-odontogram:not(.active),
+  #tabs-ohis:not(.active) {
+      display: none !important;
+  }
+  #tabs-odontogram.active,
+  #tabs-ohis.active {
+      display: block !important;
+  }
+  .table-odontogram {
+  	width: 100%;
+  	overflow-x: auto;
+  	margin: 0 0 1em;
+  	padding-right: 0px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .odontogram-toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    width: max-content;
+  }
+  .tool-btn {
+    padding: 8px 16px;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    color: #94a3b8;
+  }
+  .tool-btn.active.normal { background: #fff; border-color: #94a3b8; color: #1e293b; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transform: translateY(-2px); }
+  .tool-btn.active.karies { background: #0f172a; border-color: #0f172a; color: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transform: translateY(-2px); }
+  .tool-btn.active.tambalan { background: #93c5fd; border-color: #3b82f6; color: #0f172a; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transform: translateY(-2px); }
+  .tool-btn.active.scaling { background: #fde047; border-color: #eab308; color: #0f172a; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transform: translateY(-2px); }
+  .tool-btn.active.missing { background: #ef4444; border-color: #dc2626; color: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transform: translateY(-2px); }
+  
+  .odontogram-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .tooth-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .tooth-label {
+    font-size: 10px;
+    font-weight: 900;
+    color: #94a3b8;
+    margin-bottom: 8px;
+  }
+  .tooth-label-bot {
+    margin-top: 8px;
+    margin-bottom: 0;
+  }
+  .tooth-svg-wrapper {
+    position: relative;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    transition: transform 0.2s;
+  }
+  .tooth-svg-wrapper:hover {
+    transform: scale(1.1);
+  }
+  .tooth-polygon {
+    stroke: #94a3b8;
+    transition: fill 0.2s;
+  }
+  .tooth-polygon:hover {
+    stroke: #0f172a;
+    stroke-width: 2;
+  }
+  .tooth-gap {
+    width: 24px;
+  }
+  .tooth-separator {
+    height: 4px;
+    width: 100%;
+    background-color: #e2e8f0;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+</style>
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span> Tutup</button>
+    <h4 class="modal-title">Riwayat Odontogram</h4>
+</div>
+<div class="modal-body">
+  <ul class="nav nav-tabs" id="odontogram-tabs">
+    <li class="active"><a href="#tabs-odontogram" data-toggle="tab">Odontogram</a></li>
+    <li><a href="#tabs-ohis" data-toggle="tab">OHIS</a></li>
+  </ul>
+
+  <div class="tab-content">
+  
+    <div class="tab-pane active" id="tabs-odontogram">
+      <h4>Odontogram</h4>
+      <div class="table-odontogram">
+        <div class="odontogram-toolbar" style="align-items: center;">
+            <label for="tool-select" style="margin-right: 10px; font-weight: bold; margin-bottom: 0;">Kondisi / Tindakan:</label>
+            <select id="tool-select" class="form-control" style="width: 350px; display: inline-block;">
+                <option value="sou">⚪ Normal / Baik (sou)</option>
+                <option value="car">⚫ Karies (car)</option>
+                <option value="amf">⬛ Tambalan Amalgam (amf)</option>
+                <option value="cof">▦ Tambalan Composite (cof)</option>
+                <option value="fis">❇ Fissure Sealant (fis)</option>
+                <option value="nvt">▽ Gigi Non-Vital (nvt)</option>
+                <option value="rct">▼ Perawatan Saluran Akar (rct)</option>
+                <option value="non">∅ Tidak Ada / Tidak Diketahui (non)</option>
+                <option value="une">⊘ Un-Erupted (une)</option>
+                <option value="pre">◬ Partial Erupt (pre)</option>
+                <option value="ano">❓ Anomali (ano)</option>
+                <option value="imv">⊘ Impaksi (imv)</option>
+                <option value="att">◬ Atrisi (att)</option>
+                <option value="abr">◬ Abrasi (abr)</option>
+                <option value="cfr"># Fraktur Mahkota (cfr)</option>
+                <option value="fmc">🔲 Full Metal Crown (fmc)</option>
+                <option value="poc">⏸ Porcelain Crown (poc)</option>
+                <option value="mpc">⏸ Metal Porcelain Crown (mpc)</option>
+                <option value="gmc">🔲 Gold Metal Crown (gmc)</option>
+                <option value="rrx">V Sisa Akar (rrx)</option>
+                <option value="mis">❌ Gigi Hilang (mis)</option>
+                <option value="ipx">🔩 Implant (ipx)</option>
+                <option value="meb">━ Metal Bridge (meb)</option>
+                <option value="pob">━ Porcelain Bridge (pob)</option>
+                <option value="pon">━ Pontic (pon)</option>
+                <option value="frm">≚ Frame Denture (frm)</option>
+                <option value="acr">≚ Acrylic Denture (acr)</option>
+                <option value="prd">≚ Partial Denture (prd)</option>
+                <option value="fld">≚ Full Denture (fld)</option>
+                <option value="gif">⚪ GIC/Silika (gif)</option>
+                <option value="dia">↔ Diastema (dia)</option>
+                <option value="custom">✍️ Custom / Lainnya (custom)</option>
+            </select>
+            <button id="btn-reset-odontogram" class="btn btn-danger" style="margin-left: 10px;">Reset Semua</button>
+        </div>
+
+        <svg height="0" width="0" style="position:absolute">
+            <defs>
+                <pattern id="cof-pattern" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                    <line x1="0" y1="0" x2="0" y2="8" stroke="#1e293b" stroke-width="2" />
+                </pattern>
+                <pattern id="fis-pattern" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                    <line x1="0" y1="0" x2="0" y2="8" stroke="#f472b6" stroke-width="3" />
+                </pattern>
+                <pattern id="poc-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <line x1="4" y1="0" x2="4" y2="8" stroke="#1e293b" stroke-width="2" />
+                </pattern>
+            </defs>
+        </svg>
+
+        <div style="min-width: 700px; padding: 20px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div id="row-top-adult" class="odontogram-row"></div>
+            <div id="row-top-child" class="odontogram-row"></div>
+            <div class="tooth-separator"></div>
+            <div id="row-bot-child" class="odontogram-row"></div>
+            <div id="row-bot-adult" class="odontogram-row"></div>
+        </div>
+      <br>
+      <div class="tampildata">
+        <h4>History Odontogram</h4>
+        <table class="table table-bordered table-striped table-hover display nowrap" width="100%">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Elemen</th>
+              <th>Kondisi</th>
+              <th>Catatan</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loop: $odontogram}
+              <tr>
+                <td>{?=isset_or($value.tgl_input)?}</td>
+                <td>{?=str_replace('gg_','Gigi ',$value.pemeriksaan)?}</td>
+                <td class="edit-kondisi" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}"><span class="kondisi-text">{?=isset_or($value.kondisi)?}</span><input type="text" class="form-control input-sm input-kondisi" value="{?=isset_or($value.kondisi)?}" style="display:none;" /></td>
+                <td class="edit-catatan" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}"><span class="catatan-text">{?=isset_or($value.catatan)?}</span><input type="text" class="form-control input-sm input-catatan" value="{?=isset_or($value.catatan)?}" style="display:none;" /></td>
+                <td><a href="#" class="btn btn-xs btn-danger delete" data-id="{?=isset_or($value.id)?}" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}" data-catatan="{?=isset_or($value.catatan)?}"><span class="fa fa-trash"></span><span class="hidden-xs">Hapus</span></a></td>
+              </tr>
+            {/loop}
+          </tbody>
+        </table>
+      </div>
+      </div>
+    </div>
+    <div class="tab-pane" id="tabs-ohis">
+      <div class="ohis clearfix">
+        <h4>OHIS</h4>
+        <div class="form-group">
+          <div class="col-md-12">
+              <h5>Debris Index</h5>
+              <div class="form-inline">
+                  <div class="form-group">
+                      <input type="text" name="d_16" class="form-control" placeholder="16"/>
+                  </div>
+                  <div class="form-group">
+                      <input type="text" name="d_11" class="form-control" placeholder="11"/>
+                  </div>
+                  <div class="form-group">
+                      <input type="text" name="d_26" class="form-control" placeholder="26"/>
+                  </div>
+              </div>
+              <div class="form-inline">
+                <div class="form-group">
+                    <input type="text" name="d_46" class="form-control" placeholder="46"/>
+                </div>
+                <div class="form-group">
+                    <input type="text" name="d_31" class="form-control" placeholder="31"/>
+                </div>
+                <div class="form-group">
+                    <input type="text" name="d_36" class="form-control" placeholder="36"/>
+                </div>
+              </div>
+          </div>
+          <div class="col-md-12">
+            <h5>Calculus Index</h5>
+            <div class="form-inline">
+              <div class="form-group">
+                  <input type="text" name="c_16" class="form-control" placeholder="16"/>
+              </div>
+              <div class="form-group">
+                  <input type="text" name="c_11" class="form-control" placeholder="11"/>
+              </div>
+              <div class="form-group">
+                  <input type="text" name="c_26" class="form-control" placeholder="26"/>
+              </div>
+            </div>
+            <div class="form-inline">
+              <div class="form-group">
+                  <input type="text" name="c_46" class="form-control" placeholder="46"/>
+              </div>
+              <div class="form-group">
+                  <input type="text" name="c_31" class="form-control" placeholder="31"/>
+              </div>
+              <div class="form-group">
+                  <input type="text" name="c_36" class="form-control" placeholder="36"/>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <div class="form-group">
+              <br>
+              <button class="btn btn-success simpanohis">Simpan</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tampildataohis">
+        <h4>History OHIS</h4>
+        <table class="table table-bordered table-striped table-hover display nowrap" width="100%">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Debris Index</th>
+              <th>Calculus Index</th>
+              <th>Index OHIS</th>
+              <th>Kriteria OHIS</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loop: $ohis}
+              <tr>
+                <td>{?=isset_or($value.tgl_input)?}</td>
+                <td>{?=isset_or($value.debris)?}</td>
+                <td>{?=isset_or($value.calculus)?}</td>
+                <td>{?=isset_or($value.nilai)?}</td>
+                <td>{?=isset_or($value.kriteria)?}</td>
+                <td><a href="#" class="btn btn-xs btn-danger deleteohis" data-tgl_input="{?=isset_or($value.tgl_input)?}"><span class="fa fa-trash"></span><span class="hidden-xs">Hapus</span></a></td>
+              </tr>
+            {/loop}
+          </tbody>
+        </table>
+      </div>      
+    </div> 
+  </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-primary" data-dismiss="modal">Tutup</button>
+</div>
+
+<script type="text/javascript">
+  $('select').selectator();
+</script>
+<script type="text/javascript">
+$(document).ready(function(){
+  const anteriorTeeth = [13,12,11,21,22,23, 43,42,41,31,32,33, 53,52,51,61,62,63, 83,82,81,71,72,73];
+  const topAdult = [18,17,16,15,14,13,12,11, 21,22,23,24,25,26,27,28];
+  const topChild = [55,54,53,52,51, 61,62,63,64,65];
+  const botChild = [85,84,83,82,81, 71,72,73,74,75];
+  const botAdult = [48,47,46,45,44,43,42,41, 31,32,33,34,35,36,37,38];
+
+  let activeTool = 'normal';
+  let gigiSelection = {};
+  
+  function getFill(tooth, surface) {
+      const state = gigiSelection[tooth] && gigiSelection[tooth][surface] ? gigiSelection[tooth][surface] : [];
+      if (!Array.isArray(state)) return 'white';
+      if (state.includes('karies') || state.includes('car')) return '#1e293b';
+      if (state.includes('tambalan') || state.includes('amf')) return '#1e293b';
+      if (state.includes('cof')) return 'url(#cof-pattern)';
+      if (state.includes('fis')) return 'url(#fis-pattern)';
+      if (state.includes('poc') || state.includes('ipx') || state.includes('pob')) return 'url(#poc-pattern)';
+      if (state.includes('scaling')) return 'url(#scaling-pattern)';
+      if (state.includes('custom')) return '#e9d5ff';
+      return 'white';
+  }
+
+  function getStroke(tooth, surface) {
+      const centerState = gigiSelection[tooth] && gigiSelection[tooth]['center'] ? gigiSelection[tooth]['center'] : [];
+      if (Array.isArray(centerState) && (centerState.includes('fmc') || centerState.includes('meb'))) return 'stroke="#1e293b" stroke-width="3"';
+      return 'stroke="#94a3b8" stroke-width="1"';
+  }
+
+  function renderTooth(t, isBottom, rowArray = null, index = -1) {
+      const isAnterior = anteriorTeeth.includes(t);
+      const centerState = gigiSelection[t] && gigiSelection[t]['center'] ? gigiSelection[t]['center'] : [];
+      const topState = gigiSelection[t] && gigiSelection[t]['top'] ? gigiSelection[t]['top'] : [];
+      
+      const isMissing = (Array.isArray(centerState) && (centerState.includes('missing') || centerState.includes('mis'))) || (Array.isArray(topState) && topState.includes('mis'));
+      const isRrx = (Array.isArray(centerState) && centerState.includes('rrx')) || (Array.isArray(topState) && topState.includes('rrx'));
+      
+      let polygons = '';
+      if (isAnterior) {
+          polygons += `<polygon class="tooth-polygon" data-tooth="${t}" data-surface="top" points="0,0 40,0 30,20 10,20" fill="${getFill(t, 'top')}" ${getStroke(t, 'top')}/>`;
+          polygons += `<polygon class="tooth-polygon" data-tooth="${t}" data-surface="right" points="40,0 40,40 30,20" fill="${getFill(t, 'right')}" ${getStroke(t, 'right')}/>`;
+          polygons += `<polygon class="tooth-polygon" data-tooth="${t}" data-surface="bottom" points="40,40 0,40 10,20 30,20" fill="${getFill(t, 'bottom')}" ${getStroke(t, 'bottom')}/>`;
+          polygons += `<polygon class="tooth-polygon" data-tooth="${t}" data-surface="left" points="0,40 0,0 10,20" fill="${getFill(t, 'left')}" ${getStroke(t, 'left')}/>`;
+      } else {
+          polygons += `<polygon class="tooth-polygon" data-tooth="${t}" data-surface="top" points="0,0 40,0 30,10 10,10" fill="${getFill(t, 'top')}" ${getStroke(t, 'top')}/>`;
+          polygons += `<polygon class="tooth-polygon" data-tooth="${t}" data-surface="right" points="40,0 40,40 30,30 30,10" fill="${getFill(t, 'right')}" ${getStroke(t, 'right')}/>`;
+          polygons += `<polygon class="tooth-polygon" data-tooth="${t}" data-surface="bottom" points="40,40 0,40 10,30 30,30" fill="${getFill(t, 'bottom')}" ${getStroke(t, 'bottom')}/>`;
+          polygons += `<polygon class="tooth-polygon" data-tooth="${t}" data-surface="left" points="0,40 0,0 10,10 10,30" fill="${getFill(t, 'left')}" ${getStroke(t, 'left')}/>`;
+          polygons += `<rect class="tooth-polygon" data-tooth="${t}" data-surface="center" x="10" y="10" width="20" height="20" fill="${getFill(t, 'center')}" ${getStroke(t, 'center')}/>`;
+      }
+
+      let overlays = '';
+      if (isMissing) {
+          overlays += `<line x1="0" y1="0" x2="40" y2="40" stroke="#ef4444" stroke-width="5" pointer-events="none"/><line x1="40" y1="0" x2="0" y2="40" stroke="#ef4444" stroke-width="5" pointer-events="none"/>`;
+      }
+      if (Array.isArray(centerState) && centerState.includes('pon')) {
+          overlays += `<line x1="0" y1="0" x2="40" y2="40" stroke="#1e293b" stroke-width="5" pointer-events="none"/><line x1="40" y1="0" x2="0" y2="40" stroke="#1e293b" stroke-width="5" pointer-events="none"/>`;
+      }
+      if (isRrx) {
+          overlays += `<line x1="0" y1="0" x2="20" y2="40" stroke="#ef4444" stroke-width="5" pointer-events="none"/><line x1="40" y1="0" x2="20" y2="40" stroke="#ef4444" stroke-width="5" pointer-events="none"/>`;
+      }
+
+      let rootMarker = '';
+      if (Array.isArray(centerState) && (centerState.includes('nvt') || centerState.includes('rct'))) {
+          const fillRoot = centerState.includes('rct') ? '#1e293b' : 'white';
+          if (!isBottom) {
+              rootMarker = `<polygon points="10,0 30,0 20,-20" fill="${fillRoot}" stroke="#1e293b" stroke-width="2" pointer-events="none"/>`;
+          } else {
+              rootMarker = `<polygon points="10,40 30,40 20,60" fill="${fillRoot}" stroke="#1e293b" stroke-width="2" pointer-events="none"/>`;
+          }
+      }
+
+      let textAnnotation = '';
+      const textStates = ['non', 'une', 'pre', 'ano', 'meb', 'pob', 'pon', 'frm', 'acr', 'ipx', 'imv', 'att', 'abr', 'cfr', 'gif', 'mpc', 'gmc', 'prd', 'fld', 'dia'];
+      let foundTexts = [];
+      if (Array.isArray(centerState)) {
+          textStates.forEach(ts => {
+              if (centerState.includes(ts)) {
+                  foundTexts.push(ts.toUpperCase());
+              }
+          });
+      }
+      if (foundTexts.length > 0) {
+          textAnnotation = `<text x="20" y="${isBottom ? 65 : -10}" font-size="11" font-weight="bold" fill="#1e293b" text-anchor="middle" pointer-events="none">${foundTexts.join('-')}</text>`;
+      }
+
+      let bridgeLine = '';
+      if (rowArray && index >= 0 && Array.isArray(centerState) && (centerState.includes('meb') || centerState.includes('pob') || centerState.includes('pon'))) {
+          let isLeftConnected = false;
+          let isRightConnected = false;
+          let gapLeft = 5;
+          let gapRight = 5;
+          
+          if (index > 0) {
+              let leftTooth = rowArray[index - 1];
+              let leftCenterState = gigiSelection[leftTooth] && gigiSelection[leftTooth]['center'] ? gigiSelection[leftTooth]['center'] : [];
+              if (leftCenterState.includes('meb') || leftCenterState.includes('pob') || leftCenterState.includes('pon')) {
+                  isLeftConnected = true;
+                  if (leftTooth == 11 || leftTooth == 51 || leftTooth == 81 || leftTooth == 41) {
+                      gapLeft = 25;
+                  }
+              }
+          }
+          
+          if (index < rowArray.length - 1) {
+              let rightTooth = rowArray[index + 1];
+              let rightCenterState = gigiSelection[rightTooth] && gigiSelection[rightTooth]['center'] ? gigiSelection[rightTooth]['center'] : [];
+              if (rightCenterState.includes('meb') || rightCenterState.includes('pob') || rightCenterState.includes('pon')) {
+                  isRightConnected = true;
+                  if (t == 11 || t == 51 || t == 81 || t == 41) {
+                      gapRight = 25;
+                  }
+              }
+          }
+          
+          let yPos = isBottom ? 75 : -35;
+          let startX = isLeftConnected ? -gapLeft : 20;
+          let endX = isRightConnected ? 40 + gapRight : 20;
+          let isPon = centerState.includes('pon');
+          
+          bridgeLine += `<line x1="${startX}" y1="${yPos}" x2="${endX}" y2="${yPos}" stroke="#1e293b" stroke-width="4" stroke-linecap="round" pointer-events="none"/>`;
+          
+          if (!isPon) {
+              bridgeLine += `<line x1="20" y1="${yPos}" x2="20" y2="${isBottom ? 45 : -5}" stroke="#1e293b" stroke-width="4" stroke-linecap="round" pointer-events="none"/>`;
+          }
+      }
+
+      const labelTop = !isBottom ? `<div class="tooth-label">${t}</div>` : '';
+      const labelBot = isBottom ? `<div class="tooth-label tooth-label-bot">${t}</div>` : '';
+
+      return `
+        <div class="tooth-wrapper" style="margin-bottom: 35px; margin-top: 35px;">
+          ${labelTop}
+          <div class="tooth-svg-wrapper">
+              <svg viewBox="0 0 40 40" class="w-full h-full drop-shadow-sm" style="overflow: visible;">
+                  ${bridgeLine}
+                  ${polygons}
+                  ${overlays}
+                  ${rootMarker}
+                  ${textAnnotation}
+              </svg>
+          </div>
+          ${labelBot}
+        </div>
+      `;
+  }
+  
+  function renderOdontogram() {
+      let topAdultHtml = '';
+      topAdult.forEach((t, i) => {
+          topAdultHtml += renderTooth(t, false, topAdult, i);
+          if (t == 11) topAdultHtml += `<div class="tooth-gap"></div>`;
+      });
+      $('#row-top-adult').html(topAdultHtml);
+
+      let topChildHtml = '';
+      topChild.forEach((t, i) => {
+          topChildHtml += renderTooth(t, false, topChild, i);
+          if (t == 51) topChildHtml += `<div class="tooth-gap"></div>`;
+      });
+      $('#row-top-child').html(topChildHtml);
+
+      let botChildHtml = '';
+      botChild.forEach((t, i) => {
+          botChildHtml += renderTooth(t, true, botChild, i);
+          if (t == 81) botChildHtml += `<div class="tooth-gap"></div>`;
+      });
+      $('#row-bot-child').html(botChildHtml);
+
+      let botAdultHtml = '';
+      botAdult.forEach((t, i) => {
+          botAdultHtml += renderTooth(t, true, botAdult, i);
+          if (t == 41) botAdultHtml += `<div class="tooth-gap"></div>`;
+      });
+      $('#row-bot-adult').html(botAdultHtml);
+  }
+
+  function parseData(rawData) {
+      gigiSelection = {};
+      if(rawData) {
+          rawData.forEach(function(item){
+              var p = item.pemeriksaan;
+              var parts = p.split('_');
+              if(parts.length >= 3) {
+                  var t = parts[1];
+                  var surf = parts[2];
+                  if(!gigiSelection[t]) gigiSelection[t] = {};
+                  if(!gigiSelection[t][surf]) gigiSelection[t][surf] = [];
+                  gigiSelection[t][surf].push(item.kondisi.toLowerCase());
+              } else if (parts.length == 2) {
+                  var t = parts[1];
+                  if(!gigiSelection[t]) gigiSelection[t] = {};
+                  if(!gigiSelection[t]['center']) gigiSelection[t]['center'] = [];
+                  gigiSelection[t]['center'].push(item.kondisi.toLowerCase());
+              }
+          });
+      }
+      renderOdontogram();
+  }
+
+  var rawOdontogram = {?=json_encode($odontogram)?};
+  parseData(rawOdontogram);
+
+  $('#tool-select').change(function(){
+      activeTool = $(this).val();
+  });
+
+  $("#btn-reset-odontogram").click(function(e){
+      e.preventDefault();
+      var id_pasien = $('input:text[name=no_rkm_medis]').val();
+      if (!id_pasien) {
+          alert('Pilih pasien terlebih dahulu.');
+          return;
+      }
+      if(confirm('Apakah Anda yakin ingin menghapus semua data odontogram untuk pasien ini?')) {
+          var baseURL = mlite.url + '/' + mlite.admin;
+          var url = baseURL + '/dokter_ralan/odontogramdelete/?t=' + mlite.token;
+          $.post(url, {
+              no_rkm_medis: id_pasien
+          }, function(data) {
+              gigiSelection = {};
+              renderOdontogram();
+              $('.tampildata').load(baseURL + '/dokter_ralan/odontogramtampil/' + id_pasien + '?t=' + mlite.token);
+          });
+      }
+  });
+
+  $("#tabs-odontogram").on('click', '.tooth-polygon', function(){
+      var tooth = $(this).attr('data-tooth');
+      var surface = $(this).attr('data-surface');
+      var baseURL = mlite.url + '/' + mlite.admin;
+      var id_pasien = $('input:text[name=no_rkm_medis]').val();
+      
+      var kondisi = activeTool;
+      var url = baseURL + '/dokter_ralan/odontogramsave/?t=' + mlite.token;
+      
+      var pemeriksaanVal = 'gg_' + tooth + '_' + surface;
+      const centerTools = ['mis', 'rrx', 'cfr', 'fmc', 'poc', 'nvt', 'rct', 'non', 'une', 'pre', 'ano', 'ipx', 'meb', 'pob', 'pon', 'frm', 'acr', 'imv', 'att', 'abr', 'gif', 'mpc', 'gmc', 'prd', 'fld', 'dia'];
+      var targetSurface = surface;
+      if (centerTools.includes(activeTool)) {
+          pemeriksaanVal = 'gg_' + tooth + '_center';
+          targetSurface = 'center';
+      }
+
+      var existingState = false;
+      if (gigiSelection[tooth] && gigiSelection[tooth][targetSurface] && gigiSelection[tooth][targetSurface].includes(activeTool)) {
+          existingState = true;
+      }
+
+      if (existingState && activeTool !== 'sou') {
+          var delUrl = baseURL + '/dokter_ralan/odontogramdelete/?t=' + mlite.token;
+          var delId = null;
+          for(var i = 0; i < rawOdontogram.length; i++) {
+              if(rawOdontogram[i].pemeriksaan === pemeriksaanVal && String(rawOdontogram[i].kondisi).toLowerCase() === String(kondisi).toLowerCase()) {
+                  delId = rawOdontogram[i].id;
+                  break;
+              }
+          }
+          var delData = {
+              no_rkm_medis: id_pasien,
+              pemeriksaan: pemeriksaanVal,
+              kondisi: kondisi
+          };
+          if(delId) delData.id = delId;
+          $.post(delUrl, delData, function(data) {
+              gigiSelection[tooth][targetSurface] = gigiSelection[tooth][targetSurface].filter(k => k !== activeTool);
+              renderOdontogram();
+              $('.tampildata').load(baseURL + '/dokter_ralan/odontogramtampil/' + id_pasien + '?t=' + mlite.token);
+          });
+      } else {
+          $.post(url, {
+              no_rkm_medis: id_pasien,
+              pemeriksaan: pemeriksaanVal,
+              kondisi: kondisi,
+              catatan: ''
+          }, function(data) {
+              if(activeTool === 'sou') {
+                  if(gigiSelection[tooth] && gigiSelection[tooth][surface]) {
+                      gigiSelection[tooth][surface] = [];
+                  }
+              } else if(centerTools.includes(activeTool)) {
+                  if(!gigiSelection[tooth]) gigiSelection[tooth] = {};
+                  if(!gigiSelection[tooth]['center']) gigiSelection[tooth]['center'] = [];
+                  if(!gigiSelection[tooth]['center'].includes(activeTool)) gigiSelection[tooth]['center'].push(activeTool);
+              } else {
+                  if(!gigiSelection[tooth]) gigiSelection[tooth] = {};
+                  if(!gigiSelection[tooth][surface]) gigiSelection[tooth][surface] = [];
+                  if(!gigiSelection[tooth][surface].includes(activeTool)) gigiSelection[tooth][surface].push(activeTool);
+              }
+              renderOdontogram();
+              
+              $('.tampildata').load(baseURL + '/dokter_ralan/odontogramtampil/' + id_pasien + '?t=' + mlite.token);
+          });
+      }
+  });
+  $("#tabs-odontogram").on("dblclick", ".edit-catatan", function() {
+      var $td = $(this);
+      $td.find(".catatan-text").hide();
+      var $input = $td.find(".input-catatan");
+      $input.show().focus();
+  });
+  
+  $("#tabs-odontogram").on("blur", ".input-catatan", function() {
+      var $input = $(this);
+      var $td = $input.closest("td");
+      var newCatatan = $input.val();
+      var oldCatatan = $td.find(".catatan-text").text();
+      
+      if (newCatatan !== oldCatatan) {
+          var baseURL = mlite.url + '/' + mlite.admin;
+          var id_pasien = $('input:text[name=no_rkm_medis]').val();
+          var url = baseURL + '/dokter_ralan/odontogramupdatecatatan/?t=' + mlite.token;
+          
+          $.post(url, {
+              no_rkm_medis: id_pasien,
+              pemeriksaan: $td.attr("data-pemeriksaan"),
+              kondisi: $td.attr("data-kondisi"),
+              tgl_input: $td.attr("data-tgl_input"),
+              catatan: newCatatan
+          }, function(data) {
+              $td.find(".catatan-text").text(newCatatan);
+              $td.find(".catatan-text").show();
+              $input.hide();
+              $td.next('td').find('.delete').attr('data-catatan', newCatatan);
+          });
+      } else {
+          $td.find(".catatan-text").show();
+          $input.hide();
+      }
+  });
+
+  $("#tabs-odontogram").on("keypress", ".input-catatan", function(e) {
+      if (e.which == 13) {
+          $(this).blur();
+      }
+  });
+
+  $("#tabs-odontogram").on("dblclick", ".edit-kondisi", function() {
+      var $td = $(this);
+      $td.find(".kondisi-text").hide();
+      var $input = $td.find(".input-kondisi");
+      $input.show().focus();
+  });
+
+  $("#tabs-odontogram").on("blur", ".input-kondisi", function() {
+      var $input = $(this);
+      var $td = $input.closest("td");
+      var newKondisi = $input.val();
+      var oldKondisi = $td.find(".kondisi-text").text();
+
+      if (newKondisi !== oldKondisi) {
+          var baseURL = mlite.url + '/' + mlite.admin;
+          var id_pasien = $('input:text[name=no_rkm_medis]').val();
+          var url = baseURL + '/dokter_ralan/odontogramupdatecatatan/?t=' + mlite.token;
+
+          $.post(url, {
+              no_rkm_medis: id_pasien,
+              pemeriksaan: $td.attr("data-pemeriksaan"),
+              kondisi: oldKondisi,
+              tgl_input: $td.attr("data-tgl_input"),
+              catatan: $td.closest('tr').find('.catatan-text').text(),
+              kondisi_baru: newKondisi
+          }, function(data) {
+              $td.find(".kondisi-text").text(newKondisi);
+              $td.attr("data-kondisi", newKondisi);
+              $td.find(".kondisi-text").show();
+              $input.hide();
+              $td.closest('tr').find('.delete').attr('data-kondisi', newKondisi);
+          });
+      } else {
+          $td.find(".kondisi-text").show();
+          $input.hide();
+      }
+  });
+
+  $("#tabs-odontogram").on("keypress", ".input-kondisi", function(e) {
+      if (e.which == 13) {
+          $(this).blur();
+      }
+  });
+
+  $("#tabs-odontogram").on("click", ".delete", function(e){
+    e.preventDefault();
+    var baseURL = mlite.url + '/' + mlite.admin;
+    var id_pasien = $('input:text[name=no_rkm_medis]').val();
+    var gg_xx  = $(this).attr("data-pemeriksaan");
+    var kondisi  = $(this).attr("data-kondisi");
+    var catatan  = $(this).attr("data-catatan");
+    var tgl_input  = $(this).attr("data-tgl_input");
+    var url = baseURL + '/dokter_ralan/odontogramdelete/?t=' + mlite.token;
+    $.post(url,{
+      no_rkm_medis:id_pasien,
+      id: $(this).attr("data-id"),
+      pemeriksaan:gg_xx,
+      kondisi:kondisi,
+      catatan: catatan,
+      tgl_input: tgl_input
+    } ,function(data) {
+      $('.tampildata').load(baseURL + '/dokter_ralan/odontogramtampil/' + id_pasien + '?t=' + mlite.token, function() {
+          var parts = gg_xx.split('_');
+          if(parts.length >= 3) {
+              var t = parts[1];
+              var surf = parts[2];
+              if(gigiSelection[t] && gigiSelection[t][surf]) {
+                  gigiSelection[t][surf] = gigiSelection[t][surf].filter(k => k !== kondisi);
+              }
+          } else if (parts.length == 2) {
+              var t = parts[1];
+              if(gigiSelection[t] && gigiSelection[t]['center']) {
+                  gigiSelection[t]['center'] = gigiSelection[t]['center'].filter(k => k !== kondisi);
+              }
+          }
+          renderOdontogram();
+      });
+    });
+  });
+  $(".simpanohis").click(function(){
+    var baseURL = mlite.url + '/' + mlite.admin;
+    var id_pasien = $('input:text[name=no_rkm_medis]').val();
+    var d_16 = $('input:text[name=d_16]').val();
+    var d_11 = $('input:text[name=d_11]').val();
+    var d_26 = $('input:text[name=d_26]').val();
+    var d_36 = $('input:text[name=d_36]').val();
+    var d_31 = $('input:text[name=d_31]').val();
+    var d_46 = $('input:text[name=d_46]').val();
+    var c_16 = $('input:text[name=c_16]').val();
+    var c_11 = $('input:text[name=c_11]').val();
+    var c_26 = $('input:text[name=c_26]').val();
+    var c_36 = $('input:text[name=c_36]').val();
+    var c_31 = $('input:text[name=c_31]').val();
+    var c_46 = $('input:text[name=c_46]').val();
+    var url = baseURL + '/dokter_ralan/ohissave/?t=' + mlite.token;
+    $.post(url,{
+      no_rkm_medis:id_pasien,
+      d_16:d_16,
+      d_11:d_11,
+      d_26:d_26,
+      d_36:d_36,
+      d_31:d_31,
+      d_46:d_46,
+      c_16:c_16,
+      c_11:c_11,
+      c_26:c_26,
+      c_36:c_36,
+      c_31:c_31,
+      c_46:c_46
+    } ,function(data) {
+      $('.tampildataohis').load(baseURL + '/dokter_ralan/ohistampil/' + id_pasien + '?t=' + mlite.token);
+    });
+  });  
+  $(".deleteohis").click(function(){
+    var baseURL = mlite.url + '/' + mlite.admin;
+    var id_pasien = $('input:text[name=no_rkm_medis]').val();
+    var tgl_input  = $(this).attr("data-tgl_input");
+    var url = baseURL + '/dokter_ralan/ohisdelete/?t=' + mlite.token;
+    $.post(url,{
+      no_rkm_medis:id_pasien,
+      tgl_input: tgl_input
+    } ,function(data) {
+      $('.tampildataohis').load(baseURL + '/dokter_ralan/ohistampil/' + id_pasien + '?t=' + mlite.token);
+    });
+  });  
+});
+</script>
+

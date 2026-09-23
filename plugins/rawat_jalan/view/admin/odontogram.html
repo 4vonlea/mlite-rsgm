@@ -199,6 +199,7 @@
                 <option value="fld">≚ Full Denture (fld)</option>
                 <option value="gif">⚪ GIC/Silika (gif)</option>
                 <option value="dia">↔ Diastema (dia)</option>
+                <option value="custom">✍️ Custom / Lainnya (custom)</option>
             </select>
             <button id="btn-reset-odontogram" class="btn btn-danger" style="margin-left: 10px;">Reset Semua</button>
         </div>
@@ -247,9 +248,9 @@
               <tr>
                 <td>{?=isset_or($value.tgl_input)?}</td>
                 <td>{?=str_replace('gg_','Gigi ',$value.pemeriksaan)?}</td>
-                <td>{?=isset_or($value.kondisi)?}</td>
+                <td class="edit-kondisi" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}"><span class="kondisi-text">{?=isset_or($value.kondisi)?}</span><input type="text" class="form-control input-sm input-kondisi" value="{?=isset_or($value.kondisi)?}" style="display:none;" /></td>
                 <td class="edit-catatan" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}"><span class="catatan-text">{?=isset_or($value.catatan)?}</span><input type="text" class="form-control input-sm input-catatan" value="{?=isset_or($value.catatan)?}" style="display:none;" /></td>
-                <td><a href="#" class="btn btn-xs btn-danger delete" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}" data-catatan="{?=isset_or($value.catatan)?}"><span class="fa fa-trash"></span><span class="hidden-xs">Hapus</span></a></td>
+                <td><a href="#" class="btn btn-xs btn-danger delete" data-id="{?=isset_or($value.id)?}" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}" data-catatan="{?=isset_or($value.catatan)?}"><span class="fa fa-trash"></span><span class="hidden-xs">Hapus</span></a></td>
               </tr>
             {/loop}
           </tbody>
@@ -403,6 +404,7 @@ $(document).ready(function(){
       if (state.includes('fis')) return 'url(#fis-pattern)';
       if (state.includes('poc') || state.includes('ipx') || state.includes('pob')) return 'url(#poc-pattern)';
       if (state.includes('scaling')) return 'url(#scaling-pattern)';
+      if (state.includes('custom')) return '#e9d5ff';
       return 'white';
   }
 
@@ -634,11 +636,20 @@ $(document).ready(function(){
 
       if (existingState && activeTool !== 'sou') {
           var delUrl = baseURL + '/rawat_jalan/odontogramdelete/?t=' + mlite.token;
-          $.post(delUrl, {
+          var delId = null;
+          for(var i = 0; i < rawOdontogram.length; i++) {
+              if(rawOdontogram[i].pemeriksaan === pemeriksaanVal && String(rawOdontogram[i].kondisi).toLowerCase() === String(kondisi).toLowerCase()) {
+                  delId = rawOdontogram[i].id;
+                  break;
+              }
+          }
+          var delData = {
               no_rkm_medis: id_pasien,
               pemeriksaan: pemeriksaanVal,
               kondisi: kondisi
-          }, function(data) {
+          };
+          if(delId) delData.id = delId;
+          $.post(delUrl, delData, function(data) {
               gigiSelection[tooth][targetSurface] = gigiSelection[tooth][targetSurface].filter(k => k !== activeTool);
               renderOdontogram();
               $('.tampildata').load(baseURL + '/rawat_jalan/odontogramtampil/' + id_pasien + '?t=' + mlite.token);
@@ -648,7 +659,7 @@ $(document).ready(function(){
               no_rkm_medis: id_pasien,
               pemeriksaan: pemeriksaanVal,
               kondisi: kondisi,
-              catatan: 'Added via visual tool'
+              catatan: ''
           }, function(data) {
               if(activeTool === 'sou') {
                   if(gigiSelection[tooth] && gigiSelection[tooth][surface]) {
@@ -711,6 +722,50 @@ $(document).ready(function(){
       }
   });
 
+  $("#tabs-odontogram").on("dblclick", ".edit-kondisi", function() {
+      var $td = $(this);
+      $td.find(".kondisi-text").hide();
+      var $input = $td.find(".input-kondisi");
+      $input.show().focus();
+  });
+
+  $("#tabs-odontogram").on("blur", ".input-kondisi", function() {
+      var $input = $(this);
+      var $td = $input.closest("td");
+      var newKondisi = $input.val();
+      var oldKondisi = $td.find(".kondisi-text").text();
+
+      if (newKondisi !== oldKondisi) {
+          var baseURL = mlite.url + '/' + mlite.admin;
+          var id_pasien = $('input:text[name=no_rkm_medis]').val();
+          var url = baseURL + '/rawat_jalan/odontogramupdatecatatan/?t=' + mlite.token;
+
+          $.post(url, {
+              no_rkm_medis: id_pasien,
+              pemeriksaan: $td.attr("data-pemeriksaan"),
+              kondisi: oldKondisi,
+              tgl_input: $td.attr("data-tgl_input"),
+              catatan: $td.closest('tr').find('.catatan-text').text(),
+              kondisi_baru: newKondisi
+          }, function(data) {
+              $td.find(".kondisi-text").text(newKondisi);
+              $td.attr("data-kondisi", newKondisi);
+              $td.find(".kondisi-text").show();
+              $input.hide();
+              $td.closest('tr').find('.delete').attr('data-kondisi', newKondisi);
+          });
+      } else {
+          $td.find(".kondisi-text").show();
+          $input.hide();
+      }
+  });
+
+  $("#tabs-odontogram").on("keypress", ".input-kondisi", function(e) {
+      if (e.which == 13) {
+          $(this).blur();
+      }
+  });
+
   $("#tabs-odontogram").on("click", ".delete", function(e){
     e.preventDefault();
     var baseURL = mlite.url + '/' + mlite.admin;
@@ -722,6 +777,7 @@ $(document).ready(function(){
     var url = baseURL + '/rawat_jalan/odontogramdelete/?t=' + mlite.token;
     $.post(url,{
       no_rkm_medis:id_pasien,
+      id: $(this).attr("data-id"),
       pemeriksaan:gg_xx,
       kondisi:kondisi,
       catatan: catatan,

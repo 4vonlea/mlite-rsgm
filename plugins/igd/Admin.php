@@ -1030,34 +1030,43 @@ class Admin extends AdminModule
 
     public function postOdontogramDelete()
     {
-      $_POST['id_user']	= $this->core->getUserInfo('id');
       $query = $this->db('mlite_odontogram')->where('no_rkm_medis', $_POST['no_rkm_medis']);
+
+      if(!empty($_POST['id'])) {
+        $query = $query->where('id', $_POST['id']);
+      } else {
+        $_POST['id_user']	= $this->core->getUserInfo('id');
+        if(!empty($_POST['pemeriksaan'])) {
+          $query = $query->where('pemeriksaan', $_POST['pemeriksaan']);
+        }
+        if(!empty($_POST['kondisi'])) {
+          $query = $query->where('kondisi', $_POST['kondisi']);
+        }
+        if(!empty($_POST['catatan'])) {
+          $query = $query->where('catatan', $_POST['catatan']);
+        }
+        if(!empty($_POST['tgl_input'])) {
+          $query = $query->where('tgl_input', $_POST['tgl_input']);
+        }
+        $query = $query->where('id_user', $_POST['id_user']);
+      }
       
-      if(!empty($_POST['pemeriksaan'])) {
-        $query = $query->where('pemeriksaan', $_POST['pemeriksaan']);
-      }
-      if(!empty($_POST['kondisi'])) {
-        $query = $query->where('kondisi', $_POST['kondisi']);
-      }
-      if(!empty($_POST['catatan'])) {
-        $query = $query->where('catatan', $_POST['catatan']);
-      }
-      if(!empty($_POST['tgl_input'])) {
-        $query = $query->where('tgl_input', $_POST['tgl_input']);
-      }
-      
-      $query = $query->where('id_user', $_POST['id_user'])->delete();
+      $query->delete();
       exit();
     }
 
     public function postOdontogramUpdateCatatan()
     {
+      $data = ['catatan' => isset($_POST['catatan']) ? $_POST['catatan'] : ''];
+      if (!empty($_POST['kondisi_baru'])) {
+        $data['kondisi'] = $_POST['kondisi_baru'];
+      }
       $query = $this->db('mlite_odontogram')
       ->where('no_rkm_medis', $_POST['no_rkm_medis'])
       ->where('pemeriksaan', $_POST['pemeriksaan'])
       ->where('kondisi', $_POST['kondisi'])
       ->where('tgl_input', $_POST['tgl_input'])
-      ->save(['catatan' => $_POST['catatan']]);
+      ->save($data);
       exit();
     }
 

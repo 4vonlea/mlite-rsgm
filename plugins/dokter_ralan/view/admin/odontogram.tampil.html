@@ -14,10 +14,10 @@
       <tr>
         <td>{?=isset_or($value.tgl_input)?}</td>
         <td>{?=str_replace('gg_','Gigi ',$value.pemeriksaan)?}</td>
-        <td>{?=isset_or($value.kondisi)?}</td>
+        <td class="edit-kondisi" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}"><span class="kondisi-text">{?=isset_or($value.kondisi)?}</span><input type="text" class="form-control input-sm input-kondisi" value="{?=isset_or($value.kondisi)?}" style="display:none;" /></td>
         <td class="edit-catatan" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}"><span class="catatan-text">{?=isset_or($value.catatan)?}</span><input type="text" class="form-control input-sm input-catatan" value="{?=isset_or($value.catatan)?}" style="display:none;" /></td>
 
-        <td><a href="#" class="btn btn-xs btn-danger delete" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}" data-catatan="{?=isset_or($value.catatan)?}"><span class="fa fa-trash"></span><span class="hidden-xs">Hapus</span></a></td>
+        <td><a href="#" class="btn btn-xs btn-danger delete" data-id="{?=isset_or($value.id)?}" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}" data-catatan="{?=isset_or($value.catatan)?}"><span class="fa fa-trash"></span><span class="hidden-xs">Hapus</span></a></td>
       </tr>
     {/loop}
   </tbody>
@@ -64,6 +64,48 @@ $(document).ready(function(){
       }
   });
 
+  $(".edit-kondisi").dblclick(function() {
+      var $td = $(this);
+      $td.find(".kondisi-text").hide();
+      var $input = $td.find(".input-kondisi");
+      $input.show().focus();
+  });
+  $(".input-kondisi").blur(function() {
+      var $input = $(this);
+      var $td = $input.closest("td");
+      var newKondisi = $input.val();
+      var oldKondisi = $td.find(".kondisi-text").text();
+
+      if (newKondisi !== oldKondisi) {
+          var baseURL = mlite.url + '/' + mlite.admin;
+          var id_pasien = $('input:text[name=no_rkm_medis]').val();
+          var url = baseURL + '/dokter_ralan/odontogramupdatecatatan/?t=' + mlite.token;
+
+          $.post(url, {
+              no_rkm_medis: id_pasien,
+              pemeriksaan: $td.attr("data-pemeriksaan"),
+              kondisi: oldKondisi,
+              tgl_input: $td.attr("data-tgl_input"),
+              catatan: $td.closest('tr').find('.catatan-text').text(),
+              kondisi_baru: newKondisi
+          }, function(data) {
+              $td.find(".kondisi-text").text(newKondisi);
+              $td.attr("data-kondisi", newKondisi);
+              $td.find(".kondisi-text").show();
+              $input.hide();
+              $td.closest('tr').find('.delete').attr('data-kondisi', newKondisi);
+          });
+      } else {
+          $td.find(".kondisi-text").show();
+          $input.hide();
+      }
+  });
+  $(".input-kondisi").keypress(function(e) {
+      if (e.which == 13) {
+          $(this).blur();
+      }
+  });
+
   $(".delete").click(function(){
     var baseURL = mlite.url + '/' + mlite.admin;
     var id_pasien = $('input:text[name=no_rkm_medis]').val();
@@ -74,6 +116,7 @@ $(document).ready(function(){
     var url = baseURL + '/dokter_ralan/odontogramdelete/?t=' + mlite.token;
     $.post(url,{
       no_rkm_medis:id_pasien,
+      id: $(this).attr("data-id"),
       pemeriksaan:gg_xx,
       kondisi:kondisi,
       catatan: catatan,
