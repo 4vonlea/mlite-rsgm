@@ -866,11 +866,24 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
     }
     // tampilkan data
     $("#display").hide();
+    var targetTab = $('#rincian .nav-tabs .active a').attr('href');
+    if (kat == 'radiologi') {
+        targetTab = '#rad';
+    } else if (kat == 'laboratorium') {
+        targetTab = '#lab';
+    } else if (kat == 'tindakan') {
+        targetTab = '#tindakan';
+    } else if (kat == 'obat' || kat == 'racikan') {
+        targetTab = '#resep';
+    }
     var url = baseURL + '/dokter_ralan/rincian?t=' + mlite.token;
     $.post(url, {no_rawat : no_rawat,
     }, function(result) {
       // tampilkan data
       $("#rincian").html(result).show();
+      if(targetTab) {
+          $('#rincian .nav-tabs a[href="' + targetTab + '"]').tab('show');
+      }
     });
     $('input:hidden[name=kd_jenis_prw]').val("");
     $('input:text[name=nm_perawatan]').val("");
@@ -934,11 +947,15 @@ $("#rincian").on("click",".hapus_detail", function(event){
         jam_rawat: jam_rawat,
         provider: provider
       } ,function(data) {
+        var activeTab = $('#rincian .nav-tabs .active a').attr('href');
         var url = baseURL + '/dokter_ralan/rincian?t=' + mlite.token;
         $.post(url, {no_rawat : no_rawat,
         }, function(data) {
           // tampilkan data
           $("#rincian").html(data).show();
+          if(activeTab) {
+              $('#rincian .nav-tabs a[href="' + activeTab + '"]').tab('show');
+          }
         });
         $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
         "Data rincian rawat jalan telah dihapus!"+
@@ -966,11 +983,15 @@ $("#rincian").on("click",".hapus_permintaan_lab", function(event){
         noorder: noorder,
         no_rawat: no_rawat
       } ,function(data) {
+        var activeTab = $('#rincian .nav-tabs .active a').attr('href');
         var url = baseURL + '/dokter_ralan/rincian?t=' + mlite.token;
         $.post(url, {no_rawat : no_rawat,
         }, function(data) {
           // tampilkan data
           $("#rincian").html(data).show();
+          if(activeTab) {
+              $('#rincian .nav-tabs a[href="' + activeTab + '"]').tab('show');
+          }
         });
         $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
         "Data rincian rawat jalan telah dihapus!"+
@@ -998,11 +1019,15 @@ $("#rincian").on("click",".hapus_permintaan_rad", function(event){
         noorder: noorder,
         no_rawat: no_rawat
       } ,function(data) {
+        var activeTab = $('#rincian .nav-tabs .active a').attr('href');
         var url = baseURL + '/dokter_ralan/rincian?t=' + mlite.token;
         $.post(url, {no_rawat : no_rawat,
         }, function(data) {
           // tampilkan data
           $("#rincian").html(data).show();
+          if(activeTab) {
+              $('#rincian .nav-tabs a[href="' + activeTab + '"]').tab('show');
+          }
         });
         $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
         "Data rincian rawat jalan telah dihapus!"+
@@ -1034,11 +1059,15 @@ $("#rincian").on("click",".hapus_resep_obat", function(event){
         tgl_peresepan: tgl_peresepan,
         jam_peresepan: jam_peresepan
       } ,function(data) {
+        var activeTab = $('#rincian .nav-tabs .active a').attr('href');
         var url = baseURL + '/dokter_ralan/rincian?t=' + mlite.token;
         $.post(url, {no_rawat : no_rawat,
         }, function(data) {
           // tampilkan data
           $("#rincian").html(data).show();
+          if(activeTab) {
+              $('#rincian .nav-tabs a[href="' + activeTab + '"]').tab('show');
+          }
         });
         $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
         "Data rincian rawat jalan telah dihapus!"+
@@ -1068,11 +1097,15 @@ $("#rincian").on("click",".hapus_resep_dokter", function(event){
         no_rawat: no_rawat,
         kd_jenis_prw: kd_jenis_prw
       } ,function(data) {
+        var activeTab = $('#rincian .nav-tabs .active a').attr('href');
         var url = baseURL + '/dokter_ralan/rincian?t=' + mlite.token;
         $.post(url, {no_rawat : no_rawat,
         }, function(data) {
           // tampilkan data
           $("#rincian").html(data).show();
+          if(activeTab) {
+              $('#rincian .nav-tabs a[href="' + activeTab + '"]').tab('show');
+          }
         });
         $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
         "Data rincian rawat jalan telah dihapus!"+
@@ -1162,10 +1195,14 @@ $("#rincian").on("click","#simpan_copy_resep", function(event){
     //if(data == 'ErrorError') {
     //  alert('Stok tidak mencukupi pada satu atau lebih obat.');
     //} else {
+      var activeTab = $('#rincian .nav-tabs .active a').attr('href');
       $.post(url, {no_rawat : no_rawat,
       }, function(data) {
         // tampilkan data
         $("#rincian").html(data).show();
+        if(activeTab) {
+            $('#rincian .nav-tabs a[href="' + activeTab + '"]').tab('show');
+        }
       });
       $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
       "Data pasien telah disimpan!"+

@@ -293,6 +293,8 @@
             <tr>
               <th>Tanggal</th>
               <th>Nama Item</th>
+              <th>Info Tambahan</th>
+              <th>Diagnosa Klinis</th>
               <th>Unit/Kelas</th>
               <th>Tarif</th>
               <th>Aksi</th>
@@ -303,6 +305,8 @@
             <tr>
               <td>{?=isset_or($value.tgl_permintaan)?} {?=isset_or($value.jam_permintaan)?}</td>
               <td>{?=isset_or($value.nm_perawatan)?}</td>
+              <td>{?=isset_or($value.informasi_tambahan)?}</td>
+              <td>{?=isset_or($value.diagnosa_klinis)?}</td>
               <td>{?=isset_or($value.kelas)?}</td>
               <td>Rp. <span class="pull-right">{?= number_format($value.total_byr,2,',','.')?}</span></td>
               <td><button type="button" class="btn btn-danger btn-xs hapus_permintaan_rad" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-noorder="{?=isset_or($value.noorder)?}"><i class="fa fa-close"></i><span class="hidden-xs"> Hapus</span></button></td>
@@ -311,7 +315,7 @@
           </tbody>
           <tfoot>
             <tr>
-              <th colspan="3">Total Biaya Radiologi</th>
+              <th colspan="5">Total Biaya Radiologi</th>
               <th>Rp. <span class="pull-right">{?= number_format($jumlah_total_rad,2,',','.')?}</span></th>
               <th></th>
             </tr>
@@ -349,11 +353,15 @@
             jam_permintaan: jam_permintaan
           } ,function(data) {
             console.log(data);
+            var activeTab = $('#rincian .nav-tabs .active a').attr('href');
             var url = baseURL + '/dokter_ralan/rincian?t=' + mlite.token;
             $.post(url, {no_rawat : no_rawat,
             }, function(data) {
               // tampilkan data
               $("#rincian").html(data).show();
+              if(activeTab) {
+                  $('#rincian .nav-tabs a[href="' + activeTab + '"]').tab('show');
+              }
             });
           });
       }
@@ -376,11 +384,15 @@
             kd_jenis_prw: kd_jenis_prw
           } ,function(data) {
             console.log(data);
+            var activeTab = $('#rincian .nav-tabs .active a').attr('href');
             var url = baseURL + '/dokter_ralan/rincian?t=' + mlite.token;
             $.post(url, {no_rawat : no_rawat,
             }, function(data) {
               // tampilkan data
               $("#rincian").html(data).show();
+              if(activeTab) {
+                  $('#rincian .nav-tabs a[href="' + activeTab + '"]').tab('show');
+              }
             });
           });
       }
@@ -403,11 +415,15 @@
       id_template: id_template
     } ,function(data) {
       var no_rawat = $('input:text[name=no_rawat]').val();
+      var activeTab = $('#rincian .nav-tabs .active a').attr('href');
       var url = baseURL + '/dokter_ralan/rincian?t=' + mlite.token;
       $.post(url, {no_rawat : no_rawat,
       }, function(data) {
         // tampilkan data
         $("#rincian").html(data).show();
+        if(activeTab) {
+            $('#rincian .nav-tabs a[href="' + activeTab + '"]').tab('show');
+        }
       });
     });
     //$('#detailModal').modal('hidden');

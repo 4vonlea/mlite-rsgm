@@ -507,8 +507,19 @@ class Admin extends AdminModule
         while ($retryCount < $maxRetries && !$success) {
           $this->db()->pdo()->beginTransaction();
           try {
-            $cek_rad = $this->db('permintaan_radiologi')->where('no_rawat', $_POST['no_rawat'])->where('tgl_permintaan', date('Y-m-d'))->where('tgl_sampel', '=', '0000-00-00')->where('status', 'ralan')->oneArray();
-            if(!$cek_rad) {
+            $cek_rad_all = $this->db('permintaan_radiologi')->where('no_rawat', $_POST['no_rawat'])->where('tgl_permintaan', date('Y-m-d'))->where('tgl_sampel', '=', '0000-00-00')->where('status', 'ralan')->toArray();
+            $target_noorder = false;
+            if(!empty($cek_rad_all)) {
+               foreach ($cek_rad_all as $rad) {
+                  $sudah_ada = $this->db('permintaan_pemeriksaan_radiologi')->where('noorder', $rad['noorder'])->where('kd_jenis_prw', $_POST['kd_jenis_prw'])->oneArray();
+                  if(!$sudah_ada) {
+                     $target_noorder = $rad['noorder'];
+                     break;
+                  }
+               }
+            }
+            
+            if(!$target_noorder) {
               $prefix_rad = 'PR' . date('Ymd');
               $urut = $this->db('permintaan_radiologi')
                   ->like('noorder', $prefix_rad . '%')
@@ -538,16 +549,12 @@ class Admin extends AdminModule
                 ]);
 
             } else {
-              $noorder = $cek_rad['noorder'];
-              $sudah_ada = $this->db('permintaan_pemeriksaan_radiologi')->where('noorder', $noorder)->where('kd_jenis_prw', $_POST['kd_jenis_prw'])->oneArray();
-              if(!$sudah_ada) {
-                $this->db('permintaan_pemeriksaan_radiologi')
-                  ->save([
-                    'noorder' => $noorder,
-                    'kd_jenis_prw' => $_POST['kd_jenis_prw'],
-                    'stts_bayar' => 'Belum'
-                  ]);
-              }
+              $this->db('permintaan_pemeriksaan_radiologi')
+                ->save([
+                  'noorder' => $target_noorder,
+                  'kd_jenis_prw' => $_POST['kd_jenis_prw'],
+                  'stts_bayar' => 'Belum'
+                ]);
             }
             $this->db()->pdo()->commit();
             $success = true;
