@@ -4,19 +4,17 @@ if (!defined("UPGRADABLE")) {
     exit();
 }
 
-if (!function_exists('rrmdir')) {
-    function rrmdir($dir)
-    {
-        $files = array_diff(scandir($dir), array('.','..'));
-        foreach ($files as $file) {
-            if (is_dir("$dir/$file")) {
-                rrmdir("$dir/$file");
-            } else {
-                unlink("$dir/$file");
-            }
+function rrmdir($dir)
+{
+    $files = array_diff(scandir($dir), array('.','..'));
+    foreach ($files as $file) {
+        if (is_dir("$dir/$file")) {
+            rrmdir("$dir/$file");
+        } else {
+            unlink("$dir/$file");
         }
-        return rmdir($dir);
     }
+    return rmdir($dir);
 }
 
 switch ($version) {

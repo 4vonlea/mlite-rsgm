@@ -41,9 +41,7 @@
       <td rowspan="7" style="vertical-align:top;">{?=isset_or($value.nomor)?}</td>
       <td rowspan="6" style="vertical-align:top;white-space: nowrap;">
         {?=isset_or($value.tgl_perawatan)?} {?=isset_or($value.jam_rawat)?}<br>
-        {?=isset_or($value.departemen_petugas)?}<br><br>
-        Kunjungan: {?=isset_or($value.stts_daftar)?}<br>
-        Kasus: {?=isset_or($value.status_poli)?}
+        {?=isset_or($value.departemen_petugas)?}
       </td>
       <td>{?=isset_or($value.suhu_tubuh)?}</td>
       <td>{?=isset_or($value.tensi)?}</td>
@@ -72,9 +70,7 @@
       <td rowspan="4" style="vertical-align:top;white-space: nowrap;">
         <b>Rawat Jalan</b><br>
         {?=isset_or($value.tgl_perawatan)?} {?=isset_or($value.jam_rawat)?}<br>
-        {?=isset_or($value.departemen_petugas)?}<br><br>
-        Kunjungan: {?=isset_or($value.stts_daftar)?}<br>
-        Kasus: {?=isset_or($value.status_poli)?}
+        {?=isset_or($value.departemen_petugas)?}
       </td>
       {/if}
       {if: $admin_mode == 'complex'}

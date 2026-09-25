@@ -391,10 +391,6 @@ $("#form_rincian").on("click", "#simpan_rincian", function (event) {
     $("#rawat_jl_pr").hide();
     $('#biaya').attr("readonly", true);
     $('#nm_perawatan').attr("readonly", true);
-    $('select[name=provider]').val("");
-    if ($('select[name=provider]').hasClass('selectpicker')) {
-        $('select[name=provider]').selectpicker('refresh');
-    }
     $('input:hidden[name=kd_jenis_prw]').val("");
     $('input:text[name=nm_perawatan]').val("");
     $('input:hidden[name=kat]').val("");

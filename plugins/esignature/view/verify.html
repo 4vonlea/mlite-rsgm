@@ -1,138 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Verifikasi Dokumen - {?=isset_or($nama_instansi)?}</title>
+    <title>Verifikasi Tanda Tangan Elektronik</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            padding: 20px; 
-            background: #f4f7f6; 
-            color: #333;
-        }
-        .card { 
-            background: #fff; 
-            padding: 30px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-            max-width: 500px; 
-            margin: 20px auto; 
-        }
-        .header {
-            text-align: center;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
-        }
-        .header img {
-            max-height: 80px;
-            margin-bottom: 10px;
-        }
-        .header h1 {
-            font-size: 1.2rem;
-            margin: 0;
-            color: #2c3e50;
-        }
-        .status-box {
-            text-align: center;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-        }
-        .status-box.success {
-            background: #e8f5e9;
-            color: #2e7d32;
-            border: 1px solid #c8e6c9;
-        }
-        .status-box.error {
-            background: #ffebee;
-            color: #c62828;
-            border: 1px solid #ffcdd2;
-        }
-        .status-box h2 {
-            margin: 0 0 5px 0;
-            font-size: 1.4rem;
-        }
-        .status-box p {
-            margin: 0;
-            font-size: 0.95rem;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        table td {
-            padding: 12px 0;
-            border-bottom: 1px solid #eee;
-            vertical-align: top;
-        }
-        table td:first-child {
-            font-weight: 600;
-            color: #555;
-            width: 40%;
-        }
-        table td:last-child {
-            color: #111;
-        }
-        .footer {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 0.85rem;
-            color: #888;
-        }
+        body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
+        .success { color: green; border-left: 5px solid green; padding-left: 10px; }
+        .error { color: red; border-left: 5px solid red; padding-left: 10px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="header">
-        {if: !empty($logo)}
-            <img src="{?=url()?}/{?=$logo?}" alt="Logo Instansi">
-        {/if}
-        <h1>{?=isset_or($nama_instansi)?}</h1>
-    </div>
+    <h2>Verifikasi Tanda Tangan</h2>
     
     {if: $valid}
-        <div class="status-box success">
-            <h2>✅ Valid</h2>
-            <p>Tanda Tangan Elektronik Sah</p>
+        <div class="success">
+            <h3>✅ Tanda Tangan Valid</h3>
+            <p>Dokumen ini telah ditandatangani secara elektronik dan tercatat dalam sistem kami.</p>
         </div>
-        <table>
+        <table style="width:100%; margin-top: 20px;">
             <tr>
-                <td>Jenis Dokumen</td>
-                <td>{?=isset_or($signature.jenis_dokumen)?}</td>
-            </tr>
-            <tr>
-                <td>Nama Dokumen</td>
-                <td>{?=isset_or($signature.nama_dokumen)?}</td>
-            </tr>
-            <tr>
-                <td>Penandatangan</td>
+                <td><strong>Penandatangan:</strong></td>
                 <td>{?=isset_or($signature.signer_name)?}</td>
             </tr>
             <tr>
-                <td>Waktu TTE</td>
+                <td><strong>Peran:</strong></td>
+                <td>{?=isset_or($signature.signer_role)?}</td>
+            </tr>
+            <tr>
+                <td><strong>Waktu:</strong></td>
                 <td>{?=isset_or($signature.signed_at)?}</td>
             </tr>
             <tr>
-                <td>ID Transaksi</td>
-                <td style="word-break: break-all; font-family: monospace; font-size: 0.9em; color: #666;">
-                    {?=isset_or($signature.signature_hash)?}
-                </td>
+                <td><strong>Hash Dokumen:</strong></td>
+                <td style="word-break: break-all; font-family: monospace;">{?=isset_or($signature.signature_hash)?}</td>
+            </tr>
+            <tr>
+                <td><strong>Legal Basis:</strong></td>
+                <td>{?=isset_or($signature.legal_basis)?}</td>
             </tr>
         </table>
+        <div style="margin-top: 20px; text-align: center;">
+             <img src="{?=url(WEBAPPS_URL.'/berkas/esignature/'.$signature.signature_path)?}" style="max-width: 200px; border: 1px dashed #ccc;">
+        </div>
     {else}
-        <div class="status-box error">
-            <h2>❌ Tidak Valid</h2>
-            <p>Dokumen tidak dikenali atau telah dimanipulasi.</p>
+        <div class="error">
+            <h3>❌ Tidak Valid</h3>
+            <p>Hash tanda tangan tidak ditemukan atau dokumen telah dimanipulasi.</p>
         </div>
     {/if}
     
-    <div class="footer">
-        Dilindungi oleh UU ITE No. 11 Tahun 2008.<br>
-        Sistem Informasi Manajemen mLITE.
-    </div>
+    <hr>
+    <p style="text-align: center; font-size: 0.8em; color: #666;">
+        Generated by mLITE E-Signature Module
+    </p>
 </div>
 
 </body>

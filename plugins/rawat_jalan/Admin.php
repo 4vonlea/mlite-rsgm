@@ -484,9 +484,6 @@ class Admin extends AdminModule
         $input = json_decode(file_get_contents('php://input'), true);
         if (!is_array($input)) $input = $_POST;
         
-        file_put_contents(BASE_DIR . '/uploads/input_biaya_log.txt', print_r($input, true));
-        file_put_contents(BASE_DIR . '/uploads/debug_biaya.txt', date('Y-m-d H:i:s') . " - Received biaya: " . (isset($input['biaya']) ? $input['biaya'] : 'NOT SET') . " | kat: " . $input['kat'] . "\n", FILE_APPEND);
-
         $kategori = trim($input['kat']);
 
         if (empty($kategori) || empty($input['no_rawat']) || empty($input['kd_jenis_prw'])) {
@@ -505,48 +502,42 @@ class Admin extends AdminModule
 
                 if($input['provider'] == 'rawat_jl_dr') {
                     for ($i = 0; $i < $input['jml_tindakan']; $i++) {          
-                        $biaya_input = isset($input['biaya']) ? ($input['biaya'] === '' ? 0 : $input['biaya']) : false;
-                        $is_override = ($biaya_input !== false && $biaya_input != $jns_perawatan['total_byrdr']);
                         $this->db('rawat_jl_dr')->save([
                             'no_rawat' => $input['no_rawat'],
                             'kd_jenis_prw' => $input['kd_jenis_prw'],
                             'kd_dokter' => $input['kode_provider'],
                             'tgl_perawatan' => $input['tgl_perawatan'],
                             'jam_rawat' => date('H:i:s', strtotime($input['jam_rawat']. ' +'.$i.'0 seconds')),
-                            'material' => $is_override ? 0 : $jns_perawatan['material'],
-                            'bhp' => $is_override ? 0 : $jns_perawatan['bhp'],
-                            'tarif_tindakandr' => $is_override ? $biaya_input : $jns_perawatan['tarif_tindakandr'],
-                            'kso' => $is_override ? 0 : $jns_perawatan['kso'],
-                            'menejemen' => $is_override ? 0 : $jns_perawatan['menejemen'],
-                            'biaya_rawat' => $is_override ? $biaya_input : $jns_perawatan['total_byrdr'],
+                            'material' => $jns_perawatan['material'],
+                            'bhp' => $jns_perawatan['bhp'],
+                            'tarif_tindakandr' => $jns_perawatan['tarif_tindakandr'],
+                            'kso' => $jns_perawatan['kso'],
+                            'menejemen' => $jns_perawatan['menejemen'],
+                            'biaya_rawat' => $jns_perawatan['total_byrdr'],
                             'stts_bayar' => 'Belum'
                         ]);
                     }
                 }
                 if($input['provider'] == 'rawat_jl_pr') {
                     for ($i = 0; $i < $input['jml_tindakan']; $i++) {          
-                        $biaya_input = isset($input['biaya']) ? ($input['biaya'] === '' ? 0 : $input['biaya']) : false;
-                        $is_override = ($biaya_input !== false && $biaya_input != $jns_perawatan['total_byrpr']);
                         $this->db('rawat_jl_pr')->save([
                             'no_rawat' => $input['no_rawat'],
                             'kd_jenis_prw' => $input['kd_jenis_prw'],
                             'nip' => $input['kode_provider2'],
                             'tgl_perawatan' => $input['tgl_perawatan'],
                             'jam_rawat' => date('H:i:s', strtotime($input['jam_rawat']. ' +'.$i.'0 seconds')),
-                            'material' => $is_override ? 0 : $jns_perawatan['material'],
-                            'bhp' => $is_override ? 0 : $jns_perawatan['bhp'],
-                            'tarif_tindakanpr' => $is_override ? $biaya_input : $jns_perawatan['tarif_tindakanpr'],
-                            'kso' => $is_override ? 0 : $jns_perawatan['kso'],
-                            'menejemen' => $is_override ? 0 : $jns_perawatan['menejemen'],
-                            'biaya_rawat' => $is_override ? $biaya_input : $jns_perawatan['total_byrpr'],
+                            'material' => $jns_perawatan['material'],
+                            'bhp' => $jns_perawatan['bhp'],
+                            'tarif_tindakanpr' => $jns_perawatan['tarif_tindakanpr'],
+                            'kso' => $jns_perawatan['kso'],
+                            'menejemen' => $jns_perawatan['menejemen'],
+                            'biaya_rawat' => $jns_perawatan['total_byrpr'],
                             'stts_bayar' => 'Belum'
                         ]);
                     }
                 }
                 if($input['provider'] == 'rawat_jl_drpr') {
                     for ($i = 0; $i < $input['jml_tindakan']; $i++) {          
-                        $biaya_input = isset($input['biaya']) ? ($input['biaya'] === '' ? 0 : $input['biaya']) : false;
-                        $is_override = ($biaya_input !== false && $biaya_input != $jns_perawatan['total_byrdrpr']);
                         $this->db('rawat_jl_drpr')->save([
                             'no_rawat' => $input['no_rawat'],
                             'kd_jenis_prw' => $input['kd_jenis_prw'],
@@ -554,13 +545,13 @@ class Admin extends AdminModule
                             'nip' => $input['kode_provider2'],
                             'tgl_perawatan' => $input['tgl_perawatan'],
                             'jam_rawat' => date('H:i:s', strtotime($input['jam_rawat']. ' +'.$i.'0 seconds')),
-                            'material' => $is_override ? 0 : $jns_perawatan['material'],
-                            'bhp' => $is_override ? 0 : $jns_perawatan['bhp'],
-                            'tarif_tindakandr' => $is_override ? 0 : $jns_perawatan['tarif_tindakandr'],
-                            'tarif_tindakanpr' => $is_override ? $biaya_input : $jns_perawatan['tarif_tindakanpr'],
-                            'kso' => $is_override ? 0 : $jns_perawatan['kso'],
-                            'menejemen' => $is_override ? 0 : $jns_perawatan['menejemen'],
-                            'biaya_rawat' => $is_override ? $biaya_input : $jns_perawatan['total_byrdrpr'],
+                            'material' => $jns_perawatan['material'],
+                            'bhp' => $jns_perawatan['bhp'],
+                            'tarif_tindakandr' => $jns_perawatan['tarif_tindakandr'],
+                            'tarif_tindakanpr' => $jns_perawatan['tarif_tindakanpr'],
+                            'kso' => $jns_perawatan['kso'],
+                            'menejemen' => $jns_perawatan['menejemen'],
+                            'biaya_rawat' => $jns_perawatan['total_byrdrpr'],
                             'stts_bayar' => 'Belum'
                         ]);
                     }
@@ -1994,48 +1985,42 @@ class Admin extends AdminModule
         $jns_perawatan = $this->db('jns_perawatan')->where('kd_jenis_prw', $_POST['kd_jenis_prw'])->oneArray();
         if($_POST['provider'] == 'rawat_jl_dr') {
           for ($i = 0; $i < $_POST['jml_tindakan']; $i++) {          
-            $biaya_input = isset($_POST['biaya']) ? ($_POST['biaya'] === '' ? 0 : $_POST['biaya']) : false;
-            $is_override = ($biaya_input !== false && $biaya_input != $jns_perawatan['total_byrdr']);
             $this->db('rawat_jl_dr')->save([
               'no_rawat' => htmlspecialchars($_POST['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
               'kd_jenis_prw' => $_POST['kd_jenis_prw'],
               'kd_dokter' => $_POST['kode_provider'],
               'tgl_perawatan' => $_POST['tgl_perawatan'],
               'jam_rawat' => date('H:i:s', strtotime($_POST['jam_rawat']. ' +'.$i.'0 seconds')),
-              'material' => $is_override ? 0 : $jns_perawatan['material'],
-              'bhp' => $is_override ? 0 : $jns_perawatan['bhp'],
-              'tarif_tindakandr' => $is_override ? $biaya_input : $jns_perawatan['tarif_tindakandr'],
-              'kso' => $is_override ? 0 : $jns_perawatan['kso'],
-              'menejemen' => $is_override ? 0 : $jns_perawatan['menejemen'],
-              'biaya_rawat' => $is_override ? $biaya_input : $jns_perawatan['total_byrdr'],
+              'material' => $jns_perawatan['material'],
+              'bhp' => $jns_perawatan['bhp'],
+              'tarif_tindakandr' => $jns_perawatan['tarif_tindakandr'],
+              'kso' => $jns_perawatan['kso'],
+              'menejemen' => $jns_perawatan['menejemen'],
+              'biaya_rawat' => $jns_perawatan['total_byrdr'],
               'stts_bayar' => 'Belum'
             ]);
           }
         }
         if($_POST['provider'] == 'rawat_jl_pr') {
           for ($i = 0; $i < $_POST['jml_tindakan']; $i++) {          
-            $biaya_input = isset($_POST['biaya']) ? ($_POST['biaya'] === '' ? 0 : $_POST['biaya']) : false;
-            $is_override = ($biaya_input !== false && $biaya_input != $jns_perawatan['total_byrpr']);
             $this->db('rawat_jl_pr')->save([
               'no_rawat' => htmlspecialchars($_POST['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
               'kd_jenis_prw' => $_POST['kd_jenis_prw'],
               'nip' => $_POST['kode_provider2'],
               'tgl_perawatan' => $_POST['tgl_perawatan'],
               'jam_rawat' => date('H:i:s', strtotime($_POST['jam_rawat']. ' +'.$i.'0 seconds')),
-              'material' => $is_override ? 0 : $jns_perawatan['material'],
-              'bhp' => $is_override ? 0 : $jns_perawatan['bhp'],
-              'tarif_tindakanpr' => $is_override ? $biaya_input : $jns_perawatan['tarif_tindakanpr'],
-              'kso' => $is_override ? 0 : $jns_perawatan['kso'],
-              'menejemen' => $is_override ? 0 : $jns_perawatan['menejemen'],
-              'biaya_rawat' => $is_override ? $biaya_input : $jns_perawatan['total_byrpr'],
+              'material' => $jns_perawatan['material'],
+              'bhp' => $jns_perawatan['bhp'],
+              'tarif_tindakanpr' => $jns_perawatan['tarif_tindakanpr'],
+              'kso' => $jns_perawatan['kso'],
+              'menejemen' => $jns_perawatan['menejemen'],
+              'biaya_rawat' => $jns_perawatan['total_byrpr'],
               'stts_bayar' => 'Belum'
             ]);
           }
         }
         if($_POST['provider'] == 'rawat_jl_drpr') {
           for ($i = 0; $i < $_POST['jml_tindakan']; $i++) {          
-            $biaya_input = isset($_POST['biaya']) ? ($_POST['biaya'] === '' ? 0 : $_POST['biaya']) : false;
-            $is_override = ($biaya_input !== false && $biaya_input != $jns_perawatan['total_byrdrpr']);
             $this->db('rawat_jl_drpr')->save([
               'no_rawat' => htmlspecialchars($_POST['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
               'kd_jenis_prw' => $_POST['kd_jenis_prw'],
@@ -2043,13 +2028,13 @@ class Admin extends AdminModule
               'nip' => $_POST['kode_provider2'],
               'tgl_perawatan' => $_POST['tgl_perawatan'],
               'jam_rawat' => date('H:i:s', strtotime($_POST['jam_rawat']. ' +'.$i.'0 seconds')),
-              'material' => $is_override ? 0 : $jns_perawatan['material'],
-              'bhp' => $is_override ? 0 : $jns_perawatan['bhp'],
-              'tarif_tindakandr' => $is_override ? 0 : $jns_perawatan['tarif_tindakandr'],
-              'tarif_tindakanpr' => $is_override ? $biaya_input : $jns_perawatan['tarif_tindakanpr'],
-              'kso' => $is_override ? 0 : $jns_perawatan['kso'],
-              'menejemen' => $is_override ? 0 : $jns_perawatan['menejemen'],
-              'biaya_rawat' => $is_override ? $biaya_input : $jns_perawatan['total_byrdrpr'],
+              'material' => $jns_perawatan['material'],
+              'bhp' => $jns_perawatan['bhp'],
+              'tarif_tindakandr' => $jns_perawatan['tarif_tindakandr'],
+              'tarif_tindakanpr' => $jns_perawatan['tarif_tindakanpr'],
+              'kso' => $jns_perawatan['kso'],
+              'menejemen' => $jns_perawatan['menejemen'],
+              'biaya_rawat' => $jns_perawatan['total_byrdrpr'],
               'stts_bayar' => 'Belum'
             ]);
           }
@@ -2231,10 +2216,6 @@ class Admin extends AdminModule
       $rows = $this->db('pemeriksaan_ralan')
         ->where('no_rawat', $_POST['no_rawat'])
         ->toArray();
-      $reg = $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->oneArray();
-      $stts_daftar = $reg['stts_daftar'] ?? '-';
-      $status_poli = $reg['status_poli'] ?? '-';
-
       $i = 1;
       $row['nama_petugas'] = '';
       $row['departemen_petugas'] = '';
@@ -2243,19 +2224,6 @@ class Admin extends AdminModule
         $row['nomor'] = $i++;
         $row['nama_petugas'] = $this->core->getPegawaiInfo('nama',$row['nip']);
         $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
-        $row['stts_daftar'] = $stts_daftar;
-        $row['status_poli'] = $status_poli;
-        
-        $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
-        $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ralan')->where('ref_id', $ref_id)->oneArray();
-        if ($sig) {
-            $row['is_signed'] = true;
-            $row['signature_hash'] = $sig['signature_hash'];
-        } else {
-            $row['is_signed'] = false;
-            $row['sign_ref_id'] = $ref_id;
-        }
-
         $result[] = $row;
       }
 
@@ -2268,21 +2236,10 @@ class Admin extends AdminModule
         $row['nomor'] = $i++;
         $row['nama_petugas'] = $this->core->getPegawaiInfo('nama',$row['nip']);
         $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
-
-        $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
-        $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ranap')->where('ref_id', $ref_id)->oneArray();
-        if ($sig) {
-            $row['is_signed'] = true;
-            $row['signature_hash'] = $sig['signature_hash'];
-        } else {
-            $row['is_signed'] = false;
-            $row['sign_ref_id'] = $ref_id;
-        }
-
         $result_ranap[] = $row;
       }
 
-      echo $this->draw('soap.html', ['pemeriksaan' => htmlspecialchars_array($result), 'pemeriksaan_ranap' => htmlspecialchars_array($result_ranap), 'diagnosa' => htmlspecialchars_array($diagnosa), 'prosedur' => htmlspecialchars_array($prosedur), 'admin_mode' => $this->settings->get('settings.admin_mode'), 'current_user' => $this->core->getUserInfo('username')]);
+      echo $this->draw('soap.html', ['pemeriksaan' => htmlspecialchars_array($result), 'pemeriksaan_ranap' => htmlspecialchars_array($result_ranap), 'diagnosa' => htmlspecialchars_array($diagnosa), 'prosedur' => htmlspecialchars_array($prosedur), 'admin_mode' => $this->settings->get('settings.admin_mode')]);
       exit();
     }
 

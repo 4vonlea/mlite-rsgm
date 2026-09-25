@@ -33,13 +33,13 @@
                             <p><strong>Penandatangan:</strong> {?=isset_or($signer_name)?} ({?=isset_or($signer_role)?})</p>
                         </div>
                         
-                        <div class="form-group" style="margin-top: 20px;">
-                            <label for="passphrase">Masukkan Kata Sandi (Login) untuk Memverifikasi:</label>
-                            <input type="password" id="passphrase" class="form-control" placeholder="Kata Sandi..." style="font-size: 18px; padding: 10px; height: auto;">
+                        <div class="signature-wrapper" style="border: 1px solid #ccc; width: 100%; height: 300px; position: relative;">
+                            <canvas id="signature-pad" style="width: 100%; height: 100%; touch-action: none;"></canvas>
                         </div>
                         
                         <br>
-                        <button type="button" class="btn btn-primary" id="save"><i class="fa fa-lock"></i> Verifikasi & Tanda Tangani</button>
+                        <button type="button" class="btn btn-warning" id="clear">Hapus</button>
+                        <button type="button" class="btn btn-primary" id="save">Simpan Tanda Tangan</button>
                     </div>
                 </div>
             </div>
@@ -48,73 +48,59 @@
 </body>
 
 <script>
+    var wrapper = document.querySelector(".signature-wrapper canvas");
+    var clearButton = document.getElementById("clear");
     var saveButton = document.getElementById("save");
+    var canvas = wrapper;
+    
+    function resizeCanvas() {
+        var ratio =  Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext("2d").scale(ratio, ratio);
+    }
+    window.onresize = resizeCanvas;
+    resizeCanvas();
+
+    var signaturePad = new SignaturePad(canvas, {
+        backgroundColor: 'rgb(255, 255, 255)'
+    });
+
+    clearButton.addEventListener("click", function (event) {
+        signaturePad.clear();
+    });
 
     saveButton.addEventListener("click", function (event) {
-        var passphrase = document.getElementById("passphrase").value;
-        if (passphrase.trim() === "") {
-            alert("Silakan masukkan kata sandi (passphrase) terlebih dahulu.");
+        if (signaturePad.isEmpty()) {
+            alert("Silakan tanda tangan terlebih dahulu.");
         } else {
-            // Disable button during process
-            saveButton.disabled = true;
-            saveButton.innerHTML = "Memverifikasi...";
-
+            var dataUrl = signaturePad.toDataURL();
             $.post('{?=url([ADMIN, "esignature", "saveSignature"])?}&t={?=$_SESSION['token']?}', {
                 ref_type: '{?=isset_or($ref_type)?}',
                 ref_id: '{?=isset_or($ref_id)?}',
                 signer_role: '{?=isset_or($signer_role)?}',
                 signer_id: '{?=isset_or($signer_id)?}',
                 signer_name: '{?=isset_or($signer_name)?}',
-                passphrase: passphrase
+                image_data: dataUrl
             }, function(response){
                 var res = typeof response === 'object' ? response : JSON.parse(response);
                 if(res.status == 'success') {
+                    alert('Tanda tangan berhasil disimpan.\nHash: ' + res.hash);
+                    
+                    // Open PDF in new window
+                    window.open('{?=url([ADMIN, "esignature", "generatepdf", $ref_type, $ref_id])?}', '_blank');
+
                     // Close window or refresh parent
                     if(window.opener) {
-                        try {
-                            var $parent = window.opener.jQuery;
-                            var container = $parent('#sign_container_{?=isset_or($ref_id)?}');
-                            if (container.length) {
-                                var verifyUrl = '{?=url(["esignature", "verify"])?}/' + res.hash;
-                                var qrClass = 'qr_' + res.hash.substring(0, 8);
-                                
-                                container.html(
-                                    '<div class="' + qrClass + '" style="margin-top:10px;margin-bottom:10px;"></div>' +
-                                    '{?=isset_or($signer_name)?}'
-                                );
-                                
-                                $parent('.' + qrClass).qrcode({
-                                    width: 120,
-                                    height: 120,
-                                    text: verifyUrl
-                                });
-                            }
-                        } catch (e) {
-                            console.error('Error injecting QR:', e);
-                        }
+                        window.opener.location.reload();
                         window.close();
                     } else {
                         window.location.reload();
                     }
                 } else {
-                    alert('Gagal: ' + (res.message || 'Kata sandi tidak valid.'));
-                    saveButton.disabled = false;
-                    saveButton.innerHTML = '<i class="fa fa-lock"></i> Verifikasi & Tanda Tangani';
+                    alert('Gagal menyimpan.');
                 }
-            }).fail(function(xhr) {
-                var res = JSON.parse(xhr.responseText || '{}');
-                alert('Gagal: ' + (res.message || 'Terjadi kesalahan pada server.'));
-                saveButton.disabled = false;
-                saveButton.innerHTML = '<i class="fa fa-lock"></i> Verifikasi & Tanda Tangani';
             });
-        }
-    });
-
-    // Enter key support
-    document.getElementById("passphrase").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            saveButton.click();
         }
     });
 </script>

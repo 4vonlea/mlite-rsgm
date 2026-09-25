@@ -33,76 +33,14 @@
 	</style>
 
 	<script>
-function KirimEmail() {
-    var email = document.getElementById("email").value;
-    var receiver = document.getElementById("receiver").value;
-    var file = "{?=url()?}/uploads/radiologi/{$filename}.pdf";
-    var pdfUrl = window.location.href;
-    pdfUrl += (pdfUrl.indexOf('?') > -1) ? '&action=pdf' : '?action=pdf';
-
-    var btn = $('button[onclick="KirimEmail()"]');
-    var oldText = btn.html();
-    btn.html('<i class="fa fa-spinner fa-spin"></i> Memproses...').prop('disabled', true);
-
-    $.get(pdfUrl, function() {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                var data = xhttp.responseText;
-                alert(data);
-                btn.html(oldText).prop('disabled', false);
-            }
-        };
-        xhttp.open("POST", "{?=url([ADMIN,'radiologi','kirimemail'])?}", true);
-        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhttp.send("email=" + email + "&receiver=" + receiver + "&file=" + file);
-    }).fail(function() {
-        alert("Gagal membuat dokumen PDF.");
-        btn.html(oldText).prop('disabled', false);
-    });
-}
-
-function KirimWA() {
-    var api_key = '{$wagateway.token}';
-    var sender = '{$wagateway.phonenumber}';
-    var number = document.getElementById("number").value;
-    var message = document.getElementById("message").value;
-    var tipe = 'pdf';
-    var file = "{?=url()?}/uploads/radiologi/{$filename}.pdf";
-    var pdfUrl = window.location.href;
-    pdfUrl += (pdfUrl.indexOf('?') > -1) ? '&action=pdf' : '?action=pdf';
-
-    var btn = $('button[onclick="KirimWA()"]');
-    var oldText = btn.html();
-    btn.html('<i class="fa fa-spinner fa-spin"></i> Memproses...').prop('disabled', true);
-
-    $.get(pdfUrl, function() {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                var data = xhttp.responseText;
-                if(data.indexOf('504 Gateway Time-out') != -1) {
-                    alert('Timeout!!! Gagal mengirim pesan.');
-                } else {
-                    var jsonResponse = JSON.parse(data);
-                    if(jsonResponse["status"] == true) {
-                        alert('Sukses mengirim pesan.');
-                    } else {
-                        alert('Gagal mengirim pesan.\n' + jsonResponse["msg"]);
-                    }
-                }
-                btn.html(oldText).prop('disabled', false);
-            }
-        };
-        xhttp.open("POST", "{?=url([ADMIN,'api','kirimwadocument'])?}", true);
-        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhttp.send("api_key=" + api_key + "&sender=" + sender + "&number=" + number + "&message=" + message + "&tipe=" + tipe + "&file=" + file);
-    }).fail(function() {
-        alert("Gagal membuat dokumen PDF.");
-        btn.html(oldText).prop('disabled', false);
-    });
-}
-</script>
+	function printContent(el){
+	var restorepage = document.body.innerHTML;
+	var printcontent = document.getElementById(el).innerHTML;
+	document.body.innerHTML = printcontent;
+	window.print();
+	document.body.innerHTML = restorepage; window.close();
+	}
+	</script>
 	</head>
 
 	<body>
@@ -209,19 +147,10 @@ function KirimWA() {
 							<br>
 							<br>
 							<center>
-							<a href="{?=url()?}/esignature/verify/{?=isset_or($signature.signature_hash)?}" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">
-								<img src="{$qrCode}" width="100px"/>
-							</a>
+							<img src="{$qrCode}" width="100px"/>
 							</center>
 							<br>
-							{if: $signature}
-							<div style="font-size: 10px; color: #4CAF50; margin-bottom: 5px;">
-								<i>Ditandatangani secara elektronik oleh:</i>
-							</div>
-							{$signature.signer_name}
-							{else}
 							{$pj_radiologi}
-							{/if}
 					</td>
 				</tr>
 			</table>
@@ -291,73 +220,54 @@ function KirimWA() {
 
 <script>
 function KirimEmail() {
-    var email = document.getElementById("email").value;
-    var receiver = document.getElementById("receiver").value;
-    var file = "{?=url()?}/uploads/radiologi/{$filename}.pdf";
-    var pdfUrl = window.location.href;
-    pdfUrl += (pdfUrl.indexOf('?') > -1) ? '&action=pdf' : '?action=pdf';
-
-    var btn = $('button[onclick="KirimEmail()"]');
-    var oldText = btn.html();
-    btn.html('<i class="fa fa-spinner fa-spin"></i> Memproses...').prop('disabled', true);
-
-    $.get(pdfUrl, function() {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                var data = xhttp.responseText;
-                alert(data);
-                btn.html(oldText).prop('disabled', false);
-            }
-        };
-        xhttp.open("POST", "{?=url([ADMIN,'radiologi','kirimemail'])?}", true);
-        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhttp.send("email=" + email + "&receiver=" + receiver + "&file=" + file);
-    }).fail(function() {
-        alert("Gagal membuat dokumen PDF.");
-        btn.html(oldText).prop('disabled', false);
-    });
+	var xhttp = new XMLHttpRequest();
+	var email = document.getElementById("email").value;
+	var receiver = document.getElementById("receiver").value;
+	var file = "{?=url()?}/uploads/radiologi/{$filename}.pdf";
+	console.log(email + " - " + receiver + " - " + file);
+	xhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			var data=xhttp.responseText;
+			console.log(data);
+			alert(data);
+		}
+	};
+	xhttp.open("POST", "{?=url([ADMIN,'radiologi','kirimemail'])?}", true);
+	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	xhttp.send("email=" + email + "&receiver=" + receiver + "&file=" + file);
 }
-
 function KirimWA() {
-    var api_key = '{$wagateway.token}';
-    var sender = '{$wagateway.phonenumber}';
-    var number = document.getElementById("number").value;
-    var message = document.getElementById("message").value;
-    var tipe = 'pdf';
-    var file = "{?=url()?}/uploads/radiologi/{$filename}.pdf";
-    var pdfUrl = window.location.href;
-    pdfUrl += (pdfUrl.indexOf('?') > -1) ? '&action=pdf' : '?action=pdf';
-
-    var btn = $('button[onclick="KirimWA()"]');
-    var oldText = btn.html();
-    btn.html('<i class="fa fa-spinner fa-spin"></i> Memproses...').prop('disabled', true);
-
-    $.get(pdfUrl, function() {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                var data = xhttp.responseText;
-                if(data.indexOf('504 Gateway Time-out') != -1) {
-                    alert('Timeout!!! Gagal mengirim pesan.');
-                } else {
-                    var jsonResponse = JSON.parse(data);
-                    if(jsonResponse["status"] == true) {
-                        alert('Sukses mengirim pesan.');
-                    } else {
-                        alert('Gagal mengirim pesan.\n' + jsonResponse["msg"]);
-                    }
-                }
-                btn.html(oldText).prop('disabled', false);
-            }
-        };
-        xhttp.open("POST", "{?=url([ADMIN,'api','kirimwadocument'])?}", true);
-        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhttp.send("api_key=" + api_key + "&sender=" + sender + "&number=" + number + "&message=" + message + "&tipe=" + tipe + "&file=" + file);
-    }).fail(function() {
-        alert("Gagal membuat dokumen PDF.");
-        btn.html(oldText).prop('disabled', false);
-    });
+	var xhttp = new XMLHttpRequest();
+	var api_key = '{$wagateway.token}';
+	var sender = '{$wagateway.phonenumber}';
+	var number = document.getElementById("number").value;
+	var message = document.getElementById("message").value;
+	var tipe = 'pdf';
+	var file = "{?=url()?}/uploads/radiologi/{$filename}.pdf";
+	console.log(number + " - " + message);
+	xhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			var data=xhttp.responseText;
+			var timeout = '504 Gateway Time-out';
+			if(data.indexOf(timeout) != -1) {
+    			alert('Timeout!!! Gagal mengirim pesan.');
+			} else {
+    			var jsonResponse = JSON.parse(data);
+    			if(jsonResponse["status"] == true) {
+    				alert('Sukses mengirim pesan.');
+    			} else {
+					alert('Gagal mengirim pesan.\n' + jsonResponse["msg"]);
+    			}
+			}
+		}
+	};
+	xhttp.open("POST", "{?=url([ADMIN,'api','kirimwa'])?}", true);
+	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	xhttp.send("api_key=" + api_key + "&sender=" + sender + "&number=" + number + "&message=" + message);
+	xhttp.open("POST", "{?=url([ADMIN,'api','kirimwadocument'])?}", true);
+	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	xhttp.send("api_key=" + api_key + "&sender=" + sender + "&number=" + number + "&message=" + message + "&tipe=" + tipe + "&file=" + file);
 }
 </script>
+
 </html>
