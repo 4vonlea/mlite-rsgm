@@ -64,7 +64,11 @@ define('DBPASS', $db_pass);
 define('DBNAME', $db_name);
 
 // URL Webapps
-define('WEBAPPS_URL', 'https://rsgmha.web.id/uploads'); // Sesuaikan http://mlite.loc dengan domain atau IP Address server
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+$host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+$dir = dirname($_SERVER['SCRIPT_NAME']);
+$dir = $dir === '\\' || $dir === '/' ? '' : $dir;
+define('WEBAPPS_URL', $protocol . '://' . $host . $dir . '/uploads');
 define('WEBAPPS_PATH', BASE_DIR . '/uploads');
 
 // Multi APP
