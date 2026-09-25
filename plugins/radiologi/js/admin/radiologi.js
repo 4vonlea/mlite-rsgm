@@ -937,3 +937,128 @@ $("#form_rincian").on("click","#jam_reg", function(event){
   }   
 
 {/if}
+$(document).on('click', '.btn-tte', function(e) {
+    e.preventDefault();
+    var ref_type = $(this).attr('data-ref_type');
+    var ref_id = $(this).attr('data-ref_id');
+    var signer_name = $(this).attr('data-signer_name');
+    var baseURL = mlite.url + '/' + mlite.admin;
+    var url = baseURL + '/esignature/saveSignature?t=' + mlite.token;
+    
+    if ($('#tte-modal-style').length === 0) {
+        $('head').append('<style id="tte-modal-style">'+
+            '.modal-tte-center { display: flex !important; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); }' +
+            '.modal-tte-center .modal-dialog { margin: auto; width: 400px; max-width: 90vw; }' +
+            '.modal-tte-center .modal-content { border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: none; }' +
+            '.modal-tte-center .modal-header { border-bottom: none; padding-top: 20px; }' +
+            '.modal-tte-center .modal-footer { border-top: none; background: #f8f9fa; border-radius: 0 0 12px 12px; padding: 15px 20px; }' +
+            '.modal-tte-center .btn-tte-confirm { background: #3498db; color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; width: 100%; transition: all 0.3s; }' +
+            '.modal-tte-center .btn-tte-confirm:hover { background: #2980b9; }' +
+            '.modal-tte-center .btn-tte-cancel { color: #888; background: transparent; border: none; font-weight: bold; padding: 8px; width: 100%; margin-top: 5px; }' +
+            '.modal-tte-center .btn-tte-cancel:hover { color: #555; }' +
+        '</style>');
+    }
+
+    var formHtml = '<div class="text-center" style="padding: 10px;">' +
+        '<i class="fa fa-lock fa-4x text-primary" style="margin-bottom: 20px; color: #3498db;"></i>' +
+        '<h4 style="margin-bottom: 15px; color: #333; font-weight: bold;">Tanda Tangan Elektronik</h4>' +
+        '<p class="text-muted" style="margin-bottom: 25px; font-size: 14px;">Masukkan kata sandi (login) Anda untuk menyetujui dokumen ini.</p>' +
+        '<div class="form-group">' +
+            '<input type="password" id="tte-passphrase-input" class="form-control text-center" placeholder="Kata Sandi" style="font-size: 18px; letter-spacing: 2px; padding: 20px 15px; border-radius: 8px; border: 2px solid #ddd; outline: none; box-shadow: none;">' +
+        '</div>' +
+    '</div>';
+
+    var dialog = bootbox.dialog({
+        message: formHtml,
+        className: 'modal-tte-center',
+        closeButton: false,
+        buttons: {
+            confirm: {
+                label: 'VERIFIKASI SEKARANG',
+                className: 'btn-tte-confirm',
+                callback: function () {
+                    var passphrase = $('#tte-passphrase-input').val();
+                    if (passphrase === "") {
+                        $('#tte-passphrase-input').css('border-color', '#e74c3c');
+                        $('#tte-passphrase-input').animate({marginLeft: "-10px"}, 100).animate({marginLeft: "10px"}, 100).animate({marginLeft: "0"}, 100);
+                        return false;
+                    }
+                    
+                    var processingDialog = bootbox.dialog({
+                        message: '<p class="text-center mb-0" style="padding: 20px;"><i class="fa fa-spin fa-spinner fa-2x text-primary" style="margin-bottom:10px;"></i><br>Sedang memverifikasi...</p>',
+                        closeButton: false,
+                        className: 'modal-tte-center'
+                    });
+                    
+                    $.post(url, {
+                        ref_type: ref_type,
+                        ref_id: ref_id,
+                        signer_name: signer_name,
+                        passphrase: passphrase
+                    }, function(response) {
+                        processingDialog.modal('hide');
+                        var res = typeof response === 'object' ? response : JSON.parse(response);
+                        if (res.status == 'success') {
+                            var container = $('#sign_container_' + ref_id);
+                            if (container.length) {
+                                $('#btn-cetak-'+ref_id).removeAttr('disabled').removeAttr('title');
+                                $('button[data-ref_id="'+ref_id+'"]').hide();
+                                
+                                var verifyUrl = mlite.url + '/esignature/verify/' + res.hash;
+                                var qrClass = 'qr_' + res.hash.substring(0, 8);
+                                container.html(
+                                    '<a href="'+verifyUrl+'" target="_blank" style="cursor:default; text-decoration:none; color:inherit;"><div class="' + qrClass + '" style="margin-top:10px;margin-bottom:10px; display:inline-block;"></div></a>' +
+                                    '<br><small class="text-muted"><i class="fa fa-check-circle text-success"></i> Ditandatangani oleh ' + signer_name + '</small>'
+                                );
+                                $('.' + qrClass).qrcode({
+                                    width: 100,
+                                    height: 100,
+                                    text: res.hash
+                                });
+                                                                $('#btn-cetak-'+ref_id).removeAttr('disabled').removeAttr('title');
+                                // Hide the TTE button
+                                $('button[data-ref_id="'+ref_id+'"]').hide();
+                                                        } else {
+                                // fallback if container not found
+                                $('#btn-cetak-'+ref_id).removeAttr('disabled').removeAttr('title');
+                                $('button[data-ref_id="'+ref_id+'"]').hide();
+                                bootbox.alert({
+                                    message: '<h4 class="text-success"><i class="fa fa-check-circle"></i> Berhasil ditandatangani!</h4>',
+                                    className: 'modal-tte-center'
+                                });
+                            }
+                        } else {
+                            bootbox.alert({
+                                message: '❌ Gagal: ' + (res.message || 'Kata sandi tidak valid.'),
+                                className: 'modal-tte-center'
+                            });
+                        }
+                    }).fail(function(xhr) {
+                        processingDialog.modal('hide');
+                        var res = {};
+                        try { res = JSON.parse(xhr.responseText || '{}'); } catch(e) {}
+                        bootbox.alert({
+                            message: '❌ Gagal: ' + (res.message || 'Terjadi kesalahan pada server.'),
+                            className: 'modal-tte-center'
+                        });
+                    });
+                }
+            },
+            cancel: {
+                label: 'Batal',
+                className: 'btn-tte-cancel',
+                callback: function() {}
+            }
+        }
+    });
+
+    dialog.on('shown.bs.modal', function() {
+        $('#tte-passphrase-input').focus();
+        $('#tte-passphrase-input').on('keypress', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                $('.btn-tte-confirm').click();
+            }
+        });
+    });
+});

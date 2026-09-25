@@ -115,15 +115,27 @@
                 <i class="fa fa-edit"></i> Hasil
               </button>
               <button type="button" class="btn btn-warning btn-sm cetak_hasil"
+                id="btn-cetak-{?=isset_or($value.ref_id)?}"
+                {if: !$value.signature}disabled title="Harap tanda tangani dokumen terlebih dahulu"{/if}
                 data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}" data-jam_periksa="{?=isset_or($value.jam)?}"
                 data-status="{?=isset_or($value.status_periksa)?}">
                 <i class="fa fa-print"></i> Cetak
               </button>
+              {if: !$value.signature}
+                {if: $current_user == $pj_radiologi}
+              <button type="button" class="btn btn-success btn-sm btn-tte"
+                data-ref_type="radiologi_hasil" 
+                data-ref_id="{?=isset_or($value.ref_id)?}" 
+                data-signer_name="{?=isset_or($value.nm_dokter)?}">
+                <i class="fa fa-certificate"></i> Tanda Tangani
+              </button>
+                {/if}
+              {/if}
               <a href="{?=url([ADMIN,'orthanc','bridgingorthanc',convertNorawat($value.no_rawat), strtolower($value.status_periksa), $value.tgl_periksa, $value.jam])?}"
                 class="btn btn-info btn-sm" data-toggle="modal" data-target="#orthancModal">
                 <i class="fa fa-image"></i> PACS
               </a>
-              <button type="button" class="btn btn-danger btn-sm {if: $_SESSION['mlite_user'] !='1'}disabled{else}hapus_radiologi{/if}"
+              <button type="button" class="btn btn-danger btn-sm hapus_radiologi"
                 data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}"
                 data-jam_periksa="{?=isset_or($value.jam)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}"
                 data-status="{?=isset_or($value.status_periksa)?}">
@@ -141,13 +153,30 @@
             {loop: $value.hasil_radiologi as $data1}
             <div class="well well-sm" style="background:#fcfcfc; border: 1px solid #eee; position:relative; padding-right: 40px;">
               {?=nl2br(isset_or($data1.hasil))?}
-              <button type="button" class="btn btn-danger btn-xs {if: $_SESSION['mlite_user'] !='1'}disabled{else}hapus_hasil_radiologi{/if}"
+              <button type="button" class="btn btn-danger btn-xs hapus_hasil_radiologi"
                 data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}"
                 data-jam_periksa="{?=isset_or($value.jam)?}" style="position:absolute; top:8px; right:8px;" title="Hapus Hasil">
                 <i class="fa fa-trash"></i>
               </button>
             </div>
             {/loop}
+            
+            <div id="sign_container_{?=isset_or($value.ref_id)?}" class="text-right" style="margin-top: 10px;">
+              {if: $value.signature}
+              <a href="{?=url()?}/esignature/verify/{?=isset_or($value.signature.signature_hash)?}" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">
+                <div class="qr_{?=substr($value.signature.signature_hash, 0, 8)?}" style="margin-top:10px;margin-bottom:10px; display:inline-block;"></div>
+              </a>
+              <script>
+                  jQuery('.qr_{?=substr($value.signature.signature_hash, 0, 8)?}').qrcode({
+                      width: 100,
+                      height: 100,
+                      text: "{?=isset_or($value.signature.signature_hash)?}"
+                  });
+              </script>
+              <br><small class="text-muted"><i class="fa fa-check-circle text-success"></i> Ditandatangani oleh {?=isset_or($value.signature.signer_name)?}</small>
+              {/if}
+            </div>
+
           </div>
         </div>
         {/if}

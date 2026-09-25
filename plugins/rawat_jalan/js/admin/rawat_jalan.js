@@ -607,9 +607,12 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
       $('textarea[name=instruksi]').val("");
       $('textarea[name=evaluasi]').val("");
       $('input:text[name=spo2]').val("");
-      $('input:text[name=tgl_perawatan]').val("{?=date('Y-m-d')?}");
-      $('input:text[name=tgl_registrasi]').val("{?=date('Y-m-d')?}");
-      $('input:text[name=jam_rawat]').val("{?=date('H:i:s')?}");
+      var dt = new Date();
+        var tgl = dt.getFullYear() + '-' + ('0' + (dt.getMonth() + 1)).slice(-2) + '-' + ('0' + dt.getDate()).slice(-2);
+        var jam = ('0' + dt.getHours()).slice(-2) + ':' + ('0' + dt.getMinutes()).slice(-2) + ':' + ('0' + dt.getSeconds()).slice(-2);
+        $('input:text[name=tgl_perawatan]').val(tgl);
+        $('input:text[name=tgl_registrasi]').val(tgl);
+        $('input:text[name=jam_rawat]').val(jam);
       $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
       "Data soap telah disimpan!"+
       "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
@@ -749,9 +752,12 @@ $("#soap").on("click",".hapus_soap", function(event){
         $('textarea[name=instruksi]').val("");
         $('textarea[name=evaluasi]').val("");
         $('input:text[name=spo2]').val("");
-        $('input:text[name=tgl_perawatan]').val("{?=date('Y-m-d')?}");
-        $('input:text[name=tgl_registrasi]').val("{?=date('Y-m-d')?}");
-        $('input:text[name=jam_rawat]').val("{?=date('H:i:s')?}");
+        var dt = new Date();
+        var tgl = dt.getFullYear() + '-' + ('0' + (dt.getMonth() + 1)).slice(-2) + '-' + ('0' + dt.getDate()).slice(-2);
+        var jam = ('0' + dt.getHours()).slice(-2) + ':' + ('0' + dt.getMinutes()).slice(-2) + ':' + ('0' + dt.getSeconds()).slice(-2);
+        $('input:text[name=tgl_perawatan]').val(tgl);
+        $('input:text[name=tgl_registrasi]').val(tgl);
+        $('input:text[name=jam_rawat]').val(jam);
         $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
         "Data rincian riwayat telah dihapus!"+
         "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
@@ -851,9 +857,12 @@ $("#surat_kontrol").on("click",".hapus_kontrol", function(event){
         $('textarea[name=penilaian]').val("");
         $('textarea[name=rtl]').val("");
         $('textarea[name=instruksi]').val("");
-        $('input:text[name=tgl_perawatan]').val("{?=date('Y-m-d')?}");
-        $('input:text[name=tgl_registrasi]').val("{?=date('Y-m-d')?}");
-        $('input:text[name=jam_rawat]').val("{?=date('H:i:s')?}");
+        var dt = new Date();
+        var tgl = dt.getFullYear() + '-' + ('0' + (dt.getMonth() + 1)).slice(-2) + '-' + ('0' + dt.getDate()).slice(-2);
+        var jam = ('0' + dt.getHours()).slice(-2) + ':' + ('0' + dt.getMinutes()).slice(-2) + ':' + ('0' + dt.getSeconds()).slice(-2);
+        $('input:text[name=tgl_perawatan]').val(tgl);
+        $('input:text[name=tgl_registrasi]').val(tgl);
+        $('input:text[name=jam_rawat]').val(jam);
         */
         $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
         "Data rincian riwayat telah dihapus!"+
@@ -900,6 +909,11 @@ $("#layanan").on("click", ".pilih_layanan", function(event){
   $('#provider').show();
   $('#aturan_pakai').hide();
   $("#form_kontrol").hide();
+
+  // Trigger change event on provider to fetch the correct cost if a provider is already selected
+  if ($('#pilih_provider').val() != '') {
+      $('#pilih_provider').trigger('change');
+  }
 });
 
 // ketika tombol panggil ditekan
@@ -968,13 +982,19 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
     $('input:hidden[name=kd_jenis_prw]').val("");
     $('input:text[name=nm_perawatan]').val("");
     $('input:hidden[name=kat]').val("");
-    $('input:text[name=biaya]').val("");
+    $('input:text[name=biaya]').val("").prop("readonly", true);
+    $('select[name=provider]').val("");
+    if ($('select[name=provider]').hasClass('selectpicker')) {
+        $('select[name=provider]').selectpicker('refresh');
+    }
     $('input:text[name=nama_provider]').val("");
     $('input:text[name=nama_provider2]').val("");
     $('input:text[name=kode_provider]').val("");
     $('input:text[name=kode_provider2]').val("");
+    $('#rawat_jl_dr').hide();
+    $('#rawat_jl_pr').hide();
     $('input:text[name=jam_rawat]').last().val("");
-    $('input:text[name=jml_tindakan]').val("");
+    $('input:text[name=jml_tindakan]').val("1");
     $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
     "Data pasien telah disimpan!"+
     "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
@@ -1581,3 +1601,121 @@ $(document).on('click', 'a[href="#ubah_dokter"]', function(event){
   }   
 
 {/if}
+
+
+$(document).on('click', '.btn-tte', function(e) {
+    e.preventDefault();
+    var ref_type = $(this).attr('data-ref_type');
+    var ref_id = $(this).attr('data-ref_id');
+    var signer_name = $(this).attr('data-signer_name');
+    var baseURL = mlite.url + '/' + mlite.admin;
+    var url = baseURL + '/esignature/saveSignature?t=' + mlite.token;
+    
+    // Inject CSS for vertical centering and elegant modal width if not exists
+    if ($('#tte-modal-style').length === 0) {
+        $('head').append('<style id="tte-modal-style">'+
+            '.modal-tte-center { display: flex !important; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); }' +
+            '.modal-tte-center .modal-dialog { margin: auto; width: 400px; max-width: 90vw; }' +
+            '.modal-tte-center .modal-content { border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: none; }' +
+            '.modal-tte-center .modal-header { border-bottom: none; padding-top: 20px; }' +
+            '.modal-tte-center .modal-footer { border-top: none; background: #f8f9fa; border-radius: 0 0 12px 12px; padding: 15px 20px; }' +
+            '.modal-tte-center .btn-tte-confirm { background: #3498db; color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; width: 100%; transition: all 0.3s; }' +
+            '.modal-tte-center .btn-tte-confirm:hover { background: #2980b9; }' +
+            '.modal-tte-center .btn-tte-cancel { color: #888; background: transparent; border: none; font-weight: bold; padding: 8px; width: 100%; margin-top: 5px; }' +
+            '.modal-tte-center .btn-tte-cancel:hover { color: #555; }' +
+        '</style>');
+    }
+
+    var formHtml = '<div class="text-center" style="padding: 10px;">' +
+        '<i class="fa fa-lock fa-4x text-primary" style="margin-bottom: 20px; color: #3498db;"></i>' +
+        '<h4 style="margin-bottom: 15px; color: #333; font-weight: bold;">Tanda Tangan Elektronik</h4>' +
+        '<p class="text-muted" style="margin-bottom: 25px; font-size: 14px;">Masukkan kata sandi (login) Anda untuk menyetujui dokumen ini.</p>' +
+        '<div class="form-group">' +
+            '<input type="password" id="tte-passphrase-input" class="form-control text-center" placeholder="Kata Sandi" style="font-size: 18px; letter-spacing: 2px; padding: 20px 15px; border-radius: 8px; border: 2px solid #ddd; outline: none; box-shadow: none;">' +
+        '</div>' +
+    '</div>';
+
+    var dialog = bootbox.dialog({
+        message: formHtml,
+        className: 'modal-tte-center',
+        closeButton: false,
+        buttons: {
+            confirm: {
+                label: 'VERIFIKASI SEKARANG',
+                className: 'btn-tte-confirm',
+                callback: function () {
+                    var passphrase = $('#tte-passphrase-input').val();
+                    if (passphrase === "") {
+                        $('#tte-passphrase-input').css('border-color', '#e74c3c');
+                        // wiggle effect
+                        $('#tte-passphrase-input').animate({marginLeft: "-10px"}, 100).animate({marginLeft: "10px"}, 100).animate({marginLeft: "0"}, 100);
+                        return false;
+                    }
+                    
+                    var processingDialog = bootbox.dialog({
+                        message: '<p class="text-center mb-0" style="padding: 20px;"><i class="fa fa-spin fa-spinner fa-2x text-primary" style="margin-bottom:10px;"></i><br>Sedang memverifikasi...</p>',
+                        closeButton: false,
+                        className: 'modal-tte-center'
+                    });
+                    
+                    $.post(url, {
+                        ref_type: ref_type,
+                        ref_id: ref_id,
+                        signer_name: signer_name,
+                        passphrase: passphrase
+                    }, function(response) {
+                        processingDialog.modal('hide');
+                        var res = typeof response === 'object' ? response : JSON.parse(response);
+                        if (res.status == 'success') {
+                            var container = $('#sign_container_' + ref_id);
+                            if (container.length) {
+                                var verifyUrl = mlite.url + '/esignature/verify/' + res.hash;
+                                var qrClass = 'qr_' + res.hash.substring(0, 8);
+                                container.html(
+                                    '<div class="' + qrClass + '" style="margin-top:10px;margin-bottom:10px;"></div>' +
+                                    signer_name
+                                );
+                                $('.' + qrClass).qrcode({
+                                    width: 120,
+                                    height: 120,
+                                    text: res.hash
+                                });
+                            } else {
+                                $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+                            }
+                        } else {
+                            bootbox.alert({
+                                message: '❌ Gagal: ' + (res.message || 'Kata sandi tidak valid.'),
+                                className: 'modal-tte-center'
+                            });
+                        }
+                    }).fail(function(xhr) {
+                        processingDialog.modal('hide');
+                        var res = {};
+                        try { res = JSON.parse(xhr.responseText || '{}'); } catch(e) {}
+                        bootbox.alert({
+                            message: '❌ Gagal: ' + (res.message || 'Terjadi kesalahan pada server.'),
+                            className: 'modal-tte-center'
+                        });
+                    });
+                }
+            },
+            cancel: {
+                label: 'Batal',
+                className: 'btn-tte-cancel',
+                callback: function() {}
+            }
+        }
+    });
+
+    dialog.on('shown.bs.modal', function() {
+        $('#tte-passphrase-input').focus();
+        
+        $('#tte-passphrase-input').on('keypress', function(e) {
+            if (e.which === 13) { // Enter key
+                e.preventDefault();
+                $('.btn-tte-confirm').click();
+            }
+        });
+    });
+});

@@ -1106,16 +1106,24 @@ class Admin extends AdminModule
       ->where('kd_dokter', $this->settings->get('settings.pj_radiologi'))
       ->oneArray();
 
-    $qr = QRCode::getMinimumQRCode(
-      $pj_radiologi['nm_dokter'],
-      QR_ERROR_CORRECT_LEVEL_L
-    );
+    $ref_id = 'radiologi_' . str_replace('/', '', $no_rawat) . '_' . $tgl . '_' . str_replace(':', '', $jam);
+    $signature = $this->db('mlite_esignatures')
+      ->where('ref_type', 'radiologi_hasil')
+      ->where('ref_id', $ref_id)
+      ->oneArray();
+
+    if ($signature) {
+        $qrUrl = $signature['signature_hash'];
+        $qr = QRCode::getMinimumQRCode($qrUrl, QR_ERROR_CORRECT_LEVEL_L);
+    } else {
+        $qr = QRCode::getMinimumQRCode($pj_radiologi['nm_dokter'], QR_ERROR_CORRECT_LEVEL_L);
+    }
     $im = $qr->createImage(4, 4);
     $qrPath = BASE_DIR . '/' . ADMIN . '/tmp/qrcode.png';
     imagepng($im, $qrPath);
     imagedestroy($im);
 
-    $qrCode = url() . '/' . ADMIN . '/tmp/qrcode.png';
+    $qrCode = url() . '/' . ADMIN . '/tmp/qrcode.png?t=' . time();
 
     /* =======================
      * DATA PASIEN
@@ -1188,19 +1196,23 @@ class Admin extends AdminModule
      * ======================= */
 
 
-    echo $this->draw('cetakhasil.html', [
-      'periksa_radiologi' => $periksa_radiologi,
-      'hasil_radiologi' => $hasil_radiologi,
-      'gambar_radiologi' => $gambar_radiologi,
-      'jumlah_total_radiologi' => $jumlah_total_radiologi,
-      'qrCode' => $qrCode,
-      'pj_radiologi' => $pj_radiologi['nm_dokter'],
-      'dokter_perujuk' => htmlspecialchars_array($dokter_perujuk)['nama'],
-      'pasien' => $pasien,
-      'filename' => $filename,
-      'no_rawat' => htmlspecialchars($_GET['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
-      'wagateway' => $this->settings->get('wagateway')
-    ]);
+    if (!isset($_GET['action']) || $_GET['action'] != 'pdf') {
+        echo $this->draw('cetakhasil.html', [
+            'periksa_radiologi' => $periksa_radiologi,
+            'hasil_radiologi' => $hasil_radiologi,
+            'gambar_radiologi' => $gambar_radiologi,
+            'jumlah_total_radiologi' => $jumlah_total_radiologi,
+            'qrCode' => $qrCode,
+            'pj_radiologi' => $pj_radiologi['nm_dokter'],
+            'dokter_perujuk' => htmlspecialchars_array($dokter_perujuk)['nama'],
+            'pasien' => $pasien,
+            'filename' => $filename,
+            'no_rawat' => htmlspecialchars($_GET['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            'wagateway' => $this->settings->get('wagateway'),
+            'signature' => $signature
+        ]);
+        exit;
+    }
 
     $this->tpl->set('periksa_radiologi', $periksa_radiologi);
     $this->tpl->set('hasil_radiologi', $hasil_radiologi);
@@ -1213,6 +1225,7 @@ class Admin extends AdminModule
     $this->tpl->set('filename', $filename);
     $this->tpl->set('no_rawat', $no_rawat);
     $this->tpl->set('wagateway', $this->settings->get('wagateway'));
+    $this->tpl->set('signature', $signature);
 
     // render HTML TANPA draw()
     $html = $this->draw('cetakhasil.html');
@@ -1220,6 +1233,26 @@ class Admin extends AdminModule
     /* =======================
      * mPDF
      * ======================= */
+    
+    // Release PHP session lock so user can navigate to other pages
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+    
+    // Return response immediately for background AJAX
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    } else {
+        $size = ob_get_length();
+        if ($size !== false) {
+            header("Content-Length: $size");
+            header('Connection: close');
+            ob_end_flush();
+            @ob_flush();
+            flush();
+        }
+    }
+    
     try {
       $mpdf = new \Mpdf\Mpdf([
         'mode' => 'utf-8',
@@ -1469,6 +1502,14 @@ class Admin extends AdminModule
         ->where('tgl_periksa', $row['tgl_periksa'])
         // ->where('jam', $row['jam'])
         ->toArray();
+
+      $ref_id = 'radiologi_' . str_replace('/', '', $_POST['no_rawat']) . '_' . $row['tgl_periksa'] . '_' . str_replace(':', '', $row['jam']);
+      $row['ref_id'] = $ref_id;
+      $row['signature'] = $this->db('mlite_esignatures')
+        ->where('ref_type', 'radiologi_hasil')
+        ->where('ref_id', $ref_id)
+        ->oneArray();
+
       $periksa_radiologi[] = $row;
     }
 
@@ -1487,7 +1528,9 @@ class Admin extends AdminModule
       'jumlah_total_radiologi' => $jumlah_total_radiologi, 
       'no_rawat' => htmlspecialchars($_POST['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 
       'radiologi' => htmlspecialchars_array($radiologi),
-      'mini_pacs' => htmlspecialchars_array($mini_pacs)
+      'mini_pacs' => htmlspecialchars_array($mini_pacs),
+      'current_user' => $this->core->getUserInfo('username'),
+      'pj_radiologi' => $this->settings->get('settings.pj_radiologi')
     ]);
     exit();
   }
