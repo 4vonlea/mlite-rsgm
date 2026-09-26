@@ -8620,24 +8620,39 @@ class Admin extends AdminModule
     $rowKunj[] = ['v' => '', 's' => 3];
     $sheetAgg[] = $rowKunj;
 
-    // (-) Kekurangan = Kunjungan - Terkirim
+    // Denominator per resource (Basis layak kirim per kategori)
+    $den_of = [];
+    foreach ($RESOURCE_KEYS as $key) {
+      $den_of[$key] = $total_kunjungan;
+      if (isset($den_groups[$key])) {
+        $dg = isset($modul_den[$den_groups[$key]]) ? $modul_den[$den_groups[$key]] : 0;
+        if ($dg > 0) {
+          $den_of[$key] = $dg;
+        }
+      }
+    }
+
+    // (-) Kekurangan = Denominator - Terkirim
     $rowKurang = [['v' => '(-)', 's' => 8]];
     foreach ($RESOURCE_KEYS as $key) {
-      $rowKurang[] = ['v' => $total_kunjungan - $totals[$key], 's' => 3];
+      $rowKurang[] = ['v' => max(0, $den_of[$key] - $totals[$key]), 's' => 3];
     }
     $rowKurang[] = ['v' => '', 's' => 3];
     $sheetAgg[] = $rowKurang;
 
-    // % per resource
+    // % per resource (Basis layak kirim per kategori)
     $rowPersen = [['v' => '%', 's' => 8]];
     foreach ($RESOURCE_KEYS as $key) {
-      $pct = $total_kunjungan > 0 ? round(($totals[$key] / $total_kunjungan) * 100, 2) : 0;
+      $pct = $den_of[$key] > 0 ? min(100, round(($totals[$key] / $den_of[$key]) * 100, 2)) : 0;
       $rowPersen[] = ['v' => $pct, 's' => 10];
     }
     $rowPersen[] = ['v' => '', 's' => 3];
     $sheetAgg[] = [];
     $sheetAgg[] = $rowPersen;
     $sheetAgg[] = [];
+
+    // Keterangan tambahan di kolom persen (%) — header diberi catatan basis
+    $sheetAgg[] = [['v' => 'Catatan basis persen: Encounter & Diagnostik = total kunjungan (' . $total_kunjungan . '); Obat, Laboratorium & Radiologi (termasuk seluruh sub-resource-nya) = kunjungan pemakai layanan tsb dengan kelengkapan klinis lengkap (Encounter + Diagnosa + Closing), yaitu ' . $kunjungan_eligible . ' kunjungan.', 's' => 4, 'm' => ($RES_COUNT + 2)]];
 
     $sheetAgg[] = [['v' => 'JMLH KUNJUNGAN PASIEN * ' . $RES_COUNT . ' ITEM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $jml_items, 's' => 7]];
     $sheetAgg[] = [['v' => 'TOTAL ITEM TERKIRIM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $grand_total, 's' => 7]];
@@ -8652,12 +8667,16 @@ class Admin extends AdminModule
     $sheetAgg[] = [['v' => 'MODUL / RESOURCE', 's' => 1], ['v' => '% TERTERKIRIM', 's' => 1]];
 
     foreach ($modul_wajib as $m) {
-      $pct = $total_kunjungan > 0 ? round(($totals[$m[1]] / $total_kunjungan) * 100, 2) : 0;
+      $den = ($m[1] === 'id_encounter' || $m[1] === 'id_condition') ? $total_kunjungan : (isset($modul_den[$m[1]]) ? $modul_den[$m[1]] : 0);
+      if ($den <= 0) {
+        $den = $total_kunjungan;
+      }
+      $pct = $den > 0 ? min(100, round(($totals[$m[1]] / $den) * 100, 2)) : 0;
       $sheetAgg[] = [['v' => $m[0], 's' => 4], ['v' => $pct, 's' => 10], ['v' => '%', 's' => 8]];
     }
 
-    // Catatan: pembanding = total kunjungan pasien pada periode & filter terpilih
-    $sheetAgg[] = [['v' => 'Pembanding persen: jumlah total kunjungan (' . $total_kunjungan . ') pada periode/ filter terpilih.', 's' => 4, 'm' => $AGG_COLS]];
+    // Catatan: Encounter & Diagnostik dibanding total kunjungan; Obat/Lab/Rad dibanding kunjungan pemakai layanan tsb yang lengkap klinis
+    $sheetAgg[] = [['v' => 'Pembanding persen: Encounter & Diagnostik = total kunjungan (' . $total_kunjungan . '); Obat, Laboratorium & Radiologi = kunjungan pemakai layanan tsb dengan kelengkapan klinis lengkap (Encounter + Diagnosa + Closing), yaitu ' . $kunjungan_eligible . ' kunjungan.', 's' => 4, 'm' => $AGG_COLS]];
 
     $sheetAgg[] = [];
     $sheetAgg[] = [['v' => 'KETERANGAN / CATATAN', 's' => 2, 'm' => $AGG_COLS]];
@@ -8790,7 +8809,7 @@ class Admin extends AdminModule
     try {
       if (!isset($_GET['force'])) {
         $cache_key = md5(serialize([$start_date, $end_date, $filter_dokter, $filter_poli, $filter_ket, $filter_bayar]));
-        $cache_file = sys_get_temp_dir() . '/satu_sehat_rekap_v1_' . $cache_key . '.tmp';
+        $cache_file = sys_get_temp_dir() . '/satu_sehat_rekap_v4_' . $cache_key . '.tmp';
         if (is_file($cache_file) && (time() - filemtime($cache_file)) < 300) {
           $cached = unserialize(file_get_contents($cache_file));
           if (is_array($cached)) {
@@ -8864,6 +8883,22 @@ class Admin extends AdminModule
     $total_kunjungan = 0;
     $poli_agg = [];
 
+    // Basis kelayakan kirim (kelengkapan klinis) untuk Modul Wajib:
+    // denominator per modul = kunjungan pemakai layanan tsb yang sudah lengkap klinis
+    // (Encounter + Condition + ClinicalImpression terkirim). Encounter & Diagnostik
+    // tetap dibanding total kunjungan (keduanya penyusun "lengkap klinis").
+    $kunjungan_eligible = 0;
+    $modul_den = [
+      'id_encounter' => 0,
+      'id_condition' => 0,
+      'id_medication_request' => 0,
+      'id_medication_dispense' => 0,
+      'id_lab_pk_specimen' => 0,
+      'id_imaging_study' => 0,
+    ];
+    $day_modul_den = [];
+    $day_elig = [];
+
     // Probe tabel detail (lab & obat) agar halaman rekap tidak rusak bila tabel belum dibuat di server
     $lab_table_ok = true;
     $med_table_ok = true;
@@ -8884,22 +8919,90 @@ class Admin extends AdminModule
       $rad_table_ok = false;
     }
 
+    // Preload massal (hindari N+1 per kunjungan): ambil data look-up satu kali
+    $noRawatList = array_values(array_unique(array_column($rows, 'no_rawat')));
+    $chunks = array_chunk($noRawatList, 500);
+
+    $resp_map = [];
+    $bill_map = [];
+    $perawatan_map = [];
+    $diag_set = [];
+    $resep_set = [];
+    $labpk_set = [];
+    $rad_set = [];
+    foreach ($chunks as $chunk) {
+      foreach ($this->db('mlite_satu_sehat_response')->where('no_rawat', 'in', $chunk)->toArray() as $r) {
+        if (!isset($resp_map[$r['no_rawat']])) {
+          $resp_map[$r['no_rawat']] = $r;
+        }
+      }
+      foreach ($this->db('mlite_billing')->where('no_rawat', 'in', $chunk)->toArray() as $r) {
+        if (!isset($bill_map[$r['no_rawat']])) {
+          $bill_map[$r['no_rawat']] = $r['tgl_billing'];
+        }
+      }
+      foreach ($this->db('pemeriksaan_ralan')->where('no_rawat', 'in', $chunk)->toArray() as $r) {
+        if (!isset($perawatan_map[$r['no_rawat']])) {
+          $perawatan_map[$r['no_rawat']] = $r['tgl_perawatan'];
+        }
+      }
+      foreach ($this->db('diagnosa_pasien')->where('status', 'Ralan')->where('prioritas', '1')->where('no_rawat', 'in', $chunk)->select(['no_rawat'])->toArray() as $r) {
+        $diag_set[$r['no_rawat']] = true;
+      }
+      foreach ($this->db('resep_obat')->where('no_rawat', 'in', $chunk)->select(['no_rawat'])->toArray() as $r) {
+        $resep_set[$r['no_rawat']] = true;
+      }
+      foreach ($this->db('periksa_lab')->where('kategori', 'PK')->where('no_rawat', 'in', $chunk)->select(['no_rawat'])->toArray() as $r) {
+        $labpk_set[$r['no_rawat']] = true;
+      }
+      foreach ($this->db('periksa_radiologi')->where('no_rawat', 'in', $chunk)->select(['no_rawat'])->toArray() as $r) {
+        $rad_set[$r['no_rawat']] = true;
+      }
+    }
+
+    // Detail lab/obat/rad per kunjungan (dibatch per chunk)
+    $lab_grp = [];
+    $med_grp = [];
+    $rad_grp = [];
+    if ($lab_table_ok) {
+      foreach ($chunks as $chunk) {
+        foreach ($this->db('mlite_satu_sehat_lab_response')->where('no_rawat', 'in', $chunk)->toArray() as $r) {
+          $lab_grp[$r['no_rawat']][] = $r;
+        }
+      }
+    }
+    if ($med_table_ok) {
+      foreach ($chunks as $chunk) {
+        foreach ($this->db('mlite_satu_sehat_med_response')->where('no_rawat', 'in', $chunk)->toArray() as $r) {
+          $med_grp[$r['no_rawat']][] = $r;
+        }
+      }
+    }
+    if ($rad_table_ok) {
+      foreach ($chunks as $chunk) {
+        foreach ($this->db('mlite_satu_sehat_rad_response')->where('no_rawat', 'in', $chunk)->toArray() as $r) {
+          $rad_grp[$r['no_rawat']][] = $r;
+        }
+      }
+    }
+
+    // Nama poli diambil sekali (bukan per kunjungan)
+    $poli_map = [];
+    foreach ($this->db('poliklinik')->select(['kd_poli', 'nm_poli'])->toArray() as $r) {
+      $poli_map[$r['kd_poli']] = $r['nm_poli'];
+    }
+
     foreach ($rows as $row) {
-      $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $row['no_rawat'])->oneArray();
-      
+      $mlite_satu_sehat_response = isset($resp_map[$row['no_rawat']]) ? $resp_map[$row['no_rawat']] : [];
+
       $row['no_rawat_converted'] = convertNoRawat($row['no_rawat']);
-      $row['nm_poli'] = $this->core->getPoliklinikInfo('nm_poli', $row['kd_poli']);
-      
-      $mlite_billing = $this->db('mlite_billing')->where('no_rawat', $row['no_rawat'])->oneArray();
-      $pemeriksaan_ralan = $this->db('pemeriksaan_ralan')->where('no_rawat', $row['no_rawat'])->oneArray();
+      $row['nm_poli'] = isset($poli_map[$row['kd_poli']]) ? $poli_map[$row['kd_poli']] : '';
+
+      $mlite_billing = ['tgl_billing' => isset($bill_map[$row['no_rawat']]) ? $bill_map[$row['no_rawat']] : ''];
+      $pemeriksaan_ralan = ['tgl_perawatan' => isset($perawatan_map[$row['no_rawat']]) ? $perawatan_map[$row['no_rawat']] : ''];
       $tgl_pulang = isset_or($mlite_billing['tgl_billing'], isset_or($pemeriksaan_ralan['tgl_perawatan'], ''));
 
-      $diagnosa_pasien = $this->db('diagnosa_pasien')
-        ->join('penyakit', 'penyakit.kd_penyakit=diagnosa_pasien.kd_penyakit')
-        ->where('no_rawat', $row['no_rawat'])
-        ->where('diagnosa_pasien.status', $row['status_lanjut'])
-        ->where('prioritas', '1')
-        ->oneArray();
+      $diagnosa_pasien = isset($diag_set[$row['no_rawat']]) ? ['ada' => true] : [];
 
       // Determine Status/Keterangan
       $id_encounter = isset_or($mlite_satu_sehat_response['id_encounter'], '');
@@ -8950,8 +9053,33 @@ class Admin extends AdminModule
         $fields[$key] = isset_or($mlite_satu_sehat_response[$key], '');
       }
 
+      // Kelengkapan klinis (Basis layak kirim): Encounter + Diagnosa + Closing sudah terkirim
+      $bundle_ok = $fields['id_encounter'] !== '' && $fields['id_condition'] !== '' && $fields['id_clinical_impression'] !== '';
+      if ($bundle_ok) {
+        $kunjungan_eligible++;
+        if (isset($day_elig[$date])) {
+          $day_elig[$date]++;
+        } else {
+          $day_elig[$date] = 1;
+        }
+        if (isset($resep_set[$row['no_rawat']])) {
+          $modul_den['id_medication_request']++;
+          $modul_den['id_medication_dispense']++;
+          $day_modul_den[$date]['id_medication_request'] = isset($day_modul_den[$date]['id_medication_request']) ? $day_modul_den[$date]['id_medication_request'] + 1 : 1;
+          $day_modul_den[$date]['id_medication_dispense'] = isset($day_modul_den[$date]['id_medication_dispense']) ? $day_modul_den[$date]['id_medication_dispense'] + 1 : 1;
+        }
+        if (isset($labpk_set[$row['no_rawat']])) {
+          $modul_den['id_lab_pk_specimen']++;
+          $day_modul_den[$date]['id_lab_pk_specimen'] = isset($day_modul_den[$date]['id_lab_pk_specimen']) ? $day_modul_den[$date]['id_lab_pk_specimen'] + 1 : 1;
+        }
+        if (isset($rad_set[$row['no_rawat']])) {
+          $modul_den['id_imaging_study']++;
+          $day_modul_den[$date]['id_imaging_study'] = isset($day_modul_den[$date]['id_imaging_study']) ? $day_modul_den[$date]['id_imaging_study'] + 1 : 1;
+        }
+      }
+
       // Lab per-item: dihitung dari tabel detail (id per pemeriksaan), bukan kolom id terakhir
-      $lab_detail = $lab_table_ok ? $this->db('mlite_satu_sehat_lab_response')->where('no_rawat', $row['no_rawat'])->toArray() : [];
+      $lab_detail = isset($lab_grp[$row['no_rawat']]) ? $lab_grp[$row['no_rawat']] : [];
       if (!empty($lab_detail)) {
         $lab_map_fields = [
           'id_lab_pk_request' => 'id_service_request',
@@ -8984,7 +9112,7 @@ class Admin extends AdminModule
       }
 
       // Obat per-item: dihitung dari tabel detail (id per item obat), bukan kolom id terakhir
-      $med_detail = $med_table_ok ? $this->db('mlite_satu_sehat_med_response')->where('no_rawat', $row['no_rawat'])->toArray() : [];
+      $med_detail = isset($med_grp[$row['no_rawat']]) ? $med_grp[$row['no_rawat']] : [];
       if (!empty($med_detail)) {
         $med_map_fields = [
           'id_medication_request' => 'id_medication_request',
@@ -9016,7 +9144,7 @@ class Admin extends AdminModule
       }
 
       // Radiologi per-item: dihitung dari tabel detail (id per pemeriksaan), bukan kolom id terakhir
-      $rad_detail = $rad_table_ok ? $this->db('mlite_satu_sehat_rad_response')->where('no_rawat', $row['no_rawat'])->toArray() : [];
+      $rad_detail = isset($rad_grp[$row['no_rawat']]) ? $rad_grp[$row['no_rawat']] : [];
       if (!empty($rad_detail)) {
         $rad_map_fields = [
           'id_rad_request' => 'id_service_request',
@@ -9113,6 +9241,23 @@ class Admin extends AdminModule
       ['Radiologi (Imaging Study)', 'id_imaging_study'],
     ];
 
+    // Denominator per kategori kesatuan kirim: seluruh sub-resource obat/lab PK/radiologi
+    // memakai pembanding pemakai layanan tsb dengan kelengkapan klinis lengkap
+    $den_groups = [
+      'id_medication_request' => 'id_medication_request',
+      'id_medication_dispense' => 'id_medication_request',
+      'id_medication_statement' => 'id_medication_request',
+      'id_rad_request' => 'id_imaging_study',
+      'id_rad_specimen' => 'id_imaging_study',
+      'id_rad_observation' => 'id_imaging_study',
+      'id_rad_diagnostic' => 'id_imaging_study',
+      'id_imaging_study' => 'id_imaging_study',
+      'id_lab_pk_request' => 'id_lab_pk_specimen',
+      'id_lab_pk_specimen' => 'id_lab_pk_specimen',
+      'id_lab_pk_observation' => 'id_lab_pk_specimen',
+      'id_lab_pk_diagnostic' => 'id_lab_pk_specimen',
+    ];
+
     $result = [
       'RESOURCE_KEYS' => $RESOURCE_KEYS,
       'RESOURCE_LABELS' => $RESOURCE_LABELS,
@@ -9129,6 +9274,11 @@ class Admin extends AdminModule
       'pct_ttl' => $pct_ttl,
       'pct_dec' => $pct_dec,
       'modul_wajib' => $modul_wajib,
+      'den_groups' => $den_groups,
+      'kunjungan_eligible' => $kunjungan_eligible,
+      'modul_den' => $modul_den,
+      'day_modul_den' => $day_modul_den,
+      'day_elig' => $day_elig,
       'poli_agg' => $poli_agg,
     ];
 
@@ -9193,6 +9343,7 @@ class Admin extends AdminModule
     extract($agg);
 
     // Baris per tanggal (termasuk hari tanpa kunjungan → 0)
+    $modul_keys = ['id_encounter', 'id_condition', 'id_medication_request', 'id_medication_dispense', 'id_lab_pk_specimen', 'id_imaging_study'];
     $dates = [];
     for ($d = $start_date; $d <= $end_date; $d = date('Y-m-d', strtotime($d . ' +1 day'))) {
       $present = isset($day_agg[$d]) ? $day_agg[$d] : null;
@@ -9204,12 +9355,28 @@ class Admin extends AdminModule
         $day_total += $n;
       }
       $kunjungan = $present ? $present['kunjungan'] : 0;
+      $dmod = isset($day_modul_den[$d]) ? $day_modul_den[$d] : [];
+      // Rata-rata persen Modul Wajib hari itu (denominator Basis layak kirim per modul)
+      $mod_sum = 0;
+      $mod_cnt = 0;
+      foreach ($modul_keys as $mk) {
+        $mden = ($mk === 'id_encounter' || $mk === 'id_condition') ? $kunjungan : (isset($dmod[$mk]) ? $dmod[$mk] : 0);
+        if ($mden <= 0) {
+          $mden = $kunjungan;
+        }
+        if ($mden > 0) {
+          $mod_sum += min(100, ($per[$mk] / $mden) * 100);
+          $mod_cnt++;
+        }
+      }
       $dates[] = [
         'tanggal' => $d,
         'label' => date('d-m-Y', strtotime($d)),
         'kunjungan' => $kunjungan,
+        'eligible' => isset($day_elig[$d]) ? $day_elig[$d] : 0,
+        'modul_den' => $dmod,
         'total' => $day_total,
-        'persen' => $kunjungan > 0 ? round(($day_total / ($kunjungan * $RES_COUNT)) * 100, 2) : 0,
+        'persen' => $mod_cnt > 0 ? round(($mod_sum / $mod_cnt), 2) : 0,
         'resource' => $per,
         'status' => $present && isset($present['status']) ? $present['status'] : ['sudah' => 0, 'sebagian' => 0, 'belum' => 0],
       ];
@@ -9230,25 +9397,37 @@ class Admin extends AdminModule
       return $b['kunjungan'] - $a['kunjungan'];
     });
 
-    // Ringkasan per resource: terkirim, kekurangan, persen
+    // Ringkasan per resource: terkirim, kekurangan, persen (Basis layak kirim per kategori)
     $totals_arr = [];
     $kekurangan = [];
     $persen = [];
     foreach ($RESOURCE_KEYS as $key) {
       $totals_arr[$key] = $totals[$key];
-      $kekurangan[$key] = $total_kunjungan - $totals[$key];
-      $persen[$key] = $total_kunjungan > 0 ? round(($totals[$key] / $total_kunjungan) * 100, 2) : 0;
+      $den_key = $total_kunjungan;
+      if (isset($den_groups[$key])) {
+        $den_key = isset($modul_den[$den_groups[$key]]) ? $modul_den[$den_groups[$key]] : 0;
+        if ($den_key <= 0) {
+          $den_key = $total_kunjungan;
+        }
+      }
+      $kekurangan[$key] = $den_key > 0 ? max(0, $den_key - $totals[$key]) : 0;
+      $persen[$key] = $den_key > 0 ? min(100, round(($totals[$key] / $den_key) * 100, 2)) : 0;
     }
 
-    // Modul wajib + persen
+    // Modul wajib + persen (denominator per modul: total kunjungan untuk Encounter/Diagnostik,
+    // kunjungan pemakai layanan tsb dengan kelengkapan klinis lengkap untuk Obat/Lab/Rad)
     $modul_wajib_arr = [];
     foreach ($modul_wajib as $m) {
+      $den = ($m[1] === 'id_encounter' || $m[1] === 'id_condition') ? $total_kunjungan : (isset($modul_den[$m[1]]) ? $modul_den[$m[1]] : 0);
+      if ($den <= 0) {
+        $den = $total_kunjungan;
+      }
       $modul_wajib_arr[] = [
         'modul' => $m[0],
         'key' => $m[1],
         'terkirim' => $totals[$m[1]],
-        'kunjungan' => $total_kunjungan,
-        'persen' => $total_kunjungan > 0 ? round(($totals[$m[1]] / $total_kunjungan) * 100, 2) : 0,
+        'kunjungan' => $den,
+        'persen' => $den > 0 ? min(100, round(($totals[$m[1]] / $den) * 100, 2)) : 0,
       ];
     }
 
@@ -9259,6 +9438,8 @@ class Admin extends AdminModule
       '- ID Questionnaire (pasien tidak mampu / KPS): hanya diisi jika pasien memiliki surat keterangan tidak mampu.',
       '- ID Allergy: hanya terisi jika ada diagnosa alergi; selama ini dokter umum tidak memeriksa langsung terkait alergi sehingga 0%.',
       '- Angka di halaman ini mengikuti filter yang dipilih (default rekap: kunjungan rawat jalan (status_lanjut = Ralan), tidak Batal, dan status bayar = Sudah Bayar).',
+      '- Persentase Modul Wajib: Encounter & Diagnostik dibanding total kunjungan; Obat, Laboratorium & Radiologi dibanding kunjungan pemakai layanan tsb dengan kelengkapan klinis lengkap (Encounter + Diagnosa + Closing) sudah terkirim.',
+      '- Pada tabel Agregasi per Tanggal, persen per kolom juga memakai basis per kategori: seluruh sub-resource obat (MR/MD/Statement), lab PK (SR/Specimen/Observation/Diagnostic Report) dan radiologi (SR/Specimen/Observation/Diagnostic Report/Image Study) dibanding pemakai layanan tsb yang lengkap klinis, agar satu kesatuan kategori sinkron.',
     ];
 
     header('Content-Type: application/json');
@@ -9270,6 +9451,7 @@ class Admin extends AdminModule
         'label' => date('d/m/Y', strtotime($start_date)) . ' s/d ' . date('d/m/Y', strtotime($end_date)),
       ],
       'total_kunjungan' => $total_kunjungan,
+      'kunjungan_eligible' => $kunjungan_eligible,
       'grand_total' => $grand_total,
       'jml_items' => $jml_items,
       'pct_ttl' => $pct_ttl,

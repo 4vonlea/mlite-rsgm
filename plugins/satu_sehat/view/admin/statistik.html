@@ -282,7 +282,7 @@
 
         <div class="stat-panel">
             <div class="sp-title">Agregasi per Tanggal</div>
-            <div class="sp-sub">Kolom = 31 resource Satu Sehat. Isi = jumlah item terkirim pada tanggal tersebut; warna semakin pekat = semakin tinggi persentasenya terhadap kunjungan.</div>
+            <div class="sp-sub">Kolom = 31 resource Satu Sehat. Isi = jumlah item terkirim pada tanggal tersebut; warna semakin pekat = semakin tinggi persentasenya. Encounter/Diagnostik dibanding kunjungan; kolom seluruh sub-resource obat, lab & radiologi dibanding pemakai layanan tsb dengan lengkap klinis (Basis layak kirim), sehingga satu kesatuan kategori sinkron. TOTAL = rata-rata % 6 modul wajib hari itu; angka di depan TOTAL = jumlah seluruh item terkirim.</div>
             <div class="stat-scroll">
                 <table id="tbl_stat"></table>
             </div>
@@ -292,7 +292,7 @@
             <div class="col-md-6">
                 <div class="stat-panel">
                     <div class="sp-title">Persentase Modul Wajib Satusehat</div>
-                    <div class="sp-sub">Dibandingkan dengan jumlah kunjungan <b id="mw_base">-</b> pada periode terpilih.</div>
+                    <div class="sp-sub">% = terkirim &divide; pembanding. Encounter/Diagnostik = total kunjungan; Obat/Lab/Rad = kunjungan pemakai layanan dengan lengkap klinis (Encounter+Diagnosa+Closing). Semesta lengkap klinis: <b id="mw_base">-</b></div>
                     <div id="mw_list"></div>
                 </div>
             </div>
@@ -641,6 +641,21 @@
         var keys = res.resource_keys;
         var labels = res.resource_labels;
         var colCount = keys.length + 2;
+        // Denominator per kategori kesatuan kirim: seluruh sub-resource obat/lab PK/radiologi
+        var DEN_GROUP = {
+            'id_medication_request': 'id_medication_request',
+            'id_medication_dispense': 'id_medication_request',
+            'id_medication_statement': 'id_medication_request',
+            'id_rad_request': 'id_imaging_study',
+            'id_rad_specimen': 'id_imaging_study',
+            'id_rad_observation': 'id_imaging_study',
+            'id_rad_diagnostic': 'id_imaging_study',
+            'id_imaging_study': 'id_imaging_study',
+            'id_lab_pk_request': 'id_lab_pk_specimen',
+            'id_lab_pk_specimen': 'id_lab_pk_specimen',
+            'id_lab_pk_observation': 'id_lab_pk_specimen',
+            'id_lab_pk_diagnostic': 'id_lab_pk_specimen'
+        };
 
         var h = '<thead><tr><th rowspan="2">Tanggal</th>';
         for (var i = 0; i < keys.length; i++) {
@@ -650,21 +665,34 @@
 
         var body = '<tbody>';
         res.dates.forEach(function (d) {
+            var dmod = d.modul_den || {};
             body += '<tr>';
             body += '<td class="frst">' + d.label + '</td>';
             for (var i = 0; i < keys.length; i++) {
-                var v = d.resource[keys[i]] || 0;
+                var k = keys[i];
+                var v = d.resource[k] || 0;
                 var bg = '';
                 var tip = '';
-                if (d.kunjungan > 0) {
-                    var ratio = v / d.kunjungan;
+                var group = DEN_GROUP[k];
+                var den;
+                var denLabel;
+                if (group && dmod[group] > 0) {
+                    den = dmod[group];
+                    denLabel = 'pemakai layanan (lengkap klinis)';
+                } else {
+                    den = d.kunjungan;
+                    denLabel = 'kunjungan';
+                }
+                if (den > 0) {
+                    var ratio = Math.min(v / den, 1);
+                    var pct = Math.round(ratio * 100);
                     if (v > 0) {
                         var alpha = Math.min(0.06 + ratio * 0.85, 0.95);
                         bg = 'background:rgba(56,161,105,' + alpha.toFixed(2) + ');';
                     } else {
                         bg = 'background:rgba(229,62,62,0.08);';
                     }
-                    tip = ' title="' + nf(v) + ' / ' + nf(d.kunjungan) + ' kunjungan (' + Math.round(ratio * 100) + '%)"';
+                    tip = ' title="' + nf(v) + ' / ' + nf(den) + ' ' + denLabel + ' (' + pct + '%)"';
                 }
                 body += '<td style="' + bg + '"' + tip + '>' + v + '</td>';
             }
@@ -697,7 +725,7 @@
         foot += '<td>-</td></tr>';
 
         // %
-        foot += '<tr class="foot-row hdr"><td>% (Terkirim/Kunjungan)</td>';
+        foot += '<tr class="foot-row hdr"><td>% (Basis layak kirim)</td>';
         for (var i = 0; i < keys.length; i++) {
             foot += '<td>' + (res.persen[keys[i]] || 0) + '%</td>';
         }
@@ -709,7 +737,7 @@
     }
 
     function renderModul(res) {
-        $('#mw_base').text(nf(res.total_kunjungan));
+        $('#mw_base').text(nf(res.kunjungan_eligible != null ? res.kunjungan_eligible : res.total_kunjungan));
         var list = res.modul_wajib || [];
         var html = '';
         list.forEach(function (m) {
