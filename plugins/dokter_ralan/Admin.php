@@ -1177,6 +1177,17 @@ class Admin extends AdminModule
         $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
         $row['stts_daftar'] = $stts_daftar;
         $row['status_poli'] = $status_poli;
+        
+        $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
+        $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ralan')->where('ref_id', $ref_id)->oneArray();
+        if ($sig) {
+            $row['is_signed'] = true;
+            $row['signature_hash'] = $sig['signature_hash'];
+        } else {
+            $row['is_signed'] = false;
+            $row['sign_ref_id'] = $ref_id;
+        }
+
         $result[] = $row;
       }
 
@@ -1189,6 +1200,17 @@ class Admin extends AdminModule
          $row['nomor'] = $i++;
          $row['nama_petugas'] = $this->core->getPegawaiInfo('nama',$row['nip']);
          $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
+         
+         $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
+         $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ranap')->where('ref_id', $ref_id)->oneArray();
+         if ($sig) {
+             $row['is_signed'] = true;
+             $row['signature_hash'] = $sig['signature_hash'];
+         } else {
+             $row['is_signed'] = false;
+             $row['sign_ref_id'] = $ref_id;
+         }
+
          $result_ranap[] = $row;
         }
       }
@@ -1200,7 +1222,8 @@ class Admin extends AdminModule
           'prosedur' => htmlspecialchars_array($prosedur), 
           'mapping_snomed' => htmlspecialchars_array($mapping_snomed),
           'mapping_snomed_icd9' => htmlspecialchars_array($mapping_snomed_icd9),
-          'admin_mode' => $this->settings->get('settings.admin_mode')
+          'admin_mode' => $this->settings->get('settings.admin_mode'),
+          'current_user' => $this->core->getUserInfo('username')
       ]);
       exit();
     }
