@@ -1160,6 +1160,10 @@ class Admin extends AdminModule
          $mapping_snomed_icd9[] = $row_mapping_snomed_icd9;
        }
         
+      $reg = $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->oneArray();
+      $stts_daftar = $reg['stts_daftar'] ?? '-';
+      $status_poli = $reg['status_poli'] ?? '-';
+
       $i = 1;
       $row['nama_petugas'] = '';
       $row['departemen_petugas'] = '';
@@ -1171,6 +1175,8 @@ class Admin extends AdminModule
         $row['nomor'] = $i++;
         $row['nama_petugas'] = $this->core->getPegawaiInfo('nama',$row['nip']);
         $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
+        $row['stts_daftar'] = $stts_daftar;
+        $row['status_poli'] = $status_poli;
         $result[] = $row;
       }
 

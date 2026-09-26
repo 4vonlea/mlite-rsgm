@@ -6864,7 +6864,7 @@ class Admin extends AdminModule
         ]
       ],
       "category" => [
-        "food"
+        $row['allergy']['category']
       ],
       "code" => [
         "coding" => [

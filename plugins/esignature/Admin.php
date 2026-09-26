@@ -77,13 +77,23 @@ class Admin extends AdminModule
         header('Content-Type: application/json');
 
         try {
-            if (!isset($_POST['ref_type']) || !isset($_POST['ref_id']) || !isset($_POST['image_data'])) {
+            if (!isset($_POST['ref_type']) || !isset($_POST['ref_id']) || !isset($_POST['passphrase'])) {
                 throw new \Exception("Missing parameters");
             }
 
             $ref_type = $_POST['ref_type'];
             $ref_id = $_POST['ref_id'];
-            $image_data = $_POST['image_data']; 
+            $passphrase = $_POST['passphrase']; 
+            
+            // Verifikasi Password Login
+            $userId = $_SESSION['mlite_user'] ?? null;
+            if (!$userId) throw new \Exception("Sesi login tidak valid, silakan login ulang.");
+            $user = $this->db('mlite_users')->where('id', $userId)->oneArray();
+            if (!$user) throw new \Exception("Pengguna tidak ditemukan.");
+            
+            if (!password_verify(trim($passphrase), $user['password'])) {
+                throw new \Exception("Kata sandi (Passphrase) tidak valid!");
+            }
             
             $filename = 'sign_' . time() . '_' . uniqid() . '.png';
             $dir = WEBAPPS_PATH . '/berkas/esignature/';
@@ -99,21 +109,27 @@ class Admin extends AdminModule
             }
 
             $path = $dir . $filename;
-            $image_data = str_replace('data:image/png;base64,', '', $image_data);
-            $image_data = str_replace(' ', '+', $image_data);
             
-            if (file_put_contents($path, base64_decode($image_data)) === false) {
+            // Buat gambar transparan 1x1 pixel
+            $img = imagecreatetruecolor(1, 1);
+            imagesavealpha($img, true);
+            $color = imagecolorallocatealpha($img, 0, 0, 0, 127);
+            imagefill($img, 0, 0, $color);
+            if (!imagepng($img, $path)) {
+                 imagedestroy($img);
                  throw new \Exception("Failed to save image file");
             }
+            imagedestroy($img);
 
-            $hash = hash_file('sha256', $path);
+            // Perbaikan: gunakan hash acak unik alih-alih hash dari file gambar yang identik
+            $hash = hash('sha256', uniqid('', true) . bin2hex(random_bytes(16)));
 
             $save = $this->db('mlite_esignatures')->save([
                 'ref_type' => $ref_type,
                 'ref_id' => $ref_id,
-                'signer_role' => $_POST['signer_role'] ?? 'unknown',
-                'signer_id' => $_POST['signer_id'] ?? 'unknown',
-                'signer_name' => $_POST['signer_name'] ?? 'unknown',
+                'signer_role' => $user['role'] ?? 'unknown',
+                'signer_id' => $user['username'] ?? 'unknown',
+                'signer_name' => $user['fullname'] ?? 'unknown',
                 'signature_path' => $filename,
                 'signature_hash' => $hash,
                 'signed_at' => date('Y-m-d H:i:s'),
@@ -142,7 +158,8 @@ class Admin extends AdminModule
 
     public function getGeneratePdf($ref_type, $ref_id)
     {
-        $signatures = $this->db('mlite_esignatures')
+        try {
+            $signatures = $this->db('mlite_esignatures')
             ->where('ref_type', $ref_type)
             ->where('ref_id', $ref_id)
             ->toArray();
@@ -216,7 +233,7 @@ class Admin extends AdminModule
                                 <small>'.date('d-m-Y H:i', strtotime($sig['signed_at'])).'</small>
                             </td>
                             <td width="40%" align="center">
-                                <barcode code="'.$verifyUrl.'" type="QR" class="barcode" size="0.8" error="M" disableborder="1" />
+                                <barcode code="'.$sig['signature_hash'].'" type="QR" class="barcode" size="0.8" error="M" disableborder="1" />
                                 <br>
                                 <br>
                                 <small>Scan to Verify</small>
@@ -280,5 +297,10 @@ class Admin extends AdminModule
         // Also output to browser
         $mpdf->Output($fileName, 'I');
         exit;
+        } catch (\Throwable $e) {
+            echo "<h1>PDF Error</h1><p>" . $e->getMessage() . "</p>";
+            echo "<pre>" . $e->getTraceAsString() . "</pre>";
+            exit;
+        }
     }
 }
