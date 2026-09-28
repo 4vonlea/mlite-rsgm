@@ -57,15 +57,31 @@
       <td rowspan="7" style="vertical-align:top;">
         Instruksi: {?=isset_or($value.instruksi)?}<br><br>
         Evaluasi: {?=isset_or($value.evaluasi)?}<br><br>
-        <div class="qrcodePetugas{?=isset_or($value.nomor)?}" style="margin-top:10px;width:40px;margin-right: 120px;"></div>
-        {?=isset_or($value.nama_petugas)?}
-        <script>
-          jQuery('.qrcodePetugas{?=isset_or($value.nomor)?}').qrcode({
-            width: 64,
-            height: 64,
-            text	: "Petugas: {?=isset_or($value.nama_petugas)?}"
-          });
-        </script>
+        {if: isset($value.is_signed) && $value.is_signed}
+          <a href="{?=url(['esignature', 'verify', $value.signature_hash])?}" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">
+            <div class="qrcodePetugasValid{?=isset_or($value.nomor)?}" style="margin-top:10px;width:40px;margin-right: 120px;"></div>
+          </a>
+          {?=isset_or($value.nama_petugas)?}
+          <script>
+            jQuery('.qrcodePetugasValid{?=isset_or($value.nomor)?}').qrcode({
+              width: 120,
+              height: 120,
+              text: "{?=isset_or($value.signature_hash)?}"
+            });
+          </script>
+        {else}
+          <div id="sign_container_{?=isset_or($value.sign_ref_id)?}">
+              {if: $current_user == $value.nip}
+              <button type="button" class="btn btn-primary btn-xs btn-tte"
+                 data-ref_type="soap_ralan"
+                 data-ref_id="{?=isset_or($value.sign_ref_id)?}"
+                 data-signer_name="{?=isset_or($value.nama_petugas)?}">
+                 <i class="fa fa-pencil"></i> Tanda Tangani
+              </button><br><br>
+              {/if}
+              {?=isset_or($value.nama_petugas)?}
+          </div>
+        {/if}
       </td>
       {else}
       <td rowspan="5" style="vertical-align:top;">{?=isset_or($value.nomor)?}</td>
@@ -178,15 +194,31 @@
         <td>{?=isset_or($data.alergi)?}</td>
         <td rowspan="6" style="vertical-align:top;">
           {?=isset_or($data.instruksi)?}<br><br>
-          <div class="qrcodePetugas{?=isset_or($data.nomor)?}" style="margin-top:10px;width:40px;margin-right: 120px;"></div>
-          {?=isset_or($data.nama_petugas)?}
-          <script>
-          	jQuery('.qrcodePetugas{?=isset_or($data.nomor)?}').qrcode({
-              width: 64,
-              height: 64,
-          		text	: "Petugas: {?=isset_or($data.nama_petugas)?}"
-          	});
-          </script>
+          {if: isset($data.is_signed) && $data.is_signed}
+            <a href="{?=url(['esignature', 'verify', $data.signature_hash])?}" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">
+              <div class="qrcodePetugasValid{?=isset_or($data.nomor)?}" style="margin-top:10px;width:40px;margin-right: 120px;"></div>
+            </a>
+            {?=isset_or($data.nama_petugas)?}
+            <script>
+              jQuery('.qrcodePetugasValid{?=isset_or($data.nomor)?}').qrcode({
+                width: 120,
+                height: 120,
+                text: "{?=isset_or($data.signature_hash)?}"
+              });
+            </script>
+          {else}
+            <div id="sign_container_{?=isset_or($data.sign_ref_id)?}">
+                {if: $current_user == $data.nip}
+                <button type="button" class="btn btn-primary btn-xs btn-tte"
+                   data-ref_type="soap_ranap"
+                   data-ref_id="{?=isset_or($data.sign_ref_id)?}"
+                   data-signer_name="{?=isset_or($data.nama_petugas)?}">
+                   <i class="fa fa-pencil"></i> Tanda Tangani
+                </button><br><br>
+                {/if}
+                {?=isset_or($data.nama_petugas)?}
+            </div>
+          {/if}
         </td>
       </tr>
       <tr>
