@@ -2864,6 +2864,7 @@ class Admin extends AdminModule
     $dilewati = [];
     $first_id = null;
     $other_text = [];
+    $detail = [];
 
     $dedupe_tooth = [];
     foreach ($rows as $row) {
@@ -2937,6 +2938,12 @@ class Admin extends AdminModule
 
       list($oid, $raw) = $this->_dentalPostObservation($payload);
       $this->_dentalSaveItem($b['no_rawat'], 'gg_' . $tooth, $oid, $raw);
+      $detail[] = [
+        'item' => 'gg_' . $tooth,
+        'sukses' => $oid ? true : false,
+        'id_observation' => $oid ?: null,
+        'raw_response' => $raw !== '' ? substr($raw, 0, 1500) : '(tidak ada response)',
+      ];
       if ($oid) {
         if ($first_id === null) {
           $first_id = $oid;
@@ -2970,6 +2977,13 @@ class Admin extends AdminModule
       ];
       list($oid, $raw) = $this->_dentalPostObservation($payload_other);
       $this->_dentalSaveItem($b['no_rawat'], 'other', $oid, $raw);
+      $detail[] = [
+        'item' => 'other',
+        'sukses' => $oid ? true : false,
+        'id_observation' => $oid ?: null,
+        'raw_response' => $raw !== '' ? substr($raw, 0, 1500) : '(tidak ada response)',
+        'isi' => implode('; ', $other_text),
+      ];
       if ($oid && $first_id === null) {
         $first_id = $oid;
       }
@@ -2982,7 +2996,7 @@ class Admin extends AdminModule
       }
     }
 
-    $response = json_encode(['sukses' => $terkirim, 'gagal' => $gagal, 'dilewati' => $dilewati, 'id_odontogram' => $first_id, 'other_text' => $other_text], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    $response = json_encode(['sukses' => $terkirim, 'gagal' => $gagal, 'dilewati' => $dilewati, 'id_odontogram' => $first_id, 'other_text' => $other_text, 'detail' => $detail], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     if ($render) {
       echo $this->draw('observation.html', ['pesan' => ($terkirim > 0 ? 'Sukses' : 'Gagal') . ' mengirim odontogram (' . $terkirim . ' gigi) ke platform Satu Sehat!!', 'response' => $response]);
     } else {
@@ -3027,6 +3041,7 @@ class Admin extends AdminModule
     $terkirim = 0;
     $gagal = 0;
     $dilewati = [];
+    $detail = [];
 
     foreach ($index_teeth as $tooth) {
       $d = isset($ohis['d_' . $tooth]) ? (int) $ohis['d_' . $tooth] : 0;
@@ -3059,6 +3074,7 @@ class Admin extends AdminModule
         ];
         list($oid, $raw) = $this->_dentalPostObservation($payload);
         $this->_dentalSaveItem($b['no_rawat'], 'd_' . $tooth, $oid, $raw);
+        $detail[] = ['item' => 'd_' . $tooth, 'sukses' => $oid ? true : false, 'id_observation' => $oid ?: null, 'raw_response' => $raw !== '' ? substr($raw, 0, 1500) : '(tidak ada response)'];
         if ($oid) { $terkirim++; } else { $gagal++; }
       } elseif ($d >= 1) {
         $dilewati[] = 'd_' . $tooth . '=' . $d;
@@ -3091,6 +3107,7 @@ class Admin extends AdminModule
         ];
         list($oid, $raw) = $this->_dentalPostObservation($payload);
         $this->_dentalSaveItem($b['no_rawat'], 'c_' . $tooth, $oid, $raw);
+        $detail[] = ['item' => 'c_' . $tooth, 'sukses' => $oid ? true : false, 'id_observation' => $oid ?: null, 'raw_response' => $raw !== '' ? substr($raw, 0, 1500) : '(tidak ada response)'];
         if ($oid) { $terkirim++; } else { $gagal++; }
       } elseif ($c >= 1) {
         $dilewati[] = 'c_' . $tooth . '=' . $c;
@@ -3126,6 +3143,7 @@ class Admin extends AdminModule
       ];
       list($oid, $raw) = $this->_dentalPostObservation($payload);
       $this->_dentalSaveItem($b['no_rawat'], 'di_total', $oid, $raw);
+      $detail[] = ['item' => 'di_total', 'sukses' => $oid ? true : false, 'id_observation' => $oid ?: null, 'raw_response' => $raw !== '' ? substr($raw, 0, 1500) : '(tidak ada response)'];
       if ($oid) { $terkirim++; } else { $gagal++; }
     }
 
@@ -3153,6 +3171,7 @@ class Admin extends AdminModule
       ];
       list($oid, $raw) = $this->_dentalPostObservation($payload);
       $this->_dentalSaveItem($b['no_rawat'], 'ci_total', $oid, $raw);
+      $detail[] = ['item' => 'ci_total', 'sukses' => $oid ? true : false, 'id_observation' => $oid ?: null, 'raw_response' => $raw !== '' ? substr($raw, 0, 1500) : '(tidak ada response)'];
       if ($oid) { $terkirim++; } else { $gagal++; }
     }
 
@@ -3193,6 +3212,7 @@ class Admin extends AdminModule
       ];
       list($oid, $raw) = $this->_dentalPostObservation($payload);
       $this->_dentalSaveItem($b['no_rawat'], 'ohis_total', $oid, $raw);
+      $detail[] = ['item' => 'ohis_total', 'sukses' => $oid ? true : false, 'id_observation' => $oid ?: null, 'raw_response' => $raw !== '' ? substr($raw, 0, 1500) : '(tidak ada response)'];
       if ($oid) {
         $terkirim++;
         $id_ohis_total = $oid;
@@ -3208,7 +3228,7 @@ class Admin extends AdminModule
       }
     }
 
-    $response = json_encode(['sukses' => $terkirim, 'gagal' => $gagal, 'dilewati' => $dilewati, 'id_ohis_total' => $id_ohis_total, 'debris' => $debris_total, 'calculus' => $calculus_total, 'nilai' => $nilai], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    $response = json_encode(['sukses' => $terkirim, 'gagal' => $gagal, 'dilewati' => $dilewati, 'id_ohis_total' => $id_ohis_total, 'debris' => $debris_total, 'calculus' => $calculus_total, 'nilai' => $nilai, 'detail' => $detail], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     if ($render) {
       echo $this->draw('observation.html', ['pesan' => ($terkirim > 0 ? 'Sukses' : 'Gagal') . ' mengirim OHIS (' . $terkirim . ' observation) ke platform Satu Sehat!!', 'response' => $response]);
     } else {
