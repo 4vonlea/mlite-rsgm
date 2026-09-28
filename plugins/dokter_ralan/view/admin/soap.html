@@ -166,6 +166,34 @@
               data-jam_rawat="{?=isset_or($value.jam_rawat)?}"
               {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip}disabled{/if}
               ><span class="fa fa-trash"></span><span class="hidden-xs"> Hapus</span></button>
+            {if: $admin_mode != 'complex'}
+              {if: isset($value.is_signed) && $value.is_signed}
+                <br><br>
+                <a href="{?=url(['esignature', 'verify', $value.signature_hash])?}" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">
+                  <div class="qrcodePetugasValidSimple{?=isset_or($value.nomor)?}" style="margin-top:5px; width:40px;"></div>
+                </a>
+                <small>{?=isset_or($value.nama_petugas)?}</small>
+                <script>
+                  jQuery('.qrcodePetugasValidSimple{?=isset_or($value.nomor)?}').qrcode({
+                    width: 100,
+                    height: 100,
+                    text: "{?=isset_or($value.signature_hash)?}"
+                  });
+                </script>
+              {else}
+                <div id="sign_container_{?=isset_or($value.sign_ref_id)?}">
+                  {if: $current_user == $value.nip}
+                    <br>
+                    <button type="button" class="btn btn-primary btn-xs btn-tte"
+                       data-ref_type="soap_ralan"
+                       data-ref_id="{?=isset_or($value.sign_ref_id)?}"
+                       data-signer_name="{?=isset_or($value.nama_petugas)?}">
+                       <i class="fa fa-pencil"></i> Tanda Tangani
+                    </button>
+                  {/if}
+                </div>
+              {/if}
+            {/if}
           </div>
         </td>
         <th colspan="2">Plan</th>

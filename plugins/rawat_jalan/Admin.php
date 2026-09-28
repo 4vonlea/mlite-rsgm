@@ -2247,11 +2247,17 @@ class Admin extends AdminModule
         $row['status_poli'] = $status_poli;
         
         $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
-        $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ralan')->where('ref_id', $ref_id)->oneArray();
-        if ($sig) {
-            $row['is_signed'] = true;
-            $row['signature_hash'] = $sig['signature_hash'];
-        } else {
+        try {
+            $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ralan')->where('ref_id', $ref_id)->oneArray();
+            if ($sig) {
+                $row['is_signed'] = true;
+                $row['signature_hash'] = $sig['signature_hash'];
+            } else {
+                $row['is_signed'] = false;
+                $row['sign_ref_id'] = $ref_id;
+            }
+        } catch (\Throwable $e) {
+            // Tabel mlite_esignatures belum ada (modul esignature belum diinstall)
             $row['is_signed'] = false;
             $row['sign_ref_id'] = $ref_id;
         }
@@ -2270,11 +2276,17 @@ class Admin extends AdminModule
         $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
 
         $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
-        $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ranap')->where('ref_id', $ref_id)->oneArray();
-        if ($sig) {
-            $row['is_signed'] = true;
-            $row['signature_hash'] = $sig['signature_hash'];
-        } else {
+        try {
+            $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ranap')->where('ref_id', $ref_id)->oneArray();
+            if ($sig) {
+                $row['is_signed'] = true;
+                $row['signature_hash'] = $sig['signature_hash'];
+            } else {
+                $row['is_signed'] = false;
+                $row['sign_ref_id'] = $ref_id;
+            }
+        } catch (\Throwable $e) {
+            // Tabel mlite_esignatures belum ada (modul esignature belum diinstall)
             $row['is_signed'] = false;
             $row['sign_ref_id'] = $ref_id;
         }

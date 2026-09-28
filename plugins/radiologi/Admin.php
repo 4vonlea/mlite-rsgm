@@ -1107,10 +1107,14 @@ class Admin extends AdminModule
       ->oneArray();
 
     $ref_id = 'radiologi_' . str_replace('/', '', $no_rawat) . '_' . $tgl . '_' . str_replace(':', '', $jam);
-    $signature = $this->db('mlite_esignatures')
-      ->where('ref_type', 'radiologi_hasil')
-      ->where('ref_id', $ref_id)
-      ->oneArray();
+    try {
+        $signature = $this->db('mlite_esignatures')
+          ->where('ref_type', 'radiologi_hasil')
+          ->where('ref_id', $ref_id)
+          ->oneArray();
+    } catch (\Throwable $e) {
+        $signature = null;
+    }
 
     if ($signature) {
         $qrUrl = $signature['signature_hash'];
@@ -1505,10 +1509,14 @@ class Admin extends AdminModule
 
       $ref_id = 'radiologi_' . str_replace('/', '', $_POST['no_rawat']) . '_' . $row['tgl_periksa'] . '_' . str_replace(':', '', $row['jam']);
       $row['ref_id'] = $ref_id;
-      $row['signature'] = $this->db('mlite_esignatures')
-        ->where('ref_type', 'radiologi_hasil')
-        ->where('ref_id', $ref_id)
-        ->oneArray();
+      try {
+          $row['signature'] = $this->db('mlite_esignatures')
+            ->where('ref_type', 'radiologi_hasil')
+            ->where('ref_id', $ref_id)
+            ->oneArray();
+      } catch (\Throwable $e) {
+          $row['signature'] = null;
+      }
 
       $periksa_radiologi[] = $row;
     }

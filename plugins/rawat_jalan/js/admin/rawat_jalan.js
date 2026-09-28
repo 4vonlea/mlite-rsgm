@@ -1629,7 +1629,7 @@ $(document).on('click', '.btn-tte', function(e) {
     var formHtml = '<div class="text-center" style="padding: 10px;">' +
         '<i class="fa fa-lock fa-4x text-primary" style="margin-bottom: 20px; color: #3498db;"></i>' +
         '<h4 style="margin-bottom: 15px; color: #333; font-weight: bold;">Tanda Tangan Elektronik</h4>' +
-        '<p class="text-muted" style="margin-bottom: 25px; font-size: 14px;">Masukkan kata sandi (login) Anda untuk menyetujui dokumen ini.</p>' +
+        '<p class="text-muted" style="margin-bottom: 25px; font-size: 14px;">Masukkan kata sandi (login) akun MLITE Anda untuk memverifikasi dokumen ini.<br><strong style="color: #e74c3c;">Pastikan isian data telah benar dan sesuai.</strong></p>' +
         '<div class="form-group">' +
             '<input type="password" id="tte-passphrase-input" class="form-control text-center" placeholder="Kata Sandi" style="font-size: 18px; letter-spacing: 2px; padding: 20px 15px; border-radius: 8px; border: 2px solid #ddd; outline: none; box-shadow: none;">' +
         '</div>' +
