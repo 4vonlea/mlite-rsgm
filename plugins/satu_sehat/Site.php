@@ -12,6 +12,8 @@ class Site extends SiteModule
         $this->route('satu-sehat/condition/(:any)', 'forwardCondition');
         $this->route('satu-sehat/observation/(:any)/(:any)', 'forwardObservation');
         $this->route('satu-sehat/procedure/(:any)', 'forwardProcedure');
+        $this->route('satu-sehat/odontogram/(:any)', 'forwardOdontogram');
+        $this->route('satu-sehat/ohis/(:any)', 'forwardOhis');
         $this->route('satu-sehat/diet-gizi/(:any)', 'forwardDietGizi');
         $this->route('satu-sehat/vaksin/(:any)', 'forwardVaksin');
         $this->route('satu-sehat/care-plan/(:any)', 'forwardCarePlan');
@@ -99,6 +101,34 @@ class Site extends SiteModule
         $admin = new \Plugins\Satu_Sehat\Admin($this->core);
         $admin->init();
         return $admin->getProcedure($no_rawat, false);
+    }
+
+    public function forwardOdontogram($no_rawat = null)
+    {
+        if ($no_rawat === null && isset($_GET['no_rawat'])) {
+            $no_rawat = $_GET['no_rawat'];
+        }
+        if ($no_rawat === null) {
+            echo json_encode(['error' => 'no_rawat kosong']);
+            exit();
+        }
+        $admin = new \Plugins\Satu_Sehat\Admin($this->core);
+        $admin->init();
+        return $admin->getOdontogram($no_rawat, false);
+    }
+
+    public function forwardOhis($no_rawat = null)
+    {
+        if ($no_rawat === null && isset($_GET['no_rawat'])) {
+            $no_rawat = $_GET['no_rawat'];
+        }
+        if ($no_rawat === null) {
+            echo json_encode(['error' => 'no_rawat kosong']);
+            exit();
+        }
+        $admin = new \Plugins\Satu_Sehat\Admin($this->core);
+        $admin->init();
+        return $admin->getOhis($no_rawat, false);
     }
 
     public function forwardDietGizi($no_rawat = null)
@@ -319,6 +349,8 @@ class Site extends SiteModule
         $medBase = '/satu-sehat/medication/';
         $labBase = '/satu-sehat/laboratory/';
         $radBase = '/satu-sehat/radiology/';
+        $odBase = '/satu-sehat/odontogram/';
+        $ohisBase = '/satu-sehat/ohis/';
 
         echo '<!doctype html>
         <html>
@@ -511,6 +543,22 @@ class Site extends SiteModule
                         "<div>Radiology (" + rt + "):<pre>" + (typeof rtJson === "string" ? rtJson : JSON.stringify(rtJson, null, 2)) + "</pre></div>"
                     );
                 }
+
+                // Odontogram
+                const odTxt = await call("' . $odBase . '" + nrUrl);
+                const od = toJsonOrString(odTxt);
+                container.insertAdjacentHTML(
+                    "beforeend",
+                    "<div>Odontogram:<pre>" + (typeof od === "string" ? od : JSON.stringify(od, null, 2)) + "</pre></div>"
+                );
+
+                // OHIS
+                const ohisTxt = await call("' . $ohisBase . '" + nrUrl);
+                const ohis = toJsonOrString(ohisTxt);
+                container.insertAdjacentHTML(
+                    "beforeend",
+                    "<div>OHIS:<pre>" + (typeof ohis === "string" ? ohis : JSON.stringify(ohis, null, 2)) + "</pre></div>"
+                );
                     
                 results.push({
                     no_rawat: nrDisp,
@@ -526,7 +574,9 @@ class Site extends SiteModule
                     questionnaire: questionnaire,
                     medication: medRes,
                     laboratory: labRes,
-                    radiology: radRes
+                    radiology: radRes,
+                    odontogram: od,
+                    ohis: ohis
                 });
 
                 summary.textContent = JSON.stringify(results, null, 2);
@@ -576,6 +626,8 @@ class Site extends SiteModule
         $medBase = '/satu-sehat/medication/';
         $labBase = '/satu-sehat/laboratory/';
         $radBase = '/satu-sehat/radiology/';
+        $odBase = '/satu-sehat/odontogram/';
+        $ohisBase = '/satu-sehat/ohis/';
 
         echo '<!doctype html>
         <html>
@@ -766,6 +818,22 @@ class Site extends SiteModule
                         "<div>Radiology (" + rt + "):<pre>" + (typeof rtJson === "string" ? rtJson : JSON.stringify(rtJson, null, 2)) + "</pre></div>"
                     );
                 }
+
+                // Odontogram
+                const odTxt = await call("' . $odBase . '" + nrUrl);
+                const od = toJsonOrString(odTxt);
+                container.insertAdjacentHTML(
+                    "beforeend",
+                    "<div>Odontogram:<pre>" + (typeof od === "string" ? od : JSON.stringify(od, null, 2)) + "</pre></div>"
+                );
+
+                // OHIS
+                const ohisTxt = await call("' . $ohisBase . '" + nrUrl);
+                const ohis = toJsonOrString(ohisTxt);
+                container.insertAdjacentHTML(
+                    "beforeend",
+                    "<div>OHIS:<pre>" + (typeof ohis === "string" ? ohis : JSON.stringify(ohis, null, 2)) + "</pre></div>"
+                );
                     
                 results.push({
                     no_rawat: nrDisp,
@@ -781,7 +849,9 @@ class Site extends SiteModule
                     questionnaire: questionnaire,
                     medication: medRes,
                     laboratory: labRes,
-                    radiology: radRes
+                    radiology: radRes,
+                    odontogram: od,
+                    ohis: ohis
                 });
 
                 summary.textContent = JSON.stringify(results, null, 2);

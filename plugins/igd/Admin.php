@@ -1020,10 +1020,29 @@ class Admin extends AdminModule
       exit();
     }
 
+    private function resolveDentalInputNoRawat($no_rkm_medis)
+    {
+      if (!empty($_POST['no_rawat'])) {
+        return $_POST['no_rawat'];
+      }
+      $v = $this->db('reg_periksa')
+        ->where('no_rkm_medis', $no_rkm_medis)
+        ->where('stts', '!=', 'Batal')
+        ->where('tgl_registrasi', '=', date('Y-m-d'))
+        ->desc('jam_reg')
+        ->limit(1)
+        ->oneArray();
+      return $v ? $v['no_rawat'] : '';
+    }
+
     public function postOdontogramSave()
     {
       $_POST['id_user']	= $this->core->getUserInfo('id');
       $_POST['tgl_input'] = date('Y-m-d');
+      $nr = $this->resolveDentalInputNoRawat($_POST['no_rkm_medis']);
+      if ($nr !== '') {
+        $_POST['no_rawat'] = $nr;
+      }
       $query = $this->db('mlite_odontogram')->save($_POST);
       exit();
     }
@@ -1085,14 +1104,18 @@ class Admin extends AdminModule
       $_POST['calculus'] = ($_POST['c_16']+$_POST['c_11']+$_POST['c_26']+$_POST['c_36']+$_POST['c_31']+$_POST['c_46'])/6;
       $_POST['calculus'] = ceil($_POST['calculus']*100)/100;
       $_POST['nilai'] = $_POST['debris']+$_POST['calculus'];
-      if($_POST['nilai'] >= '0,0' && $_POST['nilai'] <= '1,2') {
+      if($_POST['nilai'] >= '0' && $_POST['nilai'] <= '1,2') {
         $_POST['kriteria'] = 'Baik';
-      } elseif($_POST['nilai'] >= '1,3' && $_POST['nilai'] <= '3,0') {
+      } elseif($_POST['nilai'] >= '1,3' && $_POST['nilai'] <= '3') {
         $_POST['kriteria'] = 'Sedang';
-      } elseif($_POST['nilai'] >= '1,3' && $_POST['nilai'] <= '3,0') {
+      } elseif($_POST['nilai'] > '3') {
         $_POST['kriteria'] = 'Buruk';
       } else {
         $_POST['kriteria'] = '';
+      }
+      $nr = $this->resolveDentalInputNoRawat($_POST['no_rkm_medis']);
+      if ($nr !== '') {
+        $_POST['no_rawat'] = $nr;
       }
       $query = $this->db('mlite_ohis')->save($_POST);
       exit();

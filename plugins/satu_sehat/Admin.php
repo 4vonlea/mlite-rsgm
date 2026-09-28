@@ -2636,6 +2636,587 @@ class Admin extends AdminModule
     exit();
   }
 
+  private function _dentalFdiMap()
+  {
+    return [
+      '11' => ['422653006', 'Structure of permanent maxillary right central incisor tooth'],
+      '12' => ['424877001', 'Structure of permanent maxillary right lateral incisor tooth'],
+      '13' => ['860767006', 'Structure of permanent maxillary right canine tooth'],
+      '14' => ['57826002', 'Structure of permanent maxillary right first premolar tooth'],
+      '15' => ['36492000', 'Structure of permanent maxillary right second premolar tooth'],
+      '16' => ['865995000', 'Structure of permanent maxillary right first molar tooth'],
+      '17' => ['863902006', 'Structure of permanent maxillary right second molar tooth'],
+      '18' => ['68085002', 'Structure of permanent maxillary right third molar tooth'],
+      '21' => ['424399000', 'Structure of permanent maxillary left central incisor tooth'],
+      '22' => ['423185002', 'Structure of permanent maxillary left lateral incisor tooth'],
+      '23' => ['860780009', 'Structure of permanent maxillary left canine tooth'],
+      '24' => ['61897005', 'Structure of permanent maxillary left first premolar tooth'],
+      '25' => ['23226009', 'Structure of permanent maxillary left second premolar tooth'],
+      '26' => ['865988009', 'Structure of permanent maxillary left first molar tooth'],
+      '27' => ['863901004', 'Structure of permanent maxillary left second molar tooth'],
+      '28' => ['87704003', 'Structure of permanent maxillary left third molar tooth'],
+      '31' => ['425106001', 'Structure of permanent mandibular left central incisor tooth'],
+      '32' => ['423331005', 'Structure of permanent mandibular left lateral incisor tooth'],
+      '33' => ['860782001', 'Structure of permanent mandibular left canine tooth'],
+      '34' => ['2400006', 'Structure of permanent mandibular left first premolar tooth'],
+      '35' => ['24573005', 'Structure of permanent mandibular left second premolar tooth'],
+      '36' => ['866006002', 'Structure of permanent mandibular left first molar tooth'],
+      '37' => ['863898000', 'Structure of permanent mandibular left second molar tooth'],
+      '38' => ['74344005', 'Structure of permanent mandibular left third molar tooth'],
+      '41' => ['424575004', 'Structure of permanent mandibular right central incisor tooth'],
+      '42' => ['423937004', 'Structure of permanent mandibular right lateral incisor tooth'],
+      '43' => ['860785004', 'Structure of permanent mandibular right canine tooth'],
+      '44' => ['80140008', 'Structure of permanent mandibular right first premolar tooth'],
+      '45' => ['8873007', 'Structure of permanent mandibular right second premolar tooth'],
+      '46' => ['866005003', 'Structure of permanent mandibular right first molar tooth'],
+      '47' => ['863899008', 'Structure of permanent mandibular right second molar tooth'],
+      '48' => ['38994002', 'Structure of permanent mandibular right third molar tooth'],
+      '51' => ['88824007', 'Structure of deciduous maxillary right central incisor tooth'],
+      '52' => ['65624003', 'Structure of deciduous maxillary right lateral incisor tooth'],
+      '53' => ['30618001', 'Structure of deciduous maxillary right canine tooth'],
+      '54' => ['17505006', 'Structure of deciduous maxillary right first molar tooth'],
+      '55' => ['27855007', 'Structure of deciduous maxillary right second molar tooth'],
+      '61' => ['51678005', 'Structure of deciduous maxillary left central incisor tooth'],
+      '62' => ['43622005', 'Structure of deciduous maxillary left lateral incisor tooth'],
+      '63' => ['73937000', 'Structure of deciduous maxillary left canine tooth'],
+      '64' => ['45234009', 'Structure of deciduous maxillary left first molar tooth'],
+      '65' => ['51943008', 'Structure of deciduous maxillary left second molar tooth'],
+      '71' => ['89552004', 'Structure of deciduous mandibular left central incisor tooth'],
+      '72' => ['14770005', 'Structure of deciduous mandibular left lateral incisor tooth'],
+      '73' => ['43281008', 'Structure of deciduous mandibular left canine tooth'],
+      '74' => ['38896004', 'Structure of deciduous mandibular left first molar tooth'],
+      '75' => ['49330006', 'Structure of deciduous mandibular left second molar tooth'],
+      '81' => ['67834006', 'Structure of deciduous mandibular right central incisor tooth'],
+      '82' => ['22445006', 'Structure of deciduous mandibular right lateral incisor tooth'],
+      '83' => ['6062009', 'Structure of deciduous mandibular right canine tooth'],
+      '84' => ['58646007', 'Structure of deciduous mandibular right first molar tooth'],
+      '85' => ['61868007', 'Structure of deciduous mandibular right second molar tooth'],
+    ];
+  }
+
+  private function _dentalKondisiToL5($kondisi)
+  {
+    $k = trim((string) $kondisi);
+    if ($k === '') {
+      return null;
+    }
+    $lk = strtolower($k);
+    $sct = 'http://snomed.info/sct';
+    $term = 'http://terminology.kemkes.go.id/CodeSystem/clinical-term';
+    $map = [
+      'karies' => [$sct, '80967001', 'Dental caries'],
+      'car' => [$sct, '80967001', 'Dental caries'],
+      'sisa akar' => [$term, 'OV000093', 'Sisa Akar'],
+      'sisak akar' => [$term, 'OV000093', 'Sisa Akar'],
+      'akar' => [$term, 'OV000093', 'Sisa Akar'],
+      'rrx' => [$term, 'OV000093', 'Sisa Akar'],
+      'tumpat' => [$sct, '287451003', 'Tooth cavity drilled and filled'],
+      'tumpatan' => [$sct, '287451003', 'Tooth cavity drilled and filled'],
+      'cof' => [$sct, '287451003', 'Tooth cavity drilled and filled'],
+      'amf' => [$sct, '287451003', 'Tooth cavity drilled and filled'],
+      'gif' => [$sct, '287451003', 'Tooth cavity drilled and filled'],
+      'tanggal' => [$sct, '234948008', 'Tooth absent'],
+      'gigi hilang' => [$sct, '234948008', 'Tooth absent'],
+      'hilang' => [$sct, '234948008', 'Tooth absent'],
+      'mis' => [$sct, '234948008', 'Tooth absent'],
+      'erupsi' => [$sct, '397797004', 'Tooth erupted'],
+      'impaksi' => [$sct, '129263008', 'Impacted tooth'],
+      'imv' => [$sct, '129263008', 'Impacted tooth'],
+      'fraktur mahkota' => [$sct, '278590005', 'Fractured dental crown'],
+      'fraktur' => [$sct, '278590005', 'Fractured dental crown'],
+      'cfr' => [$sct, '278590005', 'Fractured dental crown'],
+      'sehat' => [$sct, '162005007', 'No tooth problem'],
+      'sou' => [$sct, '162005007', 'No tooth problem'],
+      'normal' => [$sct, '162005007', 'No tooth problem'],
+    ];
+    if (isset($map[$lk])) {
+      return $map[$lk];
+    }
+    foreach ($map as $key => $val) {
+      if (strpos($lk, $key) !== false) {
+        return $val;
+      }
+    }
+    return null;
+  }
+
+  private function _dentalPostObservation($payload)
+  {
+    $data_observation = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    $curl = curl_init();
+    curl_setopt_array($curl, array(
+      CURLOPT_URL => $this->fhirurl . '/Observation',
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_ENCODING => '',
+      CURLOPT_MAXREDIRS => 10,
+      CURLOPT_TIMEOUT => 0,
+      CURLOPT_FOLLOWLOCATION => true,
+      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+      CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . $this->getAccessToken()),
+      CURLOPT_CUSTOMREQUEST => 'POST',
+      CURLOPT_POSTFIELDS => $data_observation,
+    ));
+    $response = curl_exec($curl);
+    $decoded = json_decode($response);
+    $id = (is_object($decoded) && isset($decoded->id)) ? $decoded->id : null;
+    curl_close($curl);
+    return [$id, $response];
+  }
+
+  private function _dentalSaveItem($no_rawat, $item, $id, $response)
+  {
+    $existing = $this->db('mlite_satu_sehat_gigi_response')->where('no_rawat', $no_rawat)->where('item', $item)->oneArray();
+    $data = [
+      'no_rawat' => $no_rawat,
+      'item' => $item,
+      'id_observation' => $id,
+      'status' => $id ? 'sent' : 'failed',
+      'raw_response' => $response,
+      'tgl_kirim' => $id ? date('Y-m-d H:i:s') : null,
+    ];
+    if ($existing) {
+      $this->db('mlite_satu_sehat_gigi_response')->where('no_rawat', $no_rawat)->where('item', $item)->save($data);
+    } else {
+      $this->db('mlite_satu_sehat_gigi_response')->save($data);
+    }
+  }
+
+  private function _dentalBases($no_rawat)
+  {
+    $no_rawat = revertNoRawat($no_rawat);
+    $zonawaktu = '+07:00';
+    if ($this->settings->get('satu_sehat.zonawaktu') == 'WITA') {
+      $zonawaktu = '+08:00';
+    }
+    if ($this->settings->get('satu_sehat.zonawaktu') == 'WIT') {
+      $zonawaktu = '+09:00';
+    }
+    $kd_poli = $this->core->getRegPeriksaInfo('kd_poli', $no_rawat);
+    $kd_dokter = $this->core->getRegPeriksaInfo('kd_dokter', $no_rawat);
+    $no_ktp_dokter = $this->core->getPegawaiInfo('no_ktp', $kd_dokter);
+    $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
+    $no_ktp_pasien = $this->core->getPasienInfo('no_ktp', $no_rkm_medis);
+    $nama_pasien = $this->core->getPasienInfo('nm_pasien', $no_rkm_medis);
+    $tgl_registrasi = $this->core->getRegPeriksaInfo('tgl_registrasi', $no_rawat);
+    $jam_reg = $this->core->getRegPeriksaInfo('jam_reg', $no_rawat);
+    $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
+
+    $ihs_patient = '';
+    $__patientResp = $this->getPatient($no_ktp_pasien);
+    $__patientJson = json_decode($__patientResp);
+    if (is_object($__patientJson) && isset($__patientJson->entry) && is_array($__patientJson->entry) && isset($__patientJson->entry[0]) && isset($__patientJson->entry[0]->resource) && isset($__patientJson->entry[0]->resource->id)) {
+      $ihs_patient = $__patientJson->entry[0]->resource->id;
+    }
+    $practitioner_id = '';
+    $__pracResp = $this->getPractitioner($no_ktp_dokter);
+    $__pracJson = json_decode($__pracResp);
+    if (is_object($__pracJson) && isset($__pracJson->entry) && is_array($__pracJson->entry) && isset($__pracJson->entry[0]) && isset($__pracJson->entry[0]->resource) && isset($__pracJson->entry[0]->resource->id)) {
+      $practitioner_id = $__pracJson->entry[0]->resource->id;
+    }
+    $encounter_id = isset($mlite_satu_sehat_response['id_encounter']) ? $mlite_satu_sehat_response['id_encounter'] : '';
+    $effective = ($tgl_registrasi ? $tgl_registrasi . 'T' : '') . ($jam_reg ? $jam_reg : '00:00:00') . $zonawaktu;
+
+    return [
+      'no_rawat' => $no_rawat,
+      'zonawaktu' => $zonawaktu,
+      'ihs_patient' => $ihs_patient,
+      'practitioner_id' => $practitioner_id,
+      'encounter_id' => $encounter_id,
+      'effective' => $effective,
+      'nama_pasien' => $nama_pasien,
+      'tgl_registrasi' => $tgl_registrasi,
+      'no_rkm_medis' => $no_rkm_medis,
+      'no_ktp_pasien' => $no_ktp_pasien,
+      'response_row' => $mlite_satu_sehat_response,
+    ];
+  }
+
+  public function getOdontogram($no_rawat, $render = true)
+  {
+    $b = $this->_dentalBases($no_rawat);
+    if ($b['encounter_id'] === '' || $b['ihs_patient'] === '' || $b['practitioner_id'] === '') {
+      $response = json_encode(['error' => 'Prasyarat SATUSEHAT belum lengkap (encounter/patient/practitioner)', 'missing' => ['encounter' => $b['encounter_id'], 'patient' => $b['ihs_patient'], 'practitioner' => $b['practitioner_id']]], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render) {
+        echo $this->draw('observation.html', ['pesan' => 'Gagal mengirim odontogram ke platform Satu Sehat!!', 'response' => $response]);
+      } else {
+        echo $response;
+      }
+      exit();
+    }
+
+    $rows = $this->db('mlite_odontogram')->where('no_rawat', $b['no_rawat'])->toArray();
+    if (empty($rows)) {
+      $rows = $this->db('mlite_odontogram')->where('no_rkm_medis', $b['no_rkm_medis'])->where('tgl_input', $b['tgl_registrasi'])->toArray();
+    }
+    if (empty($rows)) {
+      $response = json_encode(['error' => 'Tidak ada data odontogram untuk kunjungan ini'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render) {
+        echo $this->draw('observation.html', ['pesan' => 'Gagal mengirim odontogram ke platform Satu Sehat!!', 'response' => $response]);
+      } else {
+        echo $response;
+      }
+      exit();
+    }
+
+    $fdi_map = $this->_dentalFdiMap();
+    $terkirim = 0;
+    $gagal = 0;
+    $dilewati = [];
+    $first_id = null;
+    $other_text = [];
+
+    $dedupe_tooth = [];
+    foreach ($rows as $row) {
+      $pemeriksaan = isset($row['pemeriksaan']) ? trim((string) $row['pemeriksaan']) : '';
+      if (!preg_match('/^gg_(\d{2})(?:_[a-zA-Z0-9_]+)?$/i', $pemeriksaan, $m)) {
+        $dilewati[] = $pemeriksaan ?: '(kosong)';
+        continue;
+      }
+      $tooth = $m[1];
+      if (!isset($fdi_map[$tooth])) {
+        $dilewati[] = $pemeriksaan;
+        continue;
+      }
+      $sudah = $this->db('mlite_satu_sehat_gigi_response')->where('no_rawat', $b['no_rawat'])->where('item', 'gg_' . $tooth)->oneArray();
+      if (!empty($sudah['id_observation'])) {
+        $dilewati[] = $pemeriksaan . ':sudah-terkirim';
+        continue;
+      }
+      if (strtolower(trim((string) (isset($row['kondisi']) ? $row['kondisi'] : ''))) === 'non') {
+        $dilewati[] = $pemeriksaan . ':non';
+        continue;
+      }
+      $l5 = $this->_dentalKondisiToL5(isset($row['kondisi']) ? $row['kondisi'] : '');
+      if ($l5 === null) {
+        $kondisi_raw = trim((string) (isset($row['kondisi']) ? $row['kondisi'] : ''));
+        if ($kondisi_raw !== '') {
+          $other_text[] = 'Gigi ' . $tooth . ' ' . $kondisi_raw;
+        }
+        $dilewati[] = $pemeriksaan . ':' . ($kondisi_raw !== '' ? $kondisi_raw : 'kosong');
+        continue;
+      }
+      $dup_key = $tooth . '|' . $l5[1];
+      if (isset($dedupe_tooth[$dup_key])) {
+        $dilewati[] = $pemeriksaan . ':duplikat';
+        continue;
+      }
+      $dedupe_tooth[$dup_key] = true;
+
+      $payload = [
+        'resourceType' => 'Observation',
+        'status' => 'final',
+        'category' => [
+          ['coding' => [['system' => 'http://terminology.hl7.org/CodeSystem/observation-category', 'code' => 'exam', 'display' => 'Exam']]]
+        ],
+        'code' => [
+          'coding' => [['system' => 'http://terminology.kemkes.go.id/CodeSystem/clinical-term', 'code' => 'OC000061', 'display' => 'Pemeriksaan Odontogram']]
+        ],
+        'subject' => ['reference' => 'Patient/' . $b['ihs_patient']],
+        'performer' => [['reference' => 'Practitioner/' . $b['practitioner_id']]],
+        'encounter' => [
+          'reference' => 'Encounter/' . $b['encounter_id'],
+          'display' => 'Pemeriksaan Odontogram ' . $b['nama_pasien'] . ' tanggal ' . $b['tgl_registrasi']
+        ],
+        'effectiveDateTime' => $b['effective'],
+        'issued' => $b['effective'],
+        'bodySite' => [
+          'coding' => [['system' => 'http://snomed.info/sct', 'code' => $fdi_map[$tooth][0], 'display' => $fdi_map[$tooth][1]]]
+        ],
+        'valueBoolean' => true,
+        'component' => [
+          [
+            'code' => [
+              'coding' => [['system' => 'http://snomed.info/sct', 'code' => '278544002', 'display' => 'Tooth finding']]
+            ],
+            'valueCodeableConcept' => [
+              'coding' => [['system' => $l5[0], 'code' => $l5[1], 'display' => $l5[2]]]
+            ]
+          ]
+        ]
+      ];
+
+      list($oid, $raw) = $this->_dentalPostObservation($payload);
+      $this->_dentalSaveItem($b['no_rawat'], 'gg_' . $tooth, $oid, $raw);
+      if ($oid) {
+        if ($first_id === null) {
+          $first_id = $oid;
+        }
+        $terkirim++;
+      } else {
+        $gagal++;
+      }
+    }
+
+    $other_sudah = $this->db('mlite_satu_sehat_gigi_response')->where('no_rawat', $b['no_rawat'])->where('item', 'other')->oneArray();
+    if (!empty($other_text) && empty($other_sudah['id_observation'])) {
+      $payload_other = [
+        'resourceType' => 'Observation',
+        'status' => 'final',
+        'category' => [
+          ['coding' => [['system' => 'http://terminology.hl7.org/CodeSystem/observation-category', 'code' => 'exam', 'display' => 'Exam']]]
+        ],
+        'code' => [
+          'coding' => [['system' => 'http://terminology.kemkes.go.id/CodeSystem/clinical-term', 'code' => 'OC000060', 'display' => 'Kondisi Gigi dan Mulut Lainnya']]
+        ],
+        'subject' => ['reference' => 'Patient/' . $b['ihs_patient']],
+        'performer' => [['reference' => 'Practitioner/' . $b['practitioner_id']]],
+        'encounter' => [
+          'reference' => 'Encounter/' . $b['encounter_id'],
+          'display' => 'Kondisi Gigi dan Mulut Lainnya ' . $b['nama_pasien'] . ' tanggal ' . $b['tgl_registrasi']
+        ],
+        'effectiveDateTime' => $b['effective'],
+        'issued' => $b['effective'],
+        'valueString' => implode('; ', $other_text),
+      ];
+      list($oid, $raw) = $this->_dentalPostObservation($payload_other);
+      $this->_dentalSaveItem($b['no_rawat'], 'other', $oid, $raw);
+      if ($oid && $first_id === null) {
+        $first_id = $oid;
+      }
+    }
+
+    if ($first_id !== null) {
+      $resp_row = $b['response_row'];
+      if ($resp_row) {
+        $this->db('mlite_satu_sehat_response')->where('no_rawat', $b['no_rawat'])->save(['id_odontogram' => $first_id]);
+      }
+    }
+
+    $response = json_encode(['sukses' => $terkirim, 'gagal' => $gagal, 'dilewati' => $dilewati, 'id_odontogram' => $first_id, 'other_text' => $other_text], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    if ($render) {
+      echo $this->draw('observation.html', ['pesan' => ($terkirim > 0 ? 'Sukses' : 'Gagal') . ' mengirim odontogram (' . $terkirim . ' gigi) ke platform Satu Sehat!!', 'response' => $response]);
+    } else {
+      echo $response;
+    }
+    exit();
+  }
+
+  public function getOhis($no_rawat, $render = true)
+  {
+    $b = $this->_dentalBases($no_rawat);
+    if ($b['encounter_id'] === '' || $b['ihs_patient'] === '' || $b['practitioner_id'] === '') {
+      $response = json_encode(['error' => 'Prasyarat SATUSEHAT belum lengkap (encounter/patient/practitioner)', 'missing' => ['encounter' => $b['encounter_id'], 'patient' => $b['ihs_patient'], 'practitioner' => $b['practitioner_id']]], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render) {
+        echo $this->draw('observation.html', ['pesan' => 'Gagal mengirim OHIS ke platform Satu Sehat!!', 'response' => $response]);
+      } else {
+        echo $response;
+      }
+      exit();
+    }
+
+    $ohis = $this->db('mlite_ohis')->where('no_rawat', $b['no_rawat'])->limit(1)->desc('tgl_input')->oneArray();
+    if (!$ohis) {
+      $ohis = $this->db('mlite_ohis')->where('no_rkm_medis', $b['no_rkm_medis'])->where('tgl_input', $b['tgl_registrasi'])->limit(1)->desc('tgl_input')->oneArray();
+    }
+    if (!$ohis) {
+      $response = json_encode(['error' => 'Tidak ada data OHIS untuk kunjungan ini'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render) {
+        echo $this->draw('observation.html', ['pesan' => 'Gagal mengirim OHIS ke platform Satu Sehat!!', 'response' => $response]);
+      } else {
+        echo $response;
+      }
+      exit();
+    }
+
+    $fdi_map = $this->_dentalFdiMap();
+    $index_teeth = ['16', '11', '26', '36', '31', '46'];
+    $scor_debris = ['1' => 'OV000097', '2' => 'OV000098', '3' => 'OV000099'];
+    $scor_debris_disp = ['1' => 'Terdapat debris pada 1/3 permukaan servikal gigi atau dijumpai stain ekstrinsik', '2' => 'Terdapat debris pada 1/3 - 2/3 permukaan gigi', '3' => 'Terdapat debris pada > 2/3 permukaan gigi'];
+    $scor_kalkulus = ['1' => 'OV000100', '2' => 'OV000101', '3' => 'OV000102'];
+    $scor_kalkulus_disp = ['1' => 'Terdapat kalkulus supragingiva pada 1/3 permukaan servikal gigi tanpa kalkulus subgingiva', '2' => 'Terdapat kalkulus supragingiva pada 1/3 - 2/3 permukaan gigi dan/atau terdapat kalkulus subgingiva berupa titik-titik yang tidak melingkari leher gigi', '3' => 'Terdapat kalkulus supragingiva pada > 2/3 permukaan gigi dan/atau terdapat kalkulus subgingiva yang melingkari leher gigi'];
+    $terkirim = 0;
+    $gagal = 0;
+    $dilewati = [];
+
+    foreach ($index_teeth as $tooth) {
+      $d = isset($ohis['d_' . $tooth]) ? (int) $ohis['d_' . $tooth] : 0;
+      $c = isset($ohis['c_' . $tooth]) ? (int) $ohis['c_' . $tooth] : 0;
+      if ($d >= 1 && $d <= 3 && isset($scor_debris[(string) $d])) {
+        $payload = [
+          'resourceType' => 'Observation',
+          'status' => 'final',
+          'category' => [
+            ['coding' => [['system' => 'http://terminology.hl7.org/CodeSystem/observation-category', 'code' => 'exam', 'display' => 'Exam']]]
+          ],
+          'code' => [
+            'coding' => [['system' => 'http://terminology.kemkes.go.id/CodeSystem/clinical-term', 'code' => 'OC000062', 'display' => 'Debris Indeks']]
+          ],
+          'subject' => ['reference' => 'Patient/' . $b['ihs_patient']],
+          'performer' => [['reference' => 'Practitioner/' . $b['practitioner_id']]],
+          'encounter' => [
+            'reference' => 'Encounter/' . $b['encounter_id'],
+            'display' => 'OHIS Debris Indeks ' . $b['nama_pasien'] . ' tanggal ' . $b['tgl_registrasi']
+          ],
+          'effectiveDateTime' => $b['effective'],
+          'issued' => $b['effective'],
+          'bodySite' => [
+            'coding' => [['system' => 'http://snomed.info/sct', 'code' => $fdi_map[$tooth][0], 'display' => $fdi_map[$tooth][1]]]
+          ],
+          'valueCodeableConcept' => [
+            'coding' => [['system' => 'http://terminology.kemkes.go.id/CodeSystem/clinical-term', 'code' => $scor_debris[(string) $d], 'display' => $scor_debris_disp[(string) $d]]],
+            'text' => 'Skor ' . $d
+          ]
+        ];
+        list($oid, $raw) = $this->_dentalPostObservation($payload);
+        $this->_dentalSaveItem($b['no_rawat'], 'd_' . $tooth, $oid, $raw);
+        if ($oid) { $terkirim++; } else { $gagal++; }
+      } elseif ($d >= 1) {
+        $dilewati[] = 'd_' . $tooth . '=' . $d;
+      }
+      if ($c >= 1 && $c <= 3 && isset($scor_kalkulus[(string) $c])) {
+        $payload = [
+          'resourceType' => 'Observation',
+          'status' => 'final',
+          'category' => [
+            ['coding' => [['system' => 'http://terminology.hl7.org/CodeSystem/observation-category', 'code' => 'exam', 'display' => 'Exam']]]
+          ],
+          'code' => [
+            'coding' => [['system' => 'http://terminology.kemkes.go.id/CodeSystem/clinical-term', 'code' => 'OC000063', 'display' => 'Kalkulus Indeks']]
+          ],
+          'subject' => ['reference' => 'Patient/' . $b['ihs_patient']],
+          'performer' => [['reference' => 'Practitioner/' . $b['practitioner_id']]],
+          'encounter' => [
+            'reference' => 'Encounter/' . $b['encounter_id'],
+            'display' => 'OHIS Kalkulus Indeks ' . $b['nama_pasien'] . ' tanggal ' . $b['tgl_registrasi']
+          ],
+          'effectiveDateTime' => $b['effective'],
+          'issued' => $b['effective'],
+          'bodySite' => [
+            'coding' => [['system' => 'http://snomed.info/sct', 'code' => $fdi_map[$tooth][0], 'display' => $fdi_map[$tooth][1]]]
+          ],
+          'valueCodeableConcept' => [
+            'coding' => [['system' => 'http://terminology.kemkes.go.id/CodeSystem/clinical-term', 'code' => $scor_kalkulus[(string) $c], 'display' => $scor_kalkulus_disp[(string) $c]]],
+            'text' => 'Skor ' . $c
+          ]
+        ];
+        list($oid, $raw) = $this->_dentalPostObservation($payload);
+        $this->_dentalSaveItem($b['no_rawat'], 'c_' . $tooth, $oid, $raw);
+        if ($oid) { $terkirim++; } else { $gagal++; }
+      } elseif ($c >= 1) {
+        $dilewati[] = 'c_' . $tooth . '=' . $c;
+      }
+    }
+
+    $id_ohis_total = null;
+    $debris_total = isset($ohis['debris']) ? (float) $ohis['debris'] : null;
+    $calculus_total = isset($ohis['calculus']) ? (float) $ohis['calculus'] : null;
+    $nilai = isset($ohis['nilai']) ? (float) $ohis['nilai'] : null;
+
+    if (is_numeric($ohis['debris'])) {
+      $payload = [
+        'resourceType' => 'Observation',
+        'status' => 'final',
+        'category' => [
+          ['coding' => [['system' => 'http://terminology.hl7.org/CodeSystem/observation-category', 'code' => 'exam', 'display' => 'Exam']]]
+        ],
+        'code' => [
+          'coding' => [['system' => 'http://terminology.kemkes.go.id/CodeSystem/clinical-term', 'code' => 'OC000056', 'display' => 'Skor Total Debris Indeks']]
+        ],
+        'subject' => ['reference' => 'Patient/' . $b['ihs_patient']],
+        'performer' => [['reference' => 'Practitioner/' . $b['practitioner_id']]],
+        'encounter' => ['reference' => 'Encounter/' . $b['encounter_id']],
+        'effectiveDateTime' => $b['effective'],
+        'issued' => $b['effective'],
+        'valueQuantity' => [
+          'value' => $debris_total,
+          'unit' => 'score',
+          'system' => 'http://unitsofmeasure.org',
+          'code' => '{score}'
+        ]
+      ];
+      list($oid, $raw) = $this->_dentalPostObservation($payload);
+      $this->_dentalSaveItem($b['no_rawat'], 'di_total', $oid, $raw);
+      if ($oid) { $terkirim++; } else { $gagal++; }
+    }
+
+    if (is_numeric($ohis['calculus'])) {
+      $payload = [
+        'resourceType' => 'Observation',
+        'status' => 'final',
+        'category' => [
+          ['coding' => [['system' => 'http://terminology.hl7.org/CodeSystem/observation-category', 'code' => 'exam', 'display' => 'Exam']]]
+        ],
+        'code' => [
+          'coding' => [['system' => 'http://terminology.kemkes.go.id/CodeSystem/clinical-term', 'code' => 'OC000057', 'display' => 'Skor Total Kalkulus Indeks']]
+        ],
+        'subject' => ['reference' => 'Patient/' . $b['ihs_patient']],
+        'performer' => [['reference' => 'Practitioner/' . $b['practitioner_id']]],
+        'encounter' => ['reference' => 'Encounter/' . $b['encounter_id']],
+        'effectiveDateTime' => $b['effective'],
+        'issued' => $b['effective'],
+        'valueQuantity' => [
+          'value' => $calculus_total,
+          'unit' => 'score',
+          'system' => 'http://unitsofmeasure.org',
+          'code' => '{score}'
+        ]
+      ];
+      list($oid, $raw) = $this->_dentalPostObservation($payload);
+      $this->_dentalSaveItem($b['no_rawat'], 'ci_total', $oid, $raw);
+      if ($oid) { $terkirim++; } else { $gagal++; }
+    }
+
+    if (is_numeric($ohis['nilai'])) {
+      $kriteria = isset($ohis['kriteria']) ? trim((string) $ohis['kriteria']) : '';
+      $interp = 'OI000030';
+      $interp_disp = 'Kondisi Gigi Cukup Baik';
+      if ($nilai <= 1.2) {
+        $interp = 'OI000029';
+        $interp_disp = 'Kondisi Gigi Baik';
+      } elseif ($nilai > 3.0) {
+        $interp = 'OI000031';
+        $interp_disp = 'Kondisi Gigi Buruk';
+      }
+      $payload = [
+        'resourceType' => 'Observation',
+        'status' => 'final',
+        'category' => [
+          ['coding' => [['system' => 'http://terminology.hl7.org/CodeSystem/observation-category', 'code' => 'exam', 'display' => 'Exam']]]
+        ],
+        'code' => [
+          'coding' => [['system' => 'http://terminology.kemkes.go.id/CodeSystem/clinical-term', 'code' => 'OC000058', 'display' => 'Skor Total Oral Hygiene Index Simplified (OHIS)']]
+        ],
+        'subject' => ['reference' => 'Patient/' . $b['ihs_patient']],
+        'performer' => [['reference' => 'Practitioner/' . $b['practitioner_id']]],
+        'encounter' => ['reference' => 'Encounter/' . $b['encounter_id']],
+        'effectiveDateTime' => $b['effective'],
+        'issued' => $b['effective'],
+        'valueQuantity' => [
+          'value' => $nilai,
+          'unit' => 'score',
+          'system' => 'http://unitsofmeasure.org',
+          'code' => '{score}'
+        ],
+        'interpretation' => [
+          'coding' => [['system' => 'http://terminology.kemkes.go.id/CodeSystem/clinical-term', 'code' => $interp, 'display' => $interp_disp]]
+        ]
+      ];
+      list($oid, $raw) = $this->_dentalPostObservation($payload);
+      $this->_dentalSaveItem($b['no_rawat'], 'ohis_total', $oid, $raw);
+      if ($oid) {
+        $terkirim++;
+        $id_ohis_total = $oid;
+      } else {
+        $gagal++;
+      }
+    }
+
+    if ($id_ohis_total !== null) {
+      $resp_row = $b['response_row'];
+      if ($resp_row) {
+        $this->db('mlite_satu_sehat_response')->where('no_rawat', $b['no_rawat'])->save(['id_ohis_total' => $id_ohis_total]);
+      }
+    }
+
+    $response = json_encode(['sukses' => $terkirim, 'gagal' => $gagal, 'dilewati' => $dilewati, 'id_ohis_total' => $id_ohis_total, 'debris' => $debris_total, 'calculus' => $calculus_total, 'nilai' => $nilai], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    if ($render) {
+      echo $this->draw('observation.html', ['pesan' => ($terkirim > 0 ? 'Sukses' : 'Gagal') . ' mengirim OHIS (' . $terkirim . ' observation) ke platform Satu Sehat!!', 'response' => $response]);
+    } else {
+      echo $response;
+    }
+    exit();
+  }
+
   public function getMappingLab()
   {
     $this->_addHeaderFiles();
@@ -7767,6 +8348,32 @@ class Admin extends AdminModule
       $s[$key] = $detailState($labTotal, $labItems, $field);
     }
 
+    // Odontogram & OHIS (detail tabel gigi: item gg_NN / ohis_total)
+    $odItems = isset($row['od_items']) && is_array($row['od_items']) ? $row['od_items'] : [];
+    $ggItems = [];
+    $ohisRow = null;
+    foreach ($odItems as $od) {
+      $itm = isset_or($od['item'], '');
+      if (strpos($itm, 'gg_') === 0) {
+        $ggItems[] = $od;
+      } elseif ($itm === 'ohis_total') {
+        $ohisRow = $od;
+      }
+    }
+    if (count($ggItems) === 0) {
+      $s['odontogram'] = 'empty';
+    } else {
+      $ggState = $detailState(count($ggItems), $ggItems, 'id_observation');
+      $s['odontogram'] = $ggState === 'blocked' ? 'ready' : $ggState;
+    }
+    if ($ohisRow === null) {
+      $s['ohis'] = 'empty';
+    } elseif (isset_or($ohisRow['id_observation'], '') !== '') {
+      $s['ohis'] = 'done';
+    } else {
+      $s['ohis'] = 'ready';
+    }
+
     // Lainnya
     $s['careplan'] = $row['id_careplan'] != '' ? 'done'
       : (empty($row['care_plan']) ? 'empty' : 'ready');
@@ -7792,6 +8399,7 @@ class Admin extends AdminModule
       'cat_obat'      => ['med_req', 'med_disp', 'med_stmt'],
       'cat_radiologi' => ['rad_req', 'rad_spec', 'rad_obs', 'rad_diag', 'imaging'],
       'cat_lab'       => ['lab_req', 'lab_spec', 'lab_obs', 'lab_diag'],
+      'cat_gigi'      => ['odontogram', 'ohis'],
       'cat_lainnya'   => ['careplan', 'allergy', 'questionnaire'],
     ];
   }
@@ -7915,6 +8523,14 @@ class Admin extends AdminModule
       $this->db('mlite_satu_sehat_rad_response')->where('no_rawat', '')->count();
     } catch (Throwable $e) {
       $rad_table_ok = false;
+    }
+
+    // Cek apakah tabel detail odontogram/OHIS sudah ada
+    $gigi_table_ok = true;
+    try {
+      $this->db('mlite_satu_sehat_gigi_response')->where('no_rawat', '')->count();
+    } catch (Throwable $e) {
+      $gigi_table_ok = false;
     }
 
     foreach ($query_data as $row) {
@@ -8205,6 +8821,18 @@ class Admin extends AdminModule
           $row['rad_total'] = (int) $this->db('permintaan_pemeriksaan_radiologi')
             ->where('noorder', $row['permintaan_radiologi']['noorder'])
             ->count();
+        }
+      }
+
+      // Item odontogram & OHIS beserta status (tabel detail gigi)
+      $row['od_items'] = [];
+      if ($gigi_table_ok) {
+        $row['od_items'] = $this->db('mlite_satu_sehat_gigi_response')
+          ->where('no_rawat', $row['no_rawat'])
+          ->asc('item')
+          ->toArray();
+        if (!is_array($row['od_items'])) {
+          $row['od_items'] = [];
         }
       }
 
@@ -8686,6 +9314,7 @@ class Admin extends AdminModule
       '- ID Vaksin/Imunisasi: di RSGM tidak ada layanan vaksin/imunisasi.',
       '- ID Questionnaire (pasien tidak mampu / KPS): hanya diisi jika pasien memiliki surat keterangan tidak mampu.',
       '- ID Allergy: hanya terisi jika ada diagnosa alergi; selama ini dokter umum tidak memeriksa langsung terkait alergi sehingga 0%.',
+      '- Odontogram & OHIS (Debris-Kalkulus): persen dibanding kunjungan pemakai layanan gigi (data odontogram/OHIS tersimpan) dengan kelengkapan klinis lengkap; tidak ikut persentase baris generik.',
     ];
     foreach ($catatan as $c) {
       $sheetAgg[] = [['v' => $c, 's' => 4, 'm' => $AGG_COLS]];
@@ -8879,6 +9508,9 @@ class Admin extends AdminModule
 
     // Initialize totals & agregasi harian
     $totals = array_fill_keys($RESOURCE_KEYS, 0);
+    // Modul dental (odontogram & OHIS) dihitung terpisah & tidak masuk persentase baris generik
+    $totals['id_odontogram'] = 0;
+    $totals['id_ohis_total'] = 0;
     $day_agg = [];
     $total_kunjungan = 0;
     $poli_agg = [];
@@ -8895,6 +9527,8 @@ class Admin extends AdminModule
       'id_medication_dispense' => 0,
       'id_lab_pk_specimen' => 0,
       'id_imaging_study' => 0,
+      'id_odontogram' => 0,
+      'id_ohis_total' => 0,
     ];
     $day_modul_den = [];
     $day_elig = [];
@@ -8918,6 +9552,12 @@ class Admin extends AdminModule
     } catch (Throwable $e) {
       $rad_table_ok = false;
     }
+    $gigi_table_ok = true;
+    try {
+      $this->db('mlite_satu_sehat_gigi_response')->limit(1)->oneArray();
+    } catch (Throwable $e) {
+      $gigi_table_ok = false;
+    }
 
     // Preload massal (hindari N+1 per kunjungan): ambil data look-up satu kali
     $noRawatList = array_values(array_unique(array_column($rows, 'no_rawat')));
@@ -8930,6 +9570,9 @@ class Admin extends AdminModule
     $resep_set = [];
     $labpk_set = [];
     $rad_set = [];
+    $gigi_map = [];
+    $gigi_has_gg = [];
+    $gigi_has_ohis = [];
     foreach ($chunks as $chunk) {
       foreach ($this->db('mlite_satu_sehat_response')->where('no_rawat', 'in', $chunk)->toArray() as $r) {
         if (!isset($resp_map[$r['no_rawat']])) {
@@ -8957,6 +9600,21 @@ class Admin extends AdminModule
       }
       foreach ($this->db('periksa_radiologi')->where('no_rawat', 'in', $chunk)->select(['no_rawat'])->toArray() as $r) {
         $rad_set[$r['no_rawat']] = true;
+      }
+      if ($gigi_table_ok) {
+        foreach ($this->db('mlite_satu_sehat_gigi_response')->where('no_rawat', 'in', $chunk)->toArray() as $r) {
+          if (!isset($gigi_map[$r['no_rawat']])) {
+            $gigi_map[$r['no_rawat']] = [];
+          }
+          $gigi_map[$r['no_rawat']][] = $r;
+          $itm = isset($r['item']) ? (string) $r['item'] : '';
+          if (strpos($itm, 'gg_') === 0) {
+            $gigi_has_gg[$r['no_rawat']] = true;
+          }
+          if ($itm === 'ohis_total') {
+            $gigi_has_ohis[$r['no_rawat']] = true;
+          }
+        }
       }
     }
 
@@ -9076,6 +9734,14 @@ class Admin extends AdminModule
           $modul_den['id_imaging_study']++;
           $day_modul_den[$date]['id_imaging_study'] = isset($day_modul_den[$date]['id_imaging_study']) ? $day_modul_den[$date]['id_imaging_study'] + 1 : 1;
         }
+        if (isset($gigi_has_gg[$row['no_rawat']])) {
+          $modul_den['id_odontogram']++;
+          $day_modul_den[$date]['id_odontogram'] = isset($day_modul_den[$date]['id_odontogram']) ? $day_modul_den[$date]['id_odontogram'] + 1 : 1;
+        }
+        if (isset($gigi_has_ohis[$row['no_rawat']])) {
+          $modul_den['id_ohis_total']++;
+          $day_modul_den[$date]['id_ohis_total'] = isset($day_modul_den[$date]['id_ohis_total']) ? $day_modul_den[$date]['id_ohis_total'] + 1 : 1;
+        }
       }
 
       // Lab per-item: dihitung dari tabel detail (id per pemeriksaan), bukan kolom id terakhir
@@ -9178,6 +9844,43 @@ class Admin extends AdminModule
 
       // ImagingStudy tetap per pasien (satu studi PACS), tidak dihitung per item
 
+      // Odontogram & OHIS per-kunjungan (dari tabel detail gigi). Tidak masuk hitungan persentase
+      // baris generik (RES_COUNT), hanya untuk modul/monitor kelengkapan dental.
+      $dental_extra = ['id_odontogram' => '', 'id_ohis_total' => ''];
+      if ($gigi_table_ok && isset($gigi_map[$row['no_rawat']])) {
+        $total_gg = 0;
+        $sent_gg = 0;
+        $ohis_item = '';
+        foreach ($gigi_map[$row['no_rawat']] as $gd) {
+          $itm = isset($gd['item']) ? (string) $gd['item'] : '';
+          if (strpos($itm, 'gg_') === 0) {
+            if (isset_or($gd['status'], '') !== 'no_mapping') {
+              $total_gg++;
+            }
+            if (isset_or($gd['id_observation'], '') !== '') {
+              $sent_gg++;
+            }
+          } elseif ($itm === 'ohis_total') {
+            $ohis_item = isset_or($gd['id_observation'], '');
+          }
+        }
+        if ($total_gg > 0) {
+          $dental_extra['id_odontogram'] = ($sent_gg >= $total_gg) ? '1' : '';
+        }
+        if ($ohis_item !== '') {
+          $dental_extra['id_ohis_total'] = '1';
+        }
+      }
+      foreach ($dental_extra as $key => $val) {
+        if ($val !== '') {
+          $totals[$key]++;
+          if (!isset($day_agg[$date][$key])) {
+            $day_agg[$date][$key] = 0;
+          }
+          $day_agg[$date][$key]++;
+        }
+      }
+
       $sent_count = 0;
       $row_flat = [
         'no' => $no++,
@@ -9239,6 +9942,8 @@ class Admin extends AdminModule
       ['Obat - Medication Dispense', 'id_medication_dispense'],
       ['Laboratorium (Specimen)', 'id_lab_pk_specimen'],
       ['Radiologi (Imaging Study)', 'id_imaging_study'],
+      ['Odontogram (Gigi)', 'id_odontogram'],
+      ['OHIS (Debris-Kalkulus)', 'id_ohis_total'],
     ];
 
     // Denominator per kategori kesatuan kirim: seluruh sub-resource obat/lab PK/radiologi
@@ -9256,6 +9961,8 @@ class Admin extends AdminModule
       'id_lab_pk_specimen' => 'id_lab_pk_specimen',
       'id_lab_pk_observation' => 'id_lab_pk_specimen',
       'id_lab_pk_diagnostic' => 'id_lab_pk_specimen',
+      'id_odontogram' => 'id_odontogram',
+      'id_ohis_total' => 'id_ohis_total',
     ];
 
     $result = [
@@ -9439,6 +10146,7 @@ class Admin extends AdminModule
       '- ID Allergy: hanya terisi jika ada diagnosa alergi; selama ini dokter umum tidak memeriksa langsung terkait alergi sehingga 0%.',
       '- Angka di halaman ini mengikuti filter yang dipilih (default rekap: kunjungan rawat jalan (status_lanjut = Ralan), tidak Batal, dan status bayar = Sudah Bayar).',
       '- Persentase Modul Wajib: Encounter & Diagnostik dibanding total kunjungan; Obat, Laboratorium & Radiologi dibanding kunjungan pemakai layanan tsb dengan kelengkapan klinis lengkap (Encounter + Diagnosa + Closing) sudah terkirim.',
+      '- Odontogram & OHIS (Debris-Kalkulus): persen dibanding kunjungan pemakai layanan gigi dengan kelengkapan klinis lengkap, dihitung dari tabel detail gigi; tidak ikut persentase baris generik.',
       '- Pada tabel Agregasi per Tanggal, persen per kolom juga memakai basis per kategori: seluruh sub-resource obat (MR/MD/Statement), lab PK (SR/Specimen/Observation/Diagnostic Report) dan radiologi (SR/Specimen/Observation/Diagnostic Report/Image Study) dibanding pemakai layanan tsb yang lengkap klinis, agar satu kesatuan kategori sinkron.',
     ];
 

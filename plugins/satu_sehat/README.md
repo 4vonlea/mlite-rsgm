@@ -1,6 +1,6 @@
 # Plugin Satu Sehat
 
-Modul integrasi platform **Satu Sehat** Kementerian Kesehatan RI di mLITE, menggunakan standar FHIR R4 untuk pengiriman data kunjungan, diagnosa, tindakan, obat, laboratorium, dan radiologi ke platform nasional.
+Modul integrasi platform **Satu Sehat** Kementerian Kesehatan RI di mLITE, menggunakan standar FHIR R4 untuk pengiriman data kunjungan, diagnosa, tindakan, obat, laboratorium, dan radiologi ke platform nasional. Versi `6.7.0`+ juga mendukung pengiriman **Odontogram** dan **OHIS (Debris-Kalkulus)** untuk fasyankes gigi (RSGM).
 
 ## Akses Modul
 
@@ -81,6 +81,56 @@ Modul integrasi platform **Satu Sehat** Kementerian Kesehatan RI di mLITE, mengg
 7. **Pengiriman Data Encounter**
    - Setelah semua mapping selesai, pengiriman Encounter dapat dilakukan dari modul Rawat Jalan/Rawat Inap.
    - Encounter mendukung tipe **ambulatory** (rawat jalan) dan **inpatient encounter** (rawat inap).
+
+## Panduan Odontogram & OHIS (RSGM / Rawat Jalan Gigi)
+
+Fitur ini aktif sejak versi modul `6.7.0` (DDL migrasi `6.6.0`). Syarat agar data gigi bisa
+dikirim: kunjungan sudah terkirim **Encounter**, dan dokter sudah di-mapping praktisi.
+
+### A. Input Data
+
+1. Dokter membuka formulir **Odontogram** dan/atau **OHIS** di modul rawat jalan
+   (Dokter Ralan / Rawat Jalan / IGD).
+2. Saat disimpan, sistem **otomatis mengisi `no_rawat`** dari kunjungan aktif hari itu
+   (paling akhir, `stts != Batal`). Tidak perlu mengisi manual.
+3. Isi kondisi gigi (mis. Karies, Sisa Akar, Tumpat) dan skor OHIS (debris/kalkulus per
+   gigi indeks 16,11,26,36,31,46). Selamat disimpan, data siap dikirim.
+
+### B. Kirim Data
+
+1. Buka **Satu Sehat → Data Response**, cari kunjungan pasien, lalu klik **Forward**
+   (gigi/OHIS) pada baris tersebut, **atau**
+2. Gunakan halaman kirim massal **`/satu-sehat/forward-tanggal`** (pilih tanggal) atau
+   **`/satu-sehat/forward-norawat/<no_rawat>`**. Halaman ini otomatis menambah bagian
+   **Odontogram** dan **OHIS** yang mengirim:
+   - Setiap gigi dengan kondisi terpetakan → 1 `Observation` `OC000061`.
+   - Gigi *tidak terpetakan* (mis. "Goyang") → digabung ke 1 `Observation` `OC000060`
+     (text). Gigi kosong dilewati.
+   - OHIS → `Observation` debris & kalkulus per gigi + total `OC000056/57/58`.
+3. Hasil pengiriman tampil sebagai JSON: `{sukses, gagal, dilewati, id_odontogram,
+   other_text}` / `{sukses, gagal, id_ohis_total, debris, calculus, nilai}`.
+
+### C. Pantau
+
+1. **Data Response** → filter kategori **"Odontogram & OHIS"** → status per kunjungan
+   (Siap Kirim / Terkirim / Sebagian / Kosong / Ada Masalah).
+2. **Statistik** (menu Satu Sehat) → baris modul wajib baru: **Odontogram (Gigi)** dan
+   **OHIS (Debris-Kalkulus)** — persen = terkirim ÷ kunjungan pemakai layanan gigi yang
+   lengkap klinis (Encounter + Diagnosa + Closing).
+3. **Export Rekap (Excel)** → blok "PERSENTASE PENGIRIMAN MODUL WAJIB" memuat kedua modul
+   baru dengan basis per kategorinya. Kolom per-resource generik (31 item) tidak berubah.
+
+### D. Ketentuan & Catatan
+
+- Kondisi *"Tanggal"* (= gigi tanggal) dikirim sebagai `234948008` (Tooth absent);
+  mohon **konfirmasi dokter** bila berbeda dengan kolegium.
+- Kondisi *"Goyang"* dan sejenisnya tidak punya kode Lampiran 5 → dikirim lewat
+  `OC000060` (Kondisi Gigi dan Mulut Lainnya, teks).
+- Kriteria OHIS: `≤1,2` Baik, `1,3–3,0` Sedang, `>3` Buruk. Pastikan nilai OHIS di form
+  sudah benar agar interpretasi (`OI000029/30/31`) akurat.
+- Perbaikan kriteria ini diterapkan di handler simpan Odontogram/OHIS pada
+  `plugins/dokter_ralan`, `plugins/rawat_jalan`, dan `plugins/igd`.
+- Detail teknis & terminologi selengkapnya: `docs/implementation-plan-odontogram-ohis.md`.
 
 ## Catatan
 

@@ -2110,6 +2110,38 @@ switch ($version) {
 
         $return = '6.6.0';
         break;
+    case '6.6.0':
+        // Pengiriman Odontogram & OHIS ke SATUSEHAT (RSGM): kolom link no_rawat + tabel response gigi + id odontogram/ohis.
+        if (defined('DBDRIVER') && DBDRIVER == 'sqlite') {
+            $this->core->db()->pdo()->exec("CREATE TABLE IF NOT EXISTS `mlite_satu_sehat_gigi_response` (
+              `no_rawat` TEXT NOT NULL,
+              `item` TEXT NOT NULL,
+              `id_observation` TEXT DEFAULT NULL,
+              `status` TEXT NOT NULL DEFAULT 'pending',
+              `raw_response` TEXT,
+              `tgl_kirim` TEXT DEFAULT NULL,
+              PRIMARY KEY (`no_rawat`,`item`)
+            );");
+        } else {
+            $this->core->db()->pdo()->exec("CREATE TABLE IF NOT EXISTS `mlite_satu_sehat_gigi_response` (
+              `no_rawat` varchar(17) NOT NULL,
+              `item` varchar(40) NOT NULL,
+              `id_observation` varchar(50) DEFAULT NULL,
+              `status` varchar(15) NOT NULL DEFAULT 'pending',
+              `raw_response` text DEFAULT NULL,
+              `tgl_kirim` datetime DEFAULT NULL,
+              PRIMARY KEY (`no_rawat`,`item`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=latin1;");
+        }
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_odontogram` ADD COLUMN `no_rawat` varchar(17) NULL DEFAULT NULL AFTER `no_rkm_medis`"); } catch (\Throwable $e) {}
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_odontogram` ADD KEY `no_rawat` (`no_rawat`)"); } catch (\Throwable $e) {}
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_ohis` ADD COLUMN `no_rawat` varchar(17) NULL DEFAULT NULL AFTER `no_rkm_medis`"); } catch (\Throwable $e) {}
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_ohis` ADD KEY `no_rawat` (`no_rawat`)"); } catch (\Throwable $e) {}
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_satu_sehat_response` ADD COLUMN `id_odontogram` varchar(50) NULL DEFAULT NULL"); } catch (\Throwable $e) {}
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_satu_sehat_response` ADD COLUMN `id_ohis_total` varchar(50) NULL DEFAULT NULL"); } catch (\Throwable $e) {}
+
+        $return = '6.7.0';
+        break;
     }
 
         // Self-heal: pastikan kolom nama_kfa cukup lebar untuk nama produk KFA yang panjang (mis. kombinasi multivitamin).
@@ -2117,7 +2149,7 @@ switch ($version) {
         try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_satu_sehat_mapping_obat` MODIFY `nama_kfa` varchar(500) DEFAULT NULL"); } catch (\Throwable $e) {}
 
     if (!isset($return) || !$return) {
-        $return = '6.6.0';
+        $return = '6.7.0';
     }
 
 return $return;
