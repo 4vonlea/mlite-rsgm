@@ -419,12 +419,46 @@ class Site extends SiteModule
             }
         }
 
-        async function run() {
-            const log = document.getElementById("log");
-            const summary = document.getElementById("summary");
-            const results = [];
+        const log = document.getElementById("log");
+        const summary = document.getElementById("summary");
 
-            for (const item of list) {
+        const LIMIT = 5;
+
+        function pool(items, worker, limit) {
+            return new Promise((resolve) => {
+                let i = 0;
+                let active = 0;
+                const results = [];
+                function next() {
+                    while (active < limit && i < items.length) {
+                        const idx = i++;
+                        active++;
+                        worker(items[idx])
+                            .then((res) => { results[idx] = res; })
+                            .catch((err) => { results[idx] = err; })
+                            .finally(() => {
+                                active--;
+                                if (i >= items.length && active === 0) {
+                                    resolve(results);
+                                } else {
+                                    next();
+                                }
+                            });
+                    }
+                    if (i >= items.length && active === 0) {
+                        resolve(results);
+                    }
+                }
+                next();
+            });
+        }
+
+        async function run() {
+            const results = await pool(list, processVisit, LIMIT);
+            summary.textContent = JSON.stringify(results, null, 2);
+        }
+
+        async function processVisit(item) {
                 const nrDisp = item.display;
                 const nrUrl = item.url;
 
@@ -496,12 +530,12 @@ class Site extends SiteModule
                     "<div>Vaksin:<pre>" + (typeof vax === "string" ? vax : JSON.stringify(vax, null, 2)) + "</pre></div>"
                 );
 
-                // Diet Gizi
+                // Rekomendasi Diet
                 const dietTxt = await call("' . $dietBase . '" + nrUrl);
                 const diet = toJsonOrString(dietTxt);
                 container.insertAdjacentHTML(
                     "beforeend",
-                    "<div>Diet Gizi:<pre>" + (typeof diet === "string" ? diet : JSON.stringify(diet, null, 2)) + "</pre></div>"
+                    "<div>Rekomendasi Diet:<pre>" + (typeof diet === "string" ? diet : JSON.stringify(diet, null, 2)) + "</pre></div>"
                 );
 
                 // Care Plan
@@ -584,7 +618,7 @@ class Site extends SiteModule
                     "<div>OHIS:<pre>" + (typeof ohis === "string" ? ohis : JSON.stringify(ohis, null, 2)) + "</pre></div>"
                 );
                     
-                results.push({
+                return {
                     no_rawat: nrDisp,
                     encounter: enc,
                     composition_resume: comp,
@@ -602,13 +636,9 @@ class Site extends SiteModule
                     radiology: radRes,
                     odontogram: od,
                     ohis: ohis
-                });
+                };
 
-                summary.textContent = JSON.stringify(results, null, 2);
             }
-
-            summary.textContent = JSON.stringify(results, null, 2);
-        }
 
         run();
         </script>
@@ -705,12 +735,46 @@ class Site extends SiteModule
             }
         }
 
-        async function run() {
-            const log = document.getElementById("log");
-            const summary = document.getElementById("summary");
-            const results = [];
+        const log = document.getElementById("log");
+        const summary = document.getElementById("summary");
 
-            for (const item of list) {
+        const LIMIT = 5;
+
+        function pool(items, worker, limit) {
+            return new Promise((resolve) => {
+                let i = 0;
+                let active = 0;
+                const results = [];
+                function next() {
+                    while (active < limit && i < items.length) {
+                        const idx = i++;
+                        active++;
+                        worker(items[idx])
+                            .then((res) => { results[idx] = res; })
+                            .catch((err) => { results[idx] = err; })
+                            .finally(() => {
+                                active--;
+                                if (i >= items.length && active === 0) {
+                                    resolve(results);
+                                } else {
+                                    next();
+                                }
+                            });
+                    }
+                    if (i >= items.length && active === 0) {
+                        resolve(results);
+                    }
+                }
+                next();
+            });
+        }
+
+        async function run() {
+            const results = await pool(list, processVisit, LIMIT);
+            summary.textContent = JSON.stringify(results, null, 2);
+        }
+
+        async function processVisit(item) {
                 const nrDisp = item.display;
                 const nrUrl = item.url;
 
@@ -782,12 +846,12 @@ class Site extends SiteModule
                     "<div>Vaksin:<pre>" + (typeof vax === "string" ? vax : JSON.stringify(vax, null, 2)) + "</pre></div>"
                 );
 
-                // Diet Gizi
+                // Rekomendasi Diet
                 const dietTxt = await call("' . $dietBase . '" + nrUrl);
                 const diet = toJsonOrString(dietTxt);
                 container.insertAdjacentHTML(
                     "beforeend",
-                    "<div>Diet Gizi:<pre>" + (typeof diet === "string" ? diet : JSON.stringify(diet, null, 2)) + "</pre></div>"
+                    "<div>Rekomendasi Diet:<pre>" + (typeof diet === "string" ? diet : JSON.stringify(diet, null, 2)) + "</pre></div>"
                 );
 
                 // Care Plan
@@ -869,7 +933,7 @@ class Site extends SiteModule
                     "<div>OHIS:<pre>" + (typeof ohis === "string" ? ohis : JSON.stringify(ohis, null, 2)) + "</pre></div>"
                 );
                     
-                results.push({
+                return {
                     no_rawat: nrDisp,
                     encounter: enc,
                     composition_resume: comp,
@@ -887,13 +951,9 @@ class Site extends SiteModule
                     radiology: radRes,
                     odontogram: od,
                     ohis: ohis
-                });
+                };
 
-                summary.textContent = JSON.stringify(results, null, 2);
             }
-
-            summary.textContent = JSON.stringify(results, null, 2);
-        }
 
         run();
         </script>

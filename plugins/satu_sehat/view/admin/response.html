@@ -320,7 +320,7 @@
                     </optgroup>
                     <optgroup label="Per Item — Klinis">
                         <option value="procedure">ID Procedure</option>
-                        <option value="composition">ID Composition (ADIME)</option>
+                        <option value="composition">Rekomendasi Diet (Composition)</option>
                         <option value="vaksin">ID Vaksin/Imunisasi</option>
                     </optgroup>
                     <optgroup label="Per Item — Obat">
@@ -412,8 +412,8 @@
                             <th style="white-space: nowrap;">ID Observation Perut</th>
                             <th style="white-space: nowrap;">ID Observation Kesadaran</th>
                             <th style="white-space: nowrap;">ID Procedure</th>
-                            <th style="white-space: nowrap;">ID Composition</th>
-                            <th style="white-space: nowrap;">ID Composition Gizi</th>
+                            <th style="white-space: nowrap;">ID Resume Medis (Composition)</th>
+                            <th style="white-space: nowrap;">ID Rekomendasi Diet (Composition)</th>
                             <th style="white-space: nowrap;">ID Vaksin/Imunisasi</th>
                             <th style="white-space: nowrap;">ID Medication Request</th>
                             <th style="white-space: nowrap;">ID Medication Dispense</th>
@@ -1005,10 +1005,10 @@
                 {
                     data: 'id_composition_gizi',
                     render: function (data, type, row) {
-                        if (row.id_composition_gizi == '' && row.adime_gizi != '') {
+                        if (row.id_composition_gizi == '' && row.adime_gizi_instruksi != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="dietgizi" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
-                        } else if (row.id_composition_gizi == '' && row.adime_gizi == '') {
-                            return badgeError('Adime Gizi Kosong', 'Catatan ADIME gizi belum diinput di menu Pemeriksaan → Catatan ADIME Gizi.');
+                        } else if (row.id_composition_gizi == '' && row.adime_gizi_instruksi == '') {
+                            return badgeError('Rekomendasi Diet Kosong', 'Catatan instruksi ADIME gizi belum diisi di menu Pemeriksaan → Catatan ADIME Gizi.');
                         } else { return `<span class="uuid">${data}</span>` }
                     }
                 },
@@ -1253,6 +1253,24 @@
         const id = button.data('id');
         const tipe = button.data('tipe');
         const ttv = "/" + button.data('ttv') || "";
+        var modalTitles = {
+            encounter: 'Kirim Data Encounter Satu Sehat',
+            encounterbundle: 'Kirim Data Encounter Satu Sehat',
+            condition: 'Kirim Data Condition Satu Sehat',
+            clinicalimpression: 'Kirim Data Clinical Impression Satu Sehat',
+            observation: 'Kirim Data Observasi Satu Sehat',
+            procedure: 'Kirim Data Procedure Satu Sehat',
+            compositionresume: 'Kirim Data Resume Medis Satu Sehat',
+            dietgizi: 'Kirim Data Rekomendasi Diet Satu Sehat',
+            vaksin: 'Kirim Data Vaksin Satu Sehat',
+            medication: 'Kirim Data Medication Satu Sehat',
+            laboratory: 'Kirim Data Laboratorium Satu Sehat',
+            radiology: 'Kirim Data Radiologi Satu Sehat',
+            careplan: 'Kirim Data Care Plan Satu Sehat',
+            allergy: 'Kirim Data Allergy Satu Sehat',
+            questionnaire: 'Kirim Data Questionnaire Satu Sehat',
+            forwardnorawat: 'Forward Data Satu Sehat'
+        };
         let url = baseURL + "/satu_sehat/" + tipe + "/" + id + ttv + "?t=" + mlite.token
         if (tipe == 'encounterbundle') {
             // Untuk encounterbundle, tidak ada ttv
@@ -1291,6 +1309,9 @@
                     } catch (e) { /* JSON valid namun bukan {error} → render apa adanya */ }
                 }
                 $('#modalcontent').html(response);
+                if (modalTitles[tipe]) {
+                    $('#asuransiModal .modal-title').html(modalTitles[tipe]);
+                }
             },
             error: function (xhr, status) {
                 var msg = 'Gagal mengirim/memuat data (status: ' + status + (xhr.status ? ', HTTP ' + xhr.status : '') + '). Coba lagi.';

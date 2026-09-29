@@ -127,11 +127,40 @@ class Admin extends AdminModule
     // exit();
   }
 
+  private static $cachedToken = null;
+  private static $cachedTokenExpire = 0;
+
   private function getAccessToken(): string
   {
+    $now = time();
+
+    if (self::$cachedToken !== null && (self::$cachedTokenExpire - $now) > 300) {
+      return self::$cachedToken;
+    }
+
+    $storedToken = $this->settings->get('satu_sehat', 'token');
+    $storedExpire = intval($this->settings->get('satu_sehat', 'token_expire'));
+    if (is_string($storedToken) && $storedToken !== '' && ($storedExpire - $now) > 300) {
+      self::$cachedToken = $storedToken;
+      self::$cachedTokenExpire = $storedExpire;
+      return $storedToken;
+    }
+
     $raw = $this->getToken();
     $obj = json_decode($raw);
-    if (is_object($obj) && isset($obj->access_token) && is_string($obj->access_token)) {
+    if (is_object($obj) && isset($obj->access_token) && is_string($obj->access_token) && $obj->access_token !== '') {
+      $durasi = 3600;
+      if (isset($obj->expires_in) && is_numeric($obj->expires_in) && intval($obj->expires_in) > 0) {
+        $durasi = intval($obj->expires_in);
+      }
+      $expired = $now + $durasi;
+      try {
+        $this->settings->set('satu_sehat', 'token', $obj->access_token);
+        $this->settings->set('satu_sehat', 'token_expire', (string) $expired);
+      } catch (\Throwable $e) {
+      }
+      self::$cachedToken = $obj->access_token;
+      self::$cachedTokenExpire = $expired;
       return $obj->access_token;
     }
     return '';
@@ -221,6 +250,12 @@ class Admin extends AdminModule
   public function getPatient($nik_pasien)
   {
 
+    $cacheKey = 'patient:' . $nik_pasien;
+    $cached = $this->settings->get('satu_sehat', $cacheKey);
+    if (is_string($cached) && $cached !== '') {
+      return $cached;
+    }
+
     $curl = curl_init();
 
     curl_setopt_array($curl, array(
@@ -238,6 +273,18 @@ class Admin extends AdminModule
     $response = curl_exec($curl);
 
     curl_close($curl);
+
+    $obj = json_decode($response);
+    if (is_object($obj) && isset($obj->entry) && is_array($obj->entry) && isset($obj->entry[0]) && isset($obj->entry[0]->resource) && isset($obj->entry[0]->resource->id)) {
+      try {
+        $this->settings->set(
+          'satu_sehat',
+          $cacheKey,
+          json_encode(array('entry' => array(array('resource' => array('id' => $obj->entry[0]->resource->id)))))
+        );
+      } catch (\Throwable $e) {
+      }
+    }
     return $response;
     // echo $response;
     // exit();
@@ -3635,9 +3682,9 @@ class Admin extends AdminModule
       $id_pasien = $__patientJson->entry[0]->resource->id;
     }
     if ($id_pasien === '') {
-      $resp = json_encode(['error' => 'Data tidak lengkap untuk Diet Gizi', 'missing' => ['patient_id' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      $resp = json_encode(['error' => 'Data tidak lengkap untuk Rekomendasi Diet', 'missing' => ['patient_id' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
       if ($render) {
-        echo $this->draw('dietgizi.html', ['pesan' => 'Gagal mengirim diet gizi platform Satu Sehat!!', 'response' => $resp]);
+        echo $this->draw('dietgizi.html', ['pesan' => 'Gagal mengirim Rekomendasi Diet platform Satu Sehat!!', 'response' => $resp]);
       } else {
         echo $resp;
       }
@@ -3652,7 +3699,7 @@ class Admin extends AdminModule
         'id_composition_gizi' => $mlite_satu_sehat_response['id_composition_gizi']
       ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
       if ($render) {
-        echo $this->draw('dietgizi.html', ['pesan' => 'Data Diet Gizi sudah pernah terkirim (id_composition_gizi terisi).', 'response' => $resp]);
+        echo $this->draw('dietgizi.html', ['pesan' => 'Data Rekomendasi Diet sudah pernah terkirim (id_composition_gizi terisi).', 'response' => $resp]);
       } else {
         echo $resp;
       }
@@ -3662,11 +3709,11 @@ class Admin extends AdminModule
     // Validasi: Encounter wajib terkirim lebih dulu (jangan POST "Encounter/" kosong)
     if ($id_encounter === '') {
       $resp = json_encode([
-        'error' => 'Data tidak lengkap untuk Diet Gizi',
+        'error' => 'Data tidak lengkap untuk Rekomendasi Diet',
         'missing' => ['id_encounter' => 'missing']
       ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
       if ($render) {
-        echo $this->draw('dietgizi.html', ['pesan' => 'Gagal mengirim diet gizi platform Satu Sehat!!', 'response' => $resp]);
+        echo $this->draw('dietgizi.html', ['pesan' => 'Gagal mengirim Rekomendasi Diet platform Satu Sehat!!', 'response' => $resp]);
       } else {
         echo $resp;
       }
@@ -3684,15 +3731,26 @@ class Admin extends AdminModule
       ->oneArray();
     $instruksi = isset_or($adime_gizi['instruksi'], '');
 
+    // Guard skip: jangan kirim Composition kosong (mencegah data placeholder ke SATU SEHAT).
+    if (empty($adime_gizi) || trim($instruksi) === '') {
+      $resp = json_encode([
+        'pesan' => 'tidak ada data gizi',
+        'status' => 'skip'
+      ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render) {
+        echo $this->draw('dietgizi.html', ['pesan' => 'Tidak ada catatan ADIME gizi untuk kunjungan ini — tidak dikirim (skip).', 'response' => $resp]);
+      } else {
+        echo $resp;
+      }
+      exit();
+    }
+
     // FHIR Narrative (section.text.div) wajib berupa XHTML yang aman, bukan teks polos.
     $instruksi_narasi = str_replace(
       ['&', '<', '>', '"', "'"],
       ['&amp;', '&lt;', '&gt;', '&quot;', '&apos;'],
       trim($instruksi)
     );
-    if ($instruksi_narasi === '') {
-      $instruksi_narasi = 'Tidak ada catatan instruksi gizi';
-    }
     $instruksi_xhtml = '<div xmlns="http://www.w3.org/1999/xhtml">' . $instruksi_narasi . '</div>';
 
     $curl = curl_init();
@@ -3739,7 +3797,7 @@ class Admin extends AdminModule
           "display" => $nama_dokter
         ]
       ],
-      "title" => "Modul Gizi",
+      "title" => "Rekomendasi Diet",
       "custodian" => [
         "reference" => "Organization/" . $this->organizationid
       ],
@@ -3797,7 +3855,7 @@ class Admin extends AdminModule
             'id_composition_gizi' => $id_composition
           ]);
       }
-      $pesan = 'Sukses mengirim id_composition_gizi platform Satu Sehat!!';
+      $pesan = 'Sukses mengirim Rekomendasi Diet (id_composition_gizi) platform Satu Sehat!!';
     }
 
     curl_close($curl);
@@ -4030,9 +4088,9 @@ class Admin extends AdminModule
       $id_pasien = $__patientJson->entry[0]->resource->id;
     }
     if ($id_pasien === '') {
-      $resp = json_encode(['error' => 'Data tidak lengkap untuk Diet Gizi', 'missing' => ['patient_id' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      $resp = json_encode(['error' => 'Data tidak lengkap untuk Questionnaire', 'missing' => ['patient_id' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
       if ($render) {
-        echo $this->draw('dietgizi.html', ['pesan' => 'Gagal mengirim diet gizi platform Satu Sehat!!', 'response' => $resp]);
+        echo $this->draw('dietgizi.html', ['pesan' => 'Gagal mengirim questionnaire platform Satu Sehat!!', 'response' => $resp]);
       } else {
         echo $resp;
       }
@@ -8524,8 +8582,9 @@ class Admin extends AdminModule
     $s['procedure'] = $row['id_procedure'] != '' ? 'done'
       : (empty($row['prosedur_pasien']) ? 'empty' : 'ready');
 
+    $adi_instr = is_array($row['adime_gizi']) ? trim((string) isset_or($row['adime_gizi']['instruksi'], '')) : '';
     $s['composition'] = $row['id_composition_gizi'] != '' ? 'done'
-      : (empty($row['adime_gizi']) ? 'empty' : 'ready');
+      : ($adi_instr === '' ? 'empty' : 'ready');
 
     $s['vaksin'] = $row['id_immunization'] != '' ? 'done'
       : (empty($row['immunization']) ? 'empty' : 'ready');
@@ -8880,6 +8939,9 @@ class Admin extends AdminModule
 
       $row['adime_gizi'] = $this->db('catatan_adime_gizi')
         ->where('no_rawat', $row['no_rawat'])->oneArray();
+      $row['adime_gizi_instruksi'] = is_array($row['adime_gizi'])
+        ? trim((string) isset_or($row['adime_gizi']['instruksi'], ''))
+        : '';
 
       $row['immunization'] = $this->db('resep_obat')
         ->join('resep_dokter', 'resep_dokter.no_resep=resep_obat.no_resep')
@@ -9606,7 +9668,7 @@ class Admin extends AdminModule
     $sheetAgg[] = [['v' => 'KETERANGAN / CATATAN', 's' => 2, 'm' => $AGG_COLS]];
     $catatan = [
       '- Modul wajib berdasarkan surat RS Online Kemenkes: Pendaftaran (Encounter), Diagnostik (Condition), Obat (Medication Request dan Medication Dispense), Laboratorium (Specimen), dan Radiologi (Imaging Study).',
-      '- ID Composition (administrasi gizi): untuk rawat jalan memang tidak ada, hanya untuk rawat inap saja.',
+      '- ID Rekomendasi Diet (Composition): data diambil dari catatan ADIME gizi (menu Pemeriksaan → Catatan ADIME Gizi).',
       '- ID Vaksin/Imunisasi: di RSGM tidak ada layanan vaksin/imunisasi.',
       '- ID Questionnaire (pasien tidak mampu / KPS): hanya diisi jika pasien memiliki surat keterangan tidak mampu.',
       '- ID Allergy: hanya terisi jika ada diagnosa alergi; selama ini dokter umum tidak memeriksa langsung terkait alergi sehingga 0%.',
@@ -9764,8 +9826,8 @@ class Admin extends AdminModule
       'ID Observation Tensi', 'ID Observation Nadi', 'ID Observation RR',
       'ID Observation Suhu', 'ID Observation SPO2', 'ID Observation GCS',
       'ID Observation Tinggi', 'ID Observation Berat', 'ID Observation Perut',
-      'ID Observation Kesadaran', 'ID Procedure', 'ID Composition',
-      'ID Composition Gizi', 'ID Vaksin/Imunisasi', 'ID Medication Request', 'ID Medication Dispense',
+      'ID Observation Kesadaran', 'ID Procedure', 'ID Resume Medis (Composition)',
+      'ID Rekomendasi Diet (Composition)', 'ID Vaksin/Imunisasi', 'ID Medication Request', 'ID Medication Dispense',
       'ID Medication Statement', 'ID Service Request Radiologi', 'ID Specimen Radiologi',
       'ID Observation Radiologi', 'ID Diagnostic Report Radiologi', 'Image Study',
       'ID Service Request Lab PK', 'ID Specimen Lab PK', 'ID Observation Lab PK',
@@ -10436,7 +10498,7 @@ class Admin extends AdminModule
 
     $catatan = [
       '- Modul wajib berdasarkan surat RS Online Kemenkes: Pendaftaran (Encounter), Diagnostik (Condition), Obat (Medication Request dan Medication Dispense), Laboratorium (Specimen), dan Radiologi (Imaging Study).',
-      '- ID Composition (administrasi gizi): untuk rawat jalan memang tidak ada, hanya untuk rawat inap saja.',
+      '- ID Rekomendasi Diet (Composition): data diambil dari catatan ADIME gizi (menu Pemeriksaan → Catatan ADIME Gizi).',
       '- ID Vaksin/Imunisasi: di RSGM tidak ada layanan vaksin/imunisasi.',
       '- ID Questionnaire (pasien tidak mampu / KPS): hanya diisi jika pasien memiliki surat keterangan tidak mampu.',
       '- ID Allergy: hanya terisi jika ada diagnosa alergi; selama ini dokter umum tidak memeriksa langsung terkait alergi sehingga 0%.',
