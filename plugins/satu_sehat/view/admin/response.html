@@ -375,7 +375,7 @@
                             <th class="grp-identitas" colspan="16">Identitas Pasien</th>
                             <th class="grp-encounter" colspan="3">Encounter &amp; Diagnosa</th>
                             <th class="grp-vital" colspan="10">Vital Signs (Observation)</th>
-                            <th class="grp-klinis" colspan="3">Klinis</th>
+                            <th class="grp-klinis" colspan="4">Klinis</th>
                             <th class="grp-obat" colspan="3">Obat</th>
                             <th class="grp-radio" colspan="5">Radiologi</th>
                             <th class="grp-lab" colspan="4">Laboratorium</th>
@@ -413,6 +413,7 @@
                             <th style="white-space: nowrap;">ID Observation Kesadaran</th>
                             <th style="white-space: nowrap;">ID Procedure</th>
                             <th style="white-space: nowrap;">ID Composition</th>
+                            <th style="white-space: nowrap;">ID Composition Gizi</th>
                             <th style="white-space: nowrap;">ID Vaksin/Imunisasi</th>
                             <th style="white-space: nowrap;">ID Medication Request</th>
                             <th style="white-space: nowrap;">ID Medication Dispense</th>
@@ -994,9 +995,19 @@
                 {
                     data: 'id_composition',
                     render: function (data, type, row) {
-                        if (row.id_composition == '' && row.adime_gizi != '') {
+                        if (row.id_composition == '' && row.id_encounter != '') {
+                            return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="compositionresume" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
+                        } else if (row.id_composition == '' && row.id_encounter == '') {
+                            return badgeWarn('Encounter Belum Terkirim', 'Kirim Encounter terlebih dahulu, lalu kirim Resume Medis Composition.');
+                        } else { return `<span class="uuid">${data}</span>` }
+                    }
+                },
+                {
+                    data: 'id_composition_gizi',
+                    render: function (data, type, row) {
+                        if (row.id_composition_gizi == '' && row.adime_gizi != '') {
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="dietgizi" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
-                        } else if (row.id_composition == '' && row.adime_gizi == '') {
+                        } else if (row.id_composition_gizi == '' && row.adime_gizi == '') {
                             return badgeError('Adime Gizi Kosong', 'Catatan ADIME gizi belum diinput di menu Pemeriksaan → Catatan ADIME Gizi.');
                         } else { return `<span class="uuid">${data}</span>` }
                     }

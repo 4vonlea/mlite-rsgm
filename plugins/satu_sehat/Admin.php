@@ -3645,13 +3645,55 @@ class Admin extends AdminModule
     }
     $id_encounter = isset_or($mlite_satu_sehat_response['id_encounter'], '');
 
+    // Guard idempoten: jika sudah pernah terkirim, jangan kirim ulang (duplikat)
+    if (isset_or($mlite_satu_sehat_response['id_composition_gizi'], '') !== '') {
+      $resp = json_encode([
+        'pesan' => 'sudah terkirim',
+        'id_composition_gizi' => $mlite_satu_sehat_response['id_composition_gizi']
+      ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render) {
+        echo $this->draw('dietgizi.html', ['pesan' => 'Data Diet Gizi sudah pernah terkirim (id_composition_gizi terisi).', 'response' => $resp]);
+      } else {
+        echo $resp;
+      }
+      exit();
+    }
+
+    // Validasi: Encounter wajib terkirim lebih dulu (jangan POST "Encounter/" kosong)
+    if ($id_encounter === '') {
+      $resp = json_encode([
+        'error' => 'Data tidak lengkap untuk Diet Gizi',
+        'missing' => ['id_encounter' => 'missing']
+      ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render) {
+        echo $this->draw('dietgizi.html', ['pesan' => 'Gagal mengirim diet gizi platform Satu Sehat!!', 'response' => $resp]);
+      } else {
+        echo $resp;
+      }
+      exit();
+    }
+
     $date = date('Y-m-d');
     $time = date('H:i:s');
 
     $nama_dokter = $this->core->getPegawaiInfo('nama', $kd_dokter);
     $tgl_registrasi = $this->core->getRegPeriksaInfo('tgl_registrasi', $no_rawat);
-    $adime_gizi = $this->db('catatan_adime_gizi')->where('no_rawat', $no_rawat)->oneArray();
+    $adime_gizi = $this->db('catatan_adime_gizi')
+      ->where('no_rawat', $no_rawat)
+      ->desc('tanggal')
+      ->oneArray();
     $instruksi = isset_or($adime_gizi['instruksi'], '');
+
+    // FHIR Narrative (section.text.div) wajib berupa XHTML yang aman, bukan teks polos.
+    $instruksi_narasi = str_replace(
+      ['&', '<', '>', '"', "'"],
+      ['&amp;', '&lt;', '&gt;', '&quot;', '&apos;'],
+      trim($instruksi)
+    );
+    if ($instruksi_narasi === '') {
+      $instruksi_narasi = 'Tidak ada catatan instruksi gizi';
+    }
+    $instruksi_xhtml = '<div xmlns="http://www.w3.org/1999/xhtml">' . $instruksi_narasi . '</div>';
 
     $curl = curl_init();
 
@@ -3714,13 +3756,196 @@ class Admin extends AdminModule
           ],
           "text" => [
             "status" => "additional",
-            "div" => $instruksi
+            "div" => $instruksi_xhtml
           ]
         ]
       ]
     ];
 
     $data = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+
+    curl_setopt_array($curl, array(
+      CURLOPT_URL => $this->fhirurl . '/Composition',
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_ENCODING => '',
+      CURLOPT_MAXREDIRS => 10,
+      CURLOPT_TIMEOUT => 0,
+      CURLOPT_FOLLOWLOCATION => true,
+      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+      CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . $this->getAccessToken()),
+      CURLOPT_CUSTOMREQUEST => 'POST',
+      CURLOPT_POSTFIELDS => $data
+    ));
+
+    $response = curl_exec($curl);
+
+    $id_composition = isset_or(json_decode($response)->id, '');
+    $pesan = 'Gagal mengirim composition platform Satu Sehat!!';
+    if ($id_composition) {
+      $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
+      if ($mlite_satu_sehat_response) {
+        $this->db('mlite_satu_sehat_response')
+          ->where('no_rawat', $no_rawat)
+          ->save([
+            'no_rawat' => $no_rawat,
+            'id_composition_gizi' => $id_composition
+          ]);
+      } else {
+        $this->db('mlite_satu_sehat_response')
+          ->save([
+            'no_rawat' => $no_rawat,
+            'id_composition_gizi' => $id_composition
+          ]);
+      }
+      $pesan = 'Sukses mengirim id_composition_gizi platform Satu Sehat!!';
+    }
+
+    curl_close($curl);
+    // echo $response;
+    // echo '<pre>' . $data . '</pre>';
+    if ($render) {
+      echo $this->draw('dietgizi.html', ['pesan' => $pesan, 'response' => $response]);
+    } else {
+      echo $response;
+    }
+    exit();
+  }
+
+  public function getCompositionResume($no_rawat, $render = true)
+  {
+
+    $zonawaktu = '+07:00';
+    if ($this->settings->get('satu_sehat.zonawaktu') == 'WITA') {
+      $zonawaktu = '+08:00';
+    }
+    if ($this->settings->get('satu_sehat.zonawaktu') == 'WIT') {
+      $zonawaktu = '+09:00';
+    }
+
+    $no_rawat = revertNoRawat($no_rawat);
+    $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
+
+    // Guard idempoten: id_composition (Resume Medis) sudah terkirim
+    if (isset_or($mlite_satu_sehat_response['id_composition'], '') !== '') {
+      $resp = json_encode([
+        'pesan' => 'sudah terkirim',
+        'id_composition' => $mlite_satu_sehat_response['id_composition']
+      ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render) {
+        echo $this->draw('dietgizi.html', ['pesan' => 'Composition Resume Medis sudah pernah terkirim (id_composition terisi).', 'response' => $resp]);
+      } else {
+        echo $resp;
+      }
+      exit();
+    }
+
+    $id_encounter = isset_or($mlite_satu_sehat_response['id_encounter'], '');
+
+    // Validasi: Encounter wajib ada karena Composition Resume mereferensi Encounter
+    if ($id_encounter === '') {
+      $resp = json_encode([
+        'error' => 'Data tidak lengkap untuk Resume Medis Composition',
+        'missing' => ['id_encounter' => 'missing']
+      ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render) {
+        echo $this->draw('dietgizi.html', ['pesan' => 'Gagal mengirim composition platform Satu Sehat!!', 'response' => $resp]);
+      } else {
+        echo $resp;
+      }
+      exit();
+    }
+
+    $kd_dokter = $this->core->getRegPeriksaInfo('kd_dokter', $no_rawat);
+    $nama_dokter = $this->core->getPegawaiInfo('nama', $kd_dokter);
+    $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
+    $no_ktp_pasien = $this->core->getPasienInfo('no_ktp', $no_rkm_medis);
+    $nama_pasien = $this->core->getPasienInfo('nm_pasien', $no_rkm_medis);
+    $tgl_registrasi = $this->core->getRegPeriksaInfo('tgl_registrasi', $no_rawat);
+    $mlite_billing = $this->db('mlite_billing')->where('no_rawat', $no_rawat)->oneArray();
+
+    $data_id_dokter = $this->db('mlite_satu_sehat_mapping_praktisi')->select('practitioner_id')->where('kd_dokter', $kd_dokter)->oneArray();
+    $id_dokter = isset_or($data_id_dokter['practitioner_id'], '');
+
+    $__patientResp = $this->getPatient($no_ktp_pasien);
+    $__patientJson = json_decode($__patientResp);
+    $id_pasien = '';
+    if (is_object($__patientJson) && isset($__patientJson->entry) && is_array($__patientJson->entry) && isset($__patientJson->entry[0]) && isset($__patientJson->entry[0]->resource) && isset($__patientJson->entry[0]->resource->id)) {
+      $id_pasien = $__patientJson->entry[0]->resource->id;
+    }
+    if ($id_pasien === '' || $id_dokter === '') {
+      $resp = json_encode([
+        'error' => 'Data tidak lengkap untuk Resume Medis Composition',
+        'missing' => ['patient_id' => $id_pasien === '' ? 'missing' : 'ok', 'practitioner_id' => $id_dokter === '' ? 'missing' : 'ok']
+      ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render) {
+        echo $this->draw('dietgizi.html', ['pesan' => 'Gagal mengirim composition platform Satu Sehat!!', 'response' => $resp]);
+      } else {
+        echo $resp;
+      }
+      exit();
+    }
+
+    $date = date('Y-m-d');
+    $time = date('H:i:s');
+    if (!empty($mlite_billing['tgl_billing']) && !empty($mlite_billing['jam_billing'])) {
+      $zonaWaktu_composition = $this->convertTimeSatset($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing']) . '' . $zonawaktu;
+    } else {
+      $zonaWaktu_composition = $date . 'T' . $time . $zonawaktu;
+    }
+
+    $display_composition = "Kunjungan " . $nama_pasien . " di tanggal " . $tgl_registrasi;
+
+    $data = [
+      "resourceType" => "Composition",
+      "identifier" => [
+        "system" => "http://sys-ids.kemkes.go.id/composition/" . $this->organizationid,
+        "value" => $no_rawat
+      ],
+      "status" => "final",
+      "type" => [
+        "coding" => [
+          [
+            "system" => "http://loinc.org",
+            "code" => "18842-5",
+            "display" => "Discharge summary"
+          ]
+        ]
+      ],
+      "category" => [
+        [
+          "coding" => [
+            [
+              "system" => "http://loinc.org",
+              "code" => "LP173421-1",
+              "display" => "Report"
+            ]
+          ]
+        ]
+      ],
+      "subject" => [
+        "reference" => "Patient/" . $id_pasien,
+        "display" => $nama_pasien
+      ],
+      "encounter" => [
+        "reference" => "Encounter/" . $id_encounter,
+        "display" => $display_composition
+      ],
+      "date" => $zonaWaktu_composition,
+      "author" => [
+        [
+          "reference" => "Practitioner/" . $id_dokter,
+          "display" => $nama_dokter
+        ]
+      ],
+      "title" => "Resume Medis Rawat Jalan",
+      "custodian" => [
+        "reference" => "Organization/" . $this->organizationid
+      ]
+    ];
+
+    $data = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+
+    $curl = curl_init();
 
     curl_setopt_array($curl, array(
       CURLOPT_URL => $this->fhirurl . '/Composition',
@@ -3755,12 +3980,10 @@ class Admin extends AdminModule
             'id_composition' => $id_composition
           ]);
       }
-      $pesan = 'Sukses mengirim id_composition platform Satu Sehat!!';
+      $pesan = 'Sukses mengirim id_composition (Resume Medis) platform Satu Sehat!!';
     }
 
     curl_close($curl);
-    // echo $response;
-    // echo '<pre>' . $data . '</pre>';
     if ($render) {
       echo $this->draw('dietgizi.html', ['pesan' => $pesan, 'response' => $response]);
     } else {
@@ -7342,6 +7565,12 @@ class Admin extends AdminModule
     $mlite_billing = $this->db('mlite_billing')->where('no_rawat', $no_rawat)->oneArray();
     $pemeriksaan = $this->db('pemeriksaan_ralan')->where('no_rawat', $no_rawat)->oneArray();
 
+    // recordedDate wajib berupa datetime valid. Prioritas: waktu pemeriksaan → waktu registrasi → waktu server.
+    $tgl_pemeriksaan = isset_or($pemeriksaan['tgl_perawatan'], $tgl_registrasi);
+    $jam_pemeriksaan = isset_or($pemeriksaan['jam_rawat'], $jam_reg);
+    if (!$tgl_pemeriksaan) { $tgl_pemeriksaan = date('Y-m-d'); }
+    if (!$jam_pemeriksaan) { $jam_pemeriksaan = date('H:i:s'); }
+
     $rtl = $pemeriksaan['rtl'] ?? null;
 
     $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
@@ -7370,6 +7599,20 @@ class Admin extends AdminModule
     }
 
     $encounter_id = $mlite_satu_sehat_response['id_encounter'] ?? null;
+
+    // Guard idempoten: sudah pernah terkirim → jangan kirim ulang (duplikat)
+    if (isset($mlite_satu_sehat_response['id_allergy']) && $mlite_satu_sehat_response['id_allergy'] !== '') {
+      $resp = json_encode([
+        'pesan' => 'sudah terkirim',
+        'id_allergy' => $mlite_satu_sehat_response['id_allergy']
+      ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render) {
+        echo $this->draw('allergy.html', ['pesan' => 'Data alergi sudah pernah terkirim (id_allergy terisi).', 'response' => $resp]);
+      } else {
+        echo $resp;
+      }
+      exit();
+    }
 
     if ($ihs_patient === '' || !$encounter_id) {
       $error = [
@@ -7400,7 +7643,7 @@ class Admin extends AdminModule
         'deskripsi' => 'Allergy to drug',
         'snomed_ct' => '416098002',
         'icd_10' => 'T88.7',
-        'category' => 'drug'
+        'category' => 'medication'
       ],
       [
         'deskripsi' => 'Allergy to nutraceutical',
@@ -7426,115 +7669,143 @@ class Admin extends AdminModule
 
     $row['allergy'] = [];
 
-    $allergy = $this->db('diagnosa_pasien')
+    $allergy_all = $this->db('diagnosa_pasien')
       ->join('penyakit', 'penyakit.kd_penyakit = diagnosa_pasien.kd_penyakit')
       ->where('no_rawat', $no_rawat)
       ->where('diagnosa_pasien.status', $status_lanjut)
       ->in('diagnosa_pasien.kd_penyakit', $allergy_icd10)
-      ->oneArray();
+      ->toArray();
 
     $allergy_map = array_column($allergy_list, null, 'icd_10');
 
-    if (!empty($allergy) && isset($allergy_map[$allergy['kd_penyakit']])) {
-      $row['allergy'] = $allergy_map[$allergy['kd_penyakit']];
+    foreach ((array) $allergy_all as $ar) {
+      $ar = (array) $ar;
+      if (!empty($ar) && isset($allergy_map[$ar['kd_penyakit']])) {
+        $row['allergy'][] = $allergy_map[$ar['kd_penyakit']];
+      }
     }
 
-    $allergy = [
-      "resourceType" => "AllergyIntolerance",
-      "identifier" => [
-        "system" => "http://sys-ids.kemkes.go.id/allergy/" . $this->organizationid,
-        "use" => "official",
-        "value" => $no_rawat
-      ],
-      "clinicalStatus" => [
-        "coding" => [
-          [
-            "system" => "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
-            "code" => "active",
-            "display" => "Active"
-          ]
-        ]
-      ],
-      "verificationStatus" => [
-        "coding" => [
-          [
-            "system" => "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification",
-            "code" => "confirmed",
-            "display" => "Confirmed"
-          ]
-        ]
-      ],
-      "category" => [
-        $row['allergy']['category']
-      ],
-      "code" => [
-        "coding" => [
-          [
-            "system" => "http://snomed.info/sct",
-            "code" => $row['allergy']['snomed_ct'],
-            "display" => $row['allergy']['deskripsi']
+    if (empty($row['allergy'])) {
+      $resp = json_encode([
+        'pesan' => 'Tidak ada data alergi',
+        'allergy_rows' => []
+      ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render) {
+        echo $this->draw('allergy.html', ['pesan' => 'Tidak ada diagnosa alergi untuk dikirim pada kunjungan ini.', 'response' => $resp]);
+      } else {
+        echo $resp;
+      }
+      exit();
+    }
+
+    $ids_allergy = [];
+    $last_raw = null;
+    $idx = 0;
+    foreach ($row['allergy'] as $a) {
+      $idx++;
+
+      $payload = [
+        "resourceType" => "AllergyIntolerance",
+        "identifier" => [
+          "system" => "http://sys-ids.kemkes.go.id/allergy/" . $this->organizationid,
+          "use" => "official",
+          "value" => $no_rawat . '-' . $idx
+        ],
+        "clinicalStatus" => [
+          "coding" => [
+            [
+              "system" => "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
+              "code" => "active",
+              "display" => "Active"
+            ]
           ]
         ],
-        "text" => $row['allergy']['deskripsi']
-      ],
-      "patient" => [
-        "reference" => "Patient/" . $ihs_patient,
-        "display" => $nama_pasien
-      ],
-      "encounter" => [
-        "reference" => "Encounter/" . $encounter_id,
-        "display" => $kunjungan . ' ' . $nama_pasien . ' dari tanggal ' . $tgl_registrasi
-      ],
-      "recordedDate" => $pemeriksaan['tgl_perawatan'] . 'T' . $pemeriksaan['jam_rawat'] . $zonawaktu,
-      "recorder" => [
-        "reference" => "Practitioner/" . $id_dokter['practitioner_id'],
-        "display" => $nama_dokter
-      ]
-    ];
+        "verificationStatus" => [
+          "coding" => [
+            [
+              "system" => "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification",
+              "code" => "confirmed",
+              "display" => "Confirmed"
+            ]
+          ]
+        ],
+        "category" => [
+          $a['category']
+        ],
+        "code" => [
+          "coding" => [
+            [
+              "system" => "http://snomed.info/sct",
+              "code" => $a['snomed_ct'],
+              "display" => $a['deskripsi']
+            ]
+          ],
+          "text" => $a['deskripsi']
+        ],
+        "patient" => [
+          "reference" => "Patient/" . $ihs_patient,
+          "display" => $nama_pasien
+        ],
+        "encounter" => [
+          "reference" => "Encounter/" . $encounter_id,
+          "display" => $kunjungan . ' ' . $nama_pasien . ' dari tanggal ' . $tgl_registrasi
+        ],
+        "recordedDate" => $tgl_pemeriksaan . 'T' . $jam_pemeriksaan . $zonawaktu,
+        "recorder" => [
+          "reference" => "Practitioner/" . $id_dokter['practitioner_id'],
+          "display" => $nama_dokter
+        ]
+      ];
 
-    $allergy = json_encode($allergy, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+      $payloadJson = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 
-    $curl = curl_init();
-    // echo '<pre>' . $allergy . '</pre>';
+      $curl = curl_init();
 
-    curl_setopt_array($curl, array(
-      CURLOPT_URL => $this->fhirurl . '/AllergyIntolerance',
-      CURLOPT_RETURNTRANSFER => true,
-      CURLOPT_ENCODING => '',
-      CURLOPT_MAXREDIRS => 10,
-      CURLOPT_TIMEOUT => 0,
-      CURLOPT_FOLLOWLOCATION => true,
-      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-      CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . json_decode($this->getToken())->access_token),
-      CURLOPT_CUSTOMREQUEST => 'POST',
-      CURLOPT_POSTFIELDS => $allergy
-    ));
+      curl_setopt_array($curl, array(
+        CURLOPT_URL => $this->fhirurl . '/AllergyIntolerance',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 0,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . json_decode($this->getToken())->access_token),
+        CURLOPT_CUSTOMREQUEST => 'POST',
+        CURLOPT_POSTFIELDS => $payloadJson
+      ));
 
-    $response = curl_exec($curl);
+      $last_raw = curl_exec($curl);
+      curl_close($curl);
 
-    $decoded = json_decode($response);
-    $id_allergy = (is_object($decoded) && isset($decoded->id)) ? $decoded->id : null;
+      $decoded = json_decode($last_raw);
+      $id = (is_object($decoded) && isset($decoded->id)) ? $decoded->id : null;
+      if ($id) {
+        $ids_allergy[] = $id;
+      }
+    }
+
     $pesan = 'Gagal mengirim allergy platform Satu Sehat!!';
-    if ($id_allergy) {
+    if (!empty($ids_allergy)) {
+      $id_allergy_join = implode(',', $ids_allergy);
       $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
       if ($mlite_satu_sehat_response) {
         $this->db('mlite_satu_sehat_response')
           ->where('no_rawat', $no_rawat)
           ->save([
             'no_rawat' => $no_rawat,
-            'id_allergy' => $id_allergy
+            'id_allergy' => $id_allergy_join
           ]);
       } else {
         $this->db('mlite_satu_sehat_response')
           ->save([
             'no_rawat' => $no_rawat,
-            'id_allergy' => $id_allergy
+            'id_allergy' => $id_allergy_join
           ]);
       }
-      $pesan = 'Sukses mengirim allergy platform Satu Sehat!!';
+      $pesan = 'Sukses mengirim ' . count($ids_allergy) . ' allergy platform Satu Sehat!!';
     }
 
-    curl_close($curl);
+    $response = $last_raw;
 
     if ($render) {
       echo $this->draw('allergy.html', ['pesan' => $pesan, 'response' => $response]);
@@ -8128,6 +8399,7 @@ class Admin extends AdminModule
         $row['id_observation_ttvkesadaran'] = isset_or($mlite_satu_sehat_response['id_observation_ttvkesadaran'], '');
         $row['id_procedure'] = isset_or($mlite_satu_sehat_response['id_procedure'], '');
         $row['id_composition'] = isset_or($mlite_satu_sehat_response['id_composition'], '');
+        $row['id_composition_gizi'] = isset_or($mlite_satu_sehat_response['id_composition_gizi'], '');
         $data_response[] = $row;
       }
       $json = json_encode($data_response);
@@ -8252,7 +8524,7 @@ class Admin extends AdminModule
     $s['procedure'] = $row['id_procedure'] != '' ? 'done'
       : (empty($row['prosedur_pasien']) ? 'empty' : 'ready');
 
-    $s['composition'] = $row['id_composition'] != '' ? 'done'
+    $s['composition'] = $row['id_composition_gizi'] != '' ? 'done'
       : (empty($row['adime_gizi']) ? 'empty' : 'ready');
 
     $s['vaksin'] = $row['id_immunization'] != '' ? 'done'
@@ -8692,7 +8964,7 @@ class Admin extends AdminModule
           'deskripsi' => 'Allergy to drug',
           'snomed_ct' => '416098002',
           'icd_10' => 'T88.7',
-          'category' => 'drug'
+          'category' => 'medication'
         ],
         [
           'deskripsi' => 'Allergy to nutraceutical',
@@ -8718,17 +8990,20 @@ class Admin extends AdminModule
 
       $row['allergy'] = [];
 
-      $allergy = $this->db('diagnosa_pasien')
+      $allergy_all = $this->db('diagnosa_pasien')
         ->join('penyakit', 'penyakit.kd_penyakit = diagnosa_pasien.kd_penyakit')
         ->where('no_rawat', $row['no_rawat'])
         ->where('diagnosa_pasien.status', $row['status_lanjut'])
         ->in('diagnosa_pasien.kd_penyakit', $allergy_icd10)
-        ->oneArray();
+        ->toArray();
 
       $allergy_map = array_column($allergy_list, null, 'icd_10');
 
-      if (!empty($allergy) && isset($allergy_map[$allergy['kd_penyakit']])) {
-        $row['allergy'][] = $allergy_map[$allergy['kd_penyakit']];
+      foreach ((array) $allergy_all as $ar) {
+        $ar = (array) $ar;
+        if (!empty($ar) && isset($allergy_map[$ar['kd_penyakit']])) {
+          $row['allergy'][] = $allergy_map[$ar['kd_penyakit']];
+        }
       }
 
       $row['questionnaire'] = $this->db('catatan_perawatan')->where('no_rawat', $row['no_rawat'])->where('catatan', 'KPS')->oneArray();
@@ -8748,6 +9023,7 @@ class Admin extends AdminModule
       $row['id_observation_ttvkesadaran'] = isset_or($mlite_satu_sehat_response['id_observation_ttvkesadaran'], '');
       $row['id_procedure'] = isset_or($mlite_satu_sehat_response['id_procedure'], '');
       $row['id_composition'] = isset_or($mlite_satu_sehat_response['id_composition'], '');
+      $row['id_composition_gizi'] = isset_or($mlite_satu_sehat_response['id_composition_gizi'], '');
       $row['id_medication_for_request'] = isset_or($mlite_satu_sehat_response['id_medication_for_request'], '');
       $row['id_medication_request'] = isset_or($mlite_satu_sehat_response['id_medication_request'], '');
       $row['id_medication_for_dispense'] = isset_or($mlite_satu_sehat_response['id_medication_for_dispense'], '');
@@ -9477,7 +9753,7 @@ class Admin extends AdminModule
       'id_observation_ttvsuhu', 'id_observation_ttvspo2', 'id_observation_ttvgcs',
       'id_observation_ttvtinggi', 'id_observation_ttvberat', 'id_observation_ttvperut',
       'id_observation_ttvkesadaran', 'id_procedure', 'id_composition',
-      'id_immunization', 'id_medication_request', 'id_medication_dispense',
+      'id_composition_gizi', 'id_immunization', 'id_medication_request', 'id_medication_dispense',
       'id_medication_statement', 'id_rad_request', 'id_rad_specimen',
       'id_rad_observation', 'id_rad_diagnostic', 'id_imaging_study',
       'id_lab_pk_request', 'id_lab_pk_specimen', 'id_lab_pk_observation',
@@ -9489,7 +9765,7 @@ class Admin extends AdminModule
       'ID Observation Suhu', 'ID Observation SPO2', 'ID Observation GCS',
       'ID Observation Tinggi', 'ID Observation Berat', 'ID Observation Perut',
       'ID Observation Kesadaran', 'ID Procedure', 'ID Composition',
-      'ID Vaksin/Imunisasi', 'ID Medication Request', 'ID Medication Dispense',
+      'ID Composition Gizi', 'ID Vaksin/Imunisasi', 'ID Medication Request', 'ID Medication Dispense',
       'ID Medication Statement', 'ID Service Request Radiologi', 'ID Specimen Radiologi',
       'ID Observation Radiologi', 'ID Diagnostic Report Radiologi', 'Image Study',
       'ID Service Request Lab PK', 'ID Specimen Lab PK', 'ID Observation Lab PK',

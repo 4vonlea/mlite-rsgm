@@ -2148,6 +2148,25 @@ switch ($version) {
         // Nama produk KFA bisa melebihi 200 karakter (400+), sehingga mysql strict mode menolak INSERT jika kolom terlalu sempit.
         try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_satu_sehat_mapping_obat` MODIFY `nama_kfa` varchar(500) DEFAULT NULL"); } catch (\Throwable $e) {}
 
+        // Perbaikan SATUSEHAT: pisahkan kolom Resume Medis (id_composition) dengan Modul Gizi (id_composition_gizi).
+        // Sebelumnya modul gizi menimpa id_composition sehingga ID Composition Resume Medis tidak pernah tersimpan.
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_satu_sehat_response` ADD COLUMN `id_composition_gizi` varchar(50) NULL DEFAULT NULL AFTER `id_composition`"); } catch (\Throwable $e) {}
+        // id_allergy kini menampung beberapa UUID (gabung-koma) karena semua diagnosa alergi dikirim.
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_satu_sehat_response` MODIFY `id_allergy` varchar(500) NULL DEFAULT NULL"); } catch (\Throwable $e) {}
+        // Rekonsiliasi data lama: UUID gizi yang sempat menimpa id_composition dipindah ke kolom yang benar (idempoten).
+        try {
+            $this->core->db()->pdo()->exec(
+                "UPDATE `mlite_satu_sehat_response` r
+                 SET r.`id_composition_gizi` = r.`id_composition`, r.`id_composition` = NULL
+                 WHERE r.`id_composition` IS NOT NULL
+                   AND EXISTS (
+                       SELECT 1 FROM `catatan_adime_gizi` a
+                       WHERE a.`no_rawat` = r.`no_rawat`
+                         AND a.`instruksi` IS NOT NULL AND TRIM(a.`instruksi`) <> ''
+                   )"
+            );
+        } catch (\Throwable $e) {}
+
     if (!isset($return) || !$return) {
         $return = '6.7.0';
     }

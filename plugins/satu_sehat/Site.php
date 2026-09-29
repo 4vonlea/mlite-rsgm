@@ -15,6 +15,7 @@ class Site extends SiteModule
         $this->route('satu-sehat/odontogram/(:any)', 'forwardOdontogram');
         $this->route('satu-sehat/ohis/(:any)', 'forwardOhis');
         $this->route('satu-sehat/diet-gizi/(:any)', 'forwardDietGizi');
+        $this->route('satu-sehat/composition/(:any)', 'forwardComposition');
         $this->route('satu-sehat/vaksin/(:any)', 'forwardVaksin');
         $this->route('satu-sehat/care-plan/(:any)', 'forwardCarePlan');
         $this->route('satu-sehat/allergy/(:any)', 'forwardAllergy');
@@ -143,6 +144,20 @@ class Site extends SiteModule
         $admin = new \Plugins\Satu_Sehat\Admin($this->core);
         $admin->init();
         return $admin->getDietGizi($no_rawat, false);
+    }
+
+    public function forwardComposition($no_rawat = null)
+    {
+        if ($no_rawat === null && isset($_GET['no_rawat'])) {
+            $no_rawat = $_GET['no_rawat'];
+        }
+        if ($no_rawat === null) {
+            echo json_encode(['error' => 'no_rawat kosong']);
+            exit();
+        }
+        $admin = new \Plugins\Satu_Sehat\Admin($this->core);
+        $admin->init();
+        return $admin->getCompositionResume($no_rawat, false);
     }
 
     public function forwardVaksin($no_rawat = null)
@@ -337,6 +352,7 @@ class Site extends SiteModule
             ];
         }   
         $encBase = '/satu-sehat/encounter/';
+        $compBase = '/satu-sehat/composition/';
         $condBase = '/satu-sehat/condition/';
         $obsBase = '/satu-sehat/observation/';
         $procBase = '/satu-sehat/procedure/';
@@ -423,6 +439,14 @@ class Site extends SiteModule
                 container.insertAdjacentHTML(
                     "beforeend",
                     "<div>Encounter:<pre>" + (typeof enc === "string" ? enc : JSON.stringify(enc, null, 2)) + "</pre></div>"
+                );
+
+                // Composition Resume Medis
+                const compTxt = await call("' . $compBase . '" + nrUrl);
+                const comp = toJsonOrString(compTxt);
+                container.insertAdjacentHTML(
+                    "beforeend",
+                    "<div>Composition Resume:<pre>" + (typeof comp === "string" ? comp : JSON.stringify(comp, null, 2)) + "</pre></div>"
                 );
 
                 // Condition
@@ -563,6 +587,7 @@ class Site extends SiteModule
                 results.push({
                     no_rawat: nrDisp,
                     encounter: enc,
+                    composition_resume: comp,
                     condition: cond,
                     observation: obsRes,
                     procedure: proc,
@@ -614,6 +639,7 @@ class Site extends SiteModule
         }
 
         $encBase = '/satu-sehat/encounter/';
+        $compBase = '/satu-sehat/composition/';
         $condBase = '/satu-sehat/condition/';
         $obsBase = '/satu-sehat/observation/';
         $procBase = '/satu-sehat/procedure/';
@@ -699,6 +725,14 @@ class Site extends SiteModule
                 container.insertAdjacentHTML(
                     "beforeend",
                     "<div>Encounter:<pre>" + (typeof enc === "string" ? enc : JSON.stringify(enc, null, 2)) + "</pre></div>"
+                );
+
+                // Composition Resume Medis
+                const compTxt = await call("' . $compBase . '" + nrUrl);
+                const comp = toJsonOrString(compTxt);
+                container.insertAdjacentHTML(
+                    "beforeend",
+                    "<div>Composition Resume:<pre>" + (typeof comp === "string" ? comp : JSON.stringify(comp, null, 2)) + "</pre></div>"
                 );
 
                 // Condition
@@ -838,6 +872,7 @@ class Site extends SiteModule
                 results.push({
                     no_rawat: nrDisp,
                     encounter: enc,
+                    composition_resume: comp,
                     condition: cond,
                     observation: obsRes,
                     procedure: proc,
