@@ -2828,6 +2828,100 @@ class Admin extends AdminModule
     }
   }
 
+  // Diagnostik khusus jalur dental: mencari tahu kenapa lookup Patient/Practitioner kosong.
+  // Sengaja memakai curl sendiri (bukan mengubah getPatient/getPractitioner) supaya
+  // modul lain yang memakai fungsi tersebut tidak ikut terpengaruh.
+  private function _dentalLookup($resource, $nik, $token = null)
+  {
+    $out = ['resource' => $resource, 'nik' => (string) $nik, 'http_code' => 0, 'curl_error' => '', 'body' => '', 'id' => ''];
+    if ($token === null) {
+      $token = $this->getAccessToken();
+    }
+
+    $curl = curl_init();
+    curl_setopt_array($curl, array(
+      CURLOPT_URL => $this->fhirurl . '/' . $resource . '?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_ENCODING => '',
+      CURLOPT_MAXREDIRS => 10,
+      CURLOPT_TIMEOUT => 30,
+      CURLOPT_CONNECTTIMEOUT => 15,
+      CURLOPT_FOLLOWLOCATION => true,
+      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+      CURLOPT_HTTPHEADER => array('Content-Type: application/json', 'Authorization: Bearer ' . $token),
+      CURLOPT_CUSTOMREQUEST => 'GET'
+    ));
+    $response = curl_exec($curl);
+    $out['http_code'] = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    $out['curl_error'] = (string) curl_error($curl);
+    curl_close($curl);
+
+    $body = is_string($response) ? $response : '';
+    $out['body'] = substr($body, 0, 300);
+    $obj = json_decode($body);
+    if (is_object($obj) && isset($obj->entry) && is_array($obj->entry) && isset($obj->entry[0]) && isset($obj->entry[0]->resource) && isset($obj->entry[0]->resource->id)) {
+      $out['id'] = $obj->entry[0]->resource->id;
+    }
+    return $out;
+  }
+
+  // Mengubah hasil probe menjadi kalimat yang bisa dibaca user.
+  private function _dentalExplain($resource, $nik)
+  {
+    $label = ($resource === 'Patient') ? 'pasien' : 'praktisi (dokter)';
+    $nik = trim((string) $nik);
+    if ($nik === '') {
+      return 'NIK ' . $label . ' belum terisi di master data.';
+    }
+
+    if ($this->getAccessToken() === '') {
+      return 'Gagal memperoleh access token SATUSEHAT. Periksa Client ID, Secret Key, dan URL SATUSEHAT pada menu Pengaturan.';
+    }
+
+    $probe = $this->_dentalLookup($resource, $nik);
+    if ($probe['http_code'] === 401) {
+      // Token ditolak: ambil token baru sekali lalu coba ulang.
+      $fresh = json_decode($this->getToken());
+      if (is_object($fresh) && isset($fresh->access_token) && $fresh->access_token !== '') {
+        $probe = $this->_dentalLookup($resource, $nik, $fresh->access_token);
+      }
+    }
+
+    $code = $probe['http_code'];
+    if ($probe['curl_error'] !== '') {
+      return 'Tidak dapat menghubungi server SATUSEHAT saat mencari ' . $label . ': ' . $probe['curl_error'] . ' (kode HTTP ' . $code . ').';
+    }
+    if ($code === 401 || $code === 403) {
+      return 'Server SATUSEHAT menolak token (HTTP ' . $code . '). Periksa Client ID / Secret Key / URL SATUSEHAT pada menu Pengaturan.';
+    }
+    if ($code === 404) {
+      return 'Endpoint SATUSEHAT tidak ditemukan (HTTP 404). Periksa kembali URL SATUSEHAT pada menu Pengaturan.';
+    }
+    if ($code >= 500) {
+      return 'Server SATUSEHAT sedang bermasalah (HTTP ' . $code . '). Coba lagi beberapa saat lagi.';
+    }
+    if ($code === 0) {
+      return 'Tidak ada respons dari server SATUSEHAT saat mencari ' . $label . '. Periksa koneksi internet server.';
+    }
+    if ($probe['id'] !== '') {
+      return $label . ' ditemukan (ID ' . $probe['id'] . ') tetapi hasil pencarian tetap kosong.';
+    }
+    return $label . ' dengan NIK ' . $nik . ' tidak terdaftar di SATUSEHAT (HTTP ' . $code . '). Periksa NIK di portal SATUSEHAT.';
+  }
+
+  // Daftar prasyarat yang benar-benar belum lengkap, beserta penyebabnya.
+  private function _dentalMissingList($b)
+  {
+    $list = [];
+    if ($b['encounter_id'] === '') {
+      $list[] = ['prasyarat' => 'encounter', 'alasan' => 'Encounter belum pernah dikirim pada kunjungan ini. Kirim data Encounter terlebih dahulu.'];
+    }
+    foreach ((array) $b['detail'] as $d) {
+      $list[] = ['prasyarat' => $d['prasyarat'], 'alasan' => $d['alasan']];
+    }
+    return $list;
+  }
+
   private function _dentalBases($no_rawat)
   {
     $no_rawat = revertNoRawat($no_rawat);
@@ -2860,6 +2954,16 @@ class Admin extends AdminModule
     if (is_object($__pracJson) && isset($__pracJson->entry) && is_array($__pracJson->entry) && isset($__pracJson->entry[0]) && isset($__pracJson->entry[0]->resource) && isset($__pracJson->entry[0]->resource->id)) {
       $practitioner_id = $__pracJson->entry[0]->resource->id;
     }
+
+    // Hanya dijalankan bila hasil lookup di atas kosong, agar tidak menambah panggilan
+    // ke SATUSEHAT pada alur yang normal. Cara pencarian tetap sama seperti sebelumnya.
+    $detail = [];
+    if ($ihs_patient === '') {
+      $detail[] = ['prasyarat' => 'patient', 'alasan' => $this->_dentalExplain('Patient', $no_ktp_pasien)];
+    }
+    if ($practitioner_id === '') {
+      $detail[] = ['prasyarat' => 'practitioner', 'alasan' => $this->_dentalExplain('Practitioner', $no_ktp_dokter)];
+    }
     $encounter_id = isset($mlite_satu_sehat_response['id_encounter']) ? $mlite_satu_sehat_response['id_encounter'] : '';
     $effective = ($tgl_registrasi ? $tgl_registrasi . 'T' : '') . ($jam_reg ? $jam_reg : '00:00:00') . $zonawaktu;
 
@@ -2874,6 +2978,8 @@ class Admin extends AdminModule
       'tgl_registrasi' => $tgl_registrasi,
       'no_rkm_medis' => $no_rkm_medis,
       'no_ktp_pasien' => $no_ktp_pasien,
+      'no_ktp_dokter' => $no_ktp_dokter,
+      'detail' => $detail,
       'response_row' => $mlite_satu_sehat_response,
     ];
   }
@@ -2882,7 +2988,14 @@ class Admin extends AdminModule
   {
     $b = $this->_dentalBases($no_rawat);
     if ($b['encounter_id'] === '' || $b['ihs_patient'] === '' || $b['practitioner_id'] === '') {
-      $response = json_encode(['error' => 'Prasyarat SATUSEHAT belum lengkap (encounter/patient/practitioner)', 'missing' => ['encounter' => $b['encounter_id'], 'patient' => $b['ihs_patient'], 'practitioner' => $b['practitioner_id']]], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      $response = json_encode([
+        'error' => 'Gagal mengirim odontogram ke platform Satu Sehat',
+        'module' => 'odontogram',
+        'no_rawat' => $b['no_rawat'],
+        'nik_pasien' => $b['no_ktp_pasien'],
+        'nik_dokter' => $b['no_ktp_dokter'],
+        'belum_lengkap' => $this->_dentalMissingList($b),
+      ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
       if ($render) {
         echo $this->draw('observation.html', ['pesan' => 'Gagal mengirim odontogram ke platform Satu Sehat!!', 'response' => $response]);
       } else {
@@ -3056,7 +3169,14 @@ class Admin extends AdminModule
   {
     $b = $this->_dentalBases($no_rawat);
     if ($b['encounter_id'] === '' || $b['ihs_patient'] === '' || $b['practitioner_id'] === '') {
-      $response = json_encode(['error' => 'Prasyarat SATUSEHAT belum lengkap (encounter/patient/practitioner)', 'missing' => ['encounter' => $b['encounter_id'], 'patient' => $b['ihs_patient'], 'practitioner' => $b['practitioner_id']]], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      $response = json_encode([
+        'error' => 'Gagal mengirim OHIS ke platform Satu Sehat',
+        'module' => 'ohis',
+        'no_rawat' => $b['no_rawat'],
+        'nik_pasien' => $b['no_ktp_pasien'],
+        'nik_dokter' => $b['no_ktp_dokter'],
+        'belum_lengkap' => $this->_dentalMissingList($b),
+      ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
       if ($render) {
         echo $this->draw('observation.html', ['pesan' => 'Gagal mengirim OHIS ke platform Satu Sehat!!', 'response' => $response]);
       } else {
