@@ -113,12 +113,10 @@ dikirim: kunjungan sudah terkirim **Encounter**, dan dokter sudah di-mapping pra
 ### C. Pantau
 
 1. **Data Response** → filter kategori **"Odontogram & OHIS"** → status per kunjungan
-   (Siap Kirim / Terkirim / Sebagian / Kosong / Ada Masalah).
-2. **Statistik** (menu Satu Sehat) → baris modul wajib baru: **Odontogram (Gigi)** dan
-   **OHIS (Debris-Kalkulus)** — persen = terkirim ÷ kunjungan pemakai layanan gigi yang
-   lengkap klinis (Encounter + Diagnosa + Closing).
-3. **Export Rekap (Excel)** → blok "PERSENTASE PENGIRIMAN MODUL WAJIB" memuat kedua modul
-   baru dengan basis per kategorinya. Kolom per-resource generik (31 item) tidak berubah.
+   (Siap Kirim / Terkirim / Sebagian / Kosong / Ada Masalah). Ini satu-satunya tempat
+   pemantauan kelengkapan dental.
+2. Odontogram & OHIS **tidak termasuk Modul Wajib**, sehingga tidak muncul di baris
+   "Persentase Modul Wajib Satusehat" (halaman Statistik maupun Export Rekap Excel).
 
 ### D. Ketentuan & Catatan
 

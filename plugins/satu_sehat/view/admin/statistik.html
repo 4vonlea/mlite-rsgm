@@ -228,7 +228,7 @@
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="stat-card">
-                    <div class="sc-label">Total Item Terkirim</div>
+                    <div class="sc-label">Total Item Wajib Terkirim</div>
                     <div class="sc-value" id="stat_terkirim">0</div>
                     <div class="sc-sub" id="stat_terkirim_sub">-</div>
                 </div>
@@ -242,9 +242,9 @@
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="stat-card">
-                    <div class="sc-label">Target Item (Kunjungan x 31)</div>
+                    <div class="sc-label">Target Item Wajib (Total Pembanding)</div>
                     <div class="sc-value" id="stat_target">0</div>
-                    <div class="sc-sub">Jumlah ideal seluruh item terisi</div>
+                    <div class="sc-sub">16 resource wajib RSGM, pembanding per kategori</div>
                 </div>
             </div>
         </div>
@@ -406,6 +406,7 @@
         var ket = $('#stat_filter_ket').val() || '';
         var bayar = $('#stat_filter_bayar').val() || 'Sudah Bayar';
         var url = baseURL + '/statisticapi?t=' + encodeURIComponent(mlite.token)
+            + '&_=' + new Date().getTime()
             + '&tanggal_awal=' + encodeURIComponent(awal || '')
             + '&tanggal_akhir=' + encodeURIComponent(akhir || '')
             + '&filter_dokter=' + encodeURIComponent(dokter)
@@ -445,13 +446,13 @@
         var bayar = $('#stat_filter_bayar').val() || 'Sudah Bayar';
         $('#stat_kunjungan_sub').text(res.periode.label + ' \u00b7 ' + (bayar === 'Semua' ? 'Semua Status Bayar' : bayar));
 
-        var jml = Number(res.jml_items) || 0;
+        var jml = Number(res.wajib_jml_items) || 0;
         var target = nf(jml);
-        $('#stat_terkirim').text(nf(res.grand_total));
-        $('#stat_terkirim_sub').text('dari target ' + target + ' item');
+        $('#stat_terkirim').text(nf(res.wajib_terkirim));
+        $('#stat_terkirim_sub').text('dari target ' + target + ' item wajib');
 
-        $('#stat_persen').text(Number(res.pct_ttl).toFixed(2).replace('.', ',') + '%');
-        $('#stat_persen_sub').text(Number(res.pct_dec).toLocaleString('id-ID') + ' (desimal, ' + res.overall_percentage + '%)');
+        $('#stat_persen').text(Number(res.wajib_pct_ttl).toFixed(2).replace('.', ',') + '%');
+        $('#stat_persen_sub').text(Number(res.wajib_pct_dec).toLocaleString('id-ID') + ' (desimal, ' + res.wajib_pct_int + '%)');
 
         $('#stat_target').text(target);
         $('#chart_sub').text('Periode ' + res.periode.label + ' — sumbu kiri: jumlah, sumbu kanan: persentase terkirim.');

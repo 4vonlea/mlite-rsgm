@@ -9640,10 +9640,10 @@ class Admin extends AdminModule
     // Keterangan tambahan di kolom persen (%) — header diberi catatan basis
     $sheetAgg[] = [['v' => 'Catatan basis persen: Encounter & Diagnostik = total kunjungan (' . $total_kunjungan . '); Obat, Laboratorium & Radiologi (termasuk seluruh sub-resource-nya) = kunjungan pemakai layanan tsb dengan kelengkapan klinis lengkap (Encounter + Diagnosa + Closing), yaitu ' . $kunjungan_eligible . ' kunjungan.', 's' => 4, 'm' => ($RES_COUNT + 2)]];
 
-    $sheetAgg[] = [['v' => 'JMLH KUNJUNGAN PASIEN * ' . $RES_COUNT . ' ITEM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $jml_items, 's' => 7]];
-    $sheetAgg[] = [['v' => 'TOTAL ITEM TERKIRIM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $grand_total, 's' => 7]];
-    $sheetAgg[] = [['v' => 'TTL ITEM TERKIRIM / ' . $jml_items . ' * 100', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $pct_ttl, 's' => 10], ['v' => '%', 's' => 8]];
-    $sheetAgg[] = [['v' => 'PERSENTASE TOTAL DATA YG BERHASIL TERKIRIM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $pct_dec, 's' => 3]];
+    $sheetAgg[] = [['v' => 'TOTAL PEMBANDING 16 RESOURCE WAJIB', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $wajib_jml_items, 's' => 7]];
+    $sheetAgg[] = [['v' => 'TOTAL ITEM WAJIB TERKIRIM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $wajib_terkirim, 's' => 7]];
+    $sheetAgg[] = [['v' => 'TTL ITEM WAJIB TERKIRIM / ' . $wajib_jml_items . ' * 100', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $wajib_pct_ttl, 's' => 10], ['v' => '%', 's' => 8]];
+    $sheetAgg[] = [['v' => 'PERSENTASE TOTAL DATA WAJIB YG BERHASIL TERKIRIM', 's' => 8], ['v' => '', 's' => 8], ['v' => '', 's' => 8], ['v' => $wajib_pct_dec, 's' => 3]];
 
     // ============ PERSENTASE MODUL WAJIB SATUSEHAT + KETERANGAN ============
     $AGG_COLS = $RES_COUNT + 2;
@@ -9652,27 +9652,20 @@ class Admin extends AdminModule
     $sheetAgg[] = [['v' => 'PERSENTASE PENGIRIMAN MODUL WAJIB SATUSEHAT (%)', 's' => 2, 'm' => $AGG_COLS]];
     $sheetAgg[] = [['v' => 'MODUL / RESOURCE', 's' => 1], ['v' => '% TERTERKIRIM', 's' => 1]];
 
-    foreach ($modul_wajib as $m) {
-      $den = ($m[1] === 'id_encounter' || $m[1] === 'id_condition') ? $total_kunjungan : (isset($modul_den[$m[1]]) ? $modul_den[$m[1]] : 0);
-      if ($den <= 0) {
-        $den = $total_kunjungan;
-      }
-      $pct = $den > 0 ? min(100, round(($totals[$m[1]] / $den) * 100, 2)) : 0;
-      $sheetAgg[] = [['v' => $m[0], 's' => 4], ['v' => $pct, 's' => 10], ['v' => '%', 's' => 8]];
+    $modul_rows = $this->_buildModulWajibRows($modul_wajib, $den_groups, $modul_den, $totals, $total_kunjungan);
+    foreach ($modul_rows as $r) {
+      $sheetAgg[] = [['v' => $r['modul'], 's' => 4], ['v' => $r['persen'], 's' => 10], ['v' => '%', 's' => 8]];
     }
 
     // Catatan: Encounter & Diagnostik dibanding total kunjungan; Obat/Lab/Rad dibanding kunjungan pemakai layanan tsb yang lengkap klinis
-    $sheetAgg[] = [['v' => 'Pembanding persen: Encounter & Diagnostik = total kunjungan (' . $total_kunjungan . '); Obat, Laboratorium & Radiologi = kunjungan pemakai layanan tsb dengan kelengkapan klinis lengkap (Encounter + Diagnosa + Closing), yaitu ' . $kunjungan_eligible . ' kunjungan.', 's' => 4, 'm' => $AGG_COLS]];
+    $sheetAgg[] = [['v' => 'Pembanding persen: Pendaftaran & Diagnostik = total kunjungan (' . $total_kunjungan . '); Obat, Laboratorium & Radiologi = kunjungan pemakai layanan tsb dengan kelengkapan klinis lengkap (Encounter + Diagnosa + Closing), yaitu ' . $kunjungan_eligible . ' kunjungan.', 's' => 4, 'm' => $AGG_COLS]];
 
     $sheetAgg[] = [];
     $sheetAgg[] = [['v' => 'KETERANGAN / CATATAN', 's' => 2, 'm' => $AGG_COLS]];
     $catatan = [
       '- Modul wajib berdasarkan surat RS Online Kemenkes: Pendaftaran (Encounter), Diagnostik (Condition), Obat (Medication Request dan Medication Dispense), Laboratorium (Specimen), dan Radiologi (Imaging Study).',
-      '- ID Rekomendasi Diet (Composition): data diambil dari catatan ADIME gizi (menu Pemeriksaan → Catatan ADIME Gizi).',
-      '- ID Vaksin/Imunisasi: di RSGM tidak ada layanan vaksin/imunisasi.',
-      '- ID Questionnaire (pasien tidak mampu / KPS): hanya diisi jika pasien memiliki surat keterangan tidak mampu.',
-      '- ID Allergy: hanya terisi jika ada diagnosa alergi; selama ini dokter umum tidak memeriksa langsung terkait alergi sehingga 0%.',
-      '- Odontogram & OHIS (Debris-Kalkulus): persen dibanding kunjungan pemakai layanan gigi (data odontogram/OHIS tersimpan) dengan kelengkapan klinis lengkap; tidak ikut persentase baris generik.',
+      '- Kartu "Persentase Terkirim" memakai 16 resource wajib RSGM dari Playbook_use_case Gigi SATUSEHAT (Kemkes, use case Gigi v1.5 tgl 7 Agustus 2024). Pembanding per kategori: resource klinis & Tanda Vital = total kunjungan; Obat = kunjungan pemakai resep; Imaging Study = kunjungan pemakai radiologi; Service Request/Specimen/Diagnostic Report = kunjungan pemakai Lab PK + Radiologi (semuanya dengan kelengkapan klinis lengkap).',
+      '- Odontogram & OHIS (Debris-Kalkulus): tidak termasuk Modul Wajib, dipantau terpisah di menu Data Response (filter kategori "Odontogram & OHIS").',
     ];
     foreach ($catatan as $c) {
       $sheetAgg[] = [['v' => $c, 's' => 4, 'm' => $AGG_COLS]];
@@ -9796,7 +9789,7 @@ class Admin extends AdminModule
     try {
       if (!isset($_GET['force'])) {
         $cache_key = md5(serialize([$start_date, $end_date, $filter_dokter, $filter_poli, $filter_ket, $filter_bayar]));
-        $cache_file = sys_get_temp_dir() . '/satu_sehat_rekap_v4_' . $cache_key . '.tmp';
+        $cache_file = sys_get_temp_dir() . '/satu_sehat_rekap_v11_' . $cache_key . '.tmp';
         if (is_file($cache_file) && (time() - filemtime($cache_file)) < 300) {
           $cached = unserialize(file_get_contents($cache_file));
           if (is_array($cached)) {
@@ -9872,6 +9865,36 @@ class Admin extends AdminModule
     $day_agg = [];
     $total_kunjungan = 0;
     $poli_agg = [];
+    // Akumulasi 16 resource wajib (dasar kartu "Persentase Terkirim")
+    $wajib_total = 0;
+    $wajib_eligible_total = 0;
+
+    // 16 resource wajib RSGM dari Playbook_use_case Gigi SATUSEHAT
+    // (Kemkes, use case Gigi v1.5 tgl 7 Agustus 2024). Dipakai untuk menghitung kartu
+    // "Persentase Terkirim" (denominator = kunjungan x 16), bukan lagi 31/32 resource.
+    // Patient & Medication tidak punya kolom sendiri: Patient dianggap terkirim saat
+    // Encounter terkirim (IHS sudah diresolusi), Medication saat MedicationRequest
+    // terkirim (katalog KFA mengikuti resep). Beberapa resource memakai lebih dari satu
+    // key (dipisah '|'): terhitung terkirim bila minimal satu key terisi.
+    $modul_wajib16 = [
+      ['Encounter', 'id_encounter'],
+      ['Patient', 'id_encounter'],
+      ['Condition', 'id_condition'],
+      ['ClinicalImpression', 'id_clinical_impression'],
+      ['Procedure', 'id_procedure'],
+      ['QuestionnaireResponse', 'id_questionnaire'],
+      ['AllergyIntolerance', 'id_allergy'],
+      ['MedicationStatement', 'id_medication_statement'],
+      ['MedicationRequest', 'id_medication_request'],
+      ['MedicationDispense', 'id_medication_dispense'],
+      ['Medication', 'id_medication_request'],
+      ['Observation', 'id_observation_ttvtensi|id_observation_ttvnadi|id_observation_ttvrespirasi|id_observation_ttvsuhu'],
+      ['ServiceRequest', 'id_lab_pk_request|id_rad_request'],
+      ['Specimen', 'id_lab_pk_specimen|id_rad_specimen'],
+      ['DiagnosticReport', 'id_lab_pk_diagnostic|id_rad_diagnostic'],
+      ['ImagingStudy', 'id_imaging_study'],
+    ];
+    $wajib_res_count = count($modul_wajib16);
 
     // Basis kelayakan kirim (kelengkapan klinis) untuk Modul Wajib:
     // denominator per modul = kunjungan pemakai layanan tsb yang sudah lengkap klinis
@@ -10260,6 +10283,57 @@ class Admin extends AdminModule
           $day_agg[$date]['total'] += $is_sent;
       }
 
+      // Persentase Terkirim berbasis 16 resource wajib (Playbook Gigi).
+      // Pembilang & penyebut dihitung pada kunjungan yang sama agar tidak mungkin > 100%:
+      //   - resource klinis & Tanda Vital  : semua kunjungan menjadi pembanding
+      //   - resource obat                 : hanya kunjungan pemakai resep (lengkap klinis)
+      //   - Imaging Study                 : hanya kunjungan pemakai radiologi
+      //   - ServiceRequest/Specimen/DiagR : hanya kunjungan pemakai Lab PK atau Radiologi
+      // Satu resource terhitung terkirim bila minimal satu key-nya terisi pada kunjungan ini.
+      $no_rawat = $row['no_rawat'];
+      $has_resep = isset($resep_set[$no_rawat]);
+      $has_lab = isset($labpk_set[$no_rawat]);
+      $has_rad = isset($rad_set[$no_rawat]);
+      $wajib_sent = 0;
+      $wajib_elig = 0;
+      foreach ($modul_wajib16 as $mw) {
+        switch ($mw[0]) {
+          case 'MedicationStatement':
+          case 'MedicationRequest':
+          case 'MedicationDispense':
+          case 'Medication':
+            $elig = $bundle_ok && $has_resep;
+            break;
+          case 'ImagingStudy':
+            $elig = $bundle_ok && $has_rad;
+            break;
+          case 'ServiceRequest':
+          case 'Specimen':
+          case 'DiagnosticReport':
+            $elig = $bundle_ok && ($has_lab || $has_rad);
+            break;
+          default: // Encounter, Patient, Condition, ClinicalImpression, Procedure,
+                   // QuestionnaireResponse, AllergyIntolerance, Observation
+            $elig = true;
+        }
+        if (!$elig) {
+          continue;
+        }
+        $wajib_elig++;
+        $ada = false;
+        foreach (explode('|', $mw[1]) as $mk) {
+          if (isset($fields[$mk]) && $fields[$mk] !== '') {
+            $ada = true;
+            break;
+          }
+        }
+        if ($ada) {
+          $wajib_sent++;
+        }
+      }
+      $wajib_total += $wajib_sent;
+      $wajib_eligible_total += $wajib_elig;
+
       // Agregasi per poli (untuk breakdown di halaman statistik)
       $kd_poli = isset($row['kd_poli']) ? $row['kd_poli'] : '';
       if (!isset($poli_agg[$kd_poli])) {
@@ -10293,6 +10367,16 @@ class Admin extends AdminModule
     $pct_ttl = $jml_items > 0 ? round(($grand_total / $jml_items) * 100, 2) : 0;
     $pct_dec = $jml_items > 0 ? round(($grand_total / $jml_items), 4) : 0;
 
+    // Metrik "Persentase Terkirim" berbasis 16 resource wajib RSGM (Playbook Gigi).
+    // Penyebut = jumlah resource wajib yang relevan pada tiap kunjungan (basis per kategori),
+    // dihitung bersama pembilang sehingga hasilnya selalu berada di rentang 0-100%.
+    $wajib_jml_items = $wajib_eligible_total;
+    $wajib_pct_ttl = $wajib_jml_items > 0 ? round(($wajib_total / $wajib_jml_items) * 100, 2) : 0;
+    $wajib_pct_dec = $wajib_jml_items > 0 ? round(($wajib_total / $wajib_jml_items), 4) : 0;
+    $wajib_pct_int = $wajib_jml_items > 0 ? round(($wajib_total / $wajib_jml_items) * 100) : 0;
+
+    // Panel "Persentase Modul Wajib Satusehat" (tampilan halaman) — daftar resource wajib
+    // inti sesuai surat RS Online Kemenkes.
     $modul_wajib = [
       ['Pendaftaran (Encounter)', 'id_encounter'],
       ['Diagnostik (Condition)', 'id_condition'],
@@ -10300,8 +10384,6 @@ class Admin extends AdminModule
       ['Obat - Medication Dispense', 'id_medication_dispense'],
       ['Laboratorium (Specimen)', 'id_lab_pk_specimen'],
       ['Radiologi (Imaging Study)', 'id_imaging_study'],
-      ['Odontogram (Gigi)', 'id_odontogram'],
-      ['OHIS (Debris-Kalkulus)', 'id_ohis_total'],
     ];
 
     // Denominator per kategori kesatuan kirim: seluruh sub-resource obat/lab PK/radiologi
@@ -10338,6 +10420,12 @@ class Admin extends AdminModule
       'jml_items' => $jml_items,
       'pct_ttl' => $pct_ttl,
       'pct_dec' => $pct_dec,
+      'wajib_res_count' => $wajib_res_count,
+      'wajib_terkirim' => $wajib_total,
+      'wajib_jml_items' => $wajib_jml_items,
+      'wajib_pct_ttl' => $wajib_pct_ttl,
+      'wajib_pct_dec' => $wajib_pct_dec,
+      'wajib_pct_int' => $wajib_pct_int,
       'modul_wajib' => $modul_wajib,
       'den_groups' => $den_groups,
       'kunjungan_eligible' => $kunjungan_eligible,
@@ -10357,6 +10445,44 @@ class Admin extends AdminModule
     }
 
     return $result;
+  }
+
+  /**
+   * Pembanding persen untuk satu resource Modul Wajib: Encounter & Diagnostik dibanding
+   * total kunjungan; Obat/Lab PK/Radiologi dibanding kunjungan pemakai layanan tsb dengan
+   * kelengkapan klinis lengkap. Bila tidak ada data sama sekali, jatuh ke total kunjungan.
+   */
+  private function _modulWajibDen($key, $modul_den, $total_kunjungan)
+  {
+    $den = ($key === 'id_encounter' || $key === 'id_condition')
+      ? $total_kunjungan
+      : (isset($modul_den[$key]) ? $modul_den[$key] : 0);
+    if ($den <= 0) {
+      $den = $total_kunjungan;
+    }
+    return $den;
+  }
+
+  /**
+   * Susun baris persentase Modul Wajib (dipakai bersama oleh halaman Statistik &
+   * Rekap Excel) dari $modul_wajib.
+   */
+  private function _buildModulWajibRows($modul_wajib, $den_groups, $modul_den, $totals, $total_kunjungan)
+  {
+    $rows = [];
+    foreach ($modul_wajib as $m) {
+      $key = isset($m[1]) ? $m[1] : '';
+      $den = $this->_modulWajibDen($key, $modul_den, $total_kunjungan);
+      $sent = isset($totals[$key]) ? (int) $totals[$key] : 0;
+      $rows[] = [
+        'modul' => $m[0],
+        'key' => $key,
+        'terkirim' => $sent,
+        'kunjungan' => $den,
+        'persen' => $den > 0 ? min(100, round(($sent / $den) * 100, 2)) : 0,
+      ];
+    }
+    return $rows;
   }
 
   /**
@@ -10421,7 +10547,7 @@ class Admin extends AdminModule
       }
       $kunjungan = $present ? $present['kunjungan'] : 0;
       $dmod = isset($day_modul_den[$d]) ? $day_modul_den[$d] : [];
-      // Rata-rata persen Modul Wajib hari itu (denominator Basis layak kirim per modul)
+      // Rata-rata persen Modul Wajib hari itu (denominator basis layak kirim per kategori)
       $mod_sum = 0;
       $mod_cnt = 0;
       foreach ($modul_keys as $mk) {
@@ -10479,32 +10605,20 @@ class Admin extends AdminModule
       $persen[$key] = $den_key > 0 ? min(100, round(($totals[$key] / $den_key) * 100, 2)) : 0;
     }
 
-    // Modul wajib + persen (denominator per modul: total kunjungan untuk Encounter/Diagnostik,
-    // kunjungan pemakai layanan tsb dengan kelengkapan klinis lengkap untuk Obat/Lab/Rad)
-    $modul_wajib_arr = [];
-    foreach ($modul_wajib as $m) {
-      $den = ($m[1] === 'id_encounter' || $m[1] === 'id_condition') ? $total_kunjungan : (isset($modul_den[$m[1]]) ? $modul_den[$m[1]] : 0);
-      if ($den <= 0) {
-        $den = $total_kunjungan;
-      }
-      $modul_wajib_arr[] = [
-        'modul' => $m[0],
-        'key' => $m[1],
-        'terkirim' => $totals[$m[1]],
-        'kunjungan' => $den,
-        'persen' => $den > 0 ? min(100, round(($totals[$m[1]] / $den) * 100, 2)) : 0,
-      ];
-    }
+    // Modul wajib + persen (Pendaftaran, Diagnostik, Obat, Lab, Radiologi).
+    $modul_wajib_arr = $this->_buildModulWajibRows($modul_wajib, $den_groups, $modul_den, $totals, $total_kunjungan);
 
     $catatan = [
       '- Modul wajib berdasarkan surat RS Online Kemenkes: Pendaftaran (Encounter), Diagnostik (Condition), Obat (Medication Request dan Medication Dispense), Laboratorium (Specimen), dan Radiologi (Imaging Study).',
+      '- Kartu "Persentase Terkirim" memakai 16 resource wajib RSGM dari Playbook_use_case Gigi SATUSEHAT (Kemkes, use case Gigi v1.5 tgl 7 Agustus 2024): AllergyIntolerance, ClinicalImpression, Condition, DiagnosticReport, Encounter, ImagingStudy, Medication, MedicationDispense, MedicationRequest, MedicationStatement, Observation, Patient, Procedure, QuestionnaireResponse, ServiceRequest, dan Specimen.',
+      '- Pembanding kartu "Persentase Terkirim" memakai basis per kategori, bukan kunjungan x 16: 9 resource klinis (Encounter, Patient, Condition, ClinicalImpression, Procedure, QuestionnaireResponse, Allergy, MedicationStatement) dan Observation (Tanda Vital) dibanding total kunjungan; Medication, MedicationRequest, MedicationDispense & MedicationStatement dibanding kunjungan pemakai resep; Imaging Study dibanding kunjungan pemakai radiologi; Service Request, Specimen & Diagnostic Report dibanding kunjungan pemakai Lab PK + Radiologi. Semua berbasis kunjungan dengan kelengkapan klinis lengkap (Encounter + Diagnosa + Closing).',
+      '- Patient (IHS Number) & Medication (Katalog KFA) tidak punya kolom tersendiri, sehingga dihitung terkirim mengikuti Encounter / MedicationRequest.',
       '- ID Rekomendasi Diet (Composition): data diambil dari catatan ADIME gizi (menu Pemeriksaan → Catatan ADIME Gizi).',
       '- ID Vaksin/Imunisasi: di RSGM tidak ada layanan vaksin/imunisasi.',
       '- ID Questionnaire (pasien tidak mampu / KPS): hanya diisi jika pasien memiliki surat keterangan tidak mampu.',
       '- ID Allergy: hanya terisi jika ada diagnosa alergi; selama ini dokter umum tidak memeriksa langsung terkait alergi sehingga 0%.',
       '- Angka di halaman ini mengikuti filter yang dipilih (default rekap: kunjungan rawat jalan (status_lanjut = Ralan), tidak Batal, dan status bayar = Sudah Bayar).',
-      '- Persentase Modul Wajib: Encounter & Diagnostik dibanding total kunjungan; Obat, Laboratorium & Radiologi dibanding kunjungan pemakai layanan tsb dengan kelengkapan klinis lengkap (Encounter + Diagnosa + Closing) sudah terkirim.',
-      '- Odontogram & OHIS (Debris-Kalkulus): persen dibanding kunjungan pemakai layanan gigi dengan kelengkapan klinis lengkap, dihitung dari tabel detail gigi; tidak ikut persentase baris generik.',
+      '- Persentase Modul Wajib: Pendaftaran & Diagnostik dibanding total kunjungan; Obat, Laboratorium & Radiologi dibanding kunjungan pemakai layanan tsb dengan kelengkapan klinis lengkap (Encounter + Diagnosa + Closing) sudah terkirim.',
       '- Pada tabel Agregasi per Tanggal, persen per kolom juga memakai basis per kategori: seluruh sub-resource obat (MR/MD/Statement), lab PK (SR/Specimen/Observation/Diagnostic Report) dan radiologi (SR/Specimen/Observation/Diagnostic Report/Image Study) dibanding pemakai layanan tsb yang lengkap klinis, agar satu kesatuan kategori sinkron.',
     ];
 
@@ -10522,6 +10636,12 @@ class Admin extends AdminModule
       'jml_items' => $jml_items,
       'pct_ttl' => $pct_ttl,
       'pct_dec' => $pct_dec,
+      'wajib_res_count' => $wajib_res_count,
+      'wajib_terkirim' => $wajib_terkirim,
+      'wajib_jml_items' => $wajib_jml_items,
+      'wajib_pct_ttl' => $wajib_pct_ttl,
+      'wajib_pct_dec' => $wajib_pct_dec,
+      'wajib_pct_int' => $wajib_pct_int,
       'overall_percentage' => $overall_percentage,
       'resource_keys' => $RESOURCE_KEYS,
       'resource_labels' => $RESOURCE_LABELS,
