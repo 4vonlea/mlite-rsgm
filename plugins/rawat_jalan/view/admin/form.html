@@ -111,6 +111,9 @@
       <button type="button" name="button" class="btn btn-primary" id="simpan" {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_create', 'rawat_jalan') == false}disabled{/if}><i class="fa fa-save"></i><span class="hidden-xs"> Simpan</span></button>
       <button type="button" name="button" class="btn btn-danger" id="hapus" {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_delete', 'rawat_jalan') == false}disabled{/if}><i class="fa fa-trash"></i><span class="hidden-xs"> Hapus</span></button>
       <button type="button" name="button" class="btn btn-warning" id="batal"><i class="fa fa-close"></i><span class="hidden-xs"> Batal</span></button>
+      {if: !empty($rawat_jalan.reg_periksa.no_rawat)}
+      <a href="{?=url([ADMIN, 'update_bmt', 'form'])?}&no_rawat={?=isset_or($rawat_jalan.reg_periksa.no_rawat)?}" class="btn btn-info"><i class="fa fa-stethoscope"></i><span class="hidden-xs"> Asesmen Gigi UGD</span></a>
+      {/if}
     </div>
   </div>
 </div>
