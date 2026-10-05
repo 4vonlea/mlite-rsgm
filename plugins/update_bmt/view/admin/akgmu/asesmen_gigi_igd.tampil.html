@@ -1,0 +1,43 @@
+
+<div id="tampil_asesment_gigi_igd">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Data Asesmen Awal Keperawatan Gigi dan Mulut IGD</h3>
+    </div>
+    <div class="panel-body">
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+          <tbody>
+            <tr><th width="30%">Tanggal</th><td>{?=isset_or($penilaian_igd.tanggal)?}</td></tr>
+            <tr><th>Cara Datang</th><td>{?=isset_or($penilaian_igd.cara_datang)?} (Oleh: {?=isset_or($penilaian_igd.diantar_oleh)?})</td></tr>
+            <tr><th>Rujukan</th><td>{?=isset_or($penilaian_igd.rujukan)?} (Dari: {?=isset_or($penilaian_igd.rujukan_dari)?} - {?=isset_or($penilaian_igd.diagnosis_rujukan)?})</td></tr>
+            <tr><th>Jenis Kasus</th><td>{?=isset_or($penilaian_igd.jenis_kasus)?}</td></tr>
+            <tr><th>Asuransi</th><td>{?=isset_or($penilaian_igd.asuransi)?}</td></tr>
+            <tr><th>Alamat Kontak</th><td>{?=isset_or($penilaian_igd.alamat_kontak)?}</td></tr>
+            <tr><th>Nama Pengantar</th><td>{?=isset_or($penilaian_igd.nama_pengantar)?} (Hub: {?=isset_or($penilaian_igd.hub_dengan_pasien)?})</td></tr>
+            <tr><th>Sumber Data</th><td>{?=isset_or($penilaian_igd.sumber_data)?}</td></tr>
+            <tr><th>Triase</th><td>{?=isset_or($penilaian_igd.triase)?}</td></tr>
+            <tr><th>Cara Masuk</th><td>{?=isset_or($penilaian_igd.cara_masuk)?}</td></tr>
+            <tr><th>Keluhan Utama</th><td>{?=isset_or($penilaian_igd.keluhan_utama)?}</td></tr>
+            <tr><th>Riwayat Penyakit Sekarang</th><td>{?=isset_or($penilaian_igd.riwayat_penyakit_sekarang)?}</td></tr>
+            <tr><th>Masalah Keperawatan</th><td>{?=isset_or($penilaian_igd.masalah_keperawatan)?}</td></tr>
+            <tr><th>Rencana Tindak Lanjut</th><td>{?=isset_or($penilaian_igd.rencana_tindak_lanjut)?}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-primary" id="edit_asesment_gigi_igd"><i class="fa fa-edit"></i> Edit</button>
+      <button type="button" class="btn btn-default" id="tutup_asesment_gigi_igd"><i class="fa fa-times"></i> Tutup</button>
+    </div>
+  </div>
+</div>
+<script>
+$(document).ready(function() {
+  $('#edit_asesment_gigi_igd').click(function() {
+    $('#tampil_asesment_gigi_igd').hide();
+    $('#form_asesment_gigi_igd').show();
+  });
+  $('#tutup_asesment_gigi_igd').click(function() {
+    $('#tampil_asesment_gigi_igd').hide();
+  });
+});
+</script>

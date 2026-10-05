@@ -1,0 +1,823 @@
+
+<div id="form_asesment_gigi_igd">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">ASESMEN KEPERAWATAN / ASUHAN KESEHATAN GIGI DAN MULUT UNIT GAWAT DARURAT</h3>
+    </div>
+    <div class="panel-body">
+      <form method="POST" action="{?=url([ADMIN, 'update_bmt', 'save'])?}">
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group"><label>No RM (Rawat)</label><input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" required autocomplete="off"></div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group"><label>Nama Pasien</label><input type="text" name="nama_pasien" id="nama_pasien" class="form-control" value="{?=isset_or($data['nama_pasien'])?}"></div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group">
+              <label>L/P</label>
+              <select data-use-search="true" name="jenis_kelamin" id="jenis_kelamin" class="form-control">
+                <option value="L" {if: isset($data['jenis_kelamin']) && $data['jenis_kelamin'] == 'L'}selected{/if}>Laki-laki (L)</option>
+                <option value="P" {if: isset($data['jenis_kelamin']) && $data['jenis_kelamin'] == 'P'}selected{/if}>Perempuan (P)</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group"><label>Tanggal Lahir</label><input type="date" name="tanggal_lahir" id="tanggal_lahir" class="form-control" value="{?=isset_or($data['tanggal_lahir'])?}"></div>
+          </div>
+        </div>
+        
+        <!-- Informasi Dasar -->
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Cara Datang</label>
+              <select data-use-search="true" name="cara_datang" id="cara_datang" class="form-control" required>
+                <option value="Sendiri" {if: isset($data['cara_datang']) && $data['cara_datang'] == 'Sendiri'}selected{/if}>Sendiri</option>
+                <option value="Ambulans" {if: isset($data['cara_datang']) && $data['cara_datang'] == 'Ambulans'}selected{/if}>Ambulans</option>
+                <option value="Diantar Keluarga" {if: isset($data['cara_datang']) && $data['cara_datang'] == 'Diantar Keluarga'}selected{/if}>Diantar Keluarga</option>
+                <option value="Diantar Polisi" {if: isset($data['cara_datang']) && $data['cara_datang'] == 'Diantar Polisi'}selected{/if}>Diantar Polisi (No. ID)</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3" id="diantar_oleh_container" style="display: none;">
+            <div class="form-group">
+              <label>Diantar Oleh (No ID / Nama)</label>
+              <input type="text" name="diantar_oleh" id="diantar_oleh" class="form-control" maxlength="50" value="{?=isset_or($data['diantar_oleh'])?}">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Jenis Kasus</label>
+              <select data-use-search="true" name="jenis_kasus" class="form-control" required>
+                <option value="Kasus Gigi dan Mulut" {if: isset($data['jenis_kasus']) && $data['jenis_kasus'] == 'Kasus Gigi dan Mulut'}selected{/if}>Kasus Gigi dan Mulut</option>
+                <option value="Kasus Umum" {if: isset($data['jenis_kasus']) && $data['jenis_kasus'] == 'Kasus Umum'}selected{/if}>Kasus Umum</option>
+                <option value="Trauma" {if: isset($data['jenis_kasus']) && $data['jenis_kasus'] == 'Trauma'}selected{/if}>Trauma</option>
+                <option value="Non Trauma" {if: isset($data['jenis_kasus']) && $data['jenis_kasus'] == 'Non Trauma'}selected{/if}>Non Trauma</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-2">
+            <div class="form-group">
+              <label>Rujukan</label>
+              <select data-use-search="true" name="rujukan" id="rujukan" class="form-control" required>
+                <option value="Tidak" {if: isset($data['rujukan']) && $data['rujukan'] == 'Tidak'}selected{/if}>Tidak</option>
+                <option value="Ya" {if: isset($data['rujukan']) && $data['rujukan'] == 'Ya'}selected{/if}>Ya</option>
+              </select>
+            </div>
+          </div>
+          <div id="rujukan_container" style="display: none;">
+            <div class="col-md-2">
+              <div class="form-group">
+                <label>Asal Rujukan</label>
+                <select data-use-search="true" id="rujukan_dari" class="form-control">
+                  <option value="">- Pilih -</option>
+                  <option value="rs" {if: !empty($data['rujukan_rs'])}selected{/if}>RS</option>
+                  <option value="puskesmas" {if: !empty($data['rujukan_puskesmas'])}selected{/if}>Puskesmas</option>
+                  <option value="klinik" {if: !empty($data['rujukan_klinik'])}selected{/if}>Klinik</option>
+                  <option value="dokter" {if: !empty($data['rujukan_dokter'])}selected{/if}>Dokter</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-2 rujukan-input" id="rujukan_rs_container" style="display: none;">
+              <div class="form-group">
+                <label>Nama RS</label>
+                <input type="text" name="rujukan_rs" id="rujukan_rs" class="form-control" value="{?=isset_or($data['rujukan_rs'])?}">
+              </div>
+            </div>
+            <div class="col-md-2 rujukan-input" id="rujukan_puskesmas_container" style="display: none;">
+              <div class="form-group">
+                <label>Nama Puskesmas</label>
+                <input type="text" name="rujukan_puskesmas" id="rujukan_puskesmas" class="form-control" value="{?=isset_or($data['rujukan_puskesmas'])?}">
+              </div>
+            </div>
+            <div class="col-md-2 rujukan-input" id="rujukan_klinik_container" style="display: none;">
+              <div class="form-group">
+                <label>Nama Klinik</label>
+                <input type="text" name="rujukan_klinik" id="rujukan_klinik" class="form-control" value="{?=isset_or($data['rujukan_klinik'])?}">
+              </div>
+            </div>
+            <div class="col-md-2 rujukan-input" id="rujukan_dokter_container" style="display: none;">
+              <div class="form-group">
+                <label>Nama Dokter</label>
+                <input type="text" name="rujukan_dokter" id="rujukan_dokter" class="form-control" value="{?=isset_or($data['rujukan_dokter'])?}">
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label>Diagnosis Rujukan</label>
+                <input type="text" name="diagnosis_rujukan" class="form-control" value="{?=isset_or($data['diagnosis_rujukan'])?}">
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>Asuransi</label>
+              <select data-use-search="true" name="asuransi" class="form-control">
+                <option value="Asuransi" {if: isset($data['asuransi']) && $data['asuransi'] == 'Asuransi'}selected{/if}>Asuransi</option>
+                <option value="Umum" {if: isset($data['asuransi']) && $data['asuransi'] == 'Umum'}selected{/if}>Umum</option>
+                <option value="BPJS" {if: isset($data['asuransi']) && $data['asuransi'] == 'BPJS'}selected{/if}>BPJS</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Alamat Kontak</label>
+              <input type="text" name="alamat_kontak" class="form-control" maxlength="100" value="{?=isset_or($data['alamat_kontak'])?}">
+            </div>
+            <div class="form-group">
+              <label>Nama Pengantar</label>
+              <input type="text" name="nama_pengantar" class="form-control" maxlength="50" value="{?=isset_or($data['nama_pengantar'])?}">
+            </div>
+            <div class="form-group">
+              <label>Hubungan dengan Pasien</label>
+              <input type="text" name="hub_dengan_pasien" class="form-control" maxlength="30" value="{?=isset_or($data['hub_dengan_pasien'])?}">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Sumber Data</label>
+              <select data-use-search="true" name="sumber_data" class="form-control">
+                <option value="Auto Anamnesis" {if: isset($data['sumber_data']) && $data['sumber_data'] == 'Auto Anamnesis'}selected{/if}>Auto Anamnesis</option>
+                <option value="Allo Anamnesis" {if: isset($data['sumber_data']) && $data['sumber_data'] == 'Allo Anamnesis'}selected{/if}>Allo Anamnesis</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Kategori Pasien</label>
+              <select data-use-search="true" name="kategori_pasien" class="form-control">
+                <option value="Pasien Anak (0- <18 tahun)" {if: isset($data['kategori_pasien']) && $data['kategori_pasien'] == 'Pasien Anak (0- <18 tahun)'}selected{/if}>Pasien Anak (0- &lt;18 tahun)</option>
+                <option value="Pasien Dewasa (18-65 tahun)" {if: isset($data['kategori_pasien']) && $data['kategori_pasien'] == 'Pasien Dewasa (18-65 tahun)'}selected{/if}>Pasien Dewasa (18-65 tahun)</option>
+                <option value="Pasien Geriatri (>65 tahun)" {if: isset($data['kategori_pasien']) && $data['kategori_pasien'] == 'Pasien Geriatri (>65 tahun)'}selected{/if}>Pasien Geriatri (&gt;65 tahun)</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Tanggal kunjungan</label>
+              <input type="date" name="tanggal" class="form-control" value="{?=date('Y-m-d')?}">
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>Cara Masuk</label>
+              <select data-use-search="true" name="cara_masuk" class="form-control">
+                <option value="Jalan Kaki" {if: isset($data['cara_masuk']) && $data['cara_masuk'] == 'Jalan Kaki'}selected{/if}>Jalan Kaki</option>
+                <option value="Kursi Roda" {if: isset($data['cara_masuk']) && $data['cara_masuk'] == 'Kursi Roda'}selected{/if}>Kursi Roda</option>
+                <option value="Brankar" {if: isset($data['cara_masuk']) && $data['cara_masuk'] == 'Brankar'}selected{/if}>Brankar</option>
+                <option value="Digendong" {if: isset($data['cara_masuk']) && $data['cara_masuk'] == 'Digendong'}selected{/if}>Digendong</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <h4>TRIASE</h4>
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Triase Kategori</label>
+              <select data-use-search="true" name="triase" class="form-control">
+                <option value="Merah" {if: isset($data['triase']) && $data['triase'] == 'Merah'}selected{/if} style="background:red;color:white;">Merah (ATS 1)</option>
+                <option value="Kuning" {if: isset($data['triase']) && $data['triase'] == 'Kuning'}selected{/if} style="background:yellow;color:black;">Kuning (ATS 2 / ATS 3)</option>
+                <option value="Hijau" {if: isset($data['triase']) && $data['triase'] == 'Hijau'}selected{/if} style="background:green;color:white;">Hijau (ATS 4 / ATS 5)</option>
+                <option value="Hitam" {if: isset($data['triase']) && $data['triase'] == 'Hitam'}selected{/if} style="background:black;color:white;">Hitam (DOA)</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Jam Mulai</label>
+              <input type="time" name="jam_mulai_triase" class="form-control" value="{?=isset_or($data['jam_mulai_triase'])?}">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Jam Selesai</label>
+              <input type="time" name="jam_selesai_triase" class="form-control" value="{?=isset_or($data['jam_selesai_triase'])?}">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Petugas Triase</label>
+              <input type="text" name="petugas_triase" class="form-control" value="{?=isset_or($data['petugas_triase'])?}">
+            </div>
+          </div>
+        </div>
+
+        <!-- Keluhan dan Riwayat -->
+        <h4>KELUHAN & RIWAYAT PENYAKIT</h4>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group">
+              <label>KELUHAN UTAMA</label>
+              <textarea name="keluhan_utama" class="form-control" rows="3" required>{?=isset_or($data['keluhan_utama'])?}</textarea>
+            </div>
+            <div class="form-group">
+              <label>RIWAYAT PENYAKIT SEKARANG</label>
+              <textarea name="riwayat_penyakit_sekarang" class="form-control" rows="3" required>{?=isset_or($data['riwayat_penyakit_sekarang'])?}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <table class="table table-bordered">
+              <tr>
+                <td>Penyakit Jantung</td>
+                <td>
+                  <select data-use-search="true" name="penyakit_jantung" class="form-control"><option value="Tidak Ada" {if: isset($data['penyakit_jantung']) && $data['penyakit_jantung'] == 'Tidak Ada'}selected{/if}>Tidak Ada</option><option value="Ada" {if: isset($data['penyakit_jantung']) && $data['penyakit_jantung'] == 'Ada'}selected{/if}>Ada</option></select>
+                </td>
+              </tr>
+              <tr>
+                <td>Hipertensi</td>
+                <td>
+                  <select data-use-search="true" name="hipertensi" class="form-control"><option value="Tidak Ada" {if: isset($data['hipertensi']) && $data['hipertensi'] == 'Tidak Ada'}selected{/if}>Tidak Ada</option><option value="Ada" {if: isset($data['hipertensi']) && $data['hipertensi'] == 'Ada'}selected{/if}>Ada</option></select>
+                </td>
+              </tr>
+              <tr>
+                <td>Diabetes</td>
+                <td>
+                  <select data-use-search="true" name="diabetes" class="form-control"><option value="Tidak Ada" {if: isset($data['diabetes']) && $data['diabetes'] == 'Tidak Ada'}selected{/if}>Tidak Ada</option><option value="Ada" {if: isset($data['diabetes']) && $data['diabetes'] == 'Ada'}selected{/if}>Ada</option></select>
+                </td>
+              </tr>
+              <tr>
+                <td>Hepatitis</td>
+                <td>
+                  <select data-use-search="true" name="hepatitis" class="form-control"><option value="Tidak Ada" {if: isset($data['hepatitis']) && $data['hepatitis'] == 'Tidak Ada'}selected{/if}>Tidak Ada</option><option value="Ada" {if: isset($data['hepatitis']) && $data['hepatitis'] == 'Ada'}selected{/if}>Ada</option></select>
+                </td>
+              </tr>
+              <tr>
+                <td>Haemophilia</td>
+                <td>
+                  <select data-use-search="true" name="haemophilia" class="form-control"><option value="Tidak Ada" {if: isset($data['haemophilia']) && $data['haemophilia'] == 'Tidak Ada'}selected{/if}>Tidak Ada</option><option value="Ada" {if: isset($data['haemophilia']) && $data['haemophilia'] == 'Ada'}selected{/if}>Ada</option></select>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <table class="table table-bordered">
+              <tr>
+                <td>Tuberculosis</td>
+                <td>
+                  <select data-use-search="true" name="tuberculosis" class="form-control"><option value="Tidak Ada" {if: isset($data['tuberculosis']) && $data['tuberculosis'] == 'Tidak Ada'}selected{/if}>Tidak Ada</option><option value="Ada" {if: isset($data['tuberculosis']) && $data['tuberculosis'] == 'Ada'}selected{/if}>Ada</option></select>
+                </td>
+              </tr>
+              <tr>
+                <td>HIV/AIDS</td>
+                <td>
+                  <select data-use-search="true" name="hiv_aids" class="form-control"><option value="Tidak Ada" {if: isset($data['hiv_aids']) && $data['hiv_aids'] == 'Tidak Ada'}selected{/if}>Tidak Ada</option><option value="Ada" {if: isset($data['hiv_aids']) && $data['hiv_aids'] == 'Ada'}selected{/if}>Ada</option></select>
+                </td>
+              </tr>
+              <tr>
+                <td>Penyakit Lainnya</td>
+                <td>
+                  <select data-use-search="true" name="penyakit_lainnya" id="penyakit_lainnya" class="form-control" style="margin-bottom: 5px;">
+                    <option value="Tidak Ada" {if: isset($data['penyakit_lainnya']) && $data['penyakit_lainnya'] == 'Tidak Ada'}selected{/if}>Tidak Ada</option>
+                    <option value="Ada" {if: isset($data['penyakit_lainnya']) && $data['penyakit_lainnya'] == 'Ada'}selected{/if}>Ada</option>
+                  </select>
+                  <div id="penyakit_lainnya_container" style="display: none;">
+                    <input type="text" name="penyakit_lainnya_ket" class="form-control" placeholder="Sebutkan Penyakit Lainnya" value="{?=isset_or($data['penyakit_lainnya_ket'])?}">
+                    <select data-use-search="true" name="penyakit_menular" class="form-control" style="margin-top: 5px;">
+                      <option value="Tidak Menular" {if: isset($data['penyakit_menular']) && $data['penyakit_menular'] == 'Tidak Menular'}selected{/if}>Tidak Menular</option>
+                      <option value="Menular" {if: isset($data['penyakit_menular']) && $data['penyakit_menular'] == 'Menular'}selected{/if}>Menular</option>
+                    </select>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Alergi Obat-obatan</td>
+                <td>
+                  <select data-use-search="true" name="alergi_obat" id="alergi_obat" class="form-control" style="margin-bottom: 5px;">
+                    <option value="Tidak Ada" {if: isset($data['alergi_obat']) && $data['alergi_obat'] == 'Tidak Ada'}selected{/if}>Tidak Ada</option>
+                    <option value="Ada" {if: isset($data['alergi_obat']) && $data['alergi_obat'] == 'Ada'}selected{/if}>Ada</option>
+                  </select>
+                  <input type="text" name="alergi_obat_ket" id="alergi_obat_ket" class="form-control" placeholder="Sebutkan Alergi Obat" value="{?=isset_or($data['alergi_obat_ket'])?}" style="display: none;">
+                </td>
+              </tr>
+              <tr>
+                <td>Alergi Makanan</td>
+                <td>
+                  <select data-use-search="true" name="alergi_makanan" id="alergi_makanan" class="form-control" style="margin-bottom: 5px;">
+                    <option value="Tidak Ada" {if: isset($data['alergi_makanan']) && $data['alergi_makanan'] == 'Tidak Ada'}selected{/if}>Tidak Ada</option>
+                    <option value="Ada" {if: isset($data['alergi_makanan']) && $data['alergi_makanan'] == 'Ada'}selected{/if}>Ada</option>
+                  </select>
+                  <input type="text" name="alergi_makanan_ket" id="alergi_makanan_ket" class="form-control" placeholder="Sebutkan Alergi Makanan" value="{?=isset_or($data['alergi_makanan_ket'])?}" style="display: none;">
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- Pemeriksaan Fisik -->
+        <h4>PEMERIKSAAN FISIK</h4>
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group"><label>Keadaan Umum</label><input type="text" name="keadaan_umum" class="form-control" value="{?=isset_or($data['keadaan_umum'])?}"></div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group"><label>Kesadaran</label><input type="text" name="kesadaran" class="form-control" value="{?=isset_or($data['kesadaran'])?}"></div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group"><label>Tekanan Darah (mmHg)</label><input type="text" name="td" class="form-control" value="{?=isset_or($data['td'])?}"></div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group"><label>Frekuensi Nadi (x/menit)</label><input type="text" name="nadi" class="form-control" value="{?=isset_or($data['nadi'])?}"></div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group"><label>Frekuensi Napas (x/menit)</label><input type="text" name="rr" class="form-control" value="{?=isset_or($data['rr'])?}"></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group"><label>Suhu (°C)</label><input type="text" name="suhu" class="form-control" value="{?=isset_or($data['suhu'])?}"></div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group"><label>Golongan Darah</label><input type="text" name="gol_darah" class="form-control" value="{?=isset_or($data['gol_darah'])?}"></div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group"><label>Saturasi Oksigen (%)</label><input type="text" name="saturasi" class="form-control" value="{?=isset_or($data['saturasi'])?}"></div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group"><label>Berat Badan (kg)</label><input type="text" name="bb" class="form-control" value="{?=isset_or($data['bb'])?}"></div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group"><label>Tinggi Badan (cm)</label><input type="text" name="tb" class="form-control" value="{?=isset_or($data['tb'])?}"></div>
+          </div>
+        </div>
+
+        <h4>PSIKOSOSIAL-KULTURAL-SPIRITUAL-EKONOMI</h4>
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Status Pernikahan</label>
+              <select data-use-search="true" name="status_pernikahan" id="status_pernikahan" class="form-control">
+                <option value="Lajang" {if: isset($data['status_pernikahan']) && $data['status_pernikahan'] == 'Lajang'}selected{/if}>Lajang</option>
+                <option value="Menikah" {if: isset($data['status_pernikahan']) && $data['status_pernikahan'] == 'Menikah'}selected{/if}>Menikah</option>
+                <option value="Cerai" {if: isset($data['status_pernikahan']) && $data['status_pernikahan'] == 'Cerai'}selected{/if}>Cerai</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3" id="tinggal_bersama_container" style="display: none;">
+            <div class="form-group">
+              <label>Tinggal bersama keluarga</label>
+              <select data-use-search="true" name="tinggal_bersama" id="tinggal_bersama" class="form-control">
+                <option value="Ya" {if: isset($data['tinggal_bersama']) && $data['tinggal_bersama'] == 'Ya'}selected{/if}>Ada (Ya)</option>
+                <option value="Tidak" {if: isset($data['tinggal_bersama']) && $data['tinggal_bersama'] == 'Tidak'}selected{/if}>Tidak</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6" id="tinggal_bersama_ket_container" style="display: none;">
+            <div class="form-group">
+              <label>Penjelasan</label>
+              <input type="text" name="tinggal_bersama_ket" class="form-control" value="{?=isset_or($data['tinggal_bersama_ket'])?}">
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Riwayat Kebiasaan</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="riwayat_kebiasaan_merokok" value="Ya" {if: isset($data['riwayat_kebiasaan_merokok']) && $data['riwayat_kebiasaan_merokok'] == 'Ya'}checked{/if}> Merokok</label>
+              <label class="checkbox-inline"><input type="checkbox" name="riwayat_kebiasaan_alkohol" value="Ya" {if: isset($data['riwayat_kebiasaan_alkohol']) && $data['riwayat_kebiasaan_alkohol'] == 'Ya'}checked{/if}> Alkohol</label>
+              <label class="checkbox-inline"><input type="checkbox" name="riwayat_kebiasaan_napza" value="Ya" {if: isset($data['riwayat_kebiasaan_napza']) && $data['riwayat_kebiasaan_napza'] == 'Ya'}checked{/if}> NAPZA</label>
+              <label class="checkbox-inline"><input type="checkbox" name="riwayat_kebiasaan_lainnya" value="Ya" {if: isset($data['riwayat_kebiasaan_lainnya']) && $data['riwayat_kebiasaan_lainnya'] == 'Ya'}checked{/if}> Lainnya</label>
+              <input type="text" name="ket_riwayat_kebiasaan" class="form-control mt-2" placeholder="Jenis dan Jumlah perhari" value="{?=isset_or($data['ket_riwayat_kebiasaan'])?}">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Hambatan Fisik</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="hambatan_fisik_pendengaran" value="Ya" {if: isset($data['hambatan_fisik_pendengaran']) && $data['hambatan_fisik_pendengaran'] == 'Ya'}checked{/if}> Pendengaran</label>
+              <label class="checkbox-inline"><input type="checkbox" name="hambatan_fisik_bicara" value="Ya" {if: isset($data['hambatan_fisik_bicara']) && $data['hambatan_fisik_bicara'] == 'Ya'}checked{/if}> Bicara</label>
+              <label class="checkbox-inline"><input type="checkbox" name="hambatan_fisik_penglihatan" value="Ya" {if: isset($data['hambatan_fisik_penglihatan']) && $data['hambatan_fisik_penglihatan'] == 'Ya'}checked{/if}> Penglihatan</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Hambatan Kognitif</label>
+              <input type="text" name="hambatan_kognitif" class="form-control" value="{?=isset_or($data['hambatan_kognitif'])?}">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Bahasa yang digunakan</label>
+              <input type="text" name="bahasa_digunakan" class="form-control" value="{?=isset_or($data['bahasa_digunakan'])?}">
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Keyakinan & Nilai-nilai:</label><br>
+              <table style="width:100%">
+                <tr>
+                  <td>Dirawat & diasuh oleh PPA sesama gender</td>
+                  <td>
+                    <select data-use-search="true" name="dirawat_sesama_gender" class="form-control" style="margin-bottom:5px;">
+                      <option value="Tidak" {if: isset($data['dirawat_sesama_gender']) && $data['dirawat_sesama_gender'] == 'Tidak'}selected{/if}>Tidak</option>
+                      <option value="Ya" {if: isset($data['dirawat_sesama_gender']) && $data['dirawat_sesama_gender'] == 'Ya'}selected{/if}>Ya</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Ada pantangan makanan tertentu</td>
+                  <td>
+                    <select data-use-search="true" name="pantangan_makanan" id="pantangan_makanan" class="form-control" style="margin-bottom:5px;">
+                      <option value="Tidak" {if: isset($data['pantangan_makanan']) && $data['pantangan_makanan'] == 'Tidak'}selected{/if}>Tidak</option>
+                      <option value="Ya" {if: isset($data['pantangan_makanan']) && $data['pantangan_makanan'] == 'Ya'}selected{/if}>Ya, yaitu</option>
+                    </select>
+                    <input type="text" name="pantangan_makanan_ket" id="pantangan_makanan_ket" class="form-control" value="{?=isset_or($data['pantangan_makanan_ket'])?}" style="display: none;" placeholder="Sebutkan pantangan">
+                  </td>
+                </tr>
+                <tr>
+                  <td>Ada hari dihindari untuk tindakan</td>
+                  <td>
+                    <select data-use-search="true" name="hari_tindakan" id="hari_tindakan" class="form-control" style="margin-bottom:5px;">
+                      <option value="Tidak" {if: isset($data['hari_tindakan']) && $data['hari_tindakan'] == 'Tidak'}selected{/if}>Tidak</option>
+                      <option value="Ya" {if: isset($data['hari_tindakan']) && $data['hari_tindakan'] == 'Ya'}selected{/if}>Ya, yaitu</option>
+                    </select>
+                    <input type="text" name="hari_tindakan_ket" id="hari_tindakan_ket" class="form-control" value="{?=isset_or($data['hari_tindakan_ket'])?}" style="display: none;" placeholder="Sebutkan hari">
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Ekonomi</label>
+              <select data-use-search="true" name="ekonomi" class="form-control"><option value="Sangat Tinggi" {if: isset($data['ekonomi']) && $data['ekonomi'] == 'Sangat Tinggi'}selected{/if}>Sangat Tinggi</option><option value="Tinggi" {if: isset($data['ekonomi']) && $data['ekonomi'] == 'Tinggi'}selected{/if}>Tinggi</option><option value="Sedang" {if: isset($data['ekonomi']) && $data['ekonomi'] == 'Sedang'}selected{/if}>Sedang</option><option value="Rendah" {if: isset($data['ekonomi']) && $data['ekonomi'] == 'Rendah'}selected{/if}>Rendah</option></select>
+            </div>
+          </div>
+        </div>
+
+        <h4>SKRINING GIZI</h4>
+        <div class="row">
+          <div class="col-md-6">
+            <b>Malnutrition Screening Tool (MST) untuk Dewasa</b>
+            <div class="form-group mt-2">
+              <label>1. Apakah pasien mengalami penurunan BB yang tidak diinginkan dalam 6 bulan terakhir?</label>
+              <select data-use-search="true" name="mst_penurunan_bb" class="form-control">
+                <option value="0" {if: isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == '0'}selected{/if}>Tidak ada penurunan berat badan (0)</option>
+                <option value="2" {if: isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == '2'}selected{/if}>Tidak yakin / tidak tahu / terasa baju lebih longgar (2)</option>
+                <option value="1" {if: isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == '1'}selected{/if}>1-5 kg (1)</option>
+                <option value="2" {if: isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == '2'}selected{/if}>6-10 kg (2)</option>
+                <option value="3" {if: isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == '3'}selected{/if}>11-15 kg (3)</option>
+                <option value="4" {if: isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == '4'}selected{/if}>>15 kg (4)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>2. Apakah asupan makanan berkurang karena tidak nafsu makan?</label>
+              <select data-use-search="true" name="mst_asupan_makanan" class="form-control">
+                <option value="0" {if: isset($data['mst_asupan_makanan']) && $data['mst_asupan_makanan'] == '0'}selected{/if}>Tidak (0)</option>
+                <option value="1" {if: isset($data['mst_asupan_makanan']) && $data['mst_asupan_makanan'] == '1'}selected{/if}>Ya (1)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>3. Pasien dengan diagnosis khusus</label>
+              <select data-use-search="true" name="mst_diagnosis_khusus" class="form-control">
+                <option value="Tidak" {if: isset($data['mst_diagnosis_khusus']) && $data['mst_diagnosis_khusus'] == 'Tidak'}selected{/if}>Tidak</option>
+                <option value="Ya" {if: isset($data['mst_diagnosis_khusus']) && $data['mst_diagnosis_khusus'] == 'Ya'}selected{/if}>Ya</option>
+              </select>
+            </div>
+            <div class="form-group mt-3">
+              <label>Total Skor MST:</label>
+              <input type="text" id="total_skor_mst" class="form-control" readonly style="font-weight: bold; font-size: 16px;">
+            </div>
+            <p style="font-size: 11px; font-style: italic; margin-top:10px;">*(Bila skor &ge; 2 dan atau pasien dengan diagnosis khusus pada dewasa, atau skor &ge; 1 pada anak berarti pasien berisiko malnutrisi, dilaporkan ke DPJP dan diskonsulkan ke Nutrisionis jika perlu)</p>
+          </div>
+          <div class="col-md-6">
+            <b>Modifikasi STRONG-kids untuk Anak (0-<18 tahun)</b>
+            <div class="form-group mt-2">
+              <label>1. Pasien tampak kurus</label>
+              <select data-use-search="true" name="strong_kurus" class="form-control"><option value="0" {if: isset($data['strong_kurus']) && $data['strong_kurus'] == '0'}selected{/if}>Tidak (0)</option><option value="1" {if: isset($data['strong_kurus']) && $data['strong_kurus'] == '1'}selected{/if}>Ya (1)</option></select>
+            </div>
+            <div class="form-group">
+              <label>2. Terdapat penurunan berat badan selama satu bulan terakhir ATAU untuk bayi <1 tahun, berat badan tidak naik 3 bulan terakhir</label>
+              <select data-use-search="true" name="strong_penurunan_bb" class="form-control"><option value="0" {if: isset($data['strong_penurunan_bb']) && $data['strong_penurunan_bb'] == '0'}selected{/if}>Tidak (0)</option><option value="1" {if: isset($data['strong_penurunan_bb']) && $data['strong_penurunan_bb'] == '1'}selected{/if}>Ya (1)</option></select>
+            </div>
+            <div class="form-group">
+              <label>3. Terdapat SALAH SATU dari kondisi tersebut (Diare >5 kali/hari, asupan kurang)</label>
+              <select data-use-search="true" name="strong_kondisi" class="form-control"><option value="0" {if: isset($data['strong_kondisi']) && $data['strong_kondisi'] == '0'}selected{/if}>Tidak (0)</option><option value="1" {if: isset($data['strong_kondisi']) && $data['strong_kondisi'] == '1'}selected{/if}>Ya (1)</option></select>
+            </div>
+            <div class="form-group">
+              <label>4. Terdapat penyakit atau keadaan yang mengakibatkan pasien berisiko mengalami malnutrisi</label>
+              <select data-use-search="true" name="strong_penyakit" class="form-control"><option value="0" {if: isset($data['strong_penyakit']) && $data['strong_penyakit'] == '0'}selected{/if}>Tidak (0)</option><option value="2" {if: isset($data['strong_penyakit']) && $data['strong_penyakit'] == '2'}selected{/if}>Ya (2)</option></select>
+            </div>
+            <div class="form-group mt-3">
+              <label>Total Skor STRONG-kids:</label>
+              <input type="text" id="total_skor_strong" class="form-control" readonly style="font-weight: bold; font-size: 16px;">
+            </div>
+          </div>
+        </div>
+
+        <h4>ASESMEN RISIKO JATUH (GET UP AND GO TEST)</h4>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>a. Perhatikan cara berjalan. Apakah pasien tampak tidak seimbang?</label>
+              <select data-use-search="true" name="asesmen_jatuh_a" class="form-control"><option value="Tidak" {if: isset($data['asesmen_jatuh_a']) && $data['asesmen_jatuh_a'] == 'Tidak'}selected{/if}>Tidak</option><option value="Ya" {if: isset($data['asesmen_jatuh_a']) && $data['asesmen_jatuh_a'] == 'Ya'}selected{/if}>Ya</option></select>
+            </div>
+            <div class="form-group">
+              <label>b. Apakah pasien memegang pinggiran kursi atau meja saat akan duduk?</label>
+              <select data-use-search="true" name="asesmen_jatuh_b" class="form-control"><option value="Tidak" {if: isset($data['asesmen_jatuh_b']) && $data['asesmen_jatuh_b'] == 'Tidak'}selected{/if}>Tidak</option><option value="Ya" {if: isset($data['asesmen_jatuh_b']) && $data['asesmen_jatuh_b'] == 'Ya'}selected{/if}>Ya</option></select>
+            </div>
+            <div class="form-group">
+              <label>Hasil</label>
+              <select data-use-search="true" name="asesmen_jatuh_hasil" class="form-control">
+                <option value="Tidak Berisiko" {if: isset($data['asesmen_jatuh_hasil']) && $data['asesmen_jatuh_hasil'] == 'Tidak Berisiko'}selected{/if}>Tidak Berisiko (tidak ditemukan a dan b)</option>
+                <option value="Risiko Rendah" {if: isset($data['asesmen_jatuh_hasil']) && $data['asesmen_jatuh_hasil'] == 'Risiko Rendah'}selected{/if}>Risiko Rendah (ditemukan a atau b)</option>
+                <option value="Risiko Tinggi" {if: isset($data['asesmen_jatuh_hasil']) && $data['asesmen_jatuh_hasil'] == 'Risiko Tinggi'}selected{/if}>Risiko Tinggi (a dan b ditemukan)</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Tindakan</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="asesmen_jatuh_tindakan_tidak" value="Ya" {if: isset($data['asesmen_jatuh_tindakan_tidak']) && $data['asesmen_jatuh_tindakan_tidak'] == 'Ya'}checked{/if}> Tidak ada tindakan</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="asesmen_jatuh_tindakan_edukasi" value="Ya" {if: isset($data['asesmen_jatuh_tindakan_edukasi']) && $data['asesmen_jatuh_tindakan_edukasi'] == 'Ya'}checked{/if}> Edukasi kepada pasien tentang pencegahan jatuh</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="asesmen_jatuh_tindakan_kalung" value="Ya" {if: isset($data['asesmen_jatuh_tindakan_kalung']) && $data['asesmen_jatuh_tindakan_kalung'] == 'Ya'}checked{/if}> Dipasangkan kalung risiko jatuh</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="asesmen_jatuh_tindakan_alat" value="Ya" {if: isset($data['asesmen_jatuh_tindakan_alat']) && $data['asesmen_jatuh_tindakan_alat'] == 'Ya'}checked{/if}> Diberikan alat bantu jalan</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="asesmen_jatuh_tindakan_dampingi" value="Ya" {if: isset($data['asesmen_jatuh_tindakan_dampingi']) && $data['asesmen_jatuh_tindakan_dampingi'] == 'Ya'}checked{/if}> Dampingi pasien saat mobilisasi</label>
+            </div>
+          </div>
+        </div>
+
+        <h4>PEMERIKSAAN PENUNJANG & MASALAH</h4>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Pemeriksaan Penunjang</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="penunjang_lab" value="Ya" {if: isset($data['penunjang_lab']) && $data['penunjang_lab'] == 'Ya'}checked{/if}> Laboratorium</label>
+              <label class="checkbox-inline"><input type="checkbox" name="penunjang_rontgen" value="Ya" {if: isset($data['penunjang_rontgen']) && $data['penunjang_rontgen'] == 'Ya'}checked{/if}> Rontgen</label>
+              <label class="checkbox-inline"><input type="checkbox" id="penunjang_lain" name="penunjang_lain" value="Ya" {if: isset($data['penunjang_lain']) && $data['penunjang_lain'] == 'Ya'}checked{/if}> Lain-lain, yaitu:</label>
+              <input type="text" name="penunjang_lain_ket" id="penunjang_lain_ket" class="form-control mt-2" value="{?=isset_or($data['penunjang_lain_ket'])?}" style="display: none;" placeholder="Sebutkan pemeriksaan lainnya">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>MASALAH KEPERAWATAN</label>
+              <textarea name="masalah_keperawatan" class="form-control" rows="3">{?=isset_or($data['masalah_keperawatan'])?}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>RENCANA DAN TINDAK LANJUT PERAWATAN, TERMASUK KEBUTUHAN EDUKASI</label>
+              <textarea name="rencana_tindak_lanjut" class="form-control" rows="3">{?=isset_or($data['rencana_tindak_lanjut'])?}</textarea>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>EVALUASI</label><br>
+              <table style="width:100%">
+                <tr>
+                  <td><label class="checkbox-inline"><input type="checkbox" name="evaluasi_kontrol" value="Ya" {if: isset($data['evaluasi_kontrol']) && $data['evaluasi_kontrol'] == 'Ya'}checked{/if}> Kontrol</label></td>
+                  <td>Tanggal: <input type="date" name="evaluasi_kontrol_tgl" class="form-control" value="{?=isset_or($data['evaluasi_kontrol_tgl'])?}"></td>
+                </tr>
+                <tr>
+                  <td><label class="checkbox-inline"><input type="checkbox" name="evaluasi_rujuk" value="Ya" {if: isset($data['evaluasi_rujuk']) && $data['evaluasi_rujuk'] == 'Ya'}checked{/if}> Rujuk</label></td>
+                  <td>ke RS: <input type="text" name="evaluasi_rujuk_ke" class="form-control" value="{?=isset_or($data['evaluasi_rujuk_ke'])?}"></td>
+                </tr>
+                <tr>
+                  <td><label class="checkbox-inline"><input type="checkbox" name="evaluasi_rawat_inap" value="Ya" {if: isset($data['evaluasi_rawat_inap']) && $data['evaluasi_rawat_inap'] == 'Ya'}checked{/if}> Rawat Inap</label></td>
+                  <td>Ruangan: <input type="text" name="evaluasi_rawat_inap_ruangan" class="form-control" value="{?=isset_or($data['evaluasi_rawat_inap_ruangan'])?}"></td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>DPJP (NIP/Nama)</label>
+              <input type="text" name="nip_dpjp" class="form-control" value="{?=isset_or($data['nip_dpjp'])?}">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Perawat/Terapis Gigi (NIP/Nama)</label>
+              <input type="text" name="nip" class="form-control" value="{?=isset_or($data['nip'])?}">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tombol -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group">
+              <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+              <a href="{?=url([ADMIN, 'update_bmt', 'manage'])?}" class="btn btn-default"><i class="fa fa-times"></i> Batal</a>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  function toggleDiantarOleh() {
+    if ($('#cara_datang').val() === 'Diantar Polisi') {
+      $('#diantar_oleh_container').show();
+      $('#diantar_oleh').prop('required', true);
+    } else {
+      $('#diantar_oleh_container').hide();
+      $('#diantar_oleh').prop('required', false);
+      $('#diantar_oleh').val('');
+    }
+  }
+
+  function toggleRujukanDari() {
+    $('.rujukan-input').hide();
+    var val = $('#rujukan_dari').val();
+    if (val) {
+      $('#rujukan_' + val + '_container').show();
+    }
+  }
+
+  function toggleRujukan() {
+    if ($('#rujukan').val() === 'Ya') {
+      $('#rujukan_container').show();
+      toggleRujukanDari();
+    } else {
+      $('#rujukan_container').hide();
+      $('#rujukan_dari').val('');
+      $('.rujukan-input input').val('');
+      $('input[name="diagnosis_rujukan"]').val('');
+      $('.rujukan-input').hide();
+    }
+  }
+
+  function togglePenyakitLainnya() {
+    if ($('#penyakit_lainnya').val() === 'Ada') {
+      $('#penyakit_lainnya_container').show();
+    } else {
+      $('#penyakit_lainnya_container').hide();
+      $('input[name="penyakit_lainnya_ket"]').val('');
+      $('select[name="penyakit_menular"]').val('Tidak Menular');
+    }
+  }
+
+  function toggleAlergiObat() {
+    if ($('#alergi_obat').val() === 'Ada') {
+      $('#alergi_obat_ket').show();
+    } else {
+      $('#alergi_obat_ket').hide();
+      $('#alergi_obat_ket').val('');
+    }
+  }
+
+  function toggleAlergiMakanan() {
+    if ($('#alergi_makanan').val() === 'Ada') {
+      $('#alergi_makanan_ket').show();
+    } else {
+      $('#alergi_makanan_ket').hide();
+      $('#alergi_makanan_ket').val('');
+    }
+  }
+
+  function toggleStatusPernikahan() {
+    if ($('#status_pernikahan').val() === 'Cerai') {
+      $('#tinggal_bersama_container').show();
+      $('#tinggal_bersama_ket_container').show();
+    } else {
+      $('#tinggal_bersama_container').hide();
+      $('#tinggal_bersama_ket_container').hide();
+      $('#tinggal_bersama').val('Ya');
+      $('input[name="tinggal_bersama_ket"]').val('');
+    }
+  }
+
+  function toggleKeyakinan() {
+    if ($('#pantangan_makanan').val() === 'Ya') {
+      $('#pantangan_makanan_ket').show();
+    } else {
+      $('#pantangan_makanan_ket').hide();
+      $('#pantangan_makanan_ket').val('');
+    }
+    
+    if ($('#hari_tindakan').val() === 'Ya') {
+      $('#hari_tindakan_ket').show();
+    } else {
+      $('#hari_tindakan_ket').hide();
+      $('#hari_tindakan_ket').val('');
+    }
+  }
+
+  function calculateSkorGizi() {
+    // MST
+    var mst1 = parseInt($('select[name="mst_penurunan_bb"]').val()) || 0;
+    var mst2 = parseInt($('select[name="mst_asupan_makanan"]').val()) || 0;
+    $('#total_skor_mst').val(mst1 + mst2);
+    
+    // STRONG-kids
+    var strong1 = parseInt($('select[name="strong_kurus"]').val()) || 0;
+    var strong2 = parseInt($('select[name="strong_penurunan_bb"]').val()) || 0;
+    var strong3 = parseInt($('select[name="strong_kondisi"]').val()) || 0;
+    var strong4 = parseInt($('select[name="strong_penyakit"]').val()) || 0;
+    $('#total_skor_strong').val(strong1 + strong2 + strong3 + strong4);
+  }
+
+  function togglePenunjangLain() {
+    if ($('#penunjang_lain').is(':checked')) {
+      $('#penunjang_lain_ket').show();
+    } else {
+      $('#penunjang_lain_ket').hide();
+      $('#penunjang_lain_ket').val('');
+    }
+  }
+
+  // Run on load to set initial state
+  toggleDiantarOleh();
+  toggleRujukan();
+  togglePenyakitLainnya();
+  toggleAlergiObat();
+  toggleAlergiMakanan();
+  toggleStatusPernikahan();
+  toggleKeyakinan();
+  calculateSkorGizi();
+  togglePenunjangLain();
+
+  // Run on change
+  $('#cara_datang').change(function() {
+    toggleDiantarOleh();
+  });
+  
+  $('#rujukan').change(function() {
+    toggleRujukan();
+  });
+  
+  $('#rujukan_dari').change(function() {
+    $('.rujukan-input input').val('');
+    toggleRujukanDari();
+  });
+
+  $('#penyakit_lainnya').change(function() {
+    togglePenyakitLainnya();
+  });
+  
+  $('#alergi_obat').change(function() {
+    toggleAlergiObat();
+  });
+  
+  $('#alergi_makanan').change(function() {
+    toggleAlergiMakanan();
+  });
+  
+  $('#status_pernikahan').change(function() {
+    toggleStatusPernikahan();
+  });
+  
+  $('#pantangan_makanan, #hari_tindakan').change(function() {
+    toggleKeyakinan();
+  });
+  
+  $('select[name^="mst_"], select[name^="strong_"]').change(function() {
+    calculateSkorGizi();
+  });
+  
+  $('#penunjang_lain').change(function() {
+    togglePenunjangLain();
+  });
+  // AUTO-FILL: ambil data pasien saat no_rawat diisi
+  var noRawatTimer;
+  $('#no_rawat').on('blur change', function() {
+    var noRawat = $(this).val().trim();
+    if (!noRawat) return;
+    $.ajax({
+      url: '{?=url([ADMIN, "update_bmt", "patient_info"])?}',
+      data: { no_rawat: noRawat },
+      dataType: 'json',
+      success: function(res) {
+        if (res.success) {
+          // Hanya isi jika field kosong (tidak override data yang sudah ada)
+          if (!$('#nama_pasien').val())    $('#nama_pasien').val(res.nama_pasien);
+          if (!$('#tanggal_lahir').val())  $('#tanggal_lahir').val(res.tanggal_lahir);
+          if (!$('#jenis_kelamin').val() || $('#jenis_kelamin').val() == '') {
+            $('#jenis_kelamin').val(res.jenis_kelamin).trigger('change');
+          }
+        }
+      }
+    });
+  });
+});
+</script>

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Asesmen Gigi dan Mulut UGD</title>
+<style>
+    @page { size: A4; margin: 10mm; }
+    body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 0; }
+    .container { width: 100%; max-width: 190mm; margin: 0 auto; border: 1px solid #000; box-sizing: border-box; }
+    
+    /* Header Table */
+    .table-header { width: 100%; border-collapse: collapse; }
+    .table-header td { border: 1px solid #000; padding: 5px; vertical-align: top; }
+    .logo { width: 60px; height: auto; }
+    .title-header { text-align: center; }
+    .title-header h3 { margin: 0; font-size: 14px; font-weight: bold; }
+    .title-header h2 { margin: 2px 0; font-size: 16px; font-weight: bold; }
+    .title-header p { margin: 0; font-size: 9px; }
+    
+    /* Input Boxes (RM) */
+    .box-rm { display: inline-block; width: 15px; height: 15px; border: 1px solid #000; margin-left: 2px; }
+    
+    /* Form Sections */
+    .section-title { font-weight: bold; font-size: 12px; text-align: center; background-color: #fff; padding: 5px; border-top: 1px solid #000; border-bottom: 1px solid #000; }
+    .sub-title { font-size: 10px; text-align: center; font-weight: normal; margin-top: -3px; margin-bottom: 3px; }
+    
+    .table-body { width: 100%; border-collapse: collapse; }
+    .table-body td { border: 1px solid #000; padding: 3px 5px; vertical-align: top; }
+    
+    /* Checkbox simulation */
+    .cb { display: inline-block; width: 10px; height: 10px; border: 1px solid #000; vertical-align: middle; margin-right: 3px; font-size: 10px; line-height: 10px; text-align: center; }
+    .cb.checked::after { content: '✓'; }
+    
+    .table-no-border { width: 100%; border-collapse: collapse; }
+    .table-no-border td { border: none; padding: 1px 3px; }
+    
+    .dotted-line { border-bottom: 1px dotted #000; display: inline-block; width: 100%; }
+    
+    .triase-box { display: inline-block; width: 12px; height: 12px; vertical-align: middle; margin: 0 3px; }
+    .triase-merah { background-color: red; }
+    .triase-kuning { background-color: yellow; }
+    .triase-hijau { background-color: green; }
+    .triase-hitam { background-color: black; }
+    
+    .textarea-box { min-height: 50px; }
+    
+    .signature-area { text-align: center; margin-top: 10px; }
+    
+    /* Page Break for print */
+    .page-break { page-break-after: always; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <!-- HEADER -->
+    <table class="table-header">
+        <tr>
+            <td width="70%" style="text-align:center; vertical-align:middle; padding: 0;">
+                <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat" style="width: 100%; height: auto; max-height: 80px; object-fit: contain;">
+            </td>
+            <td width="30%">
+                <table class="table-no-border" style="font-size: 11px;">
+                    <tr>
+                        <td width="30%">No RM</td>
+                        <td width="5%">:</td>
+                        <td>
+                            {?=isset_or($data['no_rkm_medis'])?}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Nama Pasien</td>
+                        <td>:</td>
+                        <td>{?=isset_or($data['nama_pasien'])?} ({?=isset_or($data['jenis_kelamin'])?})</td>
+                    </tr>
+                    <tr>
+                        <td>Tanggal Lahir</td>
+                        <td>:</td>
+                        <td>{?=isset_or($data['tanggal_lahir_indo'])?}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    
+    <div style="padding: 3px; font-size: 9px; border-bottom: 1px solid #000;">
+        Perhatian :<br>
+        * Harap semua penulisan dilakukan dengan keterbacaan yang jelas, benar dan lengkap.<br>
+        * Berilah tanda centang (✓) pada kotak pilihan yang telah disediakan.<br>
+        * Berilah tanda lingkar pada pilihan yang telah disediakan.
+    </div>
+
+    <div class="section-title">
+        ASESMEN KEPERAWATAN / ASUHAN KESEHATAN GIGI DAN MULUT UNIT GAWAT DARURAT
+        <div class="sub-title">(dilengkapi dalam waktu 2 jam pertama pasien datang)</div>
+    </div>
+
+    <!-- SECTION 1 -->
+    <table class="table-body">
+        <tr>
+            <td width="50%">
+                <div>Cara Datang</div>
+                <div class="cb {if: isset($data['cara_datang']) && $data['cara_datang'] == 'Sendiri'}checked{/if}"></div> Sendiri &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: isset($data['cara_datang']) && $data['cara_datang'] == 'Ambulans'}checked{/if}"></div> Ambulans<br>
+                <div class="cb"></div> Diantar Keluarga &nbsp; <div class="cb"></div> Diantar Polisi (No. ID...........................)
+            </td>
+            <td width="50%" rowspan="2">
+                <div>Jenis Kasus</div>
+                <table class="table-no-border">
+                    <tr>
+                        <td width="50%"><div class="cb {if: isset($data['jenis_kasus']) && $data['jenis_kasus'] == 'Kasus Gigi dan Mulut'}checked{/if}"></div> Kasus Gigi dan Mulut<br><div class="cb {if: isset($data['jenis_kasus']) && $data['jenis_kasus'] == 'Kasus Umum'}checked{/if}"></div> Kasus Umum</td>
+                        <td width="50%"><div class="cb {if: isset($data['jenis_kasus']) && $data['jenis_kasus'] == 'Trauma'}checked{/if}"></div> Trauma<br><div class="cb {if: isset($data['jenis_kasus']) && $data['jenis_kasus'] == 'Non Trauma'}checked{/if}"></div> Non Trauma</td>
+                    </tr>
+                    <tr>
+                        <td><div class="cb {if: isset($data['kiriman_dari']) && $data['kiriman_dari'] == 'Puskesmas'}checked{/if}"></div> Puskesmas {?=isset_or($data['kiriman_dari_ket'])?}<br><div class="cb {if: isset($data['kiriman_dari']) && $data['kiriman_dari'] == 'Dokter'}checked{/if}"></div> Dokter {?=isset_or($data['kiriman_dari_ket'])?}</td>
+                        <td><div class="cb {if: isset($data['asuransi']) && $data['asuransi'] == 'Asuransi'}checked{/if}"></div> Asuransi<br><div class="cb {if: isset($data['asuransi']) && $data['asuransi'] == 'Umum'}checked{/if}"></div> Umum<br><div class="cb {if: isset($data['asuransi']) && $data['asuransi'] == 'BPJS'}checked{/if}"></div> BPJS</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Rujukan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: isset($data['rujukan']) && $data['rujukan'] == 'Tidak'}checked{/if}"></div> Tidak &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: isset($data['rujukan']) && $data['rujukan'] == 'Ya'}checked{/if}"></div> Ya &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: !empty($data['rujukan_rs'])}checked{/if}"></div> RS {?=isset_or($data['rujukan_rs'])?}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: !empty($data['rujukan_klinik'])}checked{/if}"></div> Klinik {?=isset_or($data['rujukan_klinik'])?}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Diagnosis Rujukan {?=isset_or($data['diagnosis_rujukan'])?}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table class="table-no-border">
+                    <tr><td width="35%">Alamat Kontak</td><td width="5%">:</td><td>{?=isset_or($data['alamat_kontak'])?}</td></tr>
+                    <tr><td>Nama Pengantar</td><td>:</td><td>{?=isset_or($data['nama_pengantar'])?}</td></tr>
+                    <tr><td>Hubungan dengan Pasien</td><td>:</td><td>{?=isset_or($data['hub_dengan_pasien'])?}</td></tr>
+                </table>
+            </td>
+            <td>
+                <table class="table-no-border">
+                    <tr><td width="50%">Sumber Data<br><div class="cb {if: isset($data['sumber_data']) && $data['sumber_data'] == 'Auto Anamnesis'}checked{/if}"></div> Auto Anamnesis<br><div class="cb {if: isset($data['sumber_data']) && $data['sumber_data'] == 'Allo Anamnesis'}checked{/if}"></div> Allo Anamnesis</td>
+                    <td width="50%"><div class="cb {if: isset($data['kategori_pasien']) && $data['kategori_pasien'] == 'Pasien Anak (0- <18 tahun)'}checked{/if}"></div> Pasien Anak (0- <18 tahun)<br><div class="cb {if: isset($data['kategori_pasien']) && $data['kategori_pasien'] == 'Pasien Dewasa (18-65 tahun)'}checked{/if}"></div> Pasien Dewasa (18-65 tahun)<br><div class="cb {if: isset($data['kategori_pasien']) && $data['kategori_pasien'] == 'Pasien Geriatri (>65 tahun)'}checked{/if}"></div> Pasien Geriatri (>65 tahun)</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    
+    <table class="table-body">
+        <tr>
+            <td width="50%">Tanggal kunjungan: {?=isset_or($data['tanggal'])?}</td>
+            <td width="50%"></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <b>TRIASE:</b> 
+                <div class="cb triase-box triase-merah {if: isset($data['triase']) && $data['triase'] == 'Merah'}checked{/if}"></div> Merah (ATS 1) 
+                <div class="cb triase-box triase-kuning {if: isset($data['triase']) && $data['triase'] == 'Kuning'}checked{/if}"></div> Kuning (ATS 2 / ATS 3) 
+                <div class="cb triase-box triase-hijau {if: isset($data['triase']) && $data['triase'] == 'Hijau'}checked{/if}"></div> Hijau (ATS 4 / ATS 5) 
+                <div class="cb triase-box triase-hitam {if: isset($data['triase']) && $data['triase'] == 'Hitam'}checked{/if}"></div> Hitam (DOA) 
+                &nbsp;&nbsp;|&nbsp;&nbsp; 
+                Cara Masuk &nbsp;&nbsp; <div class="cb {if: isset($data['cara_masuk']) && $data['cara_masuk'] == 'Jalan Kaki'}checked{/if}"></div> Jalan Kaki &nbsp;&nbsp; <div class="cb {if: isset($data['cara_masuk']) && $data['cara_masuk'] == 'Kursi Roda'}checked{/if}"></div> Kursi Roda &nbsp;&nbsp; <div class="cb {if: isset($data['cara_masuk']) && $data['cara_masuk'] == 'Brankar'}checked{/if}"></div> Brankar &nbsp;&nbsp; <div class="cb {if: isset($data['cara_masuk']) && $data['cara_masuk'] == 'Digendong'}checked{/if}"></div> Digendong<br>
+                Jam Mulai Triase: {?=isset_or($data['jam_mulai_triase'])?} Jam Selesai Triase: {?=isset_or($data['jam_selesai_triase'])?} Petugas Triase: {?=isset_or($data['petugas_triase'])?}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <b>KELUHAN UTAMA:</b><br><div class="textarea-box">{?=isset_or($data['keluhan_utama'])?}</div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <b>RIWAYAT PENYAKIT SEKARANG:</b><br><div class="textarea-box">{?=isset_or($data['riwayat_penyakit_sekarang'])?}</div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <b>RIWAYAT PENYAKIT:</b><br>
+                <table class="table-no-border" style="width: 50%;">
+                    <tr><td width="5%">1.</td><td width="45%">Penyakit Jantung</td><td>: {if: isset($data['penyakit_jantung']) && $data['penyakit_jantung'] == 'Tidak Ada'}<b>Tidak Ada</b>{else}Tidak Ada{/if} / {if: isset($data['penyakit_jantung']) && $data['penyakit_jantung'] == 'Ada'}<b>Ada</b>{else}Ada{/if}</td></tr>
+                    <tr><td>2.</td><td>Hipertensi</td><td>: {if: isset($data['hipertensi']) && $data['hipertensi'] == 'Tidak Ada'}<b>Tidak Ada</b>{else}Tidak Ada{/if} / {if: isset($data['hipertensi']) && $data['hipertensi'] == 'Ada'}<b>Ada</b>{else}Ada{/if}</td></tr>
+                    <tr><td>3.</td><td>Diabetes</td><td>: {if: isset($data['diabetes']) && $data['diabetes'] == 'Tidak Ada'}<b>Tidak Ada</b>{else}Tidak Ada{/if} / {if: isset($data['diabetes']) && $data['diabetes'] == 'Ada'}<b>Ada</b>{else}Ada{/if}</td></tr>
+                    <tr><td>4.</td><td>Hepatitis</td><td>: {if: isset($data['hepatitis']) && $data['hepatitis'] == 'Tidak Ada'}<b>Tidak Ada</b>{else}Tidak Ada{/if} / {if: isset($data['hepatitis']) && $data['hepatitis'] == 'Ada'}<b>Ada</b>{else}Ada{/if}</td></tr>
+                    <tr><td>5.</td><td>Haemophilia</td><td>: {if: isset($data['haemophilia']) && $data['haemophilia'] == 'Tidak Ada'}<b>Tidak Ada</b>{else}Tidak Ada{/if} / {if: isset($data['haemophilia']) && $data['haemophilia'] == 'Ada'}<b>Ada</b>{else}Ada{/if}</td></tr>
+                    <tr><td>6.</td><td>Tuberculosis</td><td>: {if: isset($data['tuberculosis']) && $data['tuberculosis'] == 'Tidak Ada'}<b>Tidak Ada</b>{else}Tidak Ada{/if} / {if: isset($data['tuberculosis']) && $data['tuberculosis'] == 'Ada'}<b>Ada</b>{else}Ada{/if}</td></tr>
+                    <tr><td>7.</td><td>HIV/AIDS</td><td>: {if: isset($data['hiv_aids']) && $data['hiv_aids'] == 'Tidak Ada'}<b>Tidak Ada</b>{else}Tidak Ada{/if} / {if: isset($data['hiv_aids']) && $data['hiv_aids'] == 'Ada'}<b>Ada</b>{else}Ada{/if}</td></tr>
+                    <tr><td>8.</td><td>Penyakit Lainnya</td><td>: {if: isset($data['penyakit_lainnya']) && $data['penyakit_lainnya'] == 'Tidak Ada'}<b>Tidak Ada</b>{else}Tidak Ada{/if} / {if: isset($data['penyakit_lainnya']) && $data['penyakit_lainnya'] == 'Ada'}<b>Ada</b>{else}Ada{/if} ({?=isset_or($data['penyakit_lainnya_ket'])?})</td></tr>
+                </table>
+                ................................................................................<br><br>
+                9. Alergi terhadap Obat-obatan : {if: isset($data['alergi_obat']) && $data['alergi_obat'] == 'Tidak Ada'}<b>Tidak Ada</b>{else}Tidak Ada{/if} / {if: isset($data['alergi_obat']) && $data['alergi_obat'] == 'Ada'}<b>Ada</b>{else}Ada{/if}<br>{?=isset_or($data['alergi_obat_ket'])?}................................................................................<br><br>
+                10. Alergi terhadap Makanan : {if: isset($data['alergi_makanan']) && $data['alergi_makanan'] == 'Tidak Ada'}<b>Tidak Ada</b>{else}Tidak Ada{/if} / {if: isset($data['alergi_makanan']) && $data['alergi_makanan'] == 'Ada'}<b>Ada</b>{else}Ada{/if}<br>{?=isset_or($data['alergi_makanan_ket'])?}................................................................................
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <b>PEMERIKSAAN FISIK</b><br>
+                <table class="table-no-border">
+                    <tr>
+                        <td width="15%">Keadaan Umum:</td><td width="15%">{?=isset_or($data['keadaan_umum'])?}</td>
+                        <td width="15%">Tekanan Darah:</td><td width="15%">{?=isset_or($data['td'])?} mmHg</td>
+                        <td width="15%">Frekuensi Napas:</td><td width="15%">{?=isset_or($data['rr'])?} x/menit</td>
+                        <td width="10%">Suhu:</td><td>{?=isset_or($data['suhu'])?} °C</td>
+                    </tr>
+                    <tr>
+                        <td>Kesadaran:</td><td>{?=isset_or($data['kesadaran'])?}</td>
+                        <td>Frekuensi Nadi:</td><td>{?=isset_or($data['nadi'])?} x/menit</td>
+                        <td>Saturasi Oksigen:</td><td>{?=isset_or($data['saturasi'])?} %</td>
+                        <td>Golongan Darah:</td><td>{?=isset_or($data['gol_darah'])?}</td>
+                    </tr>
+                </table>
+                <table class="table-no-border">
+                    <tr>
+                        <td width="15%">Berat Badan:</td><td width="15%">{?=isset_or($data['bb'])?} kg</td>
+                        <td width="15%">Tinggi Badan:</td><td width="55%">{?=isset_or($data['tb'])?} cm</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <b>PSIKOSOSIAL-KULTURAL-SPIRITUAL-EKONOMI</b><br>
+                <table class="table-no-border">
+                    <tr>
+                        <td width="20%">Status Pernikahan</td><td><div class="cb {if: isset($data['status_pernikahan']) && $data['status_pernikahan'] == 'Lajang'}checked{/if}"></div> Lajang &nbsp;&nbsp; <div class="cb {if: isset($data['status_pernikahan']) && $data['status_pernikahan'] == 'Menikah'}checked{/if}"></div> Menikah &nbsp;&nbsp; <div class="cb {if: isset($data['status_pernikahan']) && $data['status_pernikahan'] == 'Cerai'}checked{/if}"></div> Cerai tinggal bersama keluarga: &nbsp;&nbsp; <div class="cb {if: isset($data['tinggal_bersama']) && $data['tinggal_bersama'] == 'Ya'}checked{/if}"></div> ya &nbsp;&nbsp; <div class="cb {if: isset($data['tinggal_bersama']) && $data['tinggal_bersama'] == 'Tidak'}checked{/if}"></div> tidak, jelaskan {?=isset_or($data['tinggal_bersama_ket'])?}</td>
+                    </tr>
+                    <tr>
+                        <td>Riwayat Kebiasaan</td><td><div class="cb {if: isset($data['riwayat_kebiasaan_merokok']) && $data['riwayat_kebiasaan_merokok'] == 'Ya'}checked{/if}"></div> Merokok &nbsp;&nbsp; <div class="cb {if: isset($data['riwayat_kebiasaan_alkohol']) && $data['riwayat_kebiasaan_alkohol'] == 'Ya'}checked{/if}"></div> Alkohol &nbsp;&nbsp; <div class="cb {if: isset($data['riwayat_kebiasaan_napza']) && $data['riwayat_kebiasaan_napza'] == 'Ya'}checked{/if}"></div> NAPZA &nbsp;&nbsp; <div class="cb {if: isset($data['riwayat_kebiasaan_lainnya']) && $data['riwayat_kebiasaan_lainnya'] == 'Ya'}checked{/if}"></div> Lainnya {?=isset_or($data['ket_riwayat_kebiasaan'])?}</td>
+                    </tr>
+                    <tr>
+                        <td>Hambatan Fisik</td><td><div class="cb {if: isset($data['hambatan_fisik_pendengaran']) && $data['hambatan_fisik_pendengaran'] == 'Ya'}checked{/if}"></div> Pendengaran &nbsp;&nbsp; <div class="cb {if: isset($data['hambatan_fisik_bicara']) && $data['hambatan_fisik_bicara'] == 'Ya'}checked{/if}"></div> Bicara &nbsp;&nbsp; <div class="cb {if: isset($data['hambatan_fisik_penglihatan']) && $data['hambatan_fisik_penglihatan'] == 'Ya'}checked{/if}"></div> Penglihatan</td>
+                    </tr>
+                    <tr>
+                        <td>Hambatan Kognitif</td><td>{?=isset_or($data['hambatan_kognitif'])?}.........................................................................................................................................................</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            Keyakinan dan nilai-nilai pribadi pasien<br>
+                            a. Dirawat dan diasuh oleh PPA sesama gender &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: isset($data['dirawat_sesama_gender']) && $data['dirawat_sesama_gender'] == 'Ya'}checked{/if}"></div> Ya &nbsp;&nbsp; <div class="cb {if: isset($data['dirawat_sesama_gender']) && $data['dirawat_sesama_gender'] == 'Tidak'}checked{/if}"></div> Tidak<br>
+                            b. Ada pantangan makanan tertentu &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: isset($data['pantangan_makanan']) && $data['pantangan_makanan'] == 'Ya'}checked{/if}"></div> Ya, yaitu {?=isset_or($data['pantangan_makanan_ket'])?} &nbsp;&nbsp; <div class="cb {if: isset($data['pantangan_makanan']) && $data['pantangan_makanan'] == 'Tidak'}checked{/if}"></div> Tidak<br>
+                            c. Ada hari yang dihindari atau diinginkan untuk tindakan <div class="cb {if: isset($data['hari_tindakan']) && $data['hari_tindakan'] == 'Ya'}checked{/if}"></div> Ya, yaitu {?=isset_or($data['hari_tindakan_ket'])?} &nbsp;&nbsp; <div class="cb {if: isset($data['hari_tindakan']) && $data['hari_tindakan'] == 'Tidak'}checked{/if}"></div> Tidak
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Bahasa yang digunakan</td><td>{?=isset_or($data['bahasa_digunakan'])?}.........................................................................................................................................................</td>
+                    </tr>
+                    <tr>
+                        <td>Ekonomi</td><td><div class="cb {if: isset($data['ekonomi']) && $data['ekonomi'] == 'Sangat Tinggi'}checked{/if}"></div> Sangat Tinggi &nbsp;&nbsp; <div class="cb {if: isset($data['ekonomi']) && $data['ekonomi'] == 'Tinggi'}checked{/if}"></div> Tinggi &nbsp;&nbsp; <div class="cb {if: isset($data['ekonomi']) && $data['ekonomi'] == 'Sedang'}checked{/if}"></div> Sedang &nbsp;&nbsp; <div class="cb {if: isset($data['ekonomi']) && $data['ekonomi'] == 'Rendah'}checked{/if}"></div> Rendah</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <div style="text-align: right; font-style: italic; font-size: 9px; padding: 3px;">
+        Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+    </div>
+</div>
+
+<div class="page-break"></div>
+
+<div class="container">
+    <table class="table-no-border" style="margin-top:5px; margin-bottom:5px;">
+        <tr>
+            <td width="35%">Nama Pasien: {?=isset_or($data['nama_pasien'])?} ({?=isset_or($data['jenis_kelamin'])?})</td>
+            <td width="30%">Tanggal Lahir: {?=isset_or($data['tanggal_lahir_indo'])?}</td>
+            <td width="35%">
+                No. RM: 
+                <div class="box-rm">{?=isset($data['no_rkm_medis'][0])?$data['no_rkm_medis'][0]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][1])?$data['no_rkm_medis'][1]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][2])?$data['no_rkm_medis'][2]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][3])?$data['no_rkm_medis'][3]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][4])?$data['no_rkm_medis'][4]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][5])?$data['no_rkm_medis'][5]:''?}</div>
+            </td>
+        </tr>
+    </table>
+    
+    <table class="table-body">
+        <tr>
+            <td width="50%">
+                <b>SKRINING GIZI BERDASARKAN RESIKO NUTRISIONAL</b><br>
+                <i><b>Malnutrition Screening Tool (MST) untuk Dewasa</b></i><br>
+                1. Apakah pasien mengalami penurunan BB yang tidak diinginkan dalam 6 bulan terakhir?<br>
+                &nbsp;&nbsp;&nbsp;a. {if: isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == '0'}<b>Tidak ada penurunan berat badan (0)</b>{else}Tidak ada penurunan berat badan (0){/if}<br>
+                &nbsp;&nbsp;&nbsp;b. {if: isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == '2'}<b>Tidak yakin / tidak tahu / terasa baju lebih longgar (2)</b>{else}Tidak yakin / tidak tahu / terasa baju lebih longgar (2){/if}<br>
+                &nbsp;&nbsp;&nbsp;c. Jika ya, berapa penurunan berat badan tersebut<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{if: isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == '1'}<b>1-5 kg (1)</b>{else}1-5 kg (1){/if}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{if: isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == '2'}<b>6-10 kg (2)</b>{else}6-10 kg (2){/if}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{if: isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == '3'}<b>11-15 kg (3)</b>{else}11-15 kg (3){/if}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{if: isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == '4'}<b>>15 kg (4)</b>{else}>15 kg (4){/if}<br>
+                2. Apakah asupan makanan berkurang karena tidak nafsu makan?<br>
+                &nbsp;&nbsp;&nbsp;a. {if: isset($data['mst_asupan_makanan']) && $data['mst_asupan_makanan'] == '0'}<b>Tidak (0)</b>{else}Tidak (0){/if}<br>
+                &nbsp;&nbsp;&nbsp;b. {if: isset($data['mst_asupan_makanan']) && $data['mst_asupan_makanan'] == '1'}<b>Ya (1)</b>{else}Ya (1){/if}<br>
+                3. Pasien dengan diagnosis khusus &nbsp;&nbsp; <div class="cb {if: isset($data['mst_diagnosis_khusus']) && $data['mst_diagnosis_khusus'] == 'Ya'}checked{/if}"></div> Ya &nbsp;&nbsp; <div class="cb {if: isset($data['mst_diagnosis_khusus']) && $data['mst_diagnosis_khusus'] == 'Tidak'}checked{/if}"></div> Tidak<br><br>
+                {if: isset($data['kategori_pasien']) && $data['kategori_pasien'] != 'Pasien Anak (0- <18 tahun)'}
+                Total Skor: {?=(isset_or($data['mst_penurunan_bb'], 0) + isset_or($data['mst_asupan_makanan'], 0))?}
+                {/if}
+            </td>
+            <td width="50%">
+                <br>
+                <i><b>Modifikasi STRONG-kids untuk Anak (0-<18 tahun)</b></i><br>
+                1. Pasien tampak kurus<br>
+                &nbsp;&nbsp;&nbsp;a. {if: isset($data['strong_kurus']) && $data['strong_kurus'] == '0'}<b>Tidak (0)</b>{else}Tidak (0){/if}<br>
+                &nbsp;&nbsp;&nbsp;b. {if: isset($data['strong_kurus']) && $data['strong_kurus'] == '1'}<b>Ya (1)</b>{else}Ya (1){/if}<br>
+                2. Terdapat penurunan berat badan selama satu bulan terakhir ATAU untuk bayi <1 tahun, berat badan tidak naik 3 bulan terakhir<br>
+                &nbsp;&nbsp;&nbsp;a. {if: isset($data['strong_penurunan_bb']) && $data['strong_penurunan_bb'] == '0'}<b>Tidak (0)</b>{else}Tidak (0){/if}<br>
+                &nbsp;&nbsp;&nbsp;b. {if: isset($data['strong_penurunan_bb']) && $data['strong_penurunan_bb'] == '1'}<b>Ya (1)</b>{else}Ya (1){/if}<br>
+                3. Terdapat SALAH SATU dari kondisi tersebut (Diare >=5 kali/hari, Asupan makanan berkurang)<br>
+                &nbsp;&nbsp;&nbsp;a. {if: isset($data['strong_kondisi']) && $data['strong_kondisi'] == '0'}<b>Tidak (0)</b>{else}Tidak (0){/if}<br>
+                &nbsp;&nbsp;&nbsp;b. {if: isset($data['strong_kondisi']) && $data['strong_kondisi'] == '1'}<b>Ya (1)</b>{else}Ya (1){/if}<br>
+                4. Terdapat penyakit atau keadaan yang mengakibatkan pasien berisiko mengalami malnutrisi<br>
+                &nbsp;&nbsp;&nbsp;a. {if: isset($data['strong_penyakit']) && $data['strong_penyakit'] == '0'}<b>Tidak (0)</b>{else}Tidak (0){/if}<br>
+                &nbsp;&nbsp;&nbsp;b. {if: isset($data['strong_penyakit']) && $data['strong_penyakit'] == '2'}<b>Ya (2)</b>{else}Ya (2){/if}
+                {if: isset($data['kategori_pasien']) && $data['kategori_pasien'] == 'Pasien Anak (0- <18 tahun)'}
+                <br><br>Total Skor: {?=(isset_or($data['strong_kurus'], 0) + isset_or($data['strong_penurunan_bb'], 0) + isset_or($data['strong_kondisi'], 0) + isset_or($data['strong_penyakit'], 0))?}
+                {/if}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="font-style: italic; font-size: 9px;">
+                *(Bila skor >=2 dan atau pasien dengan diagnosis khusus pada dewasa, atau skor >=1 pada anak berarti pasien berisiko malnutrisi, dilaporkan ke DPJP dan diskonsulkan ke Nutrisionis jika perlu)
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <b>ASESMEN RISIKO JATUH</b><br>
+                <b>GET UP AND GO TEST</b><br>
+                a. Perhatikan cara berjalan. Apakah pasien tampak tidak seimbang (sempoyongan/limbung) atau menggunakan alat bantu jalan?<br>
+                &nbsp;&nbsp;&nbsp;<div class="cb {if: isset($data['asesmen_jatuh_a']) && $data['asesmen_jatuh_a'] == 'Ya'}checked{/if}"></div> Ya &nbsp;&nbsp; <div class="cb {if: isset($data['asesmen_jatuh_a']) && $data['asesmen_jatuh_a'] == 'Tidak'}checked{/if}"></div> Tidak<br>
+                b. Apakah pasien memegang pinggiran kursi atau meja atau benda lain sebagai penopang saat akan duduk?<br>
+                &nbsp;&nbsp;&nbsp;<div class="cb {if: isset($data['asesmen_jatuh_b']) && $data['asesmen_jatuh_b'] == 'Ya'}checked{/if}"></div> Ya &nbsp;&nbsp; <div class="cb {if: isset($data['asesmen_jatuh_b']) && $data['asesmen_jatuh_b'] == 'Tidak'}checked{/if}"></div> Tidak<br><br>
+                
+                <table class="table-no-border">
+                    <tr>
+                        <td width="50%">
+                            Hasil: <div class="cb {if: isset($data['asesmen_jatuh_hasil']) && $data['asesmen_jatuh_hasil'] == 'Tidak Berisiko'}checked{/if}"></div> Tidak Berisiko (tidak ditemukan a dan b)<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: isset($data['asesmen_jatuh_hasil']) && $data['asesmen_jatuh_hasil'] == 'Risiko Rendah'}checked{/if}"></div> Risiko Rendah (ditemukan a atau b)<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: isset($data['asesmen_jatuh_hasil']) && $data['asesmen_jatuh_hasil'] == 'Risiko Tinggi'}checked{/if}"></div> Risiko Tinggi (a dan b ditemukan)
+                        </td>
+                        <td width="50%">
+                            Tindakan: <div class="cb {if: isset($data['asesmen_jatuh_tindakan_tidak']) && $data['asesmen_jatuh_tindakan_tidak'] == 'Ya'}checked{/if}"></div> Tidak ada tindakan<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: isset($data['asesmen_jatuh_tindakan_edukasi']) && $data['asesmen_jatuh_tindakan_edukasi'] == 'Ya'}checked{/if}"></div> Edukasi kepada pasien tentang pencegahan jatuh<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: isset($data['asesmen_jatuh_tindakan_kalung']) && $data['asesmen_jatuh_tindakan_kalung'] == 'Ya'}checked{/if}"></div> Dipasangkan kalung risiko jatuh<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: isset($data['asesmen_jatuh_tindakan_alat']) && $data['asesmen_jatuh_tindakan_alat'] == 'Ya'}checked{/if}"></div> Diberikan alat bantu jalan (tongkat / kruk / kursi roda)<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: isset($data['asesmen_jatuh_tindakan_dampingi']) && $data['asesmen_jatuh_tindakan_dampingi'] == 'Ya'}checked{/if}"></div> Dampingi pasien saat mobilisasi
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td width="50%">
+                <b>PEMERIKSAAN PENUNJANG</b><br>
+                <div class="cb {if: isset($data['penunjang_lab']) && $data['penunjang_lab'] == 'Ya'}checked{/if}"></div> Laboratorium<br>
+                <div class="cb {if: isset($data['penunjang_rontgen']) && $data['penunjang_rontgen'] == 'Ya'}checked{/if}"></div> Rontgen<br>
+                <div class="cb {if: isset($data['penunjang_lain']) && $data['penunjang_lain'] == 'Ya'}checked{/if}"></div> Lain-lain, yaitu {?=isset_or($data['penunjang_lain_ket'])?}
+            </td>
+            <td width="50%" rowspan="2" style="vertical-align: top;">
+                <b>MASALAH KEPERAWATAN</b><br>
+                {?=nl2br(isset_or($data['masalah_keperawatan']))?}
+            </td>
+        </tr>
+        <tr>
+            <td style="vertical-align: top;">
+                <b>RENCANA DAN TINDAK LANJUT PERAWATAN, TERMASUK KEBUTUHAN EDUKASI</b><br>
+                {?=nl2br(isset_or($data['rencana_tindak_lanjut']))?}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <b>EVALUASI</b><br>
+                <div class="cb {if: isset($data['evaluasi_kontrol']) && $data['evaluasi_kontrol'] == 'Ya'}checked{/if}"></div> Kontrol &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tanggal &nbsp;: {?=isset_or($data['evaluasi_kontrol_tgl'])?}<br>
+                <div class="cb {if: isset($data['evaluasi_rujuk']) && $data['evaluasi_rujuk'] == 'Ya'}checked{/if}"></div> Rujuk &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ke RS &nbsp;&nbsp;&nbsp;&nbsp;: {?=isset_or($data['evaluasi_rujuk_rs'])?}<br>
+                <div class="cb {if: isset($data['evaluasi_ranap']) && $data['evaluasi_ranap'] == 'Ya'}checked{/if}"></div> Rawat Inap &nbsp; Ruangan : {?=isset_or($data['evaluasi_ranap_ruang'])?}
+            </td>
+        </tr>
+        <tr>
+            <td width="50%" class="signature-area">
+                <br><b>DPJP</b><br><br><br><br><br>
+                ( {?=isset_or($data['nm_dokter'], isset_or($data['nip_dpjp']))?} )<br>
+                NIP. {?=isset_or($data['nip_dpjp'])?}
+            </td>
+            <td width="50%" class="signature-area">
+                Banjarmasin, {?=isset_or($data['tanggal'])?}<br>
+                <b>Perawat/Terapis Gigi dan Mulut</b><br><br><br><br><br>
+                ( {?=isset_or($data['nm_perawat'], isset_or($data['nip_perawat']))?} )<br>
+                NIP. {?=isset_or($data['nip_perawat'])?}
+            </td>
+        </tr>
+    </table>
+    <div style="text-align: right; font-style: italic; font-size: 9px; padding: 3px;">
+        Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+    </div>
+</div>
+
+</body>
+</html>

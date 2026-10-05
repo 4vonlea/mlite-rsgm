@@ -1,0 +1,551 @@
+
+<div id="form_asesment_gigi_igd">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">ASESMEN KEPERAWATAN / ASUHAN KESEHATAN GIGI DAN MULUT UNIT GAWAT DARURAT</h3>
+    </div>
+    <div class="panel-body">
+      <form id="asesmentGigiIgdForm">
+        <input type="hidden" name="no_rawat" value="{?=isset_or($penilaian_igd.no_rawat)?}">
+        
+        <!-- Informasi Dasar -->
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Cara Datang</label>
+              <select name="cara_datang" class="form-control" required>
+                <option value="Sendiri">Sendiri</option>
+                <option value="Ambulans">Ambulans</option>
+                <option value="Diantar Keluarga">Diantar Keluarga</option>
+                <option value="Diantar Polisi">Diantar Polisi (No. ID)</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Diantar Oleh (No ID / Nama)</label>
+              <input type="text" name="diantar_oleh" class="form-control" maxlength="50">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Jenis Kasus</label>
+              <select name="jenis_kasus" class="form-control" required>
+                <option value="Kasus Gigi dan Mulut">Kasus Gigi dan Mulut</option>
+                <option value="Kasus Umum">Kasus Umum</option>
+                <option value="Trauma">Trauma</option>
+                <option value="Non Trauma">Non Trauma</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-2">
+            <div class="form-group">
+              <label>Rujukan</label>
+              <select name="rujukan" class="form-control" required>
+                <option value="Tidak">Tidak</option>
+                <option value="Ya">Ya</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group">
+              <label>Rujukan Dari</label>
+              <select name="rujukan_dari" class="form-control">
+                <option value="-">-</option>
+                <option value="RS">RS</option>
+                <option value="Klinik">Klinik</option>
+                <option value="Puskesmas">Puskesmas</option>
+                <option value="Dokter">Dokter</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>Diagnosis Rujukan / Asal</label>
+              <input type="text" name="diagnosis_rujukan" class="form-control" maxlength="100">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>Asuransi</label>
+              <select name="asuransi" class="form-control">
+                <option value="Asuransi">Asuransi</option>
+                <option value="Umum">Umum</option>
+                <option value="BPJS">BPJS</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Alamat Kontak</label>
+              <input type="text" name="alamat_kontak" class="form-control" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label>Nama Pengantar</label>
+              <input type="text" name="nama_pengantar" class="form-control" maxlength="50">
+            </div>
+            <div class="form-group">
+              <label>Hubungan dengan Pasien</label>
+              <input type="text" name="hub_dengan_pasien" class="form-control" maxlength="30">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Sumber Data</label>
+              <select name="sumber_data" class="form-control">
+                <option value="Auto Anamnesis">Auto Anamnesis</option>
+                <option value="Allo Anamnesis">Allo Anamnesis</option>
+                <option value="Pasien Anak (0- <18 tahun)">Pasien Anak (0- <18 tahun)</option>
+                <option value="Pasien Dewasa (18-65 tahun)">Pasien Dewasa (18-65 tahun)</option>
+                <option value="Pasien Geriatri (>65 tahun)">Pasien Geriatri (>65 tahun)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Tanggal kunjungan</label>
+              <input type="date" name="tanggal" class="form-control" value="{?=date('Y-m-d')?}">
+            </div>
+          </div>
+        </div>
+
+        <h4>TRIASE</h4>
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>Triase Kategori</label>
+              <select name="triase" class="form-control">
+                <option value="Merah (ATS 1)" style="background:red;color:white;">Merah (ATS 1)</option>
+                <option value="Kuning (ATS 2 / ATS 3)" style="background:yellow;color:black;">Kuning (ATS 2 / ATS 3)</option>
+                <option value="Hijau (ATS 4 / ATS 5)" style="background:green;color:white;">Hijau (ATS 4 / ATS 5)</option>
+                <option value="Hitam (DOA)" style="background:black;color:white;">Hitam (DOA)</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>Cara Masuk</label>
+              <select name="cara_masuk" class="form-control">
+                <option value="Jalan Kaki">Jalan Kaki</option>
+                <option value="Kursi Roda">Kursi Roda</option>
+                <option value="Brankar">Brankar</option>
+                <option value="Digendong">Digendong</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group">
+              <label>Jam Mulai</label>
+              <input type="time" name="jam_mulai_triase" class="form-control">
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group">
+              <label>Jam Selesai</label>
+              <input type="time" name="jam_selesai_triase" class="form-control">
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group">
+              <label>Petugas Triase</label>
+              <input type="text" name="petugas_triase" class="form-control">
+            </div>
+          </div>
+        </div>
+
+        <!-- Keluhan dan Riwayat -->
+        <h4>KELUHAN & RIWAYAT PENYAKIT</h4>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group">
+              <label>KELUHAN UTAMA</label>
+              <textarea name="keluhan_utama" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+              <label>RIWAYAT PENYAKIT SEKARANG</label>
+              <textarea name="riwayat_penyakit_sekarang" class="form-control" rows="3" required></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <table class="table table-bordered">
+              <tr>
+                <td>Penyakit Jantung</td>
+                <td>
+                  <select name="penyakit_jantung" class="form-control"><option value="Tidak Ada">Tidak Ada</option><option value="Ada">Ada</option></select>
+                </td>
+              </tr>
+              <tr>
+                <td>Hipertensi</td>
+                <td>
+                  <select name="hipertensi" class="form-control"><option value="Tidak Ada">Tidak Ada</option><option value="Ada">Ada</option></select>
+                </td>
+              </tr>
+              <tr>
+                <td>Diabetes</td>
+                <td>
+                  <select name="diabetes" class="form-control"><option value="Tidak Ada">Tidak Ada</option><option value="Ada">Ada</option></select>
+                </td>
+              </tr>
+              <tr>
+                <td>Hepatitis</td>
+                <td>
+                  <select name="hepatitis" class="form-control"><option value="Tidak Ada">Tidak Ada</option><option value="Ada">Ada</option></select>
+                </td>
+              </tr>
+              <tr>
+                <td>Haemophilia</td>
+                <td>
+                  <select name="haemophilia" class="form-control"><option value="Tidak Ada">Tidak Ada</option><option value="Ada">Ada</option></select>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <table class="table table-bordered">
+              <tr>
+                <td>Tuberculosis</td>
+                <td>
+                  <select name="tuberculosis" class="form-control"><option value="Tidak Ada">Tidak Ada</option><option value="Ada">Ada</option></select>
+                </td>
+              </tr>
+              <tr>
+                <td>HIV/AIDS</td>
+                <td>
+                  <select name="hiv_aids" class="form-control"><option value="Tidak Ada">Tidak Ada</option><option value="Ada">Ada</option></select>
+                </td>
+              </tr>
+              <tr>
+                <td>Penyakit Lainnya</td>
+                <td>
+                  <input type="text" name="penyakit_lainnya" class="form-control" placeholder="Penyakit Lainnya">
+                  <select name="menular_tidak_menular" class="form-control mt-2"><option value="-">-</option><option value="Menular">Menular</option><option value="Tidak Menular">Tidak Menular</option></select>
+                </td>
+              </tr>
+              <tr>
+                <td>Alergi Obat-obatan</td>
+                <td>
+                  <input type="text" name="alergi_obat" class="form-control" placeholder="Tidak Ada / Sebutkan">
+                </td>
+              </tr>
+              <tr>
+                <td>Alergi Makanan</td>
+                <td>
+                  <input type="text" name="alergi_makanan" class="form-control" placeholder="Tidak Ada / Sebutkan">
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- Pemeriksaan Fisik -->
+        <h4>PEMERIKSAAN FISIK</h4>
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group"><label>Keadaan Umum</label><input type="text" name="keadaan_umum" class="form-control"></div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group"><label>Kesadaran</label><input type="text" name="kesadaran" class="form-control"></div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group"><label>Tekanan Darah (mmHg)</label><input type="text" name="td" class="form-control"></div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group"><label>Frekuensi Nadi (x/menit)</label><input type="text" name="nadi" class="form-control"></div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group"><label>Frekuensi Napas (x/menit)</label><input type="text" name="rr" class="form-control"></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group"><label>Suhu (°C)</label><input type="text" name="suhu" class="form-control"></div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group"><label>Golongan Darah</label><input type="text" name="gol_darah" class="form-control"></div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group"><label>Saturasi Oksigen (%)</label><input type="text" name="saturasi" class="form-control"></div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group"><label>Berat Badan (kg)</label><input type="text" name="bb" class="form-control"></div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group"><label>Tinggi Badan (cm)</label><input type="text" name="tb" class="form-control"></div>
+          </div>
+        </div>
+
+        <h4>PSIKOSOSIAL-KULTURAL-SPIRITUAL-EKONOMI</h4>
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Status Pernikahan</label>
+              <select name="status_pernikahan" class="form-control"><option value="Lajang">Lajang</option><option value="Menikah">Menikah</option></select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Cerai tinggal bersama keluarga</label>
+              <select name="cerai_tinggal_bersama" class="form-control"><option value="tidak">tidak</option><option value="ya">ya</option><option value="jelaskan">jelaskan</option></select>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Penjelasan (jika jelaskan)</label>
+              <input type="text" name="ket_cerai" class="form-control">
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Riwayat Kebiasaan</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="riwayat_kebiasaan_merokok" value="Ya"> Merokok</label>
+              <label class="checkbox-inline"><input type="checkbox" name="riwayat_kebiasaan_alkohol" value="Ya"> Alkohol</label>
+              <label class="checkbox-inline"><input type="checkbox" name="riwayat_kebiasaan_napza" value="Ya"> NAPZA</label>
+              <label class="checkbox-inline"><input type="checkbox" name="riwayat_kebiasaan_lainnya" value="Ya"> Lainnya</label>
+              <input type="text" name="ket_riwayat_kebiasaan" class="form-control mt-2" placeholder="Jenis dan Jumlah perhari">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Hambatan Fisik</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="hambatan_fisik_pendengaran" value="Ya"> Pendengaran</label>
+              <label class="checkbox-inline"><input type="checkbox" name="hambatan_fisik_bicara" value="Ya"> Bicara</label>
+              <label class="checkbox-inline"><input type="checkbox" name="hambatan_fisik_penglihatan" value="Ya"> Penglihatan</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Hambatan Kognitif</label>
+              <input type="text" name="hambatan_kognitif" class="form-control">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Bahasa yang digunakan</label>
+              <input type="text" name="bahasa_digunakan" class="form-control">
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Keyakinan & Nilai-nilai:</label><br>
+              <table style="width:100%">
+                <tr><td>Dirawat & diasuh oleh PPA sesama gender</td><td><select name="dirawat_sesama_gender" class="form-control"><option value="Tidak">Tidak</option><option value="Ya">Ya</option></select></td></tr>
+                <tr><td>Ada pantangan makanan tertentu</td><td><select name="pantangan_makanan" class="form-control"><option value="Tidak">Tidak</option><option value="Ya">Ya, yaitu</option></select><input type="text" name="ket_pantangan_makanan" class="form-control"></td></tr>
+                <tr><td>Ada hari dihindari untuk tindakan</td><td><select name="hari_dihindari_tindakan" class="form-control"><option value="Tidak">Tidak</option><option value="Ya">Ya, yaitu</option></select><input type="text" name="ket_hari_dihindari" class="form-control"></td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Ekonomi</label>
+              <select name="ekonomi" class="form-control"><option value="Sangat Tinggi">Sangat Tinggi</option><option value="Tinggi">Tinggi</option><option value="Sedang">Sedang</option><option value="Rendah">Rendah</option></select>
+            </div>
+          </div>
+        </div>
+
+        <h4>SKRINING GIZI</h4>
+        <div class="row">
+          <div class="col-md-6">
+            <b>Malnutrition Screening Tool (MST) untuk Dewasa</b>
+            <div class="form-group mt-2">
+              <label>1. Apakah pasien mengalami penurunan BB yang tidak diinginkan dalam 6 bulan terakhir?</label>
+              <select name="mst_penurunan_bb" class="form-control">
+                <option value="0">Tidak ada penurunan berat badan (0)</option>
+                <option value="2">Tidak yakin / tidak tahu / terasa baju lebih longgar (2)</option>
+                <option value="1">1-5 kg (1)</option>
+                <option value="2">6-10 kg (2)</option>
+                <option value="3">11-15 kg (3)</option>
+                <option value="4">>15 kg (4)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>2. Apakah asupan makanan berkurang karena tidak nafsu makan?</label>
+              <select name="mst_asupan_makanan" class="form-control">
+                <option value="0">Tidak (0)</option>
+                <option value="1">Ya (1)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>3. Pasien dengan diagnosis khusus</label>
+              <select name="mst_diagnosis_khusus" class="form-control">
+                <option value="Tidak">Tidak</option>
+                <option value="Ya">Ya</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <b>Modifikasi STRONG-kids untuk Anak (0-<18 tahun)</b>
+            <div class="form-group mt-2">
+              <label>1. Pasien tampak kurus</label>
+              <select name="strong_kurus" class="form-control"><option value="0">Tidak (0)</option><option value="1">Ya (1)</option></select>
+            </div>
+            <div class="form-group">
+              <label>2. Terdapat penurunan berat badan selama satu bulan terakhir ATAU untuk bayi <1 tahun, berat badan tidak naik 3 bulan terakhir</label>
+              <select name="strong_penurunan_bb" class="form-control"><option value="0">Tidak (0)</option><option value="1">Ya (1)</option></select>
+            </div>
+            <div class="form-group">
+              <label>3. Terdapat SALAH SATU dari kondisi tersebut (Diare >5 kali/hari, asupan kurang)</label>
+              <select name="strong_kondisi" class="form-control"><option value="0">Tidak (0)</option><option value="1">Ya (1)</option></select>
+            </div>
+            <div class="form-group">
+              <label>4. Terdapat penyakit atau keadaan yang mengakibatkan pasien berisiko mengalami malnutrisi</label>
+              <select name="strong_penyakit" class="form-control"><option value="0">Tidak (0)</option><option value="2">Ya (2)</option></select>
+            </div>
+          </div>
+        </div>
+
+        <h4>ASESMEN RISIKO JATUH (GET UP AND GO TEST)</h4>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>a. Perhatikan cara berjalan. Apakah pasien tampak tidak seimbang?</label>
+              <select name="asesmen_jatuh_a" class="form-control"><option value="Tidak">Tidak</option><option value="Ya">Ya</option></select>
+            </div>
+            <div class="form-group">
+              <label>b. Apakah pasien memegang pinggiran kursi atau meja saat akan duduk?</label>
+              <select name="asesmen_jatuh_b" class="form-control"><option value="Tidak">Tidak</option><option value="Ya">Ya</option></select>
+            </div>
+            <div class="form-group">
+              <label>Hasil</label>
+              <select name="asesmen_jatuh_hasil" class="form-control">
+                <option value="Tidak Berisiko">Tidak Berisiko (tidak ditemukan a dan b)</option>
+                <option value="Risiko Rendah">Risiko Rendah (ditemukan a atau b)</option>
+                <option value="Risiko Tinggi">Risiko Tinggi (a dan b ditemukan)</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Tindakan</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="asesmen_jatuh_tindakan_tidak" value="Ya"> Tidak ada tindakan</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="asesmen_jatuh_tindakan_edukasi" value="Ya"> Edukasi kepada pasien tentang pencegahan jatuh</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="asesmen_jatuh_tindakan_kalung" value="Ya"> Dipasangkan kalung risiko jatuh</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="asesmen_jatuh_tindakan_alat" value="Ya"> Diberikan alat bantu jalan</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="asesmen_jatuh_tindakan_dampingi" value="Ya"> Dampingi pasien saat mobilisasi</label>
+            </div>
+          </div>
+        </div>
+
+        <h4>PEMERIKSAAN PENUNJANG & MASALAH</h4>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Pemeriksaan Penunjang</label><br>
+              <label class="checkbox-inline"><input type="checkbox" name="pemeriksaan_penunjang_lab" value="Ya"> Laboratorium</label>
+              <label class="checkbox-inline"><input type="checkbox" name="pemeriksaan_penunjang_rontgen" value="Ya"> Rontgen</label>
+              <label class="checkbox-inline"><input type="checkbox" name="pemeriksaan_penunjang_lainnya" value="Ya"> Lain-lain, yaitu:</label>
+              <input type="text" name="ket_pemeriksaan_penunjang" class="form-control mt-2">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>MASALAH KEPERAWATAN</label>
+              <textarea name="masalah_keperawatan" class="form-control" rows="3"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>RENCANA DAN TINDAK LANJUT PERAWATAN, TERMASUK KEBUTUHAN EDUKASI</label>
+              <textarea name="rencana_tindak_lanjut" class="form-control" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>EVALUASI</label><br>
+              <table style="width:100%">
+                <tr>
+                  <td><label class="checkbox-inline"><input type="checkbox" name="evaluasi_kontrol" value="Ya"> Kontrol</label></td>
+                  <td>Tanggal: <input type="date" name="evaluasi_kontrol_tgl" class="form-control"></td>
+                </tr>
+                <tr>
+                  <td><label class="checkbox-inline"><input type="checkbox" name="evaluasi_rujuk" value="Ya"> Rujuk</label></td>
+                  <td>ke RS: <input type="text" name="evaluasi_rujuk_ke" class="form-control"></td>
+                </tr>
+                <tr>
+                  <td><label class="checkbox-inline"><input type="checkbox" name="evaluasi_rawat_inap" value="Ya"> Rawat Inap</label></td>
+                  <td>Ruangan: <input type="text" name="evaluasi_rawat_inap_ruangan" class="form-control"></td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>DPJP (NIP/Nama)</label>
+              <input type="text" name="nip_dpjp" class="form-control">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Perawat/Terapis Gigi (NIP/Nama)</label>
+              <input type="text" name="nip" class="form-control">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tombol -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group">
+              <button type="button" id="simpan_asesment_gigi_igd" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+              <button type="button" id="batal_asesment_gigi_igd" class="btn btn-default"><i class="fa fa-times"></i> Batal</button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  $('#simpan_asesment_gigi_igd').click(function() {
+    var formData = $('#asesmentGigiIgdForm').serialize();
+    var baseURL = mlite.url + '/' + mlite.admin;
+    
+    $.ajax({
+      url: baseURL + '/igd/assessmentsavegigi?t=' + mlite.token,
+      type: 'POST',
+      data: formData,
+      dataType: 'json',
+      success: function(response) {
+        if(response.status == 'success') {
+          $('#notif').html('<div class="alert alert-success alert-dismissible fade in" role="alert" style="border-radius:0px;margin-top:-15px;">Data assessment gigi berhasil disimpan!<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button></div>').show();
+          $('#form_asesment_gigi_igd').hide();
+        } else {
+          $('#notif').html('<div class="alert alert-danger alert-dismissible fade in" role="alert" style="border-radius:0px;margin-top:-15px;">Gagal menyimpan data: ' + (response.msg || 'Unknown error') + '<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button></div>').show();
+        }
+      },
+      error: function() {
+        $('#notif').html('<div class="alert alert-danger alert-dismissible fade in" role="alert" style="border-radius:0px;margin-top:-15px;">Terjadi kesalahan saat menyimpan data!<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button></div>').show();
+      }
+    });
+  });
+  
+  $('#batal_asesment_gigi_igd').click(function() {
+    $('#form_asesment_gigi_igd').hide();
+  });
+});
+</script>
