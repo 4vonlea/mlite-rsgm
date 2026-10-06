@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ANS1 - Informasi Tindakan Pembiusan</title>
+<style>
+  @page { size: A4; margin: 8mm 10mm; }
+  body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 0; color: #000; }
+  
+  .container { width: 100%; max-width: 192mm; margin: 0 auto; border: 1px solid #000; box-sizing: border-box; }
+
+  /* Header */
+  .table-header { width: 100%; border-collapse: collapse; }
+  .table-header td { border: 1px solid #000; padding: 4px; vertical-align: middle; }
+  
+  /* RM Box */
+  .rm-header-td { vertical-align: top; padding: 4px; font-size: 10px; }
+  .box-rm { display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin-left: 1px; text-align: center; line-height: 14px; font-size: 10px; }
+
+  /* Section title */
+  .section-main-title { text-align: center; font-weight: bold; font-size: 12px; padding: 4px; border-top: 1px solid #000; border-bottom: 1px solid #000; background: #fff; }
+
+  /* Tables */
+  .table-body { width: 100%; border-collapse: collapse; }
+  .table-body td { border: 1px solid #000; padding: 4px 6px; vertical-align: top; font-size: 10px; }
+  .table-body th { border: 1px solid #000; padding: 4px 6px; vertical-align: middle; text-align: center; font-size: 10px; }
+
+  /* Checkbox */
+  .cb { display: inline-block; width: 10px; height: 10px; border: 1px solid #000; vertical-align: middle; margin-right: 2px; text-align: center; line-height: 10px; font-size: 9px; }
+  .cb.checked::after { content: '✓'; font-weight: bold; }
+
+  .dotted { border-bottom: 1px dotted #000; display: inline-block; min-width: 60px; }
+  .text-center { text-align: center; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- HEADER -->
+  <table class="table-header">
+    <tr>
+      <td style="width: 65%; text-align:center; vertical-align:middle; padding: 0; border: none; border-right: 1px solid #000;">
+        <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat" style="width: 100%; height: auto; max-height: 80px; object-fit: contain;">
+      </td>
+      <td class="rm-header-td" style="width: 35%;">
+        <strong>No. RM</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+        <div class="box-rm">{?=isset($data['no_rkm_medis'][0])?$data['no_rkm_medis'][0]:''?}</div>-<div class="box-rm">{?=isset($data['no_rkm_medis'][1])?$data['no_rkm_medis'][1]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][2])?$data['no_rkm_medis'][2]:''?}</div>-<div class="box-rm">{?=isset($data['no_rkm_medis'][3])?$data['no_rkm_medis'][3]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][4])?$data['no_rkm_medis'][4]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][5])?$data['no_rkm_medis'][5]:''?}</div>
+        <br><br>
+        <strong>Nama Pasien</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 
+        <span class="dotted" style="min-width: 130px;">{?=isset_or($data['nm_pasien'])?}</span> &nbsp;{?= isset($data['jk']) ? ($data['jk'] == 'L' ? 'L' : 'P') : 'L/P' ?}
+        <br><br>
+        <strong>Tanggal Lahir</strong> &nbsp;&nbsp;&nbsp;&nbsp;:
+        <span class="dotted" style="min-width: 140px;">{?=isset_or($data['tanggal_lahir_indo'])?}</span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Judul Utama -->
+  <div class="section-main-title">INFORMASI TINDAKAN PEMBIUSAN<br>PEMBERIAN INFORMASI TINDAKAN PEMBIUSAN</div>
+
+  <table class="table-body">
+    <tr>
+      <td style="width: 30%;">Pemberi Informasi</td>
+      <td colspan="3">{?=isset_or($data['pemberi_informasi'])?}</td>
+    </tr>
+    <tr>
+      <td style="width: 30%;">Penerima Informasi</td>
+      <td colspan="3" style="padding: 0;">
+        <table style="width:100%; border:none; border-collapse: collapse;">
+            <tr><td style="border:none; padding:4px;">1. Nama : {?=isset_or($data['penerima_informasi_1'])?}</td></tr>
+            <tr><td style="border:none; border-top:1px solid #000; padding:4px;">2. Nama : {?=isset_or($data['penerima_informasi_2'])?}</td></tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th style="width: 5%;">NO</th>
+      <th style="width: 25%;">JENIS INFORMASI</th>
+      <th style="width: 60%;">ISI INFORMASI</th>
+      <th style="width: 10%;">TANDAI (✓)</th>
+    </tr>
+    <tr>
+      <td class="text-center">1</td>
+      <td>Diagnosis kerja /<br>Diagnosis Banding</td>
+      <td><strong>Status Fisik ASA : </strong> {?=isset_or($data['status_fisik_asa'])?}</td>
+      <td class="text-center">
+        <div class="cb {?= isset($data['tandai_1']) && $data['tandai_1'] == '1' ? 'checked' : '' ?}"></div>
+      </td>
+    </tr>
+    <tr>
+      <td class="text-center">2</td>
+      <td>Dasar Diagnosis</td>
+      <td>
+        <div class="cb {?= isset($data['dasar_diagnosis_klinis']) && $data['dasar_diagnosis_klinis'] == '1' ? 'checked' : '' ?}"></div> Klinis &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <div class="cb {?= isset($data['dasar_diagnosis_laboratorium']) && $data['dasar_diagnosis_laboratorium'] == '1' ? 'checked' : '' ?}"></div> Laboratorium<br><br>
+        <div class="cb {?= isset($data['dasar_diagnosis_radiologis']) && $data['dasar_diagnosis_radiologis'] == '1' ? 'checked' : '' ?}"></div> Radiologis &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <div class="cb {?= isset($data['dasar_diagnosis_ekg']) && $data['dasar_diagnosis_ekg'] == '1' ? 'checked' : '' ?}"></div> EKG
+      </td>
+      <td class="text-center">
+        <div class="cb {?= isset($data['tandai_2']) && $data['tandai_2'] == '1' ? 'checked' : '' ?}"></div>
+      </td>
+    </tr>
+    <tr>
+      <td class="text-center">3</td>
+      <td>Tindakan<br>Kedokteran</td>
+      <td>
+        Anestesi / Pembiusan <br><br>
+        1. Umum : 
+        <div class="cb {?= isset($data['tindakan_umum_intubasi']) && $data['tindakan_umum_intubasi'] == '1' ? 'checked' : '' ?}"></div> Intubasi &nbsp;&nbsp;
+        <div class="cb {?= isset($data['tindakan_umum_lma']) && $data['tindakan_umum_lma'] == '1' ? 'checked' : '' ?}"></div> LMA &nbsp;&nbsp;
+        <div class="cb {?= isset($data['tindakan_umum_face_mask']) && $data['tindakan_umum_face_mask'] == '1' ? 'checked' : '' ?}"></div> Face Mask &nbsp;&nbsp;
+        <div class="cb {?= isset($data['tindakan_umum_tiva']) && $data['tindakan_umum_tiva'] == '1' ? 'checked' : '' ?}"></div> TIVA <br><br>
+        2. Regional : 
+        <div class="cb {?= isset($data['tindakan_regional_spinal']) && $data['tindakan_regional_spinal'] == '1' ? 'checked' : '' ?}"></div> Spinal &nbsp;&nbsp;
+        <div class="cb {?= isset($data['tindakan_regional_epidural']) && $data['tindakan_regional_epidural'] == '1' ? 'checked' : '' ?}"></div> Epidural &nbsp;&nbsp;
+        <div class="cb {?= isset($data['tindakan_regional_blok_perifer']) && $data['tindakan_regional_blok_perifer'] == '1' ? 'checked' : '' ?}"></div> Blok Perifer
+      </td>
+      <td class="text-center">
+        <div class="cb {?= isset($data['tandai_3']) && $data['tandai_3'] == '1' ? 'checked' : '' ?}"></div>
+      </td>
+    </tr>
+    <tr>
+      <td class="text-center">4</td>
+      <td>Tata cara tindakan</td>
+      <td>{?=isset_or($data['tata_cara_tindakan'], 'Persiapan alat dan obat, pemeriksaan sebelum operasi, tindakan anastesi')?}</td>
+      <td class="text-center">
+        <div class="cb {?= isset($data['tandai_4']) && $data['tandai_4'] == '1' ? 'checked' : '' ?}"></div>
+      </td>
+    </tr>
+    <tr>
+      <td class="text-center">5</td>
+      <td>Indikasi dan tujuan</td>
+      <td>{?=isset_or($data['indikasi_dan_tujuan'], 'Memfasilitasi Operasi, menghilangkan rasa sakit saat operasi')?}</td>
+      <td class="text-center">
+        <div class="cb {?= isset($data['tandai_5']) && $data['tandai_5'] == '1' ? 'checked' : '' ?}"></div>
+      </td>
+    </tr>
+    <tr>
+      <td class="text-center">6</td>
+      <td>Resiko</td>
+      <td>
+        <div class="cb {?= isset($data['risiko_shock']) && $data['risiko_shock'] == '1' ? 'checked' : '' ?}"></div> Shock &nbsp;&nbsp;&nbsp;&nbsp;
+        <div class="cb {?= isset($data['risiko_henti_jantung']) && $data['risiko_henti_jantung'] == '1' ? 'checked' : '' ?}"></div> Henti jantung &nbsp;&nbsp;&nbsp;&nbsp;
+        <div class="cb {?= isset($data['risiko_meninggal']) && $data['risiko_meninggal'] == '1' ? 'checked' : '' ?}"></div> Meninggal dunia di meja operasi
+      </td>
+      <td class="text-center">
+        <div class="cb {?= isset($data['tandai_6']) && $data['tandai_6'] == '1' ? 'checked' : '' ?}"></div>
+      </td>
+    </tr>
+    <tr>
+      <td class="text-center">7</td>
+      <td>Komplikasi</td>
+      <td>
+        <div class="cb {?= isset($data['komplikasi_bius_umum']) && $data['komplikasi_bius_umum'] == '1' ? 'checked' : '' ?}"></div> <strong>1. Bius Umum</strong><br>
+        <div style="padding-left: 15px; margin-bottom: 8px;">
+            <div class="cb {?= isset($data['komplikasi_bu_sistem_pernapasan']) && $data['komplikasi_bu_sistem_pernapasan'] == '1' ? 'checked' : '' ?}"></div> Sistem Pernapasan : kejang dan penyempitan jalan napas, kekurangan kadar O2 dalam darah, kekurangan atau kelebihan CO2 dalam darah, aspirasi pneumonia/masuknya isi lambung ke dalam saluran nafas/paru.<br>
+            <div class="cb {?= isset($data['komplikasi_bu_jantung']) && $data['komplikasi_bu_jantung'] == '1' ? 'checked' : '' ?}"></div> Jantung dan pembuluh darah : tekanan darah turun, tekanan darah naik, gangguan irama jantung sampai henti jantung.<br>
+            <div class="cb {?= isset($data['komplikasi_bu_sistem_saraf']) && $data['komplikasi_bu_sistem_saraf'] == '1' ? 'checked' : '' ?}"></div> Sistem saraf : kejang, bangun lambat, trauma saraf tepi.<br>
+            <div class="cb {?= isset($data['komplikasi_bu_tindakan_laringoskopi']) && $data['komplikasi_bu_tindakan_laringoskopi'] == '1' ? 'checked' : '' ?}"></div> Tindakan laringoskopi intubasi (gigi patah, luka mulut, pendarahan)<br>
+            <div class="cb {?= isset($data['komplikasi_bu_suhu_tubuh']) && $data['komplikasi_bu_suhu_tubuh'] == '1' ? 'checked' : '' ?}"></div> Suhu tubuh naik/turun<br>
+            <div class="cb {?= isset($data['komplikasi_bu_efek_merugikan']) && $data['komplikasi_bu_efek_merugikan'] == '1' ? 'checked' : '' ?}"></div> Efek merugikan obat dan alergi (syok anafilaktik sampai meninggal dunia)<br>
+            <div class="cb {?= isset($data['komplikasi_bu_cedera_akibat_posisi']) && $data['komplikasi_bu_cedera_akibat_posisi'] == '1' ? 'checked' : '' ?}"></div> Cedera akibat posisi saat operasi<br>
+            <div class="cb {?= isset($data['komplikasi_bu_muntah']) && $data['komplikasi_bu_muntah'] == '1' ? 'checked' : '' ?}"></div> Muntah &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <div class="cb {?= isset($data['komplikasi_bu_perut_kembung']) && $data['komplikasi_bu_perut_kembung'] == '1' ? 'checked' : '' ?}"></div> Perut kembung &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <div class="cb {?= isset($data['komplikasi_bu_tenggorokan_serak']) && $data['komplikasi_bu_tenggorokan_serak'] == '1' ? 'checked' : '' ?}"></div> Tenggorokan serak<br>
+        </div>
+        <div class="cb {?= isset($data['komplikasi_bius_regional']) && $data['komplikasi_bius_regional'] == '1' ? 'checked' : '' ?}"></div> <strong>2. Bius Regional : Spinal / Epidural</strong><br>
+        <div style="padding-left: 15px;">
+            <div class="cb {?= isset($data['komplikasi_br_segera']) && $data['komplikasi_br_segera'] == '1' ? 'checked' : '' ?}"></div> Komplikasi segera : &nbsp;
+            <div class="cb {?= isset($data['komplikasi_br_penurunan_tekanan_darah']) && $data['komplikasi_br_penurunan_tekanan_darah'] == '1' ? 'checked' : '' ?}"></div> Penurunan Tekanan darah &nbsp;&nbsp;&nbsp;&nbsp;
+            <div class="cb {?= isset($data['komplikasi_br_anestesi_spinal_total']) && $data['komplikasi_br_anestesi_spinal_total'] == '1' ? 'checked' : '' ?}"></div> Anestesi Spinal total<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(penurunan kesadaran, penurunan denyut jantung, nafas berhenti)<br>
+            <div class="cb {?= isset($data['komplikasi_br_reaksi_toksik']) && $data['komplikasi_br_reaksi_toksik'] == '1' ? 'checked' : '' ?}"></div> Reaksi toksik (kejang, henti jantung) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <div class="cb {?= isset($data['komplikasi_br_reaksi_alergi']) && $data['komplikasi_br_reaksi_alergi'] == '1' ? 'checked' : '' ?}"></div> Reaksi Alergi (Syok Anafilaktik sampai meninggal)<br>
+            <div class="cb {?= isset($data['komplikasi_br_lanjutan']) && $data['komplikasi_br_lanjutan'] == '1' ? 'checked' : '' ?}"></div> Komplikasi lanjutan : &nbsp;
+            <div class="cb {?= isset($data['komplikasi_br_nyeri_kepala']) && $data['komplikasi_br_nyeri_kepala'] == '1' ? 'checked' : '' ?}"></div> Nyeri kepala &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <div class="cb {?= isset($data['komplikasi_br_nyeri_punggung']) && $data['komplikasi_br_nyeri_punggung'] == '1' ? 'checked' : '' ?}"></div> Nyeri punggung<br>
+            <div class="cb {?= isset($data['komplikasi_br_tidak_bisa_berkemih']) && $data['komplikasi_br_tidak_bisa_berkemih'] == '1' ? 'checked' : '' ?}"></div> Tidak bisa berkemih &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <div class="cb {?= isset($data['komplikasi_br_infeksi']) && $data['komplikasi_br_infeksi'] == '1' ? 'checked' : '' ?}"></div> Infeksi &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <div class="cb {?= isset($data['komplikasi_br_cedera_saraf']) && $data['komplikasi_br_cedera_saraf'] == '1' ? 'checked' : '' ?}"></div> Cedera Saraf<br>
+            <div class="cb {?= isset($data['komplikasi_br_pendarahan']) && $data['komplikasi_br_pendarahan'] == '1' ? 'checked' : '' ?}"></div> Pendarahan<br>
+        </div>
+      </td>
+      <td class="text-center">
+        <div class="cb {?= isset($data['tandai_7']) && $data['tandai_7'] == '1' ? 'checked' : '' ?}"></div>
+      </td>
+    </tr>
+    <tr>
+      <td class="text-center">8</td>
+      <td>Prognosis</td>
+      <td>{?=isset_or($data['prognosis'])?}</td>
+      <td class="text-center">
+        <div class="cb {?= isset($data['tandai_8']) && $data['tandai_8'] == '1' ? 'checked' : '' ?}"></div>
+      </td>
+    </tr>
+    <tr>
+      <td class="text-center">9</td>
+      <td>Alternatif Tindakan</td>
+      <td>{?=isset_or($data['alternatif_tindakan'])?}</td>
+      <td class="text-center">
+        <div class="cb {?= isset($data['tandai_9']) && $data['tandai_9'] == '1' ? 'checked' : '' ?}"></div>
+      </td>
+    </tr>
+    <tr>
+      <td class="text-center">10</td>
+      <td>Lain-lain</td>
+      <td>{?=isset_or($data['lain_lain'])?}</td>
+      <td class="text-center">
+        <div class="cb {?= isset($data['tandai_10']) && $data['tandai_10'] == '1' ? 'checked' : '' ?}"></div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Tanda Tangan -->
+  <table class="table-body">
+    <tr>
+      <td style="width: 60%; vertical-align: top; border-top: none; border-bottom: none;">
+        <br>Dengan ini menyatakan bahwa saya telah<br>menerangkan hal-hal di atas secara benar dan<br>jelas dan memberi kesempatan untuk bertanya<br>atau diskusi
+      </td>
+      <td style="width: 40%; vertical-align: top; border-top: none; border-bottom: none; text-align: center;">
+        Pemberi Informasi<br>
+        <br><br><br>
+        (......................................................)<br>
+        Tanda tangan dan nama lengkap
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; border-top: 1px solid #000; padding-top: 10px;">
+        Dengan ini menyatakan bahwa saya telah<br>menerima informasi sebagaimana di atas yang<br>saya beri tanda/paraf di kolom kanannya dan<br>telah memahaminya
+      </td>
+      <td style="vertical-align: top; border-top: 1px solid #000; padding: 0;">
+        <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0;">
+            <tr>
+                <td style="width: 50%; border: none; border-right: 1px solid #000; text-align: center; padding-top: 10px;">
+                    Penerima Informasi<br>
+                    <br><br><br>
+                    (......................................................)<br>
+                    Tanda tangan dan nama lengkap
+                </td>
+                <td style="width: 50%; border: none; text-align: center; padding-top: 10px;">
+                    Pemberi Informasi<br>
+                    <br><br><br>
+                    (......................................................)<br>
+                    Tanda tangan dan nama lengkap
+                </td>
+            </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</div>
+<script>
+    window.print();
+</script>
+</body>
+</html>

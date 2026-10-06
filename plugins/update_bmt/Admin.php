@@ -8,9 +8,13 @@ class Admin extends AdminModule
     public function navigation()
     {
         return [
-            'Asesmen Gigi UGD'       => 'manage',
-            'Form Asesmen Gigi'      => 'form',
-            'RM.RJ-10 Edukasi Pasien' => 'edukasimanage',
+            'Rawat Jalan' => [
+                'RM.GD 4 - ASESMEN KEPERAWATAN.ASUHAN GIGI DAN MULUT UGD' => 'manage',
+                'RM.RJ-10 - LEMBAR EDUKASI PASIEN DAN KELUARGA TERINTEGRASI' => 'edukasimanage',
+            ],
+            'Bedah' => [
+                // 'Nama Form Bedah' => 'bedahmanage',
+            ]
         ];
     }
 
@@ -275,21 +279,32 @@ class Admin extends AdminModule
     }
 
     // AJAX: ambil info pasien berdasarkan no_rawat
-    public function getPatient_info()
+    public function anyPatientinfo()
     {
         $no_rawat = $_GET['no_rawat'] ?? '';
+        $no_rawat = trim($no_rawat);
+        
+        // Jika input hanya angka dan kurang dari 6 digit, otomatis tambahkan nol di depan (format standar No RM)
+        if (is_numeric($no_rawat) && strlen($no_rawat) < 6) {
+            $no_rawat = str_pad($no_rawat, 6, '0', STR_PAD_LEFT);
+        }
+
         $result = ['success' => false];
 
         if (!empty($no_rawat)) {
             $reg = $this->db('reg_periksa')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $no_rawat)
-                ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                ->desc('reg_periksa.tgl_registrasi')
+                ->desc('reg_periksa.jam_reg')
                 ->oneArray();
 
             if ($reg) {
                 $result = [
                     'success'       => true,
+                    'no_rawat'      => $reg['no_rawat'] ?? '',
                     'nama_pasien'   => $reg['nm_pasien'] ?? '',
                     'jenis_kelamin' => $reg['jk'] ?? '',
                     'tanggal_lahir' => $reg['tgl_lahir'] ?? '',
@@ -348,6 +363,233 @@ class Admin extends AdminModule
         }
 
         echo $this->draw('akgmu/cetak.html', ['data' => $data]);
+        exit();
+    }
+
+    // ============================================================
+    // ANS1 - INFORMASI TINDAKAN PEMBIUSAN
+    // ============================================================
+
+    public function anyAns1manage()
+    {
+        // Tangani penghapusan data di dalam method yang sudah terdaftar
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+            $id = $_GET['id'];
+            $this->db('ans1_tindakan_pembiusan')->where('id', $id)->delete();
+            $this->notify('success', 'Data berhasil dihapus');
+            redirect(url([ADMIN, 'update_bmt', 'ans1manage']));
+        }
+
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $data = $this->db('ans1_tindakan_pembiusan')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans1_tindakan_pembiusan.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('ans1_tindakan_pembiusan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->toArray();
+
+        return $this->draw('ans1/manage.html', ['data' => $data]);
+    }
+
+    public function getAns1form()
+    {
+        // AJAX: ambil info pasien untuk bypass blokir hak akses aksi baru
+        if (isset($_GET['ajax_patient'])) {
+            $no_rawat = $_GET['no_rawat'] ?? '';
+            $no_rawat = trim($no_rawat);
+            error_log("AJAX Patient Request: no_rawat received = '$no_rawat'");
+            
+            if (is_numeric($no_rawat) && strlen($no_rawat) < 6) {
+                $no_rawat = str_pad($no_rawat, 6, '0', STR_PAD_LEFT);
+                error_log("Padded no_rawat to: '$no_rawat'");
+            }
+
+            $result = ['success' => false];
+
+            if (!empty($no_rawat)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $no_rawat)
+                    ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+                
+                error_log("Query reg_periksa result: " . print_r($reg, true));
+
+                if ($reg) {
+                    $result = [
+                        'success'       => true,
+                        'no_rawat'      => $reg['no_rawat'] ?? '',
+                        'nama_pasien'   => $reg['nm_pasien'] ?? '',
+                        'jenis_kelamin' => $reg['jk'] ?? '',
+                        'tanggal_lahir' => $reg['tgl_lahir'] ?? '',
+                        'no_rkm_medis'  => $reg['no_rkm_medis'] ?? '',
+                    ];
+                }
+            }
+
+            if (ob_get_length()) {
+                ob_clean();
+            }
+            header('Content-Type: application/json');
+            error_log("Returning JSON: " . json_encode($result));
+            echo json_encode($result);
+            exit();
+        }
+
+        $id = $_GET['id'] ?? '';
+        $data = [];
+
+        if (!empty($id)) {
+            $data = $this->db('ans1_tindakan_pembiusan')->where('id', $id)->oneArray();
+            if ($data && !empty($data['no_rawat']) && empty($data['nm_pasien'])) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                    ->oneArray();
+                if ($reg) {
+                    $data['nm_pasien']   = $reg['nm_pasien'] ?? '';
+                    $data['jk']          = $reg['jk'] ?? '';
+                    $data['tgl_lahir']   = $reg['tgl_lahir'] ?? '';
+                    $data['no_rkm_medis']= $reg['no_rkm_medis'] ?? '';
+                }
+            }
+        }
+
+        return $this->draw('ans1/form.html', [
+            'data'   => $data
+        ]);
+    }
+
+    public function postAns1save()
+    {
+        try {
+            $post = $_POST;
+            $id   = !empty($post['id']) ? (int)$post['id'] : null;
+
+            $data = [
+                'no_rawat'                             => $post['no_rawat'] ?? '',
+                'tanggal_jam'                          => $post['tanggal_jam'] ?? date('Y-m-d H:i:s'),
+                'pemberi_informasi'                    => $post['pemberi_informasi'] ?? '',
+                'penerima_informasi_1'                 => $post['penerima_informasi_1'] ?? '',
+                'penerima_informasi_2'                 => $post['penerima_informasi_2'] ?? '',
+                'status_fisik_asa'                     => $post['status_fisik_asa'] ?? '',
+                'dasar_diagnosis_klinis'               => isset($post['dasar_diagnosis_klinis']) ? '1' : '0',
+                'dasar_diagnosis_laboratorium'         => isset($post['dasar_diagnosis_laboratorium']) ? '1' : '0',
+                'dasar_diagnosis_radiologis'           => isset($post['dasar_diagnosis_radiologis']) ? '1' : '0',
+                'dasar_diagnosis_ekg'                  => isset($post['dasar_diagnosis_ekg']) ? '1' : '0',
+                'tindakan_umum_intubasi'               => isset($post['tindakan_umum_intubasi']) ? '1' : '0',
+                'tindakan_umum_lma'                    => isset($post['tindakan_umum_lma']) ? '1' : '0',
+                'tindakan_umum_face_mask'              => isset($post['tindakan_umum_face_mask']) ? '1' : '0',
+                'tindakan_umum_tiva'                   => isset($post['tindakan_umum_tiva']) ? '1' : '0',
+                'tindakan_regional_spinal'             => isset($post['tindakan_regional_spinal']) ? '1' : '0',
+                'tindakan_regional_epidural'           => isset($post['tindakan_regional_epidural']) ? '1' : '0',
+                'tindakan_regional_blok_perifer'       => isset($post['tindakan_regional_blok_perifer']) ? '1' : '0',
+                'risiko_shock'                         => isset($post['risiko_shock']) ? '1' : '0',
+                'risiko_henti_jantung'                 => isset($post['risiko_henti_jantung']) ? '1' : '0',
+                'risiko_meninggal'                     => isset($post['risiko_meninggal']) ? '1' : '0',
+                'komplikasi_bius_umum'                 => isset($post['komplikasi_bius_umum']) ? '1' : '0',
+                'komplikasi_bu_sistem_pernapasan'      => isset($post['komplikasi_bu_sistem_pernapasan']) ? '1' : '0',
+                'komplikasi_bu_jantung'                => isset($post['komplikasi_bu_jantung']) ? '1' : '0',
+                'komplikasi_bu_sistem_saraf'           => isset($post['komplikasi_bu_sistem_saraf']) ? '1' : '0',
+                'komplikasi_bu_tindakan_laringoskopi'  => isset($post['komplikasi_bu_tindakan_laringoskopi']) ? '1' : '0',
+                'komplikasi_bu_suhu_tubuh'             => isset($post['komplikasi_bu_suhu_tubuh']) ? '1' : '0',
+                'komplikasi_bu_efek_merugikan'         => isset($post['komplikasi_bu_efek_merugikan']) ? '1' : '0',
+                'komplikasi_bu_cedera_akibat_posisi'   => isset($post['komplikasi_bu_cedera_akibat_posisi']) ? '1' : '0',
+                'komplikasi_bu_muntah'                 => isset($post['komplikasi_bu_muntah']) ? '1' : '0',
+                'komplikasi_bu_perut_kembung'          => isset($post['komplikasi_bu_perut_kembung']) ? '1' : '0',
+                'komplikasi_bu_tenggorokan_serak'      => isset($post['komplikasi_bu_tenggorokan_serak']) ? '1' : '0',
+                'komplikasi_bius_regional'             => isset($post['komplikasi_bius_regional']) ? '1' : '0',
+                'komplikasi_br_segera'                 => isset($post['komplikasi_br_segera']) ? '1' : '0',
+                'komplikasi_br_penurunan_tekanan_darah'=> isset($post['komplikasi_br_penurunan_tekanan_darah']) ? '1' : '0',
+                'komplikasi_br_anestesi_spinal_total'  => isset($post['komplikasi_br_anestesi_spinal_total']) ? '1' : '0',
+                'komplikasi_br_reaksi_toksik'          => isset($post['komplikasi_br_reaksi_toksik']) ? '1' : '0',
+                'komplikasi_br_reaksi_alergi'          => isset($post['komplikasi_br_reaksi_alergi']) ? '1' : '0',
+                'komplikasi_br_lanjutan'               => isset($post['komplikasi_br_lanjutan']) ? '1' : '0',
+                'komplikasi_br_nyeri_kepala'           => isset($post['komplikasi_br_nyeri_kepala']) ? '1' : '0',
+                'komplikasi_br_nyeri_punggung'         => isset($post['komplikasi_br_nyeri_punggung']) ? '1' : '0',
+                'komplikasi_br_tidak_bisa_berkemih'    => isset($post['komplikasi_br_tidak_bisa_berkemih']) ? '1' : '0',
+                'komplikasi_br_infeksi'                => isset($post['komplikasi_br_infeksi']) ? '1' : '0',
+                'komplikasi_br_cedera_saraf'           => isset($post['komplikasi_br_cedera_saraf']) ? '1' : '0',
+                'komplikasi_br_pendarahan'             => isset($post['komplikasi_br_pendarahan']) ? '1' : '0',
+                'tata_cara_tindakan'                   => $post['tata_cara_tindakan'] ?? 'Persiapan alat dan obat, pemeriksaan sebelum operasi, tindakan anastesi',
+                'indikasi_dan_tujuan'                  => $post['indikasi_dan_tujuan'] ?? 'Memfasilitasi Operasi, menghilangkan rasa sakit saat operasi',
+                'prognosis'                            => $post['prognosis'] ?? '',
+                'alternatif_tindakan'                  => $post['alternatif_tindakan'] ?? '',
+                'lain_lain'                            => $post['lain_lain'] ?? '',
+                'tandai_1'                             => isset($post['tandai_1']) ? '1' : '0',
+                'tandai_2'                             => isset($post['tandai_2']) ? '1' : '0',
+                'tandai_3'                             => isset($post['tandai_3']) ? '1' : '0',
+                'tandai_4'                             => isset($post['tandai_4']) ? '1' : '0',
+                'tandai_5'                             => isset($post['tandai_5']) ? '1' : '0',
+                'tandai_6'                             => isset($post['tandai_6']) ? '1' : '0',
+                'tandai_7'                             => isset($post['tandai_7']) ? '1' : '0',
+                'tandai_8'                             => isset($post['tandai_8']) ? '1' : '0',
+                'tandai_9'                             => isset($post['tandai_9']) ? '1' : '0',
+                'tandai_10'                            => isset($post['tandai_10']) ? '1' : '0'
+            ];
+
+            if ($id) {
+                $this->db('ans1_tindakan_pembiusan')->where('id', $id)->save($data);
+                $this->notify('success', 'Data berhasil diupdate');
+            } else {
+                $this->db('ans1_tindakan_pembiusan')->save($data);
+                $this->notify('success', 'Data berhasil disimpan');
+            }
+
+            redirect(url([ADMIN, 'update_bmt', 'ans1manage']));
+        } catch (\Exception $e) {
+            die("Terjadi kesalahan: " . $e->getMessage());
+        }
+    }
+
+    public function anyAns1hapus()
+    {
+        $id = $_REQUEST['id'] ?? '';
+        if ($id) {
+            $this->db('ans1_tindakan_pembiusan')->where('id', $id)->delete();
+            $this->notify('success', 'Data berhasil dihapus');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'ans1manage']));
+    }
+
+    public function getAns1cetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('ans1_tindakan_pembiusan')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans1_tindakan_pembiusan.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('ans1_tindakan_pembiusan.id', $id)
+            ->select('ans1_tindakan_pembiusan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        if (!empty($data['tgl_lahir'])) {
+            $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tanggal_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tanggal_lahir_indo'] = $data['tgl_lahir'];
+            }
+        }
+
+        echo $this->draw('ans1/cetak.html', ['data' => $data]);
         exit();
     }
 }

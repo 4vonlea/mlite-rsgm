@@ -1,0 +1,222 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">ANS1 - Informasi Tindakan Pembiusan</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ans1manage'])?}">Data Form</a></li>
+                    <li class="active"><a href="#" data-toggle="tab">Tambah/Edit Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'update_bmt', 'ans1save'])?}" method="POST" id="form-ans1" class="form-horizontal">
+                    <input type="hidden" name="id" value="{?=isset_or($data.id)?}">
+                    
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">No. Rawat</label>
+                        <div class="col-sm-4">
+                            <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data.no_rawat)?}" required>
+                        </div>
+                        <label class="col-sm-2 control-label">Nama Pasien</label>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control" id="nm_pasien" value="{?=isset_or($data.nm_pasien)?}" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Tanggal Jam</label>
+                        <div class="col-sm-4">
+                            <input type="datetime-local" name="tanggal_jam" class="form-control" value="{?=isset_or($data.tanggal_jam, date('Y-m-d\TH:i'))?}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Pemberi Informasi</label>
+                        <div class="col-sm-4">
+                            <input type="text" name="pemberi_informasi" class="form-control" value="{?=isset_or($data.pemberi_informasi)?}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Penerima Informasi 1</label>
+                        <div class="col-sm-4">
+                            <input type="text" name="penerima_informasi_1" class="form-control" value="{?=isset_or($data.penerima_informasi_1)?}">
+                        </div>
+                        <label class="col-sm-2 control-label">Penerima Informasi 2</label>
+                        <div class="col-sm-4">
+                            <input type="text" name="penerima_informasi_2" class="form-control" value="{?=isset_or($data.penerima_informasi_2)?}">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h4>Isi Informasi</h4>
+                    
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Jenis Informasi</th>
+                                <th>Isi Informasi</th>
+                                <th>Tandai</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Diagnosis Kerja / Diagnosis Banding</td>
+                                <td>
+                                    <label>Status Fisik ASA</label>
+                                    <input type="text" name="status_fisik_asa" class="form-control input-sm" value="{?=isset_or($data.status_fisik_asa)?}">
+                                </td>
+                                <td><input type="checkbox" name="tandai_1" {?= isset_or($data.tandai_1) == '1' ? 'checked' : '' ?}></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Dasar Diagnosis</td>
+                                <td>
+                                    <label class="checkbox-inline"><input type="checkbox" name="dasar_diagnosis_klinis" {?= isset_or($data.dasar_diagnosis_klinis) == '1' ? 'checked' : '' ?}> Klinis</label>
+                                    <label class="checkbox-inline"><input type="checkbox" name="dasar_diagnosis_laboratorium" {?= isset_or($data.dasar_diagnosis_laboratorium) == '1' ? 'checked' : '' ?}> Laboratorium</label>
+                                    <label class="checkbox-inline"><input type="checkbox" name="dasar_diagnosis_radiologis" {?= isset_or($data.dasar_diagnosis_radiologis) == '1' ? 'checked' : '' ?}> Radiologis</label>
+                                    <label class="checkbox-inline"><input type="checkbox" name="dasar_diagnosis_ekg" {?= isset_or($data.dasar_diagnosis_ekg) == '1' ? 'checked' : '' ?}> EKG</label>
+                                </td>
+                                <td><input type="checkbox" name="tandai_2" {?= isset_or($data.tandai_2) == '1' ? 'checked' : '' ?}></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Tindakan Kedokteran</td>
+                                <td>
+                                    <strong>Anestesi / Pembiusan</strong><br>
+                                    1. Umum: 
+                                    <label class="checkbox-inline"><input type="checkbox" name="tindakan_umum_intubasi" {?= isset_or($data.tindakan_umum_intubasi) == '1' ? 'checked' : '' ?}> Intubasi</label>
+                                    <label class="checkbox-inline"><input type="checkbox" name="tindakan_umum_lma" {?= isset_or($data.tindakan_umum_lma) == '1' ? 'checked' : '' ?}> LMA</label>
+                                    <label class="checkbox-inline"><input type="checkbox" name="tindakan_umum_face_mask" {?= isset_or($data.tindakan_umum_face_mask) == '1' ? 'checked' : '' ?}> Face Mask</label>
+                                    <label class="checkbox-inline"><input type="checkbox" name="tindakan_umum_tiva" {?= isset_or($data.tindakan_umum_tiva) == '1' ? 'checked' : '' ?}> TIVA</label>
+                                    <br>
+                                    2. Regional:
+                                    <label class="checkbox-inline"><input type="checkbox" name="tindakan_regional_spinal" {?= isset_or($data.tindakan_regional_spinal) == '1' ? 'checked' : '' ?}> Spinal</label>
+                                    <label class="checkbox-inline"><input type="checkbox" name="tindakan_regional_epidural" {?= isset_or($data.tindakan_regional_epidural) == '1' ? 'checked' : '' ?}> Epidural</label>
+                                    <label class="checkbox-inline"><input type="checkbox" name="tindakan_regional_blok_perifer" {?= isset_or($data.tindakan_regional_blok_perifer) == '1' ? 'checked' : '' ?}> Blok Perifer</label>
+                                </td>
+                                <td><input type="checkbox" name="tandai_3" {?= isset_or($data.tandai_3) == '1' ? 'checked' : '' ?}></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Tata cara tindakan</td>
+                                <td><input type="text" name="tata_cara_tindakan" class="form-control input-sm" value="{?=isset_or($data.tata_cara_tindakan, 'Persiapan alat dan obat, pemeriksaan sebelum operasi, tindakan anastesi')?}"></td>
+                                <td><input type="checkbox" name="tandai_4" {?= isset_or($data.tandai_4) == '1' ? 'checked' : '' ?}></td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Indikasi dan tujuan</td>
+                                <td><input type="text" name="indikasi_dan_tujuan" class="form-control input-sm" value="{?=isset_or($data.indikasi_dan_tujuan, 'Memfasilitasi Operasi, menghilangkan rasa sakit saat operasi')?}"></td>
+                                <td><input type="checkbox" name="tandai_5" {?= isset_or($data.tandai_5) == '1' ? 'checked' : '' ?}></td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>Resiko</td>
+                                <td>
+                                    <label class="checkbox-inline"><input type="checkbox" name="risiko_shock" {?= isset_or($data.risiko_shock) == '1' ? 'checked' : '' ?}> Shock</label>
+                                    <label class="checkbox-inline"><input type="checkbox" name="risiko_henti_jantung" {?= isset_or($data.risiko_henti_jantung) == '1' ? 'checked' : '' ?}> Henti jantung</label>
+                                    <label class="checkbox-inline"><input type="checkbox" name="risiko_meninggal" {?= isset_or($data.risiko_meninggal) == '1' ? 'checked' : '' ?}> Meninggal dunia di meja operasi</label>
+                                </td>
+                                <td><input type="checkbox" name="tandai_6" {?= isset_or($data.tandai_6) == '1' ? 'checked' : '' ?}></td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>Komplikasi</td>
+                                <td>
+                                    <label><input type="checkbox" name="komplikasi_bius_umum" {?= isset_or($data.komplikasi_bius_umum) == '1' ? 'checked' : '' ?}> <strong>1. Bius Umum</strong></label>
+                                    <div style="padding-left: 20px;">
+                                        <label><input type="checkbox" name="komplikasi_bu_sistem_pernapasan" {?= isset_or($data.komplikasi_bu_sistem_pernapasan) == '1' ? 'checked' : '' ?}> Sistem Pernapasan : kejang dan penyempitan jalan napas, kekurangan kadar O2 dalam darah, kekurangan atau kelebihan CO2 dalam darah, aspirasi pneumonia/masuknya isi lambung ke dalam saluran nafas/paru.</label><br>
+                                        <label><input type="checkbox" name="komplikasi_bu_jantung" {?= isset_or($data.komplikasi_bu_jantung) == '1' ? 'checked' : '' ?}> Jantung dan pembuluh darah : tekanan darah turun, tekanan darah naik, gangguan irama jantung sampai henti jantung.</label><br>
+                                        <label><input type="checkbox" name="komplikasi_bu_sistem_saraf" {?= isset_or($data.komplikasi_bu_sistem_saraf) == '1' ? 'checked' : '' ?}> Sistem saraf : kejang, bangun lambat, trauma saraf tepi.</label><br>
+                                        <label><input type="checkbox" name="komplikasi_bu_tindakan_laringoskopi" {?= isset_or($data.komplikasi_bu_tindakan_laringoskopi) == '1' ? 'checked' : '' ?}> Tindakan laringoskopi intubasi (gigi patah, luka mulut, pendarahan)</label><br>
+                                        <label><input type="checkbox" name="komplikasi_bu_suhu_tubuh" {?= isset_or($data.komplikasi_bu_suhu_tubuh) == '1' ? 'checked' : '' ?}> Suhu tubuh naik/turun</label><br>
+                                        <label><input type="checkbox" name="komplikasi_bu_efek_merugikan" {?= isset_or($data.komplikasi_bu_efek_merugikan) == '1' ? 'checked' : '' ?}> Efek merugikan obat dan alergi (syok anafilaktik sampai meninggal dunia)</label><br>
+                                        <label><input type="checkbox" name="komplikasi_bu_cedera_akibat_posisi" {?= isset_or($data.komplikasi_bu_cedera_akibat_posisi) == '1' ? 'checked' : '' ?}> Cedera akibat posisi saat operasi</label><br>
+                                        <label class="checkbox-inline"><input type="checkbox" name="komplikasi_bu_muntah" {?= isset_or($data.komplikasi_bu_muntah) == '1' ? 'checked' : '' ?}> Muntah</label>
+                                        <label class="checkbox-inline"><input type="checkbox" name="komplikasi_bu_perut_kembung" {?= isset_or($data.komplikasi_bu_perut_kembung) == '1' ? 'checked' : '' ?}> Perut kembung</label>
+                                        <label class="checkbox-inline"><input type="checkbox" name="komplikasi_bu_tenggorokan_serak" {?= isset_or($data.komplikasi_bu_tenggorokan_serak) == '1' ? 'checked' : '' ?}> Tenggorokan serak</label>
+                                    </div>
+                                    <br>
+                                    <label><input type="checkbox" name="komplikasi_bius_regional" {?= isset_or($data.komplikasi_bius_regional) == '1' ? 'checked' : '' ?}> <strong>2. Bius Regional : Spinal / Epidural</strong></label>
+                                    <div style="padding-left: 20px;">
+                                        Komplikasi segera : 
+                                        <label class="checkbox-inline"><input type="checkbox" name="komplikasi_br_penurunan_tekanan_darah" {?= isset_or($data.komplikasi_br_penurunan_tekanan_darah) == '1' ? 'checked' : '' ?}> Penurunan Tekanan darah</label>
+                                        <label class="checkbox-inline"><input type="checkbox" name="komplikasi_br_anestesi_spinal_total" {?= isset_or($data.komplikasi_br_anestesi_spinal_total) == '1' ? 'checked' : '' ?}> Anestesi Spinal total (penurunan kesadaran, penurunan denyut jantung, nafas berhenti)</label><br>
+                                        <label class="checkbox-inline"><input type="checkbox" name="komplikasi_br_reaksi_toksik" {?= isset_or($data.komplikasi_br_reaksi_toksik) == '1' ? 'checked' : '' ?}> Reaksi toksik (kejang, henti jantung)</label>
+                                        <label class="checkbox-inline"><input type="checkbox" name="komplikasi_br_reaksi_alergi" {?= isset_or($data.komplikasi_br_reaksi_alergi) == '1' ? 'checked' : '' ?}> Reaksi Alergi (Syok Anafilaktik sampai meninggal)</label><br>
+                                        Komplikasi lanjutan : 
+                                        <label class="checkbox-inline"><input type="checkbox" name="komplikasi_br_nyeri_kepala" {?= isset_or($data.komplikasi_br_nyeri_kepala) == '1' ? 'checked' : '' ?}> Nyeri kepala</label>
+                                        <label class="checkbox-inline"><input type="checkbox" name="komplikasi_br_nyeri_punggung" {?= isset_or($data.komplikasi_br_nyeri_punggung) == '1' ? 'checked' : '' ?}> Nyeri punggung</label><br>
+                                        <label class="checkbox-inline"><input type="checkbox" name="komplikasi_br_tidak_bisa_berkemih" {?= isset_or($data.komplikasi_br_tidak_bisa_berkemih) == '1' ? 'checked' : '' ?}> Tidak bisa berkemih</label>
+                                        <label class="checkbox-inline"><input type="checkbox" name="komplikasi_br_infeksi" {?= isset_or($data.komplikasi_br_infeksi) == '1' ? 'checked' : '' ?}> Infeksi</label>
+                                        <label class="checkbox-inline"><input type="checkbox" name="komplikasi_br_cedera_saraf" {?= isset_or($data.komplikasi_br_cedera_saraf) == '1' ? 'checked' : '' ?}> Cedera Saraf</label>
+                                        <label class="checkbox-inline"><input type="checkbox" name="komplikasi_br_pendarahan" {?= isset_or($data.komplikasi_br_pendarahan) == '1' ? 'checked' : '' ?}> Pendarahan</label>
+                                    </div>
+                                </td>
+                                <td><input type="checkbox" name="tandai_7" {?= isset_or($data.tandai_7) == '1' ? 'checked' : '' ?}></td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td>Prognosis</td>
+                                <td><input type="text" name="prognosis" class="form-control input-sm" value="{?=isset_or($data.prognosis)?}"></td>
+                                <td><input type="checkbox" name="tandai_8" {?= isset_or($data.tandai_8) == '1' ? 'checked' : '' ?}></td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td>Alternatif Tindakan</td>
+                                <td><input type="text" name="alternatif_tindakan" class="form-control input-sm" value="{?=isset_or($data.alternatif_tindakan)?}"></td>
+                                <td><input type="checkbox" name="tandai_9" {?= isset_or($data.tandai_9) == '1' ? 'checked' : '' ?}></td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td>Lain-lain</td>
+                                <td><input type="text" name="lain_lain" class="form-control input-sm" value="{?=isset_or($data.lain_lain)?}"></td>
+                                <td><input type="checkbox" name="tandai_10" {?= isset_or($data.tandai_10) == '1' ? 'checked' : '' ?}></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="form-group text-center">
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+                        <a href="{?=url([ADMIN, 'update_bmt', 'ans1manage'])?}" class="btn btn-default">Batal</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$(document).ready(function() {
+    function searchPatient() {
+        var no_rawat = $('#no_rawat').val().trim();
+        if (!no_rawat) return;
+        
+        // Disable input while searching
+        $('#no_rawat').prop('readonly', true);
+        
+        $.get('{?=url([ADMIN, "update_bmt", "ans1form"])?}', {ajax_patient: 1, no_rawat: no_rawat, _: new Date().getTime()}, function(res) {
+            $('#no_rawat').prop('readonly', false);
+            if (res && res.success) {
+                $('#no_rawat').val(res.no_rawat);
+                $('#nm_pasien').val(res.nama_pasien);
+            } else {
+                alert('Data pasien tidak ditemukan untuk No RM / No Rawat: ' + no_rawat);
+            }
+        }, 'json').fail(function(jqXHR, textStatus, errorThrown) {
+            $('#no_rawat').prop('readonly', false);
+            alert('Terjadi kesalahan jaringan atau server saat mencari pasien. Silakan coba lagi. (' + textStatus + ')');
+        });
+    }
+
+    // Trigger pencarian saat input hilang fokus atau menekan Enter/Tab
+    $('#no_rawat').on('blur', searchPatient);
+    $('#no_rawat').on('keypress', function(e) {
+        if (e.which == 13) { // Enter
+            e.preventDefault();
+            searchPatient();
+        }
+    });
+});
+</script>

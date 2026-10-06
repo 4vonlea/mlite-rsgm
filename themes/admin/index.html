@@ -436,11 +436,21 @@
           </li>
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-              aria-expanded="false">Update BMT</a>
+              aria-expanded="false">UPDATE BMT</a>
             <ul class="dropdown-menu">
-              <li><a href="{?=url([ADMIN, 'update_bmt', 'manage'])?}">RM.GD 4 - ASESMEN KEPERAWATAN.ASUHAN GIGI DAN
-                  MULUT UGD</a></li>
-              <li><a href="{?=url([ADMIN, 'update_bmt', 'edukasimanage'])?}">RM.RJ-10 - LEMBAR EDUKASI PASIEN DAN KELUARGA TERINTEGRASI</a></li>
+              <li class="dropdown-submenu">
+                <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">Rawat Jalan</a>
+                <ul class="dropdown-menu">
+                  <li><a href="{?=url([ADMIN, 'update_bmt', 'manage'])?}">RM.GD 4 - ASESMEN KEPERAWATAN.ASUHAN GIGI DAN MULUT UGD</a></li>
+                  <li><a href="{?=url([ADMIN, 'update_bmt', 'edukasimanage'])?}">RM.RJ-10 - LEMBAR EDUKASI PASIEN DAN KELUARGA TERINTEGRASI</a></li>
+                </ul>
+              </li>
+              <li class="dropdown-submenu">
+                <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">Bedah</a>
+                <ul class="dropdown-menu">
+                  <li><a href="{?=url([ADMIN, 'update_bmt', 'ans1manage'])?}">ANS1 - INFORMASI TINDAKAN PEMBIUSAN</a></li>
+                </ul>
+              </li>
             </ul>
           </li>
           </ul>

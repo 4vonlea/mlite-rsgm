@@ -1,0 +1,53 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">ANS1 - Informasi Tindakan Pembiusan</h3>
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ans1manage'])?}" data-toggle="tab">Data Form</a></li>
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ans1form'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive no-margin">
+                    <table class="table table-striped table-bordered no-margin display" id="data-table">
+                        <thead>
+                            <tr>
+                                <th>No. Rawat</th>
+                                <th>No. RM</th>
+                                <th>Nama Pasien</th>
+                                <th>Tanggal</th>
+                                <th>Pemberi Informasi</th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {if: !empty($data)}
+                            {loop: $data}
+                            <tr>
+                                <td>{$value.no_rawat}</td>
+                                <td>{$value.no_rkm_medis}</td>
+                                <td>{$value.nm_pasien}</td>
+                                <td>{$value.tanggal_jam}</td>
+                                <td>{$value.pemberi_informasi}</td>
+                                <td class="text-center">
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans1form'])?}&id={$value.id}" class="btn btn-xs btn-primary"><i class="fa fa-edit"></i> Edit</a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans1cetak'])?}&id={$value.id}" target="_blank" class="btn btn-xs btn-success"><i class="fa fa-print"></i> Cetak</a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans1manage'])?}&action=delete&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Apakah anda yakin ingin menghapus data ini?')"><i class="fa fa-trash"></i> Hapus</a>
+                                </td>
+                            </tr>
+                            {/loop}
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+    $(document).ready(function() {
+        $('#data-table').DataTable();
+    });
+</script>

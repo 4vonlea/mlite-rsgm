@@ -201,7 +201,13 @@ function url($data = '')
     $url = str_replace('/'.ADMIN, '', $url);
 
     if (is_array($data)) {
-        $url = $url.'/'.implode('/', $data);
+        $flat_data = [];
+        array_walk_recursive($data, function($a) use (&$flat_data) { 
+            if (is_scalar($a)) {
+                $flat_data[] = $a; 
+            }
+        });
+        $url = $url.'/'.implode('/', $flat_data);
     } elseif ($data) {
         $data = str_replace(BASE_DIR.'/', '', $data);
         $url = $url.'/'.trim($data, '/');
