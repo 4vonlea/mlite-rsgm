@@ -1,0 +1,426 @@
+<div id="form_edukasi_pasien" style="max-width: 1100px; margin: 0 auto;">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title"><i class="fa fa-file-text-o"></i> RM.RJ-10 &mdash; Lembar Edukasi Pasien dan Keluarga Terintegrasi</h3>
+    </div>
+    <div class="panel-body">
+      <form method="POST" action="{?=url([ADMIN, 'update_bmt', 'edukasisave'])?}" id="form-edukasi">
+        <input type="hidden" name="id" value="{?=isset_or($data['id'])?}">
+
+        <!-- Identitas Pasien -->
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>No Rawat <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" required autocomplete="off" placeholder="Cth: 2024/01/0001">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-info" id="btn-cari-pasien">
+                    <i class="fa fa-search"></i> Cari
+                  </button>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>Nama Pasien</label>
+              <input type="text" name="nama_pasien" id="nama_pasien" class="form-control" value="{?=isset_or($data['nama_pasien'])?}">
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group">
+              <label>L / P</label>
+              <select data-use-search="true" name="jenis_kelamin" id="jenis_kelamin" class="form-control">
+                <option value="L" {if: isset($data['jenis_kelamin']) && $data['jenis_kelamin'] == 'L'}selected{/if}>Laki-laki (L)</option>
+                <option value="P" {if: isset($data['jenis_kelamin']) && $data['jenis_kelamin'] == 'P'}selected{/if}>Perempuan (P)</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Tanggal Lahir</label>
+              <input type="date" name="tanggal_lahir" id="tanggal_lahir" class="form-control" value="{?=isset_or($data['tanggal_lahir'])?}">
+            </div>
+          </div>
+        </div>
+
+        <!-- A. Pengkajian Kebutuhan Pasien dan Keluarga -->
+        <div class="panel panel-warning">
+          <div class="panel-heading"><h4 class="panel-title">A. Pengkajian Kebutuhan Pasien dan Keluarga</h4></div>
+          <div class="panel-body">
+            <div class="row">
+              <!-- Hambatan -->
+              <div class="col-md-4">
+                <label><strong>Hambatan</strong></label><br>
+                <div class="checkbox"><label><input type="checkbox" name="hambatan_emosi" value="1" {if: isset($data['hambatan_emosi']) && $data['hambatan_emosi'] == 1}checked{/if}> 1. Emosi</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="hambatan_motivasi" value="1" {if: isset($data['hambatan_motivasi']) && $data['hambatan_motivasi'] == 1}checked{/if}> 2. Motivasi</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="hambatan_tidak_ada" value="1" {if: isset($data['hambatan_tidak_ada']) && $data['hambatan_tidak_ada'] == 1}checked{/if}> 3. Tidak ada</label></div>
+              </div>
+              <!-- Keyakinan dan Nilai -->
+              <div class="col-md-8">
+                <label><strong>Keyakinan dan Nilai-nilai</strong></label>
+                <div class="form-group">
+                  <label>1. Pantangan Hari</label>
+                  <input type="text" name="pantangan_hari" class="form-control" value="{?=isset_or($data['pantangan_hari'])?}" placeholder="Pantangan hari...">
+                </div>
+                <div class="form-group">
+                  <label>2. Pantangan Makan</label>
+                  <input type="text" name="pantangan_makan" class="form-control" value="{?=isset_or($data['pantangan_makan'])?}" placeholder="Pantangan makan...">
+                </div>
+                <div class="form-group">
+                  <label>3. Pantangan Dirawat Dokter Gigi Lawan Jenis</label>
+                  <input type="text" name="pantangan_perawatan" class="form-control" value="{?=isset_or($data['pantangan_perawatan'])?}" placeholder="Keterangan pantangan...">
+                </div>
+              </div>
+            </div>
+
+            <hr>
+
+            <div class="row">
+              <!-- Keterbatasan -->
+              <div class="col-md-4">
+                <label><strong>Keterbatasan</strong></label><br>
+                <div class="checkbox"><label><input type="checkbox" name="keterbatasan_fisik" value="1" {if: isset($data['keterbatasan_fisik']) && $data['keterbatasan_fisik'] == 1}checked{/if}> 1. Fisik</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="keterbatasan_kognitif" value="1" {if: isset($data['keterbatasan_kognitif']) && $data['keterbatasan_kognitif'] == 1}checked{/if}> 2. Kognitif</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="keterbatasan_tidak_ada" value="1" {if: isset($data['keterbatasan_tidak_ada']) && $data['keterbatasan_tidak_ada'] == 1}checked{/if}> 3. Tidak ada</label></div>
+              </div>
+              <!-- Kemampuan Membaca -->
+              <div class="col-md-4">
+                <label><strong>Kemampuan Membaca</strong></label><br>
+                <div class="checkbox"><label><input type="checkbox" name="kemampuan_bisa_membaca" value="1" {if: isset($data['kemampuan_bisa_membaca']) && $data['kemampuan_bisa_membaca'] == 1}checked{/if}> 1. Bisa Membaca</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kemampuan_tidak_bisa_membaca" value="1" {if: isset($data['kemampuan_tidak_bisa_membaca']) && $data['kemampuan_tidak_bisa_membaca'] == 1}checked{/if}> 2. Tidak bisa membaca</label></div>
+              </div>
+            </div>
+
+            <hr>
+
+            <div class="row">
+              <!-- Ketersediaan Menerima Edukasi -->
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label><strong>Ketersediaan Menerima Edukasi</strong></label><br>
+                  <div class="checkbox"><label><input type="checkbox" name="ketersediaan_menerima_edukasi_ya" value="1" {if: isset($data['ketersediaan_menerima_edukasi_ya']) && $data['ketersediaan_menerima_edukasi_ya'] == 1}checked{/if}> 1. Ya</label></div>
+                  <div class="checkbox"><label><input type="checkbox" name="ketersediaan_menerima_edukasi_tidak" value="1" {if: isset($data['ketersediaan_menerima_edukasi_tidak']) && $data['ketersediaan_menerima_edukasi_tidak'] == 1}checked{/if}> 2. Tidak</label></div>
+                </div>
+              </div>
+              <!-- Pendidikan Terakhir -->
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label><strong>Pendidikan Terakhir</strong></label>
+                  <input type="text" name="pendidikan_terakhir" class="form-control" value="{?=isset_or($data['pendidikan_terakhir'])?}" placeholder="Pendidikan terakhir...">
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Bahasa yang Dipakai -->
+              <div class="col-md-4">
+                <label><strong>Bahasa yang Dipakai</strong></label>
+                <div class="checkbox"><label><input type="checkbox" name="bahasa_indonesia" value="1" {if: isset($data['bahasa_indonesia']) && $data['bahasa_indonesia'] == 1}checked{/if}> 1. Indonesia</label></div>
+                <div class="checkbox"><label><input type="checkbox" id="chk_bahasa_lainnya" name="chk_bahasa_lainnya" value="1" {if: !empty($data['bahasa_lainnya'])}checked{/if}> 2. Lainnya</label></div>
+                <div class="form-group" style="margin-top: 5px; display: {?=!empty($data['bahasa_lainnya']) ? 'block' : 'none'?};" id="wrap_bahasa_lainnya">
+                  <input type="text" id="bahasa_lainnya" name="bahasa_lainnya" class="form-control" value="{?=isset_or($data['bahasa_lainnya'])?}" placeholder="Bahasa lainnya...">
+                </div>
+              </div>
+              <!-- Kebutuhan Penerjemah -->
+              <div class="col-md-4">
+                <label><strong>Kebutuhan Penerjemah</strong></label>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_penerjemah_tidak" value="1" {if: isset($data['kebutuhan_penerjemah_tidak']) && $data['kebutuhan_penerjemah_tidak'] == 1}checked{/if}> 1. Tidak</label></div>
+                <div class="checkbox"><label><input type="checkbox" id="chk_penerjemah_ya" name="chk_penerjemah_ya" value="1" {if: !empty($data['kebutuhan_penerjemah_ya'])}checked{/if}> 2. Ya, bahasa</label></div>
+                <div class="form-group" style="margin-top: 5px; display: {?=!empty($data['kebutuhan_penerjemah_ya']) ? 'block' : 'none'?};" id="wrap_penerjemah_ya">
+                  <input type="text" id="kebutuhan_penerjemah_ya" name="kebutuhan_penerjemah_ya" class="form-control" value="{?=isset_or($data['kebutuhan_penerjemah_ya'])?}" placeholder="Bahasa penerjemah...">
+                </div>
+              </div>
+            </div>
+
+            <hr>
+
+            <div class="row">
+              <!-- Kebutuhan Edukasi -->
+              <div class="col-md-12">
+                <label><strong>Kebutuhan Edukasi</strong> <small class="text-muted">(centang yang sesuai)</small></label>
+                <div class="row">
+              <div class="col-md-5">
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Diagnosis" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Diagnosis') !== false}checked{/if}> 1. Diagnosis</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Tanda, gejala & penyebab" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Tanda, gejala & penyebab') !== false}checked{/if}> 2. Tanda, gejala &amp; penyebab</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Rencana tindakan medis" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Rencana tindakan medis') !== false}checked{/if}> 3. Rencana tindakan medis</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Hasil yang diharapkan" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Hasil yang diharapkan') !== false}checked{/if}> 4. Hasil yang diharapkan</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Alternatif tindakan lain" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Alternatif tindakan lain') !== false}checked{/if}> 5. Alternatif tindakan lain</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Risiko tindakan" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Risiko tindakan') !== false}checked{/if}> 6. Risiko tindakan</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Komplikasi yang mungkin terjadi" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Komplikasi yang mungkin terjadi') !== false}checked{/if}> 7. Komplikasi yang mungkin terjadi</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Prognosis" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Prognosis') !== false}checked{/if}> 8. Prognosis</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Cara menyikat gigi" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Cara menyikat gigi') !== false}checked{/if}> 9. Cara menyikat gigi</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Instruksi paska tindakan medis" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Instruksi paska tindakan medis') !== false}checked{/if}> 10. Instruksi paska tindakan medis</label></div>
+              </div>
+              <div class="col-md-5">
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Penggunaan obat" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Penggunaan obat') !== false}checked{/if}> 11. Penggunaan obat</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Efek samping obat" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Efek samping obat') !== false}checked{/if}> 12. Efek samping obat</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Interaksi obat" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Interaksi obat') !== false}checked{/if}> 13. Interaksi obat</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Keamanan dan efektivitas peralatan medis" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Keamanan dan efektivitas peralatan medis') !== false}checked{/if}> 14. Keamanan dan efektivitas peralatan medis</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Pedoman Nutrisi" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Pedoman Nutrisi') !== false}checked{/if}> 15. Pedoman Nutrisi</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Diet dan nutrisi" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Diet dan nutrisi') !== false}checked{/if}> 16. Diet dan nutrisi</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Manajemen nyeri" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Manajemen nyeri') !== false}checked{/if}> 17. Manajemen nyeri</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Teknik rehabilitasi" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Teknik rehabilitasi') !== false}checked{/if}> 18. Teknik rehabilitasi</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Cara mencuci tangan yang benar" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Cara mencuci tangan yang benar') !== false}checked{/if}> 19. Cara mencuci tangan yang benar</label></div>
+              </div>
+              <div class="col-md-2">
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Etika batuk" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Etika batuk') !== false}checked{/if}> 20. Etika batuk</label></div>
+                <div class="checkbox"><label><input type="checkbox" name="kebutuhan_edukasi[]" value="Resiko jatuh" {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Resiko jatuh') !== false}checked{/if}> 21. Resiko jatuh</label></div>
+              </div>
+                </div>
+              </div>
+            </div>
+
+            <hr>
+
+            <div class="row">
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label>Nama Perawat yang Mengkaji</label>
+                  <input type="text" name="nama_perawat" class="form-control" value="{?=isset_or($data['nama_perawat'])?}" placeholder="Nama perawat...">
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="form-group">
+                  <label>NIP</label>
+                  <input type="text" name="nip_perawat" class="form-control" value="{?=isset_or($data['nip_perawat'])?}">
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="form-group">
+                  <label>Tanggal Pengkajian</label>
+                  <input type="date" name="tanggal_pengkajian" class="form-control" value="{?=isset_or($data['tanggal_pengkajian'], date('Y-m-d'))?}">
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="form-group">
+                  <label>Jam</label>
+                  <input type="time" name="jam_pengkajian" class="form-control" value="{?=isset_or($data['jam_pengkajian'], date('H:i'))?}">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- B. Pelaksanaan Edukasi Pasien & Keluarga -->
+        <h4>B. PELAKSANAAN EDUKASI PASIEN &amp; KELUARGA</h4>
+            <div class="table-responsive">
+              <table class="table table-bordered" id="tabel-detail-edukasi">
+                <thead>
+                  <tr>
+                    <th style="min-width:120px;">Tanggal &amp; Jam</th>
+                    <th style="min-width:180px;">Isi Kebutuhan Edukasi</th>
+                    <th style="min-width:130px;">Pengetahuan Pra Edukasi</th>
+                    <th style="min-width:130px;">Penerima Edukasi</th>
+                    <th style="min-width:130px;">Metode Edukasi</th>
+                    <th style="min-width:180px;">Evaluasi</th>
+                    <th style="min-width:130px;">Nama &amp; TTD Pemberi Edukasi</th>
+                    <th style="min-width:130px;">Nama &amp; TTD Penerima Edukasi</th>
+                    <th style="width:50px;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="detail-rows">
+                  {loop: $detail}
+                  <tr class="detail-row">
+                    <td>
+                      <input type="datetime-local" name="detail_tanggal_jam[]" class="form-control input-sm" value="{?= !empty($value.tanggal_jam) ? date('Y-m-d\TH:i', strtotime($value.tanggal_jam)) : '' ?}">
+                    </td>
+                    <td>
+                      <textarea name="detail_isi_kebutuhan[]" class="form-control input-sm" rows="3" placeholder="Isi kebutuhan edukasi...">{?=isset_or($value.isi_kebutuhan_edukasi)?}</textarea>
+                    </td>
+                    <td>
+                      <select name="detail_kemampuan_pra[]" class="form-control input-sm">
+                        <option value="">- Pilih -</option>
+                        <option value="Sangat tahu" {if: isset($value.kemampuan_pra_edukasi) && $value.kemampuan_pra_edukasi == 'Sangat tahu'}selected{/if}>1. Sangat tahu</option>
+                        <option value="Perlu diulang" {if: isset($value.kemampuan_pra_edukasi) && $value.kemampuan_pra_edukasi == 'Perlu diulang'}selected{/if}>2. Perlu diulang</option>
+                        <option value="Belum tahu" {if: isset($value.kemampuan_pra_edukasi) && $value.kemampuan_pra_edukasi == 'Belum tahu'}selected{/if}>3. Belum tahu</option>
+                      </select>
+                    </td>
+                    <td>
+                      <select name="detail_sasaran[]" class="form-control input-sm">
+                        <option value="">- Pilih -</option>
+                        <option value="Pasien" {if: isset($value.sasaran_edukasi) && $value.sasaran_edukasi == 'Pasien'}selected{/if}>1. Pasien</option>
+                        <option value="Keluarga" {if: isset($value.sasaran_edukasi) && $value.sasaran_edukasi == 'Keluarga'}selected{/if}>2. Keluarga</option>
+                        <option value="Pasien & Keluarga" {if: isset($value.sasaran_edukasi) && $value.sasaran_edukasi == 'Pasien & Keluarga'}selected{/if}>3. Pasien &amp; Keluarga</option>
+                        <option value="Lain-lain" {if: isset($value.sasaran_edukasi) && $value.sasaran_edukasi == 'Lain-lain'}selected{/if}>4. Lain-lain</option>
+                      </select>
+                    </td>
+                    <td>
+                      <select name="detail_metode[]" class="form-control input-sm">
+                        <option value="">- Pilih -</option>
+                        <option value="Membaca" {if: isset($value.metode_edukasi) && $value.metode_edukasi == 'Membaca'}selected{/if}>1. Membaca</option>
+                        <option value="Demonstrasi" {if: isset($value.metode_edukasi) && $value.metode_edukasi == 'Demonstrasi'}selected{/if}>2. Demonstrasi</option>
+                        <option value="Ceramah" {if: isset($value.metode_edukasi) && $value.metode_edukasi == 'Ceramah'}selected{/if}>3. Ceramah</option>
+                        <option value="Diskusi" {if: isset($value.metode_edukasi) && $value.metode_edukasi == 'Diskusi'}selected{/if}>4. Diskusi</option>
+                        <option value="Audio Visual" {if: isset($value.metode_edukasi) && $value.metode_edukasi == 'Audio Visual'}selected{/if}>5. Audio Visual</option>
+                      </select>
+                    </td>
+                    <td>
+                      <select name="detail_evaluasi[]" class="form-control input-sm">
+                        <option value="">- Pilih -</option>
+                        <option value="Mengerti" {if: isset($value.evaluasi) && $value.evaluasi == 'Mengerti'}selected{/if}>1. Mengerti</option>
+                        <option value="Mengerti, Mengulang" {if: isset($value.evaluasi) && $value.evaluasi == 'Mengerti, Mengulang'}selected{/if}>2. Mengerti, Mengulang</option>
+                        <option value="Mengerti, Mengulang, Mendemonstrasikan" {if: isset($value.evaluasi) && $value.evaluasi == 'Mengerti, Mengulang, Mendemonstrasikan'}selected{/if}>3. Mengerti, Mengulang, Mendemonstrasikan</option>
+                        <option value="Re-edukasi" {if: isset($value.evaluasi) && $value.evaluasi == 'Re-edukasi'}selected{/if}>4. Re-edukasi</option>
+                      </select>
+                    </td>
+                    <td>
+                      <input type="text" name="detail_nama_ttd_pemberi[]" class="form-control input-sm" value="{?=isset_or($value.nama_ttd_pemberi)?}" placeholder="Nama pemberi edukasi...">
+                    </td>
+                    <td>
+                      <input type="text" name="detail_nama_ttd_penerima[]" class="form-control input-sm" value="{?=isset_or($value.nama_ttd_penerima)?}" placeholder="Nama penerima edukasi...">
+                    </td>
+                    <td>
+                      <button type="button" class="btn btn-xs btn-danger btn-hapus-row"><i class="fa fa-trash"></i></button>
+                    </td>
+                  </tr>
+                  {/loop}
+                </tbody>
+              </table>
+            </div>
+            <button type="button" class="btn btn-success btn-sm" id="btn-tambah-row" style="margin-bottom: 20px;">
+              <i class="fa fa-plus"></i> Tambah Baris Edukasi
+            </button>
+
+        <!-- Tombol Simpan -->
+        <div class="form-group">
+          <a href="{?=url([ADMIN, 'update_bmt', 'edukasimanage'])?}" class="btn btn-default"><i class="fa fa-arrow-left"></i> Kembali</a>
+          <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Template Row (hidden) -->
+<script type="text/template" id="template-row">
+  <tr class="detail-row">
+    <td>
+      <input type="datetime-local" name="detail_tanggal_jam[]" class="form-control input-sm">
+    </td>
+    <td>
+      <textarea name="detail_isi_kebutuhan[]" class="form-control input-sm" rows="3" placeholder="Isi kebutuhan edukasi..."></textarea>
+    </td>
+    <td>
+      <select name="detail_kemampuan_pra[]" class="form-control input-sm ignore-selectator">
+        <option value="">- Pilih -</option>
+        <option value="Sangat tahu">1. Sangat tahu</option>
+        <option value="Perlu diulang">2. Perlu diulang</option>
+        <option value="Belum tahu">3. Belum tahu</option>
+      </select>
+    </td>
+    <td>
+      <select name="detail_sasaran[]" class="form-control input-sm ignore-selectator">
+        <option value="">- Pilih -</option>
+        <option value="Pasien">1. Pasien</option>
+        <option value="Keluarga">2. Keluarga</option>
+        <option value="Pasien & Keluarga">3. Pasien &amp; Keluarga</option>
+        <option value="Lain-lain">4. Lain-lain</option>
+      </select>
+    </td>
+    <td>
+      <select name="detail_metode[]" class="form-control input-sm ignore-selectator">
+        <option value="">- Pilih -</option>
+        <option value="Membaca">1. Membaca</option>
+        <option value="Demonstrasi">2. Demonstrasi</option>
+        <option value="Ceramah">3. Ceramah</option>
+        <option value="Diskusi">4. Diskusi</option>
+        <option value="Audio Visual">5. Audio Visual</option>
+      </select>
+    </td>
+    <td>
+      <select name="detail_evaluasi[]" class="form-control input-sm ignore-selectator">
+        <option value="">- Pilih -</option>
+        <option value="Mengerti">1. Mengerti</option>
+        <option value="Mengerti, Mengulang">2. Mengerti, Mengulang</option>
+        <option value="Mengerti, Mengulang, Mendemonstrasikan">3. Mengerti, Mengulang, Mendemonstrasikan</option>
+        <option value="Re-edukasi">4. Re-edukasi</option>
+      </select>
+    </td>
+    <td>
+      <input type="text" name="detail_nama_ttd_pemberi[]" class="form-control input-sm" placeholder="Nama pemberi edukasi...">
+    </td>
+    <td>
+      <input type="text" name="detail_nama_ttd_penerima[]" class="form-control input-sm" placeholder="Nama penerima edukasi...">
+    </td>
+    <td>
+      <button type="button" class="btn btn-xs btn-danger btn-hapus-row"><i class="fa fa-trash"></i></button>
+    </td>
+  </tr>
+</script>
+
+<script>
+$(document).ready(function() {
+
+  // Cari pasien berdasarkan no_rawat
+  $('#btn-cari-pasien').on('click', function() {
+    var no_rawat = $('#no_rawat').val().trim();
+    if (!no_rawat) {
+      alert('Masukkan No Rawat terlebih dahulu');
+      return;
+    }
+    $.get('{?=url([ADMIN, "update_bmt", "patient_info"])?}', {no_rawat: no_rawat}, function(res) {
+      if (res.success) {
+        $('#nama_pasien').val(res.nama_pasien);
+        $('#jenis_kelamin').val(res.jenis_kelamin);
+        $('#tanggal_lahir').val(res.tanggal_lahir);
+      } else {
+        alert('Data pasien tidak ditemukan');
+      }
+    }, 'json');
+  });
+
+  // Tambah baris detail edukasi
+  $('#btn-tambah-row').on('click', function() {
+    var templateHTML = $('#template-row').html();
+    $('#detail-rows').append(templateHTML);
+    
+    // Inisialisasi ulang selectator untuk dropdown di baris yang baru ditambah
+    var newRow = $('#detail-rows .detail-row').last();
+    newRow.find('select').each(function () {
+      var options = {
+          useDimmer: true,
+          useSearch: false,
+          labels: { search: '...' }
+      };
+      if (typeof $(this).selectator === 'function') {
+        $(this).selectator(options);
+      }
+    });
+  });
+
+  // Hapus baris detail
+  $(document).on('click', '.btn-hapus-row', function() {
+    if ($('#detail-rows .detail-row').length <= 1) {
+      alert('Minimal harus ada 1 baris edukasi');
+      return;
+    }
+    $(this).closest('tr').remove();
+  });
+
+  // Toggle inputs
+  $('#chk_bahasa_lainnya').change(function() {
+    if ($(this).is(':checked')) {
+      $('#wrap_bahasa_lainnya').show();
+    } else {
+      $('#wrap_bahasa_lainnya').hide();
+      $('#bahasa_lainnya').val('');
+    }
+  });
+
+  $('#chk_penerjemah_ya').change(function() {
+    if ($(this).is(':checked')) {
+      $('#wrap_penerjemah_ya').show();
+    } else {
+      $('#wrap_penerjemah_ya').hide();
+      $('#kebutuhan_penerjemah_ya').val('');
+    }
+  });
+
+  // Tambah baris otomatis jika belum ada
+  if ($('#detail-rows .detail-row').length === 0) {
+    $('#btn-tambah-row').trigger('click');
+  }
+});
+</script>

@@ -1,0 +1,57 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title"><i class="fa fa-file-text-o"></i> RM.RJ-10 &mdash; Lembar Edukasi Pasien dan Keluarga
+      Terintegrasi</h3>
+  </div>
+  <div class="panel-body">
+    <div class="row" style="margin-bottom: 15px;">
+      <div class="col-md-12">
+        <a href="{?=url([ADMIN, 'update_bmt', 'edukasiform'])?}" class="btn btn-primary">
+          <i class="fa fa-plus"></i> Tambah Edukasi Baru
+        </a>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped" id="table-edukasi">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>No Rawat</th>
+            <th>No RM</th>
+            <th>Nama Pasien</th>
+            <th>Tgl Pengkajian</th>
+            <th>Nama Perawat</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loop: $edukasi}
+          <tr>
+            <td>{?=$key+1?}</td>
+            <td>{$value.no_rawat}</td>
+            <td>{$value.no_rkm_medis}</td>
+            <td>{$value.nama_pasien}</td>
+            <td>{$value.tanggal_pengkajian}</td>
+            <td>{$value.nama_perawat}</td>
+            <td>
+              <a href="{?=url([ADMIN, 'update_bmt', 'edukasiform'])?}&id={$value.id}" class="btn btn-xs btn-warning"><i
+                  class="fa fa-edit"></i> Edit</a>
+              <a href="{?=url([ADMIN, 'update_bmt', 'edukasicetak'])?}&id={$value.id}" class="btn btn-xs btn-info"
+                target="_blank"><i class="fa fa-print"></i> Cetak</a>
+              <a href="{?=url([ADMIN, 'update_bmt', 'edukasidelete'])?}&id={$value.id}" class="btn btn-xs btn-danger"
+                onclick="return confirm('Hapus data ini?')"><i class="fa fa-trash"></i> Hapus</a>
+            </td>
+          </tr>
+          {/loop}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+  $(document).ready(function () {
+    $('#table-edukasi').DataTable({
+      "order": [[4, "desc"]]
+    });
+  });
+</script>

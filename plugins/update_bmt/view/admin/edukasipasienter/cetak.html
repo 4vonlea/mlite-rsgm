@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>RM.RJ-10 Lembar Edukasi Pasien dan Keluarga Terintegrasi</title>
+<style>
+  @page { size: A4; margin: 8mm 10mm; }
+  body { font-family: Arial, sans-serif; font-size: 9px; margin: 0; padding: 0; color: #000; }
+  
+  .container { width: 100%; max-width: 192mm; margin: 0 auto; border: 1px solid #000; box-sizing: border-box; }
+
+  /* Header */
+  .table-header { width: 100%; border-collapse: collapse; }
+  .table-header td { border: 1px solid #000; padding: 4px; vertical-align: middle; }
+  .title-center { text-align: center; }
+  .title-center h3 { margin: 0; font-size: 11px; font-weight: bold; }
+  .title-center h2 { margin: 2px 0; font-size: 13px; font-weight: bold; }
+  .title-center p { margin: 0; font-size: 8px; }
+  .logo-cell { width: 55px; vertical-align: middle; text-align: center; }
+  .logo { width: 50px; height: auto; }
+  .gha-cell { width: 50px; text-align: center; vertical-align: middle; }
+  .gha-img { width: 45px; height: auto; }
+
+  /* RM Box */
+  .rm-header-td { vertical-align: top; padding: 4px; font-size: 9px; }
+  .box-rm { display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin-left: 1px; text-align: center; line-height: 14px; font-size: 10px; }
+
+  /* Section title */
+  .section-main-title { text-align: center; font-weight: bold; font-size: 11px; padding: 4px; border-top: 1px solid #000; border-bottom: 1px solid #000; background: #fff; }
+
+  /* Tables */
+  .table-body { width: 100%; border-collapse: collapse; }
+  .table-body td { border: 1px solid #000; padding: 3px 4px; vertical-align: top; font-size: 9px; }
+  .table-no-border { width: 100%; border-collapse: collapse; }
+  .table-no-border td { border: none; padding: 1px 2px; vertical-align: top; font-size: 9px; }
+
+  /* Checkbox */
+  .cb { display: inline-block; width: 9px; height: 9px; border: 1px solid #000; vertical-align: middle; margin-right: 2px; text-align: center; line-height: 9px; font-size: 8px; }
+  .cb.checked::after { content: '✓'; }
+
+  /* Dotted line */
+  .dotted { border-bottom: 1px dotted #000; display: inline-block; min-width: 60px; }
+
+  /* Heading inside td */
+  .heading-td { font-weight: bold; background: #f0f0f0; font-size: 9px; }
+  
+  /* Red strikethrough text (from sample) */
+  .red-strike { color: red; text-decoration: line-through; }
+
+  /* Pelaksanaan edukasi table */
+  .tbl-pelaksanaan { width: 100%; border-collapse: collapse; font-size: 8px; }
+  .tbl-pelaksanaan th { border: 1px solid #000; padding: 2px 3px; vertical-align: middle; text-align: center; font-size: 8px; line-height: 1.2; background: #fff; }
+  .tbl-pelaksanaan td { border: 1px solid #000; padding: 3px 3px; vertical-align: top; font-size: 8px; }
+
+
+  /* Page break */
+  .page-break { page-break-after: always; }
+
+  /* Footer italic */
+  .footer-italic { text-align: right; font-style: italic; font-size: 8px; color: red; padding: 2px 3px; }
+
+  /* Signature */
+  .ttd-area { text-align: center; padding: 3px; font-size: 8px; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ====================== HAL 1 ====================== -->
+<div class="container">
+  <!-- HEADER -->
+  <table class="table-header">
+    <tr>
+      <td style="width: 70%; text-align:center; vertical-align:middle; padding: 0; border: none; border-right: 1px solid #000;">
+        <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat" style="width: 100%; height: auto; max-height: 80px; object-fit: contain;">
+      </td>
+      <td class="rm-header-td" style="width: 120px;">
+        NO. RM &nbsp;=&nbsp;
+        <div class="box-rm">{?=isset($data['no_rkm_medis'][0])?$data['no_rkm_medis'][0]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][1])?$data['no_rkm_medis'][1]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][2])?$data['no_rkm_medis'][2]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][3])?$data['no_rkm_medis'][3]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][4])?$data['no_rkm_medis'][4]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][5])?$data['no_rkm_medis'][5]:''?}</div>
+        <br><br>
+        NAMA PASIEN &nbsp;=<br>
+        <span class="dotted" style="min-width: 90px;">{?=isset_or($data['nama_pasien'])?}</span>&nbsp;L/P
+        <br><br>
+        TANGGAL <span style="color: blue; text-decoration: underline;">LAHIR</span> &nbsp;=<br>
+        <span class="dotted" style="min-width: 90px;">{?=isset_or($data['tanggal_lahir_indo'])?}</span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Judul Utama -->
+  <div class="section-main-title">LEMBAR EDUKASI PASIEN DAN KELUARGA TERINTEGRASI</div>
+
+  <!-- Tabel A -->
+  <table class="table-body">
+    <tr>
+      <!-- Perhatian -->
+      <td style="width: 28%;" rowspan="2">
+        <strong>Perhatian</strong><br>
+        1, Harap di isi dengan lengkap dan terbaca jelas<br>
+        2. lingkarilah angka pada pilihan yang tersedia
+      </td>
+      <!-- Hambatan -->
+      <td style="width: 28%;" colspan="3">
+        <strong>Hambatan</strong>
+      </td>
+      <!-- Keyakinan dan Nilai -->
+      <td rowspan="4" style="width: 44%;">
+        <strong>Keyakinan dan nilai-nilai</strong><br>
+        1. Pantangan hari . . . . . . . . . . . . . . . . . . <span style="font-style: italic;">{?=isset_or($data['pantangan_hari'])?}</span><br>
+        2. Pantangan Makan. . . . . . . . . . . . . . . . . . <span style="font-style: italic;">{?=isset_or($data['pantangan_makan'])?}</span><br>
+        3. Pantangan dirawat dokter gigi lawan jenis <span style="font-style: italic;">{?=isset_or($data['pantangan_perawatan'])?}</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 10%;">1. Emosi <span {if: isset($data['hambatan_emosi']) && $data['hambatan_emosi']}style="font-weight:bold;text-decoration:underline;"{/if}>{?= $data['hambatan_emosi'] ? '(✓)' : '' ?}</span></td>
+      <td style="width: 10%;">2. Motivasi <span {if: isset($data['hambatan_motivasi']) && $data['hambatan_motivasi']}style="font-weight:bold;text-decoration:underline;"{/if}>{?= $data['hambatan_motivasi'] ? '(✓)' : '' ?}</span></td>
+      <td style="width: 8%;">3. Tidak ada <span {if: isset($data['hambatan_tidak_ada']) && $data['hambatan_tidak_ada']}style="font-weight:bold;text-decoration:underline;"{/if}>{?= $data['hambatan_tidak_ada'] ? '(✓)' : '' ?}</span></td>
+    </tr>
+    <tr>
+      <td rowspan="2" style="vertical-align: top;">
+        <strong>A. Pengkajian Kebutuhan Pasien dan Keluarga</strong>
+      </td>
+      <td colspan="3">
+        <strong>Keterbatasan</strong>
+      </td>
+    </tr>
+    <tr>
+      <td>1. Fisik <span {if: isset($data['keterbatasan_fisik']) && $data['keterbatasan_fisik']}style="font-weight:bold;text-decoration:underline;"{/if}>{?= $data['keterbatasan_fisik'] ? '(✓)' : '' ?}</span></td>
+      <td>2. Kognitif <span {if: isset($data['keterbatasan_kognitif']) && $data['keterbatasan_kognitif']}style="font-weight:bold;text-decoration:underline;"{/if}>{?= $data['keterbatasan_kognitif'] ? '(✓)' : '' ?}</span></td>
+      <td>3. Tidak ada <span {if: isset($data['keterbatasan_tidak_ada']) && $data['keterbatasan_tidak_ada']}style="font-weight:bold;text-decoration:underline;"{/if}>{?= $data['keterbatasan_tidak_ada'] ? '(✓)' : '' ?}</span></td>
+    </tr>
+    <tr>
+      <!-- Ketersediaan -->
+      <td>
+        Ketersediaan<br>menerima edukasi:<br>
+        <strong>1.</strong> Ya &nbsp;&nbsp; <strong>2.</strong> Tidak<br>
+        {?= $data['ketersediaan_menerima_edukasi_ya'] ? '<u><b>1. Ya</b></u>' : '1. Ya' ?} &nbsp;&nbsp; {?= $data['ketersediaan_menerima_edukasi_tidak'] ? '<u><b>2. Tidak</b></u>' : '2. Tidak' ?}
+        <br><br>
+        Pendidikan terakhir<br>
+        . . . . . . . . . . . . <span style="font-style: italic;">{?=isset_or($data['pendidikan_terakhir'])?}</span>
+      </td>
+      <td colspan="3">
+        <strong>Kemampuan membaca</strong><br>
+        {?= $data['kemampuan_bisa_membaca'] ? '<u><b>1. Bisa Membaca</b></u>' : '1. Bisa Membaca' ?} &nbsp;&nbsp; {?= $data['kemampuan_tidak_bisa_membaca'] ? '<u><b>2. Tidak bisa membaca</b></u>' : '2. Tidak bisa membaca' ?}
+      </td>
+    </tr>
+    <tr>
+      <!-- Bahasa -->
+      <td style="vertical-align: top;">
+        Bahasa yang dipakai<br>
+        {?= $data['bahasa_indonesia'] ? '<u><b>1. Indonesia</b></u>' : '1. Indonesia' ?}<br>
+        2. lainnya. . . . . . . . . . <span style="font-style: italic;">{?=isset_or($data['bahasa_lainnya'])?}</span>
+      </td>
+      <td colspan="3" style="vertical-align: top;">
+        <strong>Kebutuhan Penerjemah</strong><br>
+        {?= $data['kebutuhan_penerjemah_tidak'] ? '<u><b>1. tidak</b></u>' : '1. tidak' ?}<br>
+        {?= !empty($data['kebutuhan_penerjemah_ya']) ? '<u><b>2. Ya, bahasa. . . . . . ' . $data['kebutuhan_penerjemah_ya'] . '</b></u>' : '2. Ya, bahasa. . . . . .' ?}
+      </td>
+    </tr>
+    <tr>
+      <!-- Nama Perawat -->
+      <td>
+        Nama Perawat yang<br>mengkaji<br>
+        <span style="font-style:italic;">{?=isset_or($data['nama_perawat'])?}</span>
+      </td>
+      <td>
+        TTD: <br>
+        <br><br>
+        <span style="font-style:italic;">({?=isset_or($data['nip_perawat'])?})</span>
+      </td>
+      <td>
+        Tanggal:<br>
+        <span style="font-style:italic;">{?=isset_or($data['tanggal_pengkajian'])?}</span><br><br>
+        Jam:<br>
+        <span style="font-style:italic;">{?=isset_or($data['jam_pengkajian'])?}</span>
+      </td>
+      <!-- Kebutuhan Edukasi -->
+      <td>
+        <strong>Kebutuhan Edukasi</strong>
+        <table class="table-no-border" style="width:100%;">
+          <tr>
+            <td style="width:40%; vertical-align:top;">
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Diagnosis') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>1. Diagnosis</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Tanda, gejala & penyebab') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>2. Tanda, gejala &amp; penyebab</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Rencana tindakan medis') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>3. Rencana tindakan medis</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Hasil yang diharapkan') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>4. Hasil yang diharapkan</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Alternatif tindakan lain') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>5. Alternatif tindakan lain</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Risiko tindakan') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>6. Risiko tindakan</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Komplikasi yang mungkin terjadi') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>7. Komplikasi yang mungkin terjadi</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Prognosis') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>8. Prognosis</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Cara menyikat gigi') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>9. Cara menyikat gigi</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Instruksi paska tindakan medis') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>10. Instruksi paska tindakan medis</span><br>
+            </td>
+            <td style="width:35%; vertical-align:top;">
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Penggunaan obat') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>11. Penggunaan obat</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Efek samping obat') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>12. Efek samping obat</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Interaksi obat') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>13. Interaksi obat</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Keamanan dan efektivitas peralatan medis') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>14. Keamanan dan efektivitas peralatan medis</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Pedoman Nutrisi') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>15. Pedoman Nutrisi</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Diet dan nutrisi') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>16. Diet dan nutrisi</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Manajemen nyeri') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>17. Manajemen nyeri</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Teknik rehabilitasi') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>18. Teknik rehabilitasi</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Cara mencuci tangan yang benar') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>19. Cara mencuci tangan yang benar</span><br>
+            </td>
+            <td style="width:25%; vertical-align:top;">
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Etika batuk') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>20. Etika batuk</span><br>
+              <span {if: isset($data['kebutuhan_edukasi']) && strpos($data['kebutuhan_edukasi'], 'Resiko jatuh') !== false}style="font-weight:bold;text-decoration:underline;"{/if}>21. Resiko jatuh</span><br>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- B. Pelaksanaan Edukasi -->
+  <div style="border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 2px 4px; font-weight: bold; font-size: 10px;">
+    B. Pelaksanaan Edukasi Pasien &amp; Keluarga
+  </div>
+
+  <!-- Tabel Pelaksanaan -->
+  <table class="tbl-pelaksanaan">
+    <thead>
+      <tr>
+        <th style="width: 8%;">Tanggal<br>&amp; Jam</th>
+        <th style="width: 18%;">Isi Kebutuhan Edukasi</th>
+        <th style="width: 10%;">Pengetahuan Pra Edukasi</th>
+        <th style="width: 10%;">Penerima Edukasi</th>
+        <th style="width: 10%;">Metode Edukasi</th>
+        <th style="width: 14%;">Evaluasi</th>
+        <th style="width: 15%;">Dokter, Tanda Tangan &amp; Nama Pemberi Edukasi</th>
+        <th style="width: 15%;">Nama &amp; Tanda Tangan Penerima Edukasi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php $shown = 0; ?>
+      {loop: $detail}
+      <?php if ($shown >= 3) break; $shown++; ?>
+      <tr style="height: 70px;">
+        <td>{?= !empty($value.tanggal_jam) ? date('d-m-Y H:i', strtotime($value.tanggal_jam)) : '' ?}</td>
+        <td>{?=nl2br(isset_or($value.isi_kebutuhan_edukasi))?}</td>
+        <td>
+          <?php $kpe = isset($value["kemampuan_pra_edukasi"]) ? $value["kemampuan_pra_edukasi"] : ""; ?>
+          <span {?= $kpe == 'Sangat tahu' ? 'style="color:red;text-decoration:line-through;font-weight:bold;"' : 'style="color:red;text-decoration:line-through;"' ?}>1. Sangat <span style="font-style:italic;">tahu</span></span><br>
+          <span {?= $kpe == 'Perlu diulang' ? 'style="color:red;text-decoration:line-through;font-weight:bold;"' : 'style="color:red;text-decoration:line-through;"' ?}>2. Perlu <span style="font-style:italic;">diulang</span></span><br>
+          <span {?= $kpe == 'Belum tahu' ? 'style="color:red;text-decoration:line-through;font-weight:bold;"' : 'style="color:red;text-decoration:line-through;"' ?}>3. Belum <span style="font-style:italic;">tahu</span></span>
+          {?= $kpe ? '<br><b style="font-size:10px;">&#10003; ' . htmlspecialchars($kpe) . '</b>' : '' ?}
+        </td>
+        <td>
+          <?php $sas = isset($value["sasaran_edukasi"]) ? $value["sasaran_edukasi"] : ""; ?>
+          <span style="color:red;text-decoration:line-through;">1. <span style="font-style:italic;">Pasien</span></span><br>
+          <span style="color:red;text-decoration:line-through;">2. <span style="font-style:italic;">Keluarga</span></span><br>
+          <span style="color:red;text-decoration:line-through;">3. <span style="font-style:italic;">Pasien &amp; Keluarga</span></span><br>
+          4. Lain-lain
+          {?= $sas ? '<br><b style="font-size:10px;">&#10003; ' . htmlspecialchars($sas) . '</b>' : '' ?}
+        </td>
+        <td>
+          <?php $met = isset($value["metode_edukasi"]) ? $value["metode_edukasi"] : ""; ?>
+          <span style="color:red;text-decoration:line-through;">1. <span style="font-style:italic;">Membaca</span></span><br>
+          <span style="color:red;text-decoration:line-through;">2. <span style="font-style:italic;">Demonstrasi</span></span><br>
+          <span style="color:red;text-decoration:line-through;">3. <span style="font-style:italic;">Ceramah</span></span><br>
+          <span style="color:red;text-decoration:line-through;">4. <span style="font-style:italic;">Diskusi</span></span><br>
+          5. Audio Visual
+          {?= $met ? '<br><b style="font-size:10px;">&#10003; ' . htmlspecialchars($met) . '</b>' : '' ?}
+        </td>
+        <td>
+          <?php $eva = isset($value["evaluasi"]) ? $value["evaluasi"] : ""; ?>
+          1. Mengerti{?= $eva == 'Mengerti' ? ' <b>(✓)</b>' : '' ?><br>
+          <span style="color:red;text-decoration:line-through;">2. Mengerti,</span> Mengulang{?= $eva == 'Mengerti, Mengulang' ? ' <b>(✓)</b>' : '' ?}<br>
+          3. Mengerti, Mengulang, Mendemonstrasikan{?= $eva == 'Mengerti, Mengulang, Mendemonstrasikan' ? ' <b>(✓)</b>' : '' ?}<br>
+          <span style="color:red;text-decoration:line-through;">4. Re-<span style="font-style:italic;">edukasi</span></span>{?= $eva == 'Re-edukasi' ? ' <b>(✓)</b>' : '' ?}
+        </td>
+        <td>
+          <br><br><br>
+          {?=isset_or($value.nama_ttd_pemberi)?}
+        </td>
+        <td>
+          <br><br><br>
+          {?=isset_or($value.nama_ttd_penerima)?}
+        </td>
+      </tr>
+      {/loop}
+      <?php // Tambah baris kosong jika detail kurang dari 3 ?>
+      <?php for ($i = $shown; $i < 3; $i++): ?>
+      <tr style="height: 70px;">
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <?php endfor; ?>
+    </tbody>
+  </table>
+
+  <div class="footer-italic">
+    Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas
+  </div>
+
+  <!-- Footer Hal 1 -->
+  <table class="table-no-border" style="width:100%; margin-top: 2px;">
+    <tr>
+      <td style="font-size: 8px;">RSGWEd-Rev/02/2023</td>
+      <td style="text-align: right; font-size: 8px;">RM.RJ &ndash; 10 Hal 1 - 2</td>
+    </tr>
+  </table>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ====================== HAL 2 ====================== -->
+<div class="container">
+  <!-- Header Hal 2 -->
+  <table class="table-no-border" style="width:100%; margin: 4px 0 3px 0;">
+    <tr>
+      <td style="width: 35%; font-size: 9px;">
+        Nama Pasien : <span class="dotted">{?=isset_or($data['nama_pasien'])?}</span> L/P
+      </td>
+      <td style="width: 30%; font-size: 9px;">
+        Tanggal lahir : <span class="dotted">{?=isset_or($data['tanggal_lahir_indo'])?}</span>
+      </td>
+      <td style="width: 35%; font-size: 9px; text-align: right;">
+        No RM :
+        <div class="box-rm">{?=isset($data['no_rkm_medis'][0])?$data['no_rkm_medis'][0]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][1])?$data['no_rkm_medis'][1]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][2])?$data['no_rkm_medis'][2]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][3])?$data['no_rkm_medis'][3]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][4])?$data['no_rkm_medis'][4]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][5])?$data['no_rkm_medis'][5]:''?}</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Tabel Pelaksanaan Lanjutan (baris 4-9) -->
+  <table class="tbl-pelaksanaan">
+    <thead>
+      <tr>
+        <th style="width: 8%;">Tanggal<br>&amp; Jam</th>
+        <th style="width: 18%;">Isi Kebutuhan Edukasi</th>
+        <th style="width: 10%;">Kemampuan Pra Edukasi</th>
+        <th style="width: 10%;">Sasaran Edukasi</th>
+        <th style="width: 10%;">Metode Edukasi</th>
+        <th style="width: 14%;">Evaluasi</th>
+        <th style="width: 15%;">Dokter, Tanda Tangan &amp; Nama Pemberi Edukasi</th>
+        <th style="width: 15%;">Nama &amp; Tanda Tangan Penerima Edukasi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php $shown2 = 0; $idx = 0; ?>
+      {loop: $detail}
+      <?php $idx++; if ($idx <= 3) continue; $shown2++; ?>
+      <tr style="height: 70px;">
+        <td>{?= !empty($value.tanggal_jam) ? date('d-m-Y H:i', strtotime($value.tanggal_jam)) : '' ?}</td>
+        <td>{?=nl2br(isset_or($value.isi_kebutuhan_edukasi))?}</td>
+        <td>
+          <?php $kpe2 = isset($value["kemampuan_pra_edukasi"]) ? $value["kemampuan_pra_edukasi"] : ""; ?>
+          <span style="color:red;text-decoration:line-through;">1. Sangat <span style="font-style:italic;">tahu</span></span><br>
+          <span style="color:red;text-decoration:line-through;">2. Baru <span style="font-style:italic;">dikenal</span></span><br>
+          <span style="color:red;text-decoration:line-through;">3. Belum <span style="font-style:italic;">tahu</span></span>
+          {?= $kpe2 ? '<br><b style="font-size:10px;">&#10003; ' . htmlspecialchars($kpe2) . '</b>' : '' ?}
+        </td>
+        <td>
+          <?php $sas2 = isset($value["sasaran_edukasi"]) ? $value["sasaran_edukasi"] : ""; ?>
+          <span style="color:red;text-decoration:line-through;">1. <span style="font-style:italic;">Pasien</span></span><br>
+          <span style="color:red;text-decoration:line-through;">2. <span style="font-style:italic;">Keluarga</span></span><br>
+          <span style="color:red;text-decoration:line-through;">3. <span style="font-style:italic;">Pasien &amp; Keluarga</span></span><br>
+          4. Lain-lain
+          {?= $sas2 ? '<br><b style="font-size:10px;">&#10003; ' . htmlspecialchars($sas2) . '</b>' : '' ?}
+        </td>
+        <td>
+          <?php $met2 = isset($value["metode_edukasi"]) ? $value["metode_edukasi"] : ""; ?>
+          <span style="color:red;text-decoration:line-through;">1. <span style="font-style:italic;">Membaca</span></span><br>
+          <span style="color:red;text-decoration:line-through;">2. <span style="font-style:italic;">Demonstrasi</span></span><br>
+          <span style="color:red;text-decoration:line-through;">3. <span style="font-style:italic;">Ceramah</span></span><br>
+          <span style="color:red;text-decoration:line-through;">4. <span style="font-style:italic;">Diskusi</span></span><br>
+          5. Audio Visual
+          {?= $met2 ? '<br><b style="font-size:10px;">&#10003; ' . htmlspecialchars($met2) . '</b>' : '' ?}
+        </td>
+        <td>
+          <?php $eva2 = isset($value["evaluasi"]) ? $value["evaluasi"] : ""; ?>
+          1. Mengerti{?= $eva2 == 'Mengerti' ? ' <b>(✓)</b>' : '' ?><br>
+          <span style="color:red;text-decoration:line-through;">2. Mengerti,</span> Mengulang{?= $eva2 == 'Mengerti, Mengulang' ? ' <b>(✓)</b>' : '' ?}<br>
+          3. Mengerti, Mengulang, Mendemonstrasikan{?= $eva2 == 'Mengerti, Mengulang, Mendemonstrasikan' ? ' <b>(✓)</b>' : '' ?}<br>
+          <span style="color:red;text-decoration:line-through;">4. Re-<span style="font-style:italic;">edukasi</span></span>{?= $eva2 == 'Re-edukasi' ? ' <b>(✓)</b>' : '' ?}
+        </td>
+        <td>
+          <br><br><br>
+          {?=isset_or($value.nama_ttd_pemberi)?}
+        </td>
+        <td>
+          <br><br><br>
+          {?=isset_or($value.nama_ttd_penerima)?}
+        </td>
+      </tr>
+      {/loop}
+      <?php // Tambah baris kosong sampai 6 baris di hal 2 ?>
+      <?php for ($i = $shown2; $i < 6; $i++): ?>
+      <tr style="height: 70px;">
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <?php endfor; ?>
+    </tbody>
+  </table>
+
+  <div class="footer-italic">
+    Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas
+  </div>
+
+  <!-- Footer Hal 2 -->
+  <table class="table-no-border" style="width:100%; margin-top: 2px;">
+    <tr>
+      <td style="font-size: 8px;">RSGMEd-Rev/02/ 2023</td>
+      <td style="text-align: right; font-size: 8px;">RM.RJ &ndash; 10 Hal 2 - 2</td>
+    </tr>
+  </table>
+</div>
+
+<script>
+window.onload = function() { window.print(); }
+</script>
+</body>
+</html>
