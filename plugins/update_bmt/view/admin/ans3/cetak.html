@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ANS3 - Assesmen Prasedasi / Anestesi</title>
+<style>
+  @page { size: A4; margin: 8mm 10mm; }
+  body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 0; color: #000; line-height: 1.2; }
+  
+  .container { width: 100%; max-width: 192mm; margin: 0 auto; box-sizing: border-box; }
+
+  table { width: 100%; border-collapse: collapse; border: 1px solid #000; }
+  td, th { border: 1px solid #000; padding: 3px; vertical-align: top; }
+  
+  .header-td { vertical-align: middle; padding: 0; border-right: none; }
+  .title-td { vertical-align: middle; text-align: center; font-size: 16px; font-weight: bold; border-left: none; }
+
+  .cb { display: inline-block; width: 8px; height: 8px; border: 1px solid #000; vertical-align: middle; margin-right: 2px; text-align: center; line-height: 8px; font-size: 8px; }
+  .cb.checked::after { content: '✓'; font-weight: bold; }
+  
+  .section-title { text-align: center; font-weight: bold; font-size: 11px; background: #eee; padding: 2px; border-bottom: 1px solid #000; border-top: 1px solid #000; }
+  .sub-title { text-align: center; font-weight: bold; background: #eee; padding: 2px; }
+
+  .dotted { border-bottom: 1px dotted #000; display: inline-block; }
+  .row-no-margin { margin: 0; padding: 0; }
+  
+  /* Layout helpers */
+  .w-50 { width: 50%; }
+  .w-25 { width: 25%; }
+  
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .section-title, .sub-title { background: #eee !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <table>
+    <tr>
+      <td style="width: 50%; padding: 0;" class="header-td">
+        <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat" style="width: 100%; height: auto; max-height: 70px; object-fit: contain;">
+      </td>
+      <td style="width: 50%;" class="title-td">
+        ASSESMEN PRASEDASI / ANESTESI
+      </td>
+    </tr>
+  </table>
+
+  <!-- Patient Info & Header -->
+  <table style="border-top: none;">
+    <tr>
+      <td style="width: 50%; border-top: none;">
+        <strong>Nama</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span class="dotted" style="width: 200px;">{?=isset_or($data['nm_pasien'])?}</span> &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['jk']) && $data['jk'] == 'L') ? 'checked' : '' ?}"></div> LK &nbsp; <div class="cb {?= (isset($data['jk']) && $data['jk'] == 'P') ? 'checked' : '' ?}"></div> PR
+        <br>
+        <strong>Umur</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span class="dotted" style="width: 60px;">{?=isset_or($data['umur_pasien'])?}</span> 
+        <strong>Tgl Lahir</strong> : <span class="dotted" style="width: 120px;">{?=isset_or($data['tgl_lahir_indo'])?}</span>
+        <br>
+        <strong>No. RM</strong> &nbsp;&nbsp;&nbsp;&nbsp;: <span class="dotted" style="width: 250px;">{?=isset_or($data['no_rkm_medis'])?}</span>
+      </td>
+      <td style="width: 50%; border-top: none;">
+        <strong>Diagnosa Prabedah :</strong><br>
+        <span class="dotted" style="width: 90%;">{?=isset_or($data['diagnosa_prabedah'])?}</span><br>
+        <strong>Rencana Tindakan :</strong><br>
+        <span class="dotted" style="width: 90%;">{?=isset_or($data['rencana_tindakan'])?}</span><br>
+        <div style="text-align: right; margin-top: 2px;">
+            <div class="cb {?= (isset($data['tipe_tindakan']) && $data['tipe_tindakan'] == 'Elektif') ? 'checked' : '' ?}"></div> Elektif &nbsp;&nbsp;
+            <div class="cb {?= (isset($data['tipe_tindakan']) && $data['tipe_tindakan'] == 'Emergensi/CITO') ? 'checked' : '' ?}"></div> Emergensi/CITO
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Anamnese -->
+  <table style="border-top: none;">
+    <tr>
+      <td style="border-top: none;">
+        Anamnese dari &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 
+        <div class="cb {?= (isset($data['anamnese_dari']) && $data['anamnese_dari'] == 'Pasien') ? 'checked' : '' ?}"></div> Pasien &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['anamnese_dari']) && $data['anamnese_dari'] == 'Keluarga pasien') ? 'checked' : '' ?}"></div> Keluarga pasien<br>
+        
+        Riwayat Anestesi &nbsp;&nbsp;&nbsp;:
+        <div class="cb {?= (isset($data['riwayat_anestesi']) && $data['riwayat_anestesi'] == 'Ada') ? 'checked' : '' ?}"></div> Ada &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['riwayat_anestesi']) && $data['riwayat_anestesi'] == 'Tidak') ? 'checked' : '' ?}"></div> Tidak &nbsp;
+        Sebutkan jika ada <span class="dotted" style="width: 150px;">{?=isset_or($data['riwayat_anestesi_ket'])?}</span> &nbsp;&nbsp;
+        Komplikasi <span class="dotted" style="width: 150px;">{?=isset_or($data['komplikasi'])?}</span><br>
+
+        Obat yang sedang dikonsumsi : <span class="dotted" style="width: 70%;">{?=isset_or($data['obat_sedang_dikonsumsi'])?}</span><br>
+
+        Riwayat Alergi &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+        <div class="cb {?= (isset($data['riwayat_alergi']) && $data['riwayat_alergi'] == 'Ada') ? 'checked' : '' ?}"></div> Ada &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['riwayat_alergi']) && $data['riwayat_alergi'] == 'Tidak') ? 'checked' : '' ?}"></div> Tidak &nbsp;
+        Sebutkan jika ada <span class="dotted" style="width: 300px;">{?=isset_or($data['riwayat_alergi_ket'])?}</span><br>
+        
+        <div style="margin-top: 4px;">
+            <strong>BB</strong> : <span class="dotted" style="width:30px;">{?=isset_or($data['bb'])?}</span> kg &nbsp;&nbsp;&nbsp;
+            <strong>TB</strong> : <span class="dotted" style="width:30px;">{?=isset_or($data['tb'])?}</span> cm &nbsp;&nbsp;&nbsp;
+            <strong>Tanda Vital</strong> : 
+            TD : <span class="dotted" style="width:50px;">{?=isset_or($data['tanda_vital_td'])?}</span> mmHg &nbsp;&nbsp;
+            Nadi : <span class="dotted" style="width:30px;">{?=isset_or($data['tanda_vital_nadi'])?}</span> x/mnt &nbsp;&nbsp;
+            RR : <span class="dotted" style="width:30px;">{?=isset_or($data['tanda_vital_rr'])?}</span> x/mnt &nbsp;&nbsp;
+            Suhu : <span class="dotted" style="width:30px;">{?=isset_or($data['tanda_vital_suhu'])?}</span> C &nbsp;&nbsp;
+            VAS : <span class="dotted" style="width:30px;">{?=isset_or($data['tanda_vital_vas'])?}</span> / 10
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Evaluasi Jalan Nafas -->
+  <div class="section-title">EVALUASI JALAN NAFAS</div>
+  <table style="border-top: none;">
+    <tr>
+      <td style="border-top: none; width: 33%;">
+        Bebas : 
+        <div class="cb {?= (isset($data['bebas']) && $data['bebas'] == 'Ya') ? 'checked' : '' ?}"></div> Ya &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['bebas']) && $data['bebas'] == 'Tidak') ? 'checked' : '' ?}"></div> Tidak<br>
+        
+        Protusi Mandibula :
+        <div class="cb {?= (isset($data['protusi_mandibula']) && $data['protusi_mandibula'] == 'Ya') ? 'checked' : '' ?}"></div> Ya &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['protusi_mandibula']) && $data['protusi_mandibula'] == 'Tidak') ? 'checked' : '' ?}"></div> Tidak<br>
+        
+        Jarak Mentohyoid :
+        <div class="cb {?= (isset($data['jarak_mentohyoid']) && $data['jarak_mentohyoid'] == 'Normal') ? 'checked' : '' ?}"></div> Normal &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['jarak_mentohyoid']) && $data['jarak_mentohyoid'] == 'Tidak') ? 'checked' : '' ?}"></div> Tidak (<span class="dotted" style="width:20px;">{?=isset_or($data['jarak_mentohyoid_ket'])?}</span> cm)<br>
+        
+        Jarak Thyrohyoid :
+        <div class="cb {?= (isset($data['jarak_thyrohyoid']) && $data['jarak_thyrohyoid'] == 'Pendek') ? 'checked' : '' ?}"></div> Pendek &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['jarak_thyrohyoid']) && $data['jarak_thyrohyoid'] == 'Tidak') ? 'checked' : '' ?}"></div> Tidak (<span class="dotted" style="width:20px;">{?=isset_or($data['jarak_thyrohyoid_ket'])?}</span> cm)
+      </td>
+      <td style="border-top: none; width: 33%;">
+        Buka Mulut :
+        <div class="cb {?= (isset($data['buka_mulut']) && $data['buka_mulut'] == 'Normal') ? 'checked' : '' ?}"></div> Normal &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['buka_mulut']) && $data['buka_mulut'] == 'Tidak') ? 'checked' : '' ?}"></div> Tidak<br>
+        
+        Mallampathy :
+        <div class="cb {?= (isset($data['mallampathy']) && $data['mallampathy'] == 'I') ? 'checked' : '' ?}"></div> I &nbsp;
+        <div class="cb {?= (isset($data['mallampathy']) && $data['mallampathy'] == 'II') ? 'checked' : '' ?}"></div> II &nbsp;
+        <div class="cb {?= (isset($data['mallampathy']) && $data['mallampathy'] == 'III') ? 'checked' : '' ?}"></div> III &nbsp;
+        <div class="cb {?= (isset($data['mallampathy']) && $data['mallampathy'] == 'IV') ? 'checked' : '' ?}"></div> IV<br>
+        
+        Leher :
+        <div class="cb {?= (isset($data['leher']) && $data['leher'] == 'Pendek') ? 'checked' : '' ?}"></div> Pendek &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['leher']) && $data['leher'] == 'Tidak') ? 'checked' : '' ?}"></div> Tidak<br>
+        
+        Gerak Leher :
+        <div class="cb {?= (isset($data['gerak_leher']) && $data['gerak_leher'] == 'Bebas') ? 'checked' : '' ?}"></div> Bebas &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['gerak_leher']) && $data['gerak_leher'] == 'Tidak') ? 'checked' : '' ?}"></div> Tidak
+      </td>
+      <td style="border-top: none; width: 34%;">
+        Obesitas :
+        <div class="cb {?= (isset($data['obesitas']) && $data['obesitas'] == 'Ya') ? 'checked' : '' ?}"></div> Ya &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['obesitas']) && $data['obesitas'] == 'Tidak') ? 'checked' : '' ?}"></div> Tidak<br>
+        
+        Massa :
+        <div class="cb {?= (isset($data['massa']) && $data['massa'] == 'Ya') ? 'checked' : '' ?}"></div> Ya &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['massa']) && $data['massa'] == 'Tidak') ? 'checked' : '' ?}"></div> Tidak<br>
+        
+        Gigi Palsu :
+        <div class="cb {?= (isset($data['gigi_palsu']) && $data['gigi_palsu'] == 'Ya') ? 'checked' : '' ?}"></div> Ya &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['gigi_palsu']) && $data['gigi_palsu'] == 'Tidak') ? 'checked' : '' ?}"></div> Tidak<br>
+        
+        Sulit Ventilasi :
+        <div class="cb {?= (isset($data['sulit_ventilasi']) && $data['sulit_ventilasi'] == 'Ya') ? 'checked' : '' ?}"></div> Ya &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['sulit_ventilasi']) && $data['sulit_ventilasi'] == 'Tidak') ? 'checked' : '' ?}"></div> Tidak
+      </td>
+    </tr>
+  </table>
+
+  <table style="border-top: none;">
+    <tr>
+      <!-- LEFT COLUMN -->
+      <td style="width: 50%; padding: 0; border-top: none; border-bottom: none; border-right: none;">
+        <div class="sub-title" style="border-bottom: 1px solid #000; border-right: 1px solid #000;">FUNGSI SISTIM ORGAN</div>
+        <table style="border: none; margin: 0; height: 100%;">
+            <tr>
+                <td style="border: none; border-right: 1px solid #000; border-bottom: 1px solid #000; width: 50%; text-align:center;"><strong>PEMERIKSAAN</strong></td>
+                <td style="border: none; border-right: 1px solid #000; border-bottom: 1px solid #000; width: 10%; text-align:center;"><strong>DBN</strong></td>
+                <td style="border: none; border-bottom: 1px solid #000; width: 40%; text-align:center;"><strong>KETERANGAN</strong></td>
+            </tr>
+            <tr>
+                <td style="border: none; border-right: 1px solid #000; border-bottom: 1px solid #000;">
+                    <strong>Pernafasan</strong><br>
+                    <div class="cb {?= (isset($data['pernafasan_asma']) && $data['pernafasan_asma'] == 'Y') ? 'checked' : '' ?}"></div> Asma &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['pernafasan_pneumonia']) && $data['pernafasan_pneumonia'] == 'Y') ? 'checked' : '' ?}"></div> Pneumonia<br>
+                    <div class="cb {?= (isset($data['pernafasan_ispa']) && $data['pernafasan_ispa'] == 'Y') ? 'checked' : '' ?}"></div> ISPA &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['pernafasan_tuberkulosis']) && $data['pernafasan_tuberkulosis'] == 'Y') ? 'checked' : '' ?}"></div> Tuberkulosis<br>
+                    <div class="cb {?= (!empty($data['pernafasan_lainnya'])) ? 'checked' : '' ?}"></div> Lainnya <span class="dotted" style="width: 80px;">{?=isset_or($data['pernafasan_lainnya'])?}</span>
+                </td>
+                <td style="border: none; border-right: 1px solid #000; border-bottom: 1px solid #000; text-align:center; vertical-align:middle;">
+                    <div class="cb {?= (isset($data['pernafasan_dbn']) && $data['pernafasan_dbn'] == 'Y') ? 'checked' : '' ?}" style="width:12px; height:12px;"></div>
+                </td>
+                <td style="border: none; border-bottom: 1px solid #000;">{?=isset_or($data['pernafasan_keterangan'])?}</td>
+            </tr>
+            <tr>
+                <td style="border: none; border-right: 1px solid #000; border-bottom: 1px solid #000;">
+                    <strong>Kardiovaskular</strong><br>
+                    <div class="cb {?= (isset($data['kardiovaskular_ekg_abnormal']) && $data['kardiovaskular_ekg_abnormal'] == 'Y') ? 'checked' : '' ?}"></div> EKG Abnormal &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['kardiovaskular_hipertensi']) && $data['kardiovaskular_hipertensi'] == 'Y') ? 'checked' : '' ?}"></div> Hipertensi<br>
+                    <div class="cb {?= (isset($data['kardiovaskular_disritma']) && $data['kardiovaskular_disritma'] == 'Y') ? 'checked' : '' ?}"></div> Disritma &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['kardiovaskular_murmur']) && $data['kardiovaskular_murmur'] == 'Y') ? 'checked' : '' ?}"></div> Murmur<br>
+                    <div class="cb {?= (isset($data['kardiovaskular_angina']) && $data['kardiovaskular_angina'] == 'Y') ? 'checked' : '' ?}"></div> Angina &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['kardiovaskular_pacemaker']) && $data['kardiovaskular_pacemaker'] == 'Y') ? 'checked' : '' ?}"></div> Pace maker<br>
+                    <div class="cb {?= (isset($data['kardiovaskular_chf']) && $data['kardiovaskular_chf'] == 'Y') ? 'checked' : '' ?}"></div> CHF &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['kardiovaskular_penyakit_katup']) && $data['kardiovaskular_penyakit_katup'] == 'Y') ? 'checked' : '' ?}"></div> Penyakit katup<br>
+                    <div class="cb {?= (!empty($data['kardiovaskular_lainnya'])) ? 'checked' : '' ?}"></div> Lainnya <span class="dotted" style="width: 80px;">{?=isset_or($data['kardiovaskular_lainnya'])?}</span>
+                </td>
+                <td style="border: none; border-right: 1px solid #000; border-bottom: 1px solid #000; text-align:center; vertical-align:middle;">
+                    <div class="cb {?= (isset($data['kardiovaskular_dbn']) && $data['kardiovaskular_dbn'] == 'Y') ? 'checked' : '' ?}" style="width:12px; height:12px;"></div>
+                </td>
+                <td style="border: none; border-bottom: 1px solid #000;">{?=isset_or($data['kardiovaskular_keterangan'])?}</td>
+            </tr>
+            <tr>
+                <td style="border: none; border-right: 1px solid #000; border-bottom: 1px solid #000;">
+                    <strong>Neuro / Musculoscietal</strong><br>
+                    <div class="cb {?= (isset($data['neuro_sakit_kepala']) && $data['neuro_sakit_kepala'] == 'Y') ? 'checked' : '' ?}"></div> Sakit kepala &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['neuro_penurunan_kesadaran']) && $data['neuro_penurunan_kesadaran'] == 'Y') ? 'checked' : '' ?}"></div> Penurunan<br>
+                    <div class="cb {?= (isset($data['neuro_distropi']) && $data['neuro_distropi'] == 'Y') ? 'checked' : '' ?}"></div> Distropi &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['neuro_parese']) && $data['neuro_parese'] == 'Y') ? 'checked' : '' ?}"></div> Parese<br>
+                    <div class="cb {?= (isset($data['neuro_parastesia']) && $data['neuro_parastesia'] == 'Y') ? 'checked' : '' ?}"></div> Parastesia &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['neuro_plegi']) && $data['neuro_plegi'] == 'Y') ? 'checked' : '' ?}"></div> Plegi<br>
+                    <div class="cb {?= (isset($data['neuro_kejang']) && $data['neuro_kejang'] == 'Y') ? 'checked' : '' ?}"></div> Kejang<br>
+                    <div class="cb {?= (!empty($data['neuro_lainnya'])) ? 'checked' : '' ?}"></div> Lainnya <span class="dotted" style="width: 80px;">{?=isset_or($data['neuro_lainnya'])?}</span>
+                </td>
+                <td style="border: none; border-right: 1px solid #000; border-bottom: 1px solid #000; text-align:center; vertical-align:middle;">
+                    <div class="cb {?= (isset($data['neuro_dbn']) && $data['neuro_dbn'] == 'Y') ? 'checked' : '' ?}" style="width:12px; height:12px;"></div>
+                </td>
+                <td style="border: none; border-bottom: 1px solid #000;">{?=isset_or($data['neuro_keterangan'])?}</td>
+            </tr>
+            <tr>
+                <td style="border: none; border-right: 1px solid #000; border-bottom: 1px solid #000;">
+                    <strong>Renal / Endokrin</strong><br>
+                    <div class="cb {?= (isset($data['renal_diabetes']) && $data['renal_diabetes'] == 'Y') ? 'checked' : '' ?}"></div> Diabetes Melitus &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['renal_tiroid']) && $data['renal_tiroid'] == 'Y') ? 'checked' : '' ?}"></div> Tiroid<br>
+                    <div class="cb {?= (isset($data['renal_gagal_ginjal']) && $data['renal_gagal_ginjal'] == 'Y') ? 'checked' : '' ?}"></div> Gagal Ginjal / Dialisis<br>
+                    <div class="cb {?= (!empty($data['renal_lainnya'])) ? 'checked' : '' ?}"></div> Lainnya <span class="dotted" style="width: 80px;">{?=isset_or($data['renal_lainnya'])?}</span>
+                </td>
+                <td style="border: none; border-right: 1px solid #000; border-bottom: 1px solid #000; text-align:center; vertical-align:middle;">
+                    <div class="cb {?= (isset($data['renal_endokrin_dbn']) && $data['renal_endokrin_dbn'] == 'Y') ? 'checked' : '' ?}" style="width:12px; height:12px;"></div>
+                </td>
+                <td style="border: none; border-bottom: 1px solid #000;">{?=isset_or($data['renal_keterangan'])?}</td>
+            </tr>
+            <tr>
+                <td style="border: none; border-right: 1px solid #000; border-bottom: 1px solid #000;">
+                    <strong>Hepato / Gastrointestinal</strong><br>
+                    <div class="cb {?= (isset($data['hepato_sirosis']) && $data['hepato_sirosis'] == 'Y') ? 'checked' : '' ?}"></div> Sirosis &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['hepato_hepatitis']) && $data['hepato_hepatitis'] == 'Y') ? 'checked' : '' ?}"></div> Hepatitis<br>
+                    <div class="cb {?= (isset($data['hepato_obstruksi']) && $data['hepato_obstruksi'] == 'Y') ? 'checked' : '' ?}"></div> Obstruksi Usus &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['hepato_ikterus']) && $data['hepato_ikterus'] == 'Y') ? 'checked' : '' ?}"></div> Ikterus<br>
+                    <div class="cb {?= (isset($data['hepato_mual_muntah']) && $data['hepato_mual_muntah'] == 'Y') ? 'checked' : '' ?}"></div> Mual/Muntah<br>
+                    <div class="cb {?= (!empty($data['hepato_lainnya'])) ? 'checked' : '' ?}"></div> Lainnya <span class="dotted" style="width: 80px;">{?=isset_or($data['hepato_lainnya'])?}</span>
+                </td>
+                <td style="border: none; border-right: 1px solid #000; border-bottom: 1px solid #000; text-align:center; vertical-align:middle;">
+                    <div class="cb {?= (isset($data['hepato_dbn']) && $data['hepato_dbn'] == 'Y') ? 'checked' : '' ?}" style="width:12px; height:12px;"></div>
+                </td>
+                <td style="border: none; border-bottom: 1px solid #000;">{?=isset_or($data['hepato_keterangan'])?}</td>
+            </tr>
+            <tr>
+                <td style="border: none; border-right: 1px solid #000;">
+                    <strong>Lainnya</strong><br>
+                    <div class="cb {?= (isset($data['lainnya_neonat']) && $data['lainnya_neonat'] == 'Y') ? 'checked' : '' ?}"></div> Neonat/Pediatrik &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['lainnya_geriatri']) && $data['lainnya_geriatri'] == 'Y') ? 'checked' : '' ?}"></div> Geriatri<br>
+                    <div class="cb {?= (isset($data['lainnya_hamil']) && $data['lainnya_hamil'] == 'Y') ? 'checked' : '' ?}"></div> Hamil &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['lainnya_kanker']) && $data['lainnya_kanker'] == 'Y') ? 'checked' : '' ?}"></div> Kanker<br>
+                    <div class="cb {?= (isset($data['lainnya_anemia']) && $data['lainnya_anemia'] == 'Y') ? 'checked' : '' ?}"></div> Anemia &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['lainnya_dehidrasi']) && $data['lainnya_dehidrasi'] == 'Y') ? 'checked' : '' ?}"></div> Dehidrasi<br>
+                    <div class="cb {?= (isset($data['lainnya_merokok']) && $data['lainnya_merokok'] == 'Y') ? 'checked' : '' ?}"></div> Merokok &nbsp;&nbsp;
+                    <div class="cb {?= (isset($data['lainnya_alkohol']) && $data['lainnya_alkohol'] == 'Y') ? 'checked' : '' ?}"></div> Alkohol<br>
+                    <div class="cb {?= (isset($data['lainnya_pendarahan']) && $data['lainnya_pendarahan'] == 'Y') ? 'checked' : '' ?}"></div> Pendarahan Memanjang<br>
+                    <div class="cb {?= (!empty($data['lainnya_lainnya'])) ? 'checked' : '' ?}"></div> Lainnya <span class="dotted" style="width: 80px;">{?=isset_or($data['lainnya_lainnya'])?}</span><br>
+                    <div style="font-size: 8px; margin-top: 5px; text-align:right;">)* DBN : Dalam Batas Normal</div>
+                </td>
+                <td style="border: none; border-right: 1px solid #000; text-align:center; vertical-align:middle;">
+                    <div class="cb {?= (isset($data['lainnya_organ_dbn']) && $data['lainnya_organ_dbn'] == 'Y') ? 'checked' : '' ?}" style="width:12px; height:12px;"></div>
+                </td>
+                <td style="border: none;">{?=isset_or($data['lainnya_organ_keterangan'])?}</td>
+            </tr>
+        </table>
+      </td>
+
+      <!-- RIGHT COLUMN -->
+      <td style="width: 50%; padding: 0; border-top: none; border-bottom: none;">
+        <div class="sub-title" style="border-bottom: 1px solid #000;">PEMERIKSAAN LABORATORIUM</div>
+        <div style="padding: 3px;">
+            <table style="border:none; font-size:10px; line-height: 1.1;">
+                <tr>
+                    <td style="border:none; width: 25%;"><strong>Hematologi</strong></td>
+                    <td style="border:none; width: 75%;">
+                        Hb <span style="display:inline-block; width:50px;">: {?=isset_or($data['lab_hb'])?}</span> &nbsp;&nbsp; 
+                        Leukosit : {?=isset_or($data['lab_leukosit'])?}<br>
+                        Hct <span style="display:inline-block; width:50px;">: {?=isset_or($data['lab_hct'])?}</span> &nbsp;&nbsp; 
+                        Trombosit : {?=isset_or($data['lab_trombosit'])?}<br>
+                        CT <span style="display:inline-block; width:50px;">: {?=isset_or($data['lab_ct'])?}</span> &nbsp;&nbsp; 
+                        BT : {?=isset_or($data['lab_bt'])?}<br>
+                        PT <span style="display:inline-block; width:50px;">: {?=isset_or($data['lab_pt'])?}</span> &nbsp;&nbsp; 
+                        APTT : {?=isset_or($data['lab_aptt'])?}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border:none;"><strong>Fungsi Ginjal</strong></td>
+                    <td style="border:none;">
+                        Ureum <span style="display:inline-block; width:45px;">: {?=isset_or($data['lab_ureum'])?}</span> &nbsp;&nbsp;
+                        Creatinin : {?=isset_or($data['lab_creatinin'])?}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border:none;"><strong>Fungsi Hati</strong></td>
+                    <td style="border:none;">
+                        SGOT <span style="display:inline-block; width:45px;">: {?=isset_or($data['lab_sgot'])?}</span> &nbsp;&nbsp; 
+                        SGPT : {?=isset_or($data['lab_sgpt'])?}<br>
+                        Albumin <span style="display:inline-block; width:33px;">: {?=isset_or($data['lab_albumin'])?}</span> &nbsp;&nbsp; 
+                        Globulin : {?=isset_or($data['lab_globulin'])?}<br>
+                        Bilirubin: Direct : {?=isset_or($data['lab_bilirubin_direct'])?} &nbsp;&nbsp; Indirect : {?=isset_or($data['lab_bilirubin_indirect'])?}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border:none;"><strong>Elektrolit</strong></td>
+                    <td style="border:none;">
+                        Na: {?=isset_or($data['lab_na'])?} &nbsp;&nbsp; 
+                        K: {?=isset_or($data['lab_k'])?} &nbsp;&nbsp; 
+                        Cl: {?=isset_or($data['lab_cl'])?}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border:none;"><strong>Endokrin</strong></td>
+                    <td style="border:none;">
+                        GDS <span style="display:inline-block; width:45px;">: {?=isset_or($data['lab_gds'])?}</span> &nbsp;&nbsp; 
+                        T3 : {?=isset_or($data['lab_t3'])?}<br>
+                        TSH <span style="display:inline-block; width:45px;">: {?=isset_or($data['lab_tsh'])?}</span> &nbsp;&nbsp; 
+                        T4 : {?=isset_or($data['lab_t4'])?}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border:none;"><strong>BGA</strong></td>
+                    <td style="border:none;">
+                        pCO2 <span style="display:inline-block; width:45px;">: {?=isset_or($data['lab_pco2'])?}</span> &nbsp;&nbsp; 
+                        Po2 : {?=isset_or($data['lab_po2'])?}<br>
+                        BE <span style="display:inline-block; width:45px;">: {?=isset_or($data['lab_be'])?}</span> &nbsp;&nbsp; 
+                        SaO2 : {?=isset_or($data['lab_sao2'])?}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border:none;"><strong>Lain-lain</strong></td>
+                    <td style="border:none;">: {?=isset_or($data['lab_lainlain'])?}</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="sub-title" style="border-top: 1px solid #000; border-bottom: 1px solid #000;">PEMERIKSAAN PENUNJANG</div>
+        <div style="padding: 3px; height: 80px;">
+            <table style="border:none; font-size:10px;">
+                <tr><td style="border:none; width:20%;">EKG</td><td style="border:none;">: {?=isset_or($data['penunjang_ekg'])?}</td></tr>
+                <tr><td style="border:none;">Radiologi</td><td style="border:none;">: {?=isset_or($data['penunjang_radiologi'])?}</td></tr>
+                <tr><td style="border:none;">Lain-lain</td><td style="border:none;">: {?=isset_or($data['penunjang_lainlain'])?}</td></tr>
+            </table>
+        </div>
+
+        <div class="sub-title" style="border-top: 1px solid #000; border-bottom: 1px solid #000;">KETERANGAN LAIN</div>
+        <div style="padding: 3px; min-height: 40px;">
+            {?=isset_or($data['keterangan_lain'])?}
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Kesimpulan & Rencana -->
+  <table>
+    <tr>
+      <td style="width: 30%;"><strong>KESIMPULAN PRASEDASI / ANESTESI</strong></td>
+      <td style="border-left:none;">: <strong>PS ASA</strong> &nbsp;&nbsp;&nbsp; <span class="dotted" style="width: 250px; font-weight:bold;">{?=isset_or($data['ps_asa'])?}</span></td>
+    </tr>
+    <tr>
+      <td style="width: 30%;"><strong>RENCANA SEDASI / ANESTESI</strong></td>
+      <td style="border-left:none;">: <span class="dotted" style="width: 80%;">{?=isset_or($data['rencana_sedasi'])?}</span></td>
+    </tr>
+  </table>
+
+  <!-- Instruksi & TTD -->
+  <table style="border-top: none;">
+    <tr>
+      <td style="width: 60%; border-top: none;">
+        <div class="sub-title" style="background:transparent; border-bottom:none; margin-bottom:5px;">INSTRUKSI PRASEDASI / ANESTESI</div>
+        
+        <div class="cb {?= (isset($data['instruksi_puasa']) && $data['instruksi_puasa'] == 'Y') ? 'checked' : '' ?}"></div> Puasa &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Mulai Jam: <span class="dotted" style="width:100px;">{?=isset_or($data['instruksi_puasa_jam'])?}</span><br><br>
+        
+        <div class="cb {?= (isset($data['instruksi_persiapan_darah'])) ? 'checked' : '' ?}"></div> Persiapan Darah : &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['instruksi_persiapan_darah']) && $data['instruksi_persiapan_darah'] == 'Tidak') ? 'checked' : '' ?}"></div> Tidak &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <div class="cb {?= (isset($data['instruksi_persiapan_darah']) && $data['instruksi_persiapan_darah'] == 'Ya') ? 'checked' : '' ?}"></div> Ya, Sebanyak <span class="dotted" style="width:40px;">{?=isset_or($data['instruksi_persiapan_darah_cc'])?}</span> cc<br><br>
+
+        <div class="cb {?= (!empty($data['instruksi_obat_dihentikan'])) ? 'checked' : '' ?}"></div> Obat yang harus dihentikan <span class="dotted" style="width:60%;">{?=isset_or($data['instruksi_obat_dihentikan'])?}</span><br><br>
+
+        <div class="cb {?= (!empty($data['instruksi_lain1'])) ? 'checked' : '' ?}"></div> <span class="dotted" style="width:90%;">{?=isset_or($data['instruksi_lain1'])?}</span><br><br>
+        <div class="cb {?= (!empty($data['instruksi_lain2'])) ? 'checked' : '' ?}"></div> <span class="dotted" style="width:90%;">{?=isset_or($data['instruksi_lain2'])?}</span><br><br>
+        <div class="cb {?= (!empty($data['instruksi_lain3'])) ? 'checked' : '' ?}"></div> <span class="dotted" style="width:90%;">{?=isset_or($data['instruksi_lain3'])?}</span><br><br>
+        <div class="cb {?= (!empty($data['instruksi_lain4'])) ? 'checked' : '' ?}"></div> <span class="dotted" style="width:90%;">{?=isset_or($data['instruksi_lain4'])?}</span><br><br>
+        <div class="cb {?= (!empty($data['instruksi_lain5'])) ? 'checked' : '' ?}"></div> <span class="dotted" style="width:90%;">{?=isset_or($data['instruksi_lain5'])?}</span>
+      </td>
+      <td style="width: 40%; border-top: none;">
+        <strong>Diperiksa Oleh :</strong> <span class="dotted" style="width:60%;">{?=isset_or($data['dokter_nama'])?}</span><br>
+        <strong>Tanggal</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span class="dotted" style="width:40%;">{?=isset_or($data['tanggal_indo'])?}</span> Jam: <span class="dotted" style="width:40px;">{?=isset_or($data['jam'])?}</span> WITA
+        
+        <div style="text-align: center; margin-top: 30px;">
+            Dokter Anestesi<br><br><br><br><br>
+            ( <span class="dotted" style="width:70%; text-align:center;">{?=isset_or($data['dokter_nama'])?}</span> )
+        </div>
+      </td>
+    </tr>
+  </table>
+
+</div>
+
+<script>
+  window.onload = function() {
+    window.print();
+  }
+</script>
+
+</body>
+</html>

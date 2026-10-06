@@ -15,6 +15,7 @@ class Admin extends AdminModule
             'Bedah' => [
                 'ANS1 - INFORMASI TINDAKAN PEMBIUSAN' => 'ans1manage',
                 'ANS2 - PERSETUJUAN TINDAKAN PEMBIUSAN' => 'ans2manage',
+                'ANS3 - ASSESMEN PRASEDASI / ANESTESI' => 'ans3manage',
             ]
         ];
     }
@@ -775,6 +776,315 @@ class Admin extends AdminModule
         }
 
         echo $this->draw('ans2/cetak.html', ['data' => $data]);
+        exit();
+    }
+
+    // ==========================================
+    // ANS3 - ASSESMEN PRASEDASI / ANESTESI
+    // ==========================================
+
+    public function anyAns3manage()
+    {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+            $id = $_GET['id'];
+            $this->db('ans3_assesmen_prasedasi_anestesi')->where('id', $id)->delete();
+            $this->notify('success', 'Data berhasil dihapus');
+            redirect(url([ADMIN, 'update_bmt', 'ans3manage']));
+        }
+
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $data = $this->db('ans3_assesmen_prasedasi_anestesi')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans3_assesmen_prasedasi_anestesi.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('ans3_assesmen_prasedasi_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->toArray();
+
+        return $this->draw('ans3/manage.html', ['data' => $data]);
+    }
+
+    public function getAns3form()
+    {
+        if (isset($_GET['ajax_patient'])) {
+            $no_rawat = $_GET['no_rawat'] ?? '';
+            $no_rawat = trim($no_rawat);
+            
+            if (is_numeric($no_rawat) && strlen($no_rawat) < 6) {
+                $no_rawat = str_pad($no_rawat, 6, '0', STR_PAD_LEFT);
+            }
+
+            $result = ['success' => false];
+
+            if (!empty($no_rawat)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $no_rawat)
+                    ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+
+                if ($reg) {
+                    $result = [
+                        'success'       => true,
+                        'no_rawat'      => $reg['no_rawat'] ?? '',
+                        'nama_pasien'   => $reg['nm_pasien'] ?? '',
+                        'jenis_kelamin' => $reg['jk'] ?? '',
+                        'tanggal_lahir' => $reg['tgl_lahir'] ?? '',
+                        'no_rkm_medis'  => $reg['no_rkm_medis'] ?? '',
+                        'umur'          => $reg['umur'] ?? ''
+                    ];
+                }
+            }
+
+            if (ob_get_length()) {
+                ob_clean();
+            }
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit();
+        }
+
+        $id = $_GET['id'] ?? '';
+        $data = [];
+
+        if (!empty($id)) {
+            $data = $this->db('ans3_assesmen_prasedasi_anestesi')->where('id', $id)->oneArray();
+            if ($data && !empty($data['no_rawat'])) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+                    ->oneArray();
+
+                if ($reg) {
+                    $data['nm_pasien'] = $reg['nm_pasien'];
+                    $data['umur_pasien'] = $reg['umur'];
+                    $data['jk_pasien'] = $reg['jk'];
+                    $data['tgl_lahir'] = $reg['tgl_lahir'];
+                }
+            }
+        }
+
+        $this->tpl->set('data', $data);
+        return $this->draw('ans3/form.html', ['data' => $data]);
+    }
+
+    public function postAns3save()
+    {
+        try {
+            $post = $_POST;
+            $id = $post['id'] ?? '';
+
+            $data = [
+                'no_rawat' => $post['no_rawat'] ?? '',
+                'diagnosa_prabedah' => $post['diagnosa_prabedah'] ?? '',
+                'rencana_tindakan' => $post['rencana_tindakan'] ?? '',
+                'tipe_tindakan' => $post['tipe_tindakan'] ?? '',
+                'anamnese_dari' => $post['anamnese_dari'] ?? '',
+                'riwayat_anestesi' => $post['riwayat_anestesi'] ?? '',
+                'riwayat_anestesi_ket' => $post['riwayat_anestesi_ket'] ?? '',
+                'komplikasi' => $post['komplikasi'] ?? '',
+                'obat_sedang_dikonsumsi' => $post['obat_sedang_dikonsumsi'] ?? '',
+                'riwayat_alergi' => $post['riwayat_alergi'] ?? '',
+                'riwayat_alergi_ket' => $post['riwayat_alergi_ket'] ?? '',
+                
+                'bb' => $post['bb'] ?? '',
+                'tb' => $post['tb'] ?? '',
+                'tanda_vital_td' => $post['tanda_vital_td'] ?? '',
+                'tanda_vital_nadi' => $post['tanda_vital_nadi'] ?? '',
+                'tanda_vital_rr' => $post['tanda_vital_rr'] ?? '',
+                'tanda_vital_suhu' => $post['tanda_vital_suhu'] ?? '',
+                'tanda_vital_vas' => $post['tanda_vital_vas'] ?? '',
+                
+                'bebas' => $post['bebas'] ?? '',
+                'protusi_mandibula' => $post['protusi_mandibula'] ?? '',
+                'jarak_mentohyoid' => $post['jarak_mentohyoid'] ?? '',
+                'jarak_mentohyoid_ket' => $post['jarak_mentohyoid_ket'] ?? '',
+                'jarak_thyrohyoid' => $post['jarak_thyrohyoid'] ?? '',
+                'jarak_thyrohyoid_ket' => $post['jarak_thyrohyoid_ket'] ?? '',
+                'buka_mulut' => $post['buka_mulut'] ?? '',
+                'mallampathy' => $post['mallampathy'] ?? '',
+                'leher' => $post['leher'] ?? '',
+                'gerak_leher' => $post['gerak_leher'] ?? '',
+                'obesitas' => $post['obesitas'] ?? '',
+                'massa' => $post['massa'] ?? '',
+                'gigi_palsu' => $post['gigi_palsu'] ?? '',
+                'sulit_ventilasi' => $post['sulit_ventilasi'] ?? '',
+                
+                'pernafasan_dbn' => $post['pernafasan_dbn'] ?? '',
+                'pernafasan_asma' => $post['pernafasan_asma'] ?? '',
+                'pernafasan_pneumonia' => $post['pernafasan_pneumonia'] ?? '',
+                'pernafasan_ispa' => $post['pernafasan_ispa'] ?? '',
+                'pernafasan_tuberkulosis' => $post['pernafasan_tuberkulosis'] ?? '',
+                'pernafasan_lainnya' => $post['pernafasan_lainnya'] ?? '',
+                'pernafasan_keterangan' => $post['pernafasan_keterangan'] ?? '',
+                
+                'kardiovaskular_dbn' => $post['kardiovaskular_dbn'] ?? '',
+                'kardiovaskular_ekg_abnormal' => $post['kardiovaskular_ekg_abnormal'] ?? '',
+                'kardiovaskular_hipertensi' => $post['kardiovaskular_hipertensi'] ?? '',
+                'kardiovaskular_disritma' => $post['kardiovaskular_disritma'] ?? '',
+                'kardiovaskular_murmur' => $post['kardiovaskular_murmur'] ?? '',
+                'kardiovaskular_angina' => $post['kardiovaskular_angina'] ?? '',
+                'kardiovaskular_pacemaker' => $post['kardiovaskular_pacemaker'] ?? '',
+                'kardiovaskular_chf' => $post['kardiovaskular_chf'] ?? '',
+                'kardiovaskular_penyakit_katup' => $post['kardiovaskular_penyakit_katup'] ?? '',
+                'kardiovaskular_lainnya' => $post['kardiovaskular_lainnya'] ?? '',
+                'kardiovaskular_keterangan' => $post['kardiovaskular_keterangan'] ?? '',
+                
+                'neuro_dbn' => $post['neuro_dbn'] ?? '',
+                'neuro_sakit_kepala' => $post['neuro_sakit_kepala'] ?? '',
+                'neuro_penurunan_kesadaran' => $post['neuro_penurunan_kesadaran'] ?? '',
+                'neuro_distropi' => $post['neuro_distropi'] ?? '',
+                'neuro_parese' => $post['neuro_parese'] ?? '',
+                'neuro_parastesia' => $post['neuro_parastesia'] ?? '',
+                'neuro_plegi' => $post['neuro_plegi'] ?? '',
+                'neuro_kejang' => $post['neuro_kejang'] ?? '',
+                'neuro_lainnya' => $post['neuro_lainnya'] ?? '',
+                'neuro_keterangan' => $post['neuro_keterangan'] ?? '',
+                
+                'renal_endokrin_dbn' => $post['renal_endokrin_dbn'] ?? '',
+                'renal_diabetes' => $post['renal_diabetes'] ?? '',
+                'renal_tiroid' => $post['renal_tiroid'] ?? '',
+                'renal_gagal_ginjal' => $post['renal_gagal_ginjal'] ?? '',
+                'renal_lainnya' => $post['renal_lainnya'] ?? '',
+                'renal_keterangan' => $post['renal_keterangan'] ?? '',
+                
+                'hepato_dbn' => $post['hepato_dbn'] ?? '',
+                'hepato_sirosis' => $post['hepato_sirosis'] ?? '',
+                'hepato_hepatitis' => $post['hepato_hepatitis'] ?? '',
+                'hepato_obstruksi' => $post['hepato_obstruksi'] ?? '',
+                'hepato_ikterus' => $post['hepato_ikterus'] ?? '',
+                'hepato_mual_muntah' => $post['hepato_mual_muntah'] ?? '',
+                'hepato_lainnya' => $post['hepato_lainnya'] ?? '',
+                'hepato_keterangan' => $post['hepato_keterangan'] ?? '',
+                
+                'lainnya_organ_dbn' => $post['lainnya_organ_dbn'] ?? '',
+                'lainnya_neonat' => $post['lainnya_neonat'] ?? '',
+                'lainnya_geriatri' => $post['lainnya_geriatri'] ?? '',
+                'lainnya_hamil' => $post['lainnya_hamil'] ?? '',
+                'lainnya_kanker' => $post['lainnya_kanker'] ?? '',
+                'lainnya_anemia' => $post['lainnya_anemia'] ?? '',
+                'lainnya_dehidrasi' => $post['lainnya_dehidrasi'] ?? '',
+                'lainnya_merokok' => $post['lainnya_merokok'] ?? '',
+                'lainnya_alkohol' => $post['lainnya_alkohol'] ?? '',
+                'lainnya_pendarahan' => $post['lainnya_pendarahan'] ?? '',
+                'lainnya_lainnya' => $post['lainnya_lainnya'] ?? '',
+                'lainnya_organ_keterangan' => $post['lainnya_organ_keterangan'] ?? '',
+                
+                'lab_hb' => $post['lab_hb'] ?? '',
+                'lab_hct' => $post['lab_hct'] ?? '',
+                'lab_ct' => $post['lab_ct'] ?? '',
+                'lab_pt' => $post['lab_pt'] ?? '',
+                'lab_leukosit' => $post['lab_leukosit'] ?? '',
+                'lab_trombosit' => $post['lab_trombosit'] ?? '',
+                'lab_bt' => $post['lab_bt'] ?? '',
+                'lab_aptt' => $post['lab_aptt'] ?? '',
+                'lab_ureum' => $post['lab_ureum'] ?? '',
+                'lab_creatinin' => $post['lab_creatinin'] ?? '',
+                'lab_sgot' => $post['lab_sgot'] ?? '',
+                'lab_sgpt' => $post['lab_sgpt'] ?? '',
+                'lab_albumin' => $post['lab_albumin'] ?? '',
+                'lab_globulin' => $post['lab_globulin'] ?? '',
+                'lab_bilirubin_direct' => $post['lab_bilirubin_direct'] ?? '',
+                'lab_bilirubin_indirect' => $post['lab_bilirubin_indirect'] ?? '',
+                'lab_na' => $post['lab_na'] ?? '',
+                'lab_k' => $post['lab_k'] ?? '',
+                'lab_cl' => $post['lab_cl'] ?? '',
+                'lab_gds' => $post['lab_gds'] ?? '',
+                'lab_t3' => $post['lab_t3'] ?? '',
+                'lab_tsh' => $post['lab_tsh'] ?? '',
+                'lab_t4' => $post['lab_t4'] ?? '',
+                'lab_pco2' => $post['lab_pco2'] ?? '',
+                'lab_be' => $post['lab_be'] ?? '',
+                'lab_po2' => $post['lab_po2'] ?? '',
+                'lab_sao2' => $post['lab_sao2'] ?? '',
+                'lab_lainlain' => $post['lab_lainlain'] ?? '',
+                
+                'penunjang_ekg' => $post['penunjang_ekg'] ?? '',
+                'penunjang_radiologi' => $post['penunjang_radiologi'] ?? '',
+                'penunjang_lainlain' => $post['penunjang_lainlain'] ?? '',
+                'keterangan_lain' => $post['keterangan_lain'] ?? '',
+                
+                'ps_asa' => $post['ps_asa'] ?? '',
+                'rencana_sedasi' => $post['rencana_sedasi'] ?? '',
+                
+                'instruksi_puasa' => $post['instruksi_puasa'] ?? '',
+                'instruksi_puasa_jam' => $post['instruksi_puasa_jam'] ?? '',
+                'instruksi_persiapan_darah' => $post['instruksi_persiapan_darah'] ?? '',
+                'instruksi_persiapan_darah_cc' => $post['instruksi_persiapan_darah_cc'] ?? '',
+                'instruksi_obat_dihentikan' => $post['instruksi_obat_dihentikan'] ?? '',
+                'instruksi_lain1' => $post['instruksi_lain1'] ?? '',
+                'instruksi_lain2' => $post['instruksi_lain2'] ?? '',
+                'instruksi_lain3' => $post['instruksi_lain3'] ?? '',
+                'instruksi_lain4' => $post['instruksi_lain4'] ?? '',
+                'instruksi_lain5' => $post['instruksi_lain5'] ?? '',
+                
+                'tanggal' => $post['tanggal'] ?? '',
+                'jam' => $post['jam'] ?? '',
+                'dokter_nama' => $post['dokter_nama'] ?? ''
+            ];
+
+            foreach ($data as $key => $val) {
+                if ($val === '') {
+                    $data[$key] = null;
+                }
+            }
+
+            if ($id) {
+                $this->db('ans3_assesmen_prasedasi_anestesi')->where('id', $id)->save($data);
+                $this->notify('success', 'Data berhasil diupdate');
+            } else {
+                $this->db('ans3_assesmen_prasedasi_anestesi')->save($data);
+                $this->notify('success', 'Data berhasil disimpan');
+            }
+
+            redirect(url([ADMIN, 'update_bmt', 'ans3manage']));
+        } catch (\Exception $e) {
+            die("Terjadi kesalahan: " . $e->getMessage());
+        }
+    }
+
+    public function getAns3cetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('ans3_assesmen_prasedasi_anestesi')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans3_assesmen_prasedasi_anestesi.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('ans3_assesmen_prasedasi_anestesi.id', $id)
+            ->select('ans3_assesmen_prasedasi_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        if (!empty($data['tgl_lahir'])) {
+            $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            }
+        }
+        
+        if (!empty($data['tanggal'])) {
+            $tgl = explode('-', $data['tanggal']);
+            if (count($tgl) == 3) {
+                $data['tanggal_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            }
+        }
+
+        echo $this->draw('ans3/cetak.html', ['data' => $data]);
         exit();
     }
 }

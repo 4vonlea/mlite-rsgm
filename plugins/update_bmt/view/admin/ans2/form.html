@@ -165,9 +165,9 @@ $(document).ready(function() {
 
     var searchUrl = "{?=url([ADMIN, 'update_bmt', 'ans2form'])?}";
     if (searchUrl.indexOf('?') === -1) {
-        searchUrl += "?ajax_patient=1";
+        searchUrl += "?ajax_patient=1&t={?=$_SESSION['token']?}";
     } else {
-        searchUrl += "&ajax_patient=1";
+        searchUrl += "&ajax_patient=1&t={?=$_SESSION['token']?}";
     }
 
     // Use Tab key to trigger AJAX load

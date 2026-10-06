@@ -31,9 +31,9 @@
                                 <td>{$value.tanggal_jam}</td>
                                 <td>{$value.pemberi_informasi}</td>
                                 <td class="text-center">
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans1form'])?}&id={$value.id}" class="btn btn-xs btn-primary"><i class="fa fa-edit"></i> Edit</a>
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans1cetak'])?}&id={$value.id}" target="_blank" class="btn btn-xs btn-success"><i class="fa fa-print"></i> Cetak</a>
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans1manage'])?}&action=delete&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Apakah anda yakin ingin menghapus data ini?')"><i class="fa fa-trash"></i> Hapus</a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans1form'])?}&t={?=$_SESSION['token']?}&id={$value.id}" class="btn btn-xs btn-primary"><i class="fa fa-edit"></i> Edit</a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans1cetak'])?}&t={?=$_SESSION['token']?}&id={$value.id}" target="_blank" class="btn btn-xs btn-success"><i class="fa fa-print"></i> Cetak</a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans1manage'])?}&t={?=$_SESSION['token']?}&action=delete&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Apakah anda yakin ingin menghapus data ini?')"><i class="fa fa-trash"></i> Hapus</a>
                                 </td>
                             </tr>
                             {/loop}

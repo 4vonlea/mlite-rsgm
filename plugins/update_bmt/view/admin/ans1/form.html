@@ -196,7 +196,7 @@ $(document).ready(function() {
         // Disable input while searching
         $('#no_rawat').prop('readonly', true);
         
-        $.get('{?=url([ADMIN, "update_bmt", "ans1form"])?}', {ajax_patient: 1, no_rawat: no_rawat, _: new Date().getTime()}, function(res) {
+        $.get('{?=url([ADMIN, "update_bmt", "ans1form"])?}', {ajax_patient: 1, no_rawat: no_rawat, t: '{?=$_SESSION["token"]?}', _: new Date().getTime()}, function(res) {
             $('#no_rawat').prop('readonly', false);
             if (res && res.success) {
                 $('#no_rawat').val(res.no_rawat);

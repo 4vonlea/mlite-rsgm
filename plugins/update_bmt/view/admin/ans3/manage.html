@@ -2,13 +2,13 @@
     <div class="col-md-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">Data ANS2 - Persetujuan Tindakan Pembiusan</h3>
+                <h3 class="panel-title">Data ANS3 - Assesmen Prasedasi / Anestesi</h3>
                 <ul class="nav nav-tabs">
                     <li class="active">
-                        <a href="{?=url([ADMIN, 'update_bmt', 'ans2manage'])?}" role="tab">Data Persetujuan</a>
+                        <a href="{?=url([ADMIN, 'update_bmt', 'ans3manage'])?}" role="tab">Data Assesmen</a>
                     </li>
                     <li>
-                        <a href="{?=url([ADMIN, 'update_bmt', 'ans2form'])?}" role="tab">Tambah Data</a>
+                        <a href="{?=url([ADMIN, 'update_bmt', 'ans3form'])?}" role="tab">Tambah Data</a>
                     </li>
                 </ul>
             </div>
@@ -20,10 +20,9 @@
                                 <th>No. Rawat</th>
                                 <th>No. RM</th>
                                 <th>Nama Pasien</th>
-                                <th>Jenis Pernyataan</th>
+                                <th>Tipe Tindakan</th>
+                                <th>Diagnosa Prabedah</th>
                                 <th>Tanggal</th>
-                                <th>Pihak Menyatakan</th>
-                                <th>Status Pihak</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -34,20 +33,19 @@
                                 <td>{$value.no_rawat}</td>
                                 <td>{$value.no_rkm_medis}</td>
                                 <td>{$value.nm_pasien}</td>
-                                <td>{$value.jenis_pernyataan}</td>
-                                <td>{$value.tanggal_jam}</td>
-                                <td>{$value.pihak_nama}</td>
-                                <td>{$value.pihak_sebagai}</td>
+                                <td>{$value.tipe_tindakan}</td>
+                                <td>{$value.diagnosa_prabedah}</td>
+                                <td>{$value.tanggal}</td>
                                 <td>
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans2form'])?}&t={?=$_SESSION['token']?}&id={$value.id}" class="btn btn-xs btn-warning"><i class="fa fa-pencil"></i></a>
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans2cetak'])?}&t={?=$_SESSION['token']?}&id={$value.id}" class="btn btn-xs btn-primary" target="_blank"><i class="fa fa-print"></i></a>
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans2manage'])?}&t={?=$_SESSION['token']?}&action=delete&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?')"><i class="fa fa-trash"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans3form'])?}&t={?=$_SESSION['token']?}&id={$value.id}" class="btn btn-xs btn-warning"><i class="fa fa-pencil"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans3cetak'])?}&t={?=$_SESSION['token']?}&id={$value.id}" class="btn btn-xs btn-primary" target="_blank"><i class="fa fa-print"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans3manage'])?}&t={?=$_SESSION['token']?}&action=delete&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?')"><i class="fa fa-trash"></i></a>
                                 </td>
                             </tr>
                             {/loop}
                             {else}
                             <tr>
-                                <td colspan="8" class="text-center">Tidak ada data ditemukan.</td>
+                                <td colspan="7" class="text-center">Tidak ada data ditemukan.</td>
                             </tr>
                             {/if}
                         </tbody>
