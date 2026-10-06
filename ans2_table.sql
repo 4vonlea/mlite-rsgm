@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS `ans2_persetujuan_pembiusan` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `jenis_pernyataan` enum('PERSETUJUAN','PENOLAKAN') NOT NULL DEFAULT 'PERSETUJUAN',
+  `pihak_nama` varchar(100) DEFAULT NULL,
+  `pihak_umur` varchar(20) DEFAULT NULL,
+  `pihak_jk` enum('L','P') DEFAULT NULL,
+  `pihak_alamat` text DEFAULT NULL,
+  `pihak_sebagai` varchar(50) DEFAULT NULL,
+  `pasien_nama_isian` varchar(100) DEFAULT NULL,
+  `pasien_umur_isian` varchar(20) DEFAULT NULL,
+  `pasien_jk_isian` enum('L','P') DEFAULT NULL,
+  `pasien_alamat_isian` text DEFAULT NULL,
+  `alasan_penolakan` text DEFAULT NULL,
+  `tanggal_jam` datetime DEFAULT NULL,
+  `saksi_nama` varchar(100) DEFAULT NULL,
+  `pihak_rs_nama` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

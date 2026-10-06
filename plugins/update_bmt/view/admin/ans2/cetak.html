@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ANS2 - Persetujuan Tindakan Pembiusan</title>
+<style>
+  @page { size: A4; margin: 8mm 10mm; }
+  body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 0; color: #000; }
+  
+  .container { width: 100%; max-width: 192mm; margin: 0 auto; border: 1px solid #000; box-sizing: border-box; }
+
+  /* Header */
+  .table-header { width: 100%; border-collapse: collapse; }
+  .table-header td { border: 1px solid #000; padding: 4px; vertical-align: middle; }
+  
+  /* RM Box */
+  .rm-header-td { vertical-align: top; padding: 4px; font-size: 11px; }
+  .box-rm { display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin-left: 1px; text-align: center; line-height: 14px; font-size: 10px; }
+
+  /* Section title */
+  .section-main-title { text-align: center; font-weight: bold; font-size: 12px; padding: 4px; border-top: 1px solid #000; border-bottom: 1px solid #000; background: #fff; }
+
+  /* Content body */
+  .content-body { padding: 8px 12px; border-bottom: 1px solid #000; }
+  .content-body:last-child { border-bottom: none; }
+  
+  .form-row { margin-bottom: 6px; }
+  .form-label { display: inline-block; width: 150px; }
+  
+  .dotted { border-bottom: 1px dotted #000; display: inline-block; }
+  .text-center { text-align: center; }
+
+  .cb { display: inline-block; width: 10px; height: 10px; border: 1px solid #000; vertical-align: middle; margin-right: 2px; text-align: center; line-height: 10px; font-size: 9px; }
+  .cb.checked::after { content: '✓'; font-weight: bold; }
+
+  .signature-table { width: 100%; margin-top: 20px; text-align: center; }
+  .signature-table td { width: 33%; vertical-align: bottom; height: 80px; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- HEADER -->
+  <table class="table-header">
+    <tr>
+      <td style="width: 65%; text-align:center; vertical-align:middle; padding: 0; border: none; border-right: 1px solid #000;">
+        <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat" style="width: 100%; height: auto; max-height: 80px; object-fit: contain;">
+      </td>
+      <td class="rm-header-td" style="width: 35%;">
+        <strong>No. RM</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+        <div class="box-rm">{?=isset($data['no_rkm_medis'][0])?$data['no_rkm_medis'][0]:''?}</div>-<div class="box-rm">{?=isset($data['no_rkm_medis'][1])?$data['no_rkm_medis'][1]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][2])?$data['no_rkm_medis'][2]:''?}</div>-<div class="box-rm">{?=isset($data['no_rkm_medis'][3])?$data['no_rkm_medis'][3]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][4])?$data['no_rkm_medis'][4]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][5])?$data['no_rkm_medis'][5]:''?}</div>
+        <br><br>
+        <strong>Nama Pasien</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 
+        <span class="dotted" style="min-width: 130px;">{?=isset_or($data['nm_pasien'])?}</span> &nbsp;{?= isset($data['jk']) ? ($data['jk'] == 'L' ? 'L' : 'P') : 'L/P' ?}
+        <br><br>
+        <strong>Tanggal Lahir</strong> &nbsp;&nbsp;&nbsp;&nbsp;:
+        <span class="dotted" style="min-width: 140px;">{?=isset_or($data['tanggal_lahir_indo'])?}</span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- SECTION PERSETUJUAN -->
+  <div class="section-main-title">PERSETUJUAN TINDAKAN PEMBIUSAN</div>
+  <div class="content-body">
+    <div style="margin-bottom: 10px;">Yang bertanda tangan di bawah ini saya:</div>
+    
+    <div class="form-row">
+        <span class="form-label">Nama</span> : <span class="dotted" style="width: 78%;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN') ? $data['pihak_nama'] : '' ?}</span>
+    </div>
+    <div class="form-row">
+        <span class="form-label">Umur / Jenis kelamin</span> : <span class="dotted" style="width: 25%;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN') ? $data['pihak_umur'] : '' ?}</span>
+        <div class="cb {?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN' && $data['pihak_jk'] == 'L') ? 'checked' : '' ?}"></div> Laki-laki &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN' && $data['pihak_jk'] == 'P') ? 'checked' : '' ?}"></div> Perempuan
+    </div>
+    <div class="form-row" style="display:flex;">
+        <span class="form-label" style="flex:none;">Alamat</span> <span style="margin: 0 4px;">:</span> <span class="dotted" style="flex:1;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN') ? $data['pihak_alamat'] : '' ?}</span>
+    </div>
+
+    <div style="margin-top: 15px; margin-bottom: 10px; line-height: 1.5;">
+        Dengan Selaku <span class="dotted" style="min-width: 60px; text-align:center;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN') ? $data['pihak_sebagai'] : '' ?}</span> **) dengan ini menyatakan <strong>PERSETUJUAN</strong> untuk dilakukan tindakan <strong>PEMBIUSAN</strong> terhadap pasien di Rumah Sakit Gigi Mulut Gusti Hasan Aman
+    </div>
+    
+    <div class="form-row">
+        <span class="form-label">Nama</span> : <span class="dotted" style="width: 78%;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN') ? $data['pasien_nama_isian'] : '' ?}</span>
+    </div>
+    <div class="form-row">
+        <span class="form-label">Umur / Jenis kelamin</span> : <span class="dotted" style="width: 25%;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN') ? $data['pasien_umur_isian'] : '' ?}</span>
+        <div class="cb {?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN' && $data['pasien_jk_isian'] == 'L') ? 'checked' : '' ?}"></div> Laki-laki &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN' && $data['pasien_jk_isian'] == 'P') ? 'checked' : '' ?}"></div> Perempuan
+    </div>
+    <div class="form-row" style="display:flex;">
+        <span class="form-label" style="flex:none;">Alamat</span> <span style="margin: 0 4px;">:</span> <span class="dotted" style="flex:1;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN') ? $data['pasien_alamat_isian'] : '' ?}</span>
+    </div>
+
+    <div style="margin-top: 15px; margin-bottom: 20px; text-align: justify; line-height: 1.5;">
+        Saya telah mengerti dan memahami tentang jenis tindakan pembiusan beserta manfaat, resiko dan komplikasi yang akan terjadi.
+        Saya menyadari bahwa ilmu kedokteran bukanlah ilmu pasti, maka keberhasilan tindakan kedokteran bukanlah keniscayaan,
+        melainkan sangat bergantung pada izin Tuhan Yang Maha Esa
+    </div>
+
+    <div style="text-align: right; margin-bottom: 10px; padding-right: 20px;">
+        Banjarmasin, <span class="dotted" style="min-width: 150px; text-align:center;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN') ? (isset($data['tanggal_jam_indo'])?$data['tanggal_jam_indo']:'') : '' ?}</span> Pukul: <span class="dotted" style="min-width: 50px; text-align:center;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN') ? (isset($data['jam_indo'])?$data['jam_indo']:'') : '' ?}</span> WITA
+    </div>
+    
+    <table class="signature-table">
+        <tr>
+            <td style="padding-bottom: 5px;">Yang Menyatakan</td>
+            <td style="padding-bottom: 5px;">Saksi</td>
+            <td style="padding-bottom: 5px;">Pihak Rumah Sakit</td>
+        </tr>
+        <tr>
+            <td>
+                (<span class="dotted" style="min-width: 150px; text-align:center;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN') ? $data['pihak_nama'] : '' ?}</span>)<br>
+                <span style="font-size:9px;">Tanda tangan dan nama lengkap</span>
+            </td>
+            <td>
+                (<span class="dotted" style="min-width: 150px; text-align:center;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN') ? $data['saksi_nama'] : '' ?}</span>)<br>
+                <span style="font-size:9px;">Tanda tangan dan nama lengkap</span>
+            </td>
+            <td>
+                (<span class="dotted" style="min-width: 150px; text-align:center;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN') ? $data['pihak_rs_nama'] : '' ?}</span>)<br>
+                <span style="font-size:9px;">Tanda tangan dan nama lengkap</span>
+            </td>
+        </tr>
+    </table>
+  </div>
+
+  <!-- SECTION PENOLAKAN -->
+  <div class="section-main-title">PENOLAKAN TINDAKAN PEMBIUSAN</div>
+  <div class="content-body">
+    <div style="margin-bottom: 10px;">Yang bertanda tangan di bawah ini saya:</div>
+    
+    <div class="form-row">
+        <span class="form-label">Nama</span> : <span class="dotted" style="width: 78%;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN') ? $data['pihak_nama'] : '' ?}</span>
+    </div>
+    <div class="form-row">
+        <span class="form-label">Umur / Jenis kelamin</span> : <span class="dotted" style="width: 25%;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN') ? $data['pihak_umur'] : '' ?}</span>
+        <div class="cb {?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN' && $data['pihak_jk'] == 'L') ? 'checked' : '' ?}"></div> Laki-laki &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN' && $data['pihak_jk'] == 'P') ? 'checked' : '' ?}"></div> Perempuan
+    </div>
+    <div class="form-row" style="display:flex;">
+        <span class="form-label" style="flex:none;">Alamat</span> <span style="margin: 0 4px;">:</span> <span class="dotted" style="flex:1;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN') ? $data['pihak_alamat'] : '' ?}</span>
+    </div>
+
+    <div style="margin-top: 15px; margin-bottom: 10px; line-height: 1.5;">
+        Selaku <span class="dotted" style="min-width: 60px; text-align:center;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN') ? $data['pihak_sebagai'] : '' ?}</span> **) dengan ini menyatakan <strong>PENOLAKAN</strong> untuk dilakukan tindakan <strong>PEMBIUSAN</strong> dengan alasan <span class="dotted" style="min-width: 150px; text-align:center;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN') ? $data['alasan_penolakan'] : '' ?}</span>
+        terhadap pasien di Rumah Sakit Gigi Mulut Gusti Hasan Aman
+    </div>
+    
+    <div class="form-row">
+        <span class="form-label">Nama</span> : <span class="dotted" style="width: 78%;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN') ? $data['pasien_nama_isian'] : '' ?}</span>
+    </div>
+    <div class="form-row">
+        <span class="form-label">Umur / Jenis kelamin</span> : <span class="dotted" style="width: 25%;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN') ? $data['pasien_umur_isian'] : '' ?}</span>
+        <div class="cb {?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN' && $data['pasien_jk_isian'] == 'L') ? 'checked' : '' ?}"></div> Laki-laki &nbsp;&nbsp;
+        <div class="cb {?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN' && $data['pasien_jk_isian'] == 'P') ? 'checked' : '' ?}"></div> Perempuan
+    </div>
+    <div class="form-row" style="display:flex;">
+        <span class="form-label" style="flex:none;">Alamat</span> <span style="margin: 0 4px;">:</span> <span class="dotted" style="flex:1;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN') ? $data['pasien_alamat_isian'] : '' ?}</span>
+    </div>
+
+    <div style="margin-top: 15px; margin-bottom: 20px; text-align: justify; line-height: 1.5;">
+        Saya telah dijelaskan dan memahami tentang jenis tindakan pembiusan beserta manfaat, resiko, komplikasi dan kemungkinan akibat bila tidak dilaksanakannya tindakan pembiusan tersebut. Saya bertanggung jawab secara penuh segala akibat yang timbul sebagai akibat tidak dilakukannya pembiusan tersebut
+    </div>
+
+    <div style="text-align: right; margin-bottom: 10px; padding-right: 20px;">
+        Banjarmasin, <span class="dotted" style="min-width: 150px; text-align:center;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN') ? (isset($data['tanggal_jam_indo'])?$data['tanggal_jam_indo']:'') : '' ?}</span> Pukul: <span class="dotted" style="min-width: 50px; text-align:center;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN') ? (isset($data['jam_indo'])?$data['jam_indo']:'') : '' ?}</span> WITA
+    </div>
+    
+    <table class="signature-table">
+        <tr>
+            <td style="padding-bottom: 5px;">Yang Menyatakan</td>
+            <td style="padding-bottom: 5px;">Saksi</td>
+            <td style="padding-bottom: 5px;">Pihak Rumah Sakit</td>
+        </tr>
+        <tr>
+            <td>
+                (<span class="dotted" style="min-width: 150px; text-align:center;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN') ? $data['pihak_nama'] : '' ?}</span>)<br>
+                <span style="font-size:9px;">Tanda tangan dan nama lengkap</span>
+            </td>
+            <td>
+                (<span class="dotted" style="min-width: 150px; text-align:center;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN') ? $data['saksi_nama'] : '' ?}</span>)<br>
+                <span style="font-size:9px;">Tanda tangan dan nama lengkap</span>
+            </td>
+            <td>
+                (<span class="dotted" style="min-width: 150px; text-align:center;">{?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN') ? $data['pihak_rs_nama'] : '' ?}</span>)<br>
+                <span style="font-size:9px;">Tanda tangan dan nama lengkap</span>
+            </td>
+        </tr>
+    </table>
+  </div>
+</div>
+
+<script>
+  window.onload = function() {
+    window.print();
+  }
+</script>
+
+</body>
+</html>

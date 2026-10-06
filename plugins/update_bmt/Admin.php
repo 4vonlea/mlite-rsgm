@@ -13,7 +13,8 @@ class Admin extends AdminModule
                 'RM.RJ-10 - LEMBAR EDUKASI PASIEN DAN KELUARGA TERINTEGRASI' => 'edukasimanage',
             ],
             'Bedah' => [
-                // 'Nama Form Bedah' => 'bedahmanage',
+                'ANS1 - INFORMASI TINDAKAN PEMBIUSAN' => 'ans1manage',
+                'ANS2 - PERSETUJUAN TINDAKAN PEMBIUSAN' => 'ans2manage',
             ]
         ];
     }
@@ -590,6 +591,190 @@ class Admin extends AdminModule
         }
 
         echo $this->draw('ans1/cetak.html', ['data' => $data]);
+        exit();
+    }
+
+    // ==========================================
+    // ANS2 - PERSETUJUAN TINDAKAN PEMBIUSAN
+    // ==========================================
+
+    public function anyAns2manage()
+    {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+            $id = $_GET['id'];
+            $this->db('ans2_persetujuan_pembiusan')->where('id', $id)->delete();
+            $this->notify('success', 'Data berhasil dihapus');
+            redirect(url([ADMIN, 'update_bmt', 'ans2manage']));
+        }
+
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $data = $this->db('ans2_persetujuan_pembiusan')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans2_persetujuan_pembiusan.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('ans2_persetujuan_pembiusan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->toArray();
+
+        return $this->draw('ans2/manage.html', ['data' => $data]);
+    }
+
+    public function getAns2form()
+    {
+        // AJAX: ambil info pasien
+        if (isset($_GET['ajax_patient'])) {
+            $no_rawat = $_GET['no_rawat'] ?? '';
+            $no_rawat = trim($no_rawat);
+            
+            if (is_numeric($no_rawat) && strlen($no_rawat) < 6) {
+                $no_rawat = str_pad($no_rawat, 6, '0', STR_PAD_LEFT);
+            }
+
+            $result = ['success' => false];
+
+            if (!empty($no_rawat)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $no_rawat)
+                    ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat, pasien.umur')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+
+                if ($reg) {
+                    $result = [
+                        'success'       => true,
+                        'no_rawat'      => $reg['no_rawat'] ?? '',
+                        'nama_pasien'   => $reg['nm_pasien'] ?? '',
+                        'jenis_kelamin' => $reg['jk'] ?? '',
+                        'tanggal_lahir' => $reg['tgl_lahir'] ?? '',
+                        'no_rkm_medis'  => $reg['no_rkm_medis'] ?? '',
+                        'alamat'        => $reg['alamat'] ?? '',
+                        'umur'          => $reg['umur'] ?? ''
+                    ];
+                }
+            }
+
+            if (ob_get_length()) {
+                ob_clean();
+            }
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit();
+        }
+
+        $id = $_GET['id'] ?? '';
+        $data = [];
+
+        if (!empty($id)) {
+            $data = $this->db('ans2_persetujuan_pembiusan')->where('id', $id)->oneArray();
+            if ($data && !empty($data['no_rawat']) && empty($data['nm_pasien'])) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                    ->oneArray();
+
+                if ($reg) {
+                    $data['nm_pasien'] = $reg['nm_pasien'];
+                }
+            }
+        }
+
+        $this->tpl->set('data', $data);
+        return $this->draw('ans2/form.html', ['data' => $data]);
+    }
+
+    public function postAns2save()
+    {
+        try {
+            $post = $_POST;
+            $id = $post['id'] ?? '';
+
+            // Handle date conversion if needed, but input datetime-local usually returns Y-m-d\TH:i format.
+            // MySQL expects Y-m-d H:i:s.
+            $tanggal_jam = date('Y-m-d H:i:s', strtotime($post['tanggal_jam']));
+
+            $data = [
+                'no_rawat'            => $post['no_rawat'] ?? '',
+                'jenis_pernyataan'    => $post['jenis_pernyataan'] ?? 'PERSETUJUAN',
+                'pihak_nama'          => $post['pihak_nama'] ?? '',
+                'pihak_umur'          => $post['pihak_umur'] ?? '',
+                'pihak_jk'            => $post['pihak_jk'] ?? 'L',
+                'pihak_alamat'        => $post['pihak_alamat'] ?? '',
+                'pihak_sebagai'       => $post['pihak_sebagai'] ?? 'Pasien',
+                'pasien_nama_isian'   => $post['pasien_nama_isian'] ?? '',
+                'pasien_umur_isian'   => $post['pasien_umur_isian'] ?? '',
+                'pasien_jk_isian'     => $post['pasien_jk_isian'] ?? 'L',
+                'pasien_alamat_isian' => $post['pasien_alamat_isian'] ?? '',
+                'alasan_penolakan'    => $post['alasan_penolakan'] ?? '',
+                'tanggal_jam'         => $tanggal_jam,
+                'saksi_nama'          => $post['saksi_nama'] ?? '',
+                'pihak_rs_nama'       => $post['pihak_rs_nama'] ?? ''
+            ];
+
+            if ($id) {
+                $this->db('ans2_persetujuan_pembiusan')->where('id', $id)->save($data);
+                $this->notify('success', 'Data berhasil diupdate');
+            } else {
+                $this->db('ans2_persetujuan_pembiusan')->save($data);
+                $this->notify('success', 'Data berhasil disimpan');
+            }
+
+            redirect(url([ADMIN, 'update_bmt', 'ans2manage']));
+        } catch (\Exception $e) {
+            die("Terjadi kesalahan: " . $e->getMessage());
+        }
+    }
+
+    public function getAns2cetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('ans2_persetujuan_pembiusan')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans2_persetujuan_pembiusan.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('ans2_persetujuan_pembiusan.id', $id)
+            ->select('ans2_persetujuan_pembiusan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        if (!empty($data['tgl_lahir'])) {
+            $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tanggal_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tanggal_lahir_indo'] = $data['tgl_lahir'];
+            }
+        }
+        
+        if (!empty($data['tanggal_jam'])) {
+            $tgljam = explode(' ', $data['tanggal_jam']);
+            if (count($tgljam) == 2) {
+                $tgl = explode('-', $tgljam[0]);
+                if (count($tgl) == 3) {
+                    $data['tanggal_jam_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+                }
+                $jam = explode(':', $tgljam[1]);
+                if (count($jam) >= 2) {
+                    $data['jam_indo'] = $jam[0] . ':' . $jam[1];
+                }
+            }
+        }
+
+        echo $this->draw('ans2/cetak.html', ['data' => $data]);
         exit();
     }
 }

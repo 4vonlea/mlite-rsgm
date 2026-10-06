@@ -1,0 +1,223 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Form ANS2 - Persetujuan / Penolakan Tindakan Pembiusan</h3>
+                <ul class="nav nav-tabs">
+                    <li>
+                        <a href="{?=url([ADMIN, 'update_bmt', 'ans2manage'])?}" role="tab">Data Persetujuan</a>
+                    </li>
+                    <li class="active">
+                        <a href="{?=url([ADMIN, 'update_bmt', 'ans2form'])?}" role="tab">Tambah Data</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'update_bmt', 'ans2save'])?}" method="POST">
+                    <input type="hidden" name="id" value="{?=isset_or($data['id'])?}">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No. Rawat <span class="text-danger">*</span></label>
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Pasien</label>
+                                <input type="text" id="nm_pasien" class="form-control" value="{?=isset_or($data['nm_pasien'])?}" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Jenis Pernyataan <span class="text-danger">*</span></label>
+                                <select name="jenis_pernyataan" id="jenis_pernyataan" class="form-control" required>
+                                    <option value="PERSETUJUAN" {?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PERSETUJUAN') ? 'selected' : '' ?}>PERSETUJUAN TINDAKAN PEMBIUSAN</option>
+                                    <option value="PENOLAKAN" {?= (isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN') ? 'selected' : '' ?}>PENOLAKAN TINDAKAN PEMBIUSAN</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tanggal & Jam <span class="text-danger">*</span></label>
+                                <input type="datetime-local" name="tanggal_jam" class="form-control" value="{?=isset_or($data['tanggal_jam'])?}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h4>Yang Bertanda Tangan di Bawah Ini:</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Lengkap</label>
+                                <input type="text" name="pihak_nama" class="form-control" value="{?=isset_or($data['pihak_nama'])?}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Umur (Tahun)</label>
+                                <input type="text" name="pihak_umur" class="form-control" value="{?=isset_or($data['pihak_umur'])?}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Jenis Kelamin</label>
+                                <select name="pihak_jk" class="form-control">
+                                    <option value="L" {?= (isset($data['pihak_jk']) && $data['pihak_jk'] == 'L') ? 'selected' : '' ?}>Laki-laki</option>
+                                    <option value="P" {?= (isset($data['pihak_jk']) && $data['pihak_jk'] == 'P') ? 'selected' : '' ?}>Perempuan</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Alamat</label>
+                        <input type="text" name="pihak_alamat" class="form-control" value="{?=isset_or($data['pihak_alamat'])?}">
+                    </div>
+                    <div class="form-group">
+                        <label>Selaku</label>
+                        <select name="pihak_sebagai" class="form-control">
+                            <option value="Pasien" {?= (isset($data['pihak_sebagai']) && $data['pihak_sebagai'] == 'Pasien') ? 'selected' : '' ?}>Pasien</option>
+                            <option value="Ayah" {?= (isset($data['pihak_sebagai']) && $data['pihak_sebagai'] == 'Ayah') ? 'selected' : '' ?}>Ayah</option>
+                            <option value="Ibu" {?= (isset($data['pihak_sebagai']) && $data['pihak_sebagai'] == 'Ibu') ? 'selected' : '' ?}>Ibu</option>
+                            <option value="Anak" {?= (isset($data['pihak_sebagai']) && $data['pihak_sebagai'] == 'Anak') ? 'selected' : '' ?}>Anak</option>
+                            <option value="Suami" {?= (isset($data['pihak_sebagai']) && $data['pihak_sebagai'] == 'Suami') ? 'selected' : '' ?}>Suami</option>
+                            <option value="Istri" {?= (isset($data['pihak_sebagai']) && $data['pihak_sebagai'] == 'Istri') ? 'selected' : '' ?}>Istri</option>
+                        </select>
+                    </div>
+
+                    <hr>
+                    <h4>Terhadap Pasien:</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Lengkap</label>
+                                <input type="text" name="pasien_nama_isian" id="pasien_nama_isian" class="form-control" value="{?=isset_or($data['pasien_nama_isian'])?}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Umur (Tahun)</label>
+                                <input type="text" name="pasien_umur_isian" id="pasien_umur_isian" class="form-control" value="{?=isset_or($data['pasien_umur_isian'])?}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Jenis Kelamin</label>
+                                <select name="pasien_jk_isian" id="pasien_jk_isian" class="form-control">
+                                    <option value="L" {?= (isset($data['pasien_jk_isian']) && $data['pasien_jk_isian'] == 'L') ? 'selected' : '' ?}>Laki-laki</option>
+                                    <option value="P" {?= (isset($data['pasien_jk_isian']) && $data['pasien_jk_isian'] == 'P') ? 'selected' : '' ?}>Perempuan</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Alamat</label>
+                        <input type="text" name="pasien_alamat_isian" id="pasien_alamat_isian" class="form-control" value="{?=isset_or($data['pasien_alamat_isian'])?}">
+                    </div>
+
+                    <div class="form-group" id="container_alasan" style="display:none;">
+                        <label>Alasan Penolakan</label>
+                        <textarea name="alasan_penolakan" class="form-control" rows="3">{?=isset_or($data['alasan_penolakan'])?}</textarea>
+                    </div>
+
+                    <hr>
+                    <h4>Tanda Tangan & Saksi</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Saksi (Keluarga)</label>
+                                <input type="text" name="saksi_nama" class="form-control" value="{?=isset_or($data['saksi_nama'])?}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Pihak Rumah Sakit</label>
+                                <input type="text" name="pihak_rs_nama" class="form-control" value="{?=isset_or($data['pihak_rs_nama'])?}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ans2manage'])?}" class="btn btn-default"><i class="fa fa-times"></i> Batal</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$(document).ready(function() {
+    function toggleAlasan() {
+        if ($('#jenis_pernyataan').val() == 'PENOLAKAN') {
+            $('#container_alasan').slideDown();
+        } else {
+            $('#container_alasan').slideUp();
+        }
+    }
+    
+    $('#jenis_pernyataan').change(toggleAlasan);
+    toggleAlasan(); // init on load
+
+    var searchUrl = "{?=url([ADMIN, 'update_bmt', 'ans2form'])?}";
+    if (searchUrl.indexOf('?') === -1) {
+        searchUrl += "?ajax_patient=1";
+    } else {
+        searchUrl += "&ajax_patient=1";
+    }
+
+    // Use Tab key to trigger AJAX load
+    $('#no_rawat').on('keydown', function(e) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            searchPatient();
+        }
+    });
+
+    function searchPatient() {
+        var noRawat = $('#no_rawat').val();
+        if (noRawat.length > 0) {
+            var ts = new Date().getTime();
+            $.ajax({
+                url: searchUrl + "&_ts=" + ts,
+                type: 'GET',
+                data: { no_rawat: noRawat },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        $('#nm_pasien').val(response.nama_pasien);
+                        
+                        // Isi data isian pasien
+                        if ($('#pasien_nama_isian').val() == '') {
+                            $('#pasien_nama_isian').val(response.nama_pasien);
+                        }
+                        if ($('#pasien_jk_isian').val() == 'L' && response.jenis_kelamin == 'P') {
+                            $('#pasien_jk_isian').val('P');
+                        } else if ($('#pasien_jk_isian').val() == 'P' && response.jenis_kelamin == 'L') {
+                            $('#pasien_jk_isian').val('L');
+                        }
+                        
+                        if ($('#pasien_umur_isian').val() == '') {
+                            $('#pasien_umur_isian').val(response.umur.split(' ')[0]);
+                        }
+                        if ($('#pasien_alamat_isian').val() == '') {
+                            $('#pasien_alamat_isian').val(response.alamat);
+                        }
+                    } else {
+                        alert("Data pasien tidak ditemukan untuk No. Rawat / No. RM tersebut.");
+                        $('#nm_pasien').val('');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Gagal mengambil data pasien. Silakan coba lagi.');
+                    console.error("AJAX Error:", error);
+                }
+            });
+        }
+    }
+});
+</script>
