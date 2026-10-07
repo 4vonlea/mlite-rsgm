@@ -2091,4 +2091,122 @@ class Admin extends AdminModule
         echo $this->draw('bmi4/cetak.html', ['data' => $data]);
         exit();
     }
+    
+    // --- BMI5 ---
+    public function getBmi5manage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/js/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/js/dataTables.bootstrap.min.js'));
+
+        $list = $this->db('bmi5_bedah_minor')
+            ->join('reg_periksa', 'reg_periksa.no_rawat = bmi5_bedah_minor.no_rawat')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('bmi5_bedah_minor.*, pasien.nm_pasien')
+            ->desc('bmi5_bedah_minor.id')
+            ->toArray();
+
+        $this->tpl->set('list', $list);
+        return $this->draw('bmi5/manage.html');
+    }
+
+    public function getBmi5form()
+    {
+        if (isset($_GET['ajax_patient'])) {
+            header('Content-Type: application/json');
+            $no_rawat = $_GET['no_rawat'];
+            $pasien = $this->db('reg_periksa')
+                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $no_rawat)
+                ->select('pasien.*')
+                ->oneArray();
+                
+            if ($pasien) {
+                echo json_encode(['success' => true, 'nama_pasien' => $pasien['nm_pasien']]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+            exit;
+        }
+
+        $id = isset($_GET['id']) ? $_GET['id'] : 0;
+        $data = [];
+        if ($id) {
+            $data = $this->db('bmi5_bedah_minor')
+                ->join('reg_periksa', 'reg_periksa.no_rawat = bmi5_bedah_minor.no_rawat')
+                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->select('bmi5_bedah_minor.*, pasien.nm_pasien')
+                ->where('bmi5_bedah_minor.id', $id)
+                ->oneArray();
+        }
+        $this->tpl->set('data', $data);
+        return $this->draw('bmi5/form.html');
+    }
+
+    public function postBmi5save()
+    {
+        $id = isset($_POST['id']) ? $_POST['id'] : 0;
+        $data = $_POST;
+        unset($data['id']);
+        unset($data['nm_pasien']);
+
+        if ($id) {
+            $this->db('bmi5_bedah_minor')->where('id', $id)->save($data);
+            $this->notify('success', 'Ubah data berhasil');
+        } else {
+            $this->db('bmi5_bedah_minor')->save($data);
+            $this->notify('success', 'Simpan data berhasil');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'bmi5manage']));
+    }
+
+    public function getBmi5hapus()
+    {
+        $id = isset($_GET['id']) ? $_GET['id'] : 0;
+        if ($id) {
+            $this->db('bmi5_bedah_minor')->where('id', $id)->delete();
+            $this->notify('success', 'Hapus data berhasil');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'bmi5manage']));
+    }
+
+    public function getBmi5cetak()
+    {
+        $id = isset($_GET['id']) ? $_GET['id'] : 0;
+        $data = $this->db('bmi5_bedah_minor')
+            ->join('reg_periksa', 'reg_periksa.no_rawat = bmi5_bedah_minor.no_rawat')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('bmi5_bedah_minor.*, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, reg_periksa.no_rkm_medis')
+            ->where('bmi5_bedah_minor.id', $id)
+            ->oneArray();
+            
+        $data['no_rkm_medis'] = $data['no_rkm_medis'] ?? '';
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl2 = explode('-', $data['tgl_lahir']);
+            if (count($tgl2) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl2[2] . ' ' . $bulan[(int)$tgl2[1]] . ' ' . $tgl2[0];
+            }
+        }
+        
+        if (!empty($data['tanggal_pembedahan'])) {
+            $tgl = explode('-', $data['tanggal_pembedahan']);
+            if (count($tgl) == 3) {
+                $data['tgl_pembedahan_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            }
+        }
+        
+        if (!empty($data['waktu_mulai'])) {
+            $data['waktu_mulai_format'] = date('H:i', strtotime($data['waktu_mulai']));
+            $data['waktu_mulai_tgl'] = date('d-m-Y', strtotime($data['waktu_mulai']));
+        }
+        if (!empty($data['waktu_selesai'])) {
+            $data['waktu_selesai_format'] = date('H:i', strtotime($data['waktu_selesai']));
+            $data['waktu_selesai_tgl'] = date('d-m-Y', strtotime($data['waktu_selesai']));
+        }
+
+        echo $this->draw('bmi5/cetak.html', ['data' => $data]);
+        exit();
+    }
 }
