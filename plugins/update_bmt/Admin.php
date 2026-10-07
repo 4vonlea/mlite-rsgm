@@ -1283,4 +1283,237 @@ class Admin extends AdminModule
         echo $this->draw('ans4/cetak.html', ['data' => $data, 'detail' => $detail]);
         exit();
     }
+    public function getAns6manage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/js/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/js/dataTables.bootstrap.min.js'));
+        
+        $query = $this->db('ans6_status_post_anestesi')
+            ->join('reg_periksa', 'reg_periksa.no_rawat = ans6_status_post_anestesi.no_rawat')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('ans6_status_post_anestesi.*, pasien.nm_pasien')
+            ->desc('ans6_status_post_anestesi.id')
+            ->toArray();
+            
+        return $this->draw('ans6/manage.html', ['list' => $query]);
+    }
+
+    public function getAns6form()
+    {
+        $id = $_GET['id'] ?? '';
+        $data = [];
+        $detail = [];
+        
+        // Handle ajax request for patient data
+        if (isset($_GET['ajax_patient']) && !empty($_GET['no_rawat'])) {
+            $patient = $this->db('reg_periksa')
+                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
+                ->select('pasien.nm_pasien')
+                ->oneArray();
+                
+            header('Content-Type: application/json');
+            if ($patient) {
+                echo json_encode(['success' => true, 'no_rawat' => $_GET['no_rawat'], 'nama_pasien' => $patient['nm_pasien']]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+            exit();
+        }
+
+        if ($id) {
+            $data = $this->db('ans6_status_post_anestesi')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans6_status_post_anestesi.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('ans6_status_post_anestesi.id', $id)
+                ->select('ans6_status_post_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+                ->oneArray();
+                
+            $detail = $this->db('ans6_protokol_nyeri_detail')->where('id_ans6', $id)->toArray();
+        }
+
+        return $this->draw('ans6/form.html', ['data' => $data, 'detail' => $detail]);
+    }
+
+    public function postAns6save()
+    {
+        $id = $_POST['id'] ?? '';
+        $data = $_POST;
+        
+        $detail_tanggal = $data['detail_tanggal'] ?? [];
+        $detail_obat = $data['detail_obat'] ?? [];
+        $detail_ttd = $data['detail_ttd'] ?? [];
+        
+        unset($data['id']);
+        unset($data['nm_pasien']);
+        unset($data['detail_tanggal']);
+        unset($data['detail_obat']);
+        unset($data['detail_ttd']);
+        
+        if (empty($data['tanggal'])) {
+            $data['tanggal'] = date('Y-m-d');
+        }
+
+        if ($id) {
+            $this->db('ans6_status_post_anestesi')->where('id', $id)->save($data);
+            $this->db('ans6_protokol_nyeri_detail')->where('id_ans6', $id)->delete();
+        } else {
+            $query = $this->db('ans6_status_post_anestesi')->save($data);
+            $id = $this->db()->lastInsertId();
+        }
+        
+        if (!empty($detail_obat)) {
+            foreach ($detail_obat as $key => $val) {
+                if (!empty($val)) {
+                    $this->db('ans6_protokol_nyeri_detail')->save([
+                        'id_ans6' => $id,
+                        'tanggal' => $detail_tanggal[$key] ?? '',
+                        'obat' => $val,
+                        'tanda_tangan_dokter' => $detail_ttd[$key] ?? ''
+                    ]);
+                }
+            }
+        }
+
+        $this->notify('success', 'Simpan berhasil');
+        redirect(url([ADMIN, 'update_bmt', 'ans6manage']));
+    }
+
+    public function getAns6hapus()
+    {
+        $id = $_GET['id'] ?? '';
+        if ($id) {
+            $this->db('ans6_status_post_anestesi')->where('id', $id)->delete();
+            $this->db('ans6_protokol_nyeri_detail')->where('id_ans6', $id)->delete();
+            $this->notify('success', 'Hapus berhasil');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'ans6manage']));
+    }
+
+    public function getAns6cetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('ans6_status_post_anestesi')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans6_status_post_anestesi.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('ans6_status_post_anestesi.id', $id)
+            ->select('ans6_status_post_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $detail = $this->db('ans6_protokol_nyeri_detail')->where('id_ans6', $id)->toArray();
+
+        echo $this->draw('ans6/cetak.html', ['data' => $data, 'detail' => $detail]);
+        exit();
+    }
+    public function getAns7manage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/js/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/js/dataTables.bootstrap.min.js'));
+        
+        $query = $this->db('ans7_serah_terima')
+            ->join('reg_periksa', 'reg_periksa.no_rawat = ans7_serah_terima.no_rawat')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('ans7_serah_terima.*, pasien.nm_pasien')
+            ->desc('ans7_serah_terima.id')
+            ->toArray();
+            
+        return $this->draw('ans7/manage.html', ['list' => $query]);
+    }
+
+    public function getAns7form()
+    {
+        $id = $_GET['id'] ?? '';
+        $data = [];
+        
+        if (isset($_GET['ajax_patient']) && !empty($_GET['no_rawat'])) {
+            $patient = $this->db('reg_periksa')
+                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
+                ->select('pasien.nm_pasien')
+                ->oneArray();
+                
+            header('Content-Type: application/json');
+            if ($patient) {
+                echo json_encode(['success' => true, 'no_rawat' => $_GET['no_rawat'], 'nama_pasien' => $patient['nm_pasien']]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+            exit();
+        }
+
+        if ($id) {
+            $data = $this->db('ans7_serah_terima')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans7_serah_terima.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('ans7_serah_terima.id', $id)
+                ->select('ans7_serah_terima.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+                ->oneArray();
+        }
+
+        return $this->draw('ans7/form.html', ['data' => $data]);
+    }
+
+    public function postAns7save()
+    {
+        $id = $_POST['id'] ?? '';
+        $data = $_POST;
+        
+        unset($data['id']);
+        unset($data['nm_pasien']);
+        
+        if ($id) {
+            $this->db('ans7_serah_terima')->where('id', $id)->save($data);
+        } else {
+            $this->db('ans7_serah_terima')->save($data);
+        }
+        
+        $this->notify('success', 'Simpan berhasil');
+        redirect(url([ADMIN, 'update_bmt', 'ans7manage']));
+    }
+
+    public function getAns7hapus()
+    {
+        $id = $_GET['id'] ?? '';
+        if ($id) {
+            $this->db('ans7_serah_terima')->where('id', $id)->delete();
+            $this->notify('success', 'Hapus berhasil');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'ans7manage']));
+    }
+
+    public function getAns7cetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('ans7_serah_terima')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans7_serah_terima.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('ans7_serah_terima.id', $id)
+            ->select('ans7_serah_terima.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        echo $this->draw('ans7/cetak.html', ['data' => $data]);
+        exit();
+    }
 }
