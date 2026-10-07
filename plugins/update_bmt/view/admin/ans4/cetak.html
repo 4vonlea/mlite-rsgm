@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Cetak ANS4 - Rencana Anestesi</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 11px; color: #000; margin: 0; padding: 0; }
+        .page { width: 100%; max-width: 800px; margin: auto; border: 1px solid #000; box-sizing: border-box; }
+        .header { border-bottom: 2px solid #000; padding: 10px; display: flex; align-items: center; }
+        .logo-left { width: 60px; height: auto; }
+        .logo-right { width: 60px; height: auto; }
+        .instansi { flex-grow: 1; text-align: center; }
+        .instansi h4 { margin: 0; font-size: 13px; }
+        .instansi h2 { margin: 3px 0; font-size: 18px; }
+        .instansi p { margin: 0; font-size: 10px; }
+        .patient-info { width: 300px; border-left: 2px solid #000; padding-left: 10px; }
+        .patient-info table { width: 100%; font-size: 11px; }
+        .patient-info td { padding: 2px; }
+        
+        .box-title { text-align: center; background-color: #ddd; font-weight: bold; border-bottom: 1px solid #000; border-top: 1px solid #000; padding: 3px; font-size: 12px; }
+        
+        table.content-table { width: 100%; border-collapse: collapse; }
+        table.content-table td { border-bottom: 1px solid #000; padding: 5px; vertical-align: top; }
+        table.content-table td.col-50 { width: 50%; border-right: 1px solid #000; }
+        
+        table.inner-table { width: 100%; border-collapse: collapse; }
+        table.inner-table th, table.inner-table td { border: 1px solid #000; padding: 3px; text-align: center; }
+        table.inner-table th { background-color: #f9f9f9; }
+        
+        .checkbox-box { display: inline-block; width: 10px; height: 10px; border: 1px solid #000; margin-right: 5px; vertical-align: middle; text-align: center; line-height: 10px; font-size: 10px;}
+        .checked::after { content: '✓'; }
+        
+        .ttd-box { text-align: center; margin-top: 20px; float: right; width: 200px; }
+        .ttd-box p { margin-bottom: 40px; }
+        .ttd-name { text-decoration: underline; font-weight: bold; }
+        
+        .clear { clear: both; }
+    </style>
+</head>
+<body onload="window.print()">
+    <div class="page">
+        <!-- Header -->
+        <table style="width: 100%; border-bottom: 2px solid #000; margin-bottom: 10px; padding-bottom: 5px;">
+            <tr>
+                <td style="width: 60%; padding: 0; vertical-align: middle;">
+                    <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat" style="width: 100%; height: auto; max-height: 80px; object-fit: contain;">
+                </td>
+                <td style="width: 40%; border-left: 2px solid #000; padding-left: 10px; vertical-align: middle;">
+                    <table style="width: 100%; font-size: 11px;">
+                        <tr><td width="70"><b>No. RM</b></td><td width="10">:</td><td>{?=isset($data['no_rkm_medis']) ? $data['no_rkm_medis'] : ''?}</td></tr>
+                        <tr><td><b>Nama Pasien</b></td><td>:</td><td>{?=isset($data['nm_pasien']) ? $data['nm_pasien'] : ''?} {?=isset($data['jk']) && $data['jk'] == 'L' ? '(L)' : '(P)'?}</td></tr>
+                        <tr><td><b>Tanggal Lahir</b></td><td>:</td><td>{?=isset($data['tgl_lahir_indo']) ? $data['tgl_lahir_indo'] : ''?}</td></tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- SECTION 1 -->
+        <div class="box-title" style="border-top:0;">RENCANA ANESTESI (PRA ANESTESI)</div>
+        <table class="content-table">
+            <tr>
+                <td class="col-50">
+                    <div>
+                        <span class="checkbox-box {if: isset($data['premedikasi']) && $data['premedikasi'] == 'Y'}checked{/if}"></span> Premedikasi<br>
+                        <span style="margin-left: 20px; display:inline-block; border-bottom:1px dotted #000; width:80%;">{?=!empty($data['premedikasi_ket']) ? $data['premedikasi_ket'] : '&nbsp;'?}</span>
+                    </div>
+                    <br>
+                    <div>
+                        <span class="checkbox-box {if: isset($data['ga_masker']) && $data['ga_masker'] == 'Y'}checked{/if}"></span> General Anestesi Masker &nbsp;&nbsp;&nbsp;&nbsp;
+                        <span class="checkbox-box {if: isset($data['ga_intubasi']) && $data['ga_intubasi'] == 'Y'}checked{/if}"></span> Intubasi<br>
+                        <span class="checkbox-box {if: isset($data['ga_lma']) && $data['ga_lma'] == 'Y'}checked{/if}"></span> Tiva LMA<br>
+                    </div>
+                    <br>
+                    <div>
+                        <span class="checkbox-box {if: isset($data['analgetik']) && $data['analgetik'] == 'Y'}checked{/if}"></span> Analgetik<br>
+                        <span style="margin-left: 20px; display:inline-block; border-bottom:1px dotted #000; width:80%;">{?=!empty($data['analgetik_ket']) ? $data['analgetik_ket'] : '&nbsp;'?}</span>
+                    </div>
+                    <br>
+                    <div>
+                        <span class="checkbox-box {if: isset($data['pelumpuh_otot']) && $data['pelumpuh_otot'] == 'Y'}checked{/if}"></span> Pelumpuh Otot<br>
+                        <span style="margin-left: 20px; display:inline-block; border-bottom:1px dotted #000; width:80%;">1. {?=!empty($data['pelumpuh_otot_ket']) ? $data['pelumpuh_otot_ket'] : '&nbsp;'?}</span>
+                    </div>
+                </td>
+                <td style="position:relative;">
+                    <div>Maintenance &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Catatan : {?=!empty($data['maintenance_catatan']) ? $data['maintenance_catatan'] : ''?}</div>
+                    <br>
+                    <div>
+                        <span class="checkbox-box {if: isset($data['maintenance_inhalasi']) && $data['maintenance_inhalasi'] == 'Y'}checked{/if}"></span> Inhalasi : 
+                        <span class="checkbox-box {if: isset($data['inhalasi_o2']) && $data['inhalasi_o2'] == 'Y'}checked{/if}"></span> O2 &nbsp;&nbsp;
+                        <span class="checkbox-box {if: isset($data['inhalasi_isofluran']) && $data['inhalasi_isofluran'] == 'Y'}checked{/if}"></span> Isofluran ......................................<br>
+                        <span class="checkbox-box {if: isset($data['inhalasi_halotan']) && $data['inhalasi_halotan'] == 'Y'}checked{/if}"></span> Halotan Sevofluran......................................<br>
+                        <span class="checkbox-box {if: isset($data['maintenance_intravena']) && $data['maintenance_intravena'] == 'Y'}checked{/if}"></span> Intravena <span style="display:inline-block; border-bottom:1px dotted #000; width:60%;">{?=!empty($data['intravena_1']) ? $data['intravena_1'] : '&nbsp;'?}</span><br>
+                        <span class="checkbox-box"></span> <span style="display:inline-block; border-bottom:1px dotted #000; width:80%;">{?=!empty($data['intravena_2']) ? $data['intravena_2'] : '&nbsp;'?}</span><br>
+                        <span class="checkbox-box"></span> <span style="display:inline-block; border-bottom:1px dotted #000; width:80%;">{?=!empty($data['intravena_3']) ? $data['intravena_3'] : '&nbsp;'?}</span>
+                    </div>
+                    <br>
+                    <div>Teknik Anestesi</div>
+                    <div>
+                        <span class="checkbox-box {if: isset($data['teknik_regional']) && $data['teknik_regional'] == 'Y'}checked{/if}"></span> Regional &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <span class="checkbox-box {if: isset($data['teknik_epidural']) && $data['teknik_epidural'] == 'Y'}checked{/if}"></span> Epidural<br>
+                        <span class="checkbox-box {if: isset($data['teknik_sab']) && $data['teknik_sab'] == 'Y'}checked{/if}"></span> SAB &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <span class="checkbox-box {if: isset($data['teknik_pnb']) && $data['teknik_pnb'] == 'Y'}checked{/if}"></span> PNB
+                    </div>
+                    <br>
+                    <div>
+                        <span class="checkbox-box {if: isset($data['teknik_lokal']) && $data['teknik_lokal'] == 'Y'}checked{/if}"></span> Lokal<br>
+                        <span style="margin-left: 20px; display:inline-block; border-bottom:1px dotted #000; width:60%;">{?=!empty($data['teknik_lokal_ket1']) ? $data['teknik_lokal_ket1'] : '&nbsp;'?}</span><br>
+                        <span style="margin-left: 20px; display:inline-block; border-bottom:1px dotted #000; width:60%;">{?=!empty($data['teknik_lokal_ket2']) ? $data['teknik_lokal_ket2'] : '&nbsp;'?}</span>
+                    </div>
+                    
+                    <div class="ttd-box" style="margin-top:0px;">
+                        <br><br><br>
+                        ( <span class="ttd-name">{?=!empty($data['dokter_nama']) ? $data['dokter_nama'] : '........................................'?}</span> )<br>
+                        Tanda Tangan Dokter Anestesi
+                    </div>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- SECTION 2 -->
+        <div class="box-title">EVALUASI PRA INDUKSI</div>
+        <table class="content-table" style="border-bottom: 0;">
+            <tr>
+                <td class="col-50" style="border-bottom:0;">
+                    Makanan terakhir : <span style="display:inline-block; border-bottom:1px dotted #000; width:80px; text-align:center;">{?=!empty($data['makan_terakhir']) ? $data['makan_terakhir'] : '&nbsp;'?}</span> WITA<br>
+                    Minum terakhir : <span style="display:inline-block; border-bottom:1px dotted #000; width:80px; text-align:center;">{?=!empty($data['minum_terakhir']) ? $data['minum_terakhir'] : '&nbsp;'?}</span> WITA<br>
+                    Vital Sign :<br>
+                    TD : <span style="display:inline-block; border-bottom:1px dotted #000; width:40px; text-align:center;">{?=!empty($data['eval_td']) ? $data['eval_td'] : '&nbsp;'?}</span> mmHg &nbsp;&nbsp;
+                    RR : <span style="display:inline-block; border-bottom:1px dotted #000; width:40px; text-align:center;">{?=!empty($data['eval_rr']) ? $data['eval_rr'] : '&nbsp;'?}</span> x/menit<br>
+                    HR : <span style="display:inline-block; border-bottom:1px dotted #000; width:40px; text-align:center;">{?=!empty($data['eval_hr']) ? $data['eval_hr'] : '&nbsp;'?}</span> x/menit &nbsp;&nbsp;
+                    SB : <span style="display:inline-block; border-bottom:1px dotted #000; width:40px; text-align:center;">{?=!empty($data['eval_sb']) ? $data['eval_sb'] : '&nbsp;'?}</span> °C &nbsp;&nbsp;
+                    SPO2 : <span style="display:inline-block; border-bottom:1px dotted #000; width:40px; text-align:center;">{?=!empty($data['eval_spo2']) ? $data['eval_spo2'] : '&nbsp;'?}</span><br>
+                    
+                    Masalah Saat induksi &nbsp;&nbsp;&nbsp;
+                    <span class="checkbox-box {if: isset($data['masalah_induksi']) && $data['masalah_induksi'] == 'Ada'}checked{/if}"></span> Ada &nbsp;&nbsp;&nbsp;
+                    <span class="checkbox-box {if: isset($data['masalah_induksi']) && $data['masalah_induksi'] == 'Tidak Ada'}checked{/if}"></span> Tidak Ada<br>
+                    Sebutkan jika ada : <span style="display:inline-block; border-bottom:1px dotted #000; width:100px;">{?=!empty($data['masalah_induksi_ket']) ? $data['masalah_induksi_ket'] : '&nbsp;'?}</span><br>
+                    <span style="display:inline-block; border-bottom:1px dotted #000; width:100%;">&nbsp;</span><br>
+                    
+                    Perubahan rencana anestesi : 
+                    <span class="checkbox-box {if: isset($data['perubahan_rencana']) && $data['perubahan_rencana'] == 'Ada'}checked{/if}"></span> Ada &nbsp;&nbsp;&nbsp;
+                    <span class="checkbox-box {if: isset($data['perubahan_rencana']) && $data['perubahan_rencana'] == 'Tidak Ada'}checked{/if}"></span> Tidak Ada<br>
+                    Sebutkan jika ada : <span style="display:inline-block; border-bottom:1px dotted #000; width:100px;">{?=!empty($data['perubahan_rencana_ket']) ? $data['perubahan_rencana_ket'] : '&nbsp;'?}</span><br>
+                    <span style="display:inline-block; border-bottom:1px dotted #000; width:100%;">&nbsp;</span><br>
+                    
+                    Persiapan darah : &nbsp;&nbsp;&nbsp;
+                    <span class="checkbox-box {if: isset($data['persiapan_darah']) && $data['persiapan_darah'] == 'Ada'}checked{/if}"></span> Ada &nbsp;&nbsp;&nbsp;
+                    <span class="checkbox-box {if: isset($data['persiapan_darah']) && $data['persiapan_darah'] == 'Tidak Ada'}checked{/if}"></span> Tidak Ada<br>
+                    Sebutkan jika ada : <span style="display:inline-block; border-bottom:1px dotted #000; width:100px;">{?=!empty($data['persiapan_darah_ket']) ? $data['persiapan_darah_ket'] : '&nbsp;'?}</span><br>
+                    <span style="display:inline-block; border-bottom:1px dotted #000; width:100%;">&nbsp;</span>
+                </td>
+                <td style="padding:0; border-bottom:0;">
+                    <table class="inner-table" style="height: 100%; border:none;">
+                        <tr>
+                            <th style="border-top:none; border-left:none;">Obat Premedikasi</th>
+                            <th style="border-top:none;">Dosis</th>
+                            <th style="border-top:none;">Jam</th>
+                            <th style="border-top:none; border-right:none;">Pelaksana</th>
+                        </tr>
+                        {if: !empty($detail)}
+                            {loop: $detail}
+                            <tr>
+                                <td style="border-left:none;">{$value.obat_premedikasi}</td>
+                                <td>{$value.dosis}</td>
+                                <td>{$value.jam}</td>
+                                <td style="border-right:none;">{$value.pelaksana}</td>
+                            </tr>
+                            {/loop}
+                        {else}
+                            <tr><td style="border-left:none; height:18px;">&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td style="border-right:none;">&nbsp;</td></tr>
+                            <tr><td style="border-left:none; height:18px;">&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td style="border-right:none;">&nbsp;</td></tr>
+                            <tr><td style="border-left:none; height:18px;">&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td style="border-right:none;">&nbsp;</td></tr>
+                            <tr><td style="border-left:none; height:18px;">&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td style="border-right:none;">&nbsp;</td></tr>
+                        {/if}
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- SECTION 3 -->
+        <div class="box-title">DAFTAR TILIK KESELAMATAN PASIEN</div>
+        <div style="padding: 10px; border-bottom: 1px solid #000;">
+            <table width="100%">
+                <tr>
+                    <td width="33%" valign="top">
+                        <span class="checkbox-box {if: isset($data['tilik_identifikasi']) && $data['tilik_identifikasi'] == 'Y'}checked{/if}"></span> Identifikasi pasien<br>
+                        <span class="checkbox-box {if: isset($data['tilik_persetujuan']) && $data['tilik_persetujuan'] == 'Y'}checked{/if}"></span> Surat Persetujuan Pembiusan<br>
+                        <span class="checkbox-box {if: isset($data['tilik_puasa']) && $data['tilik_puasa'] == 'Y'}checked{/if}"></span> Puasa dijalankan dengan baik<br>
+                        <span class="checkbox-box {if: isset($data['tilik_mesin']) && $data['tilik_mesin'] == 'Y'}checked{/if}"></span> Mesin anestesi<br>
+                        <span class="checkbox-box {if: isset($data['tilik_suction']) && $data['tilik_suction'] == 'Y'}checked{/if}"></span> Suction<br>
+                        <span class="checkbox-box {if: isset($data['tilik_obat']) && $data['tilik_obat'] == 'Y'}checked{/if}"></span> Obat-obatan<br>
+                        <span class="checkbox-box {if: isset($data['tilik_antibiotik']) && $data['tilik_antibiotik'] == 'Y'}checked{/if}"></span> Antibiotik Profilaksis<br>
+                        <span class="checkbox-box {if: isset($data['tilik_pulse_oxy']) && $data['tilik_pulse_oxy'] == 'Y'}checked{/if}"></span> Pulse Oxymeter
+                    </td>
+                    <td width="33%" valign="top">
+                        <span class="checkbox-box {if: isset($data['tilik_ekg']) && $data['tilik_ekg'] == 'Y'}checked{/if}"></span> EKG<br>
+                        <span class="checkbox-box {if: isset($data['tilik_sabuk']) && $data['tilik_sabuk'] == 'Y'}checked{/if}"></span> Sabuk Pengaman<br>
+                        <span class="checkbox-box {if: isset($data['tilik_stetoskop']) && $data['tilik_stetoskop'] == 'Y'}checked{/if}"></span> Stetoskop precordial<br>
+                        <span class="checkbox-box {if: isset($data['tilik_nibp']) && $data['tilik_nibp'] == 'Y'}checked{/if}"></span> NIBP<br>
+                        <span class="checkbox-box {if: isset($data['tilik_termometer']) && $data['tilik_termometer'] == 'Y'}checked{/if}"></span> Termometer<br>
+                        <span class="checkbox-box {if: isset($data['tilik_selimut']) && $data['tilik_selimut'] == 'Y'}checked{/if}"></span> Selimut penghangat<br>
+                        <span class="checkbox-box {if: isset($data['tilik_urine']) && $data['tilik_urine'] == 'Y'}checked{/if}"></span> Urine Kateter<br>
+                        <span class="checkbox-box {if: isset($data['tilik_penghangat']) && $data['tilik_penghangat'] == 'Y'}checked{/if}"></span> Penghangat cairan
+                    </td>
+                    <td width="34%" valign="top">
+                        <span class="checkbox-box {if: isset($data['tilik_pasca_induksi']) && $data['tilik_pasca_induksi'] == 'Y'}checked{/if}"></span> Pasca induksi<br>
+                        <span class="checkbox-box {if: isset($data['tilik_tekanan_bantalan']) && $data['tilik_tekanan_bantalan'] == 'Y'}checked{/if}"></span> Titik-titik tekanan diperiksa dan diberi bantalan<br>
+                        <span class="checkbox-box {if: isset($data['tilik_mata']) && $data['tilik_mata'] == 'Y'}checked{/if}"></span> Mata terlindungi
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- SECTION 4 -->
+        <div class="box-title">INDUKSI</div>
+        <table class="content-table" style="border-bottom: 0;">
+            <tr>
+                <td class="col-50" style="border-bottom:0;">
+                    Keadaan saat tiba di kamar operasi :<br>
+                    <span class="checkbox-box {if: isset($data['induksi_tiba']) && $data['induksi_tiba'] == 'Tidur sadar'}checked{/if}"></span> Tidur sadar &nbsp;
+                    TD : <span style="display:inline-block; border-bottom:1px dotted #000; width:30px; text-align:center;">{?=!empty($data['induksi_td']) ? $data['induksi_td'] : '&nbsp;'?}</span> mmHg &nbsp;
+                    RR : <span style="display:inline-block; border-bottom:1px dotted #000; width:30px; text-align:center;">{?=!empty($data['induksi_rr']) ? $data['induksi_rr'] : '&nbsp;'?}</span> x/menit<br>
+                    <span class="checkbox-box {if: isset($data['induksi_tiba']) && $data['induksi_tiba'] == 'Menangis Tidak Sadar'}checked{/if}"></span> Menangis Tidak Sadar &nbsp;
+                    HR : <span style="display:inline-block; border-bottom:1px dotted #000; width:30px; text-align:center;">{?=!empty($data['induksi_hr']) ? $data['induksi_hr'] : '&nbsp;'?}</span> x/menit &nbsp;
+                    Sb : <span style="display:inline-block; border-bottom:1px dotted #000; width:30px; text-align:center;">{?=!empty($data['induksi_sb']) ? $data['induksi_sb'] : '&nbsp;'?}</span> °C<br>
+                    <span class="checkbox-box"></span><br>
+                    
+                    <table width="100%" style="border-top:1px solid #000; margin-top:5px; padding-top:5px;">
+                        <tr>
+                            <td width="30%" style="border-bottom:none; padding:0;">
+                                <span class="checkbox-box {if: isset($data['jalan_napas']) && $data['jalan_napas'] == 'Awake'}checked{/if}"></span> Awake<br>
+                                <span class="checkbox-box {if: isset($data['jalan_napas']) && $data['jalan_napas'] == 'Non Apnea'}checked{/if}"></span> Non Apnea<br>
+                                <span class="checkbox-box {if: isset($data['jalan_napas']) && $data['jalan_napas'] == 'Apnea'}checked{/if}"></span> Apnea
+                            </td>
+                            <td width="70%" style="border-bottom:none; border-left:1px solid #000; padding:0 0 0 5px;">
+                                Jalan napas :<br>
+                                <span class="checkbox-box {if: isset($data['jn_lma']) && $data['jn_lma'] == 'Y'}checked{/if}"></span> LMA &nbsp; 
+                                No : <span style="display:inline-block; border-bottom:1px dotted #000; width:30px; text-align:center;">{?=!empty($data['jn_lma_no']) ? $data['jn_lma_no'] : '&nbsp;'?}</span> &nbsp; 
+                                Cuff : <span style="display:inline-block; border-bottom:1px dotted #000; width:30px; text-align:center;">{?=!empty($data['jn_lma_cuff']) ? $data['jn_lma_cuff'] : '&nbsp;'?}</span> cmH2O<br>
+                                
+                                <span class="checkbox-box {if: isset($data['jn_ett_kink']) && $data['jn_ett_kink'] == 'Y'}checked{/if}"></span> ETT Kink / <span class="checkbox-box {if: isset($data['jn_ett_nonkink']) && $data['jn_ett_nonkink'] == 'Y'}checked{/if}"></span> Nonkink &nbsp; 
+                                <span class="checkbox-box {if: isset($data['jn_ett_oral_nasal']) && $data['jn_ett_oral_nasal'] == 'Oral'}checked{/if}"></span> Oral / <span class="checkbox-box {if: isset($data['jn_ett_oral_nasal']) && $data['jn_ett_oral_nasal'] == 'Nasal'}checked{/if}"></span> Nasal<br>
+                                
+                                <span class="checkbox-box"></span> No : <span style="display:inline-block; border-bottom:1px dotted #000; width:30px; text-align:center;">{?=!empty($data['jn_ett_no']) ? $data['jn_ett_no'] : '&nbsp;'?}</span> &nbsp;
+                                Cuff : <span style="display:inline-block; border-bottom:1px dotted #000; width:30px; text-align:center;">{?=!empty($data['jn_ett_cuff']) ? $data['jn_ett_cuff'] : '&nbsp;'?}</span> cmH2O &nbsp;
+                                Batas : <span style="display:inline-block; border-bottom:1px dotted #000; width:30px; text-align:center;">{?=!empty($data['jn_ett_batas']) ? $data['jn_ett_batas'] : '&nbsp;'?}</span><br>
+                                
+                                <span class="checkbox-box {if: isset($data['jn_endotrakial']) && $data['jn_endotrakial'] == 'Y'}checked{/if}"></span> Endobrookial Tube &nbsp; 
+                                <span class="checkbox-box {if: isset($data['jn_endo_kanan_kiri']) && $data['jn_endo_kanan_kiri'] == 'Kanan'}checked{/if}"></span> kanan / <span class="checkbox-box {if: isset($data['jn_endo_kanan_kiri']) && $data['jn_endo_kanan_kiri'] == 'Kiri'}checked{/if}"></span> kiri &nbsp;
+                                No : <span style="display:inline-block; border-bottom:1px dotted #000; width:30px; text-align:center;">{?=!empty($data['jn_endo_no']) ? $data['jn_endo_no'] : '&nbsp;'?}</span><br>
+                                
+                                <span class="checkbox-box {if: isset($data['jn_masker']) && $data['jn_masker'] == 'Y'}checked{/if}"></span> Masker &nbsp;
+                                <span class="checkbox-box {if: isset($data['jn_ngt']) && $data['jn_ngt'] == 'Y'}checked{/if}"></span> NGT &nbsp;
+                                <span class="checkbox-box {if: isset($data['jn_tampon']) && $data['jn_tampon'] == 'Y'}checked{/if}"></span> Tampon
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <div style="border-top:1px solid #000; margin-top:5px; padding-top:5px;">
+                        Posisi : &nbsp; 
+                        <span class="checkbox-box {if: isset($data['posisi_supine']) && $data['posisi_supine'] == 'Y'}checked{/if}"></span> Supine<br>
+                        <span style="margin-left:55px;"></span> <span class="checkbox-box {if: isset($data['posisi_prone']) && $data['posisi_prone'] == 'Y'}checked{/if}"></span> Prone<br>
+                        <span style="margin-left:55px;"></span> <span class="checkbox-box {if: isset($data['posisi_trendelenberg']) && $data['posisi_trendelenberg'] == 'Y'}checked{/if}"></span> Trendelenberg<br>
+                        <span style="margin-left:55px;"></span> <span class="checkbox-box {if: isset($data['posisi_lithotomi']) && $data['posisi_lithotomi'] == 'Y'}checked{/if}"></span> Lithotomi<br>
+                        <span style="margin-left:55px;"></span> <span class="checkbox-box {if: isset($data['posisi_lateral']) && $data['posisi_lateral'] == 'Y'}checked{/if}"></span> Lateral<br>
+                        <span style="margin-left:55px;"></span> <span class="checkbox-box"></span> <span style="display:inline-block; border-bottom:1px dotted #000; width:150px;">{?=!empty($data['posisi_lainnya']) ? $data['posisi_lainnya'] : '&nbsp;'?}</span>
+                    </div>
+                </td>
+                <td style="border-bottom:0;">
+                    Anestesi Regional :<br>
+                    <span class="checkbox-box {if: isset($data['reg_sab']) && $data['reg_sab'] == 'Y'}checked{/if}"></span> SAB &nbsp;
+                    <span class="checkbox-box {if: isset($data['reg_cse']) && $data['reg_cse'] == 'Y'}checked{/if}"></span> CSE &nbsp;
+                    <span class="checkbox-box {if: isset($data['reg_epidural']) && $data['reg_epidural'] == 'Y'}checked{/if}"></span> Epidural &nbsp;
+                    <span class="checkbox-box {if: isset($data['reg_caudal']) && $data['reg_caudal'] == 'Y'}checked{/if}"></span> Caudal &nbsp;
+                    <span class="checkbox-box {if: isset($data['reg_pnb']) && $data['reg_pnb'] == 'Y'}checked{/if}"></span> PNB &nbsp;
+                    <span class="checkbox-box {if: isset($data['reg_ivr']) && $data['reg_ivr'] == 'Y'}checked{/if}"></span> IVR<br>
+                    
+                    Jenis jarum : <span style="display:inline-block; border-bottom:1px dotted #000; width:80px; text-align:center;">{?=!empty($data['reg_jenis_jarum']) ? $data['reg_jenis_jarum'] : '&nbsp;'?}</span> # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Blok V. Th <span style="display:inline-block; border-bottom:1px dotted #000; width:50px; text-align:center;">{?=!empty($data['reg_blok_vth']) ? $data['reg_blok_vth'] : '&nbsp;'?}</span><br>
+                    <span style="display:inline-block; border-bottom:1px dotted #000; width:100%;">&nbsp;</span><br>
+                    
+                    Jenis PNB : <span style="display:inline-block; border-bottom:1px dotted #000; width:150px; text-align:center;">{?=!empty($data['reg_jenis_pnb']) ? $data['reg_jenis_pnb'] : '&nbsp;'?}</span><br>
+                    Obat : <span style="display:inline-block; border-bottom:1px dotted #000; width:60px; text-align:center;">{?=!empty($data['reg_obat']) ? $data['reg_obat'] : '&nbsp;'?}</span> % &nbsp;
+                    Dosis : <span style="display:inline-block; border-bottom:1px dotted #000; width:40px; text-align:center;">{?=!empty($data['reg_dosis']) ? $data['reg_dosis'] : '&nbsp;'?}</span> mg &nbsp;
+                    Vol : <span style="display:inline-block; border-bottom:1px dotted #000; width:40px; text-align:center;">{?=!empty($data['reg_vol']) ? $data['reg_vol'] : '&nbsp;'?}</span> cc<br>
+                    <span style="display:inline-block; border-bottom:1px dotted #000; width:100%; text-align:center;">{?=!empty($data['reg_obat_ket']) ? $data['reg_obat_ket'] : '&nbsp;'?}</span><br>
+                    
+                    Epidural : <span style="display:inline-block; border-bottom:1px dotted #000; width:80%; text-align:center;">{?=!empty($data['reg_epidural_ket']) ? $data['reg_epidural_ket'] : '&nbsp;'?}</span><br>
+                    
+                    <div style="border-top:1px solid #000; margin-top:5px; padding-top:5px;">
+                        Kateter Intravena :<br><br>
+                        Perifer# : <span style="display:inline-block; border-bottom:1px dotted #000; width:100px; text-align:center;">{?=!empty($data['kateter_perifer1']) ? $data['kateter_perifer1'] : '&nbsp;'?}</span><br><br>
+                        Perifer# : <span style="display:inline-block; border-bottom:1px dotted #000; width:100px; text-align:center;">{?=!empty($data['kateter_perifer2']) ? $data['kateter_perifer2'] : '&nbsp;'?}</span><br><br>
+                        CVC # : <span style="display:inline-block; border-bottom:1px dotted #000; width:100px; text-align:center;">{?=!empty($data['kateter_cvc']) ? $data['kateter_cvc'] : '&nbsp;'?}</span>
+                    </div>
+                    
+                    <div class="ttd-box" style="margin-top:20px;">
+                        ( <span class="ttd-name">{?=!empty($data['dokter_nama']) ? $data['dokter_nama'] : '........................................'?}</span> )<br>
+                        Tanda tangan dokter anestesi
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

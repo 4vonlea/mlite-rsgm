@@ -1,0 +1,63 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Data ANS4 - Rencana Anestesi</h3>
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a href="{?=url([ADMIN, 'update_bmt', 'ans4manage'])?}" role="tab">Data Rencana Anestesi</a>
+                    </li>
+                    <li>
+                        <a href="{?=url([ADMIN, 'update_bmt', 'ans4form'])?}" role="tab">Tambah Data</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive no-margin">
+                    <table class="table table-striped no-margin dataTable" id="data-table">
+                        <thead>
+                            <tr>
+                                <th>No. Rawat</th>
+                                <th>No. RM</th>
+                                <th>Nama Pasien</th>
+                                <th>Tanggal</th>
+                                <th>Jam</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {if: !empty($data)}
+                            {loop: $data}
+                            <tr>
+                                <td>{$value.no_rawat}</td>
+                                <td>{$value.no_rkm_medis}</td>
+                                <td>{$value.nm_pasien}</td>
+                                <td>{$value.tanggal}</td>
+                                <td>{$value.jam}</td>
+                                <td>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans4form'])?}&t={?=$_SESSION['token']?}&id={$value.id}" class="btn btn-xs btn-warning"><i class="fa fa-pencil"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans4cetak'])?}&t={?=$_SESSION['token']?}&id={$value.id}" class="btn btn-xs btn-primary" target="_blank"><i class="fa fa-print"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans4manage'])?}&t={?=$_SESSION['token']?}&action=delete&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?')"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {/loop}
+                            {else}
+                            <tr>
+                                <td colspan="6" class="text-center">Tidak ada data ditemukan.</td>
+                            </tr>
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$(document).ready(function() {
+    $('#data-table').DataTable({
+        "ordering": false
+    });
+});
+</script>

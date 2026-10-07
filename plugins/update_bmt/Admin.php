@@ -16,6 +16,7 @@ class Admin extends AdminModule
                 'ANS1 - INFORMASI TINDAKAN PEMBIUSAN' => 'ans1manage',
                 'ANS2 - PERSETUJUAN TINDAKAN PEMBIUSAN' => 'ans2manage',
                 'ANS3 - ASSESMEN PRASEDASI / ANESTESI' => 'ans3manage',
+                'ANS4 - RENCANA ANESTESI' => 'ans4manage',
             ]
         ];
     }
@@ -1085,6 +1086,201 @@ class Admin extends AdminModule
         }
 
         echo $this->draw('ans3/cetak.html', ['data' => $data]);
+        exit();
+    }
+
+    // ==========================================
+    // ANS4 - RENCANA ANESTESI
+    // ==========================================
+
+    public function anyAns4manage()
+    {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+            $id = $_GET['id'];
+            $this->db('ans4_rencana_anestesi')->where('id', $id)->delete();
+            $this->db('ans4_evaluasi_premedikasi_detail')->where('id_ans4', $id)->delete();
+            $this->notify('success', 'Data berhasil dihapus');
+            redirect(url([ADMIN, 'update_bmt', 'ans4manage']));
+        }
+
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $data = $this->db('ans4_rencana_anestesi')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans4_rencana_anestesi.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('ans4_rencana_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->toArray();
+
+        return $this->draw('ans4/manage.html', ['data' => $data]);
+    }
+
+    public function getAns4form()
+    {
+        if (isset($_GET['ajax_patient'])) {
+            $no_rawat = $_GET['no_rawat'] ?? '';
+            $no_rawat = trim($no_rawat);
+            
+            if (is_numeric($no_rawat) && strlen($no_rawat) < 6) {
+                $no_rawat = str_pad($no_rawat, 6, '0', STR_PAD_LEFT);
+            }
+
+            $result = ['success' => false];
+
+            if (!empty($no_rawat)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $no_rawat)
+                    ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+
+                if ($reg) {
+                    $result = [
+                        'success'       => true,
+                        'no_rawat'      => $reg['no_rawat'] ?? '',
+                        'nama_pasien'   => $reg['nm_pasien'] ?? '',
+                        'jenis_kelamin' => $reg['jk'] ?? '',
+                        'tanggal_lahir' => $reg['tgl_lahir'] ?? '',
+                        'no_rkm_medis'  => $reg['no_rkm_medis'] ?? '',
+                        'umur'          => $reg['umur'] ?? ''
+                    ];
+                }
+            }
+
+            if (ob_get_length()) {
+                ob_clean();
+            }
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit();
+        }
+
+        $id = $_GET['id'] ?? '';
+        $data = [];
+        $detail = [];
+
+        if (!empty($id)) {
+            $data = $this->db('ans4_rencana_anestesi')->where('id', $id)->oneArray();
+            if ($data && !empty($data['no_rawat'])) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+                    ->oneArray();
+
+                if ($reg) {
+                    $data['nm_pasien'] = $reg['nm_pasien'];
+                    $data['umur_pasien'] = $reg['umur'];
+                    $data['jk_pasien'] = $reg['jk'];
+                    $data['tgl_lahir'] = $reg['tgl_lahir'];
+                }
+            }
+            $detail = $this->db('ans4_evaluasi_premedikasi_detail')->where('id_ans4', $id)->toArray();
+        }
+
+        $this->tpl->set('data', $data);
+        $this->tpl->set('detail', $detail);
+        return $this->draw('ans4/form.html', ['data' => $data, 'detail' => $detail]);
+    }
+
+    public function postAns4save()
+    {
+        try {
+            $post = $_POST;
+            $id = $post['id'] ?? '';
+            $data = $post;
+            unset($data['id']);
+            unset($data['nm_pasien']);
+            unset($data['detail_obat']);
+            unset($data['detail_dosis']);
+            unset($data['detail_jam']);
+            unset($data['detail_pelaksana']);
+
+            foreach ($data as $key => $val) {
+                if ($val === '') {
+                    $data[$key] = null;
+                }
+            }
+
+            if ($id) {
+                $this->db('ans4_rencana_anestesi')->where('id', $id)->save($data);
+                $this->notify('success', 'Data berhasil diupdate');
+            } else {
+                $this->db('ans4_rencana_anestesi')->save($data);
+                $inserted = $this->db('ans4_rencana_anestesi')->where('no_rawat', $data['no_rawat'])->desc('id')->oneArray();
+                $id = $inserted['id'] ?? null;
+                $this->notify('success', 'Data berhasil disimpan');
+            }
+
+            if ($id) {
+                $this->db('ans4_evaluasi_premedikasi_detail')->where('id_ans4', $id)->delete();
+                $obat = $post['detail_obat'] ?? [];
+                $dosis = $post['detail_dosis'] ?? [];
+                $jam = $post['detail_jam'] ?? [];
+                $pelaksana = $post['detail_pelaksana'] ?? [];
+                
+                foreach ($obat as $k => $v) {
+                    if (!empty($v) || !empty($dosis[$k])) {
+                        $this->db('ans4_evaluasi_premedikasi_detail')->save([
+                            'id_ans4' => $id,
+                            'obat_premedikasi' => $v,
+                            'dosis' => $dosis[$k] ?? '',
+                            'jam' => $jam[$k] ?? '',
+                            'pelaksana' => $pelaksana[$k] ?? ''
+                        ]);
+                    }
+                }
+            }
+
+            redirect(url([ADMIN, 'update_bmt', 'ans4manage']));
+        } catch (\Exception $e) {
+            die("Terjadi kesalahan: " . $e->getMessage());
+        }
+    }
+
+    public function getAns4cetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('ans4_rencana_anestesi')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans4_rencana_anestesi.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('ans4_rencana_anestesi.id', $id)
+            ->select('ans4_rencana_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $detail = $this->db('ans4_evaluasi_premedikasi_detail')->where('id_ans4', $id)->toArray();
+
+        if (!empty($data['tgl_lahir'])) {
+            $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            }
+        }
+        
+        if (!empty($data['tanggal'])) {
+            $tgl = explode('-', $data['tanggal']);
+            if (count($tgl) == 3) {
+                $data['tanggal_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            }
+        }
+
+        echo $this->draw('ans4/cetak.html', ['data' => $data, 'detail' => $detail]);
         exit();
     }
 }
