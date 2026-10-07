@@ -116,20 +116,17 @@
               </button>
               <button type="button" class="btn btn-warning btn-sm cetak_hasil"
                 id="btn-cetak-{?=isset_or($value.ref_id)?}"
-                {if: !$value.signature}disabled title="Harap tanda tangani dokumen terlebih dahulu"{/if}
                 data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}" data-jam_periksa="{?=isset_or($value.jam)?}"
                 data-status="{?=isset_or($value.status_periksa)?}">
                 <i class="fa fa-print"></i> Cetak
               </button>
               {if: !$value.signature}
-                {if: $current_user == $pj_radiologi}
               <button type="button" class="btn btn-success btn-sm btn-tte"
                 data-ref_type="radiologi_hasil" 
                 data-ref_id="{?=isset_or($value.ref_id)?}" 
-                data-signer_name="{?=isset_or($value.nm_dokter)?}">
+                data-signer_name="{?=isset_or($current_user_name)?}">
                 <i class="fa fa-certificate"></i> Tanda Tangani
               </button>
-                {/if}
               {/if}
               <a href="{?=url([ADMIN,'orthanc','bridgingorthanc',convertNorawat($value.no_rawat), strtolower($value.status_periksa), $value.tgl_periksa, $value.jam])?}"
                 class="btn btn-info btn-sm" data-toggle="modal" data-target="#orthancModal">
