@@ -1516,4 +1516,119 @@ class Admin extends AdminModule
         echo $this->draw('ans7/cetak.html', ['data' => $data]);
         exit();
     }
+    public function getBm1manage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/js/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/js/dataTables.bootstrap.min.js'));
+        
+        $query = $this->db('bm1_informasi_tindakan')
+            ->join('reg_periksa', 'reg_periksa.no_rawat = bm1_informasi_tindakan.no_rawat')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('bm1_informasi_tindakan.*, pasien.nm_pasien')
+            ->desc('bm1_informasi_tindakan.id')
+            ->toArray();
+            
+        return $this->draw('bm1/manage.html', ['list' => $query]);
+    }
+
+    public function getBm1form()
+    {
+        $id = $_GET['id'] ?? '';
+        $data = [];
+        
+        if (isset($_GET['ajax_patient']) && !empty($_GET['no_rawat'])) {
+            $patient = $this->db('reg_periksa')
+                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
+                ->select('pasien.nm_pasien')
+                ->oneArray();
+                
+            header('Content-Type: application/json');
+            if ($patient) {
+                echo json_encode(['success' => true, 'no_rawat' => $_GET['no_rawat'], 'nama_pasien' => $patient['nm_pasien']]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+            exit();
+        }
+
+        if ($id) {
+            $data = $this->db('bm1_informasi_tindakan')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm1_informasi_tindakan.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('bm1_informasi_tindakan.id', $id)
+                ->select('bm1_informasi_tindakan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+                ->oneArray();
+        }
+
+        return $this->draw('bm1/form.html', ['data' => $data]);
+    }
+
+    public function postBm1save()
+    {
+        $id = $_POST['id'] ?? '';
+        $data = $_POST;
+        
+        unset($data['id']);
+        unset($data['nm_pasien']);
+        
+        if ($id) {
+            $this->db('bm1_informasi_tindakan')->where('id', $id)->save($data);
+        } else {
+            $this->db('bm1_informasi_tindakan')->save($data);
+        }
+        
+        $this->notify('success', 'Simpan berhasil');
+        redirect(url([ADMIN, 'update_bmt', 'bm1manage']));
+    }
+
+    public function getBm1hapus()
+    {
+        $id = $_GET['id'] ?? '';
+        if ($id) {
+            $this->db('bm1_informasi_tindakan')->where('id', $id)->delete();
+            $this->notify('success', 'Hapus berhasil');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'bm1manage']));
+    }
+
+    public function getBm1cetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('bm1_informasi_tindakan')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm1_informasi_tindakan.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('bm1_informasi_tindakan.id', $id)
+            ->select('bm1_informasi_tindakan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+        
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        if (!empty($data['tgl_dokumen'])) {
+            $tgl = explode('-', $data['tgl_dokumen']);
+            if (count($tgl) == 3) {
+                $data['tgl_dokumen_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            }
+        }
+        
+        if (!empty($data['tgl_lahir'])) {
+            $tgl2 = explode('-', $data['tgl_lahir']);
+            if (count($tgl2) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl2[2] . ' ' . $bulan[(int)$tgl2[1]] . ' ' . $tgl2[0];
+            }
+        }
+
+        echo $this->draw('bm1/cetak.html', ['data' => $data]);
+        exit();
+    }
 }

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Cetak BM1 - Informasi Tindakan Medik Pembedahan</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 11px; color: #000; margin: 0; padding: 0; }
+        .page { width: 100%; max-width: 800px; margin: auto; border: 1px solid #000; box-sizing: border-box; }
+        
+        .box-title { text-align: center; font-weight: bold; border-bottom: 1px solid #000; border-top: 1px solid #000; padding: 5px; font-size: 14px; }
+        
+        table.content-table { width: 100%; border-collapse: collapse; }
+        table.content-table td, table.content-table th { border: 1px solid #000; padding: 4px; vertical-align: top; line-height: 1.5; }
+        table.content-table th { text-align: center; font-weight: normal; }
+        
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+    </style>
+</head>
+<body onload="window.print()">
+    <div class="page">
+        <!-- Header -->
+        <table style="width: 100%; padding-bottom: 5px;">
+            <tr>
+                <td style="width: 60%; padding: 0; vertical-align: middle;">
+                    <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat" style="width: 100%; height: auto; max-height: 80px; object-fit: contain;">
+                </td>
+                <td style="width: 40%; border-left: 2px solid #000; padding-left: 10px; vertical-align: middle;">
+                    <table style="width: 100%; font-size: 11px;">
+                        <tr><td width="70"><b>No. RM</b></td><td width="10">:</td><td>{?=isset($data['no_rkm_medis']) ? $data['no_rkm_medis'] : ''?}</td></tr>
+                        <tr><td><b>Nama Pasien</b></td><td>:</td><td>{?=isset($data['nm_pasien']) ? $data['nm_pasien'] : ''?} <span style="float:right;">{?=isset($data['jk']) && $data['jk'] == 'L' ? 'L' : 'P'?}</span></td></tr>
+                        <tr><td><b>Tanggal Lahir</b></td><td>:</td><td>{?=isset($data['tgl_lahir_indo']) ? $data['tgl_lahir_indo'] : ''?}</td></tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <div class="box-title">INFORMASI TINDAKAN MEDIK / PEMBEDAHAN</div>
+        
+        <table class="content-table">
+            <tr>
+                <td colspan="2" style="width: 40%;">Pemberi Informasi</td>
+                <td colspan="2">{?=isset($data['pemberi_informasi']) ? $data['pemberi_informasi'] : '&nbsp;'?}</td>
+            </tr>
+            <tr>
+                <td colspan="2">Penerima Informasi/Pemberi Persetujuan</td>
+                <td colspan="2">{?=isset($data['penerima_informasi']) ? $data['penerima_informasi'] : '&nbsp;'?}</td>
+            </tr>
+            <tr>
+                <td colspan="2"></td>
+                <td colspan="2">1. Nama : {?=isset($data['nama_1']) ? $data['nama_1'] : '&nbsp;'?}</td>
+            </tr>
+            <tr>
+                <td colspan="2"></td>
+                <td colspan="2">2. Nama : {?=isset($data['nama_2']) ? $data['nama_2'] : '&nbsp;'?}</td>
+            </tr>
+            <tr>
+                <th width="5%">NO</th>
+                <th width="35%">JENIS INFORMASI</th>
+                <th width="50%">ISI INFORMASI</th>
+                <th width="10%">Tanda (√)</th>
+            </tr>
+            <tr>
+                <td class="text-center">1</td>
+                <td>Diagnosis / Diagnosis Banding</td>
+                <td>{?=isset($data['info_1_isi']) ? nl2br($data['info_1_isi']) : '&nbsp;'?}</td>
+                <td class="text-center" style="vertical-align: middle; font-size:14px;">{if: isset($data['info_1_tanda']) && $data['info_1_tanda'] == 'Y'}√{/if}</td>
+            </tr>
+            <tr>
+                <td class="text-center">2</td>
+                <td>Dasar Diagnosis</td>
+                <td>{?=isset($data['info_2_isi']) ? nl2br($data['info_2_isi']) : '&nbsp;'?}</td>
+                <td class="text-center" style="vertical-align: middle; font-size:14px;">{if: isset($data['info_2_tanda']) && $data['info_2_tanda'] == 'Y'}√{/if}</td>
+            </tr>
+            <tr>
+                <td class="text-center">3</td>
+                <td>Tindakan Kedokteran</td>
+                <td>{?=isset($data['info_3_isi']) ? nl2br($data['info_3_isi']) : '&nbsp;'?}</td>
+                <td class="text-center" style="vertical-align: middle; font-size:14px;">{if: isset($data['info_3_tanda']) && $data['info_3_tanda'] == 'Y'}√{/if}</td>
+            </tr>
+            <tr>
+                <td class="text-center">4</td>
+                <td>Indikasi Tindakan</td>
+                <td>{?=isset($data['info_4_isi']) ? nl2br($data['info_4_isi']) : '&nbsp;'?}</td>
+                <td class="text-center" style="vertical-align: middle; font-size:14px;">{if: isset($data['info_4_tanda']) && $data['info_4_tanda'] == 'Y'}√{/if}</td>
+            </tr>
+            <tr>
+                <td class="text-center">5</td>
+                <td>Tata Cara</td>
+                <td>{?=isset($data['info_5_isi']) ? nl2br($data['info_5_isi']) : '&nbsp;'?}</td>
+                <td class="text-center" style="vertical-align: middle; font-size:14px;">{if: isset($data['info_5_tanda']) && $data['info_5_tanda'] == 'Y'}√{/if}</td>
+            </tr>
+            <tr>
+                <td class="text-center">6</td>
+                <td>Tujuan</td>
+                <td>{?=isset($data['info_6_isi']) ? nl2br($data['info_6_isi']) : '&nbsp;'?}</td>
+                <td class="text-center" style="vertical-align: middle; font-size:14px;">{if: isset($data['info_6_tanda']) && $data['info_6_tanda'] == 'Y'}√{/if}</td>
+            </tr>
+            <tr>
+                <td class="text-center">7</td>
+                <td>Resiko</td>
+                <td>{?=isset($data['info_7_isi']) ? nl2br($data['info_7_isi']) : '&nbsp;'?}</td>
+                <td class="text-center" style="vertical-align: middle; font-size:14px;">{if: isset($data['info_7_tanda']) && $data['info_7_tanda'] == 'Y'}√{/if}</td>
+            </tr>
+            <tr>
+                <td class="text-center">8</td>
+                <td>Komplikasi</td>
+                <td>{?=isset($data['info_8_isi']) ? nl2br($data['info_8_isi']) : '&nbsp;'?}</td>
+                <td class="text-center" style="vertical-align: middle; font-size:14px;">{if: isset($data['info_8_tanda']) && $data['info_8_tanda'] == 'Y'}√{/if}</td>
+            </tr>
+            <tr>
+                <td class="text-center">9</td>
+                <td>Prognosis</td>
+                <td>{?=isset($data['info_9_isi']) ? nl2br($data['info_9_isi']) : '&nbsp;'?}</td>
+                <td class="text-center" style="vertical-align: middle; font-size:14px;">{if: isset($data['info_9_tanda']) && $data['info_9_tanda'] == 'Y'}√{/if}</td>
+            </tr>
+            <tr>
+                <td class="text-center">10</td>
+                <td>Alternatif dan Resiko</td>
+                <td>{?=isset($data['info_10_isi']) ? nl2br($data['info_10_isi']) : '&nbsp;'?}</td>
+                <td class="text-center" style="vertical-align: middle; font-size:14px;">{if: isset($data['info_10_tanda']) && $data['info_10_tanda'] == 'Y'}√{/if}</td>
+            </tr>
+            <tr>
+                <td class="text-center">11</td>
+                <td>Kebutuhan darah dan produk darah, resiko dan alternatifnya</td>
+                <td>{?=isset($data['info_11_isi']) ? nl2br($data['info_11_isi']) : '&nbsp;'?}</td>
+                <td class="text-center" style="vertical-align: middle; font-size:14px;">{if: isset($data['info_11_tanda']) && $data['info_11_tanda'] == 'Y'}√{/if}</td>
+            </tr>
+            <tr>
+                <td class="text-center">12</td>
+                <td>Lain-lain</td>
+                <td>{?=isset($data['info_12_isi']) ? nl2br($data['info_12_isi']) : '&nbsp;'?}</td>
+                <td class="text-center" style="vertical-align: middle; font-size:14px;">{if: isset($data['info_12_tanda']) && $data['info_12_tanda'] == 'Y'}√{/if}</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="text-right" style="padding: 10px;">
+                    Banjarmasin, {?=isset($data['tgl_dokumen_indo']) ? $data['tgl_dokumen_indo'] : '........................ 20....'} jam {?=isset($data['waktu_dokumen']) ? $data['waktu_dokumen'] : '........'} WITA
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="padding: 10px; height: 80px;">
+                    <i>Dengan ini menyatakan bahwa saya telah menerangkan hal-hal diatas secara benar dan jelas, dan memberikan kesempatan untuk bertanya</i>
+                </td>
+                <td class="text-center" style="vertical-align: middle; padding: 10px;">
+                    Tanda<br>Tangan<br><br><br>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="padding: 10px; height: 80px;">
+                    <i>Dengan ini menyatakan bahwa saya telah menerima informasi sebagaimana diatas yang saya berikan tanda (√) /paraf di kolom kanannya, dan telah memahaminya</i>
+                </td>
+                <td class="text-center" style="vertical-align: middle; padding: 10px;">
+                    Tanda<br>Tangan<br><br><br>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4" style="padding: 5px;">
+                    *) Bila Pasien tidak kompeten atau tidak mau menerima informasi, maka penerima informasi adalah wali atau keluarga terdekat.
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
