@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Cetak BMI4 - Formulir Pemeriksaan Pra Anestesi Lokal</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 11px; color: #000; margin: 0; padding: 0; }
+        .page { width: 100%; max-width: 800px; margin: auto; border: 1px solid #000; box-sizing: border-box; }
+        
+        .box-title { text-align: center; font-weight: bold; border-bottom: 1px solid #000; border-top: 1px solid #000; padding: 5px; font-size: 12px; background-color: #f9f9f9; }
+        
+        table.content-table { width: 100%; border-collapse: collapse; }
+        table.content-table td { border: 1px solid #000; padding: 4px; vertical-align: top; line-height: 1.5; }
+        
+        .checkbox-box { display: inline-block; width: 10px; height: 10px; border: 1px solid #000; margin-right: 3px; vertical-align: middle; text-align: center; line-height: 10px; font-size: 10px;}
+        .checked::after { content: '✓'; }
+        
+        .dotted { border-bottom: 1px dotted #000; display: inline-block; padding: 0 5px; }
+        .text-center { text-align: center; }
+        
+        .mini-table { width: 100%; border-collapse: collapse; }
+        .mini-table td { border: none; padding: 2px; }
+        .mini-table-bordered td { border: 1px solid #000; padding: 4px; }
+    </style>
+</head>
+<body onload="window.print()">
+    <div class="page">
+        <!-- Header -->
+        <table style="width: 100%; padding-bottom: 5px;">
+            <tr>
+                <td style="width: 60%; padding: 0; vertical-align: middle;">
+                    <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat" style="width: 100%; height: auto; max-height: 80px; object-fit: contain;">
+                </td>
+                <td style="width: 40%; border-left: 2px solid #000; padding-left: 10px; vertical-align: middle;">
+                    <table style="width: 100%; font-size: 11px;">
+                        <tr><td width="70"><b>No. RM</b></td><td width="10">:</td><td>{?=isset($data['no_rkm_medis']) ? $data['no_rkm_medis'] : ''?}</td></tr>
+                        <tr><td><b>Nama Pasien</b></td><td>:</td><td>{?=isset($data['nm_pasien']) ? $data['nm_pasien'] : ''?} <span style="float:right;">{?=isset($data['jk']) && $data['jk'] == 'L' ? 'L' : 'P'?}</span></td></tr>
+                        <tr><td><b>Tanggal Lahir</b></td><td>:</td><td>{?=isset($data['tgl_lahir_indo']) ? $data['tgl_lahir_indo'] : ''?}</td></tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <div class="box-title">FORMULIR PEMERIKSAAN PRA ANESTESI LOKAL</div>
+        
+        <div style="padding: 5px; border-bottom: 1px solid #000;">
+            Diagnosis : <span class="dotted" style="width: 85%;">{?=isset($data['diagnosis']) ? $data['diagnosis'] : '&nbsp;'?}</span><br>
+            Rencana tindakan : <span class="dotted" style="width: 40%;">{?=isset($data['rencana_tindakan']) ? $data['rencana_tindakan'] : '&nbsp;'?}</span> Hari <span class="dotted" style="width: 100px;">{?=isset($data['hari_tindakan']) ? $data['hari_tindakan'] : '&nbsp;'?}</span> Tanggal <span class="dotted" style="width: 150px;">{?=isset($data['tgl_tindakan_indo']) ? $data['tgl_tindakan_indo'] : '&nbsp;'?}</span>
+        </div>
+        
+        <table class="content-table" style="border-top: none;">
+            <tr>
+                <td style="width: 50%;">
+                    Riwayat operasi : 
+                    <span class="checkbox-box {if: isset($data['riwayat_operasi']) && $data['riwayat_operasi'] == 'Tidak'}checked{/if}"></span> Tidak &nbsp;&nbsp;
+                    <span class="checkbox-box {if: isset($data['riwayat_operasi']) && $data['riwayat_operasi'] == 'Ya'}checked{/if}"></span> Ya, bila ya <span class="dotted" style="width:150px;">{?=isset($data['riwayat_operasi_ket']) ? $data['riwayat_operasi_ket'] : '&nbsp;'?}</span>
+                </td>
+                <td rowspan="2" style="width: 50%;">
+                    Hipertensi : 
+                    <span class="checkbox-box {if: isset($data['hipertensi']) && $data['hipertensi'] == 'Tidak'}checked{/if}"></span> Tidak &nbsp;&nbsp;
+                    <span class="checkbox-box {if: isset($data['hipertensi']) && $data['hipertensi'] == 'Ya'}checked{/if}"></span> Ya, bila ya <span class="dotted" style="width:150px;">{?=isset($data['hipertensi_ket']) ? $data['hipertensi_ket'] : '&nbsp;'?}</span><br>
+                    Pengobatan : <span class="dotted" style="width:300px;">{?=isset($data['pengobatan_hipertensi']) ? $data['pengobatan_hipertensi'] : '&nbsp;'?}</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Penyakit yang pernah diderita : <span class="dotted" style="width:60%;">{?=isset($data['penyakit_dahulu']) ? $data['penyakit_dahulu'] : '&nbsp;'?}</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Asma : 
+                    <span class="checkbox-box {if: isset($data['asma']) && $data['asma'] == 'Tidak'}checked{/if}"></span> Tidak &nbsp;&nbsp;
+                    <span class="checkbox-box {if: isset($data['asma']) && $data['asma'] == 'Ya'}checked{/if}"></span> Ya, bila ya, serangan terakhir<br>
+                    <span class="dotted" style="width:300px; margin-left:50px;">{?=isset($data['asma_serangan_terakhir']) ? $data['asma_serangan_terakhir'] : '&nbsp;'?}</span><br>
+                    <span style="margin-left:50px;">Pengobatan :</span> <span class="dotted" style="width:220px;">{?=isset($data['asma_pengobatan']) ? $data['asma_pengobatan'] : '&nbsp;'?}</span>
+                </td>
+                <td>
+                    Merokok : 
+                    <span class="checkbox-box {if: isset($data['merokok']) && $data['merokok'] == 'Tidak'}checked{/if}"></span> Tidak &nbsp;&nbsp;
+                    <span class="checkbox-box {if: isset($data['merokok']) && $data['merokok'] == 'Ya'}checked{/if}"></span> Ya, bila ya<br>
+                    Terakhir merokok : <span class="dotted" style="width:250px;">{?=isset($data['terakhir_merokok']) ? $data['terakhir_merokok'] : '&nbsp;'?}</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Alergi : 
+                    <span class="checkbox-box {if: isset($data['alergi']) && $data['alergi'] == 'Tidak'}checked{/if}"></span> Tidak &nbsp;&nbsp;
+                    <span class="checkbox-box {if: isset($data['alergi']) && $data['alergi'] == 'Ya'}checked{/if}"></span> Ya, bila ya, obat: <span class="dotted" style="width:100px;">{?=isset($data['alergi_obat']) ? $data['alergi_obat'] : '&nbsp;'?}</span><br>
+                    <span style="margin-left: 135px;">Makanan :</span> <span class="dotted" style="width:150px;">{?=isset($data['alergi_makanan']) ? $data['alergi_makanan'] : '&nbsp;'?}</span>
+                </td>
+                <td>
+                    Gastritis : 
+                    <span class="checkbox-box {if: isset($data['gastritis']) && $data['gastritis'] == 'Tidak'}checked{/if}"></span> Tidak &nbsp;&nbsp;
+                    <span class="checkbox-box {if: isset($data['gastritis']) && $data['gastritis'] == 'Ya'}checked{/if}"></span> Ya, bila ya <span class="dotted" style="width:150px;">{?=isset($data['gastritis_ket']) ? $data['gastritis_ket'] : '&nbsp;'?}</span><br>
+                    Pengobatan : <span class="dotted" style="width:300px;">{?=isset($data['gastritis_pengobatan']) ? $data['gastritis_pengobatan'] : '&nbsp;'?}</span>
+                </td>
+            </tr>
+            
+            <tr>
+                <td style="padding: 0;">
+                    <table class="mini-table-bordered" style="width: 100%; border:none; height:100%;">
+                        <tr>
+                            <td style="border-top:none; border-left:none; width:50%;">
+                                Angina : 
+                                <span class="checkbox-box {if: isset($data['angina']) && $data['angina'] == 'Ya'}checked{/if}"></span> Ya &nbsp;&nbsp;
+                                <span class="checkbox-box {if: isset($data['angina']) && $data['angina'] == 'Tidak'}checked{/if}"></span> Tidak
+                            </td>
+                            <td style="border-top:none; border-right:none; width:50%;">
+                                Diabetes : 
+                                <span class="checkbox-box {if: isset($data['diabetes']) && $data['diabetes'] == 'Ya'}checked{/if}"></span> Ya &nbsp;&nbsp;
+                                <span class="checkbox-box {if: isset($data['diabetes']) && $data['diabetes'] == 'Tidak'}checked{/if}"></span> Tidak
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border-bottom:none; border-left:none;">
+                                Kejang : 
+                                <span class="checkbox-box {if: isset($data['kejang']) && $data['kejang'] == 'Ya'}checked{/if}"></span> Ya &nbsp;&nbsp;
+                                <span class="checkbox-box {if: isset($data['kejang']) && $data['kejang'] == 'Tidak'}checked{/if}"></span> Tidak
+                            </td>
+                            <td style="border-bottom:none; border-right:none;">
+                                Bila ya, pengobatan :<br>
+                                <span class="dotted" style="width:100%;">{?=isset($data['pengobatan_diabetes']) ? $data['pengobatan_diabetes'] : '&nbsp;'?}</span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td>
+                    Lain-lain:<br>
+                    {?=isset($data['lain_lain_penyakit']) ? nl2br($data['lain_lain_penyakit']) : ''?}
+                </td>
+            </tr>
+            
+            <tr>
+                <td colspan="2">
+                    Obat yang sedang dikonsumsi<br>
+                    {?=isset($data['obat_dikonsumsi']) ? nl2br($data['obat_dikonsumsi']) : ''?}
+                </td>
+            </tr>
+            
+            <tr>
+                <td colspan="2" style="padding: 0;">
+                    <table class="content-table" style="width:100%; border:none;">
+                        <tr>
+                            <td style="width: 30%; border-top:none; border-left:none; border-bottom:none;">
+                                kesadaran<br><br>
+                                {?=isset($data['kesadaran']) ? $data['kesadaran'] : ''?}
+                            </td>
+                            <td style="width: 70%; border-top:none; border-right:none; border-bottom:none;">
+                                Skor nyeri : 
+                                0 <span class="checkbox-box {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '0'}checked{/if}"></span> &nbsp;&nbsp;
+                                1 <span class="checkbox-box {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '1'}checked{/if}"></span> &nbsp;&nbsp;
+                                2 <span class="checkbox-box {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '2'}checked{/if}"></span> &nbsp;&nbsp;
+                                3 <span class="checkbox-box {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '3'}checked{/if}"></span> &nbsp;&nbsp;
+                                4 <span class="checkbox-box {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '4'}checked{/if}"></span> &nbsp;&nbsp;
+                                5 <span class="checkbox-box {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '5'}checked{/if}"></span> &nbsp;&nbsp;
+                                6 <span class="checkbox-box {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '6'}checked{/if}"></span> &nbsp;&nbsp;
+                                7 <span class="checkbox-box {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '7'}checked{/if}"></span> &nbsp;&nbsp;
+                                8 <span class="checkbox-box {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '8'}checked{/if}"></span> &nbsp;&nbsp;
+                                9 <span class="checkbox-box {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '9'}checked{/if}"></span> &nbsp;&nbsp;
+                                10 <span class="checkbox-box {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '10'}checked{/if}"></span>
+                                <br><br><br>
+                                <span class="checkbox-box {if: isset($data['tingkat_nyeri']) && $data['tingkat_nyeri'] == 'Tdk nyeri'}checked{/if}"></span> Tdk nyeri &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <span class="checkbox-box {if: isset($data['tingkat_nyeri']) && $data['tingkat_nyeri'] == 'nyeri ringan'}checked{/if}"></span> nyeri ringan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <span class="checkbox-box {if: isset($data['tingkat_nyeri']) && $data['tingkat_nyeri'] == 'nyeri sedang'}checked{/if}"></span> nyeri sedang &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <span class="checkbox-box {if: isset($data['tingkat_nyeri']) && $data['tingkat_nyeri'] == 'nyeri berat'}checked{/if}"></span> nyeri berat
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            
+            <tr>
+                <td colspan="2" style="padding: 0;">
+                    <table class="content-table" style="width:100%; border:none;">
+                        <tr>
+                            <td width="150" style="border-top:none; border-left:none;">Tanda vital</td>
+                            <td colspan="3" style="border-top:none; border-right:none;">TD: <span class="dotted" style="width:150px;">{?=isset($data['tanda_vital_td']) ? $data['tanda_vital_td'] : '&nbsp;'?}</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; N: <span class="dotted" style="width:150px;">{?=isset($data['tanda_vital_n']) ? $data['tanda_vital_n'] : '&nbsp;'?}</span></td>
+                        </tr>
+                        <tr>
+                            <td style="border-left:none;">Buka Mulut</td>
+                            <td width="200"><span class="checkbox-box {if: isset($data['buka_mulut']) && $data['buka_mulut'] == '>3 jari'}checked{/if}"></span> &gt;3 jari</td>
+                            <td colspan="2" style="border-right:none;"><span class="checkbox-box {if: isset($data['buka_mulut']) && $data['buka_mulut'] == '<3 jari'}checked{/if}"></span> &lt;3 jari</td>
+                        </tr>
+                        <tr>
+                            <td style="border-left:none;">Gigi</td>
+                            <td><span class="checkbox-box {if: isset($data['gigi']) && $data['gigi'] == 'komplit'}checked{/if}"></span> komplit</td>
+                            <td width="200"><span class="checkbox-box {if: isset($data['gigi']) && $data['gigi'] == 'Goyang'}checked{/if}"></span> Goyang</td>
+                            <td style="border-right:none;"><span class="checkbox-box {if: isset($data['gigi']) && $data['gigi'] == 'Gigi Palsu'}checked{/if}"></span> Gigi Palsu</td>
+                        </tr>
+                        <tr>
+                            <td style="border-left:none;">Leher</td>
+                            <td><span class="checkbox-box {if: isset($data['leher']) && $data['leher'] == 'mobile'}checked{/if}"></span> mobile</td>
+                            <td><span class="checkbox-box {if: isset($data['leher']) && $data['leher'] == 'Terbatas'}checked{/if}"></span> Terbatas</td>
+                            <td style="border-right:none;"><span class="checkbox-box {if: isset($data['leher']) && $data['leher'] == 'Trauma'}checked{/if}"></span> Trauma</td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="border-left:none; border-right:none;">Paru &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="dotted" style="width: 80%;">{?=isset($data['paru']) ? $data['paru'] : '&nbsp;'?}</span></td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="border-left:none; border-right:none;">Jantung &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="dotted" style="width: 80%;">{?=isset($data['jantung']) ? $data['jantung'] : '&nbsp;'?}</span></td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="border-left:none; border-right:none;">Abdomen &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="dotted" style="width: 80%;">{?=isset($data['abdomen']) ? $data['abdomen'] : '&nbsp;'?}</span></td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="border-left:none; border-right:none;">Ekstremitas &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="dotted" style="width: 80%;">{?=isset($data['ekstremitas']) ? $data['ekstremitas'] : '&nbsp;'?}</span></td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="border-bottom:none; border-left:none; border-right:none;">Lain-lain &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="dotted" style="width: 80%;">{?=isset($data['lain_lain_fisik']) ? $data['lain_lain_fisik'] : '&nbsp;'?}</span></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            
+            <tr>
+                <td style="padding: 0;">
+                    <div style="padding: 4px;">Pemerikasaan penunjang</div>
+                </td>
+                <td style="padding: 0;">
+                    <table class="mini-table-bordered" style="width:100%;">
+                        <tr><td style="border-top:none; border-left:none; border-right:none;">Laboratorium : {?=isset($data['lab']) ? $data['lab'] : ''?}</td></tr>
+                        <tr><td style="border-left:none; border-right:none;">X-RAY : {?=isset($data['xray']) ? $data['xray'] : ''?}</td></tr>
+                        <tr><td style="border-bottom:none; border-left:none; border-right:none;">Lain-lain : {?=isset($data['lain_lain_penunjang']) ? $data['lain_lain_penunjang'] : ''?}</td></tr>
+                    </table>
+                </td>
+            </tr>
+            
+            <tr>
+                <td colspan="2" style="padding: 0;">
+                    <table class="content-table" style="width:100%; border:none;">
+                        <tr>
+                            <td colspan="3" style="border-top:none; border-left:none; border-right:none;">
+                                Hasil konsultasi bagian lain : <br>
+                                {?=isset($data['hasil_konsultasi']) ? nl2br($data['hasil_konsultasi']) : '&nbsp;'?}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 30%; text-align: center; border-left:none;"><b>Preoperatif</b></td>
+                            <td style="width: 35%;">Premedikasi:<br><span class="dotted" style="width:90%;">{?=isset($data['premedikasi']) ? $data['premedikasi'] : '&nbsp;'?}</span></td>
+                            <td style="width: 35%; border-right:none;">Lain-lain:<br><span class="dotted" style="width:90%;">{?=isset($data['preoperatif_lain']) ? $data['preoperatif_lain'] : '&nbsp;'?}</span></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; border-left:none;"><b>Intraoperatif</b></td>
+                            <td colspan="2" style="border-right:none;">Jenis Anestesi Lokal : <span class="dotted" style="width:70%;">{?=isset($data['jenis_anestesi_lokal']) ? $data['jenis_anestesi_lokal'] : '&nbsp;'?}</span></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; border-left:none;"><b>Postoperatif</b></td>
+                            <td colspan="2" style="border-right:none;">
+                                Rencana penanganan nyeri : <span class="dotted" style="width:60%;">{?=isset($data['rencana_penanganan_nyeri']) ? $data['rencana_penanganan_nyeri'] : '&nbsp;'?}</span><br>
+                                Perawatan pasca operatif : <span class="dotted" style="width:60%;">{?=isset($data['perawatan_pasca_operatif']) ? $data['perawatan_pasca_operatif'] : '&nbsp;'?}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle; border-left:none;"><b>Surat ijin anestesi</b></td>
+                            <td style="vertical-align: middle;">
+                                <span class="checkbox-box {if: isset($data['surat_ijin_anestesi']) && $data['surat_ijin_anestesi'] == 'Ya'}checked{/if}"></span> Ya &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <span class="checkbox-box {if: isset($data['surat_ijin_anestesi']) && $data['surat_ijin_anestesi'] == 'Tidak'}checked{/if}"></span> Tidak
+                            </td>
+                            <td rowspan="2" style="text-align: center; vertical-align: middle; border-right:none; border-bottom:none;">
+                                Dokter<br>Penanggung Jawab Pelayanan<br><br><br><br>
+                                (<span class="dotted" style="width: 80%;">{?=isset($data['ttd_dpjp']) ? $data['ttd_dpjp'] : '&nbsp;'?}</span>)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle; border-left:none; border-bottom:none;"><b>Edukasi</b></td>
+                            <td style="vertical-align: middle; border-bottom:none;">
+                                <span class="checkbox-box {if: isset($data['edukasi']) && $data['edukasi'] == 'Ya'}checked{/if}"></span> Ya &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <span class="checkbox-box {if: isset($data['edukasi']) && $data['edukasi'] == 'Tidak'}checked{/if}"></span> Tidak
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            
+        </table>
+        
+        <div style="text-align: right; font-size: 8px; margin-top: 15px; color: #555;">
+            <i>Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</i>
+        </div>
+        
+    </div>
+</body>
+</html>

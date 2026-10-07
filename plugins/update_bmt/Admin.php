@@ -1631,4 +1631,464 @@ class Admin extends AdminModule
         echo $this->draw('bm1/cetak.html', ['data' => $data]);
         exit();
     }
+    public function getBm2manage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/js/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/js/dataTables.bootstrap.min.js'));
+        
+        $query = $this->db('bm2_persetujuan_tindakan')
+            ->join('reg_periksa', 'reg_periksa.no_rawat = bm2_persetujuan_tindakan.no_rawat')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('bm2_persetujuan_tindakan.*, pasien.nm_pasien')
+            ->desc('bm2_persetujuan_tindakan.id')
+            ->toArray();
+            
+        return $this->draw('bm2/manage.html', ['list' => $query]);
+    }
+
+    public function getBm2form()
+    {
+        $id = $_GET['id'] ?? '';
+        $data = [];
+        
+        if (isset($_GET['ajax_patient']) && !empty($_GET['no_rawat'])) {
+            $patient = $this->db('reg_periksa')
+                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
+                ->select('pasien.*')
+                ->oneArray();
+                
+            header('Content-Type: application/json');
+            if ($patient) {
+                echo json_encode(['success' => true, 'no_rawat' => $_GET['no_rawat'], 'nama_pasien' => $patient['nm_pasien'], 'umur' => $patient['umur'], 'jk' => $patient['jk'], 'alamat' => $patient['alamat']]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+            exit();
+        }
+
+        if ($id) {
+            $data = $this->db('bm2_persetujuan_tindakan')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm2_persetujuan_tindakan.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('bm2_persetujuan_tindakan.id', $id)
+                ->select('bm2_persetujuan_tindakan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+                ->oneArray();
+        }
+
+        return $this->draw('bm2/form.html', ['data' => $data]);
+    }
+
+    public function postBm2save()
+    {
+        $id = $_POST['id'] ?? '';
+        $data = $_POST;
+        
+        unset($data['id']);
+        unset($data['nm_pasien']); // we only save nama_pasien_form
+        
+        if ($id) {
+            $this->db('bm2_persetujuan_tindakan')->where('id', $id)->save($data);
+        } else {
+            $this->db('bm2_persetujuan_tindakan')->save($data);
+        }
+        
+        $this->notify('success', 'Simpan berhasil');
+        redirect(url([ADMIN, 'update_bmt', 'bm2manage']));
+    }
+
+    public function getBm2hapus()
+    {
+        $id = $_GET['id'] ?? '';
+        if ($id) {
+            $this->db('bm2_persetujuan_tindakan')->where('id', $id)->delete();
+            $this->notify('success', 'Hapus berhasil');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'bm2manage']));
+    }
+
+    public function getBm2cetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('bm2_persetujuan_tindakan')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm2_persetujuan_tindakan.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('bm2_persetujuan_tindakan.id', $id)
+            ->select('bm2_persetujuan_tindakan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+        
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        if (!empty($data['tgl_dokumen'])) {
+            $tgl = explode('-', $data['tgl_dokumen']);
+            if (count($tgl) == 3) {
+                $data['tgl_dokumen_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            }
+        }
+        
+        if (!empty($data['tgl_lahir'])) {
+            $tgl2 = explode('-', $data['tgl_lahir']);
+            if (count($tgl2) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl2[2] . ' ' . $bulan[(int)$tgl2[1]] . ' ' . $tgl2[0];
+            }
+        }
+
+        echo $this->draw('bm2/cetak.html', ['data' => $data]);
+        exit();
+    }
+    public function getBm4manage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/js/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/js/dataTables.bootstrap.min.js'));
+        
+        $query = $this->db('bm4_laporan_pembedahan')
+            ->join('reg_periksa', 'reg_periksa.no_rawat = bm4_laporan_pembedahan.no_rawat')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('bm4_laporan_pembedahan.*, pasien.nm_pasien')
+            ->desc('bm4_laporan_pembedahan.id')
+            ->toArray();
+            
+        return $this->draw('bm4/manage.html', ['list' => $query]);
+    }
+
+    public function getBm4form()
+    {
+        $id = $_GET['id'] ?? '';
+        $data = [];
+        
+        if (isset($_GET['ajax_patient']) && !empty($_GET['no_rawat'])) {
+            $patient = $this->db('reg_periksa')
+                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
+                ->select('pasien.*')
+                ->oneArray();
+                
+            header('Content-Type: application/json');
+            if ($patient) {
+                echo json_encode(['success' => true, 'no_rawat' => $_GET['no_rawat'], 'nama_pasien' => $patient['nm_pasien']]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+            exit();
+        }
+
+        if ($id) {
+            $data = $this->db('bm4_laporan_pembedahan')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm4_laporan_pembedahan.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('bm4_laporan_pembedahan.id', $id)
+                ->select('bm4_laporan_pembedahan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+                ->oneArray();
+        }
+
+        return $this->draw('bm4/form.html', ['data' => $data]);
+    }
+
+    public function postBm4save()
+    {
+        $id = $_POST['id'] ?? '';
+        $data = $_POST;
+        
+        unset($data['id']);
+        unset($data['nm_pasien']);
+        
+        if ($id) {
+            $this->db('bm4_laporan_pembedahan')->where('id', $id)->save($data);
+        } else {
+            $this->db('bm4_laporan_pembedahan')->save($data);
+        }
+        
+        $this->notify('success', 'Simpan berhasil');
+        redirect(url([ADMIN, 'update_bmt', 'bm4manage']));
+    }
+
+    public function getBm4hapus()
+    {
+        $id = $_GET['id'] ?? '';
+        if ($id) {
+            $this->db('bm4_laporan_pembedahan')->where('id', $id)->delete();
+            $this->notify('success', 'Hapus berhasil');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'bm4manage']));
+    }
+
+    public function getBm4cetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('bm4_laporan_pembedahan')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm4_laporan_pembedahan.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('bm4_laporan_pembedahan.id', $id)
+            ->select('bm4_laporan_pembedahan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+        
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        if (!empty($data['tgl_lahir'])) {
+            $tgl2 = explode('-', $data['tgl_lahir']);
+            if (count($tgl2) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl2[2] . ' ' . $bulan[(int)$tgl2[1]] . ' ' . $tgl2[0];
+            }
+        }
+        
+        if (!empty($data['tgl_pembedahan'])) {
+            $tgl = explode('-', $data['tgl_pembedahan']);
+            if (count($tgl) == 3) {
+                $data['tgl_pembedahan_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            }
+        }
+
+        echo $this->draw('bm4/cetak.html', ['data' => $data]);
+        exit();
+    }
+    public function getBmi1manage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/js/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/js/dataTables.bootstrap.min.js'));
+        
+        $query = $this->db('bmi1_persetujuan_anestesi_lokal')
+            ->join('reg_periksa', 'reg_periksa.no_rawat = bmi1_persetujuan_anestesi_lokal.no_rawat')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('bmi1_persetujuan_anestesi_lokal.*, pasien.nm_pasien')
+            ->desc('bmi1_persetujuan_anestesi_lokal.id')
+            ->toArray();
+            
+        return $this->draw('bmi1/manage.html', ['list' => $query]);
+    }
+
+    public function getBmi1form()
+    {
+        $id = $_GET['id'] ?? '';
+        $data = [];
+        
+        if (isset($_GET['ajax_patient']) && !empty($_GET['no_rawat'])) {
+            $patient = $this->db('reg_periksa')
+                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
+                ->select('pasien.*')
+                ->oneArray();
+                
+            header('Content-Type: application/json');
+            if ($patient) {
+                echo json_encode(['success' => true, 'no_rawat' => $_GET['no_rawat'], 'nama_pasien' => $patient['nm_pasien'], 'umur' => $patient['umur'], 'jk' => $patient['jk'], 'alamat' => $patient['alamat']]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+            exit();
+        }
+
+        if ($id) {
+            $data = $this->db('bmi1_persetujuan_anestesi_lokal')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bmi1_persetujuan_anestesi_lokal.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('bmi1_persetujuan_anestesi_lokal.id', $id)
+                ->select('bmi1_persetujuan_anestesi_lokal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk as jk_db, pasien.umur as umur_db')
+                ->oneArray();
+        }
+
+        return $this->draw('bmi1/form.html', ['data' => $data]);
+    }
+
+    public function postBmi1save()
+    {
+        $id = $_POST['id'] ?? '';
+        $data = $_POST;
+        
+        unset($data['id']);
+        unset($data['nm_pasien']);
+        
+        if ($id) {
+            $this->db('bmi1_persetujuan_anestesi_lokal')->where('id', $id)->save($data);
+        } else {
+            $this->db('bmi1_persetujuan_anestesi_lokal')->save($data);
+        }
+        
+        $this->notify('success', 'Simpan berhasil');
+        redirect(url([ADMIN, 'update_bmt', 'bmi1manage']));
+    }
+
+    public function getBmi1hapus()
+    {
+        $id = $_GET['id'] ?? '';
+        if ($id) {
+            $this->db('bmi1_persetujuan_anestesi_lokal')->where('id', $id)->delete();
+            $this->notify('success', 'Hapus berhasil');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'bmi1manage']));
+    }
+
+    public function getBmi1cetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('bmi1_persetujuan_anestesi_lokal')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bmi1_persetujuan_anestesi_lokal.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('bmi1_persetujuan_anestesi_lokal.id', $id)
+            ->select('bmi1_persetujuan_anestesi_lokal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk as jk_db, pasien.tgl_lahir, pasien.umur as umur_db')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+        
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        if (!empty($data['tgl_dokumen'])) {
+            $tgl = explode('-', $data['tgl_dokumen']);
+            if (count($tgl) == 3) {
+                $data['tgl_dokumen_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            }
+        }
+        
+        if (!empty($data['tgl_lahir'])) {
+            $tgl2 = explode('-', $data['tgl_lahir']);
+            if (count($tgl2) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl2[2] . ' ' . $bulan[(int)$tgl2[1]] . ' ' . $tgl2[0];
+            }
+        }
+
+        echo $this->draw('bmi1/cetak.html', ['data' => $data]);
+        exit();
+    }
+    public function getBmi4manage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/js/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/js/dataTables.bootstrap.min.js'));
+        
+        $query = $this->db('bmi4_pra_anestesi_lokal')
+            ->join('reg_periksa', 'reg_periksa.no_rawat = bmi4_pra_anestesi_lokal.no_rawat')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('bmi4_pra_anestesi_lokal.*, pasien.nm_pasien')
+            ->desc('bmi4_pra_anestesi_lokal.id')
+            ->toArray();
+            
+        return $this->draw('bmi4/manage.html', ['list' => $query]);
+    }
+
+    public function getBmi4form()
+    {
+        $id = $_GET['id'] ?? '';
+        $data = [];
+        
+        if (isset($_GET['ajax_patient']) && !empty($_GET['no_rawat'])) {
+            $patient = $this->db('reg_periksa')
+                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
+                ->select('pasien.*')
+                ->oneArray();
+                
+            header('Content-Type: application/json');
+            if ($patient) {
+                echo json_encode(['success' => true, 'no_rawat' => $_GET['no_rawat'], 'nama_pasien' => $patient['nm_pasien']]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+            exit();
+        }
+
+        if ($id) {
+            $data = $this->db('bmi4_pra_anestesi_lokal')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bmi4_pra_anestesi_lokal.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('bmi4_pra_anestesi_lokal.id', $id)
+                ->select('bmi4_pra_anestesi_lokal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+                ->oneArray();
+        }
+
+        return $this->draw('bmi4/form.html', ['data' => $data]);
+    }
+
+    public function postBmi4save()
+    {
+        $id = $_POST['id'] ?? '';
+        $data = $_POST;
+        
+        unset($data['id']);
+        unset($data['nm_pasien']);
+        
+        if ($id) {
+            $this->db('bmi4_pra_anestesi_lokal')->where('id', $id)->save($data);
+        } else {
+            $this->db('bmi4_pra_anestesi_lokal')->save($data);
+        }
+        
+        $this->notify('success', 'Simpan berhasil');
+        redirect(url([ADMIN, 'update_bmt', 'bmi4manage']));
+    }
+
+    public function getBmi4hapus()
+    {
+        $id = $_GET['id'] ?? '';
+        if ($id) {
+            $this->db('bmi4_pra_anestesi_lokal')->where('id', $id)->delete();
+            $this->notify('success', 'Hapus berhasil');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'bmi4manage']));
+    }
+
+    public function getBmi4cetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('bmi4_pra_anestesi_lokal')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bmi4_pra_anestesi_lokal.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('bmi4_pra_anestesi_lokal.id', $id)
+            ->select('bmi4_pra_anestesi_lokal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+        
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        if (!empty($data['tgl_lahir'])) {
+            $tgl2 = explode('-', $data['tgl_lahir']);
+            if (count($tgl2) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl2[2] . ' ' . $bulan[(int)$tgl2[1]] . ' ' . $tgl2[0];
+            }
+        }
+        
+        if (!empty($data['tanggal_tindakan'])) {
+            $tgl = explode('-', $data['tanggal_tindakan']);
+            if (count($tgl) == 3) {
+                $data['tgl_tindakan_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            }
+        }
+
+        echo $this->draw('bmi4/cetak.html', ['data' => $data]);
+        exit();
+    }
 }

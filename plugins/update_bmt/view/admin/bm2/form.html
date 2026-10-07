@@ -1,0 +1,175 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Form Persetujuan / Penolakan Tindakan Medik Pembedahan</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'bm2manage'])?}">Data Persetujuan / Penolakan</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'bm2form'])?}">Tambah Baru</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'update_bmt', 'bm2save'])?}" method="POST">
+                    <input type="hidden" name="id" value="{?=isset($data['id']) ? $data['id'] : ''?}">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No. Rawat (Untuk Mengambil Data Pasien)</label>
+                                <div class="input-group">
+                                    <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset($data['no_rawat']) ? $data['no_rawat'] : ''?}" required>
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-default" type="button" id="btn-cari-pasien"><i class="fa fa-search"></i> Cari</button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tipe Formulir</label>
+                                <select name="tipe_form" class="form-control" id="tipe_form">
+                                    <option value="PERSETUJUAN" {if: isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN'}selected{/if}>Pernyataan PERSETUJUAN Tindakan</option>
+                                    <option value="PENOLAKAN" {if: isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN'}selected{/if}>Pernyataan PENOLAKAN Tindakan</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <h4>Yang bertanda tangan di bawah ini saya: (Pihak Penanggung Jawab / Pasien)</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama</label>
+                                <input type="text" name="nama_pj" class="form-control" value="{?=isset($data['nama_pj']) ? $data['nama_pj'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Umur / Jenis Kelamin</label>
+                                <div class="row">
+                                    <div class="col-xs-6"><input type="text" name="umur_pj" class="form-control" placeholder="Umur" value="{?=isset($data['umur_pj']) ? $data['umur_pj'] : ''?}"></div>
+                                    <div class="col-xs-6">
+                                        <select name="jk_pj" class="form-control">
+                                            <option value="">- Pilih JK -</option>
+                                            <option value="Laki-laki" {if: isset($data['jk_pj']) && $data['jk_pj'] == 'Laki-laki'}selected{/if}>Laki-laki</option>
+                                            <option value="Perempuan" {if: isset($data['jk_pj']) && $data['jk_pj'] == 'Perempuan'}selected{/if}>Perempuan</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Alamat</label>
+                                <textarea name="alamat_pj" class="form-control" rows="2">{?=isset($data['alamat_pj']) ? $data['alamat_pj'] : ''?}</textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Selaku: (Hubungan dengan pasien)</label>
+                                <select name="hubungan" class="form-control">
+                                    <option value="Pasien" {if: isset($data['hubungan']) && $data['hubungan'] == 'Pasien'}selected{/if}>Pasien (Diri Sendiri)</option>
+                                    <option value="Ayah" {if: isset($data['hubungan']) && $data['hubungan'] == 'Ayah'}selected{/if}>Ayah</option>
+                                    <option value="Ibu" {if: isset($data['hubungan']) && $data['hubungan'] == 'Ibu'}selected{/if}>Ibu</option>
+                                    <option value="Anak" {if: isset($data['hubungan']) && $data['hubungan'] == 'Anak'}selected{/if}>Anak</option>
+                                    <option value="Suami" {if: isset($data['hubungan']) && $data['hubungan'] == 'Suami'}selected{/if}>Suami</option>
+                                    <option value="Istri" {if: isset($data['hubungan']) && $data['hubungan'] == 'Istri'}selected{/if}>Istri</option>
+                                    <option value="Keluarga Lain" {if: isset($data['hubungan']) && $data['hubungan'] == 'Keluarga Lain'}selected{/if}>Keluarga Lainnya</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group" id="div_alasan" style="{if: !isset($data['tipe_form']) || $data['tipe_form'] == 'PERSETUJUAN'}display:none;{/if}">
+                                <label class="text-danger">Alasan Penolakan</label>
+                                <textarea name="alasan_penolakan" class="form-control" rows="2" placeholder="Isi jika Tipe Formulir = PENOLAKAN">{?=isset($data['alasan_penolakan']) ? $data['alasan_penolakan'] : ''?}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <h4>Dengan ini menyatakan PERSETUJUAN/PENOLAKAN untuk dilakukan tindakan medik/pembedahan terhadap pasien:</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Pasien</label>
+                                <input type="text" name="nama_pasien_form" id="nama_pasien_form" class="form-control" value="{?=isset($data['nama_pasien_form']) ? $data['nama_pasien_form'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Umur / Jenis Kelamin Pasien</label>
+                                <div class="row">
+                                    <div class="col-xs-6"><input type="text" name="umur_pasien_form" id="umur_pasien_form" class="form-control" placeholder="Umur" value="{?=isset($data['umur_pasien_form']) ? $data['umur_pasien_form'] : ''?}"></div>
+                                    <div class="col-xs-6">
+                                        <select name="jk_pasien_form" id="jk_pasien_form" class="form-control">
+                                            <option value="">- Pilih JK -</option>
+                                            <option value="Laki-laki" {if: isset($data['jk_pasien_form']) && $data['jk_pasien_form'] == 'Laki-laki'}selected{/if}>Laki-laki</option>
+                                            <option value="Perempuan" {if: isset($data['jk_pasien_form']) && $data['jk_pasien_form'] == 'Perempuan'}selected{/if}>Perempuan</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Alamat Pasien</label>
+                                <textarea name="alamat_pasien_form" id="alamat_pasien_form" class="form-control" rows="2">{?=isset($data['alamat_pasien_form']) ? $data['alamat_pasien_form'] : ''?}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tanggal dan Waktu Pernyataan</label>
+                                <div class="row">
+                                    <div class="col-xs-6"><input type="date" name="tgl_dokumen" class="form-control" value="{?=isset($data['tgl_dokumen']) ? $data['tgl_dokumen'] : date('Y-m-d')?}"></div>
+                                    <div class="col-xs-6"><input type="time" name="waktu_dokumen" class="form-control" value="{?=isset($data['waktu_dokumen']) ? $data['waktu_dokumen'] : ''?}"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Pihak Yang Tanda Tangan (Opsional, untuk dicetak di bawah garis TTD)</label>
+                                <div class="row">
+                                    <div class="col-xs-4"><input type="text" name="ttd_menyatakan" class="form-control" placeholder="Yang Menyatakan" value="{?=isset($data['ttd_menyatakan']) ? $data['ttd_menyatakan'] : ''?}"></div>
+                                    <div class="col-xs-4"><input type="text" name="ttd_saksi" class="form-control" placeholder="Saksi" value="{?=isset($data['ttd_saksi']) ? $data['ttd_saksi'] : ''?}"></div>
+                                    <div class="col-xs-4"><input type="text" name="ttd_pihak_rs" class="form-control" placeholder="Pihak Rumah Sakit" value="{?=isset($data['ttd_pihak_rs']) ? $data['ttd_pihak_rs'] : ''?}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'bm2manage'])?}" class="btn btn-default">Batal</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$('#tipe_form').change(function(){
+    if($(this).val() == 'PENOLAKAN'){
+        $('#div_alasan').show();
+    } else {
+        $('#div_alasan').hide();
+    }
+});
+
+$('#btn-cari-pasien').click(function(){
+    var no_rawat = $('#no_rawat').val();
+    if(no_rawat) {
+        $.ajax({
+            url: '{?=url([ADMIN, 'update_bmt', 'bm2form'])?}',
+            type: 'GET',
+            data: { ajax_patient: 1, no_rawat: no_rawat },
+            success: function(res) {
+                if(res.success) {
+                    $('#nama_pasien_form').val(res.nama_pasien);
+                    $('#umur_pasien_form').val(res.umur);
+                    $('#jk_pasien_form').val(res.jk == 'L' ? 'Laki-laki' : 'Perempuan');
+                    $('#alamat_pasien_form').val(res.alamat);
+                } else {
+                    alert('Data pasien tidak ditemukan untuk No. Rawat tersebut!');
+                }
+            }
+        });
+    }
+});
+</script>

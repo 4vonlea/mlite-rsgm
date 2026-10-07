@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Cetak BM2 - Persetujuan / Penolakan Tindakan</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 11px; color: #000; margin: 0; padding: 0; }
+        .page { width: 100%; max-width: 800px; margin: auto; border: 1px solid #000; box-sizing: border-box; }
+        
+        .box-title { text-align: center; font-weight: bold; border-bottom: 1px solid #000; border-top: 1px solid #000; padding: 5px; font-size: 14px; background-color: #f9f9f9; }
+        
+        .checkbox-box { display: inline-block; width: 10px; height: 10px; border: 1px solid #000; margin-right: 3px; vertical-align: middle; text-align: center; line-height: 10px; font-size: 10px;}
+        .checked::after { content: '✓'; }
+        
+        .dotted { border-bottom: 1px dotted #000; display: inline-block; }
+        
+        .ttd-box { text-align: center; width: 32%; display: inline-block; margin-top: 10px; vertical-align: top; }
+        .ttd-box p { margin-bottom: 40px; }
+        
+        .section-box { padding: 10px; }
+    </style>
+</head>
+<body onload="window.print()">
+    <div class="page">
+        <!-- Header -->
+        <table style="width: 100%; padding-bottom: 5px;">
+            <tr>
+                <td style="width: 60%; padding: 0; vertical-align: middle;">
+                    <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat" style="width: 100%; height: auto; max-height: 80px; object-fit: contain;">
+                </td>
+                <td style="width: 40%; border-left: 2px solid #000; padding-left: 10px; vertical-align: middle;">
+                    <table style="width: 100%; font-size: 11px;">
+                        <tr><td width="70"><b>No. RM</b></td><td width="10">:</td><td>{?=isset($data['no_rkm_medis']) ? $data['no_rkm_medis'] : ''?}</td></tr>
+                        <tr><td><b>Nama Pasien</b></td><td>:</td><td>{?=isset($data['nm_pasien']) ? $data['nm_pasien'] : ''?} <span style="float:right;">{?=isset($data['jk']) && $data['jk'] == 'L' ? 'L' : 'P'?}</span></td></tr>
+                        <tr><td><b>Tanggal Lahir</b></td><td>:</td><td>{?=isset($data['tgl_lahir_indo']) ? $data['tgl_lahir_indo'] : ''?}</td></tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- SECTION 1: PERSETUJUAN -->
+        <div class="box-title">PERSETUJUAN TINDAKAN MEDIK / PEMBEDAHAN</div>
+        <div class="section-box">
+            Yang bertanda tangan di bawah ini saya:<br><br>
+            <table style="width: 100%; font-size: 11px; margin-bottom:10px;">
+                <tr><td width="130">Nama</td><td width="10">:</td><td class="dotted" style="width: 100%;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN' ? $data['nama_pj'] : '&nbsp;'?}</td></tr>
+                <tr>
+                    <td>Umur / Jenis kelamin</td><td>:</td>
+                    <td>
+                        <span class="dotted" style="width: 250px;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN' ? $data['umur_pj'] : '&nbsp;'?}</span>
+                        <span class="checkbox-box {if: isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN' && isset($data['jk_pj']) && $data['jk_pj'] == 'Laki-laki'}checked{/if}"></span> Laki-laki &nbsp;&nbsp;&nbsp;&nbsp;
+                        <span class="checkbox-box {if: isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN' && isset($data['jk_pj']) && $data['jk_pj'] == 'Perempuan'}checked{/if}"></span> Perempuan
+                    </td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: top;">Alamat</td><td style="vertical-align: top;">:</td>
+                    <td class="dotted" style="width: 100%; line-height:1.5;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN' ? nl2br($data['alamat_pj']) : '&nbsp;<br>&nbsp;'?}</td>
+                </tr>
+            </table>
+            
+            Dengan Selaku Pasien / Ayah / Ibu / Anak / Suami / Istri **) dengan ini menyatakan <b>PERSETUJUAN</b> untuk dilakukan tindakan kedokteran terhadap pasien di Rumah Sakit Gigi Mulut Gusti Hasan Aman<br><br>
+            
+            <table style="width: 100%; font-size: 11px; margin-bottom:10px;">
+                <tr><td width="130">Nama</td><td width="10">:</td><td class="dotted" style="width: 100%;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN' ? $data['nama_pasien_form'] : '&nbsp;'?}</td></tr>
+                <tr>
+                    <td>Umur / Jenis kelamin</td><td>:</td>
+                    <td>
+                        <span class="dotted" style="width: 250px;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN' ? $data['umur_pasien_form'] : '&nbsp;'?}</span>
+                        <span class="checkbox-box {if: isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN' && isset($data['jk_pasien_form']) && $data['jk_pasien_form'] == 'Laki-laki'}checked{/if}"></span> Laki-laki &nbsp;&nbsp;&nbsp;&nbsp;
+                        <span class="checkbox-box {if: isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN' && isset($data['jk_pasien_form']) && $data['jk_pasien_form'] == 'Perempuan'}checked{/if}"></span> Perempuan
+                    </td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: top;">Alamat</td><td style="vertical-align: top;">:</td>
+                    <td class="dotted" style="width: 100%; line-height:1.5;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN' ? nl2br($data['alamat_pasien_form']) : '&nbsp;<br>&nbsp;'?}</td>
+                </tr>
+            </table>
+            
+            <p style="text-align: justify;">
+                Saya telah mengerti dan memahami tentang jenis tindakan beserta manfaat, resiko dan komplikasi yang akan terjadi. Saya menyadari bahwa ilmu kedokteran bukanlah ilmu pasti, maka keberhasilan tindakan kedokteran bukanlah keniscayaan, melainkan sangat bergantung pada izin Tuhan Yang Maha Esa
+            </p>
+            
+            <div style="text-align: right; margin-top: 20px;">
+                Banjarmasin, <span class="dotted" style="width:200px;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN' ? (isset($data['tgl_dokumen_indo']) ? $data['tgl_dokumen_indo'] : '') : '&nbsp;'?}</span> Pukul: <span class="dotted" style="width:80px;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN' ? $data['waktu_dokumen'] : '&nbsp;'?}</span> WITA
+            </div>
+            
+            <div style="width: 100%; text-align: center; margin-top: 20px;">
+                <div class="ttd-box">
+                    Yang Menyatakan<br><br><br><br><br>
+                    (<span class="dotted" style="width:180px;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN' ? $data['ttd_menyatakan'] : '&nbsp;'?}</span>)<br>
+                    <small>Tanda tangan dan nama lengkap</small>
+                </div>
+                <div class="ttd-box">
+                    Saksi<br><br><br><br><br>
+                    (<span class="dotted" style="width:180px;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN' ? $data['ttd_saksi'] : '&nbsp;'?}</span>)<br>
+                    <small>Tanda tangan dan nama lengkap</small>
+                </div>
+                <div class="ttd-box">
+                    Pihak Rumah Sakit<br><br><br><br><br>
+                    (<span class="dotted" style="width:180px;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PERSETUJUAN' ? $data['ttd_pihak_rs'] : '&nbsp;'?}</span>)<br>
+                    <small>Tanda tangan dan nama lengkap</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SECTION 2: PENOLAKAN -->
+        <div class="box-title">PENOLAKAN TINDAKAN MEDIK / PEMBEDAHAN</div>
+        <div class="section-box">
+            Yang bertanda tangan di bawah ini saya:<br><br>
+            <table style="width: 100%; font-size: 11px; margin-bottom:10px;">
+                <tr><td width="130">Nama</td><td width="10">:</td><td class="dotted" style="width: 100%;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' ? $data['nama_pj'] : '&nbsp;'?}</td></tr>
+                <tr>
+                    <td>Umur / Jenis kelamin</td><td>:</td>
+                    <td>
+                        <span class="dotted" style="width: 250px;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' ? $data['umur_pj'] : '&nbsp;'?}</span>
+                        <span class="checkbox-box {if: isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' && isset($data['jk_pj']) && $data['jk_pj'] == 'Laki-laki'}checked{/if}"></span> Laki-laki &nbsp;&nbsp;&nbsp;&nbsp;
+                        <span class="checkbox-box {if: isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' && isset($data['jk_pj']) && $data['jk_pj'] == 'Perempuan'}checked{/if}"></span> Perempuan
+                    </td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: top;">Alamat</td><td style="vertical-align: top;">:</td>
+                    <td class="dotted" style="width: 100%; line-height:1.5;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' ? nl2br($data['alamat_pj']) : '&nbsp;<br>&nbsp;'?}</td>
+                </tr>
+            </table>
+            
+            Selaku Pasien / Ayah / Ibu / Anak / Suami / Istri **) dengan ini menyatakan <b>PENOLAKAN</b> untuk dilakukan tindakan <b>Medik / Pembedahan</b> dengan alasan <span class="dotted" style="width:400px;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' ? $data['alasan_penolakan'] : '&nbsp;'?}</span><br>
+            terhadap pasien di Rumah Sakit Gigi Mulut Gusti Hasan Aman<br><br>
+            
+            <table style="width: 100%; font-size: 11px; margin-bottom:10px;">
+                <tr><td width="130">Nama</td><td width="10">:</td><td class="dotted" style="width: 100%;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' ? $data['nama_pasien_form'] : '&nbsp;'?}</td></tr>
+                <tr>
+                    <td>Umur / Jenis kelamin</td><td>:</td>
+                    <td>
+                        <span class="dotted" style="width: 250px;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' ? $data['umur_pasien_form'] : '&nbsp;'?}</span>
+                        <span class="checkbox-box {if: isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' && isset($data['jk_pasien_form']) && $data['jk_pasien_form'] == 'Laki-laki'}checked{/if}"></span> Laki-laki &nbsp;&nbsp;&nbsp;&nbsp;
+                        <span class="checkbox-box {if: isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' && isset($data['jk_pasien_form']) && $data['jk_pasien_form'] == 'Perempuan'}checked{/if}"></span> Perempuan
+                    </td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: top;">Alamat</td><td style="vertical-align: top;">:</td>
+                    <td class="dotted" style="width: 100%; line-height:1.5;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' ? nl2br($data['alamat_pasien_form']) : '&nbsp;<br>&nbsp;'?}</td>
+                </tr>
+            </table>
+            
+            <p style="text-align: justify;">
+                Saya telah dijelaskan dan memahami tentang jenis tindakan tersebut beserta manfaat, resiko, komplikasi dan kemungkinan akibat bila tidak dilaksanakannya tindakan. Saya bertanggung jawab secara penuh segala akibat yang timbul sebagai akibat tidak dilakukannya Tindakan medik / Pembedahan tersebut
+            </p>
+            
+            <div style="text-align: right; margin-top: 20px;">
+                Banjarmasin, <span class="dotted" style="width:200px;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' ? (isset($data['tgl_dokumen_indo']) ? $data['tgl_dokumen_indo'] : '') : '&nbsp;'?}</span> Pukul: <span class="dotted" style="width:80px;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' ? $data['waktu_dokumen'] : '&nbsp;'?}</span> WITA
+            </div>
+            
+            <div style="width: 100%; text-align: center; margin-top: 20px;">
+                <div class="ttd-box">
+                    Yang Menyatakan<br><br><br><br><br>
+                    (<span class="dotted" style="width:180px;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' ? $data['ttd_menyatakan'] : '&nbsp;'?}</span>)<br>
+                    <small>Tanda tangan dan nama lengkap</small>
+                </div>
+                <div class="ttd-box">
+                    Saksi<br><br><br><br><br>
+                    (<span class="dotted" style="width:180px;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' ? $data['ttd_saksi'] : '&nbsp;'?}</span>)<br>
+                    <small>Tanda tangan dan nama lengkap</small>
+                </div>
+                <div class="ttd-box">
+                    Pihak Rumah Sakit<br><br><br><br><br>
+                    (<span class="dotted" style="width:180px;">{?=isset($data['tipe_form']) && $data['tipe_form'] == 'PENOLAKAN' ? $data['ttd_pihak_rs'] : '&nbsp;'?}</span>)<br>
+                    <small>Tanda tangan dan nama lengkap</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

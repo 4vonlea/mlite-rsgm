@@ -1,0 +1,352 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Form Pemeriksaan Pra Anestesi Lokal</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'bmi4manage'])?}">Data Pemeriksaan</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'bmi4form'])?}">Tambah Baru</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'update_bmt', 'bmi4save'])?}" method="POST">
+                    <input type="hidden" name="id" value="{?=isset($data['id']) ? $data['id'] : ''?}">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No. Rawat</label>
+                                <div class="input-group">
+                                    <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset($data['no_rawat']) ? $data['no_rawat'] : ''?}" required>
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-default" type="button" id="btn-cari-pasien"><i class="fa fa-search"></i> Cari</button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Pasien</label>
+                                <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" value="{?=isset($data['nm_pasien']) ? $data['nm_pasien'] : ''?}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Diagnosis</label>
+                                <input type="text" name="diagnosis" class="form-control" value="{?=isset($data['diagnosis']) ? $data['diagnosis'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Rencana Tindakan</label>
+                                <input type="text" name="rencana_tindakan" class="form-control" value="{?=isset($data['rencana_tindakan']) ? $data['rencana_tindakan'] : ''?}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Hari Tindakan</label>
+                                <input type="text" name="hari_tindakan" class="form-control" value="{?=isset($data['hari_tindakan']) ? $data['hari_tindakan'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Tanggal Tindakan</label>
+                                <input type="date" name="tanggal_tindakan" class="form-control" value="{?=isset($data['tanggal_tindakan']) ? $data['tanggal_tindakan'] : date('Y-m-d')?}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Riwayat Operasi</label><br>
+                                <label class="radio-inline"><input type="radio" name="riwayat_operasi" value="Tidak" {if: isset($data['riwayat_operasi']) && $data['riwayat_operasi'] == 'Tidak'}checked{/if}> Tidak</label>
+                                <label class="radio-inline"><input type="radio" name="riwayat_operasi" value="Ya" {if: isset($data['riwayat_operasi']) && $data['riwayat_operasi'] == 'Ya'}checked{/if}> Ya</label>
+                            </div>
+                            <div class="form-group toggle-riwayat" style="display:none;">
+                                <label>Bila Ya,</label>
+                                <input type="text" name="riwayat_operasi_ket" class="form-control" value="{?=isset($data['riwayat_operasi_ket']) ? $data['riwayat_operasi_ket'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Penyakit yang pernah diderita</label>
+                                <textarea name="penyakit_dahulu" class="form-control" rows="2">{?=isset($data['penyakit_dahulu']) ? $data['penyakit_dahulu'] : ''?}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Asma</label><br>
+                                <label class="radio-inline"><input type="radio" name="asma" value="Tidak" {if: isset($data['asma']) && $data['asma'] == 'Tidak'}checked{/if}> Tidak</label>
+                                <label class="radio-inline"><input type="radio" name="asma" value="Ya" {if: isset($data['asma']) && $data['asma'] == 'Ya'}checked{/if}> Ya</label>
+                            </div>
+                            <div class="form-group toggle-asma" style="display:none;">
+                                <label>Serangan Terakhir</label>
+                                <input type="text" name="asma_serangan_terakhir" class="form-control" value="{?=isset($data['asma_serangan_terakhir']) ? $data['asma_serangan_terakhir'] : ''?}">
+                            </div>
+                            <div class="form-group toggle-asma" style="display:none;">
+                                <label>Pengobatan Asma</label>
+                                <input type="text" name="asma_pengobatan" class="form-control" value="{?=isset($data['asma_pengobatan']) ? $data['asma_pengobatan'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Alergi</label><br>
+                                <label class="radio-inline"><input type="radio" name="alergi" value="Tidak" {if: isset($data['alergi']) && $data['alergi'] == 'Tidak'}checked{/if}> Tidak</label>
+                                <label class="radio-inline"><input type="radio" name="alergi" value="Ya" {if: isset($data['alergi']) && $data['alergi'] == 'Ya'}checked{/if}> Ya</label>
+                            </div>
+                            <div class="form-group toggle-alergi" style="display:none;">
+                                <label>Alergi Obat</label>
+                                <input type="text" name="alergi_obat" class="form-control" value="{?=isset($data['alergi_obat']) ? $data['alergi_obat'] : ''?}">
+                            </div>
+                            <div class="form-group toggle-alergi" style="display:none;">
+                                <label>Alergi Makanan</label>
+                                <input type="text" name="alergi_makanan" class="form-control" value="{?=isset($data['alergi_makanan']) ? $data['alergi_makanan'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Angina</label><br>
+                                <label class="radio-inline"><input type="radio" name="angina" value="Ya" {if: isset($data['angina']) && $data['angina'] == 'Ya'}checked{/if}> Ya</label>
+                                <label class="radio-inline"><input type="radio" name="angina" value="Tidak" {if: isset($data['angina']) && $data['angina'] == 'Tidak'}checked{/if}> Tidak</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Kejang</label><br>
+                                <label class="radio-inline"><input type="radio" name="kejang" value="Ya" {if: isset($data['kejang']) && $data['kejang'] == 'Ya'}checked{/if}> Ya</label>
+                                <label class="radio-inline"><input type="radio" name="kejang" value="Tidak" {if: isset($data['kejang']) && $data['kejang'] == 'Tidak'}checked{/if}> Tidak</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Hipertensi</label><br>
+                                <label class="radio-inline"><input type="radio" name="hipertensi" value="Tidak" {if: isset($data['hipertensi']) && $data['hipertensi'] == 'Tidak'}checked{/if}> Tidak</label>
+                                <label class="radio-inline"><input type="radio" name="hipertensi" value="Ya" {if: isset($data['hipertensi']) && $data['hipertensi'] == 'Ya'}checked{/if}> Ya</label>
+                            </div>
+                            <div class="form-group toggle-hipertensi" style="display:none;">
+                                <label>Bila Ya,</label>
+                                <input type="text" name="hipertensi_ket" class="form-control" value="{?=isset($data['hipertensi_ket']) ? $data['hipertensi_ket'] : ''?}">
+                            </div>
+                            <div class="form-group toggle-hipertensi" style="display:none;">
+                                <label>Pengobatan Hipertensi</label>
+                                <input type="text" name="pengobatan_hipertensi" class="form-control" value="{?=isset($data['pengobatan_hipertensi']) ? $data['pengobatan_hipertensi'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Merokok</label><br>
+                                <label class="radio-inline"><input type="radio" name="merokok" value="Tidak" {if: isset($data['merokok']) && $data['merokok'] == 'Tidak'}checked{/if}> Tidak</label>
+                                <label class="radio-inline"><input type="radio" name="merokok" value="Ya" {if: isset($data['merokok']) && $data['merokok'] == 'Ya'}checked{/if}> Ya</label>
+                            </div>
+                            <div class="form-group toggle-merokok" style="display:none;">
+                                <label>Terakhir merokok</label>
+                                <input type="text" name="terakhir_merokok" class="form-control" value="{?=isset($data['terakhir_merokok']) ? $data['terakhir_merokok'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Gastritis</label><br>
+                                <label class="radio-inline"><input type="radio" name="gastritis" value="Tidak" {if: isset($data['gastritis']) && $data['gastritis'] == 'Tidak'}checked{/if}> Tidak</label>
+                                <label class="radio-inline"><input type="radio" name="gastritis" value="Ya" {if: isset($data['gastritis']) && $data['gastritis'] == 'Ya'}checked{/if}> Ya</label>
+                            </div>
+                            <div class="form-group toggle-gastritis" style="display:none;">
+                                <label>Bila Ya,</label>
+                                <input type="text" name="gastritis_ket" class="form-control" value="{?=isset($data['gastritis_ket']) ? $data['gastritis_ket'] : ''?}">
+                            </div>
+                            <div class="form-group toggle-gastritis" style="display:none;">
+                                <label>Pengobatan Gastritis</label>
+                                <input type="text" name="gastritis_pengobatan" class="form-control" value="{?=isset($data['gastritis_pengobatan']) ? $data['gastritis_pengobatan'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Diabetes</label><br>
+                                <label class="radio-inline"><input type="radio" name="diabetes" value="Ya" {if: isset($data['diabetes']) && $data['diabetes'] == 'Ya'}checked{/if}> Ya</label>
+                                <label class="radio-inline"><input type="radio" name="diabetes" value="Tidak" {if: isset($data['diabetes']) && $data['diabetes'] == 'Tidak'}checked{/if}> Tidak</label>
+                            </div>
+                            <div class="form-group toggle-diabetes" style="display:none;">
+                                <label>Bila ya, pengobatan</label>
+                                <input type="text" name="pengobatan_diabetes" class="form-control" value="{?=isset($data['pengobatan_diabetes']) ? $data['pengobatan_diabetes'] : ''?}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Lain-lain Penyakit</label>
+                                <textarea name="lain_lain_penyakit" class="form-control" rows="4">{?=isset($data['lain_lain_penyakit']) ? $data['lain_lain_penyakit'] : ''?}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Obat yang sedang dikonsumsi</label>
+                                <textarea name="obat_dikonsumsi" class="form-control" rows="4">{?=isset($data['obat_dikonsumsi']) ? $data['obat_dikonsumsi'] : ''?}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Kesadaran</label>
+                                <input type="text" name="kesadaran" class="form-control" value="{?=isset($data['kesadaran']) ? $data['kesadaran'] : ''?}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Skor Nyeri (0-10)</label>
+                                <div style="display:flex; justify-content:space-between; max-width:400px; margin-bottom:10px;">
+                                    <label class="radio-inline"><input type="radio" name="skor_nyeri" value="0" {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '0'}checked{/if}> 0</label>
+                                    <label class="radio-inline"><input type="radio" name="skor_nyeri" value="1" {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '1'}checked{/if}> 1</label>
+                                    <label class="radio-inline"><input type="radio" name="skor_nyeri" value="2" {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '2'}checked{/if}> 2</label>
+                                    <label class="radio-inline"><input type="radio" name="skor_nyeri" value="3" {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '3'}checked{/if}> 3</label>
+                                    <label class="radio-inline"><input type="radio" name="skor_nyeri" value="4" {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '4'}checked{/if}> 4</label>
+                                    <label class="radio-inline"><input type="radio" name="skor_nyeri" value="5" {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '5'}checked{/if}> 5</label>
+                                    <label class="radio-inline"><input type="radio" name="skor_nyeri" value="6" {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '6'}checked{/if}> 6</label>
+                                    <label class="radio-inline"><input type="radio" name="skor_nyeri" value="7" {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '7'}checked{/if}> 7</label>
+                                    <label class="radio-inline"><input type="radio" name="skor_nyeri" value="8" {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '8'}checked{/if}> 8</label>
+                                    <label class="radio-inline"><input type="radio" name="skor_nyeri" value="9" {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '9'}checked{/if}> 9</label>
+                                    <label class="radio-inline"><input type="radio" name="skor_nyeri" value="10" {if: isset($data['skor_nyeri']) && $data['skor_nyeri'] == '10'}checked{/if}> 10</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Tingkat Nyeri</label><br>
+                                <label class="radio-inline"><input type="radio" name="tingkat_nyeri" value="Tdk nyeri" {if: isset($data['tingkat_nyeri']) && $data['tingkat_nyeri'] == 'Tdk nyeri'}checked{/if}> Tdk nyeri</label>
+                                <label class="radio-inline"><input type="radio" name="tingkat_nyeri" value="nyeri ringan" {if: isset($data['tingkat_nyeri']) && $data['tingkat_nyeri'] == 'nyeri ringan'}checked{/if}> nyeri ringan</label>
+                                <label class="radio-inline"><input type="radio" name="tingkat_nyeri" value="nyeri sedang" {if: isset($data['tingkat_nyeri']) && $data['tingkat_nyeri'] == 'nyeri sedang'}checked{/if}> nyeri sedang</label>
+                                <label class="radio-inline"><input type="radio" name="tingkat_nyeri" value="nyeri berat" {if: isset($data['tingkat_nyeri']) && $data['tingkat_nyeri'] == 'nyeri berat'}checked{/if}> nyeri berat</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tanda vital</label>
+                                <div class="row">
+                                    <div class="col-xs-6"><input type="text" name="tanda_vital_td" class="form-control" placeholder="TD" value="{?=isset($data['tanda_vital_td']) ? $data['tanda_vital_td'] : ''?}"></div>
+                                    <div class="col-xs-6"><input type="text" name="tanda_vital_n" class="form-control" placeholder="N" value="{?=isset($data['tanda_vital_n']) ? $data['tanda_vital_n'] : ''?}"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Buka Mulut</label><br>
+                                <label class="radio-inline"><input type="radio" name="buka_mulut" value=">3 jari" {if: isset($data['buka_mulut']) && $data['buka_mulut'] == '>3 jari'}checked{/if}> &gt;3 jari</label>
+                                <label class="radio-inline"><input type="radio" name="buka_mulut" value="<3 jari" {if: isset($data['buka_mulut']) && $data['buka_mulut'] == '<3 jari'}checked{/if}> &lt;3 jari</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Gigi</label><br>
+                                <label class="radio-inline"><input type="radio" name="gigi" value="komplit" {if: isset($data['gigi']) && $data['gigi'] == 'komplit'}checked{/if}> komplit</label>
+                                <label class="radio-inline"><input type="radio" name="gigi" value="Goyang" {if: isset($data['gigi']) && $data['gigi'] == 'Goyang'}checked{/if}> Goyang</label>
+                                <label class="radio-inline"><input type="radio" name="gigi" value="Gigi Palsu" {if: isset($data['gigi']) && $data['gigi'] == 'Gigi Palsu'}checked{/if}> Gigi Palsu</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Leher</label><br>
+                                <label class="radio-inline"><input type="radio" name="leher" value="mobile" {if: isset($data['leher']) && $data['leher'] == 'mobile'}checked{/if}> mobile</label>
+                                <label class="radio-inline"><input type="radio" name="leher" value="Terbatas" {if: isset($data['leher']) && $data['leher'] == 'Terbatas'}checked{/if}> Terbatas</label>
+                                <label class="radio-inline"><input type="radio" name="leher" value="Trauma" {if: isset($data['leher']) && $data['leher'] == 'Trauma'}checked{/if}> Trauma</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Paru</label>
+                                <input type="text" name="paru" class="form-control" value="{?=isset($data['paru']) ? $data['paru'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Jantung</label>
+                                <input type="text" name="jantung" class="form-control" value="{?=isset($data['jantung']) ? $data['jantung'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Abdomen</label>
+                                <input type="text" name="abdomen" class="form-control" value="{?=isset($data['abdomen']) ? $data['abdomen'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Ekstremitas</label>
+                                <input type="text" name="ekstremitas" class="form-control" value="{?=isset($data['ekstremitas']) ? $data['ekstremitas'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Lain-lain Fisik</label>
+                                <input type="text" name="lain_lain_fisik" class="form-control" value="{?=isset($data['lain_lain_fisik']) ? $data['lain_lain_fisik'] : ''?}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Pemeriksaan Penunjang - Laboratorium</label>
+                                <input type="text" name="lab" class="form-control" value="{?=isset($data['lab']) ? $data['lab'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Pemeriksaan Penunjang - X-RAY</label>
+                                <input type="text" name="xray" class="form-control" value="{?=isset($data['xray']) ? $data['xray'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Pemeriksaan Penunjang - Lain-lain</label>
+                                <input type="text" name="lain_lain_penunjang" class="form-control" value="{?=isset($data['lain_lain_penunjang']) ? $data['lain_lain_penunjang'] : ''?}">
+                            </div>
+                            
+                            <hr>
+                            <div class="form-group">
+                                <label>Hasil konsultasi bagian lain</label>
+                                <textarea name="hasil_konsultasi" class="form-control" rows="2">{?=isset($data['hasil_konsultasi']) ? $data['hasil_konsultasi'] : ''?}</textarea>
+                            </div>
+                            
+                            <hr>
+                            <div class="form-group">
+                                <label>Preoperatif - Premedikasi</label>
+                                <input type="text" name="premedikasi" class="form-control" value="{?=isset($data['premedikasi']) ? $data['premedikasi'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Preoperatif - Lain-lain</label>
+                                <input type="text" name="preoperatif_lain" class="form-control" value="{?=isset($data['preoperatif_lain']) ? $data['preoperatif_lain'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Intraoperatif - Jenis Anestesi Lokal</label>
+                                <input type="text" name="jenis_anestesi_lokal" class="form-control" value="{?=isset($data['jenis_anestesi_lokal']) ? $data['jenis_anestesi_lokal'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Postoperatif - Rencana penanganan nyeri</label>
+                                <input type="text" name="rencana_penanganan_nyeri" class="form-control" value="{?=isset($data['rencana_penanganan_nyeri']) ? $data['rencana_penanganan_nyeri'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Postoperatif - Perawatan pasca operatif</label>
+                                <input type="text" name="perawatan_pasca_operatif" class="form-control" value="{?=isset($data['perawatan_pasca_operatif']) ? $data['perawatan_pasca_operatif'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Surat ijin anestesi</label><br>
+                                <label class="radio-inline"><input type="radio" name="surat_ijin_anestesi" value="Ya" {if: isset($data['surat_ijin_anestesi']) && $data['surat_ijin_anestesi'] == 'Ya'}checked{/if}> Ya</label>
+                                <label class="radio-inline"><input type="radio" name="surat_ijin_anestesi" value="Tidak" {if: isset($data['surat_ijin_anestesi']) && $data['surat_ijin_anestesi'] == 'Tidak'}checked{/if}> Tidak</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Edukasi</label><br>
+                                <label class="radio-inline"><input type="radio" name="edukasi" value="Ya" {if: isset($data['edukasi']) && $data['edukasi'] == 'Ya'}checked{/if}> Ya</label>
+                                <label class="radio-inline"><input type="radio" name="edukasi" value="Tidak" {if: isset($data['edukasi']) && $data['edukasi'] == 'Tidak'}checked{/if}> Tidak</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Tanda Tangan DPJP (Opsional / Nama Cetak)</label>
+                                <input type="text" name="ttd_dpjp" class="form-control" value="{?=isset($data['ttd_dpjp']) ? $data['ttd_dpjp'] : ''?}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'bmi4manage'])?}" class="btn btn-default">Batal</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$('#btn-cari-pasien').click(function(){
+    var no_rawat = $('#no_rawat').val();
+    if(no_rawat) {
+        $.ajax({
+            url: '{?=url([ADMIN, 'update_bmt', 'bmi4form'])?}',
+            type: 'GET',
+            data: { ajax_patient: 1, no_rawat: no_rawat },
+            success: function(res) {
+                if(res.success) {
+                    $('#nm_pasien').val(res.nama_pasien);
+                } else {
+                    alert('Data pasien tidak ditemukan untuk No. Rawat tersebut!');
+                }
+            }
+        });
+    }
+});
+    function toggleGroups() {
+        if ($('input[name="riwayat_operasi"]:checked').val() == 'Ya') $('.toggle-riwayat').show(); else $('.toggle-riwayat').hide();
+        if ($('input[name="asma"]:checked').val() == 'Ya') $('.toggle-asma').show(); else $('.toggle-asma').hide();
+        if ($('input[name="alergi"]:checked').val() == 'Ya') $('.toggle-alergi').show(); else $('.toggle-alergi').hide();
+        if ($('input[name="hipertensi"]:checked').val() == 'Ya') $('.toggle-hipertensi').show(); else $('.toggle-hipertensi').hide();
+        if ($('input[name="merokok"]:checked').val() == 'Ya') $('.toggle-merokok').show(); else $('.toggle-merokok').hide();
+        if ($('input[name="gastritis"]:checked').val() == 'Ya') $('.toggle-gastritis').show(); else $('.toggle-gastritis').hide();
+        if ($('input[name="diabetes"]:checked').val() == 'Ya') $('.toggle-diabetes').show(); else $('.toggle-diabetes').hide();
+    }
+    
+    $('input[type="radio"]').change(function() {
+        toggleGroups();
+    });
+    
+    toggleGroups();
+</script>

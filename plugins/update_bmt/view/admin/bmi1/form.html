@@ -1,0 +1,276 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Form Persetujuan Tindakan Kedokteran (Anestesi Lokal)</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'bmi1manage'])?}">Data Persetujuan</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'bmi1form'])?}">Tambah Baru</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'update_bmt', 'bmi1save'])?}" method="POST">
+                    <input type="hidden" name="id" value="{?=isset($data['id']) ? $data['id'] : ''?}">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No. Rawat (Untuk Mengambil Data Pasien)</label>
+                                <div class="input-group">
+                                    <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset($data['no_rawat']) ? $data['no_rawat'] : ''?}" required>
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-default" type="button" id="btn-cari-pasien"><i class="fa fa-search"></i> Cari</button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Pasien</label>
+                                <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" value="{?=isset($data['nm_pasien']) ? $data['nm_pasien'] : ''?}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <h4>PEMBERIAN INFORMASI</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Pemberi Informasi</label>
+                                <input type="text" name="pemberi_informasi" class="form-control" value="{?=isset($data['pemberi_informasi']) ? $data['pemberi_informasi'] : ''?}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Penerima Informasi / Pemberi Persetujuan</label>
+                                <input type="text" name="penerima_informasi" class="form-control" value="{?=isset($data['penerima_informasi']) ? $data['penerima_informasi'] : ''?}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <table class="table table-bordered table-condensed">
+                        <thead>
+                            <tr>
+                                <th width="5%">NO</th>
+                                <th width="30%">JENIS INFORMASI</th>
+                                <th width="55%">ISI INFORMASI</th>
+                                <th width="10%">TANDA (v)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Diagnosis</td>
+                                <td><textarea name="info_1_isi" class="form-control" rows="2">{?=isset($data['info_1_isi']) ? $data['info_1_isi'] : ''?}</textarea></td>
+                                <td class="text-center" style="vertical-align: middle;"><input type="checkbox" name="info_1_tanda" value="Y" {if: isset($data['info_1_tanda']) && $data['info_1_tanda'] == 'Y'}checked{/if}></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Dasar Diagnosis</td>
+                                <td><textarea name="info_2_isi" class="form-control" rows="2">{?=isset($data['info_2_isi']) ? $data['info_2_isi'] : ''?}</textarea></td>
+                                <td class="text-center" style="vertical-align: middle;"><input type="checkbox" name="info_2_tanda" value="Y" {if: isset($data['info_2_tanda']) && $data['info_2_tanda'] == 'Y'}checked{/if}></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Tindakan Kedokteran Gigi/ Kedokteran</td>
+                                <td><textarea name="info_3_isi" class="form-control" rows="2">{?=isset($data['info_3_isi']) ? $data['info_3_isi'] : ''?}</textarea></td>
+                                <td class="text-center" style="vertical-align: middle;"><input type="checkbox" name="info_3_tanda" value="Y" {if: isset($data['info_3_tanda']) && $data['info_3_tanda'] == 'Y'}checked{/if}></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Indikasi Tindakan</td>
+                                <td><textarea name="info_4_isi" class="form-control" rows="2">{?=isset($data['info_4_isi']) ? $data['info_4_isi'] : ''?}</textarea></td>
+                                <td class="text-center" style="vertical-align: middle;"><input type="checkbox" name="info_4_tanda" value="Y" {if: isset($data['info_4_tanda']) && $data['info_4_tanda'] == 'Y'}checked{/if}></td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Tata Cara<br><small><i>- Tipe Sedasi/ anesthesia<br>- Uraian singkat prosedur dan tahapan yang penting</i></small></td>
+                                <td><textarea name="info_5_isi" class="form-control" rows="3">{?=isset($data['info_5_isi']) ? $data['info_5_isi'] : ''?}</textarea></td>
+                                <td class="text-center" style="vertical-align: middle;"><input type="checkbox" name="info_5_tanda" value="Y" {if: isset($data['info_5_tanda']) && $data['info_5_tanda'] == 'Y'}checked{/if}></td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>Tujuan</td>
+                                <td><textarea name="info_6_isi" class="form-control" rows="2">{?=isset($data['info_6_isi']) ? $data['info_6_isi'] : ''?}</textarea></td>
+                                <td class="text-center" style="vertical-align: middle;"><input type="checkbox" name="info_6_tanda" value="Y" {if: isset($data['info_6_tanda']) && $data['info_6_tanda'] == 'Y'}checked{/if}></td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>Resiko dan Komplikasi</td>
+                                <td><textarea name="info_7_isi" class="form-control" rows="2">{?=isset($data['info_7_isi']) ? $data['info_7_isi'] : ''?}</textarea></td>
+                                <td class="text-center" style="vertical-align: middle;"><input type="checkbox" name="info_7_tanda" value="Y" {if: isset($data['info_7_tanda']) && $data['info_7_tanda'] == 'Y'}checked{/if}></td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td>Prognosis</td>
+                                <td><textarea name="info_8_isi" class="form-control" rows="2">{?=isset($data['info_8_isi']) ? $data['info_8_isi'] : ''?}</textarea></td>
+                                <td class="text-center" style="vertical-align: middle;"><input type="checkbox" name="info_8_tanda" value="Y" {if: isset($data['info_8_tanda']) && $data['info_8_tanda'] == 'Y'}checked{/if}></td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td>Alternatif dan Resiko</td>
+                                <td><textarea name="info_9_isi" class="form-control" rows="2">{?=isset($data['info_9_isi']) ? $data['info_9_isi'] : ''?}</textarea></td>
+                                <td class="text-center" style="vertical-align: middle;"><input type="checkbox" name="info_9_tanda" value="Y" {if: isset($data['info_9_tanda']) && $data['info_9_tanda'] == 'Y'}checked{/if}></td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td>Hal lain yang akan dilakukan untuk menyelamatkan pasien<br><small><i>- Perluasan tindakan<br>- Konsultasi selama tindakan<br>- resusitasi</i></small></td>
+                                <td><textarea name="info_10_isi" class="form-control" rows="3">{?=isset($data['info_10_isi']) ? $data['info_10_isi'] : ''?}</textarea></td>
+                                <td class="text-center" style="vertical-align: middle;"><input type="checkbox" name="info_10_tanda" value="Y" {if: isset($data['info_10_tanda']) && $data['info_10_tanda'] == 'Y'}checked{/if}></td>
+                            </tr>
+                            <tr>
+                                <td>11</td>
+                                <td>Penjelasan penatalaksanaan nyeri pasca tindakan</td>
+                                <td><textarea name="info_11_isi" class="form-control" rows="2">{?=isset($data['info_11_isi']) ? $data['info_11_isi'] : ''?}</textarea></td>
+                                <td class="text-center" style="vertical-align: middle;"><input type="checkbox" name="info_11_tanda" value="Y" {if: isset($data['info_11_tanda']) && $data['info_11_tanda'] == 'Y'}checked{/if}></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tanda Tangan Dokter (Opsional / Nama Cetak)</label>
+                                <input type="text" name="ttd_dokter_pemberi" class="form-control" value="{?=isset($data['ttd_dokter_pemberi']) ? $data['ttd_dokter_pemberi'] : ''?}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tanda Tangan Pasien/Keluarga (Opsional / Nama Cetak)</label>
+                                <input type="text" name="ttd_pasien_penerima" class="form-control" value="{?=isset($data['ttd_pasien_penerima']) ? $data['ttd_pasien_penerima'] : ''?}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <h4>PERSETUJUAN TINDAKAN KEDOKTERAN DENGAN ANESTESI LOKAL</h4>
+                    <p>Yang bertanda tangan di bawah ini, saya:</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama</label>
+                                <input type="text" name="nama_pj" class="form-control" value="{?=isset($data['nama_pj']) ? $data['nama_pj'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Umur / Jenis Kelamin</label>
+                                <div class="row">
+                                    <div class="col-xs-6"><input type="text" name="umur_pj" class="form-control" placeholder="Umur" value="{?=isset($data['umur_pj']) ? $data['umur_pj'] : ''?}"></div>
+                                    <div class="col-xs-6">
+                                        <select name="jk_pj" class="form-control">
+                                            <option value="">- Pilih JK -</option>
+                                            <option value="Laki-laki" {if: isset($data['jk_pj']) && $data['jk_pj'] == 'Laki-laki'}selected{/if}>Laki-laki</option>
+                                            <option value="Perempuan" {if: isset($data['jk_pj']) && $data['jk_pj'] == 'Perempuan'}selected{/if}>Perempuan</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Alamat</label>
+                                <textarea name="alamat_pj" class="form-control" rows="2">{?=isset($data['alamat_pj']) ? $data['alamat_pj'] : ''?}</textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tindakan yang disetujui</label>
+                                <input type="text" name="tindakan_disetujui" class="form-control" value="{?=isset($data['tindakan_disetujui']) ? $data['tindakan_disetujui'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Terhadap (Hubungan dengan pasien)</label>
+                                <select name="hubungan" class="form-control">
+                                    <option value="saya sendiri" {if: isset($data['hubungan']) && $data['hubungan'] == 'saya sendiri'}selected{/if}>Saya Sendiri</option>
+                                    <option value="suami" {if: isset($data['hubungan']) && $data['hubungan'] == 'suami'}selected{/if}>Suami</option>
+                                    <option value="istri" {if: isset($data['hubungan']) && $data['hubungan'] == 'istri'}selected{/if}>Istri</option>
+                                    <option value="anak" {if: isset($data['hubungan']) && $data['hubungan'] == 'anak'}selected{/if}>Anak</option>
+                                    <option value="ayah" {if: isset($data['hubungan']) && $data['hubungan'] == 'ayah'}selected{/if}>Ayah</option>
+                                    <option value="ibu" {if: isset($data['hubungan']) && $data['hubungan'] == 'ibu'}selected{/if}>Ibu</option>
+                                    <option value="saudara" {if: isset($data['hubungan']) && $data['hubungan'] == 'saudara'}selected{/if}>Saudara</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Pasien</label>
+                                <input type="text" name="nama_pasien_form" id="nama_pasien_form" class="form-control" value="{?=isset($data['nama_pasien_form']) ? $data['nama_pasien_form'] : ''?}">
+                            </div>
+                            <div class="form-group">
+                                <label>Umur / Jenis Kelamin Pasien</label>
+                                <div class="row">
+                                    <div class="col-xs-6"><input type="text" name="umur_pasien_form" id="umur_pasien_form" class="form-control" placeholder="Umur" value="{?=isset($data['umur_pasien_form']) ? $data['umur_pasien_form'] : ''?}"></div>
+                                    <div class="col-xs-6">
+                                        <select name="jk_pasien_form" id="jk_pasien_form" class="form-control">
+                                            <option value="">- Pilih JK -</option>
+                                            <option value="Laki-laki" {if: isset($data['jk_pasien_form']) && $data['jk_pasien_form'] == 'Laki-laki'}selected{/if}>Laki-laki</option>
+                                            <option value="Perempuan" {if: isset($data['jk_pasien_form']) && $data['jk_pasien_form'] == 'Perempuan'}selected{/if}>Perempuan</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Alamat Pasien</label>
+                                <textarea name="alamat_pasien_form" id="alamat_pasien_form" class="form-control" rows="2">{?=isset($data['alamat_pasien_form']) ? $data['alamat_pasien_form'] : ''?}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Kota, Tanggal dan Waktu Dokumen</label>
+                                <div class="row">
+                                    <div class="col-xs-12" style="margin-bottom: 5px;"><input type="text" name="kota_ttd" class="form-control" value="{?=isset($data['kota_ttd']) ? $data['kota_ttd'] : 'Banjarmasin'?}"></div>
+                                    <div class="col-xs-6"><input type="date" name="tgl_dokumen" class="form-control" value="{?=isset($data['tgl_dokumen']) ? $data['tgl_dokumen'] : date('Y-m-d')?}"></div>
+                                    <div class="col-xs-6"><input type="time" name="waktu_dokumen" class="form-control" value="{?=isset($data['waktu_dokumen']) ? $data['waktu_dokumen'] : ''?}"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label>Nama Pihak Yang Tanda Tangan (Opsional)</label>
+                                <div class="row">
+                                    <div class="col-xs-3"><input type="text" name="ttd_menyatakan" class="form-control" placeholder="Yang Menyatakan" value="{?=isset($data['ttd_menyatakan']) ? $data['ttd_menyatakan'] : ''?}"></div>
+                                    <div class="col-xs-3"><input type="text" name="ttd_dokter_pelaksana" class="form-control" placeholder="Dokter" value="{?=isset($data['ttd_dokter_pelaksana']) ? $data['ttd_dokter_pelaksana'] : ''?}"></div>
+                                    <div class="col-xs-3"><input type="text" name="ttd_saksi_1" class="form-control" placeholder="Saksi 1" value="{?=isset($data['ttd_saksi_1']) ? $data['ttd_saksi_1'] : ''?}"></div>
+                                    <div class="col-xs-3"><input type="text" name="ttd_saksi_2" class="form-control" placeholder="Saksi 2" value="{?=isset($data['ttd_saksi_2']) ? $data['ttd_saksi_2'] : ''?}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'bmi1manage'])?}" class="btn btn-default">Batal</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$('#btn-cari-pasien').click(function(){
+    var no_rawat = $('#no_rawat').val();
+    if(no_rawat) {
+        $.ajax({
+            url: '{?=url([ADMIN, 'update_bmt', 'bmi1form'])?}',
+            type: 'GET',
+            data: { ajax_patient: 1, no_rawat: no_rawat },
+            success: function(res) {
+                if(res.success) {
+                    $('#nm_pasien').val(res.nama_pasien);
+                    $('#nama_pasien_form').val(res.nama_pasien);
+                    $('#umur_pasien_form').val(res.umur);
+                    $('#jk_pasien_form').val(res.jk == 'L' ? 'Laki-laki' : 'Perempuan');
+                    $('#alamat_pasien_form').val(res.alamat);
+                } else {
+                    alert('Data pasien tidak ditemukan untuk No. Rawat tersebut!');
+                }
+            }
+        });
+    }
+});
+</script>

@@ -1,0 +1,57 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Data Persetujuan / Penolakan Tindakan Medik Pembedahan</h3>
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'bm2manage'])?}">Data Persetujuan / Penolakan</a></li>
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'bm2form'])?}">Tambah Baru</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <table class="table table-striped table-hover dataTable" id="data-table">
+                    <thead>
+                        <tr>
+                            <th>No Rawat</th>
+                            <th>Tanggal Dokumen</th>
+                            <th>Tipe Form</th>
+                            <th>Penanggung Jawab</th>
+                            <th>Hubungan</th>
+                            <th>Nama Pasien (Form)</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loop: $list}
+                        <tr>
+                            <td>{$value.no_rawat}</td>
+                            <td>{$value.tgl_dokumen}</td>
+                            <td>
+                                {if: $value.tipe_form == 'PERSETUJUAN'}
+                                    <span class="label label-success">PERSETUJUAN</span>
+                                {else}
+                                    <span class="label label-danger">PENOLAKAN</span>
+                                {/if}
+                            </td>
+                            <td>{$value.nama_pj}</td>
+                            <td>{$value.hubungan}</td>
+                            <td>{$value.nama_pasien_form}</td>
+                            <td>
+                                <a href="{?=url([ADMIN, 'update_bmt', 'bm2cetak'])?}&id={$value.id}" target="_blank" class="btn btn-xs btn-default"><i class="fa fa-print"></i> Cetak</a>
+                                <a href="{?=url([ADMIN, 'update_bmt', 'bm2form'])?}&id={$value.id}" class="btn btn-xs btn-primary"><i class="fa fa-edit"></i> Edit</a>
+                                <a href="{?=url([ADMIN, 'update_bmt', 'bm2hapus'])?}&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?')"><i class="fa fa-trash"></i> Hapus</a>
+                            </td>
+                        </tr>
+                        {/loop}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$(document).ready(function() {
+    $('#data-table').DataTable();
+});
+</script>

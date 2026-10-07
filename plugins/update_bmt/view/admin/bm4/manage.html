@@ -1,0 +1,49 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Data Laporan Pembedahan Anestesi Umum Sedasi</h3>
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'bm4manage'])?}">Data Laporan Pembedahan</a></li>
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'bm4form'])?}">Tambah Baru</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <table class="table table-striped table-hover dataTable" id="data-table">
+                    <thead>
+                        <tr>
+                            <th>No Rawat</th>
+                            <th>Tanggal</th>
+                            <th>Nama Pasien</th>
+                            <th>Diagnosis Pra Bedah</th>
+                            <th>Operator</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loop: $list}
+                        <tr>
+                            <td>{$value.no_rawat}</td>
+                            <td>{$value.tgl_pembedahan}</td>
+                            <td>{$value.nm_pasien}</td>
+                            <td>{$value.diagnosis_pra_bedah}</td>
+                            <td>{$value.operator}</td>
+                            <td>
+                                <a href="{?=url([ADMIN, 'update_bmt', 'bm4cetak'])?}&id={$value.id}" target="_blank" class="btn btn-xs btn-default"><i class="fa fa-print"></i> Cetak</a>
+                                <a href="{?=url([ADMIN, 'update_bmt', 'bm4form'])?}&id={$value.id}" class="btn btn-xs btn-primary"><i class="fa fa-edit"></i> Edit</a>
+                                <a href="{?=url([ADMIN, 'update_bmt', 'bm4hapus'])?}&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?')"><i class="fa fa-trash"></i> Hapus</a>
+                            </td>
+                        </tr>
+                        {/loop}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$(document).ready(function() {
+    $('#data-table').DataTable();
+});
+</script>
