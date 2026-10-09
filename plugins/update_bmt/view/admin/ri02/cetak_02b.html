@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>RM.RI 02B - LEMBAR TEMPEL SURAT</title>
+<style>
+  @page { size: A4; margin: 8mm 10mm; }
+  body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 0; color: #000; }
+  
+  .container { width: 100%; max-width: 192mm; margin: 0 auto; box-sizing: border-box; position: relative;}
+
+  /* Header */
+  .header-top { width: 100%; display: table; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom:5px; }
+  .header-col { display: table-cell; vertical-align: middle; }
+  .header-identitas { width: 85%; font-size: 10px; }
+  .header-rm { width: 15%; text-align: center; border: 1px solid #000; padding: 5px; background: #bced89; }
+  .box-rm { display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin-left: 2px; text-align: center; line-height: 14px; font-size: 12px; background: #fff; vertical-align: bottom; }
+  
+  .judul { text-align: center; font-size: 16px; padding: 10px 0; border-top: 1px solid #000; border-bottom: 1px solid #000; }
+  
+  .identitas-table { width: 100%; border-collapse: collapse; border: 2px solid #000; margin-top: 10px; margin-bottom: 10px; }
+  .identitas-table td { border: 1px solid #000; padding: 6px; font-size: 11px; }
+
+  .tempel-box { width: 100%; border-collapse: collapse; border: 1px solid #000; }
+  .tempel-box td { border: 1px solid #000; padding: 3px; font-size: 11px; height: 18px; }
+  
+  .tempel-content { border: 1px solid #000; height: 140mm; border-top: none;}
+
+  .footer-wrap { width: 100%; font-size: 8px; margin-top: 5px; display: table; }
+  .footer-left { display: table-cell; text-align: left; }
+  .footer-center { display: table-cell; text-align: right; }
+  .footer-right { display: table-cell; text-align: right; width: 60px; }
+  
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body onload="window.print()">
+<div class="container">
+  <div class="header-top">
+    <div class="header-col header-identitas">
+      <strong>Nama Pasien:</strong> {$data.nm_pasien} &nbsp;&nbsp;&nbsp;&nbsp; <strong>L/P</strong> {?= $data['jk']=='L'?'L':'P' ?} &nbsp;&nbsp;&nbsp;&nbsp; <strong>Tanggal Lahir:</strong> {$data.tgl_lahir} &nbsp;&nbsp;&nbsp;&nbsp; <strong>NO. RM</strong>
+      <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 0, 1) ?}</div>
+      <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 1, 1) ?}</div>
+      <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 2, 1) ?}</div>
+      <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 3, 1) ?}</div>
+      <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 4, 1) ?}</div>
+      <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 5, 1) ?}</div>
+    </div>
+    <div class="header-col header-rm">
+      <strong style="font-size:12px;">RM<br>RI</strong><br><hr style="margin:2px 0;border-top:1px solid #000;"><strong style="font-size:12px;">02B</strong>
+    </div>
+  </div>
+
+  <div class="judul">LEMBAR UNTUK MENEMPEL SURAT<br>(MRS,RUJUKAN DLL)</div>
+  
+  <table class="identitas-table">
+      <tr>
+          <td width="50%">Nama Lengkap : {$data.nm_pasien}</td>
+          <td width="50%">Umur : {$data.umur}</td>
+      </tr>
+      <tr>
+          <td>Ruangan : {$data.kd_kamar}</td>
+          <td>Kelas : {$data.kelas}</td>
+      </tr>
+  </table>
+
+  <table class="tempel-box">
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">12</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">11</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">10</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">9</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">8</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">7</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">6</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">5</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">4</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">3</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">2</td></tr>
+      <tr>
+          <td style="text-align: center; font-weight: bold; border-right: none;">PENEMPELAN PERTAMA</td><td style="width: 30px; text-align:center; border-left: none;">1</td>
+      </tr>
+  </table>
+  
+  <div class="tempel-content"></div>
+
+  <div class="footer-wrap">
+      <div class="footer-left">RSGM/Ed-Rev/02/2023</div>
+      <div class="footer-center">Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas []</div>
+      <div class="footer-right">RM.RI - 02B</div>
+  </div>
+</div>
+</body>
+</html>

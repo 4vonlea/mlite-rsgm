@@ -1,0 +1,48 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Data Hak dan Kewajiban Pasien (RM.RI 01B)</h3>
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri01bmanage'])?}">Kelola Data</a></li>
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri01bform'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover dataTable">
+                        <thead>
+                            <tr>
+                                <th>No. Rawat</th>
+                                <th>No. RM</th>
+                                <th>Nama Pasien</th>
+                                <th>Tanggal & Waktu</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loop: $data}
+                            <tr>
+                                <td>{$value.no_rawat}</td>
+                                <td>{$value.no_rkm_medis}</td>
+                                <td>{$value.nm_pasien}</td>
+                                <td>{$value.tanggal_jam}</td>
+                                <td>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ri01bcetak', '?id='.$value.id])?}" class="btn btn-info btn-xs" target="_blank"><i class="fa fa-print"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ri01bform', '?id='.$value.id])?}" class="btn btn-warning btn-xs"><i class="fa fa-edit"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ri01bhapus', '?id='.$value.id])?}" class="btn btn-danger btn-xs" onclick="return confirm('Hapus data ini?');"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {/loop}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</article>
+<script>
+    $(document).ready(function() {
+        $('.dataTable').DataTable();
+    });
+</script>

@@ -1,0 +1,96 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Form Hak dan Kewajiban Pasien (RM.RI 01B)</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri01bmanage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri01bform'])?}">Form Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'update_bmt', 'ri01bsave'])?}" method="post">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <div class="form-group">
+                        <label>No. Rawat</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="no_rawat" id="no_rawat" value="{$data.no_rawat}" required>
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary" type="button" id="btn_cek_pasien">Cek Pasien</button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>No RM</label>
+                                <input type="text" class="form-control" id="no_rkm_medis" value="{$data.no_rkm_medis}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Nama Pasien</label>
+                                <input type="text" class="form-control" id="nm_pasien" value="{$data.nm_pasien}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Tanggal Lahir</label>
+                                <input type="text" class="form-control" id="tgl_lahir" value="{$data.tgl_lahir}" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Pasien/Penanggung Jawab (Tanda Tangan)</label>
+                                <input type="text" class="form-control" name="nama_pasien_pj" value="{$data.nama_pasien_pj}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Pemberi Edukasi (Tanda Tangan)</label>
+                                <input type="text" class="form-control" name="nama_pemberi_edukasi" value="{$data.nama_pemberi_edukasi}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ri01bmanage'])?}" class="btn btn-default">Kembali</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+    $('#btn_cek_pasien').click(function() {
+        var no_rawat = $('#no_rawat').val();
+        if (no_rawat) {
+            $.ajax({
+                url: '{?=url([ADMIN, "update_bmt", "ri01bform"])?}',
+                type: 'GET',
+                data: {
+                    ajax_patient: 1,
+                    no_rawat: no_rawat,
+                    t: '{?=$_SESSION["token"]?}'
+                },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        $('#no_rawat').val(res.no_rawat);
+                        $('#no_rkm_medis').val(res.no_rkm_medis);
+                        $('#nm_pasien').val(res.nm_pasien);
+                        $('#tgl_lahir').val(res.tgl_lahir);
+                    } else {
+                        alert('Pasien tidak ditemukan!');
+                    }
+                },
+                error: function() {
+                    alert('Terjadi kesalahan saat mencari data pasien.');
+                }
+            });
+        }
+    });
+</script>

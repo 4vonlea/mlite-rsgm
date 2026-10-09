@@ -1,0 +1,222 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Formulir RM.RI 11B - Pemberian Makan Pasien</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri11bmanage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri11bform'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="ri11bForm" method="POST" action="{?=url([ADMIN, 'update_bmt', 'ri11bsave'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="json_bentuk_makanan" id="json_bentuk_makanan">
+                    <input type="hidden" name="json_diet" id="json_diet">
+                    <input type="hidden" name="json_detail_pemberian" id="json_detail_pemberian">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No. Rawat / No. RM (Enter untuk cari)</label>
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required>
+                                <div id="patient_info" style="margin-top:5px; color:blue;">{$data.nm_pasien} {$data.no_rkm_medis}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>DPJP Utama</label>
+                                <input type="text" name="dpjp_utama" class="form-control" value="{$data.dpjp_utama}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nutrisionis</label>
+                                <input type="text" name="nutrisionis" class="form-control" value="{$data.nutrisionis}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Kamar / Kelas</label>
+                                <input type="text" name="kamar_kelas" class="form-control" value="{$data.kamar_kelas}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Tanggal Rawat</label>
+                                <input type="date" name="tanggal_rawat" class="form-control" value="{$data.tanggal_rawat}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Diagnosa</label>
+                                <input type="text" name="diagnosa" class="form-control" value="{$data.diagnosa}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Bentuk Makanan (Beri tanda)</label><br>
+                                <label class="checkbox-inline"><input type="checkbox" class="cb-bentuk" value="Nasi Biasa" {if: in_array('Nasi Biasa', $data.bentuk_makanan)}checked{/if}> Nasi Biasa</label>
+                                <label class="checkbox-inline"><input type="checkbox" class="cb-bentuk" value="Lunak" {if: in_array('Lunak', $data.bentuk_makanan)}checked{/if}> Lunak</label>
+                                <label class="checkbox-inline"><input type="checkbox" class="cb-bentuk" value="Saring" {if: in_array('Saring', $data.bentuk_makanan)}checked{/if}> Saring</label>
+                                <label class="checkbox-inline"><input type="checkbox" class="cb-bentuk" value="Sumsum" {if: in_array('Sumsum', $data.bentuk_makanan)}checked{/if}> Sumsum</label>
+                                <label class="checkbox-inline"><input type="checkbox" class="cb-bentuk" value="Cair" {if: in_array('Cair', $data.bentuk_makanan)}checked{/if}> Cair</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Diet</label><br>
+                                <label class="checkbox-inline"><input type="checkbox" class="cb-diet" value="Bebas/Biasa" {if: in_array('Bebas/Biasa', $data.diet)}checked{/if}> Bebas/Biasa</label>
+                                <label class="checkbox-inline"><input type="checkbox" class="cb-diet" value="TKTP" {if: in_array('TKTP', $data.diet)}checked{/if}> TKTP</label>
+                                <label class="checkbox-inline"><input type="checkbox" class="cb-diet" value="DM" {if: in_array('DM', $data.diet)}checked{/if}> DM</label>
+                                <label class="checkbox-inline"><input type="checkbox" class="cb-diet" value="RG" {if: in_array('RG', $data.diet)}checked{/if}> RG</label>
+                                <br><br>
+                                <label>Lainnya:</label>
+                                <input type="text" name="diet_lainnya" class="form-control" value="{$data.diet_lainnya}" placeholder="Isi jika ada diet lain">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tabel Jadwal Pemberian Makan</label>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-condensed" id="tblDetail">
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2" class="text-center" style="vertical-align:middle;">Hari/Tanggal</th>
+                                        <th colspan="3" class="text-center">PAGI</th>
+                                        <th colspan="3" class="text-center">SIANG</th>
+                                        <th colspan="3" class="text-center">SORE</th>
+                                        <th rowspan="2" class="text-center" style="vertical-align:middle; width:40px;"><i class="fa fa-trash"></i></th>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-center">Jam Ambil</th>
+                                        <th class="text-center">Jam Hidang</th>
+                                        <th class="text-center">TTD</th>
+                                        <th class="text-center">Jam Ambil</th>
+                                        <th class="text-center">Jam Hidang</th>
+                                        <th class="text-center">TTD</th>
+                                        <th class="text-center">Jam Ambil</th>
+                                        <th class="text-center">Jam Hidang</th>
+                                        <th class="text-center">TTD</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyDetail">
+                                    {loop: $data.detail_pemberian}
+                                    <tr class="dtl-row">
+                                        <td><input type="text" class="form-control input-sm f-tgl" value="{$value.tgl}"></td>
+                                        <td><input type="text" class="form-control input-sm f-pa" value="{$value.p_a}"></td>
+                                        <td><input type="text" class="form-control input-sm f-ph" value="{$value.p_h}"></td>
+                                        <td><input type="text" class="form-control input-sm f-pt" value="{$value.p_t}"></td>
+                                        <td><input type="text" class="form-control input-sm f-sa" value="{$value.s_a}"></td>
+                                        <td><input type="text" class="form-control input-sm f-sh" value="{$value.s_h}"></td>
+                                        <td><input type="text" class="form-control input-sm f-st" value="{$value.s_t}"></td>
+                                        <td><input type="text" class="form-control input-sm f-ma" value="{$value.m_a}"></td>
+                                        <td><input type="text" class="form-control input-sm f-mh" value="{$value.m_h}"></td>
+                                        <td><input type="text" class="form-control input-sm f-mt" value="{$value.m_t}"></td>
+                                        <td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-remove-row"><i class="fa fa-times"></i></button></td>
+                                    </tr>
+                                    {/loop}
+                                </tbody>
+                            </table>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-success" id="btnAddRow"><i class="fa fa-plus"></i> Tambah Baris</button>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tanda Tangan Nutrisionis</label>
+                                <input type="text" name="ttd_nutrisionis" class="form-control" value="{$data.ttd_nutrisionis}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tanda Tangan Perawat</label>
+                                <input type="text" name="ttd_perawat" class="form-control" value="{$data.ttd_perawat}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ri11bmanage'])?}" class="btn btn-default">Kembali</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+    $('#no_rawat').on('keypress', function(e) {
+        if(e.which === 13) {
+            e.preventDefault();
+            $.get('{?=url([ADMIN, 'update_bmt', 'ri11bform'])?}?ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
+                var d = JSON.parse(res);
+                if (d.success) {
+                    $('#no_rawat').val(d.no_rawat);
+                    $('#patient_info').html(d.nm_pasien + ' (' + d.no_rkm_medis + ')');
+                } else {
+                    $('#patient_info').html('Pasien tidak ditemukan');
+                }
+            });
+        }
+    });
+
+    $('#ri11bForm').on('submit', function() {
+        var b = []; $('.cb-bentuk:checked').each(function(){ b.push($(this).val()); }); $('#json_bentuk_makanan').val(JSON.stringify(b));
+        var t = []; $('.cb-diet:checked').each(function(){ t.push($(this).val()); }); 
+        if ($('input[name="diet_lainnya"]').val() !== '') { t.push($('input[name="diet_lainnya"]').val()); }
+        $('#json_diet').val(JSON.stringify(t));
+        
+        var dtl = [];
+        $('.dtl-row').each(function() {
+            dtl.push({
+                tgl: $(this).find('.f-tgl').val(),
+                p_a: $(this).find('.f-pa').val(),
+                p_h: $(this).find('.f-ph').val(),
+                p_t: $(this).find('.f-pt').val(),
+                s_a: $(this).find('.f-sa').val(),
+                s_h: $(this).find('.f-sh').val(),
+                s_t: $(this).find('.f-st').val(),
+                m_a: $(this).find('.f-ma').val(),
+                m_h: $(this).find('.f-mh').val(),
+                m_t: $(this).find('.f-mt').val()
+            });
+        });
+        $('#json_detail_pemberian').val(JSON.stringify(dtl));
+    });
+
+    $('#btnAddRow').click(function(){
+        var tr = '<tr class="dtl-row">' +
+            '<td><input type="text" class="form-control input-sm f-tgl"></td>' +
+            '<td><input type="text" class="form-control input-sm f-pa"></td>' +
+            '<td><input type="text" class="form-control input-sm f-ph"></td>' +
+            '<td><input type="text" class="form-control input-sm f-pt"></td>' +
+            '<td><input type="text" class="form-control input-sm f-sa"></td>' +
+            '<td><input type="text" class="form-control input-sm f-sh"></td>' +
+            '<td><input type="text" class="form-control input-sm f-st"></td>' +
+            '<td><input type="text" class="form-control input-sm f-ma"></td>' +
+            '<td><input type="text" class="form-control input-sm f-mh"></td>' +
+            '<td><input type="text" class="form-control input-sm f-mt"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-remove-row"><i class="fa fa-times"></i></button></td>' +
+            '</tr>';
+        $('#tbodyDetail').append(tr);
+    });
+
+    $(document).on('click', '.btn-remove-row', function(){
+        if ($('.dtl-row').length > 1) {
+            $(this).closest('tr').remove();
+        } else {
+            alert('Minimal harus ada 1 baris.');
+        }
+    });
+</script>

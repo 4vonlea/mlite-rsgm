@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>RM.RI 01B - HAK DAN KEWAJIBAN PASIEN</title>
+<style>
+  @page { size: A4; margin: 8mm 10mm; }
+  body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 0; color: #000; }
+  
+  .container { width: 100%; max-width: 192mm; margin: 0 auto; border: 1px solid #000; box-sizing: border-box; }
+
+  /* Header */
+  .table-header { width: 100%; border-collapse: collapse; }
+  .table-header td { border: 1px solid #000; padding: 4px; vertical-align: middle; }
+  
+  /* RM Box */
+  .rm-header-td { vertical-align: top; padding: 4px; font-size: 10px; }
+  .box-rm { display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin-left: 1px; text-align: center; line-height: 14px; font-size: 10px; }
+
+  /* Section title */
+  .section-main-title { text-align: center; font-weight: bold; font-size: 13px; padding: 6px; background: #fff; }
+
+  .dotted { border-bottom: 1px dotted #000; display: inline-block; min-width: 60px; }
+  
+  .perhatian { font-size: 9px; font-style: italic; padding: 4px 6px; border-bottom: 1px solid #000; }
+  .perhatian .right-lines { float: right; letter-spacing: 2px; }
+  
+  .isi { padding: 10px 15px; font-size: 11px; line-height: 1.4; text-align: justify; }
+  .isi strong { font-size: 11px; }
+  ol { margin-top: 5px; margin-bottom: 10px; padding-left: 20px; }
+  li { margin-bottom: 4px; }
+  
+  .ttd-box { width: 100%; display: table; margin-top: 20px; margin-bottom: 30px; }
+  .ttd-row { display: table-row; }
+  .ttd-col { display: table-cell; width: 50%; text-align: center; vertical-align: bottom; font-size: 10px; }
+  
+  .footer-wrap {
+      display: table;
+      width: 100%;
+      font-size: 8px;
+      font-weight: bold;
+      border-top: 1px solid #000;
+      padding: 3px 6px;
+      box-sizing: border-box;
+  }
+  .footer-left { display: table-cell; text-align: left; }
+  .footer-right { display: table-cell; text-align: right; }
+  .footer-center { display: table-cell; text-align: right; font-weight: normal; font-size: 8px; font-style: italic;}
+  
+  .checkbox-box {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border: 1px solid #000;
+      margin-left: 5px;
+      vertical-align: middle;
+  }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body onload="window.print()">
+
+<div class="container">
+  <!-- HEADER -->
+  <table class="table-header">
+    <tr>
+      <td style="width: 65%; text-align:center; vertical-align:middle; padding: 0; border: none; border-right: 1px solid #000;">
+        <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat" style="width: 100%; height: auto; max-height: 80px; object-fit: contain;">
+      </td>
+      <td class="rm-header-td" style="width: 35%;">
+        <strong>No. RM</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:
+        <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 0, 1) ?}</div>-<div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 1, 1) ?}</div><div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 2, 1) ?}</div>-<div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 3, 1) ?}</div><div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 4, 1) ?}</div><div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 5, 1) ?}</div>
+        <br><br>
+        <strong>Nama Pasien</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 
+        <span class="dotted" style="min-width: 130px;">{$data.nm_pasien}</span> &nbsp;{?= isset($data['jk']) ? ($data['jk'] == 'L' ? 'L' : 'P') : 'L/P' ?}
+        <br><br>
+        <strong>Tanggal Lahir</strong> &nbsp;&nbsp;&nbsp;&nbsp;:
+        <span class="dotted" style="min-width: 140px;">{$data.tanggal_lahir_indo}</span>
+      </td>
+    </tr>
+  </table>
+
+  <div class="perhatian">
+    Perhatian : <br>
+    * Harap semua penulisan dilakukan dengan keterbacaan yang jelas, benar dan lengkap.
+    <span class="right-lines">_ _</span>
+  </div>
+  
+  <div class="section-main-title">FORMULIR HAK DAN KEWAJIBAN PASIEN</div>
+  
+  <div class="isi">
+      <strong>HAK PASIEN :</strong>
+      <ol>
+          <li>Memperoleh informasi mengenai tata tertib dan peraturan yang berlaku di RSGM Gusti Hasan Aman.</li>
+          <li>Memperoleh informasi tentang hak dan kewajiban pasien.</li>
+          <li>Memperoleh pelayanan sepenuh hati yang manusiawi, adil, jujur dan tanpa diskriminasi.</li>
+          <li>Memperoleh pelayanan kesehatan yang bermutu sesuai dengan standar profesi dan standar prosedur operasional.</li>
+          <li>Memperoleh pelayanan yang efektif dan efisien sehingga terhindar dari kerugian fisik dan materi.</li>
+          <li>Mengajukan pengaduan atas kualitas pelayanan yang didapatkan.</li>
+          <li>Memilih dokter dan unit pelayanan sesuai dengan keinginannya dan peraturan yang berlaku di RSGM Gusti Hasan Aman.</li>
+          <li>Meminta konsultasi tentang penyakit yang dideritanya kepada dokter lain yang mempunyai Surat Izin Praktik (SIP) baik di dalam maupun di luar RSGM Gusti Hasan Aman.</li>
+          <li>Pasien berhak mendapatkan privasi dan kerahasiaan penyakit yang diderita termasuk data-data medisnya.</li>
+          <li>Mendapatkan informasi yang meliputi diagnosis dan tata cara tindakan medis, tujuan tindakan medis, alternatif tindakan, risiko dan komplikasi yang mungkin terjadi, dan prognosis terhadap tindakan yang dilakukan serta perkiraan biaya pengobatan.</li>
+          <li>Memberikan persetujuan atau menolak atas tindakan yang akan dilakukan oleh tenaga kesehatan terhadap penyakit yang dideritanya.</li>
+          <li>Pasien berhak didampingi keluarganya dalam keadaan kritis.</li>
+          <li>Pasien berhak menjalani ibadah sesuai agama dan kepercayaan yang dianutnya selama hal itu tidak mengganggu pasien lainnya.</li>
+          <li>Memperoleh keamanan dan keselamatan dirinya selama dalam perawatan di RSGM Gusti Hasan Aman.</li>
+          <li>Mengajukan usul, saran, perbaikan dan perlakuan RSGM Gusti Hasan Aman terhadap dirinya.</li>
+          <li>Menolak pelayanan bimbingan rohani yang tidak sesuai dengan agama dan kepercayaan yang dianutnya.</li>
+          <li>Menggugat dan/atau menuntut RSGM Gusti Hasan Aman apabila RSGM Gusti Hasan Aman diduga memberikan pelayanan yang tidak sesuai dengan standar.</li>
+          <li>Mengeluhkan pelayanan RSGM Gusti Hasan Aman yang tidak sesuai dengan standar pelayanan melalui media cetak dan elektronik sesuai dengan ketentuan peraturan perundang-undangan yang berlaku.</li>
+      </ol>
+
+      <strong>KEWAJIBAN PASIEN :</strong>
+      <ol>
+          <li>Pasien dan keluarga pasien wajib mengikuti peraturan dan tata tertib yang berlaku di RSGM Gusti Hasan Aman.</li>
+          <li>Pasien dan Keluarga pasien wajib menggunakan fasilitas RSGM Gusti Hasan Aman secara bertanggung jawab.</li>
+          <li>Pasien wajib menghormati hak-hak pasien lain, pengunjung dan hak tenaga kesehatan serta petugas lainnya yang bekerja di RSGM Gusti Hasan Aman.</li>
+          <li>Pasien berkewajiban memberikan informasi yang jujur, lengkap dan akurat sesuai kemampuan dan pengetahuannya tentang masalah kesehatannya.</li>
+          <li>Mematuhi rencana terapi yang direkomendasikan oleh tenaga Kesehatan di RSGM Gusti Hasan Aman dan disetujui oleh pasien yang bersangkutan setelah mendapatkan penjelasan sesuai ketentuan peraturan perundang-undangan.</li>
+          <li>Menerima segala konsekuensi atas keputusan pribadinya untuk menolak rencana terapi yang direkomendasikan oleh tenaga kesehatan dan/ atau tidak mematuhi petunjuk yang diberikan oleh tenaga kesehatan dalam rangka penyembuhan penyakit atau masalah kesehatannya.</li>
+          <li>Pasien berkewajiban memberikan informasi mengenai kemampuan finansial dan jaminan kesehatan yang dimilikinya.</li>
+          <li>Pasien berkewajiban memberikan imbalan jasa atas pelayanan yang diterima.</li>
+      </ol>
+      
+      <div class="ttd-box">
+          <div class="ttd-row">
+              <div class="ttd-col">
+                  Banjarmasin, {$data.tanggal_indo} <br>
+                  Pasien/Penanggung Jawab Pasien,<br><br><br><br><br>
+                  ( <span style="display:inline-block; min-width: 150px;" class="dotted text-center">{$data.nama_pasien_pj}</span> )<br>
+                  <span style="font-size: 8px;">tanda tangan dan nama jelas</span>
+              </div>
+              <div class="ttd-col">
+                  <br>
+                  Pemberi Edukasi,<br><br><br><br><br>
+                  ( <span style="display:inline-block; min-width: 150px;" class="dotted text-center">{$data.nama_pemberi_edukasi}</span> )<br>
+                  <span style="font-size: 8px;">tanda tangan dan nama jelas</span>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <div class="footer-wrap">
+      <div class="footer-left">RSGM/Ed-Rev/02/2023</div>
+      <div class="footer-center">Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas <span class="checkbox-box"></span></div>
+      <div class="footer-right">RM.RI - 01B</div>
+  </div>
+</div>
+
+</body>
+</html>

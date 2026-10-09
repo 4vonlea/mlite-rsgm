@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>RM.RI 04 - TRANSFER PASIEN INTERNAL</title>
+<style>
+  @page { size: A4; margin: 8mm 10mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; margin: 0; color: #000; }
+  .page { width: 190mm; margin: 0 auto; position: relative; }
+  .page + .page { page-break-before: always; }
+  table { border-collapse: collapse; width: 100%; }
+  .bx { border: 1.5px solid #000; }
+  .bx td { border: 1px solid #000; padding: 2px 6px; vertical-align: top; }
+  .nob td { border: none !important; padding: 0 2px; }
+  .hdr td { vertical-align: middle; }
+  .kode { background: #6aa84f; text-align: center; font-weight: bold; font-size: 15px; }
+  .rmbox { display: inline-block; width: 15px; height: 16px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; vertical-align: middle; }
+  .cb { display: inline-block; width: 12px; height: 12px; border: 1px solid #000; text-align: center; line-height: 11px; font-size: 10px; margin-right: 6px; vertical-align: middle; }
+  .ind { padding-left: 26px; }
+  .sec { text-align: center; }
+  .title { text-align: center; font-weight: bold; font-size: 15px; padding: 4px; }
+  .note { font-size: 7.5px; line-height: 1.25; }
+  .foot { display: flex; justify-content: space-between; font-size: 8px; font-weight: bold; margin-top: 8px; }
+  .dot { display: inline-block; border-bottom: 1px dotted #000; min-width: 120px; padding: 0 3px; }
+  .tight td { line-height: 1.35; }
+  @media print { .noprint { display: none; } }
+</style>
+</head>
+<body onload="window.print()">
+
+<!-- ===================== HALAMAN 1 : RM.RI 04 ===================== -->
+<div class="page">
+<table class="bx">
+  <tr class="hdr">
+    <td style="width:57%; border-right:1px solid #000;">
+      <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop" style="width:100%; max-height:75px; object-fit:contain;">
+    </td>
+    <td style="width:33%; font-size:10px;">
+      <table class="nob">
+        <tr><td style="width:62px;">No RM</td><td>:
+          <span class="rmbox">{?=$p['rm0']?}</span><span class="rmbox">{?=$p['rm1']?}</span>-<span class="rmbox">{?=$p['rm2']?}</span><span class="rmbox">{?=$p['rm3']?}</span>-<span class="rmbox">{?=$p['rm4']?}</span><span class="rmbox">{?=$p['rm5']?}</span>
+        </td></tr>
+        <tr><td>Nama Pasien</td><td>: {?=$p['nm_pasien'] ?? ''?} &nbsp; <b>{?=$p['lp']?}</b></td></tr>
+        <tr><td>Tanggal Lahir</td><td>: {?=$p['tgl_lahir']?}</td></tr>
+      </table>
+    </td>
+    <td class="kode" style="width:10%; padding:0;">
+      <div style="padding:6px 0; border-bottom:1px solid #000;">RM<br>RI</div>
+      <div style="background:#fff; padding:8px 0;">04</div>
+    </td>
+  </tr>
+  <tr><td colspan="3" class="note">
+    <u>Catatan :</u><br>
+    * Harap semua pertanyaan dilakukan dengan kelengkapan yang jelas, benar dan lengkap<br>
+    * Berilah tanda centang ( &#10004; ) pada kotak pilihan yang telah disediakan<br>
+    * Berilah tanda lingkar pada pilihan yang telah disediakan
+  </td></tr>
+  <tr><td colspan="3" class="title">TRANSFER PASIEN INTERNAL</td></tr>
+</table>
+
+<table class="bx" style="border-top:none;">
+  <tr>
+    <td style="width:26%;">Unit Tujuan : {?=$p['unit_tujuan'] ?? ''?}</td>
+    <td style="width:33%;">Nama petugas yang dihubungi : {?=$p['petugas_dihubungi'] ?? ''?}</td>
+    <td style="width:41%;">Waktu menghubungi<br>Tanggal : {?=$p['waktu_hub_tgl']?} &nbsp; Jam : {?=$p['waktu_hub_jam']?} WITA</td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      Alasan Transfer<br>
+      <div class="ind"><span class="cb">{?=$p['ck_klinis']?}</span>Kondisi Klinis</div>
+      <div class="ind"><span class="cb">{?=$p['ck_permintaan']?}</span>Permintaan pasien / keluarga</div>
+      <div class="ind"><span class="cb">{?=$p['ck_lainnya']?}</span>Lainnya {?=$p['alasan_lainnya'] ?? ''?}</div>
+    </td>
+    <td>Waktu Transfer :<br>Tanggal : {?=$p['waktu_transfer_tgl']?} &nbsp; Jam : {?=$p['waktu_transfer_jam']?} WITA</td>
+  </tr>
+</table>
+
+<table class="bx tight" style="border-top:none;">
+  <tr>
+    <td style="width:48%;">
+      Nama Pasien : {?=$p['nm_pasien'] ?? ''?}<br>
+      Tanggal Lahir : {?=$p['tgl_lahir']?}<br>
+      DPJP : {?=$p['dpjp'] ?? ''?}<br>
+      Diagnosis Masuk : {?=$p['diagnosis_masuk'] ?? ''?}
+    </td>
+    <td style="width:52%;">
+      Jenis Kelamin : {?=$p['jk_text']?}<br>
+      Tanggal Masuk : {?=$p['tgl_masuk']?}<br>
+      Ruang/Kamar : {?=$p['ruang_kamar'] ?? ''?}<br>
+      Tanggal/Jam Pindah : {?=$p['waktu_pindah_tgl']?} {?=$p['waktu_pindah_jam']?}<br>
+      Pindah ke ruang/kamar : {?=$p['pindah_ke_ruang'] ?? ''?}<br>
+      Diagnosis Sekarang : {?=$p['diagnosis_sekarang'] ?? ''?}
+    </td>
+  </tr>
+  <tr><td colspan="2" class="sec">Ringkasan Riwayat Pasien</td></tr>
+  <tr>
+    <td colspan="2" style="height:auto;">
+      Anamnesis
+      <div class="ind"><span class="cb">{?=$p['ck_keluhan']?}</span>Keluhan utama : {?=$p['keluhan_utama'] ?? ''?}</div>
+      <div style="height:10px;"></div>
+      <div class="ind"><span class="cb">{?=$p['ck_riwayat']?}</span>Riwayat penyakit : {?=$p['riwayat_penyakit'] ?? ''?}</div>
+      <div style="height:18px;"></div>
+      Pemeriksaan fisik
+      <div class="ind"><span class="cb">{?=$p['ck_ttv']?}</span>Pemeriksaan tanda vital : Tensi : {?=$p['tensi'] ?? ''?} mmHG &nbsp; Suhu : {?=$p['suhu'] ?? ''?} &deg;C &nbsp; Nadi : {?=$p['nadi'] ?? ''?} x/mnt &nbsp; Pernafasan : {?=$p['pernafasan'] ?? ''?} x/mnt</div>
+      <div class="ind"><span class="cb">{?=$p['ck_ku']?}</span>Keadaan umum : {?=$p['keadaan_umum'] ?? ''?}</div>
+      <div style="height:22px;"></div>
+    </td>
+  </tr>
+  <tr><td colspan="2" class="sec">Pemeriksaan penunjang yang sudah dilakukan</td></tr>
+  <tr><td colspan="2" style="height:42px;">{?=$p['pemeriksaan_penunjang']?}</td></tr>
+  <tr><td colspan="2" class="sec">Tindakan medis yang sudah dilakukan</td></tr>
+  <tr><td colspan="2" style="height:52px;">{?=$p['tindakan_medis']?}</td></tr>
+  <tr><td colspan="2" class="sec">Pemberian terapi</td></tr>
+  <tr>
+    <td>Alat yang terpasang dari tanggal pemasangan</td>
+    <td>Obat / cairan yang dibawa pada saat transfer</td>
+  </tr>
+  <tr>
+    <td style="padding-left:26px;">
+      a. <span class="dot">{?=$p['alat0_nama']?}</span> tgl <span class="dot" style="min-width:90px;">{?=$p['alat0_tgl']?}</span><br>
+      b. <span class="dot">{?=$p['alat1_nama']?}</span> tgl <span class="dot" style="min-width:90px;">{?=$p['alat1_tgl']?}</span><br>
+      c. <span class="dot">{?=$p['alat2_nama']?}</span> tgl <span class="dot" style="min-width:90px;">{?=$p['alat2_tgl']?}</span><br>
+      d. <span class="dot">{?=$p['alat3_nama']?}</span> tgl <span class="dot" style="min-width:90px;">{?=$p['alat3_tgl']?}</span>
+    </td>
+    <td style="padding-left:26px;">
+      a. <span class="dot">{?=$p['obat0_nama']?}</span> jumlah <span class="dot" style="min-width:80px;">{?=$p['obat0_jumlah']?}</span><br>
+      b. <span class="dot">{?=$p['obat1_nama']?}</span> jumlah <span class="dot" style="min-width:80px;">{?=$p['obat1_jumlah']?}</span><br>
+      c. <span class="dot">{?=$p['obat2_nama']?}</span> jumlah <span class="dot" style="min-width:80px;">{?=$p['obat2_jumlah']?}</span><br>
+      d. <span class="dot">{?=$p['obat3_nama']?}</span> jumlah <span class="dot" style="min-width:80px;">{?=$p['obat3_jumlah']?}</span>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Dokumen yang disertakan
+      <div class="ind"><span class="cb">{?=$p['ck_dok_rm']?}</span>Rekam Medis</div>
+      <div class="ind"><span class="cb">{?=$p['ck_dok_lab']?}</span>Hasil Pemeriksaan Laboratorium</div>
+      <div class="ind"><span class="cb">{?=$p['ck_dok_rad']?}</span>Hasil Pemeriksaan Radiologi</div>
+      <div class="ind"><span class="cb">{?=$p['ck_dok_lain']?}</span>Lainnya <span class="dot">{?=$p['dok_lain']?}</span></div>
+    </td>
+    <td>
+      Informasi yang diberikan
+      <div class="ind"><span class="cb">{?=$p['ck_inf_tarif']?}</span>Perubahan Tarif Ruangan (Transfer Internal)</div>
+      <div class="ind"><span class="cb">{?=$p['ck_inf_tindakan']?}</span>Tarif Tindakan / Operan Pemeriksaan</div>
+      <div class="ind"><span class="cb">{?=$p['ck_inf_lain']?}</span>Lainnya <span class="dot">{?=$p['inf_lain']?}</span></div>
+    </td>
+  </tr>
+</table>
+<div class="note" style="text-align:right; margin-top:3px;">Tulisan lembar ini harus diisi lengkap jika telah mengisi formulir ini dengan benar dan jelas</div>
+<div class="foot"><span>RSGM/Ed-Rev/02/2023</span><span>RM.RI – 04 Hal 1-2</span></div>
+</div>
+
+<!-- ===================== HALAMAN 2 : RM.RI 04A ===================== -->
+<div class="page">
+<table style="margin-bottom:6px;">
+  <tr>
+    <td></td>
+    <td style="width:120px;">
+      <table class="bx"><tr>
+        <td class="kode" style="padding:6px;">RM.RI</td>
+        <td style="text-align:center; font-weight:bold; font-size:15px; padding:6px;">04A</td>
+      </tr></table>
+    </td>
+  </tr>
+</table>
+<div style="font-size:11px; margin-bottom:2px;">
+  Nama Pasien: <span class="dot" style="min-width:160px;">{?=$p['nm_pasien'] ?? ''?}</span> {?=$p['lp']?}
+  &nbsp; Tanggal Lahir: <span class="dot" style="min-width:110px;">{?=$p['tgl_lahir']?}</span>
+  &nbsp; No. RM : {?=$p['no_rkm_medis'] ?? ''?}
+</div>
+
+<table class="bx tight">
+  <tr><td colspan="4" class="sec">Kategori Pasien transfer</td></tr>
+  <tr class="sec">
+    <td style="width:16%;">Level</td><td style="width:28%;">Kategori</td><td style="width:22%;">Pendamping</td><td style="width:34%;">Peralatan</td>
+  </tr>
+  <tr>
+    <td><span class="cb">{?=$p['ck_lv0']?}</span>Level 0</td>
+    <td>Pasien membutuhkan ruang perawatan biasa</td>
+    <td>TPK/Petugas keamanan</td>
+    <td>Semua rekam medic, hasil pemeriksaan penunjang, format transfer internal</td>
+  </tr>
+  <tr>
+    <td><span class="cb">{?=$p['ck_lv1']?}</span>Level 1</td>
+    <td>Pasien beresiko mengalami perburukan, pasien baru pindah dari HCU/ICU, pasien yang akan dirawat di ruang perawatan tim perawatan khusus</td>
+    <td>Petugas PK I/Petugas keamanan</td>
+    <td>Peralatan derajat 0+ tabung oksigen dan canul, stand infus dan pulse oksimetri</td>
+  </tr>
+  <tr>
+    <td><span class="cb">{?=$p['ck_lv2']?}</span>Level 2</td>
+    <td>Pasien memerlukan pengawasan ketat atau intervensi khusus, mis : pada pasien yang mengalami kegagalan satu system organ</td>
+    <td>Dokter/Perawat PK II</td>
+    <td>Peralatan derajat 1, +bedside monitor, syringe pump</td>
+  </tr>
+  <tr>
+    <td><span class="cb">{?=$p['ck_lv3']?}</span>Level 3</td>
+    <td>Pasien mengalami kegagalan multi organ dan memerlukan bantuan hidup jangka panjang ditambah dengan kebutuhan akan alat bantu nafas</td>
+    <td>Dokter/Perawat PK III</td>
+    <td>Peralatan derajat 2, +alat bantu nafas</td>
+  </tr>
+</table>
+
+<table class="bx tight" style="border-top:none;">
+  <tr><td colspan="2" class="sec">Kondisi Pasien</td></tr>
+  <tr><td style="width:47%;">Sebelum Transfer</td><td>Setelah Transfer</td></tr>
+  <tr>
+    <td>
+      Keadaan umum : {?=$p['pre_keadaan_umum'] ?? ''?}<br>
+      Kesadaran : {?=$p['pre_kesadaran'] ?? ''?}<br>
+      Pemeriksaan tanda-tanda vital :<br>
+      Tensi : {?=$p['pre_tensi'] ?? ''?} mmHg<br>
+      Suhu : {?=$p['pre_suhu'] ?? ''?} &deg;C<br>
+      Nadi : {?=$p['pre_nadi'] ?? ''?} x/mnt<br>
+      Pernapasan : {?=$p['pre_pernafasan'] ?? ''?} x/mnt<br>
+      Catatan penting : {?=$p['pre_catatan'] ?? ''?}
+    </td>
+    <td>
+      Keadaan umum : {?=$p['post_keadaan_umum'] ?? ''?}<br>
+      Kesadaran : {?=$p['post_kesadaran'] ?? ''?}<br>
+      Pemeriksaan tanda-tanda vital :<br>
+      Tensi : {?=$p['post_tensi'] ?? ''?} mmHg<br>
+      Suhu : {?=$p['post_suhu'] ?? ''?} &deg;C<br>
+      Nadi : {?=$p['post_nadi'] ?? ''?} x/mnt<br>
+      Pernapasan : {?=$p['post_pernafasan'] ?? ''?} x/mnt<br>
+      Catatan penting : {?=$p['post_catatan'] ?? ''?}
+    </td>
+  </tr>
+  <tr><td colspan="2" class="sec">Serah Terima Pasien</td></tr>
+  <tr><td colspan="2">Waktu serah terima<br>Tanggal : {?=$p['waktu_serah_tgl']?} &nbsp;&nbsp; Jam : {?=$p['waktu_serah_jam']?} WITA</td></tr>
+  <tr>
+    <td>
+      Petugas yang menyerahkan
+      <div style="text-align:center; margin-top:14px;">Petugas Medis</div>
+      <div style="height:48px;"></div>
+      <div style="text-align:center;">( {?=$p['petugas_menyerahkan'] ?? '..............................'?} )<br><span style="font-size:9px;">Tanda tangan &amp; nama terang</span></div>
+    </td>
+    <td>
+      Petugas yang menerima
+      <div style="text-align:center; margin-top:14px;">Petugas medis</div>
+      <div style="height:48px;"></div>
+      <div style="text-align:center;">( {?=$p['petugas_menerima'] ?? '..............................'?} )<br><span style="font-size:9px;">Tanda tangan &amp; nama terang</span></div>
+    </td>
+  </tr>
+</table>
+<div class="note" style="text-align:right; margin-top:3px;">Tulisan lembar ini harus diisi lengkap jika telah mengisi formulir ini dengan benar dan jelas</div>
+<div class="foot"><span>RSGM/Ed-Rev/02/2023</span><span>RM.RI – 04 Hal 2-2</span></div>
+</div>
+
+</body>
+</html>

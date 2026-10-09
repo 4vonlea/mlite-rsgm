@@ -1,0 +1,207 @@
+<article class="row">
+    <div class="col-md-12">
+        <form action="{?=url([ADMIN, 'update_bmt', 'ri03save'])?}" method="POST">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Form Serah Terima Pasien (RM.RI 03)</h3>
+                    <ul class="nav nav-tabs">
+                        <li><a href="{?=url([ADMIN, 'update_bmt', 'ri03manage'])?}">Kelola Data</a></li>
+                        <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri03form'])?}">Tambah Data</a></li>
+                    </ul>
+                </div>
+                <div class="panel-body">
+                    <fieldset><legend>Data Pasien</legend>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>No. Rawat</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="no_rawat" id="no_rawat" value="{$data.no_rawat}" required>
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-primary" type="button" id="btn_cek_pasien">Cek</button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4"><div class="form-group"><label>Nama Pasien</label><input type="text" class="form-control" id="nm_pasien" value="{$data.nm_pasien}" readonly></div></div>
+                        <div class="col-md-4"><div class="form-group"><label>No. RM</label><input type="text" class="form-control" id="no_rkm_medis" value="{$data.no_rkm_medis}" readonly></div></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4"><div class="form-group"><label>Diagnosa Medis</label><input type="text" class="form-control" name="diagnosa_medis" value="{$data.diagnosa_medis}"></div></div>
+                        <div class="col-md-4"><div class="form-group"><label>Asal Ruangan</label><input type="text" class="form-control" name="asal_ruangan" value="{$data.asal_ruangan}"></div></div>
+                        <div class="col-md-4"><div class="form-group"><label>Jam</label><input type="time" class="form-control" name="jam" value="{$data.jam}"></div></div>
+                    </div>
+                    </fieldset>
+
+                    <fieldset><legend>B. Serah Terima Obat dan Alat</legend>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label>Daftar Obat yang Diterima:</label>
+                            <table class="table table-bordered table-condensed" id="tbl_obat">
+                                <thead><tr><th>Nama Obat</th><th>Jumlah</th><th width="50"><button type="button" class="btn btn-xs btn-success" onclick="addObat()"><i class="fa fa-plus"></i></button></th></tr></thead>
+                                <tbody>
+                                    {if: isset($data['daftar_obat']) && is_array($data['daftar_obat'])}
+                                        {loop: $data.daftar_obat}
+                                        <tr>
+                                            <td><input type="text" class="form-control input-sm" name="daftar_obat[{$key}][nama]" value="{$value.nama}"></td>
+                                            <td><input type="text" class="form-control input-sm" name="daftar_obat[{$key}][jumlah]" value="{$value.jumlah}"></td>
+                                            <td><button type="button" class="btn btn-xs btn-danger" onclick="$(this).closest('tr').remove()"><i class="fa fa-trash"></i></button></td>
+                                        </tr>
+                                        {/loop}
+                                    {/if}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Daftar Alat yang Diterima:</label>
+                            <table class="table table-bordered table-condensed" id="tbl_alat">
+                                <thead><tr><th>Nama Alat</th><th>Jumlah</th><th width="50"><button type="button" class="btn btn-xs btn-success" onclick="addAlat()"><i class="fa fa-plus"></i></button></th></tr></thead>
+                                <tbody>
+                                    {if: isset($data['daftar_alat']) && is_array($data['daftar_alat'])}
+                                        {loop: $data.daftar_alat}
+                                        <tr>
+                                            <td><input type="text" class="form-control input-sm" name="daftar_alat[{$key}][nama]" value="{$value.nama}"></td>
+                                            <td><input type="text" class="form-control input-sm" name="daftar_alat[{$key}][jumlah]" value="{$value.jumlah}"></td>
+                                            <td><button type="button" class="btn btn-xs btn-danger" onclick="$(this).closest('tr').remove()"><i class="fa fa-trash"></i></button></td>
+                                        </tr>
+                                        {/loop}
+                                    {/if}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    </fieldset>
+
+                    <fieldset><legend>C. Jenis Pemeriksaan Penunjang</legend>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="table table-bordered table-condensed" id="tbl_penunjang">
+                                <thead><tr><th>Pemeriksaan Penunjang</th><th>Jumlah</th><th width="50"><button type="button" class="btn btn-xs btn-success" onclick="addPenunjang()"><i class="fa fa-plus"></i></button></th></tr></thead>
+                                <tbody>
+                                    {if: isset($data['pemeriksaan_penunjang']) && is_array($data['pemeriksaan_penunjang'])}
+                                        {loop: $data.pemeriksaan_penunjang}
+                                        <tr>
+                                            <td><input type="text" class="form-control input-sm" name="pemeriksaan_penunjang[{$key}][nama]" value="{$value.nama}"></td>
+                                            <td><input type="text" class="form-control input-sm" name="pemeriksaan_penunjang[{$key}][jumlah]" value="{$value.jumlah}"></td>
+                                            <td><button type="button" class="btn btn-xs btn-danger" onclick="$(this).closest('tr').remove()"><i class="fa fa-trash"></i></button></td>
+                                        </tr>
+                                        {/loop}
+                                    {/if}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    </fieldset>
+
+                    <fieldset><legend>D. Catatan Khusus & TTD</legend>
+                    <div class="row">
+                        <div class="col-md-12"><div class="form-group"><label>Catatan Khusus</label><textarea class="form-control" name="catatan_khusus" rows="3">{$data.catatan_khusus}</textarea></div></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4"><div class="form-group"><label>Dari perawat (asal ruangan)</label><input type="text" class="form-control" name="perawat_asal" value="{$data.perawat_asal}"></div></div>
+                        <div class="col-md-4"><div class="form-group"><label>Oleh perawat (penerima)</label><input type="text" class="form-control" name="perawat_penerima" value="{$data.perawat_penerima}"></div></div>
+                        <div class="col-md-4"><div class="form-group"><label>Sebagai perawat primer di ruangan</label><input type="text" class="form-control" name="ruangan_penerima" value="{$data.ruangan_penerima}"></div></div>
+                    </div>
+                    </fieldset>
+                </div>
+                <div class="panel-footer">
+                    <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="json_daftar_obat" id="json_daftar_obat" value="">
+                    <input type="hidden" name="json_daftar_alat" id="json_daftar_alat" value="">
+                    <input type="hidden" name="json_pemeriksaan_penunjang" id="json_pemeriksaan_penunjang" value="">
+                    <button type="button" id="btn_simpan_ri03" class="btn btn-primary">Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ri03manage'])?}" class="btn btn-default">Kembali</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</article>
+
+<script>
+    var idx_obat = {?= isset($data['daftar_obat']) && is_array($data['daftar_obat']) ? count($data['daftar_obat']) : 0 ?};
+    function addObat() {
+        var html = '<tr><td><input type="text" class="form-control input-sm" name="daftar_obat['+idx_obat+'][nama]"></td>';
+        html += '<td><input type="text" class="form-control input-sm" name="daftar_obat['+idx_obat+'][jumlah]"></td>';
+        html += '<td><button type="button" class="btn btn-xs btn-danger" onclick="$(this).closest(\'tr\').remove()"><i class="fa fa-trash"></i></button></td></tr>';
+        $('#tbl_obat tbody').append(html);
+        idx_obat++;
+    }
+
+    var idx_alat = {?= isset($data['daftar_alat']) && is_array($data['daftar_alat']) ? count($data['daftar_alat']) : 0 ?};
+    function addAlat() {
+        var html = '<tr><td><input type="text" class="form-control input-sm" name="daftar_alat['+idx_alat+'][nama]"></td>';
+        html += '<td><input type="text" class="form-control input-sm" name="daftar_alat['+idx_alat+'][jumlah]"></td>';
+        html += '<td><button type="button" class="btn btn-xs btn-danger" onclick="$(this).closest(\'tr\').remove()"><i class="fa fa-trash"></i></button></td></tr>';
+        $('#tbl_alat tbody').append(html);
+        idx_alat++;
+    }
+
+    var idx_penunjang = {?= isset($data['pemeriksaan_penunjang']) && is_array($data['pemeriksaan_penunjang']) ? count($data['pemeriksaan_penunjang']) : 0 ?};
+    function addPenunjang() {
+        var html = '<tr><td><input type="text" class="form-control input-sm" name="pemeriksaan_penunjang['+idx_penunjang+'][nama]"></td>';
+        html += '<td><input type="text" class="form-control input-sm" name="pemeriksaan_penunjang['+idx_penunjang+'][jumlah]"></td>';
+        html += '<td><button type="button" class="btn btn-xs btn-danger" onclick="$(this).closest(\'tr\').remove()"><i class="fa fa-trash"></i></button></td></tr>';
+        $('#tbl_penunjang tbody').append(html);
+        idx_penunjang++;
+    }
+
+    $('#no_rawat').keypress(function(event){
+        if (event.keyCode === 10 || event.keyCode === 13) {
+            event.preventDefault();
+            $('#btn_cek_pasien').click();
+        }
+    });
+
+    $('#btn_cek_pasien').click(function() {
+        var no_rawat = $('#no_rawat').val();
+        if (no_rawat) {
+            $.ajax({
+                url: '{?=url([ADMIN, "update_bmt", "ri03form"])?}',
+                type: 'GET',
+                data: { ajax_patient: 1, no_rawat: no_rawat, t: '{?=$_SESSION["token"]?}' },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        $('#no_rawat').val(res.no_rawat);
+                        $('#no_rkm_medis').val(res.no_rkm_medis);
+                        $('#nm_pasien').val(res.nm_pasien);
+                    } else {
+                        alert('Pasien tidak ditemukan!');
+                    }
+                },
+                error: function() {
+                    alert('Terjadi kesalahan jaringan atau server');
+                }
+            });
+        }
+    });
+
+    $('#btn_simpan_ri03').click(function() {
+        var daftar_obat = [];
+        $('#tbl_obat tbody tr').each(function() {
+            var nama = $(this).find('input[name*="[nama]"]').val();
+            var jumlah = $(this).find('input[name*="[jumlah]"]').val();
+            if(nama) daftar_obat.push({nama: nama, jumlah: jumlah});
+        });
+        $('#json_daftar_obat').val(JSON.stringify(daftar_obat));
+
+        var daftar_alat = [];
+        $('#tbl_alat tbody tr').each(function() {
+            var nama = $(this).find('input[name*="[nama]"]').val();
+            var jumlah = $(this).find('input[name*="[jumlah]"]').val();
+            if(nama) daftar_alat.push({nama: nama, jumlah: jumlah});
+        });
+        $('#json_daftar_alat').val(JSON.stringify(daftar_alat));
+
+        var pemeriksaan_penunjang = [];
+        $('#tbl_penunjang tbody tr').each(function() {
+            var nama = $(this).find('input[name*="[nama]"]').val();
+            var jumlah = $(this).find('input[name*="[jumlah]"]').val();
+            if(nama) pemeriksaan_penunjang.push({nama: nama, jumlah: jumlah});
+        });
+        $('#json_pemeriksaan_penunjang').val(JSON.stringify(pemeriksaan_penunjang));
+
+        $(this).closest('form').submit();
+    });
+</script>

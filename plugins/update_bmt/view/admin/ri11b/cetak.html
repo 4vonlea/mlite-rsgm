@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>RM.RI 11B - Formulir Pemberian Makan Pasien</title>
+<style>
+    @page { size: A4 portrait; margin: 10mm; }
+    body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 0; }
+    .page { width: 190mm; margin: 0 auto; page-break-after: always; position: relative; }
+    .page:last-child { page-break-after: auto; }
+    .table-header, .table-body, .table-ttd { width: 100%; border-collapse: collapse; }
+    .table-header td, .table-header th, .table-body td, .table-body th, .table-ttd td { border: 1px solid #000; padding: 4px; }
+    .header-logo { width: 60px; }
+    .text-center { text-align: center; }
+    .text-bold { font-weight: bold; }
+    .title-box { background-color: #f0f0f0; text-align: center; font-weight: bold; font-size: 12px; }
+    .patient-box td { vertical-align: top; }
+    .ckbox { font-size: 12px; font-weight: bold; }
+    .no-border-bottom { border-bottom: none !important; }
+    .no-border-top { border-top: none !important; }
+    .footer-note { font-size: 9px; font-style: italic; text-align: right; margin-top: 5px; }
+    .footer-bottom { font-size: 9px; display: flex; justify-content: space-between; margin-top: 20px; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 -->
+<div class="page">
+    <table class="table-header">
+        <tr>
+            <td rowspan="2" style="width:10%; text-align:center;"><img src="{?=url('assets/img/logo.png')?}" style="width:60px;"></td>
+            <td rowspan="2" style="width:50%; text-align:center; font-size:12px; font-weight:bold;">
+                PEMERINTAH PROVINSI KALIMANTAN SELATAN<br>RUMAH SAKIT GIGI DAN MULUT<br>GUSTI HASAN AMAN<br>
+                <span style="font-size:9px; font-weight:normal;">Jl. Simpang Ulin Nomor 28 Banjarmasin Kode Pos 70233<br>Telp/Fax (0511) 3260818<br>Email: rsgmgustihasanaman@yahoo.com</span>
+            </td>
+            <td style="width:30%; padding:0; border:none;">
+                <table style="width:100%; border-collapse:collapse; font-size:10px; margin:2px;">
+                    <tr><td style="width:70px;">No RM</td><td>: </td>
+                        <td><div style="border:1px solid #000; width:15px; display:inline-block; text-align:center;">{$p.rm0}</div></td>
+                        <td><div style="border:1px solid #000; width:15px; display:inline-block; text-align:center;">{$p.rm1}</div></td>
+                        <td><div style="border:1px solid #000; width:15px; display:inline-block; text-align:center;">{$p.rm2}</div></td>
+                        <td><div style="border:1px solid #000; width:15px; display:inline-block; text-align:center;">{$p.rm3}</div></td>
+                        <td><div style="border:1px solid #000; width:15px; display:inline-block; text-align:center;">{$p.rm4}</div></td>
+                        <td><div style="border:1px solid #000; width:15px; display:inline-block; text-align:center;">{$p.rm5}</div></td>
+                    </tr>
+                    <tr><td>Nama Pasien</td><td colspan="7">: {$p.nm_pasien} ........................ {$p.lp}</td></tr>
+                    <tr><td>Tanggal Lahir</td><td colspan="7">: {$p.tgl_lahir}</td></tr>
+                </table>
+            </td>
+            <td style="width:10%; text-align:center; background-color:#8cc63f; font-weight:bold; font-size:14px; padding:0;">
+                <div style="border-bottom:1px solid #000; padding:5px;">RM<br>RI</div>
+                <div style="background-color:#fff; padding:5px;">11B</div>
+            </td>
+        </tr>
+    </table>
+    
+    <div style="border:1px solid #000; border-top:none; padding:2px 5px; font-size:9px; color:red;">
+        Catatan:<br>
+        * Harap mengisi formulir secara lengkap dan jelas sesuai format yang telah ditentukan<br>
+        * Isilah kolom sesuai kriteria yang telah ditentukan
+    </div>
+
+    <table class="table-body" style="border-top:none;">
+        <tr><td colspan="4" class="title-box" style="border-top:none;">FORMULIR PEMBERIAN MAKANAN PASIEN</td></tr>
+        <tr>
+            <td style="width:20%; font-weight:bold;">DPJP Utama :</td>
+            <td colspan="3">{$p.dpjp_utama}</td>
+        </tr>
+        <tr>
+            <td style="font-weight:bold;">Nutrisionis :</td>
+            <td colspan="3">{$p.nutrisionis}</td>
+        </tr>
+        <tr>
+            <td>Kamar / kelas :<br>{$p.kamar_kelas}</td>
+            <td colspan="3">Tanggal Rawat :<br>{$p.tanggal_rawat}</td>
+        </tr>
+        <tr>
+            <td style="font-weight:bold;">Diagnosa :</td>
+            <td colspan="3">{$p.diagnosa}</td>
+        </tr>
+        <tr>
+            <td colspan="4">Beri tanda &radic; sesuai permintaan.</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="font-weight:bold; text-align:center; width:50%;">Bentuk Makanan :</td>
+            <td colspan="2" style="font-weight:bold; text-align:center; width:50%;">Diet :</td>
+        </tr>
+        <tr>
+            <td style="width:25%;">Nasi Biasa</td><td style="width:25%; text-align:center;" class="ckbox">{$p.ck_nasi}</td>
+            <td style="width:25%;">Bebas/Biasa</td><td style="width:25%; text-align:center;" class="ckbox">{$p.ck_bebas}</td>
+        </tr>
+        <tr>
+            <td>Lunak</td><td style="text-align:center;" class="ckbox">{$p.ck_lunak}</td>
+            <td>TKTP</td><td style="text-align:center;" class="ckbox">{$p.ck_tktp}</td>
+        </tr>
+        <tr>
+            <td>Saring</td><td style="text-align:center;" class="ckbox">{$p.ck_saring}</td>
+            <td>DM</td><td style="text-align:center;" class="ckbox">{$p.ck_dm}</td>
+        </tr>
+        <tr>
+            <td>Sumsum</td><td style="text-align:center;" class="ckbox">{$p.ck_sumsum}</td>
+            <td>RG</td><td style="text-align:center;" class="ckbox">{$p.ck_rg}</td>
+        </tr>
+        <tr>
+            <td>Cair</td><td style="text-align:center;" class="ckbox">{$p.ck_cair}</td>
+            <td>{$p.diet_lain}</td><td style="text-align:center;" class="ckbox">{$p.ck_lain}</td>
+        </tr>
+    </table>
+
+    <table class="table-body" style="margin-top:10px;">
+        <thead>
+            <tr>
+                <th rowspan="2" style="width:10%;">Hari/<br>Tanggal</th>
+                <th colspan="3">PAGI</th>
+                <th colspan="3">SIANG</th>
+                <th colspan="3">SORE</th>
+            </tr>
+            <tr>
+                <th style="width:10%;">Jam Ambil</th><th style="width:10%;">Jam Hidang</th><th style="width:10%;">TTD</th>
+                <th style="width:10%;">Jam Ambil</th><th style="width:10%;">Jam Hidang</th><th style="width:10%;">TTD</th>
+                <th style="width:10%;">Jam Ambil</th><th style="width:10%;">Jam Hidang</th><th style="width:10%;">TTD</th>
+            </tr>
+        </thead>
+        <tbody>
+            {loop: $p1}
+            <tr>
+                <td style="height:25px;">{$value.tgl}</td>
+                <td>{$value.p_a}</td><td>{$value.p_h}</td><td>{$value.p_t}</td>
+                <td>{$value.s_a}</td><td>{$value.s_h}</td><td>{$value.s_t}</td>
+                <td>{$value.m_a}</td><td>{$value.m_h}</td><td>{$value.m_t}</td>
+            </tr>
+            {/loop}
+        </tbody>
+    </table>
+
+    <div class="footer-note">Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</div>
+    <div class="footer-bottom">
+        <div>RSGM/Ed-Rev/02/2023</div>
+        <div>RM.RI - 11B Hal 1-2</div>
+    </div>
+</div>
+
+<!-- PAGE 2 -->
+<div class="page">
+    <table class="table-body">
+        <thead>
+            <tr>
+                <th rowspan="2" style="width:10%;">Hari/<br>Tanggal</th>
+                <th colspan="3">PAGI</th>
+                <th colspan="3">SIANG</th>
+                <th colspan="3">SORE</th>
+            </tr>
+            <tr>
+                <th style="width:10%;">Jam Ambil</th><th style="width:10%;">Jam Hidang</th><th style="width:10%;">TTD</th>
+                <th style="width:10%;">Jam Ambil</th><th style="width:10%;">Jam Hidang</th><th style="width:10%;">TTD</th>
+                <th style="width:10%;">Jam Ambil</th><th style="width:10%;">Jam Hidang</th><th style="width:10%;">TTD</th>
+            </tr>
+        </thead>
+        <tbody>
+            {loop: $p2}
+            <tr>
+                <td style="height:25px;">{$value.tgl}</td>
+                <td>{$value.p_a}</td><td>{$value.p_h}</td><td>{$value.p_t}</td>
+                <td>{$value.s_a}</td><td>{$value.s_h}</td><td>{$value.s_t}</td>
+                <td>{$value.m_a}</td><td>{$value.m_h}</td><td>{$value.m_t}</td>
+            </tr>
+            {/loop}
+        </tbody>
+    </table>
+
+    <table class="table-ttd" style="margin-top:20px;">
+        <tr>
+            <td style="width:50%; text-align:center; height:100px; vertical-align:top; border-right:1px solid #000;">
+                <br>Nutrisionis<br><br><br><br><br>
+                <div style="border-top:1px dotted #000; width:80%; margin:0 auto; padding-top:2px;">Nama & Tanda Tangan<br>{$p.ttd_nutrisionis}</div>
+            </td>
+            <td style="width:50%; text-align:center; height:100px; vertical-align:top;">
+                <br>Perawat<br><br><br><br><br>
+                <div style="border-top:1px dotted #000; width:80%; margin:0 auto; padding-top:2px;">Nama & Tanda Tangan<br>{$p.ttd_perawat}</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="footer-note">Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</div>
+    <div class="footer-bottom" style="position:absolute; bottom:0; width:100%;">
+        <div>RSGM/Ed-Rev/02/2023</div>
+        <div>RM.RI - 11B Hal 2-2</div>
+    </div>
+</div>
+
+<script>
+    window.print();
+</script>
+</body>
+</html>

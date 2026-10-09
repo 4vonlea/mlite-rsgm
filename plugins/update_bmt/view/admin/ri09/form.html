@@ -1,0 +1,111 @@
+<article class="row">
+    <div class="col-md-12">
+        <form action="{?=url([ADMIN, 'update_bmt', 'ri09save'])?}" method="POST" id="form_ri09">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Form Asesmen Status Fungsional (RM.RI 09)</h3>
+                    <ul class="nav nav-tabs">
+                        <li><a href="{?=url([ADMIN, 'update_bmt', 'ri09manage'])?}">Kelola Data</a></li>
+                        <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri09form'])?}">Tambah Data</a></li>
+                    </ul>
+                </div>
+                <div class="panel-body">
+                    <fieldset><legend>Data Pasien</legend>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>No. Rawat / No. RM</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" name="no_rawat" id="no_rawat" value="{$data.no_rawat}" required>
+                                        <span class="input-group-btn"><button class="btn btn-primary" type="button" id="btn_cek_pasien">Cek</button></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3"><div class="form-group"><label>Nama Pasien</label><input type="text" class="form-control" id="nm_pasien" value="{$data.nm_pasien}" readonly></div></div>
+                            <div class="col-md-2"><div class="form-group"><label>No. RM</label><input type="text" class="form-control" id="no_rkm_medis" value="{$data.no_rkm_medis}" readonly></div></div>
+                            <div class="col-md-4"><div class="form-group"><label>Instalasi/Unit/Ruangan</label><input type="text" class="form-control" name="ruangan" value="{$data.ruangan}"></div></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3"><div class="form-group"><label>Tanggal</label><input type="date" class="form-control" name="tanggal" value="{$data.tanggal}"></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Jam</label><input type="time" class="form-control" name="jam" value="{$data.jam}"></div></div>
+                            <div class="col-md-6"><div class="form-group"><label>Petugas</label><input type="text" class="form-control" name="petugas" value="{$data.petugas}"></div></div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset><legend>Barthel Index</legend>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-condensed" id="tbl_barthel">
+                                <thead>
+                                    <tr class="active">
+                                        <th width="40" class="text-center">NO</th>
+                                        <th width="200">ITEM</th>
+                                        <th>SKALA (pilih salah satu)</th>
+                                        <th width="60" class="text-center">SKOR</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {$rows}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="info">
+                                        <th colspan="3" class="text-right">TOTAL SKOR</th>
+                                        <th class="text-center"><span id="ri09_total">0</span></th>
+                                    </tr>
+                                    <tr class="info">
+                                        <th colspan="3" class="text-right">KATEGORI</th>
+                                        <th class="text-center" style="white-space:nowrap;"><span id="ri09_kategori">-</span></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <small class="text-muted">Kategori: 20 = Mandiri &bull; 12-19 = Ketergantungan Ringan &bull; 9-11 = Ketergantungan Sedang &bull; 5-8 = Ketergantungan Berat &bull; 0-4 = Ketergantungan Total</small>
+                    </fieldset>
+                </div>
+                <div class="panel-footer">
+                    <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ri09manage'])?}" class="btn btn-default">Kembali</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</article>
+
+<script>
+    function ri09Hitung() {
+        var total = 0, terisi = 0;
+        $('#tbl_barthel input.ri09-skor:checked').each(function() { total += parseInt($(this).val(), 10); terisi++; });
+        var kat = '-';
+        if (terisi > 0) {
+            if (total >= 20) kat = 'Mandiri';
+            else if (total >= 12) kat = 'Ketergantungan Ringan';
+            else if (total >= 9) kat = 'Ketergantungan Sedang';
+            else if (total >= 5) kat = 'Ketergantungan Berat';
+            else kat = 'Ketergantungan Total';
+        }
+        $('#ri09_total').text(total);
+        $('#ri09_kategori').text(kat);
+    }
+    $(document).on('change', '#tbl_barthel input.ri09-skor', ri09Hitung);
+    ri09Hitung();
+
+    $('#btn_cek_pasien').click(function() {
+        var no_rawat = $('#no_rawat').val();
+        if (!no_rawat) return;
+        $.ajax({
+            url: '{?=url([ADMIN, "update_bmt", "ri09form"])?}',
+            type: 'GET',
+            data: { ajax_patient: 1, no_rawat: no_rawat, t: '{?=$_SESSION["token"]?}' },
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    $('#no_rawat').val(res.no_rawat);
+                    $('#no_rkm_medis').val(res.no_rkm_medis);
+                    $('#nm_pasien').val(res.nm_pasien);
+                } else { alert('Pasien tidak ditemukan!'); }
+            },
+            error: function() { alert('Terjadi kesalahan jaringan atau server'); }
+        });
+    });
+</script>

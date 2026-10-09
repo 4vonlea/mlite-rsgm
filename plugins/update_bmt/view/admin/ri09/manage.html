@@ -1,0 +1,52 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Data Asesmen Status Fungsional (RM.RI 09)</h3>
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri09manage'])?}">Kelola Data</a></li>
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri09form'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive no-margin">
+                    <table class="table table-striped table-bordered no-margin" id="data_table_ri09">
+                        <thead>
+                            <tr>
+                                <th>No. RM</th>
+                                <th>No. Rawat</th>
+                                <th>Nama Pasien</th>
+                                <th>Ruangan</th>
+                                <th>Tanggal</th>
+                                <th>Total Skor</th>
+                                <th>Kategori</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loop: $data}
+                            <tr>
+                                <td>{$value.no_rkm_medis}</td>
+                                <td>{$value.no_rawat}</td>
+                                <td>{$value.nm_pasien}</td>
+                                <td>{$value.ruangan}</td>
+                                <td>{$value.tanggal} {$value.jam}</td>
+                                <td class="text-center">{$value.total_skor}</td>
+                                <td>{$value.kategori}</td>
+                                <td>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ri09form'])?}&id={$value.id}" class="btn btn-xs btn-primary"><i class="fa fa-edit"></i> Edit</a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ri09hapus'])?}&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Hapus data?');"><i class="fa fa-trash"></i> Hapus</a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ri09cetak'])?}&id={$value.id}" target="_blank" class="btn btn-xs btn-success"><i class="fa fa-print"></i> Cetak</a>
+                                </td>
+                            </tr>
+                            {/loop}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</article>
+<script>
+    $('#data_table_ri09').DataTable({ order: [] });
+</script>

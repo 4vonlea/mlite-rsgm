@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>RM.RI 03 - SERAH TERIMA PASIEN</title>
+<style>
+  @page { size: A4; margin: 8mm 10mm; }
+  body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 0; color: #000; }
+  
+  .container { width: 100%; max-width: 195mm; margin: 0 auto; box-sizing: border-box; position: relative; border: 1px solid #000; }
+
+  /* Header Box */
+  .header-table { width: 100%; border-collapse: collapse; border-bottom: 1px solid #000; }
+  .header-table td { border: none; vertical-align: middle; padding: 5px; }
+  .box-rm { display: inline-block; width: 15px; height: 15px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; font-weight: bold; margin-right: 1px;}
+  .header-info-table { width: 100%; font-size: 10px; }
+  .header-info-table td { padding: 2px 0; border: none; }
+
+  .judul { text-align: center; font-size: 14px; font-weight: bold; padding: 10px 0; border-bottom: 1px solid #000; }
+  
+  .content-block { padding: 10px; border-bottom: 1px solid #000; }
+  .content-block.no-border { border-bottom: none; }
+
+  .main-table { width: 100%; border-collapse: collapse; border: 1px solid #000; margin-top: 5px; }
+  .main-table th, .main-table td { border: 1px solid #000; padding: 5px; font-size: 11px; }
+  .main-table th { text-align: center; }
+
+  .ttd-box { width: 100%; display: table; margin-top: 20px; }
+  .ttd-row { display: table-row; }
+  .ttd-col { display: table-cell; width: 50%; text-align: center; vertical-align: top; font-size: 11px; padding: 0 20px;}
+  
+  .footer-wrap { width: 100%; font-size: 8px; margin-top: 5px; display: table; position: absolute; bottom: -20px; font-weight: bold; }
+  .footer-left { display: table-cell; text-align: left; }
+  .footer-right { display: table-cell; text-align: right; }
+
+  .dotted-line { display: inline-block; border-bottom: 1px dotted #000; min-width: 150px; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body onload="window.print()">
+
+<div class="container">
+    <table class="header-table">
+        <tr>
+            <td width="40%" style="border-right: 1px solid #000; padding:10px;">
+                <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat" style="width: 100%; max-height: 70px; object-fit: contain;">
+            </td>
+            <td width="45%" style="border-right: 1px solid #000; padding: 10px;">
+                <table class="header-info-table">
+                    <tr>
+                        <td width="30%">No RM</td>
+                        <td width="5%">:</td>
+                        <td>
+                            <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 0, 1) ?}</div><div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 1, 1) ?}</div> &nbsp; 
+                            <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 2, 1) ?}</div><div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 3, 1) ?}</div> &nbsp; 
+                            <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 4, 1) ?}</div><div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 5, 1) ?}</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Nama Pasien</td>
+                        <td>:</td>
+                        <td style="border-bottom: 1px dotted #000;">{$data.nm_pasien} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {?= $data['jk']=='L'?'L':'P' ?}</td>
+                    </tr>
+                    <tr>
+                        <td>Tanggal Lahir</td>
+                        <td>:</td>
+                        <td style="border-bottom: 1px dotted #000;">{$data.tgl_lahir}</td>
+                    </tr>
+                </table>
+            </td>
+            <td width="15%" style="text-align: center; background: #bced89;">
+                <strong style="font-size:14px;">RM<br>RI</strong><hr style="border-top:1px solid #000; margin:5px 0;">
+                <strong style="font-size:16px;">03</strong>
+            </td>
+        </tr>
+    </table>
+
+    <div class="judul">SERAH TERIMA PASIEN</div>
+
+    <div class="content-block">
+        <table style="width: 100%; border: none; line-height: 1.8;">
+            <tr><td width="120">Diagnosa Medis</td><td width="10">:</td><td style="border-bottom: 1px dotted #000;">{$data.diagnosa_medis}</td></tr>
+            <tr><td>Asal Ruangan</td><td>:</td><td style="border-bottom: 1px dotted #000;">{$data.asal_ruangan}</td></tr>
+            <tr><td>Jam</td><td>:</td><td style="border-bottom: 1px dotted #000;">{$data.jam}</td></tr>
+        </table>
+    </div>
+
+    <div class="content-block">
+        <strong>B. Serah terima obat dan alat</strong><br><br>
+        Daftar obat yang diterima :
+        <table class="main-table" style="margin-bottom:15px;">
+            <tr><th width="30">No</th><th>Nama Obat</th><th width="150">Jumlah</th></tr>
+            {if: !empty($data['daftar_obat']) && is_array($data['daftar_obat'])}
+                {loop: $data.daftar_obat}
+                <tr><td align="center">{?= $key+1 ?}</td><td>{$value.nama}</td><td align="center">{$value.jumlah}</td></tr>
+                {/loop}
+            {else}
+                <tr><td align="center">1</td><td></td><td></td></tr>
+                <tr><td align="center">2</td><td></td><td></td></tr>
+            {/if}
+        </table>
+
+        Daftar alat yang diterima :
+        <table class="main-table">
+            <tr><th width="30">No</th><th>Nama Alat</th><th width="150">Jumlah</th></tr>
+            {if: !empty($data['daftar_alat']) && is_array($data['daftar_alat'])}
+                {loop: $data.daftar_alat}
+                <tr><td align="center">{?= $key+1 ?}</td><td>{$value.nama}</td><td align="center">{$value.jumlah}</td></tr>
+                {/loop}
+            {else}
+                <tr><td align="center">1</td><td></td><td></td></tr>
+                <tr><td align="center">2</td><td></td><td></td></tr>
+            {/if}
+        </table>
+    </div>
+
+    <div class="content-block">
+        <strong>C. Jenis Pemeriksaan Penunjang</strong><br>
+        <table class="main-table">
+            <tr><th width="30">No</th><th>Pemeriksaan Penunjang</th><th width="150">Jumlah</th></tr>
+            {if: !empty($data['pemeriksaan_penunjang']) && is_array($data['pemeriksaan_penunjang'])}
+                {loop: $data.pemeriksaan_penunjang}
+                <tr><td align="center">{?= $key+1 ?}</td><td>{$value.nama}</td><td align="center">{$value.jumlah}</td></tr>
+                {/loop}
+            {else}
+                <tr><td align="center">1</td><td></td><td></td></tr>
+                <tr><td align="center">2</td><td></td><td></td></tr>
+            {/if}
+        </table>
+    </div>
+
+    <div class="content-block no-border">
+        <strong>D. Catatan Khusus</strong><br>
+        <div style="min-height: 50px; padding: 5px;">
+            {?= nl2br(htmlspecialchars($data['catatan_khusus'])) ?}
+        </div>
+        <br>
+        <div style="line-height: 2;">
+            Dari perawat <span class="dotted-line">{$data.perawat_asal}</span> oleh perawat <span class="dotted-line">{$data.perawat_penerima}</span> sebagai perawat primer di ruangan <span class="dotted-line">{$data.ruangan_penerima}</span>
+        </div>
+
+        <div class="ttd-box">
+            <div class="ttd-row">
+                <div class="ttd-col">
+                    Perawat asal ruangan<br><br><br><br><br>
+                    (&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)
+                </div>
+                <div class="ttd-col">
+                    PP Ruang {$data.ruangan_penerima}<br><br><br><br><br>
+                    (&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)
+                </div>
+            </div>
+        </div>
+        <div style="text-align: right; font-size: 8px; font-weight: bold; margin-top: 15px;">
+            Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+        </div>
+    </div>
+
+    <div class="footer-wrap">
+        <div class="footer-left">RSGM/Ed-Rev/02/2023</div>
+        <div class="footer-right">RM.RI - 03</div>
+    </div>
+</div>
+
+</body>
+</html>

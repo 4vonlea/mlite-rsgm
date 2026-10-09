@@ -1,0 +1,248 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Form Ringkasan Masuk dan Keluar Rumah Sakit (RM.RI 02)</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri02manage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri02form'])?}">Form Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'update_bmt', 'ri02save'])?}" method="POST">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+                    
+                    <fieldset><legend>Data Pasien & Registrasi</legend>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>No. Rawat</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="no_rawat" id="no_rawat" value="{$data.no_rawat}" required>
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-primary" type="button" id="btn_cek_pasien">Cek</button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group"><label>No RM</label><input type="text" class="form-control" id="no_rkm_medis" value="{$data.no_rkm_medis}" readonly></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group"><label>Nama Pasien</label><input type="text" class="form-control" id="nm_pasien" value="{$data.nm_pasien}" readonly></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group"><label>Dirawat Ke-</label><input type="text" class="form-control" name="dirawat_ke" value="{$data.dirawat_ke}"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group"><label>Pendidikan</label><input type="text" class="form-control" name="pendidikan" id="pendidikan" value="{$data.pendidikan}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group"><label>Agama</label><input type="text" class="form-control" name="agama" id="agama" value="{$data.agama}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group"><label>Pekerjaan</label><input type="text" class="form-control" name="pekerjaan" id="pekerjaan" value="{$data.pekerjaan}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group"><label>Status Perkawinan</label><input type="text" class="form-control" name="status_perkawinan" id="stts_nikah" value="{$data.status_perkawinan}"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group"><label>Nama & Alamat Penanggung Jawab / Wali Pasien</label><textarea class="form-control" name="nama_wali" rows="1">{$data.nama_wali}</textarea></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group"><label>Saksi (Jika Pulang Paksa)</label><input type="text" class="form-control" name="saksi" value="{$data.saksi}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group"><label>Status Wali</label><input type="text" class="form-control" name="wali_adalah" value="{$data.wali_adalah}" placeholder="Ayah/Ibu/Suami/dll"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group"><label>Dikirim Oleh</label><input type="text" class="form-control" name="dikirim_oleh" value="{$data.dikirim_oleh}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Cara Penerimaan Melalui</label>
+                                <select class="form-control" name="cara_penerimaan">
+                                    <option value="">- Pilih -</option>
+                                    <option value="1. RJ" {?= $data['cara_penerimaan']=='1. RJ'?'selected':'' ?}>1. RJ</option>
+                                    <option value="2. UGD" {?= $data['cara_penerimaan']=='2. UGD'?'selected':'' ?}>2. UGD</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    </fieldset>
+
+                    <fieldset><legend>Data Perawatan</legend>
+                    <div class="row">
+                        <div class="col-md-3"><div class="form-group"><label>Ruang Rawat</label><input type="text" class="form-control" name="ruang_rawat" value="{$data.ruang_rawat}"></div></div>
+                        <div class="col-md-3"><div class="form-group"><label>Kelas</label><input type="text" class="form-control" name="kelas" value="{$data.kelas}"></div></div>
+                        <div class="col-md-3"><div class="form-group"><label>Mutasi Di Ruang</label><input type="text" class="form-control" name="mutasi_ruang" value="{$data.mutasi_ruang}"></div></div>
+                        <div class="col-md-3"><div class="form-group"><label>Kelas Mutasi</label><input type="text" class="form-control" name="mutasi_kelas" value="{$data.mutasi_kelas}"></div></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Peserta PHB / No. PHN</label>
+                                <select class="form-control" name="peserta_phb">
+                                    <option value="">- Pilih -</option>
+                                    <option value="1. Ya" {?= $data['peserta_phb']=='1. Ya'?'selected':'' ?}>1. Ya</option>
+                                    <option value="2. Tidak" {?= $data['peserta_phb']=='2. Tidak'?'selected':'' ?}>2. Tidak</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Bagian</label>
+                                <select class="form-control" name="bagian">
+                                    <option value="">- Pilih -</option>
+                                    <option value="1. Bedah Minor" {?= $data['bagian']=='1. Bedah Minor'?'selected':'' ?}>1. Bedah Minor</option>
+                                    <option value="2. Bedah Mayor" {?= $data['bagian']=='2. Bedah Mayor'?'selected':'' ?}>2. Bedah Mayor</option>
+                                    <option value="3. Lain-lain" {?= $data['bagian']=='3. Lain-lain'?'selected':'' ?}>3. Lain-lain</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6"><div class="form-group"><label>Sebab Dirawat</label><input type="text" class="form-control" name="sebab_dirawat" value="{$data.sebab_dirawat}"></div></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2"><div class="form-group"><label>Tgl Masuk</label><input type="text" class="form-control datepicker" name="tgl_masuk" value="{$data.tgl_masuk}"></div></div>
+                        <div class="col-md-2"><div class="form-group"><label>Jam Masuk</label><input type="text" class="form-control" name="jam_masuk" value="{$data.jam_masuk}" placeholder="00:00"></div></div>
+                        <div class="col-md-2"><div class="form-group"><label>Tgl Keluar</label><input type="text" class="form-control datepicker" name="tgl_keluar" value="{$data.tgl_keluar}"></div></div>
+                        <div class="col-md-2"><div class="form-group"><label>Jam Keluar</label><input type="text" class="form-control" name="jam_keluar" value="{$data.jam_keluar}" placeholder="00:00"></div></div>
+                        <div class="col-md-4"><div class="form-group"><label>Lama Dirawat</label><input type="text" class="form-control" name="lama_dirawat" value="{$data.lama_dirawat}" placeholder="... Hari"></div></div>
+                    </div>
+                    </fieldset>
+
+                    <fieldset><legend>Diagnosis & Operasi</legend>
+                    <div class="row">
+                        <div class="col-md-6"><div class="form-group"><label>Diagnosis Masuk</label><input type="text" class="form-control" name="diagnosis_masuk" value="{$data.diagnosis_masuk}"></div></div>
+                        <div class="col-md-4"><div class="form-group"><label>Diagnosis Akhir</label><input type="text" class="form-control" name="diagnosis_akhir" value="{$data.diagnosis_akhir}"></div></div>
+                        <div class="col-md-2"><div class="form-group"><label>Kode</label><input type="text" class="form-control" name="kode_akhir" value="{$data.kode_akhir}"></div></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4"><div class="form-group"><label>Diagnosis Tambahan 1</label><input type="text" class="form-control" name="diagnosis_tambahan_1" value="{$data.diagnosis_tambahan_1}"></div></div>
+                        <div class="col-md-2"><div class="form-group"><label>Kode Tambahan 1</label><input type="text" class="form-control" name="kode_tambahan_1" value="{$data.kode_tambahan_1}"></div></div>
+                        <div class="col-md-4"><div class="form-group"><label>Diagnosis Tambahan 2</label><input type="text" class="form-control" name="diagnosis_tambahan_2" value="{$data.diagnosis_tambahan_2}"></div></div>
+                        <div class="col-md-2"><div class="form-group"><label>Kode Tambahan 2</label><input type="text" class="form-control" name="kode_tambahan_2" value="{$data.kode_tambahan_2}"></div></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4"><div class="form-group"><label>Komplikasi</label><input type="text" class="form-control" name="komplikasi" value="{$data.komplikasi}"></div></div>
+                        <div class="col-md-2"><div class="form-group"><label>Kode Komplikasi</label><input type="text" class="form-control" name="kode_komplikasi" value="{$data.kode_komplikasi}"></div></div>
+                        <div class="col-md-6"><div class="form-group"><label>Penyebab Luar Cedera/Keracunan/Morfologi Neoplasma</label><input type="text" class="form-control" name="penyebab_luar" value="{$data.penyebab_luar}"></div></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3"><div class="form-group"><label>Nama Operasi/Tindakan</label><input type="text" class="form-control" name="nama_operasi" value="{$data.nama_operasi}"></div></div>
+                        <div class="col-md-2"><div class="form-group"><label>Gol. Operasi</label><input type="text" class="form-control" name="gol_operasi" value="{$data.gol_operasi}"></div></div>
+                        <div class="col-md-3"><div class="form-group"><label>Jenis Anestesi</label><input type="text" class="form-control" name="jenis_anestesi" value="{$data.jenis_anestesi}"></div></div>
+                        <div class="col-md-2"><div class="form-group"><label>Tanggal Operasi</label><input type="text" class="form-control datepicker" name="tgl_operasi" value="{$data.tgl_operasi}"></div></div>
+                        <div class="col-md-2"><div class="form-group"><label>Kode Operasi</label><input type="text" class="form-control" name="kode_operasi" value="{$data.kode_operasi}"></div></div>
+                    </div>
+                    </fieldset>
+
+                    <fieldset><legend>Lain-lain & Status Keluar</legend>
+                    <div class="row">
+                        <div class="col-md-4"><div class="form-group"><label>Infeksi Nosokomial</label><input type="text" class="form-control" name="infeksi_nosokomial" value="{$data.infeksi_nosokomial}"></div></div>
+                        <div class="col-md-4"><div class="form-group"><label>Penyebab Infeksi</label><input type="text" class="form-control" name="penyebab_infeksi" value="{$data.penyebab_infeksi}"></div></div>
+                        <div class="col-md-4"><div class="form-group"><label>Imunisasi yang Pernah Didapat</label><input type="text" class="form-control" name="imunisasi_didapat" value="{$data.imunisasi_didapat}" placeholder="BCG, DPT, Polio, dll"></div></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4"><div class="form-group"><label>Imunisasi yang Diperoleh Selama Dirawat</label><input type="text" class="form-control" name="imunisasi_selama_dirawat" value="{$data.imunisasi_selama_dirawat}"></div></div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>Transfusi Darah</label>
+                                <select class="form-control" name="transfusi_darah">
+                                    <option value="">- Pilih -</option>
+                                    <option value="Ya" {?= $data['transfusi_darah']=='Ya'?'selected':'' ?}>Ya</option>
+                                    <option value="Tidak" {?= $data['transfusi_darah']=='Tidak'?'selected':'' ?}>Tidak</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2"><div class="form-group"><label>Transfusi 1 (cc)</label><input type="text" class="form-control" name="transfusi_1" value="{$data.transfusi_1}"></div></div>
+                        <div class="col-md-2"><div class="form-group"><label>Transfusi 2 (cc)</label><input type="text" class="form-control" name="transfusi_2" value="{$data.transfusi_2}"></div></div>
+                        <div class="col-md-2"><div class="form-group"><label>Transfusi 3 (cc)</label><input type="text" class="form-control" name="transfusi_3" value="{$data.transfusi_3}"></div></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Keadaan Keluar</label>
+                                <select class="form-control" name="keadaan_keluar">
+                                    <option value="">- Pilih -</option>
+                                    <option value="1. Sembuh" {?= $data['keadaan_keluar']=='1. Sembuh'?'selected':'' ?}>1. Sembuh</option>
+                                    <option value="2. Membaik/mulai sembuh" {?= $data['keadaan_keluar']=='2. Membaik/mulai sembuh'?'selected':'' ?}>2. Membaik/mulai sembuh</option>
+                                    <option value="3. Mati < 48 Jam" {?= $data['keadaan_keluar']=='3. Mati < 48 Jam'?'selected':'' ?}>3. Mati < 48 Jam</option>
+                                    <option value="4. Mati > 48 Jam" {?= $data['keadaan_keluar']=='4. Mati > 48 Jam'?'selected':'' ?}>4. Mati > 48 Jam</option>
+                                    <option value="5. Belum sembuh" {?= $data['keadaan_keluar']=='5. Belum sembuh'?'selected':'' ?}>5. Belum sembuh</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3"><div class="form-group"><label>Sebab Kematian (Bila Ada)</label><input type="text" class="form-control" name="sebab_kematian" value="{$data.sebab_kematian}"></div></div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Cara Keluar</label>
+                                <select class="form-control" name="cara_keluar">
+                                    <option value="">- Pilih -</option>
+                                    <option value="1. Diijinkan pulang" {?= ($data['cara_keluar']??'')=='1. Diijinkan pulang'?'selected':'' ?}>1. Diijinkan pulang</option>
+                                    <option value="2. Pulang paksa" {?= ($data['cara_keluar']??'')=='2. Pulang paksa'?'selected':'' ?}>2. Pulang paksa</option>
+                                    <option value="3. Dirujuk ke" {?= strpos($data['cara_keluar']??'', '3. Dirujuk') !== false ?'selected':'' ?}>3. Dirujuk ke...</option>
+                                    <option value="4. Pindah RS lain" {?= ($data['cara_keluar']??'')=='4. Pindah RS lain'?'selected':'' ?}>4. Pindah RS lain</option>
+                                </select>
+                                <input type="text" class="form-control" name="cara_keluar_keterangan" value="{$data.cara_keluar}" placeholder="Keterangan Rujukan (Jika Dirujuk)">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6"><div class="form-group"><label>Dokter Ruang / Yang Merawat</label><input type="text" class="form-control" name="dokter_ruang" value="{$data.dokter_ruang}"></div></div>
+                        <div class="col-md-6"><div class="form-group"><label>Petugas Admissi Rawat Inap</label><input type="text" class="form-control" name="petugas_admissi" value="{$data.petugas_admissi}"></div></div>
+                    </div>
+                    </fieldset>
+
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ri02manage'])?}" class="btn btn-default">Kembali</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+    $('#no_rawat').keypress(function(event){
+        if (event.keyCode === 10 || event.keyCode === 13) {
+            event.preventDefault();
+            $('#btn_cek_pasien').click();
+        }
+    });
+
+    $('#btn_cek_pasien').click(function() {
+        var no_rawat = $('#no_rawat').val();
+        if (no_rawat) {
+            $.ajax({
+                url: '{?=url([ADMIN, "update_bmt", "ri02form"])?}',
+                type: 'GET',
+                data: { ajax_patient: 1, no_rawat: no_rawat, t: '{?=$_SESSION["token"]?}' },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        $('#no_rawat').val(res.no_rawat);
+                        $('#no_rkm_medis').val(res.no_rkm_medis);
+                        $('#nm_pasien').val(res.nm_pasien);
+                        $('#pendidikan').val(res.pnd);
+                        $('#agama').val(res.agama);
+                        $('#pekerjaan').val(res.pekerjaan);
+                        $('#stts_nikah').val(res.stts_nikah);
+                    } else {
+                        alert('Pasien tidak ditemukan!');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Terjadi kesalahan jaringan atau server: ' + error + ' (Status: ' + status + ')');
+                    console.log(xhr.responseText);
+                }
+            });
+        }
+    });
+</script>

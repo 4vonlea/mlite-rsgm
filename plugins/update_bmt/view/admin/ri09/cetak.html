@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>RM.RI 09 - FORM ASESMEN STATUS FUNGSIONAL</title>
+<style>
+  @page { size: A4; margin: 8mm 10mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 11px; margin: 0; color: #000; }
+  .page { width: 190mm; margin: 0 auto; }
+  table { border-collapse: collapse; width: 100%; }
+  .bx { border: 1.5px solid #000; }
+  .bx > tbody > tr > td { border: 1px solid #000; padding: 2px 6px; vertical-align: middle; }
+  .nob td { border: none !important; padding: 0 2px; }
+  .kode { background: #6aa84f; text-align: center; font-weight: bold; font-size: 15px; }
+  .rmbox { display: inline-block; width: 15px; height: 16px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; vertical-align: middle; }
+  .note { font-size: 7.5px; line-height: 1.25; }
+  .title { text-align: center; font-weight: bold; font-size: 14px; padding: 3px; }
+  .barthel td, .barthel th { border: 1px solid #000; padding: 1px 4px; vertical-align: top; font-size: 11px; }
+  .barthel th { text-align: left; font-weight: normal; }
+  .barthel .c { text-align: left; width: 50px; }
+  .barthel .nilai { text-align: center; vertical-align: middle; font-weight: bold; width: 50px; }
+  .barthel .sel { font-weight: bold; text-decoration: underline; }
+  .circle { border: 1px solid #000; border-radius: 10px; padding: 0 6px; font-weight: bold; }
+  .foot { display: flex; justify-content: space-between; font-size: 8px; font-weight: bold; margin-top: 70px; }
+  .dot { display: inline-block; border-bottom: 1px dotted #000; min-width: 190px; padding: 0 3px; }
+</style>
+</head>
+<body onload="window.print()">
+<div class="page">
+
+<table class="bx">
+  <tr>
+    <td style="width:57%;"><img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop" style="width:100%; max-height:75px; object-fit:contain;"></td>
+    <td style="width:33%; font-size:10px;">
+      <table class="nob">
+        <tr><td style="width:62px;">No RM</td><td>:
+          <span class="rmbox">{?=$p['rm0']?}</span><span class="rmbox">{?=$p['rm1']?}</span>-<span class="rmbox">{?=$p['rm2']?}</span><span class="rmbox">{?=$p['rm3']?}</span>-<span class="rmbox">{?=$p['rm4']?}</span><span class="rmbox">{?=$p['rm5']?}</span>
+        </td></tr>
+        <tr><td>Nama Pasien</td><td>: {?=$p['nm_pasien']?} &nbsp; <b>{?=$p['lp']?}</b></td></tr>
+        <tr><td>Tanggal Lahir</td><td>: {?=$p['tgl_lahir']?}</td></tr>
+      </table>
+    </td>
+    <td class="kode" style="width:10%; padding:0;">
+      <div style="padding:6px 0; border-bottom:1px solid #000;">RM<br>RI</div>
+      <div style="background:#fff; padding:8px 0;">09</div>
+    </td>
+  </tr>
+  <tr><td colspan="3" class="note">
+    <u>Catatan :</u><br>
+    * Harap semua pertanyaan dilakukan dengan kelengkapan yang jelas, benar dan lengkap<br>
+    * Isilah kolom sesuai keterangan yang telah disediakan
+  </td></tr>
+  <tr><td colspan="3" class="title">FORM ASESMEN STATUS FUNGSIONAL</td></tr>
+</table>
+
+<table class="bx" style="border-top:none;">
+  <tr><td style="border:none; padding:10px 6px 4px;">
+    <table class="nob"><tr>
+      <td>Instalasi/Unit/Ruangan: <span class="dot">{?=$p['ruangan']?}</span></td>
+      <td style="text-align:right;">Tanggal dan Jam: <span class="dot">{?=$p['tanggal_jam']?}</span></td>
+    </tr></table>
+  </td></tr>
+  <tr><td style="text-align:center; font-weight:bold; font-size:13px; border-top:1px solid #000;">BARTHEL INDEX</td></tr>
+  <tr><td style="padding:0; border:none;">
+    <table class="barthel">
+      <tr><th style="width:30px;">NO</th><th style="width:130px;">ITEM</th><th>SKALA</th><th class="c">SKOR</th><th class="c" style="text-align:left;">NILAI</th></tr>
+      {$rows}
+      <tr><td colspan="4" style="font-weight:bold;">TOTAL SKOR</td><td class="nilai">{?=$p['total']?}</td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:14px 20px 20px; border:none;">
+    <div style="font-weight:bold; text-decoration:underline; margin-bottom:4px;">Kategori</div>
+    <table class="nob" style="width:auto; margin-left:16px;">{$katRows}</table>
+    <table class="nob" style="margin-top:6px;"><tr><td></td>
+      <td style="width:240px; text-align:center;">
+        <b>Petugas</b>
+        <div style="height:55px;"></div>
+        ( {?=$p['petugas'] ?: '..................................'?} )<br>
+        Tanda Tangan &amp; Nama Jelas
+      </td>
+    </tr></table>
+  </td></tr>
+</table>
+<div class="note" style="text-align:right; margin-top:3px; font-style:italic;">Tulisan lembar ini harus diisi lengkap jika telah mengisi formulir ini dengan benar dan jelas</div>
+<div class="foot"><span>RSGM/Ed-Rev/02/2023</span><span>RM.RI – 09</span></div>
+</div>
+</body>
+</html>

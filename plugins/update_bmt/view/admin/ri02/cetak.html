@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>RM.RI 02 - RINGKASAN MASUK DAN KELUAR</title>
+<style>
+  @page { size: A4; margin: 5mm 5mm; }
+  body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 0; color: #000; }
+  
+  .container { width: 100%; max-width: 195mm; margin: 0 auto; box-sizing: border-box; }
+
+  .main-table { width: 100%; border-collapse: collapse; border: 1px solid #000; }
+  .main-table td { border: 1px solid #000; padding: 3px 5px; vertical-align: top; font-size: 10px; }
+  .main-table th { border: 1px solid #000; padding: 3px 5px; vertical-align: middle; text-align: center; }
+
+  /* Header Box */
+  .header-table { width: 100%; border-collapse: collapse; }
+  .header-table td { border: none; vertical-align: middle; padding: 5px; }
+  .box-rm { display: inline-block; width: 15px; height: 15px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; font-weight: bold; margin-right: 1px;}
+
+  .dotted { border-bottom: 1px dotted #000; display: inline-block; min-width: 50px; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+
+  
+  
+  
+  .container { width: 100%; max-width: 192mm; margin: 0 auto; border: 1px solid #000; box-sizing: border-box; min-height: 250mm; position: relative;}
+
+  /* Header */
+  .header-top { width: 100%; display: table; margin-bottom: 5px; border-bottom: 1px solid #000;}
+  .header-col { display: table-cell; vertical-align: middle; }
+  .header-identitas { width: 85%; font-size: 10px; padding: 5px; }
+  .header-rm { width: 15%; text-align: center; border-left: 1px solid #000; padding: 5px; background: #bced89; }
+  
+  .judul { text-align: center; font-size: 14px; font-weight: bold; padding: 15px 0; }
+  
+  .isi { padding: 10px 20px; font-size: 12px; line-height: 1.5; text-align: justify; }
+
+  .ttd-box { width: 100%; display: table; margin-top: 30px; }
+  .ttd-row { display: table-row; }
+  .ttd-col { display: table-cell; width: 50%; text-align: left; vertical-align: top; font-size: 11px; padding: 0 20px;}
+  
+  .footer-wrap { width: 100%; font-size: 8px; margin-top: 20px; display: table; position: absolute; bottom: 5px; padding: 0 10px; box-sizing: border-box; border-top: 1px solid #000; padding-top: 5px;}
+  .footer-left { display: table-cell; text-align: left; }
+  .footer-center { display: table-cell; text-align: right; }
+  .footer-right { display: table-cell; text-align: right; width: 60px; font-weight: bold; }
+
+  
+
+
+  
+  
+  
+  .container { width: 100%; max-width: 192mm; margin: 0 auto; box-sizing: border-box; position: relative;}
+
+  /* Header */
+  .header-top { width: 100%; display: table; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom:5px; }
+  .header-col { display: table-cell; vertical-align: middle; }
+  .header-identitas { width: 85%; font-size: 10px; }
+  .header-rm { width: 15%; text-align: center; border: 1px solid #000; padding: 5px; background: #bced89; }
+  .box-rm { display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin-left: 2px; text-align: center; line-height: 14px; font-size: 12px; background: #fff; vertical-align: bottom; }
+  
+  .judul { text-align: center; font-size: 16px; padding: 10px 0; border-top: 1px solid #000; border-bottom: 1px solid #000; }
+  
+  .identitas-table { width: 100%; border-collapse: collapse; border: 2px solid #000; margin-top: 10px; margin-bottom: 10px; }
+  .identitas-table td { border: 1px solid #000; padding: 6px; font-size: 11px; }
+
+  .tempel-box { width: 100%; border-collapse: collapse; border: 1px solid #000; }
+  .tempel-box td { border: 1px solid #000; padding: 3px; font-size: 11px; height: 18px; }
+  
+  .tempel-content { border: 1px solid #000; height: 140mm; border-top: none;}
+
+  .footer-wrap { width: 100%; font-size: 8px; margin-top: 5px; display: table; }
+  .footer-left { display: table-cell; text-align: left; }
+  .footer-center { display: table-cell; text-align: right; }
+  .footer-right { display: table-cell; text-align: right; width: 60px; }
+  
+  
+</style>
+</head>
+<body onload="window.print()">
+
+<div class="container">
+  <table class="main-table">
+    <tr>
+      <td colspan="4" style="padding:0;">
+        <table class="header-table">
+            <tr>
+                <td width="50%" style="border-right: 1px solid #000;">
+                    <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat" style="width: 100%; max-height: 60px; object-fit: contain;">
+                </td>
+                <td width="35%" style="text-align: center; border-right: 1px solid #000;">
+                    <strong style="font-size:12px;">RINGKASAN MASUK<br>KELUAR RUMAH SAKIT</strong><br><br>
+                    <strong>NO. RM.</strong> 
+                    <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 0, 1) ?}</div><div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 1, 1) ?}</div> &nbsp; 
+                    <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 2, 1) ?}</div><div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 3, 1) ?}</div> &nbsp; 
+                    <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 4, 1) ?}</div><div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 5, 1) ?}</div>
+                </td>
+                <td width="15%" style="text-align: center; background: #bced89;">
+                    <strong style="font-size:14px;">RM<br>RI</strong><hr style="border-top:1px solid #000; margin:5px 0;">
+                    <strong style="font-size:14px;">02</strong>
+                </td>
+            </tr>
+        </table>
+      </td>
+    </tr>
+    
+    <tr>
+        <td colspan="3">Nama Pasien :<br> <span style="font-size: 11px;">{$data.nm_pasien}</span> <br> <em>(dengan huruf cetak)</em></td>
+        <td width="25%">Jenis Kelamin<br>1. Lk &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2. Pr <br> {?= $data['jk']=='L'?'Laki-laki':'Perempuan' ?}</td>
+    </tr>
+    <tr>
+        <td colspan="2">Tempat/Tgl lahir : {$data.tgl_lahir}</td>
+        <td>Umur : {$data.umur}</td>
+        <td>Dirawat ke : {$data.dirawat_ke}</td>
+    </tr>
+    <tr>
+        <td colspan="3">Alamat Lengkap : {$data.alamat}</td>
+        <td>Gol Darah : {$data.gol_darah}</td>
+    </tr>
+    <tr>
+        <td width="25%">Pendidikan Pasien : <br> {$data.pendidikan}</td>
+        <td width="25%">Agama : <br> {$data.agama}</td>
+        <td width="25%">Pekerjaan Pasien : <br> {$data.pekerjaan}</td>
+        <td width="25%">Status perkawinan : <br> {$data.stts_nikah}</td>
+    </tr>
+    <tr>
+        <td colspan="4">Nama & Alamat Penanggung jawab/Wali Pasien : <br> {$data.nama_wali}</td>
+    </tr>
+    <tr>
+        <td colspan="2">Dikirim oleh : <br> {$data.dikirim_oleh}</td>
+        <td colspan="2">Cara penerimaan melalui : <br> {$data.cara_penerimaan} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Peserta PHB / No. PHN : {$data.peserta_phb}</td>
+    </tr>
+    <tr>
+        <td>Ruang Rawat : {$data.ruang_rawat} <br> Kelas : {$data.kelas}</td>
+        <td>Mutasi di ruang : {$data.mutasi_ruang} <br> Kelas : {$data.mutasi_kelas}</td>
+        <td colspan="2">Bagian : {$data.bagian}</td>
+    </tr>
+    <tr>
+        <td colspan="4">Sebab dirawat : {$data.sebab_dirawat}</td>
+    </tr>
+    <tr>
+        <td colspan="2">Tgl Masuk : {$data.tgl_masuk} &nbsp;&nbsp;&nbsp; Jam : {$data.jam_masuk}</td>
+        <td colspan="2" rowspan="3" style="text-align: center; vertical-align: middle;">
+            Petugas Admissi Rawat Inap<br><br><br><br>
+            ( <span class="dotted" style="width:200px;">{$data.petugas_admissi}</span> )
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">Tgl Keluar : {$data.tgl_keluar} &nbsp;&nbsp;&nbsp; Jam : {$data.jam_keluar}</td>
+    </tr>
+    <tr>
+        <td colspan="2">Lama dirawat : {$data.lama_dirawat}</td>
+    </tr>
+    
+    <tr>
+        <td colspan="3">Diagnosis masuk : {$data.diagnosis_masuk}</td>
+        <td style="border-left:none;"></td>
+    </tr>
+    <tr>
+        <td colspan="3">Diagnosis akhir : {$data.diagnosis_akhir}</td>
+        <td>Kode : {$data.kode_akhir}</td>
+    </tr>
+    <tr>
+        <td colspan="3">Diagnosis tambahan 1. {$data.diagnosis_tambahan_1}</td>
+        <td>Kode : {$data.kode_tambahan_1}</td>
+    </tr>
+    <tr>
+        <td colspan="3">Diagnosis tambahan 2. {$data.diagnosis_tambahan_2}</td>
+        <td>Kode : {$data.kode_tambahan_2}</td>
+    </tr>
+    <tr>
+        <td colspan="3">Komplikasi : {$data.komplikasi}</td>
+        <td>Kode : {$data.kode_komplikasi}</td>
+    </tr>
+    <tr>
+        <td colspan="4">Penyebab luar cedera & keracunan/morfologi neoplasma : {$data.penyebab_luar}</td>
+    </tr>
+    
+    <tr style="text-align: center; font-weight: bold;">
+        <td colspan="2">Nama Operasi/Tindakan</td>
+        <td>Jenis Anestesi / Tanggal</td>
+        <td>Gol. Operasi / Kode</td>
+    </tr>
+    <tr>
+        <td colspan="2" style="height:25px;">{$data.nama_operasi}</td>
+        <td>{$data.jenis_anestesi} &nbsp;&nbsp;&nbsp; {$data.tgl_operasi}</td>
+        <td>{$data.gol_operasi} &nbsp;&nbsp;&nbsp; {$data.kode_operasi}</td>
+    </tr>
+    
+    <tr>
+        <td colspan="2">Infeksi nosokomial : {$data.infeksi_nosokomial}</td>
+        <td colspan="2">Penyebab infeksi : {$data.penyebab_infeksi}</td>
+    </tr>
+    <tr>
+        <td colspan="2">Imunisasi yang pernah didapat : {$data.imunisasi_didapat}</td>
+        <td colspan="2">Imunisasi yang diperoleh selama dirawat : {$data.imunisasi_selama_dirawat}</td>
+    </tr>
+    <tr>
+        <td colspan="4">Transfusi darah : {$data.transfusi_darah} &nbsp;&nbsp;&nbsp;&nbsp; 1. {$data.transfusi_1} &nbsp;&nbsp;&nbsp;&nbsp; 2. {$data.transfusi_2} &nbsp;&nbsp;&nbsp;&nbsp; 3. {$data.transfusi_3}</td>
+    </tr>
+    <tr>
+        <td colspan="2">Keadaan keluar : {$data.keadaan_keluar}</td>
+        <td colspan="2">Sebab Kematian : {$data.sebab_kematian}</td>
+    </tr>
+    <tr>
+        <td colspan="4">Cara keluar : {$data.cara_keluar}</td>
+    </tr>
+    <tr>
+        <td colspan="2">Dokter ruang / yang merawat :<br><br><br><br><br> {$data.dokter_ruang}</td>
+        <td colspan="2" style="text-align:center;">Tanda tangan :<br><br><br><br><br> ____________________________</td>
+    </tr>
+  </table>
+  
+  <div style="text-align: right; font-size: 8px; font-weight: bold; margin-top: 3px;">
+      Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas []
+  </div>
+  
+  <div style="display: table; width: 100%; font-size: 8px; font-weight: bold; margin-top: 2px;">
+      <div style="display: table-cell; text-align: left;">RSGM/Ed-Rev/02/2023</div>
+      <div style="display: table-cell; text-align: right;">RM.RI - 02</div>
+  </div>
+
+</div>
+
+<div class="container" style="page-break-before: always;">
+  <div class="header-top">
+    <div class="header-col header-identitas">
+      <strong>Nama Pasien:</strong> {$data.nm_pasien} &nbsp;&nbsp;&nbsp;&nbsp; <strong>L/P</strong> {?= $data['jk']=='L'?'L':'P' ?} &nbsp;&nbsp;&nbsp;&nbsp; <strong>Tanggal Lahir:</strong> {$data.tgl_lahir} &nbsp;&nbsp;&nbsp;&nbsp; <strong>NO. RM</strong> {$data.no_rkm_medis}
+    </div>
+    <div class="header-col header-rm">
+      <strong style="font-size:12px;">RM<br>RI</strong><br><hr style="margin:2px 0;border-top:1px solid #000;"><strong style="font-size:12px;">02A</strong>
+    </div>
+  </div>
+
+  <div class="judul">PEMBEBASAN TANGGUNG JAWAB RSGM GUSTI HASAN AMAN<br>TERHADAP PASIEN PULANG PAKSA</div>
+  
+  <div class="isi">
+      Saya yang bertanda dibawah ini adalah pasien / wali, berkeinginan keras untuk pulang sebelum waktu yang telah ditentukan oleh staf medis RSGM Gusti Hasan Aman.<br>
+      Keputusan ini akan mengakibatkan saya / wali menanggung segala resiko yang terjadi dikemudian hari serta tidak akan mengadakan penggugatan terhadap RSGM Gusti Hasan Aman sesudahnya.
+      
+      <div class="ttd-box">
+          <div class="ttd-row">
+              <div class="ttd-col">
+                  Nama jelas pasien / wali : {$data.nama_wali} <br><br>
+                  Saksi : {$data.saksi} <br><br>
+                  Pasien : {$data.nm_pasien} <br><br>
+                  Bagi wali,<br>
+                  Wali adalah : {$data.wali_adalah}
+              </div>
+              <div class="ttd-col">
+                  Banjarmasin, {?= date('d-m-Y', (!empty($data['tanggal_jam']) ? strtotime($data['tanggal_jam']) : time())) ?}<br><br><br><br><br>
+                  ( {$data.nama_wali} )<br>
+                  Tanda tangan pasien / wali
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <div class="footer-wrap">
+      <div class="footer-left">RSGM/Ed-Rev/02/2023</div>
+      <div class="footer-center">Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas []</div>
+      <div class="footer-right">RM.RI - 02A</div>
+  </div>
+</div>
+
+<div class="container" style="page-break-before: always;">
+  <div class="header-top">
+    <div class="header-col header-identitas">
+      <strong>Nama Pasien:</strong> {$data.nm_pasien} &nbsp;&nbsp;&nbsp;&nbsp; <strong>L/P</strong> {?= $data['jk']=='L'?'L':'P' ?} &nbsp;&nbsp;&nbsp;&nbsp; <strong>Tanggal Lahir:</strong> {$data.tgl_lahir} &nbsp;&nbsp;&nbsp;&nbsp; <strong>NO. RM</strong>
+      <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 0, 1) ?}</div>
+      <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 1, 1) ?}</div>
+      <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 2, 1) ?}</div>
+      <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 3, 1) ?}</div>
+      <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 4, 1) ?}</div>
+      <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 5, 1) ?}</div>
+    </div>
+    <div class="header-col header-rm">
+      <strong style="font-size:12px;">RM<br>RI</strong><br><hr style="margin:2px 0;border-top:1px solid #000;"><strong style="font-size:12px;">02B</strong>
+    </div>
+  </div>
+
+  <div class="judul">LEMBAR UNTUK MENEMPEL SURAT<br>(MRS,RUJUKAN DLL)</div>
+  
+  <table class="identitas-table">
+      <tr>
+          <td width="50%">Nama Lengkap : {$data.nm_pasien}</td>
+          <td width="50%">Umur : {$data.umur}</td>
+      </tr>
+      <tr>
+          <td>Ruangan : {$data.kd_kamar}</td>
+          <td>Kelas : {$data.kelas}</td>
+      </tr>
+  </table>
+
+  <table class="tempel-box">
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">12</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">11</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">10</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">9</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">8</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">7</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">6</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">5</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">4</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">3</td></tr>
+      <tr><td style="border-right: none;"></td><td style="width: 30px; text-align:center; border-left: none;">2</td></tr>
+      <tr>
+          <td style="text-align: center; font-weight: bold; border-right: none;">PENEMPELAN PERTAMA</td><td style="width: 30px; text-align:center; border-left: none;">1</td>
+      </tr>
+  </table>
+  
+  <div class="tempel-content"></div>
+
+  <div class="footer-wrap">
+      <div class="footer-left">RSGM/Ed-Rev/02/2023</div>
+      <div class="footer-center">Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas []</div>
+      <div class="footer-right">RM.RI - 02B</div>
+  </div>
+</div>
+
+</body>
+</html>

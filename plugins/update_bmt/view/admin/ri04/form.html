@@ -1,0 +1,251 @@
+<article class="row">
+    <div class="col-md-12">
+        <form action="{?=url([ADMIN, 'update_bmt', 'ri04save'])?}" method="POST" id="form_ri04">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Form Transfer Pasien Internal (RM.RI 04)</h3>
+                    <ul class="nav nav-tabs">
+                        <li><a href="{?=url([ADMIN, 'update_bmt', 'ri04manage'])?}">Kelola Data</a></li>
+                        <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri04form'])?}">Tambah Data</a></li>
+                    </ul>
+                </div>
+                <div class="panel-body">
+                    <fieldset><legend>Data Pasien & Transfer</legend>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>No. Rawat</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" name="no_rawat" id="no_rawat" value="{$data.no_rawat}" required>
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-primary" type="button" id="btn_cek_pasien">Cek</button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3"><div class="form-group"><label>Nama Pasien</label><input type="text" class="form-control" id="nm_pasien" value="{$data.nm_pasien}" readonly></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>No. RM</label><input type="text" class="form-control" id="no_rkm_medis" value="{$data.no_rkm_medis}" readonly></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>DPJP</label><input type="text" class="form-control" name="dpjp" value="{$data.dpjp}"></div></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3"><div class="form-group"><label>Unit Tujuan</label><input type="text" class="form-control" name="unit_tujuan" value="{$data.unit_tujuan}"></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Petugas dihubungi</label><input type="text" class="form-control" name="petugas_dihubungi" value="{$data.petugas_dihubungi}"></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Waktu hubungi (Tgl)</label><input type="date" class="form-control" name="waktu_hub_tgl" value="{$data.waktu_hub_tgl}"></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Waktu hubungi (Jam)</label><input type="time" class="form-control" name="waktu_hub_jam" value="{$data.waktu_hub_jam}"></div></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3"><div class="form-group"><label>Waktu Transfer (Tgl)</label><input type="date" class="form-control" name="waktu_transfer_tgl" value="{$data.waktu_transfer_tgl}"></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Waktu Transfer (Jam)</label><input type="time" class="form-control" name="waktu_transfer_jam" value="{$data.waktu_transfer_jam}"></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Alasan Transfer</label>
+                                <select class="form-control" name="alasan_transfer">
+                                    <option value="">- Pilih -</option>
+                                    <option value="Kondisi Klinis" {if: $data.alasan_transfer == 'Kondisi Klinis'}selected{/if}>Kondisi Klinis</option>
+                                    <option value="Permintaan pasien / keluarga" {if: $data.alasan_transfer == 'Permintaan pasien / keluarga'}selected{/if}>Permintaan pasien / keluarga</option>
+                                    <option value="Lainnya" {if: $data.alasan_transfer == 'Lainnya'}selected{/if}>Lainnya</option>
+                                </select>
+                            </div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Alasan Lainnya (jika ada)</label><input type="text" class="form-control" name="alasan_lainnya" value="{$data.alasan_lainnya}"></div></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3"><div class="form-group"><label>Tgl Masuk</label><input type="date" class="form-control" name="tgl_masuk" value="{$data.tgl_masuk}"></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Ruang / Kamar</label><input type="text" class="form-control" name="ruang_kamar" value="{$data.ruang_kamar}"></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Waktu Pindah (Tgl)</label><input type="date" class="form-control" name="waktu_pindah_tgl" value="{$data.waktu_pindah_tgl}"></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Waktu Pindah (Jam)</label><input type="time" class="form-control" name="waktu_pindah_jam" value="{$data.waktu_pindah_jam}"></div></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3"><div class="form-group"><label>Pindah ke Ruang/Kamar</label><input type="text" class="form-control" name="pindah_ke_ruang" value="{$data.pindah_ke_ruang}"></div></div>
+                            <div class="col-md-4"><div class="form-group"><label>Diagnosis Masuk</label><input type="text" class="form-control" name="diagnosis_masuk" value="{$data.diagnosis_masuk}"></div></div>
+                            <div class="col-md-5"><div class="form-group"><label>Diagnosis Sekarang</label><input type="text" class="form-control" name="diagnosis_sekarang" value="{$data.diagnosis_sekarang}"></div></div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset><legend>Ringkasan Riwayat Pasien</legend>
+                        <div class="row">
+                            <div class="col-md-6"><div class="form-group"><label>Keluhan Utama</label><textarea class="form-control" name="keluhan_utama">{$data.keluhan_utama}</textarea></div></div>
+                            <div class="col-md-6"><div class="form-group"><label>Riwayat Penyakit</label><textarea class="form-control" name="riwayat_penyakit">{$data.riwayat_penyakit}</textarea></div></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-2"><div class="form-group"><label>Tensi (mmHg)</label><input type="text" class="form-control" name="tensi" value="{$data.tensi}"></div></div>
+                            <div class="col-md-2"><div class="form-group"><label>Suhu (C)</label><input type="text" class="form-control" name="suhu" value="{$data.suhu}"></div></div>
+                            <div class="col-md-2"><div class="form-group"><label>Nadi (x/mnt)</label><input type="text" class="form-control" name="nadi" value="{$data.nadi}"></div></div>
+                            <div class="col-md-2"><div class="form-group"><label>Pernafasan (x/mnt)</label><input type="text" class="form-control" name="pernafasan" value="{$data.pernafasan}"></div></div>
+                            <div class="col-md-4"><div class="form-group"><label>Keadaan Umum</label><input type="text" class="form-control" name="keadaan_umum" value="{$data.keadaan_umum}"></div></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12"><div class="form-group"><label>Pemeriksaan Penunjang yang sudah dilakukan</label><textarea class="form-control" name="pemeriksaan_penunjang">{$data.pemeriksaan_penunjang}</textarea></div></div>
+                            <div class="col-md-12"><div class="form-group"><label>Tindakan Medis yang sudah dilakukan</label><textarea class="form-control" name="tindakan_medis">{$data.tindakan_medis}</textarea></div></div>
+                            <div class="col-md-12"><div class="form-group"><label>Pemberian Terapi</label><textarea class="form-control" name="pemberian_terapi">{$data.pemberian_terapi}</textarea></div></div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset><legend>Alat dan Obat</legend>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label>Alat yang terpasang dari tanggal pemasangan:</label>
+                                <table class="table table-bordered table-condensed" id="tbl_alat">
+                                    <thead><tr><th width="30">#</th><th>Nama Alat</th><th>Tanggal</th></tr></thead>
+                                    <tbody>
+                                        {loop: $huruf}
+                                        <tr>
+                                            <td>{$value}</td>
+                                            <td><input type="text" class="form-control input-sm i_alat_nama" value="{?= isset($data['alat_terpasang'][$key]['nama']) ? $data['alat_terpasang'][$key]['nama'] : '' ?}"></td>
+                                            <td><input type="date" class="form-control input-sm i_alat_tgl" value="{?= isset($data['alat_terpasang'][$key]['tgl']) ? $data['alat_terpasang'][$key]['tgl'] : '' ?}"></td>
+                                        </tr>
+                                        {/loop}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Obat / cairan yang dibawa pada saat transfer:</label>
+                                <table class="table table-bordered table-condensed" id="tbl_obat">
+                                    <thead><tr><th width="30">#</th><th>Nama Obat/Cairan</th><th>Jumlah</th></tr></thead>
+                                    <tbody>
+                                        {loop: $huruf}
+                                        <tr>
+                                            <td>{$value}</td>
+                                            <td><input type="text" class="form-control input-sm i_obat_nama" value="{?= isset($data['obat_dibawa'][$key]['nama']) ? $data['obat_dibawa'][$key]['nama'] : '' ?}"></td>
+                                            <td><input type="text" class="form-control input-sm i_obat_jumlah" value="{?= isset($data['obat_dibawa'][$key]['jumlah']) ? $data['obat_dibawa'][$key]['jumlah'] : '' ?}"></td>
+                                        </tr>
+                                        {/loop}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label>Dokumen yang disertakan:</label><br>
+                                <label class="checkbox-inline"><input type="checkbox" class="cb_dokumen" value="Rekam Medis" {?= in_array('Rekam Medis', $data['dokumen_disertakan']) ? 'checked' : '' ?}> Rekam Medis</label>
+                                <label class="checkbox-inline"><input type="checkbox" class="cb_dokumen" value="Hasil Pemeriksaan Laboratorium" {?= in_array('Hasil Pemeriksaan Laboratorium', $data['dokumen_disertakan']) ? 'checked' : '' ?}> Hasil Pemeriksaan Laboratorium</label>
+                                <label class="checkbox-inline"><input type="checkbox" class="cb_dokumen" value="Hasil Pemeriksaan Radiologi" {?= in_array('Hasil Pemeriksaan Radiologi', $data['dokumen_disertakan']) ? 'checked' : '' ?}> Hasil Pemeriksaan Radiologi</label>
+                                <div style="margin-top:5px;"><input type="text" class="form-control input-sm" id="cb_dokumen_lainnya" placeholder="Lainnya..." value="{?= isset($data['dokumen_disertakan'][3]) && !in_array($data['dokumen_disertakan'][3], ['Rekam Medis', 'Hasil Pemeriksaan Laboratorium', 'Hasil Pemeriksaan Radiologi']) ? $data['dokumen_disertakan'][3] : '' ?}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Informasi yang diberikan:</label><br>
+                                <label class="checkbox-inline"><input type="checkbox" class="cb_informasi" value="Perubahan Tarif Ruangan (Transfer Internal)" {?= in_array('Perubahan Tarif Ruangan (Transfer Internal)', $data['informasi_diberikan']) ? 'checked' : '' ?}> Perubahan Tarif Ruangan</label>
+                                <label class="checkbox-inline"><input type="checkbox" class="cb_informasi" value="Tarif Tindakan / Operan Pemeriksaan" {?= in_array('Tarif Tindakan / Operan Pemeriksaan', $data['informasi_diberikan']) ? 'checked' : '' ?}> Tarif Tindakan</label>
+                                <div style="margin-top:5px;"><input type="text" class="form-control input-sm" id="cb_informasi_lainnya" placeholder="Lainnya..." value="{?= isset($data['informasi_diberikan'][2]) && !in_array($data['informasi_diberikan'][2], ['Perubahan Tarif Ruangan (Transfer Internal)', 'Tarif Tindakan / Operan Pemeriksaan']) ? $data['informasi_diberikan'][2] : '' ?}"></div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset><legend>Kondisi Pasien & Serah Terima</legend>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Kategori Pasien transfer</label>
+                                    <select class="form-control" name="kategori_transfer">
+                                        <option value="">- Pilih -</option>
+                                        <option value="Level 0" {if: $data.kategori_transfer == 'Level 0'}selected{/if}>Level 0 - Perawatan biasa</option>
+                                        <option value="Level 1" {if: $data.kategori_transfer == 'Level 1'}selected{/if}>Level 1 - Perawatan khusus / HCU/ICU</option>
+                                        <option value="Level 2" {if: $data.kategori_transfer == 'Level 2'}selected{/if}>Level 2 - Pengawasan ketat (Dokter/PK II)</option>
+                                        <option value="Level 3" {if: $data.kategori_transfer == 'Level 3'}selected{/if}>Level 3 - Bantuan hidup panjang (Dokter/PK III)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Kondisi Pasien (Sebelum Transfer)</h5>
+                                <div class="form-group"><label>Keadaan Umum</label><input type="text" class="form-control input-sm" name="pre_keadaan_umum" value="{$data.pre_keadaan_umum}"></div>
+                                <div class="form-group"><label>Kesadaran</label><input type="text" class="form-control input-sm" name="pre_kesadaran" value="{$data.pre_kesadaran}"></div>
+                                <div class="row">
+                                    <div class="col-xs-6"><div class="form-group"><label>Tensi</label><input type="text" class="form-control input-sm" name="pre_tensi" value="{$data.pre_tensi}"></div></div>
+                                    <div class="col-xs-6"><div class="form-group"><label>Suhu</label><input type="text" class="form-control input-sm" name="pre_suhu" value="{$data.pre_suhu}"></div></div>
+                                    <div class="col-xs-6"><div class="form-group"><label>Nadi</label><input type="text" class="form-control input-sm" name="pre_nadi" value="{$data.pre_nadi}"></div></div>
+                                    <div class="col-xs-6"><div class="form-group"><label>Pernapasan</label><input type="text" class="form-control input-sm" name="pre_pernafasan" value="{$data.pre_pernafasan}"></div></div>
+                                </div>
+                                <div class="form-group"><label>Catatan Penting</label><textarea class="form-control input-sm" name="pre_catatan">{$data.pre_catatan}</textarea></div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Kondisi Pasien (Setelah Transfer)</h5>
+                                <div class="form-group"><label>Keadaan Umum</label><input type="text" class="form-control input-sm" name="post_keadaan_umum" value="{$data.post_keadaan_umum}"></div>
+                                <div class="form-group"><label>Kesadaran</label><input type="text" class="form-control input-sm" name="post_kesadaran" value="{$data.post_kesadaran}"></div>
+                                <div class="row">
+                                    <div class="col-xs-6"><div class="form-group"><label>Tensi</label><input type="text" class="form-control input-sm" name="post_tensi" value="{$data.post_tensi}"></div></div>
+                                    <div class="col-xs-6"><div class="form-group"><label>Suhu</label><input type="text" class="form-control input-sm" name="post_suhu" value="{$data.post_suhu}"></div></div>
+                                    <div class="col-xs-6"><div class="form-group"><label>Nadi</label><input type="text" class="form-control input-sm" name="post_nadi" value="{$data.post_nadi}"></div></div>
+                                    <div class="col-xs-6"><div class="form-group"><label>Pernapasan</label><input type="text" class="form-control input-sm" name="post_pernafasan" value="{$data.post_pernafasan}"></div></div>
+                                </div>
+                                <div class="form-group"><label>Catatan Penting</label><textarea class="form-control input-sm" name="post_catatan">{$data.post_catatan}</textarea></div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3"><div class="form-group"><label>Waktu Serah Terima (Tgl)</label><input type="date" class="form-control" name="waktu_serah_tgl" value="{$data.waktu_serah_tgl}"></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Waktu Serah Terima (Jam)</label><input type="time" class="form-control" name="waktu_serah_jam" value="{$data.waktu_serah_jam}"></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Petugas yang menyerahkan</label><input type="text" class="form-control" name="petugas_menyerahkan" value="{$data.petugas_menyerahkan}"></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Petugas yang menerima</label><input type="text" class="form-control" name="petugas_menerima" value="{$data.petugas_menerima}"></div></div>
+                        </div>
+                    </fieldset>
+                </div>
+                <div class="panel-footer">
+                    <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="json_alat_terpasang" id="json_alat_terpasang" value="">
+                    <input type="hidden" name="json_obat_dibawa" id="json_obat_dibawa" value="">
+                    <input type="hidden" name="json_dokumen_disertakan" id="json_dokumen_disertakan" value="">
+                    <input type="hidden" name="json_informasi_diberikan" id="json_informasi_diberikan" value="">
+                    <button type="button" id="btn_simpan_ri04" class="btn btn-primary">Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ri04manage'])?}" class="btn btn-default">Kembali</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</article>
+
+<script>
+    $('#btn_cek_pasien').click(function() {
+        var no_rawat = $('#no_rawat').val();
+        if (no_rawat) {
+            $.ajax({
+                url: '{?=url([ADMIN, "update_bmt", "ri04form"])?}',
+                type: 'GET',
+                data: { ajax_patient: 1, no_rawat: no_rawat, t: '{?=$_SESSION["token"]?}' },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        $('#no_rawat').val(res.no_rawat);
+                        $('#no_rkm_medis').val(res.no_rkm_medis);
+                        $('#nm_pasien').val(res.nm_pasien);
+                    } else {
+                        alert('Pasien tidak ditemukan!');
+                    }
+                },
+                error: function() { alert('Terjadi kesalahan jaringan atau server'); }
+            });
+        }
+    });
+
+    $('#btn_simpan_ri04').click(function() {
+        var alat = [];
+        $('#tbl_alat tbody tr').each(function() {
+            alat.push({
+                nama: $(this).find('.i_alat_nama').val(),
+                tgl: $(this).find('.i_alat_tgl').val()
+            });
+        });
+        $('#json_alat_terpasang').val(JSON.stringify(alat));
+
+        var obat = [];
+        $('#tbl_obat tbody tr').each(function() {
+            obat.push({
+                nama: $(this).find('.i_obat_nama').val(),
+                jumlah: $(this).find('.i_obat_jumlah').val()
+            });
+        });
+        $('#json_obat_dibawa').val(JSON.stringify(obat));
+
+        var dokumen = [];
+        $('.cb_dokumen:checked').each(function() { dokumen.push($(this).val()); });
+        var dok_lain = $('#cb_dokumen_lainnya').val();
+        if(dok_lain) dokumen.push(dok_lain);
+        $('#json_dokumen_disertakan').val(JSON.stringify(dokumen));
+
+        var informasi = [];
+        $('.cb_informasi:checked').each(function() { informasi.push($(this).val()); });
+        var inf_lain = $('#cb_informasi_lainnya').val();
+        if(inf_lain) informasi.push(inf_lain);
+        $('#json_informasi_diberikan').val(JSON.stringify(informasi));
+
+        $('#form_ri04').submit();
+    });
+</script>
