@@ -1,0 +1,304 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Formulir RM.RI 14 - Rekonsiliasi Obat</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri14manage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri14form'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="ri14Form" method="POST" action="{?=url([ADMIN, 'update_bmt', 'ri14save'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="json_admisi_detail" id="json_admisi_detail">
+                    <input type="hidden" name="json_transfer_detail" id="json_transfer_detail">
+                    <input type="hidden" name="json_pulang_detail" id="json_pulang_detail">
+                    
+                    <!-- KEPALA FORM -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No. Rawat / No. RM (Enter untuk cari)</label>
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required>
+                                <div id="patient_info" style="margin-top:5px; color:blue;">{$data.nm_pasien} {$data.no_rkm_medis}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tanggal MRS</label>
+                                <input type="date" name="tanggal_mrs" class="form-control" value="{$data.tanggal_mrs}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>DPJP</label>
+                                <select class="form-control f-pegawai" name="dpjp" style="width:100%"></select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Riwayat Alergi Pasien</label>
+                                <input type="text" name="riwayat_alergi" class="form-control" value="{$data.riwayat_alergi}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <!-- SECTION 1: ADMISI -->
+                    <h4>REKONSILIASI SAAT ADMISI</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-condensed" id="tblAdmisi">
+                            <thead>
+                                <tr>
+                                    <th>Nama Obat dan Dosis</th>
+                                    <th>Rute</th>
+                                    <th>Aturan Pakai</th>
+                                    <th>Status Saat MRS (L/H)</th>
+                                    <th>Status Dibawa Saat MRS (Ya/Tidak)</th>
+                                    <th style="width:40px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loop: $data.admisi_detail}
+                                <tr class="admisi-row">
+                                    <td><input type="text" class="form-control input-sm f-nama" value="{$value.nama}"></td>
+                                    <td><input type="text" class="form-control input-sm f-rute" value="{$value.rute}"></td>
+                                    <td><input type="text" class="form-control input-sm f-aturan" value="{$value.aturan}"></td>
+                                    <td>
+                                        <select class="form-control input-sm f-stat1">
+                                            <option value="">-</option>
+                                            <option value="L" {if: ($value.stat1 == 'L')}selected{/if}>L</option>
+                                            <option value="H" {if: ($value.stat1 == 'H')}selected{/if}>H</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-control input-sm f-stat2">
+                                            <option value="">-</option>
+                                            <option value="Ya" {if: ($value.stat2 == 'Ya')}selected{/if}>Ya</option>
+                                            <option value="Tidak" {if: ($value.stat2 == 'Tidak')}selected{/if}>Tidak</option>
+                                        </select>
+                                    </td>
+                                    <td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-rm-admisi"><i class="fa fa-times"></i></button></td>
+                                </tr>
+                                {/loop}
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-sm btn-success" id="btnAddAdmisi"><i class="fa fa-plus"></i> Tambah Baris</button>
+                    </div>
+                    <div class="row" style="margin-top:10px;">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Apoteker (Admisi)</label>
+                                <select class="form-control f-pegawai" name="admisi_apoteker" style="width:100%"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <!-- SECTION 2: TRANSFER -->
+                    <h4>REKONSILIASI SAAT TRANSFER</h4>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group"><label>Ruang Asal</label><input type="text" name="transfer_ruang_asal" class="form-control" value="{$data.transfer_ruang_asal}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group"><label>Ruang Tujuan</label><input type="text" name="transfer_ruang_tujuan" class="form-control" value="{$data.transfer_ruang_tujuan}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group"><label>Tanggal Transfer</label><input type="date" name="transfer_tanggal" class="form-control" value="{$data.transfer_tanggal}"></div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-condensed" id="tblTransfer">
+                            <thead>
+                                <tr>
+                                    <th>Nama Obat</th>
+                                    <th>Dosis</th>
+                                    <th>Rute</th>
+                                    <th>Aturan Pakai</th>
+                                    <th>Status (L/H)</th>
+                                    <th>Perubahan Aturan Pakai</th>
+                                    <th>Ket.</th>
+                                    <th style="width:40px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loop: $data.transfer_detail}
+                                <tr class="transfer-row">
+                                    <td><input type="text" class="form-control input-sm f-nama" value="{$value.nama}"></td>
+                                    <td><input type="text" class="form-control input-sm f-dosis" value="{$value.dosis}"></td>
+                                    <td><input type="text" class="form-control input-sm f-rute" value="{$value.rute}"></td>
+                                    <td><input type="text" class="form-control input-sm f-aturan" value="{$value.aturan}"></td>
+                                    <td>
+                                        <select class="form-control input-sm f-stat1">
+                                            <option value="">-</option>
+                                            <option value="L" {if: ($value.stat1 == 'L')}selected{/if}>L</option>
+                                            <option value="H" {if: ($value.stat1 == 'H')}selected{/if}>H</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="text" class="form-control input-sm f-ubah" value="{$value.ubah}"></td>
+                                    <td><input type="text" class="form-control input-sm f-ket" value="{$value.ket}"></td>
+                                    <td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-rm-transfer"><i class="fa fa-times"></i></button></td>
+                                </tr>
+                                {/loop}
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-sm btn-success" id="btnAddTransfer"><i class="fa fa-plus"></i> Tambah Baris</button>
+                    </div>
+                    <div class="row" style="margin-top:10px;">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Apoteker (Transfer)</label>
+                                <select class="form-control f-pegawai" name="transfer_apoteker" style="width:100%"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <!-- SECTION 3: PULANG -->
+                    <h4>REKONSILIASI SAAT PULANG</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-condensed" id="tblPulang">
+                            <thead>
+                                <tr>
+                                    <th>Nama Obat</th>
+                                    <th>Dosis</th>
+                                    <th>Rute</th>
+                                    <th>Aturan Pakai</th>
+                                    <th>Perubahan Aturan Pakai</th>
+                                    <th>Ket.</th>
+                                    <th style="width:40px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loop: $data.pulang_detail}
+                                <tr class="pulang-row">
+                                    <td><input type="text" class="form-control input-sm f-nama" value="{$value.nama}"></td>
+                                    <td><input type="text" class="form-control input-sm f-dosis" value="{$value.dosis}"></td>
+                                    <td><input type="text" class="form-control input-sm f-rute" value="{$value.rute}"></td>
+                                    <td><input type="text" class="form-control input-sm f-aturan" value="{$value.aturan}"></td>
+                                    <td><input type="text" class="form-control input-sm f-ubah" value="{$value.ubah}"></td>
+                                    <td><input type="text" class="form-control input-sm f-ket" value="{$value.ket}"></td>
+                                    <td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-rm-pulang"><i class="fa fa-times"></i></button></td>
+                                </tr>
+                                {/loop}
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-sm btn-success" id="btnAddPulang"><i class="fa fa-plus"></i> Tambah Baris</button>
+                    </div>
+                    <div class="row" style="margin-top:10px;">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Apoteker (Pulang)</label>
+                                <select class="form-control f-pegawai" name="pulang_apoteker" style="width:100%"></select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>TANGGAL KRS</label>
+                                <input type="date" name="tanggal_krs" class="form-control" value="{$data.tanggal_krs}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>STATUS KRS</label>
+                                <select name="status_krs" class="form-control">
+                                    <option value="">-</option>
+                                    <option value="SEMBUH" {if: ($data.status_krs == 'SEMBUH')}selected{/if}>SEMBUH</option>
+                                    <option value="RUJUK" {if: ($data.status_krs == 'RUJUK')}selected{/if}>RUJUK</option>
+                                    <option value="APS" {if: ($data.status_krs == 'APS')}selected{/if}>APS</option>
+                                    <option value="MENINGGAL" {if: ($data.status_krs == 'MENINGGAL')}selected{/if}>MENINGGAL</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ri14manage'])?}" class="btn btn-default">Kembali</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<link href="{?=url()?}/assets/css/select2.min.css" rel="stylesheet" />
+<script src="{?=url()?}/assets/jscripts/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        var s2opts = {
+            ajax: {
+                url: "{?=url([ADMIN, 'update_bmt', 'ri14form'])?}?ajax_pegawai=1",
+                dataType: 'json', delay: 250,
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            placeholder: 'Pilih Petugas...',
+            minimumInputLength: 1,
+            tags: true,
+            width: '100%'
+        };
+        $('.f-pegawai').select2(s2opts);
+        var cur1 = '{$data.dpjp}'; if(cur1) $('select[name="dpjp"]').append(new Option(cur1, cur1, true, true)).trigger('change');
+        var cur2 = '{$data.admisi_apoteker}'; if(cur2) $('select[name="admisi_apoteker"]').append(new Option(cur2, cur2, true, true)).trigger('change');
+        var cur3 = '{$data.transfer_apoteker}'; if(cur3) $('select[name="transfer_apoteker"]').append(new Option(cur3, cur3, true, true)).trigger('change');
+        var cur4 = '{$data.pulang_apoteker}'; if(cur4) $('select[name="pulang_apoteker"]').append(new Option(cur4, cur4, true, true)).trigger('change');
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if(e.which === 13) {
+            e.preventDefault();
+            $.get("{?=url([ADMIN, 'update_bmt', 'ri14form'])?}?ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
+                var d = typeof res === 'string' ? JSON.parse(res) : res;
+                if (d.success) {
+                    $('#no_rawat').val(d.no_rawat);
+                    $('#patient_info').html(d.nm_pasien + ' (' + d.no_rkm_medis + ')');
+                    if(d.tgl_masuk && !$('input[name="tanggal_mrs"]').val()) {
+                        $('input[name="tanggal_mrs"]').val(d.tgl_masuk.substring(0, 10));
+                    }
+                } else {
+                    $('#patient_info').html('Pasien tidak ditemukan');
+                }
+            });
+        }
+    });
+
+    $('#ri14Form').on('submit', function() {
+        var ad = []; $('.admisi-row').each(function() {
+            ad.push({ nama: $(this).find('.f-nama').val(), rute: $(this).find('.f-rute').val(), aturan: $(this).find('.f-aturan').val(), stat1: $(this).find('.f-stat1').val(), stat2: $(this).find('.f-stat2').val() });
+        }); $('#json_admisi_detail').val(JSON.stringify(ad));
+        
+        var tr = []; $('.transfer-row').each(function() {
+            tr.push({ nama: $(this).find('.f-nama').val(), dosis: $(this).find('.f-dosis').val(), rute: $(this).find('.f-rute').val(), aturan: $(this).find('.f-aturan').val(), stat1: $(this).find('.f-stat1').val(), ubah: $(this).find('.f-ubah').val(), ket: $(this).find('.f-ket').val() });
+        }); $('#json_transfer_detail').val(JSON.stringify(tr));
+
+        var pu = []; $('.pulang-row').each(function() {
+            pu.push({ nama: $(this).find('.f-nama').val(), dosis: $(this).find('.f-dosis').val(), rute: $(this).find('.f-rute').val(), aturan: $(this).find('.f-aturan').val(), ubah: $(this).find('.f-ubah').val(), ket: $(this).find('.f-ket').val() });
+        }); $('#json_pulang_detail').val(JSON.stringify(pu));
+    });
+
+    // Add Row Handlers
+    $('#btnAddAdmisi').click(function(){
+        var html = '<tr class="admisi-row"><td><input type="text" class="form-control input-sm f-nama"></td><td><input type="text" class="form-control input-sm f-rute"></td><td><input type="text" class="form-control input-sm f-aturan"></td><td><select class="form-control input-sm f-stat1"><option value="">-</option><option value="L">L</option><option value="H">H</option></select></td><td><select class="form-control input-sm f-stat2"><option value="">-</option><option value="Ya">Ya</option><option value="Tidak">Tidak</option></select></td><td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-rm-admisi"><i class="fa fa-times"></i></button></td></tr>';
+        $('#tblAdmisi tbody').append(html);
+    });
+    $('#btnAddTransfer').click(function(){
+        var html = '<tr class="transfer-row"><td><input type="text" class="form-control input-sm f-nama"></td><td><input type="text" class="form-control input-sm f-dosis"></td><td><input type="text" class="form-control input-sm f-rute"></td><td><input type="text" class="form-control input-sm f-aturan"></td><td><select class="form-control input-sm f-stat1"><option value="">-</option><option value="L">L</option><option value="H">H</option></select></td><td><input type="text" class="form-control input-sm f-ubah"></td><td><input type="text" class="form-control input-sm f-ket"></td><td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-rm-transfer"><i class="fa fa-times"></i></button></td></tr>';
+        $('#tblTransfer tbody').append(html);
+    });
+    $('#btnAddPulang').click(function(){
+        var html = '<tr class="pulang-row"><td><input type="text" class="form-control input-sm f-nama"></td><td><input type="text" class="form-control input-sm f-dosis"></td><td><input type="text" class="form-control input-sm f-rute"></td><td><input type="text" class="form-control input-sm f-aturan"></td><td><input type="text" class="form-control input-sm f-ubah"></td><td><input type="text" class="form-control input-sm f-ket"></td><td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-rm-pulang"><i class="fa fa-times"></i></button></td></tr>';
+        $('#tblPulang tbody').append(html);
+    });
+
+    // Remove Row Handlers
+    $(document).on('click', '.btn-rm-admisi', function(){ if ($('.admisi-row').length > 1) $(this).closest('tr').remove(); else alert('Minimal 1 baris.'); });
+    $(document).on('click', '.btn-rm-transfer', function(){ if ($('.transfer-row').length > 1) $(this).closest('tr').remove(); else alert('Minimal 1 baris.'); });
+    $(document).on('click', '.btn-rm-pulang', function(){ if ($('.pulang-row').length > 1) $(this).closest('tr').remove(); else alert('Minimal 1 baris.'); });
+</script>

@@ -1,0 +1,191 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Form Surat Pernyataan Pulang APS</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'pulangapsmanage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'pulangapsform'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="frmAps" method="POST" action="{?=url([ADMIN, 'update_bmt', 'pulangapssave'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>No. Rawat / RM (Enter untuk isi pasien)</label>
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required>
+                                <div id="patient_info" style="margin-top:5px; color:blue;">{$data.nm_pasien} {$data.no_rkm_medis}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Jenis Kelamin Pasien</label>
+                                <input type="text" class="form-control s-jk" value="{if: ($data.jk_pasien=='L')}Laki-laki{elseif: ($data.jk_pasien=='P')}Perempuan{/if}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Tgl Lahir Pasien</label>
+                                <input type="text" class="form-control s-tgl" value="{$data.tgl_lahir_pasien}" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h4>Yang Bertanda Tangan di Bawah Ini:</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama</label>
+                                <input type="text" name="nama_pihak" class="form-control s-p-nama" value="{$data.nama_pihak}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Jenis Kelamin</label>
+                                <select name="jk_pihak" class="form-control s-p-jk" required>
+                                    <option value="">-</option>
+                                    <option value="L" {if: ($data.jk_pihak == 'L')}selected{/if}>Laki-laki</option>
+                                    <option value="P" {if: ($data.jk_pihak == 'P')}selected{/if}>Perempuan</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No Kartu Identitas</label>
+                                <input type="text" name="no_identitas_pihak" class="form-control" value="{$data.no_identitas_pihak}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Selaku dari Pasien</label>
+                                <select name="selaku_pihak" class="form-control" id="selaku_pihak" required>
+                                    <option value="">-</option>
+                                    <option value="Diri Sendiri" {if: ($data.selaku_pihak == 'Diri Sendiri')}selected{/if}>Diri Sendiri</option>
+                                    <option value="Istri" {if: ($data.selaku_pihak == 'Istri')}selected{/if}>Istri</option>
+                                    <option value="Suami" {if: ($data.selaku_pihak == 'Suami')}selected{/if}>Suami</option>
+                                    <option value="Ayah" {if: ($data.selaku_pihak == 'Ayah')}selected{/if}>Ayah</option>
+                                    <option value="Ibu" {if: ($data.selaku_pihak == 'Ibu')}selected{/if}>Ibu</option>
+                                    <option value="Anak" {if: ($data.selaku_pihak == 'Anak')}selected{/if}>Anak</option>
+                                    <option value="Kakak" {if: ($data.selaku_pihak == 'Kakak')}selected{/if}>Kakak</option>
+                                    <option value="Adik" {if: ($data.selaku_pihak == 'Adik')}selected{/if}>Adik</option>
+                                    <option value="Teman" {if: ($data.selaku_pihak == 'Teman')}selected{/if}>Teman</option>
+                                    <option value="Kerabat" {if: ($data.selaku_pihak == 'Kerabat')}selected{/if}>Kerabat</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Alamat</label>
+                        <input type="text" name="alamat_pihak" class="form-control" value="{$data.alamat_pihak}" required>
+                    </div>
+
+                    <hr>
+                    <div class="form-group">
+                        <label>Alasan Pulang Atas Permintaan Sendiri</label>
+                        <textarea name="alasan_pulang" class="form-control" rows="3" required>{$data.alasan_pulang}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Tgl Surat</label>
+                                <input type="date" name="tgl_surat" class="form-control" value="{$data.tgl_surat}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Ttd Saksi RS</label>
+                                <select name="saksi_rs" class="form-control f-pegawai" style="width:100%"></select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Ttd Saksi Pasien</label>
+                                <input type="text" name="saksi_pasien" class="form-control" value="{$data.saksi_pasien}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Ttd Pembuat Pernyataan</label>
+                                <input type="text" name="pembuat_pernyataan" class="form-control s-p-nama2" value="{$data.pembuat_pernyataan}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'pulangapsmanage'])?}" class="btn btn-default">Kembali</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<link href="{?=url()?}/assets/css/select2.min.css" rel="stylesheet" />
+<script src="{?=url()?}/assets/jscripts/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('.f-pegawai').select2({
+        ajax: {
+            url: "{?=url([ADMIN, 'update_bmt', 'pulangapsform'])?}?ajax_pegawai=1",
+            dataType: 'json', delay: 250,
+            processResults: function (data) { return { results: data.results }; },
+            cache: true
+        },
+        placeholder: 'Pilih Petugas...',
+        minimumInputLength: 1,
+        tags: true,
+        width: '100%'
+    });
+    var cur = '{$data.saksi_rs}';
+    if(cur) $('.f-pegawai').append(new Option(cur, cur, true, true)).trigger('change');
+    
+    if(!$('input[name="tgl_surat"]').val()) {
+        var d = new Date();
+        var mm = d.getMonth() + 1;
+        var dd = d.getDate();
+        $('input[name="tgl_surat"]').val(d.getFullYear() + '-' + (mm<10 ? '0' : '') + mm + '-' + (dd<10 ? '0' : '') + dd);
+    }
+});
+
+$('#no_rawat').on('keypress', function(e) {
+    if(e.which === 13) {
+        e.preventDefault();
+        $.get("{?=url([ADMIN, 'update_bmt', 'pulangapsform'])?}?ajax_patient=1&no_rawat=" + $(this).val(), function(res) {
+            var d = typeof res === 'string' ? JSON.parse(res) : res;
+            if (d.success) {
+                $('#no_rawat').val(d.no_rawat);
+                $('#patient_info').html(d.nm_pasien + ' (' + d.no_rkm_medis + ')');
+                $('.s-jk').val(d.jk == 'L' ? 'Laki-laki' : (d.jk == 'P' ? 'Perempuan' : ''));
+                $('.s-tgl').val(d.tgl_lahir);
+                if($('#selaku_pihak').val() == 'Diri Sendiri') {
+                    $('.s-p-nama, .s-p-nama2').val(d.nm_pasien);
+                    $('.s-p-jk').val(d.jk);
+                }
+            } else {
+                $('#patient_info').html('Pasien tidak ditemukan');
+            }
+        });
+    }
+});
+
+$('#selaku_pihak').change(function() {
+    if($(this).val() == 'Diri Sendiri') {
+        var nm = $('#patient_info').text().split(' (')[0];
+        if(nm && nm !== 'Pasien tidak ditemukan') {
+            $('.s-p-nama, .s-p-nama2').val(nm);
+            var jk = $('.s-jk').val() == 'Laki-laki' ? 'L' : ($('.s-jk').val() == 'Perempuan' ? 'P' : '');
+            $('.s-p-jk').val(jk);
+        }
+    }
+});
+
+$('.s-p-nama').keyup(function() {
+    $('.s-p-nama2').val($(this).val());
+});
+</script>

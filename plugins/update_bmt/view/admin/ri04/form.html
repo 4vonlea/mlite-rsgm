@@ -25,11 +25,11 @@
                             </div>
                             <div class="col-md-3"><div class="form-group"><label>Nama Pasien</label><input type="text" class="form-control" id="nm_pasien" value="{$data.nm_pasien}" readonly></div></div>
                             <div class="col-md-3"><div class="form-group"><label>No. RM</label><input type="text" class="form-control" id="no_rkm_medis" value="{$data.no_rkm_medis}" readonly></div></div>
-                            <div class="col-md-3"><div class="form-group"><label>DPJP</label><input type="text" class="form-control" name="dpjp" value="{$data.dpjp}"></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>DPJP</label><select class="form-control f-pegawai" name="dpjp" style="width:100%"></select></div></div>
                         </div>
                         <div class="row">
                             <div class="col-md-3"><div class="form-group"><label>Unit Tujuan</label><input type="text" class="form-control" name="unit_tujuan" value="{$data.unit_tujuan}"></div></div>
-                            <div class="col-md-3"><div class="form-group"><label>Petugas dihubungi</label><input type="text" class="form-control" name="petugas_dihubungi" value="{$data.petugas_dihubungi}"></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Petugas dihubungi</label><select class="form-control f-pegawai" name="petugas_dihubungi" style="width:100%"></select></div></div>
                             <div class="col-md-3"><div class="form-group"><label>Waktu hubungi (Tgl)</label><input type="date" class="form-control" name="waktu_hub_tgl" value="{$data.waktu_hub_tgl}"></div></div>
                             <div class="col-md-3"><div class="form-group"><label>Waktu hubungi (Jam)</label><input type="time" class="form-control" name="waktu_hub_jam" value="{$data.waktu_hub_jam}"></div></div>
                         </div>
@@ -172,8 +172,8 @@
                         <div class="row">
                             <div class="col-md-3"><div class="form-group"><label>Waktu Serah Terima (Tgl)</label><input type="date" class="form-control" name="waktu_serah_tgl" value="{$data.waktu_serah_tgl}"></div></div>
                             <div class="col-md-3"><div class="form-group"><label>Waktu Serah Terima (Jam)</label><input type="time" class="form-control" name="waktu_serah_jam" value="{$data.waktu_serah_jam}"></div></div>
-                            <div class="col-md-3"><div class="form-group"><label>Petugas yang menyerahkan</label><input type="text" class="form-control" name="petugas_menyerahkan" value="{$data.petugas_menyerahkan}"></div></div>
-                            <div class="col-md-3"><div class="form-group"><label>Petugas yang menerima</label><input type="text" class="form-control" name="petugas_menerima" value="{$data.petugas_menerima}"></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Petugas yang menyerahkan</label><select class="form-control f-pegawai" name="petugas_menyerahkan" style="width:100%"></select></div></div>
+                            <div class="col-md-3"><div class="form-group"><label>Petugas yang menerima</label><select class="form-control f-pegawai" name="petugas_menerima" style="width:100%"></select></div></div>
                         </div>
                     </fieldset>
                 </div>
@@ -192,7 +192,29 @@
     </div>
 </article>
 
+<link href="{?=url()?}/assets/css/select2.min.css" rel="stylesheet" />
+<script src="{?=url()?}/assets/jscripts/select2.min.js"></script>
 <script>
+    $(document).ready(function() {
+        var s2opts = {
+            ajax: {
+                url: "{?=url([ADMIN, 'update_bmt', 'ri04form'])?}?ajax_pegawai=1",
+                dataType: 'json', delay: 250,
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            placeholder: 'Pilih Petugas...',
+            minimumInputLength: 1,
+            tags: true,
+            width: '100%'
+        };
+        $('.f-pegawai').select2(s2opts);
+        
+        var cur1 = '{$data.dpjp}'; if(cur1) $('select[name="dpjp"]').append(new Option(cur1, cur1, true, true)).trigger('change');
+        var cur2 = '{$data.petugas_dihubungi}'; if(cur2) $('select[name="petugas_dihubungi"]').append(new Option(cur2, cur2, true, true)).trigger('change');
+        var cur3 = '{$data.petugas_menyerahkan}'; if(cur3) $('select[name="petugas_menyerahkan"]').append(new Option(cur3, cur3, true, true)).trigger('change');
+        var cur4 = '{$data.petugas_menerima}'; if(cur4) $('select[name="petugas_menerima"]').append(new Option(cur4, cur4, true, true)).trigger('change');
+    });
     $('#btn_cek_pasien').click(function() {
         var no_rawat = $('#no_rawat').val();
         if (no_rawat) {
@@ -206,6 +228,12 @@
                         $('#no_rawat').val(res.no_rawat);
                         $('#no_rkm_medis').val(res.no_rkm_medis);
                         $('#nm_pasien').val(res.nm_pasien);
+                        if(res.tgl_masuk && !$('input[name="tgl_masuk"]').val()) {
+                            $('input[name="tgl_masuk"]').val(res.tgl_masuk.substring(0, 10));
+                        }
+                        if(res.nm_bangsal && !$('input[name="ruang_kamar"]').val()) {
+                            $('input[name="ruang_kamar"]').val(res.nm_bangsal + ' - ' + res.kd_kamar);
+                        }
                     } else {
                         alert('Pasien tidak ditemukan!');
                     }

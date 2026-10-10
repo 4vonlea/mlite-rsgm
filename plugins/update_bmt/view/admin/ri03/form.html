@@ -98,8 +98,8 @@
                         <div class="col-md-12"><div class="form-group"><label>Catatan Khusus</label><textarea class="form-control" name="catatan_khusus" rows="3">{$data.catatan_khusus}</textarea></div></div>
                     </div>
                     <div class="row">
-                        <div class="col-md-4"><div class="form-group"><label>Dari perawat (asal ruangan)</label><input type="text" class="form-control" name="perawat_asal" value="{$data.perawat_asal}"></div></div>
-                        <div class="col-md-4"><div class="form-group"><label>Oleh perawat (penerima)</label><input type="text" class="form-control" name="perawat_penerima" value="{$data.perawat_penerima}"></div></div>
+                        <div class="col-md-4"><div class="form-group"><label>Dari perawat (asal ruangan)</label><select class="form-control f-perawat" name="perawat_asal" style="width:100%"></select></div></div>
+                        <div class="col-md-4"><div class="form-group"><label>Oleh perawat (penerima)</label><select class="form-control f-perawat" name="perawat_penerima" style="width:100%"></select></div></div>
                         <div class="col-md-4"><div class="form-group"><label>Sebagai perawat primer di ruangan</label><input type="text" class="form-control" name="ruangan_penerima" value="{$data.ruangan_penerima}"></div></div>
                     </div>
                     </fieldset>
@@ -118,7 +118,29 @@
     </div>
 </article>
 
+<link href="{?=url()?}/assets/css/select2.min.css" rel="stylesheet" />
+<script src="{?=url()?}/assets/jscripts/select2.min.js"></script>
 <script>
+    $(document).ready(function() {
+        var s2opts = {
+            ajax: {
+                url: "{?=url([ADMIN, 'update_bmt', 'ri03form'])?}?ajax_pegawai=1",
+                dataType: 'json', delay: 250,
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            placeholder: 'Pilih Petugas...',
+            minimumInputLength: 1,
+            tags: true,
+            width: '100%'
+        };
+        $('.f-perawat').select2(s2opts);
+        
+        var curPerawat1 = '{$data.perawat_asal}';
+        if(curPerawat1) $('select[name="perawat_asal"]').append(new Option(curPerawat1, curPerawat1, true, true)).trigger('change');
+        var curPerawat2 = '{$data.perawat_penerima}';
+        if(curPerawat2) $('select[name="perawat_penerima"]').append(new Option(curPerawat2, curPerawat2, true, true)).trigger('change');
+    });
     var idx_obat = {?= isset($data['daftar_obat']) && is_array($data['daftar_obat']) ? count($data['daftar_obat']) : 0 ?};
     function addObat() {
         var html = '<tr><td><input type="text" class="form-control input-sm" name="daftar_obat['+idx_obat+'][nama]"></td>';
@@ -166,6 +188,9 @@
                         $('#no_rawat').val(res.no_rawat);
                         $('#no_rkm_medis').val(res.no_rkm_medis);
                         $('#nm_pasien').val(res.nm_pasien);
+                        if(!$('input[name="asal_ruangan"]').val() && res.nm_bangsal) {
+                            $('input[name="asal_ruangan"]').val(res.nm_bangsal + ' - ' + res.kd_kamar);
+                        }
                     } else {
                         alert('Pasien tidak ditemukan!');
                     }

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>RM.RJ - 07 Asesmen Ulang Nyeri</title>
+    <style>
+        @page { size: A4 portrait; margin: 10mm; }
+        body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 0; }
+        .page { width: 190mm; margin: 0 auto; position: relative; }
+        
+        .header-table { width: 100%; border-collapse: collapse; border-bottom: 1px solid #000; }
+        .header-table td { padding: 4px; vertical-align: top; }
+        
+        .rmbox { display: inline-block; width: 15px; height: 16px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; vertical-align: middle; }
+
+        .title-doc { text-align: center; font-size: 14px; font-weight: bold; margin: 0; padding: 5px 0; border-bottom: 1.5px solid #000; }
+
+        .list-section { font-size: 10px; text-align: justify; padding: 5px 10px; border-bottom: 1.5px solid #000; }
+        .list-section ul { margin-top: 5px; margin-bottom: 5px; padding-left: 18px; }
+        .list-section li { margin-bottom: 2px; }
+
+        .content-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .content-table th, .content-table td { border: 1px solid #000; padding: 5px; vertical-align: top; }
+        .content-table th { text-align: center; font-weight: normal; }
+
+        .footer-note { font-size: 8px; font-style: italic; text-align: right; margin-top: 5px; }
+        .footer-bottom { font-size: 9px; display: flex; justify-content: space-between; margin-top: 5px; font-weight: bold; }
+        
+        @media print {
+            body { -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+<div class="page">
+  <div style="border: 1.5px solid #000;">
+    <table class="header-table">
+        <tr>
+            <td style="width:55%; border-right:1px solid #000;">
+                <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop" style="width:100%; max-height:75px; object-fit:contain; display:block;">
+            </td>
+            <td style="width:45%; padding-left:15px; vertical-align:middle;">
+                <table style="width:100%; border:none; font-size:11px;">
+                    <tr>
+                        <td style="width:30%; padding:2px 0;">No RM</td>
+                        <td style="width:5%;">:</td>
+                        <td style="width:65%;">
+                            <span class="rmbox">{$p.rm0}</span><span class="rmbox">{$p.rm1}</span><span class="rmbox">{$p.rm2}</span><span class="rmbox">{$p.rm3}</span><span class="rmbox">{$p.rm4}</span><span class="rmbox">{$p.rm5}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:2px 0;">Nama Pasien</td>
+                        <td>:</td>
+                        <td style="border-bottom:1px dotted #000;">{$p.nm_pasien} &nbsp;&nbsp;&nbsp;&nbsp; {$p.lp}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:2px 0;">Tanggal Lahir</td>
+                        <td>:</td>
+                        <td style="border-bottom:1px dotted #000;">{$p.tgl_lahir}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <div style="font-size:9px; border-bottom: 1.5px solid #000; padding: 2px 10px;">
+        Perhatian :<br>
+        * Harap semua penulisan dilakukan dengan keterbacaan yang jelas, benar dan lengkap.<br>
+        * Berilah tanda lingkar pada pilihan yang telah disediakan
+    </div>
+
+    <div class="title-doc">ASESMEN ULANG NYERI</div>
+
+    <div class="list-section">
+        <strong>PENGKAJIAN ULANG</strong>
+        <ul style="list-style-type: disc;">
+            <li>Setelah tindakan sebelum pasien pulang pada pasien rawat jalan</li>
+            <li>15 menit setelah intervensi obat injeksi</li>
+            <li>1 jam setelah intervensi obat oral/lainnya</li>
+            <li>1x/shift, jika skor nyeri 1-3</li>
+            <li>Setiap 3 jam, jika skor nyeri 4-6</li>
+            <li>Setiap 1 jam, jika skor nyeri 7-10</li>
+            <li>Dihentikan, jika skor nyeri 0</li>
+        </ul>
+    </div>
+
+    <table class="content-table" style="border:none; border-top:none;">
+        <thead>
+            <tr>
+                <th style="width:15%; border-top:none; border-left:none;">Tanggal /<br>Jam</th>
+                <th style="width:45%; border-top:none;">Hasil Asesmen Nyeri</th>
+                <th style="width:25%; border-top:none;">Manajemen Nyeri</th>
+                <th style="width:15%; border-top:none; border-right:none;">Paraf dan<br>Nama</th>
+            </tr>
+        </thead>
+        <tbody>
+            {loop: $d.form_data.asesmen}
+            <tr>
+                <td style="border-left:none; text-align:center;">
+                    {if: (!empty($value.tgl_jam))}
+                        {?=date('d-m-Y', strtotime($value.tgl_jam))?}<br>{?=date('H:i', strtotime($value.tgl_jam))?}
+                    {/if}
+                </td>
+                <td>
+                    <div style="margin-bottom:10px;">Kondisi Umum: {$value.kondisi_umum}</div>
+                    
+                    <div style="width:90%; margin: 0 auto;">
+                        <table style="width:100%; border-collapse:collapse; text-align:center; font-size:8px;">
+                            <tr>
+                                <td colspan="1" style="width:9%;">Tidak<br>Nyeri</td>
+                                <td colspan="3" style="width:27%;">Nyeri<br>Ringan</td>
+                                <td colspan="3" style="width:27%;">Nyeri<br>Sedang</td>
+                                <td colspan="4" style="width:37%;">Nyeri<br>Berat</td>
+                            </tr>
+                            <tr>
+                                <td colspan="1"><div style="border-left:1px solid #000; border-right:1px solid #000; border-top:1px solid #000; height:8px; margin-top:2px;"></div></td>
+                                <td colspan="3"><div style="border-right:1px solid #000; border-top:1px solid #000; height:8px; margin-top:2px;"></div></td>
+                                <td colspan="3"><div style="border-right:1px solid #000; border-top:1px solid #000; height:8px; margin-top:2px;"></div></td>
+                                <td colspan="4"><div style="border-right:1px solid #000; border-top:1px solid #000; height:8px; margin-top:2px;"></div></td>
+                            </tr>
+                        </table>
+                        
+                        <table style="width:100%; border-collapse:collapse; font-size:9px; text-align:center; margin-top:2px; margin-bottom:8px;">
+                            <tr>
+                                <td style="width:9.09%; padding:0;">
+                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
+                                        {if: ($value.skor_nyeri === '0')}
+                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
+                                        {/if}
+                                        0
+                                    </div>
+                                </td>
+                                <td style="width:9.09%; padding:0;">
+                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
+                                        {if: ($value.skor_nyeri === '1')}
+                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
+                                        {/if}
+                                        1
+                                    </div>
+                                </td>
+                                <td style="width:9.09%; padding:0;">
+                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
+                                        {if: ($value.skor_nyeri === '2')}
+                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
+                                        {/if}
+                                        2
+                                    </div>
+                                </td>
+                                <td style="width:9.09%; padding:0;">
+                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
+                                        {if: ($value.skor_nyeri === '3')}
+                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
+                                        {/if}
+                                        3
+                                    </div>
+                                </td>
+                                <td style="width:9.09%; padding:0;">
+                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
+                                        {if: ($value.skor_nyeri === '4')}
+                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
+                                        {/if}
+                                        4
+                                    </div>
+                                </td>
+                                <td style="width:9.09%; padding:0;">
+                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
+                                        {if: ($value.skor_nyeri === '5')}
+                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
+                                        {/if}
+                                        5
+                                    </div>
+                                </td>
+                                <td style="width:9.09%; padding:0;">
+                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
+                                        {if: ($value.skor_nyeri === '6')}
+                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
+                                        {/if}
+                                        6
+                                    </div>
+                                </td>
+                                <td style="width:9.09%; padding:0;">
+                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
+                                        {if: ($value.skor_nyeri === '7')}
+                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
+                                        {/if}
+                                        7
+                                    </div>
+                                </td>
+                                <td style="width:9.09%; padding:0;">
+                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
+                                        {if: ($value.skor_nyeri === '8')}
+                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
+                                        {/if}
+                                        8
+                                    </div>
+                                </td>
+                                <td style="width:9.09%; padding:0;">
+                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
+                                        {if: ($value.skor_nyeri === '9')}
+                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
+                                        {/if}
+                                        9
+                                    </div>
+                                </td>
+                                <td style="width:9.09%; padding:0;">
+                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
+                                        {if: ($value.skor_nyeri === '10')}
+                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
+                                        {/if}
+                                        10
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <table style="width:100%; border-collapse:collapse; text-align:center; font-size:7px;">
+                            <tr>
+                                <td style="width:16%; font-size:18px;">😃</td>
+                                <td style="width:16%; font-size:18px;">😐</td>
+                                <td style="width:16%; font-size:18px;">😟</td>
+                                <td style="width:16%; font-size:18px;">😢</td>
+                                <td style="width:16%; font-size:18px;">😫</td>
+                                <td style="width:16%; font-size:18px;">😭</td>
+                            </tr>
+                            <tr>
+                                <td>Tidak<br>Nyeri</td>
+                                <td>Sedikit<br>Nyeri</td>
+                                <td>Sedikit<br>Lebih Nyeri</td>
+                                <td>Lebih<br>Nyeri Lagi</td>
+                                <td>Sangat<br>Nyeri</td>
+                                <td>Nyeri<br>Sangat Hebat</td>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+                <td>{?=nl2br($value.manajemen)?}</td>
+                <td style="border-right:none; text-align:center; vertical-align:bottom; height:60px;">
+                    ( {$value.paraf_nama} )
+                </td>
+            </tr>
+            {/loop}
+        </tbody>
+    </table>
+
+  </div>
+
+    <div class="footer-note">
+        Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas 
+        <span style="display:inline-block; width:10px; height:10px; border:1px solid #000; margin-left:5px; vertical-align:middle;"></span>
+    </div>
+    
+    <div class="footer-bottom">
+        <div>RSGM/Ed-Rev/02/2023</div>
+        <div style="color:blue;"><u>RM.RJ – 07</u></div>
+    </div>
+</div>
+</body>
+</html>

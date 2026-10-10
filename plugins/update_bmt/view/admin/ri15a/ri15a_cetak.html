@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>RM.RI 15A - DAFTAR INSTRUKSI MEDIS FARMAKOLOGI</title>
+<style>
+    @page { size: A4 portrait; margin: 10mm; }
+    body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 0; }
+    .page { width: 190mm; margin: 0 auto; position: relative; }
+    .table-header, .table-body { width: 100%; border-collapse: collapse; }
+    .table-header td { border: 1px solid #000; padding: 4px; }
+    .table-body td, .table-body th { border: 1px solid #000; padding: 4px; font-size: 10px; }
+    .text-center { text-align: center; }
+    .text-bold { font-weight: bold; }
+    .nob td { border: none !important; padding: 0 2px; }
+    .rmbox { display: inline-block; width: 15px; height: 16px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; vertical-align: middle; }
+    
+    .title-box { text-align: center; font-weight: bold; font-size: 14px; padding: 8px 0; border: 1.5px solid #000; border-top: none; }
+    .info-box { border: 1.5px solid #000; border-top: none; padding: 8px; border-bottom: none; }
+    
+    .footer-note { font-size: 9px; font-style: italic; text-align: right; margin-top: 5px; }
+    .footer-bottom { font-size: 9px; display: flex; justify-content: space-between; margin-top: 10px; font-weight: bold; }
+</style>
+</head>
+<body onload="window.print()">
+<div class="page">
+    <table class="table-header" style="border: 1.5px solid #000;">
+        <tr>
+            <td style="width:57%; padding:0; border:none; border-right:1px solid #000;">
+                <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop" style="width:100%; max-height:75px; object-fit:contain; display:block;">
+            </td>
+            <td style="width:33%; font-size:10px; border:none; border-right:1px solid #000; vertical-align:middle; padding-left:5px;">
+                <table style="width:100%; border:none;" class="nob">
+                    <tr><td style="width:62px; border:none; padding:1px;">NO. RM</td><td style="border:none; padding:1px;">: 
+                        <span class="rmbox">{$p.rm0}</span><span class="rmbox">{$p.rm1}</span>-<span class="rmbox">{$p.rm2}</span><span class="rmbox">{$p.rm3}</span>-<span class="rmbox">{$p.rm4}</span><span class="rmbox">{$p.rm5}</span>
+                    </td></tr>
+                    <tr><td style="border:none; padding:1px;">NAMA PASIEN</td><td style="border:none; padding:1px;">: {$p.nm_pasien} &nbsp; <b>{$p.lp}</b></td></tr>
+                    <tr><td style="border:none; padding:1px;">Tanggal Lahir</td><td style="border:none; padding:1px;">: {$p.tgl_lahir}</td></tr>
+                </table>
+            </td>
+            <td style="width:10%; padding:0; text-align:center; border:none;">
+                <div style="padding:6px 0; border-bottom:1px solid #000; background:#8cc63f; font-weight:bold; font-size:14px;">RM<br>RI</div>
+                <div style="padding:6px 0; background:#fff; font-size:14px; font-weight:bold;">15A</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="title-box">DAFTAR INSTRUKSI MEDIS FARMAKOLOGI</div>
+
+    <div class="info-box">
+        <table style="width: 100%; font-size: 12px; margin-bottom: 5px;" class="nob">
+            <tr>
+                <td style="width: 100px;">Riwayat Alergi</td>
+                <td>: {$p.riwayat_alergi}</td>
+            </tr>
+        </table>
+        <div style="font-size: 11px; margin-top: 5px;">
+            *Khusus antibiotik tandai dengan P / E / D (P = Profilaksis, E = Empirik, D = Definitif)
+        </div>
+    </div>
+
+    <table class="table-body" style="border: 1.5px solid #000;">
+        <thead>
+            <tr>
+                <th rowspan="2" style="width: 25px;">No.</th>
+                <th rowspan="2" style="width: 50px;">Tanggal<br>dan<br>Jam</th>
+                <th rowspan="2">Nama Obat</th>
+                <th rowspan="2">Dosis</th>
+                <th rowspan="2">Freku<br>ensi</th>
+                <th rowspan="2">Cara<br>Pemberian</th>
+                <th rowspan="2">Antibiotik<br>(P/E/D/)</th>
+                <th rowspan="2">Nama &<br>TTD Dokter</th>
+                <th colspan="2">Dihentikan</th>
+                <th rowspan="2">Ket.</th>
+            </tr>
+            <tr>
+                <th>Tanggal<br>dan Jam</th>
+                <th>Nama &<br>TTD Dokter</th>
+            </tr>
+        </thead>
+        <tbody>
+            {loop: $d.detail_obat}
+            <tr>
+                <td class="text-center" style="height:25px;">{?=$key+1?}</td>
+                <td class="text-center">{$value.tgl_jam}</td>
+                <td>{$value.nama}</td>
+                <td class="text-center">{$value.dosis}</td>
+                <td class="text-center">{$value.frekuensi}</td>
+                <td class="text-center">{$value.cara}</td>
+                <td class="text-center">{$value.antibiotik}</td>
+                <td>{$value.ttd_dokter}</td>
+                <td class="text-center">{$value.stop_tgl_jam}</td>
+                <td>{$value.stop_ttd_dokter}</td>
+                <td>{$value.ket}</td>
+            </tr>
+            {/loop}
+        </tbody>
+    </table>
+
+    <div class="footer-note">Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</div>
+    
+    <div class="footer-bottom">
+        <div>RSGM/Ed-Rev/02/2023</div>
+        <div>RM.RI - 15A</div>
+    </div>
+</div>
+</body>
+</html>

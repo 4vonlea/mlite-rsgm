@@ -1,0 +1,329 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">RM.RI 20 - Resume Pasien Pulang (RI) (R)</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri20manage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri20form'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="ri20Form" method="POST" action="{?=url([ADMIN, 'update_bmt', 'ri20save'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="json_form_data" id="json_form_data" value="">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No. Rawat / No. RM (Enter untuk cari)</label>
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required>
+                                <div id="patient_info" style="margin-top:5px; color:blue;">{$data.nm_pasien} {$data.no_rkm_medis}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Ruang Rawat</label>
+                                <input type="text" class="form-control f-ruang_rawat" value="{$data.form_data.ruang_rawat}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Tanggal Masuk</label>
+                                <input type="date" class="form-control f-tgl_masuk" value="{$data.form_data.tgl_masuk}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Tanggal Keluar</label>
+                                <input type="date" class="form-control f-tgl_keluar" value="{$data.form_data.tgl_keluar}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <p><strong>Diisi oleh dokter yang merawat:</strong></p>
+
+                    <div class="form-group">
+                        <label>1. Anamnesis</label>
+                        <textarea class="form-control f-anamnesis" rows="2">{$data.form_data.anamnesis}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>2. Riwayat Perjalanan Penyakit</label>
+                        <textarea class="form-control f-riwayat_penyakit" rows="2">{$data.form_data.riwayat_penyakit}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>3. Pemeriksaan Fisik</label>
+                        <textarea class="form-control f-pemeriksaan_fisik" rows="2">{$data.form_data.pemeriksaan_fisik}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>4. Penemuan Klinik (Lab, Rontgen, dll)</label>
+                        <textarea class="form-control f-penemuan_klinik" rows="2">{$data.form_data.penemuan_klinik}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label>5. Diagnosa Utama</label>
+                                <input type="text" class="form-control f-diagnosa_utama" value="{$data.form_data.diagnosa_utama}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>ICD-10</label>
+                                <input type="text" class="form-control f-icd_10_utama" value="{$data.form_data.icd_10_utama}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label>6. Diagnosa Sekunder</label>
+                                <input type="text" class="form-control f-diagnosa_sekunder" value="{$data.form_data.diagnosa_sekunder}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>ICD-10</label>
+                                <input type="text" class="form-control f-icd_10_sekunder" value="{$data.form_data.icd_10_sekunder}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>7. Obat selama di Rumah Sakit</label>
+                        <textarea class="form-control f-obat_selama_rs" rows="2" placeholder="(Tuliskan obat yang pernah didapat selama dirawat, dan dianggap penting untuk diketahui)">{$data.form_data.obat_selama_rs}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label>8. Tindakan selama di Rumah Sakit</label>
+                                <input type="text" class="form-control f-tindakan_selama_rs" value="{$data.form_data.tindakan_selama_rs}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>ICD-9 CM</label>
+                                <input type="text" class="form-control f-icd_9_tindakan" value="{$data.form_data.icd_9_tindakan}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>9. Kondisi pada saat pulang</label>
+                        <input type="text" class="form-control f-kondisi_pulang" value="{$data.form_data.kondisi_pulang}">
+                    </div>
+
+                    <div class="form-group">
+                        <label>10. Anjuran / Rencana / Kontrol Selanjutnya</label>
+                        <input type="text" class="form-control f-anjuran_kontrol" value="{$data.form_data.anjuran_kontrol}">
+                    </div>
+
+                    <div class="form-group">
+                        <label>11. Alasan Pulang</label><br>
+                        <label class="radio-inline"><input type="radio" name="alasan_pulang" value="Dapat berobat jalan" {if: ($data.form_data.alasan_pulang=='Dapat berobat jalan')}checked{/if}> Dapat berobat jalan</label>
+                        <label class="radio-inline"><input type="radio" name="alasan_pulang" value="Sembuh" {if: ($data.form_data.alasan_pulang=='Sembuh')}checked{/if}> Sembuh</label>
+                        <label class="radio-inline"><input type="radio" name="alasan_pulang" value="Pindah RS Lain" {if: ($data.form_data.alasan_pulang=='Pindah RS Lain')}checked{/if}> Pindah RS Lain</label>
+                        <label class="radio-inline"><input type="radio" name="alasan_pulang" value="Meninggal" {if: ($data.form_data.alasan_pulang=='Meninggal')}checked{/if}> Meninggal</label>
+                        <label class="radio-inline"><input type="radio" name="alasan_pulang" value="Pulang Atas Permintaan" {if: ($data.form_data.alasan_pulang=='Pulang Atas Permintaan')}checked{/if}> Pulang Atas Permintaan :</label>
+                        <input type="text" class="form-control f-pulang_permintaan_text" style="display:inline-block; width:300px;" value="{$data.form_data.pulang_permintaan_text}">
+                    </div>
+
+                    <h4>12. Terapi Pulang</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="tblTerapi">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" style="vertical-align:middle;">Nama Obat</th>
+                                    <th rowspan="2" style="vertical-align:middle;">Jumlah</th>
+                                    <th rowspan="2" style="vertical-align:middle;">Dosis</th>
+                                    <th rowspan="2" style="vertical-align:middle;">Frekuensi</th>
+                                    <th rowspan="2" style="vertical-align:middle;">Cara<br>Pemberian</th>
+                                    <th colspan="6" style="text-align:center;">Jam Pemberian</th>
+                                    <th rowspan="2" style="vertical-align:middle;">Petunjuk<br>Khusus</th>
+                                    <th rowspan="2" style="vertical-align:middle;">Aksi</th>
+                                </tr>
+                                <tr>
+                                    <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loop: $data.form_data.terapi}
+                                <tr class="terapi-row">
+                                    <td><input type="text" class="form-control input-sm _nama" value="{$value.nama}"></td>
+                                    <td><input type="text" class="form-control input-sm _jumlah" value="{$value.jumlah}" style="width:60px;"></td>
+                                    <td><input type="text" class="form-control input-sm _dosis" value="{$value.dosis}" style="width:60px;"></td>
+                                    <td><input type="text" class="form-control input-sm _frekuensi" value="{$value.frekuensi}" style="width:80px;"></td>
+                                    <td><input type="text" class="form-control input-sm _cara" value="{$value.cara}"></td>
+                                    <td><input type="time" class="form-control input-sm _jam1" value="{$value.jam1}" style="padding:2px;"></td>
+                                    <td><input type="time" class="form-control input-sm _jam2" value="{$value.jam2}" style="padding:2px;"></td>
+                                    <td><input type="time" class="form-control input-sm _jam3" value="{$value.jam3}" style="padding:2px;"></td>
+                                    <td><input type="time" class="form-control input-sm _jam4" value="{$value.jam4}" style="padding:2px;"></td>
+                                    <td><input type="time" class="form-control input-sm _jam5" value="{$value.jam5}" style="padding:2px;"></td>
+                                    <td><input type="time" class="form-control input-sm _jam6" value="{$value.jam6}" style="padding:2px;"></td>
+                                    <td><input type="text" class="form-control input-sm _petunjuk" value="{$value.petunjuk}"></td>
+                                    <td><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-trash"></i></button></td>
+                                </tr>
+                                {/loop}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="13">
+                                        <button type="button" class="btn btn-xs btn-success" id="btnAdd"><i class="fa fa-plus"></i> Tambah Terapi</button>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="row" style="margin-top:20px;">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Dokter yang merawat</label>
+                                <select class="form-control f-nama_dokter" style="width:100%"></select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Pasien / Keluarga</label>
+                                <input type="text" class="form-control f-nama_pasien_keluarga" value="{$data.form_data.nama_pasien_keluarga}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Tanggal & Jam TTD</label>
+                                <input type="datetime-local" class="form-control f-tgl_ttd" value="{$data.form_data.tgl_ttd}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <br>
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ri20manage'])?}" class="btn btn-default">Kembali</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<link href="{?=url()?}/assets/css/select2.min.css" rel="stylesheet" />
+<script src="{?=url()?}/assets/jscripts/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.f-nama_dokter').select2({
+            ajax: {
+                url: "{?=url([ADMIN, 'update_bmt', 'ri20form'])?}?ajax_pegawai=1",
+                dataType: 'json', delay: 250,
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            placeholder: 'Pilih Dokter / Petugas...',
+            minimumInputLength: 1,
+            tags: true,
+            width: '100%'
+        });
+        var curDokter = '{$data.form_data.nama_dokter}';
+        if(curDokter) {
+            var opt = new Option(curDokter, curDokter, true, true);
+            $('.f-nama_dokter').append(opt).trigger('change');
+        }
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if(e.which === 13) {
+            e.preventDefault();
+            $.get("{?=url([ADMIN, 'update_bmt', 'ri20form'])?}?ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
+                var d = JSON.parse(res);
+                if (d.success) {
+                    $('#no_rawat').val(d.no_rawat);
+                    $('#patient_info').html(d.nm_pasien + ' (' + d.no_rkm_medis + ')');
+                    
+                    if(!$('.f-ruang_rawat').val()) {
+                        $('.f-ruang_rawat').val(d.nm_bangsal + (d.kd_kamar ? ' - '+d.kd_kamar : ''));
+                    }
+                    if(!$('.f-tgl_masuk').val()) $('.f-tgl_masuk').val(d.tgl_masuk);
+                    if(!$('.f-tgl_keluar').val() && d.tgl_keluar != '0000-00-00') $('.f-tgl_keluar').val(d.tgl_keluar);
+                } else {
+                    $('#patient_info').html('Pasien tidak ditemukan');
+                }
+            });
+        }
+    });
+
+    $('#btnAdd').click(function() {
+        var tr = '<tr class="terapi-row">'+
+            '<td><input type="text" class="form-control input-sm _nama"></td>'+
+            '<td><input type="text" class="form-control input-sm _jumlah" style="width:60px;"></td>'+
+            '<td><input type="text" class="form-control input-sm _dosis" style="width:60px;"></td>'+
+            '<td><input type="text" class="form-control input-sm _frekuensi" style="width:80px;"></td>'+
+            '<td><input type="text" class="form-control input-sm _cara"></td>'+
+            '<td><input type="time" class="form-control input-sm _jam1" style="padding:2px;"></td>'+
+            '<td><input type="time" class="form-control input-sm _jam2" style="padding:2px;"></td>'+
+            '<td><input type="time" class="form-control input-sm _jam3" style="padding:2px;"></td>'+
+            '<td><input type="time" class="form-control input-sm _jam4" style="padding:2px;"></td>'+
+            '<td><input type="time" class="form-control input-sm _jam5" style="padding:2px;"></td>'+
+            '<td><input type="time" class="form-control input-sm _jam6" style="padding:2px;"></td>'+
+            '<td><input type="text" class="form-control input-sm _petunjuk"></td>'+
+            '<td><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-trash"></i></button></td>'+
+        '</tr>';
+        $('#tblTerapi tbody').append(tr);
+    });
+
+    $('body').on('click', '.btnDel', function() {
+        if ($('.terapi-row').length > 1) {
+            $(this).closest('tr').remove();
+        } else {
+            alert('Minimal 1 baris');
+        }
+    });
+
+    $('#ri20Form').submit(function() {
+        var fd = {
+            ruang_rawat: $('.f-ruang_rawat').val(),
+            tgl_masuk: $('.f-tgl_masuk').val(),
+            tgl_keluar: $('.f-tgl_keluar').val(),
+            anamnesis: $('.f-anamnesis').val(),
+            riwayat_penyakit: $('.f-riwayat_penyakit').val(),
+            pemeriksaan_fisik: $('.f-pemeriksaan_fisik').val(),
+            penemuan_klinik: $('.f-penemuan_klinik').val(),
+            diagnosa_utama: $('.f-diagnosa_utama').val(),
+            icd_10_utama: $('.f-icd_10_utama').val(),
+            diagnosa_sekunder: $('.f-diagnosa_sekunder').val(),
+            icd_10_sekunder: $('.f-icd_10_sekunder').val(),
+            obat_selama_rs: $('.f-obat_selama_rs').val(),
+            tindakan_selama_rs: $('.f-tindakan_selama_rs').val(),
+            icd_9_tindakan: $('.f-icd_9_tindakan').val(),
+            kondisi_pulang: $('.f-kondisi_pulang').val(),
+            anjuran_kontrol: $('.f-anjuran_kontrol').val(),
+            alasan_pulang: $('input[name="alasan_pulang"]:checked').val(),
+            pulang_permintaan_text: $('.f-pulang_permintaan_text').val(),
+            nama_dokter: $('.f-nama_dokter').val(),
+            nama_pasien_keluarga: $('.f-nama_pasien_keluarga').val(),
+            tgl_ttd: $('.f-tgl_ttd').val(),
+            terapi: []
+        };
+
+        $('.terapi-row').each(function() {
+            fd.terapi.push({
+                nama: $(this).find('._nama').val(),
+                jumlah: $(this).find('._jumlah').val(),
+                dosis: $(this).find('._dosis').val(),
+                frekuensi: $(this).find('._frekuensi').val(),
+                cara: $(this).find('._cara').val(),
+                jam1: $(this).find('._jam1').val(),
+                jam2: $(this).find('._jam2').val(),
+                jam3: $(this).find('._jam3').val(),
+                jam4: $(this).find('._jam4').val(),
+                jam5: $(this).find('._jam5').val(),
+                jam6: $(this).find('._jam6').val(),
+                petunjuk: $(this).find('._petunjuk').val()
+            });
+        });
+
+        $('#json_form_data').val(JSON.stringify(fd));
+    });
+</script>

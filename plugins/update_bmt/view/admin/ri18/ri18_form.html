@@ -1,0 +1,344 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">RM.RI 18 - Lembar Edukasi Pasien Dan Keluarga Terintegrasi</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri18manage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri18form'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="ri18Form" method="POST" action="{?=url([ADMIN, 'update_bmt', 'ri18save'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="json_pengkajian" id="json_pengkajian" value="">
+                    <input type="hidden" name="json_pelaksanaan" id="json_pelaksanaan" value="">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No. Rawat / No. RM (Enter untuk cari)</label>
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required>
+                                <div id="patient_info" style="margin-top:5px; color:blue;">{$data.nm_pasien} {$data.no_rkm_medis}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4>A. Pengkajian Kebutuhan Pasien dan Keluarga</h4>
+                    <div class="row" style="border:1px solid #ccc; padding:10px; margin-bottom:20px; border-radius:5px;">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Ketersediaan Menerima Edukasi</label>
+                                <select class="form-control p-ketersediaan">
+                                    <option value="1" {if: ($data.pengkajian.ketersediaan=='1')}selected{/if}>1. Ya</option>
+                                    <option value="2" {if: ($data.pengkajian.ketersediaan=='2')}selected{/if}>2. Tidak</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Pendidikan Terakhir</label>
+                                <input type="text" class="form-control p-pendidikan" value="{$data.pengkajian.pendidikan}">
+                            </div>
+                            <div class="form-group">
+                                <label>Bahasa yang dipakai</label>
+                                <select class="form-control p-bahasa">
+                                    <option value="1" {if: ($data.pengkajian.bahasa=='1')}selected{/if}>1. Indonesia</option>
+                                    <option value="2" {if: ($data.pengkajian.bahasa=='2')}selected{/if}>2. Lainnya</option>
+                                </select>
+                                <input type="text" class="form-control p-bahasa_lainnya" placeholder="Sebutkan..." value="{$data.pengkajian.bahasa_lainnya}" style="margin-top:5px;">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Hambatan</label><br>
+                                <label><input type="checkbox" class="p-hambatan" value="1" {if: (in_array('1', $data.pengkajian.hambatan??[]))}checked{/if}> 1. Emosi</label><br>
+                                <label><input type="checkbox" class="p-hambatan" value="2" {if: (in_array('2', $data.pengkajian.hambatan??[]))}checked{/if}> 2. Motivasi</label><br>
+                                <label><input type="checkbox" class="p-hambatan" value="3" {if: (in_array('3', $data.pengkajian.hambatan??[]))}checked{/if}> 3. Tidak ada</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Keterbatasan</label><br>
+                                <label><input type="checkbox" class="p-keterbatasan" value="1" {if: (in_array('1', $data.pengkajian.keterbatasan??[]))}checked{/if}> 1. Fisik</label><br>
+                                <label><input type="checkbox" class="p-keterbatasan" value="2" {if: (in_array('2', $data.pengkajian.keterbatasan??[]))}checked{/if}> 2. Kognitif</label><br>
+                                <label><input type="checkbox" class="p-keterbatasan" value="3" {if: (in_array('3', $data.pengkajian.keterbatasan??[]))}checked{/if}> 3. Tidak ada</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Kebutuhan Penerjemah</label>
+                                <select class="form-control p-penerjemah">
+                                    <option value="1" {if: ($data.pengkajian.penerjemah=='1')}selected{/if}>1. Tidak</option>
+                                    <option value="2" {if: ($data.pengkajian.penerjemah=='2')}selected{/if}>2. Ya</option>
+                                </select>
+                                <input type="text" class="form-control p-penerjemah_bahasa" placeholder="Bahasa..." value="{$data.pengkajian.penerjemah_bahasa}" style="margin-top:5px;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Keyakinan dan Nilai-nilai</label>
+                                <input type="text" class="form-control p-pantangan_hari" placeholder="1. Pantangan Hari" value="{$data.pengkajian.pantangan_hari}" style="margin-bottom:5px;">
+                                <input type="text" class="form-control p-pantangan_makan" placeholder="2. Pantangan Makan" value="{$data.pengkajian.pantangan_makan}" style="margin-bottom:5px;">
+                                <label><input type="checkbox" class="p-pantangan_dokter" value="3" {if: ($data.pengkajian.pantangan_dokter=='3')}checked{/if}> 3. Pantangan dirawat dokter gigi lawan jenis</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Kemampuan Membaca</label>
+                                <select class="form-control p-kemampuan_membaca">
+                                    <option value="1" {if: ($data.pengkajian.kemampuan_membaca=='1')}selected{/if}>1. Bisa Membaca</option>
+                                    <option value="2" {if: ($data.pengkajian.kemampuan_membaca=='2')}selected{/if}>2. Tidak bisa membaca</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Nama Perawat yang Mengkaji</label>
+                                <select class="form-control p-nama_perawat" style="width:100%"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Tanggal & Jam Pengkajian</label>
+                                <input type="datetime-local" class="form-control p-tgl_jam_kaji" value="{$data.pengkajian.tgl_jam_kaji}">
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <label>Kebutuhan Edukasi</label>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label><input type="checkbox" class="p-kebutuhan" value="1" {if: (in_array('1', $data.pengkajian.kebutuhan??[]))}checked{/if}> 1. Diagnosis</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="2" {if: (in_array('2', $data.pengkajian.kebutuhan??[]))}checked{/if}> 2. Tanda, gejala & penyebab</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="3" {if: (in_array('3', $data.pengkajian.kebutuhan??[]))}checked{/if}> 3. Rencana tindakan medis</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="4" {if: (in_array('4', $data.pengkajian.kebutuhan??[]))}checked{/if}> 4. Hasil yang diharapkan</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="5" {if: (in_array('5', $data.pengkajian.kebutuhan??[]))}checked{/if}> 5. Alternatif tindakan lain</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="6" {if: (in_array('6', $data.pengkajian.kebutuhan??[]))}checked{/if}> 6. Risiko tindakan</label>
+                                </div>
+                                <div class="col-md-3">
+                                    <label><input type="checkbox" class="p-kebutuhan" value="7" {if: (in_array('7', $data.pengkajian.kebutuhan??[]))}checked{/if}> 7. Komplikasi yg mungkin</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="8" {if: (in_array('8', $data.pengkajian.kebutuhan??[]))}checked{/if}> 8. Prognosis</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="9" {if: (in_array('9', $data.pengkajian.kebutuhan??[]))}checked{/if}> 9. Cara menyikat gigi</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="10" {if: (in_array('10', $data.pengkajian.kebutuhan??[]))}checked{/if}> 10. Instruksi paska tindakan</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="11" {if: (in_array('11', $data.pengkajian.kebutuhan??[]))}checked{/if}> 11. Penggunaan obat</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="12" {if: (in_array('12', $data.pengkajian.kebutuhan??[]))}checked{/if}> 12. Efek samping obat</label>
+                                </div>
+                                <div class="col-md-3">
+                                    <label><input type="checkbox" class="p-kebutuhan" value="13" {if: (in_array('13', $data.pengkajian.kebutuhan??[]))}checked{/if}> 13. Interaksi obat</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="14" {if: (in_array('14', $data.pengkajian.kebutuhan??[]))}checked{/if}> 14. Keamanan alat medis</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="15" {if: (in_array('15', $data.pengkajian.kebutuhan??[]))}checked{/if}> 15. Pedoman Nutrisi</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="16" {if: (in_array('16', $data.pengkajian.kebutuhan??[]))}checked{/if}> 16. Diet dan nutrisi</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="17" {if: (in_array('17', $data.pengkajian.kebutuhan??[]))}checked{/if}> 17. Manajemen nyeri</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="18" {if: (in_array('18', $data.pengkajian.kebutuhan??[]))}checked{/if}> 18. Teknik rehabilitasi</label>
+                                </div>
+                                <div class="col-md-3">
+                                    <label><input type="checkbox" class="p-kebutuhan" value="19" {if: (in_array('19', $data.pengkajian.kebutuhan??[]))}checked{/if}> 19. Cara mencuci tangan</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="20" {if: (in_array('20', $data.pengkajian.kebutuhan??[]))}checked{/if}> 20. Etika batuk</label><br>
+                                    <label><input type="checkbox" class="p-kebutuhan" value="21" {if: (in_array('21', $data.pengkajian.kebutuhan??[]))}checked{/if}> 21. Resiko jatuh</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h4>B. Pelaksanaan Edukasi Pasien & Keluarga</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="tblPem">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal & Jam</th>
+                                    <th>Isi Kebutuhan Edukasi</th>
+                                    <th>Pengetahuan Pra Edukasi</th>
+                                    <th>Penerima Edukasi</th>
+                                    <th>Metode Edukasi</th>
+                                    <th>Evaluasi</th>
+                                    <th>Profesi & Nama Pemberi</th>
+                                    <th>Nama Penerima</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loop: $data.pelaksanaan}
+                                <tr class="pem-row">
+                                    <td><input type="datetime-local" class="form-control _tgl_jam" value="{$value.tgl_jam}"></td>
+                                    <td><textarea class="form-control _isi">{$value.isi}</textarea></td>
+                                    <td>
+                                        <select class="form-control _pra">
+                                            <option value="">Pilih</option>
+                                            <option value="1" {if: ($value.pra_edukasi=='1')}selected{/if}>1. Sangat tahu</option>
+                                            <option value="2" {if: ($value.pra_edukasi=='2')}selected{/if}>2. Perlu diulang</option>
+                                            <option value="3" {if: ($value.pra_edukasi=='3')}selected{/if}>3. Belum tahu</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-control _penerima">
+                                            <option value="">Pilih</option>
+                                            <option value="1" {if: ($value.penerima=='1')}selected{/if}>1. Pasien</option>
+                                            <option value="2" {if: ($value.penerima=='2')}selected{/if}>2. Keluarga</option>
+                                            <option value="3" {if: ($value.penerima=='3')}selected{/if}>3. Pasien & Kel.</option>
+                                            <option value="4" {if: ($value.penerima=='4')}selected{/if}>4. Lain-lain</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-control _metode">
+                                            <option value="">Pilih</option>
+                                            <option value="1" {if: ($value.metode=='1')}selected{/if}>1. Membaca</option>
+                                            <option value="2" {if: ($value.metode=='2')}selected{/if}>2. Demonstrasi</option>
+                                            <option value="3" {if: ($value.metode=='3')}selected{/if}>3. Ceramah</option>
+                                            <option value="4" {if: ($value.metode=='4')}selected{/if}>4. Diskusi</option>
+                                            <option value="5" {if: ($value.metode=='5')}selected{/if}>5. Audio Visual</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-control _evaluasi">
+                                            <option value="">Pilih</option>
+                                            <option value="1" {if: ($value.evaluasi=='1')}selected{/if}>1. Mengerti</option>
+                                            <option value="2" {if: ($value.evaluasi=='2')}selected{/if}>2. Mgrti, Mgulang</option>
+                                            <option value="3" {if: ($value.evaluasi=='3')}selected{/if}>3. M, M, Mdemonstrasi</option>
+                                            <option value="4" {if: ($value.evaluasi=='4')}selected{/if}>4. Re-edukasi</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control _profesi" placeholder="Profesi..." value="{$value.profesi}" style="margin-bottom:5px;">
+                                        <select class="form-control _nama_pemberi" data-val="{$value.nama_pemberi}"></select>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control _nama_penerima" placeholder="Nama..." value="{$value.nama_penerima}">
+                                    </td>
+                                    <td><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-trash"></i></button></td>
+                                </tr>
+                                {/loop}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="9">
+                                        <button type="button" class="btn btn-xs btn-success" id="btnAdd"><i class="fa fa-plus"></i> Tambah Pelaksanaan</button>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ri18manage'])?}" class="btn btn-default">Kembali</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<link href="{?=url()?}/assets/css/select2.min.css" rel="stylesheet" />
+<script src="{?=url()?}/assets/jscripts/select2.min.js"></script>
+<script>
+    function initSelect2() {
+        var s2opts = {
+            ajax: {
+                url: "{?=url([ADMIN, 'update_bmt', 'ri18form'])?}?ajax_pegawai=1",
+                dataType: 'json', delay: 250,
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            placeholder: 'Pilih Petugas...',
+            minimumInputLength: 1,
+            tags: true,
+            width: '100%'
+        };
+        $('.p-nama_perawat').select2(s2opts);
+        $('._nama_pemberi:not(.select2-hidden-accessible)').select2(s2opts);
+    }
+
+    $(document).ready(function() {
+        initSelect2();
+        
+        var curPerawat = '{$data.pengkajian.nama_perawat}';
+        if(curPerawat) $('.p-nama_perawat').append(new Option(curPerawat, curPerawat, true, true)).trigger('change');
+        
+        $('.pem-row').each(function() {
+            var s = $(this).find('._nama_pemberi');
+            var val = s.data('val');
+            if(val) {
+                s.append(new Option(val, val, true, true)).trigger('change');
+            }
+        });
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if(e.which === 13) {
+            e.preventDefault();
+            $.get("{?=url([ADMIN, 'update_bmt', 'ri18form'])?}?ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
+                var d = JSON.parse(res);
+                if (d.success) {
+                    $('#no_rawat').val(d.no_rawat);
+                    $('#patient_info').html(d.nm_pasien + ' (' + d.no_rkm_medis + ')');
+                    
+                    if(!$('.p-pendidikan').val() && d.pnd) $('.p-pendidikan').val(d.pnd);
+                    if(d.bahasa_pasien) {
+                        var b = d.bahasa_pasien.toLowerCase();
+                        if(b.includes('indonesia')) {
+                            $('.p-bahasa').val('1');
+                        } else {
+                            $('.p-bahasa').val('2');
+                            $('.p-bahasa_lainnya').val(d.bahasa_pasien);
+                        }
+                    }
+                } else {
+                    $('#patient_info').html('Pasien tidak ditemukan');
+                }
+            });
+        }
+    });
+
+    $('#btnAdd').click(function() {
+        var tr = '<tr class="pem-row">'+
+            '<td><input type="datetime-local" class="form-control _tgl_jam"></td>'+
+            '<td><textarea class="form-control _isi"></textarea></td>'+
+            '<td><select class="form-control _pra"><option value="">Pilih</option><option value="1">1. Sangat tahu</option><option value="2">2. Perlu diulang</option><option value="3">3. Belum tahu</option></select></td>'+
+            '<td><select class="form-control _penerima"><option value="">Pilih</option><option value="1">1. Pasien</option><option value="2">2. Keluarga</option><option value="3">3. Pasien & Kel.</option><option value="4">4. Lain-lain</option></select></td>'+
+            '<td><select class="form-control _metode"><option value="">Pilih</option><option value="1">1. Membaca</option><option value="2">2. Demonstrasi</option><option value="3">3. Ceramah</option><option value="4">4. Diskusi</option><option value="5">5. Audio Visual</option></select></td>'+
+            '<td><select class="form-control _evaluasi"><option value="">Pilih</option><option value="1">1. Mengerti</option><option value="2">2. Mgrti, Mgulang</option><option value="3">3. M, M, Mdemonstrasi</option><option value="4">4. Re-edukasi</option></select></td>'+
+            '<td><input type="text" class="form-control _profesi" placeholder="Profesi..." style="margin-bottom:5px;"><select class="form-control _nama_pemberi"></select></td>'+
+            '<td><input type="text" class="form-control _nama_penerima" placeholder="Nama..."></td>'+
+            '<td><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-trash"></i></button></td>'+
+        '</tr>';
+        $('#tblPem tbody').append(tr);
+        initSelect2();
+    });
+
+    $('body').on('click', '.btnDel', function() {
+        if ($('.pem-row').length > 1) {
+            $(this).closest('tr').remove();
+        } else {
+            alert('Minimal 1 baris');
+        }
+    });
+
+    $('#ri18Form').submit(function() {
+        var pengkajian = {
+            ketersediaan: $('.p-ketersediaan').val(),
+            pendidikan: $('.p-pendidikan').val(),
+            bahasa: $('.p-bahasa').val(),
+            bahasa_lainnya: $('.p-bahasa_lainnya').val(),
+            hambatan: [],
+            keterbatasan: [],
+            penerjemah: $('.p-penerjemah').val(),
+            penerjemah_bahasa: $('.p-penerjemah_bahasa').val(),
+            pantangan_hari: $('.p-pantangan_hari').val(),
+            pantangan_makan: $('.p-pantangan_makan').val(),
+            pantangan_dokter: $('.p-pantangan_dokter').is(':checked') ? '3' : '',
+            kemampuan_membaca: $('.p-kemampuan_membaca').val(),
+            nama_perawat: $('.p-nama_perawat').val(),
+            tgl_jam_kaji: $('.p-tgl_jam_kaji').val(),
+            kebutuhan: []
+        };
+
+        $('.p-hambatan:checked').each(function() { pengkajian.hambatan.push($(this).val()); });
+        $('.p-keterbatasan:checked').each(function() { pengkajian.keterbatasan.push($(this).val()); });
+        $('.p-kebutuhan:checked').each(function() { pengkajian.kebutuhan.push($(this).val()); });
+
+        $('#json_pengkajian').val(JSON.stringify(pengkajian));
+
+        var pelaksanaan = [];
+        $('.pem-row').each(function() {
+            pelaksanaan.push({
+                tgl_jam: $(this).find('._tgl_jam').val(),
+                isi: $(this).find('._isi').val(),
+                pra_edukasi: $(this).find('._pra').val(),
+                penerima: $(this).find('._penerima').val(),
+                metode: $(this).find('._metode').val(),
+                evaluasi: $(this).find('._evaluasi').val(),
+                profesi: $(this).find('._profesi').val(),
+                nama_pemberi: $(this).find('._nama_pemberi').val(),
+                nama_penerima: $(this).find('._nama_penerima').val()
+            });
+        });
+        $('#json_pelaksanaan').val(JSON.stringify(pelaksanaan));
+    });
+</script>

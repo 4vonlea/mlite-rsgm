@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>RM.RI 14 - REKONSILIASI OBAT</title>
+<style>
+    @page { size: A4 portrait; margin: 10mm; }
+    body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 0; }
+    .page { width: 190mm; margin: 0 auto; position: relative; }
+    .table-header, .table-body { width: 100%; border-collapse: collapse; }
+    .table-header td, .table-header th, .table-body td, .table-body th { border: 1px solid #000; padding: 4px; }
+    .text-center { text-align: center; }
+    .text-bold { font-weight: bold; }
+    .nob td { border: none !important; padding: 0 2px; }
+    .rmbox { display: inline-block; width: 15px; height: 16px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; vertical-align: middle; }
+    
+    .title-box { text-align: center; font-weight: bold; font-size: 13px; padding: 5px; }
+    .section-title { font-weight: bold; background-color: #f0f0f0; }
+    .info-row td { border: none; padding: 2px 4px; }
+    .table-inner { width: 100%; border-collapse: collapse; }
+    .table-inner td, .table-inner th { border: 1px solid #000; padding: 3px; font-size: 10px; text-align: center; }
+    
+    .footer-note { font-size: 9px; margin-top: 5px; }
+    .footer-bottom { font-size: 9px; display: flex; justify-content: space-between; margin-top: 10px; font-weight: bold; }
+</style>
+</head>
+<body onload="window.print()">
+<div class="page">
+    <table class="table-header" style="border: 1.5px solid #000; margin-bottom:-1px;">
+        <tr>
+            <td style="width:57%; padding:0; border:none; border-right:1px solid #000;">
+                <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop" style="width:100%; max-height:75px; object-fit:contain; display:block;">
+            </td>
+            <td style="width:33%; font-size:10px; border:none; border-right:1px solid #000; vertical-align:middle; padding-left:5px;">
+                <table style="width:100%; border:none;" class="nob">
+                    <tr><td style="width:62px; border:none; padding:1px;">NO. RM</td><td style="border:none; padding:1px;">: 
+                        <span class="rmbox">{$p.rm0}</span><span class="rmbox">{$p.rm1}</span>-<span class="rmbox">{$p.rm2}</span><span class="rmbox">{$p.rm3}</span>-<span class="rmbox">{$p.rm4}</span><span class="rmbox">{$p.rm5}</span>
+                    </td></tr>
+                    <tr><td style="border:none; padding:1px;">NAMA PASIEN</td><td style="border:none; padding:1px;">: {$p.nm_pasien} &nbsp; <b>{$p.lp}</b></td></tr>
+                    <tr><td style="border:none; padding:1px;">Tanggal Lahir</td><td style="border:none; padding:1px;">: {$p.tgl_lahir}</td></tr>
+                </table>
+            </td>
+            <td style="width:10%; padding:0; text-align:center; border:none;">
+                <div style="padding:6px 0; border-bottom:1px solid #000; background:#8cc63f; font-weight:bold; font-size:14px;">RM<br>RI</div>
+                <div style="padding:6px 0; background:#fff; font-size:14px; font-weight:bold;">14</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="table-body">
+        <tr>
+            <td colspan="2" class="title-box">REKONSILIASI OBAT</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="padding:0;">
+                <table style="width:100%;" class="info-row">
+                    <tr><td style="width:150px;">TANGGAL MRS</td><td>: {$p.tanggal_mrs}</td></tr>
+                    <tr><td>DPJP</td><td>: {$p.dpjp}</td></tr>
+                    <tr><td>RIWAYAT ALERGI PASIEN</td><td>: {$p.riwayat_alergi}</td></tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- ADMISI -->
+        <tr><td colspan="2" class="section-title">REKONSILIASI SAAT ADMISI</td></tr>
+        <tr>
+            <td colspan="2" style="padding:0;">
+                <table class="table-inner" style="border:none;">
+                    <tr>
+                        <th rowspan="2" style="width:30px;">NO.</th>
+                        <th rowspan="2">NAMA OBAT DAN DOSIS</th>
+                        <th rowspan="2">RUTE</th>
+                        <th rowspan="2">ATURAN PAKAI</th>
+                        <th rowspan="2">STATUS OBAT<br>SAAT MRS</th>
+                        <th rowspan="2">STATUS OBAT<br>DIBAWA SAAT MRS</th>
+                        <th colspan="2">TTD SERAH TERIMA OBAT</th>
+                    </tr>
+                    <tr>
+                        <th>PASIEN</th>
+                        <th>APOTEKER</th>
+                    </tr>
+                    {loop: $d.admisi_detail}
+                    <tr>
+                        <td style="height:20px;">{?=$key+1?}</td>
+                        <td style="text-align:left;">{$value.nama}</td>
+                        <td>{$value.rute}</td>
+                        <td>{$value.aturan}</td>
+                        <td>{$value.stat1}</td>
+                        <td>{$value.stat2}</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    {/loop}
+                    <tr>
+                        <td colspan="8" style="text-align:left; border:none; padding:5px;">Paraf dan nama apoteker: {$p.admisi_apoteker}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- TRANSFER -->
+        <tr><td colspan="2" class="section-title" style="border-top:1px solid #000;">REKONSILIASI SAAT TRANSFER</td></tr>
+        <tr>
+            <td colspan="2" style="padding:0;">
+                <table style="width:100%;" class="info-row">
+                    <tr><td style="width:150px;">Ruang asal</td><td>: {$p.transfer_ruang_asal}</td></tr>
+                    <tr><td>Ruang tujuan</td><td>: {$p.transfer_ruang_tujuan}</td></tr>
+                    <tr><td>Tanggal</td><td>: {$p.transfer_tanggal}</td></tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="padding:0;">
+                <table class="table-inner" style="border:none;">
+                    <tr>
+                        <th style="width:30px;">NO.</th>
+                        <th>NAMA OBAT</th>
+                        <th>DOSIS</th>
+                        <th>RUTE</th>
+                        <th>ATURAN PAKAI</th>
+                        <th>STATUS OBAT<br>SAAT MRS</th>
+                        <th>PERUBAHAN<br>ATURAN PAKAI</th>
+                        <th>KET.</th>
+                    </tr>
+                    {loop: $d.transfer_detail}
+                    <tr>
+                        <td style="height:20px;">{?=$key+1?}</td>
+                        <td style="text-align:left;">{$value.nama}</td>
+                        <td>{$value.dosis}</td>
+                        <td>{$value.rute}</td>
+                        <td>{$value.aturan}</td>
+                        <td>{$value.stat1}</td>
+                        <td>{$value.ubah}</td>
+                        <td>{$value.ket}</td>
+                    </tr>
+                    {/loop}
+                    <tr>
+                        <td colspan="8" style="text-align:left; border:none; padding:5px;">Paraf dan nama apoteker: {$p.transfer_apoteker}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- PULANG -->
+        <tr><td colspan="2" class="section-title" style="border-top:1px solid #000;">REKONSILIASI SAAT PULANG</td></tr>
+        <tr>
+            <td colspan="2" style="padding:0;">
+                <table class="table-inner" style="border:none;">
+                    <tr>
+                        <th style="width:30px;">NO.</th>
+                        <th>NAMA OBAT</th>
+                        <th>DOSIS</th>
+                        <th>RUTE</th>
+                        <th>ATURAN PAKAI</th>
+                        <th>PERUBAHAN<br>ATURAN PAKAI</th>
+                        <th>KET.</th>
+                    </tr>
+                    {loop: $d.pulang_detail}
+                    <tr>
+                        <td style="height:20px;">{?=$key+1?}</td>
+                        <td style="text-align:left;">{$value.nama}</td>
+                        <td>{$value.dosis}</td>
+                        <td>{$value.rute}</td>
+                        <td>{$value.aturan}</td>
+                        <td>{$value.ubah}</td>
+                        <td>{$value.ket}</td>
+                    </tr>
+                    {/loop}
+                    <tr>
+                        <td colspan="7" style="text-align:left; border:none; padding:5px;">Paraf dan nama apoteker: {$p.pulang_apoteker}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="2" style="padding:0; border-top:1px solid #000;">
+                <table style="width:100%; font-weight:bold;" class="info-row">
+                    <tr><td style="width:150px; border-bottom:1px solid #000;">TANGGAL KRS</td><td style="border-bottom:1px solid #000;">: {$p.tanggal_krs}</td></tr>
+                    <tr><td>STATUS KRS</td><td>: {$p.status_krs}</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <div class="footer-note">Keterangan: Coret yang tidak perlu (L=Lanjut, H=Henti)</div>
+    
+    <div class="footer-bottom">
+        <div>RSGM/Ed-Rev/02/2023</div>
+        <div>RM.RI - 14</div>
+    </div>
+</div>
+</body>
+</html>

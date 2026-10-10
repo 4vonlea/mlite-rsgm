@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>RM.RJ - 11 Pemberian Informasi</title>
+    <style>
+        @page { size: A4 portrait; margin: 10mm; }
+        body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 0; }
+        .page { width: 190mm; margin: 0 auto; position: relative; }
+        
+        .header-table { width: 100%; border-collapse: collapse; border-bottom: 1.5px solid #000; }
+        .header-table td { padding: 4px; vertical-align: top; }
+        
+        .rmbox { display: inline-block; width: 15px; height: 16px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; vertical-align: middle; }
+
+        .title-doc { text-align: center; font-size: 12px; font-weight: bold; margin: 0; padding: 5px 0; border-bottom: 1.5px solid #000; background: #fff; }
+
+        .content-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .content-table th, .content-table td { border: 1.5px solid #000; padding: 4px; vertical-align: middle; }
+        .content-table th { text-align: center; }
+
+        .surat-content { padding: 5px; font-size: 11px; text-align: justify; line-height: 1.4; border-bottom: 1.5px solid #000; }
+
+        .ttd-section { display: flex; justify-content: space-between; margin-top: 15px; text-align: center; }
+        .ttd-box { width: 40%; }
+        
+        .footer-note { font-size: 8px; font-style: italic; text-align: right; margin-top: 5px; }
+        .footer-bottom { font-size: 9px; display: flex; justify-content: space-between; margin-top: 5px; font-weight: bold; color: gray; }
+        
+        @media print {
+            body { -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+
+<!-- HALAMAN 1 : PERSETUJUAN -->
+<div class="page">
+  <div style="border: 1.5px solid #000;">
+    <table class="header-table">
+        <tr>
+            <td style="width:55%; border-right:1.5px solid #000;">
+                <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop" style="width:100%; max-height:65px; object-fit:contain; display:block;">
+            </td>
+            <td style="width:45%; padding-left:15px; vertical-align:middle;">
+                <table style="width:100%; border:none; font-size:10px;">
+                    <tr>
+                        <td style="width:30%; padding:2px 0;">NO. RM</td>
+                        <td style="width:5%;">:</td>
+                        <td style="width:65%;">
+                            <span class="rmbox">{$p.rm0}</span><span class="rmbox">{$p.rm1}</span><span class="rmbox">{$p.rm2}</span><span class="rmbox">{$p.rm3}</span><span class="rmbox">{$p.rm4}</span><span class="rmbox">{$p.rm5}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:2px 0;">NAMA PASIEN</td>
+                        <td>:</td>
+                        <td style="border-bottom:1px dotted #000;">{$p.nm_pasien} <span style="float:right;">{$p.lp}</span></td>
+                    </tr>
+                    <tr>
+                        <td style="padding:2px 0;">TANGGAL LAHIR</td>
+                        <td>:</td>
+                        <td style="border-bottom:1px dotted #000;">{$p.tgl_lahir}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <div class="title-doc">PEMBERIAN INFORMASI</div>
+
+    <table class="content-table" style="border-top:none; border-left:none; border-right:none;">
+        <tr>
+            <td colspan="2" style="width:30%; border-left:none;">Pemberi Informasi</td>
+            <td colspan="2" style="border-right:none;">{$d.form_data.pemberi_informasi}</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="border-left:none;">Penerima Informasi/Pemberi Persetujuan</td>
+            <td colspan="2" style="border-right:none;">{$d.form_data.penerima_informasi}</td>
+        </tr>
+        <tr>
+            <th style="width:5%; border-left:none;"></th>
+            <th style="width:25%;">JENIS INFORMASI</th>
+            <th style="width:50%;">ISI INFORMASI</th>
+            <th style="width:20%; border-right:none;">TANDA (v)</th>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">1</td><td>Diagnosis (WD & DD)</td><td>{$d.form_data.info_1_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_1_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">2</td><td>Dasar Diagnosis</td><td>{$d.form_data.info_2_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_2_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">3</td><td>Tindakan Kedokteran</td><td>{$d.form_data.info_3_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_3_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">4</td><td>Indikasi Tindakan</td><td>{$d.form_data.info_4_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_4_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">5</td><td>Tata Cara</td><td>{$d.form_data.info_5_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_5_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">6</td><td>Tujuan</td><td>{$d.form_data.info_6_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_6_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">7</td><td>Risiko</td><td>{$d.form_data.info_7_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_7_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">8</td><td>Komplikasi</td><td>{$d.form_data.info_8_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_8_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">9</td><td>Prognosis</td><td>{$d.form_data.info_9_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_9_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">10</td><td>Alternatif & Risiko</td><td>{$d.form_data.info_10_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_10_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;"></td><td>Lain-lain</td><td>{$d.form_data.info_lain_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_lain_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td colspan="3" style="border-left:none; text-align:justify;">
+                Dengan ini menyatakan bahwa saya telah menerangkan hal-hal di atas secara benar dan jujur dan memberikan kesempatan untuk bertanya dan/atau berdiskusi
+            </td>
+            <td style="border-right:none; text-align:center; vertical-align:top;">
+                Tandatangan pemberi informasi<br><br><br>
+                {$d.form_data.ttd_pemberi}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3" style="border-left:none; text-align:justify;">
+                Dengan ini menyatakan bahwa saya telah menerima informasi sebagaimana di atas yang saya beri tanda/paraf di kolom kanannya, dan telah memahaminya
+            </td>
+            <td style="border-right:none; text-align:center; vertical-align:top;">
+                Tandatangan penerima informasi<br><br><br>
+                {$d.form_data.ttd_penerima}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4" style="border-left:none; border-right:none; border-bottom:none;">
+                Bila pasien tidak kompeten atau tidak mau menerima informasi maka penerima informasi adalah wali atau keluarga terdekat
+            </td>
+        </tr>
+    </table>
+
+    <div class="title-doc" style="border-top:1.5px solid #000;">PERSETUJUAN TINDAKAN KEDOKTERAN</div>
+    
+    <div class="surat-content" style="border-bottom:none;">
+        Yang bertandatangan di bawah ini, saya, nama ................................... <span style="display:inline-block; border-bottom:1px dotted #000; min-width:150px; text-align:center;">{$d.form_data.setuju_nama}</span> ..................................., umur ........... <span style="display:inline-block; border-bottom:1px dotted #000; min-width:40px; text-align:center;">{$d.form_data.setuju_umur}</span> ........... tahun <br>
+        laki-laki/perempuan* alamat .......................................................................... <span style="display:inline-block; border-bottom:1px dotted #000; min-width:250px; text-align:center;">{$d.form_data.setuju_alamat}</span> .........................................................................., dengan ini <br>
+        menyatakan saya setuju untuk dilakukan tindakan ........................ <span style="display:inline-block; border-bottom:1px dotted #000; min-width:350px; text-align:center;">{$d.form_data.setuju_tindakan}</span> ........................ <br>
+        terhadap saya/...................................saya* bernama................... <span style="display:inline-block; border-bottom:1px dotted #000; min-width:150px; text-align:center;">{$d.form_data.setuju_terhadap_nama}</span> ..................., umur ........... <span style="display:inline-block; border-bottom:1px dotted #000; min-width:40px; text-align:center;">{$d.form_data.setuju_terhadap_umur}</span> ...........tahun, <br>
+        laki-laki/perempuan*, alamat................................................................. <span style="display:inline-block; border-bottom:1px dotted #000; min-width:250px; text-align:center;">{$d.form_data.setuju_terhadap_alamat}</span> .................................................................<br>
+        Saya memahami perlunya dan manfaat tindakan tersebut sebagaimana telah dijelaskan seperti di atas kepada saya, termasuk risiko komplikasi yang mungkin timbul. Saya juga menyadari bahwa oleh karena ilmu kedokteran bukanlah ilmu pasti, maka keberhasilan tindakan kedokteran bukanlah keniscayaan, melainkan sangat bergantung kepada izin Tuhan Yang Maha Esa.
+        
+        <br><br>
+        Yang menyatakan <br>
+        Banjarmasin, ........................................... <span style="display:inline-block; border-bottom:1px dotted #000; min-width:100px; text-align:center;">{if: ($d.form_data.setuju_tgl)}{?=date('d-m-Y', strtotime($d.form_data.setuju_tgl))?}{/if}</span> ........................................... 
+
+        <div class="ttd-section">
+            <div class="ttd-box">
+                <br><br><br><br>
+                ( .................... {$d.form_data.setuju_menyatakan} .................... )<br>
+                <div style="font-size:8px; text-align:left; margin-top:5px;">(*coret yang tidak perlu)</div>
+            </div>
+            <div class="ttd-box">
+                Saksi:<br><br><br><br>
+                ( ........... {$d.form_data.setuju_saksi1} ........... ) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ( ........... {$d.form_data.setuju_saksi2} ........... )
+            </div>
+        </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+      <div>RSGM/Ed-Rev/02/2023</div>
+      <div>RM.RJ – 11 Hal 1 - 2</div>
+  </div>
+</div>
+
+<div style="page-break-before: always;"></div>
+
+<!-- HALAMAN 2 : PENOLAKAN -->
+<div class="page">
+  <div style="border: 1.5px solid #000;">
+    <table class="header-table">
+        <tr>
+            <td style="width:55%; border-right:1.5px solid #000;">
+                <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop" style="width:100%; max-height:65px; object-fit:contain; display:block;">
+            </td>
+            <td style="width:45%; padding-left:15px; vertical-align:middle;">
+                <table style="width:100%; border:none; font-size:10px;">
+                    <tr>
+                        <td style="width:30%; padding:2px 0;">NO. RM</td>
+                        <td style="width:5%;">:</td>
+                        <td style="width:65%;">
+                            <span class="rmbox">{$p.rm0}</span><span class="rmbox">{$p.rm1}</span><span class="rmbox">{$p.rm2}</span><span class="rmbox">{$p.rm3}</span><span class="rmbox">{$p.rm4}</span><span class="rmbox">{$p.rm5}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:2px 0;">NAMA PASIEN</td>
+                        <td>:</td>
+                        <td style="border-bottom:1px dotted #000;">{$p.nm_pasien} <span style="float:right;">{$p.lp}</span></td>
+                    </tr>
+                    <tr>
+                        <td style="padding:2px 0;">TANGGAL LAHIR</td>
+                        <td>:</td>
+                        <td style="border-bottom:1px dotted #000;">{$p.tgl_lahir}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <div class="title-doc">PEMBERIAN INFORMASI</div>
+
+    <table class="content-table" style="border-top:none; border-left:none; border-right:none;">
+        <tr>
+            <td colspan="2" style="width:30%; border-left:none;">Pemberi Informasi</td>
+            <td colspan="2" style="border-right:none;">{$d.form_data.pemberi_informasi}</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="border-left:none;">Penerima Informasi/Pemberi Persetujuan</td>
+            <td colspan="2" style="border-right:none;">{$d.form_data.penerima_informasi}</td>
+        </tr>
+        <tr>
+            <th style="width:5%; border-left:none;"></th>
+            <th style="width:25%;">JENIS INFORMASI</th>
+            <th style="width:50%;">ISI INFORMASI</th>
+            <th style="width:20%; border-right:none;">TANDA (v)</th>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">1</td><td>Diagnosis (WD & DD)</td><td>{$d.form_data.info_1_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_1_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">2</td><td>Dasar Diagnosis</td><td>{$d.form_data.info_2_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_2_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">3</td><td>Tindakan Kedokteran</td><td>{$d.form_data.info_3_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_3_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">4</td><td>Indikasi Tindakan</td><td>{$d.form_data.info_4_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_4_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">5</td><td>Tata Cara</td><td>{$d.form_data.info_5_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_5_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">6</td><td>Tujuan</td><td>{$d.form_data.info_6_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_6_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">7</td><td>Risiko</td><td>{$d.form_data.info_7_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_7_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">8</td><td>Komplikasi</td><td>{$d.form_data.info_8_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_8_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">9</td><td>Prognosis</td><td>{$d.form_data.info_9_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_9_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;">10</td><td>Alternatif & Risiko</td><td>{$d.form_data.info_10_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_10_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td style="border-left:none; text-align:center;"></td><td>Lain-lain</td><td>{$d.form_data.info_lain_isi}</td><td style="border-right:none; text-align:center;">{if: ($d.form_data.info_lain_tanda)}v{/if}</td>
+        </tr>
+        <tr>
+            <td colspan="3" style="border-left:none; text-align:justify;">
+                Dengan ini menyatakan bahwa saya telah menerangkan hal-hal di atas secara benar dan jujur dan memberikan kesempatan untuk bertanya dan/atau berdiskusi
+            </td>
+            <td style="border-right:none; text-align:center; vertical-align:top;">
+                Tandatangan pemberi informasi<br><br><br>
+                {$d.form_data.ttd_pemberi}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3" style="border-left:none; text-align:justify;">
+                Dengan ini menyatakan bahwa saya telah menerima informasi sebagaimana di atas yang saya beri tanda/paraf di kolom kanannya, dan telah memahaminya
+            </td>
+            <td style="border-right:none; text-align:center; vertical-align:top;">
+                Tandatangan penerima informasi<br><br><br>
+                {$d.form_data.ttd_penerima}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4" style="border-left:none; border-right:none; border-bottom:none;">
+                Bila pasien tidak kompeten atau tidak mau menerima informasi maka penerima informasi adalah wali atau keluarga terdekat
+            </td>
+        </tr>
+    </table>
+
+    <div class="title-doc" style="border-top:1.5px solid #000;">PENOLAKAN TINDAKAN KEDOKTERAN</div>
+    
+    <div class="surat-content" style="border-bottom:none;">
+        Yang bertandatangan di bawah ini, saya, nama ................................... <span style="display:inline-block; border-bottom:1px dotted #000; min-width:150px; text-align:center;">{$d.form_data.tolak_nama}</span> ..................................., umur ........... <span style="display:inline-block; border-bottom:1px dotted #000; min-width:40px; text-align:center;">{$d.form_data.tolak_umur}</span> ........... tahun <br>
+        laki-laki/perempuan* alamat .......................................................................... <span style="display:inline-block; border-bottom:1px dotted #000; min-width:250px; text-align:center;">{$d.form_data.tolak_alamat}</span> .........................................................................., dengan ini <br>
+        menyatakan saya menolak untuk dilakukan tindakan ........................ <span style="display:inline-block; border-bottom:1px dotted #000; min-width:350px; text-align:center;">{$d.form_data.tolak_tindakan}</span> ........................ <br>
+        terhadap saya/...................................saya* bernama................... <span style="display:inline-block; border-bottom:1px dotted #000; min-width:150px; text-align:center;">{$d.form_data.tolak_terhadap_nama}</span> ..................., umur ........... <span style="display:inline-block; border-bottom:1px dotted #000; min-width:40px; text-align:center;">{$d.form_data.tolak_terhadap_umur}</span> ...........tahun, <br>
+        laki-laki/perempuan*, alamat................................................................. <span style="display:inline-block; border-bottom:1px dotted #000; min-width:250px; text-align:center;">{$d.form_data.tolak_terhadap_alamat}</span> .................................................................<br>
+        Saya memahami perlunya pengobatan tersebut sebagaimana telah dijelaskan seperti di atas kepada saya, termasuk risiko komplikasi yang mungkin timbul.<br>
+        Saya bertanggung jawab penuh atas segala akibat yang mungkin timbul sebagai akibat tidak dilakukannya pengobatan tersebut.
+        
+        <br><br>
+        Yang menyatakan <br>
+        Banjarmasin, ........................................... <span style="display:inline-block; border-bottom:1px dotted #000; min-width:100px; text-align:center;">{if: ($d.form_data.tolak_tgl)}{?=date('d-m-Y', strtotime($d.form_data.tolak_tgl))?}{/if}</span> ........................................... 
+
+        <div class="ttd-section">
+            <div class="ttd-box">
+                <br><br><br><br>
+                ( .................... {$d.form_data.tolak_menyatakan} .................... )<br>
+                <div style="font-size:8px; text-align:left; margin-top:5px;">(*coret yang tidak perlu)</div>
+            </div>
+            <div class="ttd-box">
+                Saksi:<br><br><br><br>
+                ( ........... {$d.form_data.tolak_saksi1} ........... ) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ( ........... {$d.form_data.tolak_saksi2} ........... )
+            </div>
+        </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+      <div>RSGM/Ed-Rev/02/2023</div>
+      <div>RM.RJ – 11 Hal 2 - 2</div>
+  </div>
+</div>
+</body>
+</html>

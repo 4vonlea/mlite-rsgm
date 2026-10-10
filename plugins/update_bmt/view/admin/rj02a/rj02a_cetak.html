@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>RM.RJ - 02A Hak dan Kewajiban Pasien</title>
+    <style>
+        @page { size: A4 portrait; margin: 10mm; }
+        body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 0; }
+        .page { width: 190mm; margin: 0 auto; position: relative; }
+        
+        .header-table { width: 100%; border-collapse: collapse; border-bottom: 1px solid #000; }
+        .header-table td { padding: 4px; vertical-align: top; }
+        
+        .rmbox { display: inline-block; width: 15px; height: 16px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; vertical-align: middle; }
+
+        .content-wrapper { padding: 10px; }
+        .title-doc { text-align: center; font-size: 14px; font-weight: bold; margin: 10px 0 15px 0; }
+
+        .list-section { font-size: 10px; text-align: justify; }
+        .list-section ol { margin-top: 5px; margin-bottom: 10px; padding-left: 18px; }
+        .list-section li { margin-bottom: 2px; }
+
+        .ttd-table { width: 100%; margin-top: 20px; text-align: center; font-size: 11px; }
+        .ttd-table td { padding: 5px; vertical-align: bottom; height: 60px; }
+
+        .footer-note { font-size: 8px; font-style: italic; text-align: right; margin-top: 5px; }
+        .footer-bottom { font-size: 9px; display: flex; justify-content: space-between; margin-top: 5px; font-weight: bold; }
+        
+        @media print {
+            body { -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+<div class="page">
+  <div style="border: 1px solid #000;">
+    <table class="header-table">
+        <tr>
+            <td style="width:55%; border-right:1px solid #000;">
+                <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop" style="width:100%; max-height:75px; object-fit:contain; display:block;">
+            </td>
+            <td style="width:45%; padding-left:15px; vertical-align:middle;">
+                <table style="width:100%; border:none; font-size:11px;">
+                    <tr>
+                        <td style="width:30%; padding:2px 0;">No RM</td>
+                        <td style="width:5%;">:</td>
+                        <td style="width:65%;">
+                            <span class="rmbox">{$p.rm0}</span><span class="rmbox">{$p.rm1}</span><span class="rmbox">{$p.rm2}</span><span class="rmbox">{$p.rm3}</span><span class="rmbox">{$p.rm4}</span><span class="rmbox">{$p.rm5}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:2px 0;">Nama Pasien</td>
+                        <td>:</td>
+                        <td style="border-bottom:1px dotted #000;">{$p.nm_pasien} &nbsp;&nbsp;&nbsp;&nbsp; {$p.lp}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:2px 0;">Tanggal Lahir</td>
+                        <td>:</td>
+                        <td style="border-bottom:1px dotted #000;">{$p.tgl_lahir}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <div class="content-wrapper">
+        <div style="font-size:9px; font-style:italic;">
+            Perhatian :<br>
+            * Harap semua penulisan dilakukan dengan keterbacaan yang jelas, benar dan lengkap.
+        </div>
+
+        <div class="title-doc">FORMULIR HAK DAN KEWAJIBAN PASIEN</div>
+
+        <div class="list-section">
+            <strong>HAK PASIEN :</strong>
+            <ol>
+                <li>Memperoleh informasi mengenai tata tertib dan peraturan yang berlaku di RSGM Gusti Hasan Aman.</li>
+                <li>Memperoleh informasi tentang hak dan kewajiban pasien.</li>
+                <li>Memperoleh pelayanan sepenuh hati yang manusiawi, adil, jujur dan tanpa diskriminasi.</li>
+                <li>Memperoleh pelayanan kesehatan yang bermutu sesuai dengan standar profesi dan standar prosedur operasional.</li>
+                <li>Memperoleh pelayanan yang efektif dan efisien sehingga terhindar dari kerugian fisik dan materi.</li>
+                <li>Mengajukan pengaduan atas kualitas pelayanan yang didapatkan.</li>
+                <li>Memilih dokter dan unit pelayanan sesuai dengan keinginannya dan peraturan yang berlaku di RSGM Gusti Hasan Aman.</li>
+                <li>Meminta konsultasi tentang penyakit yang dideritanya kepada dokter lain yang mempunyai Surat Izin Praktik (SIP) baik di dalam maupun di luar RSGM Gusti Hasan Aman.</li>
+                <li>Pasien berhak mendapatkan privasi dan kerahasiaan penyakit yang diderita termasuk data-data medisnya.</li>
+                <li>Mendapatkan informasi yang meliputi diagnosis dan tata cara tindakan medis, tujuan tindakan medis, alternatif tindakan, risiko dan komplikasi yang mungkin terjadi, dan prognosis terhadap tindakan yang dilakukan serta perkiraan biaya pengobatan.</li>
+                <li>Memberikan persetujuan atau menolak atas tindakan yang akan dilakukan oleh tenaga kesehatan terhadap penyakit yang dideritanya.</li>
+                <li>Pasien berhak didampingi keluarganya dalam keadaan kritis.</li>
+                <li>Pasien berhak menjalani ibadah sesuai agama dan kepercayaan yang dianutnya selama hal itu tidak mengganggu pasien lainnya.</li>
+                <li>Memperoleh keamanan dan keselamatan dirinya selama dalam perawatan di RSGM Gusti Hasan Aman.</li>
+                <li>Mengajukan usul, saran, perbaikan dan perlakuan RSGM Gusti Hasan Aman terhadap dirinya.</li>
+                <li>Menolak pelayanan bimbingan rohani yang tidak sesuai dengan agama dan kepercayaan yang dianutnya.</li>
+                <li>Menggugat dan/atau menuntut RSGM Gusti Hasan Aman apabila RSGM Gusti Hasan Aman diduga memberikan pelayanan yang tidak sesuai dengan standar.</li>
+                <li>Mengeluhkan pelayanan RSGM Gusti Hasan Aman yang tidak sesuai dengan standar pelayanan melalui media cetak dan elektronik sesuai dengan ketentuan peraturan perundang-undangan yang berlaku.</li>
+            </ol>
+
+            <strong>KEWAJIBAN PASIEN :</strong>
+            <ol>
+                <li>Pasien dan keluarga pasien wajib mengikuti peraturan dan tata tertib yang berlaku di RSGM Gusti Hasan Aman.</li>
+                <li>Pasien dan Keluarga pasien wajib menggunakan fasilitas RSGM Gusti Hasan Aman secara bertanggung jawab.</li>
+                <li>Pasien wajib menghormati hak-hak pasien lain, pengunjung dan hak tenaga kesehatan serta petugas lainnya yang bekerja di RSGM Gusti Hasan Aman.</li>
+                <li>Pasien berkewajiban memberikan informasi yang jujur, lengkap dan akurat sesuai kemampuan dan pengetahuannya tentang masalah kesehatannya.</li>
+                <li>Mematuhi rencana terapi yang direkomendasikan oleh tenaga Kesehatan di RSGM Gusti Hasan Aman dan disetujui oleh pasien yang bersangkutan setelah mendapatkan penjelasan sesuai ketentuan peraturan perundang-undangan.</li>
+                <li>Menerima segala konsekuensi atas keputusan pribadinya untuk menolak rencana terapi yang direkomendasikan oleh tenaga kesehatan dan/ atau tidak mematuhi petunjuk yang diberikan oleh tenaga kesehatan dalam rangka penyembuhan penyakit atau masalah kesehatannya.</li>
+                <li>Pasien berkewajiban memberikan informasi mengenai kemampuan finansial dan jaminan kesehatan yang dimilikinya.</li>
+                <li>Pasien berkewajiban memberikan imbalan jasa atas pelayanan yang diterima.</li>
+            </ol>
+        </div>
+
+        <div style="margin-top:20px; padding-left:10%;">
+            Banjarmasin, {if: (!empty($d.form_data.tgl_ttd))}{?=date('d-m-Y', strtotime($d.form_data.tgl_ttd))?}{/if}
+        </div>
+        <table class="ttd-table">
+            <tr>
+                <td style="width:50%;">
+                    <div>Pasien/Penanggung jawab Pasien,</div>
+                    <div style="margin-top:60px;">( {$d.form_data.nama_pasien_pj} )</div>
+                    <div>tanda tangan dan nama jelas</div>
+                </td>
+                <td style="width:50%;">
+                    <div>Pemberi Edukasi</div>
+                    <div style="margin-top:60px;">( {$d.form_data.pemberi_edukasi} )</div>
+                    <div>tanda tangan dan nama jelas</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+  </div>
+
+    <div class="footer-note">
+        Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas 
+        <span style="display:inline-block; width:10px; height:10px; border:1px solid #000; margin-left:5px; vertical-align:middle;"></span>
+    </div>
+    
+    <div class="footer-bottom">
+        <div>RSGM/Ed-Rev/02/2023</div>
+        <div style="color:blue;"><u>RM.RJ – 02A</u></div>
+    </div>
+</div>
+</body>
+</html>

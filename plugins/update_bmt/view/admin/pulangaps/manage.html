@@ -1,0 +1,50 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Kelola Surat Pernyataan Pulang APS</h3>
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'pulangapsmanage'])?}">Kelola Data</a></li>
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'pulangapsform'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped" id="tblData">
+                        <thead>
+                            <tr>
+                                <th>No Rawat</th>
+                                <th>No RM</th>
+                                <th>Nama Pasien</th>
+                                <th>Nama Pihak (Menyatakan)</th>
+                                <th>Selaku</th>
+                                <th>Tgl Surat</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loop: $data}
+                            <tr>
+                                <td>{$value.no_rawat}</td>
+                                <td>{$value.no_rkm_medis}</td>
+                                <td>{$value.nm_pasien}</td>
+                                <td>{$value.nama_pihak}</td>
+                                <td>{$value.selaku_pihak}</td>
+                                <td>{$value.tgl_surat}</td>
+                                <td>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'pulangapscetak', '?id='.$value.id])?}" class="btn btn-xs btn-success" target="_blank"><i class="fa fa-print"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'pulangapsform', '?id='.$value.id])?}" class="btn btn-xs btn-primary"><i class="fa fa-edit"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'pulangapshapus', '?id='.$value.id])?}" class="btn btn-xs btn-danger" onclick="return confirm('Hapus data?');"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {/loop}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</article>
+<script>
+    $('#tblData').DataTable();
+</script>

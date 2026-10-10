@@ -51,7 +51,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Nama Pemberi Edukasi (Tanda Tangan)</label>
-                                <input type="text" class="form-control" name="nama_pemberi_edukasi" value="{$data.nama_pemberi_edukasi}">
+                                <select class="form-control f-nama_pemberi_edukasi" name="nama_pemberi_edukasi" style="width:100%"></select>
                             </div>
                         </div>
                     </div>
@@ -64,8 +64,30 @@
     </div>
 </article>
 
+<link href="{?=url()?}/assets/css/select2.min.css" rel="stylesheet" />
+<script src="{?=url()?}/assets/jscripts/select2.min.js"></script>
 <script>
-    $('#btn_cek_pasien').click(function() {
+    $(document).ready(function() {
+        $('.f-nama_pemberi_edukasi').select2({
+            ajax: {
+                url: "{?=url([ADMIN, 'update_bmt', 'ri01bform'])?}?ajax_pegawai=1",
+                dataType: 'json', delay: 250,
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            placeholder: 'Pilih Petugas...',
+            minimumInputLength: 1,
+            tags: true,
+            width: '100%'
+        });
+        
+        var curPemberi = '{$data.nama_pemberi_edukasi}';
+        if(curPemberi) {
+            $('.f-nama_pemberi_edukasi').append(new Option(curPemberi, curPemberi, true, true)).trigger('change');
+        }
+    });
+
+    function cekPasien() {
         var no_rawat = $('#no_rawat').val();
         if (no_rawat) {
             $.ajax({
@@ -83,6 +105,10 @@
                         $('#no_rkm_medis').val(res.no_rkm_medis);
                         $('#nm_pasien').val(res.nm_pasien);
                         $('#tgl_lahir').val(res.tgl_lahir);
+                        
+                        if(!$('input[name="nama_pasien_pj"]').val()) {
+                            $('input[name="nama_pasien_pj"]').val(res.nm_pasien);
+                        }
                     } else {
                         alert('Pasien tidak ditemukan!');
                     }
@@ -91,6 +117,14 @@
                     alert('Terjadi kesalahan saat mencari data pasien.');
                 }
             });
+        }
+    }
+
+    $('#btn_cek_pasien').click(cekPasien);
+    $('#no_rawat').on('keypress', function(e) {
+        if(e.which === 13) {
+            e.preventDefault();
+            cekPasien();
         }
     });
 </script>

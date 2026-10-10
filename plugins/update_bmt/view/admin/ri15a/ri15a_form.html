@@ -1,0 +1,151 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">RM.RI 15A - Daftar Instruksi Medis Farmakologi</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri15amanage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri15aform'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="ri15aForm" method="POST" action="{?=url([ADMIN, 'update_bmt', 'ri15asave'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="json_detail_obat" id="json_detail_obat" value="">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No. Rawat / No. RM (Enter untuk cari)</label>
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required>
+                                <div id="patient_info" style="margin-top:5px; color:blue;">{$data.nm_pasien} {$data.no_rkm_medis}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Riwayat Alergi</label>
+                                <input type="text" name="riwayat_alergi" class="form-control" value="{$data.riwayat_alergi}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h4>Detail Obat</h4>
+                    <p style="color:red; font-size:12px;">*Khusus antibiotik tandai dengan P / E / D (P = Profilaksis, E = Empirik, D = Definitif)</p>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="tblObat">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" style="text-align:center; vertical-align:middle;">Tanggal dan Jam</th>
+                                    <th rowspan="2" style="text-align:center; vertical-align:middle;">Nama Obat</th>
+                                    <th rowspan="2" style="text-align:center; vertical-align:middle;">Dosis</th>
+                                    <th rowspan="2" style="text-align:center; vertical-align:middle;">Frekuensi</th>
+                                    <th rowspan="2" style="text-align:center; vertical-align:middle;">Cara Pemberian</th>
+                                    <th rowspan="2" style="text-align:center; vertical-align:middle;">Antibiotik<br>(P/E/D/)</th>
+                                    <th rowspan="2" style="text-align:center; vertical-align:middle;">Nama & TTD Dokter</th>
+                                    <th colspan="2" style="text-align:center; vertical-align:middle;">Dihentikan</th>
+                                    <th rowspan="2" style="text-align:center; vertical-align:middle;">Ket.</th>
+                                    <th rowspan="2" style="text-align:center; vertical-align:middle; width:40px;"></th>
+                                </tr>
+                                <tr>
+                                    <th style="text-align:center; vertical-align:middle;">Tanggal dan Jam</th>
+                                    <th style="text-align:center; vertical-align:middle;">Nama & TTD Dokter</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loop: $data.detail_obat}
+                                <tr class="obat-row">
+                                    <td><input type="datetime-local" class="form-control _tgl_jam" value="{$value.tgl_jam}"></td>
+                                    <td><input type="text" class="form-control _nama" value="{$value.nama}"></td>
+                                    <td><input type="text" class="form-control _dosis" value="{$value.dosis}"></td>
+                                    <td><input type="text" class="form-control _frekuensi" value="{$value.frekuensi}"></td>
+                                    <td><input type="text" class="form-control _cara" value="{$value.cara}"></td>
+                                    <td><input type="text" class="form-control _antibiotik" value="{$value.antibiotik}"></td>
+                                    <td><input type="text" class="form-control _ttd_dokter" value="{$value.ttd_dokter}"></td>
+                                    <td><input type="datetime-local" class="form-control _stop_tgl_jam" value="{$value.stop_tgl_jam}"></td>
+                                    <td><input type="text" class="form-control _stop_ttd_dokter" value="{$value.stop_ttd_dokter}"></td>
+                                    <td><input type="text" class="form-control _ket" value="{$value.ket}"></td>
+                                    <td><button type="button" class="btn btn-xs btn-danger btn-del"><i class="fa fa-trash"></i></button></td>
+                                </tr>
+                                {/loop}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="11">
+                                        <button type="button" class="btn btn-xs btn-success" id="btnAdd"><i class="fa fa-plus"></i> Tambah Baris</button>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ri15amanage'])?}" class="btn btn-default">Kembali</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+    $('#no_rawat').on('keypress', function(e) {
+        if(e.which === 13) {
+            e.preventDefault();
+            $.get("{?=url([ADMIN, 'update_bmt', 'ri15aform'])?}?ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
+                var d = typeof res === 'string' ? JSON.parse(res) : res;
+                if (d.success) {
+                    $('#no_rawat').val(d.no_rawat);
+                    $('#patient_info').html(d.nm_pasien + ' (' + d.no_rkm_medis + ')');
+                } else {
+                    $('#patient_info').html('Pasien tidak ditemukan');
+                }
+            });
+        }
+    });
+
+    $('#btnAdd').click(function() {
+        var tr = '<tr class="obat-row">'+
+            '<td><input type="datetime-local" class="form-control _tgl_jam"></td>'+
+            '<td><input type="text" class="form-control _nama"></td>'+
+            '<td><input type="text" class="form-control _dosis"></td>'+
+            '<td><input type="text" class="form-control _frekuensi"></td>'+
+            '<td><input type="text" class="form-control _cara"></td>'+
+            '<td><input type="text" class="form-control _antibiotik"></td>'+
+            '<td><input type="text" class="form-control _ttd_dokter"></td>'+
+            '<td><input type="datetime-local" class="form-control _stop_tgl_jam"></td>'+
+            '<td><input type="text" class="form-control _stop_ttd_dokter"></td>'+
+            '<td><input type="text" class="form-control _ket"></td>'+
+            '<td><button type="button" class="btn btn-xs btn-danger btn-del"><i class="fa fa-trash"></i></button></td>'+
+        '</tr>';
+        $('#tblObat tbody').append(tr);
+    });
+
+    $('body').on('click', '.btn-del', function() {
+        if ($('.obat-row').length > 1) {
+            $(this).closest('tr').remove();
+        } else {
+            alert('Minimal 1 baris');
+        }
+    });
+
+    $('#ri15aForm').submit(function() {
+        var obat = [];
+        $('.obat-row').each(function() {
+            obat.push({
+                tgl_jam: $(this).find('._tgl_jam').val(),
+                nama: $(this).find('._nama').val(),
+                dosis: $(this).find('._dosis').val(),
+                frekuensi: $(this).find('._frekuensi').val(),
+                cara: $(this).find('._cara').val(),
+                antibiotik: $(this).find('._antibiotik').val(),
+                ttd_dokter: $(this).find('._ttd_dokter').val(),
+                stop_tgl_jam: $(this).find('._stop_tgl_jam').val(),
+                stop_ttd_dokter: $(this).find('._stop_ttd_dokter').val(),
+                ket: $(this).find('._ket').val()
+            });
+        });
+        $('#json_detail_obat').val(JSON.stringify(obat));
+    });
+</script>

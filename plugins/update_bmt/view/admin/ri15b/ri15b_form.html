@@ -1,0 +1,149 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">RM.RI 15B - Jadwal Pemberian Obat (R)</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri15bmanage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri15bform'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="ri15bForm" method="POST" action="{?=url([ADMIN, 'update_bmt', 'ri15bsave'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="json_detail_obat" id="json_detail_obat" value="">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No. Rawat / No. RM (Enter untuk cari)</label>
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required>
+                                <div id="patient_info" style="margin-top:5px; color:blue;">{$data.nm_pasien} {$data.no_rkm_medis}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h4>Daftar Obat & Jadwal Pemberian</h4>
+                    <div id="obat-container"></div>
+                    <button type="button" class="btn btn-sm btn-success" id="btnAddObat"><i class="fa fa-plus"></i> Tambah Obat Baru</button>
+
+                    <hr>
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ri15bmanage'])?}" class="btn btn-default">Kembali</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+    var initialData = {?=json_encode($data.detail_obat)?};
+
+    function renderObat() {
+        var html = '';
+        $.each(initialData, function(i, obat) {
+            html += '<div class="panel panel-info obat-card" data-index="'+i+'" style="margin-bottom: 20px;">';
+            html += '  <div class="panel-heading">Obat ke-' + (i+1) + ' <button type="button" class="btn btn-xs btn-danger pull-right btnDelObat" style="margin-top:-3px;"><i class="fa fa-trash"></i> Hapus Obat</button></div>';
+            html += '  <div class="panel-body">';
+            html += '    <div class="row">';
+            html += '      <div class="col-md-4"><label>Nama Obat</label><input type="text" class="form-control obat-nama" value="'+(obat.nama_obat||'')+'"></div>';
+            html += '      <div class="col-md-3"><label>Dosis</label><input type="text" class="form-control obat-dosis" value="'+(obat.dosis||'')+'"></div>';
+            html += '      <div class="col-md-3"><label>Cara</label><input type="text" class="form-control obat-cara" value="'+(obat.cara||'')+'"></div>';
+            html += '      <div class="col-md-2"><label>High Alert</label><select class="form-control obat-high_alert"><option value="Tidak" '+(obat.high_alert=='Tidak'?'selected':'')+'>Tidak</option><option value="Ya" '+(obat.high_alert=='Ya'?'selected':'')+'>Ya</option></select></div>';
+            html += '    </div>';
+            html += '    <div style="margin-top:15px;"><strong>Jadwal Pemberian:</strong></div>';
+            html += '    <table class="table table-bordered table-condensed table-pemberian" style="margin-top:5px; margin-bottom:10px;">';
+            html += '      <thead><tr><th>Tanggal</th><th>Jam</th><th>Tanda</th><th style="width:40px;">Aksi</th></tr></thead>';
+            html += '      <tbody>';
+            if (obat.pemberian && obat.pemberian.length > 0) {
+                $.each(obat.pemberian, function(j, pem) {
+                    html += getPemberianRow(pem.tanggal, pem.jam, pem.tanda);
+                });
+            } else {
+                html += getPemberianRow('', '', '');
+            }
+            html += '      </tbody>';
+            html += '      <tfoot><tr><td colspan="4"><button type="button" class="btn btn-xs btn-warning btnAddPem"><i class="fa fa-plus"></i> Tambah Pemberian</button></td></tr></tfoot>';
+            html += '    </table>';
+            html += '  </div>';
+            html += '</div>';
+        });
+        $('#obat-container').html(html);
+    }
+
+    function getPemberianRow(tgl, jam, tanda) {
+        return '<tr class="pem-row">'+
+            '<td><input type="date" class="form-control pem-tanggal" value="'+(tgl||'')+'"></td>'+
+            '<td><input type="time" class="form-control pem-jam" value="'+(jam||'')+'"></td>'+
+            '<td><input type="text" class="form-control pem-tanda" placeholder="v/T/K/A/ESO/TAP" value="'+(tanda||'')+'"></td>'+
+            '<td><button type="button" class="btn btn-xs btn-danger btnDelPem"><i class="fa fa-times"></i></button></td>'+
+        '</tr>';
+    }
+
+    $(document).ready(function() {
+        renderObat();
+
+        $('#btnAddObat').click(function() {
+            initialData.push({ nama_obat:'', dosis:'', high_alert:'Tidak', cara:'', pemberian:[] });
+            renderObat();
+        });
+
+        $('body').on('click', '.btnDelObat', function() {
+            if ($('.obat-card').length > 1) {
+                var idx = $(this).closest('.obat-card').data('index');
+                initialData.splice(idx, 1);
+                renderObat();
+            } else {
+                alert('Minimal 1 obat!');
+            }
+        });
+
+        $('body').on('click', '.btnAddPem', function() {
+            $(this).closest('table').find('tbody').append(getPemberianRow('', '', ''));
+        });
+
+        $('body').on('click', '.btnDelPem', function() {
+            $(this).closest('tr').remove();
+        });
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if(e.which === 13) {
+            e.preventDefault();
+            $.get("{?=url([ADMIN, 'update_bmt', 'ri15bform'])?}?ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
+                var d = typeof res === 'string' ? JSON.parse(res) : res;
+                if (d.success) {
+                    $('#no_rawat').val(d.no_rawat);
+                    $('#patient_info').html(d.nm_pasien + ' (' + d.no_rkm_medis + ')');
+                } else {
+                    $('#patient_info').html('Pasien tidak ditemukan');
+                }
+            });
+        }
+    });
+
+    $('#ri15bForm').submit(function() {
+        var finalData = [];
+        $('.obat-card').each(function() {
+            var card = $(this);
+            var obat = {
+                nama_obat: card.find('.obat-nama').val(),
+                dosis: card.find('.obat-dosis').val(),
+                cara: card.find('.obat-cara').val(),
+                high_alert: card.find('.obat-high_alert').val(),
+                pemberian: []
+            };
+            card.find('.pem-row').each(function() {
+                var prow = $(this);
+                obat.pemberian.push({
+                    tanggal: prow.find('.pem-tanggal').val(),
+                    jam: prow.find('.pem-jam').val(),
+                    tanda: prow.find('.pem-tanda').val()
+                });
+            });
+            finalData.push(obat);
+        });
+        $('#json_detail_obat').val(JSON.stringify(finalData));
+    });
+</script>

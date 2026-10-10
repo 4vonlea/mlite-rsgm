@@ -26,7 +26,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>DPJP Utama</label>
-                                <input type="text" name="dpjp_utama" class="form-control" value="{$data.dpjp_utama}">
+                                <select class="form-control f-pegawai" name="dpjp_utama" style="width:100%"></select>
                             </div>
                         </div>
                     </div>
@@ -35,7 +35,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Nutrisionis</label>
-                                <input type="text" name="nutrisionis" class="form-control" value="{$data.nutrisionis}">
+                                <select class="form-control f-pegawai" name="nutrisionis" style="width:100%"></select>
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -93,36 +93,30 @@
                                 <thead>
                                     <tr>
                                         <th rowspan="2" class="text-center" style="vertical-align:middle;">Hari/Tanggal</th>
-                                        <th colspan="3" class="text-center">PAGI</th>
-                                        <th colspan="3" class="text-center">SIANG</th>
-                                        <th colspan="3" class="text-center">SORE</th>
+                                        <th colspan="2" class="text-center">PAGI</th>
+                                        <th colspan="2" class="text-center">SIANG</th>
+                                        <th colspan="2" class="text-center">SORE</th>
                                         <th rowspan="2" class="text-center" style="vertical-align:middle; width:40px;"><i class="fa fa-trash"></i></th>
                                     </tr>
                                     <tr>
                                         <th class="text-center">Jam Ambil</th>
                                         <th class="text-center">Jam Hidang</th>
-                                        <th class="text-center">TTD</th>
                                         <th class="text-center">Jam Ambil</th>
                                         <th class="text-center">Jam Hidang</th>
-                                        <th class="text-center">TTD</th>
                                         <th class="text-center">Jam Ambil</th>
                                         <th class="text-center">Jam Hidang</th>
-                                        <th class="text-center">TTD</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tbodyDetail">
                                     {loop: $data.detail_pemberian}
                                     <tr class="dtl-row">
-                                        <td><input type="text" class="form-control input-sm f-tgl" value="{$value.tgl}"></td>
-                                        <td><input type="text" class="form-control input-sm f-pa" value="{$value.p_a}"></td>
-                                        <td><input type="text" class="form-control input-sm f-ph" value="{$value.p_h}"></td>
-                                        <td><input type="text" class="form-control input-sm f-pt" value="{$value.p_t}"></td>
-                                        <td><input type="text" class="form-control input-sm f-sa" value="{$value.s_a}"></td>
-                                        <td><input type="text" class="form-control input-sm f-sh" value="{$value.s_h}"></td>
-                                        <td><input type="text" class="form-control input-sm f-st" value="{$value.s_t}"></td>
-                                        <td><input type="text" class="form-control input-sm f-ma" value="{$value.m_a}"></td>
-                                        <td><input type="text" class="form-control input-sm f-mh" value="{$value.m_h}"></td>
-                                        <td><input type="text" class="form-control input-sm f-mt" value="{$value.m_t}"></td>
+                                        <td><input type="date" class="form-control input-sm f-tgl" value="{$value.tgl}"></td>
+                                        <td><input type="time" class="form-control input-sm f-pa" value="{$value.p_a}"></td>
+                                        <td><input type="time" class="form-control input-sm f-ph" value="{$value.p_h}"></td>
+                                        <td><input type="time" class="form-control input-sm f-sa" value="{$value.s_a}"></td>
+                                        <td><input type="time" class="form-control input-sm f-sh" value="{$value.s_h}"></td>
+                                        <td><input type="time" class="form-control input-sm f-ma" value="{$value.m_a}"></td>
+                                        <td><input type="time" class="form-control input-sm f-mh" value="{$value.m_h}"></td>
                                         <td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-remove-row"><i class="fa fa-times"></i></button></td>
                                     </tr>
                                     {/loop}
@@ -136,13 +130,13 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Tanda Tangan Nutrisionis</label>
-                                <input type="text" name="ttd_nutrisionis" class="form-control" value="{$data.ttd_nutrisionis}">
+                                <select class="form-control f-pegawai" name="ttd_nutrisionis" style="width:100%"></select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Tanda Tangan Perawat</label>
-                                <input type="text" name="ttd_perawat" class="form-control" value="{$data.ttd_perawat}">
+                                <select class="form-control f-pegawai" name="ttd_perawat" style="width:100%"></select>
                             </div>
                         </div>
                     </div>
@@ -155,15 +149,43 @@
     </div>
 </article>
 
+<link href="{?=url()?}/assets/css/select2.min.css" rel="stylesheet" />
+<script src="{?=url()?}/assets/jscripts/select2.min.js"></script>
 <script>
+    $(document).ready(function() {
+        var s2opts = {
+            ajax: {
+                url: "{?=url([ADMIN, 'update_bmt', 'ri11bform'])?}?ajax_pegawai=1",
+                dataType: 'json', delay: 250,
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            placeholder: 'Pilih Petugas...',
+            minimumInputLength: 1,
+            tags: true,
+            width: '100%'
+        };
+        $('.f-pegawai').select2(s2opts);
+        var cur1 = '{$data.dpjp_utama}'; if(cur1) $('select[name="dpjp_utama"]').append(new Option(cur1, cur1, true, true)).trigger('change');
+        var cur2 = '{$data.nutrisionis}'; if(cur2) $('select[name="nutrisionis"]').append(new Option(cur2, cur2, true, true)).trigger('change');
+        var cur3 = '{$data.ttd_nutrisionis}'; if(cur3) $('select[name="ttd_nutrisionis"]').append(new Option(cur3, cur3, true, true)).trigger('change');
+        var cur4 = '{$data.ttd_perawat}'; if(cur4) $('select[name="ttd_perawat"]').append(new Option(cur4, cur4, true, true)).trigger('change');
+    });
+
     $('#no_rawat').on('keypress', function(e) {
         if(e.which === 13) {
             e.preventDefault();
-            $.get('{?=url([ADMIN, 'update_bmt', 'ri11bform'])?}?ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
-                var d = JSON.parse(res);
+            $.get("{?=url([ADMIN, 'update_bmt', 'ri11bform'])?}?ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
+                var d = typeof res === 'string' ? JSON.parse(res) : res;
                 if (d.success) {
                     $('#no_rawat').val(d.no_rawat);
                     $('#patient_info').html(d.nm_pasien + ' (' + d.no_rkm_medis + ')');
+                    if(d.nm_bangsal && !$('input[name="kamar_kelas"]').val()) {
+                        $('input[name="kamar_kelas"]').val(d.nm_bangsal + ' - ' + d.kd_kamar);
+                    }
+                    if(d.tgl_masuk && !$('input[name="tanggal_rawat"]').val()) {
+                        $('input[name="tanggal_rawat"]').val(d.tgl_masuk.substring(0, 10));
+                    }
                 } else {
                     $('#patient_info').html('Pasien tidak ditemukan');
                 }
@@ -183,13 +205,13 @@
                 tgl: $(this).find('.f-tgl').val(),
                 p_a: $(this).find('.f-pa').val(),
                 p_h: $(this).find('.f-ph').val(),
-                p_t: $(this).find('.f-pt').val(),
+                p_t: '',
                 s_a: $(this).find('.f-sa').val(),
                 s_h: $(this).find('.f-sh').val(),
-                s_t: $(this).find('.f-st').val(),
+                s_t: '',
                 m_a: $(this).find('.f-ma').val(),
                 m_h: $(this).find('.f-mh').val(),
-                m_t: $(this).find('.f-mt').val()
+                m_t: ''
             });
         });
         $('#json_detail_pemberian').val(JSON.stringify(dtl));
@@ -197,16 +219,13 @@
 
     $('#btnAddRow').click(function(){
         var tr = '<tr class="dtl-row">' +
-            '<td><input type="text" class="form-control input-sm f-tgl"></td>' +
-            '<td><input type="text" class="form-control input-sm f-pa"></td>' +
-            '<td><input type="text" class="form-control input-sm f-ph"></td>' +
-            '<td><input type="text" class="form-control input-sm f-pt"></td>' +
-            '<td><input type="text" class="form-control input-sm f-sa"></td>' +
-            '<td><input type="text" class="form-control input-sm f-sh"></td>' +
-            '<td><input type="text" class="form-control input-sm f-st"></td>' +
-            '<td><input type="text" class="form-control input-sm f-ma"></td>' +
-            '<td><input type="text" class="form-control input-sm f-mh"></td>' +
-            '<td><input type="text" class="form-control input-sm f-mt"></td>' +
+            '<td><input type="date" class="form-control input-sm f-tgl"></td>' +
+            '<td><input type="time" class="form-control input-sm f-pa"></td>' +
+            '<td><input type="time" class="form-control input-sm f-ph"></td>' +
+            '<td><input type="time" class="form-control input-sm f-sa"></td>' +
+            '<td><input type="time" class="form-control input-sm f-sh"></td>' +
+            '<td><input type="time" class="form-control input-sm f-ma"></td>' +
+            '<td><input type="time" class="form-control input-sm f-mh"></td>' +
             '<td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-remove-row"><i class="fa fa-times"></i></button></td>' +
             '</tr>';
         $('#tbodyDetail').append(tr);

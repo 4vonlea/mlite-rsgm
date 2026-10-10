@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>RM.RI 19 - Perencanaan Pulang Pasien</title>
+    <style>
+        @page { size: A4 portrait; margin: 10mm; }
+        body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 0; }
+        .page { width: 190mm; margin: 0 auto; position: relative; }
+        .table-header { width: 100%; border-collapse: collapse; }
+        .table-header td { border: 1px solid #000; padding: 4px; }
+        .rmbox { display: inline-block; width: 15px; height: 16px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; vertical-align: middle; }
+        .nob td { border: none !important; padding: 0 2px; }
+
+        .table-body { width: 100%; border-collapse: collapse; margin-top: 2px; font-size: 11px; border: 1.5px solid #000; }
+        .table-body td, .table-body th { border: 1px solid #000; padding: 4px; vertical-align: top; }
+        .table-body th { text-align: center; font-weight: bold; }
+
+        .title-box { text-align: center; font-weight: bold; font-size: 13px; padding: 5px 0; border: 1.5px solid #000; border-top: none; }
+        .notes { font-size: 8px; color: red; margin: 2px 0 5px 0; }
+        .footer-note { font-size: 9px; font-style: italic; text-align: right; margin-top: 5px; }
+        .footer-bottom { font-size: 9px; display: flex; justify-content: space-between; margin-top: 10px; font-weight: bold; }
+
+        .ch-box { display: inline-block; width: 10px; height: 10px; border: 1px solid #000; text-align: center; line-height: 10px; font-size: 10px; font-weight: bold; margin-right: 3px; vertical-align: middle; }
+
+        @media print {
+            body { -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+<div class="page">
+    <table class="table-header" style="border: 1.5px solid #000;">
+        <tr>
+            <td style="width:57%; padding:0; border:none; border-right:1px solid #000;">
+                <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop" style="width:100%; max-height:75px; object-fit:contain; display:block;">
+            </td>
+            <td style="width:33%; font-size:10px; border:none; border-right:1px solid #000; vertical-align:middle; padding-left:5px;">
+                <table style="width:100%; border:none;" class="nob">
+                    <tr><td style="width:62px; border:none; padding:1px;">No RM</td><td style="border:none; padding:1px;">: 
+                        <span class="rmbox">{$p.rm0}</span><span class="rmbox">{$p.rm1}</span>-<span class="rmbox">{$p.rm2}</span><span class="rmbox">{$p.rm3}</span>-<span class="rmbox">{$p.rm4}</span><span class="rmbox">{$p.rm5}</span>
+                    </td></tr>
+                    <tr><td style="border:none; padding:1px;">Nama Pasien</td><td style="border:none; padding:1px;">: <span style="border-bottom:1px dotted #000;">{$p.nm_pasien}</span> &nbsp; <span style="float:right;">{$p.lp}</span></td></tr>
+                    <tr><td style="border:none; padding:1px;">Tanggal Lahir</td><td style="border:none; padding:1px;">: <span style="border-bottom:1px dotted #000;">{$p.tgl_lahir}</span></td></tr>
+                </table>
+            </td>
+            <td style="width:10%; padding:0; text-align:center; border:none;">
+                <div style="padding:6px 0; border-bottom:1px solid #000; background:#cdeb8b; font-weight:bold; font-size:14px;">RM<br>RI</div>
+                <div style="padding:6px 0; background:#fff; font-size:14px; font-weight:bold; margin-top:2px;">
+                    <span style="border: 1.5px solid #000; border-radius: 3px; padding:2px;">19</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="notes">
+        * Harap mengisi formulir ini dengan kelengkapan yang jelas, benar, dan lengkap.<br>
+        * Berilah tanda centang (√) pada kotak pilihan yang telah disediakan.<br>
+        * Berilah tanda tangan pada spasi yang disediakan.
+    </div>
+
+    <div class="title-box" style="border-top:1.5px solid #000;">PERENCANAAN PEMULANGAN PASIEN (DISCHARGE PLANNING)</div>
+
+    <table class="table-body" style="border-top:none;">
+        <tr>
+            <td colspan="2" style="width:50%;">Tanggal Masuk : {if: (!empty($d.form_data.tgl_masuk))}{?=date('d-m-Y', strtotime($d.form_data.tgl_masuk))?}{/if}</td>
+            <td colspan="2" style="width:50%;"></td>
+        </tr>
+        <tr>
+            <td colspan="2">Rencana Tanggal Pulang : {if: (!empty($d.form_data.rencana_tgl_pulang))}{?=date('d-m-Y', strtotime($d.form_data.rencana_tgl_pulang))?}{/if}</td>
+            <td colspan="2"></td>
+        </tr>
+        <tr>
+            <td colspan="2">Rencana Jam Pulang : {if: (!empty($d.form_data.rencana_jam_pulang))}{?=date('H:i', strtotime($d.form_data.rencana_jam_pulang))?}{/if}</td>
+            <td colspan="2"></td>
+        </tr>
+        
+        <tr>
+            <td style="width:38%;">Usia lanjut (60 tahun atau lebih)</td>
+            <td style="width:12%; white-space:nowrap;">
+                <span class="ch-box">{if: ($d.form_data.usia_lanjut=='Ya')}√{else}&nbsp;{/if}</span> Ya &nbsp;&nbsp;&nbsp;
+                <span class="ch-box">{if: ($d.form_data.usia_lanjut=='Tidak')}√{else}&nbsp;{/if}</span> Tidak
+            </td>
+            <td colspan="2" rowspan="4" style="vertical-align:middle; padding-left:15px; font-size:12px;">
+                Jika satu saja terpenuhi, maka pasien membutuhkan perencanaan pulang khusus
+            </td>
+        </tr>
+        <tr>
+            <td>Hambatan mobilisasi</td>
+            <td style="white-space:nowrap;">
+                <span class="ch-box">{if: ($d.form_data.hambatan_mobilisasi=='Ya')}√{else}&nbsp;{/if}</span> Ya &nbsp;&nbsp;&nbsp;
+                <span class="ch-box">{if: ($d.form_data.hambatan_mobilisasi=='Tidak')}√{else}&nbsp;{/if}</span> Tidak
+            </td>
+        </tr>
+        <tr>
+            <td>Membutuhkan pelayanan medis dan perawatan berkelanjutan</td>
+            <td style="white-space:nowrap;">
+                <span class="ch-box">{if: ($d.form_data.perawatan_lanjutan=='Ya')}√{else}&nbsp;{/if}</span> Ya &nbsp;&nbsp;&nbsp;
+                <span class="ch-box">{if: ($d.form_data.perawatan_lanjutan=='Tidak')}√{else}&nbsp;{/if}</span> Tidak
+            </td>
+        </tr>
+        <tr>
+            <td>Tergantung dengan orang lain dalam aktivitas harian</td>
+            <td style="white-space:nowrap;">
+                <span class="ch-box">{if: ($d.form_data.tergantung_orang_lain=='Ya')}√{else}&nbsp;{/if}</span> Ya &nbsp;&nbsp;&nbsp;
+                <span class="ch-box">{if: ($d.form_data.tergantung_orang_lain=='Tidak')}√{else}&nbsp;{/if}</span> Tidak
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="2" style="height:40px;">
+                Transportasi pulang :<br>
+                <div style="margin-top:5px; font-weight:bold;">{$d.form_data.transportasi}</div>
+            </td>
+            <td colspan="2">
+                Yang mendampingi dan merawat pasien di rumah :<br>
+                <div style="margin-top:5px; font-weight:bold;">{$d.form_data.pendamping}</div>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="4" style="padding:0;">
+                <table style="width:100%; border-collapse:collapse; border:none; text-align:center;">
+                    <tr>
+                        <td colspan="6" style="border:none; border-bottom:1px solid #000; text-align:left; padding:4px;">Pengobatan yang dilanjutkan dirumah :</td>
+                    </tr>
+                    <tr>
+                        <th style="border-top:none; border-left:none; border-bottom:1px solid #000; width:5%;">No.</th>
+                        <th style="border-top:none; border-bottom:1px solid #000; width:30%;">Nama Obat</th>
+                        <th style="border-top:none; border-bottom:1px solid #000; width:15%;">Jumlah</th>
+                        <th style="border-top:none; border-bottom:1px solid #000; width:15%;">Dosis</th>
+                        <th style="border-top:none; border-bottom:1px solid #000; width:15%;">Jam pemberian</th>
+                        <th style="border-top:none; border-right:none; border-bottom:1px solid #000; width:20%;">Instruksi Khusus</th>
+                    </tr>
+                    {loop: $d.form_data.pengobatan}
+                    <tr>
+                        <td style="border-left:none; border-bottom:1px solid #000; height:15px;">{?=($key+1)?}</td>
+                        <td style="border-bottom:1px solid #000; text-align:left; padding-left:5px;">{$value.nama}</td>
+                        <td style="border-bottom:1px solid #000;">{$value.jumlah}</td>
+                        <td style="border-bottom:1px solid #000;">{$value.dosis}</td>
+                        <td style="border-bottom:1px solid #000;">{$value.jam}</td>
+                        <td style="border-right:none; border-bottom:1px solid #000;">{$value.instruksi}</td>
+                    </tr>
+                    {/loop}
+                </table>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="2" style="width:50%; border-bottom:none;">Peralatan medis yang dilanjutkan di rumah</td>
+            <td colspan="2" style="width:50%; border-bottom:none;">Alat bantu yang dipakai di rumah</td>
+        </tr>
+        <tr>
+            <td style="width:5%; border-top:none; border-right:none; text-align:center; vertical-align:top;">No.</td>
+            <td style="width:45%; border-top:none; border-left:none; vertical-align:top;">
+                <div>Nama Alat Medis</div>
+                <div style="margin-top:5px; margin-left:15px;">
+                    <div><span class="ch-box">{if: ($d.form_data.alat_medis_oksigen=='1')}√{else}&nbsp;{/if}</span> Oksigen portable</div>
+                    <div style="margin-top:2px;"><span class="ch-box">{if: ($d.form_data.alat_medis_ngt=='1')}√{else}&nbsp;{/if}</span> NGT</div>
+                    <div style="margin-top:2px;"><span class="ch-box">{if: ($d.form_data.alat_medis_tidak_ada=='1')}√{else}&nbsp;{/if}</span> Tidak ada</div>
+                </div>
+            </td>
+            <td colspan="2" style="border-top:none; vertical-align:top; padding-top:18px;">
+                <div style="margin-left:15px;">
+                    <div><span class="ch-box">{if: ($d.form_data.alat_bantu_kursi_roda=='1')}√{else}&nbsp;{/if}</span> Kursi roda</div>
+                    <div style="margin-top:2px;"><span class="ch-box">{if: ($d.form_data.alat_bantu_tongkat=='1')}√{else}&nbsp;{/if}</span> Tongkat</div>
+                    <div style="margin-top:2px;"><span class="ch-box">{if: ($d.form_data.alat_bantu_lain_lain=='1')}√{else}&nbsp;{/if}</span> Lain-lain : {$d.form_data.alat_bantu_lain_text}</div>
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="4">Instruksi Selama di Rumah</td>
+        </tr>
+        <tr>
+            <td colspan="4" style="height:50px;">
+                {?=nl2br(htmlspecialchars($d.form_data.instruksi_rumah))?}
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="2">
+                Diberikan kepada pasien / keluarga
+            </td>
+            <td colspan="2">
+                Jadwal kontrol selanjutnya
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="border-bottom:none; padding:2px 15px;">
+                <span class="ch-box">{if: ($d.form_data.diberi_obat=='1')}√{else}&nbsp;{/if}</span> Obat-obatan
+            </td>
+            <td colspan="2" style="border-bottom:none;">
+                Nama dokter : {$d.form_data.jk_nama_dokter}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="border-top:none; border-bottom:none; padding:2px 15px;">
+                <span class="ch-box">{if: ($d.form_data.diberi_peralatan=='1')}√{else}&nbsp;{/if}</span> Peralatan
+            </td>
+            <td colspan="2" style="border-top:none; border-bottom:none;">
+                Tanggal dan Jam kontrol : {if: (!empty($d.form_data.jk_tgl_jam))}{?=date('d-m-Y H:i', strtotime($d.form_data.jk_tgl_jam))?}{/if}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="border-top:none; border-bottom:none; padding:2px 15px;">
+                <span class="ch-box">{if: ($d.form_data.diberi_resep=='1')}√{else}&nbsp;{/if}</span> Resep obat
+            </td>
+            <td colspan="2" style="border-top:none; border-bottom:none;">
+                Petugas : {$d.form_data.jk_petugas}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="border-top:none; padding:2px 15px 5px 15px;">
+                <span class="ch-box">{if: ($d.form_data.diberi_hasil=='1')}√{else}&nbsp;{/if}</span> Hasil pemeriksaan peunjang : {$d.form_data.diberi_hasil_text}
+            </td>
+            <td colspan="2" style="border-top:none;">
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="2" style="border-bottom:none;">Instruksi diberikan kepada :</td>
+            <td colspan="2" style="text-align:center; border-bottom:none;">Saya menerima dan mengerti tentang instruksi pulang</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="border-top:none; border-bottom:none; padding:2px 15px;">
+                <span class="ch-box">{if: ($d.form_data.id_pasien=='1')}√{else}&nbsp;{/if}</span> Pasien
+            </td>
+            <td style="border-top:none; border-bottom:none; text-align:center; width:25%;">Pihak Pasien</td>
+            <td style="border-top:none; border-bottom:none; text-align:center; width:25%;">Petugas yang menjelaskan</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="border-top:none; border-bottom:none; padding:2px 15px;">
+                <span class="ch-box">{if: ($d.form_data.id_keluarga=='1')}√{else}&nbsp;{/if}</span> Keluarga
+            </td>
+            <td style="border-top:none; border-bottom:none;"></td>
+            <td style="border-top:none; border-bottom:none;"></td>
+        </tr>
+        <tr>
+            <td colspan="2" style="border-top:none; border-bottom:none; padding:2px 15px;">
+                <span class="ch-box">{if: ($d.form_data.id_orang_terdekat=='1')}√{else}&nbsp;{/if}</span> Orang terdekat
+            </td>
+            <td style="border-top:none; border-bottom:none;"></td>
+            <td style="border-top:none; border-bottom:none;"></td>
+        </tr>
+        <tr>
+            <td colspan="2" style="border-top:none; padding:2px 15px 10px 15px;">
+                <span class="ch-box">{if: ($d.form_data.id_lain_lain=='1')}√{else}&nbsp;{/if}</span> Lain-lain : {$d.form_data.id_lain_text}
+            </td>
+            <td style="border-top:none; text-align:center; vertical-align:bottom; height:60px;">
+                ( {$d.form_data.pihak_pasien} )
+            </td>
+            <td style="border-top:none; text-align:center; vertical-align:bottom;">
+                ( {$d.form_data.petugas_menjelaskan} )
+            </td>
+        </tr>
+    </table>
+
+    <div class="footer-note">Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</div>
+    
+    <div class="footer-bottom">
+        <div>RSGM/Ed-Rev/02/2023</div>
+        <div>RM.RI – 19</div>
+    </div>
+</div>
+</body>
+</html>

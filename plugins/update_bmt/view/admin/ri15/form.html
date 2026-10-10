@@ -1,0 +1,68 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">RM.RI 15 - Formulir Instruksi Medis</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri15manage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri15form'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="ri15Form" method="POST" action="{?=url([ADMIN, 'update_bmt', 'ri15save'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No. Rawat / No. RM (Enter untuk cari)</label>
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required>
+                                <div id="patient_info" style="margin-top:5px; color:blue;">{$data.nm_pasien} {$data.no_rkm_medis}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Riwayat Alergi</label>
+                                <select name="riwayat_alergi" class="form-control">
+                                    <option value="">-</option>
+                                    <option value="Ya" {if: ($data.riwayat_alergi == 'Ya')}selected{/if}>Ya</option>
+                                    <option value="Tidak" {if: ($data.riwayat_alergi == 'Tidak')}selected{/if}>Tidak</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Alergi terhadap</label>
+                                <input type="text" name="alergi_terhadap" class="form-control" value="{$data.alergi_terhadap}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ri15manage'])?}" class="btn btn-default">Kembali</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+    $('#no_rawat').on('keypress', function(e) {
+        if(e.which === 13) {
+            e.preventDefault();
+            $.get("{?=url([ADMIN, 'update_bmt', 'ri15form'])?}?ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
+                var d = typeof res === 'string' ? JSON.parse(res) : res;
+                if (d.success) {
+                    $('#no_rawat').val(d.no_rawat);
+                    $('#patient_info').html(d.nm_pasien + ' (' + d.no_rkm_medis + ')');
+                } else {
+                    $('#patient_info').html('Pasien tidak ditemukan');
+                }
+            });
+        }
+    });
+</script>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>RM.RJ - 10 Lembar Edukasi Pasien</title>
+    <style>
+        @page { size: A4 portrait; margin: 10mm; }
+        body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 0; }
+        .page { width: 190mm; margin: 0 auto; position: relative; }
+        
+        .header-table { width: 100%; border-collapse: collapse; border-bottom: 1.5px solid #000; }
+        .header-table td { padding: 4px; vertical-align: top; }
+        
+        .rmbox { display: inline-block; width: 15px; height: 16px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; vertical-align: middle; }
+
+        .title-doc { text-align: center; font-size: 13px; font-weight: bold; margin: 0; padding: 5px 0; border-bottom: 1.5px solid #000; }
+
+        .content-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+        .content-table th, .content-table td { border: 1.5px solid #000; padding: 3px; vertical-align: top; }
+        .content-table th { text-align: center; font-weight: normal; }
+
+        .sub-table { width: 100%; border-collapse: collapse; height: 100%; }
+        .sub-table td { border: none; padding: 2px; }
+        .sub-table td.br { border-right: 1.5px solid #000; }
+
+        .circ { display: inline-block; width: 14px; height: 14px; text-align: center; line-height: 14px; border-radius: 50%; border: 1.5px solid transparent; margin: 0 1px; }
+        .circ-red { border-color: red; font-weight: bold; }
+
+        .pel-table { width: 100%; border-collapse: collapse; font-size: 8px; text-align: center; }
+        .pel-table th, .pel-table td { border: 1.5px solid #000; padding: 3px; vertical-align: middle; }
+        .pel-table td { text-align: left; }
+        .pel-table th { font-weight: bold; }
+
+        .footer-note { font-size: 8px; font-style: italic; text-align: right; margin-top: 5px; }
+        .footer-bottom { font-size: 9px; display: flex; justify-content: space-between; margin-top: 5px; font-weight: bold; color: gray; }
+        
+        @media print {
+            body { -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+<div class="page">
+  <div style="border: 1.5px solid #000;">
+    <table class="header-table">
+        <tr>
+            <td style="width:55%; border-right:1.5px solid #000;">
+                <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop" style="width:100%; max-height:65px; object-fit:contain; display:block;">
+            </td>
+            <td style="width:45%; padding-left:15px; vertical-align:middle;">
+                <table style="width:100%; border:none; font-size:10px;">
+                    <tr>
+                        <td style="width:30%; padding:2px 0;">NO. RM</td>
+                        <td style="width:5%;">:</td>
+                        <td style="width:65%;">
+                            <span class="rmbox">{$p.rm0}</span><span class="rmbox">{$p.rm1}</span><span class="rmbox">{$p.rm2}</span><span class="rmbox">{$p.rm3}</span><span class="rmbox">{$p.rm4}</span><span class="rmbox">{$p.rm5}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:2px 0;">NAMA PASIEN</td>
+                        <td>:</td>
+                        <td style="border-bottom:1px dotted #000;">{$p.nm_pasien} <span style="float:right;">{$p.lp}</span></td>
+                    </tr>
+                    <tr>
+                        <td style="padding:2px 0;">TANGGAL LAHIR</td>
+                        <td>:</td>
+                        <td style="border-bottom:1px dotted #000;">{$p.tgl_lahir}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <div class="title-doc">LEMBAR EDUKASI PASIEN DAN KELUARGA TERINTEGRASI</div>
+
+    <table class="content-table" style="border:none; border-top:none;">
+        <tr>
+            <td style="width:30%; font-weight:bold; border-left:none;">Perhatian</td>
+            <td colspan="3" style="width:35%; font-weight:bold; text-align:center;">Hambatan</td>
+            <td style="width:35%; font-weight:bold; text-align:center; border-right:none;">Keyakinan dan nilai-nilai</td>
+        </tr>
+        <tr>
+            <td style="border-left:none;">1. Harap di isi dengan lengkap dan terbaca jelas<br>2. lingkarilah angka pada pilihan yang tersedia</td>
+            <td style="width:11.66%;"><span class="circ {if: ($d.form_data.hambatan_emosi)}circ-red{/if}">1</span>. Emosi</td>
+            <td style="width:11.66%;"><span class="circ {if: ($d.form_data.hambatan_motivasi)}circ-red{/if}">2</span>. Motivasi</td>
+            <td style="width:11.66%;"><span class="circ {if: ($d.form_data.hambatan_tidak_ada)}circ-red{/if}">3</span>. Tidak ada</td>
+            <td style="border-right:none;">
+                1. Pantangan hari : {$d.form_data.keyakinan_hari}<br>
+                2. Pantangan Makan : {$d.form_data.keyakinan_makan}<br>
+                <span class="circ {if: ($d.form_data.keyakinan_lawan_jenis)}circ-red{/if}">3</span>. Pantangan dirawat dokter gigi lawan jenis
+            </td>
+        </tr>
+        <tr>
+            <td style="font-weight:bold; font-size:11px; border-left:none;">A. Pengkajian Kebutuhan Pasien<br>dan Keluarga</td>
+            <td colspan="3" style="font-weight:bold; text-align:center;">Keterbatasan</td>
+            <td style="font-weight:bold; text-align:center; border-right:none;">Kemampuan membaca</td>
+        </tr>
+        <tr>
+            <td style="padding:0; border-left:none;">
+                <table class="sub-table">
+                    <tr>
+                        <td style="width:50%;" class="br">
+                            Ketersediaan menerima edukasi:<br>
+                            <span class="circ {if: ($d.form_data.ketersediaan_edukasi=='ya')}circ-red{/if}">1</span>. Ya &nbsp; 
+                            <span class="circ {if: ($d.form_data.ketersediaan_edukasi=='tidak')}circ-red{/if}">2</span>. Tidak
+                        </td>
+                        <td style="width:50%;">
+                            Pendidikan terakhir<br>
+                            <u>{$d.form_data.pendidikan_terakhir}</u>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td><span class="circ {if: ($d.form_data.keterbatasan_fisik)}circ-red{/if}">1</span>. Fisik</td>
+            <td><span class="circ {if: ($d.form_data.keterbatasan_kognitif)}circ-red{/if}">2</span>. Kognitif</td>
+            <td><span class="circ {if: ($d.form_data.keterbatasan_tidak_ada)}circ-red{/if}">3</span>. Tidak ada</td>
+            <td style="text-align:center; border-right:none;">
+                <br>
+                <span class="circ {if: ($d.form_data.kemampuan_membaca=='bisa')}circ-red{/if}">1</span>. Bisa Membaca &nbsp;&nbsp;&nbsp; 
+                <span class="circ {if: ($d.form_data.kemampuan_membaca=='tidak')}circ-red{/if}">2</span>. Tidak bisa membaca
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:0; border-left:none; border-bottom:none;">
+                <table class="sub-table">
+                    <tr>
+                        <td style="width:50%;" class="br">
+                            Bahasa yang dipakai<br>
+                            <span class="circ {if: ($d.form_data.bahasa=='indonesia')}circ-red{/if}">1</span>. Indonesia<br>
+                            <span class="circ {if: ($d.form_data.bahasa=='lainnya')}circ-red{/if}">2</span>. lainnya : {$d.form_data.bahasa_lainnya}
+                        </td>
+                        <td style="width:50%;">
+                            Kebutuhan Penerjemah<br>
+                            <span class="circ {if: ($d.form_data.penerjemah=='tidak')}circ-red{/if}">1</span>. tidak<br>
+                            <span class="circ {if: ($d.form_data.penerjemah=='ya')}circ-red{/if}">2</span>. Ya, bahasa: {$d.form_data.penerjemah_bahasa}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td colspan="4" style="padding:0; border-right:none; border-bottom:none;">
+                <table style="width:100%; border-collapse:collapse; border:none; height:100%;">
+                    <tr><td colspan="3" style="text-align:center; font-weight:bold; border-bottom:1.5px solid #000; padding:3px;">Kebutuhan Edukasi</td></tr>
+                    <tr>
+                        <td style="width:33%; padding:3px; vertical-align:top; border-right:none;">
+                            <span class="circ {if: (in_array(1, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">1</span>. Diagnosis<br>
+                            <span class="circ {if: (in_array(2, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">2</span>. Tanda, gejala & penyebab<br>
+                            <span class="circ {if: (in_array(3, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">3</span>. Rencana tindakan medis<br>
+                            <span class="circ {if: (in_array(4, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">4</span>. Hasil yang diharapkan<br>
+                            <span class="circ {if: (in_array(5, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">5</span>. Alternatif tindakan lain<br>
+                            <span class="circ {if: (in_array(6, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">6</span>. Risiko tindakan<br>
+                            <span class="circ {if: (in_array(7, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">7</span>. Komplikasi yang mungkin terjadi<br>
+                            <span class="circ {if: (in_array(8, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">8</span>. Prognosis<br>
+                            <span class="circ {if: (in_array(9, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">9</span>. Cara menyikat gigi<br>
+                            <span class="circ {if: (in_array(10, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">10</span>. Instruksi paska tindakan medis
+                        </td>
+                        <td style="width:33%; padding:3px; vertical-align:top; border-right:none;">
+                            <span class="circ {if: (in_array(11, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">11</span>. Penggunaan obat<br>
+                            <span class="circ {if: (in_array(12, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">12</span>. Efek samping obat<br>
+                            <span class="circ {if: (in_array(13, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">13</span>. Interaksi obat<br>
+                            <span class="circ {if: (in_array(14, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">14</span>. Keamanan dan efektivitas<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;peralatan medis<br>
+                            <span class="circ {if: (in_array(15, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">15</span>. Pedoman Nutrisi<br>
+                            <span class="circ {if: (in_array(16, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">16</span>. Diet dan nutrisi<br>
+                            <span class="circ {if: (in_array(17, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">17</span>. Manajemen nyeri<br>
+                            <span class="circ {if: (in_array(18, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">18</span>. Teknik rehabilitasi<br>
+                            <span class="circ {if: (in_array(19, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">19</span>. Cara mencuci tangan yang benar
+                        </td>
+                        <td style="width:34%; padding:3px; vertical-align:top;">
+                            <span class="circ {if: (in_array(20, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">20</span>. Etika batuk<br>
+                            <span class="circ {if: (in_array(21, $d.form_data.kebutuhan_edukasi))}circ-red{/if}">21</span>. Resiko jatuh
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:0; border-left:none; border-bottom:none;">
+                <table style="width:100%; height:100%; border-collapse:collapse; border-top:1.5px solid #000;">
+                    <tr>
+                        <td style="border-right:1.5px solid #000; vertical-align:top; padding:4px;">
+                            Nama Perawat yang<br>mengkaji<br><br><br>
+                            <b><u>{$d.form_data.nama_perawat}</u></b>
+                        </td>
+                        <td style="border-right:1.5px solid #000; vertical-align:top; padding:4px;">
+                            TTD:
+                        </td>
+                        <td style="vertical-align:top; padding:4px;">
+                            Tanggal: {if: ($d.form_data.tgl_kaji)}{?=date('d-m-Y', strtotime($d.form_data.tgl_kaji))?}{/if}<br><br><br>
+                            Jam: {if: ($d.form_data.tgl_kaji)}{?=date('H:i', strtotime($d.form_data.tgl_kaji))?}{/if}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td colspan="4" style="border-bottom:none; border-right:none; border-top:1.5px solid #000;"></td>
+        </tr>
+    </table>
+
+    <div style="font-weight:bold; font-size:11px; padding: 4px; border-top: 1.5px solid #000; border-bottom: 1.5px solid #000;">
+        B. Pelaksanaan Edukasi Pasien & Keluarga
+    </div>
+
+    <table class="pel-table" style="border:none; border-top:none;">
+        <thead>
+            <tr>
+                <th style="width:7%; border-left:none; border-top:none;">Tanggal<br>& Jam</th>
+                <th style="width:17%; border-top:none;">Isi Kebutuhan Edukasi</th>
+                <th style="width:13%; border-top:none;">Pengetahuan<br>Pra Edukasi</th>
+                <th style="width:13%; border-top:none;">Penerima<br>Edukasi</th>
+                <th style="width:13%; border-top:none;">Metode Edukasi</th>
+                <th style="width:15%; border-top:none;">Evaluasi</th>
+                <th style="width:11%; border-top:none;">Tanda Tangan & Nama<br>Pemberi Edukasi</th>
+                <th style="width:11%; border-right:none; border-top:none;">Nama & Tanda<br>Tangan Penerima<br>Edukasi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {loop: $d.form_data.pelaksanaan}
+            <tr>
+                <td style="border-left:none; text-align:center;">
+                    {if: ($value.tgl_jam)}
+                    {?=date('d-m-Y', strtotime($value.tgl_jam))?}<br>{?=date('H:i', strtotime($value.tgl_jam))?}
+                    {/if}
+                </td>
+                <td>{?=nl2br($value.isi_kebutuhan)?}</td>
+                <td>
+                    <span class="circ {if: ($value.pengetahuan_pra=='1')}circ-red{/if}">1</span>. Sangat tahu<br>
+                    <span class="circ {if: ($value.pengetahuan_pra=='2')}circ-red{/if}">2</span>. Pada dasarnya<br>
+                    <span class="circ {if: ($value.pengetahuan_pra=='3')}circ-red{/if}">3</span>. Belum tahu
+                </td>
+                <td>
+                    <span class="circ {if: ($value.penerima=='1')}circ-red{/if}">1</span>. Pasien<br>
+                    <span class="circ {if: ($value.penerima=='2')}circ-red{/if}">2</span>. Keluarga<br>
+                    <span class="circ {if: ($value.penerima=='3')}circ-red{/if}">3</span>. Pasien &<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Keluarga<br>
+                    <span class="circ {if: ($value.penerima=='4')}circ-red{/if}">4</span>. Lain-lain<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{$value.penerima_lain}
+                </td>
+                <td>
+                    <span class="circ {if: ($value.metode=='1')}circ-red{/if}">1</span>. Membaca<br>
+                    <span class="circ {if: ($value.metode=='2')}circ-red{/if}">2</span>. Demonstrasi<br>
+                    <span class="circ {if: ($value.metode=='3')}circ-red{/if}">3</span>. Ceramah<br>
+                    <span class="circ {if: ($value.metode=='4')}circ-red{/if}">4</span>. Diskusi<br>
+                    <span class="circ {if: ($value.metode=='5')}circ-red{/if}">5</span>. Audio Visual
+                </td>
+                <td>
+                    <span class="circ {if: ($value.evaluasi=='1')}circ-red{/if}">1</span>. Mengerti<br>
+                    <span class="circ {if: ($value.evaluasi=='2')}circ-red{/if}">2</span>. Mengerti,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mengulang<br>
+                    <span class="circ {if: ($value.evaluasi=='3')}circ-red{/if}">3</span>. Mengerti,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mengulang,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mendemonstrasikan<br>
+                    <span class="circ {if: ($value.evaluasi=='4')}circ-red{/if}">4</span>. Re-edukasi
+                </td>
+                <td style="text-align:center; vertical-align:bottom;">
+                    <div style="text-align:left; font-size:7px;">Profesi : {$value.profesi_pemberi}</div>
+                    <br><br><br>
+                    ( {$value.nama_pemberi} )
+                </td>
+                <td style="border-right:none; text-align:center; vertical-align:bottom;">
+                    <br><br><br><br>
+                    ( {$value.nama_penerima} )
+                </td>
+            </tr>
+            {/loop}
+        </tbody>
+    </table>
+
+  </div>
+
+    <div class="footer-note">
+        Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas 
+        <span style="display:inline-block; width:10px; height:10px; border:1px solid #000; margin-left:5px; vertical-align:middle;"></span>
+    </div>
+    
+    <div class="footer-bottom">
+        <div>RSGM/Ed-Rev/02/2023</div>
+        <div>RM.RJ – 10 Hal 1 - 2</div>
+    </div>
+</div>
+</body>
+</html>

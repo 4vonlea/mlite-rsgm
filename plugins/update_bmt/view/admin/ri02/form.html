@@ -196,8 +196,8 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6"><div class="form-group"><label>Dokter Ruang / Yang Merawat</label><input type="text" class="form-control" name="dokter_ruang" value="{$data.dokter_ruang}"></div></div>
-                        <div class="col-md-6"><div class="form-group"><label>Petugas Admissi Rawat Inap</label><input type="text" class="form-control" name="petugas_admissi" value="{$data.petugas_admissi}"></div></div>
+                        <div class="col-md-6"><div class="form-group"><label>Dokter Ruang / Yang Merawat</label><select class="form-control f-dokter_ruang" name="dokter_ruang" style="width:100%"></select></div></div>
+                        <div class="col-md-6"><div class="form-group"><label>Petugas Admissi Rawat Inap</label><select class="form-control f-petugas_admissi" name="petugas_admissi" style="width:100%"></select></div></div>
                     </div>
                     </fieldset>
 
@@ -208,8 +208,30 @@
         </div>
     </div>
 </article>
-
+<link href="{?=url()?}/assets/css/select2.min.css" rel="stylesheet" />
+<script src="{?=url()?}/assets/jscripts/select2.min.js"></script>
 <script>
+    $(document).ready(function() {
+        var s2opts = {
+            ajax: {
+                url: "{?=url([ADMIN, 'update_bmt', 'ri02form'])?}?ajax_pegawai=1",
+                dataType: 'json', delay: 250,
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            placeholder: 'Pilih Petugas...',
+            minimumInputLength: 1,
+            tags: true,
+            width: '100%'
+        };
+        $('.f-dokter_ruang').select2(s2opts);
+        $('.f-petugas_admissi').select2(s2opts);
+        
+        var curDokter = '{$data.dokter_ruang}';
+        if(curDokter) $('.f-dokter_ruang').append(new Option(curDokter, curDokter, true, true)).trigger('change');
+        var curPetugas = '{$data.petugas_admissi}';
+        if(curPetugas) $('.f-petugas_admissi').append(new Option(curPetugas, curPetugas, true, true)).trigger('change');
+    });
     $('#no_rawat').keypress(function(event){
         if (event.keyCode === 10 || event.keyCode === 13) {
             event.preventDefault();
@@ -230,10 +252,32 @@
                         $('#no_rawat').val(res.no_rawat);
                         $('#no_rkm_medis').val(res.no_rkm_medis);
                         $('#nm_pasien').val(res.nm_pasien);
-                        $('#pendidikan').val(res.pnd);
-                        $('#agama').val(res.agama);
-                        $('#pekerjaan').val(res.pekerjaan);
-                        $('#stts_nikah').val(res.stts_nikah);
+                        if(!$('input[name="pendidikan"]').val()) $('input[name="pendidikan"]').val(res.pnd);
+                        if(!$('input[name="agama"]').val()) $('input[name="agama"]').val(res.agama);
+                        if(!$('input[name="pekerjaan"]').val()) $('input[name="pekerjaan"]').val(res.pekerjaan);
+                        if(!$('input[name="status_perkawinan"]').val()) $('input[name="status_perkawinan"]').val(res.stts_nikah);
+                        if(!$('input[name="ruang_rawat"]').val() && res.nm_bangsal) {
+                            $('input[name="ruang_rawat"]').val(res.nm_bangsal + ' - ' + res.kd_kamar);
+                        }
+                        if(!$('input[name="kelas"]').val()) $('input[name="kelas"]').val(res.kelas);
+                        
+                        if(res.tgl_masuk) {
+                            if(!$('input[name="tgl_masuk"]').val()) $('input[name="tgl_masuk"]').val(res.tgl_masuk.substring(0, 10));
+                            if(!$('input[name="jam_masuk"]').val()) $('input[name="jam_masuk"]').val(res.tgl_masuk.substring(11, 16));
+                        }
+                        if(res.tgl_keluar) {
+                            if(!$('input[name="tgl_keluar"]').val()) $('input[name="tgl_keluar"]').val(res.tgl_keluar.substring(0, 10));
+                            if(!$('input[name="jam_keluar"]').val()) $('input[name="jam_keluar"]').val(res.tgl_keluar.substring(11, 16));
+                        }
+                        
+                        // hitung lama dirawat
+                        if(res.tgl_masuk && res.tgl_keluar) {
+                            var start = new Date(res.tgl_masuk);
+                            var end = new Date(res.tgl_keluar);
+                            var diffTime = Math.abs(end - start);
+                            var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                            if(!$('input[name="lama_dirawat"]').val()) $('input[name="lama_dirawat"]').val(diffDays);
+                        }
                     } else {
                         alert('Pasien tidak ditemukan!');
                     }

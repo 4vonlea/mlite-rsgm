@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>RM.RI 20 - Resume Pasien Pulang</title>
+    <style>
+        @page { size: A4 portrait; margin: 10mm; }
+        body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 0; }
+        .page { width: 190mm; margin: 0 auto; position: relative; }
+        
+        .header-table { width: 100%; border-collapse: collapse; border-bottom: 1.5px solid #000; }
+        .header-table td { border: 1px solid #000; padding: 0; }
+        .header-table td:first-child { border-left: none; border-top: none; }
+        .header-table td:last-child { border-right: none; border-top: none; }
+        
+        .rmbox { display: inline-block; width: 15px; height: 16px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; vertical-align: middle; }
+        .nob td { border: none !important; padding: 0 2px; }
+
+        .info-table { width: 100%; border-collapse: collapse; border-bottom: 1.5px solid #000; font-size: 11px; }
+        .info-table td { padding: 4px; vertical-align: top; }
+
+        .content-wrapper { padding: 10px; }
+
+        .content-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .content-table td { padding: 4px; vertical-align: top; }
+        
+        .terapi-table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 11px; border: 1.5px solid #000; }
+        .terapi-table td, .terapi-table th { border: 1px solid #000; padding: 4px; vertical-align: middle; }
+        .terapi-table th { text-align: center; font-weight: bold; }
+
+        .ch-box { display: inline-block; width: 12px; height: 12px; border: 1px solid #000; text-align: center; line-height: 12px; font-size: 12px; font-weight: bold; margin-right: 3px; vertical-align: middle; }
+        
+        .ttd-table { width: 100%; margin-top: 10px; text-align: center; font-size: 11px; }
+        .ttd-table td { padding: 5px; vertical-align: bottom; height: 80px; }
+
+        .footer-note { font-size: 8px; font-style: italic; text-align: right; margin-top: 5px; }
+        .footer-bottom { font-size: 9px; display: flex; justify-content: space-between; margin-top: 5px; font-weight: bold; }
+        .footer-copy { font-size: 9px; font-weight: bold; text-align: right; margin-top: 5px; }
+
+        @media print {
+            body { -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+<div class="page">
+  <div style="border: 1.5px solid #000;">
+    <table class="header-table">
+        <tr>
+            <td style="width:50%; border-right:1px solid #000;">
+                <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop" style="width:100%; max-height:75px; object-fit:contain; display:block;">
+            </td>
+            <td style="width:38%; text-align:center; font-weight:bold; font-size:16px; border-right:1px solid #000;">
+                RESUME PASIEN PULANG<br>RAWAT INAP
+            </td>
+            <td style="width:12%; padding:0; text-align:center;">
+                <div style="padding:6px 0; border-bottom:1px solid #000; background:#cdeb8b; font-weight:bold; font-size:14px;">RM<br>RI</div>
+                <div style="padding:6px 0; background:#fff; font-size:16px; font-weight:bold;">20</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="info-table">
+        <tr>
+            <td style="width:18%;">Nama Pasien</td>
+            <td style="width:2%;">:</td>
+            <td style="width:30%;">{$p.nm_pasien} &nbsp;&nbsp;&nbsp; {$p.lp}</td>
+            <td style="width:18%;">No.RM</td>
+            <td style="width:2%;">:</td>
+            <td style="width:30%;">
+                <span class="rmbox">{$p.rm0}</span><span class="rmbox">{$p.rm1}</span><span class="rmbox">{$p.rm2}</span><span class="rmbox">{$p.rm3}</span><span class="rmbox">{$p.rm4}</span><span class="rmbox">{$p.rm5}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>Tanggal Lahir</td>
+            <td>:</td>
+            <td>{$p.tgl_lahir}</td>
+            <td>Ruang Rawat</td>
+            <td>:</td>
+            <td>{$d.form_data.ruang_rawat}</td>
+        </tr>
+        <tr>
+            <td>Jenis Kelamin</td>
+            <td>:</td>
+            <td>{if: ($p.lp=='L')}Laki-laki{elseif: ($p.lp=='P')}Perempuan{else}{$p.lp}{/if}</td>
+            <td>Tanggal Masuk</td>
+            <td>:</td>
+            <td>{if: (!empty($d.form_data.tgl_masuk))}{?=date('d-m-Y', strtotime($d.form_data.tgl_masuk))?}{/if}</td>
+        </tr>
+        <tr>
+            <td>Alamat</td>
+            <td>:</td>
+            <td>{$p.alamat}</td>
+            <td>Tanggal Keluar</td>
+            <td>:</td>
+            <td>{if: (!empty($d.form_data.tgl_keluar))}{?=date('d-m-Y', strtotime($d.form_data.tgl_keluar))?}{/if}</td>
+        </tr>
+    </table>
+
+    <div class="content-wrapper">
+        <div style="margin-bottom:10px;">Diisi oleh dokter yang merawat</div>
+
+        <table class="content-table">
+            <tr>
+                <td style="width:4%;">1.</td>
+                <td style="width:36%;">Anamnesis</td>
+                <td style="width:2%;">:</td>
+                <td style="width:58%;">{$d.form_data.anamnesis}</td>
+            </tr>
+            <tr>
+                <td>2.</td>
+                <td>Riwayat Perjalanan Penyakit</td>
+                <td>:</td>
+                <td>{$d.form_data.riwayat_penyakit}</td>
+            </tr>
+            <tr>
+                <td>3.</td>
+                <td>Pemeriksaan Fisik</td>
+                <td>:</td>
+                <td>{$d.form_data.pemeriksaan_fisik}</td>
+            </tr>
+            <tr>
+                <td>4.</td>
+                <td>Penemuan Klinik (Lab, Rontgen, dll)</td>
+                <td>:</td>
+                <td>{$d.form_data.penemuan_klinik}</td>
+            </tr>
+            <tr>
+                <td>5.</td>
+                <td>Diagnosa Utama</td>
+                <td>:</td>
+                <td>
+                    <div style="display:table; width:100%;">
+                        <div style="display:table-cell; width:70%;">{$d.form_data.diagnosa_utama}</div>
+                        <div style="display:table-cell; width:30%;">ICD - 10 : {$d.form_data.icd_10_utama}</div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>6.</td>
+                <td>Diagnosa Sekunder</td>
+                <td>:</td>
+                <td>
+                    <div style="display:table; width:100%;">
+                        <div style="display:table-cell; width:70%;">{$d.form_data.diagnosa_sekunder}</div>
+                        <div style="display:table-cell; width:30%;">ICD - 10 : {$d.form_data.icd_10_sekunder}</div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>7.</td>
+                <td>Obat selama di Rumah Sakit<br><span style="font-size:9px; font-style:italic;">(Tuliskan obat yang pernah didapat selama dirawat, dan dianggap penting untuk diketahui)</span></td>
+                <td>:</td>
+                <td>{$d.form_data.obat_selama_rs}</td>
+            </tr>
+            <tr>
+                <td>8.</td>
+                <td>Tindakan selama di Rumah Sakit</td>
+                <td>:</td>
+                <td>
+                    <div style="display:table; width:100%;">
+                        <div style="display:table-cell; width:70%;">{$d.form_data.tindakan_selama_rs}</div>
+                        <div style="display:table-cell; width:30%;">ICD - 9 CM : {$d.form_data.icd_9_tindakan}</div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>9.</td>
+                <td>Kondisi pada saat pulang</td>
+                <td>:</td>
+                <td>{$d.form_data.kondisi_pulang}</td>
+            </tr>
+            <tr>
+                <td>10.</td>
+                <td>Anjuran / Rencana / Kontrol Selanjutnya</td>
+                <td>:</td>
+                <td>{$d.form_data.anjuran_kontrol}</td>
+            </tr>
+            <tr>
+                <td>11.</td>
+                <td colspan="3">Alasan Pulang</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td colspan="3">
+                    <table style="width:100%; border:none;" class="nob">
+                        <tr>
+                            <td style="width:33%;">
+                                <span class="ch-box">{if: ($d.form_data.alasan_pulang=='Dapat berobat jalan')}√{else}&nbsp;{/if}</span> Dapat berobat jalan
+                            </td>
+                            <td style="width:20%;">
+                                <span class="ch-box">{if: ($d.form_data.alasan_pulang=='Sembuh')}√{else}&nbsp;{/if}</span> Sembuh
+                            </td>
+                            <td style="width:47%;">
+                                <span class="ch-box">{if: ($d.form_data.alasan_pulang=='Pulang Atas Permintaan')}√{else}&nbsp;{/if}</span> Pulang Atas Permintaan : {$d.form_data.pulang_permintaan_text}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="ch-box">{if: ($d.form_data.alasan_pulang=='Pindah RS Lain')}√{else}&nbsp;{/if}</span> Pindah RS Lain
+                            </td>
+                            <td>
+                                <span class="ch-box">{if: ($d.form_data.alasan_pulang=='Meninggal')}√{else}&nbsp;{/if}</span> Meninggal
+                            </td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td>12.</td>
+                <td colspan="3">Terapi Pulang</td>
+            </tr>
+        </table>
+
+        <table class="terapi-table">
+            <thead>
+                <tr>
+                    <th style="width:20%;">Nama Obat</th>
+                    <th style="width:10%;">Jumlah</th>
+                    <th style="width:10%;">Dosis</th>
+                    <th style="width:12%;">Frekuensi</th>
+                    <th style="width:12%;">Cara<br>Pemberian</th>
+                    <th colspan="6" style="width:24%;">Jam Pemberian</th>
+                    <th style="width:12%;">Petunjuk<br>Khusus</th>
+                </tr>
+            </thead>
+            <tbody>
+                {loop: $d.form_data.terapi}
+                <tr>
+                    <td>{$value.nama}</td>
+                    <td>{$value.jumlah}</td>
+                    <td>{$value.dosis}</td>
+                    <td>{$value.frekuensi}</td>
+                    <td>{$value.cara}</td>
+                    <td style="width:4%;">{$value.jam1}</td>
+                    <td style="width:4%;">{$value.jam2}</td>
+                    <td style="width:4%;">{$value.jam3}</td>
+                    <td style="width:4%;">{$value.jam4}</td>
+                    <td style="width:4%;">{$value.jam5}</td>
+                    <td style="width:4%;">{$value.jam6}</td>
+                    <td>{$value.petunjuk}</td>
+                </tr>
+                {/loop}
+            </tbody>
+        </table>
+
+        <table class="ttd-table">
+            <tr>
+                <td style="width:50%;">
+                    <div>Dokter yang merawat</div>
+                    <div style="margin-top:50px;">( {$d.form_data.nama_dokter} )</div>
+                    <div>Tanda Tangan & Nama Lengkap</div>
+                </td>
+                <td style="width:50%;">
+                    <div>Pasien / Keluarga</div>
+                    <div style="margin-top:50px;">( {$d.form_data.nama_pasien_keluarga} )</div>
+                    <div>Tanda Tangan & Nama Lengkap</div>
+                    <div style="margin-top:5px;">
+                        Tanggal : {if: (!empty($d.form_data.tgl_ttd))}{?=date('d-m-Y', strtotime($d.form_data.tgl_ttd))?}{/if}
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        Jam : {if: (!empty($d.form_data.tgl_ttd))}{?=date('H:i', strtotime($d.form_data.tgl_ttd))?}{/if}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+  </div>
+
+    <div class="footer-note">Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</div>
+    
+    <div class="footer-copy">
+        Salinan 1. Rekam medis<br>
+        Salinan 2. PPA yang menangani pasca pulang<br>
+        Salinan 3. Pasien / Keluarga<br>
+        Salinan 4. Penjamin
+    </div>
+
+    <div class="footer-bottom">
+        <div>RSGM/Ed-Rev/02/2023</div>
+        <div>RM.RI – 20</div>
+    </div>
+</div>
+</body>
+</html>

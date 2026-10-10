@@ -1,0 +1,294 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">RM.RJ - 11 Pemberian Informasi</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'rj11manage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'rj11form'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="rj11Form" method="POST" action="{?=url([ADMIN, 'update_bmt', 'rj11save'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="json_form_data" id="json_form_data" value="">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No. Rawat / No. RM (Enter untuk cari)</label>
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required>
+                                <div id="patient_info" style="margin-top:5px; color:blue;">{$data.nm_pasien} {$data.no_rkm_medis}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4>A. PEMBERIAN INFORMASI</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label>Pemberi Informasi</label>
+                            <select class="form-control f-pemberi" style="width:100%"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Penerima Informasi / Pemberi Persetujuan</label>
+                            <input type="text" class="form-control f-penerima" value="{$data.form_data.penerima_informasi}">
+                        </div>
+                    </div>
+                    <br>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th style="width:5%;">No</th>
+                                    <th style="width:25%;">JENIS INFORMASI</th>
+                                    <th style="width:60%;">ISI INFORMASI</th>
+                                    <th style="width:10%;">TANDA (v)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td><td>Diagnosis (WD & DD)</td>
+                                    <td><input type="text" class="form-control input-sm f-i1" value="{$data.form_data.info_1_isi}"></td>
+                                    <td class="text-center"><input type="checkbox" class="cb-i1" {if: ($data.form_data.info_1_tanda)}checked{/if}></td>
+                                </tr>
+                                <tr>
+                                    <td>2</td><td>Dasar Diagnosis</td>
+                                    <td><input type="text" class="form-control input-sm f-i2" value="{$data.form_data.info_2_isi}"></td>
+                                    <td class="text-center"><input type="checkbox" class="cb-i2" {if: ($data.form_data.info_2_tanda)}checked{/if}></td>
+                                </tr>
+                                <tr>
+                                    <td>3</td><td>Tindakan Kedokteran</td>
+                                    <td><input type="text" class="form-control input-sm f-i3" value="{$data.form_data.info_3_isi}"></td>
+                                    <td class="text-center"><input type="checkbox" class="cb-i3" {if: ($data.form_data.info_3_tanda)}checked{/if}></td>
+                                </tr>
+                                <tr>
+                                    <td>4</td><td>Indikasi Tindakan</td>
+                                    <td><input type="text" class="form-control input-sm f-i4" value="{$data.form_data.info_4_isi}"></td>
+                                    <td class="text-center"><input type="checkbox" class="cb-i4" {if: ($data.form_data.info_4_tanda)}checked{/if}></td>
+                                </tr>
+                                <tr>
+                                    <td>5</td><td>Tata Cara</td>
+                                    <td><input type="text" class="form-control input-sm f-i5" value="{$data.form_data.info_5_isi}"></td>
+                                    <td class="text-center"><input type="checkbox" class="cb-i5" {if: ($data.form_data.info_5_tanda)}checked{/if}></td>
+                                </tr>
+                                <tr>
+                                    <td>6</td><td>Tujuan</td>
+                                    <td><input type="text" class="form-control input-sm f-i6" value="{$data.form_data.info_6_isi}"></td>
+                                    <td class="text-center"><input type="checkbox" class="cb-i6" {if: ($data.form_data.info_6_tanda)}checked{/if}></td>
+                                </tr>
+                                <tr>
+                                    <td>7</td><td>Risiko</td>
+                                    <td><input type="text" class="form-control input-sm f-i7" value="{$data.form_data.info_7_isi}"></td>
+                                    <td class="text-center"><input type="checkbox" class="cb-i7" {if: ($data.form_data.info_7_tanda)}checked{/if}></td>
+                                </tr>
+                                <tr>
+                                    <td>8</td><td>Komplikasi</td>
+                                    <td><input type="text" class="form-control input-sm f-i8" value="{$data.form_data.info_8_isi}"></td>
+                                    <td class="text-center"><input type="checkbox" class="cb-i8" {if: ($data.form_data.info_8_tanda)}checked{/if}></td>
+                                </tr>
+                                <tr>
+                                    <td>9</td><td>Prognosis</td>
+                                    <td><input type="text" class="form-control input-sm f-i9" value="{$data.form_data.info_9_isi}"></td>
+                                    <td class="text-center"><input type="checkbox" class="cb-i9" {if: ($data.form_data.info_9_tanda)}checked{/if}></td>
+                                </tr>
+                                <tr>
+                                    <td>10</td><td>Alternatif & Risiko</td>
+                                    <td><input type="text" class="form-control input-sm f-i10" value="{$data.form_data.info_10_isi}"></td>
+                                    <td class="text-center"><input type="checkbox" class="cb-i10" {if: ($data.form_data.info_10_tanda)}checked{/if}></td>
+                                </tr>
+                                <tr>
+                                    <td></td><td>Lain-lain</td>
+                                    <td><input type="text" class="form-control input-sm f-i11" value="{$data.form_data.info_lain_isi}"></td>
+                                    <td class="text-center"><input type="checkbox" class="cb-i11" {if: ($data.form_data.info_lain_tanda)}checked{/if}></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label>Tanda Tangan Pemberi Informasi (Nama)</label>
+                            <input type="text" class="form-control f-ttd-pemberi" value="{$data.form_data.ttd_pemberi}">
+                        </div>
+                        <div class="col-md-6">
+                            <label>Tanda Tangan Penerima Informasi (Nama)</label>
+                            <input type="text" class="form-control f-ttd-penerima" value="{$data.form_data.ttd_penerima}">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h4>B. PERSETUJUAN TINDAKAN KEDOKTERAN (Halaman 1)</h4>
+                    <div class="well">
+                        <div class="row">
+                            <div class="col-md-4"><label>Nama yang setuju</label><input type="text" class="form-control s-nama" value="{$data.form_data.setuju_nama}"></div>
+                            <div class="col-md-2"><label>Umur (thn)</label><input type="text" class="form-control s-umur" value="{$data.form_data.setuju_umur}"></div>
+                            <div class="col-md-3"><label>Jenis Kelamin</label>
+                                <select class="form-control s-jk">
+                                    <option value="">-</option>
+                                    <option value="Laki-laki" {if: ($data.form_data.setuju_jk=='Laki-laki')}selected{/if}>Laki-laki</option>
+                                    <option value="Perempuan" {if: ($data.form_data.setuju_jk=='Perempuan')}selected{/if}>Perempuan</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3"><label>Alamat</label><input type="text" class="form-control s-alamat" value="{$data.form_data.setuju_alamat}"></div>
+                        </div>
+                        <div class="row" style="margin-top:10px;">
+                            <div class="col-md-12"><label>Menyatakan SETUJU untuk dilakukan tindakan:</label>
+                                <input type="text" class="form-control s-tindakan" value="{$data.form_data.setuju_tindakan}">
+                            </div>
+                        </div>
+                        <div class="row" style="margin-top:10px;">
+                            <div class="col-md-4"><label>Terhadap (Nama Pasien)</label><input type="text" class="form-control s-tnama" value="{$data.form_data.setuju_terhadap_nama}"></div>
+                            <div class="col-md-2"><label>Umur (thn)</label><input type="text" class="form-control s-tumur" value="{$data.form_data.setuju_terhadap_umur}"></div>
+                            <div class="col-md-3"><label>Jenis Kelamin</label>
+                                <select class="form-control s-tjk">
+                                    <option value="">-</option>
+                                    <option value="Laki-laki" {if: ($data.form_data.setuju_terhadap_jk=='Laki-laki')}selected{/if}>Laki-laki</option>
+                                    <option value="Perempuan" {if: ($data.form_data.setuju_terhadap_jk=='Perempuan')}selected{/if}>Perempuan</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3"><label>Alamat</label><input type="text" class="form-control s-talamat" value="{$data.form_data.setuju_terhadap_alamat}"></div>
+                        </div>
+                        <div class="row" style="margin-top:10px;">
+                            <div class="col-md-3"><label>Kota</label><input type="text" class="form-control s-kota" value="{$data.form_data.setuju_kota}"></div>
+                            <div class="col-md-3"><label>Tanggal</label><input type="date" class="form-control s-tgl" value="{$data.form_data.setuju_tgl}"></div>
+                            <div class="col-md-6"><label>Yang Menyatakan</label><input type="text" class="form-control s-menyatakan" value="{$data.form_data.setuju_menyatakan}"></div>
+                        </div>
+                        <div class="row" style="margin-top:10px;">
+                            <div class="col-md-6"><label>Saksi 1</label><input type="text" class="form-control s-saksi1" value="{$data.form_data.setuju_saksi1}"></div>
+                            <div class="col-md-6"><label>Saksi 2</label><input type="text" class="form-control s-saksi2" value="{$data.form_data.setuju_saksi2}"></div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h4>C. PENOLAKAN TINDAKAN KEDOKTERAN (Halaman 2)</h4>
+                    <div class="well">
+                        <div class="row">
+                            <div class="col-md-4"><label>Nama yang menolak</label><input type="text" class="form-control t-nama" value="{$data.form_data.tolak_nama}"></div>
+                            <div class="col-md-2"><label>Umur (thn)</label><input type="text" class="form-control t-umur" value="{$data.form_data.tolak_umur}"></div>
+                            <div class="col-md-3"><label>Jenis Kelamin</label>
+                                <select class="form-control t-jk">
+                                    <option value="">-</option>
+                                    <option value="Laki-laki" {if: ($data.form_data.tolak_jk=='Laki-laki')}selected{/if}>Laki-laki</option>
+                                    <option value="Perempuan" {if: ($data.form_data.tolak_jk=='Perempuan')}selected{/if}>Perempuan</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3"><label>Alamat</label><input type="text" class="form-control t-alamat" value="{$data.form_data.tolak_alamat}"></div>
+                        </div>
+                        <div class="row" style="margin-top:10px;">
+                            <div class="col-md-12"><label>Menyatakan MENOLAK untuk dilakukan tindakan:</label>
+                                <input type="text" class="form-control t-tindakan" value="{$data.form_data.tolak_tindakan}">
+                            </div>
+                        </div>
+                        <div class="row" style="margin-top:10px;">
+                            <div class="col-md-4"><label>Terhadap (Nama Pasien)</label><input type="text" class="form-control t-tnama" value="{$data.form_data.tolak_terhadap_nama}"></div>
+                            <div class="col-md-2"><label>Umur (thn)</label><input type="text" class="form-control t-tumur" value="{$data.form_data.tolak_terhadap_umur}"></div>
+                            <div class="col-md-3"><label>Jenis Kelamin</label>
+                                <select class="form-control t-tjk">
+                                    <option value="">-</option>
+                                    <option value="Laki-laki" {if: ($data.form_data.tolak_terhadap_jk=='Laki-laki')}selected{/if}>Laki-laki</option>
+                                    <option value="Perempuan" {if: ($data.form_data.tolak_terhadap_jk=='Perempuan')}selected{/if}>Perempuan</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3"><label>Alamat</label><input type="text" class="form-control t-talamat" value="{$data.form_data.tolak_terhadap_alamat}"></div>
+                        </div>
+                        <div class="row" style="margin-top:10px;">
+                            <div class="col-md-3"><label>Kota</label><input type="text" class="form-control t-kota" value="{$data.form_data.tolak_kota}"></div>
+                            <div class="col-md-3"><label>Tanggal</label><input type="date" class="form-control t-tgl" value="{$data.form_data.tolak_tgl}"></div>
+                            <div class="col-md-6"><label>Yang Menyatakan</label><input type="text" class="form-control t-menyatakan" value="{$data.form_data.tolak_menyatakan}"></div>
+                        </div>
+                        <div class="row" style="margin-top:10px;">
+                            <div class="col-md-6"><label>Saksi 1</label><input type="text" class="form-control t-saksi1" value="{$data.form_data.tolak_saksi1}"></div>
+                            <div class="col-md-6"><label>Saksi 2</label><input type="text" class="form-control t-saksi2" value="{$data.form_data.tolak_saksi2}"></div>
+                        </div>
+                    </div>
+
+                    <br>
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'rj11manage'])?}" class="btn btn-default">Kembali</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<link href="{?=url()?}/assets/css/select2.min.css" rel="stylesheet" />
+<script src="{?=url()?}/assets/jscripts/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.f-pemberi').select2({
+            ajax: {
+                url: "{?=url([ADMIN, 'update_bmt', 'rj11form'])?}?ajax_pegawai=1",
+                dataType: 'json', delay: 250,
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            placeholder: 'Pilih Dokter / Petugas...',
+            minimumInputLength: 1,
+            tags: true
+        });
+        // Pre-select if value exists
+        var curPemberi = '{$data.form_data.pemberi_informasi}';
+        if(curPemberi) {
+            var opt = new Option(curPemberi, curPemberi, true, true);
+            $('.f-pemberi').append(opt).trigger('change');
+        }
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if(e.which === 13) {
+            e.preventDefault();
+            $.get("{?=url([ADMIN, 'update_bmt', 'rj11form'])?}?ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
+                var d = JSON.parse(res);
+                if (d.success) {
+                    $('#no_rawat').val(d.no_rawat);
+                    $('#patient_info').html(d.nm_pasien + ' (' + d.no_rkm_medis + ')');
+                    
+                    // Autofill
+                    var jk = d.jk == 'L' ? 'Laki-laki' : (d.jk == 'P' ? 'Perempuan' : '');
+                    
+                    if(!$('.s-tnama').val()) $('.s-tnama').val(d.nm_pasien);
+                    if(!$('.s-tumur').val()) $('.s-tumur').val(d.umur ? d.umur.replace(/[^0-9]/g, '') : '');
+                    if(!$('.s-tjk').val()) $('.s-tjk').val(jk);
+                    if(!$('.s-talamat').val()) $('.s-talamat').val(d.alamat);
+
+                    if(!$('.t-tnama').val()) $('.t-tnama').val(d.nm_pasien);
+                    if(!$('.t-tumur').val()) $('.t-tumur').val(d.umur ? d.umur.replace(/[^0-9]/g, '') : '');
+                    if(!$('.t-tjk').val()) $('.t-tjk').val(jk);
+                    if(!$('.t-talamat').val()) $('.t-talamat').val(d.alamat);
+                } else {
+                    $('#patient_info').html('Pasien tidak ditemukan');
+                }
+            });
+        }
+    });
+
+    $('#rj11Form').submit(function() {
+        var fd = {
+            pemberi_informasi: $('.f-pemberi').val(),
+            penerima_informasi: $('.f-penerima').val(),
+            info_1_isi: $('.f-i1').val(), info_1_tanda: $('.cb-i1').is(':checked'),
+            info_2_isi: $('.f-i2').val(), info_2_tanda: $('.cb-i2').is(':checked'),
+            info_3_isi: $('.f-i3').val(), info_3_tanda: $('.cb-i3').is(':checked'),
+            info_4_isi: $('.f-i4').val(), info_4_tanda: $('.cb-i4').is(':checked'),
+            info_5_isi: $('.f-i5').val(), info_5_tanda: $('.cb-i5').is(':checked'),
+            info_6_isi: $('.f-i6').val(), info_6_tanda: $('.cb-i6').is(':checked'),
+            info_7_isi: $('.f-i7').val(), info_7_tanda: $('.cb-i7').is(':checked'),
+            info_8_isi: $('.f-i8').val(), info_8_tanda: $('.cb-i8').is(':checked'),
+            info_9_isi: $('.f-i9').val(), info_9_tanda: $('.cb-i9').is(':checked'),
+            info_10_isi: $('.f-i10').val(), info_10_tanda: $('.cb-i10').is(':checked'),
+            info_lain_isi: $('.f-i11').val(), info_lain_tanda: $('.cb-i11').is(':checked'),
+            ttd_pemberi: $('.f-ttd-pemberi').val(),
+            ttd_penerima: $('.f-ttd-penerima').val(),
+            
+            setuju_nama: $('.s-nama').val(), setuju_umur: $('.s-umur').val(), setuju_jk: $('.s-jk').val(), setuju_alamat: $('.s-alamat').val(),
+            setuju_tindakan: $('.s-tindakan').val(),
+            setuju_terhadap_nama: $('.s-tnama').val(), setuju_terhadap_umur: $('.s-tumur').val(), setuju_terhadap_jk: $('.s-tjk').val(), setuju_terhadap_alamat: $('.s-talamat').val(),
+            setuju_kota: $('.s-kota').val(), setuju_tgl: $('.s-tgl').val(), setuju_menyatakan: $('.s-menyatakan').val(), setuju_saksi1: $('.s-saksi1').val(), setuju_saksi2: $('.s-saksi2').val(),
+            
+            tolak_nama: $('.t-nama').val(), tolak_umur: $('.t-umur').val(), tolak_jk: $('.t-jk').val(), tolak_alamat: $('.t-alamat').val(),
+            tolak_tindakan: $('.t-tindakan').val(),
+            tolak_terhadap_nama: $('.t-tnama').val(), tolak_terhadap_umur: $('.t-tumur').val(), tolak_terhadap_jk: $('.t-tjk').val(), tolak_terhadap_alamat: $('.t-talamat').val(),
+            tolak_kota: $('.t-kota').val(), tolak_tgl: $('.t-tgl').val(), tolak_menyatakan: $('.t-menyatakan').val(), tolak_saksi1: $('.t-saksi1').val(), tolak_saksi2: $('.t-saksi2').val()
+        };
+        $('#json_form_data').val(JSON.stringify(fd));
+    });
+</script>

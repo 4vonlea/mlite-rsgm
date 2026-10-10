@@ -1,0 +1,107 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">RM.RJ - 02A Hak dan Kewajiban Pasien</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'rj02amanage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'rj02aform'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="rj02aForm" method="POST" action="{?=url([ADMIN, 'update_bmt', 'rj02asave'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="json_form_data" id="json_form_data" value="">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No. Rawat / No. RM (Enter untuk cari)</label>
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required>
+                                <div id="patient_info" style="margin-top:5px; color:blue;">{$data.nm_pasien} {$data.no_rkm_medis}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>Perhatian:</strong> Formulir ini sebagian besar berisi teks statis mengenai Hak dan Kewajiban Pasien. Silakan isi bagian tanda tangan di bawah ini.
+                    </div>
+
+                    <div class="row" style="margin-top:20px;">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Pasien/Penanggung jawab Pasien</label>
+                                <input type="text" class="form-control f-nama_pasien_pj" value="{$data.form_data.nama_pasien_pj}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Pemberi Edukasi</label>
+                                <select class="form-control f-pemberi_edukasi" style="width:100%"></select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Tanggal TTD</label>
+                                <input type="date" class="form-control f-tgl_ttd" value="{$data.form_data.tgl_ttd}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <br>
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'rj02amanage'])?}" class="btn btn-default">Kembali</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<link href="{?=url()?}/assets/css/select2.min.css" rel="stylesheet" />
+<script src="{?=url()?}/assets/jscripts/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.f-pemberi_edukasi').select2({
+            ajax: {
+                url: "{?=url([ADMIN, 'update_bmt', 'rj02aform'])?}?ajax_pegawai=1",
+                dataType: 'json', delay: 250,
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            placeholder: 'Pilih Petugas...',
+            minimumInputLength: 1,
+            tags: true,
+            width: '100%'
+        });
+        var curPemberi = '{$data.form_data.pemberi_edukasi}';
+        if(curPemberi) {
+            var opt = new Option(curPemberi, curPemberi, true, true);
+            $('.f-pemberi_edukasi').append(opt).trigger('change');
+        }
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if(e.which === 13) {
+            e.preventDefault();
+            $.get("{?=url([ADMIN, 'update_bmt', 'rj02aform'])?}?ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
+                var d = JSON.parse(res);
+                if (d.success) {
+                    $('#no_rawat').val(d.no_rawat);
+                    $('#patient_info').html(d.nm_pasien + ' (' + d.no_rkm_medis + ')');
+                    if(!$('.f-nama_pasien_pj').val()) $('.f-nama_pasien_pj').val(d.nm_pasien);
+                } else {
+                    $('#patient_info').html('Pasien tidak ditemukan');
+                }
+            });
+        }
+    });
+
+    $('#rj02aForm').submit(function() {
+        var fd = {
+            tgl_ttd: $('.f-tgl_ttd').val(),
+            nama_pasien_pj: $('.f-nama_pasien_pj').val(),
+            pemberi_edukasi: $('.f-pemberi_edukasi').val()
+        };
+        $('#json_form_data').val(JSON.stringify(fd));
+    });
+</script>

@@ -1,0 +1,331 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">RM.RI 19 - Perencanaan Pulang Pasien (Discharge Planning)</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri19manage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri19form'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="ri19Form" method="POST" action="{?=url([ADMIN, 'update_bmt', 'ri19save'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="json_form_data" id="json_form_data" value="">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No. Rawat / No. RM (Enter untuk cari)</label>
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required>
+                                <div id="patient_info" style="margin-top:5px; color:blue;">{$data.nm_pasien} {$data.no_rkm_medis}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Tanggal Masuk</label>
+                                <input type="date" class="form-control f-tgl_masuk" value="{$data.form_data.tgl_masuk}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Rencana Tanggal Pulang</label>
+                                <input type="date" class="form-control f-rencana_tgl_pulang" value="{$data.form_data.rencana_tgl_pulang}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Rencana Jam Pulang</label>
+                                <input type="time" class="form-control f-rencana_jam_pulang" value="{$data.form_data.rencana_jam_pulang}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Usia lanjut (60 tahun atau lebih)</label>
+                                <select class="form-control f-usia_lanjut">
+                                    <option value="" {if: ($data.form_data.usia_lanjut=='')}selected{/if}>-</option>
+                                    <option value="Ya" {if: ($data.form_data.usia_lanjut=='Ya')}selected{/if}>Ya</option>
+                                    <option value="Tidak" {if: ($data.form_data.usia_lanjut=='Tidak')}selected{/if}>Tidak</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Hambatan mobilisasi</label>
+                                <select class="form-control f-hambatan_mobilisasi">
+                                    <option value="" {if: ($data.form_data.hambatan_mobilisasi=='')}selected{/if}>-</option>
+                                    <option value="Ya" {if: ($data.form_data.hambatan_mobilisasi=='Ya')}selected{/if}>Ya</option>
+                                    <option value="Tidak" {if: ($data.form_data.hambatan_mobilisasi=='Tidak')}selected{/if}>Tidak</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Membutuhkan pelayanan medis dan perawatan berkelanjutan</label>
+                                <select class="form-control f-perawatan_lanjutan">
+                                    <option value="" {if: ($data.form_data.perawatan_lanjutan=='')}selected{/if}>-</option>
+                                    <option value="Ya" {if: ($data.form_data.perawatan_lanjutan=='Ya')}selected{/if}>Ya</option>
+                                    <option value="Tidak" {if: ($data.form_data.perawatan_lanjutan=='Tidak')}selected{/if}>Tidak</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Tergantung dengan orang lain dalam aktivitas harian</label>
+                                <select class="form-control f-tergantung_orang_lain">
+                                    <option value="" {if: ($data.form_data.tergantung_orang_lain=='')}selected{/if}>-</option>
+                                    <option value="Ya" {if: ($data.form_data.tergantung_orang_lain=='Ya')}selected{/if}>Ya</option>
+                                    <option value="Tidak" {if: ($data.form_data.tergantung_orang_lain=='Tidak')}selected{/if}>Tidak</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Transportasi pulang</label>
+                                <input type="text" class="form-control f-transportasi" value="{$data.form_data.transportasi}">
+                            </div>
+                            <div class="form-group">
+                                <label>Yang mendampingi dan merawat pasien di rumah</label>
+                                <input type="text" class="form-control f-pendamping" value="{$data.form_data.pendamping}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4>Pengobatan yang dilanjutkan di rumah</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="tblPengobatan">
+                            <thead>
+                                <tr>
+                                    <th>Nama Obat</th>
+                                    <th>Jumlah</th>
+                                    <th>Dosis</th>
+                                    <th>Jam pemberian</th>
+                                    <th>Instruksi Khusus</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loop: $data.form_data.pengobatan}
+                                <tr class="pengobatan-row">
+                                    <td><input type="text" class="form-control _nama" value="{$value.nama}"></td>
+                                    <td><input type="text" class="form-control _jumlah" value="{$value.jumlah}"></td>
+                                    <td><input type="text" class="form-control _dosis" value="{$value.dosis}"></td>
+                                    <td><input type="time" class="form-control _jam" value="{$value.jam}"></td>
+                                    <td><input type="text" class="form-control _instruksi" value="{$value.instruksi}"></td>
+                                    <td><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-trash"></i></button></td>
+                                </tr>
+                                {/loop}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="6">
+                                        <button type="button" class="btn btn-xs btn-success" id="btnAdd"><i class="fa fa-plus"></i> Tambah Pengobatan</button>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Peralatan medis yang dilanjutkan di rumah</h4>
+                            <label><input type="checkbox" class="f-alat_medis_oksigen" value="1" {if: ($data.form_data.alat_medis_oksigen=='1')}checked{/if}> Oksigen portable</label><br>
+                            <label><input type="checkbox" class="f-alat_medis_ngt" value="1" {if: ($data.form_data.alat_medis_ngt=='1')}checked{/if}> NGT</label><br>
+                            <label><input type="checkbox" class="f-alat_medis_tidak_ada" value="1" {if: ($data.form_data.alat_medis_tidak_ada=='1')}checked{/if}> Tidak ada</label>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Alat bantu yang dipakai di rumah</h4>
+                            <label><input type="checkbox" class="f-alat_bantu_kursi_roda" value="1" {if: ($data.form_data.alat_bantu_kursi_roda=='1')}checked{/if}> Kursi roda</label><br>
+                            <label><input type="checkbox" class="f-alat_bantu_tongkat" value="1" {if: ($data.form_data.alat_bantu_tongkat=='1')}checked{/if}> Tongkat</label><br>
+                            <label><input type="checkbox" class="f-alat_bantu_lain_lain" value="1" {if: ($data.form_data.alat_bantu_lain_lain=='1')}checked{/if}> Lain-lain</label>
+                            <input type="text" class="form-control f-alat_bantu_lain_text" value="{$data.form_data.alat_bantu_lain_text}" style="margin-top:5px;" placeholder="Sebutkan...">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top:20px;">
+                        <label>Instruksi Selama di Rumah</label>
+                        <textarea class="form-control f-instruksi_rumah" rows="4">{$data.form_data.instruksi_rumah}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Diberikan kepada pasien / keluarga</h4>
+                            <label><input type="checkbox" class="f-diberi_obat" value="1" {if: ($data.form_data.diberi_obat=='1')}checked{/if}> Obat-obatan</label><br>
+                            <label><input type="checkbox" class="f-diberi_peralatan" value="1" {if: ($data.form_data.diberi_peralatan=='1')}checked{/if}> Peralatan</label><br>
+                            <label><input type="checkbox" class="f-diberi_resep" value="1" {if: ($data.form_data.diberi_resep=='1')}checked{/if}> Resep obat</label><br>
+                            <label><input type="checkbox" class="f-diberi_hasil" value="1" {if: ($data.form_data.diberi_hasil=='1')}checked{/if}> Hasil pemeriksaan penunjang :</label>
+                            <input type="text" class="form-control f-diberi_hasil_text" value="{$data.form_data.diberi_hasil_text}">
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Jadwal kontrol selanjutnya</h4>
+                            <div class="form-group">
+                                <label>Nama dokter</label>
+                                <select class="form-control f-jk_nama_dokter" style="width:100%"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Tanggal dan Jam kontrol</label>
+                                <input type="datetime-local" class="form-control f-jk_tgl_jam" value="{$data.form_data.jk_tgl_jam}">
+                            </div>
+                            <div class="form-group">
+                                <label>Petugas</label>
+                                <select class="form-control f-jk_petugas" style="width:100%"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top:20px;">
+                        <div class="col-md-6">
+                            <h4>Instruksi diberikan kepada :</h4>
+                            <label><input type="checkbox" class="f-id_pasien" value="1" {if: ($data.form_data.id_pasien=='1')}checked{/if}> Pasien</label><br>
+                            <label><input type="checkbox" class="f-id_keluarga" value="1" {if: ($data.form_data.id_keluarga=='1')}checked{/if}> Keluarga</label><br>
+                            <label><input type="checkbox" class="f-id_orang_terdekat" value="1" {if: ($data.form_data.id_orang_terdekat=='1')}checked{/if}> Orang terdekat</label><br>
+                            <label><input type="checkbox" class="f-id_lain_lain" value="1" {if: ($data.form_data.id_lain_lain=='1')}checked{/if}> Lain-lain</label>
+                            <input type="text" class="form-control f-id_lain_text" value="{$data.form_data.id_lain_text}">
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Saya menerima dan mengerti tentang instruksi pulang</h4>
+                            <div class="form-group">
+                                <label>Pihak Pasien</label>
+                                <input type="text" class="form-control f-pihak_pasien" value="{$data.form_data.pihak_pasien}">
+                            </div>
+                            <div class="form-group">
+                                <label>Petugas yang menjelaskan</label>
+                                <select class="form-control f-petugas_menjelaskan" style="width:100%"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <br>
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ri19manage'])?}" class="btn btn-default">Kembali</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<link href="{?=url()?}/assets/css/select2.min.css" rel="stylesheet" />
+<script src="{?=url()?}/assets/jscripts/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        var s2opts = {
+            ajax: {
+                url: "{?=url([ADMIN, 'update_bmt', 'ri19form'])?}?ajax_pegawai=1",
+                dataType: 'json', delay: 250,
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            placeholder: 'Pilih Dokter / Petugas...',
+            minimumInputLength: 1,
+            tags: true,
+            width: '100%'
+        };
+        $('.f-jk_nama_dokter, .f-jk_petugas, .f-petugas_menjelaskan').select2(s2opts);
+        
+        var curDokter = '{$data.form_data.jk_nama_dokter}';
+        if(curDokter) $('.f-jk_nama_dokter').append(new Option(curDokter, curDokter, true, true)).trigger('change');
+        
+        var curPetugas = '{$data.form_data.jk_petugas}';
+        if(curPetugas) $('.f-jk_petugas').append(new Option(curPetugas, curPetugas, true, true)).trigger('change');
+        
+        var curPetugasM = '{$data.form_data.petugas_menjelaskan}';
+        if(curPetugasM) $('.f-petugas_menjelaskan').append(new Option(curPetugasM, curPetugasM, true, true)).trigger('change');
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if(e.which === 13) {
+            e.preventDefault();
+            $.get("{?=url([ADMIN, 'update_bmt', 'ri19form'])?}?ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
+                var d = JSON.parse(res);
+                if (d.success) {
+                    $('#no_rawat').val(d.no_rawat);
+                    $('#patient_info').html(d.nm_pasien + ' (' + d.no_rkm_medis + ')');
+                    
+                    if(!$('.f-tgl_masuk').val()) $('.f-tgl_masuk').val(d.tgl_masuk);
+                    
+                    // Autofill Usia Lanjut if umur >= 60
+                    if(!$('.f-usia_lanjut').val() && d.umur) {
+                        var u = parseInt(d.umur.replace(/[^0-9]/g, ''));
+                        if(u >= 60) {
+                            $('.f-usia_lanjut').val('Ya');
+                        } else if(u > 0) {
+                            $('.f-usia_lanjut').val('Tidak');
+                        }
+                    }
+                } else {
+                    $('#patient_info').html('Pasien tidak ditemukan');
+                }
+            });
+        }
+    });
+
+    $('#btnAdd').click(function() {
+        var tr = '<tr class="pengobatan-row">'+
+            '<td><input type="text" class="form-control _nama"></td>'+
+            '<td><input type="text" class="form-control _jumlah"></td>'+
+            '<td><input type="text" class="form-control _dosis"></td>'+
+            '<td><input type="time" class="form-control _jam"></td>'+
+            '<td><input type="text" class="form-control _instruksi"></td>'+
+            '<td><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-trash"></i></button></td>'+
+        '</tr>';
+        $('#tblPengobatan tbody').append(tr);
+    });
+
+    $('body').on('click', '.btnDel', function() {
+        if ($('.pengobatan-row').length > 1) {
+            $(this).closest('tr').remove();
+        } else {
+            alert('Minimal 1 baris');
+        }
+    });
+
+    $('#ri19Form').submit(function() {
+        var fd = {
+            tgl_masuk: $('.f-tgl_masuk').val(),
+            rencana_tgl_pulang: $('.f-rencana_tgl_pulang').val(),
+            rencana_jam_pulang: $('.f-rencana_jam_pulang').val(),
+            usia_lanjut: $('.f-usia_lanjut').val(),
+            hambatan_mobilisasi: $('.f-hambatan_mobilisasi').val(),
+            perawatan_lanjutan: $('.f-perawatan_lanjutan').val(),
+            tergantung_orang_lain: $('.f-tergantung_orang_lain').val(),
+            transportasi: $('.f-transportasi').val(),
+            pendamping: $('.f-pendamping').val(),
+            pengobatan: [],
+            alat_medis_oksigen: $('.f-alat_medis_oksigen').is(':checked') ? '1' : '',
+            alat_medis_ngt: $('.f-alat_medis_ngt').is(':checked') ? '1' : '',
+            alat_medis_tidak_ada: $('.f-alat_medis_tidak_ada').is(':checked') ? '1' : '',
+            alat_bantu_kursi_roda: $('.f-alat_bantu_kursi_roda').is(':checked') ? '1' : '',
+            alat_bantu_tongkat: $('.f-alat_bantu_tongkat').is(':checked') ? '1' : '',
+            alat_bantu_lain_lain: $('.f-alat_bantu_lain_lain').is(':checked') ? '1' : '',
+            alat_bantu_lain_text: $('.f-alat_bantu_lain_text').val(),
+            instruksi_rumah: $('.f-instruksi_rumah').val(),
+            diberi_obat: $('.f-diberi_obat').is(':checked') ? '1' : '',
+            diberi_peralatan: $('.f-diberi_peralatan').is(':checked') ? '1' : '',
+            diberi_resep: $('.f-diberi_resep').is(':checked') ? '1' : '',
+            diberi_hasil: $('.f-diberi_hasil').is(':checked') ? '1' : '',
+            diberi_hasil_text: $('.f-diberi_hasil_text').val(),
+            jk_nama_dokter: $('.f-jk_nama_dokter').val(),
+            jk_tgl_jam: $('.f-jk_tgl_jam').val(),
+            jk_petugas: $('.f-jk_petugas').val(),
+            id_pasien: $('.f-id_pasien').is(':checked') ? '1' : '',
+            id_keluarga: $('.f-id_keluarga').is(':checked') ? '1' : '',
+            id_orang_terdekat: $('.f-id_orang_terdekat').is(':checked') ? '1' : '',
+            id_lain_lain: $('.f-id_lain_lain').is(':checked') ? '1' : '',
+            id_lain_text: $('.f-id_lain_text').val(),
+            pihak_pasien: $('.f-pihak_pasien').val(),
+            petugas_menjelaskan: $('.f-petugas_menjelaskan').val()
+        };
+
+        $('.pengobatan-row').each(function() {
+            fd.pengobatan.push({
+                nama: $(this).find('._nama').val(),
+                jumlah: $(this).find('._jumlah').val(),
+                dosis: $(this).find('._dosis').val(),
+                jam: $(this).find('._jam').val(),
+                instruksi: $(this).find('._instruksi').val()
+            });
+        });
+
+        $('#json_form_data').val(JSON.stringify(fd));
+    });
+</script>
