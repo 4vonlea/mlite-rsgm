@@ -2239,12 +2239,22 @@ class Admin extends AdminModule
       $row['nama_petugas'] = '';
       $row['departemen_petugas'] = '';
       $result = [];
+      $is_dokter_cache = [];
+      $check_dokter = function($nip) use (&$is_dokter_cache) {
+          if (!isset($is_dokter_cache[$nip])) {
+              $dok = $this->db('dokter')->where('kd_dokter', $nip)->oneArray();
+              $is_dokter_cache[$nip] = !empty($dok);
+          }
+          return $is_dokter_cache[$nip];
+      };
+
       foreach ($rows as $row) {
         $row['nomor'] = $i++;
         $row['nama_petugas'] = $this->core->getPegawaiInfo('nama',$row['nip']);
         $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
         $row['stts_daftar'] = $stts_daftar;
         $row['status_poli'] = $status_poli;
+        $row['is_dokter'] = $check_dokter($row['nip']);
         
         $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
         try {
@@ -2458,11 +2468,32 @@ class Admin extends AdminModule
       };
 
       // 1. Sudah ada record untuk no_rawat saat ini -> ambil record terbaru milik no_rawat itu
-      $current = $this->db('pemeriksaan_ralan')
+      $role = $this->core->getUserInfo('role');
+      $is_dokter = function($nip) {
+          $dok = $this->db('dokter')->where('kd_dokter', $nip)->oneArray();
+          return !empty($dok);
+      };
+
+      $all_current = $this->db('pemeriksaan_ralan')
         ->where('no_rawat', $no_rawat)
         ->desc('tgl_perawatan')
         ->desc('jam_rawat')
-        ->oneArray();
+        ->toArray();
+
+      $current = null;
+      foreach ($all_current as $c) {
+          $creator_is_dokter = $is_dokter($c['nip']);
+          if ($role == 'medis' && $creator_is_dokter) {
+              $current = $c;
+              break;
+          } elseif ($role == 'paramedis' && !$creator_is_dokter) {
+              $current = $c;
+              break;
+          } elseif ($role == 'admin') {
+              $current = $c;
+              break;
+          }
+      }
 
       if (!empty($current)) {
         $data = $mapPemeriksaan($current);
@@ -2478,10 +2509,17 @@ class Admin extends AdminModule
         // 2. Belum ada record hari itu
         if ($status_poli == 'Lama') {
           // Pasien lama -> ambil data terakhir dari kunjungan sebelumnya
+          $role_condition = "";
+          if ($role == 'medis') {
+              $role_condition = " AND p.nip IN (SELECT kd_dokter FROM dokter)";
+          } elseif ($role == 'paramedis') {
+              $role_condition = " AND p.nip NOT IN (SELECT kd_dokter FROM dokter)";
+          }
+
           $sql = "SELECT p.tensi, p.suhu_tubuh, p.nadi, p.respirasi, p.tinggi, p.berat, p.kesadaran, p.spo2, p.gcs, p.alergi, p.lingkar_perut, p.keluhan, p.pemeriksaan, p.penilaian, p.rtl, p.tgl_perawatan, p.jam_rawat, p.no_rawat, p.nip
                   FROM pemeriksaan_ralan p
                   INNER JOIN reg_periksa r ON p.no_rawat = r.no_rawat
-                  WHERE r.no_rkm_medis = ? AND p.no_rawat != ?
+                  WHERE r.no_rkm_medis = ? AND p.no_rawat != ?" . $role_condition . "
                   ORDER BY p.tgl_perawatan DESC, p.jam_rawat DESC
                   LIMIT 1";
           $stmt = $this->db()->pdo()->prepare($sql);

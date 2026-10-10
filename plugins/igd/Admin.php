@@ -699,11 +699,21 @@ class Admin extends AdminModule
       $i = 1;
       $row['nama_petugas'] = '';
       $row['departemen_petugas'] = '';
+      $is_dokter_cache = [];
+      $check_dokter = function($nip) use (&$is_dokter_cache) {
+          if (!isset($is_dokter_cache[$nip])) {
+              $dok = $this->db('dokter')->where('kd_dokter', $nip)->oneArray();
+              $is_dokter_cache[$nip] = !empty($dok);
+          }
+          return $is_dokter_cache[$nip];
+      };
+
       $result = [];
       foreach ($rows as $row) {
         $row['nomor'] = $i++;
         $row['nama_petugas'] = $this->core->getPegawaiInfo('nama',$row['nip']);
         $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
+        $row['is_dokter'] = $check_dokter($row['nip']);
         $result[] = $row;
       }
 

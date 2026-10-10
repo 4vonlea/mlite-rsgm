@@ -83,6 +83,7 @@
       <tr>
         <td>
           <div class="">
+            {if: ($this->core->getUserInfo('role') == 'medis' && $value.is_dokter) || ($this->core->getUserInfo('role') == 'paramedis' && !$value.is_dokter) || $this->core->getUserInfo('role') == 'admin'}
             <button type="button" name="button" class="btn btn-primary btn-xs copy_soap"
               data-suhu_tubuh="{?=isset_or($value.suhu_tubuh)?}"
               data-tensi="{?=isset_or($value.tensi)?}"
@@ -102,6 +103,7 @@
               data-evaluasi="{?=isset_or($value.evaluasi)?}"
               data-spo2="{?=isset_or($value.spo2)?}"
               ><span class="fa fa-copy"></span><span class="hidden-xs"> Copy</span></button> 
+            {/if}
             <button type="button" name="button" class="btn btn-success btn-xs edit_soap"
               data-no_rawat="{?=isset_or($value.no_rawat)?}"
               data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}"
