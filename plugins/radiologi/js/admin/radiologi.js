@@ -997,8 +997,21 @@ $(document).on('click', '.btn-tte', function(e) {
                         passphrase: passphrase
                     }, function(response) {
                         processingDialog.modal('hide');
-                        var res = typeof response === 'object' ? response : JSON.parse(response);
+                        var res = {};
+                        try {
+                            res = typeof response === 'object' ? response : JSON.parse(response);
+                        } catch(e) {
+                            bootbox.alert({
+                                message: '❌ Gagal: Sesi mungkin telah berakhir (Silakan muat ulang halaman).',
+                                className: 'modal-tte-center'
+                            });
+                            return;
+                        }
                         if (res.status == 'success') {
+                            bootbox.alert({
+                                message: '✅ Sukses: Tanda tangan elektronik berhasil disimpan.',
+                                className: 'modal-tte-center'
+                            });
                             var container = $('#sign_container_' + ref_id);
                             if (container.length) {
                                 $('#btn-cetak-'+ref_id).removeAttr('disabled').removeAttr('title');

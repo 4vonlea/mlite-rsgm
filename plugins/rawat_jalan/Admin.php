@@ -2257,12 +2257,15 @@ class Admin extends AdminModule
         $row['is_dokter'] = $check_dokter($row['nip']);
         
         $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
+        file_put_contents('soap_debug.log', "rawat_jalan anySoap called: ref_id={$ref_id}, no_rawat={$row['no_rawat']}, tgl={$row['tgl_perawatan']}, jam={$row['jam_rawat']}\n", FILE_APPEND);
         try {
             $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ralan')->where('ref_id', $ref_id)->oneArray();
             if ($sig) {
+                file_put_contents('soap_debug.log', "rawat_jalan anySoap: sig FOUND for {$ref_id}\n", FILE_APPEND);
                 $row['is_signed'] = true;
                 $row['signature_hash'] = $sig['signature_hash'];
             } else {
+                file_put_contents('soap_debug.log', "rawat_jalan anySoap: sig NOT FOUND for {$ref_id}\n", FILE_APPEND);
                 $row['is_signed'] = false;
                 $row['sign_ref_id'] = $ref_id;
             }
@@ -2389,6 +2392,8 @@ class Admin extends AdminModule
     {
       $_POST['nip'] = $this->core->getUserInfo('username', null, true);
 
+      file_put_contents('soap_debug.log', "rawat_jalan postSaveSOAP called: POST=" . json_encode($_POST) . "\n", FILE_APPEND);
+
       // Pisahkan status_poli dan stts_daftar untuk diupdate ke tabel reg_periksa
       $status_poli = '';
       if(isset($_POST['status_poli'])) {
@@ -2402,9 +2407,12 @@ class Admin extends AdminModule
           unset($_POST['stts_daftar']);
       }
 
-      if(!$this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->oneArray()) {
+      $cek = $this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->oneArray();
+      if(!$cek) {
+        file_put_contents('soap_debug.log', "rawat_jalan postSaveSOAP: Record NOT found, performing INSERT\n", FILE_APPEND);
         $this->db('pemeriksaan_ralan')->save($_POST);
       } else {
+        file_put_contents('soap_debug.log', "rawat_jalan postSaveSOAP: Record FOUND, performing UPDATE\n", FILE_APPEND);
         $this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->save($_POST);
       }
 
