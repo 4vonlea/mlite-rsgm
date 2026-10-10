@@ -714,6 +714,22 @@ class Admin extends AdminModule
         $row['nama_petugas'] = $this->core->getPegawaiInfo('nama',$row['nip']);
         $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
         $row['is_dokter'] = $check_dokter($row['nip']);
+
+        $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
+        try {
+            $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ralan')->where('ref_id', $ref_id)->oneArray();
+            if ($sig) {
+                $row['is_signed'] = true;
+                $row['signature_hash'] = $sig['signature_hash'];
+            } else {
+                $row['is_signed'] = false;
+                $row['sign_ref_id'] = $ref_id;
+            }
+        } catch (\Throwable $e) {
+            $row['is_signed'] = false;
+            $row['sign_ref_id'] = $ref_id;
+        }
+
         $result[] = $row;
       }
 
@@ -725,10 +741,26 @@ class Admin extends AdminModule
         $row['nomor'] = $i++;
         $row['nama_petugas'] = $this->core->getPegawaiInfo('nama',$row['nip']);
         $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
+
+        $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
+        try {
+            $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ranap')->where('ref_id', $ref_id)->oneArray();
+            if ($sig) {
+                $row['is_signed'] = true;
+                $row['signature_hash'] = $sig['signature_hash'];
+            } else {
+                $row['is_signed'] = false;
+                $row['sign_ref_id'] = $ref_id;
+            }
+        } catch (\Throwable $e) {
+            $row['is_signed'] = false;
+            $row['sign_ref_id'] = $ref_id;
+        }
+
         $result_ranap[] = $row;
       }
 
-      echo $this->draw('soap.html', ['pemeriksaan' => htmlspecialchars_array($result), 'pemeriksaan_ranap' => htmlspecialchars_array($result_ranap), 'diagnosa' => htmlspecialchars_array($diagnosa), 'prosedur' => htmlspecialchars_array($prosedur), 'admin_mode' => $this->settings->get('settings.admin_mode')]);
+      echo $this->draw('soap.html', ['pemeriksaan' => htmlspecialchars_array($result), 'pemeriksaan_ranap' => htmlspecialchars_array($result_ranap), 'diagnosa' => htmlspecialchars_array($diagnosa), 'prosedur' => htmlspecialchars_array($prosedur), 'admin_mode' => $this->settings->get('settings.admin_mode'), 'current_user' => $this->core->getUserInfo('username')]);
       exit();
     }
 
