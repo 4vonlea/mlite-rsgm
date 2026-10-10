@@ -409,6 +409,9 @@
               <li class="menu-icon"><a href="{?=url([ADMIN, 'pasien', 'manage'])?}"{if: !$mlite.pasien_access} class="btn disabled"{/if} style="border-radius: 0 !important;"><i class="fa fa-users {if: $mlite.pasien_access}text-success{else}text-muted{/if}"></i> Pasien</a></li>
               {/if}
               {if: $this->core->getUserInfo('role', !empty($_SESSION['mlite_user']) ? $_SESSION['mlite_user'] : 1) == 'medis'}
+                {if: $mlite.module_oral_diagnostic && $mlite.oral_diagnostic_access}
+                <li class="menu-icon"><a href="{?=url([ADMIN, 'oral_diagnostic', 'manage'])?}"{if: !$mlite.oral_diagnostic_access} class="btn disabled"{/if} style="border-radius: 0 !important;"><i class="fa fa-asterisk {if: $mlite.oral_diagnostic_access}text-warning{else}text-muted{/if}"></i> Oral Diag</a></li>
+                {/if}
                 {if: $mlite.dokter_igd_access}
                 <li class="menu-icon"><a href="{?=url([ADMIN, 'dokter_igd', 'manage'])?}"{if: !$mlite.dokter_igd_access} class="btn disabled"{/if} style="border-radius: 0 !important;"><i class="fa fa-ambulance {if: $mlite.dokter_igd_access}text-danger{else}text-muted{/if}"></i> Dokter IGD</a></li>
                 {/if}

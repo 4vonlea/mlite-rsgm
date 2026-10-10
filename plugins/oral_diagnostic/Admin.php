@@ -532,61 +532,73 @@ class Admin extends AdminModule
           ]);
         }
       }
-      if($_POST['kat'] == 'obat') {
+      if($_POST['kat'] == 'radiologi') {
         $maxRetries = 5;
         $retryCount = 0;
         $success = false;
+        $lastRadError = null;
 
         while ($retryCount < $maxRetries && !$success) {
           $this->db()->pdo()->beginTransaction();
           try {
-            $no_resep = $this->core->setNoResep($_POST['tgl_perawatan']);
-            $cek_resep = $this->db('resep_obat')->join('resep_dokter', 'resep_obat.no_resep = resep_dokter.no_resep')->where('no_rawat', $_POST['no_rawat'])->where('tgl_peresepan', $_POST['tgl_perawatan'])->where('tgl_perawatan', '0000-00-00')->where('status', 'ralan')->oneArray();
+            $cek_rad_all = $this->db('permintaan_radiologi')->where('no_rawat', $_POST['no_rawat'])->where('tgl_permintaan', date('Y-m-d'))->where('tgl_sampel', '=', '0000-00-00')->where('status', 'ralan')->toArray();
+            $target_noorder = false;
+            if(!empty($cek_rad_all)) {
+               foreach ($cek_rad_all as $rad) {
+                  $sudah_ada = $this->db('permintaan_pemeriksaan_radiologi')->where('noorder', $rad['noorder'])->where('kd_jenis_prw', $_POST['kd_jenis_prw'])->oneArray();
+                  if(!$sudah_ada) {
+                     $target_noorder = $rad['noorder'];
+                     break;
+                  }
+               }
+            }
+            
+            if(!$target_noorder) {
+              $prefix_rad = 'PR' . date('Ymd');
+              $urut = $this->db('permintaan_radiologi')
+                  ->like('noorder', $prefix_rad . '%')
+                  ->nextRightNumber('noorder', 4);
+              $noorder = $prefix_rad . sprintf('%04d', $urut + $retryCount);
 
-            if(empty($cek_resep)) {
+              $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->oneArray();
+              $dokter_perujuk = !empty($_POST['kode_provider']) ? $_POST['kode_provider'] : $reg_periksa['kd_dokter'];
 
-              $resep_obat = $this->db('resep_obat')
+              $permintaan_rad = $this->db('permintaan_radiologi')
                 ->save([
-                  'no_resep' => $no_resep,
-                  'tgl_perawatan' => '0000-00-00',
-                  'jam' => '00:00:00',
+                  'noorder' => $noorder,
                   'no_rawat' => $_POST['no_rawat'],
-                  'kd_dokter' => $_POST['kode_provider'],
-                  'tgl_peresepan' => $_POST['tgl_perawatan'],
-                  'jam_peresepan' => $_POST['jam_rawat'],
+                  'tgl_permintaan' => $_POST['tgl_perawatan'],
+                  'jam_permintaan' => $_POST['jam_rawat'],
+                  'tgl_sampel' => '0000-00-00',
+                  'jam_sampel' => '00:00:00',
+                  'tgl_hasil' => '0000-00-00',
+                  'jam_hasil' => '00:00:00',
+                  'dokter_perujuk' => $dokter_perujuk,
                   'status' => 'ralan',
-                  'tgl_penyerahan' => '0000-00-00',
-                  'jam_penyerahan' => '00:00:00'
+                  'informasi_tambahan' => $_POST['informasi_tambahan'] ?? '',
+                  'diagnosa_klinis' => $_POST['diagnosa_klinis'] ?? ''
                 ]);
-
-              if ($this->db('resep_obat')->where('no_resep', $no_resep)->where('kd_dokter', $_POST['kode_provider'])->oneArray()) {
-                $this->db('resep_dokter')
-                  ->save([
-                    'no_resep' => $no_resep,
-                    'kode_brng' => $_POST['kd_jenis_prw'],
-                    'jml' => $_POST['jml'],
-                    'aturan_pakai' => $_POST['aturan_pakai']
-                  ]);
-              }
+              $this->db('permintaan_pemeriksaan_radiologi')
+                ->save([
+                  'noorder' => $noorder,
+                  'kd_jenis_prw' => $_POST['kd_jenis_prw'],
+                  'stts_bayar' => 'Belum'
+                ]);
 
             } else {
-
-              $no_resep = $cek_resep['no_resep'];
-
-              $this->db('resep_dokter')
+              $this->db('permintaan_pemeriksaan_radiologi')
                 ->save([
-                  'no_resep' => $no_resep,
-                  'kode_brng' => $_POST['kd_jenis_prw'],
-                  'jml' => $_POST['jml'],
-                  'aturan_pakai' => $_POST['aturan_pakai']
+                  'noorder' => $target_noorder,
+                  'kd_jenis_prw' => $_POST['kd_jenis_prw'],
+                  'stts_bayar' => 'Belum'
                 ]);
-
             }
             $this->db()->pdo()->commit();
             $success = true;
           } catch (\Exception $e) {
             $this->db()->pdo()->rollBack();
             if ($e->getCode() == '23000') {
+              $lastRadError = $e;
               $retryCount++;
               usleep(100000);
               continue;
@@ -594,7 +606,14 @@ class Admin extends AdminModule
             throw $e;
           }
         }
-
+        if (!$success) {
+          $detail = $lastRadError ? $lastRadError->getMessage() : 'data sudah ada pada order dan tidak dapat ditambahkan ulang.';
+          echo json_encode([
+            'status' => 'error',
+            'message' => 'Gagal menyimpan permintaan radiologi: ' . $detail
+          ]);
+          exit();
+        }
       }
       exit();
     }
@@ -628,22 +647,12 @@ class Admin extends AdminModule
       exit();
     }
 
-    public function postHapusResep()
+    public function postHapusPermintaanRad()
     {
-      if(isset($_POST['kd_jenis_prw'])) {
-        $this->db('resep_dokter')
-        ->where('no_resep', $_POST['no_resep'])
-        ->where('kode_brng', $_POST['kd_jenis_prw'])
-        ->delete();
-      } else {
-        $this->db('resep_obat')
-        ->where('no_resep', $_POST['no_resep'])
-        ->where('no_rawat', $_POST['no_rawat'])
-        ->where('tgl_peresepan', $_POST['tgl_peresepan'])
-        ->where('jam_peresepan', $_POST['jam_peresepan'])
-        ->delete();
-      }
-
+      $this->db('permintaan_radiologi')
+      ->where('noorder', $_POST['noorder'])
+      ->where('no_rawat', $_POST['no_rawat'])
+      ->delete();
       exit();
     }
 
@@ -689,23 +698,25 @@ class Admin extends AdminModule
         }
       }
 
-      $rows = $this->db('resep_obat')
-        ->join('dokter', 'dokter.kd_dokter=resep_obat.kd_dokter')
+      $rows_radiologi = $this->db('permintaan_radiologi')
+        ->join('permintaan_pemeriksaan_radiologi', 'permintaan_pemeriksaan_radiologi.noorder=permintaan_radiologi.noorder')
         ->where('no_rawat', $_POST['no_rawat'])
-        ->where('resep_obat.status', 'ralan')
+        ->where('permintaan_radiologi.status', 'ralan')
         ->toArray();
-      $resep = [];
-      $jumlah_total_resep = 0;
-      foreach ($rows as $row) {
-        $row['nomor'] = $i++;
-        $row['resep_dokter'] = $this->db('resep_dokter')->join('databarang', 'databarang.kode_brng=resep_dokter.kode_brng')->where('no_resep', $row['no_resep'])->toArray();
-        foreach ($row['resep_dokter'] as $value) {
-          $value['ralan'] = $value['jml'] * $value['dasar'];
-          $jumlah_total_resep += floatval($value['ralan']);
+      $jumlah_total_rad = 0;
+      $radiologi = [];
+
+      if($rows_radiologi) {
+        foreach ($rows_radiologi as $row) {
+          $jns_perawatan = $this->db('jns_perawatan_radiologi')->where('kd_jenis_prw', $row['kd_jenis_prw'])->oneArray();
+          $row['nm_perawatan'] = $jns_perawatan['nm_perawatan'];
+          $row['kelas'] = $jns_perawatan['kelas'];
+          $row['total_byr'] = $jns_perawatan['total_byr'];
+          $jumlah_total_rad += $jns_perawatan['total_byr'];
+          $radiologi[] = $row;
         }
-        $resep[] = $row;
       }
-      echo $this->draw('rincian.html', ['rawat_jl_dr' => $rawat_jl_dr, 'rawat_jl_pr' => $rawat_jl_pr, 'rawat_jl_drpr' => $rawat_jl_drpr, 'jumlah_total' => $jumlah_total, 'jumlah_total_resep' => $jumlah_total_resep, 'resep' => htmlspecialchars_array($resep), 'no_rawat' => htmlspecialchars($_POST['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')]);
+      echo $this->draw('rincian.html', ['rawat_jl_dr' => $rawat_jl_dr, 'rawat_jl_pr' => $rawat_jl_pr, 'rawat_jl_drpr' => $rawat_jl_drpr, 'jumlah_total' => $jumlah_total, 'jumlah_total_rad' => $jumlah_total_rad, 'radiologi' => htmlspecialchars_array($radiologi), 'no_rawat' => htmlspecialchars($_POST['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')]);
       exit();
     }
 
@@ -808,16 +819,14 @@ class Admin extends AdminModule
       exit();
     }    
 
-    public function anyObat()
+    public function anyRadiologi()
     {
-      $obat = $this->db('databarang')
-        ->join('gudangbarang', 'gudangbarang.kode_brng=databarang.kode_brng')
+      $radiologi = $this->db('jns_perawatan_radiologi')
         ->where('status', '1')
-        ->where('gudangbarang.kd_bangsal', $this->settings->get('farmasi.oral_diagnostic'))
-        ->like('databarang.nama_brng', '%'.htmlspecialchars($_POST['obat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'%')
+        ->like('nm_perawatan', '%'.htmlspecialchars($_POST['radiologi'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'%')
         ->limit(10)
         ->toArray();
-      echo $this->draw('obat.html', ['obat' => htmlspecialchars_array($obat)]);
+      echo $this->draw('radiologi.html', ['radiologi' => htmlspecialchars_array($radiologi)]);
       exit();
     }
 

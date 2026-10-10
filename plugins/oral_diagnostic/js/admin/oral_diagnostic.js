@@ -755,7 +755,7 @@ $('input:text[name=layanan]').on('input',function(e){
       $.post(url, {layanan: layanan} ,function(data) {
       // tampilkan data yang sudah di perbaharui
         $("#layanan").html(data).show();
-        $("#obat").hide();
+        $("#radiologi").hide();
       });
   }
 
@@ -763,15 +763,15 @@ $('input:text[name=layanan]').on('input',function(e){
 // end pencarian
 
 // ketika inputbox pencarian diisi
-$('input:text[name=obat]').on('input',function(e){
+$('input:text[name=radiologi]').on('input',function(e){
   var baseURL = mlite.url + '/' + mlite.admin;
-  var url    = baseURL + '/oral_diagnostic/obat?t=' + mlite.token;
-  var obat = $('input:text[name=obat]').val();
+  var url    = baseURL + '/oral_diagnostic/radiologi?t=' + mlite.token;
+  var radiologi = $('input:text[name=radiologi]').val();
 
-  if(obat!="") {
-      $.post(url, {obat: obat} ,function(data) {
+  if(radiologi!="") {
+      $.post(url, {radiologi: radiologi} ,function(data) {
       // tampilkan data yang sudah di perbaharui
-        $("#obat").html(data).show();
+        $("#radiologi").html(data).show();
         $("#layanan").hide();
       });
   }
@@ -797,36 +797,28 @@ $("#layanan").on("click", ".pilih_layanan", function(event){
   $("#layanan").hide();
   $('#provider').show();
   $('#aturan_pakai').hide();
+  $('#info_tambahan').hide();
 });
 
 // ketika baris data diklik
-$("#obat").on("click", ".pilih_obat", function(event){
+$("#radiologi").on("click", ".pilih_radiologi", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
 
-  var kode_brng = $(this).attr("data-kode_brng");
-  var nama_brng = $(this).attr("data-nama_brng");
-  var biaya = $(this).attr("data-dasar");
+  var kd_jenis_prw = $(this).attr("data-kd_jenis_prw");
+  var nm_perawatan = $(this).attr("data-nm_perawatan");
+  var biaya = $(this).attr("data-biaya");
   var kat = $(this).attr("data-kat");
 
-  $('input:hidden[name=kd_jenis_prw]').val(kode_brng);
-  $('input:text[name=nm_perawatan]').val(nama_brng);
+  $('input:hidden[name=kd_jenis_prw]').val(kd_jenis_prw);
+  $('input:text[name=nm_perawatan]').val(nm_perawatan);
   $('input:text[name=biaya]').val(biaya);
   $('input:hidden[name=kat]').val(kat);
 
-  /*$('#jumlah_jual').val(1);
-  var jumlah_jual  = $('input:text[name=jumlah_jual]').val();
-
-  $('#jumlah_jual').removeAttr("disabled");
-  $('#potongan').removeAttr("disabled");
-  $('#jumlah_jual').focus();
-
-  var total = (Number(harga)) * (Number(jumlah_jual));
-  $('input:text[name=total]').val(total);*/
-
-  $('#obat').hide();
-  $('#aturan_pakai').show();
-  $('#rawat_jl_dr').show();
+  $('#radiologi').hide();
+  $('#provider').hide();
+  $('#aturan_pakai').hide();
+  $('#info_tambahan').show();
 });
 
 // ketika tombol simpan diklik
@@ -840,11 +832,13 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
   var kode_provider   = $('input:text[name=kode_provider]').val();
   var kode_provider2   = $('input:text[name=kode_provider2]').val();
   var tgl_perawatan   = $('input:text[name=tgl_perawatan]').val();
-  var jam_rawat       = $('input:text[name=jam_rawat]').val();
+  var jam_rawat       = $('input:text[name=jam_reg]').last().val();
   var biaya           = $('input:text[name=biaya]').val();
   var aturan_pakai    = $('input:text[name=aturan_pakai]').val();
   var kat             = $('input:hidden[name=kat]').val();
   var jml             = $('input:text[name=jml]').val();
+  var informasi_tambahan = $('textarea[name=informasi_tambahan]').val();
+  var diagnosa_klinis = $('input:text[name=diagnosa_klinis]').val();
 
   var url = baseURL + '/oral_diagnostic/savedetail?t=' + mlite.token;
   $.post(url, {no_rawat : no_rawat,
@@ -857,8 +851,17 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
   biaya          : biaya,
   aturan_pakai   : aturan_pakai,
   kat            : kat,
-  jml            : jml
+  jml            : jml,
+  informasi_tambahan : informasi_tambahan,
+  diagnosa_klinis : diagnosa_klinis
   }, function(data) {
+    if (typeof data === 'string' && data.indexOf('{"status":"error"') !== -1) {
+      try {
+        var res = JSON.parse(data);
+        bootbox.alert(res.message);
+        return;
+      } catch(e) {}
+    }
 
     // tampilkan data
     $("#display").hide();
@@ -870,18 +873,20 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
     });
     $.post(baseURL + '/oral_diagnostic/cekwaktu?t=' + mlite.token, {
     } ,function(data) {
-      $("#form_rincian #rincian_jam_reg").val(data);
-      $('input:text[name=jam_rawat]').last().val(data).focus();
+      $("#form_rincian #jam_reg").val(data);
+      $('input:text[name=jam_reg]').last().val(data).focus();
     });
     $('input:hidden[name=kd_jenis_prw]').val("");
     $('input:text[name=nm_perawatan]').val("");
     $('input:hidden[name=kat]').val("");
     $('input:text[name=biaya]').val("");
+    $('input:text[name=radiologi]').val("");
     $('input:text[name=nama_provider]').val("");
     $('input:text[name=nama_provider2]').val("");
     $('input:text[name=kode_provider]').val("");
     $('input:text[name=kode_provider2]').val("");
-    $('input:text[name=jam_rawat]').last().val("");
+    $('textarea[name=informasi_tambahan]').val("");
+    $('input:text[name=diagnosa_klinis]').val("");
     $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
     "Data pasien telah disimpan!"+
     "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
@@ -928,14 +933,12 @@ $("#rincian").on("click",".hapus_detail", function(event){
 });
 
 // ketika tombol hapus ditekan
-$("#rincian").on("click",".hapus_resep_obat", function(event){
+$("#rincian").on("click",".hapus_permintaan_rad", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
-  var url = baseURL + '/oral_diagnostic/hapusresep?t=' + mlite.token;
-  var no_resep = $(this).attr("data-no_resep");
+  var url = baseURL + '/oral_diagnostic/hapuspermintaanrad?t=' + mlite.token;
+  var noorder = $(this).attr("data-noorder");
   var no_rawat = $(this).attr("data-no_rawat");
-  var tgl_peresepan = $(this).attr("data-tgl_peresepan");
-  var jam_peresepan = $(this).attr("data-jam_peresepan");
 
   // tampilkan dialog konfirmasi
   bootbox.confirm("Apakah Anda yakin ingin menghapus data ini?", function(result){
@@ -943,10 +946,8 @@ $("#rincian").on("click",".hapus_resep_obat", function(event){
     if (result){
       // mengirimkan perintah penghapusan
       $.post(url, {
-        no_resep: no_resep,
-        no_rawat: no_rawat,
-        tgl_peresepan: tgl_peresepan,
-        jam_peresepan: jam_peresepan
+        noorder: noorder,
+        no_rawat: no_rawat
       } ,function(data) {
         var url = baseURL + '/oral_diagnostic/rincian?t=' + mlite.token;
         $.post(url, {no_rawat : no_rawat,
@@ -955,41 +956,7 @@ $("#rincian").on("click",".hapus_resep_obat", function(event){
           $("#rincian").html(data).show();
         });
         $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-        "Data rincian rawat jalan telah dihapus!"+
-        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
-        "</div>").show();
-      });
-    }
-  });
-});
-
-// ketika tombol hapus ditekan
-$("#rincian").on("click",".hapus_resep_dokter", function(event){
-  var baseURL = mlite.url + '/' + mlite.admin;
-  event.preventDefault();
-  var url = baseURL + '/oral_diagnostic/hapusresep?t=' + mlite.token;
-  var no_resep = $(this).attr("data-no_resep");
-  var no_rawat = $(this).attr("data-no_rawat");
-  var kd_jenis_prw = $(this).attr("data-kd_jenis_prw");
-
-  // tampilkan dialog konfirmasi
-  bootbox.confirm("Apakah Anda yakin ingin menghapus data ini?", function(result){
-    // ketika ditekan tombol ok
-    if (result){
-      // mengirimkan perintah penghapusan
-      $.post(url, {
-        no_resep: no_resep,
-        no_rawat: no_rawat,
-        kd_jenis_prw: kd_jenis_prw
-      } ,function(data) {
-        var url = baseURL + '/oral_diagnostic/rincian?t=' + mlite.token;
-        $.post(url, {no_rawat : no_rawat,
-        }, function(data) {
-          // tampilkan data
-          $("#rincian").html(data).show();
-        });
-        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-        "Data rincian rawat jalan telah dihapus!"+
+        "Data permintaan radiologi telah dihapus!"+
         "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
         "</div>").show();
       });
