@@ -341,6 +341,11 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
   var embalase        = $('input:text[name=embalase]').val();
   var tuslah          = $('input:text[name=tuslah]').val();
 
+  if (embalase === '' || tuslah === '') {
+    bootbox.alert("Embalase dan Tuslah wajib diisi!");
+    return false;
+  }
+
   console.log(kode_brng);
 
   var url = baseURL + '/apotek_ralan/savedetail?t=' + mlite.token;

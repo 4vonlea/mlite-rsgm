@@ -267,7 +267,7 @@ class Admin extends AdminModule
                   'jml' => $jml,
                   'embalase' => $this->settings->get('farmasi.embalase'),
                   'tuslah' => $this->settings->get('farmasi.tuslah'),
-                  'total' => $kapasitas['dasar'] * $jml,
+                  'total' => ($kapasitas['dasar'] * $jml) + floatval($this->settings->get('farmasi.embalase')) + floatval($this->settings->get('farmasi.tuslah')),
                   'status' => 'Ranap',
                   'kd_bangsal' => $this->settings->get('farmasi.deporanap'),
                   'no_batch' => isset($get_gudangbarang['no_batch']) ? $get_gudangbarang['no_batch'] : '',
