@@ -1,4 +1,4 @@
-﻿# Database Changelog — mlitersgm
+# Database Changelog — mlitersgm
 
 File ini mencatat semua perubahan struktur database yang dilakukan selama development lokal.
 Gunakan file ini sebagai referensi saat deployment ke production.
@@ -68,6 +68,28 @@ Jika production menggunakan MySQL 5.7 atau mode non-strict, perubahan ini tidak 
 
 ---
 
+## [2026-10-12] v1.2 — Migrasi Tabel Pendukung Formulir Rekam Medis (update_bmt)
+
+### Tabel Baru (36 Tabel Pendukung):
+- **Anestesi & Bedah:** `ans1_tindakan_pembiusan`, `ans2_persetujuan_pembiusan`, `ans3_assesmen_prasedasi_anestesi`, `ans4_rencana_anestesi`, `ans4_evaluasi_premedikasi_detail`, `ans6_status_post_anestesi`, `ans6_protokol_nyeri_detail`, `ans7_serah_terima`, `bm1_informasi_tindakan`, `bm2_persetujuan_tindakan`, `bm4_laporan_pembedahan`, `bmi1_persetujuan_anestesi_lokal`, `bmi4_pra_anestesi_lokal`, `bmi5_bedah_minor`.
+- **Rawat Inap & Lampiran:** `asesmen_medis_umum_irna`, `ri01b_hak_kewajiban_pasien`, `ri02_ringkasan`, `ri03_serah_terima`, `ri04_transfer_internal`, `ri09_status_fungsional`, `ri11b_pemberian_makan`, `ri14_rekonsiliasi_obat`, `ri15_instruksi_medis`, `ri15a_instruksi_medis_farmakologi`, `ri15b_jadwal_obat`, `ri18_edukasi_pasien`, `ri19_discharge_planning`, `ri20_resume_pulang`, `surat_pulang_aps`.
+- **Rawat Jalan & UGD:** `asesmen_keperawatan_gigi_ugd`, `rj02a_hak_kewajiban`, `rj07_asesmen_ulang_nyeri`, `rj10_edukasi_terintegrasi`, `rj11_pemberian_informasi`.
+- **Edukasi:** `edukasi_pasien_terintegrasi`, `edukasi_pasien_terintegrasi_detail`.
+
+**Cara Migrasi ke Server / Production:**
+1. Menggunakan file SQL: Import `migration_tabel_pendukung_bmt.sql` via phpMyAdmin atau terminal MySQL:
+   ```bash
+   mysql -u root -p mlitersgm < migration_tabel_pendukung_bmt.sql
+   ```
+2. Menggunakan Web Runner: Buka URL `http://<server-host>/mlite-rsgm/migrate_bmt.php` di browser.
+3. Menggunakan CLI: Jalankan perintah:
+   ```bash
+   php migrate_bmt.php
+   ```
+4. Atau re-install plugin `update_bmt` melalui menu mLITE: **Pengaturan -> Modul**.
+
+---
+
 ## [Template Entry Selanjutnya]
 
 ```
@@ -81,3 +103,4 @@ ALTER TABLE nama_tabel ADD COLUMN kolom_baru VARCHAR(100) NULL AFTER kolom_sebel
 Alasan: ...
 File kode yang diubah: ...
 ```
+
