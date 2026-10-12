@@ -1820,14 +1820,29 @@ $(document).on('click', '.btn-tte', function(e) {
                         passphrase: passphrase
                     }, function(response) {
                         processingDialog.modal('hide');
-                        var res = typeof response === 'object' ? response : JSON.parse(response);
+                        var res = {};
+                        try {
+                            res = typeof response === 'object' ? response : JSON.parse(response);
+                        } catch(e) {
+                            bootbox.alert({
+                                message: '❌ Gagal: Sesi mungkin telah berakhir atau server mengalami kendala.<br><br><small style="color:red; max-height:200px; overflow-y:auto; display:block;">' + (typeof response === 'string' ? response : 'Unknown Error') + '</small>',
+                                className: 'modal-tte-center'
+                            });
+                            return;
+                        }
                         if (res.status == 'success') {
+                            bootbox.alert({
+                                message: '✅ Sukses: Tanda tangan elektronik berhasil disimpan.',
+                                className: 'modal-tte-center'
+                            });
                             var container = $('#sign_container_' + ref_id);
                             if (container.length) {
                                 var verifyUrl = mlite.url + '/esignature/verify/' + res.hash;
                                 var qrClass = 'qr_' + res.hash.substring(0, 8);
                                 container.html(
-                                    '<div class="' + qrClass + '" style="margin-top:10px;margin-bottom:10px;"></div>' +
+                                    '<a href="' + verifyUrl + '" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">' +
+                                    '<div class="' + qrClass + '" style="margin-top:10px;width:120px;height:120px;"></div>' +
+                                    '</a>' +
                                     signer_name
                                 );
                                 $('.' + qrClass).qrcode({

@@ -46,6 +46,10 @@ class Site extends SiteModule
                     ->where("REPLACE(reg_periksa.no_rawat, '/', '')", $no_rawat_clean)
                     ->oneArray();
                  if ($pasien) {
+                     if ($signature['ref_type'] == 'soap_ralan' && $pasien['kd_poli'] == $this->settings->get('settings.igd')) {
+                         $signature['nama_dokumen'] = 'Catatan Perkembangan Pasien Terintegrasi (CPPT) IGD';
+                     }
+                     
                      $norm = $pasien['no_rkm_medis'];
                      if (strlen($norm) > 2) {
                          $masked_rm = substr($norm, 0, 1) . str_repeat('*', strlen($norm) - 2) . substr($norm, -1);

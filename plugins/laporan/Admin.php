@@ -4,6 +4,7 @@ namespace Plugins\Laporan;
 
 use Systems\AdminModule;
 use Systems\Lib\QueryWrapper;
+use Plugins\Laporan\Src\Word;
 
 class Admin extends AdminModule
 {
@@ -535,6 +536,7 @@ class Admin extends AdminModule
         $tgl_awal = isset_or($_POST['tgl_awal'], date('Y-m-01'));
         $tgl_akhir = isset_or($_POST['tgl_akhir'], date('Y-m-t'));
         $status_pacs = isset_or($_POST['status_pacs'], 'semua');
+        $max_gambar = isset_or($_POST['max_gambar'], '');
 
         $query = $this->db('periksa_radiologi')
             ->join('reg_periksa', 'reg_periksa.no_rawat = periksa_radiologi.no_rawat')
@@ -595,10 +597,16 @@ class Admin extends AdminModule
             exit;
         }
 
+        if (isset($_POST['export_word']) || isset($_GET['export_word'])) {
+            $this->exportRadiologiPacsToWord($filtered_data, $tgl_awal, $tgl_akhir, (int)$max_gambar);
+            exit;
+        }
+
         return $this->draw('laporan_radiologi_pacs.html', [
             'tgl_awal' => $tgl_awal,
             'tgl_akhir' => $tgl_akhir,
             'status_pacs' => $status_pacs,
+            'max_gambar' => (int)$max_gambar,
             'data_radiologi' => $filtered_data,
             'title' => 'Laporan Radiologi (Status Mini PACS)'
         ]);
@@ -656,6 +664,623 @@ class Admin extends AdminModule
 
         echo $output;
         exit;
+    }
+
+    private function exportRadiologiPacsToWord($data, $tgl_awal, $tgl_akhir, $max_gambar = 0)
+    {
+        try {
+            @set_time_limit(0);
+
+            // Citra dialirkan dari disk, jadi kebutuhan memori tidak sebanding
+            // ukuran file. 512M cukup kecuali batas gambar dinaikkan drastis.
+            $need = ($max_gambar > 2000) ? '1024M' : '512M';
+            if (self::batasMemori() === null || self::batasMemori() < 512) {
+                @ini_set('memory_limit', $need);
+            }
+
+            if (!class_exists('\ZipArchive')) {
+                throw new \Exception('Ekstensi ZipArchive tidak aktif di server, file Word tidak bisa dibuat.');
+            }
+
+            if (!class_exists('Plugins\\Laporan\\Src\\Word')) {
+                $wordPath = __DIR__ . '/src/Word.php';
+                if (is_file($wordPath)) {
+                    require_once $wordPath;
+                }
+            }
+
+            if (!class_exists('Plugins\\Laporan\\Src\\Word')) {
+                throw new \Exception('File plugins/laporan/src/Word.php belum ada di server, file Word tidak bisa dibuat.');
+            }
+
+            $settings = $this->settings('settings');
+
+            $bulanIndo = [
+                1 => 'januari',
+                2 => 'februari',
+                3 => 'maret',
+                4 => 'april',
+                5 => 'mei',
+                6 => 'juni',
+                7 => 'juli',
+                8 => 'agustus',
+                9 => 'september',
+                10 => 'oktober',
+                11 => 'november',
+                12 => 'desember'
+            ];
+
+            try {
+                $periodeDate = new \DateTime($tgl_awal);
+            } catch (\Exception $e) {
+                $periodeDate = new \DateTime();
+            }
+            $bulanNama = $bulanIndo[(int)$periodeDate->format('m')];
+            $tahunNama = $periodeDate->format('Y');
+            $filename = "radiologi_{$bulanNama}{$tahunNama}.docx";
+
+            $maxGambar = ($max_gambar > 0) ? $max_gambar : $this->_pacsBatasGambarDefault();
+
+            $items = $this->_pacsKumpulkanInstance($data, $maxGambar);
+            $gambarMap = $this->_pacsAmbilGambar($items);
+
+            $doc = new Word($filename);
+            $doc->setBatasGambar($maxGambar);
+            $doc->setJudul(
+                html_entity_decode((string)isset_or($settings['nama_instansi'], 'RUMAH SAKIT'), ENT_QUOTES, 'UTF-8'),
+                'LAPORAN GAMBAR RONTGEN PACS',
+                'Periode: ' . $tgl_awal . ' s/d ' . $tgl_akhir . ' | Tanggal Cetak: ' . date('d-m-Y H:i')
+            );
+
+            // Kelompokkan instance per pasien, urutan mengikuti query (tgl periksa DESC)
+            $grup = [];
+            foreach ($items as $item) {
+                $noRawat = (string)isset_or($item['row']['no_rawat'], '0');
+                $grup[$noRawat]['list'][] = $item;
+            }
+
+            $totalGambar = 0;
+            $totalKosong = 0;
+            $daftarIsi = [];
+
+            // Hitung dulu berapa gambar yang benar-benar bisa masuk (dibatasi maxGambar)
+            foreach ($grup as $noRawat => $listItem) {
+                $ada = 0;
+                foreach ($listItem as $item) {
+                    if (!empty($gambarMap[isset_or($item['ins']['id'], 0)])) {
+                        $ada++;
+                    }
+                }
+                $grup[$noRawat]['adaGambar'] = $ada;
+            }
+
+            $sisaKuota = $maxGambar;
+            $terpotong = false;
+
+            foreach ($grup as $noRawat => $info) {
+                $listItem = $info['list'];
+                $row = $listItem[0]['row'];
+                $adaGambar = 0;
+                $kosong = 0;
+                $terpotongPasien = false;
+
+                foreach ($listItem as $item) {
+                    $ins = $item['ins'];
+                    $key = isset_or($ins['id'], 0);
+                    $punya = !empty($gambarMap[$key]);
+
+                    if ($punya) {
+                        if ($sisaKuota > 0) {
+                            $sisaKuota--;
+                            $adaGambar++;
+                        } else {
+                            $terpotong = true;
+                            $terpotongPasien = true;
+                        }
+                    } else {
+                        $kosong++;
+                    }
+                }
+
+                $totalGambar += $adaGambar;
+                $totalKosong += $kosong;
+
+                if ($adaGambar > 0) {
+                    $status = $adaGambar . ' gambar';
+                    if ($kosong > 0) {
+                        $status .= ' / ' . $kosong . ' kosong';
+                    }
+                    if ($terpotongPasien) {
+                        $status .= ' (dipotong)';
+                    }
+                } else {
+                    $status = 'Gambar kosong';
+                }
+
+                $daftarIsi[] = [
+                    'nama' => (string)isset_or($row['nm_pasien'], '-'),
+                    'rm' => (string)isset_or($row['no_rkm_medis'], '-'),
+                    'tgl' => preg_replace('/^Tanggal Periksa:\s*/', '', $this->_formatTanggalPeriksa(isset_or($row['tgl_periksa'], ''))),
+                    'no_rawat' => (string)$noRawat,
+                    'status' => $status
+                ];
+
+                $doc->tambahPasien([
+                    'nama' => (string)isset_or($row['nm_pasien'], '-'),
+                    'rm' => (string)isset_or($row['no_rkm_medis'], '-'),
+                    'no_rawat' => (string)$noRawat,
+                    'tgl' => $this->_formatTanggalPeriksa(isset_or($row['tgl_periksa'], '')),
+                    'perawatan' => (string)isset_or($row['nm_perawatan'], '')
+                ]);
+
+                foreach ($listItem as $item) {
+                    $ins = $item['ins'];
+                    $key = isset_or($ins['id'], 0);
+
+                    if (!empty($gambarMap[$key])) {
+                        $doc->tambahGambar($gambarMap[$key]);
+                    } else {
+                        $doc->tambahGambarKosong([
+                            'id' => (string)isset_or($ins['id'], '-'),
+                            'sop' => (string)isset_or($ins['sop_instance_uid'], '-'),
+                            'path' => (string)isset_or($ins['file_path'], '-')
+                        ]);
+                    }
+                }
+            }
+
+            if (empty($items)) {
+                $this->_logPacsPdf('Total 0 gambar. Periode ' . $tgl_awal . ' s/d ' . $tgl_akhir . ', instance ditemukan: 0');
+            }
+
+            if ($terpotong || $this->pacsPdfPotong) {
+                $catatan = 'PERHATIAN: file ini dipotong maksimal ' . $maxGambar . ' gambar. '
+                    . 'Data belum lengkap - naikkan batas gambar di Pengaturan Laporan, '
+                    . 'atau bagi rentang tanggal menjadi beberapa bagian.';
+
+                if ($terpotong) {
+                    $catatan .= ' Daftar Pasien di atas menandai pasien yang gambarnya dipotong.';
+                }
+
+                $doc->setCatatan($catatan);
+            }
+
+            $doc->setRingkasan('Total gambar: ' . $totalGambar . ' | Pasien: ' . count($grup) . ' | Instance: ' . count($items) . ' | Gambar kosong: ' . $totalKosong);
+
+            $doc->tambahDaftarIsi($daftarIsi);
+            $doc->download();
+
+            $this->_logPacsPdf('Selesai render Word. Gambar: ' . $totalGambar . ' dari ' . count($items) . ' instance, kosong: ' . $totalKosong . ', pasien: ' . count($grup) . '.');
+        } catch (\Throwable $e) {
+            $this->_logPacsPdf('exportRadiologiPacsToWord: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+
+            if (!headers_sent()) {
+                http_response_code(500);
+                header('Content-Type: text/plain; charset=utf-8');
+            }
+            echo 'Gagal membuat Word: ' . $e->getMessage();
+        }
+    }
+
+    private $pacsPdfPotong = false;
+
+    private function _pacsBatasGambarDefault()
+    {
+        $v = (int)$this->settings('laporan', 'pacs_pdf_max_gambar');
+        return ($v > 0) ? $v : 600;
+    }
+
+    private static function batasMemori()
+    {
+        $raw = trim((string)ini_get('memory_limit'));
+        if ($raw === '' || $raw === '-1') {
+            return null;
+        }
+
+        $unit = strtolower(substr($raw, -1));
+        $num = (int)$raw;
+
+        if ($unit === 'g') {
+            return $num * 1024;
+        }
+        if ($unit === 'm') {
+            return $num;
+        }
+
+        return (int)($num / 1048576);
+    }
+
+    private function _pacsKumpulkanInstance($data, $maxGambar)
+    {
+        $items = [];
+        $this->pacsPdfPotong = false;
+
+        if (empty($data)) {
+            return $items;
+        }
+
+        foreach ($data as $row) {
+            if (empty($row['pacs_id'])) {
+                continue;
+            }
+
+            $series = $this->db('mlite_mini_pacs_series')->where('study_id', (int)$row['pacs_id'])->toArray();
+            if (empty($series)) {
+                continue;
+            }
+
+            foreach ($series as $s) {
+                $instances = $this->db('mlite_mini_pacs_instance')->where('series_id', $s['id'])->toArray();
+
+                foreach ($instances as $ins) {
+                    $items[] = ['row' => $row, 'ins' => $ins];
+                    if (count($items) >= $maxGambar) {
+                        $this->pacsPdfPotong = true;
+                        return $items;
+                    }
+                }
+            }
+        }
+
+        return $items;
+    }
+
+    private function _pacsAmbilGambar($items)
+    {
+        $result = [];
+
+        if (empty($items)) {
+            return $result;
+        }
+
+        $maxWidth = (int)$this->settings('laporan', 'pacs_pdf_max_width');
+        if ($maxWidth < 400) {
+            $maxWidth = 900;
+        }
+
+        $pendingRemote = [];
+        $remoteIp = rtrim((string)$this->settings('mini_pacs', 'remote_ip'), '/');
+        $isMono = (string)$this->settings('mini_pacs', 'is_mono');
+        $useRemote = (!empty($remoteIp) && $isMono === '0');
+        $cacheDir = $this->_pacsCacheDir();
+
+        foreach ($items as $item) {
+            $ins = $item['ins'];
+            $key = isset_or($ins['id'], 0);
+
+            $cacheFile = ($key ? $cacheDir . '/' . (int)$key . '.jpg' : '');
+
+            if ($cacheFile !== '' && @file_exists($cacheFile) && @is_readable($cacheFile) && @filesize($cacheFile) > 0) {
+                // Sudah ada di cache: cukup baca dimensi, jangan muat binary ke memori
+                $dim = $this->_pacsDimensi($cacheFile);
+                if ($dim !== null) {
+                    $result[$key] = $dim + ['file' => $cacheFile];
+                }
+                continue;
+            }
+
+            $localBinary = $this->_pacsBacaFileLokal($ins);
+            if ($localBinary !== null) {
+                $gambar = $this->_pacsProsesGambar($localBinary, $maxWidth);
+                unset($localBinary);
+                if ($gambar !== null) {
+                    $this->_pacsCacheSimpan($cacheFile, $gambar['binary']);
+                    unset($gambar['binary']);
+                    $result[$key] = $gambar + ['file' => $cacheFile];
+                }
+                continue;
+            }
+
+            if ($useRemote && !empty($ins['id'])) {
+                $pendingRemote[$key] = (int)$ins['id'];
+            }
+        }
+
+        if (!empty($pendingRemote)) {
+            $this->_logPacsPdf('Mengambil ' . count($pendingRemote) . ' gambar dari remote PACS ' . $remoteIp);
+            $remoteBin = $this->_pacsFetchRemoteBatch(array_values($pendingRemote), $remoteIp);
+
+            foreach ($remoteBin as $id => $binary) {
+                $gambar = $this->_pacsProsesGambar($binary, $maxWidth);
+                unset($binary);
+
+                if ($gambar === null) {
+                    $this->_logPacsPdf('Body instance ' . $id . ' bukan gambar yang valid, dilewati.');
+                    continue;
+                }
+
+                $cacheFile = $cacheDir . '/' . (int)$id . '.jpg';
+                $this->_pacsCacheSimpan($cacheFile, $gambar['binary']);
+                unset($gambar['binary']);
+                $result[$id] = $gambar + ['file' => $cacheFile];
+            }
+
+            unset($remoteBin);
+        }
+
+        return $result;
+    }
+
+    private function _pacsDimensi($file)
+    {
+        $size = @filesize($file);
+        if ($size === false || $size === 0) {
+            return null;
+        }
+
+        // getimagesize hanya perlu header file, tidak memuat seluruh isi ke memori
+        $info = @getimagesize($file);
+        if ($info === false || empty($info[0]) || empty($info[1])) {
+            return null;
+        }
+
+        $mime = !empty($info['mime']) ? $info['mime'] : 'image/jpeg';
+
+        return [
+            'mime' => $mime,
+            'ext' => ($mime === 'image/png') ? 'png' : 'jpeg',
+            'w' => (int)$info[0],
+            'h' => (int)$info[1],
+            'size' => (int)$size
+        ];
+    }
+
+    private function _pacsProsesGambar($binary, $maxWidth)
+    {
+        $binary = (string)$binary;
+
+        if ($binary === '') {
+            return null;
+        }
+
+        $info = @getimagesizefromstring($binary);
+        if ($info === false || empty($info[0]) || empty($info[1])) {
+            return null;
+        }
+
+        $mime = !empty($info['mime']) ? $info['mime'] : 'image/jpeg';
+        $ext = ($mime === 'image/png') ? 'png' : 'jpeg';
+        $srcW = (int)$info[0];
+        $srcH = (int)$info[1];
+
+        $needsResize = ($srcW > $maxWidth)
+            && function_exists('imagecreatefromstring')
+            && function_exists('imagecreatetruecolor')
+            && function_exists('imagecopyresampled');
+
+        if (!$needsResize) {
+            return ['binary' => $binary, 'mime' => $mime, 'ext' => $ext, 'w' => $srcW, 'h' => $srcH];
+        }
+
+        $src = @imagecreatefromstring($binary);
+        if (!$src) {
+            return ['binary' => $binary, 'mime' => $mime, 'ext' => $ext, 'w' => $srcW, 'h' => $srcH];
+        }
+
+        $newW = $maxWidth;
+        $newH = (int)round($srcH * ($maxWidth / $srcW));
+        if ($newH < 1) {
+            $newH = 1;
+        }
+
+        $dst = imagecreatetruecolor($newW, $newH);
+        $white = imagecolorallocate($dst, 255, 255, 255);
+        imagefilledrectangle($dst, 0, 0, $newW, $newH, $white);
+        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $srcW, $srcH);
+        imagedestroy($src);
+
+        ob_start();
+        if ($mime === 'image/png' && function_exists('imagepng')) {
+            imagepng($dst, null, 6);
+            $out = ob_get_clean();
+            imagedestroy($dst);
+            return ['binary' => $out, 'mime' => 'image/png', 'ext' => 'png', 'w' => $newW, 'h' => $newH];
+        }
+
+        imagejpeg($dst, null, 75);
+        $out = ob_get_clean();
+        imagedestroy($dst);
+
+        return ['binary' => $out, 'mime' => 'image/jpeg', 'ext' => 'jpeg', 'w' => $newW, 'h' => $newH];
+    }
+
+    private function _formatTanggalPeriksa($raw)
+    {
+        $raw = trim((string)$raw);
+        if ($raw === '' || $raw === '0000-00-00 00:00:00') {
+            return 'Tanggal: -';
+        }
+
+        $tgl = null;
+        $jam = '';
+
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})[ T]+(\d{2}):(\d{2})/', $raw, $m)) {
+            $tgl = sprintf('%02d-%02d-%s', (int)$m[3], (int)$m[2], $m[1]);
+            $jam = $m[4] . ':' . $m[5];
+        } else {
+            $ts = strtotime($raw);
+            if ($ts === false) {
+                return 'Tanggal: ' . htmlspecialchars($raw, ENT_QUOTES, 'UTF-8');
+            }
+            $tgl = date('d-m-Y', $ts);
+            $jam = date('H:i', $ts);
+        }
+
+        return 'Tanggal Periksa: ' . $tgl . ($jam !== '' ? ' | Jam: ' . $jam : '');
+    }
+
+    private function _pacsCacheDir()
+    {
+        $dir = BASE_DIR . '/admin/tmp/pacs_pdf_cache';
+
+        if (!@is_dir($dir)) {
+            @mkdir($dir, 0777, true);
+        }
+
+        return $dir;
+    }
+
+    private function _pacsCacheSimpan($cacheFile, $binary)
+    {
+        if (empty($cacheFile) || !is_dir(dirname($cacheFile))) {
+            return;
+        }
+
+        if ($binary !== false && strlen((string)$binary) > 0) {
+            @file_put_contents($cacheFile, $binary);
+        }
+    }
+
+    private function _pacsBacaFileLokal($instance)
+    {
+        $filePath = isset_or($instance['file_path'], '');
+        $sopUid = isset_or($instance['sop_instance_uid'], '');
+
+        $candidates = [];
+
+        if (!empty($filePath)) {
+            $lower = strtolower($filePath);
+            if (substr($lower, -4) === '.dcm') {
+                $candidates[] = substr($filePath, 0, -4) . '_thumb.jpg';
+                $candidates[] = substr($filePath, 0, -4) . '.jpg';
+            }
+            $candidates[] = $filePath;
+        }
+
+        if (!empty($sopUid)) {
+            $candidates[] = BASE_DIR . '/uploads/pacs/' . $sopUid . '_thumb.jpg';
+            $candidates[] = BASE_DIR . '/uploads/pacs/' . $sopUid . '.jpg';
+        }
+
+        foreach ($candidates as $candidate) {
+            if ($candidate && @file_exists($candidate) && @is_readable($candidate)) {
+                $content = @file_get_contents($candidate);
+                if ($content !== false && strlen($content) > 0) {
+                    return $content;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function _pacsFetchRemoteBatch($instanceIds, $remoteIp)
+    {
+        $token = $this->_pacsRemoteToken($remoteIp);
+        $apiKey = (string)$this->settings('mini_pacs', 'remote_api_key');
+
+        $headers = [
+            'Authorization: Bearer ' . ($token ?: ''),
+            'X-Api-Key: ' . $apiKey,
+            'X-Requested-With: XMLHttpRequest'
+        ];
+
+        $out = [];
+        $batchSize = 48;
+        $ids = array_values($instanceIds);
+
+        foreach (array_chunk($ids, $batchSize) as $chunk) {
+            $multi = curl_multi_init();
+            $handles = [];
+
+            foreach ($chunk as $id) {
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $remoteIp . '/admin/api/mini_pacs/instancejpg/' . (int)$id);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+                curl_setopt($ch, CURLOPT_BUFFERSIZE, 65536);
+                $handles[$id] = $ch;
+                curl_multi_add_handle($multi, $ch);
+            }
+
+            $running = null;
+            do {
+                curl_multi_exec($multi, $running);
+                if ($running) {
+                    curl_multi_select($multi, 1.0);
+                }
+            } while ($running > 0);
+
+            foreach ($handles as $id => $ch) {
+                $body = curl_multi_getcontent($ch);
+                $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                if ($body !== false && $code < 400 && strlen((string)$body) > 0) {
+                    if (@getimagesizefromstring((string)$body) === false) {
+                        $this->_logPacsPdf('Body instance ' . $id . ' http ' . $code . ' tapi bukan gambar (' . strlen((string)$body) . ' byte, awal: ' . substr(preg_replace('/\s+/', ' ', (string)$body), 0, 40) . ')');
+                    } else {
+                        $out[$id] = $body;
+                    }
+                } else {
+                    $this->_logPacsPdf('Gagal ambil gambar instance ' . $id . ' (http ' . $code . ')');
+                }
+                curl_multi_remove_handle($multi, $ch);
+                curl_close($ch);
+            }
+
+            curl_multi_close($multi);
+        }
+
+        return $out;
+    }
+
+    private function _pacsRemoteToken($remoteIp)
+    {
+        if (isset($_SESSION['remote_pacs_token']) && !empty($_SESSION['remote_pacs_token'])) {
+            return $_SESSION['remote_pacs_token'];
+        }
+
+        $apiKey = (string)$this->settings('mini_pacs', 'remote_api_key');
+        $username = (string)$this->settings('mini_pacs', 'remote_username');
+        $password = (string)$this->settings('mini_pacs', 'remote_password');
+
+        if (empty($username) || empty($password)) {
+            $this->_logPacsPdf('Remote PACS tanpa username/password, tidak bisa login.');
+            return null;
+        }
+
+        $loginUrl = $remoteIp . '/admin/api/login';
+        if (strpos($loginUrl, 'http') !== 0) {
+            $loginUrl = 'http://' . $loginUrl;
+        }
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $loginUrl);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['username' => $username, 'password' => $password]));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'X-Api-Key: ' . $apiKey]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+        $resp = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err = curl_error($ch);
+        curl_close($ch);
+
+        if ($err) {
+            $this->_logPacsPdf('Login remote PACS gagal: ' . $err);
+            return null;
+        }
+
+        if ($code === 200) {
+            $decoded = json_decode((string)$resp, true);
+            if (isset($decoded['token'])) {
+                $_SESSION['remote_pacs_token'] = $decoded['token'];
+                return $decoded['token'];
+            }
+        }
+
+        $this->_logPacsPdf('Login remote PACS HTTP ' . $code);
+        return null;
+    }
+
+    private function _logPacsPdf($message)
+    {
+        @file_put_contents(
+            BASE_DIR . '/admin/tmp/radiologi_pdf_error.log',
+            '[' . date('Y-m-d H:i:s') . '] ' . $message . "\n",
+            FILE_APPEND
+        );
     }
 
     private function _addHeaderFiles()

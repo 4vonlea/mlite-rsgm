@@ -208,19 +208,17 @@ function KirimWA() {
 							Penanggung Jawab
 							<br>
 							<br>
+							{if: $signature}
 							<center>
 							<a href="{?=url()?}/esignature/verify/{?=isset_or($signature.signature_hash)?}" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">
 								<img src="{$qrCode}" width="100px"/>
 							</a>
 							</center>
 							<br>
-							{if: $signature}
 							<div style="font-size: 10px; color: #4CAF50; margin-bottom: 5px;">
 								<i>Ditandatangani secara elektronik oleh:</i>
 							</div>
 							{$signature.signer_name}
-							{else}
-							{$pj_radiologi}
 							{/if}
 					</td>
 				</tr>

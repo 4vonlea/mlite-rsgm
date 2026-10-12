@@ -89,7 +89,8 @@ class Admin extends Main
         $row = $this->module->{$name};
 
         if ($row && ($details = $this->getModuleInfo($name))) {
-            if (($this->getUserInfo('access') == 'all') || in_array($name, explode(',', $this->getUserInfo('access')))) {
+            $isSaveSignature = ($name === 'esignature' && strtolower($method) === 'savesignature' && !empty($_SESSION['mlite_user']));
+            if (($this->getUserInfo('access') == 'all') || in_array($name, explode(',', $this->getUserInfo('access'))) || $isSaveSignature) {
                 $anyMethod = 'any'.ucfirst($method);
                 $method = strtolower($_SERVER['REQUEST_METHOD']).ucfirst($method);
 
@@ -107,6 +108,11 @@ class Admin extends Main
 
                 $this->tpl->set('module', $details);
             } else {
+                if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+                    http_response_code(403);
+                    header('Content-Type: application/json');
+                    echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk modul ini.']);
+                }
                 exit;
             }
         } else {
