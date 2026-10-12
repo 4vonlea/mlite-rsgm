@@ -7745,12 +7745,15 @@ class Admin extends AdminModule
     $kunjungan = 'Kunjungan';
     if ($status_lanjut == 'Ranap') {
       $kunjungan = 'Perawatan';
-      $row['pemeriksaan'] = $this->db('pemeriksaan_ranap')
+      $pemeriksaan_ranap = $this->db('pemeriksaan_ranap')
         ->where('no_rawat', $no_rawat)
         ->limit(1)
         ->desc('tgl_perawatan')
         ->oneArray();
-      $rtl = $pemeriksaan['rtl'] ?? null;
+      if ($pemeriksaan_ranap) {
+        $pemeriksaan = $pemeriksaan_ranap;
+        $rtl = $pemeriksaan['rtl'] ?? null;
+      }
     }
 
     $__patientResp = $this->getPatient($no_ktp_pasien);
@@ -7783,8 +7786,10 @@ class Admin extends AdminModule
     $careplan = [
       "resourceType" => "CarePlan",
       "identifier" => [
-        "system" => "http://sys-ids.kemkes.go.id/careplan/" . $this->organizationid,
-        "value" => $no_rawat
+        [
+          "system" => "http://sys-ids.kemkes.go.id/careplan/" . $this->organizationid,
+          "value" => $no_rawat
+        ]
       ],
       "title" => "Instruksi Medik dan Keperawatan Pasien",
       "status" => "active",
@@ -8038,9 +8043,11 @@ class Admin extends AdminModule
       $payload = [
         "resourceType" => "AllergyIntolerance",
         "identifier" => [
-          "system" => "http://sys-ids.kemkes.go.id/allergy/" . $this->organizationid,
-          "use" => "official",
-          "value" => $no_rawat . '-' . $idx
+          [
+            "system" => "http://sys-ids.kemkes.go.id/allergy/" . $this->organizationid,
+            "use" => "official",
+            "value" => $no_rawat . '-' . $idx
+          ]
         ],
         "clinicalStatus" => [
           "coding" => [
