@@ -92,28 +92,10 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-3">
+                        <div class="col-md-12">
                             <div class="form-group">
                                 <label>Tgl Surat</label>
                                 <input type="date" name="tgl_surat" class="form-control" value="{$data.tgl_surat}" required>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Ttd Saksi RS</label>
-                                <select name="saksi_rs" class="form-control f-pegawai" style="width:100%"></select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Ttd Saksi Pasien</label>
-                                <input type="text" name="saksi_pasien" class="form-control" value="{$data.saksi_pasien}">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Ttd Pembuat Pernyataan</label>
-                                <input type="text" name="pembuat_pernyataan" class="form-control s-p-nama2" value="{$data.pembuat_pernyataan}" required>
                             </div>
                         </div>
                     </div>
@@ -132,7 +114,7 @@
 $(document).ready(function() {
     $('.f-pegawai').select2({
         ajax: {
-            url: "{?=url([ADMIN, 'update_bmt', 'pulangapsform'])?}?ajax_pegawai=1",
+            url: "{?=url([ADMIN, 'update_bmt', 'pulangapsform'])?}&ajax_pegawai=1",
             dataType: 'json', delay: 250,
             processResults: function (data) { return { results: data.results }; },
             cache: true
@@ -156,7 +138,7 @@ $(document).ready(function() {
 $('#no_rawat').on('keypress', function(e) {
     if(e.which === 13) {
         e.preventDefault();
-        $.get("{?=url([ADMIN, 'update_bmt', 'pulangapsform'])?}?ajax_patient=1&no_rawat=" + $(this).val(), function(res) {
+        $.get("{?=url([ADMIN, 'update_bmt', 'pulangapsform'])?}&ajax_patient=1&no_rawat=" + encodeURIComponent($(this).val()), function(res) {
             var d = typeof res === 'string' ? JSON.parse(res) : res;
             if (d.success) {
                 $('#no_rawat').val(d.no_rawat);
@@ -164,7 +146,7 @@ $('#no_rawat').on('keypress', function(e) {
                 $('.s-jk').val(d.jk == 'L' ? 'Laki-laki' : (d.jk == 'P' ? 'Perempuan' : ''));
                 $('.s-tgl').val(d.tgl_lahir);
                 if($('#selaku_pihak').val() == 'Diri Sendiri') {
-                    $('.s-p-nama, .s-p-nama2').val(d.nm_pasien);
+                    $('.s-p-nama').val(d.nm_pasien);
                     $('.s-p-jk').val(d.jk);
                 }
             } else {
@@ -178,14 +160,11 @@ $('#selaku_pihak').change(function() {
     if($(this).val() == 'Diri Sendiri') {
         var nm = $('#patient_info').text().split(' (')[0];
         if(nm && nm !== 'Pasien tidak ditemukan') {
-            $('.s-p-nama, .s-p-nama2').val(nm);
+            $('.s-p-nama').val(nm);
             var jk = $('.s-jk').val() == 'Laki-laki' ? 'L' : ($('.s-jk').val() == 'Perempuan' ? 'P' : '');
             $('.s-p-jk').val(jk);
         }
     }
 });
 
-$('.s-p-nama').keyup(function() {
-    $('.s-p-nama2').val($(this).val());
-});
 </script>

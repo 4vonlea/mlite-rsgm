@@ -216,7 +216,7 @@
     $(document).ready(function() {
         $('.f-perawat').select2({
             ajax: {
-                url: "{?=url([ADMIN, 'update_bmt', 'rj10form'])?}?ajax_pegawai=1",
+                url: "{?=url([ADMIN, 'update_bmt', 'rj10form'])?}&ajax_pegawai=1",
                 dataType: 'json', delay: 250,
                 processResults: function (data) { return { results: data.results }; },
                 cache: true
@@ -235,7 +235,7 @@
     $('#no_rawat').on('keypress', function(e) {
         if(e.which === 13) {
             e.preventDefault();
-            $.get("{?=url([ADMIN, 'update_bmt', 'rj10form'])?}?ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
+            $.get("{?=url([ADMIN, 'update_bmt', 'rj10form'])?}&ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
                 var d = JSON.parse(res);
                 if (d.success) {
                     $('#no_rawat').val(d.no_rawat);

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>LAMPIRAN - ASESMEN MEDIS UMUM IRNA</title>
+<style>
+  @page { size: A4; margin: 8mm 10mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 11px; margin: 0; color: #000; }
+  .page { width: 190mm; margin: 0 auto; }
+  table { border-collapse: collapse; width: 100%; }
+  .bx { border: 1.5px solid #000; }
+  .bx > tbody > tr > td { border: 1px solid #000; padding: 2px 6px; vertical-align: top; }
+  .nob td { border: none !important; padding: 0 2px; }
+  .rmbox { display: inline-block; width: 15px; height: 16px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; vertical-align: middle; }
+  .note { font-size: 7.5px; line-height: 1.25; }
+  .title { text-align: center; font-weight: bold; font-size: 14px; padding: 5px; background: #ddd; }
+  .box { display: inline-block; width: 10px; height: 10px; border: 1px solid #000; text-align: center; line-height: 10px; font-size: 10px; margin-right: 3px; }
+  .page-break { page-break-after: always; }
+</style>
+</head>
+<body onload="window.print()">
+<div class="page">
+
+<table class="bx">
+  <tr>
+    <td style="width:57%; text-align:center;"><img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop" style="width:100%; max-height:75px; object-fit:contain;"></td>
+    <td style="width:43%; font-size:10px;">
+      <table class="nob">
+        <tr><td style="width:62px;">No RM</td><td>:
+          <span class="rmbox">{$data.rm0}</span><span class="rmbox">{$data.rm1}</span>-<span class="rmbox">{$data.rm2}</span><span class="rmbox">{$data.rm3}</span>-<span class="rmbox">{$data.rm4}</span><span class="rmbox">{$data.rm5}</span>
+        </td></tr>
+        <tr><td>Nama Pasien</td><td>: {$data.nm_pasien} &nbsp; <b>{$data.lp}</b></td></tr>
+        <tr><td>Tanggal Lahir</td><td>: {$data.tanggal_lahir_indo}</td></tr>
+      </table>
+    </td>
+  </tr>
+  <tr><td colspan="2" class="title">ASESMEN MEDIS UMUM RAWAT INAP<br><span style="font-size:10px; font-weight:normal;">(dilengkapi dalam waktu 24 jam pertama pasien masuk ruangan)</span></td></tr>
+</table>
+
+<table class="bx">
+    <tr>
+        <td width="40%">
+            Sumber Data<br>
+            <div class="box">{if: $data.sumber_data == 'Auto Anamnesis'}X{else}&nbsp;{/if}</div> Auto Anamnesis<br>
+            <div class="box">{if: $data.sumber_data == 'Allo Anamnesis'}X{else}&nbsp;{/if}</div> Allo Anamnesis
+        </td>
+        <td width="60%">
+            <div class="box">{if: $data.kategori_pasien == 'Anak'}X{else}&nbsp;{/if}</div> Pasien Anak (0- <18 tahun)<br>
+            <div class="box">{if: $data.kategori_pasien == 'Dewasa'}X{else}&nbsp;{/if}</div> Pasien Dewasa (18-65 tahun)<br>
+            <div class="box">{if: $data.kategori_pasien == 'Geriatri'}X{else}&nbsp;{/if}</div> Pasien Geriatri (>65 tahun)
+        </td>
+    </tr>
+</table>
+<table class="bx" style="border-top:none;">
+    <tr>
+        <td style="border-top:none;">Tanggal Masuk : {$data.tanggal_masuk} &nbsp;&nbsp;&nbsp;&nbsp; Pukul : {$data.waktu_masuk}</td>
+    </tr>
+</table>
+
+<table class="bx" style="border-top:none; margin-top: -1px;">
+    <tr>
+        <td style="border-top:none; height: 350px;">
+            <b>KELUHAN UTAMA:</b><br>
+            {$data.keluhan_utama|nl2br}<br><br>
+            
+            <b>RIWAYAT PENYAKIT SEKARANG:</b><br>
+            {$data.riwayat_penyakit_sekarang|nl2br}<br><br>
+            
+            <b>RIWAYAT PENYAKIT DAHULU:</b><br>
+            {$data.riwayat_penyakit_dahulu|nl2br}<br><br>
+            
+            <b>RIWAYAT PENYAKIT KELUARGA:</b><br>
+            {$data.riwayat_penyakit_keluarga|nl2br}<br><br>
+            
+            <b>RIWAYAT ALERGI:</b> &nbsp;&nbsp; 
+            <div class="box">{if: $data.riwayat_alergi == 'Tidak'}X{else}&nbsp;{/if}</div> Tidak &nbsp;&nbsp;
+            <div class="box">{if: $data.riwayat_alergi == 'Ya'}X{else}&nbsp;{/if}</div> Ya, sebutkan: {$data.riwayat_alergi_keterangan}<br><br>
+            
+            <b>OBAT YANG RUTIN DIKONSUMSI:</b><br>
+            {$data.obat_rutin|nl2br}
+        </td>
+    </tr>
+    <tr>
+        <td style="height: 180px;">
+            <b>RIWAYAT PENYAKIT:</b><br>
+            1. Penyakit Menular : HIV/AIDS, TBC, Hepatitis, Lainnya : {$data.penyakit_menular}<br>
+            &nbsp;&nbsp;&nbsp; <i>(Jika ada, Lihat Pengkajian Penyakit Menular)</i><br>
+            2. Penyakit Jantung &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {$data.penyakit_jantung}<br>
+            3. Hipertensi &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {$data.hipertensi}<br>
+            4. Diabetes &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {$data.diabetes}<br>
+            5. Haemophilia &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {$data.haemophilia}<br>
+            6. Gangguan Ginjal &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {$data.gangguan_ginjal} &nbsp; {$data.gangguan_ginjal_ket}<br>
+            7. Penyakit Sistemik Lainnya &nbsp;: {$data.penyakit_sistemik_lainnya} &nbsp; {$data.penyakit_sistemik_lainnya_ket}<br>
+            8. Riwayat Operasi &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {$data.riwayat_operasi} &nbsp; {$data.riwayat_operasi_ket}
+        </td>
+    </tr>
+</table>
+
+<table class="bx" style="border-top:none; margin-top: -1px;">
+    <tr>
+        <td width="50%" style="border-top:none;">
+            <b>(KHUSUS PASIEN ANAK)</b><br>
+            <b>RIWAYAT KELAHIRAN</b><br>
+            Anak ke {$data.anak_ke} dari {$data.dari_saudara} saudara<br>
+            Cara Kelahiran : &nbsp; 
+                <div class="box">{if: $data.cara_kelahiran == 'Spontan'}X{else}&nbsp;{/if}</div> Spontan &nbsp;&nbsp; 
+                <div class="box">{if: $data.cara_kelahiran == 'Lain-lain'}X{else}&nbsp;{/if}</div> Lain-lain<br>
+            Umur Kelahiran : &nbsp;
+                <div class="box">{if: $data.umur_kelahiran == 'Cukup Bulan'}X{else}&nbsp;{/if}</div> Cukup Bulan &nbsp;&nbsp;
+                <div class="box">{if: $data.umur_kelahiran == 'Kurang Bulan'}X{else}&nbsp;{/if}</div> Kurang Bulan<br>
+            Kelainan Bawaan : &nbsp;
+                <div class="box">{if: $data.kelainan_bawaan == 'Tidak Ada'}X{else}&nbsp;{/if}</div> Tidak Ada &nbsp;&nbsp;
+                <div class="box">{if: $data.kelainan_bawaan == 'Ada'}X{else}&nbsp;{/if}</div> Ada: {$data.kelainan_bawaan_ket}<br>
+            
+            <b>RIWAYAT IMUNISASI</b><br>
+            <div class="box">{if: $data.imunisasi_bcg == '1'}X{else}&nbsp;{/if}</div> BCG &nbsp;&nbsp; 
+            <div class="box">{if: $data.imunisasi_polio == '1'}X{else}&nbsp;{/if}</div> Polio {$data.imunisasi_polio} Kali &nbsp;&nbsp;
+            <div class="box">{if: $data.imunisasi_dpt == '1'}X{else}&nbsp;{/if}</div> DPT {$data.imunisasi_dpt} Kali <br>
+            <div class="box">{if: $data.imunisasi_campak == '1'}X{else}&nbsp;{/if}</div> Campak {$data.imunisasi_campak} Kali &nbsp;&nbsp;
+            <div class="box">{if: $data.imunisasi_hepatitis_b == '1'}X{else}&nbsp;{/if}</div> Hepatitis B {$data.imunisasi_hepatitis_b} Kali &nbsp;&nbsp;
+            <div class="box">{if: $data.imunisasi_lainnya == '1'}X{else}&nbsp;{/if}</div> Lainnya {$data.imunisasi_lainnya} Kali<br>
+            
+            <b>RIWAYAT TUMBUH KEMBANG</b><br>
+            Pertumbuhan gigi pertama, usia : {$data.tumbuh_gigi_pertama} &nbsp; Mulai bisa bicara, usia : {$data.mulai_bisa_bicara}<br>
+            Mulai bisa duduk, usia : {$data.mulai_bisa_duduk} &nbsp; Mulai bisa membaca, usia : {$data.mulai_bisa_membaca}<br>
+            Berjalan sendiri, usia : {$data.berjalan_sendiri}
+        </td>
+        <td width="50%" style="border-top:none;">
+            <b>(KHUSUS PASIEN GERIATRI)</b><br>
+            <b>PENYAKIT LAIN</b><br>
+            <div class="box">{if: $data.geriatri_penglihatan == '1'}X{else}&nbsp;{/if}</div> Gangguan Penglihatan<br>
+            <div class="box">{if: $data.geriatri_pendengaran == '1'}X{else}&nbsp;{/if}</div> Gangguan Pendengaran<br>
+            <div class="box">{if: $data.geriatri_berkemih == '1'}X{else}&nbsp;{/if}</div> Gangguan Berkemih<br>
+            <div class="box">{if: $data.geriatri_daya_ingat == '1'}X{else}&nbsp;{/if}</div> Gangguan Daya Ingat<br>
+            <div class="box">{if: $data.geriatri_bicara == '1'}X{else}&nbsp;{/if}</div> Gangguan Bicara<br>
+            <div class="box">{if: $data.geriatri_gigi_palsu == '1'}X{else}&nbsp;{/if}</div> Memakai Gigi Palsu<br>
+            <div class="box">{if: $data.geriatri_lainnya}X{else}&nbsp;{/if}</div> Lain-lain: {$data.geriatri_lainnya}
+        </td>
+    </tr>
+</table>
+
+<table class="bx" style="border-top:none; margin-top: -1px;">
+    <tr>
+        <td style="border-top:none;">
+            <b>PEMERIKSAAN FISIK</b><br>
+            Keadaan Umum : {$data.keadaan_umum} &nbsp;&nbsp;&nbsp;&nbsp; Frekuensi Nadi : {$data.frekuensi_nadi} x/menit &nbsp;&nbsp;&nbsp;&nbsp; Berat Badan : {$data.berat_badan} Kg<br>
+            Kesadaran : {$data.kesadaran} &nbsp;&nbsp;&nbsp;&nbsp; Frekuensi Napas : {$data.frekuensi_napas} x/menit &nbsp;&nbsp;&nbsp;&nbsp; Tinggi Badan : {$data.tinggi_badan} cm<br>
+            Tekanan Darah : {$data.tekanan_darah} mmHg &nbsp;&nbsp;&nbsp;&nbsp; Suhu : {$data.suhu} &deg;C &nbsp;&nbsp;&nbsp;&nbsp; Golongan Darah : {$data.golongan_darah}
+        </td>
+    </tr>
+</table>
+
+<div class="page-break"></div>
+
+<table class="bx">
+  <tr>
+    <td style="width:57%; text-align:center;"><img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop" style="width:100%; max-height:75px; object-fit:contain;"></td>
+    <td style="width:43%; font-size:10px;">
+      <table class="nob">
+        <tr><td style="width:62px;">No RM</td><td>:
+          <span class="rmbox">{$data.rm0}</span><span class="rmbox">{$data.rm1}</span>-<span class="rmbox">{$data.rm2}</span><span class="rmbox">{$data.rm3}</span>-<span class="rmbox">{$data.rm4}</span><span class="rmbox">{$data.rm5}</span>
+        </td></tr>
+        <tr><td>Nama Pasien</td><td>: {$data.nm_pasien} &nbsp; <b>{$data.lp}</b></td></tr>
+        <tr><td>Tanggal Lahir</td><td>: {$data.tanggal_lahir_indo}</td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<table class="bx">
+    <tr>
+        <td style="border-top:none;">
+            <table class="no-border">
+                <tr>
+                    <td width="50%">
+                        <b>ASESMEN NYERI</b><br>
+                        Pasien mengeluh nyeri: 
+                        <div class="box">{if: $data.nyeri_keluhan == 'Ya'}X{else}&nbsp;{/if}</div> Ya &nbsp;&nbsp;
+                        <div class="box">{if: $data.nyeri_keluhan == 'Tidak'}X{else}&nbsp;{/if}</div> Tidak<br>
+                        Lokasi : {$data.nyeri_lokasi}<br>
+                        Durasi : {$data.nyeri_durasi}<br>
+                        Frekuensi : 
+                            <div class="box">{if: $data.nyeri_frekuensi == 'Jarang'}X{else}&nbsp;{/if}</div> Jarang &nbsp;
+                            <div class="box">{if: $data.nyeri_frekuensi == 'Hilang Timbul'}X{else}&nbsp;{/if}</div> Hilang Timbul &nbsp;
+                            <div class="box">{if: $data.nyeri_frekuensi == 'Menetap'}X{else}&nbsp;{/if}</div> Menetap<br>
+                        Karakteristik : 
+                            <div class="box">{if: $data.nyeri_karakteristik == 'Tajam'}X{else}&nbsp;{/if}</div> Tajam &nbsp;
+                            <div class="box">{if: $data.nyeri_karakteristik == 'Tumpul'}X{else}&nbsp;{/if}</div> Tumpul &nbsp;
+                            <div class="box">{if: $data.nyeri_karakteristik == 'Terbakar/panas'}X{else}&nbsp;{/if}</div> Terbakar/panas &nbsp;
+                            <div class="box">{if: $data.nyeri_karakteristik == 'Tidak'}X{else}&nbsp;{/if}</div> Tidak<br>
+                        Menjalar : 
+                            <div class="box">{if: $data.nyeri_menjalar == 'Tidak'}X{else}&nbsp;{/if}</div> Tidak &nbsp;
+                            <div class="box">{if: $data.nyeri_menjalar == 'Ya'}X{else}&nbsp;{/if}</div> Ya, ke {$data.nyeri_menjalar_ket}<br>
+                        Nyeri memberat jika : {$data.nyeri_memberat}<br>
+                        Nyeri hilang jika : {$data.nyeri_hilang}<br><br>
+                        Tindak lanjut : 
+                            <div class="box">{if: $data.nyeri_tindak_lanjut == 'Edukasi'}X{else}&nbsp;{/if}</div> Edukasi<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<div class="box">{if: $data.nyeri_tindak_lanjut == 'Terapi Medikamentosa / Non Medikamentosa'}X{else}&nbsp;{/if}</div> Terapi Medikamentosa / Non Medikamentosa<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<div class="box">{if: $data.nyeri_tindak_lanjut == 'Konsul ke'}X{else}&nbsp;{/if}</div> Konsul ke {$data.nyeri_konsul_ke}
+                    </td>
+                    <td width="50%">
+                        <b>Skala Nyeri</b><br>
+                        <div style="font-size: 14px; font-weight:bold;">Nilai: {if: $data.skala_nyeri}{$data.skala_nyeri}{else}0{/if} / 10</div><br>
+                        <i>*Untuk pasien anak <6 tahun menggunakan skala FLACC</i>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <b>PEMERIKSAAN PENUNJANG</b><br>
+            <div class="box">{if: $data.penunjang_lab == '1'}X{else}&nbsp;{/if}</div> Laboratorium<br>
+            <div class="box">{if: $data.penunjang_rontgen == '1'}X{else}&nbsp;{/if}</div> Rontgen<br>
+            <div class="box">{if: $data.penunjang_lainnya}X{else}&nbsp;{/if}</div> Lain-lain, yaitu {$data.penunjang_lainnya}
+        </td>
+    </tr>
+    <tr>
+        <td style="height: 150px;">
+            <b>DIAGNOSIS DAN DIAGNOSIS BANDING</b><br>
+            {$data.diagnosis|nl2br}
+        </td>
+    </tr>
+    <tr>
+        <td style="height: 150px;">
+            <b>RENCANA DAN TINDAK LANJUT PERAWATAN, TERMASUK KEBUTUHAN EDUKASI</b><br>
+            {$data.rencana_tindak_lanjut|nl2br}
+        </td>
+    </tr>
+    <tr>
+        <td style="padding: 10px;">
+            <table class="no-border">
+                <tr>
+                    <td width="50%"></td>
+                    <td width="50%" class="center">
+                        Banjarmasin, {$data.tanggal_ttd} Pukul {$data.jam_ttd} WITA<br>
+                        DPJP<br><br><br><br><br>
+                        ( {$data.nm_dokter} )<br>
+                        Tanda Tangan & Nama Jelas
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+</div>
+</body>
+</html>

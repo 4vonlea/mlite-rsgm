@@ -70,7 +70,7 @@
     $(document).ready(function() {
         $('.f-nama_pemberi_edukasi').select2({
             ajax: {
-                url: "{?=url([ADMIN, 'update_bmt', 'ri01bform'])?}?ajax_pegawai=1",
+                url: "{?=url([ADMIN, 'update_bmt', 'ri01bform'])?}&ajax_pegawai=1",
                 dataType: 'json', delay: 250,
                 processResults: function (data) { return { results: data.results }; },
                 cache: true

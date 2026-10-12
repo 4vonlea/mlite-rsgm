@@ -1,0 +1,408 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Form Asesmen Medis Umum IRNA</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'amumanage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'amuform'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'update_bmt', 'amusave'])?}" method="post" id="form_amu">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>No. Rawat <span class="text-danger">*</span></label>
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required>
+                                <button type="button" class="btn btn-xs btn-info mt-1" id="btn_cek_pasien">Cek Data Pasien</button>
+                            </div>
+                            <div class="form-group">
+                                <label>Nama Pasien</label>
+                                <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" value="{$data.nm_pasien}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Sumber Data</label><br>
+                                <label class="radio-inline"><input type="radio" name="sumber_data" value="Auto Anamnesis" {if: $data.sumber_data == 'Auto Anamnesis'}checked{/if}> Auto Anamnesis</label>
+                                <label class="radio-inline"><input type="radio" name="sumber_data" value="Allo Anamnesis" {if: $data.sumber_data == 'Allo Anamnesis'}checked{/if}> Allo Anamnesis</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Kategori Pasien</label><br>
+                                <label class="radio-inline"><input type="radio" name="kategori_pasien" value="Anak" {if: $data.kategori_pasien == 'Anak'}checked{/if}> Anak (0-<18 thn)</label>
+                                <label class="radio-inline"><input type="radio" name="kategori_pasien" value="Dewasa" {if: $data.kategori_pasien == 'Dewasa'}checked{/if}> Dewasa (18-65 thn)</label>
+                                <label class="radio-inline"><input type="radio" name="kategori_pasien" value="Geriatri" {if: $data.kategori_pasien == 'Geriatri'}checked{/if}> Geriatri (>65 thn)</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tanggal Masuk</label>
+                                <input type="date" name="tanggal_masuk" class="form-control" value="{$data.tanggal_masuk}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Pukul Masuk</label>
+                                <input type="time" name="waktu_masuk" class="form-control" value="{$data.waktu_masuk}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>KELUHAN UTAMA</label>
+                        <textarea name="keluhan_utama" class="form-control" rows="3">{$data.keluhan_utama}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>RIWAYAT PENYAKIT SEKARANG</label>
+                        <textarea name="riwayat_penyakit_sekarang" class="form-control" rows="3">{$data.riwayat_penyakit_sekarang}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>RIWAYAT PENYAKIT DAHULU</label>
+                        <textarea name="riwayat_penyakit_dahulu" class="form-control" rows="3">{$data.riwayat_penyakit_dahulu}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>RIWAYAT PENYAKIT KELUARGA</label>
+                        <textarea name="riwayat_penyakit_keluarga" class="form-control" rows="3">{$data.riwayat_penyakit_keluarga}</textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Riwayat Alergi</label><br>
+                                <label class="radio-inline"><input type="radio" name="riwayat_alergi" value="Tidak" {if: $data.riwayat_alergi == 'Tidak' || !$data.riwayat_alergi}checked{/if}> Tidak</label>
+                                <label class="radio-inline"><input type="radio" name="riwayat_alergi" value="Ya" {if: $data.riwayat_alergi == 'Ya'}checked{/if}> Ya</label>
+                                <input type="text" name="riwayat_alergi_keterangan" class="form-control mt-2" placeholder="sebutkan..." value="{$data.riwayat_alergi_keterangan}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>OBAT YANG RUTIN DIKONSUMSI</label>
+                                <textarea name="obat_rutin" class="form-control" rows="2">{$data.obat_rutin}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="page-header">RIWAYAT PENYAKIT</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>1. Penyakit Menular</label>
+                                <input type="text" name="penyakit_menular" class="form-control" placeholder="HIV/AIDS, TBC, Hepatitis, dll" value="{$data.penyakit_menular}">
+                            </div>
+                            <div class="form-group">
+                                <label>2. Penyakit Jantung</label>
+                                <select name="penyakit_jantung" class="form-control">
+                                    <option value="Tidak Ada" {if: $data.penyakit_jantung == 'Tidak Ada'}selected{/if}>Tidak Ada</option>
+                                    <option value="Ada" {if: $data.penyakit_jantung == 'Ada'}selected{/if}>Ada</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>3. Hipertensi</label>
+                                <select name="hipertensi" class="form-control">
+                                    <option value="Tidak Ada" {if: $data.hipertensi == 'Tidak Ada'}selected{/if}>Tidak Ada</option>
+                                    <option value="Ada" {if: $data.hipertensi == 'Ada'}selected{/if}>Ada</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>4. Diabetes</label>
+                                <select name="diabetes" class="form-control">
+                                    <option value="Tidak Ada" {if: $data.diabetes == 'Tidak Ada'}selected{/if}>Tidak Ada</option>
+                                    <option value="Ada" {if: $data.diabetes == 'Ada'}selected{/if}>Ada</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>5. Haemophilia</label>
+                                <select name="haemophilia" class="form-control">
+                                    <option value="Tidak Ada" {if: $data.haemophilia == 'Tidak Ada'}selected{/if}>Tidak Ada</option>
+                                    <option value="Ada" {if: $data.haemophilia == 'Ada'}selected{/if}>Ada</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>6. Gangguan Ginjal</label>
+                                <select name="gangguan_ginjal" class="form-control">
+                                    <option value="Tidak Ada" {if: $data.gangguan_ginjal == 'Tidak Ada'}selected{/if}>Tidak Ada</option>
+                                    <option value="Ada" {if: $data.gangguan_ginjal == 'Ada'}selected{/if}>Ada</option>
+                                </select>
+                                <input type="text" name="gangguan_ginjal_ket" class="form-control mt-1" placeholder="Ket..." value="{$data.gangguan_ginjal_ket}">
+                            </div>
+                            <div class="form-group">
+                                <label>7. Penyakit Sistemik Lainnya</label>
+                                <select name="penyakit_sistemik_lainnya" class="form-control">
+                                    <option value="Tidak Ada" {if: $data.penyakit_sistemik_lainnya == 'Tidak Ada'}selected{/if}>Tidak Ada</option>
+                                    <option value="Ada" {if: $data.penyakit_sistemik_lainnya == 'Ada'}selected{/if}>Ada</option>
+                                </select>
+                                <input type="text" name="penyakit_sistemik_lainnya_ket" class="form-control mt-1" placeholder="Ket..." value="{$data.penyakit_sistemik_lainnya_ket}">
+                            </div>
+                            <div class="form-group">
+                                <label>8. Riwayat Operasi</label>
+                                <select name="riwayat_operasi" class="form-control">
+                                    <option value="Tidak Ada" {if: $data.riwayat_operasi == 'Tidak Ada'}selected{/if}>Tidak Ada</option>
+                                    <option value="Ada" {if: $data.riwayat_operasi == 'Ada'}selected{/if}>Ada</option>
+                                </select>
+                                <input type="text" name="riwayat_operasi_ket" class="form-control mt-1" placeholder="Ket..." value="{$data.riwayat_operasi_ket}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- KHUSUS ANAK -->
+                        <div class="col-md-6" style="border-right: 1px solid #ddd;">
+                            <h4 class="page-header">(KHUSUS PASIEN ANAK)</h4>
+                            <h5>RIWAYAT KELAHIRAN</h5>
+                            <div class="form-group form-inline">
+                                <label>Anak ke </label> <input type="number" name="anak_ke" class="form-control input-sm" style="width: 60px;" value="{$data.anak_ke}">
+                                <label> dari </label> <input type="number" name="dari_saudara" class="form-control input-sm" style="width: 60px;" value="{$data.dari_saudara}"> saudara
+                            </div>
+                            <div class="form-group">
+                                <label>Cara Kelahiran</label><br>
+                                <label class="radio-inline"><input type="radio" name="cara_kelahiran" value="Spontan" {if: $data.cara_kelahiran == 'Spontan'}checked{/if}> Spontan</label>
+                                <label class="radio-inline"><input type="radio" name="cara_kelahiran" value="Lain-lain" {if: $data.cara_kelahiran == 'Lain-lain'}checked{/if}> Lain-lain</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Umur Kelahiran</label><br>
+                                <label class="radio-inline"><input type="radio" name="umur_kelahiran" value="Cukup Bulan" {if: $data.umur_kelahiran == 'Cukup Bulan'}checked{/if}> Cukup Bulan</label>
+                                <label class="radio-inline"><input type="radio" name="umur_kelahiran" value="Kurang Bulan" {if: $data.umur_kelahiran == 'Kurang Bulan'}checked{/if}> Kurang Bulan</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Kelainan Bawaan</label><br>
+                                <label class="radio-inline"><input type="radio" name="kelainan_bawaan" value="Tidak Ada" {if: $data.kelainan_bawaan == 'Tidak Ada'}checked{/if}> Tidak Ada</label>
+                                <label class="radio-inline"><input type="radio" name="kelainan_bawaan" value="Ada" {if: $data.kelainan_bawaan == 'Ada'}checked{/if}> Ada</label>
+                                <input type="text" name="kelainan_bawaan_ket" class="form-control mt-1" placeholder="Sebutkan..." value="{$data.kelainan_bawaan_ket}">
+                            </div>
+                            <h5>RIWAYAT IMUNISASI</h5>
+                            <div class="form-group">
+                                <label class="checkbox-inline"><input type="checkbox" name="imunisasi_bcg" {if: $data.imunisasi_bcg == '1'}checked{/if}> BCG</label><br>
+                                <label class="checkbox-inline"><input type="checkbox" name="chk_polio" {if: $data.imunisasi_polio}checked{/if}> Polio <input type="number" name="imunisasi_polio" class="form-control input-sm" style="width: 60px; display:inline-block;" value="{$data.imunisasi_polio}"> Kali</label><br>
+                                <label class="checkbox-inline"><input type="checkbox" name="chk_dpt" {if: $data.imunisasi_dpt}checked{/if}> DPT <input type="number" name="imunisasi_dpt" class="form-control input-sm" style="width: 60px; display:inline-block;" value="{$data.imunisasi_dpt}"> Kali</label><br>
+                                <label class="checkbox-inline"><input type="checkbox" name="chk_campak" {if: $data.imunisasi_campak}checked{/if}> Campak <input type="number" name="imunisasi_campak" class="form-control input-sm" style="width: 60px; display:inline-block;" value="{$data.imunisasi_campak}"> Kali</label><br>
+                                <label class="checkbox-inline"><input type="checkbox" name="chk_hepb" {if: $data.imunisasi_hepatitis_b}checked{/if}> Hepatitis B <input type="number" name="imunisasi_hepatitis_b" class="form-control input-sm" style="width: 60px; display:inline-block;" value="{$data.imunisasi_hepatitis_b}"> Kali</label><br>
+                                <label class="checkbox-inline"><input type="checkbox" name="chk_lainnya" {if: $data.imunisasi_lainnya}checked{/if}> Lainnya <input type="number" name="imunisasi_lainnya" class="form-control input-sm" style="width: 60px; display:inline-block;" value="{$data.imunisasi_lainnya}"> Kali</label>
+                            </div>
+                            <h5>RIWAYAT TUMBUH KEMBANG</h5>
+                            <div class="form-group">
+                                <label>Pertumbuhan gigi pertama, usia</label>
+                                <input type="text" name="tumbuh_gigi_pertama" class="form-control" value="{$data.tumbuh_gigi_pertama}">
+                            </div>
+                            <div class="form-group">
+                                <label>Mulai bisa duduk, usia</label>
+                                <input type="text" name="mulai_bisa_duduk" class="form-control" value="{$data.mulai_bisa_duduk}">
+                            </div>
+                            <div class="form-group">
+                                <label>Berjalan sendiri, usia</label>
+                                <input type="text" name="berjalan_sendiri" class="form-control" value="{$data.berjalan_sendiri}">
+                            </div>
+                            <div class="form-group">
+                                <label>Mulai bisa bicara, usia</label>
+                                <input type="text" name="mulai_bisa_bicara" class="form-control" value="{$data.mulai_bisa_bicara}">
+                            </div>
+                            <div class="form-group">
+                                <label>Mulai bisa membaca, usia</label>
+                                <input type="text" name="mulai_bisa_membaca" class="form-control" value="{$data.mulai_bisa_membaca}">
+                            </div>
+                        </div>
+                        
+                        <!-- KHUSUS GERIATRI -->
+                        <div class="col-md-6">
+                            <h4 class="page-header">(KHUSUS PASIEN GERIATRI)</h4>
+                            <h5>PENYAKIT LAIN</h5>
+                            <div class="checkbox"><label><input type="checkbox" name="geriatri_penglihatan" {if: $data.geriatri_penglihatan == '1'}checked{/if}> Gangguan Penglihatan</label></div>
+                            <div class="checkbox"><label><input type="checkbox" name="geriatri_pendengaran" {if: $data.geriatri_pendengaran == '1'}checked{/if}> Gangguan Pendengaran</label></div>
+                            <div class="checkbox"><label><input type="checkbox" name="geriatri_berkemih" {if: $data.geriatri_berkemih == '1'}checked{/if}> Gangguan Berkemih</label></div>
+                            <div class="checkbox"><label><input type="checkbox" name="geriatri_daya_ingat" {if: $data.geriatri_daya_ingat == '1'}checked{/if}> Gangguan Daya Ingat</label></div>
+                            <div class="checkbox"><label><input type="checkbox" name="geriatri_bicara" {if: $data.geriatri_bicara == '1'}checked{/if}> Gangguan Bicara</label></div>
+                            <div class="checkbox"><label><input type="checkbox" name="geriatri_gigi_palsu" {if: $data.geriatri_gigi_palsu == '1'}checked{/if}> Memakai Gigi Palsu</label></div>
+                            <div class="form-group">
+                                <label>Lain-lain</label>
+                                <input type="text" name="geriatri_lainnya" class="form-control" value="{$data.geriatri_lainnya}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="page-header">PEMERIKSAAN FISIK</h4>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Keadaan Umum</label>
+                                <input type="text" name="keadaan_umum" class="form-control" value="{$data.keadaan_umum}">
+                            </div>
+                            <div class="form-group">
+                                <label>Kesadaran</label>
+                                <input type="text" name="kesadaran" class="form-control" value="{$data.kesadaran}">
+                            </div>
+                            <div class="form-group">
+                                <label>Tekanan Darah (mmHg)</label>
+                                <input type="text" name="tekanan_darah" class="form-control" value="{$data.tekanan_darah}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Frekuensi Nadi (x/menit)</label>
+                                <input type="text" name="frekuensi_nadi" class="form-control" value="{$data.frekuensi_nadi}">
+                            </div>
+                            <div class="form-group">
+                                <label>Frekuensi Napas (x/menit)</label>
+                                <input type="text" name="frekuensi_napas" class="form-control" value="{$data.frekuensi_napas}">
+                            </div>
+                            <div class="form-group">
+                                <label>Suhu (°C)</label>
+                                <input type="text" name="suhu" class="form-control" value="{$data.suhu}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Berat Badan (Kg)</label>
+                                <input type="text" name="berat_badan" class="form-control" value="{$data.berat_badan}">
+                            </div>
+                            <div class="form-group">
+                                <label>Tinggi Badan (cm)</label>
+                                <input type="text" name="tinggi_badan" class="form-control" value="{$data.tinggi_badan}">
+                            </div>
+                            <div class="form-group">
+                                <label>Golongan Darah</label>
+                                <input type="text" name="golongan_darah" class="form-control" value="{$data.golongan_darah}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="page-header">ASESMEN NYERI</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Pasien mengeluh nyeri</label><br>
+                                <label class="radio-inline"><input type="radio" name="nyeri_keluhan" value="Ya" {if: $data.nyeri_keluhan == 'Ya'}checked{/if}> Ya</label>
+                                <label class="radio-inline"><input type="radio" name="nyeri_keluhan" value="Tidak" {if: $data.nyeri_keluhan == 'Tidak' || !$data.nyeri_keluhan}checked{/if}> Tidak</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Lokasi</label>
+                                <input type="text" name="nyeri_lokasi" class="form-control" value="{$data.nyeri_lokasi}">
+                            </div>
+                            <div class="form-group">
+                                <label>Durasi</label>
+                                <input type="text" name="nyeri_durasi" class="form-control" value="{$data.nyeri_durasi}">
+                            </div>
+                            <div class="form-group">
+                                <label>Frekuensi</label><br>
+                                <label class="radio-inline"><input type="radio" name="nyeri_frekuensi" value="Jarang" {if: $data.nyeri_frekuensi == 'Jarang'}checked{/if}> Jarang</label>
+                                <label class="radio-inline"><input type="radio" name="nyeri_frekuensi" value="Hilang Timbul" {if: $data.nyeri_frekuensi == 'Hilang Timbul'}checked{/if}> Hilang Timbul</label>
+                                <label class="radio-inline"><input type="radio" name="nyeri_frekuensi" value="Menetap" {if: $data.nyeri_frekuensi == 'Menetap'}checked{/if}> Menetap</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Karakteristik</label><br>
+                                <label class="radio-inline"><input type="radio" name="nyeri_karakteristik" value="Tajam" {if: $data.nyeri_karakteristik == 'Tajam'}checked{/if}> Tajam</label>
+                                <label class="radio-inline"><input type="radio" name="nyeri_karakteristik" value="Tumpul" {if: $data.nyeri_karakteristik == 'Tumpul'}checked{/if}> Tumpul</label>
+                                <label class="radio-inline"><input type="radio" name="nyeri_karakteristik" value="Terbakar/panas" {if: $data.nyeri_karakteristik == 'Terbakar/panas'}checked{/if}> Terbakar/panas</label>
+                                <label class="radio-inline"><input type="radio" name="nyeri_karakteristik" value="Tidak" {if: $data.nyeri_karakteristik == 'Tidak'}checked{/if}> Tidak</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Menjalar</label><br>
+                                <label class="radio-inline"><input type="radio" name="nyeri_menjalar" value="Tidak" {if: $data.nyeri_menjalar == 'Tidak'}checked{/if}> Tidak</label>
+                                <label class="radio-inline"><input type="radio" name="nyeri_menjalar" value="Ya" {if: $data.nyeri_menjalar == 'Ya'}checked{/if}> Ya</label>
+                                <input type="text" name="nyeri_menjalar_ket" class="form-control mt-1" placeholder="ke..." value="{$data.nyeri_menjalar_ket}">
+                            </div>
+                            <div class="form-group">
+                                <label>Nyeri memberat jika</label>
+                                <input type="text" name="nyeri_memberat" class="form-control" value="{$data.nyeri_memberat}">
+                            </div>
+                            <div class="form-group">
+                                <label>Nyeri hilang jika</label>
+                                <input type="text" name="nyeri_hilang" class="form-control" value="{$data.nyeri_hilang}">
+                            </div>
+                            <div class="form-group">
+                                <label>Tindak lanjut</label><br>
+                                <label class="radio-inline"><input type="radio" name="nyeri_tindak_lanjut" value="Edukasi" {if: $data.nyeri_tindak_lanjut == 'Edukasi'}checked{/if}> Edukasi</label>
+                                <label class="radio-inline"><input type="radio" name="nyeri_tindak_lanjut" value="Terapi Medikamentosa / Non Medikamentosa" {if: $data.nyeri_tindak_lanjut == 'Terapi Medikamentosa / Non Medikamentosa'}checked{/if}> Terapi Medikamentosa / Non Medikamentosa</label>
+                                <label class="radio-inline"><input type="radio" name="nyeri_tindak_lanjut" value="Konsul ke" {if: $data.nyeri_tindak_lanjut == 'Konsul ke'}checked{/if}> Konsul ke</label>
+                                <input type="text" name="nyeri_konsul_ke" class="form-control mt-1" placeholder="..." value="{$data.nyeri_konsul_ke}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Skala Nyeri (0-10)</label>
+                                <input type="range" name="skala_nyeri" min="0" max="10" value="{$data.skala_nyeri}" oninput="document.getElementById('skala_val').innerText = this.value">
+                                <div>Nilai Skala Nyeri: <span id="skala_val" style="font-weight: bold; font-size: 1.5em;">{if: $data.skala_nyeri}{$data.skala_nyeri}{else}0{/if}</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="page-header">PEMERIKSAAN PENUNJANG</h4>
+                    <div class="form-group">
+                        <div class="checkbox"><label><input type="checkbox" name="penunjang_lab" {if: $data.penunjang_lab == '1'}checked{/if}> Laboratorium</label></div>
+                        <div class="checkbox"><label><input type="checkbox" name="penunjang_rontgen" {if: $data.penunjang_rontgen == '1'}checked{/if}> Rontgen</label></div>
+                        <div class="form-group">
+                            <label>Lain-lain</label>
+                            <input type="text" name="penunjang_lainnya" class="form-control" value="{$data.penunjang_lainnya}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>DIAGNOSIS DAN DIAGNOSIS BANDING</label>
+                        <textarea name="diagnosis" class="form-control" rows="3">{$data.diagnosis}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>RENCANA DAN TINDAK LANJUT PERAWATAN, TERMASUK KEBUTUHAN EDUKASI</label>
+                        <textarea name="rencana_tindak_lanjut" class="form-control" rows="3">{$data.rencana_tindak_lanjut}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label>Waktu TTD</label>
+                                <input type="datetime-local" name="waktu_ttd" class="form-control" value="{if: $data.tanggal_ttd}{$data.tanggal_ttd}T{$data.jam_ttd}{/if}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Dokter (DPJP)</label>
+                                <select name="nip_dpjp" class="form-control">
+                                    <option value="">-- Pilih Dokter --</option>
+                                    {loop: $dokter}
+                                    <option value="{$value.kd_dokter}" {if: $value.kd_dokter == $data.nip_dpjp}selected{/if}>{$value.nm_dokter}</option>
+                                    {/loop}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan Data</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'amumanage'])?}" class="btn btn-default">Batal</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+    $('#btn_cek_pasien').click(function() {
+        var norwt = $('#no_rawat').val();
+        if(norwt == '') {
+            alert('Masukkan No. Rawat terlebih dahulu');
+            return;
+        }
+        $.ajax({
+            url: "{?=url([ADMIN, 'update_bmt', 'amuform'])?}&ajax_patient=1&no_rawat=" + encodeURIComponent(norwt),
+            type: "GET",
+            dataType: "json",
+            success: function(res) {
+                if(res.success) {
+                    $('#nm_pasien').val(res.nama_pasien);
+                    $('#no_rawat').val(res.no_rawat);
+                    alert('Data pasien ditemukan!');
+                } else {
+                    alert('Data pasien tidak ditemukan dengan nomor tersebut.');
+                }
+            },
+            error: function() {
+                alert('Terjadi kesalahan pada server saat mengambil data.');
+            }
+        });
+    });
+</script>
