@@ -1538,6 +1538,7 @@ class Admin extends AdminModule
       'radiologi' => htmlspecialchars_array($radiologi),
       'mini_pacs' => htmlspecialchars_array($mini_pacs),
       'current_user' => $this->core->getUserInfo('username'),
+      'current_user_name' => $this->core->getUserInfo('fullname'),
       'pj_radiologi' => $this->settings->get('settings.pj_radiologi')
     ]);
     exit();

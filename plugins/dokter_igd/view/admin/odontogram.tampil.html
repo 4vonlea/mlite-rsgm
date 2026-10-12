@@ -1,0 +1,130 @@
+<h4>History Odontogram</h4>
+<table class="table table-bordered table-striped table-hover display nowrap" width="100%">
+  <thead>
+    <tr>
+      <th>Tanggal</th>
+      <th>Elemen</th>
+      <th>Kondisi</th>
+      <th>Catatan</th>
+      <th>Aksi</th>
+    </tr>
+  </thead>
+  <tbody>
+    {loop: $odontogram}
+      <tr>
+        <td>{?=isset_or($value.tgl_input)?}</td>
+        <td>{?=str_replace('gg_','Gigi ',$value.pemeriksaan)?}</td>
+        <td class="edit-kondisi" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}"><span class="kondisi-text">{?=isset_or($value.kondisi)?}</span><input type="text" class="form-control input-sm input-kondisi" value="{?=isset_or($value.kondisi)?}" style="display:none;" /></td>
+        <td class="edit-catatan" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}"><span class="catatan-text">{?=isset_or($value.catatan)?}</span><input type="text" class="form-control input-sm input-catatan" value="{?=isset_or($value.catatan)?}" style="display:none;" /></td>
+
+        <td><a href="#" class="btn btn-xs btn-danger delete" data-id="{?=isset_or($value.id)?}" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}" data-catatan="{?=isset_or($value.catatan)?}"><span class="fa fa-trash"></span><span class="hidden-xs">Hapus</span></a></td>
+      </tr>
+    {/loop}
+  </tbody>
+</table>
+<script type="text/javascript">
+$(document).ready(function(){
+  $(".edit-catatan").dblclick(function() {
+      var $td = $(this);
+      $td.find(".catatan-text").hide();
+      var $input = $td.find(".input-catatan");
+      $input.show().focus();
+  });
+  $(".input-catatan").blur(function() {
+      var $input = $(this);
+      var $td = $input.closest("td");
+      var newCatatan = $input.val();
+      var oldCatatan = $td.find(".catatan-text").text();
+      
+      if (newCatatan !== oldCatatan) {
+          var baseURL = mlite.url + '/' + mlite.admin;
+          var id_pasien = $('input:text[name=no_rkm_medis]').val();
+          var url = baseURL + '/igd/odontogramupdatecatatan/?t=' + mlite.token;
+          
+          $.post(url, {
+              no_rkm_medis: id_pasien,
+              pemeriksaan: $td.attr("data-pemeriksaan"),
+              kondisi: $td.attr("data-kondisi"),
+              tgl_input: $td.attr("data-tgl_input"),
+              catatan: newCatatan
+          }, function(data) {
+              $td.find(".catatan-text").text(newCatatan);
+              $td.find(".catatan-text").show();
+              $input.hide();
+              $td.next('td').find('.delete').attr('data-catatan', newCatatan);
+          });
+      } else {
+          $td.find(".catatan-text").show();
+          $input.hide();
+      }
+  });
+  $(".input-catatan").keypress(function(e) {
+      if (e.which == 13) {
+          $(this).blur();
+      }
+  });
+
+  $(".edit-kondisi").dblclick(function() {
+      var $td = $(this);
+      $td.find(".kondisi-text").hide();
+      var $input = $td.find(".input-kondisi");
+      $input.show().focus();
+  });
+  $(".input-kondisi").blur(function() {
+      var $input = $(this);
+      var $td = $input.closest("td");
+      var newKondisi = $input.val();
+      var oldKondisi = $td.find(".kondisi-text").text();
+
+      if (newKondisi !== oldKondisi) {
+          var baseURL = mlite.url + '/' + mlite.admin;
+          var id_pasien = $('input:text[name=no_rkm_medis]').val();
+          var url = baseURL + '/igd/odontogramupdatecatatan/?t=' + mlite.token;
+
+          $.post(url, {
+              no_rkm_medis: id_pasien,
+              pemeriksaan: $td.attr("data-pemeriksaan"),
+              kondisi: oldKondisi,
+              tgl_input: $td.attr("data-tgl_input"),
+              catatan: $td.closest('tr').find('.catatan-text').text(),
+              kondisi_baru: newKondisi
+          }, function(data) {
+              $td.find(".kondisi-text").text(newKondisi);
+              $td.attr("data-kondisi", newKondisi);
+              $td.find(".kondisi-text").show();
+              $input.hide();
+              $td.closest('tr').find('.delete').attr('data-kondisi', newKondisi);
+          });
+      } else {
+          $td.find(".kondisi-text").show();
+          $input.hide();
+      }
+  });
+  $(".input-kondisi").keypress(function(e) {
+      if (e.which == 13) {
+          $(this).blur();
+      }
+  });
+
+  $(".delete").click(function(){
+    var baseURL = mlite.url + '/' + mlite.admin;
+    var id_pasien = $('input:text[name=no_rkm_medis]').val();
+    var gg_xx  = $(this).attr("data-pemeriksaan");
+    var kondisi  = $(this).attr("data-kondisi");
+    var catatan  = $(this).attr("data-catatan");
+    var tgl_input  = $(this).attr("data-tgl_input");
+    var url = baseURL + '/igd/odontogramdelete/?t=' + mlite.token;
+    $.post(url,{
+      no_rkm_medis:id_pasien,
+      id: $(this).attr("data-id"),
+      pemeriksaan:gg_xx,
+      kondisi:kondisi,
+      catatan: catatan,
+      tgl_input: tgl_input
+    } ,function(data) {
+      $('.tampildata').load(baseURL + '/igd/odontogramtampil/' + id_pasien + '?t=' + mlite.token);
+    });
+  });
+});
+</script>
+
