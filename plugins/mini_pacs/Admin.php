@@ -538,7 +538,13 @@ class Admin extends AdminModule
 
             $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $study['no_rawat'])->oneArray();
 
-            $permintaan_radiologi = $this->db('permintaan_radiologi')->where('no_rawat', $study['no_rawat'])->oneArray();
+            $permintaan_radiologi = !empty($study['noorder'])
+                ? $this->db('permintaan_radiologi')->where('noorder', $study['noorder'])->oneArray()
+                : $this->db('permintaan_radiologi')->where('no_rawat', $study['no_rawat'])->desc('tgl_permintaan')->oneArray();
+
+            if (!$permintaan_radiologi && !empty($study['no_rawat'])) {
+                $permintaan_radiologi = $this->db('permintaan_radiologi')->where('no_rawat', $study['no_rawat'])->oneArray();
+            }
 
             $pasien = $this->db('reg_periksa')
                 ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
@@ -546,13 +552,56 @@ class Admin extends AdminModule
                 ->oneArray();
             $no_ktp_pasien = isset($pasien['no_ktp']) ? $pasien['no_ktp'] : '';
 
-            // 2. Kirim ImagingStudy
+            // 2. Kumpulkan ServiceRequest ID (wajib sebagai ImagingStudy.basedOn di SATUSEHAT)
+            $srIds = [];
+            try {
+                $srList = $this->db('mlite_satu_sehat_rad_response')->where('no_rawat', $study['no_rawat'])->toArray();
+                foreach ($srList as $srRow) {
+                    if (!empty($srRow['id_service_request'])) {
+                        $srIds[] = $srRow['id_service_request'];
+                    }
+                }
+            } catch (\Throwable $e) {}
+            if (empty($srIds) && !empty($mlite_satu_sehat_response['id_rad_request'])) {
+                $srIds = [$mlite_satu_sehat_response['id_rad_request']];
+            }
+
+            // Jika ServiceRequest belum terkirim, coba kirim otomatis terlebih dahulu
+            if (empty($srIds)) {
+                try {
+                    if (class_exists('\\Plugins\\Satu_sehat\\Admin')) {
+                        $ssAdmin = new \Plugins\Satu_sehat\Admin();
+                        ob_start();
+                        $ssAdmin->getRadiology($study['no_rawat'], 'request', false);
+                        ob_end_clean();
+
+                        $srList = $this->db('mlite_satu_sehat_rad_response')->where('no_rawat', $study['no_rawat'])->toArray();
+                        foreach ($srList as $srRow) {
+                            if (!empty($srRow['id_service_request'])) {
+                                $srIds[] = $srRow['id_service_request'];
+                            }
+                        }
+                        if (empty($srIds)) {
+                            $srAggr = $this->db('mlite_satu_sehat_response')->where('no_rawat', $study['no_rawat'])->oneArray();
+                            if (!empty($srAggr['id_rad_request'])) {
+                                $srIds = [$srAggr['id_rad_request']];
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {}
+            }
+
+            if (empty($srIds)) {
+                throw new \Exception('ServiceRequest radiologi belum terkirim ke SATUSEHAT. Silakan kirim ServiceRequest terlebih dahulu.');
+            }
+
+            // 3. Kirim ImagingStudy ke FHIR SATUSEHAT
             $fhirResult = $client->sendImagingStudy([
-                'patientId' => $this->getPatientID($no_ktp_pasien), // Mohon sesuaikan
-                'encounterId' => $mlite_satu_sehat_response['id_encounter'], // Mohon sesuaikan
-                'serviceRequestId' => $mlite_satu_sehat_response['id_rad_request'], // Mohon sesuaikan
+                'patientId' => $this->getPatientID($no_ktp_pasien),
+                'encounterId' => $mlite_satu_sehat_response['id_encounter'] ?? '',
+                'serviceRequestId' => $srIds,
                 'noRawat' => $study['no_rawat'],
-                'noOrder' => $permintaan_radiologi['noorder'],
+                'noOrder' => $permintaan_radiologi['noorder'] ?? ($study['noorder'] ?? ''),
                 'studyUID' => $study['study_instance_uid'],
                 'seriesUID' => $series['series_instance_uid'],
                 'instanceUID' => $instance['sop_instance_uid']
@@ -560,29 +609,79 @@ class Admin extends AdminModule
 
             $fhirString = $fhirResult['response'];
             $fhirPayload = $fhirResult['payload'];
-
-            // Percantik format string JSON jika memungkinkan
             $fhirArr = json_decode($fhirString, true);
-            $fhirPretty = $fhirArr ? json_encode($fhirArr, JSON_PRETTY_PRINT) : $fhirString;
+            $fhirPretty = $fhirArr ? json_encode($fhirArr, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : $fhirString;
+
+            // Ambil ID ImagingStudy dari respons langsung
+            $id_imaging_study = $fhirArr['id'] ?? '';
+
+            // Jika respons adalah duplikat, recover ID dari data yang sudah ada di SATUSEHAT
+            if (empty($id_imaging_study) && !empty($permintaan_radiologi['noorder'])) {
+                try {
+                    $token = $this->getAccessToken();
+                    if (!empty($token)) {
+                        $sys = 'http://sys-ids.kemkes.go.id/acsn/' . $this->organizationid;
+                        $url = $this->fhirurl . '/ImagingStudy?identifier=' . urlencode($sys . '|' . $permintaan_radiologi['noorder']);
+                        $chRec = curl_init($url);
+                        curl_setopt($chRec, CURLOPT_RETURNTRANSFER, true);
+                        curl_setopt($chRec, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $token, 'Content-Type: application/json']);
+                        $recBody = curl_exec($chRec);
+                        curl_close($chRec);
+                        $recJson = json_decode($recBody);
+                        if (isset($recJson->entry[0]->resource->id)) {
+                            $id_imaging_study = $recJson->entry[0]->resource->id;
+                        }
+                    }
+                } catch (\Throwable $e) {}
+            }
+
+            // Simpan ID ImagingStudy ke database
+            if (!empty($id_imaging_study)) {
+                $this->db('mlite_satu_sehat_response')
+                    ->where('no_rawat', $study['no_rawat'])
+                    ->save([
+                        'id_imaging_study' => $id_imaging_study
+                    ]);
+                try {
+                    $this->db('mlite_satu_sehat_rad_response')
+                        ->where('no_rawat', $study['no_rawat'])
+                        ->save([
+                            'id_imaging_study' => $id_imaging_study
+                        ]);
+                } catch (\Throwable $e) {}
+                try {
+                    $this->db('mlite_mini_pacs_study')
+                        ->where('id', $study['id'])
+                        ->save([
+                            'satusehat_study_id' => $id_imaging_study,
+                            'satusehat_status' => 'sent',
+                            'satusehat_message' => 'Sukses mengirim image ke SATUSEHAT (ID: ' . $id_imaging_study . ')'
+                        ]);
+                } catch (\Throwable $e) {}
+            }
 
             header('Content-Type: application/json');
             echo json_encode([
                 'status' => $isDuplicate ? 'duplicate' : 'success',
-                'message' => $isDuplicate ? 'DICOM sudah ada di Satu Sehat (Duplicate).' : 'Berhasil kirim ke Satu Sehat',
-                'dicom_raw' => $upload['raw'],
+                'message' => $isDuplicate
+                    ? 'DICOM sudah ada di Satu Sehat (Duplicate)' . (!empty($id_imaging_study) ? ' — ID ImagingStudy: ' . $id_imaging_study : '')
+                    : 'Berhasil kirim ke Satu Sehat — ID ImagingStudy: ' . $id_imaging_study,
+                'id_imaging_study' => $id_imaging_study,
+                'dicom_raw' => $upload['raw'] ?? '',
                 'fhir_payload' => $fhirPayload,
                 'fhir_raw' => $fhirPretty
             ]);
-
-            $id_imaging_study = isset_or(json_decode($response)->fhir_raw->id, '');
-            $this->db('mlite_satu_sehat_response')
-              ->where('no_rawat', $study['no_rawat'])
-              ->save([
-                'id_imaging_study' => $id_imaging_study
-              ]);
-
             exit();
         } catch (\Exception $e) {
+            try {
+                $this->db('mlite_mini_pacs_study')
+                    ->where('id', $id)
+                    ->save([
+                        'satusehat_status' => 'failed',
+                        'satusehat_message' => $e->getMessage()
+                    ]);
+            } catch (\Throwable $ex) {}
+
             header('Content-Type: application/json');
             echo json_encode([
                 'status' => 'error',
@@ -2524,5 +2623,50 @@ class Admin extends AdminModule
                 // Return gracefully silently if DB fails parsing.
             }
         }
+    }
+
+    public function postReconcile()
+    {
+        $study_id = $_POST['study_id'] ?? '';
+        $no_rawat = $_POST['no_rawat'] ?? '';
+        $noorder = $_POST['noorder'] ?? '';
+
+        if (empty($study_id) || empty($no_rawat)) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => 'Parameter study_id dan no_rawat wajib diisi']);
+            exit();
+        }
+
+        $study = $this->db('mlite_mini_pacs_study')->where('id', $study_id)->oneArray();
+        if (!$study) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => 'Data PACS study tidak ditemukan']);
+            exit();
+        }
+
+        if (empty($noorder)) {
+            $permintaan = $this->db('permintaan_radiologi')->where('no_rawat', $no_rawat)->desc('tgl_permintaan')->oneArray();
+            $noorder = $permintaan['noorder'] ?? '';
+        }
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'link_status' => 'linked'
+        ];
+        if (!empty($noorder)) {
+            $saveData['noorder'] = $noorder;
+        }
+
+        $this->db('mlite_mini_pacs_study')->where('id', $study_id)->save($saveData);
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Foto PACS berhasil ditautkan ke order ' . ($noorder ?: $no_rawat),
+            'study_id' => $study_id,
+            'no_rawat' => $no_rawat,
+            'noorder' => $noorder
+        ]);
+        exit();
     }
 }

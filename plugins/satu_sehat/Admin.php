@@ -6601,6 +6601,50 @@ class Admin extends AdminModule
 
     try {
 
+    // ==== TIPE ALL — Eksekusi rantai pengiriman komprehensif SATUSEHAT ====
+    if ($tipe == 'all') {
+      $results_all = [];
+      // 1. ServiceRequest (Mandatory dasar)
+      $results_all['request'] = $this->getRadiology($no_rawat, 'request', 'silent');
+      
+      // 2. Observation (Hasil pemeriksaan klinis jika sudah diinput dokter)
+      $results_all['observation'] = $this->getRadiology($no_rawat, 'observation', 'silent');
+
+      // 3. ImagingStudy (Citra PACS jika tersedia; jika tidak ada, auto-skip tanpa memblokir alur)
+      $results_all['image'] = $this->getRadiology($no_rawat, 'image', 'silent');
+
+      // 4. DiagnosticReport (Laporan diagnostik klinis dokter)
+      $results_all['diagnostic'] = $this->getRadiology($no_rawat, 'diagnostic', 'silent');
+
+      $req_ok = count($results_all['request']['detail']['sukses'] ?? []);
+      $obs_ok = count($results_all['observation']['detail']['sukses'] ?? []);
+      $img_ok = count($results_all['image']['detail']['sukses'] ?? []);
+      $diag_ok = count($results_all['diagnostic']['detail']['sukses'] ?? []);
+
+      $pesan = "Proses pengiriman SATUSEHAT selesai. ServiceRequest: {$req_ok} sukses; Observation: {$obs_ok} sukses; ImagingStudy: {$img_ok} sukses; DiagnosticReport: {$diag_ok} sukses.";
+
+      $response = json_encode([
+        'tipe' => 'all',
+        'pesan' => $pesan,
+        'summary' => $results_all
+      ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+      if ($render === 'silent' || $render === 'return') {
+        return [
+          'tipe' => 'all',
+          'pesan' => $pesan,
+          'summary' => $results_all
+        ];
+      }
+      if ($render === true) {
+        echo $this->draw('radiology.html', ['pesan' => $pesan, 'response' => $response]);
+        exit();
+      } else {
+        echo $response;
+        return $response;
+      }
+    }
+
     // ==== TIPE IMAGE — sekali per pasien (alur PACS) ====
     if ($tipe == 'image') {
 
@@ -6608,8 +6652,18 @@ class Admin extends AdminModule
         ->where('no_rawat', $no_rawat)
         ->oneArray();
       if (!is_array($row['permintaan_radiologi']) || !isset($row['permintaan_radiologi']['noorder'])) {
-        echo '<pre>' . json_encode(['error' => 'Data tidak lengkap untuk Radiology image', 'missing' => ['permintaan_radiologi.noorder' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . '</pre>';
-        exit();
+        $errArr = ['error' => 'Data tidak lengkap untuk Radiology image', 'missing' => ['permintaan_radiologi.noorder' => 'missing']];
+        if ($render === 'silent' || $render === 'return') {
+          return ['tipe' => 'image', 'error' => true, 'pesan' => 'Permintaan radiologi tidak ditemukan', 'detail' => ['sukses' => [], 'gagal' => ['Noorder tidak ditemukan'], 'skip' => []]];
+        }
+        $errResp = json_encode($errArr, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if ($render === true) {
+          echo '<pre>' . $errResp . '</pre>';
+          exit();
+        } else {
+          echo $errResp;
+          return $errResp;
+        }
       }
       $noorder = $row['permintaan_radiologi']['noorder'];
 
@@ -6620,12 +6674,35 @@ class Admin extends AdminModule
           ->where('no_rawat', $no_rawat)
           ->oneArray();
 
+        // Auto-reconcile jika belum tertaut tapi ada foto PACS dengan noorder atau No RM yang cocok
+        if (!$pacs_study) {
+          $no_rkm_medis = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
+          $pacs_cand = $this->db('mlite_mini_pacs_study')->where('noorder', $noorder)->oneArray();
+          if (!$pacs_cand && !empty($no_rkm_medis)) {
+            $pacs_cand = $this->db('mlite_mini_pacs_study')
+              ->where('patient_id', $no_rkm_medis)
+              ->where('link_status', 'unlinked')
+              ->desc('study_date')
+              ->oneArray();
+          }
+          if ($pacs_cand) {
+            $this->db('mlite_mini_pacs_study')->where('id', $pacs_cand['id'])->save([
+              'no_rawat' => $no_rawat,
+              'noorder' => $noorder,
+              'link_status' => 'linked'
+            ]);
+            $pacs_study = $this->db('mlite_mini_pacs_study')->where('id', $pacs_cand['id'])->oneArray();
+          }
+        }
+
         if (!$pacs_study) {
           $response = json_encode([
+            'status' => 'pending_image',
             'error' => 'Data study Mini PACS tidak ditemukan',
+            'message' => 'Foto PACS belum tersedia atau belum tertaut. Pengiriman ImagingStudy dilewati, DiagnosticReport tetap dapat dikirim.',
             'missing' => ['mlite_mini_pacs_study.no_rawat' => $no_rawat]
           ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-          $pesan = 'Gagal: Study Mini PACS tidak ditemukan untuk no_rawat ' . $no_rawat;
+          $pesan = 'Foto PACS belum ditemukan untuk no_rawat ' . $no_rawat . '. Laporan diagnostik tetap dapat diproses.';
         } else {
           // Panggil SatusehatDicomClient langsung — hindari nested HTTP (504)
           try {
@@ -6763,6 +6840,28 @@ class Admin extends AdminModule
               $srIds = [$mlite_satu_sehat_response['id_rad_request']];
             }
 
+            // Jika ServiceRequest belum ada, kirim ServiceRequest terlebih dahulu secara otomatis
+            if (empty($srIds)) {
+              try {
+                $this->getRadiology($no_rawat, 'request', 'silent');
+                $srRowList = $this->db('mlite_satu_sehat_rad_response')
+                  ->where('no_rawat', $no_rawat)
+                  ->where('noorder', $noorder)
+                  ->toArray();
+                foreach ($srRowList as $srRow) {
+                  if (!empty($srRow['id_service_request'])) {
+                    $srIds[] = $srRow['id_service_request'];
+                  }
+                }
+              } catch (Throwable $e) {}
+              if (empty($srIds)) {
+                $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
+                if (!empty($mlite_satu_sehat_response['id_rad_request'])) {
+                  $srIds = [$mlite_satu_sehat_response['id_rad_request']];
+                }
+              }
+            }
+
             // started = waktu mulai studi sesungguhnya dari DICOM (StudyDate+StudyTime
             // tersimpan di mlite_mini_pacs_study.study_date), dikonversi ke UTC.
             $studyStarted = '';
@@ -6780,7 +6879,7 @@ class Admin extends AdminModule
               'serviceRequestId' => $srIds,
               'studyStarted' => $studyStarted,
               'noRawat' => $no_rawat,
-              'noOrder' => $permintaan_radiologi['noorder'] ?? '',
+              'noOrder' => $permintaan_radiologi['noorder'] ?? ($pacs_study['noorder'] ?? ''),
               'studyUID' => $pacs_study['study_instance_uid'] ?? '',
               'modality' => $modality,
               'series' => $seriesData,
@@ -6813,13 +6912,29 @@ class Admin extends AdminModule
               ? 'DICOM sudah ada di Satu Sehat (Duplicate) — Mini PACS' . ($id_imaging_study != '' ? ' — ID ImagingStudy: ' . $id_imaging_study : '')
               : 'Sukses mengirim image ke Satu Sehat via Mini PACS!! — ID ImagingStudy: ' . $id_imaging_study;
 
-            // 4. Simpan ID ImagingStudy ke database
-            $this->db('mlite_satu_sehat_response')
-              ->where('no_rawat', $no_rawat)
-              ->save([
-                'id_imaging_study' => $id_imaging_study
-              ]);
-
+            // 4. Simpan ID ImagingStudy ke database (tabel agregat, tabel detail, dan tabel PACS)
+            if (!empty($id_imaging_study)) {
+              $this->db('mlite_satu_sehat_response')
+                ->where('no_rawat', $no_rawat)
+                ->save([
+                  'id_imaging_study' => $id_imaging_study
+                ]);
+              try {
+                $this->db('mlite_satu_sehat_rad_response')
+                  ->where('no_rawat', $no_rawat)
+                  ->where('noorder', $noorder)
+                  ->save(['id_imaging_study' => $id_imaging_study]);
+              } catch (Throwable $e) {}
+              try {
+                $this->db('mlite_mini_pacs_study')
+                  ->where('id', $pacs_study['id'])
+                  ->save([
+                    'satusehat_study_id' => $id_imaging_study,
+                    'satusehat_status' => 'sent',
+                    'satusehat_message' => 'Sukses mengirim image ke SATUSEHAT (ID: ' . $id_imaging_study . ')'
+                  ]);
+              } catch (Throwable $e) {}
+            }
 
           } catch (\Exception $e) {
             $response = json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT);
@@ -6866,12 +6981,21 @@ class Admin extends AdminModule
         curl_close($curl);
 
       }
-      if ($render) {
+      if ($render === 'silent' || $render === 'return') {
+        return [
+          'tipe' => 'image',
+          'pesan' => $pesan,
+          'detail' => $hasil ?? ['sukses' => !empty($id_imaging_study) ? [$id_imaging_study] : [], 'gagal' => [], 'skip' => empty($id_imaging_study) ? [$pesan] : []],
+          'response' => $response
+        ];
+      }
+      if ($render === true) {
         echo $this->draw('radiology.html', ['pesan' => $pesan, 'response' => $response]);
+        exit();
       } else {
         echo $response;
+        return $response;
       }
-      exit();
     }
 
     // ==== TIPE request / specimen / observation / diagnostic — per item pemeriksaan ====
@@ -6879,8 +7003,18 @@ class Admin extends AdminModule
       ->where('no_rawat', $no_rawat)
       ->oneArray();
     if (!is_array($row['permintaan_radiologi']) || !isset($row['permintaan_radiologi']['noorder'])) {
-      echo json_encode(['error' => 'Data tidak lengkap untuk Radiology ' . $tipe, 'missing' => ['permintaan_radiologi.noorder' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-      exit();
+      $errArr = ['error' => 'Data tidak lengkap untuk Radiology ' . $tipe, 'missing' => ['permintaan_radiologi.noorder' => 'missing']];
+      if ($render === 'silent' || $render === 'return') {
+        return ['tipe' => $tipe, 'error' => true, 'pesan' => 'Permintaan radiologi tidak ditemukan', 'detail' => ['sukses' => [], 'gagal' => ['Noorder tidak ditemukan'], 'skip' => []]];
+      }
+      $errResp = json_encode($errArr, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      if ($render === true) {
+        echo '<pre>' . $errResp . '</pre>';
+        exit();
+      } else {
+        echo $errResp;
+        return $errResp;
+      }
     }
     $noorder = $row['permintaan_radiologi']['noorder'];
 
@@ -7386,10 +7520,11 @@ class Admin extends AdminModule
           $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Observation belum terkirim. Kirim tipe observation terlebih dahulu.)';
           continue;
         }
-        if ($id_imaging_study == '') {
-          $hasil['skip'][] = $kd_jenis_prw . ' - ' . $nm_perawatan . ' (Image Study belum terkirim. Kirim tipe image terlebih dahulu.)';
-          continue;
-        }
+
+        // imagingStudy bersifat kondisional (0..*) pada FHIR DiagnosticReport:
+        // Jika foto rontgen sudah terkirim ke SATUSEHAT, sertakan referensi ImagingStudy.
+        // Jika foto belum ada atau belum tertaut di PACS, laporan diagnostik klinis dokter
+        // TETAP DAPAT DIKIRIM ke SATUSEHAT tanpa diblokir.
 
         $ref_specimen = $rad_table_ok ? isset_or($detail['id_specimen'], '') : isset_or($mlite_satu_sehat_response['id_rad_specimen'], '');
         $ref_observation = $rad_table_ok ? isset_or($detail['id_observation'], '') : isset_or($mlite_satu_sehat_response['id_rad_observation'], '');
@@ -7498,12 +7633,21 @@ class Admin extends AdminModule
       'detail' => $hasil,
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-    if ($render) {
+    if ($render === 'silent' || $render === 'return') {
+      return [
+        'tipe' => $tipe,
+        'pesan' => $pesan,
+        'responses' => $responses_raw,
+        'detail' => $hasil,
+      ];
+    }
+    if ($render === true) {
       echo $this->draw('radiology.html', ['pesan' => $pesan, 'response' => $response]);
+      exit();
     } else {
       echo $response;
+      return $response;
     }
-    exit();
     } catch (\Throwable $e) {
     $pesan_error = 'Error teknis: ' . $e->getMessage() . ' — ' . $e->getFile() . ':' . $e->getLine();
     $response_error = json_encode([
@@ -7512,12 +7656,21 @@ class Admin extends AdminModule
       'file' => $e->getFile(),
       'line' => $e->getLine(),
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-    if ($render) {
+    if ($render === 'silent' || $render === 'return') {
+      return [
+        'tipe' => $tipe,
+        'error' => true,
+        'pesan' => $pesan_error,
+        'detail' => ['sukses' => [], 'gagal' => [$pesan_error], 'skip' => []],
+      ];
+    }
+    if ($render === true) {
       echo $this->draw('radiology.html', ['pesan' => $pesan_error, 'response' => $response_error]);
+      exit();
     } else {
       echo $response_error;
+      return $response_error;
     }
-    exit();
     }
   }
 
@@ -9736,6 +9889,9 @@ class Admin extends AdminModule
           $den_of[$key] = $dg;
         }
       }
+      if ($totals[$key] > $den_of[$key]) {
+        $den_of[$key] = $totals[$key];
+      }
     }
 
     // (-) Kekurangan = Denominator - Terkirim
@@ -9783,7 +9939,7 @@ class Admin extends AdminModule
     $sheetAgg[] = [];
     $sheetAgg[] = [['v' => 'KETERANGAN / CATATAN', 's' => 2, 'm' => $AGG_COLS]];
     $catatan = [
-      '- Modul wajib berdasarkan surat RS Online Kemenkes: Pendaftaran (Encounter), Diagnostik (Condition), Obat (Medication Request dan Medication Dispense), Laboratorium (Specimen), dan Radiologi (Imaging Study).',
+      '- Modul wajib berdasarkan surat RS Online Kemenkes: Pendaftaran (Encounter), Diagnostik (Condition), Obat (Medication Request dan Medication Dispense), Laboratorium (Specimen), dan Radiologi (Diagnostic Report).',
       '- Kartu "Persentase Terkirim" memakai 16 resource wajib RSGM dari Playbook_use_case Gigi SATUSEHAT (Kemkes, use case Gigi v1.5 tgl 7 Agustus 2024). Pembanding per kategori: resource klinis & Tanda Vital = total kunjungan; Obat = kunjungan pemakai resep; Imaging Study = kunjungan pemakai radiologi; Service Request/Specimen/Diagnostic Report = kunjungan pemakai Lab PK + Radiologi (semuanya dengan kelengkapan klinis lengkap).',
       '- Odontogram & OHIS (Debris-Kalkulus): tidak termasuk Modul Wajib, dipantau terpisah di menu Data Response (filter kategori "Odontogram & OHIS").',
     ];
@@ -9909,7 +10065,7 @@ class Admin extends AdminModule
     try {
       if (!isset($_GET['force'])) {
         $cache_key = md5(serialize([$start_date, $end_date, $filter_dokter, $filter_poli, $filter_ket, $filter_bayar]));
-        $cache_file = sys_get_temp_dir() . '/satu_sehat_rekap_v11_' . $cache_key . '.tmp';
+        $cache_file = sys_get_temp_dir() . '/satu_sehat_rekap_v12_' . $cache_key . '.tmp';
         if (is_file($cache_file) && (time() - filemtime($cache_file)) < 300) {
           $cached = unserialize(file_get_contents($cache_file));
           if (is_array($cached)) {
@@ -10028,6 +10184,7 @@ class Admin extends AdminModule
       'id_medication_dispense' => 0,
       'id_lab_pk_specimen' => 0,
       'id_imaging_study' => 0,
+      'id_rad_diagnostic' => 0,
       'id_odontogram' => 0,
       'id_ohis_total' => 0,
     ];
@@ -10221,28 +10378,6 @@ class Admin extends AdminModule
         } else {
           $day_elig[$date] = 1;
         }
-        if (isset($resep_set[$row['no_rawat']])) {
-          $modul_den['id_medication_request']++;
-          $modul_den['id_medication_dispense']++;
-          $day_modul_den[$date]['id_medication_request'] = isset($day_modul_den[$date]['id_medication_request']) ? $day_modul_den[$date]['id_medication_request'] + 1 : 1;
-          $day_modul_den[$date]['id_medication_dispense'] = isset($day_modul_den[$date]['id_medication_dispense']) ? $day_modul_den[$date]['id_medication_dispense'] + 1 : 1;
-        }
-        if (isset($labpk_set[$row['no_rawat']])) {
-          $modul_den['id_lab_pk_specimen']++;
-          $day_modul_den[$date]['id_lab_pk_specimen'] = isset($day_modul_den[$date]['id_lab_pk_specimen']) ? $day_modul_den[$date]['id_lab_pk_specimen'] + 1 : 1;
-        }
-        if (isset($rad_set[$row['no_rawat']])) {
-          $modul_den['id_imaging_study']++;
-          $day_modul_den[$date]['id_imaging_study'] = isset($day_modul_den[$date]['id_imaging_study']) ? $day_modul_den[$date]['id_imaging_study'] + 1 : 1;
-        }
-        if (isset($gigi_has_gg[$row['no_rawat']])) {
-          $modul_den['id_odontogram']++;
-          $day_modul_den[$date]['id_odontogram'] = isset($day_modul_den[$date]['id_odontogram']) ? $day_modul_den[$date]['id_odontogram'] + 1 : 1;
-        }
-        if (isset($gigi_has_ohis[$row['no_rawat']])) {
-          $modul_den['id_ohis_total']++;
-          $day_modul_den[$date]['id_ohis_total'] = isset($day_modul_den[$date]['id_ohis_total']) ? $day_modul_den[$date]['id_ohis_total'] + 1 : 1;
-        }
       }
 
       // Lab per-item: dihitung dari tabel detail (id per pemeriksaan), bukan kolom id terakhir
@@ -10382,6 +10517,44 @@ class Admin extends AdminModule
         }
       }
 
+      // Denominator per Modul (Obat, Lab, Radiologi, Gigi):
+      // Dihitung dari kunjungan pemakai layanan yang lengkap klinis ATAU yang datanya sudah
+      // terkirim ke SATUSEHAT (karena data terkirim mutlak merupakan pemakai layanan tsb
+      // dan tidak boleh membuat pembilang > penyebut).
+      $has_resep_den = ($bundle_ok && isset($resep_set[$row['no_rawat']])) || $fields['id_medication_request'] !== '' || $fields['id_medication_dispense'] !== '';
+      if ($has_resep_den) {
+        $modul_den['id_medication_request']++;
+        $modul_den['id_medication_dispense']++;
+        $day_modul_den[$date]['id_medication_request'] = isset($day_modul_den[$date]['id_medication_request']) ? $day_modul_den[$date]['id_medication_request'] + 1 : 1;
+        $day_modul_den[$date]['id_medication_dispense'] = isset($day_modul_den[$date]['id_medication_dispense']) ? $day_modul_den[$date]['id_medication_dispense'] + 1 : 1;
+      }
+
+      $has_lab_den = ($bundle_ok && isset($labpk_set[$row['no_rawat']])) || $fields['id_lab_pk_specimen'] !== '';
+      if ($has_lab_den) {
+        $modul_den['id_lab_pk_specimen']++;
+        $day_modul_den[$date]['id_lab_pk_specimen'] = isset($day_modul_den[$date]['id_lab_pk_specimen']) ? $day_modul_den[$date]['id_lab_pk_specimen'] + 1 : 1;
+      }
+
+      $has_rad_den = ($bundle_ok && isset($rad_set[$row['no_rawat']])) || $fields['id_rad_diagnostic'] !== '' || $fields['id_imaging_study'] !== '';
+      if ($has_rad_den) {
+        $modul_den['id_imaging_study']++;
+        $day_modul_den[$date]['id_imaging_study'] = isset($day_modul_den[$date]['id_imaging_study']) ? $day_modul_den[$date]['id_imaging_study'] + 1 : 1;
+        $modul_den['id_rad_diagnostic'] = isset($modul_den['id_rad_diagnostic']) ? $modul_den['id_rad_diagnostic'] + 1 : 1;
+        $day_modul_den[$date]['id_rad_diagnostic'] = isset($day_modul_den[$date]['id_rad_diagnostic']) ? $day_modul_den[$date]['id_rad_diagnostic'] + 1 : 1;
+      }
+
+      $has_gg_den = ($bundle_ok && isset($gigi_has_gg[$row['no_rawat']])) || $dental_extra['id_odontogram'] !== '';
+      if ($has_gg_den) {
+        $modul_den['id_odontogram']++;
+        $day_modul_den[$date]['id_odontogram'] = isset($day_modul_den[$date]['id_odontogram']) ? $day_modul_den[$date]['id_odontogram'] + 1 : 1;
+      }
+
+      $has_ohis_den = ($bundle_ok && isset($gigi_has_ohis[$row['no_rawat']])) || $dental_extra['id_ohis_total'] !== '';
+      if ($has_ohis_den) {
+        $modul_den['id_ohis_total']++;
+        $day_modul_den[$date]['id_ohis_total'] = isset($day_modul_den[$date]['id_ohis_total']) ? $day_modul_den[$date]['id_ohis_total'] + 1 : 1;
+      }
+
       $sent_count = 0;
       $row_flat = [
         'no' => $no++,
@@ -10406,9 +10579,9 @@ class Admin extends AdminModule
       // Persentase Terkirim berbasis 16 resource wajib (Playbook Gigi).
       // Pembilang & penyebut dihitung pada kunjungan yang sama agar tidak mungkin > 100%:
       //   - resource klinis & Tanda Vital  : semua kunjungan menjadi pembanding
-      //   - resource obat                 : hanya kunjungan pemakai resep (lengkap klinis)
-      //   - Imaging Study                 : hanya kunjungan pemakai radiologi
-      //   - ServiceRequest/Specimen/DiagR : hanya kunjungan pemakai Lab PK atau Radiologi
+      //   - resource obat                 : hanya kunjungan pemakai resep (lengkap klinis / terkirim)
+      //   - Imaging Study                 : hanya kunjungan pemakai radiologi (lengkap klinis / terkirim)
+      //   - ServiceRequest/Specimen/DiagR : hanya kunjungan pemakai Lab PK atau Radiologi (lengkap klinis / terkirim)
       // Satu resource terhitung terkirim bila minimal satu key-nya terisi pada kunjungan ini.
       $no_rawat = $row['no_rawat'];
       $has_resep = isset($resep_set[$no_rawat]);
@@ -10417,20 +10590,27 @@ class Admin extends AdminModule
       $wajib_sent = 0;
       $wajib_elig = 0;
       foreach ($modul_wajib16 as $mw) {
+        $ada = false;
+        foreach (explode('|', $mw[1]) as $mk) {
+          if (isset($fields[$mk]) && $fields[$mk] !== '') {
+            $ada = true;
+            break;
+          }
+        }
         switch ($mw[0]) {
           case 'MedicationStatement':
           case 'MedicationRequest':
           case 'MedicationDispense':
           case 'Medication':
-            $elig = $bundle_ok && $has_resep;
+            $elig = ($bundle_ok && $has_resep) || $ada;
             break;
           case 'ImagingStudy':
-            $elig = $bundle_ok && $has_rad;
+            $elig = ($bundle_ok && $has_rad) || $ada;
             break;
           case 'ServiceRequest':
           case 'Specimen':
           case 'DiagnosticReport':
-            $elig = $bundle_ok && ($has_lab || $has_rad);
+            $elig = ($bundle_ok && ($has_lab || $has_rad)) || $ada;
             break;
           default: // Encounter, Patient, Condition, ClinicalImpression, Procedure,
                    // QuestionnaireResponse, AllergyIntolerance, Observation
@@ -10440,13 +10620,6 @@ class Admin extends AdminModule
           continue;
         }
         $wajib_elig++;
-        $ada = false;
-        foreach (explode('|', $mw[1]) as $mk) {
-          if (isset($fields[$mk]) && $fields[$mk] !== '') {
-            $ada = true;
-            break;
-          }
-        }
         if ($ada) {
           $wajib_sent++;
         }
@@ -10503,7 +10676,7 @@ class Admin extends AdminModule
       ['Obat - Medication Request', 'id_medication_request'],
       ['Obat - Medication Dispense', 'id_medication_dispense'],
       ['Laboratorium (Specimen)', 'id_lab_pk_specimen'],
-      ['Radiologi (Imaging Study)', 'id_imaging_study'],
+      ['Radiologi (Diagnostic Report)', 'id_rad_diagnostic'],
     ];
 
     // Denominator per kategori kesatuan kirim: seluruh sub-resource obat/lab PK/radiologi
@@ -10512,11 +10685,11 @@ class Admin extends AdminModule
       'id_medication_request' => 'id_medication_request',
       'id_medication_dispense' => 'id_medication_request',
       'id_medication_statement' => 'id_medication_request',
-      'id_rad_request' => 'id_imaging_study',
-      'id_rad_specimen' => 'id_imaging_study',
-      'id_rad_observation' => 'id_imaging_study',
-      'id_rad_diagnostic' => 'id_imaging_study',
-      'id_imaging_study' => 'id_imaging_study',
+      'id_rad_request' => 'id_rad_diagnostic',
+      'id_rad_specimen' => 'id_rad_diagnostic',
+      'id_rad_observation' => 'id_rad_diagnostic',
+      'id_rad_diagnostic' => 'id_rad_diagnostic',
+      'id_imaging_study' => 'id_rad_diagnostic',
       'id_lab_pk_request' => 'id_lab_pk_specimen',
       'id_lab_pk_specimen' => 'id_lab_pk_specimen',
       'id_lab_pk_observation' => 'id_lab_pk_specimen',
@@ -10594,6 +10767,9 @@ class Admin extends AdminModule
       $key = isset($m[1]) ? $m[1] : '';
       $den = $this->_modulWajibDen($key, $modul_den, $total_kunjungan);
       $sent = isset($totals[$key]) ? (int) $totals[$key] : 0;
+      if ($sent > $den) {
+        $den = $sent;
+      }
       $rows[] = [
         'modul' => $m[0],
         'key' => $key,
@@ -10654,7 +10830,7 @@ class Admin extends AdminModule
     extract($agg);
 
     // Baris per tanggal (termasuk hari tanpa kunjungan → 0)
-    $modul_keys = ['id_encounter', 'id_condition', 'id_medication_request', 'id_medication_dispense', 'id_lab_pk_specimen', 'id_imaging_study'];
+    $modul_keys = ['id_encounter', 'id_condition', 'id_medication_request', 'id_medication_dispense', 'id_lab_pk_specimen', 'id_rad_diagnostic'];
     $dates = [];
     for ($d = $start_date; $d <= $end_date; $d = date('Y-m-d', strtotime($d . ' +1 day'))) {
       $present = isset($day_agg[$d]) ? $day_agg[$d] : null;
@@ -10721,6 +10897,9 @@ class Admin extends AdminModule
           $den_key = $total_kunjungan;
         }
       }
+      if ($totals[$key] > $den_key) {
+        $den_key = $totals[$key];
+      }
       $kekurangan[$key] = $den_key > 0 ? max(0, $den_key - $totals[$key]) : 0;
       $persen[$key] = $den_key > 0 ? min(100, round(($totals[$key] / $den_key) * 100, 2)) : 0;
     }
@@ -10729,17 +10908,17 @@ class Admin extends AdminModule
     $modul_wajib_arr = $this->_buildModulWajibRows($modul_wajib, $den_groups, $modul_den, $totals, $total_kunjungan);
 
     $catatan = [
-      '- Modul wajib berdasarkan surat RS Online Kemenkes: Pendaftaran (Encounter), Diagnostik (Condition), Obat (Medication Request dan Medication Dispense), Laboratorium (Specimen), dan Radiologi (Imaging Study).',
+      '- Modul wajib berdasarkan surat RS Online Kemenkes: Pendaftaran (Encounter), Diagnostik (Condition), Obat (Medication Request dan Medication Dispense), Laboratorium (Specimen), dan Radiologi (Diagnostic Report).',
       '- Kartu "Persentase Terkirim" memakai 16 resource wajib RSGM dari Playbook_use_case Gigi SATUSEHAT (Kemkes, use case Gigi v1.5 tgl 7 Agustus 2024): AllergyIntolerance, ClinicalImpression, Condition, DiagnosticReport, Encounter, ImagingStudy, Medication, MedicationDispense, MedicationRequest, MedicationStatement, Observation, Patient, Procedure, QuestionnaireResponse, ServiceRequest, dan Specimen.',
-      '- Pembanding kartu "Persentase Terkirim" memakai basis per kategori, bukan kunjungan x 16: 9 resource klinis (Encounter, Patient, Condition, ClinicalImpression, Procedure, QuestionnaireResponse, Allergy, MedicationStatement) dan Observation (Tanda Vital) dibanding total kunjungan; Medication, MedicationRequest, MedicationDispense & MedicationStatement dibanding kunjungan pemakai resep; Imaging Study dibanding kunjungan pemakai radiologi; Service Request, Specimen & Diagnostic Report dibanding kunjungan pemakai Lab PK + Radiologi. Semua berbasis kunjungan dengan kelengkapan klinis lengkap (Encounter + Diagnosa + Closing).',
+      '- Pembanding kartu "Persentase Terkirim" memakai basis per kategori, bukan kunjungan x 16: 9 resource klinis (Encounter, Patient, Condition, ClinicalImpression, Procedure, QuestionnaireResponse, Allergy, MedicationStatement) dan Observation (Tanda Vital) dibanding total kunjungan; Medication, MedicationRequest, MedicationDispense & MedicationStatement dibanding kunjungan pemakai resep; Imaging Study dibanding kunjungan pemakai radiologi; Service Request, Specimen & Diagnostic Report dibanding kunjungan pemakai Lab PK + Radiologi. Semua berbasis kunjungan dengan kelengkapan klinis lengkap atau sudah terkirim.',
       '- Patient (IHS Number) & Medication (Katalog KFA) tidak punya kolom tersendiri, sehingga dihitung terkirim mengikuti Encounter / MedicationRequest.',
       '- ID Rekomendasi Diet (Composition): data diambil dari catatan ADIME gizi (menu Pemeriksaan → Catatan ADIME Gizi).',
       '- ID Vaksin/Imunisasi: di RSGM tidak ada layanan vaksin/imunisasi.',
       '- ID Questionnaire (pasien tidak mampu / KPS): hanya diisi jika pasien memiliki surat keterangan tidak mampu.',
       '- ID Allergy: hanya terisi jika ada diagnosa alergi; selama ini dokter umum tidak memeriksa langsung terkait alergi sehingga 0%.',
       '- Angka di halaman ini mengikuti filter yang dipilih (default rekap: kunjungan rawat jalan (status_lanjut = Ralan), tidak Batal, dan status bayar = Sudah Bayar).',
-      '- Persentase Modul Wajib: Pendaftaran & Diagnostik dibanding total kunjungan; Obat, Laboratorium & Radiologi dibanding kunjungan pemakai layanan tsb dengan kelengkapan klinis lengkap (Encounter + Diagnosa + Closing) sudah terkirim.',
-      '- Pada tabel Agregasi per Tanggal, persen per kolom juga memakai basis per kategori: seluruh sub-resource obat (MR/MD/Statement), lab PK (SR/Specimen/Observation/Diagnostic Report) dan radiologi (SR/Specimen/Observation/Diagnostic Report/Image Study) dibanding pemakai layanan tsb yang lengkap klinis, agar satu kesatuan kategori sinkron.',
+      '- Persentase Modul Wajib: Pendaftaran & Diagnostik dibanding total kunjungan; Obat, Laboratorium & Radiologi dibanding kunjungan pemakai layanan tsb (yang lengkap klinis atau sudah terkirim ke SATUSEHAT).',
+      '- Pada tabel Agregasi per Tanggal, persen per kolom juga memakai basis per kategori: seluruh sub-resource obat (MR/MD/Statement), lab PK (SR/Specimen/Observation/Diagnostic Report) dan radiologi (SR/Specimen/Observation/Diagnostic Report/Image Study) dibanding pemakai layanan tsb yang lengkap klinis / terkirim, agar satu kesatuan kategori sinkron.',
     ];
 
     header('Content-Type: application/json');

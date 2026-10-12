@@ -1419,12 +1419,25 @@ class Admin extends AdminModule
 
   public function anyRincian()
   {
+    $no_rawat = isset($_POST['no_rawat']) ? $_POST['no_rawat'] : '';
+    $status_input = isset($_POST['status']) && $_POST['status'] !== '' ? $_POST['status'] : 'Ralan';
+    $status_lower = strtolower($status_input);
 
     $rows = $this->db('permintaan_radiologi')
       ->join('dokter', 'dokter.kd_dokter=permintaan_radiologi.dokter_perujuk')
-      ->where('no_rawat', $_POST['no_rawat'])
-      ->where('permintaan_radiologi.status', strtolower($_POST['status']))
-      ->toArray();
+      ->where('no_rawat', $no_rawat);
+    if (!empty($status_lower)) {
+      $rows = $rows->where('permintaan_radiologi.status', $status_lower);
+    }
+    $rows = $rows->toArray();
+
+    // Fallback jika tidak ditemukan dengan filter status (misal status mismatch ralan/ranap)
+    if (empty($rows) && !empty($no_rawat)) {
+      $rows = $this->db('permintaan_radiologi')
+        ->join('dokter', 'dokter.kd_dokter=permintaan_radiologi.dokter_perujuk')
+        ->where('no_rawat', $no_rawat)
+        ->toArray();
+    }
     $radiologi = [];
     foreach ($rows as $row) {
       $rows2 = $this->db('permintaan_pemeriksaan_radiologi')
@@ -1445,7 +1458,7 @@ class Admin extends AdminModule
       $radiologi[] = $row;
     }
 
-    $rows_periksa_radiologi = $this->db('periksa_radiologi')
+    $periksaQuery = $this->db('periksa_radiologi')
       ->select([
         'periksa_radiologi.no_rawat',
         'periksa_radiologi.tgl_periksa',
@@ -1463,8 +1476,11 @@ class Admin extends AdminModule
       ->join('dokter', 'dokter.kd_dokter=periksa_radiologi.kd_dokter')
       ->join('penjab', 'penjab.kd_pj=reg_periksa.kd_pj')
       ->join('petugas', 'petugas.nip=periksa_radiologi.nip')
-      ->where('periksa_radiologi.status', $_POST['status'])
-      ->where('periksa_radiologi.no_rawat', $_POST['no_rawat'])
+      ->where('periksa_radiologi.no_rawat', $no_rawat);
+    if (!empty($status_input)) {
+      $periksaQuery = $periksaQuery->where('periksa_radiologi.status', $status_input);
+    }
+    $rows_periksa_radiologi = $periksaQuery
       ->group('periksa_radiologi.no_rawat')
       ->group('periksa_radiologi.tgl_periksa')
       ->group('periksa_radiologi.jam')
@@ -1477,6 +1493,40 @@ class Admin extends AdminModule
       ->group('penjab.png_jawab')
       ->group('petugas.nama')
       ->toArray();
+
+    if (empty($rows_periksa_radiologi) && !empty($no_rawat)) {
+      $rows_periksa_radiologi = $this->db('periksa_radiologi')
+        ->select([
+          'periksa_radiologi.no_rawat',
+          'periksa_radiologi.tgl_periksa',
+          'periksa_radiologi.jam',
+          'periksa_radiologi.nip',
+          'periksa_radiologi.kd_dokter',
+          'periksa_radiologi.kd_jenis_prw',
+          'periksa_radiologi.dokter_perujuk',
+          'periksa_radiologi.status',
+          'dokter.nm_dokter',
+          'penjab.png_jawab',
+          'petugas.nama as nama_petugas'
+        ])
+        ->join('reg_periksa', 'reg_periksa.no_rawat=periksa_radiologi.no_rawat')
+        ->join('dokter', 'dokter.kd_dokter=periksa_radiologi.kd_dokter')
+        ->join('penjab', 'penjab.kd_pj=reg_periksa.kd_pj')
+        ->join('petugas', 'petugas.nip=periksa_radiologi.nip')
+        ->where('periksa_radiologi.no_rawat', $no_rawat)
+        ->group('periksa_radiologi.no_rawat')
+        ->group('periksa_radiologi.tgl_periksa')
+        ->group('periksa_radiologi.jam')
+        ->group('periksa_radiologi.nip')
+        ->group('periksa_radiologi.kd_dokter')
+        ->group('periksa_radiologi.kd_jenis_prw')
+        ->group('periksa_radiologi.dokter_perujuk')
+        ->group('periksa_radiologi.status')
+        ->group('dokter.nm_dokter')
+        ->group('penjab.png_jawab')
+        ->group('petugas.nama')
+        ->toArray();
+    }
 
     $periksa_radiologi = [];
     $jumlah_total_radiologi = 0;
@@ -1521,15 +1571,20 @@ class Admin extends AdminModule
       $periksa_radiologi[] = $row;
     }
 
-    $mini_pacs = $this->db('mlite_mini_pacs_study')->where('no_rawat', $_POST['no_rawat'])->toArray();
-    foreach ($mini_pacs as &$mp) {
+    $mini_pacs = [];
+    try {
+      $mini_pacs = $this->db('mlite_mini_pacs_study')->where('no_rawat', $no_rawat)->toArray();
+      foreach ($mini_pacs as &$mp) {
         $series = $this->db('mlite_mini_pacs_series')->where('study_id', $mp['id'])->toArray();
         foreach ($series as &$s) {
-            $s['instances'] = $this->db('mlite_mini_pacs_instance')->where('series_id', $s['id'])->toArray();
+          $s['instances'] = $this->db('mlite_mini_pacs_instance')->where('series_id', $s['id'])->toArray();
         }
         $mp['series'] = $series;
+      }
+      unset($mp);
+    } catch (\Throwable $e) {
+      $mini_pacs = [];
     }
-    unset($mp);
 
     echo $this->draw('rincian.html', [
       'periksa_radiologi' => htmlspecialchars_array($periksa_radiologi), 

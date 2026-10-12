@@ -2167,6 +2167,30 @@ switch ($version) {
             );
         } catch (\Throwable $e) {}
 
+        // Self-heal: Tambahkan kolom pelengkap pada mlite_mini_pacs_study untuk rekonsiliasi PACS dan pelacakan SATUSEHAT
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_mini_pacs_study` ADD COLUMN `noorder` varchar(30) NULL DEFAULT NULL AFTER `no_rawat`"); } catch (\Throwable $e) {}
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_mini_pacs_study` ADD COLUMN `patient_id` varchar(30) NULL DEFAULT NULL AFTER `noorder`"); } catch (\Throwable $e) {}
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_mini_pacs_study` ADD COLUMN `patient_name` varchar(100) NULL DEFAULT NULL AFTER `patient_id`"); } catch (\Throwable $e) {}
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_mini_pacs_study` ADD COLUMN `accession_number` varchar(50) NULL DEFAULT NULL AFTER `patient_name`"); } catch (\Throwable $e) {}
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_mini_pacs_study` ADD COLUMN `link_status` varchar(20) NOT NULL DEFAULT 'unlinked' AFTER `description`"); } catch (\Throwable $e) {}
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_mini_pacs_study` ADD COLUMN `satusehat_study_id` varchar(64) NULL DEFAULT NULL AFTER `link_status`"); } catch (\Throwable $e) {}
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_mini_pacs_study` ADD COLUMN `satusehat_status` varchar(20) NOT NULL DEFAULT 'pending' AFTER `satusehat_study_id`"); } catch (\Throwable $e) {}
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_mini_pacs_study` ADD COLUMN `satusehat_message` text NULL DEFAULT NULL AFTER `satusehat_status`"); } catch (\Throwable $e) {}
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_mini_pacs_study` ADD KEY `idx_pacs_noorder` (`noorder`)"); } catch (\Throwable $e) {}
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_mini_pacs_study` ADD KEY `idx_pacs_patient_id` (`patient_id`)"); } catch (\Throwable $e) {}
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_mini_pacs_study` ADD KEY `idx_pacs_link_status` (`link_status`)"); } catch (\Throwable $e) {}
+
+        // Self-heal: Tambahkan id_imaging_study pada mlite_satu_sehat_rad_response
+        try { $this->core->db()->pdo()->exec("ALTER TABLE `mlite_satu_sehat_rad_response` ADD COLUMN `id_imaging_study` varchar(50) NULL DEFAULT NULL AFTER `id_diagnostic`"); } catch (\Throwable $e) {}
+
+        // Rekonsiliasi data lama PACS: tandai yang sudah memiliki no_rawat sebagai 'linked' dan backfill noorder jika tersedia
+        try {
+            $this->core->db()->pdo()->exec("UPDATE `mlite_mini_pacs_study` SET `link_status` = 'linked' WHERE (`no_rawat` IS NOT NULL AND `no_rawat` <> '') AND (`link_status` IS NULL OR `link_status` = '' OR `link_status` = 'unlinked')");
+            $this->core->db()->pdo()->exec("UPDATE `mlite_mini_pacs_study` s JOIN `permintaan_radiologi` pr ON pr.`no_rawat` = s.`no_rawat` SET s.`noorder` = pr.`noorder` WHERE (s.`noorder` IS NULL OR s.`noorder` = '')");
+            $this->core->db()->pdo()->exec("UPDATE `mlite_mini_pacs_study` s JOIN `mlite_satu_sehat_response` sr ON sr.`no_rawat` = s.`no_rawat` SET s.`satusehat_study_id` = sr.`id_imaging_study`, s.`satusehat_status` = 'sent' WHERE (sr.`id_imaging_study` IS NOT NULL AND sr.`id_imaging_study` <> '') AND (s.`satusehat_study_id` IS NULL OR s.`satusehat_study_id` = '')");
+            $this->core->db()->pdo()->exec("UPDATE `mlite_satu_sehat_rad_response` rr JOIN `mlite_satu_sehat_response` sr ON sr.`no_rawat` = rr.`no_rawat` SET rr.`id_imaging_study` = sr.`id_imaging_study` WHERE (sr.`id_imaging_study` IS NOT NULL AND sr.`id_imaging_study` <> '') AND (rr.`id_imaging_study` IS NULL OR rr.`id_imaging_study` = '')");
+        } catch (\Throwable $e) {}
+
     if (!isset($return) || !$return) {
         $return = '6.7.0';
     }

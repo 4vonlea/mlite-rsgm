@@ -647,11 +647,11 @@
             'id_medication_request': 'id_medication_request',
             'id_medication_dispense': 'id_medication_request',
             'id_medication_statement': 'id_medication_request',
-            'id_rad_request': 'id_imaging_study',
-            'id_rad_specimen': 'id_imaging_study',
-            'id_rad_observation': 'id_imaging_study',
-            'id_rad_diagnostic': 'id_imaging_study',
-            'id_imaging_study': 'id_imaging_study',
+            'id_rad_request': 'id_rad_diagnostic',
+            'id_rad_specimen': 'id_rad_diagnostic',
+            'id_rad_observation': 'id_rad_diagnostic',
+            'id_rad_diagnostic': 'id_rad_diagnostic',
+            'id_imaging_study': 'id_rad_diagnostic',
             'id_lab_pk_request': 'id_lab_pk_specimen',
             'id_lab_pk_specimen': 'id_lab_pk_specimen',
             'id_lab_pk_observation': 'id_lab_pk_specimen',
@@ -678,8 +678,8 @@
                 var den;
                 var denLabel;
                 if (group && dmod[group] > 0) {
-                    den = dmod[group];
-                    denLabel = 'pemakai layanan (lengkap klinis)';
+                    den = Math.max(dmod[group], v);
+                    denLabel = 'pemakai layanan';
                 } else {
                     den = d.kunjungan;
                     denLabel = 'kunjungan';
@@ -743,7 +743,7 @@
         var html = '';
         list.forEach(function (m) {
             var pct = Number(m.persen) || 0;
-            var cls = pct < 60 ? 'low' : (pct < 90 ? 'mid' : '');
+            var cls = pct <= 50 ? 'low' : (pct <= 80 ? 'mid' : '');
             html += '<div class="mw-item">'
                 + '<div class="mw-top"><b>' + m.modul + '</b><span>' + nf(m.terkirim) + ' / ' + nf(m.kunjungan) + ' = ' + pct + '%</span></div>'
                 + '<div class="mw-bar ' + cls + '"><div style="width:' + Math.min(pct, 100) + '%"></div></div>'
