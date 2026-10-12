@@ -274,24 +274,7 @@ class Admin extends AdminModule
 
     public function navigation()
     {
-        return [
-            'Rawat Jalan' => [
-                'RM.GD 4 - ASESMEN KEPERAWATAN.ASUHAN GIGI DAN MULUT UGD' => 'manage',
-                'RM.RJ-10 - LEMBAR EDUKASI PASIEN DAN KELUARGA TERINTEGRASI' => 'edukasimanage',
-            ],
-            'Bedah' => [
-                'ANS1 - INFORMASI TINDAKAN PEMBIUSAN' => 'ans1manage',
-                'ANS2 - PERSETUJUAN TINDAKAN PEMBIUSAN' => 'ans2manage',
-                'ANS3 - ASSESMEN PRASEDASI / ANESTESI' => 'ans3manage',
-                'ANS4 - RENCANA ANESTESI' => 'ans4manage',
-                'LAMPIRAN - SURAT PERNYATAAN PULANG APS' => 'pulangapsmanage',
-            ],
-            'Ranap' => [
-                'RM.RI 01B - HAK DAN KEWAJIBAN PASIEN' => 'ri01bmanage',
-                'RM.RI 02 - RINGKASAN MASUK DAN KELUAR' => 'ri02manage',
-                'RM.RI 03 - SERAH TERIMA PASIEN' => 'ri03manage',
-            ]
-        ];
+        return [];
     }
 
     // ============================================================
@@ -5030,4 +5013,281 @@ class Admin extends AdminModule
         echo $this->draw('pulangaps/cetak.html', ['data' => $data]);
         exit();
     }
+
+    // ==========================================
+    // MANAJEMEN FORM RME (HAK AKSES PER UNIT)
+    // ==========================================
+
+    public function anyManajemenrme()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $action = $_GET['action'] ?? 'manage';
+        $kdPoli = trim($_GET['kd_poli'] ?? ($_GET['unit_id'] ?? ''));
+
+        // Ambil master all forms
+        $all_forms = $this->db('mlite_rme_form')
+            ->asc('mlite_rme_form.kategori')
+            ->asc('mlite_rme_form.urutan')
+            ->toArray();
+
+        // Ambil semua unit langsung dari master data poliklinik SIMRS
+        $units = $this->db('poliklinik')
+            ->where('status', '1')
+            ->where('kd_poli', '!=', '-')
+            ->asc('nm_poli')
+            ->toArray();
+
+        // Pasangkan form_ids untuk tiap unit
+        foreach ($units as &$u) {
+            $u['id'] = $u['kd_poli'];
+            $u['kode_unit'] = $u['kd_poli'];
+            $u['nama_unit'] = $u['nm_poli'];
+            $u['kategori'] = !empty($u['kategori_rme']) ? $u['kategori_rme'] : 'Rajal';
+
+            $mappedForms = $this->db('mlite_rme_unit_form')
+                ->join('mlite_rme_form', 'mlite_rme_form.id = mlite_rme_unit_form.form_id')
+                ->where('mlite_rme_unit_form.kd_poli', $u['kd_poli'])
+                ->select('mlite_rme_form.id, mlite_rme_form.kode_form, mlite_rme_form.nama_form')
+                ->toArray();
+            $u['form_ids'] = array_column($mappedForms, 'id');
+            $u['form_codes'] = array_column($mappedForms, 'kode_form');
+            $u['total_form'] = count($mappedForms);
+            $u['access_summary'] = !empty($u['form_codes']) ? implode(', ', $u['form_codes']) : '(Belum ada form)';
+        }
+        unset($u);
+
+        $selected_unit = null;
+        $assigned_form_ids = [];
+
+        if (!empty($kdPoli)) {
+            foreach ($units as $u) {
+                if ($u['kd_poli'] == $kdPoli || $u['id'] == $kdPoli) {
+                    $selected_unit = $u;
+                    $assigned_form_ids = $u['form_ids'];
+                    break;
+                }
+            }
+        }
+
+        return $this->draw('rme/manajemen.html', [
+            'action'            => $action,
+            'units'             => $units,
+            'selected_unit'     => $selected_unit,
+            'assigned_form_ids' => $assigned_form_ids,
+            'all_forms'         => $all_forms,
+            'token'             => $_SESSION['token'] ?? ''
+        ]);
+    }
+
+    public function postSimpanaksesrme()
+    {
+        $kdPoli = trim($_POST['kd_poli'] ?? ($_POST['unit_id'] ?? ''));
+        $formIds = $_POST['form_ids'] ?? [];
+
+        if (!empty($kdPoli)) {
+            // Hapus pemetaan lama
+            $this->db('mlite_rme_unit_form')->where('kd_poli', $kdPoli)->delete();
+
+            // Masukkan pemetaan baru
+            if (is_array($formIds)) {
+                foreach ($formIds as $fid) {
+                    $fid = (int)$fid;
+                    if ($fid > 0) {
+                        $this->db('mlite_rme_unit_form')->insert([
+                            'kd_poli' => $kdPoli,
+                            'form_id' => $fid,
+                            'status'  => '1'
+                        ]);
+                    }
+                }
+            }
+            $this->notify('success', 'Hak akses formulir berhasil disimpan!');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'manajemenrme']).'&action=permission&kd_poli='.$kdPoli);
+    }
+
+    public function postTambahunitrme()
+    {
+        $kode     = strtoupper(trim($_POST['kode_unit'] ?? ($_POST['kd_poli'] ?? '')));
+        $kategori = trim($_POST['kategori'] ?? ($_POST['kategori_rme'] ?? 'Rajal'));
+
+        if (!empty($kode)) {
+            $this->db('poliklinik')->where('kd_poli', $kode)->save([
+                'kategori_rme' => $kategori
+            ]);
+            $this->notify('success', 'Kategori RME poliklinik berhasil diperbarui!');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'manajemenrme']));
+    }
+
+    public function getHapusunitrme()
+    {
+        $kdPoli = trim($_GET['kd_poli'] ?? ($_GET['id'] ?? ''));
+        if (!empty($kdPoli)) {
+            $this->db('mlite_rme_unit_form')->where('kd_poli', $kdPoli)->delete();
+            $this->notify('success', 'Hak akses unit berhasil direset!');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'manajemenrme']));
+    }
+
+    public function postTambahformrme()
+    {
+        $kode        = strtoupper(trim($_POST['kode_form'] ?? ''));
+        $nama        = trim($_POST['nama_form'] ?? '');
+        $kategori    = trim($_POST['kategori'] ?? 'Bedah');
+        $routeManage = trim($_POST['route_manage'] ?? '');
+        $routeForm   = trim($_POST['route_form'] ?? '');
+        $routeCetak  = trim($_POST['route_cetak'] ?? '');
+        $namaTabel   = trim($_POST['nama_tabel'] ?? '');
+
+        if (!empty($kode) && !empty($nama) && !empty($routeManage)) {
+            $check = $this->db('mlite_rme_form')->where('kode_form', $kode)->oneArray();
+            if ($check) {
+                $this->db('mlite_rme_form')->where('kode_form', $kode)->save([
+                    'nama_form'    => $nama,
+                    'kategori'     => $kategori,
+                    'route_manage' => $routeManage,
+                    'route_form'   => $routeForm,
+                    'route_cetak'  => $routeCetak,
+                    'nama_tabel'   => $namaTabel
+                ]);
+                $this->notify('success', 'Data form berhasil diperbarui!');
+            } else {
+                $this->db('mlite_rme_form')->insert([
+                    'kode_form'    => $kode,
+                    'nama_form'    => $nama,
+                    'kategori'     => $kategori,
+                    'route_manage' => $routeManage,
+                    'route_form'   => $routeForm,
+                    'route_cetak'  => $routeCetak,
+                    'nama_tabel'   => $namaTabel,
+                    'status'       => '1'
+                ]);
+                $this->notify('success', 'Form baru berhasil ditambahkan!');
+            }
+        } else {
+            $this->notify('danger', 'Kode, nama form, dan rute tidak boleh kosong!');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'manajemenrme', '?tab=form']));
+    }
+
+    public function getHapusformrme()
+    {
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id > 0) {
+            $this->db('mlite_rme_form')->where('id', $id)->delete();
+            $this->db('mlite_rme_unit_form')->where('form_id', $id)->delete();
+            $this->notify('success', 'Form berhasil dihapus dari master katalog!');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'manajemenrme', '?tab=form']));
+    }
+
+    public function postSyncunitsimrs()
+    {
+        $syncPoli = !empty($_POST['sync_poli']);
+        $syncBangsal = !empty($_POST['sync_bangsal']);
+        $count = 0;
+
+        if ($syncPoli) {
+            try {
+                $polis = $this->db('poliklinik')->where('status', '1')->toArray();
+                foreach ($polis as $p) {
+                    $kode = 'POLI_' . preg_replace('/[^A-Za-z0-9_]/', '', $p['kd_poli']);
+                    $chk = $this->db('mlite_rme_unit')->where('kode_unit', $kode)->oneArray();
+                    if (!$chk) {
+                        $this->db('mlite_rme_unit')->insert([
+                            'kode_unit'  => $kode,
+                            'nama_unit'  => 'Poli ' . $p['nm_poli'],
+                            'kategori'   => 'Rajal',
+                            'keterangan' => 'Impor dari master poliklinik SIMRS',
+                            'status'     => '1'
+                        ]);
+                        $count++;
+                    }
+                }
+            } catch (\Exception $e) {}
+        }
+
+        if ($syncBangsal) {
+            try {
+                $bangsals = $this->db('bangsal')->where('status', '1')->toArray();
+                foreach ($bangsals as $b) {
+                    $kode = 'BANGSAL_' . preg_replace('/[^A-Za-z0-9_]/', '', $b['kd_bangsal']);
+                    $chk = $this->db('mlite_rme_unit')->where('kode_unit', $kode)->oneArray();
+                    if (!$chk) {
+                        $this->db('mlite_rme_unit')->insert([
+                            'kode_unit'  => $kode,
+                            'nama_unit'  => 'Ruang ' . $b['nm_bangsal'],
+                            'kategori'   => 'Ranap',
+                            'keterangan' => 'Impor dari master bangsal SIMRS',
+                            'status'     => '1'
+                        ]);
+                        $count++;
+                    }
+                }
+            } catch (\Exception $e) {}
+        }
+
+        $this->notify('success', "Berhasil sinkronisasi $count unit baru dari SIMRS!");
+        redirect(url([ADMIN, 'update_bmt', 'manajemenrme', '?tab=unit']));
+    }
+
+    public function anyKatalogrme()
+    {
+        $kdPoli = trim($_GET['kd_poli'] ?? ($_GET['unit_id'] ?? ''));
+
+        $units = $this->db('poliklinik')
+            ->where('status', '1')
+            ->where('kd_poli', '!=', '-')
+            ->asc('kategori_rme')
+            ->asc('nm_poli')
+            ->toArray();
+
+        foreach ($units as &$u) {
+            $u['id'] = $u['kd_poli'];
+            $u['kode_unit'] = $u['kd_poli'];
+            $u['nama_unit'] = $u['nm_poli'];
+            $u['kategori'] = !empty($u['kategori_rme']) ? $u['kategori_rme'] : 'Rajal';
+        }
+        unset($u);
+
+        $selected_unit = null;
+        if (!empty($kdPoli)) {
+            foreach ($units as $u) {
+                if ($u['kd_poli'] == $kdPoli || $u['id'] == $kdPoli) {
+                    $selected_unit = $u;
+                    break;
+                }
+            }
+        }
+        if (!$selected_unit && !empty($units)) {
+            $selected_unit = $units[0];
+        }
+
+        $assigned_forms = [];
+        if ($selected_unit) {
+            $assigned_forms = $this->db('mlite_rme_unit_form')
+                ->join('mlite_rme_form', 'mlite_rme_form.id = mlite_rme_unit_form.form_id')
+                ->where('mlite_rme_unit_form.kd_poli', $selected_unit['kd_poli'])
+                ->where('mlite_rme_form.status', '1')
+                ->select('mlite_rme_form.*')
+                ->asc('mlite_rme_form.kategori')
+                ->asc('mlite_rme_form.urutan')
+                ->toArray();
+        }
+
+        return $this->draw('rme/katalog.html', [
+            'units'          => $units,
+            'selected_unit'  => $selected_unit,
+            'assigned_forms' => $assigned_forms,
+            'token'          => $_SESSION['token'] ?? ''
+        ]);
+    }
 }
+

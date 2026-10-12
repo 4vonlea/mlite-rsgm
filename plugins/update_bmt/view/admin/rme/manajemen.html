@@ -1,0 +1,225 @@
+{if: $action == 'permission' && $selected_unit}
+<!-- ======================================================== -->
+<!-- HALAMAN HAK AKSES FORM RME PER POLIKLINIK / UNIT        -->
+<!-- ======================================================== -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="pull-right">
+                    <a href="{?=url([ADMIN, 'update_bmt', 'manajemenrme'])?}" class="btn btn-default btn-xs">
+                        <i class="fa fa-arrow-left"></i> Kembali
+                    </a>
+                </div>
+                <h3 class="panel-title"><i class="fa fa-key text-primary"></i> Hak Akses Form RME: <strong>{$selected_unit.nama_unit}</strong> ({$selected_unit.kode_unit})</h3>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'update_bmt', 'simpanaksesrme'])?}" method="POST">
+                    <input type="hidden" name="kd_poli" value="{$selected_unit.kd_poli}">
+                    <input type="hidden" name="unit_id" value="{$selected_unit.id}">
+                    <input type="hidden" name="t" value="{$token}">
+
+                    <!-- Fitur Salin Akses dari Poliklinik Lain -->
+                    <div class="well well-sm" style="background: #f8f9fa; border: 1px solid #e9ecef; margin-bottom: 20px;">
+                        <button type="button" id="btnToggleCopyAccess" class="btn btn-success btn-xs" style="margin-bottom: 5px;">
+                            <i class="fa fa-copy"></i> Salin Akses dari Poliklinik Lain
+                        </button>
+                        <div id="copyAccessForm" style="display: none; margin-top: 10px;">
+                            <div class="input-group">
+                                <select id="copyAccessFromUnit" class="form-control input-sm">
+                                    <option value="">-- Pilih Poliklinik untuk Disalin Pengaturan Formulirnya --</option>
+                                    {loop: $units}
+                                    {if: $value.id != $selected_unit.id}
+                                    <option value="{$value.id}" data-access="{?=implode(',', $value.form_ids)?}">
+                                        {$value.nama_unit} ({$value.kode_unit}) - [{$value.total_form} Form]
+                                    </option>
+                                    {/if}
+                                    {/loop}
+                                </select>
+                                <span class="input-group-btn">
+                                    <button type="button" id="btnCopyAccess" class="btn btn-info btn-sm" disabled>
+                                        <i class="fa fa-copy"></i> Terapkan Salinan
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-bottom: 15px;">
+                        <div class="col-sm-6">
+                            <input type="text" id="filterFormInput" class="form-control input-sm" placeholder="Ketik untuk mencari nama form / kode form...">
+                        </div>
+                        <div class="col-sm-6 text-right">
+                            <button type="button" class="btn btn-default btn-xs" id="btnCheckAll">
+                                <i class="fa fa-check-square-o"></i> Centang Semua
+                            </button>
+                            <button type="button" class="btn btn-default btn-xs" id="btnUncheckAll">
+                                <i class="fa fa-square-o"></i> Hapus Semua
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive no-margin">
+                        <table class="table table-striped table-bordered no-margin" id="table-permission" width="100%">
+                            <thead>
+                                <tr style="background: #f1f5f9;">
+                                    <th width="60" class="text-center">Akses</th>
+                                    <th width="120">Kode Form</th>
+                                    <th>Nama Formulir RME</th>
+                                    <th width="120">Kategori</th>
+                                    <th width="100" class="text-center">Preview</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loop: $all_forms}
+                                <tr class="form-row" data-search="{?=strtolower($value.kode_form)?} {?=strtolower($value.nama_form)?} {?=strtolower($value.kategori)?}">
+                                    <td class="text-center">
+                                        <input type="checkbox" name="form_ids[]" value="{$value.id}" class="form-check-item" {if: in_array($value.id, $assigned_form_ids)}checked{/if} style="width: 17px; height: 17px; cursor: pointer;">
+                                    </td>
+                                    <td><code>{$value.kode_form}</code></td>
+                                    <td><strong>{$value.nama_form}</strong></td>
+                                    <td><span class="label label-default">{$value.kategori}</span></td>
+                                    <td class="text-center">
+                                        <a href="{?=url([ADMIN, 'update_bmt', $value.route_manage])?}" target="_blank" class="btn btn-xs btn-default" title="Buka Formulir">
+                                            <i class="fa fa-external-link"></i> Buka
+                                        </a>
+                                    </td>
+                                </tr>
+                                {/loop}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="form-group text-center" style="margin-top: 25px;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-save"></i> Simpan Hak Akses
+                        </button>
+                        <a href="{?=url([ADMIN, 'update_bmt', 'manajemenrme'])?}" class="btn btn-default">
+                            Batal
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#btnToggleCopyAccess').on('click', function() {
+            $('#copyAccessForm').slideToggle();
+        });
+
+        $('#copyAccessFromUnit').on('change', function() {
+            $('#btnCopyAccess').prop('disabled', !$(this).val());
+        });
+
+        $('#btnCopyAccess').on('click', function() {
+            var selectedOption = $('#copyAccessFromUnit option:selected');
+            var accessStr = selectedOption.data('access');
+            $('.form-check-item').prop('checked', false);
+
+            if (accessStr) {
+                var ids = String(accessStr).split(',');
+                $.each(ids, function(idx, val) {
+                    $('.form-check-item[value="' + $.trim(val) + '"]').prop('checked', true);
+                });
+            }
+            alert('Akses berhasil disalin dari: ' + selectedOption.text());
+        });
+
+        $('#btnCheckAll').on('click', function() {
+            $('.form-check-item:visible').prop('checked', true);
+        });
+
+        $('#btnUncheckAll').on('click', function() {
+            $('.form-check-item:visible').prop('checked', false);
+        });
+
+        $('#filterFormInput').on('keyup', function() {
+            var val = $(this).val().toLowerCase().trim();
+            if (val === '') {
+                $('.form-row').show();
+            } else {
+                $('.form-row').each(function() {
+                    var s = $(this).data('search');
+                    if (s.indexOf(val) !== -1) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+        });
+    });
+</script>
+
+{else}
+<!-- ======================================================== -->
+<!-- HALAMAN UTAMA KELOLA HAK AKSES PER POLIKLINIK           -->
+<!-- ======================================================== -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Kelola Hak Akses Form RME</h3>
+            </div>
+            <div class="panel-body">
+                <p class="text-muted" style="margin-bottom: 15px;">
+                    Daftar unit diambil langsung dari master data <strong>Poliklinik</strong> SIMRS. Klik tombol <strong>Atur Hak Akses</strong> pada poliklinik/unit untuk menentukan formulir RME mana saja yang aktif dan dapat dibuka oleh petugas di poliklinik tersebut.
+                </p>
+
+                <div class="table-responsive no-margin">
+                    <table class="table table-striped table-hover no-margin dataTables" width="100%">
+                        <thead>
+                            <tr>
+                                <th width="80">Kode</th>
+                                <th width="240">Nama Poliklinik / Unit</th>
+                                <th width="90">Kategori</th>
+                                <th>Hak Akses Form RME</th>
+                                <th width="140" class="text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loop: $units}
+                            <tr>
+                                <td><code>{$value.kode_unit}</code></td>
+                                <td><strong>{$value.nama_unit}</strong></td>
+                                <td><span class="label label-default">{$value.kategori}</span></td>
+                                <td>
+                                    {if: !empty($value.form_codes)}
+                                        <span class="badge" style="background-color: #337ab7; margin-right: 5px;">{$value.total_form} Form</span>
+                                        <small class="text-muted">{$value.access_summary}</small>
+                                    {else}
+                                        <small class="text-danger"><em>Belum ada form yang diizinkan</em></small>
+                                    {/if}
+                                </td>
+                                <td class="text-right">
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'manajemenrme'])?}&action=permission&kd_poli={$value.kd_poli}&unit_id={$value.kd_poli}" class="btn btn-xs btn-primary" title="Atur Hak Akses Formulir">
+                                        <i class="fa fa-key"></i> Atur Hak Akses
+                                    </a>
+                                </td>
+                            </tr>
+                            {/loop}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        if ($.fn.DataTable) {
+            $('.dataTables').DataTable({
+                "language": {
+                    "search": "Cari Poliklinik:",
+                    "lengthMenu": "Tampilkan _MENU_ data",
+                    "paginate": { "first": "&laquo;", "last": "&raquo;", "previous": "‹", "next": "›" }
+                }
+            });
+        }
+    });
+</script>
+{/if}
