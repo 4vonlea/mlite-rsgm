@@ -1,0 +1,147 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default" style="box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 6px;">
+            <div class="panel-heading" style="background: linear-gradient(135deg, #0288d1 0%, #01579b 100%); color: #fff; border-radius: 6px 6px 0 0; padding: 15px 20px;">
+                <div class="pull-right">
+                    {if: $selected_unit}
+                    <a href="{?=url([ADMIN, 'update_bmt', 'manajemenrme'])?}&tab=akses&unit_id={$selected_unit.id}" class="btn btn-warning btn-sm" style="font-weight: 600;">
+                        <i class="fa fa-cogs"></i> Kelola Hak Akses Form Unit Ini
+                    </a>
+                    {else}
+                    <a href="{?=url([ADMIN, 'update_bmt', 'manajemenrme'])?}&tab=akses" class="btn btn-warning btn-sm" style="font-weight: 600;">
+                        <i class="fa fa-cogs"></i> Manajemen Form RME
+                    </a>
+                    {/if}
+                </div>
+                <h3 class="panel-title" style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">
+                    <i class="fa fa-th-large"></i> Akses Formulir RME per Unit Pelayanan
+                </h3>
+                <small style="color: #e1f5fe; font-size: 12px;">Portal cepat pengisian dan pengelolaan formulir rekam medis elektronik berdasarkan unit kerja</small>
+            </div>
+
+            <div class="panel-body" style="padding: 20px;">
+                <!-- Filter Bar -->
+                <div class="well well-sm" style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 15px; margin-bottom: 25px;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <form method="GET" action="{?=url([ADMIN, 'update_bmt', 'katalogrme'])?}" class="form-inline">
+                                <input type="hidden" name="t" value="{$token}">
+                                <label for="select-katalog-unit" style="font-weight: 700; margin-right: 10px; font-size: 14px; color: #333;">
+                                    <i class="fa fa-hospital-o text-primary"></i> Pilih Unit Pelayanan:
+                                </label>
+                                <select name="kd_poli" id="select-katalog-unit" class="form-control input-lg" style="min-width: 280px; font-weight: 600; border-color: #0288d1;" onchange="this.form.submit()">
+                                    {loop: $units}
+                                    <option value="{$value.id}" {if: $selected_unit && $selected_unit.id == $value.id}selected{/if}>
+                                        [{$value.kode_unit}] {$value.nama_unit} ({$value.kategori})
+                                    </option>
+                                    {/loop}
+                                </select>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-addon" style="background: #fff;"><i class="fa fa-search text-muted"></i></span>
+                                <input type="text" id="katalog-search-input" class="form-control" placeholder="Cari nama form di unit ini...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {if: $selected_unit}
+                <div class="row" style="margin-bottom: 20px;">
+                    <div class="col-xs-12">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;">
+                            <div>
+                                <h3 style="margin: 0; font-size: 20px; font-weight: 700; color: #2c3e50;">
+                                    Formulir Aktif: <span class="label label-primary" style="font-size: 16px;">{$selected_unit.nama_unit}</span>
+                                </h3>
+                                <p class="text-muted" style="margin: 5px 0 0 0; font-size: 13px;">
+                                    Kategori: <strong>{$selected_unit.kategori}</strong> | Total: <strong>{?=count($assigned_forms)?} formulir</strong> diizinkan untuk unit ini.
+                                </p>
+                            </div>
+                            <div>
+                                <span class="badge" style="background: #337ab7; font-size: 14px; padding: 6px 12px;">{?=count($assigned_forms)?} Form</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {if: !empty($assigned_forms)}
+                <div class="row" id="katalog-cards-container">
+                    {loop: $assigned_forms}
+                    <div class="col-md-4 col-sm-6 katalog-card-item" data-search="{?=strtolower($value.nama_form)?} {?=strtolower($value.kode_form)?} {?=strtolower($value.kategori)?}" style="margin-bottom: 20px;">
+                        <div class="thumbnail" style="border-radius: 8px; border: 1px solid #e3e8ee; box-shadow: 0 2px 6px rgba(0,0,0,0.04); transition: transform 0.2s, box-shadow 0.2s; padding: 0; overflow: hidden; height: 100%; display: flex; flex-direction: column;">
+                            <div style="background: #f8fafc; padding: 12px 15px; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center;">
+                                <span class="label {if: $value.kategori == 'Bedah'}label-danger{elseif: $value.kategori == 'Ranap'}label-info{elseif: $value.kategori == 'Rajal'}label-success{else}label-default{/if}" style="font-size: 11px;">
+                                    {$value.kategori}
+                                </span>
+                                <span class="label label-default" style="font-size: 11px; font-family: monospace;">{$value.kode_form}</span>
+                            </div>
+                            <div class="caption" style="padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                                <div>
+                                    <h4 style="margin: 0 0 10px 0; font-size: 15px; font-weight: 700; color: #1e293b; line-height: 1.4; min-height: 42px;">
+                                        {$value.nama_form}
+                                    </h4>
+                                    <p class="text-muted" style="font-size: 12px; margin-bottom: 15px;">
+                                        <i class="fa fa-database"></i> Tabel: <code>{$value.nama_tabel}</code>
+                                    </p>
+                                </div>
+                                <div style="display: flex; gap: 6px;">
+                                    <a href="{?=url([ADMIN, 'update_bmt', $value.route_form])?}" class="btn btn-success btn-sm" style="flex: 1; font-weight: 600;">
+                                        <i class="fa fa-plus-circle"></i> Isi Form
+                                    </a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', $value.route_manage])?}" class="btn btn-primary btn-sm" style="flex: 1; font-weight: 600;">
+                                        <i class="fa fa-table"></i> Data
+                                    </a>
+                                    {if: !empty($value.route_cetak)}
+                                    <a href="{?=url([ADMIN, 'update_bmt', $value.route_cetak])?}" target="_blank" class="btn btn-default btn-sm" title="Preview Cetak">
+                                        <i class="fa fa-print"></i>
+                                    </a>
+                                    {/if}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {/loop}
+                </div>
+                {else}
+                <div class="alert alert-info text-center" style="border-radius: 6px; padding: 30px;">
+                    <i class="fa fa-info-circle fa-3x" style="color: #0288d1; margin-bottom: 10px;"></i>
+                    <h4>Belum ada formulir yang diizinkan untuk unit ini</h4>
+                    <p class="text-muted">Unit <strong>{$selected_unit.nama_unit}</strong> saat ini belum memiliki form yang di-assign.</p>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'manajemenrme'])?}&tab=akses&unit_id={$selected_unit.id}" class="btn btn-primary" style="margin-top: 10px;">
+                        <i class="fa fa-plus"></i> Atur dan Pilih Form untuk Unit Ini
+                    </a>
+                </div>
+                {/if}
+
+                {else}
+                <div class="alert alert-warning text-center">
+                    <h4>Pilih Unit Pelayanan</h4>
+                    <p>Silakan pilih unit pelayanan dari daftar di atas untuk melihat formulir.</p>
+                </div>
+                {/if}
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+    $(document).ready(function() {
+        $('#katalog-search-input').on('keyup', function() {
+            var val = $(this).val().toLowerCase().trim();
+            if (val === '') {
+                $('.katalog-card-item').show();
+            } else {
+                $('.katalog-card-item').each(function() {
+                    var text = $(this).data('search');
+                    if (text.indexOf(val) !== -1) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+        });
+    });
+</script>

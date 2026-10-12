@@ -80,6 +80,47 @@ class Admin extends Main
 
         $this->assign['presensi'] = $this->db('mlite_modules')->where('dir', 'presensi')->oneArray();
 
+        // Hak Akses Form RME berdasarkan Unit Pengguna
+        $this->assign['is_admin'] = ($access == 'all') || ($this->getUserInfo('role', $id) == 'admin') || ($id == 1);
+        $this->assign['rme_categories'] = [];
+        try {
+            if ($this->db('mlite_modules')->where('dir', 'update_bmt')->oneArray()) {
+                if ($this->assign['is_admin']) {
+                    $forms = $this->db('mlite_rme_form')->where('status', '1')->asc('kategori')->asc('urutan')->toArray();
+                } else {
+                    $userCap = $this->getUserInfo('cap', $id);
+                    $poliCodes = !empty($userCap) ? array_filter(array_map('trim', explode(',', $userCap))) : [];
+                    $forms = [];
+                    if (!empty($poliCodes)) {
+                        $forms = $this->db('mlite_rme_unit_form')
+                            ->join('mlite_rme_form', 'mlite_rme_form.id = mlite_rme_unit_form.form_id')
+                            ->where('mlite_rme_unit_form.status', '1')
+                            ->where('mlite_rme_form.status', '1')
+                            ->where('mlite_rme_unit_form.kd_poli', 'IN', $poliCodes)
+                            ->select('DISTINCT mlite_rme_form.*')
+                            ->asc('mlite_rme_form.kategori')
+                            ->asc('mlite_rme_form.urutan')
+                            ->toArray();
+                    }
+                }
+
+                $categories = [];
+                if (!empty($forms)) {
+                    foreach ($forms as $f) {
+                        $cat = !empty($f['kategori']) ? $f['kategori'] : 'Umum';
+                        if (!isset($categories[$cat])) {
+                            $categories[$cat] = [
+                                'nama_kategori' => $cat,
+                                'forms' => []
+                            ];
+                        }
+                        $categories[$cat]['forms'][] = $f;
+                    }
+                }
+                $this->assign['rme_categories'] = array_values($categories);
+            }
+        } catch (\Exception $e) {}
+
         $this->tpl->set('mlite', $this->assign);
         echo $this->tpl->draw(THEMES.'/admin/'.$file, true);
     }
@@ -91,6 +132,9 @@ class Admin extends Main
         if ($row && ($details = $this->getModuleInfo($name))) {
             $isSaveSignature = ($name === 'esignature' && strtolower($method) === 'savesignature' && !empty($_SESSION['mlite_user']));
             if (($this->getUserInfo('access') == 'all') || in_array($name, explode(',', $this->getUserInfo('access'))) || $isSaveSignature) {
+                if ($name === 'update_bmt') {
+                    $this->checkRmeFormAccess($method);
+                }
                 $anyMethod = 'any'.ucfirst($method);
                 $method = strtolower($_SERVER['REQUEST_METHOD']).ucfirst($method);
 
@@ -112,12 +156,79 @@ class Admin extends Main
                     http_response_code(403);
                     header('Content-Type: application/json');
                     echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk modul ini.']);
+                } else {
+                    $this->setNotify('failure', 'Anda tidak memiliki hak akses untuk modul ini.');
+                    redirect(url([ADMIN, 'dashboard', 'main']));
                 }
                 exit;
             }
         } else {
+            http_response_code(404);
+            $this->setNotify('failure', 'Modul tidak ditemukan atau belum aktif.');
+            redirect(url([ADMIN, 'dashboard', 'main']));
             exit;
         }
+    }
+
+    protected function checkRmeFormAccess($method)
+    {
+        $userId = $_SESSION['mlite_user'] ?? 1;
+        $isAdmin = ($this->getUserInfo('access') == 'all') || ($this->getUserInfo('role', $userId) == 'admin') || ($userId == 1);
+        if ($isAdmin) {
+            return true;
+        }
+
+        $methodLower = strtolower($method);
+
+        // Menu manajemen unit form RME hanya untuk admin
+        $mgmtMethods = ['manajemenrme', 'simpanaksesrme', 'simpanuserunitrme', 'tambahunitrme', 'hapusunitrme', 'syncunitsimrs'];
+        if (in_array($methodLower, $mgmtMethods)) {
+            $this->setNotify('failure', 'Anda tidak memiliki hak akses untuk Manajemen Form RME.');
+            redirect(url([ADMIN, 'dashboard', 'main']));
+            exit;
+        }
+
+        // Ambil unit yang terkait dengan user dari capability (cap) di Manajemen Pengguna
+        $userCap = $this->getUserInfo('cap', $userId);
+        $poliCodes = !empty($userCap) ? array_filter(array_map('trim', explode(',', $userCap))) : [];
+
+        if (empty($poliCodes)) {
+            $this->setNotify('failure', 'Anda belum memiliki hak akses unit poliklinik (capability) untuk formulir RME ini.');
+            redirect(url([ADMIN, 'dashboard', 'main']));
+            exit;
+        }
+
+        // Ambil rute-rute form yang diizinkan untuk unit user
+        $allowedForms = $this->db('mlite_rme_unit_form')
+            ->join('mlite_rme_form', 'mlite_rme_form.id = mlite_rme_unit_form.form_id')
+            ->where('mlite_rme_unit_form.status', '1')
+            ->where('mlite_rme_form.status', '1')
+            ->where('mlite_rme_unit_form.kd_poli', 'IN', $poliCodes)
+            ->select('mlite_rme_form.route_manage, mlite_rme_form.route_form, mlite_rme_form.route_cetak')
+            ->toArray();
+
+        $allowedRoutes = [];
+        foreach ($allowedForms as $af) {
+            if (!empty($af['route_manage'])) $allowedRoutes[] = strtolower($af['route_manage']);
+            if (!empty($af['route_form'])) $allowedRoutes[] = strtolower($af['route_form']);
+            if (!empty($af['route_cetak'])) $allowedRoutes[] = strtolower($af['route_cetak']);
+        }
+
+        $isAllowed = false;
+        foreach ($allowedRoutes as $ar) {
+            if (strpos($methodLower, $ar) !== false || strpos($ar, $methodLower) !== false) {
+                $isAllowed = true;
+                break;
+            }
+        }
+
+        if (!$isAllowed) {
+            $this->setNotify('failure', 'Anda tidak memiliki hak akses untuk formulir RME ini.');
+            redirect(url([ADMIN, 'dashboard', 'main']));
+            exit;
+        }
+
+        return true;
     }
 
     public function createNav($activeModule, $activeMethod)
