@@ -79,70 +79,150 @@
           position: absolute; bottom: 0px;left: 80px;font-size:10px;text-shadow: -1px -1px 0 #ffffff, 1px -1px 0 #ffffff, -1px 1px 0 #ffffff, 1px 1px 0 #ffffff;
         }
       }
+    /* ========================================================
+       MODERN HORIZONTAL RECTANGULAR MENU BAR
+       ======================================================== */
+    .navbar-icon-top {
+      background-color: #ffffff !important;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 4px 12px !important;
+      min-height: 46px !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+    .navbar-icon-top .navbar-nav {
+      margin: 0 !important;
+    }
     .navbar li.menu-icon {
-      border: 0;
-      background-color: #f2f2f2;
-      border-radius: 0;
-      margin: 6px 3px;
-      transition: background-color 0.2s ease;
+      border: 0 !important;
+      background-color: #f2f2f2 !important;
+      border-radius: 0 !important;
+      margin: 3px 2px !important;
+      transition: all 0.2s ease !important;
+      box-shadow: none !important;
     }
     .navbar li.menu-icon:hover {
-      background-color: #e2e2e2;
+      background-color: #e2e2e2 !important;
+      transform: translateY(-1px);
     }
-    .navbar-icon-top .navbar-nav>li>a>.fa, .navbar-icon-top .navbar-nav>li>a>.glyphicon {
-        position: relative;
-        width: 36px;
-        font-size: 24px;
+    .navbar li.menu-icon:active {
+      transform: translateY(0);
+      box-shadow: none;
     }
+    .navbar-icon-top .navbar-nav > li.menu-icon > a {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      height: 38px !important;
+      padding: 0 14px !important;
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.3px !important;
+      color: #444444 !important;
+      text-transform: uppercase;
+      border-radius: 0 !important;
+      white-space: nowrap !important;
+      text-decoration: none !important;
+      line-height: 1 !important;
+      background: transparent !important;
+      opacity: 0.95 !important;
+    }
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > .fa,
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > .glyphicon {
+      display: inline-block !important;
+      width: auto !important;
+      margin: 0 8px 0 0 !important;
+      font-size: 17px !important;
+      line-height: 1 !important;
+      vertical-align: middle !important;
+      position: static !important;
+      top: auto !important;
+      color: #555555 !important;
+      transition: transform 0.2s ease;
+    }
+    .navbar li.menu-icon:hover a > .fa,
+    .navbar li.menu-icon:hover a > .glyphicon {
+      transform: scale(1.15);
+      color: #222222 !important;
+    }
+    .navbar li.menu-icon:hover a,
+    .navbar li.menu-icon:hover a > span {
+      color: #222222 !important;
+    }
+
+    /* Neutral Monochrome Colors (as shown in reference image) */
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > i,
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > i.text-primary,
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > i.text-success,
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > i.text-danger,
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > i.text-warning,
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > i.text-info,
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > i.text-muted {
+      color: #555555 !important;
+    }
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > span,
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > span.text-primary,
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > span.text-success,
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > span.text-danger,
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > span.text-warning,
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > span.text-info,
+    .navbar-icon-top .navbar-nav > li.menu-icon > a > span.text-muted {
+      color: #444444 !important;
+    }
+
+    /* Login Button Style (clean, borderless) */
+    .navbar-icon-top .navbar-right > li.menu-icon {
+      background-color: #f2f2f2 !important;
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+    .navbar-icon-top .navbar-right > li.menu-icon > a,
+    .navbar-icon-top .navbar-right > li.menu-icon > a > i,
+    .navbar-icon-top .navbar-right > li.menu-icon > a > span {
+      color: #2563eb !important;
+      font-weight: 700 !important;
+    }
+    .navbar-icon-top .navbar-right > li.menu-icon:hover {
+      background-color: #e2e8f0 !important;
+    }
+
     .menu-top .navbar-nav>li>a {
-        font-size: 14px !important;
+        font-size: 13.5px !important;
     }
     .menu-top .navbar-nav>li>a>.fa {
         position: relative;
         width: 10px !important;
-        font-size: 14px;
+        font-size: 13.5px;
     }
     .navbar-icon-top .navbar-nav>li>a>.fa>.badge, .navbar-icon-top .navbar-nav>li>a>.glyphicon>.badge {
-        position: absolute;
-        right: 0;
+        position: relative;
+        top: -1px;
+        margin-left: 4px;
         font-family: sans-serif;
+        font-size: 10px;
+        padding: 2px 5px;
     }
-    .navbar-icon-top .navbar-nav>li>a>.fa {
-        top: 3px;
-        line-height: 12px;
-    }
-    .navbar-icon-top .navbar-nav>li>a>.fa>.badge {
-        top: -10px;
-    }
-    .navbar-icon-top .navbar-nav>li>a>.glyphicon {
-        top: 6px;
-        line-height: 6px;
-    }
-    .navbar-icon-top .navbar-nav>li>a>.glyphicon>.badge {
-        top: -16px;
-    }  
+
     @media (min-width: 768px) {
         .navbar-icon-top .navbar-brand {
-            padding: 25px 15px;
+            padding: 10px 15px;
         }
         .navbar-icon-top .navbar-text {
-            margin-top: 25px;
-            margin-bottom: 25px;
+            margin-top: 10px;
+            margin-bottom: 10px;
         }
         .navbar-icon-top .navbar-btn, .navbar-icon-top .navbar-form {
-            margin-top: 18px;
-            margin-bottom: 18px;
+            margin-top: 5px;
+            margin-bottom: 5px;
         }
         .navbar-icon-top .navbar-nav>li>a {
             text-align: center;
-            display: table-cell;
-            height: 70px;
-            vertical-align: middle;
-            padding-top: 0;
-            padding-bottom: 0;
+            display: inline-flex !important;
+            height: 38px !important;
+            vertical-align: middle !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
         }
         .menu-top .navbar-nav>li>a {
-            font-size: 16px;
             text-align: center;
             display: table-cell;
             height: 34px;
@@ -152,7 +232,7 @@
             color: #ffffff;
           }
         .menu-top .navbar-nav>li>a:hover {
-          border-radius: 5px;
+          border-radius: 0;
           background-color: #c4c4c4;
           color: #000000;
         }
@@ -160,14 +240,11 @@
           color: #efefef !important;
         }
         .navbar-icon-top .navbar-nav>li>a>.fa, .navbar-icon-top .navbar-nav>li>a>.glyphicon {
-            display: block;
-            width: 48px;
-            margin: 2px auto 4px auto;
+            display: inline-block !important;
+            width: auto !important;
+            margin: 0 8px 0 0 !important;
             top: 0;
-            line-height: 24px;
-        }
-        .navbar-icon-top .navbar-nav>li>a>.fa>.badge, .navbar-icon-top .navbar-nav>li>a>.glyphicon>.badge {
-            top: -7px;
+            line-height: 1 !important;
         }
     }
 
@@ -253,7 +330,7 @@
               </div>
           </nav>
       </div>
-      <nav class="navbar navbar-icon-top navbar-inverse navbar-fixed-top visible-lg visible-md" style="margin-bottom:0;font-size:16px;">
+      <nav class="navbar navbar-inverse navbar-fixed-top visible-lg visible-md" style="margin-bottom:0;font-size:16px;">
         <div class="container-fluid bg-primary menu-top" style="margin: 0 !important;padding: 0 !important;border-bottom: #b6b6b6 2px solid;">
           <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
@@ -460,7 +537,7 @@
             </ul>
           </div><!--/.nav-collapse -->
         </div> 
-        <div class="container-fluid">
+        <div class="container-fluid navbar-icon-top">
           <ul class="nav navbar-nav">
             <li class="menu-icon"><a href="#" class="btn disabled"><i class="fa fa-home text-primary"></i> <span class="text-primary">Menu</span></a></li>
             {if: $this->core->ActiveModule('pasien')}
@@ -486,7 +563,7 @@
             {/if}
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            <li class="menu-icon"><a href="#" class="btn" data-toggle="modal" data-target="#menuModal" title="Login"><i class="fa fa-key text-danger"></i> <span class="text-danger">Login</span></a></li>
+            <li class="menu-icon"><a href="#" class="btn" data-toggle="modal" data-target="#menuModal" title="Login"><i class="fa fa-key"></i> <span>Login</span></a></li>
           </ul>
         </div>
       </nav>
