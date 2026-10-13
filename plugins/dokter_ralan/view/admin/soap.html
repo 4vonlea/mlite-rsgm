@@ -42,8 +42,8 @@
       <td rowspan="6" style="vertical-align:top;white-space: nowrap;">
         {?=isset_or($value.tgl_perawatan)?} {?=isset_or($value.jam_rawat)?}<br>
         {?=isset_or($value.departemen_petugas)?}<br><br>
-        Kunjungan: {?=isset_or($value.stts_daftar)?}<br>
-        Kasus: {?=isset_or($value.status_poli)?}
+        Kunjungan: <span class="label {if: $value.stts_daftar == 'Baru'}label-warning{else}label-default{/if}">{?=isset_or($value.stts_daftar)?}</span><br>
+        Kasus: <span class="label {if: isset_or($value.kasus_poli, $value.status_poli) == 'Baru'}label-info{else}label-default{/if}">{?=isset_or($value.kasus_poli, $value.status_poli)?}</span>
       </td>
       <td>{?=isset_or($value.suhu_tubuh)?}</td>
       <td>{?=isset_or($value.tensi)?}</td>
@@ -89,8 +89,8 @@
         <b>Rawat Jalan</b><br>
         {?=isset_or($value.tgl_perawatan)?} {?=isset_or($value.jam_rawat)?}<br>
         {?=isset_or($value.departemen_petugas)?}<br><br>
-        Kunjungan: {?=isset_or($value.stts_daftar)?}<br>
-        Kasus: {?=isset_or($value.status_poli)?}
+        Kunjungan: <span class="label {if: $value.stts_daftar == 'Baru'}label-warning{else}label-default{/if}">{?=isset_or($value.stts_daftar)?}</span><br>
+        Kasus: <span class="label {if: isset_or($value.kasus_poli, $value.status_poli) == 'Baru'}label-info{else}label-default{/if}">{?=isset_or($value.kasus_poli, $value.status_poli)?}</span>
       </td>
       {/if}
       {if: $admin_mode == 'complex'}
@@ -136,6 +136,9 @@
               data-instruksi="{?=isset_or($value.instruksi)?}"
               data-evaluasi="{?=isset_or($value.evaluasi)?}"
               data-spo2="{?=isset_or($value.spo2)?}"
+              data-stts_daftar="{?=isset_or($value.stts_daftar)?}"
+              data-kasus_poli="{?=isset_or($value.kasus_poli, $value.status_poli)?}"
+              data-status_poli="{?=isset_or($value.status_poli)?}"
               ><span class="fa fa-copy"></span><span class="hidden-xs"> Copy</span></button>
             <button type="button" name="button" class="btn btn-success btn-xs edit_soap"
               data-no_rawat="{?=isset_or($value.no_rawat)?}"
@@ -158,6 +161,9 @@
               data-instruksi="{?=isset_or($value.instruksi)?}"
               data-evaluasi="{?=isset_or($value.evaluasi)?}"
               data-spo2="{?=isset_or($value.spo2)?}"
+              data-stts_daftar="{?=isset_or($value.stts_daftar)?}"
+              data-kasus_poli="{?=isset_or($value.kasus_poli, $value.status_poli)?}"
+              data-status_poli="{?=isset_or($value.status_poli)?}"
               {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip}disabled{/if}
               ><span class="fa fa-edit"></span><span class="hidden-xs"> Edit</span></button>              
             <button type="button" name="button" class="btn btn-danger btn-xs hapus_soap"
@@ -284,6 +290,8 @@
               data-instruksi="{?=isset_or($data.instruksi)?}"
               data-evaluasi="{?=isset_or($data.evaluasi)?}"
               data-spo2="{?=isset_or($data.spo2)?}"
+              data-stts_daftar="{?=isset_or($data.stts_daftar)?}"
+              data-status_poli="{?=isset_or($data.status_poli)?}"
               ><span class="fa fa-copy"></span><span class="hidden-xs"> Copy</span></button>
             <button type="button" name="button" class="btn btn-success btn-xs edit_soap"
               data-no_rawat="{?=isset_or($data.no_rawat)?}"
@@ -304,6 +312,8 @@
               data-instruksi="{?=isset_or($data.instruksi)?}"
               data-evaluasi="{?=isset_or($data.evaluasi)?}"
               data-spo2="{?=isset_or($data.spo2)?}"
+              data-stts_daftar="{?=isset_or($data.stts_daftar)?}"
+              data-status_poli="{?=isset_or($data.status_poli)?}"
               {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip}disabled{/if}
               ><span class="fa fa-edit"></span><span class="hidden-xs"> Edit</span></button>
             <button type="button" name="button" class="btn btn-danger btn-xs hapus_soap"

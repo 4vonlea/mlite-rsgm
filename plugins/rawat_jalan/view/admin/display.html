@@ -92,7 +92,7 @@
               {/if}
               <li><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal">Elektronik Rekam Medis</a></li>
               {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
-              <li><a href="#soap" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-umur="{$value.umurdaftar} {$value.sttsumur}">SOAPIE & Pemeriksaan</a></li>
+              <li><a href="#soap" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-umur="{$value.umurdaftar} {$value.sttsumur}" data-tgl_registrasi="{$value.tgl_registrasi}" data-stts_daftar="{$value.stts_daftar}" data-status_poli="{$value.status_poli}">SOAPIE & Pemeriksaan</a></li>
               <li><a href="#layanan_obat" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-kd_dokter="{$value.kd_dokter}" data-nm_dokter="{$value.nm_dokter}">Layanan & Tindakan</a></li>
               {? \Systems\Lib\Event::call('rsgmgha.dropdown_menu', [$value]) ?}
               <li class="dropdown-submenu">
@@ -338,7 +338,7 @@
     </div>
 </div>
 <script type="text/javascript">
-  $('a[href="#soap"]').click(function(event){
+  $(document).on('click', 'a[href="#soap"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
 
@@ -347,12 +347,20 @@
     var nm_pasien = $(this).attr("data-nm_pasien");
     var umur = $(this).attr("data-umur");
     var tgl_registrasi = $(this).attr("data-tgl_registrasi");
+    var stts_daftar = $(this).attr("data-stts_daftar");
+    var status_poli = $(this).attr("data-status_poli");
 
     $('input:text[name=no_rawat]').val(no_rawat);
     $('input:text[name=no_rkm_medis]').val(no_rkm_medis);
     $('input:text[name=nm_pasien]').val(nm_pasien);
     $('input:text[name=umur]').val(umur);
     $('input:text[name=tgl_registrasi]').val(tgl_registrasi);
+    if (stts_daftar) {
+      $('input[name=stts_daftar][value="' + stts_daftar + '"]').prop('checked', true);
+    }
+    if (status_poli) {
+      $('input[name=status_poli][value="' + status_poli + '"]').prop('checked', true);
+    }
     $("#display").hide();
 
     var url = baseURL + '/rawat_jalan/soap?t=' + mlite.token;
@@ -384,6 +392,12 @@
           if (response.pemeriksaan) $('textarea[name=pemeriksaan]').val(response.pemeriksaan);
           if (response.penilaian) $('textarea[name=penilaian]').val(response.penilaian);
           if (response.rtl) $('textarea[name=rtl]').val(response.rtl);
+          if (response.stts_daftar) $('input[name=stts_daftar][value="' + response.stts_daftar + '"]').prop('checked', true);
+          var k_poli = response.kasus_poli || response.status_poli;
+          if (k_poli) {
+            $('input[name=kasus_poli][value="' + k_poli + '"]').prop('checked', true);
+            $('input[name=status_poli][value="' + k_poli + '"]').prop('checked', true);
+          }
         }
         if (response.source_info) {
           $('#autofill_info_text').text(response.source_info);

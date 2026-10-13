@@ -2233,7 +2233,7 @@ class Admin extends AdminModule
         ->toArray();
       $reg = $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->oneArray();
       $stts_daftar = $reg['stts_daftar'] ?? '-';
-      $status_poli = $reg['status_poli'] ?? '-';
+      $status_poli_reg = $reg['status_poli'] ?? '-';
 
       $i = 1;
       $row['nama_petugas'] = '';
@@ -2253,7 +2253,8 @@ class Admin extends AdminModule
         $row['nama_petugas'] = $this->core->getPegawaiInfo('nama',$row['nip']);
         $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
         $row['stts_daftar'] = $stts_daftar;
-        $row['status_poli'] = $status_poli;
+        $row['kasus_poli'] = !empty($row['kasus_poli']) ? $row['kasus_poli'] : $status_poli_reg;
+        $row['status_poli'] = $row['kasus_poli'];
         $row['is_dokter'] = $check_dokter($row['nip']);
         
         $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
@@ -2394,12 +2395,16 @@ class Admin extends AdminModule
 
       file_put_contents('soap_debug.log', "rawat_jalan postSaveSOAP called: POST=" . json_encode($_POST) . "\n", FILE_APPEND);
 
-      // Pisahkan status_poli dan stts_daftar untuk diupdate ke tabel reg_periksa
-      $status_poli = '';
-      if(isset($_POST['status_poli'])) {
-          $status_poli = $_POST['status_poli'];
-          unset($_POST['status_poli']);
+      // Simpan kasus_poli ke tabel pemeriksaan_ralan, dan status_poli ke tabel reg_periksa
+      $kasus_poli = 'Lama';
+      if(isset($_POST['kasus_poli']) && !empty($_POST['kasus_poli'])) {
+          $kasus_poli = $_POST['kasus_poli'];
+      } elseif(isset($_POST['status_poli']) && !empty($_POST['status_poli'])) {
+          $kasus_poli = $_POST['status_poli'];
       }
+      $_POST['kasus_poli'] = $kasus_poli;
+      $status_poli = $kasus_poli;
+      unset($_POST['status_poli']);
 
       $stts_daftar = '';
       if(isset($_POST['stts_daftar'])) {
@@ -2575,6 +2580,9 @@ class Admin extends AdminModule
         }
       }
 
+      $data['stts_daftar'] = $reg['stts_daftar'] ?? 'Lama';
+      $data['kasus_poli'] = $reg['status_poli'] ?? 'Lama';
+      $data['status_poli'] = $data['kasus_poli'];
       $data['source'] = $source;
       $data['source_info'] = $source_info;
 

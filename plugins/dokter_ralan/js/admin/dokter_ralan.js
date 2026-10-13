@@ -187,7 +187,9 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
     var instruksi       = $('textarea[name=instruksi]').val();
     var evaluasi        = $('textarea[name=evaluasi]').val();
     var spo2            = $('input:text[name=spo2]').val();
-    var status_poli     = $('#soap_status_poli').val();
+    var kasus_poli      = $('input[name=kasus_poli]:checked').val() || $('input[name=status_poli]:checked').val() || $('#soap_status_poli').val();
+    var status_poli     = kasus_poli;
+    var stts_daftar     = $('input[name=stts_daftar]:checked').val();
 
     var url = baseURL + '/dokter_ralan/savesoap?t=' + mlite.token;
     $.post(url, {no_rawat : no_rawat,
@@ -210,7 +212,9 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
     instruksi : instruksi,
     evaluasi : evaluasi,
     spo2 : spo2,
-    status_poli : status_poli
+    kasus_poli : kasus_poli,
+    status_poli : status_poli,
+    stts_daftar : stts_daftar
     }, function(data) {
       // tampilkan data
       $("#display").hide();
@@ -290,6 +294,16 @@ $("#soap").on("click",".copy_soap", function(event){
   $('textarea[name=instruksi]').val(instruksi);
   $('textarea[name=evaluasi]').val(evaluasi);
   $('input:text[name=spo2]').val(spo2);
+  var stts_daftar = $(this).attr("data-stts_daftar");
+  var status_poli = $(this).attr("data-kasus_poli") || $(this).attr("data-status_poli");
+  if (stts_daftar) {
+    $('input[name=stts_daftar][value="' + stts_daftar + '"]').prop('checked', true);
+  }
+  if (status_poli) {
+    $('input[name=kasus_poli][value="' + status_poli + '"]').prop('checked', true);
+    $('input[name=status_poli][value="' + status_poli + '"]').prop('checked', true);
+    $('#soap_status_poli').val(status_poli);
+  }
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
@@ -338,6 +352,16 @@ $("#soap").on("click",".edit_soap", function(event){
   $('textarea[name=instruksi]').val(instruksi);
   $('textarea[name=evaluasi]').val(evaluasi);
   $('input:text[name=spo2]').val(spo2);
+  var stts_daftar = $(this).attr("data-stts_daftar");
+  var status_poli = $(this).attr("data-kasus_poli") || $(this).attr("data-status_poli");
+  if (stts_daftar) {
+    $('input[name=stts_daftar][value="' + stts_daftar + '"]').prop('checked', true);
+  }
+  if (status_poli) {
+    $('input[name=kasus_poli][value="' + status_poli + '"]').prop('checked', true);
+    $('input[name=status_poli][value="' + status_poli + '"]').prop('checked', true);
+    $('#soap_status_poli').val(status_poli);
+  }
 
 });
 

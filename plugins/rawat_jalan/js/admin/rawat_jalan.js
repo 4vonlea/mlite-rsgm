@@ -555,7 +555,8 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
     var instruksi       = $('textarea[name=instruksi]').val();
     var evaluasi        = $('textarea[name=evaluasi]').val();
     var spo2            = $('input:text[name=spo2]').val();
-    var status_poli     = $('input[name=status_poli]:checked').val();
+    var kasus_poli      = $('input[name=kasus_poli]:checked').val() || $('input[name=status_poli]:checked').val();
+    var status_poli     = kasus_poli;
     var stts_daftar     = $('input[name=stts_daftar]:checked').val();
 
     var url = baseURL + '/rawat_jalan/savesoap?t=' + mlite.token;
@@ -579,6 +580,7 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
     instruksi : instruksi,
     evaluasi : evaluasi,
     spo2 : spo2,
+    kasus_poli : kasus_poli,
     status_poli : status_poli,
     stts_daftar : stts_daftar
     }, function(data) {
@@ -660,6 +662,15 @@ $("#soap").on("click",".copy_soap", function(event){
   $('textarea[name=instruksi]').val(instruksi);
   $('textarea[name=evaluasi]').val(evaluasi);
   $('input:text[name=spo2]').val(spo2);
+  var stts_daftar = $(this).attr("data-stts_daftar");
+  var kasus_poli = $(this).attr("data-kasus_poli") || $(this).attr("data-status_poli");
+  if (stts_daftar) {
+    $('input[name=stts_daftar][value="' + stts_daftar + '"]').prop('checked', true);
+  }
+  if (kasus_poli) {
+    $('input[name=kasus_poli][value="' + kasus_poli + '"]').prop('checked', true);
+    $('input[name=status_poli][value="' + kasus_poli + '"]').prop('checked', true);
+  }
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
@@ -707,6 +718,15 @@ $("#soap").on("click",".edit_soap", function(event){
   $('textarea[name=instruksi]').val(instruksi);
   $('textarea[name=evaluasi]').val(evaluasi);
   $('input:text[name=spo2]').val(spo2);
+  var stts_daftar = $(this).attr("data-stts_daftar");
+  var kasus_poli = $(this).attr("data-kasus_poli") || $(this).attr("data-status_poli");
+  if (stts_daftar) {
+    $('input[name=stts_daftar][value="' + stts_daftar + '"]').prop('checked', true);
+  }
+  if (kasus_poli) {
+    $('input[name=kasus_poli][value="' + kasus_poli + '"]').prop('checked', true);
+    $('input[name=status_poli][value="' + kasus_poli + '"]').prop('checked', true);
+  }
 
 });
 

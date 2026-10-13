@@ -1162,7 +1162,7 @@ class Admin extends AdminModule
         
       $reg = $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->oneArray();
       $stts_daftar = $reg['stts_daftar'] ?? '-';
-      $status_poli = $reg['status_poli'] ?? '-';
+      $status_poli_reg = $reg['status_poli'] ?? '-';
 
       $i = 1;
       $row['nama_petugas'] = '';
@@ -1176,7 +1176,8 @@ class Admin extends AdminModule
         $row['nama_petugas'] = $this->core->getPegawaiInfo('nama',$row['nip']);
         $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
         $row['stts_daftar'] = $stts_daftar;
-        $row['status_poli'] = $status_poli;
+        $row['kasus_poli'] = !empty($row['kasus_poli']) ? $row['kasus_poli'] : $status_poli_reg;
+        $row['status_poli'] = $row['kasus_poli'];
         
         $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
         file_put_contents('soap_debug.log', "anySoap called: ref_id={$ref_id}, no_rawat={$row['no_rawat']}, tgl={$row['tgl_perawatan']}, jam={$row['jam_rawat']}\n", FILE_APPEND);
@@ -1249,11 +1250,21 @@ class Admin extends AdminModule
 
       file_put_contents('soap_debug.log', "postSaveSOAP called: POST=" . json_encode($_POST) . "\n", FILE_APPEND);
 
-      // Pisahkan status_poli untuk diupdate ke tabel reg_periksa
-      $status_poli = '';
-      if(isset($_POST['status_poli'])) {
-          $status_poli = $_POST['status_poli'];
-          unset($_POST['status_poli']);
+      // Simpan kasus_poli ke tabel pemeriksaan_ralan, dan status_poli ke tabel reg_periksa
+      $kasus_poli = 'Lama';
+      if(isset($_POST['kasus_poli']) && !empty($_POST['kasus_poli'])) {
+          $kasus_poli = $_POST['kasus_poli'];
+      } elseif(isset($_POST['status_poli']) && !empty($_POST['status_poli'])) {
+          $kasus_poli = $_POST['status_poli'];
+      }
+      $_POST['kasus_poli'] = $kasus_poli;
+      $status_poli = $kasus_poli;
+      unset($_POST['status_poli']);
+
+      $stts_daftar = '';
+      if(isset($_POST['stts_daftar'])) {
+          $stts_daftar = $_POST['stts_daftar'];
+          unset($_POST['stts_daftar']);
       }
 
       $cek = $this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->oneArray();
@@ -1272,8 +1283,11 @@ class Admin extends AdminModule
         }
       }
 
-      if($status_poli != '') {
-          $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save(['status_poli' => $status_poli]);
+      $save_reg = [];
+      if($status_poli != '') $save_reg['status_poli'] = $status_poli;
+      if($stts_daftar != '') $save_reg['stts_daftar'] = $stts_daftar;
+      if(!empty($save_reg)) {
+          $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($save_reg);
       }
 
       exit();
@@ -1400,6 +1414,9 @@ class Admin extends AdminModule
         }
       }
 
+      $data['stts_daftar'] = $reg['stts_daftar'] ?? 'Lama';
+      $data['kasus_poli'] = $reg['status_poli'] ?? 'Lama';
+      $data['status_poli'] = $data['kasus_poli'];
       $data['source'] = $source;
       $data['source_info'] = $source_info;
 

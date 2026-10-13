@@ -102,6 +102,12 @@
                         $('input:text[name=nm_pasien]').val(nm_pasien);
                         $('input:text[name=umur]').val(umur);
                         $('input:text[name=tgl_registrasi]').val(tgl_registrasi);
+                        if (item.stts_daftar) {
+                            $('input[name=stts_daftar][value="' + item.stts_daftar + '"]').prop('checked', true);
+                        }
+                        if (item.status_poli) {
+                            $('input[name=status_poli][value="' + item.status_poli + '"]').prop('checked', true);
+                        }
                         $("#display").hide();
 
                         var soapUrl = '{?=url()?}/{?=ADMIN?}/rawat_jalan/soap?t=' + token;
@@ -111,6 +117,37 @@
                             $("#notif").hide();
                             $("#form_soap").show();
                             $("#soap").html(data).show();
+
+                            var autoFillUrl = '{?=url()?}/{?=ADMIN?}/rawat_jalan/autofillpemeriksaan?t=' + token;
+                            $.post(autoFillUrl, {no_rawat: raw_no_rawat}, function(response) {
+                                if (response && Object.keys(response).length > 0) {
+                                    if (response.tensi) $('input:text[name=tensi]').val(response.tensi);
+                                    if (response.suhu_tubuh) $('input:text[name=suhu_tubuh]').val(response.suhu_tubuh);
+                                    if (response.nadi) $('input:text[name=nadi]').val(response.nadi);
+                                    if (response.respirasi) $('input:text[name=respirasi]').val(response.respirasi);
+                                    if (response.tinggi) $('input:text[name=tinggi]').val(response.tinggi);
+                                    if (response.berat) $('input:text[name=berat]').val(response.berat);
+                                    if (response.kesadaran) $('input:text[name=kesadaran]').val(response.kesadaran);
+                                    if (response.spo2) $('input:text[name=spo2]').val(response.spo2);
+                                    if (response.gcs) $('input:text[name=gcs]').val(response.gcs);
+                                    if (response.alergi) $('input:text[name=alergi]').val(response.alergi);
+                                    if (response.lingkar_perut) $('input:text[name=lingkar_perut]').val(response.lingkar_perut);
+                                    if (response.keluhan) $('textarea[name=keluhan]').val(response.keluhan);
+                                    if (response.pemeriksaan) $('textarea[name=pemeriksaan]').val(response.pemeriksaan);
+                                    if (response.penilaian) $('textarea[name=penilaian]').val(response.penilaian);
+                                    if (response.rtl) $('textarea[name=rtl]').val(response.rtl);
+                                    if (response.stts_daftar) $('input[name=stts_daftar][value="' + response.stts_daftar + '"]').prop('checked', true);
+                                    var k_poli = response.kasus_poli || response.status_poli;
+                                    if (k_poli) {
+                                        $('input[name=kasus_poli][value="' + k_poli + '"]').prop('checked', true);
+                                        $('input[name=status_poli][value="' + k_poli + '"]').prop('checked', true);
+                                    }
+                                }
+                                if (response.source_info) {
+                                    $('#autofill_info_text').text(response.source_info);
+                                    $('#autofill_info').show();
+                                }
+                            }, 'json');
                         });
                     }
                 }
@@ -189,7 +226,7 @@
                       rows += '<span class="dropdown-toggle" data-toggle="dropdown"><button type="button" class="btn btn-sm btn-default">' + item.no_rkm_medis + ' <span class="caret"></span></button></span>';
                       rows += '<ul class="dropdown-menu" role="menu">';
                       // Add menu items here consistent with display.html
-                      rows += '<li><a href="#soap" data-no_rawat="' + item.no_rawat + '" data-no_rkm_medis="' + item.no_rkm_medis + '" data-nm_pasien="' + item.nm_pasien + '">SOAPIE & Pemeriksaan</a></li>';
+                      rows += '<li><a href="#soap" data-no_rawat="' + item.no_rawat + '" data-no_rkm_medis="' + item.no_rkm_medis + '" data-nm_pasien="' + item.nm_pasien + '" data-umur="' + (item.umurdaftar || '') + ' ' + (item.sttsumur || '') + '" data-tgl_registrasi="' + (item.tgl_registrasi || '') + '" data-stts_daftar="' + (item.stts_daftar || '') + '" data-status_poli="' + (item.status_poli || '') + '">SOAPIE & Pemeriksaan</a></li>';
                       rows += '</ul>';
                       rows += '</td>';
 

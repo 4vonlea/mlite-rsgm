@@ -86,7 +86,7 @@
                   {/if}
                   <li><a href="#" onclick="openPdfTteModal('{?=isset_or($value.no_rkm_medis)?}','{?=isset_or($value.no_rawat)?}')">Elektronik Rekam Medis</a></li>
                   {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
-                  <li><a href="#soap" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-umur="{?=isset_or($value.umurdaftar)?} {?=isset_or($value.sttsumur)?}">SOAPIE & Pemeriksaan</a></li>
+                  <li><a href="#soap" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-umur="{?=isset_or($value.umurdaftar)?} {?=isset_or($value.sttsumur)?}" data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}" data-stts_daftar="{?=isset_or($value.stts_daftar)?}" data-status_poli="{?=isset_or($value.status_poli)?}">SOAPIE & Pemeriksaan</a></li>
                   <li><a href="#layanan_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}">Layanan & Obat</a></li>
                   {? \Systems\Lib\Event::call('rsgmgha.dropdown_menu', [$value]) ?}
                   <li><a href="#rujuk_internal" data-no_rawat="{?=isset_or($value.no_rawat)?}">Rujuk Internal</a></li>
@@ -102,7 +102,7 @@
                   {/if}
                 </ul>
               </td>
-              <td style="white-space: nowrap;"><a href="#soap" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}">{?=isset_or($value.nm_pasien)?}</a></td>
+              <td style="white-space: nowrap;"><a href="#soap" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}" data-stts_daftar="{?=isset_or($value.stts_daftar)?}" data-status_poli="{?=isset_or($value.status_poli)?}">{?=isset_or($value.nm_pasien)?}</a></td>
               <td style="white-space: nowrap;"><a href="#layanan_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}">{?=isset_or($value.no_rawat)?}</a></td>
               <td style="white-space: nowrap;">
                 <button type="button" name="button" class="btn btn-xs btn-warning antrian"
@@ -240,12 +240,20 @@
     var nm_pasien = $(this).attr("data-nm_pasien");
     var umur = $(this).attr("data-umur");
     var tgl_registrasi = $(this).attr("data-tgl_registrasi");
+    var stts_daftar = $(this).attr("data-stts_daftar");
+    var status_poli = $(this).attr("data-status_poli");
 
     $('input:text[name=no_rawat]').val(no_rawat);
     $('input:text[name=no_rkm_medis]').val(no_rkm_medis);
     $('input:text[name=nm_pasien]').val(nm_pasien);
     $('input:text[name=umur]').val(umur);
     $('input:text[name=tgl_registrasi]').val(tgl_registrasi);
+    if (stts_daftar) {
+      $('input[name=stts_daftar][value="' + stts_daftar + '"]').prop('checked', true);
+    }
+    if (status_poli) {
+      $('input[name=status_poli][value="' + status_poli + '"]').prop('checked', true);
+    }
     $("#display").hide();
 
     var url = baseURL + '/dokter_ralan/soap?t=' + mlite.token;
@@ -278,6 +286,13 @@
           if (response.pemeriksaan) $('textarea[name=pemeriksaan]').val(response.pemeriksaan);
           if (response.penilaian) $('textarea[name=penilaian]').val(response.penilaian);
           if (response.rtl) $('textarea[name=rtl]').val(response.rtl);
+          if (response.stts_daftar) $('input[name=stts_daftar][value="' + response.stts_daftar + '"]').prop('checked', true);
+          var k_poli = response.kasus_poli || response.status_poli;
+          if (k_poli) {
+            $('input[name=kasus_poli][value="' + k_poli + '"]').prop('checked', true);
+            $('input[name=status_poli][value="' + k_poli + '"]').prop('checked', true);
+            $('#soap_status_poli').val(k_poli);
+          }
         }
         if (response.source_info) {
           $('#autofill_info_text').text(response.source_info);
