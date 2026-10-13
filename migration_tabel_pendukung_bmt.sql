@@ -1384,4 +1384,214 @@ CREATE TABLE IF NOT EXISTS `surat_pulang_aps` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+-- Struktur tabel `lampiran_cairan_infus`
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_cairan_infus` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `ruangan` varchar(100) DEFAULT NULL,
+  `kd_dokter` varchar(20) DEFAULT NULL,
+  `dokter` varchar(100) DEFAULT NULL,
+  `tanggal` date DEFAULT NULL,
+  `detail_cairan` mediumtext DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- Struktur tabel `lampiran_form_a_mpp`
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_form_a_mpp` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `tgl_hari` varchar(50) DEFAULT NULL,
+  `nama_mpp` varchar(150) DEFAULT NULL,
+  `nip_mpp` varchar(50) DEFAULT NULL,
+  `skrining_risiko_tinggi` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `skrining_potensi_komplain` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `skrining_kognitif_rendah` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `skrining_penyakit_kronis` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `skrining_gangguan_mental` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `skrining_biaya_tinggi` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `skrining_sistem_pembiayaan` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `skrining_los_memanjang` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `skrining_rencana_pemulangan` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `skrining_multiple_diagnosis` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `skrining_kasus_kompleks` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `fisik_fungsional` varchar(100) DEFAULT NULL,
+  `kognitif` varchar(100) DEFAULT NULL,
+  `pemahaman_kesehatan` varchar(100) DEFAULT NULL,
+  `kemampuan_menerima_perubahan` varchar(100) DEFAULT NULL,
+  `dukungan_keluarga` varchar(100) DEFAULT NULL,
+  `kepatuhan_pasien` varchar(100) DEFAULT NULL,
+  `perencanaan_lanjutan` text DEFAULT NULL,
+  `finansial_status` varchar(100) DEFAULT NULL,
+  `asesmen_lain_lain` text DEFAULT NULL,
+  `masalah_biaya` text DEFAULT NULL,
+  `masalah_keluarga` text DEFAULT NULL,
+  `masalah_pemulangan` text DEFAULT NULL,
+  `masalah_pemahaman` text DEFAULT NULL,
+  `masalah_ketidakpatuhan` text DEFAULT NULL,
+  `rencana_edukasi_ppa` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `rencana_koordinasi_bpjs` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `rencana_koordinasi_dpjp` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `rencana_lain_4` text DEFAULT NULL,
+  `rencana_lain_5` text DEFAULT NULL,
+  `kota` varchar(100) DEFAULT 'Banjarmasin',
+  `tanggal_ttd` date DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- Struktur tabel `lampiran_asesmen_ulang_status_fungsional`
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_asesmen_ulang_status_fungsional` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `ruangan` varchar(100) DEFAULT NULL,
+  `tanggal` date DEFAULT NULL,
+  `jam` time DEFAULT NULL,
+  `s1` tinyint(4) DEFAULT NULL,
+  `s2` tinyint(4) DEFAULT NULL,
+  `s3` tinyint(4) DEFAULT NULL,
+  `s4` tinyint(4) DEFAULT NULL,
+  `s5` tinyint(4) DEFAULT NULL,
+  `s6` tinyint(4) DEFAULT NULL,
+  `s7` tinyint(4) DEFAULT NULL,
+  `s8` tinyint(4) DEFAULT NULL,
+  `s9` tinyint(4) DEFAULT NULL,
+  `s10` tinyint(4) DEFAULT NULL,
+  `total_skor` tinyint(4) DEFAULT NULL,
+  `kategori` varchar(50) DEFAULT NULL,
+  `petugas` varchar(150) DEFAULT NULL,
+  `nip_petugas` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- Struktur tabel `lampiran_form_b_mpp`
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_form_b_mpp` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `tgl_pelaksanaan_1` varchar(50) DEFAULT NULL,
+  `catatan_pelaksanaan` text DEFAULT NULL,
+  `tgl_monitoring_2` varchar(50) DEFAULT NULL,
+  `catatan_monitoring` text DEFAULT NULL,
+  `tgl_fasilitasi_3` varchar(50) DEFAULT NULL,
+  `catatan_fasilitasi` text DEFAULT NULL,
+  `tgl_advokasi_4` varchar(50) DEFAULT NULL,
+  `catatan_advokasi` text DEFAULT NULL,
+  `tgl_hasil_5` varchar(50) DEFAULT NULL,
+  `catatan_hasil` text DEFAULT NULL,
+  `tgl_terminasi_6` varchar(50) DEFAULT NULL,
+  `catatan_terminasi` text DEFAULT NULL,
+  `kota` varchar(100) DEFAULT 'Banjarmasin',
+  `tanggal_ttd` date DEFAULT NULL,
+  `nama_mpp` varchar(150) DEFAULT NULL,
+  `nip_mpp` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- Struktur tabel `lampiran_kebutuhan_privasi_pasien`
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_kebutuhan_privasi_pasien` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `keluarga_dihubungi` varchar(255) DEFAULT NULL,
+  `diagnosis_medis` varchar(255) DEFAULT NULL,
+  `privasi_lawan_jenis` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `keterangan_lawan_jenis` text DEFAULT NULL,
+  `privasi_orang_lain` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `keterangan_orang_lain` text DEFAULT NULL,
+  `privasi_bagian_tubuh` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `keterangan_bagian_tubuh` text DEFAULT NULL,
+  `privasi_informasi_penyakit` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `keterangan_informasi_penyakit` text DEFAULT NULL,
+  `kota` varchar(100) DEFAULT 'Banjarmasin',
+  `tanggal_ttd` date DEFAULT NULL,
+  `nama_petugas` varchar(150) DEFAULT NULL,
+  `nip_petugas` varchar(50) DEFAULT NULL,
+  `nama_pasien_keluarga` varchar(150) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`)
+-- --------------------------------------------------------
+-- Struktur tabel `lampiran_meninggalkan_rs_tertentu`
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_meninggalkan_rs_tertentu` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `nama_pembuat` varchar(150) DEFAULT NULL,
+  `jk_pembuat` enum('Laki-laki','Perempuan') DEFAULT 'Laki-laki',
+  `no_identitas_pembuat` varchar(50) DEFAULT NULL,
+  `alamat_pembuat` text DEFAULT NULL,
+  `hubungan` varchar(50) DEFAULT 'Diri Sendiri',
+  `hubungan_detail` varchar(100) DEFAULT NULL,
+  `ruang_perawatan` varchar(100) DEFAULT NULL,
+  `keperluan` text DEFAULT NULL,
+  `tgl_mulai` date DEFAULT NULL,
+  `tgl_selesai` date DEFAULT NULL,
+  `kota` varchar(100) DEFAULT 'Banjarmasin',
+  `tanggal_ttd` date DEFAULT NULL,
+  `saksi_rs` varchar(150) DEFAULT NULL,
+  `nip_saksi_rs` varchar(50) DEFAULT NULL,
+  `saksi_pasien` varchar(150) DEFAULT NULL,
+  `pembuat_pernyataan_ttd` varchar(150) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`)
+-- --------------------------------------------------------
+-- Struktur tabel `lampiran_penghentian_pengobatan`
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_penghentian_pengobatan` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `nama_pembuat` varchar(150) DEFAULT NULL,
+  `umur_pembuat` varchar(10) DEFAULT NULL,
+  `alamat_pembuat` text DEFAULT NULL,
+  `no_telp_pembuat` varchar(50) DEFAULT NULL,
+  `bukti_diri_pembuat` varchar(100) DEFAULT NULL,
+  `hubungan` varchar(50) DEFAULT 'Diri Sendiri',
+  `hubungan_detail` varchar(100) DEFAULT NULL,
+  `bukti_diri_pasien` varchar(100) DEFAULT NULL,
+  `perawatan_kelas_kamar` varchar(150) DEFAULT NULL,
+  `alasan_penghentian` text DEFAULT NULL,
+  `kota` varchar(100) DEFAULT 'Banjarmasin',
+  `tanggal_ttd` date DEFAULT NULL,
+  `jam_ttd` varchar(20) DEFAULT NULL,
+  `nama_petugas` varchar(150) DEFAULT NULL,
+  `nip_petugas` varchar(50) DEFAULT NULL,
+  `pembuat_pernyataan_ttd` varchar(150) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;
+
+
+-- ============================================================
+-- 44. LAMPIRAN - FORMULIR PROFIL RINGKAS MEDIS RAWAT JALAN (PRMRJ)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `lampiran_profil_ringkas_medis_rajal` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `tanggal_formulir` date DEFAULT NULL,
+  `diagnosa_dpjp` longtext DEFAULT NULL,
+  `riwayat_alergi` longtext DEFAULT NULL,
+  `diagnosa_ranap` longtext DEFAULT NULL,
+  `operasi_tindakan` longtext DEFAULT NULL,
+  `obat_obatan` longtext DEFAULT NULL,
+  `keterangan_tambahan` text DEFAULT NULL,
+  `nama_dokter` varchar(150) DEFAULT NULL,
+  `nip_dokter` varchar(50) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

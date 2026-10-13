@@ -93,7 +93,15 @@ try {
         'rj07_asesmen_ulang_nyeri' => 'Asesmen Ulang Nyeri Rajal (RM.RJ 07)',
         'rj10_edukasi_terintegrasi' => 'Edukasi Terintegrasi Rajal (RM.RJ 10)',
         'rj11_pemberian_informasi' => 'Pemberian Informasi Rajal (RM.RJ 11)',
-        'surat_pulang_aps' => 'Surat Pernyataan Pulang APS'
+        'surat_pulang_aps' => 'Surat Pernyataan Pulang APS',
+        'lampiran_cairan_infus' => 'Lampiran - Pemantauan Cairan Infus (Ranap)',
+        'lampiran_form_a_mpp' => 'Lampiran - Form A Manajer Pelayanan Pasien (Ranap)',
+        'lampiran_asesmen_ulang_status_fungsional' => 'Lampiran - Form Asesmen Ulang Status Fungsional (Ranap)',
+        'lampiran_form_b_mpp' => 'Lampiran - Form B Catatan Implementasi MPP (Ranap)',
+        'lampiran_kebutuhan_privasi_pasien' => 'Lampiran - Formulir Identifikasi Kebutuhan Privasi Pasien (Ranap)',
+        'lampiran_meninggalkan_rs_tertentu' => 'Lampiran - Formulir Meninggalkan RS Selama Periode Tertentu (Ranap)',
+        'lampiran_penghentian_pengobatan' => 'Lampiran - Formulir Penghentian Pengobatan (Ranap)',
+        'lampiran_profil_ringkas_medis_rajal' => 'Lampiran - Formulir Profil Ringkas Medis Rawat Jalan PRMRJ (Rajal/Ranap)'
     ];
 
     foreach ($expectedTables as $tbl => $deskripsi) {

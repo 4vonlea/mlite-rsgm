@@ -272,12 +272,2344 @@ class Admin extends AdminModule
         exit();
     }
 
+    // ==========================================
+    // LAMPIRAN - CAIRAN INFUS (RANAP)
+    // ==========================================
+
+    public function anyCairaninfusmanage()
+    {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+            $id = $_GET['id'];
+            $this->db('lampiran_cairan_infus')->where('id', $id)->delete();
+            $this->notify('success', 'Data Lampiran Cairan Infus berhasil dihapus');
+            redirect(url([ADMIN, 'update_bmt', 'cairaninfusmanage']));
+        }
+
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $rows = $this->db('lampiran_cairan_infus')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_cairan_infus.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('lampiran_cairan_infus.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->desc('lampiran_cairan_infus.id')
+            ->toArray();
+
+        foreach ($rows as &$r) {
+            $details = !empty($r['detail_cairan']) ? json_decode($r['detail_cairan'], true) : [];
+            $r['total_botol'] = is_array($details) ? count($details) : 0;
+            if (empty($r['tanggal'])) {
+                $r['tanggal'] = '-';
+            }
+        }
+
+        return $this->draw('lampiran_cairan_infus/manage.html', ['data' => $rows]);
+    }
+
+    public function getCairaninfusform()
+    {
+        // AJAX info pasien
+        if (isset($_GET['ajax_patient'])) {
+            $no_rawat = trim($_GET['no_rawat'] ?? '');
+            if (is_numeric($no_rawat) && strlen($no_rawat) < 6) {
+                $no_rawat = str_pad($no_rawat, 6, '0', STR_PAD_LEFT);
+            }
+
+            $result = ['success' => false];
+            if (!empty($no_rawat)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->leftJoin('kamar_inap', 'kamar_inap.no_rawat = reg_periksa.no_rawat')
+                    ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
+                    ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
+                    ->leftJoin('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
+                    ->where('reg_periksa.no_rawat', $no_rawat)
+                    ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, bangsal.nm_bangsal, kamar.kd_kamar, dokter.nm_dokter')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+
+                if ($reg) {
+                    $result = array_merge(['success' => true], $reg);
+                }
+            }
+
+            if (ob_get_length()) {
+                ob_clean();
+            }
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit();
+        }
+
+        $id = $_GET['id'] ?? '';
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'nm_pasien' => '',
+            'jk' => '',
+            'tgl_lahir' => '',
+            'umur' => '',
+            'alamat' => '',
+            'ruangan' => '',
+            'kd_dokter' => '',
+            'dokter' => '',
+            'tanggal' => date('Y-m-d'),
+            'detail_cairan' => '[]',
+            'detail_cairan_parsed' => []
+        ];
+
+        if (!empty($id)) {
+            $row = $this->db('lampiran_cairan_infus')->where('id', $id)->oneArray();
+            if ($row) {
+                $data = array_merge($data, $row);
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->oneArray();
+                if ($reg) {
+                    $data = array_merge($data, $reg);
+                }
+            }
+        }
+
+        $data['detail_cairan_parsed'] = !empty($data['detail_cairan']) ? json_decode($data['detail_cairan'], true) : [];
+        if (!is_array($data['detail_cairan_parsed'])) {
+            $data['detail_cairan_parsed'] = [];
+        }
+
+        $dokter_list = $this->db('dokter')->select('kd_dokter, nm_dokter')->toArray();
+        $petugas_list = $this->db('petugas')->limit(50)->select('nip, nama')->toArray();
+        $current_user_name = $this->core->getUserInfo('fullname') ?? '';
+
+        return $this->draw('lampiran_cairan_infus/form.html', [
+            'data' => $data,
+            'dokter_list' => $dokter_list,
+            'petugas_list' => $petugas_list,
+            'current_user_name' => $current_user_name
+        ]);
+    }
+
+    public function postCairaninfussave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (!strpos($no_rawat, '/')) {
+            $reg = $this->db('reg_periksa')->where('no_rkm_medis', $no_rawat)->desc('tgl_registrasi')->desc('jam_reg')->oneArray();
+            if ($reg) {
+                $no_rawat = $reg['no_rawat'];
+            }
+        }
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'ruangan' => trim($_POST['ruangan'] ?? ''),
+            'dokter' => trim($_POST['dokter'] ?? ''),
+            'tanggal' => !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d'),
+            'detail_cairan' => $_POST['detail_cairan'] ?? '[]'
+        ];
+
+        if (!empty($id)) {
+            $this->db('lampiran_cairan_infus')->where('id', $id)->save($saveData);
+            $this->notify('success', 'Data Lampiran Cairan Infus berhasil diperbarui');
+        } else {
+            $this->db('lampiran_cairan_infus')->save($saveData);
+            $this->notify('success', 'Data Lampiran Cairan Infus berhasil disimpan');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'cairaninfusmanage']));
+    }
+
+    public function getCairaninfushapus()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!empty($id)) {
+            $this->db('lampiran_cairan_infus')->where('id', $id)->delete();
+            $this->notify('success', 'Data Lampiran Cairan Infus berhasil dihapus');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'cairaninfusmanage']));
+    }
+
+    public function getCairaninfuscetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('lampiran_cairan_infus')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_cairan_infus.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('lampiran_cairan_infus.id', $id)
+            ->select('lampiran_cairan_infus.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rm = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = $rm[$i] ?? '&nbsp;';
+        }
+        $data['no_rkm_medis'] = $rm;
+        $data['jk_label'] = ($data['jk'] ?? '') == 'L' ? 'L' : (($data['jk'] ?? '') == 'P' ? 'P' : '');
+
+        if (!empty($data['tgl_lahir'])) {
+            $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tanggal_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tanggal_lahir_indo'] = $data['tgl_lahir'];
+            }
+        } else {
+            $data['tanggal_lahir_indo'] = '-';
+        }
+
+        $items = !empty($data['detail_cairan']) ? json_decode($data['detail_cairan'], true) : [];
+        if (!is_array($items)) {
+            $items = [];
+        }
+
+        // Tampilkan 25 baris persis seperti form fisik formulir
+        $rendered_rows = [];
+        $totalRowsToDisplay = max(25, count($items));
+        for ($i = 0; $i < $totalRowsToDisplay; $i++) {
+            if (isset($items[$i])) {
+                $item = $items[$i];
+                $tglFormatted = !empty($item['tanggal']) ? date('d-m-Y', strtotime($item['tanggal'])) : '';
+                $rendered_rows[] = [
+                    'tanggal' => $tglFormatted,
+                    'botol' => $item['botol'] ?? '',
+                    'cairan_infus' => $item['cairan_infus'] ?? '',
+                    'jumlah_tetesan' => $item['jumlah_tetesan'] ?? '',
+                    'jam_mulai' => $item['jam_mulai'] ?? '',
+                    'tgl_jam_stop' => $item['tgl_jam_stop'] ?? '',
+                    'keterangan' => $item['keterangan'] ?? '',
+                    'nama' => $item['nama'] ?? ''
+                ];
+            } else {
+                $rendered_rows[] = [
+                    'tanggal' => '&nbsp;',
+                    'botol' => '&nbsp;',
+                    'cairan_infus' => '&nbsp;',
+                    'jumlah_tetesan' => '&nbsp;',
+                    'jam_mulai' => '&nbsp;',
+                    'tgl_jam_stop' => '&nbsp;',
+                    'keterangan' => '&nbsp;',
+                    'nama' => '&nbsp;'
+                ];
+            }
+        }
+        $data['rendered_rows'] = $rendered_rows;
+
+        // Cek jika request export mPDF
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 10,
+                    'margin_right' => 10,
+                    'margin_top' => 8,
+                    'margin_bottom' => 8
+                ]);
+                $html = $this->draw('lampiran_cairan_infus/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Lampiran_Cairan_Infus_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                // fallback to normal HTML view
+            }
+        }
+
+        echo $this->draw('lampiran_cairan_infus/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ==========================================
+    // LAMPIRAN - FORM A MANAJER PELAYANAN PASIEN (RANAP)
+    // ==========================================
+
+    public function anyFormamppmanage()
+    {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+            $id = $_GET['id'];
+            $this->db('lampiran_form_a_mpp')->where('id', $id)->delete();
+            $this->notify('success', 'Data Lampiran - Form A Manajer Pelayanan Pasien berhasil dihapus');
+            redirect(url([ADMIN, 'update_bmt', 'formamppmanage']));
+        }
+
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $rows = $this->db('lampiran_form_a_mpp')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_form_a_mpp.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('lampiran_form_a_mpp.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->desc('lampiran_form_a_mpp.id')
+            ->toArray();
+
+        foreach ($rows as &$r) {
+            $cnt = 0;
+            $skrining_fields = [
+                'skrining_risiko_tinggi', 'skrining_potensi_komplain', 'skrining_kognitif_rendah',
+                'skrining_penyakit_kronis', 'skrining_gangguan_mental', 'skrining_biaya_tinggi',
+                'skrining_sistem_pembiayaan', 'skrining_los_memanjang', 'skrining_rencana_pemulangan',
+                'skrining_multiple_diagnosis', 'skrining_kasus_kompleks'
+            ];
+            foreach ($skrining_fields as $f) {
+                if (!empty($r[$f]) && $r[$f] == 'Ya') {
+                    $cnt++;
+                }
+            }
+            $r['total_skrining'] = $cnt;
+        }
+
+        return $this->draw('lampiran_form_a_mpp/manage.html', ['data' => $rows]);
+    }
+
+    public function getFormamppform()
+    {
+        // AJAX info pasien
+        if (isset($_GET['ajax_patient'])) {
+            $no_rawat = trim($_GET['no_rawat'] ?? '');
+            if (is_numeric($no_rawat) && strlen($no_rawat) < 6) {
+                $no_rawat = str_pad($no_rawat, 6, '0', STR_PAD_LEFT);
+            }
+
+            $result = ['success' => false];
+            if (!empty($no_rawat)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $no_rawat)
+                    ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+
+                if ($reg) {
+                    $result = array_merge(['success' => true], $reg);
+                }
+            }
+
+            if (ob_get_length()) {
+                ob_clean();
+            }
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit();
+        }
+
+        $id = $_GET['id'] ?? '';
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'nm_pasien' => '',
+            'jk' => '',
+            'tgl_lahir' => '',
+            'umur' => '',
+            'alamat' => '',
+            'tgl_hari' => date('d-m-Y'),
+            'nama_mpp' => '',
+            'nip_mpp' => '',
+            'skrining_risiko_tinggi' => 'Tidak',
+            'skrining_potensi_komplain' => 'Tidak',
+            'skrining_kognitif_rendah' => 'Tidak',
+            'skrining_penyakit_kronis' => 'Tidak',
+            'skrining_gangguan_mental' => 'Tidak',
+            'skrining_biaya_tinggi' => 'Tidak',
+            'skrining_sistem_pembiayaan' => 'Tidak',
+            'skrining_los_memanjang' => 'Tidak',
+            'skrining_rencana_pemulangan' => 'Tidak',
+            'skrining_multiple_diagnosis' => 'Tidak',
+            'skrining_kasus_kompleks' => 'Tidak',
+            'fisik_fungsional' => '',
+            'kognitif' => '',
+            'pemahaman_kesehatan' => '',
+            'kemampuan_menerima_perubahan' => '',
+            'dukungan_keluarga' => '',
+            'kepatuhan_pasien' => '',
+            'perencanaan_lanjutan' => '',
+            'finansial_status' => '',
+            'asesmen_lain_lain' => '',
+            'masalah_biaya' => '',
+            'masalah_keluarga' => '',
+            'masalah_pemulangan' => '',
+            'masalah_pemahaman' => '',
+            'masalah_ketidakpatuhan' => '',
+            'rencana_edukasi_ppa' => 'Tidak',
+            'rencana_koordinasi_bpjs' => 'Tidak',
+            'rencana_koordinasi_dpjp' => 'Tidak',
+            'rencana_lain_4' => '',
+            'rencana_lain_5' => '',
+            'kota' => 'Banjarmasin',
+            'tanggal_ttd' => date('Y-m-d')
+        ];
+
+        if (!empty($id)) {
+            $row = $this->db('lampiran_form_a_mpp')->where('id', $id)->oneArray();
+            if ($row) {
+                $data = array_merge($data, $row);
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->oneArray();
+                if ($reg) {
+                    $data = array_merge($data, $reg);
+                }
+            }
+        }
+
+        $petugas_list = $this->db('petugas')->limit(100)->select('nip, nama')->toArray();
+
+        return $this->draw('lampiran_form_a_mpp/form.html', [
+            'data' => $data,
+            'petugas_list' => $petugas_list
+        ]);
+    }
+
+    public function postFormamppsave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (!strpos($no_rawat, '/')) {
+            $reg = $this->db('reg_periksa')->where('no_rkm_medis', $no_rawat)->desc('tgl_registrasi')->desc('jam_reg')->oneArray();
+            if ($reg) {
+                $no_rawat = $reg['no_rawat'];
+            }
+        }
+
+        $skrining_fields = [
+            'skrining_risiko_tinggi', 'skrining_potensi_komplain', 'skrining_kognitif_rendah',
+            'skrining_penyakit_kronis', 'skrining_gangguan_mental', 'skrining_biaya_tinggi',
+            'skrining_sistem_pembiayaan', 'skrining_los_memanjang', 'skrining_rencana_pemulangan',
+            'skrining_multiple_diagnosis', 'skrining_kasus_kompleks'
+        ];
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'tgl_hari' => trim($_POST['tgl_hari'] ?? ''),
+            'nama_mpp' => trim($_POST['nama_mpp'] ?? ''),
+            'nip_mpp' => trim($_POST['nip_mpp'] ?? ''),
+            'fisik_fungsional' => trim($_POST['fisik_fungsional'] ?? ''),
+            'kognitif' => trim($_POST['kognitif'] ?? ''),
+            'pemahaman_kesehatan' => trim($_POST['pemahaman_kesehatan'] ?? ''),
+            'kemampuan_menerima_perubahan' => trim($_POST['kemampuan_menerima_perubahan'] ?? ''),
+            'dukungan_keluarga' => trim($_POST['dukungan_keluarga'] ?? ''),
+            'kepatuhan_pasien' => trim($_POST['kepatuhan_pasien'] ?? ''),
+            'perencanaan_lanjutan' => trim($_POST['perencanaan_lanjutan'] ?? ''),
+            'finansial_status' => trim($_POST['finansial_status'] ?? ''),
+            'asesmen_lain_lain' => trim($_POST['asesmen_lain_lain'] ?? ''),
+            'masalah_biaya' => trim($_POST['masalah_biaya'] ?? ''),
+            'masalah_keluarga' => trim($_POST['masalah_keluarga'] ?? ''),
+            'masalah_pemulangan' => trim($_POST['masalah_pemulangan'] ?? ''),
+            'masalah_pemahaman' => trim($_POST['masalah_pemahaman'] ?? ''),
+            'masalah_ketidakpatuhan' => trim($_POST['masalah_ketidakpatuhan'] ?? ''),
+            'rencana_edukasi_ppa' => (isset($_POST['rencana_edukasi_ppa']) && $_POST['rencana_edukasi_ppa'] == 'Ya') ? 'Ya' : 'Tidak',
+            'rencana_koordinasi_bpjs' => (isset($_POST['rencana_koordinasi_bpjs']) && $_POST['rencana_koordinasi_bpjs'] == 'Ya') ? 'Ya' : 'Tidak',
+            'rencana_koordinasi_dpjp' => (isset($_POST['rencana_koordinasi_dpjp']) && $_POST['rencana_koordinasi_dpjp'] == 'Ya') ? 'Ya' : 'Tidak',
+            'rencana_lain_4' => trim($_POST['rencana_lain_4'] ?? ''),
+            'rencana_lain_5' => trim($_POST['rencana_lain_5'] ?? ''),
+            'kota' => trim($_POST['kota'] ?? 'Banjarmasin'),
+            'tanggal_ttd' => !empty($_POST['tanggal_ttd']) ? $_POST['tanggal_ttd'] : date('Y-m-d')
+        ];
+
+        foreach ($skrining_fields as $f) {
+            $saveData[$f] = (isset($_POST[$f]) && $_POST[$f] == 'Ya') ? 'Ya' : 'Tidak';
+        }
+
+        if (!empty($id)) {
+            $this->db('lampiran_form_a_mpp')->where('id', $id)->save($saveData);
+            $this->notify('success', 'Data Lampiran - Form A MPP berhasil diperbarui');
+        } else {
+            $this->db('lampiran_form_a_mpp')->save($saveData);
+            $this->notify('success', 'Data Lampiran - Form A MPP berhasil disimpan');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'formamppmanage']));
+    }
+
+    public function getFormampphapus()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!empty($id)) {
+            $this->db('lampiran_form_a_mpp')->where('id', $id)->delete();
+            $this->notify('success', 'Data Lampiran - Form A MPP berhasil dihapus');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'formamppmanage']));
+    }
+
+    public function getFormamppcetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('lampiran_form_a_mpp')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_form_a_mpp.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('lampiran_form_a_mpp.id', $id)
+            ->select('lampiran_form_a_mpp.*, reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rm = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = $rm[$i] ?? '&nbsp;';
+        }
+        $data['no_rkm_medis'] = $rm;
+        $data['jk_label'] = ($data['jk'] ?? '') == 'L' ? 'L' : (($data['jk'] ?? '') == 'P' ? 'P' : '');
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        if (!empty($data['tgl_lahir'])) {
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tanggal_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tanggal_lahir_indo'] = $data['tgl_lahir'];
+            }
+        } else {
+            $data['tanggal_lahir_indo'] = '-';
+        }
+
+        if (!empty($data['tanggal_ttd'])) {
+            $tgl = explode('-', $data['tanggal_ttd']);
+            if (count($tgl) == 3) {
+                $data['tanggal_ttd_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tanggal_ttd_indo'] = $data['tanggal_ttd'];
+            }
+        } else {
+            $data['tanggal_ttd_indo'] = date('d') . ' ' . $bulan[(int)date('m')] . ' ' . date('Y');
+        }
+
+        // Cek jika request export mPDF
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 10,
+                    'margin_right' => 10,
+                    'margin_top' => 8,
+                    'margin_bottom' => 8
+                ]);
+                $html = $this->draw('lampiran_form_a_mpp/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Lampiran_Form_A_MPP_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                // fallback to normal HTML view
+            }
+        }
+
+        echo $this->draw('lampiran_form_a_mpp/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ==========================================
+    // LAMPIRAN - FORM ASESMEN ULANG STATUS FUNGSIONAL (RANAP)
+    // ==========================================
+
+    public function anyStatusfungsionalulangmanage()
+    {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+            $id = $_GET['id'];
+            $this->db('lampiran_asesmen_ulang_status_fungsional')->where('id', $id)->delete();
+            $this->notify('success', 'Data Lampiran - Form Asesmen Ulang Status Fungsional berhasil dihapus');
+            redirect(url([ADMIN, 'update_bmt', 'statusfungsionalulangmanage']));
+        }
+
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $rows = $this->db('lampiran_asesmen_ulang_status_fungsional')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_asesmen_ulang_status_fungsional.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('lampiran_asesmen_ulang_status_fungsional.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->desc('lampiran_asesmen_ulang_status_fungsional.id')
+            ->toArray();
+
+        return $this->draw('lampiran_asesmen_ulang_status_fungsional/manage.html', ['data' => $rows]);
+    }
+
+    public function getStatusfungsionalulangform()
+    {
+        // AJAX info pasien
+        if (isset($_GET['ajax_patient'])) {
+            $no_rawat = trim($_GET['no_rawat'] ?? '');
+            if (is_numeric($no_rawat) && strlen($no_rawat) < 6) {
+                $no_rawat = str_pad($no_rawat, 6, '0', STR_PAD_LEFT);
+            }
+
+            $result = ['success' => false];
+            if (!empty($no_rawat)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->leftJoin('kamar_inap', 'kamar_inap.no_rawat = reg_periksa.no_rawat')
+                    ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
+                    ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
+                    ->where('reg_periksa.no_rawat', $no_rawat)
+                    ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, bangsal.nm_bangsal, kamar.kd_kamar')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+
+                if ($reg) {
+                    $result = array_merge(['success' => true], $reg);
+                }
+            }
+
+            if (ob_get_length()) {
+                ob_clean();
+            }
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit();
+        }
+
+        $id = $_GET['id'] ?? '';
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'nm_pasien' => '',
+            'jk' => '',
+            'tgl_lahir' => '',
+            'umur' => '',
+            'alamat' => '',
+            'ruangan' => '',
+            'tanggal' => date('Y-m-d'),
+            'jam' => date('H:i'),
+            'total_skor' => '',
+            'kategori' => '',
+            'petugas' => '',
+            'nip_petugas' => ''
+        ];
+        for ($i = 1; $i <= 10; $i++) {
+            $data['s' . $i] = '';
+        }
+
+        if (!empty($id)) {
+            $row = $this->db('lampiran_asesmen_ulang_status_fungsional')->where('id', $id)->oneArray();
+            if ($row) {
+                $data = array_merge($data, $row);
+                $data['jam'] = substr((string)$data['jam'], 0, 5);
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->oneArray();
+                if ($reg) {
+                    $data = array_merge($data, $reg);
+                }
+            }
+        }
+
+        $petugas_list = $this->db('petugas')->limit(100)->select('nip, nama')->toArray();
+
+        return $this->draw('lampiran_asesmen_ulang_status_fungsional/form.html', [
+            'data' => $data,
+            'petugas_list' => $petugas_list
+        ]);
+    }
+
+    public function postStatusfungsionalulangsave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (!strpos($no_rawat, '/')) {
+            $reg = $this->db('reg_periksa')->where('no_rkm_medis', $no_rawat)->desc('tgl_registrasi')->desc('jam_reg')->oneArray();
+            if ($reg) {
+                $no_rawat = $reg['no_rawat'];
+            }
+        }
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'ruangan' => trim($_POST['ruangan'] ?? ''),
+            'tanggal' => !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d'),
+            'jam' => !empty($_POST['jam']) ? $_POST['jam'] : date('H:i:s'),
+            'petugas' => trim($_POST['petugas'] ?? ''),
+            'nip_petugas' => trim($_POST['nip_petugas'] ?? '')
+        ];
+
+        $total = 0;
+        $filled = false;
+        for ($i = 1; $i <= 10; $i++) {
+            $val = $_POST['s' . $i] ?? '';
+            if ($val === '' || $val === null) {
+                $saveData['s' . $i] = null;
+            } else {
+                $saveData['s' . $i] = (int)$val;
+                $total += (int)$val;
+                $filled = true;
+            }
+        }
+
+        $saveData['total_skor'] = $filled ? $total : null;
+        if ($filled) {
+            if ($total >= 20) {
+                $saveData['kategori'] = 'Mandiri';
+            } elseif ($total >= 12) {
+                $saveData['kategori'] = 'Ketergantungan Ringan';
+            } elseif ($total >= 9) {
+                $saveData['kategori'] = 'Ketergantungan Sedang';
+            } elseif ($total >= 5) {
+                $saveData['kategori'] = 'Ketergantungan Berat';
+            } else {
+                $saveData['kategori'] = 'Ketergantungan Total';
+            }
+        } else {
+            $saveData['kategori'] = '';
+        }
+
+        if (!empty($id)) {
+            $this->db('lampiran_asesmen_ulang_status_fungsional')->where('id', $id)->save($saveData);
+            $this->notify('success', 'Data Asesmen Ulang Status Fungsional berhasil diperbarui');
+        } else {
+            $this->db('lampiran_asesmen_ulang_status_fungsional')->save($saveData);
+            $this->notify('success', 'Data Asesmen Ulang Status Fungsional berhasil disimpan');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'statusfungsionalulangmanage']));
+    }
+
+    public function getStatusfungsionalulanghapus()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!empty($id)) {
+            $this->db('lampiran_asesmen_ulang_status_fungsional')->where('id', $id)->delete();
+            $this->notify('success', 'Data Asesmen Ulang Status Fungsional berhasil dihapus');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'statusfungsionalulangmanage']));
+    }
+
+    public function getStatusfungsionalulangcetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $d = $this->db('lampiran_asesmen_ulang_status_fungsional')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_asesmen_ulang_status_fungsional.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('lampiran_asesmen_ulang_status_fungsional.id', $id)
+            ->select('lampiran_asesmen_ulang_status_fungsional.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->oneArray();
+
+        if (!$d) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $rmRaw = ltrim($d['no_rkm_medis'] ?? '', "'");
+        $rm = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        $p = [];
+        $p['id'] = $d['id'];
+        $p['no_rawat'] = $d['no_rawat'];
+        for ($i = 0; $i < 6; $i++) {
+            $p['rm' . $i] = $rm[$i] ?? '&nbsp;';
+        }
+        $p['nm_pasien'] = htmlspecialchars($d['nm_pasien'] ?? '');
+        $p['lp'] = ($d['jk'] ?? '') == 'L' ? 'L' : (($d['jk'] ?? '') == 'P' ? 'P' : 'L/P');
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        if (!empty($d['tgl_lahir']) && $d['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $d['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $p['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $p['tgl_lahir_indo'] = $d['tgl_lahir'];
+            }
+        } else {
+            $p['tgl_lahir_indo'] = '-';
+        }
+
+        $p['ruangan'] = htmlspecialchars($d['ruangan'] ?? '');
+        $tglJam = '';
+        if (!empty($d['tanggal'])) {
+            $tglJam .= date('d-m-Y', strtotime($d['tanggal']));
+        }
+        if (!empty($d['jam'])) {
+            $tglJam .= ' ' . substr((string)$d['jam'], 0, 5);
+        }
+        $p['tanggal_jam'] = $tglJam;
+        $p['total'] = $d['total_skor'] !== null ? $d['total_skor'] : '';
+        $p['kategori'] = htmlspecialchars($d['kategori'] ?? '');
+        $p['petugas'] = htmlspecialchars($d['petugas'] ?? '');
+
+        // Generate Barthel table rows
+        $items = [
+            1 => ['Makan', 'Feeding', ['Tidak mampu', 'Butuh bantuan memotong, mengoles mentega, dll', 'Mandiri']],
+            2 => ['Mandi', 'Bathing', ['Tergantung orang lain', 'Mandiri']],
+            3 => ['Perawatan Diri', 'Grooming', ['Membutuhkan bantuan orang lain', 'Mandiri dalam perawatan muka, rambut, gigi, dan bercukur']],
+            4 => ['Berpakaian', 'Dressing', ['Tergantung orang lain', 'Sebagian dibantu (misalnya mengancing baju)', 'Mandiri']],
+            5 => ['Buang Air Kecil', 'Blader', ['Inkontinensia atau pakai kateter dan tidak dapat mengontrol', 'Kadang Inkontinensia (maks, 1 kali dalam 24 jam)', 'Kontinensia (teratur untuk lebih dari 7 hari)']],
+            6 => ['Buang Air Besar', 'Bowels', ['Inkontinensia (tidak teratur atau perlu enema)', 'Kadang Inkontensia (sekali seminggu)', 'Kontinensia (teratur)']],
+            7 => ['Penggunaan Toilet', 'Toilet Use', ['Tergantung bantuan orang lain', 'Membutuhkan bantuan, tapi dapat melakukan beberapa hal sendiri', 'Mandiri']],
+            8 => ['Transfer', '', ['Tidak mampu – tidak seimbang saat duduk', 'Butuh bantuan untuk bisa duduk (2 orang)', 'Bantuan kecil (1 orang)', 'Mandiri']],
+            9 => ['Mobilitas', 'Mobility', ['Immobile (tidak mampu)', 'Menggunakan kursi roda', 'Berjalan dengan bantuan satu orang', 'Mandiri (meskipun menggunakan alat bantu seperti tongkat)']],
+            10 => ['Naik Turun Tangga', 'Stairs', ['Tidak mampu', 'Membutuhkan bantuan (alat bantu)', 'Mandiri']]
+        ];
+
+        $rows = '';
+        foreach ($items as $no => $it) {
+            $n = count($it[2]);
+            $nilai = ($d['s' . $no] !== null && $d['s' . $no] !== '') ? (int)$d['s' . $no] : null;
+            foreach ($it[2] as $skor => $label) {
+                $sel = ($nilai !== null && $nilai === $skor);
+                $rows .= '<tr>';
+                if ($skor === 0) {
+                    $rows .= '<td rowspan="' . $n . '" class="c" style="vertical-align: middle; font-weight: bold;">' . $no . '</td>';
+                    $rows .= '<td rowspan="' . $n . '" style="vertical-align: middle; font-weight: bold;">' . $it[0] . ($it[1] ? ' <i>(' . $it[1] . ')</i>' : '') . '</td>';
+                }
+                $rows .= '<td' . ($sel ? ' class="sel"' : '') . '>' . htmlspecialchars($label) . '</td>';
+                $rows .= '<td class="c' . ($sel ? ' sel' : '') . '">' . $skor . '</td>';
+                if ($skor === 0) {
+                    $rows .= '<td rowspan="' . $n . '" class="nilai">' . ($nilai !== null ? $nilai : '') . '</td>';
+                }
+                $rows .= '</tr>';
+            }
+        }
+
+        $katList = [
+            'Mandiri' => '20',
+            'Ketergantungan Ringan' => '12-19',
+            'Ketergantungan Sedang' => '9-11',
+            'Ketergantungan Berat' => '5-8',
+            'Ketergantungan Total' => '0-4'
+        ];
+        $katRows = '';
+        $first = true;
+        foreach ($katList as $label => $range) {
+            $on = ($d['kategori'] ?? '') === $label;
+            $katRows .= '<tr>'
+                     . '<td style="width: 35px;">' . ($first ? 'Skor' : '') . '</td>'
+                     . '<td style="width: 45px;">' . $range . '</td>'
+                     . '<td style="width: 15px; text-align: center;">:</td>'
+                     . '<td>' . ($on ? '<span class="circle-badge">' . $label . '</span>' : $label) . '</td>'
+                     . '</tr>';
+            $first = false;
+        }
+
+        // Cek export mPDF
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 10,
+                    'margin_right' => 10,
+                    'margin_top' => 8,
+                    'margin_bottom' => 8
+                ]);
+                $html = $this->draw('lampiran_asesmen_ulang_status_fungsional/cetak.html', ['p' => $p, 'rows' => $rows, 'katRows' => $katRows, 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Lampiran_Asesmen_Ulang_Status_Fungsional_' . str_replace('/', '_', $p['no_rawat']) . '.pdf';
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                // fallback to normal HTML view
+            }
+        }
+
+        echo $this->draw('lampiran_asesmen_ulang_status_fungsional/cetak.html', ['p' => $p, 'rows' => $rows, 'katRows' => $katRows, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ==========================================
+    // LAMPIRAN - FORM B CATATAN IMPLEMENTASI MANAJER PELAYANAN PASIEN (MPP) (RANAP)
+    // ==========================================
+
+    public function anyFormbmppmanage()
+    {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+            $id = $_GET['id'];
+            $this->db('lampiran_form_b_mpp')->where('id', $id)->delete();
+            $this->notify('success', 'Data Formulir B Catatan Implementasi MPP berhasil dihapus');
+            redirect(url([ADMIN, 'update_bmt', 'formbmppmanage']));
+        }
+
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $rows = $this->db('lampiran_form_b_mpp')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_form_b_mpp.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('lampiran_form_b_mpp.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->desc('lampiran_form_b_mpp.id')
+            ->toArray();
+
+        return $this->draw('lampiran_form_b_mpp/manage.html', ['data' => $rows]);
+    }
+
+    public function getFormbmppform()
+    {
+        // AJAX info pasien
+        if (isset($_GET['ajax_patient'])) {
+            $no_rawat = trim($_GET['no_rawat'] ?? '');
+            if (is_numeric($no_rawat) && strlen($no_rawat) < 6) {
+                $no_rawat = str_pad($no_rawat, 6, '0', STR_PAD_LEFT);
+            }
+
+            $result = ['success' => false];
+            if (!empty($no_rawat)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $no_rawat)
+                    ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+
+                if ($reg) {
+                    $result = array_merge(['success' => true], $reg);
+                }
+            }
+
+            if (ob_get_length()) {
+                ob_clean();
+            }
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit();
+        }
+
+        $id = $_GET['id'] ?? '';
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'nm_pasien' => '',
+            'jk' => '',
+            'tgl_lahir' => '',
+            'umur' => '',
+            'alamat' => '',
+            'tgl_pelaksanaan_1' => date('d-m-Y H:i'),
+            'catatan_pelaksanaan' => '',
+            'tgl_monitoring_2' => date('d-m-Y H:i'),
+            'catatan_monitoring' => '',
+            'tgl_fasilitasi_3' => date('d-m-Y H:i'),
+            'catatan_fasilitasi' => '',
+            'tgl_advokasi_4' => date('d-m-Y H:i'),
+            'catatan_advokasi' => '',
+            'tgl_hasil_5' => date('d-m-Y H:i'),
+            'catatan_hasil' => '',
+            'tgl_terminasi_6' => date('d-m-Y H:i'),
+            'catatan_terminasi' => '',
+            'kota' => 'Banjarmasin',
+            'tanggal_ttd' => date('Y-m-d'),
+            'nama_mpp' => '',
+            'nip_mpp' => ''
+        ];
+
+        if (!empty($id)) {
+            $row = $this->db('lampiran_form_b_mpp')->where('id', $id)->oneArray();
+            if ($row) {
+                $data = array_merge($data, $row);
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->oneArray();
+                if ($reg) {
+                    $data = array_merge($data, $reg);
+                }
+            }
+        }
+
+        $petugas_list = $this->db('petugas')->limit(100)->select('nip, nama')->toArray();
+
+        return $this->draw('lampiran_form_b_mpp/form.html', [
+            'data' => $data,
+            'petugas_list' => $petugas_list
+        ]);
+    }
+
+    public function postFormbmppsave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (!strpos($no_rawat, '/')) {
+            $reg = $this->db('reg_periksa')->where('no_rkm_medis', $no_rawat)->desc('tgl_registrasi')->desc('jam_reg')->oneArray();
+            if ($reg) {
+                $no_rawat = $reg['no_rawat'];
+            }
+        }
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'tgl_pelaksanaan_1' => trim($_POST['tgl_pelaksanaan_1'] ?? ''),
+            'catatan_pelaksanaan' => trim($_POST['catatan_pelaksanaan'] ?? ''),
+            'tgl_monitoring_2' => trim($_POST['tgl_monitoring_2'] ?? ''),
+            'catatan_monitoring' => trim($_POST['catatan_monitoring'] ?? ''),
+            'tgl_fasilitasi_3' => trim($_POST['tgl_fasilitasi_3'] ?? ''),
+            'catatan_fasilitasi' => trim($_POST['catatan_fasilitasi'] ?? ''),
+            'tgl_advokasi_4' => trim($_POST['tgl_advokasi_4'] ?? ''),
+            'catatan_advokasi' => trim($_POST['catatan_advokasi'] ?? ''),
+            'tgl_hasil_5' => trim($_POST['tgl_hasil_5'] ?? ''),
+            'catatan_hasil' => trim($_POST['catatan_hasil'] ?? ''),
+            'tgl_terminasi_6' => trim($_POST['tgl_terminasi_6'] ?? ''),
+            'catatan_terminasi' => trim($_POST['catatan_terminasi'] ?? ''),
+            'kota' => trim($_POST['kota'] ?? 'Banjarmasin'),
+            'tanggal_ttd' => !empty($_POST['tanggal_ttd']) ? $_POST['tanggal_ttd'] : date('Y-m-d'),
+            'nama_mpp' => trim($_POST['nama_mpp'] ?? ''),
+            'nip_mpp' => trim($_POST['nip_mpp'] ?? '')
+        ];
+
+        if (!empty($id)) {
+            $this->db('lampiran_form_b_mpp')->where('id', $id)->save($saveData);
+            $this->notify('success', 'Data Formulir B Catatan Implementasi MPP berhasil diperbarui');
+        } else {
+            $this->db('lampiran_form_b_mpp')->save($saveData);
+            $this->notify('success', 'Data Formulir B Catatan Implementasi MPP berhasil disimpan');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'formbmppmanage']));
+    }
+
+    public function getFormbmpphapus()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!empty($id)) {
+            $this->db('lampiran_form_b_mpp')->where('id', $id)->delete();
+            $this->notify('success', 'Data Formulir B Catatan Implementasi MPP berhasil dihapus');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'formbmppmanage']));
+    }
+
+    public function getFormbmppcetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('lampiran_form_b_mpp')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_form_b_mpp.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('lampiran_form_b_mpp.id', $id)
+            ->select('lampiran_form_b_mpp.*, reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rm = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = $rm[$i] ?? '&nbsp;';
+        }
+        $data['no_rkm_medis'] = $rm;
+        $data['jk_label'] = ($data['jk'] ?? '') == 'L' ? 'L' : (($data['jk'] ?? '') == 'P' ? 'P' : '');
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tanggal_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tanggal_lahir_indo'] = $data['tgl_lahir'];
+            }
+        } else {
+            $data['tanggal_lahir_indo'] = '-';
+        }
+
+        if (!empty($data['tanggal_ttd']) && $data['tanggal_ttd'] != '0000-00-00') {
+            $tgl = explode('-', $data['tanggal_ttd']);
+            if (count($tgl) == 3) {
+                $data['tanggal_ttd_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tanggal_ttd_indo'] = $data['tanggal_ttd'];
+            }
+        } else {
+            $data['tanggal_ttd_indo'] = date('d') . ' ' . $bulan[(int)date('m')] . ' ' . date('Y');
+        }
+
+        // Cek jika request export mPDF
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 10,
+                    'margin_right' => 10,
+                    'margin_top' => 8,
+                    'margin_bottom' => 8
+                ]);
+                $html = $this->draw('lampiran_form_b_mpp/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Formulir_B_Catatan_Implementasi_MPP_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                // fallback to normal HTML view
+            }
+        }
+
+        echo $this->draw('lampiran_form_b_mpp/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ============================================================
+    // LAMPIRAN - FORMULIR IDENTIFIKASI KEBUTUHAN PRIVASI PASIEN
+    // ============================================================
+
+    public function anyKebutuhanprivasimanage()
+    {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+            $id = $_GET['id'];
+            $this->db('lampiran_kebutuhan_privasi_pasien')->where('id', $id)->delete();
+            $this->notify('success', 'Data Identifikasi Kebutuhan Privasi Pasien berhasil dihapus');
+            redirect(url([ADMIN, 'update_bmt', 'kebutuhanprivasimanage']));
+        }
+
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $rows = $this->db('lampiran_kebutuhan_privasi_pasien')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_kebutuhan_privasi_pasien.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('lampiran_kebutuhan_privasi_pasien.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->desc('lampiran_kebutuhan_privasi_pasien.id')
+            ->toArray();
+
+        return $this->draw('lampiran_kebutuhan_privasi_pasien/manage.html', ['data' => $rows]);
+    }
+
+    public function getKebutuhanprivasiform()
+    {
+        // AJAX info pasien & diagnosa
+        if (isset($_GET['ajax_patient'])) {
+            $no_rawat = trim($_GET['no_rawat'] ?? '');
+            if (is_numeric($no_rawat) && strlen($no_rawat) < 6) {
+                $no_rawat = str_pad($no_rawat, 6, '0', STR_PAD_LEFT);
+            }
+
+            $result = ['success' => false];
+            if (!empty($no_rawat)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->leftJoin('penanggung_jawab', 'penanggung_jawab.no_rawat = reg_periksa.no_rawat')
+                    ->where('reg_periksa.no_rawat', $no_rawat)
+                    ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, reg_periksa.p_jawab, reg_periksa.hubunganpj, reg_periksa.almt_pj')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+
+                if ($reg) {
+                    // Cari diagnosa dari diagnosa_pasien dan penyakit
+                    $diag = $this->db('diagnosa_pasien')
+                        ->leftJoin('penyakit', 'penyakit.kd_penyakit = diagnosa_pasien.kd_penyakit')
+                        ->where('diagnosa_pasien.no_rawat', $reg['no_rawat'])
+                        ->select('penyakit.nm_penyakit, diagnosa_pasien.kd_penyakit')
+                        ->toArray();
+
+                    $diagList = [];
+                    foreach ($diag as $d) {
+                        $diagList[] = $d['nm_penyakit'] . ' (' . $d['kd_penyakit'] . ')';
+                    }
+                    $reg['diagnosis_medis'] = implode(', ', $diagList);
+
+                    // Penanggung jawab / keluarga yang bisa dihubungi
+                    $pj = '';
+                    if (!empty($reg['p_jawab'])) {
+                        $pj = $reg['p_jawab'] . (!empty($reg['hubunganpj']) ? ' (' . $reg['hubunganpj'] . ')' : '');
+                    }
+                    $reg['keluarga_dihubungi'] = $pj;
+
+                    $result = array_merge(['success' => true], $reg);
+                }
+            }
+
+            if (ob_get_length()) {
+                ob_clean();
+            }
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit();
+        }
+
+        $id = $_GET['id'] ?? '';
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'nm_pasien' => '',
+            'jk' => '',
+            'tgl_lahir' => '',
+            'umur' => '',
+            'alamat' => '',
+            'keluarga_dihubungi' => '',
+            'diagnosis_medis' => '',
+            'privasi_lawan_jenis' => 'Tidak',
+            'keterangan_lawan_jenis' => '',
+            'privasi_orang_lain' => 'Tidak',
+            'keterangan_orang_lain' => '',
+            'privasi_bagian_tubuh' => 'Tidak',
+            'keterangan_bagian_tubuh' => '',
+            'privasi_informasi_penyakit' => 'Tidak',
+            'keterangan_informasi_penyakit' => '',
+            'kota' => 'Banjarmasin',
+            'tanggal_ttd' => date('Y-m-d'),
+            'nama_petugas' => '',
+            'nip_petugas' => '',
+            'nama_pasien_keluarga' => ''
+        ];
+
+        if (!empty($id)) {
+            $row = $this->db('lampiran_kebutuhan_privasi_pasien')->where('id', $id)->oneArray();
+            if ($row) {
+                $data = array_merge($data, $row);
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->oneArray();
+                if ($reg) {
+                    $data = array_merge($data, $reg);
+                }
+            }
+        }
+
+        $petugas_list = $this->db('petugas')->limit(100)->select('nip, nama')->toArray();
+
+        return $this->draw('lampiran_kebutuhan_privasi_pasien/form.html', [
+            'data' => $data,
+            'petugas_list' => $petugas_list
+        ]);
+    }
+
+    public function postKebutuhanprivasisave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (!strpos($no_rawat, '/')) {
+            $reg = $this->db('reg_periksa')->where('no_rkm_medis', $no_rawat)->desc('tgl_registrasi')->desc('jam_reg')->oneArray();
+            if ($reg) {
+                $no_rawat = $reg['no_rawat'];
+            }
+        }
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'keluarga_dihubungi' => trim($_POST['keluarga_dihubungi'] ?? ''),
+            'diagnosis_medis' => trim($_POST['diagnosis_medis'] ?? ''),
+            'privasi_lawan_jenis' => trim($_POST['privasi_lawan_jenis'] ?? 'Tidak'),
+            'keterangan_lawan_jenis' => trim($_POST['keterangan_lawan_jenis'] ?? ''),
+            'privasi_orang_lain' => trim($_POST['privasi_orang_lain'] ?? 'Tidak'),
+            'keterangan_orang_lain' => trim($_POST['keterangan_orang_lain'] ?? ''),
+            'privasi_bagian_tubuh' => trim($_POST['privasi_bagian_tubuh'] ?? 'Tidak'),
+            'keterangan_bagian_tubuh' => trim($_POST['keterangan_bagian_tubuh'] ?? ''),
+            'privasi_informasi_penyakit' => trim($_POST['privasi_informasi_penyakit'] ?? 'Tidak'),
+            'keterangan_informasi_penyakit' => trim($_POST['keterangan_informasi_penyakit'] ?? ''),
+            'kota' => trim($_POST['kota'] ?? 'Banjarmasin'),
+            'tanggal_ttd' => !empty($_POST['tanggal_ttd']) ? $_POST['tanggal_ttd'] : date('Y-m-d'),
+            'nama_petugas' => trim($_POST['nama_petugas'] ?? ''),
+            'nip_petugas' => trim($_POST['nip_petugas'] ?? ''),
+            'nama_pasien_keluarga' => trim($_POST['nama_pasien_keluarga'] ?? '')
+        ];
+
+        if (!empty($id)) {
+            $this->db('lampiran_kebutuhan_privasi_pasien')->where('id', $id)->save($saveData);
+            $this->notify('success', 'Data Identifikasi Kebutuhan Privasi Pasien berhasil diperbarui');
+        } else {
+            $this->db('lampiran_kebutuhan_privasi_pasien')->save($saveData);
+            $this->notify('success', 'Data Identifikasi Kebutuhan Privasi Pasien berhasil disimpan');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'kebutuhanprivasimanage']));
+    }
+
+    public function getKebutuhanprivasihapus()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!empty($id)) {
+            $this->db('lampiran_kebutuhan_privasi_pasien')->where('id', $id)->delete();
+            $this->notify('success', 'Data Identifikasi Kebutuhan Privasi Pasien berhasil dihapus');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'kebutuhanprivasimanage']));
+    }
+
+    public function getKebutuhanprivasicetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('lampiran_kebutuhan_privasi_pasien')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_kebutuhan_privasi_pasien.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('lampiran_kebutuhan_privasi_pasien.id', $id)
+            ->select('lampiran_kebutuhan_privasi_pasien.*, reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rm = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = $rm[$i] ?? '&nbsp;';
+        }
+        $data['no_rkm_medis'] = $rm;
+        $data['jk_label'] = ($data['jk'] ?? '') == 'L' ? 'Laki-Laki' : (($data['jk'] ?? '') == 'P' ? 'Perempuan' : '-');
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tanggal_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tanggal_lahir_indo'] = $data['tgl_lahir'];
+            }
+        } else {
+            $data['tanggal_lahir_indo'] = '-';
+        }
+
+        if (!empty($data['tanggal_ttd']) && $data['tanggal_ttd'] != '0000-00-00') {
+            $tgl = explode('-', $data['tanggal_ttd']);
+            if (count($tgl) == 3) {
+                $data['tanggal_ttd_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tanggal_ttd_indo'] = $data['tanggal_ttd'];
+            }
+        } else {
+            $data['tanggal_ttd_indo'] = date('d') . ' ' . $bulan[(int)date('m')] . ' ' . date('Y');
+        }
+
+        // Cek jika request export mPDF
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 10,
+                    'margin_right' => 10,
+                    'margin_top' => 8,
+                    'margin_bottom' => 8
+                ]);
+                $html = $this->draw('lampiran_kebutuhan_privasi_pasien/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Formulir_Identifikasi_Kebutuhan_Privasi_Pasien_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                // fallback to normal HTML view
+            }
+        }
+
+        echo $this->draw('lampiran_kebutuhan_privasi_pasien/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ============================================================
+    // LAMPIRAN - FORMULIR MENINGGALKAN RUMAH SAKIT SELAMA PERIODE WAKTU TERTENTU
+    // ============================================================
+
+    public function anyMeninggalkanrsmanage()
+    {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+            $id = $_GET['id'];
+            $this->db('lampiran_meninggalkan_rs_tertentu')->where('id', $id)->delete();
+            $this->notify('success', 'Data Formulir Meninggalkan RS berhasil dihapus');
+            redirect(url([ADMIN, 'update_bmt', 'meninggalkanrsmanage']));
+        }
+
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $rows = $this->db('lampiran_meninggalkan_rs_tertentu')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_meninggalkan_rs_tertentu.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('lampiran_meninggalkan_rs_tertentu.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->desc('lampiran_meninggalkan_rs_tertentu.id')
+            ->toArray();
+
+        return $this->draw('lampiran_meninggalkan_rs_tertentu/manage.html', ['data' => $rows]);
+    }
+
+    public function getMeninggalkanrsform()
+    {
+        // AJAX info pasien
+        if (isset($_GET['ajax_patient'])) {
+            $no_rawat = trim($_GET['no_rawat'] ?? '');
+            if (is_numeric($no_rawat) && strlen($no_rawat) < 6) {
+                $no_rawat = str_pad($no_rawat, 6, '0', STR_PAD_LEFT);
+            }
+
+            $result = ['success' => false];
+            if (!empty($no_rawat)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $no_rawat)
+                    ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, reg_periksa.p_jawab, reg_periksa.hubunganpj, reg_periksa.almt_pj')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+
+                if ($reg) {
+                    // Cari ruang perawatan dari kamar_inap jika ada
+                    $km = $this->db('kamar_inap')
+                        ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
+                        ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
+                        ->where('kamar_inap.no_rawat', $reg['no_rawat'])
+                        ->desc('kamar_inap.tgl_masuk')
+                        ->desc('kamar_inap.jam_masuk')
+                        ->select('bangsal.nm_bangsal, kamar.kd_kamar')
+                        ->oneArray();
+
+                    if ($km && !empty($km['nm_bangsal'])) {
+                        $reg['ruang_perawatan'] = $km['nm_bangsal'] . ' (' . $km['kd_kamar'] . ')';
+                    } else {
+                        $reg['ruang_perawatan'] = 'Rawat Inap';
+                    }
+
+                    $result = array_merge(['success' => true], $reg);
+                }
+            }
+
+            if (ob_get_length()) {
+                ob_clean();
+            }
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit();
+        }
+
+        $id = $_GET['id'] ?? '';
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'nm_pasien' => '',
+            'jk' => '',
+            'tmp_lahir' => '',
+            'tgl_lahir' => '',
+            'umur' => '',
+            'alamat' => '',
+            'nama_pembuat' => '',
+            'jk_pembuat' => 'Laki-laki',
+            'no_identitas_pembuat' => '',
+            'alamat_pembuat' => '',
+            'hubungan' => 'Diri Sendiri',
+            'hubungan_detail' => '',
+            'ruang_perawatan' => '',
+            'keperluan' => '',
+            'tgl_mulai' => date('Y-m-d'),
+            'tgl_selesai' => date('Y-m-d'),
+            'kota' => 'Banjarmasin',
+            'tanggal_ttd' => date('Y-m-d'),
+            'saksi_rs' => '',
+            'nip_saksi_rs' => '',
+            'saksi_pasien' => '',
+            'pembuat_pernyataan_ttd' => ''
+        ];
+
+        if (!empty($id)) {
+            $row = $this->db('lampiran_meninggalkan_rs_tertentu')->where('id', $id)->oneArray();
+            if ($row) {
+                $data = array_merge($data, $row);
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->oneArray();
+                if ($reg) {
+                    $data = array_merge($data, $reg);
+                }
+            }
+        }
+
+        $petugas_list = $this->db('petugas')->limit(100)->select('nip, nama')->toArray();
+
+        return $this->draw('lampiran_meninggalkan_rs_tertentu/form.html', [
+            'data' => $data,
+            'petugas_list' => $petugas_list
+        ]);
+    }
+
+    public function postMeninggalkanrssave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (!strpos($no_rawat, '/')) {
+            $reg = $this->db('reg_periksa')->where('no_rkm_medis', $no_rawat)->desc('tgl_registrasi')->desc('jam_reg')->oneArray();
+            if ($reg) {
+                $no_rawat = $reg['no_rawat'];
+            }
+        }
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'nama_pembuat' => trim($_POST['nama_pembuat'] ?? ''),
+            'jk_pembuat' => trim($_POST['jk_pembuat'] ?? 'Laki-laki'),
+            'no_identitas_pembuat' => trim($_POST['no_identitas_pembuat'] ?? ''),
+            'alamat_pembuat' => trim($_POST['alamat_pembuat'] ?? ''),
+            'hubungan' => trim($_POST['hubungan'] ?? 'Diri Sendiri'),
+            'hubungan_detail' => trim($_POST['hubungan_detail'] ?? ''),
+            'ruang_perawatan' => trim($_POST['ruang_perawatan'] ?? ''),
+            'keperluan' => trim($_POST['keperluan'] ?? ''),
+            'tgl_mulai' => !empty($_POST['tgl_mulai']) ? $_POST['tgl_mulai'] : date('Y-m-d'),
+            'tgl_selesai' => !empty($_POST['tgl_selesai']) ? $_POST['tgl_selesai'] : date('Y-m-d'),
+            'kota' => trim($_POST['kota'] ?? 'Banjarmasin'),
+            'tanggal_ttd' => !empty($_POST['tanggal_ttd']) ? $_POST['tanggal_ttd'] : date('Y-m-d'),
+            'saksi_rs' => trim($_POST['saksi_rs'] ?? ''),
+            'nip_saksi_rs' => trim($_POST['nip_saksi_rs'] ?? ''),
+            'saksi_pasien' => trim($_POST['saksi_pasien'] ?? ''),
+            'pembuat_pernyataan_ttd' => trim($_POST['pembuat_pernyataan_ttd'] ?? '')
+        ];
+
+        if (!empty($id)) {
+            $this->db('lampiran_meninggalkan_rs_tertentu')->where('id', $id)->save($saveData);
+            $this->notify('success', 'Data Formulir Meninggalkan RS berhasil diperbarui');
+        } else {
+            $this->db('lampiran_meninggalkan_rs_tertentu')->save($saveData);
+            $this->notify('success', 'Data Formulir Meninggalkan RS berhasil disimpan');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'meninggalkanrsmanage']));
+    }
+
+    public function getMeninggalkanrshapus()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!empty($id)) {
+            $this->db('lampiran_meninggalkan_rs_tertentu')->where('id', $id)->delete();
+            $this->notify('success', 'Data Formulir Meninggalkan RS berhasil dihapus');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'meninggalkanrsmanage']));
+    }
+
+    public function getMeninggalkanrscetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('lampiran_meninggalkan_rs_tertentu')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_meninggalkan_rs_tertentu.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('lampiran_meninggalkan_rs_tertentu.id', $id)
+            ->select('lampiran_meninggalkan_rs_tertentu.*, reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.alamat')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rm = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        $data['no_rkm_medis'] = $rm;
+
+        $data['jk_pasien_label'] = ($data['jk'] ?? '') == 'L' ? 'laki-laki' : (($data['jk'] ?? '') == 'P' ? 'perempuan' : '-');
+        $data['jk_pembuat_label'] = strtolower($data['jk_pembuat'] ?? 'laki-laki');
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $tglIndo = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+                $data['ttl_pasien'] = (!empty($data['tmp_lahir']) ? $data['tmp_lahir'] . ', ' : '') . $tglIndo;
+            } else {
+                $data['ttl_pasien'] = $data['tgl_lahir'];
+            }
+        } else {
+            $data['ttl_pasien'] = '-';
+        }
+
+        // Format tanggal mulai dan selesai
+        if (!empty($data['tgl_mulai']) && $data['tgl_mulai'] != '0000-00-00') {
+            $tm = explode('-', $data['tgl_mulai']);
+            $data['tgl_mulai_indo'] = (count($tm) == 3) ? (int)$tm[2] . ' ' . $bulan[(int)$tm[1]] . ' ' . $tm[0] : $data['tgl_mulai'];
+        } else {
+            $data['tgl_mulai_indo'] = '.....................';
+        }
+
+        if (!empty($data['tgl_selesai']) && $data['tgl_selesai'] != '0000-00-00') {
+            $ts = explode('-', $data['tgl_selesai']);
+            $data['tgl_selesai_indo'] = (count($ts) == 3) ? (int)$ts[2] . ' ' . $bulan[(int)$ts[1]] . ' ' . $ts[0] : $data['tgl_selesai'];
+        } else {
+            $data['tgl_selesai_indo'] = '.....................';
+        }
+
+        if (!empty($data['tanggal_ttd']) && $data['tanggal_ttd'] != '0000-00-00') {
+            $tgl = explode('-', $data['tanggal_ttd']);
+            if (count($tgl) == 3) {
+                $data['tanggal_ttd_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tanggal_ttd_indo'] = $data['tanggal_ttd'];
+            }
+        } else {
+            $data['tanggal_ttd_indo'] = date('d') . ' ' . $bulan[(int)date('m')] . ' ' . date('Y');
+        }
+
+        // Cek jika request export mPDF
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 10,
+                    'margin_right' => 10,
+                    'margin_top' => 8,
+                    'margin_bottom' => 8
+                ]);
+                $html = $this->draw('lampiran_meninggalkan_rs_tertentu/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Formulir_Meninggalkan_RS_Tertentu_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                // fallback to normal HTML view
+            }
+        }
+
+        echo $this->draw('lampiran_meninggalkan_rs_tertentu/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ============================================================
+    // LAMPIRAN - FORMULIR PENGHENTIAN PENGOBATAN
+    // ============================================================
+
+    public function anyPenghentianpengobatanmanage()
+    {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+            $id = $_GET['id'];
+            $this->db('lampiran_penghentian_pengobatan')->where('id', $id)->delete();
+            $this->notify('success', 'Data Formulir Penghentian Pengobatan berhasil dihapus');
+            redirect(url([ADMIN, 'update_bmt', 'penghentianpengobatanmanage']));
+        }
+
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $rows = $this->db('lampiran_penghentian_pengobatan')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penghentian_pengobatan.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('lampiran_penghentian_pengobatan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+            ->desc('lampiran_penghentian_pengobatan.id')
+            ->toArray();
+
+        return $this->draw('lampiran_penghentian_pengobatan/manage.html', ['data' => $rows]);
+    }
+
+    public function getPenghentianpengobatanform()
+    {
+        // AJAX info pasien
+        if (isset($_GET['ajax_patient'])) {
+            $no_rawat = trim($_GET['no_rawat'] ?? '');
+            if (is_numeric($no_rawat) && strlen($no_rawat) < 6) {
+                $no_rawat = str_pad($no_rawat, 6, '0', STR_PAD_LEFT);
+            }
+
+            $result = ['success' => false];
+            if (!empty($no_rawat)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $no_rawat)
+                    ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, pasien.no_ktp, pasien.no_tlp, reg_periksa.p_jawab, reg_periksa.hubunganpj, reg_periksa.almt_pj')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+
+                if ($reg) {
+                    // Cari ruang perawatan dari kamar_inap jika ada
+                    $km = $this->db('kamar_inap')
+                        ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
+                        ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
+                        ->where('kamar_inap.no_rawat', $reg['no_rawat'])
+                        ->desc('kamar_inap.tgl_masuk')
+                        ->desc('kamar_inap.jam_masuk')
+                        ->select('bangsal.nm_bangsal, kamar.kelas, kamar.kd_kamar')
+                        ->oneArray();
+
+                    if ($km && !empty($km['nm_bangsal'])) {
+                        $reg['perawatan_kelas_kamar'] = $km['nm_bangsal'] . ' / Kelas ' . $km['kelas'] . ' / Kamar ' . $km['kd_kamar'];
+                    } else {
+                        $reg['perawatan_kelas_kamar'] = 'Rawat Inap';
+                    }
+
+                    // Ambil angka umur
+                    preg_match('/\d+/', $reg['umur'] ?? '', $matches);
+                    $reg['umur_angka'] = $matches[0] ?? '';
+
+                    $result = array_merge(['success' => true], $reg);
+                }
+            }
+
+            if (ob_get_length()) {
+                ob_clean();
+            }
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit();
+        }
+
+        $id = $_GET['id'] ?? '';
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'nm_pasien' => '',
+            'umur_pasien' => '',
+            'alamat_pasien' => '',
+            'nama_pembuat' => '',
+            'umur_pembuat' => '',
+            'alamat_pembuat' => '',
+            'no_telp_pembuat' => '',
+            'bukti_diri_pembuat' => '',
+            'hubungan' => 'Diri Sendiri',
+            'hubungan_detail' => '',
+            'bukti_diri_pasien' => '',
+            'perawatan_kelas_kamar' => '',
+            'alasan_penghentian' => '',
+            'kota' => 'Banjarmasin',
+            'tanggal_ttd' => date('Y-m-d'),
+            'jam_ttd' => date('H:i'),
+            'nama_petugas' => '',
+            'nip_petugas' => '',
+            'pembuat_pernyataan_ttd' => ''
+        ];
+
+        if (!empty($id)) {
+            $row = $this->db('lampiran_penghentian_pengobatan')->where('id', $id)->oneArray();
+            if ($row) {
+                $data = array_merge($data, $row);
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.alamat, pasien.no_ktp')
+                    ->oneArray();
+                if ($reg) {
+                    $data = array_merge($data, $reg);
+                    preg_match('/\d+/', $reg['umur'] ?? '', $matches);
+                    $data['umur_pasien'] = $matches[0] ?? '';
+                    $data['alamat_pasien'] = $reg['alamat'] ?? '';
+                }
+            }
+        }
+
+        $petugas_list = $this->db('petugas')->limit(100)->select('nip, nama')->toArray();
+
+        return $this->draw('lampiran_penghentian_pengobatan/form.html', [
+            'data' => $data,
+            'petugas_list' => $petugas_list
+        ]);
+    }
+
+    public function postPenghentianpengobatansave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (!strpos($no_rawat, '/')) {
+            $reg = $this->db('reg_periksa')->where('no_rkm_medis', $no_rawat)->desc('tgl_registrasi')->desc('jam_reg')->oneArray();
+            if ($reg) {
+                $no_rawat = $reg['no_rawat'];
+            }
+        }
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'nama_pembuat' => trim($_POST['nama_pembuat'] ?? ''),
+            'umur_pembuat' => trim($_POST['umur_pembuat'] ?? ''),
+            'alamat_pembuat' => trim($_POST['alamat_pembuat'] ?? ''),
+            'no_telp_pembuat' => trim($_POST['no_telp_pembuat'] ?? ''),
+            'bukti_diri_pembuat' => trim($_POST['bukti_diri_pembuat'] ?? ''),
+            'hubungan' => trim($_POST['hubungan'] ?? 'Diri Sendiri'),
+            'hubungan_detail' => trim($_POST['hubungan_detail'] ?? ''),
+            'bukti_diri_pasien' => trim($_POST['bukti_diri_pasien'] ?? ''),
+            'perawatan_kelas_kamar' => trim($_POST['perawatan_kelas_kamar'] ?? ''),
+            'alasan_penghentian' => trim($_POST['alasan_penghentian'] ?? ''),
+            'kota' => trim($_POST['kota'] ?? 'Banjarmasin'),
+            'tanggal_ttd' => !empty($_POST['tanggal_ttd']) ? $_POST['tanggal_ttd'] : date('Y-m-d'),
+            'jam_ttd' => trim($_POST['jam_ttd'] ?? date('H:i')),
+            'nama_petugas' => trim($_POST['nama_petugas'] ?? ''),
+            'nip_petugas' => trim($_POST['nip_petugas'] ?? ''),
+            'pembuat_pernyataan_ttd' => trim($_POST['pembuat_pernyataan_ttd'] ?? '')
+        ];
+
+        if (!empty($id)) {
+            $this->db('lampiran_penghentian_pengobatan')->where('id', $id)->save($saveData);
+            $this->notify('success', 'Data Formulir Penghentian Pengobatan berhasil diperbarui');
+        } else {
+            $this->db('lampiran_penghentian_pengobatan')->save($saveData);
+            $this->notify('success', 'Data Formulir Penghentian Pengobatan berhasil disimpan');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'penghentianpengobatanmanage']));
+    }
+
+    public function getPenghentianpengobatanhapus()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!empty($id)) {
+            $this->db('lampiran_penghentian_pengobatan')->where('id', $id)->delete();
+            $this->notify('success', 'Data Formulir Penghentian Pengobatan berhasil dihapus');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'penghentianpengobatanmanage']));
+    }
+
+    public function getPenghentianpengobatancetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('lampiran_penghentian_pengobatan')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penghentian_pengobatan.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('lampiran_penghentian_pengobatan.id', $id)
+            ->select('lampiran_penghentian_pengobatan.*, reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat as alamat_pasien, pasien.no_ktp as no_ktp_pasien')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rm = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        $data['no_rkm_medis'] = $rm;
+
+        // Umur pasien hanya angka
+        preg_match('/\d+/', $data['umur'] ?? '', $matches);
+        $data['umur_pasien_angka'] = $matches[0] ?? '-';
+
+        // Bukti diri pasien fallback
+        if (empty($data['bukti_diri_pasien'])) {
+            $data['bukti_diri_pasien'] = !empty($data['no_ktp_pasien']) ? $data['no_ktp_pasien'] : 'RM: ' . $data['no_rkm_medis'];
+        }
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        if (!empty($data['tanggal_ttd']) && $data['tanggal_ttd'] != '0000-00-00') {
+            $tgl = explode('-', $data['tanggal_ttd']);
+            if (count($tgl) == 3) {
+                $data['tanggal_ttd_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tanggal_ttd_indo'] = $data['tanggal_ttd'];
+            }
+        } else {
+            $data['tanggal_ttd_indo'] = date('d') . ' ' . $bulan[(int)date('m')] . ' ' . date('Y');
+        }
+
+        // Cek jika request export mPDF
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 10,
+                    'margin_right' => 10,
+                    'margin_top' => 8,
+                    'margin_bottom' => 8
+                ]);
+                $html = $this->draw('lampiran_penghentian_pengobatan/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Formulir_Penghentian_Pengobatan_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                // fallback to normal HTML view
+            }
+        }
+
+        echo $this->draw('lampiran_penghentian_pengobatan/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ============================================================
+    // LAMPIRAN - FORMULIR PROFIL RINGKAS MEDIS RAWAT JALAN (PRMRJ)
+    // ============================================================
+
+    public function anyPrmrjmanage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $rows = $this->db('lampiran_profil_ringkas_medis_rajal')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_profil_ringkas_medis_rajal.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_profil_ringkas_medis_rajal.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('lampiran_profil_ringkas_medis_rajal.*, COALESCE(lampiran_profil_ringkas_medis_rajal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk')
+            ->desc('lampiran_profil_ringkas_medis_rajal.id')
+            ->toArray();
+
+        foreach ($rows as &$r) {
+            $diag = !empty($r['diagnosa_dpjp']) ? json_decode($r['diagnosa_dpjp'], true) : [];
+            $r['total_diagnosa'] = is_array($diag) ? count($diag) : 0;
+            $alergi = !empty($r['riwayat_alergi']) ? json_decode($r['riwayat_alergi'], true) : [];
+            $r['total_alergi'] = is_array($alergi) ? count($alergi) : 0;
+            $obat = !empty($r['obat_obatan']) ? json_decode($r['obat_obatan'], true) : [];
+            $r['total_obat'] = is_array($obat) ? count($obat) : 0;
+        }
+
+        return $this->draw('lampiran_prmrj/manage.html', ['data' => $rows]);
+    }
+
+    public function getPrmrjform()
+    {
+        // AJAX pencarian pasien
+        if (isset($_GET['ajax_patient'])) {
+            $no_rawat = trim($_GET['no_rawat'] ?? '');
+            if (is_numeric($no_rawat) && strlen($no_rawat) < 6) {
+                $no_rawat = str_pad($no_rawat, 6, '0', STR_PAD_LEFT);
+            }
+
+            $result = ['success' => false];
+            if (!empty($no_rawat)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->leftJoin('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
+                    ->where('reg_periksa.no_rawat', $no_rawat)
+                    ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, dokter.nm_dokter, dokter.kd_dokter')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+
+                if ($reg) {
+                    $rmRaw = ltrim($reg['no_rkm_medis'] ?? '', "'");
+                    $reg['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+                    $result = array_merge(['success' => true], $reg);
+                }
+            }
+
+            if (ob_get_length()) {
+                ob_clean();
+            }
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode($result);
+            exit();
+        }
+
+        $id = $_GET['id'] ?? '';
+        $data = [];
+        if (!empty($id)) {
+            $data = $this->db('lampiran_profil_ringkas_medis_rajal')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_profil_ringkas_medis_rajal.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_profil_ringkas_medis_rajal.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('lampiran_profil_ringkas_medis_rajal.id', $id)
+                ->select('lampiran_profil_ringkas_medis_rajal.*, COALESCE(lampiran_profil_ringkas_medis_rajal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->oneArray();
+        }
+
+        if (empty($data)) {
+            $data = [
+                'id' => '',
+                'no_rawat' => '',
+                'no_rkm_medis' => '',
+                'tanggal_formulir' => date('Y-m-d'),
+                'nm_pasien' => '',
+                'jk' => '',
+                'tmp_lahir' => '',
+                'tgl_lahir' => '',
+                'umur' => '',
+                'alamat' => '',
+                'diagnosa_dpjp' => '[]',
+                'riwayat_alergi' => '[]',
+                'diagnosa_ranap' => '[]',
+                'operasi_tindakan' => '[]',
+                'obat_obatan' => '[]',
+                'keterangan_tambahan' => '',
+                'nama_dokter' => '',
+                'nip_dokter' => ''
+            ];
+        }
+
+        $data['diagnosa_dpjp_list'] = !empty($data['diagnosa_dpjp']) ? json_decode($data['diagnosa_dpjp'], true) : [];
+        if (!is_array($data['diagnosa_dpjp_list'])) { $data['diagnosa_dpjp_list'] = []; }
+
+        $data['riwayat_alergi_list'] = !empty($data['riwayat_alergi']) ? json_decode($data['riwayat_alergi'], true) : [];
+        if (!is_array($data['riwayat_alergi_list'])) { $data['riwayat_alergi_list'] = []; }
+
+        $data['diagnosa_ranap_list'] = !empty($data['diagnosa_ranap']) ? json_decode($data['diagnosa_ranap'], true) : [];
+        if (!is_array($data['diagnosa_ranap_list'])) { $data['diagnosa_ranap_list'] = []; }
+
+        $data['operasi_tindakan_list'] = !empty($data['operasi_tindakan']) ? json_decode($data['operasi_tindakan'], true) : [];
+        if (!is_array($data['operasi_tindakan_list'])) { $data['operasi_tindakan_list'] = []; }
+
+        $data['obat_obatan_list'] = !empty($data['obat_obatan']) ? json_decode($data['obat_obatan'], true) : [];
+        if (!is_array($data['obat_obatan_list'])) { $data['obat_obatan_list'] = []; }
+
+        $dokter_list = $this->db('dokter')->select('kd_dokter, nm_dokter')->toArray();
+
+        return $this->draw('lampiran_prmrj/form.html', [
+            'data' => $data,
+            'dokter_list' => $dokter_list
+        ]);
+    }
+
+    public function postPrmrjsave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+        $no_rkm_medis = trim($_POST['no_rkm_medis'] ?? '');
+
+        if (empty($no_rawat)) {
+            $this->notify('failure', 'No. Rawat wajib diisi!');
+            redirect(url([ADMIN, 'update_bmt', 'prmrjform']));
+        }
+
+        // Process Diagnosa & DPJP
+        $diagnosa_arr = [];
+        if (isset($_POST['diag_diagnosa']) && is_array($_POST['diag_diagnosa'])) {
+            foreach ($_POST['diag_diagnosa'] as $k => $diag) {
+                if (!empty(trim($diag)) || !empty($_POST['diag_dpjp_nama'][$k] ?? '') || !empty($_POST['diag_dpjp_utama_nama'][$k] ?? '')) {
+                    $diagnosa_arr[] = [
+                        'diagnosa' => trim($diag),
+                        'dpjp_nama' => trim($_POST['diag_dpjp_nama'][$k] ?? ''),
+                        'dpjp_tgl_mulai' => trim($_POST['diag_dpjp_tgl_mulai'][$k] ?? ''),
+                        'dpjp_tgl_akhir' => trim($_POST['diag_dpjp_tgl_akhir'][$k] ?? ''),
+                        'dpjp_ttd' => trim($_POST['diag_dpjp_ttd'][$k] ?? ''),
+                        'dpjp_utama_nama' => trim($_POST['diag_dpjp_utama_nama'][$k] ?? ''),
+                        'dpjp_utama_tgl_mulai' => trim($_POST['diag_dpjp_utama_tgl_mulai'][$k] ?? ''),
+                        'dpjp_utama_tgl_akhir' => trim($_POST['diag_dpjp_utama_tgl_akhir'][$k] ?? ''),
+                        'dpjp_utama_ttd' => trim($_POST['diag_dpjp_utama_ttd'][$k] ?? ''),
+                        'keterangan' => trim($_POST['diag_keterangan'][$k] ?? '')
+                    ];
+                }
+            }
+        }
+
+        // Process Alergi
+        $alergi_arr = [];
+        if (isset($_POST['alergi_tanggal']) && is_array($_POST['alergi_tanggal'])) {
+            foreach ($_POST['alergi_tanggal'] as $k => $tgl) {
+                $al = trim($_POST['alergi_nama'][$k] ?? '');
+                if (!empty($al) || !empty($tgl)) {
+                    $alergi_arr[] = [
+                        'tanggal' => trim($tgl),
+                        'alergi' => $al
+                    ];
+                }
+            }
+        }
+
+        // Process Diagnosa Ranap
+        $ranap_arr = [];
+        if (isset($_POST['ranap_tanggal']) && is_array($_POST['ranap_tanggal'])) {
+            foreach ($_POST['ranap_tanggal'] as $k => $tgl) {
+                $dg = trim($_POST['ranap_diagnosa'][$k] ?? '');
+                if (!empty($dg) || !empty($tgl)) {
+                    $ranap_arr[] = [
+                        'tanggal' => trim($tgl),
+                        'diagnosa' => $dg
+                    ];
+                }
+            }
+        }
+
+        // Process Operasi / Tindakan
+        $operasi_arr = [];
+        if (isset($_POST['operasi_tanggal']) && is_array($_POST['operasi_tanggal'])) {
+            foreach ($_POST['operasi_tanggal'] as $k => $tgl) {
+                $op = trim($_POST['operasi_tindakan'][$k] ?? '');
+                if (!empty($op) || !empty($tgl)) {
+                    $operasi_arr[] = [
+                        'tanggal' => trim($tgl),
+                        'operasi_tindakan' => $op
+                    ];
+                }
+            }
+        }
+
+        // Process Obat-obatan
+        $obat_arr = [];
+        if (isset($_POST['obat_nama']) && is_array($_POST['obat_nama'])) {
+            foreach ($_POST['obat_nama'] as $k => $ob) {
+                if (!empty(trim($ob))) {
+                    $obat_arr[] = [
+                        'tanggal_mulai' => trim($_POST['obat_tgl_mulai'][$k] ?? ''),
+                        'nama_obat' => trim($ob),
+                        'dosis' => trim($_POST['obat_dosis'][$k] ?? ''),
+                        'frekuensi' => trim($_POST['obat_frekuensi'][$k] ?? ''),
+                        'tanggal_selesai' => trim($_POST['obat_tgl_selesai'][$k] ?? '')
+                    ];
+                }
+            }
+        }
+
+        $payload = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'tanggal_formulir' => !empty($_POST['tanggal_formulir']) ? $_POST['tanggal_formulir'] : date('Y-m-d'),
+            'diagnosa_dpjp' => json_encode($diagnosa_arr, JSON_UNESCAPED_UNICODE),
+            'riwayat_alergi' => json_encode($alergi_arr, JSON_UNESCAPED_UNICODE),
+            'diagnosa_ranap' => json_encode($ranap_arr, JSON_UNESCAPED_UNICODE),
+            'operasi_tindakan' => json_encode($operasi_arr, JSON_UNESCAPED_UNICODE),
+            'obat_obatan' => json_encode($obat_arr, JSON_UNESCAPED_UNICODE),
+            'keterangan_tambahan' => trim($_POST['keterangan_tambahan'] ?? ''),
+            'nama_dokter' => trim($_POST['nama_dokter'] ?? ''),
+            'nip_dokter' => trim($_POST['nip_dokter'] ?? '')
+        ];
+
+        if (!empty($id)) {
+            $this->db('lampiran_profil_ringkas_medis_rajal')->where('id', $id)->update($payload);
+            $this->notify('success', 'Formulir PRMRJ berhasil diperbarui.');
+        } else {
+            $this->db('lampiran_profil_ringkas_medis_rajal')->save($payload);
+            $this->notify('success', 'Formulir PRMRJ baru berhasil disimpan.');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'prmrjmanage']));
+    }
+
+    public function getPrmrjhapus()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!empty($id)) {
+            $this->db('lampiran_profil_ringkas_medis_rajal')->where('id', $id)->delete();
+            $this->notify('success', 'Data Formulir PRMRJ berhasil dihapus.');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'prmrjmanage']));
+    }
+
+    public function getPrmrjcetak()
+    {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('lampiran_profil_ringkas_medis_rajal')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_profil_ringkas_medis_rajal.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_profil_ringkas_medis_rajal.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('lampiran_profil_ringkas_medis_rajal.id', $id)
+            ->select('lampiran_profil_ringkas_medis_rajal.*, COALESCE(lampiran_profil_ringkas_medis_rajal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat as alamat_pasien, pasien.no_ktp as no_ktp_pasien')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rm = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        $data['no_rkm_medis'] = $rm;
+        $data['rm_digits'] = str_split($rm);
+
+        // Umur pasien hanya angka
+        preg_match('/\d+/', $data['umur'] ?? '', $matches);
+        $data['umur_pasien_angka'] = $matches[0] ?? '-';
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        // Format tanggal lahir
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tglLahir = explode('-', $data['tgl_lahir']);
+            if (count($tglLahir) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tglLahir[2] . ' ' . $bulan[(int)$tglLahir[1]] . ' ' . $tglLahir[0];
+            } else {
+                $data['tgl_lahir_indo'] = $data['tgl_lahir'];
+            }
+        } else {
+            $data['tgl_lahir_indo'] = '-';
+        }
+
+        // Parse JSON lists
+        $data['diagnosa_dpjp_list'] = !empty($data['diagnosa_dpjp']) ? json_decode($data['diagnosa_dpjp'], true) : [];
+        if (!is_array($data['diagnosa_dpjp_list'])) { $data['diagnosa_dpjp_list'] = []; }
+
+        $data['riwayat_alergi_list'] = !empty($data['riwayat_alergi']) ? json_decode($data['riwayat_alergi'], true) : [];
+        if (!is_array($data['riwayat_alergi_list'])) { $data['riwayat_alergi_list'] = []; }
+
+        $data['diagnosa_ranap_list'] = !empty($data['diagnosa_ranap']) ? json_decode($data['diagnosa_ranap'], true) : [];
+        if (!is_array($data['diagnosa_ranap_list'])) { $data['diagnosa_ranap_list'] = []; }
+
+        $data['operasi_tindakan_list'] = !empty($data['operasi_tindakan']) ? json_decode($data['operasi_tindakan'], true) : [];
+        if (!is_array($data['operasi_tindakan_list'])) { $data['operasi_tindakan_list'] = []; }
+
+        $data['obat_obatan_list'] = !empty($data['obat_obatan']) ? json_decode($data['obat_obatan'], true) : [];
+        if (!is_array($data['obat_obatan_list'])) { $data['obat_obatan_list'] = []; }
+
+        // Pad with blank rows for exact physical form grid matching
+        // Page 1 Diagnosa grid: at least 16 rows
+        $targetDiagRows = max(16, count($data['diagnosa_dpjp_list']));
+        $data['padded_diagnosa'] = $data['diagnosa_dpjp_list'];
+        while (count($data['padded_diagnosa']) < $targetDiagRows) {
+            $data['padded_diagnosa'][] = [
+                'diagnosa' => '',
+                'dpjp_nama' => '',
+                'dpjp_tgl_mulai' => '',
+                'dpjp_tgl_akhir' => '',
+                'dpjp_ttd' => '',
+                'dpjp_utama_nama' => '',
+                'dpjp_utama_tgl_mulai' => '',
+                'dpjp_utama_tgl_akhir' => '',
+                'dpjp_utama_ttd' => '',
+                'keterangan' => ''
+            ];
+        }
+
+        // Page 1 Alergi grid: at least 4 rows
+        $targetAlergiRows = max(4, count($data['riwayat_alergi_list']));
+        $data['padded_alergi'] = $data['riwayat_alergi_list'];
+        while (count($data['padded_alergi']) < $targetAlergiRows) {
+            $data['padded_alergi'][] = ['tanggal' => '', 'alergi' => ''];
+        }
+
+        // Page 2 Diagnosa Ranap: at least 6 rows
+        $targetRanapRows = max(6, count($data['diagnosa_ranap_list']));
+        $data['padded_ranap'] = $data['diagnosa_ranap_list'];
+        while (count($data['padded_ranap']) < $targetRanapRows) {
+            $data['padded_ranap'][] = ['tanggal' => '', 'diagnosa' => ''];
+        }
+
+        // Page 2 Operasi: at least 6 rows
+        $targetOpRows = max(6, count($data['operasi_tindakan_list']));
+        $data['padded_operasi'] = $data['operasi_tindakan_list'];
+        while (count($data['padded_operasi']) < $targetOpRows) {
+            $data['padded_operasi'][] = ['tanggal' => '', 'operasi_tindakan' => ''];
+        }
+
+        // Page 2 Obat: at least 12 rows
+        $targetObatRows = max(12, count($data['obat_obatan_list']));
+        $data['padded_obat'] = $data['obat_obatan_list'];
+        while (count($data['padded_obat']) < $targetObatRows) {
+            $data['padded_obat'][] = [
+                'tanggal_mulai' => '',
+                'nama_obat' => '',
+                'dosis' => '',
+                'frekuensi' => '',
+                'tanggal_selesai' => ''
+            ];
+        }
+
+        // Cek jika request export mPDF
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 8,
+                    'margin_right' => 8,
+                    'margin_top' => 8,
+                    'margin_bottom' => 8
+                ]);
+                $html = $this->draw('lampiran_prmrj/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'PRMRJ_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                // fallback to normal HTML view
+            }
+        }
+
+        echo $this->draw('lampiran_prmrj/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
     public function navigation()
     {
         return [
             'Rawat Jalan' => [
                 'RM.GD 4 - ASESMEN KEPERAWATAN.ASUHAN GIGI DAN MULUT UGD' => 'manage',
                 'RM.RJ-10 - LEMBAR EDUKASI PASIEN DAN KELUARGA TERINTEGRASI' => 'edukasimanage',
+                'LAMPIRAN - FORMULIR PROFIL RINGKAS MEDIS RAWAT JALAN (PRMRJ)' => 'prmrjmanage',
             ],
             'Bedah' => [
                 'ANS1 - INFORMASI TINDAKAN PEMBIUSAN' => 'ans1manage',
@@ -290,6 +2622,15 @@ class Admin extends AdminModule
                 'RM.RI 01B - HAK DAN KEWAJIBAN PASIEN' => 'ri01bmanage',
                 'RM.RI 02 - RINGKASAN MASUK DAN KELUAR' => 'ri02manage',
                 'RM.RI 03 - SERAH TERIMA PASIEN' => 'ri03manage',
+                'LAMPIRAN - ASESMEN MEDIS UMUM IRNA' => 'amumanage',
+                'LAMPIRAN - CAIRAN INFUS' => 'cairaninfusmanage',
+                'LAMPIRAN - FORM A MANAJER PELAYANAN PASIEN' => 'formamppmanage',
+                'LAMPIRAN - FORM ASESMEN ULANG STATUS FUNGSIONAL' => 'statusfungsionalulangmanage',
+                'LAMPIRAN - FORM B - CATATAN IMPLEMENTASI MANAJER PELAYANAN PASIEN MPP' => 'formbmppmanage',
+                'LAMPIRAN - FORMULIR IDENTIFIKASI KEBUTUHAN PRIVASI PASIEN' => 'kebutuhanprivasimanage',
+                'LAMPIRAN - FORMULIR MENINGGALKAN RUMAH SAKIT SELAMA PERIODE TERTENTU' => 'meninggalkanrsmanage',
+                'LAMPIRAN - FORMULIR PENGHENTIAN PENGOBATAN' => 'penghentianpengobatanmanage',
+                'LAMPIRAN - FORMULIR PROFIL RINGKAS MEDIS RAWAT JALAN (PRMRJ)' => 'prmrjmanage',
             ]
         ];
     }

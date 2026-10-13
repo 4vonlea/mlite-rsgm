@@ -1,0 +1,297 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-user-secret"></i> Form Lampiran - Formulir Identifikasi Kebutuhan Privasi Pasien</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'kebutuhanprivasimanage'])?}"><i class="fa fa-list"></i> Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'kebutuhanprivasiform'])?}"><i class="fa fa-plus"></i> {if: !empty($data.id)}Edit Data #{?= $data['id'] ?}{else}Tambah Data{/if}</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="formKebutuhanPrivasi" method="POST" action="{?=url([ADMIN, 'update_bmt', 'kebutuhanprivasisave'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+
+                    <!-- Informasi Pasien -->
+                    <div class="well well-sm" style="background: #fdfdfd; border-left: 4px solid #337ab7;">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label><strong>No. Rawat / No. RM Pasien <span class="text-danger">*</span></strong></label>
+                                    <div class="input-group">
+                                        <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2025/09/29/000021 atau No RM" required autocomplete="off">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-primary" type="button" id="btnCariPasien"><i class="fa fa-search"></i> Cari</button>
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">Ketik No. Rawat / No. RM lalu tekan Enter atau klik Cari</small>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div id="box_info_pasien" class="alert alert-info no-margin" style="padding: 10px 15px;">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div><strong>Nama Pasien:</strong> <span id="info_nm_pasien">{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}-{/if}</span></div>
+                                            <div><strong>No. RM:</strong> <span id="info_no_rkm_medis">{if: !empty($data.no_rkm_medis)}{$data.no_rkm_medis}{else}-{/if}</span> &nbsp; (<span id="info_jk">{if: !empty($data.jk)}{?= $data['jk'] == 'L' ? 'Laki-Laki' : 'Perempuan' ?}{else}-{/if}</span>)</div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div><strong>Tanggal Lahir / Umur:</strong> <span id="info_tgl_lahir">{if: !empty($data.tgl_lahir)}{$data.tgl_lahir}{else}-{/if}</span> (<span id="info_umur">{if: !empty($data.umur)}{$data.umur}{else}-{/if}</span>)</div>
+                                            <div><strong>Alamat:</strong> <span id="info_alamat">{if: !empty($data.alamat)}{$data.alamat}{else}-{/if}</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Tambahan Identitas Formulir -->
+                    <div class="panel panel-info" style="margin-top: 15px;">
+                        <div class="panel-heading">
+                            <h4 class="panel-title"><i class="fa fa-id-card-o"></i> Informasi Kontak & Klinis</h4>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><strong>Keluarga yang bisa dihubungi</strong></label>
+                                        <input type="text" name="keluarga_dihubungi" id="keluarga_dihubungi" class="form-control" value="{$data.keluarga_dihubungi}" placeholder="Nama Keluarga & Hubungan / No. HP">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><strong>Diagnosis Medis</strong></label>
+                                        <input type="text" name="diagnosis_medis" id="diagnosis_medis" class="form-control" value="{$data.diagnosis_medis}" placeholder="Diagnosis Medis Pasien">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kebutuhan Privasi Pasien -->
+                    <div class="panel panel-primary" style="margin-top: 15px;">
+                        <div class="panel-heading">
+                            <h4 class="panel-title"><i class="fa fa-shield"></i> Kebutuhan Privasi yang Diharapkan Pasien</h4>
+                        </div>
+                        <div class="panel-body">
+                            <p class="text-muted" style="margin-bottom: 20px;">
+                                <em>Kebutuhan privasi yang diharapkan pasien pada saat wawancara klinis, pemeriksaan, prosedur/tindakan, pengobatan dan transportasi:</em>
+                            </p>
+
+                            <!-- Poin 1 -->
+                            <div class="row" style="border-bottom: 1px dashed #e0e0e0; padding-bottom: 15px; margin-bottom: 15px;">
+                                <div class="col-md-4">
+                                    <label style="font-size: 14px;"><strong>1. Privasi terhadap lawan jenis</strong></label>
+                                    <div>
+                                        <label class="radio-inline">
+                                            <input type="radio" name="privasi_lawan_jenis" value="Ya" {if: $data.privasi_lawan_jenis == 'Ya'}checked{/if}> <strong>Ya</strong>
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input type="radio" name="privasi_lawan_jenis" value="Tidak" {if: $data.privasi_lawan_jenis != 'Ya'}checked{/if}> <strong>Tidak</strong>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="form-group no-margin">
+                                        <label>Keterangan / Rincian Kebutuhan (opsional):</label>
+                                        <input type="text" name="keterangan_lawan_jenis" class="form-control" value="{$data.keterangan_lawan_jenis}" placeholder="Misal: Pasien meminta dokter/perawat perempuan saat pemeriksaan">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Poin 2 -->
+                            <div class="row" style="border-bottom: 1px dashed #e0e0e0; padding-bottom: 15px; margin-bottom: 15px;">
+                                <div class="col-md-4">
+                                    <label style="font-size: 14px;"><strong>2. Privasi terhadap orang lain</strong></label>
+                                    <div>
+                                        <label class="radio-inline">
+                                            <input type="radio" name="privasi_orang_lain" value="Ya" {if: $data.privasi_orang_lain == 'Ya'}checked{/if}> <strong>Ya</strong>
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input type="radio" name="privasi_orang_lain" value="Tidak" {if: $data.privasi_orang_lain != 'Ya'}checked{/if}> <strong>Tidak</strong>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="form-group no-margin">
+                                        <label>Keterangan / Rincian Kebutuhan (opsional):</label>
+                                        <input type="text" name="keterangan_orang_lain" class="form-control" value="{$data.keterangan_orang_lain}" placeholder="Misal: Tidak mengizinkan pengunjung selain keluarga inti / tirai tertutup penuh">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Poin 3 -->
+                            <div class="row" style="border-bottom: 1px dashed #e0e0e0; padding-bottom: 15px; margin-bottom: 15px;">
+                                <div class="col-md-4">
+                                    <label style="font-size: 14px;"><strong>3. Privasi terhadap bagian tubuh tertentu</strong></label>
+                                    <div>
+                                        <label class="radio-inline">
+                                            <input type="radio" name="privasi_bagian_tubuh" value="Ya" {if: $data.privasi_bagian_tubuh == 'Ya'}checked{/if}> <strong>Ya</strong>
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input type="radio" name="privasi_bagian_tubuh" value="Tidak" {if: $data.privasi_bagian_tubuh != 'Ya'}checked{/if}> <strong>Tidak</strong>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="form-group no-margin">
+                                        <label>Keterangan / Rincian Kebutuhan (opsional):</label>
+                                        <input type="text" name="keterangan_bagian_tubuh" class="form-control" value="{$data.keterangan_bagian_tubuh}" placeholder="Sebutkan bagian tubuh yang memerlukan privasi khusus atau penutup tambahan">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Poin 4 -->
+                            <div class="row" style="padding-bottom: 5px;">
+                                <div class="col-md-4">
+                                    <label style="font-size: 14px;"><strong>4. Privasi terhadap informasi penyakitnya</strong></label>
+                                    <div>
+                                        <label class="radio-inline">
+                                            <input type="radio" name="privasi_informasi_penyakit" value="Ya" {if: $data.privasi_informasi_penyakit == 'Ya'}checked{/if}> <strong>Ya</strong>
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input type="radio" name="privasi_informasi_penyakit" value="Tidak" {if: $data.privasi_informasi_penyakit != 'Ya'}checked{/if}> <strong>Tidak</strong>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="form-group no-margin">
+                                        <label>Keterangan / Rincian Kebutuhan (opsional):</label>
+                                        <input type="text" name="keterangan_informasi_penyakit" class="form-control" value="{$data.keterangan_informasi_penyakit}" placeholder="Misal: Diagnosis hanya boleh disampaikan kepada pasien sendiri atau suami/istri">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Tanda Tangan & Pengesahan -->
+                    <div class="panel panel-default" style="margin-top: 15px;">
+                        <div class="panel-heading">
+                            <h4 class="panel-title"><i class="fa fa-pencil"></i> Tanda Tangan & Persetujuan</h4>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label><strong>Kota</strong></label>
+                                        <input type="text" name="kota" class="form-control" value="{$data.kota}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label><strong>Tanggal Pengisian</strong></label>
+                                        <input type="date" name="tanggal_ttd" class="form-control" value="{$data.tanggal_ttd}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><strong>Nama Pasien / Keluarga (Pemberi Pernyataan)</strong></label>
+                                        <input type="text" name="nama_pasien_keluarga" id="nama_pasien_keluarga" class="form-control" value="{$data.nama_pasien_keluarga}" placeholder="Nama Pasien atau Keluarga yang menandatangani">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><strong>Nama Petugas RS</strong></label>
+                                        <input type="text" name="nama_petugas" id="nama_petugas" list="list_petugas" class="form-control" value="{$data.nama_petugas}" placeholder="Pilih atau ketik nama petugas RS">
+                                        <datalist id="list_petugas">
+                                            {loop: $petugas_list}
+                                            <option value="{$value.nama}">{$value.nip} - {$value.nama}</option>
+                                            {/loop}
+                                        </datalist>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><strong>NIP / NIK Petugas RS</strong></label>
+                                        <input type="text" name="nip_petugas" id="nip_petugas" class="form-control" value="{$data.nip_petugas}" placeholder="NIP/NIK Petugas">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Aksi -->
+                    <div class="well well-sm text-right" style="margin-top: 20px;">
+                        <a href="{?=url([ADMIN, 'update_bmt', 'kebutuhanprivasimanage'])?}" class="btn btn-default btn-lg">Batal / Kembali</a>
+                        <button type="submit" class="btn btn-success btn-lg"><i class="fa fa-save"></i> Simpan Data</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$(document).ready(function() {
+    function fetchPatient(no_rawat) {
+        if (!no_rawat) return;
+        $.ajax({
+            url: "{?=url([ADMIN, 'update_bmt', 'kebutuhanprivasiform'])?}",
+            type: "GET",
+            data: { ajax_patient: 1, no_rawat: no_rawat },
+            dataType: "json",
+            beforeSend: function() {
+                $('#btnCariPasien').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+            },
+            complete: function() {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search"></i> Cari');
+            },
+            success: function(res) {
+                if (res.success) {
+                    $('#no_rawat').val(res.no_rawat);
+                    $('#info_nm_pasien').text(res.nm_pasien || '-');
+                    $('#info_no_rkm_medis').text(res.no_rkm_medis || '-');
+                    $('#info_jk').text(res.jk === 'L' ? 'Laki-Laki' : (res.jk === 'P' ? 'Perempuan' : '-'));
+                    $('#info_tgl_lahir').text(res.tgl_lahir || '-');
+                    $('#info_umur').text(res.umur || '-');
+                    $('#info_alamat').text(res.alamat || '-');
+
+                    if (!$('#keluarga_dihubungi').val() && res.keluarga_dihubungi) {
+                        $('#keluarga_dihubungi').val(res.keluarga_dihubungi);
+                    }
+                    if (!$('#diagnosis_medis').val() && res.diagnosis_medis) {
+                        $('#diagnosis_medis').val(res.diagnosis_medis);
+                    }
+                    if (!$('#nama_pasien_keluarga').val() && res.nm_pasien) {
+                        $('#nama_pasien_keluarga').val(res.nm_pasien);
+                    }
+                } else {
+                    alert('Data pasien dengan No. Rawat / RM tersebut tidak ditemukan!');
+                }
+            },
+            error: function() {
+                alert('Terjadi kesalahan koneksi saat mencari data pasien.');
+            }
+        });
+    }
+
+    $('#btnCariPasien').on('click', function() {
+        var nr = $('#no_rawat').val().trim();
+        fetchPatient(nr);
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $('#btnCariPasien').click();
+        }
+    });
+
+    // Otomatis isi NIP jika memilih dari datalist
+    var petugasMap = {
+        {loop: $petugas_list}
+        "{$value.nama}": "{$value.nip}",
+        {/loop}
+    };
+
+    $('#nama_petugas').on('input change', function() {
+        var val = $(this).val();
+        if (petugasMap[val]) {
+            $('#nip_petugas').val(petugasMap[val]);
+        }
+    });
+});
+</script>

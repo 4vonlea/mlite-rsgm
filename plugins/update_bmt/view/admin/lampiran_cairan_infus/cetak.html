@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>LAMPIRAN - CAIRAN INFUS (RM.RI Lampiran)</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 8mm 10mm 8mm 10mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            color: #000;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 20px 0;
+        }
+        .page {
+            width: 195mm;
+            min-height: 275mm;
+            margin: 0 auto;
+            background: #fff;
+            padding: 0;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+
+        /* Toolbar Cetak di Layar */
+        .no-print-toolbar {
+            width: 195mm;
+            margin: 0 auto 15px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2c3e50;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 4px;
+        }
+        .btn-toolbar {
+            padding: 6px 14px;
+            font-size: 13px;
+            border-radius: 3px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-print:hover { background: #219150; }
+        .btn-pdf { background: #e74c3c; color: #fff; }
+        .btn-pdf:hover { background: #c0392b; }
+        .btn-close { background: #95a5a6; color: #fff; }
+        .btn-close:hover { background: #7f8c8d; }
+
+        /* Tabel Utama Form Cairan Infus */
+        .form-container {
+            width: 100%;
+            border: 2px solid #000;
+            border-collapse: collapse;
+        }
+
+        /* Header Table */
+        .table-header {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 2px solid #000;
+        }
+        .table-header td {
+            vertical-align: middle;
+            padding: 6px 8px;
+        }
+        .header-left {
+            width: 58%;
+            border-right: 2px solid #000;
+            text-align: center;
+            padding: 4px 6px;
+        }
+        .header-right {
+            width: 42%;
+            font-size: 11px;
+            padding: 8px 10px;
+        }
+
+        /* Kotak Digit No RM */
+        .rm-box-group {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .rm-box {
+            display: inline-block;
+            width: 17px;
+            height: 18px;
+            border: 1.5px solid #000;
+            text-align: center;
+            line-height: 18px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: -1px;
+            background: #fff;
+        }
+        .rm-separator {
+            display: inline-block;
+            width: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Judul Dokumen */
+        .doc-title-row {
+            width: 100%;
+            text-align: center;
+            padding: 4px 0;
+            border-bottom: 2px solid #000;
+        }
+        .doc-title-main {
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+        .doc-title-sub {
+            font-size: 13px;
+            font-style: italic;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        /* Baris Ruangan & Dokter */
+        .meta-row {
+            width: 100%;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            border-bottom: 2px solid #000;
+            display: flex;
+            align-items: baseline;
+        }
+        .meta-label {
+            display: inline-block;
+            width: 120px;
+            text-transform: uppercase;
+        }
+        .meta-val {
+            font-weight: normal;
+        }
+
+        /* Grid Data Cairan Infus */
+        .grid-cairan {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .grid-cairan th {
+            border: 1.5px solid #000;
+            font-size: 10.5px;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+            padding: 5px 3px;
+            line-height: 1.2;
+            background: #fff;
+        }
+        .grid-cairan td {
+            border: 1.5px solid #000;
+            font-size: 10px;
+            padding: 3px 4px;
+            height: 25px; /* Standar 25px per baris agar muat persis 25 baris */
+            vertical-align: middle;
+        }
+
+        .col-tgl { width: 11%; text-align: center; }
+        .col-botol { width: 7%; text-align: center; font-weight: bold; }
+        .col-cairan { width: 23%; text-align: left; }
+        .col-tetesan { width: 11%; text-align: center; }
+        .col-jam-mulai { width: 8%; text-align: center; }
+        .col-tgl-stop { width: 13%; text-align: center; }
+        .col-ket { width: 15%; text-align: left; }
+        .col-nama { width: 12%; text-align: center; }
+
+        /* Catatan di Bawah Tabel */
+        .footer-note-wrap {
+            width: 100%;
+            margin-top: 4px;
+            text-align: right;
+            padding-right: 5px;
+        }
+        .footer-note {
+            font-size: 8.5px;
+            font-style: italic;
+            color: #d00; /* Merah seperti pada contoh cetak */
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .footer-note-box {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            border: 1px solid #777;
+            margin-left: 3px;
+        }
+
+        /* Footer Standar Rumah Sakit */
+        .page-footer {
+            width: 100%;
+            margin-top: 18px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                width: 100%;
+                margin: 0;
+            }
+            .no-print, .no-print-toolbar {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body {if: empty($is_mpdf)}onload="if(window.location.search.indexOf('noprint=1')===-1)window.print()"{/if}>
+
+    <!-- Toolbar Layar / No-Print -->
+    <div class="no-print-toolbar no-print">
+        <div style="font-size: 14px; font-weight: bold;">
+            Preview Dokumen: Lampiran Cairan Infus ({$data.no_rawat})
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button onclick="window.print()" class="btn-toolbar btn-print">
+                &#128438; Cetak Dokumen
+            </button>
+            <a href="{?=url([ADMIN, 'update_bmt', 'cairaninfuscetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
+                &#128196; Download PDF
+            </a>
+            <button onclick="window.close()" class="btn-toolbar btn-close">
+                &#10006; Tutup
+            </button>
+        </div>
+    </div>
+
+    <!-- Halaman Dokumen A4 -->
+    <div class="page">
+        <div class="form-container">
+            <!-- Header KOP & Identitas Pasien -->
+            <table class="table-header">
+                <tr>
+                    <td class="header-left">
+                        <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat RSGM Gusti Hasan Aman" style="width: 100%; max-height: 72px; object-fit: contain; display: block;">
+                    </td>
+                    <td class="header-right">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <tr>
+                                <td style="width: 85px; padding: 2px 0;"><strong>NO. RM</strong></td>
+                                <td style="width: 10px; padding: 2px 0;">:</td>
+                                <td style="padding: 2px 0;">
+                                    <div class="rm-box-group">
+                                        <span class="rm-box">{$data.rm0}</span><span class="rm-box">{$data.rm1}</span>
+                                        <span class="rm-separator"></span>
+                                        <span class="rm-box">{$data.rm2}</span><span class="rm-box">{$data.rm3}</span>
+                                        <span class="rm-separator"></span>
+                                        <span class="rm-box">{$data.rm4}</span><span class="rm-box">{$data.rm5}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0;"><strong>Nama Pasien</strong></td>
+                                <td style="padding: 2px 0;">:</td>
+                                <td style="padding: 2px 0; border-bottom: 1px dotted #888;">
+                                    <strong>{$data.nm_pasien}</strong> &nbsp; <span style="font-weight: bold; float: right;">{$data.jk_label}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0;"><strong>Tanggal Lahir</strong></td>
+                                <td style="padding: 2px 0;">:</td>
+                                <td style="padding: 2px 0; border-bottom: 1px dotted #888;">
+                                    {$data.tanggal_lahir_indo}
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Judul Dokumen -->
+            <div class="doc-title-row">
+                <div class="doc-title-main">CAIRAN INFUS</div>
+                <div class="doc-title-sub">Infusion Fluid</div>
+            </div>
+
+            <!-- RUANGAN -->
+            <div class="meta-row">
+                <span class="meta-label">RUANGAN :</span>
+                <span class="meta-val">{$data.ruangan}</span>
+            </div>
+
+            <!-- DOKTER -->
+            <div class="meta-row">
+                <span class="meta-label">DOKTER :</span>
+                <span class="meta-val">{$data.dokter}</span>
+            </div>
+
+            <!-- Tabel Pemantauan Cairan Infus -->
+            <table class="grid-cairan">
+                <thead>
+                    <tr>
+                        <th class="col-tgl">TANGGAL</th>
+                        <th class="col-botol">BOTOL</th>
+                        <th class="col-cairan">CAIRAN INFUS /<br>TRANFUSI DARAH</th>
+                        <th class="col-tetesan">JUMLAH<br>TETESAN</th>
+                        <th class="col-jam-mulai">JAM<br>MULAI</th>
+                        <th class="col-tgl-stop">TGL/JAM<br>DISTOP/HABIS</th>
+                        <th class="col-ket">KETERANGAN</th>
+                        <th class="col-nama">NAMA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {loop: $data.rendered_rows}
+                    <tr>
+                        <td class="col-tgl">{$value.tanggal}</td>
+                        <td class="col-botol">{$value.botol}</td>
+                        <td class="col-cairan">{$value.cairan_infus}</td>
+                        <td class="col-tetesan">{$value.jumlah_tetesan}</td>
+                        <td class="col-jam-mulai">{$value.jam_mulai}</td>
+                        <td class="col-tgl-stop">{$value.tgl_jam_stop}</td>
+                        <td class="col-ket">{$value.keterangan}</td>
+                        <td class="col-nama">{$value.nama}</td>
+                    </tr>
+                    {/loop}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Catatan Kaki Formulir -->
+        <div class="footer-note-wrap">
+            <span class="footer-note">
+                Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+            </span>
+            <span class="footer-note-box"></span>
+        </div>
+
+        <!-- Nomor Dokumen Formulir -->
+        <div class="page-footer">
+            <div style="text-align: left;">RSGM/Ed-Rev/02/2023</div>
+            <div style="text-align: right;">RM.RI Lampiran</div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -73,20 +73,20 @@ Modul terkait di mLite: `plugins/rawat_inap`
 | 20 | Perencanaan pulang pasien | ❌ Belum Ada | - |
 | 21 | Resume pasien pulang | ❌ Belum Ada | (Biasanya ada modul Resume di Khanza) |
 | **LAMPIRAN** | | | |
-| 1 | Asesmen resiko jatuh | ❌ Belum Ada | - |
+| 1 | Asesmen resiko jatuh | ✅ Ada | Penilaian Morse/Sydney di Asesmen Ranap |
 | 2 | GIZI ANAK DAN DEWASA | ❌ Belum Ada | - |
-| 3 | ASESMEN MEDIS UMUM IR | ❌ Belum Ada | - |
-| 4 | CAIRAN INFUS | ❌ Belum Ada | - |
+| 3 | ASESMEN MEDIS UMUM IR | ✅ Ada | Modul `update_bmt` (`asesmen_medis_umum_irna`) |
+| 4 | CAIRAN INFUS | ✅ Ada | Modul `update_bmt` (`lampiran_cairan_infus`) |
 | 5 | EWS DEWASA DAN ANAK | ❌ Belum Ada | - |
-| 6 | FORM A - MANAJER PELAYANAN PASIEN | ❌ Belum Ada | - |
+| 6 | FORM A - MANAJER PELAYANAN PASIEN | ✅ Ada | Modul `update_bmt` (`lampiran_form_a_mpp`) |
 | 7 | FORM ASESMEN NYERI PASIEN ANAK | ✅ Ada | Ada di fitur asesmen nyeri ranap |
-| 8 | FORM ASESMEN ULANG STATUS FUNGSIONAL | ❌ Belum Ada | - |
-| 9 | FORM B - CATATAN IMPLEMENTASI MPP | ❌ Belum Ada | - |
+| 8 | FORM ASESMEN ULANG STATUS FUNGSIONAL | ✅ Ada | Modul `update_bmt` (`lampiran_asesmen_ulang_status_fungsional`) |
+| 9 | FORM B - CATATAN IMPLEMENTASI MPP | ✅ Ada | Modul `update_bmt` (`lampiran_form_b_mpp`) |
 | 10 | FORM REKAPITULASI KEJADIAN INFEKSI DAERAH OP | ❌ Belum Ada | - |
-| 11 | FORMULIR IDENTIFIKASI KEBUTUHAN PRIVASI PASIEN | ❌ Belum Ada | - |
-| 12 | FORMULIR MENINGGALKAN RUMAH SAKIT DALAM PERIODE TERTENTU | ❌ Belum Ada | - |
-| 13 | FORMULIR PENGHENTIAN PENGOBATAN | ❌ Belum Ada | - |
-| 14 | FORMULIR PROFIL RINGKAS MEDIS RAWAT JALAN | ❌ Belum Ada | - |
+| 11 | FORMULIR IDENTIFIKASI KEBUTUHAN PRIVASI PASIEN | ✅ Ada | Modul `update_bmt` (`lampiran_kebutuhan_privasi_pasien`) |
+| 12 | FORMULIR MENINGGALKAN RUMAH SAKIT DALAM PERIODE TERTENTU | ✅ Ada | Modul `update_bmt` (`lampiran_meninggalkan_rs_tertentu`) |
+| 13 | FORMULIR PENGHENTIAN PENGOBATAN | ✅ Ada | Modul `update_bmt` (`lampiran_penghentian_pengobatan`) |
+| 14 | FORMULIR PROFIL RINGKAS MEDIS RAWAT JALAN | ✅ Ada | Modul `update_bmt` (`lampiran_profil_ringkas_medis_rajal`) |
 | 15 | FORMULIR RUJUKAN | ✅ Ada | Tersedia form rujukan |
 | 16 | FORMULIR SKRINING DARI LUAR RUMAH SAKIT | ❌ Belum Ada | - |
 | 17 | FORMULIR STABILISASI PASIEN SEBELUM TRANSFER | ❌ Belum Ada | - |
@@ -141,7 +141,7 @@ Modul terkait di mLite: `plugins/rawat_jalan`
 | 8 | PERSETUJUAN PROSEDUR TINDAKAN RADIOLOGI | ❌ Belum Ada | - |
 | 9 | RADIOLOGI | ✅ Ada | Modul `radiologi` |
 | 10 | PEMERIKSAAN PENUNJANG MEDIS (RADIOLOGI) | ✅ Ada | Pengantar / Permintaan radiologi |
-| 11 | FORM PROFIL RINGKAS MEDIS RAWAT JALAN | ❌ Belum Ada | - |
+| 11 | FORM PROFIL RINGKAS MEDIS RAWAT JALAN | ✅ Ada | Modul `update_bmt` (`lampiran_profil_ringkas_medis_rajal` / PRMRJ) |
 """
 
 ada = doc.count("✅ Ada")
