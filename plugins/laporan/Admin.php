@@ -551,6 +551,9 @@ class Admin extends AdminModule
             ->select('periksa_radiologi.no_rawat')
             ->select('reg_periksa.no_rkm_medis')
             ->select('pasien.nm_pasien')
+            ->select('periksa_radiologi.tgl_periksa AS tgl_periksa_db')
+            ->select('periksa_radiologi.jam AS jam_db')
+            ->select('periksa_radiologi.nip AS nip_db')
             ->select("CONCAT(periksa_radiologi.tgl_periksa, ' ', periksa_radiologi.jam) AS tgl_periksa")
             ->select("GROUP_CONCAT(jns_perawatan_radiologi.nm_perawatan SEPARATOR ', ') AS nm_perawatan")
             ->select('mlite_mini_pacs_study.id AS pacs_id')
@@ -569,6 +572,7 @@ class Admin extends AdminModule
             ->group('pasien.nm_pasien')
             ->group('periksa_radiologi.tgl_periksa')
             ->group('periksa_radiologi.jam')
+            ->group('periksa_radiologi.nip')
             ->group('mlite_mini_pacs_study.id')
             ->group('dr_rad.nm_dokter')
             ->group('petugas.nama')
@@ -602,14 +606,149 @@ class Admin extends AdminModule
             exit;
         }
 
+        $user_role = $this->core->getUserInfo('role');
+        $username = $this->core->getUserInfo('username');
+        $can_delete = in_array($user_role, ['admin', 'radiologi']);
+
         return $this->draw('laporan_radiologi_pacs.html', [
             'tgl_awal' => $tgl_awal,
             'tgl_akhir' => $tgl_akhir,
             'status_pacs' => $status_pacs,
             'max_gambar' => (int)$max_gambar,
             'data_radiologi' => $filtered_data,
-            'title' => 'Laporan Radiologi (Status Mini PACS)'
+            'title' => 'Laporan Radiologi (Status Mini PACS)',
+            'can_delete' => $can_delete,
+            'user_role' => $user_role,
+            'current_user' => $username
         ]);
+    }
+
+    public function anyHapusRadiologiPacs()
+    {
+        return $this->postHapusRadiologiPacs();
+    }
+
+    public function postHapusRadiologiPacs()
+    {
+        $userRole = $this->core->getUserInfo('role');
+        $username = $this->core->getUserInfo('username');
+
+        if (!in_array($userRole, ['admin', 'radiologi'])) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Anda tidak memiliki hak akses untuk menghapus data laporan radiologi.'
+            ]);
+            exit;
+        }
+
+        $no_rawat = isset_or($_POST['no_rawat'], '');
+        $tgl_periksa = isset_or($_POST['tgl_periksa'], '');
+        $jam = isset_or($_POST['jam'], '');
+        $pacs_id = isset_or($_POST['pacs_id'], '');
+        $hapus_pacs = isset($_POST['hapus_pacs']) ? (int)$_POST['hapus_pacs'] : 1;
+
+        if (empty($no_rawat) || empty($tgl_periksa)) {
+            http_response_code(400);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Parameter no_rawat dan tgl_periksa harus diisi.'
+            ]);
+            exit;
+        }
+
+        // Antisipasi jika tgl_periksa memuat waktu (CONCAT)
+        if (strpos($tgl_periksa, ' ') !== false) {
+            $parts = explode(' ', $tgl_periksa, 2);
+            $tgl_periksa = $parts[0];
+            if (empty($jam)) {
+                $jam = $parts[1];
+            }
+        }
+
+        try {
+            // 1. Hapus periksa_radiologi
+            $queryPeriksa = $this->db('periksa_radiologi')
+                ->where('no_rawat', $no_rawat)
+                ->where('tgl_periksa', $tgl_periksa);
+            if (!empty($jam)) {
+                $queryPeriksa->where('jam', $jam);
+            }
+            $queryPeriksa->delete();
+
+            // 2. Hapus hasil_radiologi
+            $queryHasil = $this->db('hasil_radiologi')
+                ->where('no_rawat', $no_rawat)
+                ->where('tgl_periksa', $tgl_periksa);
+            if (!empty($jam)) {
+                $queryHasil->where('jam', $jam);
+            }
+            $queryHasil->delete();
+
+            // 3. Hapus gambar_radiologi dan file fisiknya jika ada
+            $queryGambar = $this->db('gambar_radiologi')
+                ->where('no_rawat', $no_rawat)
+                ->where('tgl_periksa', $tgl_periksa);
+            if (!empty($jam)) {
+                $queryGambar->where('jam', $jam);
+            }
+            $gambarList = $queryGambar->toArray();
+            foreach ($gambarList as $g) {
+                if (!empty($g['lokasi_gambar'])) {
+                    $baseWebapps = defined('WEBAPPS_PATH') ? WEBAPPS_PATH : (defined('BASE_DIR') ? BASE_DIR . '/../webapps' : dirname(dirname(__DIR__)) . '/webapps');
+                    $filePath = $baseWebapps . '/radiologi/' . $g['lokasi_gambar'];
+                    if (file_exists($filePath)) {
+                        @unlink($filePath);
+                    }
+                }
+            }
+            $queryGambar->delete();
+
+            // 4. Hapus data Mini PACS jika diminta / ada
+            $pacsDeleted = false;
+            if ($hapus_pacs) {
+                if (empty($pacs_id)) {
+                    $studyData = $this->db('mlite_mini_pacs_study')->where('no_rawat', $no_rawat)->oneArray();
+                    if ($studyData) {
+                        $pacs_id = $studyData['id'];
+                    }
+                }
+
+                if (!empty($pacs_id)) {
+                    $series = $this->db('mlite_mini_pacs_series')->where('study_id', $pacs_id)->toArray();
+                    foreach ($series as $s) {
+                        $instances = $this->db('mlite_mini_pacs_instance')->where('series_id', $s['id'])->toArray();
+                        foreach ($instances as $ins) {
+                            if (!empty($ins['file_path']) && file_exists($ins['file_path'])) {
+                                @unlink($ins['file_path']);
+                            }
+                            $this->db()->pdo()->exec("DELETE FROM mlite_mini_pacs_instance_metadata WHERE instance_id = " . intval($ins['id']));
+                            $this->db('mlite_mini_pacs_instance')->where('id', $ins['id'])->delete();
+                        }
+                        $this->db('mlite_mini_pacs_series')->where('id', $s['id'])->delete();
+                    }
+                    $this->db('mlite_mini_pacs_study')->where('id', $pacs_id)->delete();
+                    $pacsDeleted = true;
+                }
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Data laporan radiologi' . ($pacsDeleted ? ' beserta file Mini PACS terkait' : '') . ' berhasil dihapus.'
+            ]);
+            exit;
+        } catch (\Exception $e) {
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Gagal menghapus data: ' . $e->getMessage()
+            ]);
+            exit;
+        }
     }
 
     private function exportRadiologiPacsToExcel($data, $filename)

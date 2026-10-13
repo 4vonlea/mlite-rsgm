@@ -15,7 +15,14 @@ class Admin extends AdminModule
   {
     return [
       'Kelola' => 'manage',
+      'Laporan Radiologi PACS' => 'laporanradiologipacs',
     ];
+  }
+
+  public function anyLaporanradiologipacs()
+  {
+    redirect(url([ADMIN, 'laporan', 'laporanradiologipacs']));
+    exit();
   }
 
   public function apiList()

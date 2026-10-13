@@ -56,6 +56,8 @@
           </div>
         </form>
         
+        <div id="notif-pacs" style="margin-top: 15px;"></div>
+
         {if: $data_radiologi}
         <hr>
         <div class="table-responsive">
@@ -76,6 +78,9 @@
                 <th>Tarif / Biaya</th>
                 <th>Cara Bayar</th>
                 <th>Status PACS</th>
+                {if: $can_delete}
+                <th style="text-align: center; width: 80px;">Aksi</th>
+                {/if}
               </tr>
             </thead>
             <tbody>
@@ -98,21 +103,37 @@
                   {if: $value.status_pacs == 'Terkirim'}
                   <span class="label label-success">{?=isset_or($value.status_pacs)?}</span>
                   <form action="{?=url([ADMIN, 'radiologi', 'manage'])?}" method="post" target="_blank" style="display:inline;">
-                    <input type="hidden" name="periode_rawat_jalan" value="{?=isset_or($value.tgl_periksa)?}">
-                    <input type="hidden" name="periode_rawat_jalan_akhir" value="{?=isset_or($value.tgl_periksa)?}">
+                    <input type="hidden" name="periode_rawat_jalan" value="{?=isset_or($value.tgl_periksa_db, $value.tgl_periksa)?}">
+                    <input type="hidden" name="periode_rawat_jalan_akhir" value="{?=isset_or($value.tgl_periksa_db, $value.tgl_periksa)?}">
                     <input type="hidden" name="no_rawat" value="{?=isset_or($value.no_rawat)?}">
                     <button type="submit" class="btn btn-xs btn-primary" style="margin-left:5px;"><i class="fa fa-eye"></i> Lihat PACS</button>
                   </form>
                   {else}
                   <span class="label label-danger">{?=isset_or($value.status_pacs)?}</span>
                   <form action="{?=url([ADMIN, 'radiologi', 'manage'])?}" method="post" target="_blank" style="display:inline;">
-                    <input type="hidden" name="periode_rawat_jalan" value="{?=isset_or($value.tgl_periksa)?}">
-                    <input type="hidden" name="periode_rawat_jalan_akhir" value="{?=isset_or($value.tgl_periksa)?}">
+                    <input type="hidden" name="periode_rawat_jalan" value="{?=isset_or($value.tgl_periksa_db, $value.tgl_periksa)?}">
+                    <input type="hidden" name="periode_rawat_jalan_akhir" value="{?=isset_or($value.tgl_periksa_db, $value.tgl_periksa)?}">
                     <input type="hidden" name="no_rawat" value="{?=isset_or($value.no_rawat)?}">
                     <button type="submit" class="btn btn-xs btn-primary" style="margin-left:5px;"><i class="fa fa-upload"></i> Upload</button>
                   </form>
                   {/if}
                 </td>
+                {if: $can_delete}
+                <td style="text-align: center; white-space: nowrap;">
+                  <button type="button" class="btn btn-xs btn-danger btn-hapus-pacs"
+                    data-no_rawat="{?=isset_or($value.no_rawat)?}"
+                    data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}"
+                    data-pasien="{?=isset_or($value.nm_pasien)?}"
+                    data-tgl_periksa="{?=isset_or($value.tgl_periksa_db, $value.tgl_periksa)?}"
+                    data-jam="{?=isset_or($value.jam_db)?}"
+                    data-pemeriksaan="{?=isset_or($value.nm_perawatan)?}"
+                    data-pacs_id="{?=isset_or($value.pacs_id)?}"
+                    data-status_pacs="{?=isset_or($value.status_pacs)?}"
+                    title="Hapus Data Laporan Radiologi">
+                    <i class="fa fa-trash"></i> Hapus
+                  </button>
+                </td>
+                {/if}
               </tr>
               {/loop}
             </tbody>
@@ -124,15 +145,190 @@
   </div>
 </div>
 
+<!-- Modal Konfirmasi Hapus Data Laporan Radiologi -->
+<div class="modal fade" id="modalHapusPacs" tabindex="-1" role="dialog" aria-labelledby="modalHapusPacsLabel" aria-hidden="true">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <button type="button" class="close text-white" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="modalHapusPacsLabel"><i class="fa fa-trash"></i> Konfirmasi Hapus Data Laporan</h4>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning" style="margin-bottom: 15px;">
+          <i class="fa fa-exclamation-triangle"></i> <strong>Perhatian:</strong> Data pemeriksaan radiologi yang dihapus akan dibatalkan/dihapus dari riwayat pasien.
+        </div>
+        <table class="table table-bordered table-condensed" style="margin-bottom: 10px;">
+          <tr>
+            <th style="width: 35%; background: #f9f9f9;">No. Rawat</th>
+            <td><strong id="hapus_info_no_rawat">-</strong></td>
+          </tr>
+          <tr>
+            <th style="background: #f9f9f9;">No. RM / Pasien</th>
+            <td><span id="hapus_info_pasien">-</span></td>
+          </tr>
+          <tr>
+            <th style="background: #f9f9f9;">Pemeriksaan</th>
+            <td><span id="hapus_info_pemeriksaan">-</span></td>
+          </tr>
+          <tr>
+            <th style="background: #f9f9f9;">Tgl & Jam Periksa</th>
+            <td><span id="hapus_info_tgl_jam">-</span></td>
+          </tr>
+          <tr>
+            <th style="background: #f9f9f9;">Status Mini PACS</th>
+            <td><span id="hapus_info_status_pacs">-</span></td>
+          </tr>
+        </table>
+        
+        <div class="checkbox" id="container_hapus_pacs" style="margin-top: 15px; padding-left: 5px;">
+          <label style="font-weight: bold; color: #a94442;">
+            <input type="checkbox" id="check_hapus_pacs" value="1" checked> 
+            Hapus juga data pemeriksaan Mini PACS terkait (file DICOM)
+          </label>
+        </div>
+
+        <input type="hidden" id="hapus_target_no_rawat">
+        <input type="hidden" id="hapus_target_tgl_periksa">
+        <input type="hidden" id="hapus_target_jam">
+        <input type="hidden" id="hapus_target_pacs_id">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Batal</button>
+        <button type="button" class="btn btn-danger" id="btnProsesHapusPacs"><i class="fa fa-trash"></i> Ya, Hapus Data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{if: $can_delete}
 <script>
+var canDeletePacs = true;
+</script>
+{else}
+<script>
+var canDeletePacs = false;
+</script>
+{/if}
+
+<script>
+var laporanTable;
+
 $(document).ready(function() {
-  $('#laporanTable').DataTable({
+  var dtOptions = {
     "language": {
       "url": "{?=url('assets/jscripts/dataTables-id.json')?}"
     },
     "pageLength": 25,
     "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
     "order": [[ 5, "desc" ]]
+  };
+
+  if (canDeletePacs) {
+    dtOptions.columnDefs = [
+      { "orderable": false, "targets": -1 }
+    ];
+  }
+
+  laporanTable = $('#laporanTable').DataTable(dtOptions);
+
+  var $activeRowToDelete = null;
+
+  $('#laporanTable').on('click', '.btn-hapus-pacs', function(e) {
+    e.preventDefault();
+    $activeRowToDelete = $(this).closest('tr');
+    
+    var noRawat = $(this).data('no_rawat');
+    var noRm = $(this).data('no_rkm_medis');
+    var pasien = $(this).data('pasien');
+    var pemeriksaan = $(this).data('pemeriksaan');
+    var tglPeriksa = $(this).data('tgl_periksa');
+    var jam = $(this).data('jam');
+    var pacsId = $(this).data('pacs_id');
+    var statusPacs = $(this).data('status_pacs');
+
+    $('#hapus_target_no_rawat').val(noRawat);
+    $('#hapus_target_tgl_periksa').val(tglPeriksa);
+    $('#hapus_target_jam').val(jam);
+    $('#hapus_target_pacs_id').val(pacsId);
+
+    $('#hapus_info_no_rawat').text(noRawat);
+    $('#hapus_info_pasien').text((noRm ? '(' + noRm + ') ' : '') + pasien);
+    $('#hapus_info_pemeriksaan').text(pemeriksaan);
+    $('#hapus_info_tgl_jam').text(tglPeriksa + (jam ? ' ' + jam : ''));
+    
+    if (statusPacs === 'Terkirim' || pacsId) {
+      $('#hapus_info_status_pacs').html('<span class="label label-success">Terkirim' + (pacsId ? ' (ID: ' + pacsId + ')' : '') + '</span>');
+      $('#container_hapus_pacs').show();
+      $('#check_hapus_pacs').prop('checked', true);
+    } else {
+      $('#hapus_info_status_pacs').html('<span class="label label-danger">Belum Terkirim</span>');
+      $('#container_hapus_pacs').hide();
+      $('#check_hapus_pacs').prop('checked', false);
+    }
+
+    $('#btnProsesHapusPacs').prop('disabled', false).html('<i class="fa fa-trash"></i> Ya, Hapus Data');
+    $('#modalHapusPacs').modal('show');
+  });
+
+  $('#btnProsesHapusPacs').on('click', function() {
+    var $btn = $(this);
+    var noRawat = $('#hapus_target_no_rawat').val();
+    var tglPeriksa = $('#hapus_target_tgl_periksa').val();
+    var jam = $('#hapus_target_jam').val();
+    var pacsId = $('#hapus_target_pacs_id').val();
+    var hapusPacs = $('#check_hapus_pacs').is(':checked') ? 1 : 0;
+
+    $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menghapus...');
+
+    var hapusUrl = "{?=url([ADMIN, 'laporan', 'hapusradiologipacs'])?}?t=" + (typeof mlite !== 'undefined' ? mlite.token : '');
+
+    $.ajax({
+      url: hapusUrl,
+      type: 'POST',
+      dataType: 'json',
+      data: {
+        no_rawat: noRawat,
+        tgl_periksa: tglPeriksa,
+        jam: jam,
+        pacs_id: pacsId,
+        hapus_pacs: hapusPacs
+      },
+      success: function(response) {
+        $('#modalHapusPacs').modal('hide');
+        $btn.prop('disabled', false).html('<i class="fa fa-trash"></i> Ya, Hapus Data');
+
+        if (response.status === 'success') {
+          $('#notif-pacs').html(
+            '<div class="alert alert-success alert-dismissible fade in" role="alert">' +
+            '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+            '<i class="fa fa-check-circle"></i> ' + (response.message || 'Data laporan radiologi berhasil dihapus!') +
+            '</div>'
+          );
+
+          if ($activeRowToDelete && laporanTable) {
+            laporanTable.row($activeRowToDelete).remove().draw(false);
+          }
+
+          $('html, body').animate({ scrollTop: $('#notif-pacs').offset().top - 70 }, 300);
+          setTimeout(function() {
+            $('#notif-pacs .alert').fadeOut(500, function() { $(this).remove(); });
+          }, 4000);
+        } else {
+          alert(response.message || 'Gagal menghapus data.');
+        }
+      },
+      error: function(xhr, status, error) {
+        $btn.prop('disabled', false).html('<i class="fa fa-trash"></i> Ya, Hapus Data');
+        var errMsg = 'Terjadi kesalahan saat menghapus data.';
+        try {
+          var errJson = JSON.parse(xhr.responseText);
+          if (errJson && errJson.message) {
+            errMsg = errJson.message;
+          }
+        } catch(e) {}
+        alert(errMsg);
+      }
+    });
   });
 });
 
