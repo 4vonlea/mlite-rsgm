@@ -500,10 +500,132 @@ Menambahkan formulir PROFIL RINGKAS MEDIS RAWAT JALAN (PRMRJ) yang mencakup 2 ha
 - `migrate_bmt.php` — Validasi migrasi tabel otomatis (44 tabel aktif)
 - `CHECKLIST_FITUR.md` — Pembaruan checklist status fitur (72.2% selesai, 78/108 form)
 
+---
 
+## [2026-10-13] v1.11 — Modul Lampiran - Formulir Skrining Dari Luar Rumah Sakit (Ranap)
 
+### Tabel Baru: `lampiran_skrining_luar_rs`
 
+**SQL untuk production:**
+```sql
+CREATE TABLE IF NOT EXISTS `lampiran_skrining_luar_rs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `tanggal_skrining` date DEFAULT NULL,
+  `jam_skrining` time DEFAULT NULL,
+  `status_pembayaran` varchar(50) DEFAULT NULL,
+  `asal_rujukan` varchar(255) DEFAULT NULL,
+  `alasan_dirujuk` text DEFAULT NULL,
+  `diagnosa` text DEFAULT NULL,
+  `keadaan_umum` varchar(100) DEFAULT NULL,
+  `kesadaran` varchar(50) DEFAULT NULL,
+  `tensi` varchar(20) DEFAULT NULL,
+  `nadi` varchar(20) DEFAULT NULL,
+  `suhu` varchar(20) DEFAULT NULL,
+  `respirasi` varchar(20) DEFAULT NULL,
+  `terapi` text DEFAULT NULL,
+  `tindakan` text DEFAULT NULL,
+  `tujuan` varchar(255) DEFAULT NULL,
+  `tujuan_lainnya` varchar(255) DEFAULT NULL,
+  `keterangan_status` enum('TERIMA','TOLAK') DEFAULT 'TERIMA',
+  `alasan_keterangan` text DEFAULT NULL,
+  `nama_petugas` varchar(150) DEFAULT NULL,
+  `nip_petugas` varchar(50) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal_skrining` (`tanggal_skrining`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+```
 
+**Alasan:**
+Menambahkan formulir resmi akreditasi RSGM: **FORMULIR SKRINING DARI LUAR RUMAH SAKIT** (Kategori Lampiran Rawat Inap):
+1. **Header & Kop:** Kop resmi RSGM Gusti Hasan Aman dan kotak judul dokumen.
+2. **Bagian I (Identitas Pasien & Rujukan):** No. RM kotak 6 digit `[ ][ ][ ][ ][ ][ ]`, Nama Pasien (L/P), Tanggal Lahir & Umur, Status Pembayaran, Asal Rujukan, Alasan di rujuk.
+3. **Bagian II (Diagnosa):** Diagnosa kerja / diagnosa rujukan.
+4. **Bagian III (Keadaan Pasien):** Keadaan umum, Kesadaran, Tanda-tanda vital (Tensi, Nadi, Suhu, Pernapasan).
+5. **Bagian IV (Penatalaksanaan):** Terapi medikamentosa dan Tindakan.
+6. **Bagian V (Tujuan):** Checklist tujuan spesialis (UGD, Orthodonsia, Pedodonsia, Bedah Mulut, Oral Medicine, Periodonsia, Prosthodonsia, Konservasi Gigi, Lainnya).
+7. **Bagian VI (Keterangan & Petugas Jaga):** Status keputusan (TERIMA / TOLAK) dengan alasan, serta tanda tangan & identitas petugas jaga.
+8. **Catatan Kaki:** Catatan resmi dan kode formulir RSGM (`RSGM/Ed-Rev/02/2023` & `RM.RI Lampiran`).
 
+**File kode yang diubah/dibuat:**
+- `themes/admin/index.html` — Menu navigasi Rekam Medis -> Form Lampiran -> Ranap -> "LAMPIRAN - FORMULIR SKRINING DARI LUAR RUMAH SAKIT"
+- `plugins/update_bmt/Admin.php` — Handler `anySkriningluarrsmanage()`, `getSkriningluarrsform()`, `postSkriningluarrssave()`, `getSkriningluarrshapus()`, `getSkriningluarrscetak()`
+- `plugins/update_bmt/view/admin/lampiran_skrining_luar_rs/manage.html` — Tampilan manajemen data (DataTables, badge status & tombol aksi)
+- `plugins/update_bmt/view/admin/lampiran_skrining_luar_rs/form.html` — Formulir input interaktif dengan auto-search AJAX pasien & checklist poli tujuan
+- `plugins/update_bmt/view/admin/lampiran_skrining_luar_rs/cetak.html` — Output cetak & PDF 1 halaman A4 presisi sesuai dokumen acuan
+- `migration_tabel_pendukung_bmt.sql` & `plugins/update_bmt/migration.sql` — DDL tabel database
+- `migrate_bmt.php` — Validasi migrasi tabel otomatis (45 tabel aktif)
+- `CHECKLIST_FITUR.md` — Pembaruan checklist status fitur (73.1% selesai, 79/108 form)
 
+---
+
+## [2026-10-13] v1.12 — Modul Lampiran - Formulir Stabilisasi Pasien Sebelum Transfer (Ranap)
+
+### Tabel Baru: `lampiran_stabilisasi_pasien`
+
+**SQL untuk production:**
+```sql
+CREATE TABLE IF NOT EXISTS `lampiran_stabilisasi_pasien` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `tanggal_stabilisasi` date DEFAULT NULL,
+  `jam_stabilisasi` time DEFAULT NULL,
+  `nama_perawat` varchar(150) DEFAULT NULL,
+  `nip_perawat` varchar(50) DEFAULT NULL,
+  `nama_dokter` varchar(150) DEFAULT NULL,
+  `nip_dokter` varchar(50) DEFAULT NULL,
+  `diagnosa` text DEFAULT NULL,
+  `keadaan_umum` enum('Ringan','Sedang','Berat') DEFAULT 'Sedang',
+  `gcs_e` varchar(10) DEFAULT NULL,
+  `gcs_v` varchar(10) DEFAULT NULL,
+  `gcs_m` varchar(10) DEFAULT NULL,
+  `kesadaran_kualitatif` enum('Compos Mentis','Apatis','Delirium','Somnolen','Stupor','Koma') DEFAULT 'Compos Mentis',
+  `pernafasan` enum('Spontan','Dengan bantuan O2','ETT','Tracheostomi','Ambu bag') DEFAULT 'Spontan',
+  `pernafasan_o2` varchar(50) DEFAULT NULL,
+  `alat_iv_line` tinyint(1) DEFAULT 0,
+  `alat_iv_line_jalur` varchar(100) DEFAULT NULL,
+  `alat_ngt` tinyint(1) DEFAULT 0,
+  `alat_drain` tinyint(1) DEFAULT 0,
+  `alat_kateter` tinyint(1) DEFAULT 0,
+  `alat_lain_lain` varchar(255) DEFAULT NULL,
+  `monitoring_tanda_vital` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal_stabilisasi` (`tanggal_stabilisasi`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+```
+
+**Alasan:**
+Menambahkan formulir rekam medis akreditasi RSGM: **FORMULIR STABILISASI PASIEN SEBELUM TRANSFER** (Kategori Lampiran Rawat Inap):
+1. **Header & Kop Surat:** Kop resmi RSGM Gusti Hasan Aman dan bingkai formulir presisi.
+2. **Identitas Pasien & Tim Medis:** Nama Pasien, Umur & Jenis Kelamin, Diagnosa, Nama Perawat, Nama Dokter.
+3. **Kondisi Klinis Pasien:**
+   - Keadaan umum: Ringan / Sedang / Berat
+   - Kesadaran Kuantitatif: GCS E... V... M...
+   - Kesadaran Kualitatif: Compos Mentis, Apatis, Delirium, Somnolen, Stupor, Koma
+   - Pernafasan: Spontan, Dengan bantuan O2 (Liter/menit), ETT, Tracheostomi, Ambu bag
+   - Pasien menggunakan: IV Line (... jalur), Kateter, NGT, Drain, Lain-lain
+4. **Monitoring Tanda-Tanda Vital:**
+   - Tabel observasi multi-baris dinamis (Jam, TD / Mm Hg, HR / Kali/mnt, RR / Kali/mnt, T / °C, Keterangan: tindakan atau pemberian obat).
+5. **Catatan & Footer Resmi Dokumen:**
+   - Catatan kerja sama pengisian form, kode dokumen `RSGM/Ed-Rev/02/2023` & `RM.RI Lampiran`.
+
+**File kode yang diubah/dibuat:**
+- `themes/admin/index.html` — Menu navigasi Rekam Medis -> Form RME -> Ranap -> Form Lampiran -> "LAMPIRAN - FORMULIR STABILISASI PASIEN SEBELUM TRANSFER"
+- `plugins/update_bmt/Admin.php` — Handler `anyStabilisasipasienmanage()`, `getStabilisasipasienform()`, `postStabilisasipasiensave()`, `getStabilisasipasienhapus()`, `getStabilisasipasiencetak()`
+- `plugins/update_bmt/view/admin/lampiran_stabilisasi_pasien/manage.html` — Tampilan manajemen data (DataTables, badge observasi, tombol aksi)
+- `plugins/update_bmt/view/admin/lampiran_stabilisasi_pasien/form.html` — Formulir input interaktif dengan auto-search AJAX pasien, GCS, alat medis, dan tabel dinamis TTV
+- `plugins/update_bmt/view/admin/lampiran_stabilisasi_pasien/cetak.html` — Cetak & PDF 1 halaman A4 presisi sesuai dokumen acuan fisik
+- `migration_tabel_pendukung_bmt.sql` & `plugins/update_bmt/migration.sql` — DDL tabel database
+- `migrate_bmt.php` — Validasi migrasi tabel otomatis (46 tabel aktif)
+- `CHECKLIST_FITUR.md` & `hasil_pengecekan_form_mlite.md` — Pembaruan checklist status fitur (74.1% selesai, 80/108 form)
 

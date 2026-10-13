@@ -305,58 +305,90 @@
                         <li class="dropdown-submenu">
                           <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">Bedah</a>
                           <ul class="dropdown-menu">
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ans1manage'])?}" class="dropdown-item">ANS1 - INFORMASI TINDAKAN PEMBIUSAN</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ans2manage'])?}" class="dropdown-item">ANS2 - PERSETUJUAN TINDAKAN PEMBIUSAN</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ans3manage'])?}" class="dropdown-item">ANS3 - ASSESMEN PRASEDASI / ANESTESI</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ans4manage'])?}" class="dropdown-item">ANS4 - RENCANA ANESTESI</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ans6manage'])?}" class="dropdown-item">ANS6 - STATUS POST ANESTESI</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ans7manage'])?}" class="dropdown-item">ANS7 - SERAH TERIMA PASIEN PASCA OPERASI</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'bm1manage'])?}" class="dropdown-item">BM1 - INFORMASI TINDAKAN MEDIK PEMBEDAHAN</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'bm2manage'])?}" class="dropdown-item">BM2 - PERSETUJUAN / PENOLAKAN TINDAKAN</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'bm4manage'])?}" class="dropdown-item">BM4 - LAPORAN PEMBEDAHAN ANESTESI</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'bmi1manage'])?}" class="dropdown-item">BMI1 - PERSETUJUAN TINDAKAN KEDOKTERAN (ANESTESI LOKAL)</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'bmi4manage'])?}" class="dropdown-item">BMI4 - FORMULIR PEMERIKSAAN PRA ANESTESI LOKAL</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'bmi5manage'])?}" class="dropdown-item">BMI5 - LAPORAN BEDAH MINOR</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'pulangapsmanage'])?}" class="dropdown-item">LAMPIRAN - SURAT PERNYATAAN PULANG APS</a></li>
+                            <li class="dropdown-submenu">
+                              <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">Form Wajib</a>
+                              <ul class="dropdown-menu">
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ans1manage'])?}" class="dropdown-item">ANS1 - INFORMASI TINDAKAN PEMBIUSAN</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ans2manage'])?}" class="dropdown-item">ANS2 - PERSETUJUAN TINDAKAN PEMBIUSAN</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ans3manage'])?}" class="dropdown-item">ANS3 - ASSESMEN PRASEDASI / ANESTESI</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ans4manage'])?}" class="dropdown-item">ANS4 - RENCANA ANESTESI</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ans6manage'])?}" class="dropdown-item">ANS6 - STATUS POST ANESTESI</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ans7manage'])?}" class="dropdown-item">ANS7 - SERAH TERIMA PASIEN PASCA OPERASI</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'bm1manage'])?}" class="dropdown-item">BM1 - INFORMASI TINDAKAN MEDIK PEMBEDAHAN</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'bm2manage'])?}" class="dropdown-item">BM2 - PERSETUJUAN / PENOLAKAN TINDAKAN</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'bm4manage'])?}" class="dropdown-item">BM4 - LAPORAN PEMBEDAHAN ANESTESI</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'bmi1manage'])?}" class="dropdown-item">BMI1 - PERSETUJUAN TINDAKAN KEDOKTERAN (ANESTESI LOKAL)</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'bmi4manage'])?}" class="dropdown-item">BMI4 - FORMULIR PEMERIKSAAN PRA ANESTESI LOKAL</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'bmi5manage'])?}" class="dropdown-item">BMI5 - LAPORAN BEDAH MINOR</a></li>
+                              </ul>
+                            </li>
+                            <li class="dropdown-submenu">
+                              <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">Form Lampiran</a>
+                              <ul class="dropdown-menu">
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'pulangapsmanage'])?}" class="dropdown-item">LAMPIRAN - SURAT PERNYATAAN PULANG APS</a></li>
+                              </ul>
+                            </li>
                           </ul>
                         </li>
                         <li class="dropdown-submenu">
                           <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">Ranap</a>
                           <ul class="dropdown-menu">
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ri01bmanage'])?}" class="dropdown-item">RM.RI 01B - HAK DAN KEWAJIBAN PASIEN</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ri02manage'])?}" class="dropdown-item">RM.RI 02 - RINGKASAN MASUK DAN KELUAR</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ri03manage'])?}" class="dropdown-item">RM.RI 03 - SERAH TERIMA PASIEN</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ri04manage'])?}" class="dropdown-item">RM.RI 04 - TRANSFER PASIEN INTERNAL</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ri09manage'])?}" class="dropdown-item">RM.RI 09 - FORM ASESMEN STATUS FUNGSIONAL</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ri11bmanage'])?}" class="dropdown-item">RM.RI 11B - FORMULIR PEMBERIAN MAKAN PASIEN</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ri14manage'])?}" class="dropdown-item">RM.RI 14 - REKONSILIASI OBAT</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ri15manage'])?}" class="dropdown-item">RM.RI 15 - FORMULIR INSTRUKSI MEDIS</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ri15amanage'])?}" class="dropdown-item">RM.RI 15A - DAFTAR INSTRUKSI MEDIS FARMAKOLOGI</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ri15bmanage'])?}" class="dropdown-item">RM.RI 15B - JADWAL PEMBERIAN OBAT (R)</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ri18manage'])?}" class="dropdown-item">RM.RI 18 - LEMBAR EDUKASI PASIEN</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ri19manage'])?}" class="dropdown-item">RM.RI 19 - PERENCANAAN PULANG PASIEN (DISCHARGE PLANNING)</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'ri20manage'])?}" class="dropdown-item">RM.RI 20 - RESUME PASIEN PULANG (RI) (R)</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'amumanage'])?}" class="dropdown-item">LAMPIRAN - ASESMEN MEDIS UMUM IRNA</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'cairaninfusmanage'])?}" class="dropdown-item">LAMPIRAN - CAIRAN INFUS</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'formamppmanage'])?}" class="dropdown-item">LAMPIRAN - FORM A MANAJER PELAYANAN PASIEN</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'statusfungsionalulangmanage'])?}" class="dropdown-item">LAMPIRAN - FORM ASESMEN ULANG STATUS FUNGSIONAL</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'formbmppmanage'])?}" class="dropdown-item">LAMPIRAN - FORM B - CATATAN IMPLEMENTASI MANAJER PELAYANAN PASIEN MPP</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'kebutuhanprivasimanage'])?}" class="dropdown-item">LAMPIRAN - FORMULIR IDENTIFIKASI KEBUTUHAN PRIVASI PASIEN</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'meninggalkanrsmanage'])?}" class="dropdown-item">LAMPIRAN - FORMULIR MENINGGALKAN RUMAH SAKIT SELAMA PERIODE TERTENTU</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'penghentianpengobatanmanage'])?}" class="dropdown-item">LAMPIRAN - FORMULIR PENGHENTIAN PENGOBATAN</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'prmrjmanage'])?}" class="dropdown-item">LAMPIRAN - FORMULIR PROFIL RINGKAS MEDIS RAWAT JALAN (PRMRJ)</a></li>
+                            <li class="dropdown-submenu">
+                              <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">Form Wajib</a>
+                              <ul class="dropdown-menu">
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ri01bmanage'])?}" class="dropdown-item">RM.RI 01B - HAK DAN KEWAJIBAN PASIEN</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ri02manage'])?}" class="dropdown-item">RM.RI 02 - RINGKASAN MASUK DAN KELUAR</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ri03manage'])?}" class="dropdown-item">RM.RI 03 - SERAH TERIMA PASIEN</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ri04manage'])?}" class="dropdown-item">RM.RI 04 - TRANSFER PASIEN INTERNAL</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ri09manage'])?}" class="dropdown-item">RM.RI 09 - FORM ASESMEN STATUS FUNGSIONAL</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ri11bmanage'])?}" class="dropdown-item">RM.RI 11B - FORMULIR PEMBERIAN MAKAN PASIEN</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ri14manage'])?}" class="dropdown-item">RM.RI 14 - REKONSILIASI OBAT</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ri15manage'])?}" class="dropdown-item">RM.RI 15 - FORMULIR INSTRUKSI MEDIS</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ri15amanage'])?}" class="dropdown-item">RM.RI 15A - DAFTAR INSTRUKSI MEDIS FARMAKOLOGI</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ri15bmanage'])?}" class="dropdown-item">RM.RI 15B - JADWAL PEMBERIAN OBAT (R)</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ri18manage'])?}" class="dropdown-item">RM.RI 18 - LEMBAR EDUKASI PASIEN</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ri19manage'])?}" class="dropdown-item">RM.RI 19 - PERENCANAAN PULANG PASIEN (DISCHARGE PLANNING)</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'ri20manage'])?}" class="dropdown-item">RM.RI 20 - RESUME PASIEN PULANG (RI) (R)</a></li>
+                              </ul>
+                            </li>
+                            <li class="dropdown-submenu">
+                              <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">Form Lampiran</a>
+                              <ul class="dropdown-menu">
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'amumanage'])?}" class="dropdown-item">LAMPIRAN - ASESMEN MEDIS UMUM IRNA</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'cairaninfusmanage'])?}" class="dropdown-item">LAMPIRAN - CAIRAN INFUS</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'formamppmanage'])?}" class="dropdown-item">LAMPIRAN - FORM A MANAJER PELAYANAN PASIEN</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'statusfungsionalulangmanage'])?}" class="dropdown-item">LAMPIRAN - FORM ASESMEN ULANG STATUS FUNGSIONAL</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'formbmppmanage'])?}" class="dropdown-item">LAMPIRAN - FORM B - CATATAN IMPLEMENTASI MANAJER PELAYANAN PASIEN MPP</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'kebutuhanprivasimanage'])?}" class="dropdown-item">LAMPIRAN - FORMULIR IDENTIFIKASI KEBUTUHAN PRIVASI PASIEN</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'meninggalkanrsmanage'])?}" class="dropdown-item">LAMPIRAN - FORMULIR MENINGGALKAN RUMAH SAKIT SELAMA PERIODE TERTENTU</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'penghentianpengobatanmanage'])?}" class="dropdown-item">LAMPIRAN - FORMULIR PENGHENTIAN PENGOBATAN</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'prmrjmanage'])?}" class="dropdown-item">LAMPIRAN - FORMULIR PROFIL RINGKAS MEDIS RAWAT JALAN (PRMRJ)</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'skriningluarrsmanage'])?}" class="dropdown-item">LAMPIRAN - FORMULIR SKRINING DARI LUAR RUMAH SAKIT</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'stabilisasipasienmanage'])?}" class="dropdown-item">LAMPIRAN - FORMULIR STABILISASI PASIEN SEBELUM TRANSFER</a></li>
+                              </ul>
+                            </li>
                           </ul>
                         </li>
                         <li class="dropdown-submenu">
                           <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">Rajal</a>
                           <ul class="dropdown-menu">
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'manage'])?}" class="dropdown-item">RM.GD 4 - ASESMEN KEPERAWATAN.ASUHAN GIGI DAN MULUT UGD</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'rj02amanage'])?}" class="dropdown-item">RM.RJ 02A - HAK DAN KEWAJIBAN PASIEN</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'rj07manage'])?}" class="dropdown-item">RM.RJ 07 - ASESMEN ULANG NYERI</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'rj10manage'])?}" class="dropdown-item">RM.RJ 10 - LEMBAR EDUKASI PASIEN</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'edukasimanage'])?}" class="dropdown-item">RM.RJ-10 - LEMBAR EDUKASI PASIEN DAN KELUARGA TERINTEGRASI</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'rj11manage'])?}" class="dropdown-item">RM.RJ 11 - PEMBERIAN INFORMASI</a></li>
-                            <li><a href="{?=url([ADMIN, 'update_bmt', 'prmrjmanage'])?}" class="dropdown-item">LAMPIRAN - FORMULIR PROFIL RINGKAS MEDIS RAWAT JALAN (PRMRJ)</a></li>
+                            <li class="dropdown-submenu">
+                              <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">Form Wajib</a>
+                              <ul class="dropdown-menu">
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'manage'])?}" class="dropdown-item">RM.GD 4 - ASESMEN KEPERAWATAN.ASUHAN GIGI DAN MULUT UGD</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'rj02amanage'])?}" class="dropdown-item">RM.RJ 02A - HAK DAN KEWAJIBAN PASIEN</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'rj07manage'])?}" class="dropdown-item">RM.RJ 07 - ASESMEN ULANG NYERI</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'rj10manage'])?}" class="dropdown-item">RM.RJ 10 - LEMBAR EDUKASI PASIEN</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'edukasimanage'])?}" class="dropdown-item">RM.RJ-10 - LEMBAR EDUKASI PASIEN DAN KELUARGA TERINTEGRASI</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'rj11manage'])?}" class="dropdown-item">RM.RJ 11 - PEMBERIAN INFORMASI</a></li>
+                              </ul>
+                            </li>
+                            <li class="dropdown-submenu">
+                              <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">Form Lampiran</a>
+                              <ul class="dropdown-menu">
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'prmrjmanage'])?}" class="dropdown-item">LAMPIRAN - FORMULIR PROFIL RINGKAS MEDIS RAWAT JALAN (PRMRJ)</a></li>
+                              </ul>
+                            </li>
                           </ul>
                         </li>
                       </ul>

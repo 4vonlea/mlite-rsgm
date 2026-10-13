@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>FORMULIR SKRINING DARI LUAR RUMAH SAKIT - {$data.no_rawat}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 8mm 10mm 8mm 10mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10pt;
+            color: #000;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 15px 0;
+            line-height: 1.35;
+        }
+        .page {
+            width: 195mm;
+            min-height: 275mm;
+            margin: 0 auto;
+            position: relative;
+            background: #fff;
+            padding: 8mm 10mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+        }
+
+        /* Toolbar Layar */
+        .no-print-toolbar {
+            width: 195mm;
+            margin: 0 auto 12px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2c3e50;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-toolbar {
+            padding: 6px 14px;
+            font-size: 13px;
+            border-radius: 3px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #2980b9; color: #fff; }
+        .btn-close { background: #7f8c8d; color: #fff; }
+        .btn-toolbar:hover { opacity: 0.9; }
+
+        /* Tabel Bingkai Formulir */
+        .main-form-table {
+            width: 100%;
+            border: 2px solid #000;
+            border-collapse: collapse;
+        }
+        .main-form-table > tbody > tr > td {
+            border: 1.5px solid #000;
+            padding: 6px 8px;
+            vertical-align: top;
+        }
+
+        /* Header Baris 1 */
+        .header-kop-cell {
+            width: 58%;
+            border-right: 1.5px solid #000 !important;
+            padding: 4px 6px !important;
+            vertical-align: middle !important;
+        }
+        .header-title-cell {
+            width: 42%;
+            text-align: center;
+            vertical-align: middle !important;
+            padding: 10px 8px !important;
+        }
+        .header-title-main {
+            font-size: 12.5pt;
+            font-weight: bold;
+            line-height: 1.3;
+            letter-spacing: 0.5px;
+        }
+
+        /* Digit Kotak No RM */
+        .rm-box-group {
+            display: inline-flex;
+            vertical-align: middle;
+            margin-left: 2px;
+        }
+        .rm-digit-box {
+            display: inline-block;
+            width: 15px;
+            height: 17px;
+            line-height: 17px;
+            border: 1px solid #000;
+            text-align: center;
+            font-weight: bold;
+            font-size: 9.5pt;
+            margin-right: 2px;
+        }
+
+        /* Kotak Checkbox */
+        .check-box-icon {
+            display: inline-block;
+            width: 13px;
+            height: 13px;
+            line-height: 11px;
+            border: 1px solid #000;
+            text-align: center;
+            font-size: 10px;
+            vertical-align: middle;
+            margin-right: 4px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        /* Garis Isian Titik-Titik / Underline */
+        .dot-fill-line {
+            display: inline-block;
+            border-bottom: 1px dotted #555;
+            min-width: 100px;
+            padding: 0 4px;
+            font-weight: 500;
+        }
+
+        /* Sub-tabel Identitas */
+        .inner-table-identitas {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9.5pt;
+        }
+        .inner-table-identitas td {
+            padding: 2.5px 0;
+            vertical-align: top;
+            border: none !important;
+        }
+
+        /* Footer Kaki Halaman */
+        .footer-note-text {
+            color: #b02a37;
+            font-style: italic;
+            font-size: 8pt;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+        .footer-meta-bar {
+            width: 100%;
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8pt;
+            font-weight: bold;
+            color: #222;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                width: 100%;
+                padding: 0;
+                margin: 0;
+            }
+            .no-print, .no-print-toolbar {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body {if: empty($is_mpdf)}onload="if(window.location.search.indexOf('noprint=1')===-1)window.print()"{/if}>
+
+    <!-- Toolbar Layar (Tidak dicetak) -->
+    <div class="no-print-toolbar no-print">
+        <div style="font-size: 13px; font-weight: bold;">
+            Preview Dokumen: Formulir Skrining Dari Luar RS ({$data.no_rawat})
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button onclick="window.print()" class="btn-toolbar btn-print">
+                &#128438; Cetak Dokumen
+            </button>
+            <a href="{?=url([ADMIN, 'update_bmt', 'skriningluarrscetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
+                &#128196; Download PDF
+            </a>
+            <button onclick="window.close()" class="btn-toolbar btn-close">
+                &#10006; Tutup
+            </button>
+        </div>
+    </div>
+
+    <div class="page">
+        <!-- TABEL UTAMA FORMULIR -->
+        <table class="main-form-table">
+            <tbody>
+                <!-- BARIS HEADER : KOP DAN JUDUL DOKUMEN -->
+                <tr>
+                    <td class="header-kop-cell">
+                        <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="RSGM Gusti Hasan Aman" style="width: 100%; max-height: 65px; object-fit: contain; display: block; margin: 0 auto;">
+                    </td>
+                    <td class="header-title-cell">
+                        <div class="header-title-main">
+                            FORMULIR<br>
+                            SKRINING DARI LUAR RUMAH SAKIT
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- BARIS I: IDENTITAS PASIEN & ASAL RUJUKAN -->
+                <tr>
+                    <td style="width: 58%; padding: 6px 8px;">
+                        <div style="font-weight: bold; margin-bottom: 3px;">I. &nbsp;IDENTITAS PASIEN</div>
+                        <table class="inner-table-identitas">
+                            <tr>
+                                <td style="width: 120px;">a. No.RM</td>
+                                <td style="width: 10px;">:</td>
+                                <td>
+                                    <div class="rm-box-group">
+                                        {loop: $data.rm_digits}
+                                        <span class="rm-digit-box">{$value}</span>
+                                        {/loop}
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>b. Nama Pasien</td>
+                                <td style="width: 10px;">:</td>
+                                <td>
+                                    <strong>{$data.nm_pasien}</strong>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <span style="font-weight: bold;">
+                                        {if: $data.jk == 'L'}<strong><u>L</u></strong> / P{elseif: $data.jk == 'P'}L / <strong><u>P</u></strong>{else}L / P{/if}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>c. Tanggal Lahir</td>
+                                <td style="width: 10px;">:</td>
+                                <td>
+                                    {$data.tgl_lahir_indo} &nbsp;&nbsp;&nbsp; <strong>Umur:</strong> {$data.umur_angka} Thn
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>d. Status Pembayaran</td>
+                                <td style="width: 10px;">:</td>
+                                <td>
+                                    <strong>{$data.status_pembayaran}</strong>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width: 42%; padding: 6px 8px;">
+                        <div style="font-size: 9.5pt;">
+                            <div style="font-weight: bold; margin-bottom: 2px;">Asal Rujukan :</div>
+                            <div style="padding-left: 6px; margin-bottom: 8px; min-height: 22px; font-weight: 500;">
+                                {if: !empty($data.asal_rujukan)}{$data.asal_rujukan}{else}................................................................{/if}
+                            </div>
+                            <div style="font-weight: bold; margin-bottom: 2px;">Alasan di rujuk :</div>
+                            <div style="padding-left: 6px; min-height: 22px; font-weight: 500;">
+                                {if: !empty($data.alasan_dirujuk)}{$data.alasan_dirujuk}{else}................................................................{/if}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- BARIS II: DIAGNOSA -->
+                <tr>
+                    <td colspan="2" style="padding: 6px 8px;">
+                        <div style="font-size: 9.5pt;">
+                            <strong>II. &nbsp;DIAGNOSA &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</strong>
+                            &nbsp;
+                            <span style="font-weight: bold;">{if: !empty($data.diagnosa)}{$data.diagnosa}{else}........................................................................................................................................................{/if}</span>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- BARIS III: KEADAAN PASIEN -->
+                <tr>
+                    <td colspan="2" style="padding: 6px 8px;">
+                        <div style="font-weight: bold; margin-bottom: 3px;">III. &nbsp;KEADAAN PASIEN</div>
+                        <table class="inner-table-identitas" style="margin-left: 18px; width: 95%;">
+                            <tr>
+                                <td style="width: 150px;">a. Keadaan Umum</td>
+                                <td style="width: 10px;">:</td>
+                                <td><strong>{$data.keadaan_umum}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>b. Kesadaran</td>
+                                <td>:</td>
+                                <td><strong>{$data.kesadaran}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>c. Tanda-tanda Vital</td>
+                                <td>:</td>
+                                <td>
+                                    <strong>T :</strong> {if: !empty($data.tensi)}{$data.tensi}{else}......{/if} mmHg, &nbsp;&nbsp;
+                                    <strong>N :</strong> {if: !empty($data.nadi)}{$data.nadi}{else}......{/if} x/i, &nbsp;&nbsp;
+                                    <strong>S :</strong> {if: !empty($data.suhu)}{$data.suhu}{else}......{/if} °C, &nbsp;&nbsp;
+                                    <strong>P :</strong> {if: !empty($data.respirasi)}{$data.respirasi}{else}......{/if} x/i
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- BARIS IV: PENATALAKSANAAN -->
+                <tr>
+                    <td colspan="2" style="padding: 6px 8px;">
+                        <div style="font-weight: bold; margin-bottom: 3px;">IV. &nbsp;PENATALAKSANAAN</div>
+                        <div style="margin-left: 18px; font-size: 9.5pt;">
+                            <div style="font-weight: bold; margin-bottom: 2px;">a. Terapi</div>
+                            <div style="min-height: 48px; padding-left: 12px; margin-bottom: 6px; line-height: 1.4;">
+                                {if: !empty($data.terapi)}
+                                {?= nl2br(htmlspecialchars($data['terapi'])) ?}
+                                {else}
+                                <span style="color: #999; font-style: italic;">-</span>
+                                {/if}
+                            </div>
+
+                            <div style="font-weight: bold; margin-bottom: 2px;">b. Tindakan</div>
+                            <div style="min-height: 48px; padding-left: 12px; line-height: 1.4;">
+                                {if: !empty($data.tindakan)}
+                                {?= nl2br(htmlspecialchars($data['tindakan'])) ?}
+                                {else}
+                                <span style="color: #999; font-style: italic;">-</span>
+                                {/if}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- BARIS V: TUJUAN -->
+                <tr>
+                    <td colspan="2" style="padding: 6px 8px;">
+                        <div style="font-size: 9.5pt;">
+                            <div style="font-weight: bold; margin-bottom: 4px;">V. &nbsp;TUJUAN:</div>
+                            <div style="padding-left: 20px; line-height: 1.8;">
+                                <div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+                                    <span style="min-width: 110px;">
+                                        <span class="check-box-icon">{if: $data.has_ugd}&#10003;{/if}</span> UGD
+                                    </span>
+                                    <span style="min-width: 130px;">
+                                        <span class="check-box-icon">{if: $data.has_ortho}&#10003;{/if}</span> Orthodonsia
+                                    </span>
+                                    <span style="min-width: 120px;">
+                                        <span class="check-box-icon">{if: $data.has_pedo}&#10003;{/if}</span> Pedodonsia
+                                    </span>
+                                    <span style="min-width: 125px;">
+                                        <span class="check-box-icon">{if: $data.has_bedah_mulut}&#10003;{/if}</span> Bedah Mulut
+                                    </span>
+                                    <span style="min-width: 125px;">
+                                        <span class="check-box-icon">{if: $data.has_oral_med}&#10003;{/if}</span> Oral Medicine
+                                    </span>
+                                </div>
+                                <div style="display: flex; flex-wrap: wrap; margin-top: 3px;">
+                                    <span style="min-width: 130px;">
+                                        <span class="check-box-icon">{if: $data.has_perio}&#10003;{/if}</span> Periodonsia
+                                    </span>
+                                    <span style="min-width: 140px;">
+                                        <span class="check-box-icon">{if: $data.has_prostho}&#10003;{/if}</span> Prosthodonsia
+                                    </span>
+                                    <span style="min-width: 155px;">
+                                        <span class="check-box-icon">{if: $data.has_konservasi}&#10003;{/if}</span> Konservasi Gigi
+                                    </span>
+                                    <span style="flex-grow: 1;">
+                                        <span class="check-box-icon">{if: $data.has_lainnya}&#10003;{/if}</span> Lainnya
+                                        {if: !empty($data.tujuan_lainnya)}<strong>: {$data.tujuan_lainnya}</strong>{else}.....{/if}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- BARIS VI: KETERANGAN & TANDA TANGAN -->
+                <tr>
+                    <td style="width: 58%; padding: 8px 10px;">
+                        <div style="font-size: 9.5pt;">
+                            <div style="font-weight: bold; margin-bottom: 6px;"><u>VI. &nbsp;KETERANGAN :</u></div>
+                            <div style="margin-left: 18px; margin-bottom: 8px;">
+                                <span style="font-size: 11pt; font-weight: bold; margin-right: 35px;">
+                                    <span class="check-box-icon" style="width: 15px; height: 15px; line-height: 13px;">{if: $data.keterangan_status == 'TERIMA'}&#10003;{/if}</span> TERIMA
+                                </span>
+                                <span style="font-size: 11pt; font-weight: bold;">
+                                    <span class="check-box-icon" style="width: 15px; height: 15px; line-height: 13px;">{if: $data.keterangan_status == 'TOLAK'}&#10003;{/if}</span> TOLAK
+                                </span>
+                            </div>
+                            <div style="margin-left: 18px;">
+                                <u>Alasan :</u>
+                                <div style="padding-left: 6px; margin-top: 3px; min-height: 45px; line-height: 1.35; font-style: {if: empty($data.alasan_keterangan)}italic{else}normal{/if}; color: #333;">
+                                    {if: !empty($data.alasan_keterangan)}
+                                    {$data.alasan_keterangan}
+                                    {else}
+                                    ...........................................................................................
+                                    {/if}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="width: 42%; padding: 8px 10px; text-align: center; vertical-align: top;">
+                        <div style="font-size: 9.5pt;">
+                            Banjarmasin, {$data.tanggal_skrining_indo}
+                            <div style="margin-top: 2px; font-weight: bold;">Petugas Jaga</div>
+                            <div style="height: 55px;"></div>
+                            <div style="font-weight: bold; text-decoration: underline;">
+                                ({if: !empty($data.nama_petugas)}{$data.nama_petugas}{else}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{/if})
+                            </div>
+                            <div style="font-size: 8pt; font-style: italic; margin-top: 2px;">
+                                *Nama jelas/stempel nama petugas
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- CATATAN DI BAWAH BINGKAI -->
+        <div class="footer-note-text">
+            *Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+        </div>
+
+        <!-- FOOTER KODE RESMI DOKUMEN -->
+        <div class="footer-meta-bar">
+            <div>RSGM/Ed-Rev/02/2023</div>
+            <div>RM.RI Lampiran</div>
+        </div>
+    </div>
+
+</body>
+</html>

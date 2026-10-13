@@ -1,0 +1,381 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-ambulance"></i> Form Lampiran - Formulir Stabilisasi Pasien Sebelum Transfer</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'stabilisasipasienmanage'])?}"><i class="fa fa-list"></i> Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'stabilisasipasienform'])?}"><i class="fa fa-plus"></i> {if: !empty($data.id)}Edit Data #{?= $data['id'] ?}{else}Tambah Data{/if}</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="formStabilisasiPasien" method="POST" action="{?=url([ADMIN, 'update_bmt', 'stabilisasipasiensave'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{$data.no_rkm_medis}">
+
+                    <!-- Informasi Pasien -->
+                    <div class="well well-sm" style="background: #fdfdfd; border-left: 4px solid #337ab7;">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label><strong>No. Rawat / No. RM Pasien <span class="text-danger">*</span></strong></label>
+                                    <div class="input-group">
+                                        <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2025/09/29/000006 atau No RM" required autocomplete="off">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-primary" type="button" id="btnCariPasien"><i class="fa fa-search"></i> Cari</button>
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">Ketik No. Rawat / No. RM lalu tekan Enter atau klik Cari</small>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div id="box_info_pasien" class="alert alert-info no-margin" style="padding: 10px 15px;">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div><strong>Nama Pasien:</strong> <span id="info_nm_pasien">{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}-{/if}</span></div>
+                                            <div><strong>No. RM:</strong> <span id="info_no_rkm_medis">{if: !empty($data.no_rkm_medis)}{$data.no_rkm_medis}{else}-{/if}</span> &nbsp; (<span id="info_jk">{if: !empty($data.jk)}{?= $data['jk'] == 'L' ? 'Laki-Laki' : 'Perempuan' ?}{else}-{/if}</span>)</div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div><strong>Umur Pasien:</strong> <span id="info_umur">{if: !empty($data.umur)}{$data.umur}{else}-{/if}</span></div>
+                                            <div><strong>Tgl. Lahir:</strong> <span id="info_tgl_lahir">{if: !empty($data.tgl_lahir)}{$data.tgl_lahir}{else}-{/if}</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BAGIAN I: IDENTITAS & PETUGAS -->
+                    <div class="panel panel-info" style="margin-top: 15px;">
+                        <div class="panel-heading">
+                            <h4 class="panel-title"><i class="fa fa-id-card"></i> Data Pasien, Petugas & Waktu Stabilisasi</h4>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label><strong>Tanggal Stabilisasi <span class="text-danger">*</span></strong></label>
+                                        <input type="date" name="tanggal_stabilisasi" class="form-control" value="{$data.tanggal_stabilisasi}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label><strong>Jam Stabilisasi</strong></label>
+                                        <input type="time" name="jam_stabilisasi" class="form-control" value="{$data.jam_stabilisasi}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label><strong>Nama Perawat <span class="text-danger">*</span></strong></label>
+                                        <div class="input-group">
+                                            <input type="text" name="nama_perawat" id="nama_perawat" class="form-control" value="{$data.nama_perawat}" placeholder="Nama Perawat" required>
+                                            <div class="input-group-btn">
+                                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Pilih <span class="caret"></span></button>
+                                                <ul class="dropdown-menu dropdown-menu-right" style="max-height: 250px; overflow-y: auto;">
+                                                    <li class="dropdown-header">Daftar Petugas:</li>
+                                                    {loop: $petugas_list}
+                                                    <li><a href="#" class="opt-perawat" data-nama="{$value.nama}" data-nip="{$value.nip}">{$value.nama}</a></li>
+                                                    {/loop}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="nip_perawat" id="nip_perawat" value="{$data.nip_perawat}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label><strong>Nama Dokter <span class="text-danger">*</span></strong></label>
+                                        <div class="input-group">
+                                            <input type="text" name="nama_dokter" id="nama_dokter" class="form-control" value="{$data.nama_dokter}" placeholder="Nama Dokter" required>
+                                            <div class="input-group-btn">
+                                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Pilih <span class="caret"></span></button>
+                                                <ul class="dropdown-menu dropdown-menu-right" style="max-height: 250px; overflow-y: auto;">
+                                                    <li class="dropdown-header">Daftar Dokter:</li>
+                                                    {loop: $dokter_list}
+                                                    <li><a href="#" class="opt-dokter" data-nama="{$value.nm_dokter}" data-nip="{$value.kd_dokter}">{$value.nm_dokter}</a></li>
+                                                    {/loop}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="nip_dokter" id="nip_dokter" value="{$data.nip_dokter}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group no-margin">
+                                        <label><strong>Diagnosa <span class="text-danger">*</span></strong></label>
+                                        <textarea name="diagnosa" class="form-control" rows="2" placeholder="Diagnosa pasien sebelum ditransfer" required>{$data.diagnosa}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BAGIAN II: KEADAAN UMUM & KESADARAN -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            <h4 class="panel-title"><i class="fa fa-heartbeat"></i> Kondisi Klinis & Status Kesadaran</h4>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label><strong>Keadaan Umum:</strong></label>
+                                        <div>
+                                            <label class="radio-inline"><input type="radio" name="keadaan_umum" value="Ringan" {if: $data.keadaan_umum == 'Ringan'}checked{/if}> Tampak sakit Ringan</label>
+                                            <label class="radio-inline"><input type="radio" name="keadaan_umum" value="Sedang" {if: $data.keadaan_umum == 'Sedang'}checked{/if}> Sedang</label>
+                                            <label class="radio-inline"><input type="radio" name="keadaan_umum" value="Berat" {if: $data.keadaan_umum == 'Berat'}checked{/if}> Berat</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label><strong>Kesadaran Kuantitatif (GCS):</strong></label>
+                                        <div class="row">
+                                            <div class="col-xs-4">
+                                                <div class="input-group">
+                                                    <span class="input-group-addon">E</span>
+                                                    <input type="text" name="gcs_e" class="form-control" value="{$data.gcs_e}" placeholder="4">
+                                                </div>
+                                            </div>
+                                            <div class="col-xs-4">
+                                                <div class="input-group">
+                                                    <span class="input-group-addon">V</span>
+                                                    <input type="text" name="gcs_v" class="form-control" value="{$data.gcs_v}" placeholder="5">
+                                                </div>
+                                            </div>
+                                            <div class="col-xs-4">
+                                                <div class="input-group">
+                                                    <span class="input-group-addon">M</span>
+                                                    <input type="text" name="gcs_m" class="form-control" value="{$data.gcs_m}" placeholder="6">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label><strong>Kesadaran Kualitatif:</strong></label>
+                                        <select name="kesadaran_kualitatif" class="form-control">
+                                            <option value="Compos Mentis" {if: $data.kesadaran_kualitatif == 'Compos Mentis'}selected{/if}>Compos Mentis</option>
+                                            <option value="Apatis" {if: $data.kesadaran_kualitatif == 'Apatis'}selected{/if}>Apatis</option>
+                                            <option value="Delirium" {if: $data.kesadaran_kualitatif == 'Delirium'}selected{/if}>Delirium</option>
+                                            <option value="Somnolen" {if: $data.kesadaran_kualitatif == 'Somnolen'}selected{/if}>Somnolen</option>
+                                            <option value="Stupor" {if: $data.kesadaran_kualitatif == 'Stupor'}selected{/if}>Stupor</option>
+                                            <option value="Koma" {if: $data.kesadaran_kualitatif == 'Koma'}selected{/if}>Koma</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr style="margin: 10px 0;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><strong>Pernafasan:</strong></label>
+                                        <div style="margin-bottom: 5px;">
+                                            <label class="radio-inline"><input type="radio" name="pernafasan" value="Spontan" {if: $data.pernafasan == 'Spontan'}checked{/if}> Spontan</label>
+                                            <label class="radio-inline"><input type="radio" name="pernafasan" value="Dengan bantuan O2" {if: $data.pernafasan == 'Dengan bantuan O2'}checked{/if}> Dengan bantuan O2</label>
+                                            <label class="radio-inline"><input type="radio" name="pernafasan" value="ETT" {if: $data.pernafasan == 'ETT'}checked{/if}> ETT</label>
+                                            <label class="radio-inline"><input type="radio" name="pernafasan" value="Tracheostomi" {if: $data.pernafasan == 'Tracheostomi'}checked{/if}> Tracheostomi</label>
+                                            <label class="radio-inline"><input type="radio" name="pernafasan" value="Ambu bag" {if: $data.pernafasan == 'Ambu bag'}checked{/if}> Ambu bag</label>
+                                        </div>
+                                        <div class="input-group" style="width: 260px;">
+                                            <span class="input-group-addon">Bantuan O2:</span>
+                                            <input type="text" name="pernafasan_o2" class="form-control" value="{$data.pernafasan_o2}" placeholder="Contoh: 3">
+                                            <span class="input-group-addon">Liter/menit</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><strong>Pasien Menggunakan Alat:</strong></label>
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="checkbox">
+                                                    <label><input type="checkbox" name="alat_iv_line" value="1" {if: !empty($data.alat_iv_line)}checked{/if}> <strong>IV Line</strong></label>
+                                                    <input type="text" name="alat_iv_line_jalur" class="form-control input-sm" style="display: inline-block; width: 80px; margin-left: 5px;" value="{$data.alat_iv_line_jalur}" placeholder="... jalur">
+                                                </div>
+                                                <div class="checkbox">
+                                                    <label><input type="checkbox" name="alat_ngt" value="1" {if: !empty($data.alat_ngt)}checked{/if}> <strong>NGT</strong></label>
+                                                </div>
+                                                <div class="checkbox">
+                                                    <label><input type="checkbox" name="alat_drain" value="1" {if: !empty($data.alat_drain)}checked{/if}> <strong>Drain</strong></label>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="checkbox">
+                                                    <label><input type="checkbox" name="alat_kateter" value="1" {if: !empty($data.alat_kateter)}checked{/if}> <strong>Kateter</strong></label>
+                                                </div>
+                                                <div class="form-group" style="margin-top: 5px;">
+                                                    <label><small>Lain-lain:</small></label>
+                                                    <input type="text" name="alat_lain_lain" class="form-control input-sm" value="{$data.alat_lain_lain}" placeholder="Sebutkan alat lainnya...">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BAGIAN III: MONITORING TANDA-TANDA VITAL TABEL -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            <h4 class="panel-title"><i class="fa fa-table"></i> Monitoring Tanda-Tanda Vital</h4>
+                        </div>
+                        <div class="panel-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped" id="tblMonitoring">
+                                    <thead>
+                                        <tr style="background: #eef2f7;">
+                                            <th width="12%">Jam</th>
+                                            <th width="15%">TD (Mm Hg)</th>
+                                            <th width="14%">HR (Kali / mnt)</th>
+                                            <th width="14%">RR (Kali / mnt)</th>
+                                            <th width="12%">T (°C)</th>
+                                            <th width="28%">Keterangan (Tindakan / Obat)</th>
+                                            <th width="5%" class="text-center">#</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {if: !empty($data.monitoring_list)}
+                                        {loop: $data.monitoring_list}
+                                        <tr>
+                                            <td><input type="text" name="vital_jam[]" class="form-control input-sm" value="{$value.jam}" placeholder="08:00"></td>
+                                            <td><input type="text" name="vital_td[]" class="form-control input-sm" value="{$value.td}" placeholder="120/80"></td>
+                                            <td><input type="text" name="vital_hr[]" class="form-control input-sm" value="{$value.hr}" placeholder="80"></td>
+                                            <td><input type="text" name="vital_rr[]" class="form-control input-sm" value="{$value.rr}" placeholder="20"></td>
+                                            <td><input type="text" name="vital_t[]" class="form-control input-sm" value="{$value.t}" placeholder="36.5"></td>
+                                            <td><input type="text" name="vital_ket[]" class="form-control input-sm" value="{$value.ket}" placeholder="Tindakan atau terapi obat..."></td>
+                                            <td class="text-center"><button type="button" class="btn btn-danger btn-xs btnHapusBaris"><i class="fa fa-trash"></i></button></td>
+                                        </tr>
+                                        {/loop}
+                                        {else}
+                                        <!-- Default 3 baris kosong jika form baru -->
+                                        <tr>
+                                            <td><input type="text" name="vital_jam[]" class="form-control input-sm" value="08:00" placeholder="Jam"></td>
+                                            <td><input type="text" name="vital_td[]" class="form-control input-sm" value="120/80" placeholder="120/80"></td>
+                                            <td><input type="text" name="vital_hr[]" class="form-control input-sm" value="82" placeholder="HR"></td>
+                                            <td><input type="text" name="vital_rr[]" class="form-control input-sm" value="20" placeholder="RR"></td>
+                                            <td><input type="text" name="vital_t[]" class="form-control input-sm" value="36.5" placeholder="T"></td>
+                                            <td><input type="text" name="vital_ket[]" class="form-control input-sm" placeholder="Tindakan atau pemberian obat..."></td>
+                                            <td class="text-center"><button type="button" class="btn btn-danger btn-xs btnHapusBaris"><i class="fa fa-trash"></i></button></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="text" name="vital_jam[]" class="form-control input-sm" value="08:30" placeholder="Jam"></td>
+                                            <td><input type="text" name="vital_td[]" class="form-control input-sm" value="120/80" placeholder="120/80"></td>
+                                            <td><input type="text" name="vital_hr[]" class="form-control input-sm" value="80" placeholder="HR"></td>
+                                            <td><input type="text" name="vital_rr[]" class="form-control input-sm" value="20" placeholder="RR"></td>
+                                            <td><input type="text" name="vital_t[]" class="form-control input-sm" value="36.6" placeholder="T"></td>
+                                            <td><input type="text" name="vital_ket[]" class="form-control input-sm" placeholder="Tindakan atau pemberian obat..."></td>
+                                            <td class="text-center"><button type="button" class="btn btn-danger btn-xs btnHapusBaris"><i class="fa fa-trash"></i></button></td>
+                                        </tr>
+                                        {/if}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-sm" id="btnTambahBaris"><i class="fa fa-plus"></i> Tambah Baris Monitoring</button>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Aksi Simpan -->
+                    <div class="well well-sm text-right" style="margin-top: 20px;">
+                        <a href="{?=url([ADMIN, 'update_bmt', 'stabilisasipasienmanage'])?}" class="btn btn-default"><i class="fa fa-arrow-left"></i> Kembali</a>
+                        <button type="submit" class="btn btn-success" style="padding-left: 25px; padding-right: 25px;"><i class="fa fa-save"></i> <strong>Simpan Formulir</strong></button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$(document).ready(function() {
+    function cariDataPasien() {
+        var no_rawat = $('#no_rawat').val().trim();
+        if (!no_rawat) {
+            alert('Silakan masukkan No. Rawat atau No. RM terlebih dahulu!');
+            return;
+        }
+
+        $.ajax({
+            url: '{?=url([ADMIN, "update_bmt", "stabilisasipasienform"])?}&ajax_patient=1&no_rawat=' + encodeURIComponent(no_rawat),
+            type: 'GET',
+            dataType: 'json',
+            beforeSend: function() {
+                $('#btnCariPasien').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Mencari...');
+            },
+            success: function(res) {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search"></i> Cari');
+                if (res && res.success) {
+                    $('#no_rawat').val(res.no_rawat);
+                    $('#no_rkm_medis').val(res.no_rkm_medis);
+                    $('#info_nm_pasien').text(res.nm_pasien || '-');
+                    $('#info_no_rkm_medis').text(res.no_rkm_medis || '-');
+                    $('#info_jk').text(res.jk === 'L' ? 'Laki-Laki' : (res.jk === 'P' ? 'Perempuan' : '-'));
+                    $('#info_umur').text(res.umur ? res.umur : '-');
+                    $('#info_tgl_lahir').text(res.tgl_lahir || '-');
+                    if (res.nm_dokter && !$('#nama_dokter').val()) {
+                        $('#nama_dokter').val(res.nm_dokter);
+                        $('#nip_dokter').val(res.kd_dokter || '');
+                    }
+                } else {
+                    alert('Data pasien dengan No. Rawat / No. RM tersebut tidak ditemukan!');
+                }
+            },
+            error: function() {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search"></i> Cari');
+                alert('Terjadi kesalahan saat memuat data pasien.');
+            }
+        });
+    }
+
+    $('#btnCariPasien').on('click', function(e) {
+        e.preventDefault();
+        cariDataPasien();
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            cariDataPasien();
+        }
+    });
+
+    // Pilihan Dropdown Perawat / Dokter
+    $(document).on('click', '.opt-perawat', function(e) {
+        e.preventDefault();
+        $('#nama_perawat').val($(this).data('nama'));
+        $('#nip_perawat').val($(this).data('nip'));
+    });
+    $(document).on('click', '.opt-dokter', function(e) {
+        e.preventDefault();
+        $('#nama_dokter').val($(this).data('nama'));
+        $('#nip_dokter').val($(this).data('nip'));
+    });
+
+    // Tambah & Hapus Baris Monitoring
+    $('#btnTambahBaris').on('click', function() {
+        var row = '<tr>' +
+            '<td><input type="text" name="vital_jam[]" class="form-control input-sm" placeholder="Jam"></td>' +
+            '<td><input type="text" name="vital_td[]" class="form-control input-sm" placeholder="TD"></td>' +
+            '<td><input type="text" name="vital_hr[]" class="form-control input-sm" placeholder="HR"></td>' +
+            '<td><input type="text" name="vital_rr[]" class="form-control input-sm" placeholder="RR"></td>' +
+            '<td><input type="text" name="vital_t[]" class="form-control input-sm" placeholder="T"></td>' +
+            '<td><input type="text" name="vital_ket[]" class="form-control input-sm" placeholder="Tindakan / obat..."></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-danger btn-xs btnHapusBaris"><i class="fa fa-trash"></i></button></td>' +
+            '</tr>';
+        $('#tblMonitoring tbody').append(row);
+    });
+
+    $(document).on('click', '.btnHapusBaris', function() {
+        if ($('#tblMonitoring tbody tr').length > 1) {
+            $(this).closest('tr').remove();
+        } else {
+            $(this).closest('tr').find('input').val('');
+        }
+    });
+});
+</script>

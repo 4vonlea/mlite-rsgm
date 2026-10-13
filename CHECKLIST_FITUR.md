@@ -24,6 +24,8 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 6 | **Formulir Meninggalkan RS Selama Periode Tertentu** | `lampiran_meninggalkan_rs_tertentu` | `?module=update_bmt&page=meninggalkanrsmanage` | ✅ Lengkap |
 | 7 | **Formulir Penghentian Pengobatan** | `lampiran_penghentian_pengobatan` | `?module=update_bmt&page=penghentianpengobatanmanage` | ✅ Lengkap |
 | 8 | **Formulir Profil Ringkas Medis Rawat Jalan (PRMRJ)** | `lampiran_profil_ringkas_medis_rajal` | `?module=update_bmt&page=prmrjmanage` | ✅ Lengkap |
+| 9 | **Formulir Skrining dari Luar Rumah Sakit** | `lampiran_skrining_luar_rs` | `?module=update_bmt&page=skriningluarrsmanage` | ✅ Lengkap |
+| 10 | **Formulir Stabilisasi Pasien Sebelum Transfer** | `lampiran_stabilisasi_pasien` | `?module=update_bmt&page=stabilisasipasienmanage` | ✅ Lengkap |
 
 ---
 
@@ -124,8 +126,8 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 13 | Formulir Penghentian Pengobatan | - | ✅ Tersedia | `lampiran_penghentian_pengobatan` | Form RME -> Ranap |
 | 14 | Formulir Profil Ringkas Medis Rawat Jalan | PRMRJ | ✅ Tersedia | `lampiran_profil_ringkas_medis_rajal` | Form RME -> Ranap & Rajal |
 | 15 | Formulir Rujukan | - | ✅ Tersedia | `rujukan` / `rujukan_internal` | Modul Rujukan mLite |
-| 16 | Formulir Skrining dari Luar RS | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
-| 17 | Formulir Stabilisasi Pasien Sebelum Transfer | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
+| 16 | Formulir Skrining dari Luar RS | - | ✅ Tersedia | `lampiran_skrining_luar_rs` | Form Lampiran -> Ranap |
+| 17 | Formulir Stabilisasi Pasien Sebelum Transfer | - | ✅ Tersedia | `lampiran_stabilisasi_pasien` | Form RME -> Ranap -> Form Lampiran |
 | 18 | Hasil X-Ray, EEG, ECG | - | ✅ Tersedia | Modul Radiologi / Dokumen | Modul Penunjang mLite |
 | 19 | HCU | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 20 | Informasi Penundaan dan Kelambatan Pelayanan | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
@@ -192,17 +194,17 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 |---|:---:|:---:|:---:|:---:|
 | **1. UBS (Operasi & Bedah)** | 17 | 12 | 5 | **70.6%** |
 | **2. IGD (Gawat Darurat)** | 9 | 9 | 0 | **100.0%** |
-| **3. RANAP (Rawat Inap)** | 59 | 35 | 24 | **59.3%** |
+| **3. RANAP (Rawat Inap)** | 59 | 37 | 22 | **62.7%** |
 | **4. RAJAL (Rawat Jalan)** | 23 | 22 | 1 | **95.7%** |
-| **TOTAL KESELURUHAN** | **108** | **78** | **30** | **72.2%** |
+| **TOTAL KESELURUHAN** | **108** | **80** | **28** | **74.1%** |
 
 ### Rincian Kategori:
 - **Formulir Wajib (Total 58 Form)**: **53 Form Tersedia (91.4%)**, tersisa 5 form khusus di UBS Bedah.
-- **Formulir Lampiran (Total 50 Form)**: **25 Form Tersedia (50.0%)**, termasuk 8 formulir lampiran Ranap & Rajal yang baru saja diselesaikan.
+- **Formulir Lampiran (Total 50 Form)**: **27 Form Tersedia (54.0%)**, termasuk 10 formulir lampiran Ranap & Rajal yang telah diselesaikan.
 
 ---
 
-## 6. Antrean Formulir Belum Tersedia (30 Form)
+## 6. Antrean Formulir Belum Tersedia (28 Form)
 
 Berikut daftar lengkap formulir yang masih dalam antrean pengembangan:
 
@@ -213,12 +215,10 @@ Berikut daftar lengkap formulir yang masih dalam antrean pengembangan:
 - [ ] Penandaan Tepat Lokasi Bedah Mulut
 - [ ] Asesmen Bedah Minor
 
-### B. RANAP - Lampiran (24 Form):
+### B. RANAP - Lampiran (22 Form):
 - [ ] Gizi Anak dan Dewasa
 - [ ] EWS Dewasa dan Anak
 - [ ] Rekapitulasi Kejadian Infeksi Daerah OP
-- [ ] Formulir Skrining dari Luar RS
-- [ ] Formulir Stabilisasi Pasien Sebelum Transfer
 - [ ] HCU
 - [ ] Informasi Penundaan dan Kelambatan Pelayanan
 - [ ] Intervensi dan Pengkajian Ulang Nyeri

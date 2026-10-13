@@ -1595,3 +1595,38 @@ CREATE TABLE IF NOT EXISTS `lampiran_profil_ringkas_medis_rajal` (
   KEY `no_rawat` (`no_rawat`),
   KEY `no_rkm_medis` (`no_rkm_medis`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ============================================================
+-- 45. LAMPIRAN - FORMULIR SKRINING DARI LUAR RUMAH SAKIT
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `lampiran_skrining_luar_rs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `tanggal_skrining` date DEFAULT NULL,
+  `jam_skrining` time DEFAULT NULL,
+  `status_pembayaran` varchar(50) DEFAULT NULL,
+  `asal_rujukan` varchar(255) DEFAULT NULL,
+  `alasan_dirujuk` text DEFAULT NULL,
+  `diagnosa` text DEFAULT NULL,
+  `keadaan_umum` varchar(100) DEFAULT NULL,
+  `kesadaran` varchar(50) DEFAULT NULL,
+  `tensi` varchar(20) DEFAULT NULL,
+  `nadi` varchar(20) DEFAULT NULL,
+  `suhu` varchar(20) DEFAULT NULL,
+  `respirasi` varchar(20) DEFAULT NULL,
+  `terapi` text DEFAULT NULL,
+  `tindakan` text DEFAULT NULL,
+  `tujuan` varchar(255) DEFAULT NULL,
+  `tujuan_lainnya` varchar(255) DEFAULT NULL,
+  `keterangan_status` enum('TERIMA','TOLAK') DEFAULT 'TERIMA',
+  `alasan_keterangan` text DEFAULT NULL,
+  `nama_petugas` varchar(150) DEFAULT NULL,
+  `nip_petugas` varchar(50) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal_skrining` (`tanggal_skrining`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

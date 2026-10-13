@@ -101,7 +101,9 @@ try {
         'lampiran_kebutuhan_privasi_pasien' => 'Lampiran - Formulir Identifikasi Kebutuhan Privasi Pasien (Ranap)',
         'lampiran_meninggalkan_rs_tertentu' => 'Lampiran - Formulir Meninggalkan RS Selama Periode Tertentu (Ranap)',
         'lampiran_penghentian_pengobatan' => 'Lampiran - Formulir Penghentian Pengobatan (Ranap)',
-        'lampiran_profil_ringkas_medis_rajal' => 'Lampiran - Formulir Profil Ringkas Medis Rawat Jalan PRMRJ (Rajal/Ranap)'
+        'lampiran_profil_ringkas_medis_rajal' => 'Lampiran - Formulir Profil Ringkas Medis Rawat Jalan PRMRJ (Rajal/Ranap)',
+        'lampiran_skrining_luar_rs' => 'Lampiran - Formulir Skrining Dari Luar Rumah Sakit (Ranap)',
+        'lampiran_stabilisasi_pasien' => 'Lampiran - Formulir Stabilisasi Pasien Sebelum Transfer (Ranap)'
     ];
 
     foreach ($expectedTables as $tbl => $deskripsi) {
