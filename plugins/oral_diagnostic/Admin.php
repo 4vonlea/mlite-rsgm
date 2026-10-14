@@ -347,23 +347,46 @@ class Admin extends AdminModule
 
     public function postSetPoliTujuan()
     {
-      
-      if($_POST['kd_poli'] !='' && $_POST['kd_dokter'] !='') {
-        $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save([
-          'kd_poli' => $_POST['kd_poli'], 'kd_dokter' => $_POST['kd_dokter']
-        ]);
-      } elseif($_POST['kd_poli'] !='' && $_POST['kd_dokter'] =='') {
-        $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save([
-          'kd_poli' => $_POST['kd_poli']
-        ]);
-      } elseif($_POST['kd_poli'] =='' && $_POST['kd_dokter'] !='') {
-        $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save([
-          'kd_dokter' => $_POST['kd_dokter']
-        ]);
+      $no_rawat = $_POST['no_rawat'] ?? '';
+      $kd_poli = $_POST['kd_poli'] ?? '';
+      $kd_dokter = $_POST['kd_dokter'] ?? '';
+
+      if(!empty($no_rawat) && !empty($kd_poli)) {
+        $update = ['kd_poli' => $kd_poli];
+        if(!empty($kd_dokter)) {
+          $update['kd_dokter'] = $kd_dokter;
+        }
+        $this->db('reg_periksa')->where('no_rawat', $no_rawat)->save($update);
+
+        // Simpan juga ke mlite_rujukan_internal_poli (jika tabel tersedia di server)
+        try {
+          $curr_reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+          $dok = !empty($kd_dokter) ? $kd_dokter : ($curr_reg['kd_dokter'] ?? '');
+          if(!empty($dok)) {
+              $cek_rujukan = $this->db('mlite_rujukan_internal_poli')->where('no_rawat', $no_rawat)->oneArray();
+              $rujukan_data = [
+                  'no_rawat' => $no_rawat,
+                  'kd_poli' => $kd_poli,
+                  'kd_dokter' => $dok,
+                  'isi_rujukan' => 'Rujukan dari Oral Diagnostic'
+              ];
+              if(!$cek_rujukan) {
+                  $this->db('mlite_rujukan_internal_poli')->save($rujukan_data);
+              } else {
+                  $this->db('mlite_rujukan_internal_poli')->where('no_rawat', $no_rawat)->save($rujukan_data);
+              }
+          }
+        } catch (\Throwable $e) {
+          // Abaikan jika tabel belum ada di server
+        }
+
+        $this->db('mlite_pendaftaran_oral_diagnostic')->where('no_rawat', $no_rawat)->save(['stts' => 'Sudah']);
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'success', 'message' => 'Poli tujuan pelayanan berhasil disimpan.']);
       } else {
-        // default
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'message' => 'Poliklinik tujuan tidak boleh kosong.']);
       }
-      $query = $this->db('mlite_pendaftaran_oral_diagnostic')->where('no_rawat', $_POST['no_rawat'])->save(['stts' => 'Sudah']);
       
       exit();
     }
@@ -777,11 +800,130 @@ class Admin extends AdminModule
     {
       $_POST['nip'] = $this->core->getUserInfo('username', null, true);
 
-      if(!$this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->oneArray()) {
+      // Simpan kasus_poli ke tabel pemeriksaan_ralan, dan status_poli ke tabel reg_periksa
+      $kasus_poli = 'Lama';
+      if(isset($_POST['kasus_poli']) && !empty($_POST['kasus_poli'])) {
+          $kasus_poli = $_POST['kasus_poli'];
+      } elseif(isset($_POST['status_poli']) && !empty($_POST['status_poli'])) {
+          $kasus_poli = $_POST['status_poli'];
+      }
+
+      // Fail-safe jika tabel pemeriksaan_ralan di database belum di-ALTER kasus_poli
+      static $has_kasus_poli = null;
+      if ($has_kasus_poli === null) {
+        try {
+          $col = $this->db()->pdo()->query("SHOW COLUMNS FROM `pemeriksaan_ralan` LIKE 'kasus_poli'")->fetch();
+          $has_kasus_poli = !empty($col);
+        } catch (\Throwable $e) {
+          $has_kasus_poli = false;
+        }
+      }
+
+      if ($has_kasus_poli) {
+        $_POST['kasus_poli'] = $kasus_poli;
+      } else {
+        unset($_POST['kasus_poli']);
+      }
+
+      $status_poli = $kasus_poli;
+      unset($_POST['status_poli']);
+
+      $stts_daftar = '';
+      if(isset($_POST['stts_daftar'])) {
+          $stts_daftar = $_POST['stts_daftar'];
+          unset($_POST['stts_daftar']);
+      }
+
+      // Sanitize fields to prevent MySQL strict mode errors (Data truncated / NOT NULL)
+      $valid_kesadaran = ['Compos Mentis', 'Somnolence', 'Sopor', 'Coma'];
+      if(empty($_POST['kesadaran']) || !in_array($_POST['kesadaran'], $valid_kesadaran)) {
+        $_POST['kesadaran'] = 'Compos Mentis';
+      }
+      if(empty($_POST['tensi'])) $_POST['tensi'] = '-';
+      if(empty($_POST['spo2'])) $_POST['spo2'] = '-';
+      if(empty($_POST['lingkar_perut'])) $_POST['lingkar_perut'] = '-';
+      if(empty($_POST['gcs'])) $_POST['gcs'] = '-';
+      if(empty($_POST['penilaian'])) $_POST['penilaian'] = '-';
+      if(empty($_POST['rtl'])) $_POST['rtl'] = '-';
+      if(empty($_POST['instruksi'])) $_POST['instruksi'] = '-';
+      if(empty($_POST['evaluasi'])) $_POST['evaluasi'] = '-';
+
+      $cek = $this->db('pemeriksaan_ralan')
+        ->where('no_rawat', $_POST['no_rawat'])
+        ->where('tgl_perawatan', $_POST['tgl_perawatan'])
+        ->where('jam_rawat', $_POST['jam_rawat'])
+        ->oneArray();
+
+      if(!$cek) {
         $this->db('pemeriksaan_ralan')->save($_POST);
       } else {
-        $this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->save($_POST);
+        $this->db('pemeriksaan_ralan')
+          ->where('no_rawat', $_POST['no_rawat'])
+          ->where('tgl_perawatan', $_POST['tgl_perawatan'])
+          ->where('jam_rawat', $_POST['jam_rawat'])
+          ->save($_POST);
       }
+
+      $save_reg = [];
+      if($status_poli != '') $save_reg['status_poli'] = $status_poli;
+      if($stts_daftar != '') $save_reg['stts_daftar'] = $stts_daftar;
+      if(!empty($save_reg)) {
+          $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($save_reg);
+      }
+
+      exit();
+    }
+
+    public function postAutofillpemeriksaan()
+    {
+      $no_rawat = $_POST['no_rawat'] ?? '';
+      $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+
+      if (empty($reg)) {
+        header('Content-Type: application/json');
+        echo json_encode([]);
+        exit();
+      }
+
+      $mapPemeriksaan = function ($row) {
+        return [
+          'tensi' => $row['tensi'] ?? '-',
+          'suhu_tubuh' => $row['suhu_tubuh'] ?? '',
+          'nadi' => $row['nadi'] ?? '',
+          'respirasi' => $row['respirasi'] ?? '',
+          'tinggi' => $row['tinggi'] ?? '',
+          'berat' => $row['berat'] ?? '',
+          'kesadaran' => !empty($row['kesadaran']) ? $row['kesadaran'] : 'Compos Mentis',
+          'spo2' => $row['spo2'] ?? '',
+          'gcs' => $row['gcs'] ?? '',
+          'alergi' => $row['alergi'] ?? '',
+          'lingkar_perut' => $row['lingkar_perut'] ?? '-',
+          'keluhan' => $row['keluhan'] ?? '',
+          'pemeriksaan' => $row['pemeriksaan'] ?? '',
+          'penilaian' => $row['penilaian'] ?? '',
+          'rtl' => $row['rtl'] ?? '',
+          'kasus_poli' => $row['kasus_poli'] ?? 'Lama'
+        ];
+      };
+
+      $current = $this->db('pemeriksaan_ralan')
+        ->where('no_rawat', $no_rawat)
+        ->desc('tgl_perawatan')
+        ->desc('jam_rawat')
+        ->oneArray();
+
+      $data = [];
+      if ($current) {
+        $data = $mapPemeriksaan($current);
+      }
+      $data['stts_daftar'] = $reg['stts_daftar'] ?? 'Lama';
+      if (!isset($data['kasus_poli']) || empty($data['kasus_poli'])) {
+        $data['kasus_poli'] = $reg['status_poli'] ?? 'Lama';
+      }
+      $data['status_poli'] = $data['kasus_poli'];
+
+      header('Content-Type: application/json');
+      echo json_encode($data);
       exit();
     }
 

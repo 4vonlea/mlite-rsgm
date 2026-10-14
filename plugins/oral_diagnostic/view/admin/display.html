@@ -175,7 +175,7 @@
   });  
 </script>
 <script type="text/javascript">
-  $('a[href="#soap"]').click(function(event){
+  $(document).off('click', 'a[href="#soap"]').on('click', 'a[href="#soap"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
 
@@ -193,18 +193,44 @@
     $("#display").hide();
 
     var url = baseURL + '/oral_diagnostic/soap?t=' + mlite.token;
-    $.post(url, {no_rawat : no_rawat,
-    }, function(data) {
+    $.post(url, {no_rawat : no_rawat}, function(data) {
       // tampilkan data
       $("#form_rincian").hide();
       $("#form").hide();
       $("#notif").hide();
       $("#form_soap").show();
       $("#soap").html(data).show();
+
+      // Auto-fill kolom pemeriksaan / vitals & kasus_poli
+      var autoFillUrl = baseURL + '/oral_diagnostic/autofillpemeriksaan?t=' + mlite.token;
+      $.post(autoFillUrl, {no_rawat: no_rawat}, function(response) {
+        if (response && Object.keys(response).length > 0) {
+          if (response.tensi) $('input:text[name=tensi]').val(response.tensi);
+          if (response.suhu_tubuh) $('input:text[name=suhu_tubuh]').val(response.suhu_tubuh);
+          if (response.nadi) $('input:text[name=nadi]').val(response.nadi);
+          if (response.respirasi) $('input:text[name=respirasi]').val(response.respirasi);
+          if (response.tinggi) $('input:text[name=tinggi]').val(response.tinggi);
+          if (response.berat) $('input:text[name=berat]').val(response.berat);
+          if (response.kesadaran) $('input:text[name=kesadaran]').val(response.kesadaran);
+          if (response.spo2) $('input:text[name=spo2]').val(response.spo2);
+          if (response.gcs) $('input:text[name=gcs]').val(response.gcs);
+          if (response.alergi) $('input:text[name=alergi]').val(response.alergi);
+          if (response.lingkar_perut) $('input:text[name=lingkar_perut]').val(response.lingkar_perut);
+          if (response.keluhan) $('textarea[name=keluhan]').val(response.keluhan);
+          if (response.pemeriksaan) $('textarea[name=pemeriksaan]').val(response.pemeriksaan);
+          if (response.penilaian) $('textarea[name=penilaian]').val(response.penilaian);
+          if (response.rtl) $('textarea[name=rtl]').val(response.rtl);
+          if (response.stts_daftar) $('input[name=stts_daftar][value="' + response.stts_daftar + '"]').prop('checked', true);
+          var k_poli = response.kasus_poli || response.status_poli;
+          if (k_poli) {
+            $('input[name=kasus_poli][value="' + k_poli + '"]').prop('checked', true);
+          }
+        }
+      }, 'json');
     });
   });
 
-  $('a[href="#layanan_obat"]').click(function(event){
+  $(document).off('click', 'a[href="#layanan_obat"]').on('click', 'a[href="#layanan_obat"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
 
@@ -218,8 +244,7 @@
     $("#display").hide();
 
     var url = baseURL + '/oral_diagnostic/rincian?t=' + mlite.token;
-    $.post(url, {no_rawat : no_rawat,
-    }, function(data) {
+    $.post(url, {no_rawat : no_rawat}, function(data) {
       // tampilkan data
       $("#form_rincian").show();
       $("#form").hide();
@@ -228,7 +253,7 @@
     });
   });
 
-  $('a[href="#berkas_digital"]').click(function(event){
+  $(document).off('click', 'a[href="#berkas_digital"]').on('click', 'a[href="#berkas_digital"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
 
@@ -242,8 +267,7 @@
     $("#display").hide();
 
     var url = baseURL + '/oral_diagnostic/berkasdigital?t=' + mlite.token;
-    $.post(url, {no_rawat : no_rawat,
-    }, function(data) {
+    $.post(url, {no_rawat : no_rawat}, function(data) {
       // tampilkan data
       $("#form_berkasdigital").show();
       $("#form").hide();
@@ -253,7 +277,7 @@
     });
   });
 
-  $('a[href="#status_rawat"]').click(function(event){
+  $(document).off('click', 'a[href="#status_rawat"]').on('click', 'a[href="#status_rawat"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var url = baseURL + '/oral_diagnostic/statusrawat?t=' + mlite.token;
@@ -321,51 +345,56 @@
         }
     });
   });
-  $('a[href="#set_poli_tujuan"]').click(function(event){
+  $(document).off('click', 'a[href="#set_poli_tujuan"]').on('click', 'a[href="#set_poli_tujuan"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var url = baseURL + '/oral_diagnostic/setpolitujuan?t=' + mlite.token;
     var no_rawat = $(this).attr("data-no_rawat");
-    // tampilkan dialog konfirmasi
 
     var set_poli_tujuan = ''
         + '<div class="form-group">'
-        + '<label for="status_keluar">Pilih Poliklinik</label>'
-        + '<select name="kd_poli" id="kd_poli" class="form-control" data-use-dimmer="false">'
-        + '<option value="">Select</option>'
+        + '<label for="kd_poli">Pilih Poliklinik Tujuan</label>'
+        + '<select name="kd_poli" id="kd_poli" class="form-control" style="font-size:14px;height:38px;">'
+        + '<option value="">-- Pilih Poliklinik Tujuan --</option>'
         + '{loop: $rawat_jalan.poliklinik}'
         + '<option value="{?=isset_or($value.kd_poli)?}">{?=isset_or($value.nm_poli)?}</option>'
         + '{/loop}'
         + '</select>'
-        + '<br><br>'
-        + '<label for="status_keluar">Pilih Dokter</label>'
-        + '<select name="kd_dokter" id="kd_dokter" class="form-control" data-use-dimmer="false">'
-        + '<option value="">Select</option>'
+        + '<br>'
+        + '<label for="kd_dokter">Pilih Dokter (Opsional)</label>'
+        + '<select name="kd_dokter" id="kd_dokter" class="form-control" style="font-size:14px;height:38px;">'
+        + '<option value="">-- Tetap / Pilih Dokter --</option>'
         + '{loop: $rawat_jalan.dokter}'
         + '<option value="{?=isset_or($value.kd_dokter)?}">{?=isset_or($value.nm_dokter)?}</option>'
         + '{/loop}'
         + '</select>'
-        + '</div>'
-        + '';
+        + '</div>';
 
     bootbox.dialog({
       message: set_poli_tujuan,
       title: 'Set Poli Tujuan Pelayanan',
       buttons: {
+        cancel: {
+          label: 'Batal',
+          className: 'btn-default'
+        },
         main: {
           label: 'Simpan',
           className: 'btn-primary',
-          callback() {
-            var kd_poli = $('#kd_poli').find(':selected').val();
-            var kd_dokter = $('#kd_dokter').find(':selected').val();
-            console.log(url);
+          callback: function() {
+            var kd_poli = $('#kd_poli').val();
+            var kd_dokter = $('#kd_dokter').val();
+
+            if (!kd_poli) {
+              alert('Silahkan pilih poliklinik tujuan terlebih dahulu!');
+              return false;
+            }
+
             $.post(url, {
               no_rawat: no_rawat,
               kd_poli: kd_poli,
               kd_dokter: kd_dokter
-            } ,function(data) {
-              console.log(data);
-              // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
+            }, function(data) {
               $("#display").load(baseURL + '/oral_diagnostic/display?t=' + mlite.token);
               $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
               "Set Poli Tujuan Pelayanan telah disimpan!"+
@@ -376,7 +405,6 @@
         }
       }
     });
-    $('select').selectator();
     event.stopPropagation();
     return false;
   });

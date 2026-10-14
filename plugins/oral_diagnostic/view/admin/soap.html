@@ -36,6 +36,9 @@
           <b>Rawat Jalan</b><br>
           {?=isset_or($value.tgl_perawatan)?} {?=isset_or($value.jam_rawat)?}<br>
           {?=isset_or($value.departemen_petugas)?}
+          {if: isset($value.kasus_poli) && !empty($value.kasus_poli)}
+          <br><span class="label {if: $value.kasus_poli == 'Baru'}label-warning{else}label-info{/if}">Kasus: {?=isset_or($value.kasus_poli)?}</span>
+          {/if}
         </td>
         <td>{?=isset_or($value.suhu_tubuh)?}</td>
         <td>{?=isset_or($value.tensi)?}</td>
@@ -101,6 +104,7 @@
               data-instruksi="{?=isset_or($value.instruksi)?}"
               data-evaluasi="{?=isset_or($value.evaluasi)?}"
               data-spo2="{?=isset_or($value.spo2)?}"
+              data-kasus_poli="{?=isset_or($value.kasus_poli)?}"
               ><span class="fa fa-copy"></span><span class="hidden-xs"> Copy</span></button> 
             <button type="button" name="button" class="btn btn-success btn-xs edit_soap"
               data-no_rawat="{?=isset_or($value.no_rawat)?}"
@@ -123,6 +127,7 @@
               data-instruksi="{?=isset_or($value.instruksi)?}"
               data-evaluasi="{?=isset_or($value.evaluasi)?}"
               data-spo2="{?=isset_or($value.spo2)?}"
+              data-kasus_poli="{?=isset_or($value.kasus_poli)?}"
               {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip}disabled{/if}
               ><span class="fa fa-edit"></span><span class="hidden-xs"> Edit</span></button>
             <button type="button" name="button" class="btn btn-danger btn-xs hapus_soap"

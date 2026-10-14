@@ -497,74 +497,79 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
     var tgl_perawatan   = $('input:text[name=tgl_perawatan]').val();
     var jam_rawat       = $('input:text[name=jam_rawat]').val();
     var suhu_tubuh      = $('input:text[name=suhu_tubuh]').val();
-    var tensi           = $('input:text[name=tensi]').val();
+    var tensi           = $('input:text[name=tensi]').val() || '-';
     var nadi            = $('input:text[name=nadi]').val();
     var respirasi       = $('input:text[name=respirasi]').val();
     var tinggi          = $('input:text[name=tinggi]').val();
     var berat           = $('input:text[name=berat]').val();
-    var gcs             = $('input:text[name=gcs]').val();
-    var kesadaran       = $('input:text[name=kesadaran]').val();
-    var alergi          = $('input:text[name=alergi]').val();
-    var alergi          = $('input:text[name=alergi]').val();
-    var lingkar_perut   = $('input:text[name=lingkar_perut]').val();
+    var gcs             = $('input:text[name=gcs]').val() || '-';
+    var kesadaran       = $('input:text[name=kesadaran]').val() || 'Compos Mentis';
+    var alergi          = $('input:text[name=alergi]').val() || '-';
+    var lingkar_perut   = $('input:text[name=lingkar_perut]').val() || '-';
     var keluhan         = $('textarea[name=keluhan]').val();
     var pemeriksaan     = $('textarea[name=pemeriksaan]').val();
-    var penilaian       = $('textarea[name=penilaian]').val();
-    var rtl             = $('textarea[name=rtl]').val();
-    var instruksi       = $('textarea[name=instruksi]').val();
-    var evaluasi        = $('textarea[name=evaluasi]').val();
-    var spo2            = $('input:text[name=spo2]').val();
+    var penilaian       = $('textarea[name=penilaian]').val() || '-';
+    var rtl             = $('textarea[name=rtl]').val() || '-';
+    var instruksi       = $('textarea[name=instruksi]').val() || '-';
+    var evaluasi        = $('textarea[name=evaluasi]').val() || '-';
+    var spo2            = $('input:text[name=spo2]').val() || '-';
+    var stts_daftar     = $('input[name=stts_daftar]:checked').val() || 'Lama';
+    var kasus_poli      = $('input[name=kasus_poli]:checked').val() || 'Lama';
 
     var url = baseURL + '/oral_diagnostic/savesoap?t=' + mlite.token;
-    $.post(url, {no_rawat : no_rawat,
-    tgl_perawatan: tgl_perawatan,
-    jam_rawat: jam_rawat,
-    suhu_tubuh : suhu_tubuh,
-    tensi : tensi,
-    nadi : nadi,
-    respirasi : respirasi,
-    tinggi : tinggi,
-    berat : berat,
-    gcs : gcs,
-    kesadaran : kesadaran,
-    alergi : alergi,
-    lingkar_perut: lingkar_perut,
-    keluhan : keluhan,
-    pemeriksaan : pemeriksaan,
-    penilaian : penilaian,
-    rtl : rtl,
-    instruksi : instruksi,
-    evaluasi : evaluasi,
-    spo2 : spo2
+    $.post(url, {
+      no_rawat : no_rawat,
+      tgl_perawatan: tgl_perawatan,
+      jam_rawat: jam_rawat,
+      suhu_tubuh : suhu_tubuh,
+      tensi : tensi,
+      nadi : nadi,
+      respirasi : respirasi,
+      tinggi : tinggi,
+      berat : berat,
+      gcs : gcs,
+      kesadaran : kesadaran,
+      alergi : alergi,
+      lingkar_perut: lingkar_perut,
+      keluhan : keluhan,
+      pemeriksaan : pemeriksaan,
+      penilaian : penilaian,
+      rtl : rtl,
+      instruksi : instruksi,
+      evaluasi : evaluasi,
+      spo2 : spo2,
+      stts_daftar: stts_daftar,
+      kasus_poli: kasus_poli
     }, function(data) {
       // tampilkan data
       $("#display").hide();
       var url = baseURL + '/oral_diagnostic/soap?t=' + mlite.token;
-      $.post(url, {no_rawat : no_rawat,
-      }, function(data) {
+      $.post(url, {no_rawat : no_rawat}, function(data) {
         // tampilkan data
         $("#soap").html(data).show();
       });
       $('input:text[name=suhu_tubuh]').val("");
-      $('input:text[name=tensi]').val("");
+      $('input:text[name=tensi]').val("-");
       $('input:text[name=nadi]').val("");
       $('input:text[name=respirasi]').val("");
       $('input:text[name=tinggi]').val("");
       $('input:text[name=berat]').val("");
       $('input:text[name=gcs]').val("");
-      $('input:text[name=kesadaran]').val("");
+      $('input:text[name=kesadaran]').val("Compos Mentis");
       $('input:text[name=alergi]').val("");
-      $('input:text[name=lingkar_perut]').val("");
+      $('input:text[name=lingkar_perut]').val("-");
       $('textarea[name=keluhan]').val("");
       $('textarea[name=pemeriksaan]').val("");
       $('textarea[name=penilaian]').val("");
       $('textarea[name=rtl]').val("");
-      $('textarea[name=instruksi]').val("");
-      $('textarea[name=evaluasi]').val("");
+      $('textarea[name=instruksi]').val("-");
+      $('textarea[name=evaluasi]').val("-");
       $('input:text[name=spo2]').val("");
-      $('input:text[name=tgl_perawatan]').val("{?=date('Y-m-d')?}");
-      $('input:text[name=tgl_registrasi]').val("{?=date('Y-m-d')?}");
-      $('input:text[name=jam_rawat]').val("{?=date('H:i:s')?}");
+
+      var now = new Date();
+      var jam_now = ("0" + now.getHours()).slice(-2) + ":" + ("0" + now.getMinutes()).slice(-2) + ":" + ("0" + now.getSeconds()).slice(-2);
+      $('input:text[name=jam_rawat]').val(jam_now);
+
       $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
       "Data soap telah disimpan!"+
       "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
@@ -617,6 +622,10 @@ $("#soap").on("click",".edit_soap", function(event){
   $('textarea[name=instruksi]').val(instruksi);
   $('textarea[name=evaluasi]').val(evaluasi);
   $('input:text[name=spo2]').val(spo2);
+  var kasus_poli      = $(this).attr("data-kasus_poli");
+  if (kasus_poli) {
+    $('input[name=kasus_poli][value="' + kasus_poli + '"]').prop('checked', true);
+  }
 
 });
 
@@ -658,6 +667,10 @@ $("#soap").on("click",".copy_soap", function(event){
   $('textarea[name=instruksi]').val(instruksi);
   $('textarea[name=evaluasi]').val(evaluasi);
   $('input:text[name=spo2]').val(spo2);
+  var kasus_poli      = $(this).attr("data-kasus_poli");
+  if (kasus_poli) {
+    $('input[name=kasus_poli][value="' + kasus_poli + '"]').prop('checked', true);
+  }
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
