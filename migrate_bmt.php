@@ -103,7 +103,8 @@ try {
         'lampiran_penghentian_pengobatan' => 'Lampiran - Formulir Penghentian Pengobatan (Ranap)',
         'lampiran_profil_ringkas_medis_rajal' => 'Lampiran - Formulir Profil Ringkas Medis Rawat Jalan PRMRJ (Rajal/Ranap)',
         'lampiran_skrining_luar_rs' => 'Lampiran - Formulir Skrining Dari Luar Rumah Sakit (Ranap)',
-        'lampiran_stabilisasi_pasien' => 'Lampiran - Formulir Stabilisasi Pasien Sebelum Transfer (Ranap)'
+        'lampiran_stabilisasi_pasien' => 'Lampiran - Formulir Stabilisasi Pasien Sebelum Transfer (Ranap)',
+        'lampiran_intervensi_pengkajian_nyeri' => 'Lampiran - Intervensi dan Pengkajian Ulang Nyeri (Ranap)'
     ];
 
     foreach ($expectedTables as $tbl => $deskripsi) {

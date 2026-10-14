@@ -629,3 +629,50 @@ Menambahkan formulir rekam medis akreditasi RSGM: **FORMULIR STABILISASI PASIEN 
 - `migrate_bmt.php` — Validasi migrasi tabel otomatis (46 tabel aktif)
 - `CHECKLIST_FITUR.md` & `hasil_pengecekan_form_mlite.md` — Pembaruan checklist status fitur (74.1% selesai, 80/108 form)
 
+---
+
+## [2026-10-13] v1.13 — Modul Lampiran - Intervensi dan Pengkajian Ulang Nyeri (Ranap)
+
+### Tabel Baru: `lampiran_intervensi_pengkajian_nyeri`
+
+**SQL untuk production:**
+```sql
+CREATE TABLE IF NOT EXISTS `lampiran_intervensi_pengkajian_nyeri` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `instalasi_unit` varchar(150) DEFAULT NULL,
+  `detail_pengkajian` text DEFAULT NULL,
+  `catatan_tambahan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+```
+
+**Alasan:**
+Menambahkan formulir rekam medis akreditasi RSGM: **LAMPIRAN - INTERVENSI DAN PENGKAJIAN ULANG NYERI** (Kategori Lampiran Rawat Inap):
+1. **Header & Kop Surat:** Kop resmi RSGM Gusti Hasan Aman dan identitas pasien (No RM 6 kotak, Nama Pasien L/P, Tanggal Lahir & Umur).
+2. **Petunjuk Pengisian Resmi:** Huruf cetak/tulisan jelas, baik dan lengkap, serta pengisian sesuai keterangan waktu yang ditentukan.
+3. **Instalasi / Unit / Ruangan:** Lokasi perawatan pasien (Ruang Rawat Inap / Kamar / Bed).
+4. **Pedoman Klinis (3 Kolom):**
+   - **Asesmen Nyeri:** Skala Numerik (NRS 0-10), Kategori (*Tidak Nyeri, Nyeri Ringan, Nyeri Sedang, Nyeri Berat*), visual Wong-Baker FACES, dan catatan skala FLACC untuk anak <6 tahun.
+   - **Intervensi Non Farmakologi:** 1. Dingin, 2. Panas, 3. Posisi, 4. Pijat, 5. Musik, 6. TENS, 7. Relaksasi dan Pernapasan.
+   - **Waktu Pengkajian Ulang:** Sebelum pasien pulang rajal, 15 menit setelah injeksi, 1 jam setelah oral, 1x/shift (skor 1-3), setiap 3 jam (skor 4-6), setiap 1 jam (skor 7-10), dihentikan jika skor 0.
+5. **Lembar Observasi Intervensi dan Pengkajian Ulang Nyeri:**
+   - Multi-baris dinamis (*Tgl/Jam, Skor Nyeri, TD, Nadi, Napas, Suhu, Intervensi Farmakologi [Nama Obat, Dosis & Frekuensi, Rute], Intervensi Non Farmakologi, Perawat/Perawat Gigi [Nama, Paraf], Waktu Kaji Ulang*).
+6. **Catatan Kaki & Footer Dokumen Resmi:**
+   - Catatan kerja sama pengisian form, kode dokumen `RSGM/Ed-Rev/02/2023` & `RM.RI Lampiran`.
+
+**File kode yang diubah/dibuat:**
+- `themes/admin/index.html` — Menu navigasi Rekam Medis -> Form RME -> Ranap -> Form Lampiran -> "LAMPIRAN - INTERVENSI DAN PENGKAJIAN ULANG NYERI"
+- `plugins/update_bmt/Admin.php` — Handler `anyIntervensinyerimanage()`, `getIntervensinyeriform()`, `postIntervensinyerisave()`, `getIntervensinyerihapus()`, `getIntervensinyericetak()`
+- `plugins/update_bmt/view/admin/lampiran_intervensi_pengkajian_nyeri/manage.html` — Tampilan kelola data (DataTables, badge catatan, tombol aksi)
+- `plugins/update_bmt/view/admin/lampiran_intervensi_pengkajian_nyeri/form.html` — Formulir interaktif dengan AJAX cari pasien, visual skala nyeri & dynamic rows
+- `plugins/update_bmt/view/admin/lampiran_intervensi_pengkajian_nyeri/cetak.html` — Output cetak dan PDF presisi format dokumen fisik
+- `migration_tabel_pendukung_bmt.sql` & `plugins/update_bmt/migration.sql` — DDL tabel database pendukung
+- `migrate_bmt.php` — Validasi migrasi tabel otomatis (47 tabel aktif)
+- `CHECKLIST_FITUR.md` & `hasil_pengecekan_form_mlite.md` — Pembaruan checklist status fitur (75.0% selesai, 81/108 form)
+

@@ -1630,3 +1630,22 @@ CREATE TABLE IF NOT EXISTS `lampiran_skrining_luar_rs` (
   KEY `no_rkm_medis` (`no_rkm_medis`),
   KEY `tanggal_skrining` (`tanggal_skrining`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+-- --------------------------------------------------------
+-- 47. LAMPIRAN - INTERVENSI DAN PENGKAJIAN ULANG NYERI (Ranap)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_intervensi_pengkajian_nyeri` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `instalasi_unit` varchar(150) DEFAULT NULL,
+  `detail_pengkajian` text DEFAULT NULL,
+  `catatan_tambahan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+

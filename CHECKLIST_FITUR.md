@@ -26,6 +26,7 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 8 | **Formulir Profil Ringkas Medis Rawat Jalan (PRMRJ)** | `lampiran_profil_ringkas_medis_rajal` | `?module=update_bmt&page=prmrjmanage` | ✅ Lengkap |
 | 9 | **Formulir Skrining dari Luar Rumah Sakit** | `lampiran_skrining_luar_rs` | `?module=update_bmt&page=skriningluarrsmanage` | ✅ Lengkap |
 | 10 | **Formulir Stabilisasi Pasien Sebelum Transfer** | `lampiran_stabilisasi_pasien` | `?module=update_bmt&page=stabilisasipasienmanage` | ✅ Lengkap |
+| 11 | **Intervensi dan Pengkajian Ulang Nyeri** | `lampiran_intervensi_pengkajian_nyeri` | `?module=update_bmt&page=intervensinyerimanage` | ✅ Lengkap |
 
 ---
 
@@ -131,7 +132,7 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 18 | Hasil X-Ray, EEG, ECG | - | ✅ Tersedia | Modul Radiologi / Dokumen | Modul Penunjang mLite |
 | 19 | HCU | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 20 | Informasi Penundaan dan Kelambatan Pelayanan | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
-| 21 | Intervensi dan Pengkajian Ulang Nyeri | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
+| 21 | Intervensi dan Pengkajian Ulang Nyeri | - | ✅ Tersedia | `lampiran_intervensi_pengkajian_nyeri` | Form RME -> Ranap -> Form Lampiran |
 | 22 | Monitoring Pasien Kateter Urine | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 23 | Konsultasi Internal | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 24 | Monitor Pasien Selama Transfer | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
@@ -194,17 +195,17 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 |---|:---:|:---:|:---:|:---:|
 | **1. UBS (Operasi & Bedah)** | 17 | 12 | 5 | **70.6%** |
 | **2. IGD (Gawat Darurat)** | 9 | 9 | 0 | **100.0%** |
-| **3. RANAP (Rawat Inap)** | 59 | 37 | 22 | **62.7%** |
+| **3. RANAP (Rawat Inap)** | 59 | 38 | 21 | **64.4%** |
 | **4. RAJAL (Rawat Jalan)** | 23 | 22 | 1 | **95.7%** |
-| **TOTAL KESELURUHAN** | **108** | **80** | **28** | **74.1%** |
+| **TOTAL KESELURUHAN** | **108** | **81** | **27** | **75.0%** |
 
 ### Rincian Kategori:
 - **Formulir Wajib (Total 58 Form)**: **53 Form Tersedia (91.4%)**, tersisa 5 form khusus di UBS Bedah.
-- **Formulir Lampiran (Total 50 Form)**: **27 Form Tersedia (54.0%)**, termasuk 10 formulir lampiran Ranap & Rajal yang telah diselesaikan.
+- **Formulir Lampiran (Total 50 Form)**: **28 Form Tersedia (56.0%)**, termasuk 11 formulir lampiran Ranap & Rajal yang telah diselesaikan.
 
 ---
 
-## 6. Antrean Formulir Belum Tersedia (28 Form)
+## 6. Antrean Formulir Belum Tersedia (27 Form)
 
 Berikut daftar lengkap formulir yang masih dalam antrean pengembangan:
 
@@ -215,13 +216,12 @@ Berikut daftar lengkap formulir yang masih dalam antrean pengembangan:
 - [ ] Penandaan Tepat Lokasi Bedah Mulut
 - [ ] Asesmen Bedah Minor
 
-### B. RANAP - Lampiran (22 Form):
+### B. RANAP - Lampiran (21 Form):
 - [ ] Gizi Anak dan Dewasa
 - [ ] EWS Dewasa dan Anak
 - [ ] Rekapitulasi Kejadian Infeksi Daerah OP
 - [ ] HCU
 - [ ] Informasi Penundaan dan Kelambatan Pelayanan
-- [ ] Intervensi dan Pengkajian Ulang Nyeri
 - [ ] Monitoring Pasien Kateter Urine
 - [ ] Konsultasi Internal
 - [ ] Monitor Pasien Selama Transfer
