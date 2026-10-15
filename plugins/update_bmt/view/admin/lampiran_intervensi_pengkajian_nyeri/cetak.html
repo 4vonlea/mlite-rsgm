@@ -7,7 +7,7 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 8mm 8mm 8mm 8mm;
+            margin: 4mm 6mm 4mm 6mm;
         }
         * {
             box-sizing: border-box;
@@ -16,34 +16,36 @@
         }
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 8.5pt;
-            line-height: 1.2;
+            font-size: 7.5pt;
+            line-height: 1.15;
             color: #000;
             margin: 0;
-            padding: 10px;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
             background-color: #f5f5f5;
+            padding: 10px 0;
         }
         .page {
             background: #fff;
-            width: 210mm;
-            min-height: 297mm;
+            width: 200mm;
+            min-height: 285mm;
             margin: 0 auto;
-            padding: 8mm;
+            padding: 4mm 6mm;
             box-shadow: 0 0 10px rgba(0,0,0,0.15);
             position: relative;
         }
+        {/if}
 
         /* Toolbar Layar */
         .no-print-toolbar {
-            width: 210mm;
+            width: 200mm;
             margin: 0 auto 10px auto;
             padding: 8px 12px;
             background: #2c3e50;
             color: #fff;
             border-radius: 4px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
         .btn-toolbar {
             padding: 5px 12px;
@@ -59,199 +61,194 @@
         .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
         .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
 
-        /* BINGKAI LUAR FORMULIR */
-        .document-frame {
-            border: 1.5px solid #000;
-            padding: 0;
-            margin-bottom: 2px;
-        }
-
         /* HEADER 2 KOLOM: KOP DAN KOTAK PASIEN */
         .header-table {
             width: 100%;
             border-collapse: collapse;
-            border-bottom: 1.5px solid #000;
+            border: 1.5px solid #000;
+            border-bottom: none;
         }
         .header-table td {
-            padding: 4px 6px;
+            padding: 3px 5px;
             vertical-align: middle;
         }
         .header-left {
             width: 58%;
             border-right: 1.5px solid #000;
-            padding: 4px !important;
+            padding: 2px !important;
             text-align: center;
         }
         .header-left img.kop-img {
             width: 100%;
-            max-height: 75px;
+            max-height: 65px;
             object-fit: contain;
         }
         .header-right {
             width: 42%;
-            font-size: 8.5pt;
+            font-size: 8pt;
             vertical-align: top !important;
-            padding: 6px 8px !important;
+            padding: 3px 6px !important;
         }
-        .rm-box {
-            display: inline-block;
-            width: 16px;
-            height: 18px;
+        /* KOTAK NO RM */
+        .rm-digit-cell {
             border: 1px solid #000;
+            width: 14px;
+            height: 16px;
             text-align: center;
-            line-height: 18px;
             font-weight: bold;
-            font-size: 9pt;
-            margin-right: 2px;
+            font-size: 8.5pt;
+            padding: 0;
+            vertical-align: middle;
         }
 
         /* PETUNJUK PENGISIAN */
         .instruction-box {
+            border-left: 1.5px solid #000;
+            border-right: 1.5px solid #000;
+            border-top: 1.5px solid #000;
             border-bottom: 1.5px solid #000;
-            padding: 3px 8px;
+            padding: 2px 6px;
             font-size: 7.5pt;
             background-color: #fff;
-        }
-        .instruction-box strong {
-            text-decoration: underline;
+            line-height: 1.25;
         }
 
         /* JUDUL DOKUMEN */
         .title-box {
+            border-left: 1.5px solid #000;
+            border-right: 1.5px solid #000;
             border-bottom: 1.5px solid #000;
-            padding: 4px;
+            padding: 2.5px;
             text-align: center;
             font-weight: bold;
-            font-size: 10.5pt;
+            font-size: 9.5pt;
             letter-spacing: 0.5px;
         }
 
         /* BARIS UNIT / RUANGAN */
         .unit-box {
+            border-left: 1.5px solid #000;
+            border-right: 1.5px solid #000;
             border-bottom: 1.5px solid #000;
-            padding: 3px 8px;
-            font-size: 8.5pt;
+            padding: 2.5px 6px;
+            font-size: 8pt;
         }
 
         /* SECTION PEDOMAN 3 KOLOM */
         .guideline-table {
             width: 100%;
             border-collapse: collapse;
+            border-left: 1.5px solid #000;
+            border-right: 1.5px solid #000;
             border-bottom: 1.5px solid #000;
         }
         .guideline-table td {
             vertical-align: top;
-            padding: 4px 6px;
+            padding: 3px 5px;
             border-right: 1.5px solid #000;
         }
         .guideline-table td:last-child {
             border-right: none;
         }
         .col-asesmen {
-            width: 36%;
+            width: 40%;
         }
         .col-intervensi {
-            width: 34%;
+            width: 29%;
         }
         .col-kajiulang {
-            width: 30%;
+            width: 31%;
         }
         .col-title {
             font-weight: bold;
-            font-size: 8pt;
-            margin-bottom: 3px;
+            font-size: 7.5pt;
+            margin-bottom: 2px;
+            text-align: center;
         }
 
         /* VISUAL SKALA NYERI (NRS & WONG-BAKER FACES) */
-        .scale-wrap {
-            margin-top: 2px;
-            text-align: center;
-        }
-        .scale-categories {
-            display: flex;
-            justify-content: space-between;
+        .scale-cat-table {
+            width: 100%;
+            border-collapse: collapse;
             font-size: 6.5pt;
-            margin-bottom: 1px;
-            padding: 0 4px;
-        }
-        .scale-bar {
-            display: flex;
-            border: 1px solid #000;
-            height: 14px;
-            margin-bottom: 3px;
-        }
-        .scale-bar-item {
-            flex: 1;
-            border-right: 1px solid #000;
-            font-size: 7pt;
+            text-align: center;
             font-weight: bold;
-            line-height: 13px;
-            text-align: center;
         }
-        .scale-bar-item:last-child {
-            border-right: none;
-        }
-        .scale-bar-item.dark {
-            background-color: #444;
-            color: #fff;
-        }
-        .faces-row {
-            display: flex;
-            justify-content: space-between;
-            text-align: center;
-            padding: 0 2px;
-        }
-        .face-item {
-            width: 16%;
-            font-size: 6pt;
-            line-height: 1.1;
-        }
-        .face-icon {
-            font-size: 14pt;
-            display: block;
+        .scale-bracket-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1px;
             margin-bottom: 1px;
+        }
+        .scale-num-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 6.5pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 2px;
+        }
+        .scale-num-table td {
+            border: 1px solid #000 !important;
+            padding: 1px 0 !important;
+            width: 9.09%;
+        }
+        .scale-faces-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+        .scale-faces-table td {
+            border: none !important;
+            padding: 0 !important;
+            font-size: 5.5pt;
+            line-height: 1.05;
+            vertical-align: top;
         }
 
         /* TABEL MONITORING & PENGKAJIAN ULANG NYERI */
         .table-records {
             width: 100%;
             border-collapse: collapse;
+            border-left: 1.5px solid #000;
+            border-right: 1.5px solid #000;
+            border-bottom: 1.5px solid #000;
         }
         .table-records th, .table-records td {
             border: 1px solid #000;
-            padding: 2px 3px;
-            font-size: 7.5pt;
+            padding: 1.5px 2px;
+            font-size: 7pt;
         }
         .table-records th {
-            background-color: #f9f9f9;
+            background-color: #f7f7f7;
             font-weight: bold;
             text-align: center;
             vertical-align: middle;
+            line-height: 1.1;
         }
         .table-records td {
             text-align: center;
             vertical-align: middle;
+            height: 15px;
         }
         .table-records td.text-left {
             text-align: left;
-            padding-left: 4px;
+            padding-left: 3px;
         }
 
         /* CATATAN DI BAWAH BINGKAI */
         .footer-note-text {
             color: #b02a37;
             font-style: italic;
-            font-size: 7pt;
-            margin-top: 3px;
-            font-weight: 500;
-            text-align: center;
+            font-size: 6.5pt;
+            text-align: right;
+            padding-right: 2px;
         }
-        .footer-meta-bar {
+        .footer-meta-table {
             width: 100%;
-            margin-top: 15px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 8pt;
+            border-collapse: collapse;
+            margin-top: 2px;
+            font-size: 7pt;
             font-weight: bold;
             color: #222;
         }
@@ -275,229 +272,287 @@
 </head>
 <body {if: empty($is_mpdf)}onload="if(window.location.search.indexOf('noprint=1')===-1)window.print()"{/if}>
 
-    <!-- Toolbar Layar (Tidak dicetak) -->
-    <div class="no-print-toolbar no-print">
-        <div style="font-size: 12px; font-weight: bold;">
-            Preview Dokumen: Intervensi dan Pengkajian Ulang Nyeri ({$data.no_rawat})
-        </div>
-        <div style="display: flex; gap: 6px;">
-            <button onclick="window.print()" class="btn-toolbar btn-print">
-                &#128438; Cetak Dokumen
-            </button>
-            <a href="{?=url([ADMIN, 'update_bmt', 'intervensinyericetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
-                &#128196; Download PDF
-            </a>
-            <button onclick="window.close()" class="btn-toolbar btn-close">
-                &#10006; Tutup
-            </button>
-        </div>
-    </div>
+    {if: empty($is_mpdf)}
+    <!-- Toolbar Layar (Hanya di browser preview, otomatis tersembunyi saat dicetak) -->
+    <table class="no-print-toolbar no-print" style="width: 200mm; margin: 0 auto 10px auto;">
+        <tr>
+            <td style="font-size: 12px; font-weight: bold; color: #fff;">
+                Preview Formulir: Intervensi dan Pengkajian Ulang Nyeri ({$data.no_rawat})
+            </td>
+            <td style="text-align: right;">
+                <button onclick="window.print()" class="btn-toolbar btn-print">
+                    &#128438; Cetak Dokumen
+                </button>
+                <a href="{?=url([ADMIN, 'update_bmt', 'intervensinyericetak', $data.id])?}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
+                    &#128196; Download PDF
+                </a>
+                <button onclick="window.close()" class="btn-toolbar btn-close">
+                    &#10006; Tutup
+                </button>
+            </td>
+        </tr>
+    </table>
+    {/if}
 
+    {if: empty($is_mpdf)}
     <div class="page">
-        <!-- BINGKAI LUAR FORMULIR -->
-        <div class="document-frame">
+    {/if}
 
-            <!-- HEADER 2 KOLOM: KOP DAN IDENTITAS PASIEN -->
-            <table class="header-table">
-                <tr>
-                    <td class="header-left">
-                        <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat RSGM" class="kop-img">
-                    </td>
-                    <td class="header-right">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
-                            <tr>
-                                <td style="width: 80px; padding: 2px 0;">No RM</td>
-                                <td style="width: 10px;">:</td>
-                                <td>
-                                    <span class="rm-box">{$data.rm0}</span>
-                                    <span class="rm-box">{$data.rm1}</span>
-                                    <span class="rm-box">{$data.rm2}</span>
-                                    <span class="rm-box">{$data.rm3}</span>
-                                    <span class="rm-box">{$data.rm4}</span>
-                                    <span class="rm-box">{$data.rm5}</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 2px 0;">Nama Pasien</td>
-                                <td>:</td>
-                                <td style="font-weight: bold; border-bottom: 1px dotted #333;">
-                                    {$data.nm_pasien} &nbsp; ({$data.jk})
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 2px 0;">Tanggal Lahir</td>
-                                <td>:</td>
-                                <td style="border-bottom: 1px dotted #333;">
-                                    {$data.tgl_lahir_indo} &nbsp; ({$data.umur})
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
+        <!-- 1. KOP SURAT DAN IDENTITAS PASIEN -->
+        <table class="header-table">
+            <tr>
+                <td class="header-left">
+                    <img src="{$data.kop_img}" alt="Kop Surat RSGM Gusti Hasan Aman" class="kop-img">
+                </td>
+                <td class="header-right">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
+                        <tr>
+                            <td style="width: 75px; padding: 2px 0;">No RM</td>
+                            <td style="width: 8px;">:</td>
+                            <td>
+                                <table style="border-collapse: collapse; display: inline-table; vertical-align: middle;">
+                                    <tr>
+                                        <td class="rm-digit-cell">{$data.rm0}</td>
+                                        <td style="width: 2px; border: none; padding: 0;"></td>
+                                        <td class="rm-digit-cell">{$data.rm1}</td>
+                                        <td style="width: 2px; border: none; padding: 0;"></td>
+                                        <td class="rm-digit-cell">{$data.rm2}</td>
+                                        <td style="width: 2px; border: none; padding: 0;"></td>
+                                        <td class="rm-digit-cell">{$data.rm3}</td>
+                                        <td style="width: 2px; border: none; padding: 0;"></td>
+                                        <td class="rm-digit-cell">{$data.rm4}</td>
+                                        <td style="width: 2px; border: none; padding: 0;"></td>
+                                        <td class="rm-digit-cell">{$data.rm5}</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 2px 0;">Nama Pasien</td>
+                            <td>:</td>
+                            <td style="font-weight: bold; border-bottom: 1px dotted #333;">
+                                {$data.nm_pasien} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {if: $data.jk == 'L'}<u>L</u> / P{elseif: $data.jk == 'P'}L / <u>P</u>{else}L / P{/if}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 2px 0;">Tanggal Lahir</td>
+                            <td>:</td>
+                            <td style="border-bottom: 1px dotted #333;">
+                                {$data.tgl_lahir_indo} &nbsp; ({$data.umur})
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
 
-            <!-- PETUNJUK PENGISIAN -->
-            <div class="instruction-box">
-                <strong>Petunjuk :</strong><br>
-                * Harap diisi dengan huruf cetak/tulisan yang jelas, baik dan lengkap.<br>
-                * Isilah kolom sesuai keterangan yang telah ditentukan.
-            </div>
-
-            <!-- JUDUL DOKUMEN -->
-            <div class="title-box">
-                INTERVENSI DAN PENGKAJIAN ULANG NYERI
-            </div>
-
-            <!-- RUANGAN / UNIT -->
-            <div class="unit-box">
-                Instalasi/Unit/Ruangan : <strong>{$data.instalasi_unit}</strong>
-            </div>
-
-            <!-- PEDOMAN ASESMEN NYERI, INTERVENSI, DAN PENGKAJIAN ULANG -->
-            <table class="guideline-table">
-                <tr>
-                    <!-- ASESMEN NYERI -->
-                    <td class="col-asesmen">
-                        <div class="col-title">ASESMEN NYERI</div>
-                        <div class="scale-wrap">
-                            <div class="scale-categories">
-                                <div>Tidak Nyeri</div>
-                                <div>Nyeri Ringan</div>
-                                <div>Nyeri Sedang</div>
-                                <div>Nyeri Berat</div>
-                            </div>
-                            <div class="scale-bar">
-                                <div class="scale-bar-item">0</div>
-                                <div class="scale-bar-item">1</div>
-                                <div class="scale-bar-item">2</div>
-                                <div class="scale-bar-item">3</div>
-                                <div class="scale-bar-item">4</div>
-                                <div class="scale-bar-item">5</div>
-                                <div class="scale-bar-item">6</div>
-                                <div class="scale-bar-item">7</div>
-                                <div class="scale-bar-item">8</div>
-                                <div class="scale-bar-item">9</div>
-                                <div class="scale-bar-item dark">10</div>
-                            </div>
-                            <div class="faces-row">
-                                <div class="face-item">
-                                    <span class="face-icon">&#128522;</span>
-                                    <span>Tidak<br>Nyeri</span>
-                                </div>
-                                <div class="face-item">
-                                    <span class="face-icon">&#128578;</span>
-                                    <span>Sedikit<br>Nyeri</span>
-                                </div>
-                                <div class="face-item">
-                                    <span class="face-icon">&#128528;</span>
-                                    <span>Sedikit<br>Lebih Nyeri</span>
-                                </div>
-                                <div class="face-item">
-                                    <span class="face-icon">&#128577;</span>
-                                    <span>Lebih Nyeri<br>Lagi</span>
-                                </div>
-                                <div class="face-item">
-                                    <span class="face-icon">&#128546;</span>
-                                    <span>Sangat<br>Nyeri</span>
-                                </div>
-                                <div class="face-item">
-                                    <span class="face-icon">&#128557;</span>
-                                    <span>Nyeri<br>Sangat Hebat</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="font-size: 6.5pt; font-style: italic; margin-top: 4px;">
-                            *Untuk pasien anak &lt;6 tahun menggunakan skala FLACC
-                        </div>
-                    </td>
-
-                    <!-- INTERVENSI NON FARMAKOLOGI -->
-                    <td class="col-intervensi">
-                        <div class="col-title">INTERVENSI NON FARMAKOLOGI</div>
-                        <ol style="margin: 0; padding-left: 15px; font-size: 7.5pt; line-height: 1.45;">
-                            <li>Dingin</li>
-                            <li>Panas</li>
-                            <li>Posisi</li>
-                            <li>Pijat</li>
-                            <li>Musik</li>
-                            <li>TENS</li>
-                            <li>Relaksasi dan Pernapasan</li>
-                        </ol>
-                    </td>
-
-                    <!-- PENGKAJIAN ULANG -->
-                    <td class="col-kajiulang">
-                        <div class="col-title">PENGKAJIAN ULANG</div>
-                        <ul style="margin: 0; padding-left: 13px; font-size: 7pt; line-height: 1.35;">
-                            <li>Sebelum pasien pulang pada pasien rawat jalan</li>
-                            <li>15 menit setelah intervensi obat injeksi</li>
-                            <li>1 jam setelah intervensi obat oral/lainnya</li>
-                            <li>1x/shift, jika skor nyeri 1-3</li>
-                            <li>Setiap 3 jam, jika skor nyeri 4-6</li>
-                            <li>Setiap 1 jam, jika skor nyeri 7-10</li>
-                            <li>Dihentikan, jika skor nyeri 0</li>
-                        </ul>
-                    </td>
-                </tr>
-            </table>
-
-            <!-- TABEL MONITORING INTERVENSI DAN PENGKAJIAN ULANG NYERI -->
-            <table class="table-records">
-                <thead>
-                    <tr>
-                        <th rowspan="2" style="width: 12%;">Tgl/ Jam</th>
-                        <th rowspan="2" style="width: 6%;">Skor Nyeri</th>
-                        <th rowspan="2" style="width: 7%;">TD</th>
-                        <th rowspan="2" style="width: 6%;">Nadi</th>
-                        <th rowspan="2" style="width: 6%;">Napas</th>
-                        <th rowspan="2" style="width: 6%;">Suhu</th>
-                        <th colspan="3" style="width: 25%;">Intervensi Farmakologi</th>
-                        <th rowspan="2" style="width: 14%;">Intervensi Non Farmakologi</th>
-                        <th colspan="2" style="width: 12%;">Perawat/Perawat Gigi</th>
-                        <th rowspan="2" style="width: 6%;">Waktu Kaji Ulang</th>
-                    </tr>
-                    <tr>
-                        <th style="width: 11%;">Nama Obat</th>
-                        <th style="width: 9%;">Dosis &amp; Frekuensi</th>
-                        <th style="width: 5%;">Rute</th>
-                        <th style="width: 8%;">Nama</th>
-                        <th style="width: 4%;">Paraf</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {loop: $data.record_rows}
-                    <tr style="height: 22px;">
-                        <td><strong>{$value.tgl_jam}</strong></td>
-                        <td style="font-weight: bold; {if: $value.skor_nyeri >= 7}color: #d9534f;{/if}">{$value.skor_nyeri}</td>
-                        <td>{$value.td}</td>
-                        <td>{$value.nadi}</td>
-                        <td>{$value.napas}</td>
-                        <td>{$value.suhu}</td>
-                        <td class="text-left">{$value.obat_nama}</td>
-                        <td>{$value.obat_dosis}</td>
-                        <td>{$value.obat_rute}</td>
-                        <td class="text-left">{$value.non_farmakologi}</td>
-                        <td class="text-left">{$value.petugas_nama}</td>
-                        <td>{$value.petugas_paraf}</td>
-                        <td>{$value.waktu_kaji_ulang}</td>
-                    </tr>
-                    {/loop}
-                </tbody>
-            </table>
-
+        <!-- 2. PETUNJUK PENGISIAN -->
+        <div class="instruction-box">
+            * Harap diisi dengan huruf cetak/tulisan yang jelas, benar dan lengkap<br>
+            * Isilah kolom sesuai keterangan yang telah ditentukan
         </div>
+
+        <!-- 3. JUDUL DOKUMEN -->
+        <div class="title-box">
+            INTERVENSI DAN PENGKAJIAN ULANG NYERI
+        </div>
+
+        <!-- 4. RUANGAN / UNIT -->
+        <div class="unit-box">
+            Instalasi/Unit/Ruangan: <strong>{$data.instalasi_unit}</strong>
+        </div>
+
+        <!-- 5. PEDOMAN ASESMEN NYERI, INTERVENSI, DAN PENGKAJIAN ULANG (3 KOLOM) -->
+        <table class="guideline-table">
+            <tr>
+                <!-- KOLOM 1: ASESMEN NYERI -->
+                <td class="col-asesmen">
+                    <div class="col-title">ASESMEN NYERI</div>
+                    <table class="scale-cat-table">
+                        <tr>
+                            <td style="width: 14%;">Tidak<br>Nyeri</td>
+                            <td style="width: 28%;">Nyeri<br>Ringan</td>
+                            <td style="width: 28%;">Nyeri<br>Sedang</td>
+                            <td style="width: 30%;">Nyeri<br>Berat</td>
+                        </tr>
+                    </table>
+
+                    <!-- Bracket Visual -->
+                    <table class="scale-bracket-table">
+                        <tr>
+                            <td style="width: 14%; border-left: 1px solid #000; border-right: 1px solid #000; height: 5px; padding:0;"></td>
+                            <td style="width: 28%; border-right: 1px solid #000; height: 5px; padding:0;"></td>
+                            <td style="width: 28%; border-right: 1px solid #000; height: 5px; padding:0;"></td>
+                            <td style="width: 30%; border-right: 1px solid #000; height: 5px; padding:0;"></td>
+                        </tr>
+                    </table>
+
+                    <!-- Numbers 0 - 10 -->
+                    <table class="scale-num-table">
+                        <tr>
+                            <td>0</td>
+                            <td>1</td>
+                            <td>2</td>
+                            <td>3</td>
+                            <td>4</td>
+                            <td>5</td>
+                            <td>6</td>
+                            <td>7</td>
+                            <td>8</td>
+                            <td>9</td>
+                            <td style="background-color: #333; color: #fff;">10</td>
+                        </tr>
+                    </table>
+
+                    <!-- Wong-Baker FACES -->
+                    <table class="scale-faces-table">
+                        <tr>
+                            <td style="width: 16.66%;">
+                                <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><circle cx="34" cy="38" r="5" fill="#000"/><circle cx="66" cy="38" r="5" fill="#000"/><path d="M 28 58 Q 50 84 72 58" fill="none" stroke="#000" stroke-width="4.5" stroke-linecap="round"/></svg><br>
+                                Tidak<br>Nyeri
+                            </td>
+                            <td style="width: 16.66%;">
+                                <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><circle cx="34" cy="38" r="5" fill="#000"/><circle cx="66" cy="38" r="5" fill="#000"/><path d="M 32 62 Q 50 74 68 62" fill="none" stroke="#000" stroke-width="4.5" stroke-linecap="round"/></svg><br>
+                                Sedikit<br>Nyeri
+                            </td>
+                            <td style="width: 16.66%;">
+                                <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><circle cx="34" cy="38" r="5" fill="#000"/><circle cx="66" cy="38" r="5" fill="#000"/><line x1="32" y1="64" x2="68" y2="64" stroke="#000" stroke-width="4.5" stroke-linecap="round"/></svg><br>
+                                Sedikit<br>Lebih Nyeri
+                            </td>
+                            <td style="width: 16.66%;">
+                                <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><circle cx="34" cy="40" r="5" fill="#000"/><circle cx="66" cy="40" r="5" fill="#000"/><path d="M 32 70 Q 50 58 68 70" fill="none" stroke="#000" stroke-width="4.5" stroke-linecap="round"/></svg><br>
+                                Lebih Nyeri<br>Lagi
+                            </td>
+                            <td style="width: 16.66%;">
+                                <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><path d="M 26 30 L 42 34" stroke="#000" stroke-width="3.5" stroke-linecap="round"/><path d="M 74 30 L 58 34" stroke="#000" stroke-width="3.5" stroke-linecap="round"/><circle cx="34" cy="42" r="5" fill="#000"/><circle cx="66" cy="42" r="5" fill="#000"/><path d="M 28 74 Q 50 52 72 74" fill="none" stroke="#000" stroke-width="4.5" stroke-linecap="round"/></svg><br>
+                                Sangat<br>Nyeri
+                            </td>
+                            <td style="width: 16.66%;">
+                                <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><path d="M 24 28 L 42 36" stroke="#000" stroke-width="4" stroke-linecap="round"/><path d="M 76 28 L 58 36" stroke="#000" stroke-width="4" stroke-linecap="round"/><circle cx="34" cy="44" r="5" fill="#000"/><circle cx="66" cy="44" r="5" fill="#000"/><path d="M 28 48 Q 24 58 28 64 Q 32 58 28 48 Z" fill="#337ab7"/><path d="M 72 48 Q 68 58 72 64 Q 76 58 72 48 Z" fill="#337ab7"/><path d="M 30 76 Q 50 56 70 76 Q 50 70 30 76 Z" fill="#000"/></svg><br>
+                                Nyeri Sangat<br>Hebat
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="font-size: 6pt; font-style: italic; margin-top: 2px;">
+                        *Untuk pasien anak &lt;6 tahun menggunakan skala FLACC
+                    </div>
+                </td>
+
+                <!-- KOLOM 2: INTERVENSI NON FARMAKOLOGI -->
+                <td class="col-intervensi">
+                    <div class="col-title" style="text-align: left;">INTERVENSI NON FARMAKOLOGI</div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt; line-height: 1.3;">
+                        <tr><td style="width: 14px; padding: 1px 0; border: none;">1.</td><td style="padding: 1px 0; border: none;">Dingin</td></tr>
+                        <tr><td style="padding: 1px 0; border: none;">2.</td><td style="padding: 1px 0; border: none;">Panas</td></tr>
+                        <tr><td style="padding: 1px 0; border: none;">3.</td><td style="padding: 1px 0; border: none;">Posisi</td></tr>
+                        <tr><td style="padding: 1px 0; border: none;">4.</td><td style="padding: 1px 0; border: none;">Pijat</td></tr>
+                        <tr><td style="padding: 1px 0; border: none;">5.</td><td style="padding: 1px 0; border: none;">Musik</td></tr>
+                        <tr><td style="padding: 1px 0; border: none;">6.</td><td style="padding: 1px 0; border: none;">TENS</td></tr>
+                        <tr><td style="padding: 1px 0; border: none;">7.</td><td style="padding: 1px 0; border: none;">Relaksasi dan Pernapasan</td></tr>
+                    </table>
+                </td>
+
+                <!-- KOLOM 3: PENGKAJIAN ULANG -->
+                <td class="col-kajiulang">
+                    <div class="col-title" style="text-align: left;">PENGKAJIAN ULANG</div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 7pt; line-height: 1.25;">
+                        <tr>
+                            <td style="width: 8px; vertical-align: top; padding: 1px 0; border: none;">&bull;</td>
+                            <td style="padding: 1px 0; border: none;">
+                                <del style="color:#d9534f;"><span style="color:#000;">Sebelum pasien pulang pada pasien rawat jalan</span></del>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top; padding: 1px 0; border: none;">&bull;</td>
+                            <td style="padding: 1px 0; border: none;">15 menit setelah intervensi obat injeksi</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top; padding: 1px 0; border: none;">&bull;</td>
+                            <td style="padding: 1px 0; border: none;">1 jam setelah intervensi obat oral/lainnya</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top; padding: 1px 0; border: none;">&bull;</td>
+                            <td style="padding: 1px 0; border: none;">1x/shift, jika skor nyeri 1-3</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top; padding: 1px 0; border: none;">&bull;</td>
+                            <td style="padding: 1px 0; border: none;">Setiap 3 jam, jika skor nyeri 4-6</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top; padding: 1px 0; border: none;">&bull;</td>
+                            <td style="padding: 1px 0; border: none;">Setiap 1 jam, jika skor nyeri 7-10</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top; padding: 1px 0; border: none;">&bull;</td>
+                            <td style="padding: 1px 0; border: none;">Dihentikan, jika skor nyeri 0</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <!-- 6. TABEL MONITORING INTERVENSI DAN PENGKAJIAN ULANG NYERI -->
+        <table class="table-records" repeat_header="0">
+            <tbody>
+                <tr>
+                    <th rowspan="2" style="width: 11%;">Tgl/<br>Jam</th>
+                    <th rowspan="2" style="width: 6%;">Skor<br>Nyeri</th>
+                    <th rowspan="2" style="width: 6%;">TD</th>
+                    <th rowspan="2" style="width: 5%;">Nadi</th>
+                    <th rowspan="2" style="width: 5%;">Napas</th>
+                    <th rowspan="2" style="width: 5%;">Suhu</th>
+                    <th colspan="3" style="width: 27%;">Intervensi Farmakologi</th>
+                    <th rowspan="2" style="width: 14%;">Intervensi<br>Non<br>Farmakologi</th>
+                    <th colspan="2" style="width: 15%;">Perawat/Perawat Gigi</th>
+                    <th rowspan="2" style="width: 6%;">Waktu<br>Kaji<br>Ulang</th>
+                </tr>
+                <tr>
+                    <th style="width: 12%;">Nama Obat</th>
+                    <th style="width: 10%;">Dosis &amp;<br>Frekuensi</th>
+                    <th style="width: 5%;">Rute</th>
+                    <th style="width: 10%;">Nama</th>
+                    <th style="width: 5%;">Paraf</th>
+                </tr>
+                {loop: $data.record_rows}
+                <tr>
+                    <td>{$value.tgl_jam}</td>
+                    <td style="font-weight: bold; {if: !empty($value.skor_nyeri) && $value.skor_nyeri >= 7}color: #d9534f;{/if}">{$value.skor_nyeri}</td>
+                    <td>{$value.td}</td>
+                    <td>{$value.nadi}</td>
+                    <td>{$value.napas}</td>
+                    <td>{$value.suhu}</td>
+                    <td class="text-left">{$value.obat_nama}</td>
+                    <td>{$value.obat_dosis}</td>
+                    <td>{$value.obat_rute}</td>
+                    <td class="text-left">{$value.non_farmakologi}</td>
+                    <td class="text-left">{$value.petugas_nama}</td>
+                    <td>{$value.petugas_paraf}</td>
+                    <td>{$value.waktu_kaji_ulang}</td>
+                </tr>
+                {/loop}
+            </tbody>
+        </table>
 
         <!-- CATATAN DI BAWAH BINGKAI -->
-        <div class="footer-note-text">
-            *Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
-        </div>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 2px;">
+            <tr>
+                <td class="footer-note-text">
+                    Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas &nbsp; &#9633;
+                </td>
+            </tr>
+        </table>
 
         <!-- FOOTER KODE RESMI DOKUMEN -->
-        <div class="footer-meta-bar">
-            <div>RSGM/Ed-Rev/02/2023</div>
-            <div>RM.RI Lampiran</div>
-        </div>
+        <table class="footer-meta-table">
+            <tr>
+                <td style="text-align: left; width: 50%;">RSGM/Ed-Rev/02/2023</td>
+                <td style="text-align: right; width: 50%;">RM.RI Lampiran</td>
+            </tr>
+        </table>
+
+    {if: empty($is_mpdf)}
     </div>
+    {/if}
 
 </body>
 </html>

@@ -3445,24 +3445,24 @@ class Admin extends AdminModule
             $recordList = [];
         }
 
-        // Standar baris minimal 15 baris agar pas 1 halaman A4 tabel penuh
-        $targetRows = max(15, count($recordList));
+        // Standar baris minimal 20 baris agar pas 1 halaman A4 penuh presisi formulir fisik
+        $targetRows = max(20, count($recordList));
         $paddedRecords = $recordList;
         while (count($paddedRecords) < $targetRows) {
             $paddedRecords[] = [
-                'tgl_jam' => '',
-                'skor_nyeri' => '',
-                'td' => '',
-                'nadi' => '',
-                'napas' => '',
-                'suhu' => '',
-                'obat_nama' => '',
-                'obat_dosis' => '',
-                'obat_rute' => '',
-                'non_farmakologi' => '',
-                'petugas_nama' => '',
-                'petugas_paraf' => '',
-                'waktu_kaji_ulang' => ''
+                'tgl_jam' => '&nbsp;',
+                'skor_nyeri' => '&nbsp;',
+                'td' => '&nbsp;',
+                'nadi' => '&nbsp;',
+                'napas' => '&nbsp;',
+                'suhu' => '&nbsp;',
+                'obat_nama' => '&nbsp;',
+                'obat_dosis' => '&nbsp;',
+                'obat_rute' => '&nbsp;',
+                'non_farmakologi' => '&nbsp;',
+                'petugas_nama' => '&nbsp;',
+                'petugas_paraf' => '&nbsp;',
+                'waktu_kaji_ulang' => '&nbsp;'
             ];
         }
         $data['record_rows'] = $paddedRecords;
@@ -3473,14 +3473,15 @@ class Admin extends AdminModule
         }
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
                     'orientation' => 'P',
-                    'margin_left' => 8,
-                    'margin_right' => 8,
-                    'margin_top' => 8,
-                    'margin_bottom' => 8
+                    'margin_left' => 6,
+                    'margin_right' => 6,
+                    'margin_top' => 4,
+                    'margin_bottom' => 4
                 ]);
                 $html = $this->draw('lampiran_intervensi_pengkajian_nyeri/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
@@ -3488,10 +3489,11 @@ class Admin extends AdminModule
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
-                // fallback to normal HTML view
+                error_log('mPDF Error: ' . $e->getMessage());
             }
         }
 
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
         echo $this->draw('lampiran_intervensi_pengkajian_nyeri/cetak.html', ['data' => $data, 'is_mpdf' => false]);
         exit();
     }
