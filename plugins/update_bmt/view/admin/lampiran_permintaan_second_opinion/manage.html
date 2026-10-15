@@ -1,0 +1,99 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="panel-title" style="font-weight: bold; font-size: 16px;">
+                    <i class="fa fa-file-text-o text-primary"></i> LAMPIRAN - SURAT PERMINTAAN SECOND OPINION
+                </h3>
+                <div>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'secondopinionform'])?}" class="btn btn-primary btn-sm">
+                        <i class="fa fa-plus"></i> Tambah Formulir Baru
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover" id="table-second-opinion" style="font-size: 13px;">
+                        <thead>
+                            <tr class="bg-primary text-white">
+                                <th style="width: 5%; text-align: center;">No</th>
+                                <th style="width: 14%;">No. Rawat</th>
+                                <th style="width: 10%;">No. RM</th>
+                                <th style="width: 16%;">Nama Pasien</th>
+                                <th style="width: 18%;">Pembuat Pernyataan</th>
+                                <th style="width: 18%;">Tujuan Second Opinion</th>
+                                <th style="width: 10%; text-align: center;">Tgl Surat</th>
+                                <th style="width: 9%; text-align: center;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loop: $data}
+                            <tr>
+                                <td style="text-align: center;">{$counter + 1}</td>
+                                <td>
+                                    <strong>{$value.no_rawat}</strong>
+                                </td>
+                                <td>
+                                    <span class="label label-info" style="font-size: 11px;">{$value.no_rkm_medis}</span>
+                                </td>
+                                <td>
+                                    <strong>{$value.nm_pasien}</strong>
+                                    <div style="font-size: 11px; color: #777;">
+                                        {if: $value.jk == 'L'}Laki-laki{elseif: $value.jk == 'P'}Perempuan{else}-{/if} / {$value.tgl_lahir}
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>{$value.nama_pembuat}</strong>
+                                    <div style="font-size: 11px; color: #337ab7;">
+                                        <i class="fa fa-users"></i> {$value.hubungan} {if: !empty($value.hubungan_detail)}({$value.hubungan_detail}){/if}
+                                    </div>
+                                </td>
+                                <td>
+                                    {if: !empty($value.dokter_tujuan)}
+                                    <div><strong>Dokter:</strong> {$value.dokter_tujuan}</div>
+                                    {/if}
+                                    {if: !empty($value.rs_tujuan)}
+                                    <div style="font-size: 11px; color: #555;"><strong>RS:</strong> {$value.rs_tujuan}</div>
+                                    {else}
+                                    <div style="font-size: 11px; color: #999;">-</div>
+                                    {/if}
+                                </td>
+                                <td style="text-align: center;">
+                                    {$value.tanggal_ttd}
+                                </td>
+                                <td style="text-align: center;">
+                                    <div class="btn-group" role="group">
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'secondopinioncetak', $value.id])?}" target="_blank" class="btn btn-default btn-xs" title="Cetak / Preview Formulir">
+                                            <i class="fa fa-print text-primary"></i>
+                                        </a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'secondopinioncetak', $value.id])?}&pdf=1" target="_blank" class="btn btn-default btn-xs" title="Download PDF">
+                                            <i class="fa fa-file-pdf-o text-danger"></i>
+                                        </a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'secondopinionform', $value.id])?}" class="btn btn-default btn-xs" title="Edit Data">
+                                            <i class="fa fa-edit text-warning"></i>
+                                        </a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'secondopinionhapus', $value.id])?}" class="btn btn-default btn-xs" onclick="return confirm('Apakah Anda yakin ingin menghapus surat permintaan second opinion ini?');" title="Hapus">
+                                            <i class="fa fa-trash text-danger"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {/loop}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#table-second-opinion').DataTable({
+        "language": {
+            "url": "{?=url()?}/assets/jscripts/dataTables.indonesian.json"
+        },
+        "order": [[0, "asc"]]
+    });
+});
+</script>

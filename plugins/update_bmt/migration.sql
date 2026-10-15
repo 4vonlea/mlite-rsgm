@@ -1647,5 +1647,34 @@ CREATE TABLE IF NOT EXISTS `lampiran_intervensi_pengkajian_nyeri` (
   PRIMARY KEY (`id`),
   KEY `no_rawat` (`no_rawat`),
   KEY `no_rkm_medis` (`no_rkm_medis`)
+-- --------------------------------------------------------
+-- 48. LAMPIRAN - SURAT PERMINTAAN SECOND OPINION (Ranap)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_permintaan_second_opinion` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `nama_pembuat` varchar(150) DEFAULT NULL,
+  `jk_pembuat` enum('L','P') DEFAULT 'L',
+  `no_identitas_pembuat` varchar(50) DEFAULT NULL,
+  `umur_pembuat` varchar(20) DEFAULT NULL,
+  `alamat_pembuat` text DEFAULT NULL,
+  `hubungan` varchar(50) DEFAULT 'Diri sendiri',
+  `hubungan_detail` varchar(100) DEFAULT NULL,
+  `dokter_tujuan` varchar(150) DEFAULT NULL,
+  `rs_tujuan` varchar(200) DEFAULT NULL,
+  `dokumen_penunjang` text DEFAULT NULL,
+  `kota` varchar(100) DEFAULT 'Banjarmasin',
+  `tanggal_ttd` date DEFAULT NULL,
+  `nama_petugas` varchar(150) DEFAULT NULL,
+  `nip_petugas` varchar(50) DEFAULT NULL,
+  `nama_saksi` varchar(150) DEFAULT NULL,
+  `pembuat_pernyataan_ttd` varchar(150) DEFAULT NULL,
+  `tgl_pengembalian_dokumen` varchar(100) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

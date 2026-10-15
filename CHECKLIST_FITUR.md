@@ -27,6 +27,7 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 9 | **Formulir Skrining dari Luar Rumah Sakit** | `lampiran_skrining_luar_rs` | `?module=update_bmt&page=skriningluarrsmanage` | ✅ Lengkap |
 | 10 | **Formulir Stabilisasi Pasien Sebelum Transfer** | `lampiran_stabilisasi_pasien` | `?module=update_bmt&page=stabilisasipasienmanage` | ✅ Lengkap |
 | 11 | **Intervensi dan Pengkajian Ulang Nyeri** | `lampiran_intervensi_pengkajian_nyeri` | `?module=update_bmt&page=intervensinyerimanage` | ✅ Lengkap |
+| 12 | **Surat Permintaan Second Opinion** | `lampiran_permintaan_second_opinion` | `?module=update_bmt&page=secondopinionmanage` | ✅ Lengkap |
 
 ---
 
@@ -143,7 +144,7 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 29 | Permintaan Pelayanan Kerohanian | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 30 | Persetujuan untuk Testing HIV | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 31 | Surat Pengantar Rawat Inap | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
-| 32 | Surat Permintaan Second Opinion | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
+| 32 | Surat Permintaan Second Opinion | - | ✅ Tersedia | `lampiran_permintaan_second_opinion` | Form RME -> Ranap -> Form Lampiran |
 | 33 | Surat Pernyataan Bersedia Menunggu | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 34 | Surat Pernyataan Jaminan Pembiayaan | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 35 | Surat Pernyataan Pulang APS | - | ✅ Tersedia | `surat_pulang_aps` | Form RME -> Bedah & Anestesi |

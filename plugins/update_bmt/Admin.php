@@ -3498,6 +3498,267 @@ class Admin extends AdminModule
         exit();
     }
 
+    // ============================================================
+    // LAMPIRAN - SURAT PERMINTAAN SECOND OPINION (RANAP)
+    // ============================================================
+
+    public function anySecondopinionmanage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $rows = $this->db('lampiran_permintaan_second_opinion')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_permintaan_second_opinion.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_permintaan_second_opinion.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('lampiran_permintaan_second_opinion.*, COALESCE(lampiran_permintaan_second_opinion.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->desc('lampiran_permintaan_second_opinion.id')
+            ->toArray();
+
+        return $this->draw('lampiran_permintaan_second_opinion/manage.html', ['data' => $rows]);
+    }
+
+    public function getSecondopinionform($id = null)
+    {
+        // Handle AJAX Patient Auto-fill
+        if (isset($_GET['ajax_patient']) && $_GET['ajax_patient'] == '1') {
+            header('Content-Type: application/json');
+            $noRawat = trim($_GET['no_rawat'] ?? '');
+            $patient = $this->db('reg_periksa')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->leftJoin('kamar_inap', 'kamar_inap.no_rawat = reg_periksa.no_rawat')
+                ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
+                ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
+                ->where('reg_periksa.no_rawat', $noRawat)
+                ->orWhere('reg_periksa.no_rkm_medis', $noRawat)
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->desc('reg_periksa.tgl_registrasi')
+                ->oneArray();
+
+            if ($patient) {
+                $rmRaw = ltrim($patient['no_rkm_medis'] ?? '', "'");
+                $patient['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+                $ruang = '';
+                if (!empty($patient['nm_bangsal'])) {
+                    $ruang = $patient['nm_bangsal'] . (!empty($patient['kd_kamar']) ? ' / Kamar ' . $patient['kd_kamar'] : '');
+                }
+                $patient['ruang_perawatan'] = $ruang;
+                echo json_encode(['success' => true, 'data' => $patient]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Data pasien tidak ditemukan']);
+            }
+            exit();
+        }
+
+        $id = $id ?? ($_GET['id'] ?? null);
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'nama_pembuat' => '',
+            'jk_pembuat' => 'L',
+            'no_identitas_pembuat' => '',
+            'umur_pembuat' => '',
+            'alamat_pembuat' => '',
+            'hubungan' => 'Diri sendiri',
+            'hubungan_detail' => '',
+            'dokter_tujuan' => '',
+            'rs_tujuan' => '',
+            'dokumen_penunjang' => '',
+            'kota' => 'Banjarmasin',
+            'tanggal_ttd' => date('Y-m-d'),
+            'nama_petugas' => '',
+            'nip_petugas' => '',
+            'nama_saksi' => '',
+            'pembuat_pernyataan_ttd' => '',
+            'tgl_pengembalian_dokumen' => '',
+            'nm_pasien' => '',
+            'jk' => '',
+            'tgl_lahir' => '',
+            'umur' => '',
+            'alamat' => ''
+        ];
+
+        if ($id) {
+            $row = $this->db('lampiran_permintaan_second_opinion')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_permintaan_second_opinion.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_permintaan_second_opinion.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('lampiran_permintaan_second_opinion.id', $id)
+                ->select('lampiran_permintaan_second_opinion.*, COALESCE(lampiran_permintaan_second_opinion.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->oneArray();
+
+            if ($row) {
+                $data = array_merge($data, $row);
+                $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+                $data['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+            }
+        }
+
+        $petugas = $this->db('petugas')->where('status', '1')->toArray();
+
+        return $this->draw('lampiran_permintaan_second_opinion/form.html', [
+            'data' => $data,
+            'petugas' => $petugas
+        ]);
+    }
+
+    public function postSecondopinionsave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (empty($no_rawat)) {
+            $this->setNotify('failure', 'Nomor Rawat wajib diisi!');
+            redirect(url([ADMIN, 'update_bmt', 'secondopinionmanage']));
+        }
+
+        $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+        $no_rkm_medis = $reg['no_rkm_medis'] ?? ($_POST['no_rkm_medis'] ?? '');
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'nama_pembuat' => $_POST['nama_pembuat'] ?? '',
+            'jk_pembuat' => $_POST['jk_pembuat'] ?? 'L',
+            'no_identitas_pembuat' => $_POST['no_identitas_pembuat'] ?? '',
+            'umur_pembuat' => $_POST['umur_pembuat'] ?? '',
+            'alamat_pembuat' => $_POST['alamat_pembuat'] ?? '',
+            'hubungan' => $_POST['hubungan'] ?? 'Diri sendiri',
+            'hubungan_detail' => $_POST['hubungan_detail'] ?? '',
+            'dokter_tujuan' => $_POST['dokter_tujuan'] ?? '',
+            'rs_tujuan' => $_POST['rs_tujuan'] ?? '',
+            'dokumen_penunjang' => $_POST['dokumen_penunjang'] ?? '',
+            'kota' => !empty($_POST['kota']) ? $_POST['kota'] : 'Banjarmasin',
+            'tanggal_ttd' => !empty($_POST['tanggal_ttd']) ? $_POST['tanggal_ttd'] : date('Y-m-d'),
+            'nama_petugas' => $_POST['nama_petugas'] ?? '',
+            'nip_petugas' => $_POST['nip_petugas'] ?? '',
+            'nama_saksi' => $_POST['nama_saksi'] ?? '',
+            'pembuat_pernyataan_ttd' => !empty($_POST['pembuat_pernyataan_ttd']) ? $_POST['pembuat_pernyataan_ttd'] : ($_POST['nama_pembuat'] ?? ''),
+            'tgl_pengembalian_dokumen' => $_POST['tgl_pengembalian_dokumen'] ?? ''
+        ];
+
+        if ($id) {
+            $this->db('lampiran_permintaan_second_opinion')->where('id', $id)->save($saveData);
+            $this->setNotify('success', 'Data Formulir Surat Permintaan Second Opinion berhasil diperbarui.');
+        } else {
+            $this->db('lampiran_permintaan_second_opinion')->save($saveData);
+            $this->setNotify('success', 'Data Formulir Surat Permintaan Second Opinion berhasil disimpan.');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'secondopinionmanage']));
+    }
+
+    public function getSecondopinionhapus($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if ($id) {
+            $this->db('lampiran_permintaan_second_opinion')->where('id', $id)->delete();
+            $this->setNotify('success', 'Data Formulir Surat Permintaan Second Opinion berhasil dihapus.');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'secondopinionmanage']));
+    }
+
+    public function getSecondopinioncetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? '');
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('lampiran_permintaan_second_opinion')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_permintaan_second_opinion.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_permintaan_second_opinion.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('lampiran_permintaan_second_opinion.id', $id)
+            ->select('lampiran_permintaan_second_opinion.*, COALESCE(lampiran_permintaan_second_opinion.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat as alamat_pasien')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rm = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = $rm[$i] ?? '&nbsp;';
+        }
+        $data['no_rkm_medis'] = $rm;
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tgl_lahir_indo'] = $data['tgl_lahir'];
+            }
+        } else {
+            $data['tgl_lahir_indo'] = '-';
+        }
+
+        if (!empty($data['tanggal_ttd']) && $data['tanggal_ttd'] != '0000-00-00') {
+            $tgl = explode('-', $data['tanggal_ttd']);
+            if (count($tgl) == 3) {
+                $data['tanggal_ttd_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tanggal_ttd_indo'] = $data['tanggal_ttd'];
+            }
+        } else {
+            $data['tanggal_ttd_indo'] = date('d') . ' ' . $bulan[(int)date('m')] . ' ' . date('Y');
+        }
+
+        // Parsing dokumen penunjang (per baris)
+        $dokumenList = [];
+        if (!empty($data['dokumen_penunjang'])) {
+            $rawList = explode("\n", str_replace("\r", "", $data['dokumen_penunjang']));
+            foreach ($rawList as $item) {
+                $item = trim(ltrim(trim($item), '-*•'));
+                if ($item !== '') {
+                    $dokumenList[] = $item;
+                }
+            }
+        }
+        if (count($dokumenList) < 2) {
+            while (count($dokumenList) < 2) {
+                $dokumenList[] = '';
+            }
+        }
+        $data['dokumen_list'] = $dokumenList;
+
+        // Cek jika request export mPDF
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 8,
+                    'margin_right' => 8,
+                    'margin_top' => 5,
+                    'margin_bottom' => 5
+                ]);
+                $html = $this->draw('lampiran_permintaan_second_opinion/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Surat_Permintaan_Second_Opinion_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                error_log('mPDF Error: ' . $e->getMessage());
+            }
+        }
+
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_permintaan_second_opinion/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
     public function navigation()
     {
         return [
@@ -3529,6 +3790,7 @@ class Admin extends AdminModule
                 'LAMPIRAN - FORMULIR SKRINING DARI LUAR RUMAH SAKIT' => 'skriningluarrsmanage',
                 'LAMPIRAN - FORMULIR STABILISASI PASIEN SEBELUM TRANSFER' => 'stabilisasipasienmanage',
                 'LAMPIRAN - INTERVENSI DAN PENGKAJIAN ULANG NYERI' => 'intervensinyerimanage',
+                'LAMPIRAN - SURAT PERMINTAAN SECOND OPINION' => 'secondopinionmanage',
             ]
         ];
     }
