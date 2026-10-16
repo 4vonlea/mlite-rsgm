@@ -145,9 +145,10 @@ $("#form").on("click", "#simpan", function(event){
         $(".alert-dismissible").fadeTo(3000, 500).slideUp(500);
       }
       if(data.status == 'error') {
+        var errorMsg = data.message || data.msg || 'Terjadi kesalahan sistem.';
         $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
         "Gagal menyimpan data pendaftaran pasien!<br>"+
-        data.message+
+        errorMsg+
         "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
         "</div>").show();
         $(".alert-dismissible").fadeTo(3000, 500).slideUp(500);
@@ -211,8 +212,9 @@ $("#form").on("click","#hapus", function(event){
           "</div>").show();
           $(".alert-dismissible").fadeTo(3000, 500).slideUp(500);
         } else {
+          var errorMsg = data.message || data.msg || 'Terjadi kesalahan sistem.';
           $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-          "Gagal menghapus data: " + data.message +
+          "Gagal menghapus data: " + errorMsg +
           "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
           "</div>").show();
           $(".alert-dismissible").fadeTo(3000, 500).slideUp(500);

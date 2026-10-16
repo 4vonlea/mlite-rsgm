@@ -181,31 +181,43 @@ class Admin extends AdminModule
     $mlite_crud_permissions = $this->core->loadCrudPermissions('pasien');
     $_POST['tgl_daftar'] = date('Y-m-d', strtotime($_POST['tgl_daftar']));
     $pasien = $this->db('pasien')->where('no_rkm_medis', $_POST['no_rkm_medis'])->oneArray();
-    $cek_prop = $this->db('propinsi')->where('kd_prop', $_POST['kd_prop'])->oneArray();
-    if (!$cek_prop) {
-      $this->db('propinsi')->save(['kd_prop' => $_POST['kd_prop'], 'nm_prop' => $_POST['nm_prop']]);
+    $cek_prop = !empty($_POST['kd_prop']) ? $this->db('propinsi')->where('kd_prop', $_POST['kd_prop'])->oneArray() : null;
+    if (!$cek_prop && !empty($_POST['kd_prop']) && !empty($_POST['nm_prop'])) {
+      try {
+        $this->db('propinsi')->save(['kd_prop' => $_POST['kd_prop'], 'nm_prop' => $_POST['nm_prop']]);
+      } catch (\Exception $e) {}
     }
-    $cek_kab = $this->db('kabupaten')->where('kd_kab', $_POST['kd_kab'])->oneArray();
-    if (!$cek_kab) {
-      $this->db('kabupaten')->save(['kd_kab' => $_POST['kd_kab'], 'nm_kab' => $_POST['nm_kab']]);
+    $cek_kab = !empty($_POST['kd_kab']) ? $this->db('kabupaten')->where('kd_kab', $_POST['kd_kab'])->oneArray() : null;
+    if (!$cek_kab && !empty($_POST['kd_kab']) && !empty($_POST['nm_kab'])) {
+      try {
+        $this->db('kabupaten')->save(['kd_kab' => $_POST['kd_kab'], 'nm_kab' => $_POST['nm_kab']]);
+      } catch (\Exception $e) {}
     }
-    $cek_kec = $this->db('kecamatan')->where('kd_kec', $_POST['kd_kec'])->oneArray();
-    if (!$cek_kec) {
-      $this->db('kecamatan')->save(['kd_kec' => $_POST['kd_kec'], 'nm_kec' => $_POST['nm_kec']]);
+    $cek_kec = !empty($_POST['kd_kec']) ? $this->db('kecamatan')->where('kd_kec', $_POST['kd_kec'])->oneArray() : null;
+    if (!$cek_kec && !empty($_POST['kd_kec']) && !empty($_POST['nm_kec'])) {
+      try {
+        $this->db('kecamatan')->save(['kd_kec' => $_POST['kd_kec'], 'nm_kec' => $_POST['nm_kec']]);
+      } catch (\Exception $e) {}
     }
-    $cek_kel = $this->db('kelurahan')->where('nm_kel', $_POST['nm_kel'])->oneArray();
-    if (!$cek_kel) {
-      $result = $this->db('kelurahan')->select('kd_kel')->desc('kd_kel')->limit(1)->oneArray();
-      $_POST['kd_kel'] = $result['kd_kel'] + 1;
-      $this->db('kelurahan')->save(['kd_kel' => $_POST['kd_kel'], 'nm_kel' => $_POST['nm_kel']]);
+    if (!empty($_POST['nm_kel'])) {
+      $cek_kel = $this->db('kelurahan')->where('nm_kel', $_POST['nm_kel'])->oneArray();
+      if (!$cek_kel) {
+        try {
+          $result = $this->db('kelurahan')->select('kd_kel')->desc('kd_kel')->limit(1)->oneArray();
+          $_POST['kd_kel'] = ($result ? $result['kd_kel'] + 1 : 1);
+          $this->db('kelurahan')->save(['kd_kel' => $_POST['kd_kel'], 'nm_kel' => $_POST['nm_kel']]);
+        } catch (\Exception $e) {}
+      } else {
+        $_POST['kd_kel'] = $cek_kel['kd_kel'];
+      }
     }
 
-    $manual = $_POST['manual'];
+    $manual = $_POST['manual'] ?? '0';
     unset($_POST['manual']);
 
     if (!$pasien) {
       if ($mlite_crud_permissions['can_create'] == 'false') {
-        echo json_encode(['status' => 'error', 'msg' => 'Anda tidak memiliki hak akses untuk menambah data!']);
+        echo json_encode(['status' => 'error', 'msg' => 'Anda tidak memiliki hak akses untuk menambah data!', 'message' => 'Anda tidak memiliki hak akses untuk menambah data!']);
         exit();
       }
 
@@ -221,19 +233,27 @@ class Admin extends AdminModule
             $_POST['no_rkm_medis'] = $this->core->setNoRM();
           }
 
-          $_POST['tmp_lahir'] = '-';
+          $_POST['tmp_lahir'] = !empty($_POST['tmp_lahir']) ? $_POST['tmp_lahir'] : '-';
           $_POST['umur'] = $this->hitungUmur($_POST['tgl_lahir']);
           $_POST['pekerjaanpj'] = '-';
-          $_POST['alamatpj'] = $_POST['alamat'];
-          $_POST['kelurahanpj'] = $_POST['nm_kel'];
-          $_POST['kecamatanpj'] = $_POST['nm_kec'];
-          $_POST['kabupatenpj'] = $_POST['nm_kab'];
+          $_POST['alamatpj'] = !empty($_POST['alamat']) ? $_POST['alamat'] : '-';
+          $_POST['kelurahanpj'] = !empty($_POST['nm_kel']) ? $_POST['nm_kel'] : '-';
+          $_POST['kecamatanpj'] = !empty($_POST['nm_kec']) ? $_POST['nm_kec'] : '-';
+          $_POST['kabupatenpj'] = !empty($_POST['nm_kab']) ? $_POST['nm_kab'] : '-';
           $_POST['perusahaan_pasien'] = '-';
           $_POST['suku_bangsa'] = '1';
           $_POST['bahasa_pasien'] = '1';
           $_POST['cacat_fisik'] = '1';
           $_POST['nip'] = '-';
-          $_POST['propinsipj'] = $_POST['nm_prop'];
+          $_POST['propinsipj'] = !empty($_POST['nm_prop']) ? $_POST['nm_prop'] : '-';
+          $_POST['email'] = !empty($_POST['email']) ? $_POST['email'] : '-';
+          $_POST['namakeluarga'] = !empty($_POST['namakeluarga']) ? $_POST['namakeluarga'] : '-';
+          $_POST['nm_ibu'] = !empty($_POST['nm_ibu']) ? $_POST['nm_ibu'] : '-';
+          $_POST['pnd'] = !empty($_POST['pnd']) ? $_POST['pnd'] : '-';
+          $_POST['kd_prop'] = !empty($_POST['kd_prop']) ? $_POST['kd_prop'] : 1;
+          $_POST['kd_kab'] = !empty($_POST['kd_kab']) ? $_POST['kd_kab'] : 1;
+          $_POST['kd_kec'] = !empty($_POST['kd_kec']) ? $_POST['kd_kec'] : 1;
+          $_POST['kd_kel'] = !empty($_POST['kd_kel']) ? $_POST['kd_kel'] : '1';
 
           $tempPost = $_POST;
           unset($tempPost['nm_prop']);
@@ -268,16 +288,19 @@ class Admin extends AdminModule
 
       if ($success) {
         $data['status'] = 'success';
+        $data['msg'] = 'Data pendaftaran pasien telah disimpan!';
+        $data['message'] = $data['msg'];
         echo json_encode(htmlspecialchars_array($data));
       } else {
         $data['status'] = 'error';
         $data['msg'] = htmlspecialchars($lastError ?: 'Terjadi kesalahan sistem.', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $data['message'] = $data['msg'];
         echo json_encode(htmlspecialchars_array($data));
       }
 
     } else {
       if ($mlite_crud_permissions['can_update'] == 'false') {
-        echo json_encode(['status' => 'error', 'msg' => 'Anda tidak memiliki hak akses untuk mengubah data!']);
+        echo json_encode(['status' => 'error', 'msg' => 'Anda tidak memiliki hak akses untuk mengubah data!', 'message' => 'Anda tidak memiliki hak akses untuk mengubah data!']);
         exit();
       }
       unset($_POST['nm_prop']);
@@ -285,14 +308,23 @@ class Admin extends AdminModule
       unset($_POST['nm_kec']);
       unset($_POST['nm_kel']);
       $_POST['umur'] = $this->hitungUmur($_POST['tgl_lahir']);
-      $query = $this->db('pasien')->where('no_rkm_medis', $_POST['no_rkm_medis'])->update($_POST);
-
-      if ($query) {
-        $data['status'] = 'success';
-        echo json_encode(htmlspecialchars_array($data));
-      } else {
+      try {
+        $query = $this->db('pasien')->where('no_rkm_medis', $_POST['no_rkm_medis'])->update($_POST);
+        if ($query) {
+          $data['status'] = 'success';
+          $data['msg'] = 'Data pendaftaran pasien telah disimpan!';
+          $data['message'] = $data['msg'];
+          echo json_encode(htmlspecialchars_array($data));
+        } else {
+          $data['status'] = 'error';
+          $data['msg'] = 'Gagal mengubah data pasien.';
+          $data['message'] = $data['msg'];
+          echo json_encode(htmlspecialchars_array($data));
+        }
+      } catch (\Throwable $e) {
         $data['status'] = 'error';
-        $data['msg'] = htmlspecialchars($query->errorInfo()['2'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $data['msg'] = htmlspecialchars($e->getMessage(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $data['message'] = $data['msg'];
         echo json_encode(htmlspecialchars_array($data));
       }
 

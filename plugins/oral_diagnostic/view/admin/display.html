@@ -354,7 +354,7 @@
     var set_poli_tujuan = ''
         + '<div class="form-group">'
         + '<label for="kd_poli">Pilih Poliklinik Tujuan</label>'
-        + '<select name="kd_poli" id="kd_poli" class="form-control" style="font-size:14px;height:38px;">'
+        + '<select name="kd_poli" id="kd_poli" class="form-control" data-use-dimmer="false" data-use-search="true">'
         + '<option value="">-- Pilih Poliklinik Tujuan --</option>'
         + '{loop: $rawat_jalan.poliklinik}'
         + '<option value="{?=isset_or($value.kd_poli)?}">{?=isset_or($value.nm_poli)?}</option>'
@@ -362,7 +362,7 @@
         + '</select>'
         + '<br>'
         + '<label for="kd_dokter">Pilih Dokter (Opsional)</label>'
-        + '<select name="kd_dokter" id="kd_dokter" class="form-control" style="font-size:14px;height:38px;">'
+        + '<select name="kd_dokter" id="kd_dokter" class="form-control" data-use-dimmer="false" data-use-search="true">'
         + '<option value="">-- Tetap / Pilih Dokter --</option>'
         + '{loop: $rawat_jalan.dokter}'
         + '<option value="{?=isset_or($value.kd_dokter)?}">{?=isset_or($value.nm_dokter)?}</option>'
@@ -403,6 +403,13 @@
             });
           }
         }
+      }
+    });
+    $('.bootbox select').selectator({
+      useDimmer: false,
+      useSearch: true,
+      labels: {
+        search: 'Cari...'
       }
     });
     event.stopPropagation();
