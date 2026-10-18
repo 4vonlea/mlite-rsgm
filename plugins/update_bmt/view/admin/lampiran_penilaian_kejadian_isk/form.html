@@ -1,0 +1,662 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
+                <h3 class="panel-title" style="font-weight: bold; font-size: 16px;">
+                    <i class="fa fa-tint text-primary"></i> {if: !empty($data.id)}Edit{else}Tambah{/if} Penilaian Kejadian Infeksi Saluran Kemih (ISK)
+                </h3>
+                <div>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'penilaianiskmanage'])?}" class="btn btn-default btn-sm">
+                        <i class="fa fa-arrow-left"></i> Kembali
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+
+                <form method="POST" action="{?=url([ADMIN, 'update_bmt', 'penilaianisksave'])?}" id="form-penilaian-isk">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="detail_penilaian" id="detail_penilaian" value="{$data.detail_penilaian_raw}">
+
+                    <!-- IDENTITAS PASIEN -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading" style="font-weight: bold; font-size: 13px;">
+                            <i class="fa fa-user"></i> Identitas Pasien Rawat Inap
+                        </div>
+                        <div class="panel-body" style="background: #fafafa;">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>No. Rawat <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required placeholder="Contoh: 2026/10/18/000001">
+                                            <span class="input-group-btn">
+                                                <button type="button" class="btn btn-info" id="btn-cari-pasien" title="Cari data pasien">
+                                                    <i class="fa fa-search"></i> Cari
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>No. Rekam Medis</label>
+                                        <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly style="background: #eef1f4;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nama Pasien</label>
+                                        <input type="text" id="nm_pasien" class="form-control" value="{$data.nm_pasien}" readonly style="background: #eef1f4;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Jenis Kelamin</label>
+                                        <input type="text" id="jk" class="form-control" value="{$data.jk}" readonly style="background: #eef1f4;">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Umur Pasien</label>
+                                        <input type="text" id="umur" class="form-control" value="{$data.umur}" readonly style="background: #eef1f4;">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Kamar / Ruang Inap</label>
+                                        <input type="text" name="kamar_inap" id="kamar_inap" class="form-control" value="{$data.kamar_inap}" placeholder="Contoh: VIP Intan / 01">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Tanggal Mulai Penilaian</label>
+                                        <input type="date" name="tanggal_penilaian" class="form-control" value="{$data.tanggal_penilaian}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PENILAIAN 9 HARI PERAWATAN (TABS) -->
+                    <div class="panel panel-primary">
+                        <div class="panel-heading" style="font-weight: bold; font-size: 14px;">
+                            <i class="fa fa-list-ol"></i> Formulir Penilaian Kejadian Infeksi Saluran Kemih (ISK) Harian (Hari Ke-1 s/d Ke-9)
+                        </div>
+                        <div class="panel-body">
+                            
+                            <!-- TAB NAVIGATION HARI 1..9 -->
+                            <ul class="nav nav-tabs" id="tabHari" role="tablist" style="margin-bottom: 20px;">
+                                {loop: $days_range}
+                                <li role="presentation" class="{if: $value == 1}active{/if}">
+                                    <a href="#tab-hari-{$value}" aria-controls="tab-hari-{$value}" role="tab" data-toggle="tab" style="font-weight: bold;">
+                                        Hari Ke-{$value} <span class="badge" id="badge-tab-{$value}" style="font-size: 10px; background-color: #7f8c8d;">-</span>
+                                    </a>
+                                </li>
+                                {/loop}
+                            </ul>
+
+                            <!-- TAB CONTENT HARI 1..9 -->
+                            <div class="tab-content">
+                                {loop: $days_range}
+                                <div role="tabpanel" class="tab-pane {if: $value == 1}active{/if}" id="tab-hari-{$value}">
+                                    <div class="well well-sm" style="background-color: #f8fafc; border-left: 4px solid #3498db; margin-bottom: 20px;">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label><i class="fa fa-calendar"></i> Tanggal Pemeriksaan Hari Ke-{$value}:</label>
+                                                    <input type="date" class="form-control input-sm input-tgl-hari" data-day="{$value}" id="tgl_hari_{$value}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="form-group">
+                                                    <label><i class="fa fa-user-md"></i> Nama & Paraf Petugas Penilai (Perawat):</label>
+                                                    <select class="form-control input-sm select-petugas-hari" data-day="{$value}" id="petugas_hari_{$value}">
+                                                        <option value="">-- Pilih Perawat Penilai --</option>
+                                                        {loop: $petugas}
+                                                        <option value="{$value.nama}">{$value.nama} ({$value.nip})</option>
+                                                        {/loop}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3 text-right">
+                                                <label>Total Skor Hari Ke-{$value}:</label>
+                                                <div style="font-size: 20px; font-weight: bold;" id="score-display-{$value}">
+                                                    <span class="label label-default" style="font-size: 14px;">Belum Dinilai</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- PARAMETER ISK (4 OPSI SKOR 0, 1, 2, 3) -->
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover">
+                                            <thead>
+                                                <tr class="active">
+                                                    <th style="width: 60px; text-align: center;">Pilih</th>
+                                                    <th style="width: 50px; text-align: center;">No</th>
+                                                    <th>Parameter Kriteria Klinis ISK</th>
+                                                    <th style="width: 80px; text-align: center;">Skor</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <!-- PARAMETER 1 -->
+                                                <tr class="row-param row-param-1 cursor-pointer" data-day="{$value}" data-param="1" data-skor="0">
+                                                    <td style="text-align: center; vertical-align: middle;">
+                                                        <input type="checkbox" class="cb-param cb-param-1" data-day="{$value}" data-param="1" data-skor="0" id="cb_{$value}_1" style="transform: scale(1.3); cursor: pointer;">
+                                                    </td>
+                                                    <td style="text-align: center; vertical-align: top; font-weight: bold;">1</td>
+                                                    <td style="font-size: 12px; line-height: 1.45;">
+                                                        <strong>Pasien sedang terpasang kateter urin saat pengambilan sampel urin dan ada sedikitnya satu dari tanda dan gejala di bawah ini tanpa diketahui penyebab:</strong>
+                                                        <ul style="margin-bottom: 5px; padding-left: 20px;">
+                                                            <li>Demam (&gt; 38&deg;C)</li>
+                                                            <li>Nyeri pada daerah suprapubik atau costovertebral</li>
+                                                        </ul>
+                                                        <strong>Dan</strong><br>
+                                                        Hasil kultur urine positif adanya &ge; 150 <em>colone forming units</em> (CFU)/ml dengan tidak lebih dari 2 spesies mikroorganisme
+                                                        <div style="margin: 6px 0; border-top: 1px dashed #ccc; padding-top: 6px;">
+                                                            <strong>Atau</strong><br>
+                                                            <strong>Kateter urin pasien sudah terlepas dalam waktu 48 jam sebelum pengambilan sampel urin dan ada sedikitnya satu dari tanda atau gejala di bawah ini tanpa diketahui penyebabnya:</strong>
+                                                            <ul style="margin-bottom: 0; padding-left: 20px;">
+                                                                <li>Demam (&gt; 38&deg;C)</li>
+                                                                <li>Pasien mengalami inkontinensia urgency, inkontinensia frekuensi, disuria, nyeri di suprapubik atau costovertebral</li>
+                                                            </ul>
+                                                        </div>
+                                                    </td>
+                                                    <td style="text-align: center; vertical-align: middle; font-size: 16px; font-weight: bold;">
+                                                        <span class="badge" style="background-color: #27ae60; font-size: 13px;">0</span>
+                                                    </td>
+                                                </tr>
+
+                                                <!-- PARAMETER 2 -->
+                                                <tr class="row-param row-param-2 cursor-pointer" data-day="{$value}" data-param="2" data-skor="1">
+                                                    <td style="text-align: center; vertical-align: middle;">
+                                                        <input type="checkbox" class="cb-param cb-param-2" data-day="{$value}" data-param="2" data-skor="1" id="cb_{$value}_2" style="transform: scale(1.3); cursor: pointer;">
+                                                    </td>
+                                                    <td style="text-align: center; vertical-align: top; font-weight: bold;">2</td>
+                                                    <td style="font-size: 12px; line-height: 1.45;">
+                                                        <strong>Pasien sedang terpasang kateter urin saat pengambilan sampel urin dan ada sedikitnya satu dari tanda atau gejala di bawah ini tanpa diketahui penyebabnya:</strong>
+                                                        <ul style="margin-bottom: 5px; padding-left: 20px;">
+                                                            <li>Demam (&gt; 38&deg;C)</li>
+                                                            <li>Nyeri pada daerah suprapubik atau costovertebral</li>
+                                                        </ul>
+                                                        <strong>Dan</strong><br>
+                                                        Hasil pemeriksaan urin pasien ditemukan paling tidak terdapat satu dari hasil di bawah ini:
+                                                        <ul style="margin-bottom: 5px; padding-left: 20px;">
+                                                            <li>Adanya leukosit atau nitrat dari hasil pemeriksaan urin</li>
+                                                            <li><em>Pyuria</em> (terdapat &ge; 10 (WBC)/mm<sup>3</sup>) atau &ge; 3 WBC/<em>high power field of unspun urine</em></li>
+                                                            <li>Adanya mikroorganisme gram dalam sampel urin dan hasil kultur urin menunjukkan hasil &ge; 10<sup>3</sup> dan &le; 10<sup>5</sup> CFU/ml dengan tidak lebih dari 2 spesies mikrorganisme</li>
+                                                        </ul>
+                                                        <div style="margin: 6px 0; border-top: 1px dashed #ccc; padding-top: 6px;">
+                                                            <strong>Atau</strong><br>
+                                                            <strong>Kateter pasien sudah terlepas dalam waktu 48 jam sebelum pengambilan sampel urin dan ada sedikitnya satu dari tanda atau gejala di bawah ini tanpa diketahui penyebabnya:</strong>
+                                                            <ul style="margin-bottom: 0; padding-left: 20px;">
+                                                                <li>Demam (&gt; 38&deg;C)</li>
+                                                                <li>Pasien mengalami inkontinensia, disuria, nyeri pada daerah suprapubik atau costovertebral</li>
+                                                            </ul>
+                                                        </div>
+                                                    </td>
+                                                    <td style="text-align: center; vertical-align: middle; font-size: 16px; font-weight: bold;">
+                                                        <span class="badge" style="background-color: #2980b9; font-size: 13px;">1</span>
+                                                    </td>
+                                                </tr>
+
+                                                <!-- PARAMETER 3 -->
+                                                <tr class="row-param row-param-3 cursor-pointer" data-day="{$value}" data-param="3" data-skor="2">
+                                                    <td style="text-align: center; vertical-align: middle;">
+                                                        <input type="checkbox" class="cb-param cb-param-3" data-day="{$value}" data-param="3" data-skor="2" id="cb_{$value}_3" style="transform: scale(1.3); cursor: pointer;">
+                                                    </td>
+                                                    <td style="text-align: center; vertical-align: top; font-weight: bold;">3</td>
+                                                    <td style="font-size: 12px; line-height: 1.45;">
+                                                        <strong>Pasien &le; 1 tahun yang lalu dengan atau tanpa riwayat pemasangan kateter urin mempunyai paling tidak satu dari tanda dan gejala berikut ini tanpa diketahui penyebabnya:</strong>
+                                                        <ul style="margin-bottom: 5px; padding-left: 20px;">
+                                                            <li>Demam (&gt; 38&deg;C)</li>
+                                                            <li>Hipotermia (&lt; 36&deg;C)</li>
+                                                            <li>Bradikardia</li>
+                                                            <li>Dysuria</li>
+                                                            <li>Letargi</li>
+                                                            <li>Vomitting</li>
+                                                        </ul>
+                                                        <strong>Dan</strong><br>
+                                                        Hasil kultur urin positif adanya &ge; 10<sup>5</sup> <em>colony forming units</em> (CFU)/ml dengan tidak lebih dari 2 spesies mikrorganisme)
+                                                    </td>
+                                                    <td style="text-align: center; vertical-align: middle; font-size: 16px; font-weight: bold;">
+                                                        <span class="badge" style="background-color: #f39c12; font-size: 13px;">2</span>
+                                                    </td>
+                                                </tr>
+
+                                                <!-- PARAMETER 4 -->
+                                                <tr class="row-param row-param-4 cursor-pointer" data-day="{$value}" data-param="4" data-skor="3">
+                                                    <td style="text-align: center; vertical-align: middle;">
+                                                        <input type="checkbox" class="cb-param cb-param-4" data-day="{$value}" data-param="4" data-skor="3" id="cb_{$value}_4" style="transform: scale(1.3); cursor: pointer;">
+                                                    </td>
+                                                    <td style="text-align: center; vertical-align: top; font-weight: bold;">4</td>
+                                                    <td style="font-size: 12px; line-height: 1.45;">
+                                                        <strong>Pasien &le; 1 tahun yang lalu dengan atau tanpa riwayat pemasangan kateter urin mempunyai paling tidak satu dari tanda dan gejala berikut ini tanpa diketahui penyebabnya:</strong>
+                                                        <ul style="margin-bottom: 5px; padding-left: 20px;">
+                                                            <li>Demam (&gt; 38&deg;C)</li>
+                                                            <li>Hipotermia (&lt; 36&deg;C)</li>
+                                                            <li>Bradikardia</li>
+                                                            <li>Dysuria</li>
+                                                            <li>Letargi</li>
+                                                            <li>Vomitting</li>
+                                                        </ul>
+                                                        <strong>Dan</strong><br>
+                                                        Hasil pemeriksaan urin ditemukan paling tidak terdapat satu dari hal di bawah ini:
+                                                        <ul style="margin-bottom: 0; padding-left: 20px;">
+                                                            <li>Adanya leukosit atau nitrat dari hasil pemeriksaan urin</li>
+                                                            <li><em>Pyuria</em> (terdapat &ge; 10 (WBC)/mm<sup>3</sup>) atau &ge; 3 WBC/<em>high power field of unspun urine</em></li>
+                                                            <li>Adanya mikroorganisme gram dalam sampel urin dan hasil kultur urin menunjukkan hasil &ge; 10<sup>3</sup> dan &lt; 10<sup>5</sup> CFU/ml dengan tidak lebih dari 2 spesies mikrorganisme</li>
+                                                        </ul>
+                                                    </td>
+                                                    <td style="text-align: center; vertical-align: middle; font-size: 16px; font-weight: bold;">
+                                                        <span class="badge" style="background-color: #e74c3c; font-size: 13px;">3</span>
+                                                    </td>
+                                                </tr>
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                </div>
+                                {/loop}
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- PREVIEW MATRIKS PENILAIAN LIVE 9 HARI -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading" style="font-weight: bold; font-size: 13px;">
+                            <i class="fa fa-table"></i> Visual Matriks Lembar Penilaian ISK (Hari 1 s/d 9)
+                        </div>
+                        <div class="panel-body" style="padding: 10px;">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-condensed text-center" style="font-size: 11px; margin-bottom: 0;">
+                                    <thead>
+                                        <tr class="info">
+                                            <th rowspan="2" style="width: 40px; vertical-align: middle; text-align: center;">No</th>
+                                            <th rowspan="2" style="vertical-align: middle; text-align: center;">Ringkasan Parameter</th>
+                                            <th rowspan="2" style="width: 50px; vertical-align: middle; text-align: center;">Skor</th>
+                                            <th colspan="9" style="text-align: center;">Skor Hari Perawatan Ke</th>
+                                        </tr>
+                                        <tr class="active" style="font-size: 10px;">
+                                            {loop: $days_range}
+                                            <th style="width: 7%; text-align: center;">
+                                                {$value}<br>
+                                                <small id="matrix-tgl-label-{$value}">Tgl ....</small>
+                                            </th>
+                                            {/loop}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="font-weight: bold;">1</td>
+                                            <td style="text-align: left;">Kateter urin / lepas &lt;48 jam + Gejala + Kultur &ge; 150 CFU/ml</td>
+                                            <td style="font-weight: bold;">0</td>
+                                            {loop: $days_range}
+                                            <td id="m_p1_d{$value}">-</td>
+                                            {/loop}
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">2</td>
+                                            <td style="text-align: left;">Kateter urin / lepas &lt;48 jam + Gejala + Leukosit/Nitrat/Pyuria/Kultur 10&sup3;-10&sup5;</td>
+                                            <td style="font-weight: bold;">1</td>
+                                            {loop: $days_range}
+                                            <td id="m_p2_d{$value}">-</td>
+                                            {/loop}
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">3</td>
+                                            <td style="text-align: left;">Pasien &le;1 thn &plusmn; kateter + Gejala Pediatrik + Kultur &ge; 10&sup5; CFU/ml</td>
+                                            <td style="font-weight: bold;">2</td>
+                                            {loop: $days_range}
+                                            <td id="m_p3_d{$value}">-</td>
+                                            {/loop}
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">4</td>
+                                            <td style="text-align: left;">Pasien &le;1 thn &plusmn; kateter + Gejala Pediatrik + Leukosit/Nitrat/Pyuria/Kultur 10&sup3;-&lt;10&sup5;</td>
+                                            <td style="font-weight: bold;">3</td>
+                                            {loop: $days_range}
+                                            <td id="m_p4_d{$value}">-</td>
+                                            {/loop}
+                                        </tr>
+                                        <tr style="background-color: #f1f2f6; font-weight: bold;">
+                                            <td colspan="3" style="text-align: right;">TOTAL SKOR:</td>
+                                            {loop: $days_range}
+                                            <td id="m_tot_d{$value}" style="font-size: 13px; color: #2c3e50;">-</td>
+                                            {/loop}
+                                        </tr>
+                                        <tr style="background-color: #fafafa; font-size: 10px;">
+                                            <td colspan="3" style="text-align: right;">Perawat Penilai:</td>
+                                            {loop: $days_range}
+                                            <td id="m_pet_d{$value}" style="color: #555;">-</td>
+                                            {/loop}
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CATATAN KHUSUS & KETERANGAN -->
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <label><i class="fa fa-commenting-o"></i> Catatan Tambahan / Keterangan Klinis:</label>
+                                <textarea name="catatan" id="catatan" class="form-control" rows="3" placeholder="Tuliskan catatan khusus kondisi pasien, pelepasan kateter, hasil lab kultur urin, atau instruksi DPJP...">{$data.catatan}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOMBOL SIMPAN -->
+                    <div class="form-group text-right" style="margin-top: 20px;">
+                        <a href="{?=url([ADMIN, 'update_bmt', 'penilaianiskmanage'])?}" class="btn btn-default">
+                            <i class="fa fa-times"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="btn-simpan">
+                            <i class="fa fa-save"></i> Simpan Penilaian ISK
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CARI PASIEN -->
+<div class="modal fade" id="modal-cari-pasien" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><i class="fa fa-search"></i> Cari Data Pasien Rawat Inap</h4>
+            </div>
+            <div class="modal-body">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <input type="text" id="cari-pasien-keyword" class="form-control" placeholder="Ketik No. Rawat, No. RM, atau Nama Pasien...">
+                    <span class="input-group-btn">
+                        <button class="btn btn-primary" type="button" id="btn-do-cari-pasien">
+                            <i class="fa fa-search"></i> Cari
+                        </button>
+                    </span>
+                </div>
+                <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                    <table class="table table-bordered table-striped table-hover" id="table-hasil-cari-pasien">
+                        <thead>
+                            <tr class="info" style="font-size: 12px;">
+                                <th>No. Rawat</th>
+                                <th>No. RM</th>
+                                <th>Nama Pasien</th>
+                                <th>JK / Umur</th>
+                                <th>Kamar Inap</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-hasil-cari-pasien" style="font-size: 12px;">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Ketik kata kunci dan tekan Cari untuk menemukan pasien rawat inap.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    var detailData = {};
+    try {
+        var rawJson = $('#detail_penilaian').val();
+        if (rawJson && rawJson.trim() !== '') {
+            detailData = JSON.parse(rawJson);
+        }
+    } catch(e) {
+        detailData = {};
+    }
+
+    // Inisialisasi data hari 1..9
+    for (var d = 1; d <= 9; d++) {
+        if (!detailData[d]) {
+            detailData[d] = {
+                tgl: '',
+                param_1: false,
+                param_2: false,
+                param_3: false,
+                param_4: false,
+                total_skor: null,
+                petugas: ''
+            };
+        } else {
+            // Load ke form
+            if (detailData[d].tgl) {
+                $('#tgl_hari_' + d).val(detailData[d].tgl);
+            }
+            if (detailData[d].petugas) {
+                $('#petugas_hari_' + d).val(detailData[d].petugas);
+            }
+            if (detailData[d].param_1 || detailData[d].p1) {
+                $('#cb_' + d + '_1').prop('checked', true);
+            }
+            if (detailData[d].param_2 || detailData[d].p2) {
+                $('#cb_' + d + '_2').prop('checked', true);
+            }
+            if (detailData[d].param_3 || detailData[d].p3) {
+                $('#cb_' + d + '_3').prop('checked', true);
+            }
+            if (detailData[d].param_4 || detailData[d].p4) {
+                $('#cb_' + d + '_4').prop('checked', true);
+            }
+        }
+        updateDayDisplay(d);
+    }
+    syncJson();
+
+    // Event Checkbox Change
+    $('.cb-param').on('change', function() {
+        var d = $(this).data('day');
+        collectDayData(d);
+        updateDayDisplay(d);
+        syncJson();
+    });
+
+    // Event Tanggal Hari Change
+    $('.input-tgl-hari').on('change', function() {
+        var d = $(this).data('day');
+        collectDayData(d);
+        updateDayDisplay(d);
+        syncJson();
+    });
+
+    // Event Petugas Hari Change
+    $('.select-petugas-hari').on('change', function() {
+        var d = $(this).data('day');
+        collectDayData(d);
+        updateDayDisplay(d);
+        syncJson();
+    });
+
+    // Ambil data hari d dari inputan
+    function collectDayData(d) {
+        var p1 = $('#cb_' + d + '_1').is(':checked');
+        var p2 = $('#cb_' + d + '_2').is(':checked');
+        var p3 = $('#cb_' + d + '_3').is(':checked');
+        var p4 = $('#cb_' + d + '_4').is(':checked');
+        var tgl = $('#tgl_hari_' + d).val();
+        var pet = $('#petugas_hari_' + d).val();
+
+        var anySelected = p1 || p2 || p3 || p4;
+        var totalSkor = null;
+        if (anySelected) {
+            totalSkor = 0;
+            if (p1) totalSkor += 0;
+            if (p2) totalSkor += 1;
+            if (p3) totalSkor += 2;
+            if (p4) totalSkor += 3;
+        }
+
+        detailData[d] = {
+            tgl: tgl,
+            param_1: p1,
+            param_2: p2,
+            param_3: p3,
+            param_4: p4,
+            total_skor: totalSkor,
+            petugas: pet
+        };
+    }
+
+    // Update tampilan per tab dan tabel matriks
+    function updateDayDisplay(d) {
+        var item = detailData[d] || {};
+        var p1 = item.param_1;
+        var p2 = item.param_2;
+        var p3 = item.param_3;
+        var p4 = item.param_4;
+        var totalSkor = item.total_skor;
+        var tgl = item.tgl;
+        var pet = item.petugas;
+
+        // Label Skor Hari
+        var badgeHtml = '';
+        var tabBadgeText = '-';
+        if (totalSkor !== null) {
+            tabBadgeText = 'Skor: ' + totalSkor;
+            if (totalSkor == 0) {
+                badgeHtml = '<span class="label label-success" style="font-size: 14px;"><i class="fa fa-check-circle"></i> Skor: 0 (Tanpa Tanda ISK)</span>';
+            } else if (totalSkor == 1) {
+                badgeHtml = '<span class="label label-info" style="font-size: 14px;"><i class="fa fa-info-circle"></i> Skor: 1 (Risiko Ringan ISK)</span>';
+            } else if (totalSkor == 2) {
+                badgeHtml = '<span class="label label-warning" style="font-size: 14px;"><i class="fa fa-exclamation-triangle"></i> Skor: 2 (Terindikasi Pediatrik)</span>';
+            } else {
+                badgeHtml = '<span class="label label-danger" style="font-size: 14px;"><i class="fa fa-ambulance"></i> Skor: ' + totalSkor + ' (Risiko Tinggi ISK)</span>';
+            }
+        } else {
+            badgeHtml = '<span class="label label-default" style="font-size: 14px;">Belum Dinilai</span>';
+        }
+        $('#score-display-' + d).html(badgeHtml);
+        $('#badge-tab-' + d).text(tabBadgeText);
+
+        // Update Matrix Table
+        $('#m_p1_d' + d).html(p1 ? '<span class="text-success" style="font-weight: bold; font-size: 13px;">&#10003;</span>' : '-');
+        $('#m_p2_d' + d).html(p2 ? '<span class="text-info" style="font-weight: bold; font-size: 13px;">&#10003;</span>' : '-');
+        $('#m_p3_d' + d).html(p3 ? '<span class="text-warning" style="font-weight: bold; font-size: 13px;">&#10003;</span>' : '-');
+        $('#m_p4_d' + d).html(p4 ? '<span class="text-danger" style="font-weight: bold; font-size: 13px;">&#10003;</span>' : '-');
+
+        if (totalSkor !== null) {
+            $('#m_tot_d' + d).html('<span class="badge" style="font-size: 11px;">' + totalSkor + '</span>');
+        } else {
+            $('#m_tot_d' + d).text('-');
+        }
+
+        if (tgl) {
+            var parts = tgl.split('-');
+            if (parts.length === 3) {
+                $('#matrix-tgl-label-' + d).text(parts[2] + '/' + parts[1]);
+            } else {
+                $('#matrix-tgl-label-' + d).text(tgl);
+            }
+        } else {
+            $('#matrix-tgl-label-' + d).text('Tgl ....');
+        }
+
+        if (pet) {
+            var shortPet = pet.length > 8 ? pet.substring(0, 8) + '..' : pet;
+            $('#m_pet_d' + d).text(shortPet).attr('title', pet);
+        } else {
+            $('#m_pet_d' + d).text('-').removeAttr('title');
+        }
+    }
+
+    function syncJson() {
+        $('#detail_penilaian').val(JSON.stringify(detailData));
+    }
+
+    // Modal Cari Pasien
+    $('#btn-cari-pasien').on('click', function() {
+        $('#modal-cari-pasien').modal('show');
+        cariPasien();
+    });
+
+    $('#btn-do-cari-pasien').on('click', function() {
+        cariPasien();
+    });
+
+    $('#cari-pasien-keyword').on('keypress', function(e) {
+        if (e.which === 13) {
+            cariPasien();
+        }
+    });
+
+    function cariPasien() {
+        var q = $('#cari-pasien-keyword').val();
+        $('#tbody-hasil-cari-pasien').html('<tr><td colspan="6" class="text-center"><i class="fa fa-spinner fa-spin"></i> Mencari pasien rawat inap...</td></tr>');
+        
+        $.ajax({
+            url: '{?=url([ADMIN, "update_bmt", "caripasienranapajax"])?}',
+            type: 'GET',
+            data: { q: q },
+            dataType: 'json',
+            success: function(res) {
+                if (res && res.length > 0) {
+                    var html = '';
+                    $.each(res, function(i, row) {
+                        html += '<tr>';
+                        html += '<td><strong>' + row.no_rawat + '</strong></td>';
+                        html += '<td>' + row.no_rkm_medis + '</td>';
+                        html += '<td>' + row.nm_pasien + '</td>';
+                        html += '<td>' + (row.jk || '-') + ' / ' + (row.umur || '-') + '</td>';
+                        html += '<td>' + (row.kamar || '-') + '</td>';
+                        html += '<td><button type="button" class="btn btn-xs btn-success btn-pilih-pasien" ' +
+                                'data-norawat="' + row.no_rawat + '" ' +
+                                'data-norm="' + row.no_rkm_medis + '" ' +
+                                'data-nama="' + row.nm_pasien + '" ' +
+                                'data-jk="' + (row.jk || '-') + '" ' +
+                                'data-umur="' + (row.umur || '-') + '" ' +
+                                'data-kamar="' + (row.kamar || '') + '"><i class="fa fa-check"></i> Pilih</button></td>';
+                        html += '</tr>';
+                    });
+                    $('#tbody-hasil-cari-pasien').html(html);
+                } else {
+                    $('#tbody-hasil-cari-pasien').html('<tr><td colspan="6" class="text-center text-muted">Data pasien rawat inap tidak ditemukan.</td></tr>');
+                }
+            },
+            error: function() {
+                $('#tbody-hasil-cari-pasien').html('<tr><td colspan="6" class="text-center text-danger">Gagal memuat data pasien. Silakan coba kembali.</td></tr>');
+            }
+        });
+    }
+
+    $(document).on('click', '.btn-pilih-pasien', function() {
+        $('#no_rawat').val($(this).data('norawat'));
+        $('#no_rkm_medis').val($(this).data('norm'));
+        $('#nm_pasien').val($(this).data('nama'));
+        $('#jk').val($(this).data('jk'));
+        $('#umur').val($(this).data('umur'));
+        $('#kamar_inap').val($(this).data('kamar'));
+        $('#modal-cari-pasien').modal('hide');
+    });
+
+    // Validasi sebelum submit
+    $('#form-penilaian-isk').on('submit', function(e) {
+        syncJson();
+        if (!$('#no_rawat').val()) {
+            alert('Nomor Rawat wajib diisi!');
+            $('#no_rawat').focus();
+            e.preventDefault();
+            return false;
+        }
+    });
+
+});
+</script>

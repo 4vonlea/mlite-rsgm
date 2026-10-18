@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Penilaian Kejadian ISK - {$data.no_rawat}</title>
+    <style>
+        {if: empty($is_mpdf)}
+        @page {
+            size: A4 portrait;
+            margin: 5mm 8mm 5mm 8mm;
+        }
+        {/if}
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 7.5pt;
+            line-height: 1.15;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
+            background-color: #f4f6f9;
+            padding: 12px 0;
+        }
+        .page {
+            background: #fff;
+            width: 195mm;
+            min-height: 278mm;
+            margin: 0 auto;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        {/if}
+
+        /* Toolbar Layar Browser */
+        .no-print-toolbar {
+            width: 195mm;
+            margin: 0 auto 10px auto;
+            padding: 8px 14px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+            border-collapse: collapse;
+        }
+        .btn-toolbar {
+            padding: 5px 12px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+
+        /* BINGKAI UTAMA */
+        .outer-border {
+            border: 1.5px solid #000;
+            width: 100%;
+        }
+
+        /* KOP HEADER DUA KOLOM */
+        .kop-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1.5px solid #000;
+        }
+        .kop-left {
+            width: 58%;
+            border-right: 1.5px solid #000;
+            padding: 3px 5px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .kop-left img {
+            width: 100%;
+            max-height: 54px;
+            object-fit: contain;
+        }
+        .kop-right {
+            width: 42%;
+            padding: 3px 8px;
+            font-size: 7.5pt;
+            vertical-align: top;
+        }
+
+        /* KOTAK DIGIT NOMOR RM */
+        .rm-box-table {
+            border-collapse: collapse;
+        }
+        .rm-digit-cell {
+            border: 1px solid #000;
+            width: 14px;
+            height: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 8pt;
+            vertical-align: middle;
+        }
+
+        /* GARIS TITIK-TITIK */
+        .dot-line {
+            border-bottom: 1px dotted #000;
+            min-height: 13px;
+        }
+
+        /* JUDUL FORMULIR */
+        .title-bar {
+            text-align: center;
+            font-weight: bold;
+            padding: 4px 0 3px 0;
+            border-bottom: 1.5px solid #000;
+        }
+        .title-main {
+            font-size: 10pt;
+            letter-spacing: 0.5px;
+        }
+
+        /* SUBHEADER DIISI OLEH PERAWAT */
+        .sub-header-perawat {
+            padding: 2px 6px;
+            font-size: 7.5pt;
+            font-weight: bold;
+            border-bottom: 1.5px solid #000;
+            background-color: #fff;
+        }
+
+        /* TABEL MATRIKS ISK */
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .matrix-table th, .matrix-table td {
+            border: 1px solid #000;
+            padding: 2px 3px;
+        }
+        .matrix-table th {
+            text-align: center;
+            vertical-align: middle;
+            font-weight: bold;
+            font-size: 7.5pt;
+            background-color: #fff;
+        }
+        .col-no {
+            width: 3.5%;
+            text-align: center;
+            vertical-align: top;
+            font-weight: bold;
+            font-size: 7.5pt;
+        }
+        .col-param {
+            width: 53.5%;
+            vertical-align: top;
+            text-align: justify;
+            font-size: 7pt;
+            line-height: 1.15;
+        }
+        .col-skor {
+            width: 5%;
+            text-align: center;
+            vertical-align: middle;
+            font-weight: bold;
+            font-size: 8.5pt;
+        }
+        .col-day {
+            width: 4.22%;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 7.5pt;
+        }
+
+        .list-param {
+            margin: 1px 0 2px 0;
+            padding-left: 14px;
+        }
+        .list-param li {
+            margin-bottom: 1px;
+        }
+
+        /* FOOTER KERTAS */
+        .form-footer-table {
+            width: 100%;
+            margin-top: 3px;
+            font-size: 6.5pt;
+            border-collapse: collapse;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: #fff !important;
+                padding: 0 !important;
+            }
+            .page {
+                box-shadow: none !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+{if: empty($is_mpdf)}
+<div class="no-print no-print-toolbar">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <strong style="font-size: 13px;"><i class="fa fa-print"></i> Cetak Lembar Penilaian Kejadian ISK</strong>
+            <span style="font-size: 11px; opacity: 0.8; margin-left: 10px;">(Format Resmi Rekam Medis RSGM Gusti Hasan Aman)</span>
+        </div>
+        <div>
+            <button onclick="window.print()" class="btn-toolbar btn-print">&#128438; Cetak Dokumen</button>
+            <a href="?pdf=1" target="_blank" class="btn-toolbar btn-pdf">&#128196; Download PDF</a>
+            <button onclick="window.close()" class="btn-toolbar btn-close">&#10006; Tutup</button>
+        </div>
+    </div>
+</div>
+{/if}
+
+<div class="page">
+    <div class="outer-border">
+
+        <!-- HEADER KOP & IDENTITAS PASIEN -->
+        <table class="kop-table">
+            <tr>
+                <td class="kop-left">
+                    {if: !empty($data.kop_img)}
+                    <img src="{$data.kop_img}" alt="KOP RSGM Gusti Hasan Aman">
+                    {else}
+                    <div style="font-weight: bold; font-size: 8.5pt;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+                    <div style="font-weight: bold; font-size: 9.5pt;">RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</div>
+                    <div style="font-size: 6.5pt;">Jl. Simpang Ulin No. 28 Banjarmasin 70233 Telp/Fax: (0511) 3268018</div>
+                    {/if}
+                </td>
+                <td class="kop-right">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="width: 25%; font-weight: bold; vertical-align: middle;">No RM</td>
+                            <td style="width: 3%; vertical-align: middle;">:</td>
+                            <td>
+                                <table class="rm-box-table">
+                                    <tr>
+                                        <td class="rm-digit-cell">{$data.rm0}</td>
+                                        <td class="rm-digit-cell">{$data.rm1}</td>
+                                        <td style="width: 4px; border: none; text-align: center;">-</td>
+                                        <td class="rm-digit-cell">{$data.rm2}</td>
+                                        <td class="rm-digit-cell">{$data.rm3}</td>
+                                        <td style="width: 4px; border: none; text-align: center;">-</td>
+                                        <td class="rm-digit-cell">{$data.rm4}</td>
+                                        <td class="rm-digit-cell">{$data.rm5}</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold; padding-top: 3px; vertical-align: middle;">Nama Pasien</td>
+                            <td style="padding-top: 3px; vertical-align: middle;">:</td>
+                            <td style="padding-top: 3px;">
+                                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                    <span style="font-weight: bold; font-size: 7.5pt;">{$data.nm_pasien}</span>
+                                    <span style="font-size: 7.5pt; margin-left: 6px;">
+                                        {if: $data.jk == 'L'}<strong>L</strong> / P{elseif: $data.jk == 'P'}L / <strong>P</strong>{else}L / P{/if}
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold; padding-top: 3px; vertical-align: middle;">Tanggal Lahir</td>
+                            <td style="padding-top: 3px; vertical-align: middle;">:</td>
+                            <td style="padding-top: 3px; font-size: 7.5pt;">
+                                {$data.tgl_lahir}
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <!-- JUDUL DOKUMEN -->
+        <div class="title-bar">
+            <span class="title-main">PENILAIAN KEJADIAN INFEKSI SALURAN KEMIH (ISK)</span>
+        </div>
+
+        <!-- SUBHEADER DIISI OLEH PERAWAT -->
+        <div class="sub-header-perawat">
+            Diisi Oleh Perawat
+        </div>
+
+        <!-- TABEL MATRIKS PENILAIAN ISK (DIGABUNG JADI SATU) -->
+        <table class="matrix-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" class="col-no">No</th>
+                    <th rowspan="2" class="col-param" style="text-align: center;">Parameter</th>
+                    <th rowspan="2" class="col-skor">Skor</th>
+                    <th colspan="9" style="text-align: center;">Skor Hari Perawatan Ke</th>
+                </tr>
+                <tr>
+                    {loop: $data.days}
+                    <th class="col-day">
+                        {$value.day}<br>
+                        <span style="font-size: 6pt; font-weight: normal;">Tgl {if: !empty($value.tgl_label)}{$value.tgl_label}{else}.....{/if}</span>
+                    </th>
+                    {/loop}
+                </tr>
+            </thead>
+            <tbody>
+                <!-- PARAMETER 1 -->
+                <tr>
+                    <td class="col-no">1</td>
+                    <td class="col-param">
+                        <strong>Pasien sedang terpasang kateter urin saat pengambilan sampel urin dan ada sedikitnya satu dari tanda dan gejala di bawah ini tanpa diketahui penyebab:</strong>
+                        <ul class="list-param">
+                            <li>Demam (&gt; 38&deg;C)</li>
+                            <li>Nyeri pada daerah suprapubik atau costovertebral</li>
+                        </ul>
+                        <strong>Dan</strong><br>
+                        Hasil kultur urine positif adanya &ge; 150 <em>colone forming units</em> (CFU)/ml dengan tidak lebih dari 2 spesies mikroorganisme<br>
+                        <strong>Atau</strong><br>
+                        <strong>Kateter urin pasien sudah terlepas dalam waktu 48 jam sebelum pengambilan sampel urin dan ada sedikitnya satu dari tanda atau gejala di bawah ini tanpa diketahui penyebabnya:</strong>
+                        <ul class="list-param">
+                            <li>Demam (&gt; 38&deg;C)</li>
+                            <li>Pasien mengalami inkontinensia urgency, inkontinensia frekuensi, disuria, nyeri di suprapubik atau costovertebral</li>
+                        </ul>
+                    </td>
+                    <td class="col-skor">0</td>
+                    {loop: $data.days}
+                    <td class="col-day">
+                        {if: $value.p1_checked}&#10003;{/if}
+                    </td>
+                    {/loop}
+                </tr>
+
+                <!-- PARAMETER 2 -->
+                <tr>
+                    <td class="col-no">2</td>
+                    <td class="col-param">
+                        <strong>Pasien sedang terpasang kateter urin saat pengambilan sampel urin dan ada sedikitnya satu dari tanda atau gejala di bawah ini tanpa diketahui penyebabnya:</strong>
+                        <ul class="list-param">
+                            <li>Demam (&gt; 38&deg;C)</li>
+                            <li>Nyeri pada daerah suprapubik atau costovertebral</li>
+                        </ul>
+                        <strong>Dan</strong><br>
+                        Hasil pemeriksaan urin pasien ditemukan paling tidak terdapat satu dari hasil di bawah ini:
+                        <ul class="list-param">
+                            <li>Adanya leukosit atau nitrat dari hasil pemeriksaan urin</li>
+                            <li><em>Pyuria</em> (terdapat &ge; 10 (WBC)/mm<sup>3</sup>) atau &ge; 3 WBC/<em>high power field of unspun urine</em></li>
+                            <li>Adanya mikroorganisme gram dalam sampel urin dan hasil kultur urin menunjukkan hasil &ge; 10<sup>3</sup> dan &le; 10<sup>5</sup> CFU/ml dengan tidak lebih dari 2 spesies mikrorganisme</li>
+                        </ul>
+                        <strong>Atau</strong><br>
+                        <strong>Kateter pasien sudah terlepas dalam waktu 48 jam sebelum pengambilan sampel urin dan ada sedikitnya satu dari tanda atau gejala di bawah ini tanpa diketahui penyebabnya:</strong>
+                        <ul class="list-param">
+                            <li>Demam (&gt; 38&deg;C)</li>
+                            <li>Pasien mengalami inkontinensia, disuria, nyeri pada daerah suprapubik atau costovertebral</li>
+                        </ul>
+                    </td>
+                    <td class="col-skor">1</td>
+                    {loop: $data.days}
+                    <td class="col-day">
+                        {if: $value.p2_checked}&#10003;{/if}
+                    </td>
+                    {/loop}
+                </tr>
+
+                <!-- PARAMETER 3 -->
+                <tr>
+                    <td class="col-no">3</td>
+                    <td class="col-param">
+                        <strong>Pasien &le; 1 tahun yang lalu dengan atau tanpa riwayat pemasangan kateter urin mempunyai paling tidak satu dari tanda dan gejala berikut ini tanpa diketahui penyebabnya:</strong>
+                        <ul class="list-param">
+                            <li>Demam (&gt; 38&deg;C)</li>
+                            <li>Hipotermia (&lt; 36&deg;C)</li>
+                            <li>Bradikardia</li>
+                            <li>Dysuria</li>
+                            <li>Letargi</li>
+                            <li>Vomitting</li>
+                        </ul>
+                        <strong>Dan</strong><br>
+                        Hasil kultur urin positif adanya &ge; 10<sup>5</sup> <em>colony forming units</em> (CFU)/ml dengan tidak lebih dari 2 spesies mikrorganisme)
+                    </td>
+                    <td class="col-skor">2</td>
+                    {loop: $data.days}
+                    <td class="col-day">
+                        {if: $value.p3_checked}&#10003;{/if}
+                    </td>
+                    {/loop}
+                </tr>
+
+                <!-- PARAMETER 4 -->
+                <tr>
+                    <td class="col-no">4</td>
+                    <td class="col-param">
+                        <strong>Pasien &le; 1 tahun yang lalu dengan atau tanpa riwayat pemasangan kateter urin mempunyai paling tidak satu dari tanda dan gejala berikut ini tanpa diketahui penyebabnya:</strong>
+                        <ul class="list-param">
+                            <li>Demam (&gt; 38&deg;C)</li>
+                            <li>Hipotermia (&lt; 36&deg;C)</li>
+                            <li>Bradikardia</li>
+                            <li>Dysuria</li>
+                            <li>Letargi</li>
+                            <li>Vomitting</li>
+                        </ul>
+                        <strong>Dan</strong><br>
+                        Hasil pemeriksaan urin ditemukan paling tidak terdapat satu dari hal di bawah ini:
+                        <ul class="list-param">
+                            <li>Adanya leukosit atau nitrat dari hasil pemeriksaan urin</li>
+                            <li><em>Pyuria</em> (terdapat &ge; 10 (WBC)/mm<sup>3</sup>) atau &ge; 3 WBC/<em>high power field of unspun urine</em></li>
+                            <li>Adanya mikroorganisme gram dalam sampel urin dan hasil kultur urin menunjukkan hasil &ge; 10<sup>3</sup> dan &lt; 10<sup>5</sup> CFU/ml dengan tidak lebih dari 2 spesies mikrorganisme</li>
+                        </ul>
+                    </td>
+                    <td class="col-skor">3</td>
+                    {loop: $data.days}
+                    <td class="col-day">
+                        {if: $value.p4_checked}&#10003;{/if}
+                    </td>
+                    {/loop}
+                </tr>
+
+                <!-- BARIS TOTAL SKOR -->
+                <tr style="font-weight: bold; background-color: #fafafa;">
+                    <td colspan="2" style="font-weight: bold; font-size: 8pt; padding: 3px 5px;">
+                        TOTAL SKOR
+                    </td>
+                    <td class="col-skor"></td>
+                    {loop: $data.days}
+                    <td class="col-day" style="font-weight: bold; font-size: 8.5pt;">
+                        {if: $value.total_skor !== null}{$value.total_skor}{/if}
+                    </td>
+                    {/loop}
+                </tr>
+
+                <!-- BARIS NAMA & PARAF YANG MELAKUKAN PENILAIAN -->
+                <tr style="height: 26px;">
+                    <td colspan="2" style="font-weight: bold; font-size: 7.5pt; vertical-align: middle; padding: 2px 5px;">
+                        Nama &amp; Paraf yang Melakukan Penilaian
+                    </td>
+                    <td class="col-skor"></td>
+                    {loop: $data.days}
+                    <td class="col-day" style="font-size: 6pt; vertical-align: middle; word-break: break-all;">
+                        {if: !empty($value.petugas)}{$value.petugas}{/if}
+                    </td>
+                    {/loop}
+                </tr>
+
+            </tbody>
+        </table>
+
+    </div>
+
+    <!-- FOOTER IDENTIFIKASI DOKUMEN REKAM MEDIS -->
+    <table class="form-footer-table">
+        <tr>
+            <td style="text-align: left; width: 50%;">RSGM/Ed-Rev/02/2023</td>
+            <td style="text-align: right; width: 50%;">RM.RI Lampiran</td>
+        </tr>
+    </table>
+
+</div>
+
+</body>
+</html>

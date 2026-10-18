@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Konsultasi Internal - {$data.no_rawat}</title>
+    <style>
+        {if: empty($is_mpdf)}
+        @page {
+            size: A4 portrait;
+            margin: 6mm 10mm 6mm 10mm;
+        }
+        {/if}
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8.5pt;
+            line-height: 1.35;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
+            background-color: #f4f6f9;
+            padding: 15px 0;
+        }
+        .page {
+            background: #fff;
+            width: 195mm;
+            min-height: 278mm;
+            margin: 0 auto;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        {/if}
+
+        /* Toolbar Layar Browser */
+        .no-print-toolbar {
+            width: 195mm;
+            margin: 0 auto 12px auto;
+            padding: 8px 14px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+            border-collapse: collapse;
+        }
+        .btn-toolbar {
+            padding: 5px 12px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+
+        /* BINGKAI UTAMA */
+        .outer-border {
+            border: 1.5px solid #000;
+            width: 100%;
+        }
+
+        /* KOP HEADER DUA KOLOM */
+        .kop-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1.5px solid #000;
+        }
+        .kop-left {
+            width: 58%;
+            border-right: 1.5px solid #000;
+            padding: 4px 6px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .kop-left img {
+            width: 100%;
+            max-height: 60px;
+            object-fit: contain;
+        }
+        .kop-right {
+            width: 42%;
+            padding: 4px 8px;
+            font-size: 7.5pt;
+            vertical-align: top;
+        }
+
+        /* KOTAK DIGIT NOMOR RM */
+        .rm-box-table {
+            border-collapse: collapse;
+        }
+        .rm-digit-cell {
+            border: 1px solid #000;
+            width: 14px;
+            height: 16px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 8.5pt;
+            vertical-align: middle;
+        }
+
+        /* BARIS PETUNJUK */
+        .notice-bar {
+            border-bottom: 1px solid #000;
+            padding: 3px 10px;
+            font-size: 7pt;
+            color: #c0392b;
+            font-style: italic;
+        }
+
+        /* JUDUL FORMULIR */
+        .title-bar {
+            text-align: center;
+            font-weight: bold;
+            font-size: 11.5pt;
+            padding: 8px 0 6px 0;
+            letter-spacing: 0.5px;
+        }
+
+        /* KONTEN BADAN */
+        .body-cell {
+            padding: 4px 14px 8px 14px;
+            font-size: 8.5pt;
+        }
+
+        /* TABEL PENGISIAN */
+        .table-fill {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2px;
+            margin-bottom: 4px;
+        }
+        .table-fill td {
+            padding: 2px 0;
+            vertical-align: bottom;
+            font-size: 8.5pt;
+        }
+
+        /* GARIS TITIK-TITIK */
+        .dot-line {
+            border-bottom: 1px dotted #000;
+            min-height: 14px;
+        }
+
+        /* KOTAK JAWABAN KONSULTASI */
+        .box-jawaban {
+            border: 1.5px solid #000;
+            width: 100%;
+            margin-top: 8px;
+            margin-bottom: 4px;
+        }
+        .box-jawaban-header {
+            text-align: center;
+            font-weight: bold;
+            font-size: 9.5pt;
+            padding: 3px 0;
+            border-bottom: 1.5px solid #000;
+            letter-spacing: 0.5px;
+            background-color: #fafafa;
+        }
+        .box-jawaban-body {
+            padding: 6px 12px 6px 12px;
+            font-size: 8.5pt;
+        }
+
+        /* FOOTER DI LUAR BINGKAI */
+        .footer-note {
+            font-style: italic;
+            font-size: 7pt;
+            color: #c0392b;
+            text-align: right;
+            padding-top: 3px;
+            padding-right: 2px;
+        }
+        .footer-meta {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7pt;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .no-print, .no-print-toolbar {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body {if: empty($is_mpdf)}onload="if(window.location.search.indexOf('noprint=1')===-1)window.print()"{/if}>
+
+    {if: empty($is_mpdf)}
+    <!-- Toolbar Layar (Otomatis hilang saat diprint) -->
+    <table class="no-print-toolbar no-print">
+        <tr>
+            <td style="font-size: 12px; font-weight: bold; color: #fff;">
+                Preview Formulir: Konsultasi Internal ({$data.no_rawat})
+            </td>
+            <td style="text-align: right;">
+                <button onclick="window.print()" class="btn-toolbar btn-print">
+                    &#128438; Cetak Dokumen
+                </button>
+                <a href="{?=url([ADMIN, 'update_bmt', 'konsultasiinternalcetak', $data.id])?}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
+                    &#128196; Download PDF
+                </a>
+                <button onclick="window.close()" class="btn-toolbar btn-close">
+                    &#10006; Tutup
+                </button>
+            </td>
+        </tr>
+    </table>
+
+    <div class="page">
+    {/if}
+
+        <div class="outer-border">
+            <!-- 1. KOP RSGM & IDENTITAS PASIEN -->
+            <table class="kop-table">
+                <tr>
+                    <td class="kop-left">
+                        <img src="{$data.kop_img}" alt="KOP RSGM Gusti Hasan Aman">
+                    </td>
+                    <td class="kop-right">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt;">
+                            <tr>
+                                <td style="width: 65px; padding: 2px 0;">No. RM</td>
+                                <td style="width: 6px;">:</td>
+                                <td>
+                                    <table class="rm-box-table">
+                                        <tr>
+                                            <td class="rm-digit-cell">{$data.rm0}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm1}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm2}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm3}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm4}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm5}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0;">Nama Pasien</td>
+                                <td>:</td>
+                                <td class="dot-line">
+                                    <strong>{$data.nm_pasien}</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ({if: $data.jk == 'L'}<u>L</u>/P{elseif: $data.jk == 'P'}L/<u>P</u>{else}L/P{/if})
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0;">Tanggal Lahir</td>
+                                <td>:</td>
+                                <td class="dot-line">
+                                    {$data.tgl_lahir_indo}
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- 2. PETUNJUK RESMI -->
+            <div class="notice-bar">
+                * Harap pengisian dilakukan dengan tulisan/cetak yang jelas, benar dan lengkap
+            </div>
+
+            <!-- 3. JUDUL FORMULIR -->
+            <div class="title-bar">
+                KONSULTASI INTERNAL
+            </div>
+
+            <!-- 4. LEMBAR PERMINTAAN KONSULTASI -->
+            <div class="body-cell">
+                <table class="table-fill">
+                    <tr>
+                        <td style="width: 24%;">Yth. T. S. Bagian</td>
+                        <td style="width: 2%;">:</td>
+                        <td class="dot-line"><strong>{$data.ts_bagian}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Di Instalasi</td>
+                        <td>:</td>
+                        <td class="dot-line">{$data.instalasi}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" style="padding-top: 4px; padding-bottom: 2px;">
+                            Mohon pemeriksaan lebih lanjut :
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Nama</td>
+                        <td>:</td>
+                        <td class="dot-line">
+                            <strong>{$data.nm_pasien}</strong> 
+                            <span style="float: right;">{if: $data.jk == 'L'}<u>L</u>/P*{elseif: $data.jk == 'P'}L/<u>P</u>*{else}L/P*{/if}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Tanggal Lahir / Umur</td>
+                        <td>:</td>
+                        <td class="dot-line">
+                            {$data.tgl_lahir_indo} &nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp; {if: !empty($data.umur_pasien)}{$data.umur_pasien}{elseif: !empty($data.umur)}{$data.umur}{else}.....{/if}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Diagnosa sementara</td>
+                        <td>:</td>
+                        <td class="dot-line">{$data.diagnosa_sementara}</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">Konsultasi yang diminta</td>
+                        <td style="vertical-align: top;">:</td>
+                        <td class="dot-line" style="line-height: 1.5;">
+                            {if: !empty($data.konsultasi_diminta)}
+                                {$data.konsultasi_diminta}
+                            {else}
+                                &nbsp;<br>&nbsp;
+                            {/if}
+                        </td>
+                    </tr>
+                </table>
+
+                <div style="margin-top: 6px; margin-bottom: 4px;">
+                    Demikian atas bantuannya kami ucapkan terima kasih.
+                </div>
+
+                <!-- TANDA TANGAN DOKTER YANG MERAWAT -->
+                <table style="width: 100%; border-collapse: collapse; margin-top: 4px;">
+                    <tr>
+                        <td style="width: 50%;"></td>
+                        <td style="width: 50%; text-align: center; font-size: 8.5pt;">
+                            Banjarmasin, {if: !empty($data.tgl_konsul_indo)}{$data.tgl_konsul_indo}{else}....................................{/if}
+                            <div style="margin-top: 3px;">Dokter yang merawat,</div>
+                            <div style="height: 42px; line-height: 42px;">&nbsp;</div>
+                            <div style="margin-top: 2px;">
+                                ( {if: !empty($data.nama_dokter_pengirim)}{$data.nama_dokter_pengirim}{else}....................................{/if} )
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- 5. KOTAK JAWABAN KONSULTASI -->
+                <div class="box-jawaban">
+                    <div class="box-jawaban-header">
+                        JAWABAN
+                    </div>
+                    <div class="box-jawaban-body">
+                        <table class="table-fill">
+                            <tr>
+                                <td style="width: 22%; vertical-align: top;">Hasil Pemeriksaan :</td>
+                                <td class="dot-line" style="line-height: 1.5;">
+                                    {if: !empty($data.jawaban_hasil_pemeriksaan)}
+                                        {$data.jawaban_hasil_pemeriksaan}
+                                    {else}
+                                        &nbsp;<br>&nbsp;
+                                    {/if}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: top; padding-top: 4px;">Diagnosa :</td>
+                                <td class="dot-line" style="line-height: 1.5; padding-top: 4px;">
+                                    {if: !empty($data.jawaban_diagnosa)}
+                                        {$data.jawaban_diagnosa}
+                                    {else}
+                                        &nbsp;<br>&nbsp;
+                                    {/if}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: top; padding-top: 4px;">Nasihat :</td>
+                                <td class="dot-line" style="line-height: 1.5; padding-top: 4px;">
+                                    {if: !empty($data.jawaban_nasihat)}
+                                        {$data.jawaban_nasihat}
+                                    {else}
+                                        &nbsp;<br>&nbsp;
+                                    {/if}
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- TANDA TANGAN DOKTER KONSULEN -->
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 4px;">
+                            <tr>
+                                <td style="width: 50%; vertical-align: bottom; font-size: 6.5pt; font-style: italic; color: #555;">
+                                    Form ini untuk Rekam Medis
+                                </td>
+                                <td style="width: 50%; text-align: center; font-size: 8.5pt;">
+                                    Banjarmasin, {if: !empty($data.tgl_jawaban_indo)}{$data.tgl_jawaban_indo}{else}....................................{/if}
+                                    <div style="margin-top: 3px;">Tanda Tangan,</div>
+                                    <div style="height: 42px; line-height: 42px;">&nbsp;</div>
+                                    <div style="margin-top: 2px;">
+                                        ( {if: !empty($data.nama_dokter_konsulen)}{$data.nama_dokter_konsulen}{else}....................................{/if} )
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- FOOTER CATATAN MERAH & KODE FORMULIR -->
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td class="footer-note">
+                    Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+                </td>
+            </tr>
+        </table>
+        <table class="footer-meta">
+            <tr>
+                <td style="text-align: left; width: 50%;">RSGM/Ed-Rev/02/2023</td>
+                <td style="text-align: right; width: 50%;">RM.RI Lampiran</td>
+            </tr>
+        </table>
+
+    {if: empty($is_mpdf)}
+    </div>
+    {/if}
+
+</body>
+</html>

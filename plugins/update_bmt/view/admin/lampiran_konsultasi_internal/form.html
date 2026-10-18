@@ -1,0 +1,292 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
+                <h3 class="panel-title" style="font-weight: bold; font-size: 16px;">
+                    <i class="fa fa-pencil-square-o text-primary"></i> FORMULIR KONSULTASI INTERNAL
+                </h3>
+                <div>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'konsultasiinternalmanage'])?}" class="btn btn-default btn-sm">
+                        <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'update_bmt', 'konsultasiinternalsave'])?}" method="post" id="form-konsultasi-internal">
+                    <input type="hidden" name="id" value="{$data.id}">
+
+                    <!-- PETUNJUK RESMI -->
+                    <div class="alert alert-info" style="font-size: 12px; margin-bottom: 20px;">
+                        <strong><i class="fa fa-info-circle"></i> Petunjuk Pengisian Formulir Konsultasi Internal:</strong>
+                        <ul style="margin-bottom: 0; padding-left: 20px;">
+                            <li>Harap pengisian dilakukan dengan tulisan/cetak yang jelas, benar dan lengkap.</li>
+                            <li>Formulir ini terdiri dari 2 bagian: <strong>Permintaan Konsultasi</strong> (diisi oleh DPJP/Dokter yang merawat) dan <strong>Jawaban Konsultasi</strong> (diisi oleh Dokter Spesialis/Konsulen yang dituju).</li>
+                            <li>Gunakan fitur cari pasien untuk mengisi identitas pasien dan ruangan rawat inap secara otomatis.</li>
+                        </ul>
+                    </div>
+
+                    <!-- 1. IDENTITAS PASIEN & RUANG RAWAT -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading" style="font-weight: bold;">
+                            <i class="fa fa-user"></i> Data Pasien & Ruang Rawat Inap
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nomor Rawat / No. RM <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2025/09/29/000006" required>
+                                            <span class="input-group-btn">
+                                                <button type="button" class="btn btn-primary" id="btn-cari-pasien">
+                                                    <i class="fa fa-search"></i> Cari
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nomor Rekam Medis (No. RM)</label>
+                                        <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly style="background-color: #f9f9f9; font-weight: bold;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nama Pasien</label>
+                                        <input type="text" id="nm_pasien" class="form-control" value="{$data.nm_pasien}" readonly style="background-color: #f9f9f9; font-weight: bold;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Jenis Kelamin</label>
+                                        <input type="text" id="pasien_jk" class="form-control" value="{if: $data.jk == 'L'}Laki-Laki (L){elseif: $data.jk == 'P'}Perempuan (P){else}{$data.jk}{/if}" readonly style="background-color: #f9f9f9;">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Tanggal Lahir Pasien</label>
+                                        <input type="text" id="tgl_lahir_pasien" class="form-control" value="{$data.tgl_lahir}" readonly style="background-color: #f9f9f9;">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Umur Pasien</label>
+                                        <input type="text" id="umur_pasien" class="form-control" value="{$data.umur}" readonly style="background-color: #f9f9f9;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Ruangan / Kamar Inap <span class="text-danger">*</span></label>
+                                        <input type="text" name="kamar_inap" id="kamar_inap" class="form-control" value="{$data.kamar_inap}" placeholder="Contoh: Ruang Melati / Bed 02" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. LEMBAR PERMINTAAN KONSULTASI INTERNAL (BAGIAN ATAS) -->
+                    <div class="panel panel-primary">
+                        <div class="panel-heading" style="font-weight: bold;">
+                            <i class="fa fa-paper-plane"></i> Lembar Permintaan Konsultasi Internal (Diisi Oleh Dokter Pengirim / DPJP)
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Yth. Teman Sejawat (T. S.) Bagian / Spesialisasi <span class="text-danger">*</span></label>
+                                        <input type="text" name="ts_bagian" id="ts_bagian" class="form-control" list="list_bagian" value="{$data.ts_bagian}" placeholder="Contoh: Bedah Mulut & Maksilofasial / Penyakit Dalam / Anestesi" required>
+                                        <datalist id="list_bagian">
+                                            <option value="Spesialis Bedah Mulut & Maksilofasial (Sp.BMM)">
+                                            <option value="Spesialis Penyakit Dalam (Sp.PD)">
+                                            <option value="Spesialis Anestesiologi & Terapi Intensif (Sp.An)">
+                                            <option value="Spesialis Konservasi Gigi (Sp.KG)">
+                                            <option value="Spesialis Periodonsia (Sp.Perio)">
+                                            <option value="Spesialis Kedokteran Gigi Anak (Sp.KGA)">
+                                            <option value="Spesialis Ortodonsia (Sp.Ort)">
+                                            <option value="Spesialis Radiologi Kedokteran Gigi (Sp.RKG)">
+                                            <option value="Dokter Gigi Umum / DPJP Ruangan">
+                                        </datalist>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Di Instalasi / Unit Pelayanan <span class="text-danger">*</span></label>
+                                        <input type="text" name="instalasi" id="instalasi" class="form-control" list="list_instalasi" value="{$data.instalasi}" placeholder="Contoh: Rawat Inap / Rawat Jalan / IBS" required>
+                                        <datalist id="list_instalasi">
+                                            <option value="Instalasi Rawat Inap (IRNA)">
+                                            <option value="Instalasi Bedah Sentral (IBS)">
+                                            <option value="Instalasi Rawat Jalan (IRJ)">
+                                            <option value="Instalasi Gawat Darurat (IGD)">
+                                            <option value="Intensive Care Unit (ICU / HCU)">
+                                        </datalist>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Diagnosa Sementara <span class="text-danger">*</span></label>
+                                        <input type="text" name="diagnosa_sementara" id="diagnosa_sementara" class="form-control" value="{$data.diagnosa_sementara}" placeholder="Tuliskan diagnosa kerja/sementara pasien saat ini" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Konsultasi yang Diminta (Mohon Pemeriksaan Lebih Lanjut / Evaluasi Tindakan) <span class="text-danger">*</span></label>
+                                        <textarea name="konsultasi_diminta" id="konsultasi_diminta" rows="3" class="form-control" placeholder="Tuliskan alasan dan hal yang dimintakan konsultasi, contoh: Mohon evaluasi toleransi operasi odontektomi dengan general anestesi, mohon saran pengelolaan DM tipe 2 sebelum tindakan bedah." required>{$data.konsultasi_diminta}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Tanggal Permintaan Konsultasi <span class="text-danger">*</span></label>
+                                        <input type="date" name="tgl_konsul" id="tgl_konsul" class="form-control" value="{$data.tgl_konsul}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Dokter yang Merawat (Dokter Pengirim) <span class="text-danger">*</span></label>
+                                        <input type="text" name="nama_dokter_pengirim" id="nama_dokter_pengirim" class="form-control" list="list_dokter" value="{$data.nama_dokter_pengirim}" placeholder="Nama & Gelar Dokter DPJP" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. LEMBAR JAWABAN KONSULTASI INTERNAL (BAGIAN BAWAH) -->
+                    <div class="panel panel-success" style="border-top: 3px solid #27ae60;">
+                        <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: bold; font-size: 14px;">
+                                <i class="fa fa-reply"></i> JAWABAN KONSULTASI (Diisi Oleh Dokter Konsulen yang Dituju)
+                            </span>
+                            <div>
+                                <select name="status_konsul" id="status_konsul" class="form-control input-sm" style="display: inline-block; width: 170px; font-weight: bold;">
+                                    <option value="Menunggu Jawaban" {if: $data.status_konsul == 'Menunggu Jawaban'}selected{/if}>⏳ Menunggu Jawaban</option>
+                                    <option value="Sudah Dijawab" {if: $data.status_konsul == 'Sudah Dijawab'}selected{/if}>✅ Sudah Dijawab</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Hasil Pemeriksaan Konsulen:</label>
+                                        <textarea name="jawaban_hasil_pemeriksaan" id="jawaban_hasil_pemeriksaan" rows="3" class="form-control" placeholder="Tuliskan temuan klinis, hasil anamnesis, pemeriksaan fisik, dan penunjang...">{$data.jawaban_hasil_pemeriksaan}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Diagnosa Konsulen:</label>
+                                        <textarea name="jawaban_diagnosa" id="jawaban_diagnosa" rows="2" class="form-control" placeholder="Diagnosa definitif atau konfirmasi diagnosa dari dokter konsulen...">{$data.jawaban_diagnosa}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Nasihat / Rekomendasi Terapi & Tindakan Lanjutan:</label>
+                                        <textarea name="jawaban_nasihat" id="jawaban_nasihat" rows="3" class="form-control" placeholder="Tuliskan anjuran terapi, batas toleransi tindakan, obat-obatan penyerta, atau petunjuk tata laksana bersama...">{$data.jawaban_nasihat}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Tanggal Jawaban Konsultasi:</label>
+                                        <input type="date" name="tgl_jawaban" id="tgl_jawaban" class="form-control" value="{$data.tgl_jawaban}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Nama Dokter Konsulen (Tanda Tangan Jawaban):</label>
+                                        <input type="text" name="nama_dokter_konsulen" id="nama_dokter_konsulen" class="form-control" list="list_dokter" value="{$data.nama_dokter_konsulen}" placeholder="Nama & Gelar Dokter Konsulen">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <datalist id="list_dokter">
+                                {loop: $dokter}
+                                <option value="{$value.nm_dokter}">
+                                {/loop}
+                            </datalist>
+                        </div>
+                    </div>
+
+                    <!-- TOMBOL AKSI -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-bottom: 25px;">
+                        <a href="{?=url([ADMIN, 'update_bmt', 'konsultasiinternalmanage'])?}" class="btn btn-default">
+                            <i class="fa fa-ban"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fa fa-save"></i> Simpan Formulir Konsultasi Internal
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // AJAX Cari Pasien
+    $('#btn-cari-pasien').on('click', function() {
+        var noRawat = $('#no_rawat').val().trim();
+        if (!noRawat) {
+            alert('Masukkan Nomor Rawat atau Nomor Rekam Medis terlebih dahulu!');
+            return;
+        }
+
+        $.getJSON('{?=url([ADMIN, "update_bmt", "konsultasiinternalform"])?}', {
+            ajax_patient: 1,
+            no_rawat: noRawat
+        }, function(res) {
+            if (res && res.success) {
+                var d = res.data || res;
+                $('#no_rawat').val(d.no_rawat);
+                $('#no_rkm_medis').val(d.no_rkm_medis);
+                $('#nm_pasien').val(d.nm_pasien);
+                $('#pasien_jk').val(d.jk == 'L' ? 'Laki-Laki (L)' : 'Perempuan (P)');
+                $('#tgl_lahir_pasien').val(d.tgl_lahir);
+                $('#umur_pasien').val(d.umur);
+                if (d.ruang_perawatan && !$('#kamar_inap').val()) {
+                    $('#kamar_inap').val(d.ruang_perawatan);
+                }
+                if (d.nm_dokter && !$('#nama_dokter_pengirim').val()) {
+                    $('#nama_dokter_pengirim').val(d.nm_dokter);
+                }
+            } else {
+                alert('Data pasien dengan No. Rawat/RM tersebut tidak ditemukan.');
+            }
+        }).fail(function() {
+            alert('Terjadi kesalahan koneksi saat mencari data pasien.');
+        });
+    });
+
+    // Otomatis ubah status konsul ke Sudah Dijawab bila form jawaban diisi
+    $('#jawaban_hasil_pemeriksaan, #jawaban_diagnosa, #jawaban_nasihat, #nama_dokter_konsulen').on('input change', function() {
+        if ($('#jawaban_hasil_pemeriksaan').val().trim() || $('#jawaban_nasihat').val().trim() || $('#nama_dokter_konsulen').val().trim()) {
+            if (!$('#tgl_jawaban').val()) {
+                var today = new Date().toISOString().split('T')[0];
+                $('#tgl_jawaban').val(today);
+            }
+            $('#status_konsul').val('Sudah Dijawab');
+        }
+    });
+});
+</script>

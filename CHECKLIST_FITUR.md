@@ -28,6 +28,12 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 10 | **Formulir Stabilisasi Pasien Sebelum Transfer** | `lampiran_stabilisasi_pasien` | `?module=update_bmt&page=stabilisasipasienmanage` | ✅ Lengkap |
 | 11 | **Intervensi dan Pengkajian Ulang Nyeri** | `lampiran_intervensi_pengkajian_nyeri` | `?module=update_bmt&page=intervensinyerimanage` | ✅ Lengkap |
 | 12 | **Surat Permintaan Second Opinion** | `lampiran_permintaan_second_opinion` | `?module=update_bmt&page=secondopinionmanage` | ✅ Lengkap |
+| 13 | **Penilaian Kejadian Phlebitis (VIP)** | `lampiran_penilaian_kejadian_phlebitis` | `?module=update_bmt&page=penilaianphlebitismanage` | ✅ Lengkap |
+| 14 | **Permintaan Pelayanan Kerohanian** | `lampiran_permintaan_pelayanan_kerohanian` | `?module=update_bmt&page=pelayanankerohanianmanage` | ✅ Lengkap |
+| 15 | **Monitoring Pasien Kateter Urine** | `lampiran_monitoring_pasien_kateter_urin` | `?module=update_bmt&page=monitoringkateterurinmanage` | ✅ Lengkap |
+| 16 | **Konsultasi Internal** | `lampiran_konsultasi_internal` | `?module=update_bmt&page=konsultasiinternalmanage` | ✅ Lengkap |
+| 17 | **Monitoring Pasien Selama Transfer** | `lampiran_monitoring_pasien_selama_transfer` | `?module=update_bmt&page=monitoringpasienselamatransfermanage` | ✅ Lengkap |
+| 18 | **Penilaian Dekubitus** | `lampiran_penilaian_dekubitus` | `?module=update_bmt&page=penilaiandekubitusmanage` | ✅ Lengkap |
 
 ---
 
@@ -134,18 +140,18 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 19 | HCU | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 20 | Informasi Penundaan dan Kelambatan Pelayanan | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 21 | Intervensi dan Pengkajian Ulang Nyeri | - | ✅ Tersedia | `lampiran_intervensi_pengkajian_nyeri` | Form RME -> Ranap -> Form Lampiran |
-| 22 | Monitoring Pasien Kateter Urine | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
-| 23 | Konsultasi Internal | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
-| 24 | Monitor Pasien Selama Transfer | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
-| 25 | Penilaian Dekubitus | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
-| 26 | Penilaian Kejadian Infeksi Luka OP (ILO) | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
-| 27 | Penilaian Kejadian ISK | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
-| 28 | Penilaian Kejadian Phlebitis | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
-| 29 | Permintaan Pelayanan Kerohanian | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
+| 22 | Monitoring Pasien Kateter Urine | - | ✅ Tersedia | `lampiran_monitoring_pasien_kateter_urin` | Form RME -> Ranap -> Form Lampiran |
+| 23 | Konsultasi Internal | - | ✅ Tersedia | `lampiran_konsultasi_internal` | Form RME -> Ranap -> Form Lampiran |
+| 24 | Monitor Pasien Selama Transfer | - | ✅ Tersedia | `lampiran_monitoring_pasien_selama_transfer` | Form RME -> Ranap -> Form Lampiran |
+| 25 | Penilaian Dekubitus | - | ✅ Tersedia | `lampiran_penilaian_dekubitus` | Form RME -> Ranap -> Form Lampiran |
+| 26 | Penilaian Kejadian Infeksi Luka OP (ILO) | - | ✅ Tersedia | `lampiran_penilaian_kejadian_ilo` | Form RME -> Ranap -> Form Lampiran |
+| 27 | Penilaian Kejadian ISK | - | ✅ Tersedia | `lampiran_penilaian_kejadian_isk` | Form RME -> Ranap -> Form Lampiran |
+| 28 | Penilaian Kejadian Phlebitis | - | ✅ Tersedia | `lampiran_penilaian_kejadian_phlebitis` | Form RME -> Ranap -> Form Lampiran |
+| 29 | Permintaan Pelayanan Kerohanian | - | ✅ Tersedia | `lampiran_permintaan_pelayanan_kerohanian` | Form RME -> Ranap -> Form Lampiran |
 | 30 | Persetujuan untuk Testing HIV | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 31 | Surat Pengantar Rawat Inap | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 32 | Surat Permintaan Second Opinion | - | ✅ Tersedia | `lampiran_permintaan_second_opinion` | Form RME -> Ranap -> Form Lampiran |
-| 33 | Surat Pernyataan Bersedia Menunggu | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
+| 33 | Surat Pernyataan Bersedia Menunggu | - | ✅ Tersedia | `lampiran_surat_pernyataan_bersedia_menunggu` | Form RME -> Ranap -> Form Lampiran |
 | 34 | Surat Pernyataan Jaminan Pembiayaan | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 35 | Surat Pernyataan Pulang APS | - | ✅ Tersedia | `surat_pulang_aps` | Form RME -> Bedah & Anestesi |
 | 36 | Transfer Pasien Eksternal | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
@@ -196,17 +202,17 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 |---|:---:|:---:|:---:|:---:|
 | **1. UBS (Operasi & Bedah)** | 17 | 12 | 5 | **70.6%** |
 | **2. IGD (Gawat Darurat)** | 9 | 9 | 0 | **100.0%** |
-| **3. RANAP (Rawat Inap)** | 59 | 38 | 21 | **64.4%** |
+| **3. RANAP (Rawat Inap)** | 59 | 43 | 16 | **72.9%** |
 | **4. RAJAL (Rawat Jalan)** | 23 | 22 | 1 | **95.7%** |
-| **TOTAL KESELURUHAN** | **108** | **81** | **27** | **75.0%** |
+| **TOTAL KESELURUHAN** | **108** | **86** | **22** | **79.6%** |
 
 ### Rincian Kategori:
 - **Formulir Wajib (Total 58 Form)**: **53 Form Tersedia (91.4%)**, tersisa 5 form khusus di UBS Bedah.
-- **Formulir Lampiran (Total 50 Form)**: **28 Form Tersedia (56.0%)**, termasuk 11 formulir lampiran Ranap & Rajal yang telah diselesaikan.
+- **Formulir Lampiran (Total 50 Form)**: **35 Form Tersedia (70.0%)**, tersisa 15 formulir lampiran (14 Ranap & 1 Rajal).
 
 ---
 
-## 6. Antrean Formulir Belum Tersedia (27 Form)
+## 6. Antrean Formulir Belum Tersedia (20 Form)
 
 Berikut daftar lengkap formulir yang masih dalam antrean pengembangan:
 
@@ -217,24 +223,17 @@ Berikut daftar lengkap formulir yang masih dalam antrean pengembangan:
 - [ ] Penandaan Tepat Lokasi Bedah Mulut
 - [ ] Asesmen Bedah Minor
 
-### B. RANAP - Lampiran (21 Form):
+### B. RANAP - Lampiran (14 Form):
 - [ ] Gizi Anak dan Dewasa
 - [ ] EWS Dewasa dan Anak
 - [ ] Rekapitulasi Kejadian Infeksi Daerah OP
 - [ ] HCU
 - [ ] Informasi Penundaan dan Kelambatan Pelayanan
-- [ ] Monitoring Pasien Kateter Urine
-- [ ] Konsultasi Internal
-- [ ] Monitor Pasien Selama Transfer
-- [ ] Penilaian Dekubitus
-- [ ] Penilaian Kejadian Infeksi Luka OP (ILO)
-- [ ] Penilaian Kejadian ISK
-- [ ] Penilaian Kejadian Phlebitis
-- [ ] Permintaan Pelayanan Kerohanian
+- [x] Penilaian Kejadian Infeksi Luka OP (ILO)
+- [x] Penilaian Kejadian ISK
 - [ ] Persetujuan untuk Testing HIV
 - [ ] Surat Pengantar Rawat Inap
-- [ ] Surat Permintaan Second Opinion
-- [ ] Surat Pernyataan Bersedia Menunggu
+- [x] Surat Pernyataan Bersedia Menunggu
 - [ ] Surat Pernyataan Jaminan Pembiayaan
 - [ ] Transfer Pasien Eksternal (Lembar 1)
 - [ ] Transfer Pasien Eksternal (Lanjutan)

@@ -9,7 +9,7 @@
     <link rel="icon" href="{?=url()?}/{$mlite.logo}" type="image/x-icon">
     <link href="{$mlite.path}/assets/css/{$mlite.theme_admin}.min.css?v={$mlite.version}" rel="stylesheet">
     <link href="{$mlite.path}/assets/css/animate.min.css?v={$mlite.version}" rel="stylesheet">
-    <link href="{?=url(THEMES.'/admin/css/style.css?v=1122'.$mlite.version)?}" rel="stylesheet">
+    <link href="{?=url(THEMES.'/admin/css/style.css?v=1124'.$mlite.version)?}" rel="stylesheet">
     <link href="{$mlite.path}/assets/css/font-awesome.css?v={$mlite.version}" rel="stylesheet">
 <style>
 .navbar li.menu-icon {
@@ -120,11 +120,36 @@
     clear: both;
 }
 
-/* Fix submenu positioning in 2-column layout */
+/* Fix submenu positioning */
+.dropdown-submenu {
+    position: relative;
+}
+
 .dropdown-submenu > .dropdown-menu {
+    top: 0;
     left: 100%;
     margin-top: -6px;
     margin-left: -1px;
+    overflow: visible;
+}
+
+.dropdown-submenu:hover > .dropdown-menu {
+    display: block !important;
+}
+
+.dropdown-menu.scrollable-menu {
+    max-height: 75vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.dropdown-menu.scrollable-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dropdown-menu.scrollable-menu::-webkit-scrollbar-thumb {
+    background: #bbb;
+    border-radius: 3px;
 }
 
 /* Responsive adjustments */
@@ -335,7 +360,7 @@
                           <ul class="dropdown-menu">
                             <li class="dropdown-submenu">
                               <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">Form Wajib</a>
-                              <ul class="dropdown-menu">
+                              <ul class="dropdown-menu scrollable-menu">
                                 <li><a href="{?=url([ADMIN, 'update_bmt', 'ri01bmanage'])?}" class="dropdown-item">RM.RI 01B - HAK DAN KEWAJIBAN PASIEN</a></li>
                                 <li><a href="{?=url([ADMIN, 'update_bmt', 'ri02manage'])?}" class="dropdown-item">RM.RI 02 - RINGKASAN MASUK DAN KELUAR</a></li>
                                 <li><a href="{?=url([ADMIN, 'update_bmt', 'ri03manage'])?}" class="dropdown-item">RM.RI 03 - SERAH TERIMA PASIEN</a></li>
@@ -353,7 +378,7 @@
                             </li>
                             <li class="dropdown-submenu">
                               <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">Form Lampiran</a>
-                              <ul class="dropdown-menu">
+                              <ul class="dropdown-menu scrollable-menu">
                                 <li><a href="{?=url([ADMIN, 'update_bmt', 'amumanage'])?}" class="dropdown-item">LAMPIRAN - ASESMEN MEDIS UMUM IRNA</a></li>
                                 <li><a href="{?=url([ADMIN, 'update_bmt', 'cairaninfusmanage'])?}" class="dropdown-item">LAMPIRAN - CAIRAN INFUS</a></li>
                                 <li><a href="{?=url([ADMIN, 'update_bmt', 'formamppmanage'])?}" class="dropdown-item">LAMPIRAN - FORM A MANAJER PELAYANAN PASIEN</a></li>
@@ -367,6 +392,15 @@
                                 <li><a href="{?=url([ADMIN, 'update_bmt', 'stabilisasipasienmanage'])?}" class="dropdown-item">LAMPIRAN - FORMULIR STABILISASI PASIEN SEBELUM TRANSFER</a></li>
                                 <li><a href="{?=url([ADMIN, 'update_bmt', 'intervensinyerimanage'])?}" class="dropdown-item">LAMPIRAN - INTERVENSI DAN PENGKAJIAN ULANG NYERI</a></li>
                                 <li><a href="{?=url([ADMIN, 'update_bmt', 'secondopinionmanage'])?}" class="dropdown-item">LAMPIRAN - SURAT PERMINTAAN SECOND OPINION</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'penilaianphlebitismanage'])?}" class="dropdown-item">LAMPIRAN - PENILAIAN KEJADIAN PHLEIBITIS</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'pelayanankerohanianmanage'])?}" class="dropdown-item">LAMPIRAN - PERMINTAAN PELAYANAN KEROHANIAN</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'monitoringkateterurinmanage'])?}" class="dropdown-item">RML - MONITORING PASIEN KATETER URINE</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'konsultasiinternalmanage'])?}" class="dropdown-item">LAMPIRAN - KONSULTASI INTERNAL</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'monitoringpasienselamatransfermanage'])?}" class="dropdown-item">LAMPIRAN - MONITORING PASIEN SELAMA TRANSFER</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'penilaiandekubitusmanage'])?}" class="dropdown-item">LAMPIRAN - PENILAIAN DEKUBITUS</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'penilaianilomanage'])?}" class="dropdown-item">LAMPIRAN - PENILAIAN KEJADIAN INFEKSI LUKA OPERASI (ILO)</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'penilaianiskmanage'])?}" class="dropdown-item">LAMPIRAN - PENILAIAN KEJADIAN INFEKSI SALURAN KEMIH (ISK)</a></li>
+                                <li><a href="{?=url([ADMIN, 'update_bmt', 'bersediamenunggumanage'])?}" class="dropdown-item">LAMPIRAN - SURAT PERNYATAAN BERSEDIA MENUNGGU</a></li>
                               </ul>
                             </li>
                           </ul>

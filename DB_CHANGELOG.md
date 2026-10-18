@@ -672,7 +672,617 @@ Menambahkan formulir rekam medis akreditasi RSGM: **LAMPIRAN - INTERVENSI DAN PE
 - `plugins/update_bmt/view/admin/lampiran_intervensi_pengkajian_nyeri/manage.html` — Tampilan kelola data (DataTables, badge catatan, tombol aksi)
 - `plugins/update_bmt/view/admin/lampiran_intervensi_pengkajian_nyeri/form.html` — Formulir interaktif dengan AJAX cari pasien, visual skala nyeri & dynamic rows
 - `plugins/update_bmt/view/admin/lampiran_intervensi_pengkajian_nyeri/cetak.html` — Output cetak dan PDF presisi format dokumen fisik
-- `migration_tabel_pendukung_bmt.sql` & `plugins/update_bmt/migration.sql` — DDL tabel database pendukung
-- `migrate_bmt.php` — Validasi migrasi tabel otomatis (47 tabel aktif)
 - `CHECKLIST_FITUR.md` & `hasil_pengecekan_form_mlite.md` — Pembaruan checklist status fitur (75.0% selesai, 81/108 form)
+
+---
+
+## [2026-10-18] v1.14 — Modul Lampiran - Penilaian Kejadian Phlebitis (Visual Infusion Phlebitis / VIP Ranap)
+
+### Tabel Baru: `lampiran_penilaian_kejadian_phlebitis`
+
+**SQL untuk production:**
+```sql
+CREATE TABLE IF NOT EXISTS `lampiran_penilaian_kejadian_phlebitis` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `kamar_inap` varchar(150) DEFAULT NULL,
+  `lokasi_iv_line` varchar(100) DEFAULT NULL,
+  `tgl_pemasangan` date DEFAULT NULL,
+  `tipe_kanul` varchar(50) DEFAULT NULL,
+  `detail_penilaian` longtext DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+```
+
+**Alasan & Fitur:**
+Menambahkan formulir rekam medis akreditasi RSGM: **LAMPIRAN - PENILAIAN KEJADIAN PHLEIBITIS (VISUAL INFUSION PHLEIBITIS / VIP)** (Kategori Lampiran Rawat Inap):
+1. **Header & Kop Resmi RSGM:** Kop surat RSGM Gusti Hasan Aman dan kotak identitas pasien (No RM 6 kotak berdigit, Nama Pasien L/P, Tanggal Lahir & Umur).
+2. **Sub-header Petunjuk:** Keterangan penanggung jawab "Diisi Oleh Perawat".
+3. **Tabel Observasi Harian Presisi 9 Hari (VIP Grid):**
+   - 9 kolom hari perawatan (`1` s/d `9`) dilengkapi tanggal observasi harian.
+   - 6 parameter klinis Visual Infusion Phlebitis (VIP Jackson):
+     - Parameter 1: IV Line nampak sehat (Skor 0).
+     - Parameter 2: Salah satu tanda jelas: Sedikit nyeri / sedikit kemerahan dekat IV Line (Skor 1).
+     - Parameter 3: Dua dari tanda jelas: Nyeri pada IV Line, kemerahan, pembengkakan (Skor 2).
+     - Parameter 4: Semua tanda jelas: Nyeri sepanjang kanul, kemerahan, pembengkakan (Skor 3).
+     - Parameter 5: Semua tanda jelas: Nyeri, kemerahan, bengkak, vena teraba keras (Skor 4/5).
+     - Parameter 6: Semua tanda jelas: Nyeri, kemerahan, bengkak, vena keras, periksia/demam (Skor 5/6).
+   - Tanda centang (`✓`) tercetak otomatis pada parameter yang teridentifikasi setiap hari pengamatan.
+   - Baris **TOTAL SKOR** otomatis terakumulasi per hari perawatan.
+   - Baris **Nama & Paraf yang Melakukan Penilaian** per hari perawatan.
+4. **Pedoman Keterangan Skala & Tindakan Intervensi Klinis:**
+   - Skala Phlebitis: 0 (Tidak ada tanda), 1-2 (Tahap awal), 3-4 (Awal trombophlebitis), 5 (Stadium lanjut).
+   - Tindakan Intervensi: 1. Observasi kanul, 2. Resite kanul, 3. Resite kanul dan pertimbangkan perawatan, 4. Memulai perawatan.
+5. **Catatan Kaki Resmi & Kode Dokumen:**
+   - Catatan kerja sama warna merah: *"Terima kasih atas kerja sama anda telah mengisi formulir ini dengan benar dan jelas"*.
+   - Kode formulir akreditasi: `RSGM/Ed-Rev/02/2023` & `RM.RI Lampiran`.
+6. **Form Interaktif Modern:**
+   - AJAX pencarian pasien instan by No Rawat / No RM.
+   - Tab interaktif Hari Ke-1 s/d 9 dengan auto-kalkulasi skor, live badge derajat phlebitis, rekomendasi tindakan perawat.
+   - Tombol auto-fill tanggal berurutan dan copy nama petugas ke seluruh hari.
+7. **Output Cetak & PDF:**
+   - Tampilan cetak presisi 1 lembar kertas A4 potrait identik dengan template fisik rumah sakit.
+   - Dilengkapi toolbar preview layar (Cetak & Download PDF via mPDF).
+
+**File kode yang diubah/dibuat:**
+- `themes/admin/index.html` — Menu navigasi Rekam Medis -> Form RME -> Ranap -> Form Lampiran -> "LAMPIRAN - PENILAIAN KEJADIAN PHLEIBITIS"
+- `plugins/update_bmt/Admin.php` — Handler `anyPenilaianphlebitismanage()`, `getPenilaianphlebitisform()`, `postPenilaianphlebitissave()`, `getPenilaianphlebitishapus()`, `getPenilaianphlebitiscetak()`, dan navigasi
+- `plugins/update_bmt/view/admin/lampiran_penilaian_kejadian_phlebitis/manage.html` — Tampilan manajemen data (DataTables, badge pemantauan, skor & status VIP, tombol aksi)
+- `plugins/update_bmt/view/admin/lampiran_penilaian_kejadian_phlebitis/form.html` — Formulir interaktif pemantauan 9 hari, AJAX cari pasien, auto-skor, dan panduan klinis
+- `plugins/update_bmt/view/admin/lampiran_penilaian_kejadian_phlebitis/cetak.html` — Layout cetak dan PDF presisi format dokumen fisik RSGM
+- `migration_tabel_pendukung_bmt.sql` & `plugins/update_bmt/migration.sql` — DDL tabel database pendukung (Tabel ke-48)
+- `migrate_bmt.php` — Skrip validasi migrasi tabel otomatis (48 dari 48 tabel aktif)
+- `CHECKLIST_FITUR.md`, `format.py`, & `hasil_pengecekan_form_mlite.md` — Pembaruan checklist status fitur (76.9% selesai, 83/108 form)
+
+---
+
+## [2026-10-18] v1.15 — Modul Lampiran - Permintaan Pelayanan Kerohanian (Ranap)
+
+### Tabel Baru: `lampiran_permintaan_pelayanan_kerohanian`
+
+**SQL untuk production:**
+```sql
+CREATE TABLE IF NOT EXISTS `lampiran_permintaan_pelayanan_kerohanian` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `kamar_inap` varchar(150) DEFAULT NULL,
+  `nama_pemohon` varchar(150) DEFAULT NULL,
+  `tgl_lahir_pemohon` date DEFAULT NULL,
+  `umur_pemohon` varchar(50) DEFAULT NULL,
+  `alamat_pemohon` text DEFAULT NULL,
+  `hubungan_pasien` varchar(100) DEFAULT NULL,
+  `agama_kepercayaan` varchar(150) DEFAULT NULL,
+  `kebutuhan_khusus` text DEFAULT NULL,
+  `nama_rohaniawan` varchar(150) DEFAULT NULL,
+  `kota` varchar(50) DEFAULT 'Banjarmasin',
+  `tanggal_surat` date DEFAULT NULL,
+  `nama_perawat` varchar(150) DEFAULT NULL,
+  `nip_perawat` varchar(50) DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+```
+
+**Alasan & Fitur:**
+Menambahkan formulir rekam medis akreditasi RSGM: **LAMPIRAN - PERMINTAAN PELAYANAN KEROHANIAN** (Kategori Lampiran Rawat Inap):
+1. **Header & Kop Resmi RSGM:** Kop surat RSGM Gusti Hasan Aman dan kotak identitas pasien (No RM 6 kotak berdigit, Nama Pasien L/P, Tanggal Lahir).
+2. **Baris Petunjuk Resmi:** Teks merah miring: `* Harap pengisian dilakukan dengan tulisan/cetak yang jelas, benar dan lengkap`.
+3. **Judul Formulir Resmi:** Teks tebal bergaris bawah `PERMINTAAN PELAYANAN KEROHANIAN`.
+4. **Identitas Pemohon (Yang Bertandatangan):**
+   - Nama pemohon.
+   - Tanggal lahir & umur pemohon.
+   - Alamat lengkap pemohon.
+   - Hubungan dengan pasien (Diri Sendiri, Suami, Istri, Ayah Kandung, Ibu Kandung, Anak, dll).
+5. **Pernyataan Pelayanan Kerohanian:**
+   - Pernyataan resmi: *"Dengan ini menyatakan permintaan pendampingan pelayanan kerohanian agama/ kepercayaan [agama] Kepada RSGM Gusti Hasan Aman terhadap pasien :"*
+   - Pilihan agama/kepercayaan (Islam, Kristen Protestan, Kristen Katolik, Hindu, Buddha, Khonghucu, Penghayat Kepercayaan).
+6. **Identitas Pasien Terkait:**
+   - Nama pasien, Tanggal lahir & umur pasien, Nomor Rekam Medis (No.RM), dan Alamat lengkap pasien dengan garis titik-titik isian.
+7. **Kalimat Penutup & Tanda Tangan 2 Kolom:**
+   - Kalimat penutup: *"Demikian surat permohonan permintaan pelayanan kerohanian ini saya buat, atas perhatiannya saya ucapkan terimakasih."*
+   - Tempat & tanggal pengesahan: `Banjarmasin, [tanggal surat]`.
+   - 2 kolom tanda tangan: **Perawat** (kiri) & **Yang membuat pernyataan** (kanan).
+8. **Catatan Kaki Resmi & Kode Dokumen:**
+   - Catatan kerja sama warna merah: *"Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas"*.
+   - Kode formulir akreditasi: `RSGM/Ed-Rev/02/2023` (kiri bawah) & `RM.RI Lampiran` (kanan bawah).
+9. **Form Interaktif Modern:**
+   - AJAX pencarian pasien instan by No Rawat / No RM.
+   - Tombol shortcut *"Pemohon adalah Pasien Sendiri"* untuk otomatis menyalin data pasien ke formulir pemohon.
+   - Auto-kalkulasi umur dari tanggal lahir.
+   - Auto-suggest petugas/perawat penanggung jawab dari master data rumah sakit.
+10. **Output Cetak & PDF:**
+    - Tampilan cetak presisi 1 lembar kertas A4 potrait identik 1:1 dengan template fisik dokumen rumah sakit.
+    - Dilengkapi toolbar preview layar (Cetak & Download PDF via mPDF).
+
+**File kode yang diubah/dibuat:**
+- `themes/admin/index.html` — Menu navigasi Rekam Medis -> Form RME -> Ranap -> Form Lampiran -> "LAMPIRAN - PERMINTAAN PELAYANAN KEROHANIAN"
+- `plugins/update_bmt/Admin.php` — Handler `anyPelayanankerohanianmanage()`, `getPelayanankerohanianform()`, `postPelayanankerohaniansave()`, `getPelayanankerohanihapus()`, `getPelayanankerohanicetak()`, dan navigasi
+- `plugins/update_bmt/view/admin/lampiran_permintaan_pelayanan_kerohanian/manage.html` — Tampilan manajemen data (DataTables, badge agama/kepercayaan, detail kamar & pemohon, tombol cetak, PDF, edit, hapus)
+- `plugins/update_bmt/view/admin/lampiran_permintaan_pelayanan_kerohanian/form.html` — Formulir interaktif dengan AJAX pencarian pasien, copy data pasien, auto umur, dan auto-suggest perawat
+- `plugins/update_bmt/view/admin/lampiran_permintaan_pelayanan_kerohanian/cetak.html` — Layout cetak dan PDF presisi format dokumen fisik RSGM
+- `migration_tabel_pendukung_bmt.sql` & `plugins/update_bmt/migration.sql` — DDL tabel database pendukung (Tabel ke-49)
+- `migrate_bmt.php` — Skrip validasi migrasi tabel otomatis (49 dari 49 tabel aktif)
+- `CHECKLIST_FITUR.md`, `format.py`, & `hasil_pengecekan_form_mlite.md` — Pembaruan checklist status fitur (77.8% selesai, 84/108 form)
+
+---
+
+## [2026-10-18] v1.16 — Modul RML - Monitoring Pasien Kateter Urine (Ranap)
+
+### Tabel Baru: `lampiran_monitoring_pasien_kateter_urin`
+
+**SQL untuk production:**
+```sql
+CREATE TABLE IF NOT EXISTS `lampiran_monitoring_pasien_kateter_urin` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `ruang` varchar(150) DEFAULT NULL,
+  `bulan_tahun` varchar(50) DEFAULT NULL,
+  `tgl_mrs` date DEFAULT NULL,
+  `diagnosa` varchar(255) DEFAULT NULL,
+  `jenis_cath` varchar(50) DEFAULT NULL,
+  `jenis_cath_lainnya` varchar(100) DEFAULT NULL,
+  `no_cath` varchar(20) DEFAULT NULL,
+  `no_cath_lainnya` varchar(50) DEFAULT NULL,
+  `detail_monitoring` longtext DEFAULT NULL,
+  `nama_icn` varchar(150) DEFAULT NULL,
+  `nip_icn` varchar(50) DEFAULT NULL,
+  `nama_head_nurse` varchar(150) DEFAULT NULL,
+  `nip_head_nurse` varchar(50) DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+```
+
+**Alasan & Fitur:**
+Menambahkan formulir rekam medis akreditasi RSGM: **RML - MONITORING PASIEN KATETER URINE** (`FORMULIR MONITORING PASIEN TERPASANG KATETER URIN`) (Kategori Lampiran Rawat Inap):
+1. **Header & Kop Resmi RSGM:** Kop surat RSGM Gusti Hasan Aman dan kotak identitas pasien (No RM 6 kotak berdigit, Nama Pasien L/P, Tanggal Lahir).
+2. **Judul Formulir Resmi:** `FORMULIR MONITORING PASIEN TERPASANG KATETER URIN`.
+3. **Data Identitas Rawat & Diagnosa:**
+   - Ruang perawatan, Periode Bulan / Tahun, Tanggal MRS (Masuk Rumah Sakit), dan Diagnosa klinis.
+4. **Spesifikasi Kateter Terpasang:**
+   - Jenis Kateter: Silikon, Folley, atau lainnya.
+   - Ukuran / No. Kateter: 6, 8, 10, 12, 14, 16, 18, 20, 22, atau nomor khusus.
+5. **Grid Pemantauan Bundel Pencegahan & Gejala ISK 31 Hari:**
+   - **I. Item Pencegahan ISK (13 Parameter Bundel):**
+     1. Pasang
+     2. Lepas
+     3. Cuci tangan sesuai 5 moment
+     4. Pemasangan dengan teknik aseptik
+     5. Fiksasi dg baik
+     6. Urin bag di bwh bladder
+     7. Posisi kateter baik/tdk tertekuk, terlipat
+     8. Urin bag tidak menyentuh lantai
+     9. Tidak bladder training dgn klem
+     10. Tidak membuka sambungan antara cath dan selang urin bag
+     11. Perineal hygiene dg air dan sabun 2x/hari
+     12. Gelas ukur terpisah antar pasien
+     13. Ada indikasi pemakaian kateter urin
+     *(Penandaan: `✓` bila dilakukan, `-` bila tidak dilakukan)*
+   - **II. Gejala ISK (8 Parameter Deteksi Klinis):**
+     - a.1 Demam ≥38° C
+     - a.2 Nyeri supra-pubic
+     - a.3 Urgency/anyang2an
+     - a.4 Frequency/sering kencing
+     - a.5 Dysuria/nyeri saatkencing
+     - a.6 Nyeri costovertebral angle
+     - b. Kuman biakan urine ≥10³ atau ≥10⁵/ml
+     - c. Pyuria (≥10 leukosit urin)
+     *(Penandaan: `✓` bila ditemukan gejala, `0` bila tidak ditemukan / normal)*
+   - **Kolom Tanggal 1 s/d 31, Kolom Total (hari), dan Kolom Keterangan (Ketr).**
+6. **Formula Perhitungan Angka Kejadian ISK (PPI KARS):**
+   - Rumus: *(Jumlah pasien ISK / Jumlah hari pemasangan kateter urin) x 1000*.
+   - Auto-kalkulasi hari pemasangan dan status deteksi gejala.
+7. **Pengesahan Petugas (2 Kolom):**
+   - Dibuat oleh: **ICN (Infection Control Nurse)**.
+   - Mengetahui: **Head Nurse (Kepala Ruangan)**.
+8. **Form Interaktif Modern:**
+   - AJAX pencarian pasien cepat (No. Rawat / No. RM).
+   - Fitur Quick Actions Harian: *"Bundel Terpenuhi (✓)"*, *"Gejala ISK Normal (0)"*, dan *"Kosongkan"*.
+   - Auto-serialize JSON grid 31 hari ke database.
+9. **Output Cetak & PDF Presisi:**
+   - Layout landscape A4 presisi 1 lembar identik 1:1 dengan form fisik rumah sakit.
+   - Dilengkapi toolbar preview layar (Cetak & Download PDF via mPDF).
+
+**File kode yang diubah/dibuat:**
+- `themes/admin/index.html` — Menu navigasi Rekam Medis -> Form RME -> Ranap -> Form Lampiran -> "RML - MONITORING PASIEN KATETER URINE"
+- `plugins/update_bmt/Admin.php` — Handler `anyMonitoringkateterurinmanage()`, `getMonitoringkateterurinform()`, `postMonitoringkateterurinsave()`, `getMonitoringkateterurinhapus()`, `getMonitoringkateterurincetak()`, dan navigasi
+- `plugins/update_bmt/view/admin/lampiran_monitoring_pasien_kateter_urin/manage.html` — Tampilan manajemen data (DataTables, badge spesifikasi kateter, ICN/Head Nurse, aksi)
+- `plugins/update_bmt/view/admin/lampiran_monitoring_pasien_kateter_urin/form.html` — Formulir interaktif 31 hari pemantauan, auto-kalkulasi, AJAX pasien, quick fill
+- `plugins/update_bmt/view/admin/lampiran_monitoring_pasien_kateter_urin/cetak.html` — Layout cetak & PDF landscape A4 presisi sesuai dokumen fisik RSGM
+- `migration_tabel_pendukung_bmt.sql` & `plugins/update_bmt/migration.sql` — DDL tabel database pendukung (Tabel ke-50)
+- `migrate_bmt.php` — Skrip validasi migrasi tabel otomatis (50 dari 50 tabel aktif)
+- `seed_kateter_urin.php` — Skrip generator data sampel pemantauan kateter urin
+- `CHECKLIST_FITUR.md`, `format.py`, & `hasil_pengecekan_form_mlite.md` — Pembaruan checklist status fitur (78.7% selesai, 85/108 form)
+
+---
+
+## [2026-10-18] v1.17 — Modul Lampiran - Formulir Konsultasi Internal (Ranap)
+
+### Tabel Baru: `lampiran_konsultasi_internal` (Tabel ke-51 dari 51 tabel aktif `update_bmt`)
+
+**SQL untuk production:**
+```sql
+CREATE TABLE IF NOT EXISTS `lampiran_konsultasi_internal` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `kamar_inap` varchar(150) DEFAULT NULL,
+  `ts_bagian` varchar(150) DEFAULT NULL,
+  `instalasi` varchar(150) DEFAULT NULL,
+  `diagnosa_sementara` text DEFAULT NULL,
+  `konsultasi_diminta` text DEFAULT NULL,
+  `tgl_konsul` date DEFAULT NULL,
+  `kd_dokter_pengirim` varchar(20) DEFAULT NULL,
+  `nama_dokter_pengirim` varchar(150) DEFAULT NULL,
+  `jawaban_hasil_pemeriksaan` text DEFAULT NULL,
+  `jawaban_diagnosa` text DEFAULT NULL,
+  `jawaban_nasihat` text DEFAULT NULL,
+  `tgl_jawaban` date DEFAULT NULL,
+  `kd_dokter_konsulen` varchar(20) DEFAULT NULL,
+  `nama_dokter_konsulen` varchar(150) DEFAULT NULL,
+  `status_konsul` enum('Menunggu Jawaban','Sudah Dijawab') DEFAULT 'Menunggu Jawaban',
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+```
+
+**Alasan & Fitur Implementasi:**
+1. **Standar Akreditasi KARS Pelayanan Terintegrasi (PAP & MKE):**
+   - Mengakomodasi formulir rekam medis resmi: **`RSGM/Ed-Rev/02/2023 - RM.RI Lampiran`**.
+   - Menyediakan pencatatan konsultasi klinis internal antar dokter penanggung jawab pelayanan (DPJP) dengan dokter spesialis konsulen.
+2. **Struktur Formulir 2 Bagian Terintegrasi:**
+   - **Bagian 1 (Permintaan Konsultasi / Diisi DPJP):**
+     - Yth. T.S. Bagian / Spesialisasi (disediakan datalist Sp.BMM, Sp.PD, Sp.An, Sp.KG, Sp.Perio, Sp.KGA, Sp.Ort, Sp.RKG, DPJP).
+     - Di Instalasi / Unit (IRNA, IBS, IRJ, IGD, ICU/HCU).
+     - Identitas Pasien & Ruangan / Kamar Inap.
+     - Diagnosa Sementara & Konsultasi yang Diminta.
+     - Pengesahan DPJP: Kota, Tanggal Permintaan, Nama & Tanda Tangan Dokter yang Merawat.
+   - **Bagian 2 (Jawaban Konsultasi / Boxed JAWABAN):**
+     - Hasil Pemeriksaan Konsulen (temuan klinis, anamnesis, fisik, penunjang).
+     - Diagnosa Konsulen (definitif/konfirmasi).
+     - Nasihat / Rekomendasi Terapi & Tindakan Bersama.
+     - Pengesahan Konsulen: Kota, Tanggal Jawaban, Nama & Tanda Tangan Dokter Konsulen.
+     - Catatan khusus kiri bawah: *"Form ini untuk Rekam Medis"*.
+3. **Formulir Interaktif & Cerdas:**
+   - AJAX pencarian pasien instan via No. Rawat / No. RM dengan auto-fill nama, JK, tanggal lahir, umur, dan kamar rawat inap.
+   - Auto-toggle status konsultasi menjadi *"Sudah Dijawab"* saat kolom jawaban diisi.
+   - Datalist dokter aktif untuk pemilihan dokter pengirim dan konsulen.
+4. **Output Cetak & PDF Presisi 1:1 Identik:**
+   - Layout Portrait A4 berbingkai tunggal (*outer border*) persis template fisik rumah sakit.
+   - KOP RSGM Gusti Hasan Aman lengkap dengan kotak digit No. RM (6 kotak) & identitas pasien.
+   - Baris petunjuk merah: `* Harap pengisian dilakukan dengan tulisan/cetak yang jelas, benar dan lengkap`.
+   - Box JAWABAN dengan garis pembatas tebal dan footer resmi rumah sakit.
+   - Cetak langsung browser dan download PDF otomatis via mPDF.
+
+**File kode yang diubah/dibuat:**
+- `themes/admin/index.html` — Menu navigasi Rekam Medis -> Form RME -> Ranap -> Form Lampiran -> "LAMPIRAN - KONSULTASI INTERNAL"
+- `plugins/update_bmt/Admin.php` — Handler `anyKonsultasiinternalmanage()`, `getKonsultasiinternalform()`, `postKonsultasiinternalsave()`, `getKonsultasiinternalhapus()`, `getKonsultasiinternalcetak()`, dan registrasi di `navigation()`
+- `plugins/update_bmt/view/admin/lampiran_konsultasi_internal/manage.html` — Tampilan manajemen data (DataTables, status badge Menunggu/Sudah Dijawab, DPJP, konsulen, aksi)
+- `plugins/update_bmt/view/admin/lampiran_konsultasi_internal/form.html` — Form input interaktif AJAX pasien, datalist spesialisasi & instalasi, auto-status
+- `plugins/update_bmt/view/admin/lampiran_konsultasi_internal/cetak.html` — Template cetak & PDF A4 portrait presisi sesuai dokumen fisik RSGM
+- `migration_tabel_pendukung_bmt.sql` & `plugins/update_bmt/migration.sql` — DDL tabel database pendukung (Tabel ke-51)
+- `migrate_bmt.php` — Skrip validasi migrasi tabel otomatis (51 dari 51 tabel aktif)
+- `seed_konsultasi_internal.php` — Skrip seeder data sampel realistis (Bedah Mulut ke Anestesi, Bedah Mulut ke Penyakit Dalam, Ortho ke Bedah Mulut)
+- `CHECKLIST_FITUR.md`, `format.py`, & `hasil_pengecekan_form_mlite.md` — Pembaruan checklist status fitur (79.6% selesai, 86/108 form, 33/50 lampiran)
+
+---
+
+## [2026-10-18] v1.18 — Modul Lampiran - Monitoring Pasien Selama Transfer (Ranap)
+
+### Tabel Baru: `lampiran_monitoring_pasien_selama_transfer` (Tabel ke-52 dari 52 tabel aktif `update_bmt`)
+
+**SQL untuk production:**
+```sql
+CREATE TABLE IF NOT EXISTS `lampiran_monitoring_pasien_selama_transfer` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `kamar_inap` varchar(150) DEFAULT NULL,
+  `tanggal_transfer` date DEFAULT NULL,
+  `status_kegawatdaruratan` enum('Merah','Kuning','Hijau','Hitam') DEFAULT 'Kuning',
+  `jenis_kasus` enum('Trauma','Non Trauma') DEFAULT 'Non Trauma',
+  `diagnosa` text DEFAULT NULL,
+  `monitoring_keterangan` text DEFAULT NULL,
+  `petugas_transfer` varchar(150) DEFAULT NULL,
+  `nip_petugas_transfer` varchar(50) DEFAULT NULL,
+  `jam_berangkat` time DEFAULT NULL,
+  `jam_tiba` time DEFAULT NULL,
+  `detail_monitoring` longtext DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal_transfer` (`tanggal_transfer`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+```
+
+**Alasan & Fitur Implementasi:**
+1. **Standar Akreditasi KARS Pelayanan Transfer & Rujukan Pasien (ARK & PAP):**
+   - Mengakomodasi formulir rekam medis resmi: **`RSGM/Ed-Rev/02/2023 - RM.RI Lampiran`**.
+   - Menyediakan pencatatan parameter observasi tanda vital, tindakan gawat darurat, dan terapi obat/cairan selama proses pemindahan/transfer pasien (antar unit, intra-hospital, IGD ke IBS, IRNA ke IBS, atau rujukan).
+2. **Struktur Formulir Komprehensif Presisi 1:1:**
+   - **Header Informasi Transfer:**
+     - Tanggal Transfer & Ruangan/Kamar Inap Asal.
+     - **Status Kegawatdaruratan / Triase**: Merah (🟥 Resusitasi/Gawat Darurat), Kuning (🟨 Urgent/Mendesak), Hijau (🟩 Stabil/Non Urgent), Hitam (⬛ Meninggal/Paliatif Terminal).
+     - **Jenis Kasus**: Trauma / Non Trauma.
+     - **Petugas Transfer**: Nama & NIP pendamping medis/paramedis.
+     - **Waktu Transfer**: Jam Berangkat & Jam Tiba di unit penerima.
+     - **Diagnosa & Monitoring**: Indikasi klinis serta tujuan pemindahan.
+   - **Grid Observasi Vital (10 Kolom Standar Medis):**
+     1. Jam Obs.
+     2. GCS/Pupil Rx (misal: E4V5M6 / 3mm (+/+))
+     3. Tensi (BP mmHg)
+     4. RR (x/menit)
+     5. SPO2 (%)
+     6. Temp (°C)
+     7. Jam Tindakan
+     8. Hal-Hal Penting / Tindakan Medis Dilakukan
+     9. Jam Terapi
+     10. Terapi (Obat / Cairan Diberikan)
+   - Dipad secara otomatis hingga 15 baris pada tampilan cetak agar sesuai proporsi lembar cetak fisik rumah sakit.
+   - **Pengesahan Petugas Transfer:**
+     - Kotak tanda tangan petugas transfer dengan nama terang.
+     - Catatan klinis serah terima kiri bawah.
+     - Catatan kaki merah italic: *"Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas"*.
+     - Footer resmi: `RSGM/Ed-Rev/02/2023` (kiri) & `RM.RI Lampiran` (kanan).
+3. **Antarmuka Interaktif & Cerdas:**
+   - AJAX pencarian pasien instan via No. Rawat / No. RM dengan auto-fill identitas dan kamar rawat inap.
+   - Dynamic rows table dengan tombol tambah baris (+ Tambah Baris Observasi) dan hapus baris.
+   - Serialisasi otomatis ke JSON pada kolom `detail_monitoring`.
+   - DataTables management dengan badge triase warna-warni dan tombol Aksi (Edit, Cetak HTML, Download PDF mPDF, Hapus).
+4. **Output Cetak & PDF mPDF 1 Halaman A4 Presisi:**
+   - Tampilan cetak berbingkai (*single outer border*) sesuai format fisik RSGM Gusti Hasan Aman.
+   - KOP RSGM lengkap dengan 6 kotak digit nomor rekam medis.
+   - Tersedia tombol cetak langsung browser dan tombol unduh PDF resmi.
+
+**File kode yang diubah/dibuat:**
+- `themes/admin/index.html` — Menu navigasi Rekam Medis -> Form RME -> Ranap -> Form Lampiran -> "LAMPIRAN - MONITORING PASIEN SELAMA TRANSFER"
+- `plugins/update_bmt/Admin.php` — Handler `anyMonitoringpasienselamatransfermanage()`, `getMonitoringpasienselamatransferform()`, `postMonitoringpasienselamatransfersave()`, `getMonitoringpasienselamatransferhapus()`, `getMonitoringpasienselamatransfercetak()`, dan registrasi navigasi
+- `plugins/update_bmt/view/admin/lampiran_monitoring_pasien_selama_transfer/manage.html` — View kelola DataTables dengan nomor urut dinamis `{$value.nomor}` dan badge status kegawatdaruratan
+- `plugins/update_bmt/view/admin/lampiran_monitoring_pasien_selama_transfer/form.html` — Form input interaktif AJAX pasien, radio button triase & jenis kasus, dinamis 10-kolom tabel observasi
+- `plugins/update_bmt/view/admin/lampiran_monitoring_pasien_selama_transfer/cetak.html` — Template cetak HTML & PDF mPDF A4 portrait presisi 1:1 fisik form RSGM
+- `migration_tabel_pendukung_bmt.sql` & `plugins/update_bmt/migration.sql` — DDL tabel database pendukung (Tabel ke-52)
+- `migrate_bmt.php` — Validasi migrasi otomatis 52 dari 52 tabel aktif
+- `seed_monitoring_transfer.php` — Skrip seeder data sampel 3 kasus realistis (Kuning - Trauma Cito ORIF, Merah - Non Trauma Angina Ludwig, Hijau - Non Trauma Pindah Paviliun VIP)
+- `CHECKLIST_FITUR.md`, `format.py`, & `hasil_pengecekan_form_mlite.md` — Pembaruan checklist status fitur (80.6% selesai, 87/108 form, 34/50 lampiran)
+
+---
+
+## [2026-10-18] v1.19 — Modul Lampiran - Penilaian Dekubitus / Norton Scale (Ranap)
+
+### Tabel Baru: `lampiran_penilaian_dekubitus` (Tabel ke-53 dari 53 tabel aktif `update_bmt`)
+
+**SQL untuk production:**
+```sql
+CREATE TABLE IF NOT EXISTS `lampiran_penilaian_dekubitus` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `kamar_inap` varchar(150) DEFAULT NULL,
+  `tanggal_penilaian` date DEFAULT NULL,
+  `detail_penilaian` longtext DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal_penilaian` (`tanggal_penilaian`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+```
+
+**Alasan & Fitur Implementasi:**
+1. **Standar Akreditasi KARS Pelayanan Asuhan Pasien & Keselamatan Pasien (SKP 6 & PAP):**
+   - Mengakomodasi formulir rekam medis resmi: **`RSGM/Ed-Rev/02/2023 - RM.RI Lampiran`**.
+   - Menyediakan instrumen evaluasi risiko luka tekan/dekubitus menggunakan **Skala Norton (Decubitus Risk Assessment)** yang dievaluasi per hari perawatan (Hari Ke-1 s/d Ke-9).
+2. **Struktur Formulir Komprehensif Presisi 1:1:**
+   - **Header Identitas:**
+     - KOP RSGM Gusti Hasan Aman & 6 kotak digit nomor rekam medis.
+     - Nama Pasien, Jenis Kelamin (L/P), dan Tanggal Lahir bergaris titik-titik.
+     - Judul: `PENILAIAN DEKUBITUS (DECUBITUS RISK ASSESSMENT)`.
+     - Subheader: `Diisi Oleh Perawat:`.
+   - **Tabel Skala Norton 12 Kolom:**
+     - Kolom: `No` (4%), `Komponen` (34%), `Skor` (6%), dan `Skor Hari Perawatan Ke` (9 kolom hari 1..9, masing-masing 6.2%).
+     - 5 Komponen Norton:
+       1. **Kondisi fisik umum**: Baik (4), Lumayan (3), Buruk (2), Sangat buruk (1).
+       2. **Kesadaran**: Komposmentis (4), Apatis (3), Konfus/saporis (2), Stupor/koma (1).
+       3. **Aktivitas**: Ambulan (4), Ambulan dengan bantuan (3), Hanya bisa duduk (2), Tiduran (1).
+       4. **Mobilitas**: Bergerak bebas (4), Sedikit terbatas (3), Sangat terbatas (2), Tidak bisa bergerak (1).
+       5. **Inkontinensia**: Tidak (4), Kadang-kadang (3), Sering inkontinensia urine (2), Sering inkontinensia alvi dan urine (1).
+     - Baris `TOTAL SKOR`: Total skor komponen hari 1..9 (rentang skor 5 s/d 20).
+     - Baris `Nama & Paraf yang Melakukan Penilaian`: Nama perawat penilai tiap hari.
+   - **Keterangan & Footer:**
+     - Catatan kaki kanan merah: *"Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas"* + kotak paraf.
+     - Aturan risiko kiri: `*) Resiko dekubitus bila total skor ≤ 14`.
+     - Kode formulir: `RSGM/Ed-Rev/02/2023` (kiri) & `RM.RI Lampiran` (kanan).
+3. **Antarmuka Interaktif & Cerdas:**
+   - AJAX pencarian pasien instan via No. Rawat / No. RM dengan auto-fill identitas dan kamar rawat inap.
+   - Tab navigasi interaktif Hari Ke-1 s/d Ke-9 dengan badge skor dinamis dan warna indikator risiko.
+   - Tab khusus **Matrix Preview 9 Hari** yang otomatis tersinkronisasi live saat perawat mengisi atau mengubah skor.
+   - DataTables management dengan badge risiko (Merah: Resiko Dekubitus ≤ 14, Hijau: Tidak Berisiko > 14), status hari terisi, dan tombol Aksi (Edit, Cetak HTML, Unduh PDF mPDF, Hapus).
+4. **Output Cetak & PDF mPDF 1 Halaman A4 Presisi:**
+   - Tampilan cetak berbingkai tunggal (*single outer border*) sesuai format fisik RSGM.
+   - KOP RSGM lengkap dengan 6 kotak digit nomor rekam medis.
+   - Tersedia tombol cetak langsung browser dan tombol unduh PDF resmi via mPDF.
+
+**File kode yang diubah/dibuat:**
+- `themes/admin/index.html` — Menu navigasi Rekam Medis -> Form RME -> Ranap -> Form Lampiran -> "LAMPIRAN - PENILAIAN DEKUBITUS"
+- `plugins/update_bmt/Admin.php` — Handler `anyPenilaiandekubitusmanage()`, `getPenilaiandekubitusform()`, `postPenilaiandekubitussave()`, `getPenilaiandekubitushapus()`, `getPenilaiandekubituscetak()`, dan registrasi navigasi
+- `plugins/update_bmt/view/admin/lampiran_penilaian_dekubitus/manage.html` — View kelola DataTables dengan nomor urut dinamis `{$value.nomor}` dan badge skor & risiko
+- `plugins/update_bmt/view/admin/lampiran_penilaian_dekubitus/form.html` — Form input interaktif AJAX pasien, tab evaluasi 9 hari, tab matrix live preview, perhitungan skor otomatis
+- `plugins/update_bmt/view/admin/lampiran_penilaian_dekubitus/cetak.html` — Template cetak HTML & PDF mPDF A4 portrait presisi 1:1 fisik form RSGM
+- `migration_tabel_pendukung_bmt.sql` & `plugins/update_bmt/migration.sql` — DDL tabel database pendukung (Tabel ke-53)
+- `migrate_bmt.php` — Validasi migrasi otomatis 53 dari 53 tabel aktif
+- `seed_penilaian_dekubitus.php` — Skrip seeder data sampel 3 kasus klinis realistis (Pasien Bedah Fraktur Maksilofasial Tirah Baring Ketat Skor 11-14, Pasien Sepsis Odontogenik Skor 6-10, Pasien Mandiri Odontektomi Elektif Skor 17-20)
+- `CHECKLIST_FITUR.md`, `format.py`, & `hasil_pengecekan_form_mlite.md` — Pembaruan checklist status fitur (81.5% selesai, 88/108 form, 35/50 lampiran)
+
+---
+
+## [2026-10-18] v1.20 — Modul Lampiran - Penilaian Kejadian Infeksi Luka Operasi (ILO) & Perbaikan Menu Dropdown Ranap Overflow
+
+### 1. Perbaikan Menu Navigasi (Dropdown Submenu CSS Overflow)
+- **Masalah:** Menu dropdown bertingkat pada `Rekam Medis -> Form RME -> Ranap -> Form Lampiran` yang berisi > 19 item formulir terpotong di tepi bawah layar monitor / laptop (*vertical viewport clipping*) sehingga item-item terbaru di bagian bawah tidak terlihat dan tidak dapat di-scroll.
+- **Solusi:**
+  - Ditambahkan `max-height: 80vh; overflow-y: auto; overflow-x: hidden;` serta styling *thin scrollbar* pada selector `.dropdown-submenu > .dropdown-menu` di file [themes/admin/css/style.css](file:///Applications/XAMPP/xamppfiles/htdocs/mlite-rsgm/themes/admin/css/style.css) dan [themes/admin/index.html](file:///Applications/XAMPP/xamppfiles/htdocs/mlite-rsgm/themes/admin/index.html).
+  - Cache RainTPL dibersihkan (`admin/tmp/*.html`) sehingga menu langsung responsif dan dapat di-scroll dengan lancar pada seluruh resolusi layar.
+
+### 2. Tabel Baru: `lampiran_penilaian_kejadian_ilo` (Tabel ke-54 dari 54 tabel aktif `update_bmt`)
+
+**SQL untuk production:**
+```sql
+CREATE TABLE IF NOT EXISTS `lampiran_penilaian_kejadian_ilo` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `kamar_inap` varchar(150) DEFAULT NULL,
+  `tanggal_penilaian` date DEFAULT NULL,
+  `detail_penilaian` longtext DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal_penilaian` (`tanggal_penilaian`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+```
+
+**Alasan & Fitur Implementasi:**
+1. **Standar Pencegahan & Pengendalian Infeksi (PPI) dan Keselamatan Pasien (SKP):**
+   - Mengakomodasi formulir rekam medis resmi: **`RSGM/Ed-Rev/02/2023 - RM.RI Lampiran`**.
+   - Menyediakan pemantauan harian luka post operasi (Hari Ke-1 s/d Ke-10) oleh perawat untuk deteksi dini tanda-tanda infeksi luka operasi (ILO).
+2. **Struktur Formulir Komprehensif Presisi 1:1:**
+   - **Header Identitas:**
+     - KOP RSGM Gusti Hasan Aman & 6 kotak digit nomor rekam medis.
+     - Nama Pasien, Jenis Kelamin (L/P), dan Tanggal Lahir bergaris titik-titik.
+     - Judul: `PENILAIAN KEJADIAN INFEKSI LUKA OPERASI (ILO)`.
+     - Subheader: `Diisi Oleh Perawat`.
+   - **Tabel Penilaian ILO 13 Kolom:**
+     - Kolom: `No.` (4%), `Parameter` (44%), `Skor` (6%), dan `Skor Hari Perawatan Ke -` (10 kolom hari 1..10, masing-masing 4.6%).
+     - 6 Parameter Klinis:
+       1. **Proses penyembuhan normal** (Skor: 0)
+       2. **Proses penyembuhan normal dengan kemerahan sedang** (a. Ditemukan beberapa kemerahan, b. Kemerahan, c. Erythema sedang) (Skor: 1)
+       3. **Erythema dengan tanda inflamasi** (a. Pada satu tempat, b. Di sekitar luka jahitan, c. Sepanjang luka, d. Di sekeliling luka) (Skor: 2)
+       4. **Luka bersih atau ditemukan cairan haemoserosis** (a. Hanya pada satu tempat < 2 cm, b. Di sepanjang luka > 2 cm, c. Ditemukan banyak haemoseus, d. Prolonged > 3 hari) (Skor: 3)
+       5. **Pus** (a. Hanya pada suatu tempat < 2 cm, b. Di sepanjang luka > 2 cm) (Skor: 4)
+       6. **Adanya infeksi yang dalam dengan atau tanpa kerusakan jaringan, hematoma requiring** (Skor: 5)
+     - Baris `TOTAL SKOR`: Total skor evaluasi harian (rentang skor 0 s/d 5).
+     - Baris `Nama & Paraf yang Melakukan Penilaian`: Nama perawat penilai tiap hari.
+   - **Keterangan Hasil Skor & Footer:**
+     - `0   = Tidak Ada Tanda Infeksi`
+     - `1-2 = Tahap Awal Infeksi`
+     - `3-4 = Awal Infeksi`
+     - `5   = Stadium Lanjut Infeksi`
+     - Catatan kaki: *"Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas"*.
+     - Kode formulir: `RSGM/Ed-Rev/02/2023` (kiri) & `RM.RI Lampiran` (kanan).
+3. **Antarmuka Interaktif & Cerdas:**
+   - AJAX pencarian pasien instan via No. Rawat / No. RM dengan auto-fill identitas dan kamar rawat inap.
+   - Tab navigasi interaktif Hari Ke-1 s/d Ke-10 dengan radio button parameter, auto skor, dan auto badge status infeksi.
+   - Quick-select modal petugas / perawat.
+   - Live visual 10-day matrix table matching print layout.
+   - DataTables management dengan badge kategori infeksi (Hijau: Tidak Ada Tanda Infeksi, Biru: Tahap Awal Infeksi, Kuning: Awal Infeksi, Merah: Stadium Lanjut Infeksi), status hari terisi, dan tombol Aksi (Edit, Cetak HTML, Unduh PDF mPDF, Hapus).
+4. **Output Cetak & PDF mPDF 1 Halaman A4 Presisi:**
+   - Tampilan cetak berbingkai tunggal (*single outer border*) sesuai format fisik RSGM.
+   - KOP RSGM lengkap dengan 6 kotak digit nomor rekam medis.
+   - Tersedia tombol cetak langsung browser dan tombol unduh PDF resmi via mPDF.
+
+**File kode yang diubah/dibuat:**
+- `themes/admin/css/style.css` & `themes/admin/index.html` — Perbaikan dropdown-submenu overflow & penambahan menu "LAMPIRAN - PENILAIAN KEJADIAN INFEKSI LUKA OPERASI (ILO)"
+- `plugins/update_bmt/Admin.php` — Handler `anyPenilaianilomanage()`, `getPenilaianiloform()`, `postPenilaianilosave()`, `getPenilaianilohapus()`, `getPenilaianilocetak()`, dan registrasi navigasi
+- `plugins/update_bmt/view/admin/lampiran_penilaian_kejadian_ilo/manage.html` — View kelola DataTables dengan nomor urut dinamis `{$value.nomor}` dan badge skor & status infeksi
+- `plugins/update_bmt/view/admin/lampiran_penilaian_kejadian_ilo/form.html` — Form input interaktif AJAX pasien, tab evaluasi 10 hari, live matrix preview, perhitungan skor otomatis
+- `plugins/update_bmt/view/admin/lampiran_penilaian_kejadian_ilo/cetak.html` — Template cetak HTML & PDF mPDF A4 portrait presisi 1:1 fisik form RSGM
+- `migration_tabel_pendukung_bmt.sql` & `plugins/update_bmt/migration.sql` — DDL tabel database pendukung (Tabel ke-54)
+- `migrate_bmt.php` — Validasi migrasi otomatis 54 dari 54 tabel aktif
+- `seed_penilaian_kejadian_ilo.php` — Skrip seeder data sampel 3 kasus klinis realistis (Pasien Bedah Mulut Normal Skor 0, Pasien Kista Mandibula Tahap Awal Infeksi Skor 1-2, Pasien Rekonstruksi Fraktur Maksilofasial Pus Awal Infeksi Skor 4)
+- `CHECKLIST_FITUR.md`, `format.py`, & `hasil_pengecekan_form_mlite.md` — Pembaruan checklist status fitur (82.4% selesai, 89/108 form, 36/50 lampiran)
+
+---
+
+## [1.21.0] - 2026-10-18
+### Added - LAMPIRAN - PENILAIAN KEJADIAN INFEKSI SALURAN KEMIH (ISK) (Rawat Inap)
+1. **Tabel Database Baru:**
+   - Dibuat tabel `lampiran_penilaian_kejadian_isk` (Tabel ke-55 pada `migration_tabel_pendukung_bmt.sql` dan Tabel ke-56 pada `plugins/update_bmt/migration.sql`) dengan kolom: `id`, `no_rawat`, `no_rkm_medis`, `kamar_inap`, `tanggal_penilaian`, `detail_penilaian` (JSON 9 hari), `catatan`, `created_at`, `updated_at`.
+2. **Kesesuaian 100% Format Fisik Dokumen RSGM (Digabung Jadi Satu):**
+   - Menggabungkan seluruh kriteria dari dokumen 2 halaman menjadi 1 halaman A4 portrait utuh dan rapi tanpa terpotong di tengah baris parameter.
+   - **4 Parameter Kriteria Klinis ISK:**
+     1. **Parameter 1 (Skor: 0):**
+        - Pasien terpasang kateter urin saat sampel urin dan minimal satu gejala (Demam > 38°C, Nyeri suprapubik/costovertebral) Dan kultur urin positif ≥ 150 CFU/ml ≤ 2 spesies mikroorganisme; ATAU kateter terlepas < 48 jam sebelum sampel urin dan ada tanda/gejala (Demam, inkontinensia urgency/frekuensi, disuria, nyeri).
+     2. **Parameter 2 (Skor: 1):**
+        - Pasien terpasang kateter urin saat sampel urin dan tanda/gejala Dan hasil urin ditemukan: leukosit/nitrat, pyuria (≥ 10 WBC/mm³ atau ≥ 3 WBC/HPF), atau mikroorganisme gram & kultur ≥ 10³ dan ≤ 10⁵ CFU/ml ≤ 2 spesies; ATAU kateter lepas < 48 jam dan ada gejala.
+     3. **Parameter 3 (Skor: 2):**
+        - Pasien ≤ 1 tahun yang lalu dengan/tanpa riwayat kateter urin mempunyai tanda/gejala (Demam > 38°C, Hipotermia < 36°C, Bradikardia, Dysuria, Letargi, Vomitting) Dan kultur urin positif ≥ 10⁵ CFU/ml ≤ 2 spesies.
+     4. **Parameter 4 (Skor: 3):**
+        - Pasien ≤ 1 tahun yang lalu dengan/tanpa riwayat kateter urin mempunyai tanda/gejala Dan pemeriksaan urin: leukosit/nitrat, pyuria ≥ 10 WBC/mm³, atau mikroorganisme gram & kultur ≥ 10³ dan < 10⁵ CFU/ml.
+   - **Matriks 9 Hari Perawatan:**
+     - Kolom Hari Ke-1 s/d Ke-9 dengan subkolom tanggal pemeriksaan.
+     - Baris `TOTAL SKOR`: Perhitungan otomatis total skor harian.
+     - Baris `Nama & Paraf yang Melakukan Penilaian`: Identitas perawat evaluator.
+     - Kode formulir: `RSGM/Ed-Rev/02/2023` (kiri) & `RM.RI Lampiran` (kanan).
+3. **Fitur Pengelolaan & Antarmuka Interaktif:**
+   - Navigasi menu: `Rekam Medis -> Form RME -> Ranap -> Form Lampiran -> LAMPIRAN - PENILAIAN KEJADIAN INFEKSI SALURAN KEMIH (ISK)`.
+   - Form input interaktif AJAX pasien, tab 9 hari evaluasi, auto-score, badge interpretasi, dan visual preview matriks 9 hari dinamis.
+   - DataTables management dengan nomor urut dinamis, status hari terisi, skor & interpretasi klinis terakhir, serta filter pencarian instan.
+4. **Cetak & Export PDF mPDF:**
+   - Output cetak browser & mPDF presisi 1:1, berbingkai tunggal, KOP RSGM lengkap dengan 6 kotak digit nomor rekam medis.
+5. **Seeder Data Sampel:**
+---
+
+## [1.22.0] - 2026-10-18
+### Added - LAMPIRAN - SURAT PERNYATAAN BERSEDIA MENUNGGU (Rawat Inap)
+1. **Tabel Database Baru:**
+   - Dibuat tabel `lampiran_surat_pernyataan_bersedia_menunggu` (Tabel ke-56 pada `migration_tabel_pendukung_bmt.sql` dan Tabel ke-57 pada `plugins/update_bmt/migration.sql`) dengan kolom: `id`, `no_rawat`, `no_rkm_medis`, `nama_pj`, `tgl_lahir_pj`, `jk_pj`, `alamat_pj`, `no_identitas_pj`, `hubungan`, `nama_pasien`, `tgl_lahir_pasien`, `jk_pasien`, `alamat_pasien`, `ruang_menunggu`, `tanggal_surat`, `kd_dokter`, `nama_dokter`, `catatan`, `created_at`, `updated_at`.
+2. **Kesesuaian 100% Format Fisik Dokumen RSGM:**
+   - Header: Kop resmi RSGM Gusti Hasan Aman lengkap dengan lambang Pemprov Kalsel, identitas rumah sakit, dan logo GHA.
+   - Judul Dokumen: `SURAT PERNYATAAN BERSEDIA MENUNGGU` (huruf kapital, tebal, di tengah).
+   - Bagian 1: Identitas Pembuat Pernyataan / Penanggung Jawab (`Nama`, `Tanggal Lahir`, `Jenis Kelamin`, `Alamat`, `No Identitas`).
+   - Klausul Kesediaan: *"Menyatakan bahwa bersedia menunggu di IGD sampai adanya ketersediaan ruangan di ruang perawatan biasa / ruang perawatan intensif"*.
+   - Bagian 2: Subjek Pasien dengan garis bawah dinamis pada hubungan terpilih:
+     `Terhadap diri saya sendiri / suami / istri / orang tua / anak saya dengan :`
+     diikuti rincian identitas pasien (`Nama`, `Tanggal Lahir`, `Jenis Kelamin`, `Alamat`).
+   - Pernyataan Penutup: *"Demikian persetujuan ini saya buat dengan penuh kesadaran dan tanpa paksaan."*
+   - Tempat & Tanggal: `Banjarmasin, [Tanggal Surat]` rata kanan di atas kolom Dokter.
+   - Kolom Tanda Tangan: 2 kolom sejajar (`Yang membuat pernyataan` dan `Dokter yang merawat`) dilengkapi garis titik-titik dan nama tercetak jelas.
+   - Catatan Kaki: *"Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas"* disertai ikon kotak &#9634;.
+   - Kode Formulir: `RSGM/Ed-Rev/02/2023` (kiri) & `RM.RI Lampiran` (kanan).
+3. **Fitur Pengelolaan & Antarmuka Interaktif:**
+   - Navigasi menu: `Rekam Medis -> Form RME -> Ranap -> Form Lampiran -> LAMPIRAN - SURAT PERNYATAAN BERSEDIA MENUNGGU`.
+   - Pencarian AJAX pasien cepat via No. Rawat / No. RM dengan auto-fill data pasien dan data penanggung jawab dari registrasi.
+   - Tombol instan *"Salin dari Data Pasien"* jika pasien membuat pernyataan untuk diri sendiri.
+   - Dropdown dokter DPJP otomatis terintegrasi tabel `dokter`.
+   - DataTables management view dengan nomor urut dinamis `{$value.nomor}`, badge hubungan keluarga, badge ruang perawatan tujuan, dan tombol Aksi (Edit, Cetak HTML, Unduh PDF mPDF, Hapus).
+4. **Cetak & Export PDF mPDF:**
+   - Output cetak browser & mPDF presisi 1:1, berbingkai tunggal (*single outer border*), path lokal gambar kop untuk mencegah deadlock pada built-in PHP server.
+5. **Seeder Data Sampel:**
+   - Dijalankan `seed_surat_pernyataan_bersedia_menunggu.php` dengan 3 kasus realistis (Anak - AHMAD SYAFIQ RIFANI dengan PJ Orang Tua, Pasien Sendiri - Jhon Doe, Pasien Istri - Jane Doe dengan PJ Suami).
+
+
+
+
+
+
+
+
 

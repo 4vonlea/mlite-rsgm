@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Penilaian Dekubitus - {$data.no_rawat}</title>
+    <style>
+        {if: empty($is_mpdf)}
+        @page {
+            size: A4 portrait;
+            margin: 6mm 10mm 6mm 10mm;
+        }
+        {/if}
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8pt;
+            line-height: 1.25;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
+            background-color: #f4f6f9;
+            padding: 15px 0;
+        }
+        .page {
+            background: #fff;
+            width: 195mm;
+            min-height: 278mm;
+            margin: 0 auto;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        {/if}
+
+        /* Toolbar Layar Browser */
+        .no-print-toolbar {
+            width: 195mm;
+            margin: 0 auto 12px auto;
+            padding: 8px 14px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+            border-collapse: collapse;
+        }
+        .btn-toolbar {
+            padding: 5px 12px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+
+        /* BINGKAI UTAMA */
+        .outer-border {
+            border: 1.5px solid #000;
+            width: 100%;
+        }
+
+        /* KOP HEADER DUA KOLOM */
+        .kop-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1.5px solid #000;
+        }
+        .kop-left {
+            width: 58%;
+            border-right: 1.5px solid #000;
+            padding: 4px 6px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .kop-left img {
+            width: 100%;
+            max-height: 60px;
+            object-fit: contain;
+        }
+        .kop-right {
+            width: 42%;
+            padding: 4px 8px;
+            font-size: 7.5pt;
+            vertical-align: top;
+        }
+
+        /* KOTAK DIGIT NOMOR RM */
+        .rm-box-table {
+            border-collapse: collapse;
+        }
+        .rm-digit-cell {
+            border: 1px solid #000;
+            width: 14px;
+            height: 16px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 8.5pt;
+            vertical-align: middle;
+        }
+
+        /* GARIS TITIK-TITIK */
+        .dot-line {
+            border-bottom: 1px dotted #000;
+            min-height: 14px;
+        }
+
+        /* JUDUL FORMULIR */
+        .title-bar {
+            text-align: center;
+            font-weight: bold;
+            padding: 5px 0 4px 0;
+            border-bottom: 1.5px solid #000;
+        }
+        .title-main {
+            font-size: 10.5pt;
+            letter-spacing: 0.5px;
+        }
+        .title-sub {
+            font-size: 9pt;
+            font-style: italic;
+            font-weight: normal;
+        }
+
+        /* SUBHEADER DIISI OLEH PERAWAT */
+        .sub-header-perawat {
+            font-size: 7.5pt;
+            font-weight: bold;
+            padding: 4px 6px;
+            border-bottom: 1.5px solid #000;
+            background-color: #fff;
+        }
+
+        /* TABEL NORTON SCALE */
+        .norton-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .norton-table th, .norton-table td {
+            border: 1px solid #000;
+            font-size: 7.5pt;
+        }
+        .norton-table th {
+            text-align: center;
+            font-weight: bold;
+            vertical-align: middle;
+            padding: 3px 2px;
+            background-color: #fff;
+        }
+        .col-day-header {
+            text-align: center;
+            font-size: 7pt;
+            font-weight: bold;
+            padding: 2px 1px;
+            width: 6.2%;
+            line-height: 1.15;
+        }
+        .komponen-cell {
+            padding: 5px 6px;
+            vertical-align: top;
+            line-height: 1.35;
+        }
+        .komponen-title {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        .skor-ref-cell {
+            text-align: center;
+            vertical-align: top;
+            padding: 5px 2px;
+            line-height: 1.35;
+            font-weight: normal;
+        }
+        .score-val-cell {
+            text-align: center;
+            vertical-align: middle;
+            font-size: 10pt;
+            font-weight: bold;
+            padding: 2px 1px;
+        }
+        .total-row td {
+            font-weight: bold;
+            padding: 5px 6px;
+            font-size: 8pt;
+            vertical-align: middle;
+        }
+        .total-val-cell {
+            text-align: center;
+            vertical-align: middle;
+            font-size: 9.5pt;
+            font-weight: bold;
+            padding: 2px 1px;
+        }
+        .perawat-row td {
+            font-weight: bold;
+            padding: 5px 6px;
+            font-size: 7.5pt;
+            vertical-align: middle;
+        }
+        .perawat-val-cell {
+            text-align: center;
+            vertical-align: middle;
+            font-size: 6.5pt;
+            font-weight: normal;
+            line-height: 1.1;
+            padding: 3px 1px;
+            word-break: break-word;
+        }
+
+        /* CATATAN DI BAWAH TABEL */
+        .footer-note-row {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 3px;
+        }
+        .footer-note-red {
+            font-style: italic;
+            font-size: 7pt;
+            color: #c0392b;
+            text-align: right;
+            padding-right: 2px;
+            vertical-align: middle;
+        }
+        .checkbox-square {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border: 1px solid #777;
+            vertical-align: middle;
+            margin-left: 4px;
+        }
+        .risk-rule-note {
+            font-size: 7.5pt;
+            font-weight: bold;
+            color: #000;
+            margin-top: 25px;
+            margin-left: 2px;
+        }
+
+        /* FOOTER KODE RESMI */
+        .footer-meta {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7pt;
+            font-weight: bold;
+            margin-top: 35px;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .no-print, .no-print-toolbar {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body {if: empty($is_mpdf)}onload="if(window.location.search.indexOf('noprint=1')===-1)window.print()"{/if}>
+
+    {if: empty($is_mpdf)}
+    <!-- Toolbar Layar (Otomatis hilang saat dicetak) -->
+    <table class="no-print-toolbar no-print">
+        <tr>
+            <td style="font-size: 12px; font-weight: bold; color: #fff;">
+                Preview Formulir: Penilaian Dekubitus ({$data.no_rawat})
+            </td>
+            <td style="text-align: right;">
+                <button onclick="window.print()" class="btn-toolbar btn-print">
+                    &#128438; Cetak Dokumen
+                </button>
+                <a href="{?=url([ADMIN, 'update_bmt', 'penilaiandekubituscetak', $data.id])?}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
+                    &#128196; Download PDF
+                </a>
+                <button onclick="window.close()" class="btn-toolbar btn-close">
+                    &#10006; Tutup
+                </button>
+            </td>
+        </tr>
+    </table>
+
+    <div class="page">
+    {/if}
+
+        <div class="outer-border">
+            <!-- 1. KOP RSGM & IDENTITAS PASIEN -->
+            <table class="kop-table">
+                <tr>
+                    <td class="kop-left">
+                        <img src="{$data.kop_img}" alt="KOP RSGM Gusti Hasan Aman">
+                    </td>
+                    <td class="kop-right">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt;">
+                            <tr>
+                                <td style="width: 65px; padding: 2px 0;">No. RM</td>
+                                <td style="width: 6px;">:</td>
+                                <td>
+                                    <table class="rm-box-table">
+                                        <tr>
+                                            <td class="rm-digit-cell">{$data.rm0}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm1}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm2}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm3}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm4}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm5}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0;">Nama Pasien</td>
+                                <td>:</td>
+                                <td class="dot-line">
+                                    <strong>{$data.nm_pasien}</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ({if: $data.jk == 'L'}<u>L</u>/P{elseif: $data.jk == 'P'}L/<u>P</u>{else}L/P{/if})
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0;">Tanggal Lahir</td>
+                                <td>:</td>
+                                <td class="dot-line">
+                                    {$data.tgl_lahir_indo}
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- 2. JUDUL FORMULIR -->
+            <div class="title-bar">
+                <div class="title-main">PENILAIAN DEKUBITUS</div>
+                <div class="title-sub">(DECUBITUS RISK ASSESSMENT)</div>
+            </div>
+
+            <!-- 3. SUBHEADER DIISI OLEH PERAWAT -->
+            <div class="sub-header-perawat">
+                Diisi Oleh Perawat:
+            </div>
+
+            <!-- 4. TABEL SKALA NORTON (12 KOLOM) -->
+            <table class="norton-table">
+                <thead>
+                    <tr>
+                        <th style="width: 4%;" rowspan="2">No</th>
+                        <th style="width: 34%;" rowspan="2">Komponen</th>
+                        <th style="width: 6%;" rowspan="2">Skor</th>
+                        <th colspan="9" style="padding: 4px 2px;">Skor Hari Perawatan Ke</th>
+                    </tr>
+                    <tr>
+                        {loop: $data.days}
+                        <th class="col-day-header">
+                            {$value.day}<br>
+                            {if: !empty($value.tgl_label)}Tgl {$value.tgl_label}{else}Tgl .....{/if}
+                        </th>
+                        {/loop}
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- KOMPONEN 1: Kondisi fisik umum -->
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle; font-weight: bold;">1</td>
+                        <td class="komponen-cell">
+                            <div class="komponen-title">Kondisi fisik umum</div>
+                            1. Baik<br>
+                            2. Lumayan<br>
+                            3. Buruk<br>
+                            4. Sangat buruk
+                        </td>
+                        <td class="skor-ref-cell">
+                            &nbsp;<br>
+                            4<br>
+                            3<br>
+                            2<br>
+                            1
+                        </td>
+                        {loop: $data.days}
+                        <td class="score-val-cell">
+                            {if: $value.kondisi_fisik !== null}{$value.kondisi_fisik}{else}&nbsp;{/if}
+                        </td>
+                        {/loop}
+                    </tr>
+
+                    <!-- KOMPONEN 2: Kesadaran -->
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle; font-weight: bold;">2</td>
+                        <td class="komponen-cell">
+                            <div class="komponen-title">Kesadaran</div>
+                            a. Komposmentis<br>
+                            b. Apatis<br>
+                            c. Konfus/saporis<br>
+                            d. Stupor/koma
+                        </td>
+                        <td class="skor-ref-cell">
+                            &nbsp;<br>
+                            4<br>
+                            3<br>
+                            2<br>
+                            1
+                        </td>
+                        {loop: $data.days}
+                        <td class="score-val-cell">
+                            {if: $value.kesadaran !== null}{$value.kesadaran}{else}&nbsp;{/if}
+                        </td>
+                        {/loop}
+                    </tr>
+
+                    <!-- KOMPONEN 3: Aktivitas -->
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle; font-weight: bold;">3</td>
+                        <td class="komponen-cell">
+                            <div class="komponen-title">Aktivitas</div>
+                            a. Ambulan<br>
+                            b. Ambulan dengan bantuan<br>
+                            c. Hanya bisa duduk<br>
+                            d. Tiduran
+                        </td>
+                        <td class="skor-ref-cell">
+                            &nbsp;<br>
+                            4<br>
+                            3<br>
+                            2<br>
+                            1
+                        </td>
+                        {loop: $data.days}
+                        <td class="score-val-cell">
+                            {if: $value.aktivitas !== null}{$value.aktivitas}{else}&nbsp;{/if}
+                        </td>
+                        {/loop}
+                    </tr>
+
+                    <!-- KOMPONEN 4: Mobilitas -->
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle; font-weight: bold;">4</td>
+                        <td class="komponen-cell">
+                            <div class="komponen-title">Mobilitas</div>
+                            1. Bergerak bebas<br>
+                            2. Sedikit terbatas<br>
+                            3. Sangat terbatas<br>
+                            4. Tidak bisa bergerak
+                        </td>
+                        <td class="skor-ref-cell">
+                            &nbsp;<br>
+                            4<br>
+                            3<br>
+                            2<br>
+                            1
+                        </td>
+                        {loop: $data.days}
+                        <td class="score-val-cell">
+                            {if: $value.mobilitas !== null}{$value.mobilitas}{else}&nbsp;{/if}
+                        </td>
+                        {/loop}
+                    </tr>
+
+                    <!-- KOMPONEN 5: Inkontinensia -->
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle; font-weight: bold;">5</td>
+                        <td class="komponen-cell">
+                            <div class="komponen-title">Inkontinensia</div>
+                            1. Tidak<br>
+                            2. Kadang-kadang<br>
+                            3. Sering inkontinensia urine<br>
+                            4. Sering inkontinensia alvi dan urine
+                        </td>
+                        <td class="skor-ref-cell">
+                            &nbsp;<br>
+                            4<br>
+                            3<br>
+                            2<br>
+                            1
+                        </td>
+                        {loop: $data.days}
+                        <td class="score-val-cell">
+                            {if: $value.inkontinensia !== null}{$value.inkontinensia}{else}&nbsp;{/if}
+                        </td>
+                        {/loop}
+                    </tr>
+
+                    <!-- BARIS TOTAL SKOR -->
+                    <tr class="total-row">
+                        <td colspan="3">TOTAL SKOR</td>
+                        {loop: $data.days}
+                        <td class="total-val-cell">
+                            {if: $value.total_skor !== null}{$value.total_skor}{else}&nbsp;{/if}
+                        </td>
+                        {/loop}
+                    </tr>
+
+                    <!-- BARIS NAMA & PARAF YANG MELAKUKAN PENILAIAN -->
+                    <tr class="perawat-row">
+                        <td colspan="3">Nama & Paraf yang Melakukan Penilaian</td>
+                        {loop: $data.days}
+                        <td class="perawat-val-cell">
+                            {if: !empty($value.perawat)}{$value.perawat}{else}&nbsp;{/if}
+                        </td>
+                        {/loop}
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+        <!-- 5. CATATAN KAKI DI LUAR BINGKAI -->
+        <table class="footer-note-row">
+            <tr>
+                <td class="footer-note-red">
+                    Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+                    <span class="checkbox-square"></span>
+                </td>
+            </tr>
+        </table>
+
+        <!-- 6. ATURAN SKOR RISIKO -->
+        <div class="risk-rule-note">
+            *) Resiko dekubitus bila total skor &le; 14
+        </div>
+
+        <!-- 7. FOOTER IDENTITAS DOKUMEN RSGM -->
+        <table class="footer-meta">
+            <tr>
+                <td style="text-align: left; width: 50%;">RSGM/Ed-Rev/02/2023</td>
+                <td style="text-align: right; width: 50%;">RM.RI Lampiran</td>
+            </tr>
+        </table>
+
+    {if: empty($is_mpdf)}
+    </div>
+    {/if}
+
+</body>
+</html>

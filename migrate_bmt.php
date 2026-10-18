@@ -104,7 +104,16 @@ try {
         'lampiran_profil_ringkas_medis_rajal' => 'Lampiran - Formulir Profil Ringkas Medis Rawat Jalan PRMRJ (Rajal/Ranap)',
         'lampiran_skrining_luar_rs' => 'Lampiran - Formulir Skrining Dari Luar Rumah Sakit (Ranap)',
         'lampiran_stabilisasi_pasien' => 'Lampiran - Formulir Stabilisasi Pasien Sebelum Transfer (Ranap)',
-        'lampiran_intervensi_pengkajian_nyeri' => 'Lampiran - Intervensi dan Pengkajian Ulang Nyeri (Ranap)'
+        'lampiran_intervensi_pengkajian_nyeri' => 'Lampiran - Intervensi dan Pengkajian Ulang Nyeri (Ranap)',
+        'lampiran_penilaian_kejadian_phlebitis' => 'Lampiran - Penilaian Kejadian Phlebitis (VIP Ranap)',
+        'lampiran_permintaan_pelayanan_kerohanian' => 'Lampiran - Permintaan Pelayanan Kerohanian (Ranap)',
+        'lampiran_monitoring_pasien_kateter_urin' => 'Lampiran - Formulir Monitoring Pasien Kateter Urine (Ranap)',
+        'lampiran_konsultasi_internal' => 'Lampiran - Formulir Konsultasi Internal (Ranap)',
+        'lampiran_monitoring_pasien_selama_transfer' => 'Lampiran - Formulir Monitoring Pasien Selama Transfer (Ranap)',
+        'lampiran_penilaian_dekubitus' => 'Lampiran - Formulir Penilaian Dekubitus (Ranap)',
+        'lampiran_penilaian_kejadian_ilo' => 'Lampiran - Formulir Penilaian Kejadian Infeksi Luka Operasi (ILO) (Ranap)',
+        'lampiran_penilaian_kejadian_isk' => 'Lampiran - Formulir Penilaian Kejadian Infeksi Saluran Kemih (ISK) (Ranap)',
+        'lampiran_surat_pernyataan_bersedia_menunggu' => 'Lampiran - Surat Pernyataan Bersedia Menunggu (Ranap)'
     ];
 
     foreach ($expectedTables as $tbl => $deskripsi) {

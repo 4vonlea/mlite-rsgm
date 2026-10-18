@@ -1,0 +1,345 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
+                <h3 class="panel-title" style="font-weight: bold; font-size: 16px;">
+                    <i class="fa fa-pencil-square-o text-primary"></i> FORMULIR PERMINTAAN PELAYANAN KEROHANIAN
+                </h3>
+                <div>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'pelayanankerohanianmanage'])?}" class="btn btn-default btn-sm">
+                        <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'update_bmt', 'pelayanankerohaniansave'])?}" method="post" id="form-pelayanan-kerohanian">
+                    <input type="hidden" name="id" value="{$data.id}">
+
+                    <!-- PETUNJUK RESMI -->
+                    <div class="alert alert-info" style="font-size: 12px; margin-bottom: 20px;">
+                        <strong><i class="fa fa-info-circle"></i> Petunjuk Pengisian:</strong>
+                        <ul style="margin-bottom: 0; padding-left: 20px;">
+                            <li>Harap pengisian dilakukan dengan tulisan/cetak yang jelas, benar dan lengkap.</li>
+                            <li>Formulir ini diisi oleh pasien atau keluarga/wali yang mengajukan permohonan pendampingan rohani selama masa perawatan di RSGM Gusti Hasan Aman.</li>
+                            <li>Gunakan tombol <em>"Pemohon adalah Pasien Sendiri"</em> untuk otomatis mengisi identitas pemohon dari data pasien.</li>
+                        </ul>
+                    </div>
+
+                    <!-- 1. IDENTITAS PASIEN & RUANGAN -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading" style="font-weight: bold;">
+                            <i class="fa fa-user"></i> Data Pasien & Ruang Perawatan
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nomor Rawat / No. RM <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2025/09/29/000006" required>
+                                            <span class="input-group-btn">
+                                                <button type="button" class="btn btn-primary" id="btn-cari-pasien">
+                                                    <i class="fa fa-search"></i> Cari
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nomor Rekam Medis (No. RM)</label>
+                                        <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly style="background-color: #f9f9f9; font-weight: bold;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nama Pasien</label>
+                                        <input type="text" id="nm_pasien" class="form-control" value="{$data.nm_pasien}" readonly style="background-color: #f9f9f9; font-weight: bold;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Jenis Kelamin</label>
+                                        <input type="text" id="pasien_jk" class="form-control" value="{if: $data.jk == 'L'}Laki-Laki{elseif: $data.jk == 'P'}Perempuan{else}{$data.jk}{/if}" readonly style="background-color: #f9f9f9;">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Tanggal Lahir Pasien</label>
+                                        <input type="text" id="tgl_lahir_pasien" class="form-control" value="{$data.tgl_lahir}" readonly style="background-color: #f9f9f9;">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Umur Pasien</label>
+                                        <input type="text" id="umur_pasien" class="form-control" value="{$data.umur}" readonly style="background-color: #f9f9f9;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Ruangan / Kamar Inap <span class="text-danger">*</span></label>
+                                        <input type="text" name="kamar_inap" id="kamar_inap" class="form-control" value="{$data.kamar_inap}" placeholder="Contoh: Ruang Melati / Bed 02" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label>Alamat Pasien</label>
+                                        <textarea id="alamat_pasien" class="form-control" rows="2" readonly style="background-color: #f9f9f9;">{$data.alamat}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. DATA PEMOHON (YANG BERTANDATANGAN DI BAWAH INI) -->
+                    <div class="panel panel-default" style="border-top: 3px solid #f39c12;">
+                        <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: bold; font-size: 14px; color: #2c3e50;">
+                                <i class="fa fa-id-card-o text-warning"></i> Yang Bertandatangan di Bawah Ini (Pemohon)
+                            </span>
+                            <div>
+                                <button type="button" class="btn btn-warning btn-xs" id="btn-salin-pasien">
+                                    <i class="fa fa-copy"></i> Pemohon adalah Pasien Sendiri
+                                </button>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nama Pemohon <span class="text-danger">*</span></label>
+                                        <input type="text" name="nama_pemohon" id="nama_pemohon" class="form-control" value="{$data.nama_pemohon}" placeholder="Nama lengkap pemohon" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Tanggal Lahir Pemohon</label>
+                                        <input type="date" name="tgl_lahir_pemohon" id="tgl_lahir_pemohon" class="form-control" value="{$data.tgl_lahir_pemohon}">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Umur Pemohon</label>
+                                        <input type="text" name="umur_pemohon" id="umur_pemohon" class="form-control" value="{$data.umur_pemohon}" placeholder="Contoh: 35 Tahun">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Hubungan dengan Pasien <span class="text-danger">*</span></label>
+                                        <input type="text" name="hubungan_pasien" id="hubungan_pasien" class="form-control" list="list_hubungan" value="{$data.hubungan_pasien}" placeholder="Contoh: Diri Sendiri / Suami / Istri" required>
+                                        <datalist id="list_hubungan">
+                                            <option value="Diri Sendiri">
+                                            <option value="Suami">
+                                            <option value="Istri">
+                                            <option value="Ayah Kandung">
+                                            <option value="Ibu Kandung">
+                                            <option value="Anak">
+                                            <option value="Saudara Kandung">
+                                            <option value="Keluarga / Wali">
+                                        </datalist>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label>Alamat Pemohon <span class="text-danger">*</span></label>
+                                        <textarea name="alamat_pemohon" id="alamat_pemohon" class="form-control" rows="2" placeholder="Alamat lengkap tempat tinggal pemohon" required>{$data.alamat_pemohon}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. PERNYATAAN PERMINTAAN PELAYANAN KEROHANIAN -->
+                    <div class="panel panel-success">
+                        <div class="panel-heading" style="font-weight: bold;">
+                            <i class="fa fa-heartbeat"></i> Permintaan Pendampingan Pelayanan Kerohanian
+                        </div>
+                        <div class="panel-body">
+                            <div class="alert alert-success" style="font-size: 13px; margin-bottom: 15px; line-height: 1.6;">
+                                <em>"Dengan ini menyatakan permintaan pendampingan pelayanan kerohanian agama/kepercayaan kepada RSGM Gusti Hasan Aman terhadap pasien."</em>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Agama / Kepercayaan <span class="text-danger">*</span></label>
+                                        <input type="text" name="agama_kepercayaan" id="agama_kepercayaan" class="form-control" list="list_agama" value="{$data.agama_kepercayaan}" placeholder="Pilih atau ketik agama/kepercayaan" required>
+                                        <datalist id="list_agama">
+                                            <option value="Islam">
+                                            <option value="Kristen Protestan">
+                                            <option value="Kristen Katolik">
+                                            <option value="Hindu">
+                                            <option value="Buddha">
+                                            <option value="Khonghucu">
+                                            <option value="Penghayat Kepercayaan">
+                                        </datalist>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Nama Rohaniawan / Pembimbing Rohani (Opsional)</label>
+                                        <input type="text" name="nama_rohaniawan" id="nama_rohaniawan" class="form-control" value="{$data.nama_rohaniawan}" placeholder="Contoh: Ust. H. Ahmad Baihaki, S.Ag (Bimbingan Rohani Islam RSGM)">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label>Kebutuhan Khusus / Bentuk Bimbingan Spiritual yang Diharapkan</label>
+                                        <textarea name="kebutuhan_khusus" id="kebutuhan_khusus" rows="2" class="form-control" placeholder="Contoh: Bimbingan doa pra-operasi, doa kesembuhan pasca bedah mulut, pendampingan moril keluarga.">{$data.kebutuhan_khusus}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. PENGESAHAN & TANDA TANGAN -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading" style="font-weight: bold; background-color: #f5f5f5;">
+                            <i class="fa fa-pencil"></i> Pengesahan Surat Permintaan
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Kota Surat</label>
+                                        <input type="text" name="kota" id="kota" class="form-control" value="{$data.kota}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Tanggal Surat <span class="text-danger">*</span></label>
+                                        <input type="date" name="tanggal_surat" id="tanggal_surat" class="form-control" value="{$data.tanggal_surat}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Nama Perawat Penanggung Jawab <span class="text-danger">*</span></label>
+                                        <input type="text" name="nama_perawat" id="nama_perawat" class="form-control" list="list_perawat" value="{$data.nama_perawat}" placeholder="Nama & Gelar Perawat" required>
+                                        <datalist id="list_perawat">
+                                            {loop: $petugas}
+                                            <option value="{$value.nama}">
+                                            {/loop}
+                                        </datalist>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>NIP / NIK Perawat</label>
+                                        <input type="text" name="nip_perawat" id="nip_perawat" class="form-control" value="{$data.nip_perawat}" placeholder="NIP/NIK (jika ada)">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label>Catatan Tambahan Koordinasi Pelayanan Kerohanian</label>
+                                        <textarea name="catatan" id="catatan" rows="2" class="form-control" placeholder="Contoh: Pelayanan kerohanian telah dikoordinasikan dengan tim pembinaan rohani rumah sakit.">{$data.catatan}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOMBOL AKSI -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-bottom: 20px;">
+                        <a href="{?=url([ADMIN, 'update_bmt', 'pelayanankerohanianmanage'])?}" class="btn btn-default">
+                            <i class="fa fa-ban"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fa fa-save"></i> Simpan Permintaan Kerohanian
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // 1. AJAX Cari Pasien
+    $('#btn-cari-pasien').on('click', function() {
+        var noRawat = $('#no_rawat').val().trim();
+        if (!noRawat) {
+            alert('Masukkan Nomor Rawat atau Nomor Rekam Medis terlebih dahulu!');
+            return;
+        }
+
+        $.getJSON('{?=url([ADMIN, "update_bmt", "pelayanankerohanianform"])?}', {
+            ajax_patient: 1,
+            no_rawat: noRawat
+        }, function(res) {
+            if (res && res.success) {
+                var d = res.data || res;
+                $('#no_rawat').val(d.no_rawat);
+                $('#no_rkm_medis').val(d.no_rkm_medis);
+                $('#nm_pasien').val(d.nm_pasien);
+                $('#pasien_jk').val(d.jk == 'L' ? 'Laki-Laki' : 'Perempuan');
+                $('#tgl_lahir_pasien').val(d.tgl_lahir);
+                $('#umur_pasien').val(d.umur);
+                $('#alamat_pasien').val(d.alamat || '');
+                if (d.ruang_perawatan && !$('#kamar_inap').val()) {
+                    $('#kamar_inap').val(d.ruang_perawatan);
+                }
+            } else {
+                alert('Data pasien dengan No. Rawat/RM tersebut tidak ditemukan.');
+            }
+        }).fail(function() {
+            alert('Terjadi kesalahan koneksi saat mencari data pasien.');
+        });
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if (e.which == 13) {
+            e.preventDefault();
+            $('#btn-cari-pasien').click();
+        }
+    });
+
+    // 2. Salin Data Pasien ke Pemohon
+    $('#btn-salin-pasien').on('click', function() {
+        var nm = $('#nm_pasien').val();
+        var tgl = $('#tgl_lahir_pasien').val();
+        var umur = $('#umur_pasien').val();
+        var alamat = $('#alamat_pasien').val();
+
+        if (!nm) {
+            alert('Cari data pasien terlebih dahulu!');
+            return;
+        }
+
+        $('#nama_pemohon').val(nm);
+        $('#tgl_lahir_pemohon').val(tgl);
+        $('#umur_pemohon').val(umur);
+        $('#alamat_pemohon').val(alamat);
+        $('#hubungan_pasien').val('Diri Sendiri');
+    });
+
+    // 3. Auto hitung umur pemohon saat tanggal lahir pemohon diubah
+    $('#tgl_lahir_pemohon').on('change', function() {
+        var birthDateStr = $(this).val();
+        if (birthDateStr) {
+            var birthDate = new Date(birthDateStr);
+            var today = new Date();
+            var age = today.getFullYear() - birthDate.getFullYear();
+            var m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            if (age >= 0 && !$('#umur_pemohon').val()) {
+                $('#umur_pemohon').val(age + ' Tahun');
+            }
+        }
+    });
+});
+</script>

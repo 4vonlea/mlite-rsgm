@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Monitoring Pasien Selama Transfer - {$data.no_rawat}</title>
+    <style>
+        {if: empty($is_mpdf)}
+        @page {
+            size: A4 portrait;
+            margin: 6mm 10mm 6mm 10mm;
+        }
+        {/if}
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8.5pt;
+            line-height: 1.3;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
+            background-color: #f4f6f9;
+            padding: 15px 0;
+        }
+        .page {
+            background: #fff;
+            width: 195mm;
+            min-height: 278mm;
+            margin: 0 auto;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        {/if}
+
+        /* Toolbar Layar Browser */
+        .no-print-toolbar {
+            width: 195mm;
+            margin: 0 auto 12px auto;
+            padding: 8px 14px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+            border-collapse: collapse;
+        }
+        .btn-toolbar {
+            padding: 5px 12px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+
+        /* BINGKAI UTAMA */
+        .outer-border {
+            border: 1.5px solid #000;
+            width: 100%;
+        }
+
+        /* KOP HEADER DUA KOLOM */
+        .kop-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1.5px solid #000;
+        }
+        .kop-left {
+            width: 58%;
+            border-right: 1.5px solid #000;
+            padding: 4px 6px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .kop-left img {
+            width: 100%;
+            max-height: 60px;
+            object-fit: contain;
+        }
+        .kop-right {
+            width: 42%;
+            padding: 4px 8px;
+            font-size: 7.5pt;
+            vertical-align: top;
+        }
+
+        /* KOTAK DIGIT NOMOR RM */
+        .rm-box-table {
+            border-collapse: collapse;
+        }
+        .rm-digit-cell {
+            border: 1px solid #000;
+            width: 14px;
+            height: 16px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 8.5pt;
+            vertical-align: middle;
+        }
+
+        /* GARIS TITIK-TITIK */
+        .dot-line {
+            border-bottom: 1px dotted #000;
+            min-height: 14px;
+        }
+
+        /* JUDUL FORMULIR */
+        .title-bar {
+            text-align: center;
+            font-weight: bold;
+            font-size: 11pt;
+            padding: 5px 0;
+            border-bottom: 1.5px solid #000;
+            letter-spacing: 0.5px;
+        }
+
+        /* HEADER INFO TRANSFER */
+        .transfer-info-cell {
+            padding: 5px 8px 4px 8px;
+            font-size: 8pt;
+            border-bottom: 1.5px solid #000;
+        }
+        .triage-box {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            vertical-align: middle;
+            margin-right: 4px;
+            border: 1px solid #000;
+            text-align: center;
+            line-height: 12px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        /* TABEL MONITORING GRID */
+        .grid-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .grid-table th, .grid-table td {
+            border: 1px solid #000;
+            padding: 3px 2px;
+            font-size: 7.5pt;
+            vertical-align: middle;
+        }
+        .grid-table th {
+            text-align: center;
+            font-weight: bold;
+            background-color: #fafafa;
+        }
+        .grid-table td.center {
+            text-align: center;
+        }
+
+        /* KOTAK TANDA TANGAN */
+        .signature-box {
+            padding: 8px 15px 10px 15px;
+            font-size: 8.5pt;
+        }
+
+        /* FOOTER DI LUAR BINGKAI */
+        .footer-note {
+            font-style: italic;
+            font-size: 7pt;
+            color: #c0392b;
+            text-align: right;
+            padding-top: 3px;
+            padding-right: 2px;
+        }
+        .footer-meta {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7pt;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .no-print, .no-print-toolbar {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body {if: empty($is_mpdf)}onload="if(window.location.search.indexOf('noprint=1')===-1)window.print()"{/if}>
+
+    {if: empty($is_mpdf)}
+    <!-- Toolbar Layar (Otomatis hilang saat diprint) -->
+    <table class="no-print-toolbar no-print">
+        <tr>
+            <td style="font-size: 12px; font-weight: bold; color: #fff;">
+                Preview Formulir: Monitoring Pasien Selama Transfer ({$data.no_rawat})
+            </td>
+            <td style="text-align: right;">
+                <button onclick="window.print()" class="btn-toolbar btn-print">
+                    &#128438; Cetak Dokumen
+                </button>
+                <a href="{?=url([ADMIN, 'update_bmt', 'monitoringpasienselamatransfercetak', $data.id])?}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
+                    &#128196; Download PDF
+                </a>
+                <button onclick="window.close()" class="btn-toolbar btn-close">
+                    &#10006; Tutup
+                </button>
+            </td>
+        </tr>
+    </table>
+
+    <div class="page">
+    {/if}
+
+        <div class="outer-border">
+            <!-- 1. KOP RSGM & IDENTITAS PASIEN -->
+            <table class="kop-table">
+                <tr>
+                    <td class="kop-left">
+                        <img src="{$data.kop_img}" alt="KOP RSGM Gusti Hasan Aman">
+                    </td>
+                    <td class="kop-right">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt;">
+                            <tr>
+                                <td style="width: 65px; padding: 2px 0;">No. RM</td>
+                                <td style="width: 6px;">:</td>
+                                <td>
+                                    <table class="rm-box-table">
+                                        <tr>
+                                            <td class="rm-digit-cell">{$data.rm0}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm1}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm2}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm3}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm4}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm5}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0;">Nama Pasien</td>
+                                <td>:</td>
+                                <td class="dot-line">
+                                    <strong>{$data.nm_pasien}</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ({if: $data.jk == 'L'}<u>L</u>/P{elseif: $data.jk == 'P'}L/<u>P</u>{else}L/P{/if})
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0;">Tanggal Lahir</td>
+                                <td>:</td>
+                                <td class="dot-line">
+                                    {$data.tgl_lahir_indo}
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- 2. JUDUL FORMULIR -->
+            <div class="title-bar">
+                MONITORING PASIEN SELAMA TRANSFER
+            </div>
+
+            <!-- 3. INFORMASI PARAMETER TRANSFER & TRIAGE -->
+            <div class="transfer-info-cell">
+                <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
+                    <tr>
+                        <td style="width: 115px; font-weight: bold; padding: 2px 0;">Tanggal</td>
+                        <td style="width: 8px; padding: 2px 0;">:</td>
+                        <td colspan="2" style="padding: 2px 0;">{$data.tanggal_transfer_indo}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold; padding: 5px 0 6px 0;">STATUS KEGAWATDARURATAN</td>
+                        <td style="padding: 5px 0 6px 0;">:</td>
+                        <td colspan="2" style="padding: 5px 0 6px 0;">
+                            <table style="border-collapse: collapse; font-size: 8pt;">
+                                <tr>
+                                    <td style="width: 14px; height: 14px; background-color: #d63031; border: 1px solid #000; text-align: center; vertical-align: middle; color: #fff; font-size: 8pt; font-weight: bold; padding: 0;">
+                                        {if: $data.status_kegawatdaruratan == 'Merah'}&#10003;{else}&nbsp;{/if}
+                                    </td>
+                                    <td style="padding-left: 5px; padding-right: 25px; vertical-align: middle;">Merah</td>
+                                    <td style="width: 14px; height: 14px; background-color: #f1c40f; border: 1px solid #000; text-align: center; vertical-align: middle; color: #000; font-size: 8pt; font-weight: bold; padding: 0;">
+                                        {if: $data.status_kegawatdaruratan == 'Kuning'}&#10003;{else}&nbsp;{/if}
+                                    </td>
+                                    <td style="padding-left: 5px; padding-right: 25px; vertical-align: middle;">Kuning</td>
+                                    <td style="width: 14px; height: 14px; background-color: #27ae60; border: 1px solid #000; text-align: center; vertical-align: middle; color: #fff; font-size: 8pt; font-weight: bold; padding: 0;">
+                                        {if: $data.status_kegawatdaruratan == 'Hijau'}&#10003;{else}&nbsp;{/if}
+                                    </td>
+                                    <td style="padding-left: 5px; padding-right: 25px; vertical-align: middle;">Hijau</td>
+                                    <td style="width: 14px; height: 14px; background-color: #000000; border: 1px solid #000; text-align: center; vertical-align: middle; color: #fff; font-size: 8pt; font-weight: bold; padding: 0;">
+                                        {if: $data.status_kegawatdaruratan == 'Hitam'}&#10003;{else}&nbsp;{/if}
+                                    </td>
+                                    <td style="padding-left: 5px; vertical-align: middle;">Hitam</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="vertical-align: top; padding: 2px 0;">
+                            <div style="font-weight: bold;">JENIS KASUS</div>
+                            <div style="margin-top: 3px;">
+                                <span>{if: $data.jenis_kasus == 'Trauma'}&#9632;{else}&#9633;{/if} Trauma</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                                <span>{if: $data.jenis_kasus == 'Non Trauma'}&#9632;{else}&#9633;{/if} Non Trauma</span>
+                            </div>
+                        </td>
+                        <td style="vertical-align: top; padding: 2px 0; width: 45%;">
+                            <div style="font-weight: bold; margin-bottom: 3px;">PETUGAS TRANSFER :</div>
+                            <div><strong>{$data.petugas_transfer}</strong></div>
+                        </td>
+                        <td style="vertical-align: top; padding: 2px 0; width: 25%;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
+                                <tr>
+                                    <td style="width: 70px; font-weight: bold;">Berangkat</td>
+                                    <td style="width: 6px;">:</td>
+                                    <td>{if: !empty($data.jam_berangkat)}{$data.jam_berangkat}{else}..... : .....{/if}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold; padding-top: 2px;">Tiba</td>
+                                    <td style="padding-top: 2px;">:</td>
+                                    <td style="padding-top: 2px;">{if: !empty($data.jam_tiba)}{$data.jam_tiba}{else}..... : .....{/if}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold; padding-top: 4px;">Diagnosa</td>
+                        <td style="padding-top: 4px;">:</td>
+                        <td colspan="2" style="padding-top: 4px;">{$data.diagnosa}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold; padding-top: 2px;">Monitoring</td>
+                        <td style="padding-top: 2px;">:</td>
+                        <td colspan="2" style="padding-top: 2px;">{if: !empty($data.monitoring_keterangan)}{$data.monitoring_keterangan}{else}-{/if}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- 4. TABEL MONITORING OBSERVASI (10 KOLOM PRESISI) -->
+            <table class="grid-table">
+                <thead>
+                    <tr>
+                        <th style="width: 7%;">Jam<br>Obs.</th>
+                        <th style="width: 11%;">GCS/Pupil<br>Rx</th>
+                        <th style="width: 8%;">Tensi<br>(BP)</th>
+                        <th style="width: 6.5%;">RR<br>(x/m)</th>
+                        <th style="width: 6.5%;">SPO<sub>2</sub><br>(%)</th>
+                        <th style="width: 7%;">Temp<br>(°C)</th>
+                        <th style="width: 7%;">Jam<br>Tind.</th>
+                        <th style="width: 20%;">Hal-Hal<br>penting/Tindakan</th>
+                        <th style="width: 7%;">Jam<br>Th/</th>
+                        <th style="width: 20%;">Terapi (obat/cairan)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {loop: $data.grid_rows}
+                    <tr>
+                        <td class="center" style="height: 18px;">{$value.jam_obs}</td>
+                        <td class="center">{$value.gcs_pupil_rx}</td>
+                        <td class="center">{$value.tensi}</td>
+                        <td class="center">{$value.rr}</td>
+                        <td class="center">{$value.spo2}</td>
+                        <td class="center">{$value.temp}</td>
+                        <td class="center">{$value.jam_tind}</td>
+                        <td style="padding-left: 4px;">{$value.hal_penting_tindakan}</td>
+                        <td class="center">{$value.jam_terapi}</td>
+                        <td style="padding-left: 4px;">{$value.terapi_obat_cairan}</td>
+                    </tr>
+                    {/loop}
+                </tbody>
+            </table>
+
+            <!-- 5. KOTAK PENGESAHAN PETUGAS TRANSFER -->
+            <div class="signature-box">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 60%; vertical-align: top;">
+                            {if: !empty($data.catatan)}
+                            <div style="font-size: 7.5pt; color: #444;">
+                                <strong>Catatan:</strong> {$data.catatan}
+                            </div>
+                            {/if}
+                        </td>
+                        <td style="width: 40%; text-align: center; font-size: 8.5pt;">
+                            <div style="margin-bottom: 2px;">Petugas Transfer</div>
+                            <div style="height: 52px; line-height: 52px;">&nbsp;</div>
+                            <div>
+                                ( {if: !empty($data.petugas_transfer)}{$data.petugas_transfer}{else}....................................{/if} )
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- FOOTER CATATAN MERAH & KODE FORMULIR -->
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td class="footer-note">
+                    Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+                </td>
+            </tr>
+        </table>
+        <table class="footer-meta">
+            <tr>
+                <td style="text-align: left; width: 50%;">RSGM/Ed-Rev/02/2023</td>
+                <td style="text-align: right; width: 50%;">RM.RI Lampiran</td>
+            </tr>
+        </table>
+
+    {if: empty($is_mpdf)}
+    </div>
+    {/if}
+
+</body>
+</html>

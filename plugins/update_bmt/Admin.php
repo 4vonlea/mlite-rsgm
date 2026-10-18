@@ -3759,6 +3759,2567 @@ class Admin extends AdminModule
         exit();
     }
 
+    // ============================================================
+    // LAMPIRAN - PENILAIAN KEJADIAN PHLEIBITIS (VISUAL INFUSION PHLEIBITIS / VIP)
+    // ============================================================
+
+    public function anyPenilaianphlebitismanage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $rows = $this->db('lampiran_penilaian_kejadian_phlebitis')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_phlebitis.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_phlebitis.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('lampiran_penilaian_kejadian_phlebitis.*, COALESCE(lampiran_penilaian_kejadian_phlebitis.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->desc('lampiran_penilaian_kejadian_phlebitis.id')
+            ->toArray();
+
+        $no = 1;
+        foreach ($rows as &$r) {
+            $r['nomor'] = $no++;
+            $rmRaw = ltrim($r['no_rkm_medis'] ?? '', "'");
+            $r['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+
+            $details = !empty($r['detail_penilaian']) ? json_decode($r['detail_penilaian'], true) : [];
+            $terpantau = 0;
+            $maxSkor = null;
+
+            if (is_array($details)) {
+                for ($h = 1; $h <= 9; $h++) {
+                    if (isset($details[$h])) {
+                        $item = $details[$h];
+                        if (!empty($item['tgl']) || ($item['skor'] !== '' && $item['skor'] !== null)) {
+                            $terpantau++;
+                            if ($item['skor'] !== '' && $item['skor'] !== null) {
+                                $sVal = (int)$item['skor'];
+                                if ($maxSkor === null || $sVal > $maxSkor) {
+                                    $maxSkor = $sVal;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            $r['hari_terpantau'] = $terpantau;
+            $r['max_skor'] = $maxSkor;
+        }
+
+        return $this->draw('lampiran_penilaian_kejadian_phlebitis/manage.html', ['data' => $rows]);
+    }
+
+    public function getPenilaianphlebitisform($id = null)
+    {
+        // Handle AJAX Patient Auto-fill
+        if (isset($_GET['ajax_patient']) && $_GET['ajax_patient'] == '1') {
+            header('Content-Type: application/json');
+            $noRawat = trim($_GET['no_rawat'] ?? '');
+            $patient = $this->db('reg_periksa')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->leftJoin('kamar_inap', 'kamar_inap.no_rawat = reg_periksa.no_rawat')
+                ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
+                ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
+                ->where('reg_periksa.no_rawat', $noRawat)
+                ->orWhere('reg_periksa.no_rkm_medis', $noRawat)
+                ->desc('reg_periksa.tgl_registrasi')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->oneArray();
+
+            if ($patient) {
+                $rmRaw = ltrim($patient['no_rkm_medis'] ?? '', "'");
+                $patient['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+                $patient['ruang_perawatan'] = !empty($patient['nm_bangsal']) ? $patient['nm_bangsal'] . ' (' . $patient['kd_kamar'] . ')' : 'Rawat Inap';
+                echo json_encode(array_merge(['success' => true], $patient));
+            } else {
+                echo json_encode(['success' => false]);
+            }
+            exit();
+        }
+
+        $data = [];
+        if ($id) {
+            $data = $this->db('lampiran_penilaian_kejadian_phlebitis')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_phlebitis.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_phlebitis.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('lampiran_penilaian_kejadian_phlebitis.id', $id)
+                ->select('lampiran_penilaian_kejadian_phlebitis.*, COALESCE(lampiran_penilaian_kejadian_phlebitis.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+                ->oneArray();
+        }
+
+        if (empty($data)) {
+            $data = [
+                'id' => '',
+                'no_rawat' => '',
+                'no_rkm_medis' => '',
+                'nm_pasien' => '',
+                'jk' => '',
+                'tgl_lahir' => '',
+                'umur' => '',
+                'kamar_inap' => '',
+                'lokasi_iv_line' => 'Metacarpal Dextra',
+                'tgl_pemasangan' => date('Y-m-d'),
+                'tipe_kanul' => 'Abocath 22G',
+                'catatan' => '',
+                'detail_penilaian' => ''
+            ];
+        } else {
+            $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+            $data['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        }
+
+        $detailArr = !empty($data['detail_penilaian']) ? json_decode($data['detail_penilaian'], true) : [];
+        if (!is_array($detailArr)) {
+            $detailArr = [];
+        }
+
+        $days = [];
+        for ($h = 1; $h <= 9; $h++) {
+            $item = $detailArr[$h] ?? [];
+            $days[] = [
+                'hari' => $h,
+                'tgl' => $item['tgl'] ?? '',
+                'param_checked' => $item['param_checked'] ?? '',
+                'skor' => (isset($item['skor']) && $item['skor'] !== '') ? (int)$item['skor'] : '',
+                'petugas' => $item['petugas'] ?? '',
+                'paraf' => $item['paraf'] ?? '✓'
+            ];
+        }
+        $data['days'] = $days;
+
+        return $this->draw('lampiran_penilaian_kejadian_phlebitis/form.html', ['data' => $data]);
+    }
+
+    public function postPenilaianphlebitissave()
+    {
+        $id = !empty($_POST['id']) ? (int)$_POST['id'] : null;
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (empty($no_rawat)) {
+            redirect(url([ADMIN, 'update_bmt', 'penilaianphlebitismanage']));
+            return;
+        }
+
+        $hariPost = $_POST['hari'] ?? [];
+        $detailArr = [];
+        for ($h = 1; $h <= 9; $h++) {
+            $tgl = trim($hariPost[$h]['tgl'] ?? '');
+            $paramChecked = trim($hariPost[$h]['param_checked'] ?? '');
+            $skor = isset($hariPost[$h]['skor']) && $hariPost[$h]['skor'] !== '' ? (int)$hariPost[$h]['skor'] : '';
+            $petugas = trim($hariPost[$h]['petugas'] ?? '');
+            $paraf = trim($hariPost[$h]['paraf'] ?? '');
+
+            $detailArr[$h] = [
+                'tgl' => $tgl,
+                'param_checked' => $paramChecked,
+                'skor' => $skor,
+                'petugas' => $petugas,
+                'paraf' => $paraf
+            ];
+        }
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => trim($_POST['no_rkm_medis'] ?? ''),
+            'kamar_inap' => trim($_POST['kamar_inap'] ?? ''),
+            'lokasi_iv_line' => trim($_POST['lokasi_iv_line'] ?? ''),
+            'tgl_pemasangan' => !empty($_POST['tgl_pemasangan']) ? $_POST['tgl_pemasangan'] : null,
+            'tipe_kanul' => trim($_POST['tipe_kanul'] ?? ''),
+            'catatan' => trim($_POST['catatan'] ?? ''),
+            'detail_penilaian' => json_encode($detailArr)
+        ];
+
+        if ($id) {
+            $this->db('lampiran_penilaian_kejadian_phlebitis')->where('id', $id)->save($saveData);
+        } else {
+            $this->db('lampiran_penilaian_kejadian_phlebitis')->save($saveData);
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'penilaianphlebitismanage']));
+    }
+
+    public function getPenilaianphlebitishapus($id)
+    {
+        if ($id) {
+            $this->db('lampiran_penilaian_kejadian_phlebitis')->where('id', $id)->delete();
+        }
+        redirect(url([ADMIN, 'update_bmt', 'penilaianphlebitismanage']));
+    }
+
+    public function getPenilaianphlebitiscetak($id)
+    {
+        $data = $this->db('lampiran_penilaian_kejadian_phlebitis')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_phlebitis.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_phlebitis.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('lampiran_penilaian_kejadian_phlebitis.id', $id)
+            ->select('lampiran_penilaian_kejadian_phlebitis.*, COALESCE(lampiran_penilaian_kejadian_phlebitis.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data penilaian phlebitis tidak ditemukan.";
+            exit();
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rm = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = $rm[$i] ?? '&nbsp;';
+        }
+        $data['no_rkm_medis'] = $rm;
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tgl_lahir_indo'] = $data['tgl_lahir'];
+            }
+        } else {
+            $data['tgl_lahir_indo'] = '-';
+        }
+
+        $detailArr = !empty($data['detail_penilaian']) ? json_decode($data['detail_penilaian'], true) : [];
+        if (!is_array($detailArr)) {
+            $detailArr = [];
+        }
+
+        for ($h = 1; $h <= 9; $h++) {
+            $item = $detailArr[$h] ?? [];
+            $tglStr = !empty($item['tgl']) ? date('d/m', strtotime($item['tgl'])) : '.....';
+            $data['h' . $h . '_tgl_label'] = 'Tgl ' . $tglStr;
+
+            $pChecked = (int)($item['param_checked'] ?? 0);
+            for ($p = 1; $p <= 6; $p++) {
+                $data['h' . $h . '_p' . $p] = ($pChecked === $p) ? '&#10003;' : '&nbsp;';
+            }
+
+            $skorVal = (isset($item['skor']) && $item['skor'] !== '' && $pChecked > 0) ? $item['skor'] : '&nbsp;';
+            $data['h' . $h . '_skor'] = $skorVal;
+
+            $petugasStr = '';
+            if (!empty($item['petugas']) && $pChecked > 0) {
+                $petugasStr = htmlspecialchars($item['petugas']);
+                if (!empty($item['paraf']) && $item['paraf'] == '✓') {
+                    $petugasStr .= '<br><span style="font-size: 8pt; color: #27ae60;">&#10003;</span>';
+                }
+            } else {
+                $petugasStr = '&nbsp;';
+            }
+            $data['h' . $h . '_petugas'] = $petugasStr;
+        }
+
+        // Cek jika request export mPDF
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 6,
+                    'margin_right' => 6,
+                    'margin_top' => 4,
+                    'margin_bottom' => 4
+                ]);
+                $html = $this->draw('lampiran_penilaian_kejadian_phlebitis/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Penilaian_Phlebitis_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                error_log('mPDF Error: ' . $e->getMessage());
+            }
+        }
+
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_penilaian_kejadian_phlebitis/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ============================================================
+    // LAMPIRAN - PERMINTAAN PELAYANAN KEROHANIAN
+    // ============================================================
+
+    public function anyPelayanankerohanianmanage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $kerohanian = $this->db('lampiran_permintaan_pelayanan_kerohanian')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_permintaan_pelayanan_kerohanian.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_permintaan_pelayanan_kerohanian.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('lampiran_permintaan_pelayanan_kerohanian.*, COALESCE(lampiran_permintaan_pelayanan_kerohanian.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, lampiran_permintaan_pelayanan_kerohanian.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat as alamat_pasien')
+            ->desc('lampiran_permintaan_pelayanan_kerohanian.id')
+            ->toArray();
+
+        $no = 1;
+        foreach ($kerohanian as &$item) {
+            $item['nomor'] = $no++;
+            $rmRaw = ltrim($item['no_rkm_medis'] ?? '', "'");
+            $item['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+            $item['umur'] = !empty($item['umur']) ? $item['umur'] : ($item['umur_pasien'] ?? '-');
+            $item['jk'] = !empty($item['jk']) ? $item['jk'] : '-';
+        }
+
+        return $this->draw('lampiran_permintaan_pelayanan_kerohanian/manage.html', [
+            'data' => $kerohanian,
+            'kerohanian' => $kerohanian
+        ]);
+    }
+
+    public function getPelayanankerohanianform($id = null)
+    {
+        // AJAX: Cari data pasien via No. Rawat / No. RM
+        if (isset($_GET['ajax_patient']) && $_GET['ajax_patient'] == '1') {
+            header('Content-Type: application/json');
+            $no_rawat = trim($_GET['no_rawat'] ?? '');
+
+            $reg = $this->db('reg_periksa')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $no_rawat)
+                ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->oneArray();
+
+            if ($reg) {
+                $rmRaw = ltrim($reg['no_rkm_medis'] ?? '', "'");
+                $reg['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+
+                // Cari kamar inap bila ada
+                $kamar = $this->db('kamar_inap')
+                    ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
+                    ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
+                    ->where('kamar_inap.no_rawat', $reg['no_rawat'])
+                    ->desc('kamar_inap.tgl_masuk')
+                    ->select('bangsal.nm_bangsal, kamar.kd_kamar')
+                    ->oneArray();
+
+                $reg['ruang_perawatan'] = $kamar ? ($kamar['nm_bangsal'] . ' / ' . $kamar['kd_kamar']) : 'Rawat Inap';
+
+                echo json_encode(['success' => true, 'data' => $reg]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Data pasien tidak ditemukan']);
+            }
+            exit();
+        }
+
+        $id = $id ?? ($_GET['id'] ?? null);
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'kamar_inap' => '',
+            'nama_pemohon' => '',
+            'tgl_lahir_pemohon' => '',
+            'umur_pemohon' => '',
+            'alamat_pemohon' => '',
+            'hubungan_pasien' => 'Diri Sendiri',
+            'agama_kepercayaan' => 'Islam',
+            'kebutuhan_khusus' => '',
+            'nama_rohaniawan' => '',
+            'kota' => 'Banjarmasin',
+            'tanggal_surat' => date('Y-m-d'),
+            'nama_perawat' => '',
+            'nip_perawat' => '',
+            'catatan' => '',
+            'nm_pasien' => '',
+            'jk' => '',
+            'tgl_lahir' => '',
+            'umur' => '',
+            'alamat' => ''
+        ];
+
+        if ($id) {
+            $row = $this->db('lampiran_permintaan_pelayanan_kerohanian')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_permintaan_pelayanan_kerohanian.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_permintaan_pelayanan_kerohanian.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('lampiran_permintaan_pelayanan_kerohanian.id', $id)
+                ->select('lampiran_permintaan_pelayanan_kerohanian.*, COALESCE(lampiran_permintaan_pelayanan_kerohanian.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->oneArray();
+
+            if ($row) {
+                $data = array_merge($data, $row);
+                $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+                $data['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+            }
+        }
+
+        $petugas = $this->db('petugas')->where('status', '1')->toArray();
+
+        return $this->draw('lampiran_permintaan_pelayanan_kerohanian/form.html', [
+            'data' => $data,
+            'petugas' => $petugas
+        ]);
+    }
+
+    public function postPelayanankerohaniansave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (empty($no_rawat)) {
+            $this->setNotify('failure', 'Nomor Rawat wajib diisi!');
+            redirect(url([ADMIN, 'update_bmt', 'pelayanankerohanianmanage']));
+        }
+
+        $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+        $no_rkm_medis = $reg['no_rkm_medis'] ?? ($_POST['no_rkm_medis'] ?? '');
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'kamar_inap' => $_POST['kamar_inap'] ?? '',
+            'nama_pemohon' => $_POST['nama_pemohon'] ?? '',
+            'tgl_lahir_pemohon' => !empty($_POST['tgl_lahir_pemohon']) ? $_POST['tgl_lahir_pemohon'] : null,
+            'umur_pemohon' => $_POST['umur_pemohon'] ?? '',
+            'alamat_pemohon' => $_POST['alamat_pemohon'] ?? '',
+            'hubungan_pasien' => $_POST['hubungan_pasien'] ?? 'Diri Sendiri',
+            'agama_kepercayaan' => $_POST['agama_kepercayaan'] ?? '',
+            'kebutuhan_khusus' => $_POST['kebutuhan_khusus'] ?? '',
+            'nama_rohaniawan' => $_POST['nama_rohaniawan'] ?? '',
+            'kota' => !empty($_POST['kota']) ? $_POST['kota'] : 'Banjarmasin',
+            'tanggal_surat' => !empty($_POST['tanggal_surat']) ? $_POST['tanggal_surat'] : date('Y-m-d'),
+            'nama_perawat' => $_POST['nama_perawat'] ?? '',
+            'nip_perawat' => $_POST['nip_perawat'] ?? '',
+            'catatan' => $_POST['catatan'] ?? ''
+        ];
+
+        if ($id) {
+            $saveData['updated_at'] = date('Y-m-d H:i:s');
+            $this->db('lampiran_permintaan_pelayanan_kerohanian')->where('id', $id)->save($saveData);
+            $this->setNotify('success', 'Data Permintaan Pelayanan Kerohanian berhasil diperbarui.');
+        } else {
+            $saveData['created_at'] = date('Y-m-d H:i:s');
+            $saveData['updated_at'] = date('Y-m-d H:i:s');
+            $this->db('lampiran_permintaan_pelayanan_kerohanian')->save($saveData);
+            $this->setNotify('success', 'Data Permintaan Pelayanan Kerohanian berhasil disimpan.');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'pelayanankerohanianmanage']));
+    }
+
+    public function getPelayanankerohanihapus($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if ($id) {
+            $this->db('lampiran_permintaan_pelayanan_kerohanian')->where('id', $id)->delete();
+            $this->setNotify('success', 'Data Permintaan Pelayanan Kerohanian berhasil dihapus.');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'pelayanankerohanianmanage']));
+    }
+
+    public function getPelayanankerohanicetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? '');
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('lampiran_permintaan_pelayanan_kerohanian')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_permintaan_pelayanan_kerohanian.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_permintaan_pelayanan_kerohanian.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('lampiran_permintaan_pelayanan_kerohanian.id', $id)
+            ->select('lampiran_permintaan_pelayanan_kerohanian.*, COALESCE(lampiran_permintaan_pelayanan_kerohanian.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat as alamat_pasien')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rm = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = $rm[$i] ?? '&nbsp;';
+        }
+        $data['no_rkm_medis'] = $rm;
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        // Tanggal Lahir Pasien
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tgl_lahir_indo'] = $data['tgl_lahir'];
+            }
+        } else {
+            $data['tgl_lahir_indo'] = '-';
+        }
+
+        // Tanggal Lahir Pemohon
+        if (!empty($data['tgl_lahir_pemohon']) && $data['tgl_lahir_pemohon'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir_pemohon']);
+            if (count($tgl) == 3) {
+                $data['tgl_lahir_pemohon_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tgl_lahir_pemohon_indo'] = $data['tgl_lahir_pemohon'];
+            }
+        } else {
+            $data['tgl_lahir_pemohon_indo'] = '';
+        }
+
+        // Tanggal Surat
+        if (!empty($data['tanggal_surat']) && $data['tanggal_surat'] != '0000-00-00') {
+            $tgl = explode('-', $data['tanggal_surat']);
+            if (count($tgl) == 3) {
+                $data['tanggal_surat_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tanggal_surat_indo'] = $data['tanggal_surat'];
+            }
+        } else {
+            $data['tanggal_surat_indo'] = date('d') . ' ' . $bulan[(int)date('m')] . ' ' . date('Y');
+        }
+
+        // Cek jika request export mPDF
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 8,
+                    'margin_right' => 8,
+                    'margin_top' => 5,
+                    'margin_bottom' => 5
+                ]);
+                $html = $this->draw('lampiran_permintaan_pelayanan_kerohanian/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Permintaan_Pelayanan_Kerohanian_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                error_log('mPDF Error: ' . $e->getMessage());
+            }
+        }
+
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_permintaan_pelayanan_kerohanian/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ============================================================
+    // RML - MONITORING PASIEN KATETER URINE (RANAP)
+    // ============================================================
+
+    public function anyMonitoringkateterurinmanage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $monitoring = $this->db('lampiran_monitoring_pasien_kateter_urin')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_monitoring_pasien_kateter_urin.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_monitoring_pasien_kateter_urin.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('lampiran_monitoring_pasien_kateter_urin.*, COALESCE(lampiran_monitoring_pasien_kateter_urin.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, lampiran_monitoring_pasien_kateter_urin.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+            ->desc('lampiran_monitoring_pasien_kateter_urin.id')
+            ->toArray();
+
+        $no = 1;
+        foreach ($monitoring as &$item) {
+            $item['nomor'] = $no++;
+            $rmRaw = ltrim($item['no_rkm_medis'] ?? '', "'");
+            $item['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        }
+
+        return $this->draw('lampiran_monitoring_pasien_kateter_urin/manage.html', [
+            'data' => $monitoring,
+            'monitoring' => $monitoring
+        ]);
+    }
+
+    public function getMonitoringkateterurinform($id = null)
+    {
+        // AJAX: Cari data pasien via No. Rawat / No. RM
+        if (isset($_GET['ajax_patient']) && $_GET['ajax_patient'] == '1') {
+            header('Content-Type: application/json');
+            $no_rawat = trim($_GET['no_rawat'] ?? '');
+
+            $reg = $this->db('reg_periksa')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $no_rawat)
+                ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->oneArray();
+
+            if ($reg) {
+                $rmRaw = ltrim($reg['no_rkm_medis'] ?? '', "'");
+                $reg['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+
+                // Cari kamar inap bila ada
+                $kamar = $this->db('kamar_inap')
+                    ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
+                    ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
+                    ->where('kamar_inap.no_rawat', $reg['no_rawat'])
+                    ->desc('kamar_inap.tgl_masuk')
+                    ->select('bangsal.nm_bangsal, kamar.kd_kamar')
+                    ->oneArray();
+
+                $reg['ruang_perawatan'] = $kamar ? ($kamar['nm_bangsal'] . ' / ' . $kamar['kd_kamar']) : 'Rawat Inap';
+
+                echo json_encode(['success' => true, 'data' => $reg]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Data pasien tidak ditemukan']);
+            }
+            exit();
+        }
+
+        $itemsPencegahan = [
+            ['key' => 'pasang', 'label' => 'Pasang', 'icon' => ''],
+            ['key' => 'lepas', 'label' => 'Lepas', 'icon' => ''],
+            ['key' => 'cuci_tangan', 'label' => 'Cuci tangan sesuai 5 moment', 'icon' => ''],
+            ['key' => 'teknik_aseptik', 'label' => 'Pemasangan dengan teknik aseptik', 'icon' => ''],
+            ['key' => 'fiksasi', 'label' => 'Fiksasi dg baik', 'icon' => ''],
+            ['key' => 'urin_bag_bwh_bladder', 'label' => 'Urin bag di bwh bladder', 'icon' => ''],
+            ['key' => 'posisi_kateter', 'label' => 'Posisi kateter baik/tdk tertekuk, terlipat', 'icon' => ''],
+            ['key' => 'urin_bag_lantai', 'label' => 'Urin bag tidak menyentuh lantai', 'icon' => ''],
+            ['key' => 'tidak_bladder_training', 'label' => 'Tidak bladder training dgn klem', 'icon' => ''],
+            ['key' => 'tidak_buka_sambungan', 'label' => 'Tidak membuka sambungan antara cath dan selang urin bag', 'icon' => ''],
+            ['key' => 'perineal_hygiene', 'label' => 'Perineal hygiene dg air dan sabun 2x/hari', 'icon' => ''],
+            ['key' => 'gelas_ukur_terpisah', 'label' => 'Gelas ukur terpisah antar pasien', 'icon' => ''],
+            ['key' => 'ada_indikasi', 'label' => 'Ada indikasi pemakaian kateter urin', 'icon' => '']
+        ];
+
+        $itemsGejala = [
+            ['key' => 'gejala_demam', 'label' => 'Demam ≥38° C', 'prefix' => 'a.1'],
+            ['key' => 'gejala_nyeri_suprapubic', 'label' => 'Nyeri supra-pubic', 'prefix' => 'a.2'],
+            ['key' => 'gejala_urgency', 'label' => 'Urgency/anyang2an', 'prefix' => 'a.3'],
+            ['key' => 'gejala_frequency', 'label' => 'Frequency/sering kencing', 'prefix' => 'a.4'],
+            ['key' => 'gejala_dysuria', 'label' => 'Dysuria/nyeri saatkencing', 'prefix' => 'a.5'],
+            ['key' => 'gejala_nyeri_costovertebral', 'label' => 'Nyeri costovertebral angle', 'prefix' => 'a.6'],
+            ['key' => 'gejala_kuman_biakan', 'label' => 'Kuman biakan urine ≥10³ atau ≥10⁵/ml', 'prefix' => 'b.'],
+            ['key' => 'gejala_pyuria', 'label' => 'Pyuria (≥10 leukosit urin)', 'prefix' => 'c.']
+        ];
+
+        $id = $id ?? ($_GET['id'] ?? null);
+        $bulanIndo = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        $currBulanTahun = $bulanIndo[(int)date('m')] . ' ' . date('Y');
+
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'ruang' => '',
+            'bulan_tahun' => $currBulanTahun,
+            'tgl_mrs' => date('Y-m-d'),
+            'diagnosa' => '',
+            'jenis_cath' => 'Folley',
+            'jenis_cath_lainnya' => '',
+            'no_cath' => '16',
+            'no_cath_lainnya' => '',
+            'detail_monitoring' => '',
+            'detail_monitoring_data' => [],
+            'nama_icn' => '',
+            'nip_icn' => '',
+            'nama_head_nurse' => '',
+            'nip_head_nurse' => '',
+            'catatan' => '',
+            'nm_pasien' => '',
+            'jk' => '',
+            'tgl_lahir' => '',
+            'umur' => '',
+            'alamat' => ''
+        ];
+
+        if ($id) {
+            $row = $this->db('lampiran_monitoring_pasien_kateter_urin')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_monitoring_pasien_kateter_urin.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_monitoring_pasien_kateter_urin.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('lampiran_monitoring_pasien_kateter_urin.id', $id)
+                ->select('lampiran_monitoring_pasien_kateter_urin.*, COALESCE(lampiran_monitoring_pasien_kateter_urin.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->oneArray();
+
+            if ($row) {
+                $data = array_merge($data, $row);
+                $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+                $data['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+                if (!empty($data['detail_monitoring'])) {
+                    $data['detail_monitoring_data'] = json_decode($data['detail_monitoring'], true) ?: [];
+                }
+            }
+        }
+
+        $petugas = $this->db('petugas')->where('status', '1')->toArray();
+
+        return $this->draw('lampiran_monitoring_pasien_kateter_urin/form.html', [
+            'data' => $data,
+            'items_pencegahan' => $itemsPencegahan,
+            'items_gejala' => $itemsGejala,
+            'petugas' => $petugas
+        ]);
+    }
+
+    public function postMonitoringkateterurinsave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (empty($no_rawat)) {
+            $this->setNotify('failure', 'Nomor Rawat wajib diisi!');
+            redirect(url([ADMIN, 'update_bmt', 'monitoringkateterurinmanage']));
+        }
+
+        $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+        $no_rkm_medis = $reg['no_rkm_medis'] ?? ($_POST['no_rkm_medis'] ?? '');
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'ruang' => $_POST['ruang'] ?? '',
+            'bulan_tahun' => $_POST['bulan_tahun'] ?? '',
+            'tgl_mrs' => !empty($_POST['tgl_mrs']) ? $_POST['tgl_mrs'] : null,
+            'diagnosa' => $_POST['diagnosa'] ?? '',
+            'jenis_cath' => $_POST['jenis_cath'] ?? 'Folley',
+            'jenis_cath_lainnya' => $_POST['jenis_cath_lainnya'] ?? '',
+            'no_cath' => $_POST['no_cath'] ?? '16',
+            'no_cath_lainnya' => $_POST['no_cath_lainnya'] ?? '',
+            'detail_monitoring' => $_POST['detail_monitoring_json'] ?? '',
+            'nama_icn' => $_POST['nama_icn'] ?? '',
+            'nip_icn' => $_POST['nip_icn'] ?? '',
+            'nama_head_nurse' => $_POST['nama_head_nurse'] ?? '',
+            'nip_head_nurse' => $_POST['nip_head_nurse'] ?? '',
+            'catatan' => $_POST['catatan'] ?? ''
+        ];
+
+        if ($id) {
+            $saveData['updated_at'] = date('Y-m-d H:i:s');
+            $this->db('lampiran_monitoring_pasien_kateter_urin')->where('id', $id)->save($saveData);
+            $this->setNotify('success', 'Data Monitoring Pasien Kateter Urin berhasil diperbarui.');
+        } else {
+            $saveData['created_at'] = date('Y-m-d H:i:s');
+            $saveData['updated_at'] = date('Y-m-d H:i:s');
+            $this->db('lampiran_monitoring_pasien_kateter_urin')->save($saveData);
+            $this->setNotify('success', 'Data Monitoring Pasien Kateter Urin berhasil disimpan.');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'monitoringkateterurinmanage']));
+    }
+
+    public function getMonitoringkateterurinhapus($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if ($id) {
+            $this->db('lampiran_monitoring_pasien_kateter_urin')->where('id', $id)->delete();
+            $this->setNotify('success', 'Data Monitoring Pasien Kateter Urin berhasil dihapus.');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'monitoringkateterurinmanage']));
+    }
+
+    public function getMonitoringkateterurincetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? '');
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('lampiran_monitoring_pasien_kateter_urin')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_monitoring_pasien_kateter_urin.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_monitoring_pasien_kateter_urin.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('lampiran_monitoring_pasien_kateter_urin.id', $id)
+            ->select('lampiran_monitoring_pasien_kateter_urin.*, COALESCE(lampiran_monitoring_pasien_kateter_urin.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat as alamat_pasien')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rm = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = $rm[$i] ?? '&nbsp;';
+        }
+        $data['no_rkm_medis'] = $rm;
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        // Tanggal Lahir Pasien
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tgl_lahir_indo'] = $data['tgl_lahir'];
+            }
+        } else {
+            $data['tgl_lahir_indo'] = '-';
+        }
+
+        // Tanggal MRS
+        if (!empty($data['tgl_mrs']) && $data['tgl_mrs'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_mrs']);
+            if (count($tgl) == 3) {
+                $data['tgl_mrs_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tgl_mrs_indo'] = $data['tgl_mrs'];
+            }
+        } else {
+            $data['tgl_mrs_indo'] = '-';
+        }
+
+        // Parsing detail monitoring grid
+        $rawGrid = [];
+        if (!empty($data['detail_monitoring'])) {
+            $rawGrid = json_decode($data['detail_monitoring'], true) ?: [];
+        }
+
+        $itemsPencegahan = [
+            ['key' => 'pasang', 'label' => 'Pasang', 'icon' => ''],
+            ['key' => 'lepas', 'label' => 'Lepas', 'icon' => ''],
+            ['key' => 'cuci_tangan', 'label' => 'Cuci tangan sesuai 5 moment', 'icon' => ''],
+            ['key' => 'teknik_aseptik', 'label' => 'Pemasangan dengan teknik aseptik', 'icon' => ''],
+            ['key' => 'fiksasi', 'label' => 'Fiksasi dg baik', 'icon' => ''],
+            ['key' => 'urin_bag_bwh_bladder', 'label' => 'Urin bag di bwh bladder', 'icon' => ''],
+            ['key' => 'posisi_kateter', 'label' => 'Posisi kateter baik/tdk tertekuk, terlipat', 'icon' => ''],
+            ['key' => 'urin_bag_lantai', 'label' => 'Urin bag tidak menyentuh lantai', 'icon' => ''],
+            ['key' => 'tidak_bladder_training', 'label' => 'Tidak bladder training dgn klem', 'icon' => ''],
+            ['key' => 'tidak_buka_sambungan', 'label' => 'Tidak membuka sambungan antara cath dan selang urin bag', 'icon' => ''],
+            ['key' => 'perineal_hygiene', 'label' => 'Perineal hygiene dg air dan sabun 2x/hari', 'icon' => ''],
+            ['key' => 'gelas_ukur_terpisah', 'label' => 'Gelas ukur terpisah antar pasien', 'icon' => ''],
+            ['key' => 'ada_indikasi', 'label' => 'Ada indikasi pemakaian kateter urin', 'icon' => '']
+        ];
+
+        $gridPencegahan = [];
+        foreach ($itemsPencegahan as $item) {
+            $rowObj = $rawGrid[$item['key']] ?? [];
+            $days = [];
+            for ($d = 1; $d <= 31; $d++) {
+                $days[$d] = $rowObj['d' . $d] ?? '';
+            }
+            $gridPencegahan[] = [
+                'key' => $item['key'],
+                'label' => $item['label'],
+                'icon' => $item['icon'],
+                'days' => $days,
+                'total' => $rowObj['total'] ?? '',
+                'ketr' => $rowObj['ketr'] ?? ''
+            ];
+        }
+        $data['grid_pencegahan'] = $gridPencegahan;
+
+        $itemsGejala = [
+            ['key' => 'gejala_demam', 'label' => 'Demam ≥38° C'],
+            ['key' => 'gejala_nyeri_suprapubic', 'label' => 'Nyeri supra-pubic'],
+            ['key' => 'gejala_urgency', 'label' => 'Urgency/anyang2an'],
+            ['key' => 'gejala_frequency', 'label' => 'Frequency/sering kencing'],
+            ['key' => 'gejala_dysuria', 'label' => 'Dysuria/nyeri saatkencing'],
+            ['key' => 'gejala_nyeri_costovertebral', 'label' => 'Nyeri costovertebral angle'],
+            ['key' => 'gejala_kuman_biakan', 'label' => 'Kuman biakan urine ≥10³ atau ≥10⁵/ml'],
+            ['key' => 'gejala_pyuria', 'label' => 'Pyuria (≥10 leukosit urin)']
+        ];
+
+        $gridGejala = [];
+        foreach ($itemsGejala as $item) {
+            $rowObj = $rawGrid[$item['key']] ?? [];
+            $days = [];
+            for ($d = 1; $d <= 31; $d++) {
+                $days[$d] = $rowObj['d' . $d] ?? '';
+            }
+            $gridGejala[] = [
+                'key' => $item['key'],
+                'label' => $item['label'],
+                'days' => $days,
+                'total' => $rowObj['total'] ?? '',
+                'ketr' => $rowObj['ketr'] ?? ''
+            ];
+        }
+        $data['grid_gejala'] = $gridGejala;
+
+        // Cek jika request export mPDF
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4-L',
+                    'orientation' => 'L',
+                    'margin_left' => 6,
+                    'margin_right' => 6,
+                    'margin_top' => 5,
+                    'margin_bottom' => 5
+                ]);
+                $html = $this->draw('lampiran_monitoring_pasien_kateter_urin/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Monitoring_Kateter_Urin_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                error_log('mPDF Error: ' . $e->getMessage());
+            }
+        }
+
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_monitoring_pasien_kateter_urin/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ============================================================
+    // LAMPIRAN - KONSULTASI INTERNAL (Ranap)
+    // ============================================================
+
+    public function anyKonsultasiinternalmanage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $konsultasi = $this->db('lampiran_konsultasi_internal')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_konsultasi_internal.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_konsultasi_internal.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('lampiran_konsultasi_internal.*, COALESCE(lampiran_konsultasi_internal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, lampiran_konsultasi_internal.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
+            ->desc('lampiran_konsultasi_internal.id')
+            ->toArray();
+
+        $no = 1;
+        foreach ($konsultasi as &$item) {
+            $item['nomor'] = $no++;
+            $rmRaw = ltrim($item['no_rkm_medis'] ?? '', "'");
+            $item['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+            $item['umur'] = !empty($item['umur']) ? $item['umur'] : ($item['umur_pasien'] ?? '-');
+            $item['jk'] = !empty($item['jk']) ? $item['jk'] : '-';
+        }
+
+        return $this->draw('lampiran_konsultasi_internal/manage.html', [
+            'data' => $konsultasi,
+            'konsultasi' => $konsultasi
+        ]);
+    }
+
+    public function getKonsultasiinternalform($id = null)
+    {
+        // AJAX: Cari data pasien via No. Rawat / No. RM
+        if (isset($_GET['ajax_patient']) && $_GET['ajax_patient'] == '1') {
+            header('Content-Type: application/json');
+            $no_rawat = trim($_GET['no_rawat'] ?? '');
+
+            $reg = $this->db('reg_periksa')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $no_rawat)
+                ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->oneArray();
+
+            if ($reg) {
+                $rmRaw = ltrim($reg['no_rkm_medis'] ?? '', "'");
+                $reg['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+
+                // Cari kamar inap bila ada
+                $kamar = $this->db('kamar_inap')
+                    ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
+                    ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
+                    ->where('kamar_inap.no_rawat', $reg['no_rawat'])
+                    ->desc('kamar_inap.tgl_masuk')
+                    ->select('bangsal.nm_bangsal, kamar.kd_kamar')
+                    ->oneArray();
+
+                $reg['kamar_inap'] = $kamar ? ($kamar['nm_bangsal'] . ' / ' . $kamar['kd_kamar']) : 'Rawat Inap';
+
+                echo json_encode(['success' => true, 'data' => $reg]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Data pasien tidak ditemukan']);
+            }
+            exit();
+        }
+
+        $id = $id ?? ($_GET['id'] ?? null);
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'kamar_inap' => '',
+            'ts_bagian' => '',
+            'instalasi' => 'Instalasi Rawat Inap (IRNA)',
+            'diagnosa_sementara' => '',
+            'konsultasi_diminta' => '',
+            'tgl_konsul' => date('Y-m-d'),
+            'kd_dokter_pengirim' => '',
+            'nama_dokter_pengirim' => '',
+            'jawaban_hasil_pemeriksaan' => '',
+            'jawaban_diagnosa' => '',
+            'jawaban_nasihat' => '',
+            'tgl_jawaban' => '',
+            'kd_dokter_konsulen' => '',
+            'nama_dokter_konsulen' => '',
+            'status_konsul' => 'Menunggu Jawaban',
+            'catatan' => '',
+            'nm_pasien' => '',
+            'jk' => '',
+            'tgl_lahir' => '',
+            'umur' => ''
+        ];
+
+        if ($id) {
+            $row = $this->db('lampiran_konsultasi_internal')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_konsultasi_internal.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_konsultasi_internal.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('lampiran_konsultasi_internal.id', $id)
+                ->select('lampiran_konsultasi_internal.*, COALESCE(lampiran_konsultasi_internal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur')
+                ->oneArray();
+
+            if ($row) {
+                $data = array_merge($data, $row);
+                $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+                $data['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+            }
+        }
+
+        $dokter = $this->db('dokter')->where('status', '1')->toArray();
+
+        return $this->draw('lampiran_konsultasi_internal/form.html', [
+            'data' => $data,
+            'dokter' => $dokter
+        ]);
+    }
+
+    public function postKonsultasiinternalsave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (empty($no_rawat)) {
+            $this->setNotify('failure', 'Nomor Rawat wajib diisi!');
+            redirect(url([ADMIN, 'update_bmt', 'konsultasiinternalmanage']));
+        }
+
+        $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+        $no_rkm_medis = $reg['no_rkm_medis'] ?? ($_POST['no_rkm_medis'] ?? '');
+
+        $status_konsul = $_POST['status_konsul'] ?? 'Menunggu Jawaban';
+        if (!empty($_POST['jawaban_hasil_pemeriksaan']) || !empty($_POST['jawaban_nasihat'])) {
+            $status_konsul = 'Sudah Dijawab';
+        }
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'kamar_inap' => $_POST['kamar_inap'] ?? '',
+            'ts_bagian' => $_POST['ts_bagian'] ?? '',
+            'instalasi' => $_POST['instalasi'] ?? '',
+            'diagnosa_sementara' => $_POST['diagnosa_sementara'] ?? '',
+            'konsultasi_diminta' => $_POST['konsultasi_diminta'] ?? '',
+            'tgl_konsul' => !empty($_POST['tgl_konsul']) ? $_POST['tgl_konsul'] : date('Y-m-d'),
+            'kd_dokter_pengirim' => $_POST['kd_dokter_pengirim'] ?? null,
+            'nama_dokter_pengirim' => $_POST['nama_dokter_pengirim'] ?? '',
+            'jawaban_hasil_pemeriksaan' => $_POST['jawaban_hasil_pemeriksaan'] ?? '',
+            'jawaban_diagnosa' => $_POST['jawaban_diagnosa'] ?? '',
+            'jawaban_nasihat' => $_POST['jawaban_nasihat'] ?? '',
+            'tgl_jawaban' => !empty($_POST['tgl_jawaban']) ? $_POST['tgl_jawaban'] : null,
+            'kd_dokter_konsulen' => $_POST['kd_dokter_konsulen'] ?? null,
+            'nama_dokter_konsulen' => $_POST['nama_dokter_konsulen'] ?? '',
+            'status_konsul' => $status_konsul,
+            'catatan' => $_POST['catatan'] ?? '',
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        if (!empty($id)) {
+            $saveData['id'] = $id;
+            $result = $this->db('lampiran_konsultasi_internal')->where('id', $id)->save($saveData);
+            $msg = 'diperbarui';
+        } else {
+            $saveData['created_at'] = date('Y-m-d H:i:s');
+            $result = $this->db('lampiran_konsultasi_internal')->save($saveData);
+            $msg = 'disimpan';
+        }
+
+        if ($result) {
+            $this->setNotify('success', "Data Konsultasi Internal berhasil $msg.");
+        } else {
+            $this->setNotify('failure', "Gagal menyimpan data Konsultasi Internal.");
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'konsultasiinternalmanage']));
+    }
+
+    public function getKonsultasiinternalhapus($id)
+    {
+        if (!empty($id)) {
+            $result = $this->db('lampiran_konsultasi_internal')->where('id', $id)->delete();
+            if ($result) {
+                $this->setNotify('success', 'Data Konsultasi Internal berhasil dihapus.');
+            } else {
+                $this->setNotify('failure', 'Gagal menghapus data Konsultasi Internal.');
+            }
+        }
+        redirect(url([ADMIN, 'update_bmt', 'konsultasiinternalmanage']));
+    }
+
+    public function getKonsultasiinternalcetak($id)
+    {
+        $data = $this->db('lampiran_konsultasi_internal')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_konsultasi_internal.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_konsultasi_internal.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('lampiran_konsultasi_internal.id', $id)
+            ->select('lampiran_konsultasi_internal.*, COALESCE(lampiran_konsultasi_internal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat')
+            ->oneArray();
+
+        if (!$data) {
+            $this->setNotify('failure', 'Data Konsultasi Internal tidak ditemukan!');
+            redirect(url([ADMIN, 'update_bmt', 'konsultasiinternalmanage']));
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rmPadded = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        $data['no_rkm_medis'] = $rmPadded;
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = substr($rmPadded, $i, 1);
+        }
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        // Tanggal Lahir Pasien
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tgl_lahir_indo'] = $data['tgl_lahir'];
+            }
+        } else {
+            $data['tgl_lahir_indo'] = '-';
+        }
+
+        // Tanggal Konsultasi
+        if (!empty($data['tgl_konsul']) && $data['tgl_konsul'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_konsul']);
+            if (count($tgl) == 3) {
+                $data['tgl_konsul_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tgl_konsul_indo'] = $data['tgl_konsul'];
+            }
+        } else {
+            $data['tgl_konsul_indo'] = '';
+        }
+
+        // Tanggal Jawaban
+        if (!empty($data['tgl_jawaban']) && $data['tgl_jawaban'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_jawaban']);
+            if (count($tgl) == 3) {
+                $data['tgl_jawaban_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tgl_jawaban_indo'] = $data['tgl_jawaban'];
+            }
+        } else {
+            $data['tgl_jawaban_indo'] = '';
+        }
+
+        // Cek jika request export mPDF
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 8,
+                    'margin_right' => 8,
+                    'margin_top' => 5,
+                    'margin_bottom' => 5
+                ]);
+                $html = $this->draw('lampiran_konsultasi_internal/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Konsultasi_Internal_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                error_log('mPDF Error: ' . $e->getMessage());
+            }
+        }
+
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_konsultasi_internal/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ============================================================
+    // LAMPIRAN - MONITORING PASIEN SELAMA TRANSFER (Ranap)
+    // ============================================================
+
+    public function anyMonitoringpasienselamatransfermanage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $monitoring = $this->db('lampiran_monitoring_pasien_selama_transfer')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_monitoring_pasien_selama_transfer.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_monitoring_pasien_selama_transfer.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('lampiran_monitoring_pasien_selama_transfer.*, COALESCE(lampiran_monitoring_pasien_selama_transfer.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, lampiran_monitoring_pasien_selama_transfer.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
+            ->desc('lampiran_monitoring_pasien_selama_transfer.id')
+            ->toArray();
+
+        $no = 1;
+        foreach ($monitoring as &$item) {
+            $item['nomor'] = $no++;
+            $rmRaw = ltrim($item['no_rkm_medis'] ?? '', "'");
+            $item['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+            $item['umur'] = !empty($item['umur']) ? $item['umur'] : ($item['umur_pasien'] ?? '-');
+            $item['jk'] = !empty($item['jk']) ? $item['jk'] : '-';
+        }
+
+        return $this->draw('lampiran_monitoring_pasien_selama_transfer/manage.html', [
+            'data' => $monitoring,
+            'monitoring' => $monitoring
+        ]);
+    }
+
+    public function getMonitoringpasienselamatransferform($id = null)
+    {
+        // AJAX: Cari data pasien via No. Rawat / No. RM
+        if (isset($_GET['ajax_patient']) && $_GET['ajax_patient'] == '1') {
+            header('Content-Type: application/json');
+            $no_rawat = trim($_GET['no_rawat'] ?? '');
+
+            $reg = $this->db('reg_periksa')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $no_rawat)
+                ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->oneArray();
+
+            if ($reg) {
+                $rmRaw = ltrim($reg['no_rkm_medis'] ?? '', "'");
+                $reg['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+
+                // Cari kamar inap bila ada
+                $kamar = $this->db('kamar_inap')
+                    ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
+                    ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
+                    ->where('kamar_inap.no_rawat', $reg['no_rawat'])
+                    ->desc('kamar_inap.tgl_masuk')
+                    ->select('bangsal.nm_bangsal, kamar.kd_kamar')
+                    ->oneArray();
+
+                $reg['kamar_inap'] = $kamar ? ($kamar['nm_bangsal'] . ' / ' . $kamar['kd_kamar']) : 'Rawat Inap';
+
+                echo json_encode(['success' => true, 'data' => $reg]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Data pasien tidak ditemukan']);
+            }
+            exit();
+        }
+
+        $id = $id ?? ($_GET['id'] ?? null);
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'kamar_inap' => '',
+            'tanggal_transfer' => date('Y-m-d'),
+            'status_kegawatdaruratan' => 'Kuning',
+            'jenis_kasus' => 'Non Trauma',
+            'diagnosa' => '',
+            'monitoring_keterangan' => '',
+            'petugas_transfer' => '',
+            'nip_petugas_transfer' => '',
+            'jam_berangkat' => date('H:i'),
+            'jam_tiba' => date('H:i', time() + 900),
+            'detail_monitoring' => '[]',
+            'catatan' => '',
+            'nm_pasien' => '',
+            'jk' => '',
+            'tgl_lahir' => '',
+            'umur' => ''
+        ];
+
+        if ($id) {
+            $row = $this->db('lampiran_monitoring_pasien_selama_transfer')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_monitoring_pasien_selama_transfer.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_monitoring_pasien_selama_transfer.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('lampiran_monitoring_pasien_selama_transfer.id', $id)
+                ->select('lampiran_monitoring_pasien_selama_transfer.*, COALESCE(lampiran_monitoring_pasien_selama_transfer.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur')
+                ->oneArray();
+
+            if ($row) {
+                $data = array_merge($data, $row);
+                $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+                $data['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+            }
+        }
+
+        $petugas = $this->db('petugas')->where('status', '1')->toArray();
+
+        return $this->draw('lampiran_monitoring_pasien_selama_transfer/form.html', [
+            'data' => $data,
+            'petugas' => $petugas
+        ]);
+    }
+
+    public function postMonitoringpasienselamatransfersave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (empty($no_rawat)) {
+            $this->setNotify('failure', 'Nomor Rawat wajib diisi!');
+            redirect(url([ADMIN, 'update_bmt', 'monitoringpasienselamatransfermanage']));
+        }
+
+        $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+        $no_rkm_medis = $reg['no_rkm_medis'] ?? ($_POST['no_rkm_medis'] ?? '');
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'kamar_inap' => $_POST['kamar_inap'] ?? '',
+            'tanggal_transfer' => !empty($_POST['tanggal_transfer']) ? $_POST['tanggal_transfer'] : date('Y-m-d'),
+            'status_kegawatdaruratan' => $_POST['status_kegawatdaruratan'] ?? 'Kuning',
+            'jenis_kasus' => $_POST['jenis_kasus'] ?? 'Non Trauma',
+            'diagnosa' => $_POST['diagnosa'] ?? '',
+            'monitoring_keterangan' => $_POST['monitoring_keterangan'] ?? '',
+            'petugas_transfer' => $_POST['petugas_transfer'] ?? '',
+            'nip_petugas_transfer' => $_POST['nip_petugas_transfer'] ?? '',
+            'jam_berangkat' => !empty($_POST['jam_berangkat']) ? $_POST['jam_berangkat'] : null,
+            'jam_tiba' => !empty($_POST['jam_tiba']) ? $_POST['jam_tiba'] : null,
+            'detail_monitoring' => $_POST['detail_monitoring'] ?? '[]',
+            'catatan' => $_POST['catatan'] ?? '',
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        if (!empty($id)) {
+            $saveData['id'] = $id;
+            $result = $this->db('lampiran_monitoring_pasien_selama_transfer')->where('id', $id)->save($saveData);
+            $msg = 'diperbarui';
+        } else {
+            $saveData['created_at'] = date('Y-m-d H:i:s');
+            $result = $this->db('lampiran_monitoring_pasien_selama_transfer')->save($saveData);
+            $msg = 'disimpan';
+        }
+
+        if ($result) {
+            $this->setNotify('success', "Data Monitoring Pasien Selama Transfer berhasil $msg.");
+        } else {
+            $this->setNotify('failure', "Gagal menyimpan data monitoring transfer.");
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'monitoringpasienselamatransfermanage']));
+    }
+
+    public function getMonitoringpasienselamatransferhapus($id)
+    {
+        if (!empty($id)) {
+            $result = $this->db('lampiran_monitoring_pasien_selama_transfer')->where('id', $id)->delete();
+            if ($result) {
+                $this->setNotify('success', 'Data monitoring transfer berhasil dihapus.');
+            } else {
+                $this->setNotify('failure', 'Gagal menghapus data monitoring transfer.');
+            }
+        }
+        redirect(url([ADMIN, 'update_bmt', 'monitoringpasienselamatransfermanage']));
+    }
+
+    public function getMonitoringpasienselamatransfercetak($id)
+    {
+        $data = $this->db('lampiran_monitoring_pasien_selama_transfer')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_monitoring_pasien_selama_transfer.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_monitoring_pasien_selama_transfer.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('lampiran_monitoring_pasien_selama_transfer.id', $id)
+            ->select('lampiran_monitoring_pasien_selama_transfer.*, COALESCE(lampiran_monitoring_pasien_selama_transfer.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat')
+            ->oneArray();
+
+        if (!$data) {
+            $this->setNotify('failure', 'Data monitoring transfer tidak ditemukan!');
+            redirect(url([ADMIN, 'update_bmt', 'monitoringpasienselamatransfermanage']));
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rmPadded = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        $data['no_rkm_medis'] = $rmPadded;
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = substr($rmPadded, $i, 1);
+        }
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        // Tanggal Lahir Pasien
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tgl_lahir_indo'] = $data['tgl_lahir'];
+            }
+        } else {
+            $data['tgl_lahir_indo'] = '-';
+        }
+
+        // Tanggal Transfer
+        if (!empty($data['tanggal_transfer']) && $data['tanggal_transfer'] != '0000-00-00') {
+            $tgl = explode('-', $data['tanggal_transfer']);
+            if (count($tgl) == 3) {
+                $data['tanggal_transfer_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tanggal_transfer_indo'] = $data['tanggal_transfer'];
+            }
+        } else {
+            $data['tanggal_transfer_indo'] = date('d') . ' ' . $bulan[(int)date('m')] . ' ' . date('Y');
+        }
+
+        // Grid Rows
+        $gridRows = !empty($data['detail_monitoring']) ? json_decode($data['detail_monitoring'], true) : [];
+        if (!is_array($gridRows)) {
+            $gridRows = [];
+        }
+
+        // Pad to at least 15 rows to visually match the physical form
+        $totalRowsToDisplay = max(15, count($gridRows));
+        for ($i = count($gridRows); $i < $totalRowsToDisplay; $i++) {
+            $gridRows[] = [
+                'jam_obs' => '&nbsp;',
+                'gcs_pupil_rx' => '&nbsp;',
+                'tensi' => '&nbsp;',
+                'rr' => '&nbsp;',
+                'spo2' => '&nbsp;',
+                'temp' => '&nbsp;',
+                'jam_tind' => '&nbsp;',
+                'hal_penting_tindakan' => '&nbsp;',
+                'jam_terapi' => '&nbsp;',
+                'terapi_obat_cairan' => '&nbsp;'
+            ];
+        }
+        $data['grid_rows'] = $gridRows;
+
+        // Cek jika request export mPDF
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 8,
+                    'margin_right' => 8,
+                    'margin_top' => 5,
+                    'margin_bottom' => 5
+                ]);
+                $html = $this->draw('lampiran_monitoring_pasien_selama_transfer/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Monitoring_Transfer_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                error_log('mPDF Error: ' . $e->getMessage());
+            }
+        }
+
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_monitoring_pasien_selama_transfer/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ============================================================
+    // LAMPIRAN - PENILAIAN DEKUBITUS (DECUBITUS RISK ASSESSMENT)
+    // ============================================================
+
+    public function anyPenilaiandekubitusmanage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $records = $this->db('lampiran_penilaian_dekubitus')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_dekubitus.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_dekubitus.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('lampiran_penilaian_dekubitus.*, COALESCE(lampiran_penilaian_dekubitus.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, lampiran_penilaian_dekubitus.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
+            ->desc('lampiran_penilaian_dekubitus.id')
+            ->toArray();
+
+        $no = 1;
+        foreach ($records as &$item) {
+            $item['nomor'] = $no++;
+            $rmRaw = ltrim($item['no_rkm_medis'] ?? '', "'");
+            $item['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+            $item['umur'] = !empty($item['umur']) ? $item['umur'] : ($item['umur_pasien'] ?? '-');
+            $item['jk'] = !empty($item['jk']) ? $item['jk'] : '-';
+
+            // Parse detail_penilaian to get summary stats
+            $detail = !empty($item['detail_penilaian']) ? json_decode($item['detail_penilaian'], true) : [];
+            $hariTerisi = 0;
+            $skorTerakhir = null;
+            $petugasTerakhir = '-';
+            if (is_array($detail)) {
+                for ($d = 1; $d <= 9; $d++) {
+                    if (isset($detail[$d]) && is_array($detail[$d])) {
+                        $rowDay = $detail[$d];
+                        if (!empty($rowDay['total_skor'])) {
+                            $hariTerisi++;
+                            $skorTerakhir = $rowDay['total_skor'];
+                            if (!empty($rowDay['perawat'])) {
+                                $petugasTerakhir = $rowDay['perawat'];
+                            }
+                        }
+                    }
+                }
+            }
+            $item['hari_terisi'] = $hariTerisi;
+            $item['skor_terakhir'] = $skorTerakhir;
+            $item['petugas_terakhir'] = $petugasTerakhir;
+        }
+
+        return $this->draw('lampiran_penilaian_dekubitus/manage.html', [
+            'data' => $records
+        ]);
+    }
+
+    public function getPenilaiandekubitusform($id = null)
+    {
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'nm_pasien' => '',
+            'jk' => '-',
+            'umur' => '-',
+            'tgl_lahir' => '-',
+            'kamar_inap' => '',
+            'tanggal_penilaian' => date('Y-m-d'),
+            'detail_penilaian_raw' => '{}',
+            'catatan' => ''
+        ];
+
+        if (!empty($id)) {
+            $row = $this->db('lampiran_penilaian_dekubitus')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_dekubitus.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_dekubitus.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('lampiran_penilaian_dekubitus.id', $id)
+                ->select('lampiran_penilaian_dekubitus.*, COALESCE(lampiran_penilaian_dekubitus.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
+                ->oneArray();
+
+            if ($row) {
+                $data = $row;
+                $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+                $data['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+                $data['umur'] = !empty($data['umur']) ? $data['umur'] : ($data['umur_pasien'] ?? '-');
+                $data['jk'] = !empty($data['jk']) ? $data['jk'] : '-';
+                $data['detail_penilaian_raw'] = $data['detail_penilaian'] ?? '{}';
+            }
+        } elseif (isset($_GET['no_rawat'])) {
+            $no_rawat = trim($_GET['no_rawat']);
+            $reg = $this->db('reg_periksa')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->leftJoin('kamar_inap', 'kamar_inap.no_rawat = reg_periksa.no_rawat')
+                ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
+                ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
+                ->where('reg_periksa.no_rawat', $no_rawat)
+                ->select('reg_periksa.*, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->oneArray();
+
+            if ($reg) {
+                $data['no_rawat'] = $reg['no_rawat'];
+                $rmRaw = ltrim($reg['no_rkm_medis'] ?? '', "'");
+                $data['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+                $data['nm_pasien'] = $reg['nm_pasien'] ?? '';
+                $data['jk'] = $reg['jk'] ?? '-';
+                $data['umur'] = $reg['umur'] ?? '-';
+                $data['tgl_lahir'] = $reg['tgl_lahir'] ?? '-';
+                if (!empty($reg['nm_bangsal'])) {
+                    $data['kamar_inap'] = $reg['nm_bangsal'] . ' / ' . $reg['kd_kamar'];
+                }
+            }
+        }
+
+        $petugas = $this->db('petugas')->select('nip, nama')->toArray();
+        $daysRange = range(1, 9);
+
+        return $this->draw('lampiran_penilaian_dekubitus/form.html', [
+            'data' => $data,
+            'petugas' => $petugas,
+            'days_range' => $daysRange
+        ]);
+    }
+
+    public function postPenilaiandekubitussave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (empty($no_rawat)) {
+            $this->setNotify('failure', 'Nomor Rawat wajib diisi!');
+            redirect(url([ADMIN, 'update_bmt', 'penilaiandekubitusmanage']));
+        }
+
+        $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+        $no_rkm_medis = $reg['no_rkm_medis'] ?? ($_POST['no_rkm_medis'] ?? '');
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'kamar_inap' => $_POST['kamar_inap'] ?? '',
+            'tanggal_penilaian' => !empty($_POST['tanggal_penilaian']) ? $_POST['tanggal_penilaian'] : date('Y-m-d'),
+            'detail_penilaian' => $_POST['detail_penilaian'] ?? '{}',
+            'catatan' => $_POST['catatan'] ?? '',
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        if (!empty($id)) {
+            $saveData['id'] = $id;
+            $result = $this->db('lampiran_penilaian_dekubitus')->where('id', $id)->save($saveData);
+            $msg = 'diperbarui';
+        } else {
+            $saveData['created_at'] = date('Y-m-d H:i:s');
+            $result = $this->db('lampiran_penilaian_dekubitus')->save($saveData);
+            $msg = 'disimpan';
+        }
+
+        if ($result) {
+            $this->setNotify('success', "Data Penilaian Dekubitus berhasil $msg.");
+        } else {
+            $this->setNotify('failure', "Gagal menyimpan data penilaian dekubitus.");
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'penilaiandekubitusmanage']));
+    }
+
+    public function getPenilaiandekubitushapus($id)
+    {
+        if (!empty($id)) {
+            $result = $this->db('lampiran_penilaian_dekubitus')->where('id', $id)->delete();
+            if ($result) {
+                $this->setNotify('success', 'Data penilaian dekubitus berhasil dihapus.');
+            } else {
+                $this->setNotify('failure', 'Gagal menghapus data penilaian dekubitus.');
+            }
+        }
+        redirect(url([ADMIN, 'update_bmt', 'penilaiandekubitusmanage']));
+    }
+
+    public function getPenilaiandekubituscetak($id)
+    {
+        $data = $this->db('lampiran_penilaian_dekubitus')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_dekubitus.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_dekubitus.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('lampiran_penilaian_dekubitus.id', $id)
+            ->select('lampiran_penilaian_dekubitus.*, COALESCE(lampiran_penilaian_dekubitus.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat')
+            ->oneArray();
+
+        if (!$data) {
+            $this->setNotify('failure', 'Data penilaian dekubitus tidak ditemukan!');
+            redirect(url([ADMIN, 'update_bmt', 'penilaiandekubitusmanage']));
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rmPadded = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        $data['no_rkm_medis'] = $rmPadded;
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = substr($rmPadded, $i, 1);
+        }
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        // Tanggal Lahir Pasien
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tgl_lahir_indo'] = $data['tgl_lahir'];
+            }
+        } else {
+            $data['tgl_lahir_indo'] = '-';
+        }
+
+        // Parse detail_penilaian JSON into days array 1..9
+        $detail = !empty($data['detail_penilaian']) ? json_decode($data['detail_penilaian'], true) : [];
+        $days = [];
+        for ($d = 1; $d <= 9; $d++) {
+            $item = $detail[$d] ?? [];
+            $tglLabel = '';
+            if (!empty($item['tgl'])) {
+                $p = explode('-', $item['tgl']);
+                if (count($p) == 3) {
+                    $tglLabel = $p[2] . '/' . $p[1];
+                } else {
+                    $tglLabel = $item['tgl'];
+                }
+            }
+
+            $days[] = [
+                'day' => $d,
+                'tgl_label' => $tglLabel,
+                'kondisi_fisik' => isset($item['kondisi_fisik']) && $item['kondisi_fisik'] !== null && $item['kondisi_fisik'] !== '' ? $item['kondisi_fisik'] : null,
+                'kesadaran' => isset($item['kesadaran']) && $item['kesadaran'] !== null && $item['kesadaran'] !== '' ? $item['kesadaran'] : null,
+                'aktivitas' => isset($item['aktivitas']) && $item['aktivitas'] !== null && $item['aktivitas'] !== '' ? $item['aktivitas'] : null,
+                'mobilitas' => isset($item['mobilitas']) && $item['mobilitas'] !== null && $item['mobilitas'] !== '' ? $item['mobilitas'] : null,
+                'inkontinensia' => isset($item['inkontinensia']) && $item['inkontinensia'] !== null && $item['inkontinensia'] !== '' ? $item['inkontinensia'] : null,
+                'total_skor' => isset($item['total_skor']) && $item['total_skor'] !== null && $item['total_skor'] !== '' ? $item['total_skor'] : null,
+                'perawat' => !empty($item['perawat']) ? $item['perawat'] : ''
+            ];
+        }
+        $data['days'] = $days;
+
+        // Cek jika request export mPDF
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 8,
+                    'margin_right' => 8,
+                    'margin_top' => 5,
+                    'margin_bottom' => 5
+                ]);
+                $html = $this->draw('lampiran_penilaian_dekubitus/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Penilaian_Dekubitus_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                error_log('mPDF Error: ' . $e->getMessage());
+            }
+        }
+
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_penilaian_dekubitus/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ============================================================
+    // LAMPIRAN - PENILAIAN KEJADIAN INFEKSI LUKA OPERASI (ILO)
+    // ============================================================
+
+    public function anyPenilaianilomanage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $records = $this->db('lampiran_penilaian_kejadian_ilo')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_ilo.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_ilo.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('lampiran_penilaian_kejadian_ilo.*, COALESCE(lampiran_penilaian_kejadian_ilo.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, lampiran_penilaian_kejadian_ilo.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
+            ->desc('lampiran_penilaian_kejadian_ilo.id')
+            ->toArray();
+
+        $no = 1;
+        foreach ($records as &$item) {
+            $item['nomor'] = $no++;
+            $rmRaw = ltrim($item['no_rkm_medis'] ?? '', "'");
+            $item['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+            $item['umur'] = !empty($item['umur']) ? $item['umur'] : ($item['umur_pasien'] ?? '-');
+            $item['jk'] = !empty($item['jk']) ? $item['jk'] : '-';
+
+            // Parse detail_penilaian to get summary stats
+            $detail = !empty($item['detail_penilaian']) ? json_decode($item['detail_penilaian'], true) : [];
+            $hariTerisi = 0;
+            $skorTerakhir = null;
+            $kategoriTerakhir = '-';
+            $petugasTerakhir = '-';
+            if (is_array($detail)) {
+                for ($d = 1; $d <= 10; $d++) {
+                    if (isset($detail[$d]) && is_array($detail[$d])) {
+                        $rowDay = $detail[$d];
+                        if (isset($rowDay['total_skor']) && $rowDay['total_skor'] !== '' && $rowDay['total_skor'] !== null) {
+                            $hariTerisi++;
+                            $skorTerakhir = (int)$rowDay['total_skor'];
+                            if (!empty($rowDay['petugas'])) {
+                                $petugasTerakhir = $rowDay['petugas'];
+                            }
+                            if ($skorTerakhir == 0) {
+                                $kategoriTerakhir = 'Tidak Ada Tanda Infeksi';
+                            } elseif ($skorTerakhir >= 1 && $skorTerakhir <= 2) {
+                                $kategoriTerakhir = 'Tahap Awal Infeksi';
+                            } elseif ($skorTerakhir >= 3 && $skorTerakhir <= 4) {
+                                $kategoriTerakhir = 'Awal Infeksi';
+                            } else {
+                                $kategoriTerakhir = 'Stadium Lanjut Infeksi';
+                            }
+                        }
+                    }
+                }
+            }
+            $item['hari_terisi'] = $hariTerisi;
+            $item['skor_terakhir'] = $skorTerakhir;
+            $item['kategori_terakhir'] = $kategoriTerakhir;
+            $item['petugas_terakhir'] = $petugasTerakhir;
+        }
+
+        return $this->draw('lampiran_penilaian_kejadian_ilo/manage.html', [
+            'data' => $records
+        ]);
+    }
+
+    public function getPenilaianiloform($id = null)
+    {
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'nm_pasien' => '',
+            'jk' => '-',
+            'umur' => '-',
+            'tgl_lahir' => '-',
+            'kamar_inap' => '',
+            'tanggal_penilaian' => date('Y-m-d'),
+            'detail_penilaian_raw' => '{}',
+            'catatan' => ''
+        ];
+
+        if (!empty($id)) {
+            $row = $this->db('lampiran_penilaian_kejadian_ilo')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_ilo.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_ilo.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('lampiran_penilaian_kejadian_ilo.id', $id)
+                ->select('lampiran_penilaian_kejadian_ilo.*, COALESCE(lampiran_penilaian_kejadian_ilo.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
+                ->oneArray();
+
+            if ($row) {
+                $data = $row;
+                $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+                $data['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+                $data['umur'] = !empty($data['umur']) ? $data['umur'] : ($data['umur_pasien'] ?? '-');
+                $data['jk'] = !empty($data['jk']) ? $data['jk'] : '-';
+                $data['detail_penilaian_raw'] = $data['detail_penilaian'] ?? '{}';
+            }
+        } elseif (isset($_GET['no_rawat'])) {
+            $no_rawat = trim($_GET['no_rawat']);
+            $reg = $this->db('reg_periksa')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->leftJoin('kamar_inap', 'kamar_inap.no_rawat = reg_periksa.no_rawat')
+                ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
+                ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
+                ->where('reg_periksa.no_rawat', $no_rawat)
+                ->select('reg_periksa.*, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->oneArray();
+
+            if ($reg) {
+                $data['no_rawat'] = $reg['no_rawat'];
+                $rmRaw = ltrim($reg['no_rkm_medis'] ?? '', "'");
+                $data['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+                $data['nm_pasien'] = $reg['nm_pasien'] ?? '';
+                $data['jk'] = $reg['jk'] ?? '-';
+                $data['umur'] = $reg['umur'] ?? '-';
+                $data['tgl_lahir'] = $reg['tgl_lahir'] ?? '-';
+                if (!empty($reg['nm_bangsal'])) {
+                    $data['kamar_inap'] = $reg['nm_bangsal'] . ' / ' . $reg['kd_kamar'];
+                }
+            }
+        }
+
+        $petugas = $this->db('petugas')->select('nip, nama')->toArray();
+        $daysRange = range(1, 10);
+
+        return $this->draw('lampiran_penilaian_kejadian_ilo/form.html', [
+            'data' => $data,
+            'petugas' => $petugas,
+            'days_range' => $daysRange
+        ]);
+    }
+
+    public function postPenilaianilosave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (empty($no_rawat)) {
+            $this->setNotify('failure', 'Nomor Rawat wajib diisi!');
+            redirect(url([ADMIN, 'update_bmt', 'penilaianilomanage']));
+        }
+
+        $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+        $no_rkm_medis = $reg['no_rkm_medis'] ?? ($_POST['no_rkm_medis'] ?? '');
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'kamar_inap' => $_POST['kamar_inap'] ?? '',
+            'tanggal_penilaian' => !empty($_POST['tanggal_penilaian']) ? $_POST['tanggal_penilaian'] : date('Y-m-d'),
+            'detail_penilaian' => $_POST['detail_penilaian'] ?? '{}',
+            'catatan' => $_POST['catatan'] ?? '',
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        if (!empty($id)) {
+            $saveData['id'] = $id;
+            $result = $this->db('lampiran_penilaian_kejadian_ilo')->where('id', $id)->save($saveData);
+            $msg = 'diperbarui';
+        } else {
+            $saveData['created_at'] = date('Y-m-d H:i:s');
+            $result = $this->db('lampiran_penilaian_kejadian_ilo')->save($saveData);
+            $msg = 'disimpan';
+        }
+
+        if ($result) {
+            $this->setNotify('success', "Data Penilaian Kejadian ILO berhasil $msg.");
+        } else {
+            $this->setNotify('failure', "Gagal menyimpan data penilaian kejadian ILO.");
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'penilaianilomanage']));
+    }
+
+    public function getPenilaianilohapus($id)
+    {
+        if (!empty($id)) {
+            $result = $this->db('lampiran_penilaian_kejadian_ilo')->where('id', $id)->delete();
+            if ($result) {
+                $this->setNotify('success', 'Data penilaian kejadian ILO berhasil dihapus.');
+            } else {
+                $this->setNotify('failure', 'Gagal menghapus data penilaian kejadian ILO.');
+            }
+        }
+        redirect(url([ADMIN, 'update_bmt', 'penilaianilomanage']));
+    }
+
+    public function getPenilaianilocetak($id)
+    {
+        $data = $this->db('lampiran_penilaian_kejadian_ilo')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_ilo.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_ilo.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('lampiran_penilaian_kejadian_ilo.id', $id)
+            ->select('lampiran_penilaian_kejadian_ilo.*, COALESCE(lampiran_penilaian_kejadian_ilo.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat')
+            ->oneArray();
+
+        if (!$data) {
+            $this->setNotify('failure', 'Data penilaian kejadian ILO tidak ditemukan!');
+            redirect(url([ADMIN, 'update_bmt', 'penilaianilomanage']));
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rmPadded = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        $data['no_rkm_medis'] = $rmPadded;
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = substr($rmPadded, $i, 1);
+        }
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        // Tanggal Lahir Pasien
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tgl_lahir_indo'] = $data['tgl_lahir'];
+            }
+        } else {
+            $data['tgl_lahir_indo'] = '-';
+        }
+
+        // Parse detail_penilaian JSON into days array 1..10
+        $detail = !empty($data['detail_penilaian']) ? json_decode($data['detail_penilaian'], true) : [];
+        $days = [];
+        for ($d = 1; $d <= 10; $d++) {
+            $item = $detail[$d] ?? [];
+            $tglLabel = '';
+            if (!empty($item['tgl'])) {
+                $p = explode('-', $item['tgl']);
+                if (count($p) == 3) {
+                    $tglLabel = $p[2] . '/' . $p[1];
+                } else {
+                    $tglLabel = $item['tgl'];
+                }
+            }
+
+            $param = isset($item['parameter']) && $item['parameter'] !== '' && $item['parameter'] !== null ? (int)$item['parameter'] : null;
+            $totalSkor = isset($item['total_skor']) && $item['total_skor'] !== '' && $item['total_skor'] !== null ? (int)$item['total_skor'] : null;
+            
+            $days[] = [
+                'day' => $d,
+                'tgl_label' => $tglLabel,
+                'parameter' => $param,
+                'p1_checked' => ($param === 0 || (isset($item['p1']) && $item['p1'] === '0')),
+                'p2_checked' => ($param === 1 || (!empty($item['p2']) && $item['p2'] == '1')),
+                'p3_checked' => ($param === 2 || (!empty($item['p3']) && $item['p3'] == '2')),
+                'p4_checked' => ($param === 3 || (!empty($item['p4']) && $item['p4'] == '3')),
+                'p5_checked' => ($param === 4 || (!empty($item['p5']) && $item['p5'] == '4')),
+                'p6_checked' => ($param === 5 || (!empty($item['p6']) && $item['p6'] == '5')),
+                'total_skor' => $totalSkor,
+                'petugas' => $item['petugas'] ?? ''
+            ];
+        }
+        $data['days'] = $days;
+
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
+            $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+            $html = $this->draw('lampiran_penilaian_kejadian_ilo/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+            try {
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 8,
+                    'margin_right' => 8,
+                    'margin_top' => 8,
+                    'margin_bottom' => 8,
+                ]);
+                $mpdf->WriteHTML($html);
+                $mpdf->Output('Penilaian_ILO_' . $data['no_rkm_medis'] . '.pdf', 'I');
+                exit();
+            } catch (\Throwable $e) {
+                error_log('mPDF Error: ' . $e->getMessage());
+            }
+        }
+
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_penilaian_kejadian_ilo/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ============================================================
+    // LAMPIRAN - PENILAIAN KEJADIAN INFEKSI SALURAN KEMIH (ISK)
+    // ============================================================
+
+    public function anyPenilaianiskmanage()
+    {
+        $query = $this->db('lampiran_penilaian_kejadian_isk')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_isk.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_isk.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->leftJoin('kamar_inap', 'kamar_inap.no_rawat = reg_periksa.no_rawat')
+            ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
+            ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal');
+
+        if (isset($_GET['s']) && !empty($_GET['s'])) {
+            $s = '%' . trim($_GET['s']) . '%';
+            $query->where('lampiran_penilaian_kejadian_isk.no_rawat', 'LIKE', $s)
+                ->orWhere('lampiran_penilaian_kejadian_isk.no_rkm_medis', 'LIKE', $s)
+                ->orWhere('pasien.nm_pasien', 'LIKE', $s);
+        }
+
+        $records = $query->select('lampiran_penilaian_kejadian_isk.*, 
+            COALESCE(lampiran_penilaian_kejadian_isk.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, 
+            pasien.nm_pasien, pasien.jk, pasien.umur as umur_pasien, pasien.umur,
+            bangsal.nm_bangsal, kamar.kd_kamar')
+            ->desc('lampiran_penilaian_kejadian_isk.id')
+            ->toArray();
+
+        $nomor = 1;
+        foreach ($records as &$item) {
+            $item['nomor'] = $nomor++;
+            $rmRaw = ltrim($item['no_rkm_medis'] ?? '', "'");
+            $item['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+            $item['umur'] = !empty($item['umur']) ? $item['umur'] : ($item['umur_pasien'] ?? '-');
+            $item['jk'] = !empty($item['jk']) ? $item['jk'] : '-';
+
+            if (empty($item['kamar_inap']) && !empty($item['nm_bangsal'])) {
+                $item['kamar_inap'] = $item['nm_bangsal'] . ' / ' . ($item['kd_kamar'] ?? '-');
+            }
+
+            // Hitung hari terisi dan skor terakhir
+            $detail = !empty($item['detail_penilaian']) ? json_decode($item['detail_penilaian'], true) : [];
+            $hariTerisi = 0;
+            $skorTerakhir = null;
+            $kategoriTerakhir = '-';
+            $petugasTerakhir = '';
+
+            if (is_array($detail)) {
+                for ($d = 1; $d <= 9; $d++) {
+                    if (!empty($detail[$d])) {
+                        $dData = $detail[$d];
+                        $hasData = !empty($dData['tgl']) || !empty($dData['param_1']) || !empty($dData['param_2']) || !empty($dData['param_3']) || !empty($dData['param_4']) || (isset($dData['total_skor']) && $dData['total_skor'] !== null && $dData['total_skor'] !== '');
+                        if ($hasData) {
+                            $hariTerisi++;
+                            if (isset($dData['total_skor']) && $dData['total_skor'] !== null && $dData['total_skor'] !== '') {
+                                $skorTerakhir = (int)$dData['total_skor'];
+                            }
+                            if (!empty($dData['petugas'])) {
+                                $petugasTerakhir = $dData['petugas'];
+                            }
+                        }
+                    }
+                }
+                if ($skorTerakhir !== null) {
+                    if ($skorTerakhir == 0) {
+                        $kategoriTerakhir = 'Tanpa Tanda ISK';
+                    } elseif ($skorTerakhir == 1) {
+                        $kategoriTerakhir = 'Risiko Ringan ISK';
+                    } elseif ($skorTerakhir == 2) {
+                        $kategoriTerakhir = 'Terindikasi Pediatrik';
+                    } else {
+                        $kategoriTerakhir = 'Risiko Tinggi ISK';
+                    }
+                }
+            }
+            $item['hari_terisi'] = $hariTerisi;
+            $item['skor_terakhir'] = $skorTerakhir;
+            $item['kategori_terakhir'] = $kategoriTerakhir;
+            $item['petugas_terakhir'] = $petugasTerakhir;
+        }
+
+        return $this->draw('lampiran_penilaian_kejadian_isk/manage.html', [
+            'data' => $records
+        ]);
+    }
+
+    public function getPenilaianiskform($id = null)
+    {
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'nm_pasien' => '',
+            'jk' => '-',
+            'umur' => '-',
+            'tgl_lahir' => '-',
+            'kamar_inap' => '',
+            'tanggal_penilaian' => date('Y-m-d'),
+            'detail_penilaian_raw' => '{}',
+            'catatan' => ''
+        ];
+
+        if (!empty($id)) {
+            $row = $this->db('lampiran_penilaian_kejadian_isk')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_isk.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_isk.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('lampiran_penilaian_kejadian_isk.id', $id)
+                ->select('lampiran_penilaian_kejadian_isk.*, COALESCE(lampiran_penilaian_kejadian_isk.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
+                ->oneArray();
+
+            if ($row) {
+                $data = $row;
+                $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+                $data['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+                $data['umur'] = !empty($data['umur']) ? $data['umur'] : ($data['umur_pasien'] ?? '-');
+                $data['jk'] = !empty($data['jk']) ? $data['jk'] : '-';
+                $data['detail_penilaian_raw'] = $data['detail_penilaian'] ?? '{}';
+            }
+        } elseif (isset($_GET['no_rawat'])) {
+            $no_rawat = trim($_GET['no_rawat']);
+            $reg = $this->db('reg_periksa')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->leftJoin('kamar_inap', 'kamar_inap.no_rawat = reg_periksa.no_rawat')
+                ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
+                ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
+                ->where('reg_periksa.no_rawat', $no_rawat)
+                ->select('reg_periksa.*, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->oneArray();
+
+            if ($reg) {
+                $data['no_rawat'] = $reg['no_rawat'];
+                $rmRaw = ltrim($reg['no_rkm_medis'] ?? '', "'");
+                $data['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+                $data['nm_pasien'] = $reg['nm_pasien'] ?? '';
+                $data['jk'] = $reg['jk'] ?? '-';
+                $data['umur'] = $reg['umur'] ?? '-';
+                $data['tgl_lahir'] = $reg['tgl_lahir'] ?? '-';
+                if (!empty($reg['nm_bangsal'])) {
+                    $data['kamar_inap'] = $reg['nm_bangsal'] . ' / ' . $reg['kd_kamar'];
+                }
+            }
+        }
+
+        $petugas = $this->db('petugas')->select('nip, nama')->toArray();
+        $daysRange = range(1, 9);
+
+        return $this->draw('lampiran_penilaian_kejadian_isk/form.html', [
+            'data' => $data,
+            'petugas' => $petugas,
+            'days_range' => $daysRange
+        ]);
+    }
+
+    public function postPenilaianisksave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (empty($no_rawat)) {
+            $this->setNotify('failure', 'Nomor Rawat wajib diisi!');
+            redirect(url([ADMIN, 'update_bmt', 'penilaianiskmanage']));
+        }
+
+        $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+        $no_rkm_medis = $reg['no_rkm_medis'] ?? ($_POST['no_rkm_medis'] ?? '');
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'kamar_inap' => $_POST['kamar_inap'] ?? '',
+            'tanggal_penilaian' => !empty($_POST['tanggal_penilaian']) ? $_POST['tanggal_penilaian'] : date('Y-m-d'),
+            'detail_penilaian' => $_POST['detail_penilaian'] ?? '{}',
+            'catatan' => $_POST['catatan'] ?? '',
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        if (!empty($id)) {
+            $saveData['id'] = $id;
+            $result = $this->db('lampiran_penilaian_kejadian_isk')->where('id', $id)->save($saveData);
+            $msg = 'diperbarui';
+        } else {
+            $saveData['created_at'] = date('Y-m-d H:i:s');
+            $result = $this->db('lampiran_penilaian_kejadian_isk')->save($saveData);
+            $msg = 'disimpan';
+        }
+
+        if ($result) {
+            $this->setNotify('success', "Data Penilaian Kejadian ISK berhasil $msg.");
+        } else {
+            $this->setNotify('failure', "Gagal menyimpan data penilaian kejadian ISK.");
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'penilaianiskmanage']));
+    }
+
+    public function getPenilaianiskhapus($id)
+    {
+        if (!empty($id)) {
+            $result = $this->db('lampiran_penilaian_kejadian_isk')->where('id', $id)->delete();
+            if ($result) {
+                $this->setNotify('success', 'Data penilaian kejadian ISK berhasil dihapus.');
+            } else {
+                $this->setNotify('failure', 'Gagal menghapus data penilaian kejadian ISK.');
+            }
+        }
+        redirect(url([ADMIN, 'update_bmt', 'penilaianiskmanage']));
+    }
+
+    public function getPenilaianiskcetak($id)
+    {
+        $data = $this->db('lampiran_penilaian_kejadian_isk')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_isk.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_isk.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('lampiran_penilaian_kejadian_isk.id', $id)
+            ->select('lampiran_penilaian_kejadian_isk.*, COALESCE(lampiran_penilaian_kejadian_isk.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat')
+            ->oneArray();
+
+        if (!$data) {
+            $this->setNotify('failure', 'Data penilaian kejadian ISK tidak ditemukan!');
+            redirect(url([ADMIN, 'update_bmt', 'penilaianiskmanage']));
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rmPadded = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        $data['no_rkm_medis'] = $rmPadded;
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = substr($rmPadded, $i, 1);
+        }
+
+        // Parse detail_penilaian JSON into days array 1..9
+        $detail = !empty($data['detail_penilaian']) ? json_decode($data['detail_penilaian'], true) : [];
+        $days = [];
+        for ($d = 1; $d <= 9; $d++) {
+            $item = $detail[$d] ?? [];
+            $tglLabel = '';
+            if (!empty($item['tgl'])) {
+                $p = explode('-', $item['tgl']);
+                if (count($p) == 3) {
+                    $tglLabel = $p[2] . '/' . $p[1];
+                } else {
+                    $tglLabel = $item['tgl'];
+                }
+            }
+
+            $totalSkor = isset($item['total_skor']) && $item['total_skor'] !== '' && $item['total_skor'] !== null ? (int)$item['total_skor'] : null;
+            
+            $days[] = [
+                'day' => $d,
+                'tgl_label' => $tglLabel,
+                'p1_checked' => (!empty($item['param_1']) || !empty($item['p1'])),
+                'p2_checked' => (!empty($item['param_2']) || !empty($item['p2'])),
+                'p3_checked' => (!empty($item['param_3']) || !empty($item['p3'])),
+                'p4_checked' => (!empty($item['param_4']) || !empty($item['p4'])),
+                'total_skor' => $totalSkor,
+                'petugas' => $item['petugas'] ?? ''
+            ];
+        }
+        $data['days'] = $days;
+
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
+            $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+            $html = $this->draw('lampiran_penilaian_kejadian_isk/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+            try {
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 8,
+                    'margin_right' => 8,
+                    'margin_top' => 6,
+                    'margin_bottom' => 6,
+                ]);
+                $mpdf->WriteHTML($html);
+                $mpdf->Output('Penilaian_ISK_' . $data['no_rkm_medis'] . '.pdf', 'I');
+                exit();
+            } catch (\Throwable $e) {
+                error_log('mPDF Error: ' . $e->getMessage());
+            }
+        }
+
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_penilaian_kejadian_isk/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ============================================================
+    // LAMPIRAN - SURAT PERNYATAAN BERSEDIA MENUNGGU
+    // ============================================================
+
+    public function anyBersediamenunggumanage()
+    {
+        $query = $this->db('lampiran_surat_pernyataan_bersedia_menunggu')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_surat_pernyataan_bersedia_menunggu.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_surat_pernyataan_bersedia_menunggu.no_rkm_medis, reg_periksa.no_rkm_medis)');
+
+        if (isset($_GET['s']) && !empty($_GET['s'])) {
+            $s = '%' . trim($_GET['s']) . '%';
+            $query->where('lampiran_surat_pernyataan_bersedia_menunggu.no_rawat', 'LIKE', $s)
+                ->orWhere('lampiran_surat_pernyataan_bersedia_menunggu.no_rkm_medis', 'LIKE', $s)
+                ->orWhere('lampiran_surat_pernyataan_bersedia_menunggu.nama_pasien', 'LIKE', $s)
+                ->orWhere('lampiran_surat_pernyataan_bersedia_menunggu.nama_pj', 'LIKE', $s);
+        }
+
+        $records = $query->select('lampiran_surat_pernyataan_bersedia_menunggu.*, 
+            COALESCE(lampiran_surat_pernyataan_bersedia_menunggu.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, 
+            COALESCE(lampiran_surat_pernyataan_bersedia_menunggu.nama_pasien, pasien.nm_pasien) as nama_pasien')
+            ->desc('lampiran_surat_pernyataan_bersedia_menunggu.id')
+            ->toArray();
+
+        $nomor = 1;
+        foreach ($records as &$item) {
+            $item['nomor'] = $nomor++;
+            $rmRaw = ltrim($item['no_rkm_medis'] ?? '', "'");
+            $item['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        }
+
+        return $this->draw('lampiran_surat_pernyataan_bersedia_menunggu/manage.html', [
+            'data' => $records
+        ]);
+    }
+
+    public function getBersediamenungguform($id = null)
+    {
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'nama_pj' => '',
+            'tgl_lahir_pj' => '',
+            'jk_pj' => 'Laki-laki',
+            'alamat_pj' => '',
+            'no_identitas_pj' => '',
+            'hubungan' => 'Diri Saya Sendiri',
+            'nama_pasien' => '',
+            'tgl_lahir_pasien' => '',
+            'jk_pasien' => 'Laki-laki',
+            'alamat_pasien' => '',
+            'ruang_menunggu' => 'ruang perawatan biasa / ruang perawatan intensif',
+            'tanggal_surat' => date('Y-m-d'),
+            'kd_dokter' => '',
+            'nama_dokter' => '',
+            'catatan' => ''
+        ];
+
+        if (!empty($id)) {
+            $row = $this->db('lampiran_surat_pernyataan_bersedia_menunggu')
+                ->where('id', $id)
+                ->oneArray();
+
+            if ($row) {
+                $data = $row;
+                $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+                $data['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+            }
+        } elseif (isset($_GET['no_rawat'])) {
+            $no_rawat = trim($_GET['no_rawat']);
+            $reg = $this->db('reg_periksa')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->leftJoin('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
+                ->where('reg_periksa.no_rawat', $no_rawat)
+                ->select('reg_periksa.*, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat, pasien.no_ktp, dokter.nm_dokter')
+                ->oneArray();
+
+            if ($reg) {
+                $data['no_rawat'] = $reg['no_rawat'];
+                $rmRaw = ltrim($reg['no_rkm_medis'] ?? '', "'");
+                $data['no_rkm_medis'] = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+                $data['nama_pasien'] = $reg['nm_pasien'] ?? '';
+                $data['tgl_lahir_pasien'] = $reg['tgl_lahir'] ?? '';
+                $data['jk_pasien'] = ($reg['jk'] == 'P' || $reg['jk'] == 'Perempuan') ? 'Perempuan' : 'Laki-laki';
+                $data['alamat_pasien'] = $reg['alamat'] ?? '';
+                $data['kd_dokter'] = $reg['kd_dokter'] ?? '';
+                $data['nama_dokter'] = $reg['nm_dokter'] ?? '';
+
+                if (!empty($reg['p_jawab'])) {
+                    $data['nama_pj'] = $reg['p_jawab'];
+                    $data['alamat_pj'] = $reg['almt_pj'] ?? ($reg['alamat'] ?? '');
+                    $data['hubungan'] = !empty($reg['hubunganpj']) ? $reg['hubunganpj'] : 'Diri Saya Sendiri';
+                } else {
+                    $data['nama_pj'] = $reg['nm_pasien'] ?? '';
+                    $data['tgl_lahir_pj'] = $reg['tgl_lahir'] ?? '';
+                    $data['jk_pj'] = $data['jk_pasien'];
+                    $data['alamat_pj'] = $reg['alamat'] ?? '';
+                    $data['no_identitas_pj'] = $reg['no_ktp'] ?? '';
+                    $data['hubungan'] = 'Diri Saya Sendiri';
+                }
+            }
+        }
+
+        $dokter = $this->db('dokter')->select('kd_dokter, nm_dokter')->toArray();
+
+        return $this->draw('lampiran_surat_pernyataan_bersedia_menunggu/form.html', [
+            'data' => $data,
+            'dokter' => $dokter
+        ]);
+    }
+
+    public function postBersediamenunggusave()
+    {
+        $id = $_POST['id'] ?? '';
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+
+        if (empty($no_rawat)) {
+            $this->setNotify('failure', 'Nomor Rawat wajib diisi!');
+            redirect(url([ADMIN, 'update_bmt', 'bersediamenunggumanage']));
+        }
+
+        $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+        $no_rkm_medis = $reg['no_rkm_medis'] ?? ($_POST['no_rkm_medis'] ?? '');
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'nama_pj' => $_POST['nama_pj'] ?? '',
+            'tgl_lahir_pj' => !empty($_POST['tgl_lahir_pj']) ? $_POST['tgl_lahir_pj'] : null,
+            'jk_pj' => $_POST['jk_pj'] ?? 'Laki-laki',
+            'alamat_pj' => $_POST['alamat_pj'] ?? '',
+            'no_identitas_pj' => $_POST['no_identitas_pj'] ?? '',
+            'hubungan' => $_POST['hubungan'] ?? 'Diri Saya Sendiri',
+            'nama_pasien' => $_POST['nama_pasien'] ?? '',
+            'tgl_lahir_pasien' => !empty($_POST['tgl_lahir_pasien']) ? $_POST['tgl_lahir_pasien'] : null,
+            'jk_pasien' => $_POST['jk_pasien'] ?? 'Laki-laki',
+            'alamat_pasien' => $_POST['alamat_pasien'] ?? '',
+            'ruang_menunggu' => $_POST['ruang_menunggu'] ?? 'ruang perawatan biasa / ruang perawatan intensif',
+            'tanggal_surat' => !empty($_POST['tanggal_surat']) ? $_POST['tanggal_surat'] : date('Y-m-d'),
+            'kd_dokter' => $_POST['kd_dokter'] ?? '',
+            'nama_dokter' => $_POST['nama_dokter'] ?? '',
+            'catatan' => $_POST['catatan'] ?? '',
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        if (!empty($id)) {
+            $saveData['id'] = $id;
+            $result = $this->db('lampiran_surat_pernyataan_bersedia_menunggu')->where('id', $id)->save($saveData);
+            $msg = 'diperbarui';
+        } else {
+            $saveData['created_at'] = date('Y-m-d H:i:s');
+            $result = $this->db('lampiran_surat_pernyataan_bersedia_menunggu')->save($saveData);
+            $msg = 'disimpan';
+        }
+
+        if ($result) {
+            $this->setNotify('success', "Surat Pernyataan Bersedia Menunggu berhasil $msg.");
+        } else {
+            $this->setNotify('failure', "Gagal menyimpan surat pernyataan bersedia menunggu.");
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'bersediamenunggumanage']));
+    }
+
+    public function getBersediamenungguhapus($id)
+    {
+        if (!empty($id)) {
+            $result = $this->db('lampiran_surat_pernyataan_bersedia_menunggu')->where('id', $id)->delete();
+            if ($result) {
+                $this->setNotify('success', 'Surat pernyataan bersedia menunggu berhasil dihapus.');
+            } else {
+                $this->setNotify('failure', 'Gagal menghapus surat pernyataan bersedia menunggu.');
+            }
+        }
+        redirect(url([ADMIN, 'update_bmt', 'bersediamenunggumanage']));
+    }
+
+    public function getBersediamenunggucetak($id)
+    {
+        $data = $this->db('lampiran_surat_pernyataan_bersedia_menunggu')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_surat_pernyataan_bersedia_menunggu.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_surat_pernyataan_bersedia_menunggu.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('lampiran_surat_pernyataan_bersedia_menunggu.id', $id)
+            ->select('lampiran_surat_pernyataan_bersedia_menunggu.*, COALESCE(lampiran_surat_pernyataan_bersedia_menunggu.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis')
+            ->oneArray();
+
+        if (!$data) {
+            $this->setNotify('failure', 'Data surat pernyataan bersedia menunggu tidak ditemukan!');
+            redirect(url([ADMIN, 'update_bmt', 'bersediamenunggumanage']));
+        }
+
+        $bulanIndo = [
+            1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ];
+
+        // Format tanggal surat
+        if (!empty($data['tanggal_surat'])) {
+            $ts = strtotime($data['tanggal_surat']);
+            $data['tanggal_surat_indo'] = date('d', $ts) . ' ' . ($bulanIndo[(int)date('m', $ts)] ?? date('m', $ts)) . ' ' . date('Y', $ts);
+        } else {
+            $data['tanggal_surat_indo'] = date('d') . ' ' . ($bulanIndo[(int)date('m')] ?? '') . ' ' . date('Y');
+        }
+
+        // Format tgl lahir PJ
+        if (!empty($data['tgl_lahir_pj']) && $data['tgl_lahir_pj'] != '0000-00-00') {
+            $tp = strtotime($data['tgl_lahir_pj']);
+            $data['tgl_lahir_pj_indo'] = date('d', $tp) . ' ' . ($bulanIndo[(int)date('m', $tp)] ?? date('m', $tp)) . ' ' . date('Y', $tp);
+        } else {
+            $data['tgl_lahir_pj_indo'] = '-';
+        }
+
+        // Format tgl lahir Pasien
+        if (!empty($data['tgl_lahir_pasien']) && $data['tgl_lahir_pasien'] != '0000-00-00') {
+            $tpas = strtotime($data['tgl_lahir_pasien']);
+            $data['tgl_lahir_pasien_indo'] = date('d', $tpas) . ' ' . ($bulanIndo[(int)date('m', $tpas)] ?? date('m', $tpas)) . ' ' . date('Y', $tpas);
+        } else {
+            $data['tgl_lahir_pasien_indo'] = '-';
+        }
+
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
+            $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+            $html = $this->draw('lampiran_surat_pernyataan_bersedia_menunggu/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+            try {
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 12,
+                    'margin_right' => 12,
+                    'margin_top' => 10,
+                    'margin_bottom' => 10,
+                ]);
+                $mpdf->WriteHTML($html);
+                $mpdf->Output('Surat_Pernyataan_Bersedia_Menunggu_' . $data['no_rkm_medis'] . '.pdf', 'I');
+                exit();
+            } catch (\Throwable $e) {
+                error_log('mPDF Error: ' . $e->getMessage());
+            }
+        }
+
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_surat_pernyataan_bersedia_menunggu/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
     public function navigation()
     {
         return [
@@ -3791,6 +6352,15 @@ class Admin extends AdminModule
                 'LAMPIRAN - FORMULIR STABILISASI PASIEN SEBELUM TRANSFER' => 'stabilisasipasienmanage',
                 'LAMPIRAN - INTERVENSI DAN PENGKAJIAN ULANG NYERI' => 'intervensinyerimanage',
                 'LAMPIRAN - SURAT PERMINTAAN SECOND OPINION' => 'secondopinionmanage',
+                'LAMPIRAN - PENILAIAN KEJADIAN PHLEIBITIS' => 'penilaianphlebitismanage',
+                'LAMPIRAN - PERMINTAAN PELAYANAN KEROHANIAN' => 'pelayanankerohanianmanage',
+                'RML - MONITORING PASIEN KATETER URINE' => 'monitoringkateterurinmanage',
+                'LAMPIRAN - KONSULTASI INTERNAL' => 'konsultasiinternalmanage',
+                'LAMPIRAN - MONITORING PASIEN SELAMA TRANSFER' => 'monitoringpasienselamatransfermanage',
+                'LAMPIRAN - PENILAIAN DEKUBITUS' => 'penilaiandekubitusmanage',
+                'LAMPIRAN - PENILAIAN KEJADIAN INFEKSI LUKA OPERASI (ILO)' => 'penilaianilomanage',
+                'LAMPIRAN - PENILAIAN KEJADIAN INFEKSI SALURAN KEMIH (ISK)' => 'penilaianiskmanage',
+                'LAMPIRAN - SURAT PERNYATAAN BERSEDIA MENUNGGU' => 'bersediamenunggumanage',
             ]
         ];
     }

@@ -1647,6 +1647,8 @@ CREATE TABLE IF NOT EXISTS `lampiran_intervensi_pengkajian_nyeri` (
   PRIMARY KEY (`id`),
   KEY `no_rawat` (`no_rawat`),
   KEY `no_rkm_medis` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 -- --------------------------------------------------------
 -- 48. LAMPIRAN - SURAT PERMINTAAN SECOND OPINION (Ranap)
 -- --------------------------------------------------------
@@ -1676,5 +1678,224 @@ CREATE TABLE IF NOT EXISTS `lampiran_permintaan_second_opinion` (
   PRIMARY KEY (`id`),
   KEY `no_rawat` (`no_rawat`),
   KEY `no_rkm_medis` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- 49. LAMPIRAN - PENILAIAN KEJADIAN PHLEIBITIS (Ranap)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_penilaian_kejadian_phlebitis` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `kamar_inap` varchar(150) DEFAULT NULL,
+  `lokasi_iv_line` varchar(100) DEFAULT NULL,
+  `tgl_pemasangan` date DEFAULT NULL,
+  `tipe_kanul` varchar(50) DEFAULT NULL,
+  `detail_penilaian` longtext DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- 50. LAMPIRAN - PERMINTAAN PELAYANAN KEROHANIAN (Ranap)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_permintaan_pelayanan_kerohanian` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `kamar_inap` varchar(150) DEFAULT NULL,
+  `nama_pemohon` varchar(150) DEFAULT NULL,
+  `tgl_lahir_pemohon` date DEFAULT NULL,
+  `umur_pemohon` varchar(50) DEFAULT NULL,
+  `alamat_pemohon` text DEFAULT NULL,
+  `hubungan_pasien` varchar(100) DEFAULT NULL,
+  `agama_kepercayaan` varchar(150) DEFAULT NULL,
+  `kebutuhan_khusus` text DEFAULT NULL,
+  `nama_rohaniawan` varchar(150) DEFAULT NULL,
+  `kota` varchar(50) DEFAULT 'Banjarmasin',
+  `tanggal_surat` date DEFAULT NULL,
+  `nama_perawat` varchar(150) DEFAULT NULL,
+  `nip_perawat` varchar(50) DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- 51. LAMPIRAN - FORMULIR MONITORING PASIEN KATETER URIN (Ranap)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_monitoring_pasien_kateter_urin` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `ruang` varchar(150) DEFAULT NULL,
+  `bulan_tahun` varchar(50) DEFAULT NULL,
+  `tgl_mrs` date DEFAULT NULL,
+  `diagnosa` varchar(255) DEFAULT NULL,
+  `jenis_cath` varchar(50) DEFAULT NULL,
+  `jenis_cath_lainnya` varchar(100) DEFAULT NULL,
+  `no_cath` varchar(20) DEFAULT NULL,
+  `no_cath_lainnya` varchar(50) DEFAULT NULL,
+  `detail_monitoring` longtext DEFAULT NULL,
+  `nama_icn` varchar(150) DEFAULT NULL,
+  `nip_icn` varchar(50) DEFAULT NULL,
+  `nama_head_nurse` varchar(150) DEFAULT NULL,
+  `nip_head_nurse` varchar(50) DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- 52. LAMPIRAN - FORMULIR KONSULTASI INTERNAL (Ranap)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_konsultasi_internal` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `kamar_inap` varchar(150) DEFAULT NULL,
+  `ts_bagian` varchar(150) DEFAULT NULL,
+  `instalasi` varchar(150) DEFAULT NULL,
+  `diagnosa_sementara` text DEFAULT NULL,
+  `konsultasi_diminta` text DEFAULT NULL,
+  `tgl_konsul` date DEFAULT NULL,
+  `kd_dokter_pengirim` varchar(20) DEFAULT NULL,
+  `nama_dokter_pengirim` varchar(150) DEFAULT NULL,
+  `jawaban_hasil_pemeriksaan` text DEFAULT NULL,
+  `jawaban_diagnosa` text DEFAULT NULL,
+  `jawaban_nasihat` text DEFAULT NULL,
+  `tgl_jawaban` date DEFAULT NULL,
+  `kd_dokter_konsulen` varchar(20) DEFAULT NULL,
+  `nama_dokter_konsulen` varchar(150) DEFAULT NULL,
+  `status_konsul` enum('Menunggu Jawaban','Sudah Dijawab') DEFAULT 'Menunggu Jawaban',
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- 53. LAMPIRAN - FORMULIR MONITORING PASIEN SELAMA TRANSFER (Ranap)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_monitoring_pasien_selama_transfer` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `kamar_inap` varchar(150) DEFAULT NULL,
+  `tanggal_transfer` date DEFAULT NULL,
+  `status_kegawatdaruratan` enum('Merah','Kuning','Hijau','Hitam') DEFAULT 'Kuning',
+  `jenis_kasus` enum('Trauma','Non Trauma') DEFAULT 'Non Trauma',
+  `diagnosa` text DEFAULT NULL,
+  `monitoring_keterangan` text DEFAULT NULL,
+  `petugas_transfer` varchar(150) DEFAULT NULL,
+  `nip_petugas_transfer` varchar(50) DEFAULT NULL,
+  `jam_berangkat` time DEFAULT NULL,
+  `jam_tiba` time DEFAULT NULL,
+  `detail_monitoring` longtext DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal_transfer` (`tanggal_transfer`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- --------------------------------------------------------
+-- 54. LAMPIRAN - FORMULIR PENILAIAN DEKUBITUS (Ranap)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_penilaian_dekubitus` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `kamar_inap` varchar(150) DEFAULT NULL,
+  `tanggal_penilaian` date DEFAULT NULL,
+  `detail_penilaian` longtext DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal_penilaian` (`tanggal_penilaian`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- 55. LAMPIRAN - FORMULIR PENILAIAN KEJADIAN INFEKSI LUKA OPERASI (ILO) (Ranap)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_penilaian_kejadian_ilo` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `kamar_inap` varchar(150) DEFAULT NULL,
+  `tanggal_penilaian` date DEFAULT NULL,
+  `detail_penilaian` longtext DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal_penilaian` (`tanggal_penilaian`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- 56. LAMPIRAN - FORMULIR PENILAIAN KEJADIAN INFEKSI SALURAN KEMIH (ISK) (Ranap)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_penilaian_kejadian_isk` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `kamar_inap` varchar(150) DEFAULT NULL,
+  `tanggal_penilaian` date DEFAULT NULL,
+  `detail_penilaian` longtext DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal_penilaian` (`tanggal_penilaian`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- 57. LAMPIRAN - SURAT PERNYATAAN BERSEDIA MENUNGGU (Ranap)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_surat_pernyataan_bersedia_menunggu` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `nama_pj` varchar(100) NOT NULL,
+  `tgl_lahir_pj` date DEFAULT NULL,
+  `jk_pj` enum('Laki-laki','Perempuan') DEFAULT 'Laki-laki',
+  `alamat_pj` text DEFAULT NULL,
+  `no_identitas_pj` varchar(30) DEFAULT NULL,
+  `hubungan` varchar(50) DEFAULT 'Diri Saya Sendiri',
+  `nama_pasien` varchar(100) DEFAULT NULL,
+  `tgl_lahir_pasien` date DEFAULT NULL,
+  `jk_pasien` enum('Laki-laki','Perempuan') DEFAULT 'Laki-laki',
+  `alamat_pasien` text DEFAULT NULL,
+  `ruang_menunggu` varchar(150) DEFAULT 'ruang perawatan biasa / ruang perawatan intensif',
+  `tanggal_surat` date DEFAULT NULL,
+  `kd_dokter` varchar(20) DEFAULT NULL,
+  `nama_dokter` varchar(100) DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal_surat` (`tanggal_surat`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

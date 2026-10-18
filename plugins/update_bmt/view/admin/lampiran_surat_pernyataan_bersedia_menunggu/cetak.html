@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Surat Pernyataan Bersedia Menunggu - {$data.no_rawat}</title>
+    <style>
+        {if: empty($is_mpdf)}
+        @page {
+            size: A4 portrait;
+            margin: 10mm 15mm 10mm 15mm;
+        }
+        {/if}
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
+            background-color: #f4f6f9;
+            padding: 20px 0;
+        }
+        .page {
+            background: #fff;
+            width: 190mm;
+            min-height: 270mm;
+            margin: 0 auto;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        {/if}
+
+        /* Toolbar Layar Browser */
+        .no-print-toolbar {
+            width: 190mm;
+            margin: 0 auto 12px auto;
+            padding: 8px 14px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+        }
+        .btn-toolbar {
+            padding: 5px 12px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+
+        /* BINGKAI UTAMA */
+        .outer-border {
+            border: 1.5px solid #000;
+            padding: 0;
+            width: 100%;
+        }
+
+        /* KOP HEADER */
+        .kop-header {
+            width: 100%;
+            border-bottom: 2px solid #000;
+            padding: 8px 12px;
+            text-align: center;
+        }
+        .kop-header img {
+            width: 100%;
+            max-height: 75px;
+            object-fit: contain;
+        }
+
+        /* BODY SURAT */
+        .content-box {
+            padding: 20px 28px 75px 28px;
+        }
+
+        /* JUDUL SURAT */
+        .title-surat {
+            text-align: center;
+            font-weight: bold;
+            font-size: 12.5pt;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        /* TABEL IDENTITAS */
+        .table-identitas {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+            font-size: 10pt;
+        }
+        .table-identitas td {
+            padding: 2.5px 0;
+            vertical-align: top;
+        }
+        .td-label {
+            width: 140px;
+        }
+        .td-colon {
+            width: 18px;
+            text-align: center;
+        }
+        .td-value {
+            font-weight: normal;
+        }
+
+        .statement-text {
+            text-align: justify;
+            margin: 14px 0;
+            line-height: 1.6;
+        }
+
+        /* TANDA TANGAN */
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+        .signature-table td {
+            width: 50%;
+            text-align: center;
+            vertical-align: top;
+            font-size: 10pt;
+        }
+
+        /* FOOTER RSGM */
+        .form-footer-table {
+            width: 100%;
+            margin-top: 6px;
+            font-size: 7.5pt;
+            border-collapse: collapse;
+        }
+
+        .footnote-kerjasama {
+            text-align: right;
+            font-size: 6.5pt;
+            margin-top: 4px;
+            color: #333;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: #fff !important;
+                padding: 0 !important;
+            }
+            .page {
+                box-shadow: none !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+{if: empty($is_mpdf)}
+<div class="no-print no-print-toolbar">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <strong style="font-size: 13px;"><i class="fa fa-print"></i> Surat Pernyataan Bersedia Menunggu</strong>
+            <span style="font-size: 11px; opacity: 0.8; margin-left: 10px;">(Format Resmi Rekam Medis RSGM Gusti Hasan Aman)</span>
+        </div>
+        <div>
+            <button onclick="window.print()" class="btn-toolbar btn-print">&#128438; Cetak Dokumen</button>
+            <a href="?pdf=1" target="_blank" class="btn-toolbar btn-pdf">&#128196; Download PDF</a>
+            <button onclick="window.close()" class="btn-toolbar btn-close">&#10006; Tutup</button>
+        </div>
+    </div>
+</div>
+{/if}
+
+<div class="page">
+    <div class="outer-border">
+
+        <!-- KOP SURAT RESMI RSGM -->
+        <div class="kop-header">
+            {if: !empty($data.kop_img)}
+            <img src="{$data.kop_img}" alt="KOP RSGM Gusti Hasan Aman">
+            {else}
+            <div style="font-weight: bold; font-size: 11pt;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+            <div style="font-weight: bold; font-size: 13pt;">RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</div>
+            <div style="font-size: 8pt;">Jl. Simpang Ulin Nomor 28 Banjarmasin Kode Pos 70233 Telp/Fax: (0511) 3260818</div>
+            <div style="font-size: 8pt;">Email: rsgmgustihasanaman@yahoo.com</div>
+            {/if}
+        </div>
+
+        <!-- ISI SURAT PERNYATAAN -->
+        <div class="content-box">
+
+            <!-- JUDUL -->
+            <div class="title-surat">
+                SURAT PERNYATAAN BERSEDIA MENUNGGU
+            </div>
+
+            <!-- BAGIAN 1: PEMBUAT PERNYATAAN -->
+            <div style="margin-bottom: 8px;">
+                Yang bertanda tangan di bawah ini :
+            </div>
+
+            <table class="table-identitas">
+                <tr>
+                    <td class="td-label">Nama</td>
+                    <td class="td-colon">:</td>
+                    <td class="td-value"><strong>{$data.nama_pj}</strong></td>
+                </tr>
+                <tr>
+                    <td class="td-label">Tanggal Lahir</td>
+                    <td class="td-colon">:</td>
+                    <td class="td-value">{if: !empty($data.tgl_lahir_pj)}{$data.tgl_lahir_pj_indo}{else}-{/if}</td>
+                </tr>
+                <tr>
+                    <td class="td-label">Jenis Kelamin</td>
+                    <td class="td-colon">:</td>
+                    <td class="td-value">{$data.jk_pj}</td>
+                </tr>
+                <tr>
+                    <td class="td-label">Alamat</td>
+                    <td class="td-colon">:</td>
+                    <td class="td-value">{$data.alamat_pj}</td>
+                </tr>
+                <tr>
+                    <td class="td-label">No Identitas</td>
+                    <td class="td-colon">:</td>
+                    <td class="td-value">{if: !empty($data.no_identitas_pj)}{$data.no_identitas_pj}{else}-{/if}</td>
+                </tr>
+            </table>
+
+            <!-- KLAUSUL PERNYATAAN -->
+            <div class="statement-text">
+                Menyatakan bahwa bersedia menunggu di IGD sampai adanya ketersediaan ruangan di <strong>{$data.ruang_menunggu}</strong>
+            </div>
+
+            <!-- BAGIAN 2: HUBUNGAN DAN IDENTITAS PASIEN -->
+            <div style="margin-top: 14px; margin-bottom: 8px;">
+                Terhadap {if: $data.hubungan == 'Diri Saya Sendiri'}<strong><u>diri saya sendiri</u></strong>{else}diri saya sendiri{/if} / 
+                {if: $data.hubungan == 'Suami'}<strong><u>suami</u></strong>{else}suami{/if} / 
+                {if: $data.hubungan == 'Istri'}<strong><u>istri</u></strong>{else}istri{/if} / 
+                {if: $data.hubungan == 'Orang Tua'}<strong><u>orang tua</u></strong>{else}orang tua{/if} / 
+                {if: $data.hubungan == 'Anak'}<strong><u>anak saya</u></strong>{else}anak saya{/if} dengan :
+            </div>
+
+            <table class="table-identitas">
+                <tr>
+                    <td class="td-label">Nama</td>
+                    <td class="td-colon">:</td>
+                    <td class="td-value"><strong>{$data.nama_pasien}</strong></td>
+                </tr>
+                <tr>
+                    <td class="td-label">Tanggal Lahir</td>
+                    <td class="td-colon">:</td>
+                    <td class="td-value">{if: !empty($data.tgl_lahir_pasien)}{$data.tgl_lahir_pasien_indo}{else}-{/if}</td>
+                </tr>
+                <tr>
+                    <td class="td-label">Jenis Kelamin</td>
+                    <td class="td-colon">:</td>
+                    <td class="td-value">{$data.jk_pasien}</td>
+                </tr>
+                <tr>
+                    <td class="td-label">Alamat</td>
+                    <td class="td-colon">:</td>
+                    <td class="td-value">{$data.alamat_pasien}</td>
+                </tr>
+            </table>
+
+            <!-- PENUTUP -->
+            <div class="statement-text" style="margin-top: 14px; margin-bottom: 25px;">
+                Demikian persetujuan ini saya buat dengan penuh kesadaran dan tanpa paksaan.
+            </div>
+
+            <!-- TANDA TANGAN -->
+            <table class="signature-table" style="margin-top: 20px;">
+                <tr>
+                    <td style="width: 50%;"></td>
+                    <td style="width: 50%; text-align: center; padding-bottom: 20px;">
+                        Banjarmasin, {$data.tanggal_surat_indo}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; vertical-align: top;">
+                        Yang membuat pernyataan
+                        <div style="height: 60px;"></div>
+                        <div style="letter-spacing: 1px;">..................................................</div>
+                        <div style="font-weight: bold; margin-top: 4px;">( {$data.nama_pj} )</div>
+                    </td>
+                    <td style="text-align: center; vertical-align: top;">
+                        Dokter yang merawat
+                        <div style="height: 60px;"></div>
+                        <div style="letter-spacing: 1px;">..................................................</div>
+                        <div style="font-weight: bold; margin-top: 4px;">( {if: !empty($data.nama_dokter)}{$data.nama_dokter}{else}..................................................{/if} )</div>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
+    </div>
+
+    <!-- FOOTNOTE & KODE FORMULIR -->
+    <div class="footnote-kerjasama">
+        <em>Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</em> &#9634;
+    </div>
+
+    <table class="form-footer-table">
+        <tr>
+            <td style="text-align: left; width: 50%;">RSGM/Ed-Rev/02/2023</td>
+            <td style="text-align: right; width: 50%;">RM.RI Lampiran</td>
+        </tr>
+    </table>
+
+</div>
+
+</body>
+</html>
