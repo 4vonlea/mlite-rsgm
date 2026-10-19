@@ -1278,6 +1278,130 @@ CREATE TABLE IF NOT EXISTS `lampiran_penilaian_kejadian_ilo` (
 5. **Seeder Data Sampel:**
    - Dijalankan `seed_surat_pernyataan_bersedia_menunggu.php` dengan 3 kasus realistis (Anak - AHMAD SYAFIQ RIFANI dengan PJ Orang Tua, Pasien Sendiri - Jhon Doe, Pasien Istri - Jane Doe dengan PJ Suami).
 
+---
+
+## [1.23.0] - 2026-10-18
+### Added - LAMPIRAN - INFORMASI PENUNDAAN DAN KELAMBATAN PELAYANAN (Rawat Inap)
+1. **Tabel Database Baru:**
+   - Dibuat tabel `lampiran_penundaan_kelambatan_pelayanan` (Tabel ke-57 pada `migration_tabel_pendukung_bmt.sql` dan Tabel ke-58 pada `plugins/update_bmt/migration.sql`) dengan kolom: `id`, `no_rawat`, `no_rkm_medis`, `tanggal`, `jam`, `instalasi_unit`, `kd_dokter_pengirim`, `nama_dokter_pengirim`, `jenis_pelayanan`, `status_penerima`, `nama_penerima`, `alamat_penerima`, `no_identitas_penerima`, `sebab_kerusakan_alat`, `sebab_kondisi_umum_pasien`, `sebab_penundaan_penjadwalan`, `sebab_pemadaman_listrik`, `sebab_tempat_tidur_penuh`, `sebab_faktor_penyulit`, `keterangan_faktor_penyulit`, `solusi_dijadwalkan_ulang`, `jadwal_akan_datang`, `solusi_dirujuk`, `tujuan_rujukan`, `solusi_kembali_dokter_pengirim`, `kd_dokter_dpjp`, `nama_dokter_dpjp`, `kd_pemberi_informasi`, `nama_pemberi_informasi`, `catatan`, `created_at`, `updated_at`.
+2. **Kesesuaian 100% Format Fisik Dokumen RSGM:**
+   - Header Dokumen:
+     - Sisi kiri: Kop resmi RSGM Gusti Hasan Aman lengkap dengan lambang Pemprov Kalsel, nama instansi, alamat, kontak, dan logo GHA.
+     - Sisi kanan: Identitas Pasien terbingkai kotak dengan 6 kotak digit nomor rekam medis (`NO. RM: [ ][ ][ ][ ][ ][ ]`), Nama Pasien + Jenis Kelamin (L/P), dan Tanggal Lahir.
+   - Kotak Petunjuk: `* Harap diisi / tempelkan stiker jika ada` dan `* Beri tanda (v) pada kotak yang sesuai`.
+   - Banner Judul: `INFORMASI PENUNDAAN DAN KELAMBATAN PELAYANAN` (huruf kapital tebal berbingkai).
+   - Grid Informasi:
+     - `Tanggal : [tanggal_indo]` | `Jam : [jam_wita] WITA`
+     - `Instalasi / Unit : [instalasi_unit]` | `Dokter yang mengirim : [nama_dokter_pengirim]`
+     - `Jenis Pelayanan : [jenis_pelayanan]`
+   - Bagian 1: Pernyataan Penerima Informasi (`Pasien Sendiri`, `Keluarga`, `Penanggung Jawab Pasien`) disertai rincian Nama, Alamat, dan No. Identitas.
+   - Bagian 2 (Penyebab Penundaan): Matriks 2 kolom checkbox:
+     - Kolom Kiri: `Kerusakan Alat`, `Kondisi Umum Pasien`, `Penundaan Penjadwalan`, `Pemadaman Instalasi Listrik`.
+     - Kolom Kanan: `Tempat Tidur Tidak Tersedia`, `Faktor Penyulit : [keterangan_faktor_penyulit]`.
+   - Bagian 3 (Persetujuan Alternatif Solusi):
+     - `Dijadwalkan ulang dan menjadi prioritas` & `jadwal yang akan datang : [jadwal_akan_datang]`.
+     - `Dirujuk ke layanan kesehatan lain, ke [tujuan_rujukan]`.
+     - `Dikembalikan kepada dokter pengirim`.
+   - Lokasi & Waktu: `Banjarmasin, [tanggal_indo] Jam : [jam_wita] WITA` di sebelah kanan atas kolom tanda tangan.
+   - Tanda Tangan 3 Kolom:
+     - Kolom 1: `Menyetujui, Pasien / Keluarga Pasien`
+     - Kolom 2: `Mengetahui DPJP`
+     - Kolom 3: `Pemberi Informasi`
+   - Catatan Kaki Resmi: *"Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas"* disertai simbol kotak &#9634;.
+   - Kode Formulir: `RSGM/Ed-Rev/02/2023` (kiri bawah) & `RM.RI Lampiran` (kanan bawah).
+3. **Fitur Pengelolaan & Antarmuka Interaktif:**
+   - Navigasi menu: `Rekam Medis -> Form RME -> Ranap -> Form Lampiran -> LAMPIRAN - INFORMASI PENUNDAAN DAN KELAMBATAN PELAYANAN`.
+   - Form AJAX autocomplete pencarian pasien instan via No. Rawat / No. RM.
+   - Tombol instan *"Salin dari Data Pasien"* untuk pengisian otomatis penerima informasi jika pasien sendiri.
+   - Dropdown dokter pengirim, dokter DPJP, dan petugas pemberi informasi.
+   - DataTables management view dengan nomor urut dinamis `{$value.nomor}`, label status hubungan, badge penyebab penundaan (merah/kuning/biru), rincian solusi alternatif, dan tombol Aksi (Edit, Cetak HTML, Unduh PDF mPDF, Hapus).
+4. **Cetak & Export PDF mPDF:**
+   - Output cetak browser & mPDF presisi 1:1, berbingkai tunggal (*single outer border*), path lokal gambar kop untuk mencegah deadlock pada server.
+5. **Seeder Data Sampel:**
+   - Dijalankan `seed_penundaan_kelambatan_pelayanan.php` dengan 3 kasus realistis (Pasien Anak IBS Odontektomi ditunda karena demam akut & batuk berdahak pra-induksi, Pasien Radiologi CBCT 3D ditunda karena kerusakan sensor gantry alat, Pasien Rawat Inap Konservasi ditunda karena kamar sedang disterilisasi).
+
+---
+
+## [1.24.0] - 2026-10-18
+### Added - LAMPIRAN - PERSETUJUAN UNTUK TESTING HIV (Rawat Inap)
+1. **Tabel Database Baru:**
+   - Dibuat tabel `lampiran_persetujuan_testing_hiv` (Tabel ke-58 pada `migration_tabel_pendukung_bmt.sql` dan Tabel ke-59 pada `plugins/update_bmt/migration.sql`) dengan kolom: `id`, `no_rawat`, `no_rkm_medis`, `kode_klien`, `tanggal`, `tanggal_pelaksanaan`, `nama_pasien`, `kd_konselor`, `nama_konselor`, `status_persetujuan`, `catatan`, `created_at`, `updated_at`.
+2. **Kesesuaian 100% Format Fisik Dokumen RSGM:**
+   - Header Dokumen:
+     - Sisi kiri: Kop resmi RSGM Gusti Hasan Aman lengkap dengan lambang Pemprov Kalsel, nama instansi, alamat, kontak, dan logo GHA.
+     - Sisi kanan: Identitas Pasien dengan 6 kotak digit nomor rekam medis (`No RM : [ ][ ][ ][ ][ ][ ]`), Nama Pasien + Jenis Kelamin (L/P), dan Tanggal Lahir.
+   - Judul Dokumen: `PERSETUJUAN UNTUK TESTING HIV` (huruf kapital tebal di tengah).
+   - Metadata Klien VCT: `Kode Klien : [kode_klien]` dan `Tanggal : [tanggal_indo]`.
+   - Klausul 1: Hak kerahasiaan & hak menarik persetujuan sebelum pemeriksaan dilangsungkan.
+   - Klausul 2: Poin materi informasi & konseling pra-tes HIV:
+     - a. Keberadaan dan kegunaan dari testing HIV
+     - b. Tujuan dan kegunaan dari testing HIV
+     - c. Apa yang dapat dan tidak dapat diberitahukan dari testing HIV
+     - d. Keuntungan serta resiko dari testing HIV dan dari mengetahui hasil testing saya
+     - e. Pemahaman dari positif, negatif, false negatif, false positif, dan hasil tes intermediate serta dampak dari masa jendela
+     - f. Pengukuran untuk pencegahan dari pemaparan dan penularan akan HIV
+   - Klausul 3: Kesepakatan sukarela menjalani tes dengan hasil rahasia bagi diri sendiri dan persetujuan menerima konseling pasca tes.
+   - Klausul 4: Jaminan bahwa pelayanan kesehatan tidak dipengaruhi keputusan terhadap tes.
+   - Klausul 5: Kesempatan bertanya dan telah mendapatkan jawaban yang memuaskan.
+   - Klausul 6: Pemberian izin pelaksanaan tes pada tanggal tertentu (`[tanggal_pelaksanaan_indo]`).
+   - Kolom Tanda Tangan: 2 kolom sejajar (`Pasien` di kiri dan `Konselor` di kanan) disertai garis titik-titik dan nama terang di dalam kurung.
+   - Catatan Kaki: *"Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas"* (cetak miring kanan bawah).
+   - Kode Formulir: `RSGM/Ed-Rev/02/2023` (kiri bawah) & `RM.RI Lampiran` (kanan bawah).
+3. **Fitur Pengelolaan & Antarmuka Interaktif:**
+   - Navigasi menu: `Rekam Medis -> Form RME -> Ranap -> Form Lampiran -> LAMPIRAN - PERSETUJUAN UNTUK TESTING HIV`.
+   - Form AJAX autocomplete pencarian pasien instan via No. Rawat / No. RM.
+   - Generator otomatis nomor `Kode Klien` format `VCT/YYYY/MM/XXX`.
+   - Dropdown konselor terintegrasi daftar dokter & petugas RSGM.
+   - DataTables management view dengan nomor urut dinamis `{$value.nomor}`, badge kode klien, badge status persetujuan (Setuju/Menolak), nama konselor, tanggal pelaksanaan, dan tombol Aksi (Edit, Cetak HTML, Unduh PDF mPDF, Hapus).
+4. **Cetak & Export PDF mPDF:**
+   - Output cetak browser & mPDF presisi 1:1, tata letak terbuka (*open clean layout*) sesuai dokumen asli, path lokal gambar kop untuk mencegah deadlock pada server.
+5. **Seeder Data Sampel:**
+   - Dijalankan `seed_persetujuan_testing_hiv.php` dengan 3 kasus realistis (Skrining pre-operatif bedah mulut mayor AHMAD SYAFIQ RIFANI dengan konselor drg. EKARIANI NURRAHMIDAWATI; Skrining sukarela VCT Jhon Doe dengan konselor drg. WINDA ARIANI; Skrining rujukan pra-tindakan Jane Doe dengan konselor drg. TEGUH HADIANTO, Sp.KG).
+6. **Bugfix Query Database & Notifikasi:**
+   - Memperbaiki error `Call to undefined method Systems\Admin::mysql()` pada controller `lampiran_penundaan_kelambatan_pelayanan` dan `lampiran_persetujuan_testing_hiv` dengan standarisasi menggunakan `$this->db()` dan `$this->notify()`.
+
+---
+
+## [1.25.0] - 2026-10-18
+### Added - LAMPIRAN - VCT PRA TESTING HIV (Rawat Inap - 3 Halaman Terpadu 1 File PDF)
+1. **Tabel Database Baru:**
+   - Dibuat tabel `lampiran_vct_pra_testing_hiv` (Tabel ke-59 pada `migration_tabel_pendukung_bmt.sql` dan Tabel ke-60 pada `plugins/update_bmt/migration.sql`) dengan 40 kolom data terstruktur meliputi data demografi (jenis klien, status hubungan, jumlah anak, umur, pendidikan, pekerjaan), riwayat risiko individu (pasangan tetap, status pasangan, tgl tes terakhir), detail potensi pajanan JSON (8 pajanan berisiko + masa jendela window period), pertanyaan risiko tambahan (tes ulang window period, kontak orang HIV, hamil/trimester, KB, IMS, TB), penilaian penyesuaian diri (5 item), catatan penyesuaian individu, intervensi konselor JSON (14 poin intervensi), catatan lainnya, hasil pemeriksaan HIV (Antibody negatif/positif/indeterminate), tgl mengetahui, dan konselor.
+2. **Kesesuaian 100% Format Fisik Dokumen RSGM (3 Halaman Terpadu):**
+   - **Halaman 1 (RM.RI Lampiran Hal 1-3):**
+     - Header: Kop resmi RSGM Gusti Hasan Aman di kiri, Box identitas pasien dengan 6 kotak digit No. RM (`[0][5][5][2][6][8]`), Nama Pasien + JK (L/P), dan Tanggal Lahir di kanan.
+     - Banner Judul: `VCT PRA TESTING HIV` berbingkai hitam, memuat Kode Klien otomatis (`VCT/YYYY/MM/XXX`), Tanggal, Tanggal Tes Klien, dan Tempat Tes.
+     - Kotak 1: `1. Data Demografi` (Grid 3 kolom x 2 baris: a. Jenis Klien, b. Status Hubungan, c. Jumlah Anak, d. Umur Klien, e. Pendidikan, f. Pekerjaan).
+     - Kotak 2: `2. Pendidikan Risiko Individu` (Grid 3 kolom: Klien Punya Pasangan Tetap, Status Pasangan Tetap, Tanggal Tes Terakhir).
+     - Footnote & Footer: *"Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas □"*, `RSGM/Ed-Rev/02/2023`, dan `RM.RI Lampiran Hal 1-3`.
+   - **Halaman 2 (RM.RI Lampiran Hal 2-3):**
+     - Sub-Header: Nama Pasien, Tanggal Lahir, NO. RM (6 kotak digit).
+     - Bingkai Utama:
+       - Header: `Tulislah kode dan tanggal potensi pajanan yang paling akhir`.
+       - Tabel Potensi Pajanan: 8 baris jenis pajanan (Okupasional, Tatto/goresan, Produk Darah, Hubungan Seks Vaginal, Oral Seks, Anal Seks, Riwayat kekerasan Seksual, Bergantian peralatan suntik) dengan tanggal paling berisiko dan kode masa jendela (1=Ya, 2=Tidak).
+       - Baris tes ulang masa jendela dengan tanggal, serta 5 baris risiko tambahan (kontak orang HIV, kehamilan trimester 1/2/3, KB teratur, IMS, TB).
+       - Kotak 3: `3. Penilaian pribadi atas strategi penyesuaian diri (beri kode 1 = YA, 2 = TIDAK)` (5 pertanyaan risiko bunuh diri/melukai diri/kekerasan/dukungan personal).
+       - Catatan Penilaian Penyesuaian Individu: 3 baris bergaris dengan isi catatan konseling.
+       - Intervensi Konselor (Bagian Hal 2): 7 checklist intervensi pra-tes.
+     - Footnote & Footer: *"Terima kasih..."*, `RSGM/Ed-Rev/02/2023`, dan `RM.RI Lampiran Hal 2-3`.
+   - **Halaman 3 (RM.RI Lampiran Hal 3-3):**
+     - Sub-Header: Nama Pasien, Tanggal Lahir, NO. RM (6 kotak digit).
+     - Bingkai Utama:
+       - Lanjutan Intervensi Konselor: 6 checklist intervensi (eksplorasi hasil tes HIV positif, dukungan keluarga, risiko personal, isu penting, informasi prosedur tes, informed consent).
+       - Catatan Lainnya: 3 baris bergaris dengan isi catatan tambahan konselor.
+       - Hasil Pemeriksaan (beri tanda): 3 checklist horizontal (`Antibody HIV negatif`, `Antibody HIV positif`, `Indeterminate`).
+       - Kotak Tanda Tangan: Kolom kiri kosong, Kolom kanan: Tanggal mengetahui, Mengetahui Konselor, ttd, dan nama terang konselor.
+     - Footnote & Footer: *"Terima kasih..."*, `RSGM/Ed-Rev/02/2023`, dan `RM.RI Lampiran Hal 3-3`.
+3. **Ekspor PDF 3 Halaman Menjadi Satu File PDF Utuh:**
+   - Menggunakan tag `<pagebreak />` dengan mPDF terpadu sehingga seluruh 3 halaman tersusun rapi dalam SATU file PDF resmi siap unduh/cetak.
+   - Dilengkapi toolbar preview browser untuk cetak langsung via dialog print maupun unduh file PDF.
+4. **Data Sampel Klinis:**
+   - Dijalankan seeder `seed_vct_pra_testing_hiv.php` berisi 3 data pasien realistis (AHMAD SYAFIQ RIFANI, Jhon Doe, Jane Doe) dengan variasi demografi, tingkat risiko, dan status hasil pemeriksaan.
+5. **Navigasi & Menu:**
+   - Ditambahkan menu pada `Rekam Medis -> Form RME -> Ranap -> Form Lampiran -> LAMPIRAN - VCT PRA TESTING HIV`.
+   - Route URL: `?module=update_bmt&page=vctpratestinghivmanage`.
+
+
+
 
 
 

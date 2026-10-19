@@ -27,12 +27,13 @@
                             <tr>
                                 <td>{$value.no_rawat}</td>
                                 <td>{$value.no_rkm_medis}</td>
-                                <td>{$value.nm_pasien}</td>
+                                <td>{if: !empty($value.nama_pasien)}{$value.nama_pasien}{elseif: !empty($value.nm_pasien)}{$value.nm_pasien}{else}-{/if}</td>
                                 <td>{$value.nama_pihak}</td>
                                 <td>{$value.selaku_pihak}</td>
                                 <td>{$value.tgl_surat}</td>
                                 <td>
                                     <a href="{?=url([ADMIN, 'update_bmt', 'pulangapscetak', '?id='.$value.id])?}" class="btn btn-xs btn-success" target="_blank"><i class="fa fa-print"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'pulangapscetak', '?id='.$value.id])?}&pdf=1" class="btn btn-xs btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
                                     <a href="{?=url([ADMIN, 'update_bmt', 'pulangapsform', '?id='.$value.id])?}" class="btn btn-xs btn-primary"><i class="fa fa-edit"></i></a>
                                     <a href="{?=url([ADMIN, 'update_bmt', 'pulangapshapus', '?id='.$value.id])?}" class="btn btn-xs btn-danger" onclick="return confirm('Hapus data?');"><i class="fa fa-trash"></i></a>
                                 </td>

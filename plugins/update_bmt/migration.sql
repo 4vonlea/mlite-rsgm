@@ -1899,3 +1899,167 @@ CREATE TABLE IF NOT EXISTS `lampiran_surat_pernyataan_bersedia_menunggu` (
   KEY `tanggal_surat` (`tanggal_surat`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+-- 58. LAMPIRAN - INFORMASI PENUNDAAN DAN KELAMBATAN PELAYANAN (Ranap)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_penundaan_kelambatan_pelayanan` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `tanggal` date DEFAULT NULL,
+  `jam` time DEFAULT NULL,
+  `instalasi_unit` varchar(100) DEFAULT NULL,
+  `kd_dokter_pengirim` varchar(20) DEFAULT NULL,
+  `nama_dokter_pengirim` varchar(100) DEFAULT NULL,
+  `jenis_pelayanan` varchar(150) DEFAULT NULL,
+  `status_penerima` enum('Pasien Sendiri','Keluarga','Penanggung Jawab Pasien') DEFAULT 'Pasien Sendiri',
+  `nama_penerima` varchar(100) DEFAULT NULL,
+  `alamat_penerima` text DEFAULT NULL,
+  `no_identitas_penerima` varchar(30) DEFAULT NULL,
+  `sebab_kerusakan_alat` tinyint(1) DEFAULT 0,
+  `sebab_kondisi_umum_pasien` tinyint(1) DEFAULT 0,
+  `sebab_penundaan_penjadwalan` tinyint(1) DEFAULT 0,
+  `sebab_pemadaman_listrik` tinyint(1) DEFAULT 0,
+  `sebab_tempat_tidur_penuh` tinyint(1) DEFAULT 0,
+  `sebab_faktor_penyulit` tinyint(1) DEFAULT 0,
+  `keterangan_faktor_penyulit` varchar(255) DEFAULT NULL,
+  `solusi_dijadwalkan_ulang` tinyint(1) DEFAULT 0,
+  `jadwal_akan_datang` varchar(150) DEFAULT NULL,
+  `solusi_dirujuk` tinyint(1) DEFAULT 0,
+  `tujuan_rujukan` varchar(150) DEFAULT NULL,
+  `solusi_kembali_dokter_pengirim` tinyint(1) DEFAULT 0,
+  `kd_dokter_dpjp` varchar(20) DEFAULT NULL,
+  `nama_dokter_dpjp` varchar(100) DEFAULT NULL,
+  `kd_pemberi_informasi` varchar(20) DEFAULT NULL,
+  `nama_pemberi_informasi` varchar(100) DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal` (`tanggal`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- 59. LAMPIRAN - PERSETUJUAN UNTUK TESTING HIV (Ranap)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_persetujuan_testing_hiv` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `kode_klien` varchar(50) DEFAULT NULL,
+  `tanggal` date DEFAULT NULL,
+  `tanggal_pelaksanaan` date DEFAULT NULL,
+  `nama_pasien` varchar(100) DEFAULT NULL,
+  `kd_konselor` varchar(20) DEFAULT NULL,
+  `nama_konselor` varchar(100) DEFAULT NULL,
+  `status_persetujuan` enum('Setuju','Menolak') DEFAULT 'Setuju',
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal` (`tanggal`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+-- --------------------------------------------------------
+-- 60. LAMPIRAN - VCT PRA TESTING HIV (Ranap)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_vct_pra_testing_hiv` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `kode_klien` varchar(50) DEFAULT NULL,
+  `tanggal` date DEFAULT NULL,
+  `tanggal_tes_klien` date DEFAULT NULL,
+  `tempat_tes` varchar(100) DEFAULT NULL,
+  `jenis_klien` varchar(20) DEFAULT NULL,
+  `status_hubungan` varchar(30) DEFAULT NULL,
+  `jumlah_anak` varchar(20) DEFAULT NULL,
+  `umur_klien` varchar(20) DEFAULT NULL,
+  `pendidikan` varchar(30) DEFAULT NULL,
+  `pekerjaan` varchar(50) DEFAULT NULL,
+  `pekerjaan_lain` varchar(100) DEFAULT NULL,
+  `pasangan_tetap` varchar(10) DEFAULT NULL,
+  `status_pasangan` varchar(20) DEFAULT NULL,
+  `tgl_tes_terakhir` date DEFAULT NULL,
+  `detail_pajanan` text DEFAULT NULL,
+  `tes_ulang_window` varchar(10) DEFAULT 'TIDAK',
+  `tgl_tes_ulang` date DEFAULT NULL,
+  `berisiko_orang_hiv` varchar(10) DEFAULT NULL,
+  `klien_hamil` varchar(10) DEFAULT NULL,
+  `trimester_kehamilan` varchar(20) DEFAULT NULL,
+  `kb_teratur` varchar(10) DEFAULT NULL,
+  `riwayat_ims` varchar(10) DEFAULT NULL,
+  `gejala_tb` varchar(10) DEFAULT NULL,
+  `indikasi_bunuh_diri` varchar(10) DEFAULT NULL,
+  `riwayat_melukai_diri` varchar(10) DEFAULT NULL,
+  `mencederai_orang_lain` varchar(10) DEFAULT NULL,
+  `kekerasan_pasangan` varchar(10) DEFAULT NULL,
+  `dukungan_personal` varchar(10) DEFAULT NULL,
+  `catatan_penyesuaian` text DEFAULT NULL,
+  `intervensi_konselor` text DEFAULT NULL,
+  `catatan_lainnya` text DEFAULT NULL,
+  `hasil_pemeriksaan` varchar(50) DEFAULT NULL,
+  `tanggal_mengetahui` date DEFAULT NULL,
+  `kd_konselor` varchar(20) DEFAULT NULL,
+  `nama_konselor` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal` (`tanggal`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- 61. LAMPIRAN - PERSETUJUAN PROSEDUR TINDAKAN RADIOLOGI (Rajal)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lampiran_persetujuan_tindakan_radiologi` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `nama_penanggung_jawab` varchar(150) DEFAULT NULL,
+  `jk_penanggung_jawab` enum('L','P') DEFAULT 'L',
+  `tmp_lahir_penanggung_jawab` varchar(100) DEFAULT NULL,
+  `tgl_lahir_penanggung_jawab` date DEFAULT NULL,
+  `usia_penanggung_jawab` varchar(20) DEFAULT NULL,
+  `no_identitas_penanggung_jawab` varchar(50) DEFAULT NULL,
+  `jenis_identitas_penanggung_jawab` varchar(30) DEFAULT 'KTP',
+  `alamat_penanggung_jawab` text DEFAULT NULL,
+  `kelurahan_penanggung_jawab` varchar(100) DEFAULT NULL,
+  `kecamatan_penanggung_jawab` varchar(100) DEFAULT NULL,
+  `kabupaten_penanggung_jawab` varchar(100) DEFAULT NULL,
+  `provinsi_penanggung_jawab` varchar(100) DEFAULT NULL,
+  `hubungan_pasien` varchar(50) DEFAULT 'Diri Sendiri',
+  `hubungan_pasien_lainnya` varchar(100) DEFAULT NULL,
+  `tindakan_radiologi` text DEFAULT NULL,
+  `nama_pasien_terhadap` varchar(150) DEFAULT NULL,
+  `jk_pasien_terhadap` enum('L','P') DEFAULT 'L',
+  `tmp_lahir_pasien_terhadap` varchar(100) DEFAULT NULL,
+  `tgl_lahir_pasien_terhadap` date DEFAULT NULL,
+  `usia_pasien_terhadap` varchar(20) DEFAULT NULL,
+  `alamat_pasien_terhadap` text DEFAULT NULL,
+  `kelurahan_pasien_terhadap` varchar(100) DEFAULT NULL,
+  `kecamatan_pasien_terhadap` varchar(100) DEFAULT NULL,
+  `kabupaten_pasien_terhadap` varchar(100) DEFAULT NULL,
+  `provinsi_pasien_terhadap` varchar(100) DEFAULT NULL,
+  `kota_surat` varchar(100) DEFAULT 'Banjarmasin',
+  `tanggal_surat` date DEFAULT NULL,
+  `jam_surat` time DEFAULT NULL,
+  `nama_yang_menyatakan` varchar(150) DEFAULT NULL,
+  `kd_dokter` varchar(20) DEFAULT NULL,
+  `nama_dokter` varchar(150) DEFAULT NULL,
+  `nama_saksi_1` varchar(150) DEFAULT NULL,
+  `nama_saksi_2` varchar(150) DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+

@@ -1,0 +1,459 @@
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title" style="font-weight: bold;">
+            <i class="fa fa-edit"></i> {if: !empty($id)}Edit{else}Tambah{/if} Persetujuan Prosedur Tindakan Radiologi
+        </h3>
+    </div>
+    <div class="panel-body">
+        <form method="POST" action="" class="form-horizontal" id="form-radiologi">
+            <!-- PENCARIAN PASIEN / NO RAWAT -->
+            <div class="alert alert-info" style="margin-bottom: 20px;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="col-sm-4 control-label">No. Rawat / No. RM <span class="text-danger">*</span></label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Masukkan No. Rawat (YYYY/MM/DD/NNNNNN) atau No. RM" required>
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-primary" type="button" id="btn-cari-pasien">
+                                            <i class="fa fa-search"></i> Cari Pasien
+                                        </button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="col-sm-4 control-label">No. Rekam Medis</label>
+                            <div class="col-sm-8">
+                                <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" placeholder="No. RM" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BAGIAN 1: IDENTITAS YANG MEMBUAT PERNYATAAN -->
+            <div class="panel panel-primary">
+                <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h4 class="panel-title" style="font-weight: bold;">
+                        <i class="fa fa-user"></i> I. Identitas Yang Bertanda Tangan (Pemberi Pernyataan)
+                    </h4>
+                    <button type="button" class="btn btn-default btn-xs" id="btn-copy-pasien" style="color: #333; font-weight: bold;">
+                        <i class="fa fa-copy"></i> Sama Dengan Data Pasien (Diri Sendiri)
+                    </button>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Nama Lengkap <span class="text-danger">*</span></label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="nama_penanggung_jawab" id="nama_penanggung_jawab" class="form-control" value="{$data.nama_penanggung_jawab}" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Jenis Kelamin</label>
+                                <div class="col-sm-8">
+                                    <label class="radio-inline">
+                                        <input type="radio" name="jk_penanggung_jawab" value="L" {if: ($data.jk_penanggung_jawab ?? 'L') == 'L'}checked{/if}> Laki-laki
+                                    </label>
+                                    <label class="radio-inline">
+                                        <input type="radio" name="jk_penanggung_jawab" value="P" {if: ($data.jk_penanggung_jawab ?? '') == 'P'}checked{/if}> Perempuan
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Tempat / Tgl Lahir</label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="tmp_lahir_penanggung_jawab" id="tmp_lahir_penanggung_jawab" class="form-control" value="{$data.tmp_lahir_penanggung_jawab}" placeholder="Tempat Lahir">
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="date" name="tgl_lahir_penanggung_jawab" id="tgl_lahir_penanggung_jawab" class="form-control" value="{$data.tgl_lahir_penanggung_jawab}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Usia</label>
+                                <div class="col-sm-4">
+                                    <div class="input-group">
+                                        <input type="text" name="usia_penanggung_jawab" id="usia_penanggung_jawab" class="form-control" value="{$data.usia_penanggung_jawab}" placeholder="Contoh: 35">
+                                        <span class="input-group-addon">Tahun</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">No. Identitas</label>
+                                <div class="col-sm-4">
+                                    <select name="jenis_identitas_penanggung_jawab" id="jenis_identitas_penanggung_jawab" class="form-control">
+                                        <option value="KTP" {if: ($data.jenis_identitas_penanggung_jawab ?? '') == 'KTP'}selected{/if}>KTP</option>
+                                        <option value="SIM" {if: ($data.jenis_identitas_penanggung_jawab ?? '') == 'SIM'}selected{/if}>SIM</option>
+                                        <option value="Paspor" {if: ($data.jenis_identitas_penanggung_jawab ?? '') == 'Paspor'}selected{/if}>Paspor</option>
+                                        <option value="Lainnya" {if: ($data.jenis_identitas_penanggung_jawab ?? '') == 'Lainnya'}selected{/if}>Lainnya</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" name="no_identitas_penanggung_jawab" id="no_identitas_penanggung_jawab" class="form-control" value="{$data.no_identitas_penanggung_jawab}" placeholder="Nomor KTP/SIM">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Alamat Lengkap</label>
+                                <div class="col-sm-8">
+                                    <textarea name="alamat_penanggung_jawab" id="alamat_penanggung_jawab" class="form-control" rows="2" placeholder="Jalan / RT / RW">{$data.alamat_penanggung_jawab}</textarea>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Kelurahan / Desa</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="kelurahan_penanggung_jawab" id="kelurahan_penanggung_jawab" class="form-control" value="{$data.kelurahan_penanggung_jawab}" placeholder="Kelurahan">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Kecamatan</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="kecamatan_penanggung_jawab" id="kecamatan_penanggung_jawab" class="form-control" value="{$data.kecamatan_penanggung_jawab}" placeholder="Kecamatan">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Kabupaten / Kota</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="kabupaten_penanggung_jawab" id="kabupaten_penanggung_jawab" class="form-control" value="{$data.kabupaten_penanggung_jawab}" placeholder="Kabupaten / Kota">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Provinsi</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="provinsi_penanggung_jawab" id="provinsi_penanggung_jawab" class="form-control" value="{$data.provinsi_penanggung_jawab}" placeholder="Provinsi">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr style="margin: 10px 0;">
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Hubungan Dengan Pasien <span class="text-danger">*</span></label>
+                                <div class="col-sm-10">
+                                    <label class="radio-inline">
+                                        <input type="radio" name="hubungan_pasien" value="Diri Sendiri" {if: ($data.hubungan_pasien ?? 'Diri Sendiri') == 'Diri Sendiri'}checked{/if}> Diri Sendiri
+                                    </label>
+                                    <label class="radio-inline">
+                                        <input type="radio" name="hubungan_pasien" value="Suami" {if: ($data.hubungan_pasien ?? '') == 'Suami'}checked{/if}> Suami
+                                    </label>
+                                    <label class="radio-inline">
+                                        <input type="radio" name="hubungan_pasien" value="Istri" {if: ($data.hubungan_pasien ?? '') == 'Istri'}checked{/if}> Istri
+                                    </label>
+                                    <label class="radio-inline">
+                                        <input type="radio" name="hubungan_pasien" value="Anak" {if: ($data.hubungan_pasien ?? '') == 'Anak'}checked{/if}> Anak
+                                    </label>
+                                    <label class="radio-inline">
+                                        <input type="radio" name="hubungan_pasien" value="Orang Tua" {if: ($data.hubungan_pasien ?? '') == 'Orang Tua'}checked{/if}> Orang Tua
+                                    </label>
+                                    <label class="radio-inline">
+                                        <input type="radio" name="hubungan_pasien" value="Keluarga" {if: ($data.hubungan_pasien ?? '') == 'Keluarga'}checked{/if}> Keluarga
+                                    </label>
+                                    <input type="text" name="hubungan_pasien_lainnya" id="hubungan_pasien_lainnya" class="form-control input-sm" style="display: inline-block; width: 220px; margin-left: 10px;" value="{$data.hubungan_pasien_lainnya}" placeholder="Sebutkan jika keluarga (misal: Kakak/Paman)">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BAGIAN 2: PERNYATAAN & TINDAKAN RADIOLOGI -->
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <h4 class="panel-title" style="font-weight: bold;">
+                        <i class="fa fa-stethoscope"></i> II. Pernyataan & Tindakan Radiologi
+                    </h4>
+                </div>
+                <div class="panel-body">
+                    <div class="alert alert-warning" style="font-size: 13px; line-height: 1.6; margin-bottom: 15px;">
+                        <strong>Pernyataan Pasien / Penanggung Jawab:</strong><br>
+                        1. Saya memahami perlunya dan manfaat prosedur tindakan radiologi sebagaimana telah dijelaskan seperti diatas kepada saya, termasuk risiko yang mungkin timbul akibat radiasi.<br>
+                        2. <strong>SETUJU</strong> dilakukannya prosedur tindakan radiologi berupa :
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Tindakan Radiologi <span class="text-danger">*</span></label>
+                        <div class="col-sm-10">
+                            <textarea name="tindakan_radiologi" id="tindakan_radiologi" class="form-control" rows="3" placeholder="Tuliskan tindakan radiologi yang disetujui (Contoh: Foto Panoramik, CBCT 3D Mandibula, Foto Periapikal Gigi 36, dll.)" required>{$data.tindakan_radiologi}</textarea>
+                            <div style="margin-top: 6px;">
+                                <span class="text-muted" style="font-size: 11px;">Template Cepat: </span>
+                                <button type="button" class="btn btn-default btn-xs btn-template" data-text="Foto Panoramik">Foto Panoramik</button>
+                                <button type="button" class="btn btn-default btn-xs btn-template" data-text="Foto Dental Periapikal">Foto Periapikal</button>
+                                <button type="button" class="btn btn-default btn-xs btn-template" data-text="Foto Bitewing">Foto Bitewing</button>
+                                <button type="button" class="btn btn-default btn-xs btn-template" data-text="Foto Oklusal">Foto Oklusal</button>
+                                <button type="button" class="btn btn-default btn-xs btn-template" data-text="Foto Cephalometri (Lateral/AP)">Foto Cephalometri</button>
+                                <button type="button" class="btn btn-default btn-xs btn-template" data-text="CBCT 3D (Cone Beam Computed Tomography)">CBCT 3D</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BAGIAN 3: IDENTITAS PASIEN TERKAIT -->
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h4 class="panel-title" style="font-weight: bold;">
+                        <i class="fa fa-wheelchair"></i> III. Terhadap Pasien
+                    </h4>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Nama Pasien</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="nama_pasien_terhadap" id="nama_pasien_terhadap" class="form-control" value="{$data.nama_pasien_terhadap}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Jenis Kelamin</label>
+                                <div class="col-sm-8">
+                                    <label class="radio-inline">
+                                        <input type="radio" name="jk_pasien_terhadap" value="L" {if: ($data.jk_pasien_terhadap ?? 'L') == 'L'}checked{/if}> Laki-laki
+                                    </label>
+                                    <label class="radio-inline">
+                                        <input type="radio" name="jk_pasien_terhadap" value="P" {if: ($data.jk_pasien_terhadap ?? '') == 'P'}checked{/if}> Perempuan
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Tempat / Tgl Lahir</label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="tmp_lahir_pasien_terhadap" id="tmp_lahir_pasien_terhadap" class="form-control" value="{$data.tmp_lahir_pasien_terhadap}" placeholder="Tempat Lahir">
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="date" name="tgl_lahir_pasien_terhadap" id="tgl_lahir_pasien_terhadap" class="form-control" value="{$data.tgl_lahir_pasien_terhadap}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Usia</label>
+                                <div class="col-sm-4">
+                                    <div class="input-group">
+                                        <input type="text" name="usia_pasien_terhadap" id="usia_pasien_terhadap" class="form-control" value="{$data.usia_pasien_terhadap}">
+                                        <span class="input-group-addon">Tahun</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Alamat Pasien</label>
+                                <div class="col-sm-8">
+                                    <textarea name="alamat_pasien_terhadap" id="alamat_pasien_terhadap" class="form-control" rows="2">{$data.alamat_pasien_terhadap}</textarea>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Kelurahan / Desa</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="kelurahan_pasien_terhadap" id="kelurahan_pasien_terhadap" class="form-control" value="{$data.kelurahan_pasien_terhadap}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Kecamatan</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="kecamatan_pasien_terhadap" id="kecamatan_pasien_terhadap" class="form-control" value="{$data.kecamatan_pasien_terhadap}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Kabupaten / Kota</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="kabupaten_pasien_terhadap" id="kabupaten_pasien_terhadap" class="form-control" value="{$data.kabupaten_pasien_terhadap}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Provinsi</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="provinsi_pasien_terhadap" id="provinsi_pasien_terhadap" class="form-control" value="{$data.provinsi_pasien_terhadap}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BAGIAN 4: TANGGAL, WAKTU & TANDA TANGAN -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title" style="font-weight: bold;">
+                        <i class="fa fa-calendar-check-o"></i> IV. Tempat, Tanggal & Pengesahan Tanda Tangan
+                    </h4>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Kota</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="kota_surat" id="kota_surat" class="form-control" value="{$data.kota_surat}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Tanggal</label>
+                                <div class="col-sm-8">
+                                    <input type="date" name="tanggal_surat" id="tanggal_surat" class="form-control" value="{$data.tanggal_surat}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Pukul / Jam</label>
+                                <div class="col-sm-8">
+                                    <input type="time" name="jam_surat" id="jam_surat" class="form-control" value="{$data.jam_surat}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top: 15px;">
+                        <div class="col-md-3">
+                            <div class="form-group" style="margin-left: 0; margin-right: 0;">
+                                <label>1. Yang Menyatakan <span class="text-danger">*</span></label>
+                                <input type="text" name="nama_yang_menyatakan" id="nama_yang_menyatakan" class="form-control" value="{$data.nama_yang_menyatakan}" placeholder="Nama Pasien / Keluarga" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group" style="margin-left: 0; margin-right: 0;">
+                                <label>2. Dokter</label>
+                                <select name="kd_dokter" id="kd_dokter" class="form-control" onchange="document.getElementById('nama_dokter').value = this.options[this.selectedIndex].text;">
+                                    <option value="">-- Pilih Dokter --</option>
+                                    {loop: $dokter}
+                                    <option value="{$value.kd_dokter}" {if: ($data.kd_dokter ?? '') == $value.kd_dokter}selected{/if}>{$value.nm_dokter}</option>
+                                    {/loop}
+                                </select>
+                                <input type="hidden" name="nama_dokter" id="nama_dokter" value="{$data.nama_dokter}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group" style="margin-left: 0; margin-right: 0;">
+                                <label>3. Saksi I (Petugas RS)</label>
+                                <input type="text" name="nama_saksi_1" id="nama_saksi_1" class="form-control" value="{$data.nama_saksi_1}" placeholder="Nama Saksi 1">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group" style="margin-left: 0; margin-right: 0;">
+                                <label>4. Saksi II (Keluarga / Petugas)</label>
+                                <input type="text" name="nama_saksi_2" id="nama_saksi_2" class="form-control" value="{$data.nama_saksi_2}" placeholder="Nama Saksi 2">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BUTTONS -->
+            <div class="text-right" style="margin-top: 20px;">
+                <a href="{?=url([ADMIN, 'update_bmt', 'persetujuanradiologimanage'])?}" class="btn btn-default">
+                    <i class="fa fa-arrow-left"></i> Batal & Kembali
+                </a>
+                <button type="submit" class="btn btn-primary" style="min-width: 130px;">
+                    <i class="fa fa-save"></i> Simpan Data
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Quick template button click
+    $('.btn-template').on('click', function() {
+        var t = $(this).data('text');
+        var cur = $('#tindakan_radiologi').val().trim();
+        if (cur === '') {
+            $('#tindakan_radiologi').val(t);
+        } else {
+            $('#tindakan_radiologi').val(cur + ', ' + t);
+        }
+    });
+
+    // Auto copy pasien to penanggung jawab
+    $('#btn-copy-pasien').on('click', function() {
+        $('#nama_penanggung_jawab').val($('#nama_pasien_terhadap').val());
+        var jk = $('input[name="jk_pasien_terhadap"]:checked').val() || 'L';
+        $('input[name="jk_penanggung_jawab"][value="' + jk + '"]').prop('checked', true);
+        $('#tmp_lahir_penanggung_jawab').val($('#tmp_lahir_pasien_terhadap').val());
+        $('#tgl_lahir_penanggung_jawab').val($('#tgl_lahir_pasien_terhadap').val());
+        $('#usia_penanggung_jawab').val($('#usia_pasien_terhadap').val());
+        $('#alamat_penanggung_jawab').val($('#alamat_pasien_terhadap').val());
+        $('#kelurahan_penanggung_jawab').val($('#kelurahan_pasien_terhadap').val());
+        $('#kecamatan_penanggung_jawab').val($('#kecamatan_pasien_terhadap').val());
+        $('#kabupaten_penanggung_jawab').val($('#kabupaten_pasien_terhadap').val());
+        $('#provinsi_penanggung_jawab').val($('#provinsi_pasien_terhadap').val());
+        $('input[name="hubungan_pasien"][value="Diri Sendiri"]').prop('checked', true);
+        $('#nama_yang_menyatakan').val($('#nama_pasien_terhadap').val());
+    });
+
+    // AJAX lookup pasien by no_rawat / no_rkm_medis
+    $('#btn-cari-pasien').on('click', function() {
+        var noRawat = $('#no_rawat').val().trim();
+        if (!noRawat) {
+            alert('Silakan masukkan No. Rawat atau No. RM terlebih dahulu');
+            return;
+        }
+
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Mencari...');
+
+        $.getJSON('{?=url([ADMIN, "update_bmt", "persetujuanradiologiform"])?}', {
+            ajax_patient: 1,
+            no_rawat: noRawat
+        }, function(res) {
+            btn.prop('disabled', false).html('<i class="fa fa-search"></i> Cari Pasien');
+            if (res.success) {
+                $('#no_rawat').val(res.no_rawat);
+                $('#no_rkm_medis').val(res.no_rkm_medis);
+
+                // Terhadap Pasien
+                $('#nama_pasien_terhadap').val(res.nm_pasien);
+                $('input[name="jk_pasien_terhadap"][value="' + res.jk + '"]').prop('checked', true);
+                $('#tmp_lahir_pasien_terhadap').val(res.tmp_lahir);
+                $('#tgl_lahir_pasien_terhadap').val(res.tgl_lahir);
+                $('#usia_pasien_terhadap').val(res.umur);
+                $('#alamat_pasien_terhadap').val(res.alamat);
+                $('#kelurahan_pasien_terhadap').val(res.nm_kel);
+                $('#kecamatan_pasien_terhadap').val(res.nm_kec);
+                $('#kabupaten_pasien_terhadap').val(res.nm_kab);
+                $('#provinsi_pasien_terhadap').val(res.nm_prop);
+
+                // Default Penanggung Jawab jika masih kosong
+                if (!$('#nama_penanggung_jawab').val()) {
+                    $('#nama_penanggung_jawab').val(res.nm_pasien);
+                    $('input[name="jk_penanggung_jawab"][value="' + res.jk + '"]').prop('checked', true);
+                    $('#tmp_lahir_penanggung_jawab').val(res.tmp_lahir);
+                    $('#tgl_lahir_penanggung_jawab').val(res.tgl_lahir);
+                    $('#usia_penanggung_jawab').val(res.umur);
+                    $('#no_identitas_penanggung_jawab').val(res.no_ktp);
+                    $('#alamat_penanggung_jawab').val(res.alamat);
+                    $('#kelurahan_penanggung_jawab').val(res.nm_kel);
+                    $('#kecamatan_penanggung_jawab').val(res.nm_kec);
+                    $('#kabupaten_penanggung_jawab').val(res.nm_kab);
+                    $('#provinsi_penanggung_jawab').val(res.nm_prop);
+                    $('#nama_yang_menyatakan').val(res.nm_pasien);
+                }
+            } else {
+                alert('Data pasien dengan No. Rawat / No. RM tersebut tidak ditemukan.');
+            }
+        }).fail(function() {
+            btn.prop('disabled', false).html('<i class="fa fa-search"></i> Cari Pasien');
+            alert('Terjadi kesalahan saat mencari data pasien.');
+        });
+    });
+
+    // Auto set nama_dokter on initial load
+    var sel = document.getElementById('kd_dokter');
+    if (sel && sel.selectedIndex > 0 && !document.getElementById('nama_dokter').value) {
+        document.getElementById('nama_dokter').value = sel.options[sel.selectedIndex].text;
+    }
+});
+</script>

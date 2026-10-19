@@ -263,7 +263,7 @@
             <table class="table-header">
                 <tr>
                     <td class="header-left">
-                        <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat RSGM Gusti Hasan Aman" style="width: 100%; max-height: 72px; object-fit: contain; display: block;">
+                        <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop Surat RSGM Gusti Hasan Aman" style="width: 100%; max-height: 72px; object-fit: contain; display: block;">
                     </td>
                     <td class="header-right">
                         <table style="width: 100%; border-collapse: collapse; font-size: 11px;">

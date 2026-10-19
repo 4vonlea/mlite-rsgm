@@ -34,6 +34,12 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 16 | **Konsultasi Internal** | `lampiran_konsultasi_internal` | `?module=update_bmt&page=konsultasiinternalmanage` | ✅ Lengkap |
 | 17 | **Monitoring Pasien Selama Transfer** | `lampiran_monitoring_pasien_selama_transfer` | `?module=update_bmt&page=monitoringpasienselamatransfermanage` | ✅ Lengkap |
 | 18 | **Penilaian Dekubitus** | `lampiran_penilaian_dekubitus` | `?module=update_bmt&page=penilaiandekubitusmanage` | ✅ Lengkap |
+| 19 | **Penilaian Kejadian Infeksi Luka OP (ILO)** | `lampiran_penilaian_kejadian_ilo` | `?module=update_bmt&page=penilaianilomanage` | ✅ Lengkap |
+| 20 | **Penilaian Kejadian ISK** | `lampiran_penilaian_kejadian_isk` | `?module=update_bmt&page=penilaianiskmanage` | ✅ Lengkap |
+| 21 | **Surat Pernyataan Bersedia Menunggu** | `lampiran_surat_pernyataan_bersedia_menunggu` | `?module=update_bmt&page=bersediamenunggumanage` | ✅ Lengkap |
+| 22 | **Informasi Penundaan & Kelambatan Pelayanan** | `lampiran_penundaan_kelambatan_pelayanan` | `?module=update_bmt&page=penundaanpelayananmanage` | ✅ Lengkap |
+| 23 | **Persetujuan Untuk Testing HIV** | `lampiran_persetujuan_testing_hiv` | `?module=update_bmt&page=testinghivmanage` | ✅ Lengkap |
+| 24 | **VCT Pra Testing HIV** | `lampiran_vct_pra_testing_hiv` | `?module=update_bmt&page=vctpratestinghivmanage` | ✅ Lengkap |
 
 ---
 
@@ -138,7 +144,7 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 17 | Formulir Stabilisasi Pasien Sebelum Transfer | - | ✅ Tersedia | `lampiran_stabilisasi_pasien` | Form RME -> Ranap -> Form Lampiran |
 | 18 | Hasil X-Ray, EEG, ECG | - | ✅ Tersedia | Modul Radiologi / Dokumen | Modul Penunjang mLite |
 | 19 | HCU | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
-| 20 | Informasi Penundaan dan Kelambatan Pelayanan | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
+| 20 | Informasi Penundaan dan Kelambatan Pelayanan | - | ✅ Tersedia | `lampiran_penundaan_kelambatan_pelayanan` | Form RME -> Ranap -> Form Lampiran |
 | 21 | Intervensi dan Pengkajian Ulang Nyeri | - | ✅ Tersedia | `lampiran_intervensi_pengkajian_nyeri` | Form RME -> Ranap -> Form Lampiran |
 | 22 | Monitoring Pasien Kateter Urine | - | ✅ Tersedia | `lampiran_monitoring_pasien_kateter_urin` | Form RME -> Ranap -> Form Lampiran |
 | 23 | Konsultasi Internal | - | ✅ Tersedia | `lampiran_konsultasi_internal` | Form RME -> Ranap -> Form Lampiran |
@@ -148,7 +154,7 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 27 | Penilaian Kejadian ISK | - | ✅ Tersedia | `lampiran_penilaian_kejadian_isk` | Form RME -> Ranap -> Form Lampiran |
 | 28 | Penilaian Kejadian Phlebitis | - | ✅ Tersedia | `lampiran_penilaian_kejadian_phlebitis` | Form RME -> Ranap -> Form Lampiran |
 | 29 | Permintaan Pelayanan Kerohanian | - | ✅ Tersedia | `lampiran_permintaan_pelayanan_kerohanian` | Form RME -> Ranap -> Form Lampiran |
-| 30 | Persetujuan untuk Testing HIV | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
+| 30 | Persetujuan untuk Testing HIV | - | ✅ Tersedia | `lampiran_persetujuan_testing_hiv` | Form RME -> Ranap -> Form Lampiran |
 | 31 | Surat Pengantar Rawat Inap | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 32 | Surat Permintaan Second Opinion | - | ✅ Tersedia | `lampiran_permintaan_second_opinion` | Form RME -> Ranap -> Form Lampiran |
 | 33 | Surat Pernyataan Bersedia Menunggu | - | ✅ Tersedia | `lampiran_surat_pernyataan_bersedia_menunggu` | Form RME -> Ranap -> Form Lampiran |
@@ -156,7 +162,7 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 35 | Surat Pernyataan Pulang APS | - | ✅ Tersedia | `surat_pulang_aps` | Form RME -> Bedah & Anestesi |
 | 36 | Transfer Pasien Eksternal | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 37 | Transfer Pasien Eksternal (Lanjutan) | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
-| 38 | VCT Pra Testing HIV | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
+| 38 | VCT Pra Testing HIV | - | ✅ Tersedia | `lampiran_vct_pra_testing_hiv` | Form RME -> Ranap -> Form Lampiran |
 
 ---
 
@@ -228,16 +234,16 @@ Berikut daftar lengkap formulir yang masih dalam antrean pengembangan:
 - [ ] EWS Dewasa dan Anak
 - [ ] Rekapitulasi Kejadian Infeksi Daerah OP
 - [ ] HCU
-- [ ] Informasi Penundaan dan Kelambatan Pelayanan
+- [x] Informasi Penundaan dan Kelambatan Pelayanan
 - [x] Penilaian Kejadian Infeksi Luka OP (ILO)
 - [x] Penilaian Kejadian ISK
-- [ ] Persetujuan untuk Testing HIV
+- [x] Persetujuan untuk Testing HIV
 - [ ] Surat Pengantar Rawat Inap
 - [x] Surat Pernyataan Bersedia Menunggu
 - [ ] Surat Pernyataan Jaminan Pembiayaan
 - [ ] Transfer Pasien Eksternal (Lembar 1)
 - [ ] Transfer Pasien Eksternal (Lanjutan)
-- [ ] VCT Pra Testing HIV
+- [x] VCT Pra Testing HIV
 
 ### C. RAJAL - Lampiran (1 Form):
 - [ ] Persetujuan Prosedur Radiologi

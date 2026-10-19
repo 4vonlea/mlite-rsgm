@@ -113,7 +113,10 @@ try {
         'lampiran_penilaian_dekubitus' => 'Lampiran - Formulir Penilaian Dekubitus (Ranap)',
         'lampiran_penilaian_kejadian_ilo' => 'Lampiran - Formulir Penilaian Kejadian Infeksi Luka Operasi (ILO) (Ranap)',
         'lampiran_penilaian_kejadian_isk' => 'Lampiran - Formulir Penilaian Kejadian Infeksi Saluran Kemih (ISK) (Ranap)',
-        'lampiran_surat_pernyataan_bersedia_menunggu' => 'Lampiran - Surat Pernyataan Bersedia Menunggu (Ranap)'
+        'lampiran_surat_pernyataan_bersedia_menunggu' => 'Lampiran - Surat Pernyataan Bersedia Menunggu (Ranap)',
+        'lampiran_penundaan_kelambatan_pelayanan' => 'Lampiran - Informasi Penundaan dan Kelambatan Pelayanan (Ranap)',
+        'lampiran_persetujuan_testing_hiv' => 'Lampiran - Persetujuan Untuk Testing HIV (Ranap)',
+        'lampiran_vct_pra_testing_hiv' => 'Lampiran - VCT Pra Testing HIV (Ranap)'
     ];
 
     foreach ($expectedTables as $tbl => $deskripsi) {

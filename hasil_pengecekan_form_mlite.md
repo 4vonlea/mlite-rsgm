@@ -99,7 +99,7 @@ Berdasarkan pengecekan dan sinkronisasi menyeluruh pada source code `mLite` (di 
 | 17 | FORMULIR STABILISASI PASIEN SEBELUM TRANSFER | ✅ Ada | Modul `update_bmt` (`lampiran_stabilisasi_pasien`) |
 | 18 | HASIL X-RAY, EEG, ECG | ✅ Ada | Integrasi dengan modul `radiologi` & Berkas Digital |
 | 19 | HCU | ❌ Belum Ada | Antrean Lampiran Ranap |
-| 20 | INFORMASI PENUNDAAN DAN KELAMBATAN PELAYANAN | ❌ Belum Ada | Antrean Lampiran Ranap |
+| 20 | INFORMASI PENUNDAAN DAN KELAMBATAN PELAYANAN | ✅ Ada | Modul `update_bmt` (`lampiran_penundaan_kelambatan_pelayanan`) |
 | 21 | INTERVENSI DAN PENGKAJIAN ULANG NYERI | ✅ Ada | Modul `update_bmt` (`lampiran_intervensi_pengkajian_nyeri`) |
 | 22 | MONITORING PASIEN KATETER URINE | ✅ Ada | Modul `update_bmt` (`lampiran_monitoring_pasien_kateter_urin`) |
 | 23 | KONSULTASI INTERNAL | ✅ Ada | Modul `update_bmt` (`lampiran_konsultasi_internal`) |
@@ -109,7 +109,7 @@ Berdasarkan pengecekan dan sinkronisasi menyeluruh pada source code `mLite` (di 
 | 27 | PENILAIAN KEJADIAN ISK | ✅ Ada | Modul `update_bmt` (`lampiran_penilaian_kejadian_isk`) |
 | 28 | PENILAIAN KEJADIAN PHLEIBITIS (VIP) | ✅ Ada | Modul `update_bmt` (`lampiran_penilaian_kejadian_phlebitis`) |
 | 29 | PERMINTAAN PELAYANAN KEROHANIAN | ✅ Ada | Modul `update_bmt` (`lampiran_permintaan_pelayanan_kerohanian`) |
-| 30 | PERSETUJUAN UNTUK TESTING HIV | ❌ Belum Ada | Antrean Lampiran Ranap |
+| 30 | PERSETUJUAN UNTUK TESTING HIV | ✅ Ada | Modul `update_bmt` (`lampiran_persetujuan_testing_hiv`) |
 | 31 | SURAT PENGANTAR RAWAT INAP | ❌ Belum Ada | Antrean Lampiran Ranap |
 | 32 | SURAT PERMINTAAN SECOND OPINION | ✅ Ada | Modul `update_bmt` (`lampiran_permintaan_second_opinion`) |
 | 33 | SURAT PERNYATAAN BERSEDIA MENUNGGU | ✅ Ada | Modul `update_bmt` (`lampiran_surat_pernyataan_bersedia_menunggu`) |
@@ -117,7 +117,7 @@ Berdasarkan pengecekan dan sinkronisasi menyeluruh pada source code `mLite` (di 
 | 35 | SURAT PERNYATAAN PULANG APS | ✅ Ada | Modul `update_bmt` (`surat_pulang_aps`) |
 | 36 | TRANSFER PASIEN EKSTERNAL (Lembar 1) | ❌ Belum Ada | Antrean Lampiran Ranap |
 | 37 | TRANSFER PASIEN EKSTERNAL (Lanjutan) | ❌ Belum Ada | Antrean Lampiran Ranap |
-| 38 | VCT PRA TESTING HIV | ❌ Belum Ada | Antrean Lampiran Ranap |
+| 38 | VCT PRA TESTING HIV | ✅ Ada | Modul `update_bmt` (`lampiran_vct_pra_testing_hiv`) |
 
 ---
 
@@ -147,7 +147,7 @@ Berdasarkan pengecekan dan sinkronisasi menyeluruh pada source code `mLite` (di 
 | 5 | RESUME MEDIS RAWAT JALAN | ✅ Ada | Modul Resume Pasien Ralan |
 | 6 | SKRINING RESIKO JATUH | ✅ Ada | Terintegrasi di Asesmen Rawat Jalan |
 | 7 | SURAT PERNYATAAN PULANG APS | ✅ Ada | Modul `update_bmt` (`surat_pulang_aps`) |
-| 8 | PERSETUJUAN PROSEDUR TINDAKAN RADIOLOGI | ❌ Belum Ada | Antrean Lampiran Rajal |
+| 8 | PERSETUJUAN PROSEDUR TINDAKAN RADIOLOGI | ✅ Ada | Modul `update_bmt` (`lampiran_persetujuan_tindakan_radiologi`) |
 | 9 | RADIOLOGI | ✅ Ada | Modul `radiologi` (`periksa_radiologi`) |
 | 10 | PEMERIKSAAN PENUNJANG MEDIS (RADIOLOGI) | ✅ Ada | Modul Permintaan Radiologi |
 | 11 | FORM PROFIL RINGKAS MEDIS RAWAT JALAN | ✅ Ada | Modul `update_bmt` (`lampiran_profil_ringkas_medis_rajal`) |
@@ -160,12 +160,12 @@ Berdasarkan pengecekan dan sinkronisasi menyeluruh pada source code `mLite` (di 
 |---|:---:|:---:|:---:|:---:|
 | **1. UBS (Operasi/Bedah)** | 17 | 12 | 5 | **70.6%** |
 | **2. IGD (Gawat Darurat)** | 9 | 9 | 0 | **100.0%** |
-| **3. RANAP (Rawat Inap)** | 59 | 48 | 11 | **81.4%** |
-| **4. RAJAL (Rawat Jalan)** | 23 | 22 | 1 | **95.7%** |
-| **TOTAL KESELURUHAN** | **108** | **91** | **17** | **84.3%** |
+| **3. RANAP (Rawat Inap)** | 59 | 51 | 8 | **86.4%** |
+| **4. RAJAL (Rawat Jalan)** | 23 | 23 | 0 | **100.0%** |
+| **TOTAL KESELURUHAN** | **108** | **95** | **13** | **88.0%** |
 
 ### Evaluasi Progres:
-- **Total Formulir Selesai:** **91 dari 108 form (84.3%)** telah siap dan aktif di sistem mLITE.
+- **Total Formulir Selesai:** **95 dari 108 form (88.0%)** telah siap dan aktif di sistem mLITE.
 - **Formulir Wajib (Total 58 Form):** **53 form (91.4%)** telah tersedia lengkap.
-- **Formulir Lampiran (Total 50 Form):** **38 form (76.0%)** telah tersedia lengkap (termasuk modul terbaru: *Lampiran - Surat Pernyataan Bersedia Menunggu*).
-- **Sisa Antrean:** Tersisa **17 formulir** untuk diselesaikan secara bertahap.
+- **Formulir Lampiran (Total 50 Form):** **42 form (84.0%)** telah tersedia lengkap (termasuk modul terbaru: *Lampiran - Persetujuan Prosedur Tindakan Radiologi*).
+- **Sisa Antrean:** Tersisa **13 formulir** untuk diselesaikan secara bertahap.

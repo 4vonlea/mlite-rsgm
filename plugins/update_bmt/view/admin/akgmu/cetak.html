@@ -48,16 +48,43 @@
     
     /* Page Break for print */
     .page-break { page-break-after: always; }
+
+{if: empty($is_mpdf)}
+@media screen {
+    body { background-color: #f4f6f9 !important; padding: 15px 0 !important; }
+    .container, .page, .main-box, .main-container { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; margin: 0 auto 20px auto !important; padding: 8mm 10mm !important; }
+}
+{/if}
+.no-print-toolbar { width: 100%; max-width: 195mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
+.btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-decoration: none; display: inline-block; }
+.btn-print { background: #27ae60; color: #fff; }
+.btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+.btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+@media print {
+    .no-print-toolbar { display: none !important; }
+    body { background: transparent !important; padding: 0 !important; }
+    .container, .page, .main-box, .main-container { box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
+}
+
 </style>
 </head>
 <body>
+
+    {if: empty($is_mpdf)}
+    <div class="no-print-toolbar">
+        <button onclick="window.print()" class="btn-toolbar btn-print"><i class="fa fa-print"></i> Cetak Dokumen</button>
+        <a href="#" onclick="window.open(window.location.href + (window.location.href.indexOf('?') !== -1 ? (window.location.href.indexOf('pdf=1') !== -1 ? '' : '&pdf=1') : '?pdf=1'), '_blank'); return false;" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Download PDF</a>
+        <button onclick="window.close()" class="btn-toolbar btn-close"><i class="fa fa-times"></i> Tutup</button>
+    </div>
+    {/if}
+
 
 <div class="container">
     <!-- HEADER -->
     <table class="table-header">
         <tr>
             <td width="70%" style="text-align:center; vertical-align:middle; padding: 0;">
-                <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat" style="width: 100%; height: auto; max-height: 80px; object-fit: contain;">
+                <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{elseif: !empty($p.kop_img)}{$p.kop_img}{elseif: !empty($d.kop_img)}{$d.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop Surat" style="width: 100%; height: auto; max-height: 80px; object-fit: contain;">
             </td>
             <td width="30%">
                 <table class="table-no-border" style="font-size: 11px;">

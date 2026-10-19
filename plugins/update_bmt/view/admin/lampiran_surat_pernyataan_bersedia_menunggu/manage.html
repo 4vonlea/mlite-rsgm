@@ -48,8 +48,8 @@
                                     <small class="text-muted"><i class="fa fa-calendar"></i> {$value.tanggal_surat}</small>
                                 </td>
                                 <td style="vertical-align: middle;">
-                                    <strong>{$value.nama_pasien}</strong><br>
-                                    <small class="text-muted">No. RM: {$value.no_rkm_medis} | {$value.jk_pasien}</small>
+                                    <strong>{if: !empty($value.nama_pasien)}{$value.nama_pasien}{elseif: !empty($value.nm_pasien)}{$value.nm_pasien}{else}-{/if}</strong><br>
+                                    <small class="text-muted">No. RM: {if: !empty($value.no_rkm_medis)}{$value.no_rkm_medis}{else}-{/if} | {if: !empty($value.jk_pasien)}{$value.jk_pasien}{elseif: !empty($value.jk)}{$value.jk}{else}-{/if}</small>
                                 </td>
                                 <td style="vertical-align: middle;">
                                     <strong>{$value.nama_pj}</strong><br>
@@ -70,8 +70,11 @@
                                 </td>
                                 <td style="text-align: center; vertical-align: middle;">
                                     <div class="btn-group btn-group-xs">
-                                        <a href="{?=url([ADMIN, 'update_bmt', 'bersediamenunggucetak', $value.id])?}" class="btn btn-default" title="Cetak / Preview PDF" target="_blank">
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'bersediamenunggucetak', $value.id])?}" class="btn btn-default" title="Cetak Formulir" target="_blank">
                                             <i class="fa fa-print"></i>
+                                        </a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'bersediamenunggucetak', $value.id])?}?pdf=1" class="btn btn-danger" title="Download PDF (mPDF)" target="_blank">
+                                            <i class="fa fa-file-pdf-o"></i>
                                         </a>
                                         <a href="{?=url([ADMIN, 'update_bmt', 'bersediamenungguform', $value.id])?}" class="btn btn-warning" title="Edit Data">
                                             <i class="fa fa-edit"></i>

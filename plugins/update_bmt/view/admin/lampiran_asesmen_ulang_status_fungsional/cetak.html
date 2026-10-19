@@ -255,7 +255,7 @@
         <table class="header-table" style="width: 100%;">
             <tr>
                 <td style="width: 58%; border-right: 1px solid #000; padding: 4px 6px; text-align: center; vertical-align: middle;">
-                    <img src="{?=url('assets/img/KOP-SURAT.png')?}" alt="Kop Surat RSGM Gusti Hasan Aman" style="width: 100%; max-height: 75px; object-fit: contain; display: block;">
+                    <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($p.kop_img)}{$p.kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop Surat RSGM Gusti Hasan Aman" style="width: 100%; max-height: 75px; object-fit: contain; display: block;">
                 </td>
                 <td style="width: 42%; padding: 4px 8px; vertical-align: top;">
                     <table class="rm-box-table">

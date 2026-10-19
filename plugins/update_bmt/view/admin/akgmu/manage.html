@@ -33,6 +33,7 @@
             <td>
               <a href="{?=url([ADMIN, 'update_bmt', 'form'])?}&no_rawat={$value.no_rawat}" class="btn btn-xs btn-warning"><i class="fa fa-edit"></i> Edit</a>
               <a href="{?=url([ADMIN, 'update_bmt', 'cetak'])?}&no_rawat={$value.no_rawat}" class="btn btn-xs btn-info" target="_blank"><i class="fa fa-print"></i> Cetak</a>
+              <a href="{?=url([ADMIN, 'update_bmt', 'cetak'])?}&no_rawat={$value.no_rawat}&pdf=1" class="btn btn-xs btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
             </td>
           </tr>
           {/loop}

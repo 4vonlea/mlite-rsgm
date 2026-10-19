@@ -32,13 +32,14 @@
                             <tr>
                                 <td>{$value.no_rawat}</td>
                                 <td>{$value.no_rkm_medis}</td>
-                                <td>{$value.nm_pasien}</td>
+                                <td>{if: !empty($value.nama_pasien)}{$value.nama_pasien}{elseif: !empty($value.nm_pasien)}{$value.nm_pasien}{else}-{/if}</td>
                                 <td>{$value.tipe_tindakan}</td>
                                 <td>{$value.diagnosa_prabedah}</td>
                                 <td>{$value.tanggal}</td>
                                 <td>
                                     <a href="{?=url([ADMIN, 'update_bmt', 'ans3form'])?}&t={?=$_SESSION['token']?}&id={$value.id}" class="btn btn-xs btn-warning"><i class="fa fa-pencil"></i></a>
                                     <a href="{?=url([ADMIN, 'update_bmt', 'ans3cetak'])?}&t={?=$_SESSION['token']?}&id={$value.id}" class="btn btn-xs btn-primary" target="_blank"><i class="fa fa-print"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans3cetak'])?}&t={?=$_SESSION['token']?}&id={$value.id}&pdf=1" class="btn btn-xs btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
                                     <a href="{?=url([ADMIN, 'update_bmt', 'ans3manage'])?}&t={?=$_SESSION['token']?}&action=delete&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?')"><i class="fa fa-trash"></i></a>
                                 </td>
                             </tr>

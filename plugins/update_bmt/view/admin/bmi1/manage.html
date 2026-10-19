@@ -27,9 +27,10 @@
                             <td>{$value.tgl_dokumen}</td>
                             <td>{$value.pemberi_informasi}</td>
                             <td>{$value.penerima_informasi}</td>
-                            <td>{$value.nm_pasien}</td>
+                            <td>{if: !empty($value.nama_pasien)}{$value.nama_pasien}{elseif: !empty($value.nm_pasien)}{$value.nm_pasien}{else}-{/if}</td>
                             <td>
                                 <a href="{?=url([ADMIN, 'update_bmt', 'bmi1cetak'])?}&id={$value.id}" target="_blank" class="btn btn-xs btn-default"><i class="fa fa-print"></i> Cetak</a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'bmi1cetak'])?}&id={$value.id}&pdf=1" target="_blank" class="btn btn-xs btn-danger"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
                                 <a href="{?=url([ADMIN, 'update_bmt', 'bmi1form'])?}&id={$value.id}" class="btn btn-xs btn-primary"><i class="fa fa-edit"></i> Edit</a>
                                 <a href="{?=url([ADMIN, 'update_bmt', 'bmi1hapus'])?}&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?')"><i class="fa fa-trash"></i> Hapus</a>
                             </td>

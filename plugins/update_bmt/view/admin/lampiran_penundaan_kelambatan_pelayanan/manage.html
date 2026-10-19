@@ -1,0 +1,145 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
+                <h3 class="panel-title" style="font-weight: bold; font-size: 16px;">
+                    <i class="fa fa-exclamation-circle text-warning"></i> LAMPIRAN - INFORMASI PENUNDAAN DAN KELAMBATAN PELAYANAN
+                </h3>
+                <div>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'penundaankelambatanform'])?}" class="btn btn-primary btn-sm">
+                        <i class="fa fa-plus"></i> Tambah Formulir Penundaan
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+
+                <!-- INFORMASI PETUNJUK -->
+                <div class="alert alert-info" style="font-size: 12px; margin-bottom: 20px;">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <strong><i class="fa fa-info-circle"></i> Petunjuk Formulir:</strong><br>
+                            Formulir ini digunakan untuk memberikan dan mendokumentasikan informasi secara tertulis kepada pasien atau keluarga/penanggung jawab mengenai penundaan dan kelambatan pelayanan medis/tindakan (beserta sebab penundaan dan alternatif solusi tindak lanjut) di lingkungan RSGM Gusti Hasan Aman.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABEL DATA -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover" id="table-penundaan-pelayanan" style="width: 100%;">
+                        <thead>
+                            <tr class="info" style="font-size: 12px;">
+                                <th style="text-align: center; width: 35px;">No</th>
+                                <th>No. Rawat & Waktu</th>
+                                <th>Identitas Pasien</th>
+                                <th>Penerima Informasi</th>
+                                <th>Unit & Jenis Pelayanan</th>
+                                <th>Sebab Penundaan</th>
+                                <th>Solusi Alternatif</th>
+                                <th>DPJP & Pemberi Info</th>
+                                <th style="text-align: center; width: 130px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 12px;">
+                            {if: !empty($data)}
+                            {loop: $data}
+                            <tr>
+                                <td style="text-align: center; vertical-align: middle;">{$value.nomor}</td>
+                                <td style="vertical-align: middle;">
+                                    <strong class="text-primary">{$value.no_rawat}</strong><br>
+                                    <small class="text-muted"><i class="fa fa-calendar"></i> {$value.tanggal} | <i class="fa fa-clock-o"></i> {$value.jam} WITA</small>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <strong>{$value.nm_pasien}</strong><br>
+                                    <small class="text-muted">No. RM: {$value.no_rkm_medis} | {$value.jk}</small>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <strong>{$value.nama_penerima}</strong><br>
+                                    <span class="label label-info" style="font-size: 10px;">{$value.status_penerima}</span>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <strong class="text-success"><i class="fa fa-hospital-o"></i> {$value.instalasi_unit}</strong><br>
+                                    <small>{$value.jenis_pelayanan}</small>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    {if: !empty($value.sebab_kerusakan_alat)}
+                                        <span class="label label-danger" style="display: inline-block; margin-bottom: 2px;">Kerusakan Alat</span><br>
+                                    {/if}
+                                    {if: !empty($value.sebab_kondisi_umum_pasien)}
+                                        <span class="label label-warning" style="display: inline-block; margin-bottom: 2px;">Kondisi Umum Pasien</span><br>
+                                    {/if}
+                                    {if: !empty($value.sebab_penundaan_penjadwalan)}
+                                        <span class="label label-primary" style="display: inline-block; margin-bottom: 2px;">Penundaan Penjadwalan</span><br>
+                                    {/if}
+                                    {if: !empty($value.sebab_pemadaman_listrik)}
+                                        <span class="label label-default" style="display: inline-block; margin-bottom: 2px;">Pemadaman Listrik</span><br>
+                                    {/if}
+                                    {if: !empty($value.sebab_tempat_tidur_penuh)}
+                                        <span class="label label-info" style="display: inline-block; margin-bottom: 2px;">Tempat Tidur Tidak Tersedia</span><br>
+                                    {/if}
+                                    {if: !empty($value.sebab_faktor_penyulit)}
+                                        <span class="label label-danger" style="display: inline-block; margin-bottom: 2px;">Faktor Penyulit: {$value.keterangan_faktor_penyulit}</span>
+                                    {/if}
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    {if: !empty($value.solusi_dijadwalkan_ulang)}
+                                        <strong class="text-primary"><i class="fa fa-calendar-check-o"></i> Dijadwalkan Ulang</strong><br>
+                                        <small class="text-muted">{$value.jadwal_akan_datang}</small>
+                                    {elseif: !empty($value.solusi_dirujuk)}
+                                        <strong class="text-warning"><i class="fa fa-ambulance"></i> Dirujuk ke Layanan Lain</strong><br>
+                                        <small class="text-muted">Ke: {$value.tujuan_rujukan}</small>
+                                    {elseif: !empty($value.solusi_kembali_dokter_pengirim)}
+                                        <strong class="text-danger"><i class="fa fa-undo"></i> Dikembalikan ke Dokter Pengirim</strong>
+                                    {else}
+                                        <span class="text-muted">-</span>
+                                    {/if}
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <small><strong>DPJP:</strong> {$value.nama_dokter_dpjp}</small><br>
+                                    <small class="text-muted"><strong>Pemberi Info:</strong> {$value.nama_pemberi_informasi}</small>
+                                </td>
+                                <td style="text-align: center; vertical-align: middle;">
+                                    <div class="btn-group btn-group-xs">
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'penundaankelambatancetak', $value.id])?}" class="btn btn-default" title="Cetak Formulir" target="_blank">
+                                            <i class="fa fa-print"></i>
+                                        </a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'penundaankelambatancetak', $value.id])?}?pdf=1" class="btn btn-danger" title="Download PDF (mPDF)" target="_blank">
+                                            <i class="fa fa-file-pdf-o"></i>
+                                        </a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'penundaankelambatanform', $value.id])?}" class="btn btn-warning" title="Edit Data">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'penundaankelambatanhapus', $value.id])?}" class="btn btn-danger" title="Hapus Data" onclick="return confirm('Apakah Anda yakin ingin menghapus data penundaan pelayanan ini?');">
+                                            <i class="fa fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {/loop}
+                            {else}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted" style="padding: 30px;">
+                                    <i class="fa fa-folder-open-o fa-2x"></i><br>
+                                    Belum ada data Formulir Informasi Penundaan dan Kelambatan Pelayanan. Klik tombol <strong>Tambah Formulir Penundaan</strong> untuk menambahkan data.
+                                </td>
+                            </tr>
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#table-penundaan-pelayanan').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Indonesian.json"
+        },
+        "order": [[0, "asc"]],
+        "pageLength": 10
+    });
+});
+</script>

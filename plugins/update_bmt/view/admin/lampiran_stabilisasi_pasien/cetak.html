@@ -234,7 +234,7 @@
 
             <!-- KOP SURAT RSGM -->
             <div class="header-kop-wrap">
-                <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="RSGM Gusti Hasan Aman" class="kop-img">
+                <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="RSGM Gusti Hasan Aman" class="kop-img">
             </div>
 
             <!-- JUDUL DOKUMEN -->

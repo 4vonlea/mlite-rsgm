@@ -26,7 +26,7 @@
                             <tr>
                                 <td>{$value.no_rkm_medis}</td>
                                 <td>{$value.no_rawat}</td>
-                                <td>{$value.nm_pasien}</td>
+                                <td>{if: !empty($value.nama_pasien)}{$value.nama_pasien}{elseif: !empty($value.nm_pasien)}{$value.nm_pasien}{else}-{/if}</td>
                                 <td>{$value.tgl_masuk}</td>
                                 <td>{$value.tgl_keluar}</td>
                                 <td>
@@ -36,6 +36,7 @@
                                     <a href="{?=url([ADMIN, 'update_bmt', 'ri02cetak'])?}&id={$value.id}" target="_blank" class="btn btn-xs btn-success">
                                       <i class="fa fa-print"></i> Cetak Gabungan
                                     </a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ri02cetak'])?}&id={$value.id}&pdf=1" target="_blank" class="btn btn-xs btn-danger"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
                                 </td>
                             </tr>
                             {/loop}

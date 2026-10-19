@@ -106,8 +106,11 @@
                                 </td>
                                 <td style="text-align: center; vertical-align: middle;">
                                     <div class="btn-group btn-group-xs">
-                                        <a href="{?=url([ADMIN, 'update_bmt', 'penilaianiskcetak', $value.id])?}" class="btn btn-default" title="Cetak / Preview PDF" target="_blank">
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'penilaianiskcetak', $value.id])?}" class="btn btn-default" title="Cetak Formulir" target="_blank">
                                             <i class="fa fa-print"></i>
+                                        </a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'penilaianiskcetak', $value.id])?}?pdf=1" class="btn btn-danger" title="Download PDF (mPDF)" target="_blank">
+                                            <i class="fa fa-file-pdf-o"></i>
                                         </a>
                                         <a href="{?=url([ADMIN, 'update_bmt', 'penilaianiskform', $value.id])?}" class="btn btn-warning" title="Edit Data">
                                             <i class="fa fa-edit"></i>

@@ -1,0 +1,121 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
+                <h3 class="panel-title" style="font-weight: bold; font-size: 16px;">
+                    <i class="fa fa-heartbeat text-danger"></i> LAMPIRAN - PERSETUJUAN UNTUK TESTING HIV
+                </h3>
+                <div>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'persetujuantestinghivform'])?}" class="btn btn-primary btn-sm">
+                        <i class="fa fa-plus"></i> Tambah Formulir Persetujuan
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+
+                <!-- INFORMASI PETUNJUK -->
+                <div class="alert alert-info" style="font-size: 12px; margin-bottom: 20px;">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <strong><i class="fa fa-info-circle"></i> Petunjuk Formulir:</strong><br>
+                            Formulir Persetujuan Untuk Testing HIV (*Informed Consent for HIV Testing*) ini digunakan untuk mendokumentasikan persetujuan sukarela pasien setelah menerima konseling pra-tes (VCT) mengenai tujuan, manfaat, risiko, dan tindak lanjut pemeriksaan HIV di RSGM Gusti Hasan Aman.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABEL DATA -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover" id="table-testing-hiv" style="width: 100%;">
+                        <thead>
+                            <tr class="info" style="font-size: 12px;">
+                                <th style="text-align: center; width: 40px;">No</th>
+                                <th>No. Rawat & Tanggal Konseling</th>
+                                <th>Identitas Pasien</th>
+                                <th>Kode Klien (VCT)</th>
+                                <th>Tgl Pelaksanaan Testing</th>
+                                <th>Konselor</th>
+                                <th style="text-align: center; width: 110px;">Status</th>
+                                <th style="text-align: center; width: 130px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 12px;">
+                            {if: !empty($data)}
+                            {loop: $data}
+                            <tr>
+                                <td style="text-align: center; vertical-align: middle;">{$value.nomor}</td>
+                                <td style="vertical-align: middle;">
+                                    <strong class="text-primary">{$value.no_rawat}</strong><br>
+                                    <small class="text-muted"><i class="fa fa-calendar"></i> {$value.tanggal}</small>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <strong>{if: !empty($value.nama_pasien)}{$value.nama_pasien}{elseif: !empty($value.nm_pasien)}{$value.nm_pasien}{else}-{/if}</strong><br>
+                                    <small class="text-muted">No. RM: {if: !empty($value.no_rkm_medis)}{$value.no_rkm_medis}{else}-{/if} | {if: !empty($value.jk)}{$value.jk}{else}-{/if}</small>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <span class="label label-primary" style="font-size: 11px;">
+                                        <i class="fa fa-user-secret"></i> {$value.kode_klien}
+                                    </span>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <i class="fa fa-check-circle text-success"></i> {$value.tanggal_pelaksanaan}
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    {if: !empty($value.nama_konselor)}
+                                        <i class="fa fa-user-md text-info"></i> {$value.nama_konselor}
+                                    {else}
+                                        <span class="text-muted">-</span>
+                                    {/if}
+                                </td>
+                                <td style="text-align: center; vertical-align: middle;">
+                                    {if: $value.status_persetujuan == 'Setuju'}
+                                        <span class="label label-success" style="font-size: 11px;">Setuju Testing</span>
+                                    {else}
+                                        <span class="label label-danger" style="font-size: 11px;">Menolak</span>
+                                    {/if}
+                                </td>
+                                <td style="text-align: center; vertical-align: middle;">
+                                    <div class="btn-group btn-group-xs">
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'persetujuantestinghivcetak', $value.id])?}" class="btn btn-default" title="Cetak Formulir" target="_blank">
+                                            <i class="fa fa-print"></i>
+                                        </a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'persetujuantestinghivcetak', $value.id])?}?pdf=1" class="btn btn-danger" title="Download PDF (mPDF)" target="_blank">
+                                            <i class="fa fa-file-pdf-o"></i>
+                                        </a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'persetujuantestinghivform', $value.id])?}" class="btn btn-warning" title="Edit Data">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'persetujuantestinghivhapus', $value.id])?}" class="btn btn-danger" title="Hapus Data" onclick="return confirm('Apakah Anda yakin ingin menghapus data persetujuan testing HIV ini?');">
+                                            <i class="fa fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {/loop}
+                            {else}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted" style="padding: 30px;">
+                                    <i class="fa fa-folder-open-o fa-2x"></i><br>
+                                    Belum ada data Persetujuan Untuk Testing HIV. Klik tombol <strong>Tambah Formulir Persetujuan</strong> untuk menambahkan data.
+                                </td>
+                            </tr>
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#table-testing-hiv').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Indonesian.json"
+        },
+        "order": [[0, "asc"]],
+        "pageLength": 10
+    });
+});
+</script>

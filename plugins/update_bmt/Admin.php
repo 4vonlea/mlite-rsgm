@@ -25,7 +25,7 @@ class Admin extends AdminModule
         $data = $this->db('asesmen_medis_umum_irna')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = asesmen_medis_umum_irna.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('asesmen_medis_umum_irna.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('asesmen_medis_umum_irna.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->toArray();
 
         return $this->draw('asesmen_medis_umum_irna/manage.html', ['data' => $data]);
@@ -49,7 +49,7 @@ class Admin extends AdminModule
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat, pasien.umur')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat, pasien.umur')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -108,7 +108,7 @@ class Admin extends AdminModule
                 $reg = $this->db('reg_periksa')
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
                     ->oneArray();
 
                 if ($reg) {
@@ -243,7 +243,7 @@ class Admin extends AdminModule
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->leftJoin('dokter', 'dokter.kd_dokter = asesmen_medis_umum_irna.nip_dpjp')
             ->where('asesmen_medis_umum_irna.id', $id)
-            ->select('asesmen_medis_umum_irna.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, dokter.nm_dokter')
+            ->select('asesmen_medis_umum_irna.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, dokter.nm_dokter')
             ->oneArray();
 
         if (!$data) {
@@ -268,7 +268,20 @@ class Admin extends AdminModule
             }
         }
         
-        echo $this->draw('asesmen_medis_umum_irna/cetak.html', ['data' => $data]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('asesmen_medis_umum_irna/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('AMU_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
         exit();
     }
 
@@ -292,7 +305,7 @@ class Admin extends AdminModule
         $rows = $this->db('lampiran_cairan_infus')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_cairan_infus.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('lampiran_cairan_infus.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('lampiran_cairan_infus.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('lampiran_cairan_infus.id')
             ->toArray();
 
@@ -326,7 +339,7 @@ class Admin extends AdminModule
                     ->leftJoin('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, bangsal.nm_bangsal, kamar.kd_kamar, dokter.nm_dokter')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, bangsal.nm_bangsal, kamar.kd_kamar, dokter.nm_dokter')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -369,7 +382,7 @@ class Admin extends AdminModule
                 $reg = $this->db('reg_periksa')
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                     ->oneArray();
                 if ($reg) {
                     $data = array_merge($data, $reg);
@@ -447,7 +460,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_cairan_infus.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('lampiran_cairan_infus.id', $id)
-            ->select('lampiran_cairan_infus.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('lampiran_cairan_infus.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
 
         if (!$data) {
@@ -519,6 +532,7 @@ class Admin extends AdminModule
         }
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -528,9 +542,13 @@ class Admin extends AdminModule
                     'margin_top' => 8,
                     'margin_bottom' => 8
                 ]);
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
                 $html = $this->draw('lampiran_cairan_infus/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Lampiran_Cairan_Infus_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -538,7 +556,8 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('lampiran_cairan_infus/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_cairan_infus/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => false]);
         exit();
     }
 
@@ -562,7 +581,7 @@ class Admin extends AdminModule
         $rows = $this->db('lampiran_form_a_mpp')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_form_a_mpp.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('lampiran_form_a_mpp.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('lampiran_form_a_mpp.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('lampiran_form_a_mpp.id')
             ->toArray();
 
@@ -600,7 +619,7 @@ class Admin extends AdminModule
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -672,7 +691,7 @@ class Admin extends AdminModule
                 $reg = $this->db('reg_periksa')
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                     ->oneArray();
                 if ($reg) {
                     $data = array_merge($data, $reg);
@@ -772,7 +791,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_form_a_mpp.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('lampiran_form_a_mpp.id', $id)
-            ->select('lampiran_form_a_mpp.*, reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('lampiran_form_a_mpp.*, reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
 
         if (!$data) {
@@ -819,6 +838,7 @@ class Admin extends AdminModule
         }
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -828,9 +848,13 @@ class Admin extends AdminModule
                     'margin_top' => 8,
                     'margin_bottom' => 8
                 ]);
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
                 $html = $this->draw('lampiran_form_a_mpp/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Lampiran_Form_A_MPP_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -838,7 +862,8 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('lampiran_form_a_mpp/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_form_a_mpp/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => false]);
         exit();
     }
 
@@ -862,7 +887,7 @@ class Admin extends AdminModule
         $rows = $this->db('lampiran_asesmen_ulang_status_fungsional')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_asesmen_ulang_status_fungsional.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('lampiran_asesmen_ulang_status_fungsional.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('lampiran_asesmen_ulang_status_fungsional.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('lampiran_asesmen_ulang_status_fungsional.id')
             ->toArray();
 
@@ -887,7 +912,7 @@ class Admin extends AdminModule
                     ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, bangsal.nm_bangsal, kamar.kd_kamar')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, bangsal.nm_bangsal, kamar.kd_kamar')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -935,7 +960,7 @@ class Admin extends AdminModule
                 $reg = $this->db('reg_periksa')
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                     ->oneArray();
                 if ($reg) {
                     $data = array_merge($data, $reg);
@@ -1035,7 +1060,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_asesmen_ulang_status_fungsional.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('lampiran_asesmen_ulang_status_fungsional.id', $id)
-            ->select('lampiran_asesmen_ulang_status_fungsional.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('lampiran_asesmen_ulang_status_fungsional.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
 
         if (!$d) {
@@ -1141,6 +1166,7 @@ class Admin extends AdminModule
         }
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -1150,9 +1176,14 @@ class Admin extends AdminModule
                     'margin_top' => 8,
                     'margin_bottom' => 8
                 ]);
-                $html = $this->draw('lampiran_asesmen_ulang_status_fungsional/cetak.html', ['p' => $p, 'rows' => $rows, 'katRows' => $katRows, 'is_mpdf' => true]);
+                $p['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+                $kop_img = $p['kop_img'];
+                $html = $this->draw('lampiran_asesmen_ulang_status_fungsional/cetak.html', ['p' => $p, 'kop_img' => $kop_img, 'rows' => $rows, 'katRows' => $katRows, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Lampiran_Asesmen_Ulang_Status_Fungsional_' . str_replace('/', '_', $p['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -1160,7 +1191,9 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('lampiran_asesmen_ulang_status_fungsional/cetak.html', ['p' => $p, 'rows' => $rows, 'katRows' => $katRows, 'is_mpdf' => false]);
+        $p['kop_img'] = url('assets/img/KOP-SURAT.png');
+        $kop_img = $p['kop_img'];
+        echo $this->draw('lampiran_asesmen_ulang_status_fungsional/cetak.html', ['p' => $p, 'kop_img' => $kop_img, 'rows' => $rows, 'katRows' => $katRows, 'is_mpdf' => false]);
         exit();
     }
 
@@ -1184,7 +1217,7 @@ class Admin extends AdminModule
         $rows = $this->db('lampiran_form_b_mpp')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_form_b_mpp.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('lampiran_form_b_mpp.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('lampiran_form_b_mpp.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('lampiran_form_b_mpp.id')
             ->toArray();
 
@@ -1206,7 +1239,7 @@ class Admin extends AdminModule
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -1259,7 +1292,7 @@ class Admin extends AdminModule
                 $reg = $this->db('reg_periksa')
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                     ->oneArray();
                 if ($reg) {
                     $data = array_merge($data, $reg);
@@ -1340,7 +1373,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_form_b_mpp.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('lampiran_form_b_mpp.id', $id)
-            ->select('lampiran_form_b_mpp.*, reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('lampiran_form_b_mpp.*, reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
 
         if (!$data) {
@@ -1387,6 +1420,7 @@ class Admin extends AdminModule
         }
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -1396,9 +1430,13 @@ class Admin extends AdminModule
                     'margin_top' => 8,
                     'margin_bottom' => 8
                 ]);
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
                 $html = $this->draw('lampiran_form_b_mpp/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Formulir_B_Catatan_Implementasi_MPP_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -1406,7 +1444,8 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('lampiran_form_b_mpp/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_form_b_mpp/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => false]);
         exit();
     }
 
@@ -1430,7 +1469,7 @@ class Admin extends AdminModule
         $rows = $this->db('lampiran_kebutuhan_privasi_pasien')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_kebutuhan_privasi_pasien.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('lampiran_kebutuhan_privasi_pasien.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('lampiran_kebutuhan_privasi_pasien.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->desc('lampiran_kebutuhan_privasi_pasien.id')
             ->toArray();
 
@@ -1453,7 +1492,7 @@ class Admin extends AdminModule
                     ->leftJoin('penanggung_jawab', 'penanggung_jawab.no_rawat = reg_periksa.no_rawat')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, reg_periksa.p_jawab, reg_periksa.hubunganpj, reg_periksa.almt_pj')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, reg_periksa.p_jawab, reg_periksa.hubunganpj, reg_periksa.almt_pj')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -1525,7 +1564,7 @@ class Admin extends AdminModule
                 $reg = $this->db('reg_periksa')
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                     ->oneArray();
                 if ($reg) {
                     $data = array_merge($data, $reg);
@@ -1605,7 +1644,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_kebutuhan_privasi_pasien.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('lampiran_kebutuhan_privasi_pasien.id', $id)
-            ->select('lampiran_kebutuhan_privasi_pasien.*, reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat')
+            ->select('lampiran_kebutuhan_privasi_pasien.*, reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat')
             ->oneArray();
 
         if (!$data) {
@@ -1652,6 +1691,7 @@ class Admin extends AdminModule
         }
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -1661,9 +1701,13 @@ class Admin extends AdminModule
                     'margin_top' => 8,
                     'margin_bottom' => 8
                 ]);
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
                 $html = $this->draw('lampiran_kebutuhan_privasi_pasien/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Formulir_Identifikasi_Kebutuhan_Privasi_Pasien_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -1671,7 +1715,8 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('lampiran_kebutuhan_privasi_pasien/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_kebutuhan_privasi_pasien/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => false]);
         exit();
     }
 
@@ -1695,7 +1740,7 @@ class Admin extends AdminModule
         $rows = $this->db('lampiran_meninggalkan_rs_tertentu')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_meninggalkan_rs_tertentu.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('lampiran_meninggalkan_rs_tertentu.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('lampiran_meninggalkan_rs_tertentu.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->desc('lampiran_meninggalkan_rs_tertentu.id')
             ->toArray();
 
@@ -1717,7 +1762,7 @@ class Admin extends AdminModule
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, reg_periksa.p_jawab, reg_periksa.hubunganpj, reg_periksa.almt_pj')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, reg_periksa.p_jawab, reg_periksa.hubunganpj, reg_periksa.almt_pj')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -1787,7 +1832,7 @@ class Admin extends AdminModule
                 $reg = $this->db('reg_periksa')
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                     ->oneArray();
                 if ($reg) {
                     $data = array_merge($data, $reg);
@@ -1868,7 +1913,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_meninggalkan_rs_tertentu.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('lampiran_meninggalkan_rs_tertentu.id', $id)
-            ->select('lampiran_meninggalkan_rs_tertentu.*, reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.alamat')
+            ->select('lampiran_meninggalkan_rs_tertentu.*, reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.alamat')
             ->oneArray();
 
         if (!$data) {
@@ -1930,6 +1975,7 @@ class Admin extends AdminModule
         }
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -1939,9 +1985,13 @@ class Admin extends AdminModule
                     'margin_top' => 8,
                     'margin_bottom' => 8
                 ]);
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
                 $html = $this->draw('lampiran_meninggalkan_rs_tertentu/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Formulir_Meninggalkan_RS_Tertentu_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -1949,7 +1999,8 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('lampiran_meninggalkan_rs_tertentu/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_meninggalkan_rs_tertentu/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => false]);
         exit();
     }
 
@@ -1973,7 +2024,7 @@ class Admin extends AdminModule
         $rows = $this->db('lampiran_penghentian_pengobatan')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penghentian_pengobatan.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('lampiran_penghentian_pengobatan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+            ->select('lampiran_penghentian_pengobatan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur')
             ->desc('lampiran_penghentian_pengobatan.id')
             ->toArray();
 
@@ -1995,7 +2046,7 @@ class Admin extends AdminModule
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, pasien.no_ktp, pasien.no_tlp, reg_periksa.p_jawab, reg_periksa.hubunganpj, reg_periksa.almt_pj')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, pasien.no_ktp, pasien.no_tlp, reg_periksa.p_jawab, reg_periksa.hubunganpj, reg_periksa.almt_pj')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -2066,7 +2117,7 @@ class Admin extends AdminModule
                 $reg = $this->db('reg_periksa')
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.alamat, pasien.no_ktp')
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur, pasien.alamat, pasien.no_ktp')
                     ->oneArray();
                 if ($reg) {
                     $data = array_merge($data, $reg);
@@ -2150,7 +2201,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penghentian_pengobatan.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('lampiran_penghentian_pengobatan.id', $id)
-            ->select('lampiran_penghentian_pengobatan.*, reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat as alamat_pasien, pasien.no_ktp as no_ktp_pasien')
+            ->select('lampiran_penghentian_pengobatan.*, reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat as alamat_pasien, pasien.no_ktp as no_ktp_pasien')
             ->oneArray();
 
         if (!$data) {
@@ -2191,6 +2242,7 @@ class Admin extends AdminModule
         }
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -2200,9 +2252,13 @@ class Admin extends AdminModule
                     'margin_top' => 8,
                     'margin_bottom' => 8
                 ]);
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
                 $html = $this->draw('lampiran_penghentian_pengobatan/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Formulir_Penghentian_Pengobatan_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -2210,7 +2266,8 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('lampiran_penghentian_pengobatan/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_penghentian_pengobatan/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => false]);
         exit();
     }
 
@@ -2227,7 +2284,7 @@ class Admin extends AdminModule
         $rows = $this->db('lampiran_profil_ringkas_medis_rajal')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_profil_ringkas_medis_rajal.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_profil_ringkas_medis_rajal.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('lampiran_profil_ringkas_medis_rajal.*, COALESCE(lampiran_profil_ringkas_medis_rajal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk')
+            ->select('lampiran_profil_ringkas_medis_rajal.*, COALESCE(lampiran_profil_ringkas_medis_rajal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk')
             ->desc('lampiran_profil_ringkas_medis_rajal.id')
             ->toArray();
 
@@ -2259,7 +2316,7 @@ class Admin extends AdminModule
                     ->leftJoin('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, dokter.nm_dokter, dokter.kd_dokter')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, dokter.nm_dokter, dokter.kd_dokter')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -2286,7 +2343,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_profil_ringkas_medis_rajal.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_profil_ringkas_medis_rajal.no_rkm_medis, reg_periksa.no_rkm_medis)')
                 ->where('lampiran_profil_ringkas_medis_rajal.id', $id)
-                ->select('lampiran_profil_ringkas_medis_rajal.*, COALESCE(lampiran_profil_ringkas_medis_rajal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->select('lampiran_profil_ringkas_medis_rajal.*, COALESCE(lampiran_profil_ringkas_medis_rajal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                 ->oneArray();
         }
 
@@ -2473,7 +2530,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_profil_ringkas_medis_rajal.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_profil_ringkas_medis_rajal.no_rkm_medis, reg_periksa.no_rkm_medis)')
             ->where('lampiran_profil_ringkas_medis_rajal.id', $id)
-            ->select('lampiran_profil_ringkas_medis_rajal.*, COALESCE(lampiran_profil_ringkas_medis_rajal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat as alamat_pasien, pasien.no_ktp as no_ktp_pasien')
+            ->select('lampiran_profil_ringkas_medis_rajal.*, COALESCE(lampiran_profil_ringkas_medis_rajal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat as alamat_pasien, pasien.no_ktp as no_ktp_pasien')
             ->oneArray();
 
         if (!$data) {
@@ -2580,6 +2637,7 @@ class Admin extends AdminModule
         }
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -2589,9 +2647,13 @@ class Admin extends AdminModule
                     'margin_top' => 8,
                     'margin_bottom' => 8
                 ]);
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
                 $html = $this->draw('lampiran_prmrj/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'PRMRJ_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -2599,7 +2661,8 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('lampiran_prmrj/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_prmrj/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => false]);
         exit();
     }
 
@@ -2616,7 +2679,7 @@ class Admin extends AdminModule
         $rows = $this->db('lampiran_skrining_luar_rs')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_skrining_luar_rs.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_skrining_luar_rs.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('lampiran_skrining_luar_rs.*, COALESCE(lampiran_skrining_luar_rs.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk')
+            ->select('lampiran_skrining_luar_rs.*, COALESCE(lampiran_skrining_luar_rs.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk')
             ->desc('lampiran_skrining_luar_rs.id')
             ->toArray();
 
@@ -2640,7 +2703,7 @@ class Admin extends AdminModule
                     ->leftJoin('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, penjab.png_jawab, dokter.nm_dokter')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, penjab.png_jawab, dokter.nm_dokter')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -2667,7 +2730,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_skrining_luar_rs.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_skrining_luar_rs.no_rkm_medis, reg_periksa.no_rkm_medis)')
                 ->where('lampiran_skrining_luar_rs.id', $id)
-                ->select('lampiran_skrining_luar_rs.*, COALESCE(lampiran_skrining_luar_rs.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->select('lampiran_skrining_luar_rs.*, COALESCE(lampiran_skrining_luar_rs.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                 ->oneArray();
         }
 
@@ -2798,7 +2861,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_skrining_luar_rs.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_skrining_luar_rs.no_rkm_medis, reg_periksa.no_rkm_medis)')
             ->where('lampiran_skrining_luar_rs.id', $id)
-            ->select('lampiran_skrining_luar_rs.*, COALESCE(lampiran_skrining_luar_rs.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+            ->select('lampiran_skrining_luar_rs.*, COALESCE(lampiran_skrining_luar_rs.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
             ->oneArray();
 
         if (!$data) {
@@ -2869,6 +2932,7 @@ class Admin extends AdminModule
         }
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -2878,9 +2942,13 @@ class Admin extends AdminModule
                     'margin_top' => 8,
                     'margin_bottom' => 8
                 ]);
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
                 $html = $this->draw('lampiran_skrining_luar_rs/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Skrining_Luar_RS_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -2888,7 +2956,8 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('lampiran_skrining_luar_rs/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_skrining_luar_rs/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => false]);
         exit();
     }
 
@@ -2905,7 +2974,7 @@ class Admin extends AdminModule
         $rows = $this->db('lampiran_stabilisasi_pasien')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_stabilisasi_pasien.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_stabilisasi_pasien.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('lampiran_stabilisasi_pasien.*, COALESCE(lampiran_stabilisasi_pasien.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk')
+            ->select('lampiran_stabilisasi_pasien.*, COALESCE(lampiran_stabilisasi_pasien.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk')
             ->desc('lampiran_stabilisasi_pasien.id')
             ->toArray();
 
@@ -2934,7 +3003,7 @@ class Admin extends AdminModule
                     ->leftJoin('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, penjab.png_jawab, dokter.nm_dokter, dokter.kd_dokter')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, penjab.png_jawab, dokter.nm_dokter, dokter.kd_dokter')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -2961,7 +3030,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_stabilisasi_pasien.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_stabilisasi_pasien.no_rkm_medis, reg_periksa.no_rkm_medis)')
                 ->where('lampiran_stabilisasi_pasien.id', $id)
-                ->select('lampiran_stabilisasi_pasien.*, COALESCE(lampiran_stabilisasi_pasien.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->select('lampiran_stabilisasi_pasien.*, COALESCE(lampiran_stabilisasi_pasien.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                 ->oneArray();
         }
 
@@ -3104,7 +3173,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_stabilisasi_pasien.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_stabilisasi_pasien.no_rkm_medis, reg_periksa.no_rkm_medis)')
             ->where('lampiran_stabilisasi_pasien.id', $id)
-            ->select('lampiran_stabilisasi_pasien.*, COALESCE(lampiran_stabilisasi_pasien.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+            ->select('lampiran_stabilisasi_pasien.*, COALESCE(lampiran_stabilisasi_pasien.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
             ->oneArray();
 
         if (!$data) {
@@ -3166,6 +3235,7 @@ class Admin extends AdminModule
         }
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -3175,9 +3245,13 @@ class Admin extends AdminModule
                     'margin_top' => 8,
                     'margin_bottom' => 8
                 ]);
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
                 $html = $this->draw('lampiran_stabilisasi_pasien/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Stabilisasi_Pasien_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -3185,7 +3259,8 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('lampiran_stabilisasi_pasien/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_stabilisasi_pasien/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => false]);
         exit();
     }
 
@@ -3202,7 +3277,7 @@ class Admin extends AdminModule
         $rows = $this->db('lampiran_intervensi_pengkajian_nyeri')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_intervensi_pengkajian_nyeri.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_intervensi_pengkajian_nyeri.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('lampiran_intervensi_pengkajian_nyeri.*, COALESCE(lampiran_intervensi_pengkajian_nyeri.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('lampiran_intervensi_pengkajian_nyeri.*, COALESCE(lampiran_intervensi_pengkajian_nyeri.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->desc('lampiran_intervensi_pengkajian_nyeri.id')
             ->toArray();
 
@@ -3231,7 +3306,7 @@ class Admin extends AdminModule
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -3274,7 +3349,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_intervensi_pengkajian_nyeri.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_intervensi_pengkajian_nyeri.no_rkm_medis, reg_periksa.no_rkm_medis)')
                 ->where('lampiran_intervensi_pengkajian_nyeri.id', $id)
-                ->select('lampiran_intervensi_pengkajian_nyeri.*, COALESCE(lampiran_intervensi_pengkajian_nyeri.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->select('lampiran_intervensi_pengkajian_nyeri.*, COALESCE(lampiran_intervensi_pengkajian_nyeri.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                 ->oneArray();
         }
 
@@ -3410,7 +3485,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_intervensi_pengkajian_nyeri.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_intervensi_pengkajian_nyeri.no_rkm_medis, reg_periksa.no_rkm_medis)')
             ->where('lampiran_intervensi_pengkajian_nyeri.id', $id)
-            ->select('lampiran_intervensi_pengkajian_nyeri.*, COALESCE(lampiran_intervensi_pengkajian_nyeri.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+            ->select('lampiran_intervensi_pengkajian_nyeri.*, COALESCE(lampiran_intervensi_pengkajian_nyeri.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
             ->oneArray();
 
         if (!$data) {
@@ -3474,6 +3549,7 @@ class Admin extends AdminModule
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
                 $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -3486,6 +3562,9 @@ class Admin extends AdminModule
                 $html = $this->draw('lampiran_intervensi_pengkajian_nyeri/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Pengkajian_Ulang_Nyeri_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -3511,7 +3590,7 @@ class Admin extends AdminModule
         $rows = $this->db('lampiran_permintaan_second_opinion')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_permintaan_second_opinion.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_permintaan_second_opinion.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('lampiran_permintaan_second_opinion.*, COALESCE(lampiran_permintaan_second_opinion.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('lampiran_permintaan_second_opinion.*, COALESCE(lampiran_permintaan_second_opinion.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->desc('lampiran_permintaan_second_opinion.id')
             ->toArray();
 
@@ -3531,7 +3610,7 @@ class Admin extends AdminModule
                 ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                 ->where('reg_periksa.no_rawat', $noRawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $noRawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->desc('reg_periksa.tgl_registrasi')
                 ->oneArray();
 
@@ -3584,7 +3663,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_permintaan_second_opinion.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_permintaan_second_opinion.no_rkm_medis, reg_periksa.no_rkm_medis)')
                 ->where('lampiran_permintaan_second_opinion.id', $id)
-                ->select('lampiran_permintaan_second_opinion.*, COALESCE(lampiran_permintaan_second_opinion.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->select('lampiran_permintaan_second_opinion.*, COALESCE(lampiran_permintaan_second_opinion.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                 ->oneArray();
 
             if ($row) {
@@ -3670,7 +3749,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_permintaan_second_opinion.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_permintaan_second_opinion.no_rkm_medis, reg_periksa.no_rkm_medis)')
             ->where('lampiran_permintaan_second_opinion.id', $id)
-            ->select('lampiran_permintaan_second_opinion.*, COALESCE(lampiran_permintaan_second_opinion.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat as alamat_pasien')
+            ->select('lampiran_permintaan_second_opinion.*, COALESCE(lampiran_permintaan_second_opinion.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat as alamat_pasien')
             ->oneArray();
 
         if (!$data) {
@@ -3735,6 +3814,7 @@ class Admin extends AdminModule
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
                 $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -3747,6 +3827,9 @@ class Admin extends AdminModule
                 $html = $this->draw('lampiran_permintaan_second_opinion/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Surat_Permintaan_Second_Opinion_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -3772,7 +3855,7 @@ class Admin extends AdminModule
         $rows = $this->db('lampiran_penilaian_kejadian_phlebitis')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_phlebitis.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_phlebitis.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('lampiran_penilaian_kejadian_phlebitis.*, COALESCE(lampiran_penilaian_kejadian_phlebitis.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->select('lampiran_penilaian_kejadian_phlebitis.*, COALESCE(lampiran_penilaian_kejadian_phlebitis.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
             ->desc('lampiran_penilaian_kejadian_phlebitis.id')
             ->toArray();
 
@@ -3824,7 +3907,7 @@ class Admin extends AdminModule
                 ->where('reg_periksa.no_rawat', $noRawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $noRawat)
                 ->desc('reg_periksa.tgl_registrasi')
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->oneArray();
 
             if ($patient) {
@@ -3844,7 +3927,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_phlebitis.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_phlebitis.no_rkm_medis, reg_periksa.no_rkm_medis)')
                 ->where('lampiran_penilaian_kejadian_phlebitis.id', $id)
-                ->select('lampiran_penilaian_kejadian_phlebitis.*, COALESCE(lampiran_penilaian_kejadian_phlebitis.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+                ->select('lampiran_penilaian_kejadian_phlebitis.*, COALESCE(lampiran_penilaian_kejadian_phlebitis.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
                 ->oneArray();
         }
 
@@ -3947,13 +4030,18 @@ class Admin extends AdminModule
         redirect(url([ADMIN, 'update_bmt', 'penilaianphlebitismanage']));
     }
 
-    public function getPenilaianphlebitiscetak($id)
+    public function getPenilaianphlebitiscetak($id = null)
     {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
         $data = $this->db('lampiran_penilaian_kejadian_phlebitis')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_phlebitis.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_phlebitis.no_rkm_medis, reg_periksa.no_rkm_medis)')
             ->where('lampiran_penilaian_kejadian_phlebitis.id', $id)
-            ->select('lampiran_penilaian_kejadian_phlebitis.*, COALESCE(lampiran_penilaian_kejadian_phlebitis.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+            ->select('lampiran_penilaian_kejadian_phlebitis.*, COALESCE(lampiran_penilaian_kejadian_phlebitis.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
             ->oneArray();
 
         if (!$data) {
@@ -4019,6 +4107,7 @@ class Admin extends AdminModule
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
                 $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -4031,6 +4120,9 @@ class Admin extends AdminModule
                 $html = $this->draw('lampiran_penilaian_kejadian_phlebitis/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Penilaian_Phlebitis_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -4056,7 +4148,7 @@ class Admin extends AdminModule
         $kerohanian = $this->db('lampiran_permintaan_pelayanan_kerohanian')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_permintaan_pelayanan_kerohanian.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_permintaan_pelayanan_kerohanian.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('lampiran_permintaan_pelayanan_kerohanian.*, COALESCE(lampiran_permintaan_pelayanan_kerohanian.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, lampiran_permintaan_pelayanan_kerohanian.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat as alamat_pasien')
+            ->select('lampiran_permintaan_pelayanan_kerohanian.*, COALESCE(lampiran_permintaan_pelayanan_kerohanian.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, pasien.nm_pasien as nama_pasien, lampiran_permintaan_pelayanan_kerohanian.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat as alamat_pasien')
             ->desc('lampiran_permintaan_pelayanan_kerohanian.id')
             ->toArray();
 
@@ -4086,7 +4178,7 @@ class Admin extends AdminModule
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                 ->oneArray();
 
             if ($reg) {
@@ -4142,7 +4234,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_permintaan_pelayanan_kerohanian.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_permintaan_pelayanan_kerohanian.no_rkm_medis, reg_periksa.no_rkm_medis)')
                 ->where('lampiran_permintaan_pelayanan_kerohanian.id', $id)
-                ->select('lampiran_permintaan_pelayanan_kerohanian.*, COALESCE(lampiran_permintaan_pelayanan_kerohanian.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->select('lampiran_permintaan_pelayanan_kerohanian.*, COALESCE(lampiran_permintaan_pelayanan_kerohanian.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                 ->oneArray();
 
             if ($row) {
@@ -4228,7 +4320,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_permintaan_pelayanan_kerohanian.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_permintaan_pelayanan_kerohanian.no_rkm_medis, reg_periksa.no_rkm_medis)')
             ->where('lampiran_permintaan_pelayanan_kerohanian.id', $id)
-            ->select('lampiran_permintaan_pelayanan_kerohanian.*, COALESCE(lampiran_permintaan_pelayanan_kerohanian.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat as alamat_pasien')
+            ->select('lampiran_permintaan_pelayanan_kerohanian.*, COALESCE(lampiran_permintaan_pelayanan_kerohanian.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat as alamat_pasien')
             ->oneArray();
 
         if (!$data) {
@@ -4289,6 +4381,7 @@ class Admin extends AdminModule
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
                 $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -4301,6 +4394,9 @@ class Admin extends AdminModule
                 $html = $this->draw('lampiran_permintaan_pelayanan_kerohanian/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Permintaan_Pelayanan_Kerohanian_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -4326,7 +4422,7 @@ class Admin extends AdminModule
         $monitoring = $this->db('lampiran_monitoring_pasien_kateter_urin')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_monitoring_pasien_kateter_urin.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_monitoring_pasien_kateter_urin.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('lampiran_monitoring_pasien_kateter_urin.*, COALESCE(lampiran_monitoring_pasien_kateter_urin.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, lampiran_monitoring_pasien_kateter_urin.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+            ->select('lampiran_monitoring_pasien_kateter_urin.*, COALESCE(lampiran_monitoring_pasien_kateter_urin.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, pasien.nm_pasien as nama_pasien, lampiran_monitoring_pasien_kateter_urin.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
             ->desc('lampiran_monitoring_pasien_kateter_urin.id')
             ->toArray();
 
@@ -4354,7 +4450,7 @@ class Admin extends AdminModule
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                 ->oneArray();
 
             if ($reg) {
@@ -4441,7 +4537,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_monitoring_pasien_kateter_urin.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_monitoring_pasien_kateter_urin.no_rkm_medis, reg_periksa.no_rkm_medis)')
                 ->where('lampiran_monitoring_pasien_kateter_urin.id', $id)
-                ->select('lampiran_monitoring_pasien_kateter_urin.*, COALESCE(lampiran_monitoring_pasien_kateter_urin.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->select('lampiran_monitoring_pasien_kateter_urin.*, COALESCE(lampiran_monitoring_pasien_kateter_urin.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                 ->oneArray();
 
             if ($row) {
@@ -4532,7 +4628,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_monitoring_pasien_kateter_urin.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_monitoring_pasien_kateter_urin.no_rkm_medis, reg_periksa.no_rkm_medis)')
             ->where('lampiran_monitoring_pasien_kateter_urin.id', $id)
-            ->select('lampiran_monitoring_pasien_kateter_urin.*, COALESCE(lampiran_monitoring_pasien_kateter_urin.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat as alamat_pasien')
+            ->select('lampiran_monitoring_pasien_kateter_urin.*, COALESCE(lampiran_monitoring_pasien_kateter_urin.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat as alamat_pasien')
             ->oneArray();
 
         if (!$data) {
@@ -4649,6 +4745,7 @@ class Admin extends AdminModule
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
                 $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4-L',
@@ -4661,6 +4758,9 @@ class Admin extends AdminModule
                 $html = $this->draw('lampiran_monitoring_pasien_kateter_urin/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Monitoring_Kateter_Urin_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -4686,7 +4786,7 @@ class Admin extends AdminModule
         $konsultasi = $this->db('lampiran_konsultasi_internal')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_konsultasi_internal.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_konsultasi_internal.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('lampiran_konsultasi_internal.*, COALESCE(lampiran_konsultasi_internal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, lampiran_konsultasi_internal.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
+            ->select('lampiran_konsultasi_internal.*, COALESCE(lampiran_konsultasi_internal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, pasien.nm_pasien as nama_pasien, lampiran_konsultasi_internal.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
             ->desc('lampiran_konsultasi_internal.id')
             ->toArray();
 
@@ -4716,7 +4816,7 @@ class Admin extends AdminModule
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                 ->oneArray();
 
             if ($reg) {
@@ -4773,7 +4873,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_konsultasi_internal.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_konsultasi_internal.no_rkm_medis, reg_periksa.no_rkm_medis)')
                 ->where('lampiran_konsultasi_internal.id', $id)
-                ->select('lampiran_konsultasi_internal.*, COALESCE(lampiran_konsultasi_internal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur')
+                ->select('lampiran_konsultasi_internal.*, COALESCE(lampiran_konsultasi_internal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur')
                 ->oneArray();
 
             if ($row) {
@@ -4863,13 +4963,18 @@ class Admin extends AdminModule
         redirect(url([ADMIN, 'update_bmt', 'konsultasiinternalmanage']));
     }
 
-    public function getKonsultasiinternalcetak($id)
+    public function getKonsultasiinternalcetak($id = null)
     {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
         $data = $this->db('lampiran_konsultasi_internal')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_konsultasi_internal.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_konsultasi_internal.no_rkm_medis, reg_periksa.no_rkm_medis)')
             ->where('lampiran_konsultasi_internal.id', $id)
-            ->select('lampiran_konsultasi_internal.*, COALESCE(lampiran_konsultasi_internal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat')
+            ->select('lampiran_konsultasi_internal.*, COALESCE(lampiran_konsultasi_internal.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat')
             ->oneArray();
 
         if (!$data) {
@@ -4930,6 +5035,7 @@ class Admin extends AdminModule
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
                 $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -4942,6 +5048,9 @@ class Admin extends AdminModule
                 $html = $this->draw('lampiran_konsultasi_internal/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Konsultasi_Internal_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -4967,7 +5076,7 @@ class Admin extends AdminModule
         $monitoring = $this->db('lampiran_monitoring_pasien_selama_transfer')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_monitoring_pasien_selama_transfer.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_monitoring_pasien_selama_transfer.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('lampiran_monitoring_pasien_selama_transfer.*, COALESCE(lampiran_monitoring_pasien_selama_transfer.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, lampiran_monitoring_pasien_selama_transfer.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
+            ->select('lampiran_monitoring_pasien_selama_transfer.*, COALESCE(lampiran_monitoring_pasien_selama_transfer.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, pasien.nm_pasien as nama_pasien, lampiran_monitoring_pasien_selama_transfer.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
             ->desc('lampiran_monitoring_pasien_selama_transfer.id')
             ->toArray();
 
@@ -4997,7 +5106,7 @@ class Admin extends AdminModule
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                 ->oneArray();
 
             if ($reg) {
@@ -5050,7 +5159,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_monitoring_pasien_selama_transfer.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_monitoring_pasien_selama_transfer.no_rkm_medis, reg_periksa.no_rkm_medis)')
                 ->where('lampiran_monitoring_pasien_selama_transfer.id', $id)
-                ->select('lampiran_monitoring_pasien_selama_transfer.*, COALESCE(lampiran_monitoring_pasien_selama_transfer.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur')
+                ->select('lampiran_monitoring_pasien_selama_transfer.*, COALESCE(lampiran_monitoring_pasien_selama_transfer.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur')
                 ->oneArray();
 
             if ($row) {
@@ -5131,13 +5240,18 @@ class Admin extends AdminModule
         redirect(url([ADMIN, 'update_bmt', 'monitoringpasienselamatransfermanage']));
     }
 
-    public function getMonitoringpasienselamatransfercetak($id)
+    public function getMonitoringpasienselamatransfercetak($id = null)
     {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
         $data = $this->db('lampiran_monitoring_pasien_selama_transfer')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_monitoring_pasien_selama_transfer.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_monitoring_pasien_selama_transfer.no_rkm_medis, reg_periksa.no_rkm_medis)')
             ->where('lampiran_monitoring_pasien_selama_transfer.id', $id)
-            ->select('lampiran_monitoring_pasien_selama_transfer.*, COALESCE(lampiran_monitoring_pasien_selama_transfer.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat')
+            ->select('lampiran_monitoring_pasien_selama_transfer.*, COALESCE(lampiran_monitoring_pasien_selama_transfer.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat')
             ->oneArray();
 
         if (!$data) {
@@ -5210,6 +5324,7 @@ class Admin extends AdminModule
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
                 $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -5222,6 +5337,9 @@ class Admin extends AdminModule
                 $html = $this->draw('lampiran_monitoring_pasien_selama_transfer/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Monitoring_Transfer_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -5247,7 +5365,7 @@ class Admin extends AdminModule
         $records = $this->db('lampiran_penilaian_dekubitus')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_dekubitus.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_dekubitus.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('lampiran_penilaian_dekubitus.*, COALESCE(lampiran_penilaian_dekubitus.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, lampiran_penilaian_dekubitus.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
+            ->select('lampiran_penilaian_dekubitus.*, COALESCE(lampiran_penilaian_dekubitus.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, pasien.nm_pasien as nama_pasien, lampiran_penilaian_dekubitus.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
             ->desc('lampiran_penilaian_dekubitus.id')
             ->toArray();
 
@@ -5309,7 +5427,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_dekubitus.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_dekubitus.no_rkm_medis, reg_periksa.no_rkm_medis)')
                 ->where('lampiran_penilaian_dekubitus.id', $id)
-                ->select('lampiran_penilaian_dekubitus.*, COALESCE(lampiran_penilaian_dekubitus.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
+                ->select('lampiran_penilaian_dekubitus.*, COALESCE(lampiran_penilaian_dekubitus.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
                 ->oneArray();
 
             if ($row) {
@@ -5328,7 +5446,7 @@ class Admin extends AdminModule
                 ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
                 ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                 ->where('reg_periksa.no_rawat', $no_rawat)
-                ->select('reg_periksa.*, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->oneArray();
 
             if ($reg) {
@@ -5410,13 +5528,18 @@ class Admin extends AdminModule
         redirect(url([ADMIN, 'update_bmt', 'penilaiandekubitusmanage']));
     }
 
-    public function getPenilaiandekubituscetak($id)
+    public function getPenilaiandekubituscetak($id = null)
     {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
         $data = $this->db('lampiran_penilaian_dekubitus')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_dekubitus.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_dekubitus.no_rkm_medis, reg_periksa.no_rkm_medis)')
             ->where('lampiran_penilaian_dekubitus.id', $id)
-            ->select('lampiran_penilaian_dekubitus.*, COALESCE(lampiran_penilaian_dekubitus.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat')
+            ->select('lampiran_penilaian_dekubitus.*, COALESCE(lampiran_penilaian_dekubitus.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat')
             ->oneArray();
 
         if (!$data) {
@@ -5482,6 +5605,7 @@ class Admin extends AdminModule
         if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
             try {
                 $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -5494,6 +5618,9 @@ class Admin extends AdminModule
                 $html = $this->draw('lampiran_penilaian_dekubitus/cetak.html', ['data' => $data, 'is_mpdf' => true]);
                 $mpdf->WriteHTML($html);
                 $filename = 'Penilaian_Dekubitus_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output($filename, 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -5519,7 +5646,7 @@ class Admin extends AdminModule
         $records = $this->db('lampiran_penilaian_kejadian_ilo')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_ilo.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_ilo.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('lampiran_penilaian_kejadian_ilo.*, COALESCE(lampiran_penilaian_kejadian_ilo.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, lampiran_penilaian_kejadian_ilo.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
+            ->select('lampiran_penilaian_kejadian_ilo.*, COALESCE(lampiran_penilaian_kejadian_ilo.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, COALESCE(pasien.nm_pasien, pasien.nm_pasien as nama_pasien, lampiran_penilaian_kejadian_ilo.no_rawat) as nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
             ->desc('lampiran_penilaian_kejadian_ilo.id')
             ->toArray();
 
@@ -5592,7 +5719,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_ilo.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_ilo.no_rkm_medis, reg_periksa.no_rkm_medis)')
                 ->where('lampiran_penilaian_kejadian_ilo.id', $id)
-                ->select('lampiran_penilaian_kejadian_ilo.*, COALESCE(lampiran_penilaian_kejadian_ilo.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
+                ->select('lampiran_penilaian_kejadian_ilo.*, COALESCE(lampiran_penilaian_kejadian_ilo.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
                 ->oneArray();
 
             if ($row) {
@@ -5611,7 +5738,7 @@ class Admin extends AdminModule
                 ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
                 ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                 ->where('reg_periksa.no_rawat', $no_rawat)
-                ->select('reg_periksa.*, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->oneArray();
 
             if ($reg) {
@@ -5693,13 +5820,18 @@ class Admin extends AdminModule
         redirect(url([ADMIN, 'update_bmt', 'penilaianilomanage']));
     }
 
-    public function getPenilaianilocetak($id)
+    public function getPenilaianilocetak($id = null)
     {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
         $data = $this->db('lampiran_penilaian_kejadian_ilo')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_ilo.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_ilo.no_rkm_medis, reg_periksa.no_rkm_medis)')
             ->where('lampiran_penilaian_kejadian_ilo.id', $id)
-            ->select('lampiran_penilaian_kejadian_ilo.*, COALESCE(lampiran_penilaian_kejadian_ilo.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat')
+            ->select('lampiran_penilaian_kejadian_ilo.*, COALESCE(lampiran_penilaian_kejadian_ilo.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat')
             ->oneArray();
 
         if (!$data) {
@@ -5767,6 +5899,7 @@ class Admin extends AdminModule
             $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
             $html = $this->draw('lampiran_penilaian_kejadian_ilo/cetak.html', ['data' => $data, 'is_mpdf' => true]);
             try {
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -5777,6 +5910,9 @@ class Admin extends AdminModule
                     'margin_bottom' => 8,
                 ]);
                 $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output('Penilaian_ILO_' . $data['no_rkm_medis'] . '.pdf', 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -5811,7 +5947,7 @@ class Admin extends AdminModule
 
         $records = $query->select('lampiran_penilaian_kejadian_isk.*, 
             COALESCE(lampiran_penilaian_kejadian_isk.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, 
-            pasien.nm_pasien, pasien.jk, pasien.umur as umur_pasien, pasien.umur,
+            pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur as umur_pasien, pasien.umur,
             bangsal.nm_bangsal, kamar.kd_kamar')
             ->desc('lampiran_penilaian_kejadian_isk.id')
             ->toArray();
@@ -5895,7 +6031,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_isk.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_isk.no_rkm_medis, reg_periksa.no_rkm_medis)')
                 ->where('lampiran_penilaian_kejadian_isk.id', $id)
-                ->select('lampiran_penilaian_kejadian_isk.*, COALESCE(lampiran_penilaian_kejadian_isk.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
+                ->select('lampiran_penilaian_kejadian_isk.*, COALESCE(lampiran_penilaian_kejadian_isk.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.umur')
                 ->oneArray();
 
             if ($row) {
@@ -5914,7 +6050,7 @@ class Admin extends AdminModule
                 ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
                 ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                 ->where('reg_periksa.no_rawat', $no_rawat)
-                ->select('reg_periksa.*, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->oneArray();
 
             if ($reg) {
@@ -5996,13 +6132,18 @@ class Admin extends AdminModule
         redirect(url([ADMIN, 'update_bmt', 'penilaianiskmanage']));
     }
 
-    public function getPenilaianiskcetak($id)
+    public function getPenilaianiskcetak($id = null)
     {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
         $data = $this->db('lampiran_penilaian_kejadian_isk')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_penilaian_kejadian_isk.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_penilaian_kejadian_isk.no_rkm_medis, reg_periksa.no_rkm_medis)')
             ->where('lampiran_penilaian_kejadian_isk.id', $id)
-            ->select('lampiran_penilaian_kejadian_isk.*, COALESCE(lampiran_penilaian_kejadian_isk.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat')
+            ->select('lampiran_penilaian_kejadian_isk.*, COALESCE(lampiran_penilaian_kejadian_isk.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur as umur_pasien, pasien.alamat')
             ->oneArray();
 
         if (!$data) {
@@ -6051,6 +6192,7 @@ class Admin extends AdminModule
             $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
             $html = $this->draw('lampiran_penilaian_kejadian_isk/cetak.html', ['data' => $data, 'is_mpdf' => true]);
             try {
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -6061,6 +6203,9 @@ class Admin extends AdminModule
                     'margin_bottom' => 6,
                 ]);
                 $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output('Penilaian_ISK_' . $data['no_rkm_medis'] . '.pdf', 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -6148,7 +6293,7 @@ class Admin extends AdminModule
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->leftJoin('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
                 ->where('reg_periksa.no_rawat', $no_rawat)
-                ->select('reg_periksa.*, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat, pasien.no_ktp, dokter.nm_dokter')
+                ->select('reg_periksa.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat, pasien.no_ktp, dokter.nm_dokter')
                 ->oneArray();
 
             if ($reg) {
@@ -6251,8 +6396,13 @@ class Admin extends AdminModule
         redirect(url([ADMIN, 'update_bmt', 'bersediamenunggumanage']));
     }
 
-    public function getBersediamenunggucetak($id)
+    public function getBersediamenunggucetak($id = null)
     {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
         $data = $this->db('lampiran_surat_pernyataan_bersedia_menunggu')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_surat_pernyataan_bersedia_menunggu.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_surat_pernyataan_bersedia_menunggu.no_rkm_medis, reg_periksa.no_rkm_medis)')
@@ -6298,6 +6448,7 @@ class Admin extends AdminModule
             $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
             $html = $this->draw('lampiran_surat_pernyataan_bersedia_menunggu/cetak.html', ['data' => $data, 'is_mpdf' => true]);
             try {
+@ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -6308,6 +6459,9 @@ class Admin extends AdminModule
                     'margin_bottom' => 10,
                 ]);
                 $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
                 $mpdf->Output('Surat_Pernyataan_Bersedia_Menunggu_' . $data['no_rkm_medis'] . '.pdf', 'I');
                 exit();
             } catch (\Throwable $e) {
@@ -6317,6 +6471,1015 @@ class Admin extends AdminModule
 
         $data['kop_img'] = url('assets/img/KOP-SURAT.png');
         echo $this->draw('lampiran_surat_pernyataan_bersedia_menunggu/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ============================================================
+    // LAMPIRAN - INFORMASI PENUNDAAN DAN KELAMBATAN PELAYANAN
+    // ============================================================
+
+    public function anyPenundaankelambatanmanage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $query = "SELECT p.*, r.no_rkm_medis, pas.nm_pasien, pas.tgl_lahir, pas.jk, pas.alamat as alamat_pasien,
+                         d1.nm_dokter as nama_dokter_pengirim_db,
+                         d2.nm_dokter as nama_dokter_dpjp_db
+                  FROM lampiran_penundaan_kelambatan_pelayanan p
+                  LEFT JOIN reg_periksa r ON r.no_rawat = p.no_rawat
+                  LEFT JOIN pasien pas ON pas.no_rkm_medis = r.no_rkm_medis
+                  LEFT JOIN dokter d1 ON d1.kd_dokter = p.kd_dokter_pengirim
+                  LEFT JOIN dokter d2 ON d2.kd_dokter = p.kd_dokter_dpjp
+                  ORDER BY p.id DESC";
+
+        $stmt = $this->db()->pdo()->query($query);
+        $rows = $stmt ? $stmt->fetchAll(\PDO::FETCH_ASSOC) : [];
+
+        foreach ($rows as $k => $v) {
+            $rows[$k]['nomor'] = $k + 1;
+            if (!empty($v['nama_dokter_pengirim_db'])) {
+                $rows[$k]['nama_dokter_pengirim'] = $v['nama_dokter_pengirim_db'];
+            }
+            if (!empty($v['nama_dokter_dpjp_db'])) {
+                $rows[$k]['nama_dokter_dpjp'] = $v['nama_dokter_dpjp_db'];
+            }
+        }
+
+        return $this->draw('lampiran_penundaan_kelambatan_pelayanan/manage.html', ['data' => $rows, 'rows' => $rows]);
+    }
+
+    public function getPenundaankelambatanform($id = null)
+    {
+        $data = [];
+        if ($id) {
+            $data = $this->db('lampiran_penundaan_kelambatan_pelayanan')
+                               ->where('id', $id)
+                               ->oneArray();
+            if ($data) {
+                $pasien = $this->db('reg_periksa')
+                                     ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                                     ->select(['pasien.nm_pasien', 'pasien.tgl_lahir', 'pasien.jk', 'pasien.alamat', 'pasien.no_ktp', 'reg_periksa.no_rkm_medis'])
+                                     ->oneArray();
+                if ($pasien) {
+                    $data['nm_pasien'] = $pasien['nm_pasien'];
+                    $data['tgl_lahir_pasien'] = $pasien['tgl_lahir'];
+                    $data['jk_pasien'] = $pasien['jk'];
+                    $data['alamat_pasien'] = $pasien['alamat'];
+                    $data['no_rkm_medis'] = $pasien['no_rkm_medis'];
+                    $data['no_ktp_pasien'] = $pasien['no_ktp'];
+                }
+            }
+        } else {
+            $data = [
+                'id' => '',
+                'no_rawat' => $_GET['no_rawat'] ?? '',
+                'no_rkm_medis' => '',
+                'tanggal' => date('Y-m-d'),
+                'jam' => date('H:i:s'),
+                'instalasi_unit' => 'Instalasi Bedah Sentral',
+                'kd_dokter_pengirim' => '',
+                'nama_dokter_pengirim' => '',
+                'jenis_pelayanan' => '',
+                'status_penerima' => 'Pasien Sendiri',
+                'nama_penerima' => '',
+                'alamat_penerima' => '',
+                'no_identitas_penerima' => '',
+                'sebab_kerusakan_alat' => 0,
+                'sebab_kondisi_umum_pasien' => 0,
+                'sebab_penundaan_penjadwalan' => 0,
+                'sebab_pemadaman_listrik' => 0,
+                'sebab_tempat_tidur_penuh' => 0,
+                'sebab_faktor_penyulit' => 0,
+                'keterangan_faktor_penyulit' => '',
+                'solusi_dijadwalkan_ulang' => 1,
+                'jadwal_akan_datang' => '',
+                'solusi_dirujuk' => 0,
+                'tujuan_rujukan' => '',
+                'solusi_kembali_dokter_pengirim' => 0,
+                'kd_dokter_dpjp' => '',
+                'nama_dokter_dpjp' => '',
+                'kd_pemberi_informasi' => '',
+                'nama_pemberi_informasi' => '',
+                'catatan' => '',
+                'nm_pasien' => '',
+                'tgl_lahir_pasien' => '',
+                'jk_pasien' => '',
+                'alamat_pasien' => '',
+                'no_ktp_pasien' => ''
+            ];
+
+            if (!empty($data['no_rawat'])) {
+                $reg = $this->db('reg_periksa')
+                                  ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                                  ->join('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
+                                  ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                                  ->select([
+                                      'reg_periksa.no_rawat',
+                                      'reg_periksa.no_rkm_medis',
+                                      'reg_periksa.kd_dokter',
+                                      'dokter.nm_dokter',
+                                      'reg_periksa.p_jawab',
+                                      'reg_periksa.almt_pj',
+                                      'reg_periksa.hubunganpj',
+                                      'pasien.nm_pasien',
+                                      'pasien.tgl_lahir',
+                                      'pasien.jk',
+                                      'pasien.alamat',
+                                      'pasien.no_ktp'
+                                  ])
+                                  ->oneArray();
+
+                if ($reg) {
+                    $data['no_rkm_medis'] = $reg['no_rkm_medis'];
+                    $data['nm_pasien'] = $reg['nm_pasien'];
+                    $data['tgl_lahir_pasien'] = $reg['tgl_lahir'];
+                    $data['jk_pasien'] = $reg['jk'];
+                    $data['alamat_pasien'] = $reg['alamat'];
+                    $data['no_ktp_pasien'] = $reg['no_ktp'];
+                    $data['kd_dokter_dpjp'] = $reg['kd_dokter'];
+                    $data['nama_dokter_dpjp'] = $reg['nm_dokter'];
+                    $data['kd_dokter_pengirim'] = $reg['kd_dokter'];
+                    $data['nama_dokter_pengirim'] = $reg['nm_dokter'];
+                    $data['nama_penerima'] = $reg['nm_pasien'];
+                    $data['alamat_penerima'] = $reg['alamat'];
+                    $data['no_identitas_penerima'] = $reg['no_ktp'];
+                }
+            }
+        }
+
+        $dokter = $this->db('dokter')->where('status', '1')->toArray();
+        $petugas = $this->db('petugas')->where('status', '1')->toArray();
+
+        return $this->draw('lampiran_penundaan_kelambatan_pelayanan/form.html', [
+            'data' => $data,
+            'dokter' => $dokter,
+            'petugas' => $petugas
+        ]);
+    }
+
+    public function postPenundaankelambatansave()
+    {
+        $id = $_POST['id'] ?? null;
+        $no_rawat = $_POST['no_rawat'] ?? '';
+
+        if (empty($no_rawat)) {
+            $this->notify('failure', 'Nomor Rawat wajib diisi!');
+            redirect(url([ADMIN, 'update_bmt', 'penundaankelambatanform']));
+        }
+
+        $nama_dokter_pengirim = $_POST['nama_dokter_pengirim'] ?? '';
+        if (!empty($_POST['kd_dokter_pengirim'])) {
+            $doc1 = $this->db('dokter')->where('kd_dokter', $_POST['kd_dokter_pengirim'])->oneArray();
+            if ($doc1) $nama_dokter_pengirim = $doc1['nm_dokter'];
+        }
+
+        $nama_dokter_dpjp = $_POST['nama_dokter_dpjp'] ?? '';
+        if (!empty($_POST['kd_dokter_dpjp'])) {
+            $doc2 = $this->db('dokter')->where('kd_dokter', $_POST['kd_dokter_dpjp'])->oneArray();
+            if ($doc2) $nama_dokter_dpjp = $doc2['nm_dokter'];
+        }
+
+        $nama_pemberi_informasi = $_POST['nama_pemberi_informasi'] ?? '';
+        if (!empty($_POST['kd_pemberi_informasi'])) {
+            $pet = $this->db('petugas')->where('nip', $_POST['kd_pemberi_informasi'])->oneArray();
+            if ($pet) {
+                $nama_pemberi_informasi = $pet['nama'];
+            } else {
+                $doc3 = $this->db('dokter')->where('kd_dokter', $_POST['kd_pemberi_informasi'])->oneArray();
+                if ($doc3) $nama_pemberi_informasi = $doc3['nm_dokter'];
+            }
+        }
+
+        $payload = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $_POST['no_rkm_medis'] ?? '',
+            'tanggal' => !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d'),
+            'jam' => !empty($_POST['jam']) ? $_POST['jam'] : date('H:i:s'),
+            'instalasi_unit' => $_POST['instalasi_unit'] ?? '',
+            'kd_dokter_pengirim' => $_POST['kd_dokter_pengirim'] ?? '',
+            'nama_dokter_pengirim' => $nama_dokter_pengirim,
+            'jenis_pelayanan' => $_POST['jenis_pelayanan'] ?? '',
+            'status_penerima' => $_POST['status_penerima'] ?? 'Pasien Sendiri',
+            'nama_penerima' => $_POST['nama_penerima'] ?? '',
+            'alamat_penerima' => $_POST['alamat_penerima'] ?? '',
+            'no_identitas_penerima' => $_POST['no_identitas_penerima'] ?? '',
+            'sebab_kerusakan_alat' => isset($_POST['sebab_kerusakan_alat']) ? 1 : 0,
+            'sebab_kondisi_umum_pasien' => isset($_POST['sebab_kondisi_umum_pasien']) ? 1 : 0,
+            'sebab_penundaan_penjadwalan' => isset($_POST['sebab_penundaan_penjadwalan']) ? 1 : 0,
+            'sebab_pemadaman_listrik' => isset($_POST['sebab_pemadaman_listrik']) ? 1 : 0,
+            'sebab_tempat_tidur_penuh' => isset($_POST['sebab_tempat_tidur_penuh']) ? 1 : 0,
+            'sebab_faktor_penyulit' => isset($_POST['sebab_faktor_penyulit']) ? 1 : 0,
+            'keterangan_faktor_penyulit' => $_POST['keterangan_faktor_penyulit'] ?? '',
+            'solusi_dijadwalkan_ulang' => isset($_POST['solusi_dijadwalkan_ulang']) ? 1 : 0,
+            'jadwal_akan_datang' => $_POST['jadwal_akan_datang'] ?? '',
+            'solusi_dirujuk' => isset($_POST['solusi_dirujuk']) ? 1 : 0,
+            'tujuan_rujukan' => $_POST['tujuan_rujukan'] ?? '',
+            'solusi_kembali_dokter_pengirim' => isset($_POST['solusi_kembali_dokter_pengirim']) ? 1 : 0,
+            'kd_dokter_dpjp' => $_POST['kd_dokter_dpjp'] ?? '',
+            'nama_dokter_dpjp' => $nama_dokter_dpjp,
+            'kd_pemberi_informasi' => $_POST['kd_pemberi_informasi'] ?? '',
+            'nama_pemberi_informasi' => $nama_pemberi_informasi,
+            'catatan' => $_POST['catatan'] ?? ''
+        ];
+
+        if ($id) {
+            $this->db('lampiran_penundaan_kelambatan_pelayanan')
+                 ->where('id', $id)
+                 ->save($payload);
+            $this->notify('success', 'Data Informasi Penundaan dan Kelambatan Pelayanan berhasil diperbarui.');
+        } else {
+            $this->db('lampiran_penundaan_kelambatan_pelayanan')
+                 ->save($payload);
+            $this->notify('success', 'Data Informasi Penundaan dan Kelambatan Pelayanan berhasil disimpan.');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'penundaankelambatanmanage']));
+    }
+
+    public function getPenundaankelambatanhapus($id)
+    {
+        $this->db('lampiran_penundaan_kelambatan_pelayanan')
+             ->where('id', $id)
+             ->delete();
+        $this->notify('success', 'Data Informasi Penundaan dan Kelambatan Pelayanan berhasil dihapus.');
+        redirect(url([ADMIN, 'update_bmt', 'penundaankelambatanmanage']));
+    }
+
+    public function getPenundaankelambatancetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+        $query = "SELECT p.*, r.no_rkm_medis, pas.nm_pasien, pas.tgl_lahir, pas.jk, pas.alamat as alamat_pasien,
+                         d1.nm_dokter as nama_dokter_pengirim_db,
+                         d2.nm_dokter as nama_dokter_dpjp_db
+                  FROM lampiran_penundaan_kelambatan_pelayanan p
+                  LEFT JOIN reg_periksa r ON r.no_rawat = p.no_rawat
+                  LEFT JOIN pasien pas ON pas.no_rkm_medis = r.no_rkm_medis
+                  LEFT JOIN dokter d1 ON d1.kd_dokter = p.kd_dokter_pengirim
+                  LEFT JOIN dokter d2 ON d2.kd_dokter = p.kd_dokter_dpjp
+                  WHERE p.id = '$id'";
+
+        $stmt = $this->db()->pdo()->query($query);
+        $data = $stmt ? $stmt->fetch(\PDO::FETCH_ASSOC) : false;
+
+        if (!$data) {
+            echo "Data tidak ditemukan!";
+            exit();
+        }
+
+        if (!empty($data['nama_dokter_pengirim_db'])) {
+            $data['nama_dokter_pengirim'] = $data['nama_dokter_pengirim_db'];
+        }
+        if (!empty($data['nama_dokter_dpjp_db'])) {
+            $data['nama_dokter_dpjp'] = $data['nama_dokter_dpjp_db'];
+        }
+
+        $bulanIndo = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        if (!empty($data['tanggal']) && $data['tanggal'] != '0000-00-00') {
+            $ts = strtotime($data['tanggal']);
+            $data['tanggal_indo'] = date('d', $ts) . ' ' . ($bulanIndo[(int)date('m', $ts)] ?? date('m', $ts)) . ' ' . date('Y', $ts);
+        } else {
+            $data['tanggal_indo'] = date('d') . ' ' . ($bulanIndo[(int)date('m')] ?? date('m')) . ' ' . date('Y');
+        }
+
+        if (!empty($data['jam'])) {
+            $data['jam_wita'] = date('H:i', strtotime($data['jam']));
+        } else {
+            $data['jam_wita'] = date('H:i');
+        }
+
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tpas = strtotime($data['tgl_lahir']);
+            $data['tgl_lahir_pasien_indo'] = date('d', $tpas) . ' ' . ($bulanIndo[(int)date('m', $tpas)] ?? date('m', $tpas)) . ' ' . date('Y', $tpas);
+        } else {
+            $data['tgl_lahir_pasien_indo'] = '-';
+        }
+
+        $rmClean = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rmPadded = str_pad($rmClean, 6, '0', STR_PAD_LEFT);
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = substr($rmPadded, $i, 1);
+        }
+
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
+            $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+            $html = $this->draw('lampiran_penundaan_kelambatan_pelayanan/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+            try {
+@ini_set('display_errors', '0');
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 12,
+                    'margin_right' => 12,
+                    'margin_top' => 10,
+                    'margin_bottom' => 10,
+                ]);
+                $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+                $mpdf->Output('Informasi_Penundaan_Kelambatan_Pelayanan_' . $data['no_rkm_medis'] . '.pdf', 'I');
+                exit();
+            } catch (\Throwable $e) {
+                error_log('mPDF Error: ' . $e->getMessage());
+            }
+        }
+
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_penundaan_kelambatan_pelayanan/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ============================================================
+    // LAMPIRAN - PERSETUJUAN UNTUK TESTING HIV
+    // ============================================================
+
+    public function anyPersetujuantestinghivmanage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $query = "SELECT h.*, r.no_rkm_medis, pas.nm_pasien, pas.nm_pasien as nama_pasien, pas.tgl_lahir, pas.jk, pas.alamat as alamat_pasien,
+                         d.nm_dokter as nama_dokter_konselor,
+                         p.nama as nama_petugas_konselor
+                  FROM lampiran_persetujuan_testing_hiv h
+                  LEFT JOIN reg_periksa r ON r.no_rawat = h.no_rawat
+                  LEFT JOIN pasien pas ON pas.no_rkm_medis = r.no_rkm_medis
+                  LEFT JOIN dokter d ON d.kd_dokter = h.kd_konselor
+                  LEFT JOIN petugas p ON p.nip = h.kd_konselor
+                  ORDER BY h.id DESC";
+
+        $stmt = $this->db()->pdo()->query($query);
+        $rows = $stmt ? $stmt->fetchAll(\PDO::FETCH_ASSOC) : [];
+
+        foreach ($rows as $k => $v) {
+            $rows[$k]['nomor'] = $k + 1;
+            $rows[$k]['nama_pasien'] = !empty($v['nama_pasien']) ? $v['nama_pasien'] : (!empty($v['nm_pasien']) ? $v['nm_pasien'] : '-');
+            $rows[$k]['no_rkm_medis'] = !empty($v['no_rkm_medis']) ? $v['no_rkm_medis'] : '-';
+            $rows[$k]['jk'] = !empty($v['jk']) ? $v['jk'] : '-';
+            if (!empty($v['nama_dokter_konselor'])) {
+                $rows[$k]['nama_konselor'] = $v['nama_dokter_konselor'];
+            } elseif (!empty($v['nama_petugas_konselor'])) {
+                $rows[$k]['nama_konselor'] = $v['nama_petugas_konselor'];
+            } else {
+                $rows[$k]['nama_konselor'] = '-';
+            }
+        }
+
+        return $this->draw('lampiran_persetujuan_testing_hiv/manage.html', ['data' => $rows, 'rows' => $rows]);
+    }
+
+    public function getPersetujuantestinghivform($id = null)
+    {
+        $data = [];
+        if ($id) {
+            $data = $this->db('lampiran_persetujuan_testing_hiv')
+                         ->where('id', $id)
+                         ->oneArray();
+            if ($data) {
+                $pasien = $this->db('reg_periksa')
+                               ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                               ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                               ->select(['pasien.nm_pasien', 'pasien.tgl_lahir', 'pasien.jk', 'pasien.alamat', 'pasien.no_ktp', 'reg_periksa.no_rkm_medis'])
+                               ->oneArray();
+                if ($pasien) {
+                    $data['nm_pasien'] = $pasien['nm_pasien'];
+                    $data['tgl_lahir_pasien'] = $pasien['tgl_lahir'];
+                    $data['jk_pasien'] = $pasien['jk'];
+                    $data['alamat_pasien'] = $pasien['alamat'];
+                    $data['no_rkm_medis'] = $pasien['no_rkm_medis'];
+                    $data['no_ktp_pasien'] = $pasien['no_ktp'];
+                }
+            }
+        } else {
+            $data = [
+                'id' => '',
+                'no_rawat' => $_GET['no_rawat'] ?? '',
+                'no_rkm_medis' => '',
+                'kode_klien' => 'VCT/' . date('Y/m') . '/' . rand(100, 999),
+                'tanggal' => date('Y-m-d'),
+                'tanggal_pelaksanaan' => date('Y-m-d'),
+                'nama_pasien' => '',
+                'kd_konselor' => '',
+                'nama_konselor' => '',
+                'status_persetujuan' => 'Setuju',
+                'catatan' => '',
+                'nm_pasien' => '',
+                'tgl_lahir_pasien' => '',
+                'jk_pasien' => '',
+                'alamat_pasien' => '',
+                'no_ktp_pasien' => ''
+            ];
+
+            if (!empty($data['no_rawat'])) {
+                $reg = $this->db('reg_periksa')
+                            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                            ->join('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
+                            ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                            ->select([
+                                'reg_periksa.no_rawat',
+                                'reg_periksa.no_rkm_medis',
+                                'reg_periksa.kd_dokter',
+                                'dokter.nm_dokter',
+                                'pasien.nm_pasien',
+                                'pasien.tgl_lahir',
+                                'pasien.jk',
+                                'pasien.alamat',
+                                'pasien.no_ktp'
+                            ])
+                            ->oneArray();
+
+                if ($reg) {
+                    $data['no_rkm_medis'] = $reg['no_rkm_medis'];
+                    $data['nm_pasien'] = $reg['nm_pasien'];
+                    $data['nama_pasien'] = $reg['nm_pasien'];
+                    $data['tgl_lahir_pasien'] = $reg['tgl_lahir'];
+                    $data['jk_pasien'] = $reg['jk'];
+                    $data['alamat_pasien'] = $reg['alamat'];
+                    $data['no_ktp_pasien'] = $reg['no_ktp'];
+                    $data['kd_konselor'] = $reg['kd_dokter'];
+                    $data['nama_konselor'] = $reg['nm_dokter'];
+                }
+            }
+        }
+
+        $dokter = $this->db('dokter')->where('status', '1')->toArray();
+        $petugas = $this->db('petugas')->where('status', '1')->toArray();
+
+        return $this->draw('lampiran_persetujuan_testing_hiv/form.html', [
+            'data' => $data,
+            'dokter' => $dokter,
+            'petugas' => $petugas
+        ]);
+    }
+
+    public function postPersetujuantestinghivsave()
+    {
+        $id = $_POST['id'] ?? null;
+        $no_rawat = $_POST['no_rawat'] ?? '';
+
+        if (empty($no_rawat)) {
+            $this->notify('failure', 'Nomor Rawat wajib diisi!');
+            redirect(url([ADMIN, 'update_bmt', 'persetujuantestinghivform']));
+        }
+
+        $nama_konselor = $_POST['nama_konselor'] ?? '';
+        if (!empty($_POST['kd_konselor'])) {
+            $doc = $this->db('dokter')->where('kd_dokter', $_POST['kd_konselor'])->oneArray();
+            if ($doc) {
+                $nama_konselor = $doc['nm_dokter'];
+            } else {
+                $pet = $this->db('petugas')->where('nip', $_POST['kd_konselor'])->oneArray();
+                if ($pet) $nama_konselor = $pet['nama'];
+            }
+        }
+
+        $payload = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $_POST['no_rkm_medis'] ?? '',
+            'kode_klien' => $_POST['kode_klien'] ?? '',
+            'tanggal' => !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d'),
+            'tanggal_pelaksanaan' => !empty($_POST['tanggal_pelaksanaan']) ? $_POST['tanggal_pelaksanaan'] : date('Y-m-d'),
+            'nama_pasien' => $_POST['nama_pasien'] ?? '',
+            'kd_konselor' => $_POST['kd_konselor'] ?? '',
+            'nama_konselor' => $nama_konselor,
+            'status_persetujuan' => $_POST['status_persetujuan'] ?? 'Setuju',
+            'catatan' => $_POST['catatan'] ?? ''
+        ];
+
+        if ($id) {
+            $this->db('lampiran_persetujuan_testing_hiv')
+                 ->where('id', $id)
+                 ->save($payload);
+            $this->notify('success', 'Data Persetujuan Untuk Testing HIV berhasil diperbarui.');
+        } else {
+            $this->db('lampiran_persetujuan_testing_hiv')
+                 ->save($payload);
+            $this->notify('success', 'Data Persetujuan Untuk Testing HIV berhasil disimpan.');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'persetujuantestinghivmanage']));
+    }
+
+    public function getPersetujuantestinghivhapus($id)
+    {
+        $this->db('lampiran_persetujuan_testing_hiv')
+             ->where('id', $id)
+             ->delete();
+        $this->notify('success', 'Data Persetujuan Untuk Testing HIV berhasil dihapus.');
+        redirect(url([ADMIN, 'update_bmt', 'persetujuantestinghivmanage']));
+    }
+
+    public function getPersetujuantestinghivcetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+        $query = "SELECT h.*, r.no_rkm_medis, pas.nm_pasien, pas.tgl_lahir, pas.jk, pas.alamat as alamat_pasien,
+                         d.nm_dokter as nama_dokter_konselor,
+                         p.nama as nama_petugas_konselor
+                  FROM lampiran_persetujuan_testing_hiv h
+                  LEFT JOIN reg_periksa r ON r.no_rawat = h.no_rawat
+                  LEFT JOIN pasien pas ON pas.no_rkm_medis = r.no_rkm_medis
+                  LEFT JOIN dokter d ON d.kd_dokter = h.kd_konselor
+                  LEFT JOIN petugas p ON p.nip = h.kd_konselor
+                  WHERE h.id = '$id'";
+
+        $stmt = $this->db()->pdo()->query($query);
+        $data = $stmt ? $stmt->fetch(\PDO::FETCH_ASSOC) : false;
+
+        if (!$data) {
+            echo "Data tidak ditemukan!";
+            exit();
+        }
+
+        if (!empty($data['nama_dokter_konselor'])) {
+            $data['nama_konselor'] = $data['nama_dokter_konselor'];
+        } elseif (!empty($data['nama_petugas_konselor'])) {
+            $data['nama_konselor'] = $data['nama_petugas_konselor'];
+        }
+
+        if (empty($data['nama_pasien']) && !empty($data['nm_pasien'])) {
+            $data['nama_pasien'] = $data['nm_pasien'];
+        }
+
+        $bulanIndo = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        if (!empty($data['tanggal']) && $data['tanggal'] != '0000-00-00') {
+            $ts = strtotime($data['tanggal']);
+            $data['tanggal_indo'] = date('d', $ts) . ' ' . ($bulanIndo[(int)date('m', $ts)] ?? date('m', $ts)) . ' ' . date('Y', $ts);
+        } else {
+            $data['tanggal_indo'] = date('d') . ' ' . ($bulanIndo[(int)date('m')] ?? date('m')) . ' ' . date('Y');
+        }
+
+        if (!empty($data['tanggal_pelaksanaan']) && $data['tanggal_pelaksanaan'] != '0000-00-00') {
+            $tp = strtotime($data['tanggal_pelaksanaan']);
+            $data['tanggal_pelaksanaan_indo'] = date('d', $tp) . ' ' . ($bulanIndo[(int)date('m', $tp)] ?? date('m', $tp)) . ' ' . date('Y', $tp);
+        } else {
+            $data['tanggal_pelaksanaan_indo'] = $data['tanggal_indo'];
+        }
+
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tpas = strtotime($data['tgl_lahir']);
+            $data['tgl_lahir_pasien_indo'] = date('d', $tpas) . ' ' . ($bulanIndo[(int)date('m', $tpas)] ?? date('m', $tpas)) . ' ' . date('Y', $tpas);
+        } else {
+            $data['tgl_lahir_pasien_indo'] = '-';
+        }
+
+        $rmClean = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rmPadded = str_pad($rmClean, 6, '0', STR_PAD_LEFT);
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = substr($rmPadded, $i, 1);
+        }
+
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
+            $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+            $html = $this->draw('lampiran_persetujuan_testing_hiv/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+            try {
+@ini_set('display_errors', '0');
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 15,
+                    'margin_right' => 15,
+                    'margin_top' => 12,
+                    'margin_bottom' => 12,
+                ]);
+                $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+                $mpdf->Output('Persetujuan_Testing_HIV_' . $data['no_rkm_medis'] . '.pdf', 'I');
+                exit();
+            } catch (\Throwable $e) {
+                error_log('mPDF Error: ' . $e->getMessage());
+            }
+        }
+
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_persetujuan_testing_hiv/cetak.html', ['data' => $data, 'is_mpdf' => false]);
+        exit();
+    }
+
+    // ============================================================
+    // LAMPIRAN - VCT PRA TESTING HIV
+    // ============================================================
+
+    public function anyVctpratestinghivmanage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $query = "SELECT v.*, r.no_rkm_medis, pas.nm_pasien, pas.nm_pasien as nama_pasien, pas.tgl_lahir, pas.jk, pas.alamat as alamat_pasien,
+                         d.nm_dokter as nama_dokter_konselor,
+                         p.nama as nama_petugas_konselor
+                  FROM lampiran_vct_pra_testing_hiv v
+                  LEFT JOIN reg_periksa r ON r.no_rawat = v.no_rawat
+                  LEFT JOIN pasien pas ON pas.no_rkm_medis = r.no_rkm_medis
+                  LEFT JOIN dokter d ON d.kd_dokter = v.kd_konselor
+                  LEFT JOIN petugas p ON p.nip = v.kd_konselor
+                  ORDER BY v.id DESC";
+
+        $stmt = $this->db()->pdo()->query($query);
+        $rows = $stmt ? $stmt->fetchAll(\PDO::FETCH_ASSOC) : [];
+
+        foreach ($rows as $k => $v) {
+            $rows[$k]['nomor'] = $k + 1;
+            $rows[$k]['nama_pasien'] = !empty($v['nama_pasien']) ? $v['nama_pasien'] : (!empty($v['nm_pasien']) ? $v['nm_pasien'] : '-');
+            $rows[$k]['no_rkm_medis'] = !empty($v['no_rkm_medis']) ? $v['no_rkm_medis'] : '-';
+            $rows[$k]['jk'] = !empty($v['jk']) ? $v['jk'] : '-';
+            if (!empty($v['nama_dokter_konselor'])) {
+                $rows[$k]['nama_konselor'] = $v['nama_dokter_konselor'];
+            } elseif (!empty($v['nama_petugas_konselor'])) {
+                $rows[$k]['nama_konselor'] = $v['nama_petugas_konselor'];
+            } else {
+                $rows[$k]['nama_konselor'] = '-';
+            }
+        }
+
+        return $this->draw('lampiran_vct_pra_testing_hiv/manage.html', ['data' => $rows, 'rows' => $rows]);
+    }
+
+    public function getVctpratestinghivform($id = null)
+    {
+        $data = [];
+        if ($id) {
+            $data = $this->db('lampiran_vct_pra_testing_hiv')
+                         ->where('id', $id)
+                         ->oneArray();
+            if ($data) {
+                $pasien = $this->db('reg_periksa')
+                               ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                               ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                               ->select(['pasien.nm_pasien', 'pasien.tgl_lahir', 'pasien.jk', 'pasien.alamat', 'pasien.no_ktp', 'reg_periksa.no_rkm_medis'])
+                               ->oneArray();
+                if ($pasien) {
+                    $data['nm_pasien'] = $pasien['nm_pasien'];
+                    $data['nama_pasien'] = $pasien['nm_pasien'];
+                    $data['tgl_lahir_pasien'] = $pasien['tgl_lahir'];
+                    $data['jk_pasien'] = $pasien['jk'];
+                    $data['alamat_pasien'] = $pasien['alamat'];
+                    $data['no_rkm_medis'] = $pasien['no_rkm_medis'];
+                    $data['no_ktp_pasien'] = $pasien['no_ktp'];
+                }
+                $data['detail_pajanan_arr'] = !empty($data['detail_pajanan']) ? json_decode($data['detail_pajanan'], true) : [];
+                $data['intervensi_konselor_arr'] = !empty($data['intervensi_konselor']) ? json_decode($data['intervensi_konselor'], true) : [];
+            }
+        } else {
+            $data = [
+                'id' => '',
+                'no_rawat' => $_GET['no_rawat'] ?? '',
+                'no_rkm_medis' => '',
+                'kode_klien' => 'VCT/' . date('Y/m') . '/' . rand(100, 999),
+                'tanggal' => date('Y-m-d'),
+                'tanggal_tes_klien' => date('Y-m-d'),
+                'tempat_tes' => 'RSGM Gusti Hasan Aman',
+                'jenis_klien' => '1',
+                'status_hubungan' => '2',
+                'jumlah_anak' => '8',
+                'umur_klien' => '3',
+                'pendidikan' => '4',
+                'pekerjaan' => '1',
+                'pekerjaan_lain' => '',
+                'pasangan_tetap' => '1',
+                'status_pasangan' => '3',
+                'tgl_tes_terakhir' => '',
+                'detail_pajanan' => '',
+                'detail_pajanan_arr' => [],
+                'tes_ulang_window' => 'TIDAK',
+                'tgl_tes_ulang' => '',
+                'berisiko_orang_hiv' => '2',
+                'klien_hamil' => '2',
+                'trimester_kehamilan' => '',
+                'kb_teratur' => '1',
+                'riwayat_ims' => '2',
+                'gejala_tb' => '2',
+                'indikasi_bunuh_diri' => '2',
+                'riwayat_melukai_diri' => '2',
+                'mencederai_orang_lain' => '2',
+                'kekerasan_pasangan' => '2',
+                'dukungan_personal' => '1',
+                'catatan_penyesuaian' => '',
+                'intervensi_konselor' => '',
+                'intervensi_konselor_arr' => [],
+                'catatan_lainnya' => '',
+                'hasil_pemeriksaan' => 'Antibody HIV negatif',
+                'tanggal_mengetahui' => date('Y-m-d'),
+                'kd_konselor' => '',
+                'nama_konselor' => '',
+                'nm_pasien' => '',
+                'tgl_lahir_pasien' => '',
+                'jk_pasien' => '',
+                'alamat_pasien' => '',
+                'no_ktp_pasien' => ''
+            ];
+
+            if (!empty($data['no_rawat'])) {
+                $reg = $this->db('reg_periksa')
+                            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                            ->join('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
+                            ->where('reg_periksa.no_rawat', $data['no_rawat'])
+                            ->select([
+                                'reg_periksa.no_rawat',
+                                'reg_periksa.no_rkm_medis',
+                                'reg_periksa.kd_dokter',
+                                'dokter.nm_dokter',
+                                'pasien.nm_pasien',
+                                'pasien.tgl_lahir',
+                                'pasien.jk',
+                                'pasien.alamat',
+                                'pasien.no_ktp'
+                            ])
+                            ->oneArray();
+
+                if ($reg) {
+                    $data['no_rkm_medis'] = $reg['no_rkm_medis'];
+                    $data['nm_pasien'] = $reg['nm_pasien'];
+                    $data['tgl_lahir_pasien'] = $reg['tgl_lahir'];
+                    $data['jk_pasien'] = $reg['jk'];
+                    $data['alamat_pasien'] = $reg['alamat'];
+                    $data['no_ktp_pasien'] = $reg['no_ktp'];
+                    $data['kd_konselor'] = $reg['kd_dokter'];
+                    $data['nama_konselor'] = $reg['nm_dokter'];
+                    $data['jenis_klien'] = ($reg['jk'] == 'P' || $reg['jk'] == 'Perempuan') ? '2' : '1';
+                }
+            }
+        }
+
+        $dokter = $this->db('dokter')->where('status', '1')->toArray();
+        $petugas = $this->db('petugas')->where('status', '1')->toArray();
+
+        return $this->draw('lampiran_vct_pra_testing_hiv/form.html', [
+            'data' => $data,
+            'dokter' => $dokter,
+            'petugas' => $petugas
+        ]);
+    }
+
+    public function postVctpratestinghivsave()
+    {
+        $id = $_POST['id'] ?? null;
+        $no_rawat = $_POST['no_rawat'] ?? '';
+
+        if (empty($no_rawat)) {
+            $this->notify('failure', 'Nomor Rawat wajib diisi!');
+            redirect(url([ADMIN, 'update_bmt', 'vctpratestinghivform']));
+        }
+
+        $nama_konselor = $_POST['nama_konselor'] ?? '';
+        if (!empty($_POST['kd_konselor'])) {
+            $doc = $this->db('dokter')->where('kd_dokter', $_POST['kd_konselor'])->oneArray();
+            if ($doc) {
+                $nama_konselor = $doc['nm_dokter'];
+            } else {
+                $pet = $this->db('petugas')->where('nip', $_POST['kd_konselor'])->oneArray();
+                if ($pet) $nama_konselor = $pet['nama'];
+            }
+        }
+
+        $detail_pajanan = isset($_POST['pajanan']) && is_array($_POST['pajanan']) ? json_encode($_POST['pajanan']) : ($_POST['detail_pajanan'] ?? '');
+        $intervensi_konselor = isset($_POST['intervensi']) && is_array($_POST['intervensi']) ? json_encode($_POST['intervensi']) : ($_POST['intervensi_konselor'] ?? '');
+
+        $payload = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $_POST['no_rkm_medis'] ?? '',
+            'kode_klien' => $_POST['kode_klien'] ?? '',
+            'tanggal' => !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d'),
+            'tanggal_tes_klien' => !empty($_POST['tanggal_tes_klien']) ? $_POST['tanggal_tes_klien'] : date('Y-m-d'),
+            'tempat_tes' => $_POST['tempat_tes'] ?? 'RSGM Gusti Hasan Aman',
+            'jenis_klien' => $_POST['jenis_klien'] ?? '1',
+            'status_hubungan' => $_POST['status_hubungan'] ?? '2',
+            'jumlah_anak' => $_POST['jumlah_anak'] ?? '8',
+            'umur_klien' => $_POST['umur_klien'] ?? '3',
+            'pendidikan' => $_POST['pendidikan'] ?? '4',
+            'pekerjaan' => $_POST['pekerjaan'] ?? '1',
+            'pekerjaan_lain' => $_POST['pekerjaan_lain'] ?? '',
+            'pasangan_tetap' => $_POST['pasangan_tetap'] ?? '1',
+            'status_pasangan' => $_POST['status_pasangan'] ?? '3',
+            'tgl_tes_terakhir' => !empty($_POST['tgl_tes_terakhir']) ? $_POST['tgl_tes_terakhir'] : null,
+            'detail_pajanan' => $detail_pajanan,
+            'tes_ulang_window' => $_POST['tes_ulang_window'] ?? 'TIDAK',
+            'tgl_tes_ulang' => !empty($_POST['tgl_tes_ulang']) ? $_POST['tgl_tes_ulang'] : null,
+            'berisiko_orang_hiv' => $_POST['berisiko_orang_hiv'] ?? '2',
+            'klien_hamil' => $_POST['klien_hamil'] ?? '2',
+            'trimester_kehamilan' => $_POST['trimester_kehamilan'] ?? '',
+            'kb_teratur' => $_POST['kb_teratur'] ?? '1',
+            'riwayat_ims' => $_POST['riwayat_ims'] ?? '2',
+            'gejala_tb' => $_POST['gejala_tb'] ?? '2',
+            'indikasi_bunuh_diri' => $_POST['indikasi_bunuh_diri'] ?? '2',
+            'riwayat_melukai_diri' => $_POST['riwayat_melukai_diri'] ?? '2',
+            'mencederai_orang_lain' => $_POST['mencederai_orang_lain'] ?? '2',
+            'kekerasan_pasangan' => $_POST['kekerasan_pasangan'] ?? '2',
+            'dukungan_personal' => $_POST['dukungan_personal'] ?? '1',
+            'catatan_penyesuaian' => $_POST['catatan_penyesuaian'] ?? '',
+            'intervensi_konselor' => $intervensi_konselor,
+            'catatan_lainnya' => $_POST['catatan_lainnya'] ?? '',
+            'hasil_pemeriksaan' => $_POST['hasil_pemeriksaan'] ?? 'Antibody HIV negatif',
+            'tanggal_mengetahui' => !empty($_POST['tanggal_mengetahui']) ? $_POST['tanggal_mengetahui'] : date('Y-m-d'),
+            'kd_konselor' => $_POST['kd_konselor'] ?? '',
+            'nama_konselor' => $nama_konselor
+        ];
+
+        if ($id) {
+            $this->db('lampiran_vct_pra_testing_hiv')
+                 ->where('id', $id)
+                 ->save($payload);
+            $this->notify('success', 'Data VCT Pra Testing HIV berhasil diperbarui.');
+        } else {
+            $this->db('lampiran_vct_pra_testing_hiv')
+                 ->save($payload);
+            $this->notify('success', 'Data VCT Pra Testing HIV berhasil disimpan.');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'vctpratestinghivmanage']));
+    }
+
+    public function getVctpratestinghivhapus($id)
+    {
+        $this->db('lampiran_vct_pra_testing_hiv')
+             ->where('id', $id)
+             ->delete();
+        $this->notify('success', 'Data VCT Pra Testing HIV berhasil dihapus.');
+        redirect(url([ADMIN, 'update_bmt', 'vctpratestinghivmanage']));
+    }
+
+    public function getVctpratestinghivcetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+        $query = "SELECT v.*, r.no_rkm_medis, pas.nm_pasien, pas.tgl_lahir, pas.jk, pas.alamat as alamat_pasien,
+                         d.nm_dokter as nama_dokter_konselor,
+                         p.nama as nama_petugas_konselor
+                  FROM lampiran_vct_pra_testing_hiv v
+                  LEFT JOIN reg_periksa r ON r.no_rawat = v.no_rawat
+                  LEFT JOIN pasien pas ON pas.no_rkm_medis = r.no_rkm_medis
+                  LEFT JOIN dokter d ON d.kd_dokter = v.kd_konselor
+                  LEFT JOIN petugas p ON p.nip = v.kd_konselor
+                  WHERE v.id = '$id'";
+
+        $stmt = $this->db()->pdo()->query($query);
+        $data = $stmt ? $stmt->fetch(\PDO::FETCH_ASSOC) : false;
+
+        if (!$data) {
+            echo "Data tidak ditemukan!";
+            exit();
+        }
+
+        if (!empty($data['nama_dokter_konselor'])) {
+            $data['nama_konselor'] = $data['nama_dokter_konselor'];
+        } elseif (!empty($data['nama_petugas_konselor'])) {
+            $data['nama_konselor'] = $data['nama_petugas_konselor'];
+        }
+
+        if (empty($data['nama_pasien']) && !empty($data['nm_pasien'])) {
+            $data['nama_pasien'] = $data['nm_pasien'];
+        }
+
+        $bulanIndo = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        // Format tanggal indo
+        $formatDateIndo = function($tgl) use ($bulanIndo) {
+            if (!empty($tgl) && $tgl != '0000-00-00') {
+                $ts = strtotime($tgl);
+                return date('d', $ts) . ' ' . ($bulanIndo[(int)date('m', $ts)] ?? date('m', $ts)) . ' ' . date('Y', $ts);
+            }
+            return '-';
+        };
+
+        // Format tanggal slash (DD / MM / YYYY)
+        $formatDateSlash = function($tgl) {
+            if (!empty($tgl) && $tgl != '0000-00-00') {
+                $ts = strtotime($tgl);
+                return date('d / m / Y', $ts);
+            }
+            return '____ / ____ / ________';
+        };
+
+        $data['tanggal_indo'] = $formatDateIndo($data['tanggal']);
+        $data['tanggal_slash'] = $formatDateSlash($data['tanggal']);
+        $data['tanggal_tes_klien_slash'] = $formatDateSlash($data['tanggal_tes_klien']);
+        $data['tgl_tes_terakhir_slash'] = $formatDateSlash($data['tgl_tes_terakhir']);
+        $data['tgl_tes_ulang_slash'] = $formatDateSlash($data['tgl_tes_ulang']);
+        $data['tanggal_mengetahui_indo'] = $formatDateIndo($data['tanggal_mengetahui']);
+        $data['tgl_lahir_pasien_indo'] = $formatDateIndo($data['tgl_lahir']);
+
+        $rmClean = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rmPadded = str_pad($rmClean, 6, '0', STR_PAD_LEFT);
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = substr($rmPadded, $i, 1);
+        }
+
+        // Pajanan items list
+        $defaultPajanan = [
+            'okupasional' => ['nama' => 'Pajanan Okupasional', 'kode' => '2', 'tgl' => '', 'window' => '2'],
+            'tatto' => ['nama' => 'Tatto, goresan', 'kode' => '2', 'tgl' => '', 'window' => '2'],
+            'produk_darah' => ['nama' => 'Produk Darah', 'kode' => '2', 'tgl' => '', 'window' => '2'],
+            'seks_vaginal' => ['nama' => 'Hubungan Seks Vaginal', 'kode' => '2', 'tgl' => '', 'window' => '2'],
+            'oral_seks' => ['nama' => 'Oral Seks', 'kode' => '2', 'tgl' => '', 'window' => '2'],
+            'anal_seks' => ['nama' => 'Anal Seks', 'kode' => '2', 'tgl' => '', 'window' => '2'],
+            'kekerasan_seksual' => ['nama' => 'Riwayat kekerasan Seksual', 'kode' => '2', 'tgl' => '', 'window' => '2'],
+            'peralatan_suntik' => ['nama' => 'Bergantian peralatan suntik', 'kode' => '2', 'tgl' => '', 'window' => '2']
+        ];
+        $parsedPajanan = !empty($data['detail_pajanan']) ? json_decode($data['detail_pajanan'], true) : [];
+        if (!is_array($parsedPajanan)) $parsedPajanan = [];
+
+        $pajananRows = [];
+        foreach ($defaultPajanan as $k => $def) {
+            $item = $parsedPajanan[$k] ?? [];
+            $kodeVal = isset($item['kode']) ? $item['kode'] : $def['kode'];
+            $tglVal = !empty($item['tgl']) ? $formatDateSlash($item['tgl']) : '____ / ____ / ________';
+            $winVal = isset($item['window']) ? $item['window'] : $def['window'];
+
+            $pajananRows[] = [
+                'key' => $k,
+                'nama' => $def['nama'],
+                'kode' => $kodeVal,
+                'tgl' => $tglVal,
+                'window' => $winVal
+            ];
+        }
+        $data['pajanan_rows'] = $pajananRows;
+
+        // Intervensi konselor list (14 item)
+        $defaultIntervensi = [
+            'hal2_kerahasiaan' => 'Kerahasiaandan pribadi yang saudara tawarkan pada klien',
+            'hal2_dasar_hiv' => 'Informasi dasar tentang HIV dan penularannya',
+            'hal2_potensi_keuntungan' => 'Informasi dasar potensi keuntungan dan kesulitan tes ( hukum dsb)',
+            'hal2_penilaian_risiko' => 'Penilaian risiko personal',
+            'hal2_eksplorasi_hambatan' => 'Eksplorasi dan pemecahan problem hambatan pengurangan risiko',
+            'hal2_kondom' => 'Penggunaan kondom, termasuk demonstrasi penggunaan kondom',
+            'hal2_kesiapan_status' => 'Kesiapan klien mempelajari status HIV',
+            'hal3_eksplorasi_positif' => 'Eksplorasi akan apa yang dilakukan klien ketika hasil tes HIV (+), dan penyesuaian diri yang dimungkinkan ketika hasil tes HIV (+). Termasuk didalamnya penilaian kemungkinan bunuh diri',
+            'hal3_pemikiran_reproduksi' => 'Pemikiran klien akan perencanaan reproduksi dan keluarga berencana',
+            'hal3_dukungan_keluarga' => 'Eksplorasi kemungkinan dukungan keluarga dan kawan-kawan',
+            'hal3_penilaian_risiko2' => 'Penilaian risiko personal',
+            'hal3_isu_penting' => 'Isu penting yang dibutuhkan klien lainnya',
+            'hal3_info_prosedur' => 'Informasi dasar tentang tes dan prosedur pemeriksaan sampai didapat hasil',
+            'hal3_informed_consent' => 'Informed consent untuk melakukan tes HIV'
+        ];
+        $parsedIntervensi = !empty($data['intervensi_konselor']) ? json_decode($data['intervensi_konselor'], true) : [];
+        if (!is_array($parsedIntervensi)) $parsedIntervensi = [];
+
+        $data['intervensi'] = [];
+        foreach ($defaultIntervensi as $k => $label) {
+            $data['intervensi'][$k] = !empty($parsedIntervensi[$k]) ? true : false;
+        }
+
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
+            $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+            $html = $this->draw('lampiran_vct_pra_testing_hiv/cetak.html', ['data' => $data, 'is_mpdf' => true]);
+            try {
+@ini_set('display_errors', '0');
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 12,
+                    'margin_right' => 12,
+                    'margin_top' => 10,
+                    'margin_bottom' => 10,
+                ]);
+                $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+                $mpdf->Output('VCT_Pra_Testing_HIV_' . $data['no_rkm_medis'] . '.pdf', 'I');
+                exit();
+            } catch (\Throwable $e) {
+                error_log('mPDF Error: ' . $e->getMessage());
+            }
+        }
+
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_vct_pra_testing_hiv/cetak.html', ['data' => $data, 'is_mpdf' => false]);
         exit();
     }
 
@@ -6361,6 +7524,9 @@ class Admin extends AdminModule
                 'LAMPIRAN - PENILAIAN KEJADIAN INFEKSI LUKA OPERASI (ILO)' => 'penilaianilomanage',
                 'LAMPIRAN - PENILAIAN KEJADIAN INFEKSI SALURAN KEMIH (ISK)' => 'penilaianiskmanage',
                 'LAMPIRAN - SURAT PERNYATAAN BERSEDIA MENUNGGU' => 'bersediamenunggumanage',
+                'LAMPIRAN - INFORMASI PENUNDAAN DAN KELAMBATAN PELAYANAN' => 'penundaankelambatanmanage',
+                'LAMPIRAN - PERSETUJUAN UNTUK TESTING HIV' => 'persetujuantestinghivmanage',
+                'LAMPIRAN - VCT PRA TESTING HIV' => 'vctpratestinghivmanage',
             ]
         ];
     }
@@ -6403,7 +7569,7 @@ class Admin extends AdminModule
                     $reg = $this->db('reg_periksa')
                         ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                         ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                        ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                        ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
                         ->oneArray();
                     if ($reg) {
                         $data['nama_pasien']   = $reg['nm_pasien'] ?? '';
@@ -6549,7 +7715,7 @@ class Admin extends AdminModule
                 $reg = $this->db('reg_periksa')
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
                     ->oneArray();
                 if ($reg) {
                     if (empty($data['no_rkm_medis']))  $data['no_rkm_medis']  = $reg['no_rkm_medis'] ?? '';
@@ -6573,7 +7739,20 @@ class Admin extends AdminModule
                 $data['tanggal_lahir_indo'] = '';
             }
 
-            echo $this->draw('edukasipasienter/cetak.html', ['data' => $data, 'detail' => $detail]);
+            $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+            $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+            $html = $this->draw('edukasipasienter/cetak.html', ['data' => $data, 'detail' => $detail, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+            if ($is_mpdf) {
+@ini_set('display_errors', '0');
+                $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+                $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+                $mpdf->Output('EDUKASI_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+                exit();
+            }
+            echo $html;
             exit();
         } catch (\Exception $e) {
             file_put_contents(BASE_DIR . '/tmp/edukasi_error_cetak.log', $e->getMessage() . "\n" . $e->getTraceAsString());
@@ -6594,7 +7773,7 @@ class Admin extends AdminModule
         $asesmen = $this->db('asesmen_keperawatan_gigi_ugd')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = asesmen_keperawatan_gigi_ugd.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('asesmen_keperawatan_gigi_ugd.*, pasien.nm_pasien, reg_periksa.no_rkm_medis')
+            ->select('asesmen_keperawatan_gigi_ugd.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, reg_periksa.no_rkm_medis')
             ->toArray();
 
         return $this->draw('akgmu/manage.html', ['asesmen' => $asesmen]);
@@ -6610,7 +7789,7 @@ class Admin extends AdminModule
             $reg = $this->db('reg_periksa')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $no_rawat)
-                ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
                 ->oneArray();
 
             if ($reg) {
@@ -6643,7 +7822,7 @@ class Admin extends AdminModule
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
                 ->desc('reg_periksa.tgl_registrasi')
                 ->desc('reg_periksa.jam_reg')
                 ->oneArray();
@@ -6687,7 +7866,7 @@ class Admin extends AdminModule
         $data = $this->db('asesmen_keperawatan_gigi_ugd')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = asesmen_keperawatan_gigi_ugd.no_rawat')
             ->leftJoin('dokter', 'dokter.kd_dokter = asesmen_keperawatan_gigi_ugd.nip_dpjp')
-            ->leftJoin('petugas', 'petugas.nip = asesmen_keperawatan_gigi_ugd.nip_perawat')
+            ->leftJoin('petugas', 'petugas.nip = asesmen_keperawatan_gigi_ugd.nip')
             ->where('asesmen_keperawatan_gigi_ugd.no_rawat', $no_rawat)
             ->select('asesmen_keperawatan_gigi_ugd.*, reg_periksa.no_rkm_medis, dokter.nm_dokter, petugas.nama AS nm_perawat')
             ->oneArray();
@@ -6709,7 +7888,20 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('akgmu/cetak.html', ['data' => $data]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('akgmu/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_GD4_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
         exit();
     }
 
@@ -6734,7 +7926,7 @@ class Admin extends AdminModule
         $data = $this->db('ans1_tindakan_pembiusan')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans1_tindakan_pembiusan.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ans1_tindakan_pembiusan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ans1_tindakan_pembiusan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->toArray();
 
         return $this->draw('ans1/manage.html', ['data' => $data]);
@@ -6760,7 +7952,7 @@ class Admin extends AdminModule
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -6819,7 +8011,7 @@ class Admin extends AdminModule
                 $reg = $this->db('reg_periksa')
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
                     ->oneArray();
                 if ($reg) {
                     $data['nm_pasien']   = $reg['nm_pasien'] ?? '';
@@ -6939,7 +8131,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans1_tindakan_pembiusan.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ans1_tindakan_pembiusan.id', $id)
-            ->select('ans1_tindakan_pembiusan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('ans1_tindakan_pembiusan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
 
         if (!$data) {
@@ -6964,7 +8156,23 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('ans1/cetak.html', ['data' => $data]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ans1/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+            @ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+            if (ob_get_length()) {
+                ob_clean();
+            }
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('ANS1_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
         exit();
     }
 
@@ -6988,7 +8196,7 @@ class Admin extends AdminModule
         $data = $this->db('ans2_persetujuan_pembiusan')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans2_persetujuan_pembiusan.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ans2_persetujuan_pembiusan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ans2_persetujuan_pembiusan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->toArray();
 
         return $this->draw('ans2/manage.html', ['data' => $data]);
@@ -7012,7 +8220,7 @@ class Admin extends AdminModule
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat, pasien.umur')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat, pasien.umur')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -7070,7 +8278,7 @@ class Admin extends AdminModule
                 $reg = $this->db('reg_periksa')
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
                     ->oneArray();
 
                 if ($reg) {
@@ -7137,7 +8345,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans2_persetujuan_pembiusan.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ans2_persetujuan_pembiusan.id', $id)
-            ->select('ans2_persetujuan_pembiusan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('ans2_persetujuan_pembiusan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
 
         if (!$data) {
@@ -7176,7 +8384,20 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('ans2/cetak.html', ['data' => $data]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ans2/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('ANS2_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
         exit();
     }
 
@@ -7200,7 +8421,7 @@ class Admin extends AdminModule
         $data = $this->db('ans3_assesmen_prasedasi_anestesi')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans3_assesmen_prasedasi_anestesi.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ans3_assesmen_prasedasi_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ans3_assesmen_prasedasi_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->toArray();
 
         return $this->draw('ans3/manage.html', ['data' => $data]);
@@ -7223,7 +8444,7 @@ class Admin extends AdminModule
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -7280,7 +8501,7 @@ class Admin extends AdminModule
                 $reg = $this->db('reg_periksa')
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
                     ->oneArray();
 
                 if ($reg) {
@@ -7483,7 +8704,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans3_assesmen_prasedasi_anestesi.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ans3_assesmen_prasedasi_anestesi.id', $id)
-            ->select('ans3_assesmen_prasedasi_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->select('ans3_assesmen_prasedasi_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
             ->oneArray();
 
         if (!$data) {
@@ -7513,7 +8734,20 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('ans3/cetak.html', ['data' => $data]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ans3/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('ANS3_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
         exit();
     }
 
@@ -7538,7 +8772,7 @@ class Admin extends AdminModule
         $data = $this->db('ans4_rencana_anestesi')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans4_rencana_anestesi.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ans4_rencana_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ans4_rencana_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->toArray();
 
         return $this->draw('ans4/manage.html', ['data' => $data]);
@@ -7561,7 +8795,7 @@ class Admin extends AdminModule
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -7597,7 +8831,7 @@ class Admin extends AdminModule
                 $reg = $this->db('reg_periksa')
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
                     ->oneArray();
 
                 if ($reg) {
@@ -7682,7 +8916,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans4_rencana_anestesi.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ans4_rencana_anestesi.id', $id)
-            ->select('ans4_rencana_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->select('ans4_rencana_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
             ->oneArray();
 
         if (!$data) {
@@ -7714,7 +8948,20 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('ans4/cetak.html', ['data' => $data, 'detail' => $detail]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ans4/cetak.html', ['data' => $data, 'detail' => $detail, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('ANS4_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
         exit();
     }
     public function getAns6manage()
@@ -7726,7 +8973,7 @@ class Admin extends AdminModule
         $query = $this->db('ans6_status_post_anestesi')
             ->join('reg_periksa', 'reg_periksa.no_rawat = ans6_status_post_anestesi.no_rawat')
             ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ans6_status_post_anestesi.*, pasien.nm_pasien')
+            ->select('ans6_status_post_anestesi.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('ans6_status_post_anestesi.id')
             ->toArray();
             
@@ -7744,7 +8991,7 @@ class Admin extends AdminModule
             $patient = $this->db('reg_periksa')
                 ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
-                ->select('pasien.nm_pasien')
+                ->select('pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
                 ->oneArray();
                 
             header('Content-Type: application/json');
@@ -7761,7 +9008,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans6_status_post_anestesi.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('ans6_status_post_anestesi.id', $id)
-                ->select('ans6_status_post_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+                ->select('ans6_status_post_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur')
                 ->oneArray();
                 
             $detail = $this->db('ans6_protokol_nyeri_detail')->where('id_ans6', $id)->toArray();
@@ -7837,7 +9084,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans6_status_post_anestesi.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ans6_status_post_anestesi.id', $id)
-            ->select('ans6_status_post_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->select('ans6_status_post_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
             ->oneArray();
 
         if (!$data) {
@@ -7847,7 +9094,20 @@ class Admin extends AdminModule
 
         $detail = $this->db('ans6_protokol_nyeri_detail')->where('id_ans6', $id)->toArray();
 
-        echo $this->draw('ans6/cetak.html', ['data' => $data, 'detail' => $detail]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ans6/cetak.html', ['data' => $data, 'detail' => $detail, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('ANS6_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
         exit();
     }
     public function getAns7manage()
@@ -7859,7 +9119,7 @@ class Admin extends AdminModule
         $query = $this->db('ans7_serah_terima')
             ->join('reg_periksa', 'reg_periksa.no_rawat = ans7_serah_terima.no_rawat')
             ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ans7_serah_terima.*, pasien.nm_pasien')
+            ->select('ans7_serah_terima.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('ans7_serah_terima.id')
             ->toArray();
             
@@ -7875,7 +9135,7 @@ class Admin extends AdminModule
             $patient = $this->db('reg_periksa')
                 ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
-                ->select('pasien.nm_pasien')
+                ->select('pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
                 ->oneArray();
                 
             header('Content-Type: application/json');
@@ -7892,7 +9152,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans7_serah_terima.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('ans7_serah_terima.id', $id)
-                ->select('ans7_serah_terima.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+                ->select('ans7_serah_terima.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur')
                 ->oneArray();
         }
 
@@ -7939,7 +9199,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans7_serah_terima.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ans7_serah_terima.id', $id)
-            ->select('ans7_serah_terima.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->select('ans7_serah_terima.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
             ->oneArray();
 
         if (!$data) {
@@ -7947,7 +9207,20 @@ class Admin extends AdminModule
             exit();
         }
 
-        echo $this->draw('ans7/cetak.html', ['data' => $data]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ans7/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('ANS7_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
         exit();
     }
     public function getBm1manage()
@@ -7959,7 +9232,7 @@ class Admin extends AdminModule
         $query = $this->db('bm1_informasi_tindakan')
             ->join('reg_periksa', 'reg_periksa.no_rawat = bm1_informasi_tindakan.no_rawat')
             ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('bm1_informasi_tindakan.*, pasien.nm_pasien')
+            ->select('bm1_informasi_tindakan.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('bm1_informasi_tindakan.id')
             ->toArray();
             
@@ -7975,7 +9248,7 @@ class Admin extends AdminModule
             $patient = $this->db('reg_periksa')
                 ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
-                ->select('pasien.nm_pasien')
+                ->select('pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
                 ->oneArray();
                 
             header('Content-Type: application/json');
@@ -7992,7 +9265,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm1_informasi_tindakan.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('bm1_informasi_tindakan.id', $id)
-                ->select('bm1_informasi_tindakan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+                ->select('bm1_informasi_tindakan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur')
                 ->oneArray();
         }
 
@@ -8039,7 +9312,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm1_informasi_tindakan.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('bm1_informasi_tindakan.id', $id)
-            ->select('bm1_informasi_tindakan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->select('bm1_informasi_tindakan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
             ->oneArray();
 
         if (!$data) {
@@ -8068,7 +9341,20 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('bm1/cetak.html', ['data' => $data]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('bm1/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('BM1_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
         exit();
     }
     public function getBm2manage()
@@ -8080,7 +9366,7 @@ class Admin extends AdminModule
         $query = $this->db('bm2_persetujuan_tindakan')
             ->join('reg_periksa', 'reg_periksa.no_rawat = bm2_persetujuan_tindakan.no_rawat')
             ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('bm2_persetujuan_tindakan.*, pasien.nm_pasien')
+            ->select('bm2_persetujuan_tindakan.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('bm2_persetujuan_tindakan.id')
             ->toArray();
             
@@ -8113,7 +9399,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm2_persetujuan_tindakan.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('bm2_persetujuan_tindakan.id', $id)
-                ->select('bm2_persetujuan_tindakan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+                ->select('bm2_persetujuan_tindakan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur')
                 ->oneArray();
         }
 
@@ -8160,7 +9446,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm2_persetujuan_tindakan.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('bm2_persetujuan_tindakan.id', $id)
-            ->select('bm2_persetujuan_tindakan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->select('bm2_persetujuan_tindakan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
             ->oneArray();
 
         if (!$data) {
@@ -8189,7 +9475,20 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('bm2/cetak.html', ['data' => $data]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('bm2/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('BM2_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
         exit();
     }
     public function getBm4manage()
@@ -8201,7 +9500,7 @@ class Admin extends AdminModule
         $query = $this->db('bm4_laporan_pembedahan')
             ->join('reg_periksa', 'reg_periksa.no_rawat = bm4_laporan_pembedahan.no_rawat')
             ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('bm4_laporan_pembedahan.*, pasien.nm_pasien')
+            ->select('bm4_laporan_pembedahan.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('bm4_laporan_pembedahan.id')
             ->toArray();
             
@@ -8234,7 +9533,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm4_laporan_pembedahan.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('bm4_laporan_pembedahan.id', $id)
-                ->select('bm4_laporan_pembedahan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+                ->select('bm4_laporan_pembedahan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur')
                 ->oneArray();
         }
 
@@ -8281,7 +9580,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm4_laporan_pembedahan.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('bm4_laporan_pembedahan.id', $id)
-            ->select('bm4_laporan_pembedahan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->select('bm4_laporan_pembedahan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
             ->oneArray();
 
         if (!$data) {
@@ -8310,7 +9609,20 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('bm4/cetak.html', ['data' => $data]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('bm4/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('BM4_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
         exit();
     }
     public function getBmi1manage()
@@ -8322,7 +9634,7 @@ class Admin extends AdminModule
         $query = $this->db('bmi1_persetujuan_anestesi_lokal')
             ->join('reg_periksa', 'reg_periksa.no_rawat = bmi1_persetujuan_anestesi_lokal.no_rawat')
             ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('bmi1_persetujuan_anestesi_lokal.*, pasien.nm_pasien')
+            ->select('bmi1_persetujuan_anestesi_lokal.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('bmi1_persetujuan_anestesi_lokal.id')
             ->toArray();
             
@@ -8355,7 +9667,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bmi1_persetujuan_anestesi_lokal.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('bmi1_persetujuan_anestesi_lokal.id', $id)
-                ->select('bmi1_persetujuan_anestesi_lokal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk as jk_db, pasien.umur as umur_db')
+                ->select('bmi1_persetujuan_anestesi_lokal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk as jk_db, pasien.umur as umur_db')
                 ->oneArray();
         }
 
@@ -8402,7 +9714,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bmi1_persetujuan_anestesi_lokal.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('bmi1_persetujuan_anestesi_lokal.id', $id)
-            ->select('bmi1_persetujuan_anestesi_lokal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk as jk_db, pasien.tgl_lahir, pasien.umur as umur_db')
+            ->select('bmi1_persetujuan_anestesi_lokal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk as jk_db, pasien.tgl_lahir, pasien.umur as umur_db')
             ->oneArray();
 
         if (!$data) {
@@ -8431,7 +9743,20 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('bmi1/cetak.html', ['data' => $data]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('bmi1/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('BMI1_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
         exit();
     }
     public function getBmi4manage()
@@ -8443,7 +9768,7 @@ class Admin extends AdminModule
         $query = $this->db('bmi4_pra_anestesi_lokal')
             ->join('reg_periksa', 'reg_periksa.no_rawat = bmi4_pra_anestesi_lokal.no_rawat')
             ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('bmi4_pra_anestesi_lokal.*, pasien.nm_pasien')
+            ->select('bmi4_pra_anestesi_lokal.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('bmi4_pra_anestesi_lokal.id')
             ->toArray();
             
@@ -8476,7 +9801,7 @@ class Admin extends AdminModule
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bmi4_pra_anestesi_lokal.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('bmi4_pra_anestesi_lokal.id', $id)
-                ->select('bmi4_pra_anestesi_lokal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+                ->select('bmi4_pra_anestesi_lokal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur')
                 ->oneArray();
         }
 
@@ -8523,7 +9848,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bmi4_pra_anestesi_lokal.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('bmi4_pra_anestesi_lokal.id', $id)
-            ->select('bmi4_pra_anestesi_lokal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->select('bmi4_pra_anestesi_lokal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
             ->oneArray();
 
         if (!$data) {
@@ -8552,7 +9877,20 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('bmi4/cetak.html', ['data' => $data]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('bmi4/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('BMI4_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
         exit();
     }
     
@@ -8566,7 +9904,7 @@ class Admin extends AdminModule
         $list = $this->db('bmi5_bedah_minor')
             ->join('reg_periksa', 'reg_periksa.no_rawat = bmi5_bedah_minor.no_rawat')
             ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('bmi5_bedah_minor.*, pasien.nm_pasien')
+            ->select('bmi5_bedah_minor.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('bmi5_bedah_minor.id')
             ->toArray();
 
@@ -8599,7 +9937,7 @@ class Admin extends AdminModule
             $data = $this->db('bmi5_bedah_minor')
                 ->join('reg_periksa', 'reg_periksa.no_rawat = bmi5_bedah_minor.no_rawat')
                 ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                ->select('bmi5_bedah_minor.*, pasien.nm_pasien')
+                ->select('bmi5_bedah_minor.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
                 ->where('bmi5_bedah_minor.id', $id)
                 ->oneArray();
         }
@@ -8640,7 +9978,7 @@ class Admin extends AdminModule
         $data = $this->db('bmi5_bedah_minor')
             ->join('reg_periksa', 'reg_periksa.no_rawat = bmi5_bedah_minor.no_rawat')
             ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('bmi5_bedah_minor.*, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, reg_periksa.no_rkm_medis')
+            ->select('bmi5_bedah_minor.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, reg_periksa.no_rkm_medis')
             ->where('bmi5_bedah_minor.id', $id)
             ->oneArray();
             
@@ -8670,7 +10008,20 @@ class Admin extends AdminModule
             $data['waktu_selesai_tgl'] = date('d-m-Y', strtotime($data['waktu_selesai']));
         }
 
-        echo $this->draw('bmi5/cetak.html', ['data' => $data]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('bmi5/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('BMI5_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
         exit();
     }
 
@@ -8687,7 +10038,7 @@ class Admin extends AdminModule
         $data = $this->db('ri01b_hak_kewajiban_pasien')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri01b_hak_kewajiban_pasien.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ri01b_hak_kewajiban_pasien.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ri01b_hak_kewajiban_pasien.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('ri01b_hak_kewajiban_pasien.id')
             ->toArray();
 
@@ -8716,7 +10067,7 @@ class Admin extends AdminModule
                     ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                     ->where('reg_periksa.no_rawat', $no_rawat)
                     ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, pasien.pnd, pasien.bahasa_pasien, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, pasien.pnd, pasien.bahasa_pasien, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
                     ->desc('reg_periksa.tgl_registrasi')
                     ->desc('reg_periksa.jam_reg')
                     ->oneArray();
@@ -8748,7 +10099,7 @@ class Admin extends AdminModule
                 $reg = $this->db('reg_periksa')
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
                     ->oneArray();
 
                 if ($reg) {
@@ -8805,7 +10156,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri01b_hak_kewajiban_pasien.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ri01b_hak_kewajiban_pasien.id', $id)
-            ->select('ri01b_hak_kewajiban_pasien.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.tgl_lahir')
+            ->select('ri01b_hak_kewajiban_pasien.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.tgl_lahir')
             ->oneArray();
 
         if (!$data) {
@@ -8838,7 +10189,20 @@ class Admin extends AdminModule
             }
         }
 
-        echo $this->draw('ri01b/cetak.html', ['data' => $data]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ri01b/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RI01B_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
         exit();
     }
 
@@ -8853,7 +10217,7 @@ class Admin extends AdminModule
         $data = $this->db('ri02_ringkasan')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri02_ringkasan.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ri02_ringkasan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ri02_ringkasan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('ri02_ringkasan.id')->toArray();
         return $this->draw('ri02/manage.html', ['data' => $data]);
     }
@@ -8876,7 +10240,7 @@ class Admin extends AdminModule
                     ->leftJoin('kamar', 'kamar.kd_kamar = kamar_inap.kd_kamar')
                     ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                     ->where('reg_periksa.no_rawat', $no_rawat)->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.gol_darah, pasien.alamat, pasien.pekerjaan, pasien.pnd, pasien.agama, pasien.stts_nikah, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar, kamar.kelas')
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.gol_darah, pasien.alamat, pasien.pekerjaan, pasien.pnd, pasien.agama, pasien.stts_nikah, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar, kamar.kelas')
                     ->desc('reg_periksa.tgl_registrasi')->desc('reg_periksa.jam_reg')->oneArray();
                 if ($reg) { $result = array_merge(['success' => true], $reg); }
                 error_log('AJAX RI02 RESULT: ' . json_encode($result));
@@ -8905,7 +10269,7 @@ class Admin extends AdminModule
         if (!empty($id)) {
             $data = $this->db('ri02_ringkasan')->where('id', $id)->oneArray();
             if ($data && !empty($data['no_rawat'])) {
-                $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.gol_darah, pasien.umur, pasien.alamat, pasien.pnd, pasien.agama, pasien.pekerjaan, pasien.stts_nikah')->oneArray();
+                $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.gol_darah, pasien.umur, pasien.alamat, pasien.pnd, pasien.agama, pasien.pekerjaan, pasien.stts_nikah')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
             }
         }
@@ -8954,7 +10318,21 @@ class Admin extends AdminModule
             $data['umur'] = date_diff(date_create($data['tgl_lahir']), date_create('today'))->y . ' th'; 
         }
 
-        echo $this->draw('ri02/cetak.html', ['data' => $data]); exit();
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ri02/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RI02_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -8967,7 +10345,7 @@ class Admin extends AdminModule
         $data = $this->db('ri03_serah_terima')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri03_serah_terima.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ri03_serah_terima.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ri03_serah_terima.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->toArray();
         return $this->draw('ri03/manage.html', ['data' => $data]);
     }
@@ -8990,7 +10368,7 @@ class Admin extends AdminModule
                 ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->desc('reg_periksa.tgl_registrasi')->desc('reg_periksa.jam_reg')
                 ->oneArray();
             if ($reg) { $result = array_merge(['success' => true], $reg); }
@@ -9017,7 +10395,7 @@ class Admin extends AdminModule
             $db_data = $this->db('ri03_serah_terima')->where('id', $id)->oneArray();
             if ($db_data) {
                 $data = array_merge($data, $db_data);
-                $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien')->oneArray();
+                $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
                 foreach(['daftar_obat', 'daftar_alat', 'pemeriksaan_penunjang'] as $f) {
                     if (!empty($data[$f]) && is_string($data[$f])) { $data[$f] = json_decode($data[$f], true); }
@@ -9061,7 +10439,21 @@ class Admin extends AdminModule
             $data[$f] = !empty($data[$f]) ? json_decode($data[$f], true) : [];
         }
 
-        echo $this->draw('ri03/cetak.html', ['data' => $data]); exit();
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ri03/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RI03_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -9071,7 +10463,7 @@ class Admin extends AdminModule
         $data = $this->db('ri04_transfer_internal')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri04_transfer_internal.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ri04_transfer_internal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ri04_transfer_internal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('ri04_transfer_internal.id')
             ->toArray();
         return $this->draw('ri04/manage.html', ['data' => $data]);
@@ -9096,7 +10488,7 @@ class Admin extends AdminModule
                 ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->desc('reg_periksa.tgl_registrasi')->desc('reg_periksa.jam_reg')
                 ->oneArray();
             if ($reg) { $result = array_merge(['success' => true], $reg); }
@@ -9119,7 +10511,7 @@ class Admin extends AdminModule
             $db_data = $this->db('ri04_transfer_internal')->where('id', $id)->oneArray();
             if ($db_data) {
                 $data = array_merge($data, $db_data);
-                $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien')->oneArray();
+                $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
                 foreach(['alat_terpasang', 'obat_dibawa', 'dokumen_disertakan', 'informasi_diberikan'] as $f) {
                     if (!empty($data[$f]) && is_string($data[$f])) { $data[$f] = json_decode($data[$f], true); }
@@ -9211,7 +10603,21 @@ class Admin extends AdminModule
 
         foreach (['Level 0', 'Level 1', 'Level 2', 'Level 3'] as $i => $lv) { $p['ck_lv' . $i] = $ck(($data['kategori_transfer'] ?? '') == $lv); }
 
-        echo $this->draw('ri04/cetak.html', ['p' => $p]); exit();
+        $p['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ri04/cetak.html', ['p' => $p, 'kop_img' => $p['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RI04_' . ($p['no_rkm_medis'] ?? ($data['no_rkm_medis'] ?? 'dokumen')) . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -9249,7 +10655,7 @@ class Admin extends AdminModule
         $data = $this->db('ri09_status_fungsional')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri09_status_fungsional.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ri09_status_fungsional.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ri09_status_fungsional.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('ri09_status_fungsional.id')
             ->toArray();
         return $this->draw('ri09/manage.html', ['data' => $data]);
@@ -9274,7 +10680,7 @@ class Admin extends AdminModule
                 ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->desc('reg_periksa.tgl_registrasi')->desc('reg_periksa.jam_reg')
                 ->oneArray();
             if ($reg) { $result = array_merge(['success' => true], $reg); }
@@ -9291,7 +10697,7 @@ class Admin extends AdminModule
                 $data = array_merge($data, $row);
                 $data['jam'] = substr((string)$data['jam'], 0, 5);
                 $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien')->oneArray();
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
             }
         }
@@ -9351,7 +10757,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri09_status_fungsional.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ri09_status_fungsional.id', $id)
-            ->select('ri09_status_fungsional.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('ri09_status_fungsional.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
         if (!$d) { exit("Data tidak ditemukan"); }
 
@@ -9396,7 +10802,21 @@ class Admin extends AdminModule
             $first = false;
         }
 
-        echo $this->draw('ri09/cetak.html', ['p' => $p, 'rows' => $rows, 'katRows' => $katRows]); exit();
+        $p['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ri09/cetak.html', ['p' => $p, 'rows' => $rows, 'katRows' => $katRows, 'kop_img' => $p['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RI09_' . ($p['no_rkm_medis'] ?? ($data['no_rkm_medis'] ?? 'dokumen')) . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -9409,7 +10829,7 @@ class Admin extends AdminModule
         $data = $this->db('ri11b_pemberian_makan')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri11b_pemberian_makan.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ri11b_pemberian_makan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ri11b_pemberian_makan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('ri11b_pemberian_makan.id')
             ->toArray();
         return $this->draw('ri11b/manage.html', ['data' => $data]);
@@ -9434,7 +10854,7 @@ class Admin extends AdminModule
                 ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->desc('reg_periksa.tgl_registrasi')->desc('reg_periksa.jam_reg')
                 ->oneArray();
             if ($reg) { $result = array_merge(['success' => true], $reg); }
@@ -9451,7 +10871,7 @@ class Admin extends AdminModule
             if ($row) {
                 $data = array_merge($data, $row);
                 $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien')->oneArray();
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
             }
         }
@@ -9501,7 +10921,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri11b_pemberian_makan.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ri11b_pemberian_makan.id', $id)
-            ->select('ri11b_pemberian_makan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('ri11b_pemberian_makan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
         if (!$d) { exit("Data tidak ditemukan"); }
 
@@ -9551,7 +10971,21 @@ class Admin extends AdminModule
         $page1_rows = array_slice($detail, 0, 12);
         $page2_rows = array_slice($detail, 12, 19);
 
-        echo $this->draw('ri11b/cetak.html', ['p' => $p, 'p1' => $page1_rows, 'p2' => $page2_rows]); exit();
+        $p['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ri11b/cetak.html', ['p' => $p, 'p1' => $page1_rows, 'p2' => $page2_rows, 'kop_img' => $p['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RI11B_' . ($p['no_rkm_medis'] ?? ($data['no_rkm_medis'] ?? 'dokumen')) . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -9564,7 +10998,7 @@ class Admin extends AdminModule
         $data = $this->db('ri14_rekonsiliasi_obat')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri14_rekonsiliasi_obat.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ri14_rekonsiliasi_obat.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ri14_rekonsiliasi_obat.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('ri14_rekonsiliasi_obat.id')
             ->toArray();
         return $this->draw('ri14/manage.html', ['data' => $data]);
@@ -9589,7 +11023,7 @@ class Admin extends AdminModule
                 ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->desc('reg_periksa.tgl_registrasi')->desc('reg_periksa.jam_reg')
                 ->oneArray();
             if ($reg) { $result = array_merge(['success' => true], $reg); }
@@ -9607,7 +11041,7 @@ class Admin extends AdminModule
             if ($row) {
                 $data = array_merge($data, $row);
                 $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien')->oneArray();
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
             }
         }
@@ -9665,7 +11099,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri14_rekonsiliasi_obat.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ri14_rekonsiliasi_obat.id', $id)
-            ->select('ri14_rekonsiliasi_obat.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('ri14_rekonsiliasi_obat.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
         if (!$d) { exit("Data tidak ditemukan"); }
 
@@ -9698,7 +11132,21 @@ class Admin extends AdminModule
         $p['tanggal_krs'] = !empty($d['tanggal_krs']) && $d['tanggal_krs'] != '0000-00-00' ? date('d-m-Y', strtotime($d['tanggal_krs'])) : '';
         $p['status_krs'] = htmlspecialchars($d['status_krs'] ?? '');
 
-        echo $this->draw('ri14/cetak.html', ['p' => $p, 'd' => $d]); exit();
+        $p['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ri14/cetak.html', ['p' => $p, 'd' => $d, 'kop_img' => $p['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RI14_' . ($d['no_rkm_medis'] ?? ($p['no_rkm_medis'] ?? 'dokumen')) . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -9711,7 +11159,7 @@ class Admin extends AdminModule
         $data = $this->db('ri15_instruksi_medis')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri15_instruksi_medis.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ri15_instruksi_medis.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ri15_instruksi_medis.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('ri15_instruksi_medis.id')
             ->toArray();
         return $this->draw('ri15/manage.html', ['data' => $data]);
@@ -9736,7 +11184,7 @@ class Admin extends AdminModule
                 ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->desc('reg_periksa.tgl_registrasi')->desc('reg_periksa.jam_reg')
                 ->oneArray();
             if ($reg) { $result = array_merge(['success' => true], $reg); }
@@ -9750,7 +11198,7 @@ class Admin extends AdminModule
             if ($row) {
                 $data = array_merge($data, $row);
                 $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien')->oneArray();
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
             }
         }
@@ -9787,7 +11235,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri15_instruksi_medis.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ri15_instruksi_medis.id', $id)
-            ->select('ri15_instruksi_medis.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('ri15_instruksi_medis.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
         if (!$d) { exit("Data tidak ditemukan"); }
 
@@ -9801,7 +11249,21 @@ class Admin extends AdminModule
         $p['riwayat_alergi'] = htmlspecialchars($d['riwayat_alergi'] ?? '');
         $p['alergi_terhadap'] = htmlspecialchars($d['alergi_terhadap'] ?? '');
 
-        echo $this->draw('ri15/cetak.html', ['p' => $p]); exit();
+        $p['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ri15/cetak.html', ['p' => $p, 'kop_img' => $p['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RI15_' . ($p['no_rkm_medis'] ?? ($data['no_rkm_medis'] ?? 'dokumen')) . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -9814,7 +11276,7 @@ class Admin extends AdminModule
         $data = $this->db('ri15a_instruksi_medis_farmakologi')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri15a_instruksi_medis_farmakologi.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ri15a_instruksi_medis_farmakologi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ri15a_instruksi_medis_farmakologi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('ri15a_instruksi_medis_farmakologi.id')
             ->toArray();
         return $this->draw('ri15a/ri15a_manage.html', ['data' => $data]);
@@ -9839,7 +11301,7 @@ class Admin extends AdminModule
                 ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->desc('reg_periksa.tgl_registrasi')->desc('reg_periksa.jam_reg')
                 ->oneArray();
             if ($reg) { $result = array_merge(['success' => true], $reg); }
@@ -9853,7 +11315,7 @@ class Admin extends AdminModule
             if ($row) {
                 $data = array_merge($data, $row);
                 $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien')->oneArray();
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
             }
         }
@@ -9895,7 +11357,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri15a_instruksi_medis_farmakologi.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ri15a_instruksi_medis_farmakologi.id', $id)
-            ->select('ri15a_instruksi_medis_farmakologi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('ri15a_instruksi_medis_farmakologi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
         if (!$d) { exit("Data tidak ditemukan"); }
 
@@ -9914,7 +11376,21 @@ class Admin extends AdminModule
         
         $p['riwayat_alergi'] = htmlspecialchars($d['riwayat_alergi'] ?? '');
 
-        echo $this->draw('ri15a/ri15a_cetak.html', ['p' => $p, 'd' => $d]); exit();
+        $p['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ri15a/ri15a_cetak.html', ['p' => $p, 'd' => $d, 'kop_img' => $p['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RI15A_' . ($d['no_rkm_medis'] ?? ($p['no_rkm_medis'] ?? 'dokumen')) . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -9927,7 +11403,7 @@ class Admin extends AdminModule
         $data = $this->db('ri15b_jadwal_obat')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri15b_jadwal_obat.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ri15b_jadwal_obat.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ri15b_jadwal_obat.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('ri15b_jadwal_obat.id')
             ->toArray();
         return $this->draw('ri15b/ri15b_manage.html', ['data' => $data]);
@@ -9952,7 +11428,7 @@ class Admin extends AdminModule
                 ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->desc('reg_periksa.tgl_registrasi')->desc('reg_periksa.jam_reg')
                 ->oneArray();
             if ($reg) { $result = array_merge(['success' => true], $reg); }
@@ -9966,7 +11442,7 @@ class Admin extends AdminModule
             if ($row) {
                 $data = array_merge($data, $row);
                 $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien')->oneArray();
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
             }
         }
@@ -10007,7 +11483,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri15b_jadwal_obat.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ri15b_jadwal_obat.id', $id)
-            ->select('ri15b_jadwal_obat.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('ri15b_jadwal_obat.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
         if (!$d) { exit("Data tidak ditemukan"); }
 
@@ -10067,7 +11543,21 @@ class Admin extends AdminModule
         $p['lp'] = ($d['jk'] ?? '') == 'L' ? 'L' : (($d['jk'] ?? '') == 'P' ? 'P' : 'L/P');
         $p['tgl_lahir'] = !empty($d['tgl_lahir']) && $d['tgl_lahir'] != '0000-00-00' ? date('d-m-Y', strtotime($d['tgl_lahir'])) : '';
         
-        echo $this->draw('ri15b/ri15b_cetak.html', ['p' => $p, 'd' => $d]); exit();
+        $p['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ri15b/ri15b_cetak.html', ['p' => $p, 'd' => $d, 'kop_img' => $p['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RI15B_' . ($d['no_rkm_medis'] ?? ($p['no_rkm_medis'] ?? 'dokumen')) . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -10080,7 +11570,7 @@ class Admin extends AdminModule
         $data = $this->db('ri18_edukasi_pasien')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri18_edukasi_pasien.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ri18_edukasi_pasien.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ri18_edukasi_pasien.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('ri18_edukasi_pasien.id')
             ->toArray();
         return $this->draw('ri18/ri18_manage.html', ['data' => $data]);
@@ -10104,7 +11594,7 @@ class Admin extends AdminModule
                 ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.umur, pasien.jk, pasien.alamat, pasien.pnd, pasien.bahasa_pasien, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.umur, pasien.jk, pasien.alamat, pasien.pnd, pasien.bahasa_pasien, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->desc('kamar_inap.tgl_masuk')->desc('kamar_inap.jam_masuk')
                 ->oneArray();
             if ($reg) { $result = array_merge(['success' => true], $reg); }
@@ -10118,7 +11608,7 @@ class Admin extends AdminModule
             if ($row) {
                 $data = array_merge($data, $row);
                 $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien')->oneArray();
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
             }
         }
@@ -10170,7 +11660,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri18_edukasi_pasien.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ri18_edukasi_pasien.id', $id)
-            ->select('ri18_edukasi_pasien.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('ri18_edukasi_pasien.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
         if (!$d) { exit("Data tidak ditemukan"); }
 
@@ -10244,7 +11734,21 @@ class Admin extends AdminModule
         $p['lp'] = ($d['jk'] ?? '') == 'L' ? 'L' : (($d['jk'] ?? '') == 'P' ? 'P' : 'L/P');
         $p['tgl_lahir'] = !empty($d['tgl_lahir']) && $d['tgl_lahir'] != '0000-00-00' ? date('d-m-Y', strtotime($d['tgl_lahir'])) : '';
         
-        echo $this->draw('ri18/ri18_cetak.html', ['p' => $p, 'd' => $d]); exit();
+        $p['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ri18/ri18_cetak.html', ['p' => $p, 'd' => $d, 'kop_img' => $p['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RI18_' . ($d['no_rkm_medis'] ?? ($p['no_rkm_medis'] ?? 'dokumen')) . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -10257,7 +11761,7 @@ class Admin extends AdminModule
         $data = $this->db('ri19_discharge_planning')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri19_discharge_planning.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ri19_discharge_planning.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ri19_discharge_planning.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('ri19_discharge_planning.id')
             ->toArray();
         return $this->draw('ri19/ri19_manage.html', ['data' => $data]);
@@ -10281,7 +11785,7 @@ class Admin extends AdminModule
                 ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.umur, pasien.jk, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.umur, pasien.jk, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->desc('kamar_inap.tgl_masuk')->desc('kamar_inap.jam_masuk')
                 ->oneArray();
             if ($reg) { $result = array_merge(['success' => true], $reg); }
@@ -10295,7 +11799,7 @@ class Admin extends AdminModule
             if ($row) {
                 $data = array_merge($data, $row);
                 $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien')->oneArray();
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
             }
         }
@@ -10351,7 +11855,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri19_discharge_planning.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ri19_discharge_planning.id', $id)
-            ->select('ri19_discharge_planning.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('ri19_discharge_planning.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
         if (!$d) { exit("Data tidak ditemukan"); }
 
@@ -10369,7 +11873,21 @@ class Admin extends AdminModule
         $p['lp'] = ($d['jk'] ?? '') == 'L' ? 'L' : (($d['jk'] ?? '') == 'P' ? 'P' : 'L/P');
         $p['tgl_lahir'] = !empty($d['tgl_lahir']) && $d['tgl_lahir'] != '0000-00-00' ? date('d-m-Y', strtotime($d['tgl_lahir'])) : '';
         
-        echo $this->draw('ri19/ri19_cetak.html', ['p' => $p, 'd' => $d]); exit();
+        $p['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ri19/ri19_cetak.html', ['p' => $p, 'd' => $d, 'kop_img' => $p['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RI19_' . ($d['no_rkm_medis'] ?? ($p['no_rkm_medis'] ?? 'dokumen')) . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -10382,7 +11900,7 @@ class Admin extends AdminModule
         $data = $this->db('ri20_resume_pulang')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri20_resume_pulang.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('ri20_resume_pulang.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('ri20_resume_pulang.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('ri20_resume_pulang.id')
             ->toArray();
         return $this->draw('ri20/ri20_manage.html', ['data' => $data]);
@@ -10406,7 +11924,7 @@ class Admin extends AdminModule
                 ->leftJoin('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, kamar_inap.tgl_masuk, kamar_inap.tgl_keluar, bangsal.nm_bangsal, kamar.kd_kamar')
                 ->desc('kamar_inap.tgl_masuk')->desc('kamar_inap.jam_masuk')
                 ->oneArray();
             if ($reg) { $result = array_merge(['success' => true], $reg); }
@@ -10420,7 +11938,7 @@ class Admin extends AdminModule
             if ($row) {
                 $data = array_merge($data, $row);
                 $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien')->oneArray();
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
             }
         }
@@ -10472,7 +11990,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ri20_resume_pulang.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('ri20_resume_pulang.id', $id)
-            ->select('ri20_resume_pulang.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat')
+            ->select('ri20_resume_pulang.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat')
             ->oneArray();
         if (!$d) { exit("Data tidak ditemukan"); }
 
@@ -10491,7 +12009,21 @@ class Admin extends AdminModule
         $p['tgl_lahir'] = !empty($d['tgl_lahir']) && $d['tgl_lahir'] != '0000-00-00' ? date('d-m-Y', strtotime($d['tgl_lahir'])) : '';
         $p['alamat'] = htmlspecialchars($d['alamat'] ?? '');
         
-        echo $this->draw('ri20/ri20_cetak.html', ['p' => $p, 'd' => $d]); exit();
+        $p['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('ri20/ri20_cetak.html', ['p' => $p, 'd' => $d, 'kop_img' => $p['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RI20_' . ($d['no_rkm_medis'] ?? ($p['no_rkm_medis'] ?? 'dokumen')) . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -10504,7 +12036,7 @@ class Admin extends AdminModule
         $data = $this->db('rj02a_hak_kewajiban')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rj02a_hak_kewajiban.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('rj02a_hak_kewajiban.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('rj02a_hak_kewajiban.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('rj02a_hak_kewajiban.id')
             ->toArray();
         return $this->draw('rj02a/rj02a_manage.html', ['data' => $data]);
@@ -10525,7 +12057,7 @@ class Admin extends AdminModule
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.alamat')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur, pasien.alamat')
                 ->desc('reg_periksa.tgl_registrasi')->desc('reg_periksa.jam_reg')
                 ->oneArray();
             if ($reg) { $result = array_merge(['success' => true], $reg); }
@@ -10539,7 +12071,7 @@ class Admin extends AdminModule
             if ($row) {
                 $data = array_merge($data, $row);
                 $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien')->oneArray();
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
             }
         }
@@ -10582,7 +12114,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rj02a_hak_kewajiban.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('rj02a_hak_kewajiban.id', $id)
-            ->select('rj02a_hak_kewajiban.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('rj02a_hak_kewajiban.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
         if (!$d) { exit("Data tidak ditemukan"); }
 
@@ -10596,7 +12128,21 @@ class Admin extends AdminModule
         $p['lp'] = ($d['jk'] ?? '') == 'L' ? 'L' : (($d['jk'] ?? '') == 'P' ? 'P' : 'L/P');
         $p['tgl_lahir'] = !empty($d['tgl_lahir']) && $d['tgl_lahir'] != '0000-00-00' ? date('d-m-Y', strtotime($d['tgl_lahir'])) : '';
         
-        echo $this->draw('rj02a/rj02a_cetak.html', ['p' => $p, 'd' => $d]); exit();
+        $p['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('rj02a/rj02a_cetak.html', ['p' => $p, 'd' => $d, 'kop_img' => $p['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RJ02A_' . ($d['no_rkm_medis'] ?? ($p['no_rkm_medis'] ?? 'dokumen')) . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -10609,7 +12155,7 @@ class Admin extends AdminModule
         $data = $this->db('rj07_asesmen_ulang_nyeri')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rj07_asesmen_ulang_nyeri.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('rj07_asesmen_ulang_nyeri.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('rj07_asesmen_ulang_nyeri.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('rj07_asesmen_ulang_nyeri.id')
             ->toArray();
         return $this->draw('rj07/rj07_manage.html', ['data' => $data]);
@@ -10630,7 +12176,7 @@ class Admin extends AdminModule
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.alamat')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur, pasien.alamat')
                 ->desc('reg_periksa.tgl_registrasi')->desc('reg_periksa.jam_reg')
                 ->oneArray();
             if ($reg) { $result = array_merge(['success' => true], $reg); }
@@ -10644,7 +12190,7 @@ class Admin extends AdminModule
             if ($row) {
                 $data = array_merge($data, $row);
                 $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien')->oneArray();
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
             }
         }
@@ -10692,7 +12238,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rj07_asesmen_ulang_nyeri.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('rj07_asesmen_ulang_nyeri.id', $id)
-            ->select('rj07_asesmen_ulang_nyeri.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('rj07_asesmen_ulang_nyeri.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
         if (!$d) { exit("Data tidak ditemukan"); }
 
@@ -10710,7 +12256,21 @@ class Admin extends AdminModule
         $p['lp'] = ($d['jk'] ?? '') == 'L' ? 'L' : (($d['jk'] ?? '') == 'P' ? 'P' : 'L/P');
         $p['tgl_lahir'] = !empty($d['tgl_lahir']) && $d['tgl_lahir'] != '0000-00-00' ? date('d-m-Y', strtotime($d['tgl_lahir'])) : '';
         
-        echo $this->draw('rj07/rj07_cetak.html', ['p' => $p, 'd' => $d]); exit();
+        $p['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('rj07/rj07_cetak.html', ['p' => $p, 'd' => $d, 'kop_img' => $p['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RJ07_' . ($d['no_rkm_medis'] ?? ($p['no_rkm_medis'] ?? 'dokumen')) . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -10723,7 +12283,7 @@ class Admin extends AdminModule
         $data = $this->db('rj10_edukasi_terintegrasi')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rj10_edukasi_terintegrasi.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('rj10_edukasi_terintegrasi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('rj10_edukasi_terintegrasi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('rj10_edukasi_terintegrasi.id')
             ->toArray();
         return $this->draw('rj10/rj10_manage.html', ['data' => $data]);
@@ -10744,7 +12304,7 @@ class Admin extends AdminModule
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.pnd, pasien.bahasa_pasien, pasien.umur')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.pnd, pasien.bahasa_pasien, pasien.umur')
                 ->desc('reg_periksa.tgl_registrasi')->desc('reg_periksa.jam_reg')
                 ->oneArray();
             if ($reg) { $result = array_merge(['success' => true], $reg); }
@@ -10758,7 +12318,7 @@ class Admin extends AdminModule
             if ($row) {
                 $data = array_merge($data, $row);
                 $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien')->oneArray();
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
             }
         }
@@ -10812,7 +12372,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rj10_edukasi_terintegrasi.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('rj10_edukasi_terintegrasi.id', $id)
-            ->select('rj10_edukasi_terintegrasi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('rj10_edukasi_terintegrasi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
         if (!$d) { exit("Data tidak ditemukan"); }
 
@@ -10830,7 +12390,21 @@ class Admin extends AdminModule
         $p['lp'] = ($d['jk'] ?? '') == 'L' ? 'L' : (($d['jk'] ?? '') == 'P' ? 'P' : 'L/P');
         $p['tgl_lahir'] = !empty($d['tgl_lahir']) && $d['tgl_lahir'] != '0000-00-00' ? date('d-m-Y', strtotime($d['tgl_lahir'])) : '';
         
-        echo $this->draw('rj10/rj10_cetak.html', ['p' => $p, 'd' => $d]); exit();
+        $p['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('rj10/rj10_cetak.html', ['p' => $p, 'd' => $d, 'kop_img' => $p['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RJ10_' . ($d['no_rkm_medis'] ?? ($p['no_rkm_medis'] ?? 'dokumen')) . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -10843,7 +12417,7 @@ class Admin extends AdminModule
         $data = $this->db('rj11_pemberian_informasi')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rj11_pemberian_informasi.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('rj11_pemberian_informasi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('rj11_pemberian_informasi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('rj11_pemberian_informasi.id')
             ->toArray();
         return $this->draw('rj11/rj11_manage.html', ['data' => $data]);
@@ -10864,7 +12438,7 @@ class Admin extends AdminModule
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.umur, pasien.jk, pasien.alamat')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.umur, pasien.jk, pasien.alamat')
                 ->desc('reg_periksa.tgl_registrasi')->desc('reg_periksa.jam_reg')
                 ->oneArray();
             if ($reg) { $result = array_merge(['success' => true], $reg); }
@@ -10878,7 +12452,7 @@ class Admin extends AdminModule
             if ($row) {
                 $data = array_merge($data, $row);
                 $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien')->oneArray();
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
             }
         }
@@ -10945,7 +12519,7 @@ class Admin extends AdminModule
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rj11_pemberian_informasi.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->where('rj11_pemberian_informasi.id', $id)
-            ->select('rj11_pemberian_informasi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+            ->select('rj11_pemberian_informasi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
             ->oneArray();
         if (!$d) { exit("Data tidak ditemukan"); }
 
@@ -10959,7 +12533,21 @@ class Admin extends AdminModule
         $p['lp'] = ($d['jk'] ?? '') == 'L' ? 'L' : (($d['jk'] ?? '') == 'P' ? 'P' : 'L/P');
         $p['tgl_lahir'] = !empty($d['tgl_lahir']) && $d['tgl_lahir'] != '0000-00-00' ? date('d-m-Y', strtotime($d['tgl_lahir'])) : '';
         
-        echo $this->draw('rj11/rj11_cetak.html', ['p' => $p, 'd' => $d]); exit();
+        $p['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('rj11/rj11_cetak.html', ['p' => $p, 'd' => $d, 'kop_img' => $p['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('RM_RJ11_' . ($d['no_rkm_medis'] ?? ($p['no_rkm_medis'] ?? 'dokumen')) . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
     }
 
     // ============================================================
@@ -10975,7 +12563,7 @@ class Admin extends AdminModule
         $data = $this->db('surat_pulang_aps')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = surat_pulang_aps.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('surat_pulang_aps.*, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->select('surat_pulang_aps.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
             ->desc('surat_pulang_aps.id')
             ->toArray();
 
@@ -10996,7 +12584,7 @@ class Admin extends AdminModule
             $p = $this->db('reg_periksa')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $no_rawat)
-                ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
                 ->oneArray();
             if ($p) {
                 ob_clean(); echo json_encode(array_merge(['success' => true, 'no_rawat' => $no_rawat], $p)); exit();
@@ -11017,7 +12605,7 @@ class Admin extends AdminModule
             $data = $this->db('surat_pulang_aps')
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = surat_pulang_aps.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                ->select('surat_pulang_aps.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk as jk_pasien, pasien.tgl_lahir as tgl_lahir_pasien')
+                ->select('surat_pulang_aps.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk as jk_pasien, pasien.tgl_lahir as tgl_lahir_pasien')
                 ->where('surat_pulang_aps.id', $id)
                 ->oneArray();
         }
@@ -11071,7 +12659,7 @@ class Admin extends AdminModule
         $data = $this->db('surat_pulang_aps')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = surat_pulang_aps.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('surat_pulang_aps.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk as jk_pasien, pasien.tgl_lahir as tgl_lahir_pasien, pasien.umur')
+            ->select('surat_pulang_aps.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk as jk_pasien, pasien.tgl_lahir as tgl_lahir_pasien, pasien.umur')
             ->where('surat_pulang_aps.id', $id)
             ->oneArray();
         
@@ -11098,7 +12686,370 @@ class Admin extends AdminModule
             $data['tgl_surat_indo'] = '';
         }
 
-        echo $this->draw('pulangaps/cetak.html', ['data' => $data]);
+        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
+        $html = $this->draw('pulangaps/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        if ($is_mpdf) {
+@ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf->WriteHTML($html);
+if (ob_get_length()) {
+    ob_clean();
+}
+            $mpdf->Output('PULANGAPS_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            exit();
+        }
+        echo $html;
+        exit();
+    }
+
+    // ============================================================
+    // LAMPIRAN - PERSETUJUAN PROSEDUR TINDAKAN RADIOLOGI (RAJAL)
+    // ============================================================
+
+    public function anyPersetujuanradiologimanage()
+    {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+            $id = $_GET['id'];
+            $this->db('lampiran_persetujuan_tindakan_radiologi')->where('id', $id)->delete();
+            $this->notify('success', 'Data persetujuan tindakan radiologi berhasil dihapus');
+            redirect(url([ADMIN, 'update_bmt', 'persetujuanradiologimanage']));
+        }
+
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $data = $this->db('lampiran_persetujuan_tindakan_radiologi')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_persetujuan_tindakan_radiologi.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_persetujuan_tindakan_radiologi.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('lampiran_persetujuan_tindakan_radiologi.*, COALESCE(lampiran_persetujuan_tindakan_radiologi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk as jk_pasien')
+            ->desc('lampiran_persetujuan_tindakan_radiologi.id')
+            ->toArray();
+
+        foreach ($data as $k => $v) {
+            $data[$k]['nomor'] = $k + 1;
+        }
+
+        return $this->draw('lampiran_persetujuan_tindakan_radiologi/manage.html', ['data' => $data]);
+    }
+
+    public function anyPersetujuanradiologiform($id = null)
+    {
+        // AJAX auto lookup info pasien
+        if (isset($_GET['ajax_patient']) || isset($_POST['ajax_patient'])) {
+            $no_rawat = $_GET['no_rawat'] ?? ($_POST['no_rawat'] ?? '');
+            $no_rawat = trim($no_rawat);
+            if (is_numeric($no_rawat) && strlen($no_rawat) < 6) {
+                $no_rawat = str_pad($no_rawat, 6, '0', STR_PAD_LEFT);
+            }
+
+            $result = ['success' => false];
+            if (!empty($no_rawat)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->leftJoin('kelurahan', 'kelurahan.kd_kel = pasien.kd_kel')
+                    ->leftJoin('kecamatan', 'kecamatan.kd_kec = pasien.kd_kec')
+                    ->leftJoin('kabupaten', 'kabupaten.kd_kab = pasien.kd_kab')
+                    ->leftJoin('propinsi', 'propinsi.kd_prop = pasien.kd_prop')
+                    ->where('reg_periksa.no_rawat', $no_rawat)
+                    ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.no_ktp, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.alamat, pasien.umur, kelurahan.nm_kel, kecamatan.nm_kec, kabupaten.nm_kab, propinsi.nm_prop')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+
+                if ($reg) {
+                    $result = [
+                        'success'       => true,
+                        'no_rawat'      => $reg['no_rawat'] ?? '',
+                        'no_rkm_medis'  => $reg['no_rkm_medis'] ?? '',
+                        'nm_pasien'     => $reg['nm_pasien'] ?? '',
+                        'no_ktp'        => $reg['no_ktp'] ?? '',
+                        'jk'            => $reg['jk'] ?? '',
+                        'tmp_lahir'     => $reg['tmp_lahir'] ?? '',
+                        'tgl_lahir'     => $reg['tgl_lahir'] ?? '',
+                        'umur'          => $reg['umur'] ?? '',
+                        'alamat'        => $reg['alamat'] ?? '',
+                        'nm_kel'        => $reg['nm_kel'] ?? '',
+                        'nm_kec'        => $reg['nm_kec'] ?? '',
+                        'nm_kab'        => $reg['nm_kab'] ?? '',
+                        'nm_prop'       => $reg['nm_prop'] ?? ''
+                    ];
+                }
+            }
+            echo json_encode($result);
+            exit();
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $post = $_POST;
+            $saveData = [
+                'no_rawat'                        => trim($post['no_rawat'] ?? ''),
+                'no_rkm_medis'                   => trim($post['no_rkm_medis'] ?? ''),
+                'nama_penanggung_jawab'          => trim($post['nama_penanggung_jawab'] ?? ''),
+                'jk_penanggung_jawab'            => $post['jk_penanggung_jawab'] ?? 'L',
+                'tmp_lahir_penanggung_jawab'     => trim($post['tmp_lahir_penanggung_jawab'] ?? ''),
+                'tgl_lahir_penanggung_jawab'     => !empty($post['tgl_lahir_penanggung_jawab']) ? $post['tgl_lahir_penanggung_jawab'] : null,
+                'usia_penanggung_jawab'          => trim($post['usia_penanggung_jawab'] ?? ''),
+                'no_identitas_penanggung_jawab'  => trim($post['no_identitas_penanggung_jawab'] ?? ''),
+                'jenis_identitas_penanggung_jawab' => trim($post['jenis_identitas_penanggung_jawab'] ?? 'KTP'),
+                'alamat_penanggung_jawab'        => trim($post['alamat_penanggung_jawab'] ?? ''),
+                'kelurahan_penanggung_jawab'     => trim($post['kelurahan_penanggung_jawab'] ?? ''),
+                'kecamatan_penanggung_jawab'     => trim($post['kecamatan_penanggung_jawab'] ?? ''),
+                'kabupaten_penanggung_jawab'     => trim($post['kabupaten_penanggung_jawab'] ?? ''),
+                'provinsi_penanggung_jawab'      => trim($post['provinsi_penanggung_jawab'] ?? ''),
+                'hubungan_pasien'                => trim($post['hubungan_pasien'] ?? 'Diri Sendiri'),
+                'hubungan_pasien_lainnya'        => trim($post['hubungan_pasien_lainnya'] ?? ''),
+                'tindakan_radiologi'             => trim($post['tindakan_radiologi'] ?? ''),
+                'nama_pasien_terhadap'           => trim($post['nama_pasien_terhadap'] ?? ''),
+                'jk_pasien_terhadap'             => $post['jk_pasien_terhadap'] ?? 'L',
+                'tmp_lahir_pasien_terhadap'      => trim($post['tmp_lahir_pasien_terhadap'] ?? ''),
+                'tgl_lahir_pasien_terhadap'      => !empty($post['tgl_lahir_pasien_terhadap']) ? $post['tgl_lahir_pasien_terhadap'] : null,
+                'usia_pasien_terhadap'           => trim($post['usia_pasien_terhadap'] ?? ''),
+                'alamat_pasien_terhadap'         => trim($post['alamat_pasien_terhadap'] ?? ''),
+                'kelurahan_pasien_terhadap'      => trim($post['kelurahan_pasien_terhadap'] ?? ''),
+                'kecamatan_pasien_terhadap'      => trim($post['kecamatan_pasien_terhadap'] ?? ''),
+                'kabupaten_pasien_terhadap'      => trim($post['kabupaten_pasien_terhadap'] ?? ''),
+                'provinsi_pasien_terhadap'       => trim($post['provinsi_pasien_terhadap'] ?? ''),
+                'kota_surat'                     => trim($post['kota_surat'] ?? 'Banjarmasin'),
+                'tanggal_surat'                  => !empty($post['tanggal_surat']) ? $post['tanggal_surat'] : date('Y-m-d'),
+                'jam_surat'                      => !empty($post['jam_surat']) ? $post['jam_surat'] : date('H:i:s'),
+                'nama_yang_menyatakan'           => trim($post['nama_yang_menyatakan'] ?? ''),
+                'kd_dokter'                      => trim($post['kd_dokter'] ?? ''),
+                'nama_dokter'                    => trim($post['nama_dokter'] ?? ''),
+                'nama_saksi_1'                   => trim($post['nama_saksi_1'] ?? ''),
+                'nama_saksi_2'                   => trim($post['nama_saksi_2'] ?? '')
+            ];
+
+            if ($id) {
+                $saveData['updated_at'] = date('Y-m-d H:i:s');
+                $this->db('lampiran_persetujuan_tindakan_radiologi')->where('id', $id)->save($saveData);
+                $this->notify('success', 'Data persetujuan tindakan radiologi berhasil diperbarui');
+            } else {
+                $saveData['created_at'] = date('Y-m-d H:i:s');
+                $saveData['updated_at'] = date('Y-m-d H:i:s');
+                $this->db('lampiran_persetujuan_tindakan_radiologi')->save($saveData);
+                $this->notify('success', 'Data persetujuan tindakan radiologi berhasil disimpan');
+            }
+            redirect(url([ADMIN, 'update_bmt', 'persetujuanradiologimanage']));
+        }
+
+        $defaultData = [
+            'id'                               => '',
+            'no_rawat'                         => $_GET['no_rawat'] ?? '',
+            'no_rkm_medis'                     => '',
+            'nama_penanggung_jawab'            => '',
+            'jk_penanggung_jawab'              => 'L',
+            'tmp_lahir_penanggung_jawab'       => '',
+            'tgl_lahir_penanggung_jawab'       => '',
+            'usia_penanggung_jawab'            => '',
+            'no_identitas_penanggung_jawab'    => '',
+            'jenis_identitas_penanggung_jawab' => 'KTP',
+            'alamat_penanggung_jawab'          => '',
+            'kelurahan_penanggung_jawab'       => '',
+            'kecamatan_penanggung_jawab'       => '',
+            'kabupaten_penanggung_jawab'       => '',
+            'provinsi_penanggung_jawab'        => '',
+            'hubungan_pasien'                  => 'Diri Sendiri',
+            'hubungan_pasien_lainnya'          => '',
+            'tindakan_radiologi'               => '',
+            'nama_pasien_terhadap'             => '',
+            'jk_pasien_terhadap'               => 'L',
+            'tmp_lahir_pasien_terhadap'        => '',
+            'tgl_lahir_pasien_terhadap'        => '',
+            'usia_pasien_terhadap'             => '',
+            'alamat_pasien_terhadap'           => '',
+            'kelurahan_pasien_terhadap'        => '',
+            'kecamatan_pasien_terhadap'        => '',
+            'kabupaten_pasien_terhadap'        => '',
+            'provinsi_pasien_terhadap'         => '',
+            'kota_surat'                       => 'Banjarmasin',
+            'tanggal_surat'                    => date('Y-m-d'),
+            'jam_surat'                        => date('H:i'),
+            'nama_yang_menyatakan'             => '',
+            'kd_dokter'                        => '',
+            'nama_dokter'                      => '',
+            'nama_saksi_1'                     => '',
+            'nama_saksi_2'                     => ''
+        ];
+
+        $data = $defaultData;
+        if ($id) {
+            $row = $this->db('lampiran_persetujuan_tindakan_radiologi')->where('id', $id)->oneArray();
+            if ($row) {
+                $data = array_merge($defaultData, $row);
+            }
+        } elseif (!empty($_GET['no_rawat'])) {
+            $no_rawat = $_GET['no_rawat'];
+            $reg = $this->db('reg_periksa')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->leftJoin('kelurahan', 'kelurahan.kd_kel = pasien.kd_kel')
+                ->leftJoin('kecamatan', 'kecamatan.kd_kec = pasien.kd_kec')
+                ->leftJoin('kabupaten', 'kabupaten.kd_kab = pasien.kd_kab')
+                ->leftJoin('propinsi', 'propinsi.kd_prop = pasien.kd_prop')
+                ->where('reg_periksa.no_rawat', $no_rawat)
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.no_ktp, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.alamat, pasien.umur, kelurahan.nm_kel, kecamatan.nm_kec, kabupaten.nm_kab, propinsi.nm_prop')
+                ->oneArray();
+            if ($reg) {
+                $data['no_rawat'] = $reg['no_rawat'] ?? '';
+                $data['no_rkm_medis'] = $reg['no_rkm_medis'] ?? '';
+                $data['nama_pasien_terhadap'] = $reg['nm_pasien'] ?? '';
+                $data['jk_pasien_terhadap'] = $reg['jk'] ?? 'L';
+                $data['tmp_lahir_pasien_terhadap'] = $reg['tmp_lahir'] ?? '';
+                $data['tgl_lahir_pasien_terhadap'] = $reg['tgl_lahir'] ?? '';
+                $data['usia_pasien_terhadap'] = $reg['umur'] ?? '';
+                $data['alamat_pasien_terhadap'] = $reg['alamat'] ?? '';
+                $data['kelurahan_pasien_terhadap'] = $reg['nm_kel'] ?? '';
+                $data['kecamatan_pasien_terhadap'] = $reg['nm_kec'] ?? '';
+                $data['kabupaten_pasien_terhadap'] = $reg['nm_kab'] ?? '';
+                $data['provinsi_pasien_terhadap'] = $reg['nm_prop'] ?? '';
+
+                // Default pembuat pernyataan diri sendiri
+                $data['nama_penanggung_jawab'] = $reg['nm_pasien'] ?? '';
+                $data['jk_penanggung_jawab'] = $reg['jk'] ?? 'L';
+                $data['tmp_lahir_penanggung_jawab'] = $reg['tmp_lahir'] ?? '';
+                $data['tgl_lahir_penanggung_jawab'] = $reg['tgl_lahir'] ?? '';
+                $data['usia_penanggung_jawab'] = $reg['umur'] ?? '';
+                $data['no_identitas_penanggung_jawab'] = $reg['no_ktp'] ?? '';
+                $data['alamat_penanggung_jawab'] = $reg['alamat'] ?? '';
+                $data['kelurahan_penanggung_jawab'] = $reg['nm_kel'] ?? '';
+                $data['kecamatan_penanggung_jawab'] = $reg['nm_kec'] ?? '';
+                $data['kabupaten_penanggung_jawab'] = $reg['nm_kab'] ?? '';
+                $data['provinsi_penanggung_jawab'] = $reg['nm_prop'] ?? '';
+                $data['hubungan_pasien'] = 'Diri Sendiri';
+                $data['nama_yang_menyatakan'] = $reg['nm_pasien'] ?? '';
+            }
+        }
+
+        $dokter = $this->db('dokter')->where('status', '1')->toArray();
+
+        return $this->draw('lampiran_persetujuan_tindakan_radiologi/form.html', [
+            'data' => $data,
+            'id' => $id,
+            'dokter' => $dokter
+        ]);
+    }
+
+    public function getPersetujuanradiologihapus($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if ($id) {
+            $this->db('lampiran_persetujuan_tindakan_radiologi')->where('id', $id)->delete();
+            $this->notify('success', 'Data persetujuan tindakan radiologi berhasil dihapus');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'persetujuanradiologimanage']));
+    }
+
+    public function getPersetujuanradiologicetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('lampiran_persetujuan_tindakan_radiologi')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_persetujuan_tindakan_radiologi.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_persetujuan_tindakan_radiologi.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('lampiran_persetujuan_tindakan_radiologi.id', $id)
+            ->select('lampiran_persetujuan_tindakan_radiologi.*, COALESCE(lampiran_persetujuan_tindakan_radiologi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk as jk_pasien_db, pasien.tgl_lahir as tgl_lahir_pasien_db')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rm = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = $rm[$i] ?? '&nbsp;';
+        }
+        $data['no_rkm_medis'] = $rm;
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        // Tanggal Lahir Pasien
+        $tglPasien = !empty($data['tgl_lahir_pasien_terhadap']) ? $data['tgl_lahir_pasien_terhadap'] : ($data['tgl_lahir_pasien_db'] ?? '');
+        if (!empty($tglPasien) && $tglPasien != '0000-00-00') {
+            $tgl = explode('-', $tglPasien);
+            if (count($tgl) == 3) {
+                $data['tgl_lahir_pasien_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tgl_lahir_pasien_indo'] = $tglPasien;
+            }
+        } else {
+            $data['tgl_lahir_pasien_indo'] = '-';
+        }
+
+        // Tanggal Lahir Penanggung Jawab
+        if (!empty($data['tgl_lahir_penanggung_jawab']) && $data['tgl_lahir_penanggung_jawab'] != '0000-00-00') {
+            $tglPj = explode('-', $data['tgl_lahir_penanggung_jawab']);
+            if (count($tglPj) == 3) {
+                $data['tgl_lahir_pj_indo'] = (int)$tglPj[2] . ' ' . $bulan[(int)$tglPj[1]] . ' ' . $tglPj[0];
+            } else {
+                $data['tgl_lahir_pj_indo'] = $data['tgl_lahir_penanggung_jawab'];
+            }
+        } else {
+            $data['tgl_lahir_pj_indo'] = '-';
+        }
+
+        // Tanggal Surat
+        if (!empty($data['tanggal_surat']) && $data['tanggal_surat'] != '0000-00-00') {
+            $tglS = explode('-', $data['tanggal_surat']);
+            if (count($tglS) == 3) {
+                $data['tgl_surat_indo'] = (int)$tglS[2] . ' ' . $bulan[(int)$tglS[1]] . ' ' . $tglS[0];
+                $data['tgl_surat_hari'] = (int)$tglS[2];
+                $data['tgl_surat_bulan'] = $bulan[(int)$tglS[1]];
+                $data['tgl_surat_tahun'] = $tglS[0];
+            } else {
+                $data['tgl_surat_indo'] = $data['tanggal_surat'];
+                $data['tgl_surat_hari'] = date('d');
+                $data['tgl_surat_bulan'] = $bulan[(int)date('m')];
+                $data['tgl_surat_tahun'] = date('Y');
+            }
+        } else {
+            $data['tgl_surat_indo'] = date('d') . ' ' . $bulan[(int)date('m')] . ' ' . date('Y');
+            $data['tgl_surat_hari'] = date('d');
+            $data['tgl_surat_bulan'] = $bulan[(int)date('m')];
+            $data['tgl_surat_tahun'] = date('Y');
+        }
+
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                @ini_set('display_errors', '0');
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 10,
+                    'margin_right' => 10,
+                    'margin_top' => 8,
+                    'margin_bottom' => 8
+                ]);
+                $data['kop_img'] = BASE_DIR . '/assets/img/KOP-SURAT.png';
+                $html = $this->draw('lampiran_persetujuan_tindakan_radiologi/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => true]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Persetujuan_Tindakan_Radiologi_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                if (ob_get_length()) {
+                    ob_clean();
+                }
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                // fallback to normal HTML view
+            }
+        }
+
+        $data['kop_img'] = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_persetujuan_tindakan_radiologi/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => false]);
         exit();
     }
 }
+

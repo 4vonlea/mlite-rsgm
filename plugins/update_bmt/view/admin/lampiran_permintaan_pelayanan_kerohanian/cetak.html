@@ -308,8 +308,7 @@
                                 <td style="padding: 2px 0;">Nama Pasien</td>
                                 <td>:</td>
                                 <td class="dot-line">
-                                    <strong>{$data.nm_pasien}</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ({if: $data.jk ==
-                                    'L'}<u>L</u>/P{elseif: $data.jk == 'P'}L/<u>P</u>{else}L/P{/if})
+                                    <strong>{$data.nm_pasien}</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ({if: $data.jk == 'L'}<u>L</u>/P{elseif: $data.jk == 'P'}L/<u>P</u>{else}L/P{/if})
                                 </td>
                             </tr>
                             <tr>
@@ -370,9 +369,7 @@
 
                 <!-- PERNYATAAN PERMINTAAN PENDAMPINGAN KEROHANIAN -->
                 <div style="margin-top: 10px; margin-bottom: 10px; text-align: justify; line-height: 1.6;">
-                    Dengan ini menyatakan permintaan pendampingan pelayanan kerohanian agama/ kepercayaan &nbsp;<span
-                        style="border-bottom: 1px dotted #000; font-weight: bold; min-width: 140px; display: inline-block; text-align: center; padding: 0 8px;">{if:
-                        !empty($data.agama_kepercayaan)}{$data.agama_kepercayaan}{else}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{/if}</span>&nbsp;
+                    Dengan ini menyatakan permintaan pendampingan pelayanan kerohanian agama/ kepercayaan &nbsp;<span style="border-bottom: 1px dotted #000; font-weight: bold; min-width: 140px; display: inline-block; text-align: center; padding: 0 8px;">{if: !empty($data.agama_kepercayaan)}{$data.agama_kepercayaan}{else}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{/if}</span>&nbsp;
                     Kepada RSGM Gusti Hasan Aman terhadap pasien :
                 </div>
 
@@ -389,8 +386,7 @@
                         <td class="dot-line" style="width: 48%;">{$data.tgl_lahir_indo}</td>
                         <td style="width: 8%; text-align: right; padding-right: 4px;">Umur :</td>
                         <td class="dot-line" style="width: 22%;">
-                            {if: !empty($data.umur_pasien)}{$data.umur_pasien}{elseif:
-                            !empty($data.umur)}{$data.umur}{else}&nbsp;{/if}
+                            {if: !empty($data.umur_pasien)}{$data.umur_pasien}{elseif: !empty($data.umur)}{$data.umur}{else}&nbsp;{/if}
                         </td>
                     </tr>
                     <tr>
@@ -416,8 +412,7 @@
                     <tr>
                         <td style="width: 50%;"></td>
                         <td style="width: 50%; text-align: center; font-size: 8.5pt;">
-                            {$data.kota}, {if:
-                            !empty($data.tanggal_surat_indo)}{$data.tanggal_surat_indo}{else}....................................{/if}
+                            {$data.kota}, {if: !empty($data.tanggal_surat_indo)}{$data.tanggal_surat_indo}{else}....................................{/if}
                         </td>
                     </tr>
                 </table>
@@ -430,14 +425,10 @@
                     </tr>
                     <tr>
                         <td style="height: 65px; vertical-align: bottom;">
-                            ( {if:
-                            !empty($data.nama_perawat)}{$data.nama_perawat}{else}....................................{/if}
-                            )
+                            ( {if: !empty($data.nama_perawat)}{$data.nama_perawat}{else}....................................{/if} )
                         </td>
                         <td style="height: 65px; vertical-align: bottom;">
-                            ( {if:
-                            !empty($data.nama_pemohon)}{$data.nama_pemohon}{else}....................................{/if}
-                            )
+                            ( {if: !empty($data.nama_pemohon)}{$data.nama_pemohon}{else}....................................{/if} )
                         </td>
                     </tr>
                 </table>
