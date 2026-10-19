@@ -513,8 +513,8 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
     var instruksi       = $('textarea[name=instruksi]').val() || '-';
     var evaluasi        = $('textarea[name=evaluasi]').val() || '-';
     var spo2            = $('input:text[name=spo2]').val() || '-';
-    var stts_daftar     = $('input[name=stts_daftar]:checked').val() || 'Lama';
-    var kasus_poli      = $('input[name=kasus_poli]:checked').val() || 'Lama';
+    var stts_daftar     = $('#form_soap input[name=stts_daftar]:checked').val() || 'Lama';
+    var kasus_poli      = $('#form_soap input[name=kasus_poli]:checked').val() || 'Lama';
 
     var url = baseURL + '/oral_diagnostic/savesoap?t=' + mlite.token;
     $.post(url, {
@@ -541,6 +541,10 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
       stts_daftar: stts_daftar,
       kasus_poli: kasus_poli
     }, function(data) {
+      // update attribute pada tombol dropdown display
+      $('a[href="#soap"][data-no_rawat="' + no_rawat + '"]').attr('data-stts_daftar', stts_daftar);
+      $('a[href="#soap"][data-no_rawat="' + no_rawat + '"]').attr('data-status_poli', kasus_poli);
+
       // tampilkan data
       $("#display").hide();
       var url = baseURL + '/oral_diagnostic/soap?t=' + mlite.token;
@@ -624,7 +628,11 @@ $("#soap").on("click",".edit_soap", function(event){
   $('input:text[name=spo2]').val(spo2);
   var kasus_poli      = $(this).attr("data-kasus_poli");
   if (kasus_poli) {
-    $('input[name=kasus_poli][value="' + kasus_poli + '"]').prop('checked', true);
+    $('#form_soap input[name=kasus_poli][value="' + kasus_poli + '"]').prop('checked', true).trigger('change');
+  }
+  var stts_daftar     = $(this).attr("data-stts_daftar");
+  if (stts_daftar) {
+    $('#form_soap input[name=stts_daftar][value="' + stts_daftar + '"]').prop('checked', true).trigger('change');
   }
 
 });
@@ -669,7 +677,11 @@ $("#soap").on("click",".copy_soap", function(event){
   $('input:text[name=spo2]').val(spo2);
   var kasus_poli      = $(this).attr("data-kasus_poli");
   if (kasus_poli) {
-    $('input[name=kasus_poli][value="' + kasus_poli + '"]').prop('checked', true);
+    $('#form_soap input[name=kasus_poli][value="' + kasus_poli + '"]').prop('checked', true).trigger('change');
+  }
+  var stts_daftar     = $(this).attr("data-stts_daftar");
+  if (stts_daftar) {
+    $('#form_soap input[name=stts_daftar][value="' + stts_daftar + '"]').prop('checked', true).trigger('change');
   }
 
   window.scrollTo({ top: 0, behavior: 'smooth' });

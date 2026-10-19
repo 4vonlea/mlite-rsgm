@@ -39,6 +39,9 @@
           {if: isset($value.kasus_poli) && !empty($value.kasus_poli)}
           <br><span class="label {if: $value.kasus_poli == 'Baru'}label-warning{else}label-info{/if}">Kasus: {?=isset_or($value.kasus_poli)?}</span>
           {/if}
+          {if: isset($value.stts_daftar) && !empty($value.stts_daftar)}
+          <br><span class="label {if: $value.stts_daftar == 'Baru'}label-warning{else}label-default{/if}">Kunjungan: {?=isset_or($value.stts_daftar)?}</span>
+          {/if}
         </td>
         <td>{?=isset_or($value.suhu_tubuh)?}</td>
         <td>{?=isset_or($value.tensi)?}</td>
@@ -105,6 +108,7 @@
               data-evaluasi="{?=isset_or($value.evaluasi)?}"
               data-spo2="{?=isset_or($value.spo2)?}"
               data-kasus_poli="{?=isset_or($value.kasus_poli)?}"
+              data-stts_daftar="{?=isset_or($value.stts_daftar)?}"
               ><span class="fa fa-copy"></span><span class="hidden-xs"> Copy</span></button> 
             <button type="button" name="button" class="btn btn-success btn-xs edit_soap"
               data-no_rawat="{?=isset_or($value.no_rawat)?}"
@@ -128,6 +132,7 @@
               data-evaluasi="{?=isset_or($value.evaluasi)?}"
               data-spo2="{?=isset_or($value.spo2)?}"
               data-kasus_poli="{?=isset_or($value.kasus_poli)?}"
+              data-stts_daftar="{?=isset_or($value.stts_daftar)?}"
               {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip}disabled{/if}
               ><span class="fa fa-edit"></span><span class="hidden-xs"> Edit</span></button>
             <button type="button" name="button" class="btn btn-danger btn-xs hapus_soap"

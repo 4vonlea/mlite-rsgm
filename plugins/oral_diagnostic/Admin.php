@@ -770,6 +770,10 @@ class Admin extends AdminModule
       $rows = $this->db('pemeriksaan_ralan')
         ->where('no_rawat', $_POST['no_rawat'])
         ->toArray();
+      $od_reg = $this->db('mlite_pendaftaran_oral_diagnostic')->where('no_rawat', $_POST['no_rawat'])->oneArray();
+      if(empty($od_reg)) {
+        $od_reg = $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->oneArray();
+      }
       $i = 1;
       $row['nama_petugas'] = '';
       $row['departemen_petugas'] = '';
@@ -778,6 +782,10 @@ class Admin extends AdminModule
         $row['nomor'] = $i++;
         $row['nama_petugas'] = $this->core->getPegawaiInfo('nama',$row['nip']);
         $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
+        $row['stts_daftar'] = $od_reg['stts_daftar'] ?? 'Lama';
+        if (empty($row['kasus_poli'])) {
+          $row['kasus_poli'] = $od_reg['status_poli'] ?? 'Lama';
+        }
         $result[] = $row;
       }
 
@@ -869,6 +877,7 @@ class Admin extends AdminModule
       if($stts_daftar != '') $save_reg['stts_daftar'] = $stts_daftar;
       if(!empty($save_reg)) {
           $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($save_reg);
+          $this->db('mlite_pendaftaran_oral_diagnostic')->where('no_rawat', $_POST['no_rawat'])->save($save_reg);
       }
 
       exit();
@@ -877,7 +886,10 @@ class Admin extends AdminModule
     public function postAutofillpemeriksaan()
     {
       $no_rawat = $_POST['no_rawat'] ?? '';
-      $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+      $reg = $this->db('mlite_pendaftaran_oral_diagnostic')->where('no_rawat', $no_rawat)->oneArray();
+      if(empty($reg)) {
+        $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+      }
 
       if (empty($reg)) {
         header('Content-Type: application/json');
@@ -1790,8 +1802,8 @@ class Admin extends AdminModule
         header('Content-type: text/javascript');
         $cek_pegawai = $this->db('pegawai')->where('nik', $this->core->getUserInfo('username', $_SESSION['mlite_user']))->oneArray();
         $cek_role = '';
-        if($cek_pegawai) {
-          $cek_role = $this->core->getPegawaiInfo('nik', $this->core->getUserInfo('username', $_SESSION['mlite_user']));
+        if($cek_pegawai || $this->core->getUserInfo('role', null, true) == 'admin') {
+          $cek_role = $this->core->getUserInfo('username', $_SESSION['mlite_user']);
         }
         $this->assign['websocket'] = $this->settings->get('settings.websocket');
         $this->assign['websocket_proxy'] = $this->settings->get('settings.websocket_proxy');
