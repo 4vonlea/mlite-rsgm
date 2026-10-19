@@ -84,7 +84,7 @@ Berdasarkan pengecekan dan sinkronisasi menyeluruh pada source code `mLite` (di 
 | 2 | GIZI ANAK DAN DEWASA | ❌ Belum Ada | Antrean Lampiran Ranap |
 | 3 | ASESMEN MEDIS UMUM IRNA | ✅ Ada | Modul `update_bmt` (`asesmen_medis_umum_irna`) |
 | 4 | CAIRAN INFUS | ✅ Ada | Modul `update_bmt` (`lampiran_cairan_infus`) |
-| 5 | EWS DEWASA DAN ANAK | ❌ Belum Ada | Antrean Lampiran Ranap |
+| 5 | EWS DEWASA DAN ANAK | ✅ Ada | Modul `update_bmt` (`lampiran_ews`) (Dewasa Hal 1 & Anak Hal 2) |
 | 6 | FORM A - MANAJER PELAYANAN PASIEN | ✅ Ada | Modul `update_bmt` (`lampiran_form_a_mpp`) |
 | 7 | FORM ASESMEN NYERI PASIEN ANAK | ✅ Ada | Terintegrasi di Asesmen Nyeri Ranap |
 | 8 | FORM ASESMEN ULANG STATUS FUNGSIONAL | ✅ Ada | Modul `update_bmt` (`lampiran_asesmen_ulang_status_fungsional`) |

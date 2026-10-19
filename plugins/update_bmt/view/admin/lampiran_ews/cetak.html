@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Lembar Observasi EWS Dewasa & Anak - {$data.no_rawat}</title>
+    <style>
+        {if: empty($is_mpdf)}
+        @page {
+            size: A4 portrait;
+            margin: 4mm 5mm 4mm 5mm;
+        }
+        {/if}
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 6.8pt;
+            line-height: 1.15;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
+            background-color: #f4f6f9;
+            padding: 15px 0;
+        }
+        .page {
+            background: #fff;
+            width: 200mm;
+            min-height: 280mm;
+            margin: 0 auto 20px auto;
+            padding: 4mm;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        {/if}
+
+        /* Toolbar Layar Browser */
+        .no-print-toolbar {
+            width: 200mm;
+            margin: 0 auto 12px auto;
+            padding: 8px 14px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-toolbar {
+            padding: 5px 12px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+
+        @media print {
+            .no-print-toolbar { display: none !important; }
+            body { background: #fff !important; padding: 0 !important; }
+            .page {
+                box-shadow: none !important;
+                margin: 0 !important;
+                width: 100% !important;
+                padding: 0 !important;
+            }
+        }
+
+        /* BINGKAI UTAMA */
+        .main-container {
+            border: 1.5px solid #000;
+            width: 100%;
+        }
+
+        /* KOP SURAT */
+        .kop-header {
+            width: 100%;
+            border-bottom: 1.5px solid #000;
+            text-align: center;
+            padding: 2px;
+        }
+        .kop-header img {
+            width: 100%;
+            max-height: 50px;
+            object-fit: contain;
+        }
+
+        /* HEADER IDENTITAS PASIEN */
+        .header-info-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1.5px solid #000;
+        }
+        .header-info-table td {
+            padding: 2.5px 5px;
+            vertical-align: middle;
+            font-size: 7.2pt;
+        }
+        .header-title-box {
+            width: 35%;
+            border-right: 1.5px solid #000;
+            font-weight: bold;
+            font-size: 8pt;
+            text-transform: uppercase;
+        }
+        .header-nama-box {
+            width: 35%;
+            border-right: 1.5px solid #000;
+            font-weight: bold;
+        }
+        .header-jk-box {
+            width: 30%;
+            font-size: 7pt;
+        }
+
+        /* TABEL OBSERVASI EWS */
+        .table-ews {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 6.2pt;
+        }
+        .table-ews th, .table-ews td {
+            border: 1px solid #000;
+            padding: 1px 0px;
+            text-align: center;
+            vertical-align: middle;
+            height: 13.5px;
+        }
+        .table-ews .col-param {
+            width: 76px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 6.5pt;
+            padding: 1px 2px;
+        }
+        .table-ews .col-range {
+            width: 44px;
+            font-weight: bold;
+            font-size: 6.2pt;
+            padding: 0 1px;
+        }
+        .table-ews .col-score-mid {
+            width: 34px;
+            font-weight: bold;
+            font-size: 6.2pt;
+            text-align: center;
+        }
+        .table-ews .col-obs {
+            width: 16px;
+            text-align: center;
+            font-size: 7pt;
+            font-weight: bold;
+        }
+        .table-ews .col-range-r {
+            width: 44px;
+            font-weight: bold;
+            font-size: 6.2pt;
+        }
+
+        /* PEWS PARAMETER LABELS */
+        .pews-ku-label {
+            width: 175px;
+            text-align: left;
+            padding: 2px 4px !important;
+            font-size: 6.5pt;
+        }
+
+        /* WARNA-WARNA PARAMETER EWS DEWASA */
+        .bg-blue {
+            background-color: #00a2e8 !important;
+            color: #000 !important;
+            font-weight: bold;
+        }
+        .bg-red {
+            background-color: #ff3333 !important;
+            color: #000 !important;
+            font-weight: bold;
+        }
+        .bg-yellow {
+            background-color: #ffff00 !important;
+            color: #000 !important;
+            font-weight: bold;
+        }
+        .bg-peach {
+            background-color: #ffb380 !important;
+            color: #000 !important;
+            font-weight: bold;
+        }
+        .bg-white {
+            background-color: #ffffff !important;
+            color: #000 !important;
+        }
+        .bg-gray {
+            background-color: #e9ecef !important;
+        }
+
+        /* WARNA PEWS ANAK */
+        .bg-pews-ku {
+            background-color: #ffd8b8 !important;
+        }
+        .bg-pews-green {
+            background-color: #d4edda !important;
+        }
+        .bg-pews-peach {
+            background-color: #ffd8b8 !important;
+        }
+        .bg-th-blue {
+            background-color: #85c1e9 !important;
+            font-weight: bold;
+        }
+
+        /* TANDA LINGKARAN O */
+        .circle-o {
+            display: inline-block;
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: 900;
+            font-size: 7.5pt;
+            color: #000;
+            text-align: center;
+            line-height: 1;
+        }
+
+        /* PETUNJUK RESPON KLINIS */
+        .table-panduan {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 5.8pt;
+            line-height: 1.15;
+            border-top: 1.5px solid #000;
+        }
+        .table-panduan td {
+            border: 1px solid #000;
+            padding: 2px 4px;
+            vertical-align: middle;
+        }
+        .lbl-ringan {
+            width: 165px;
+            background-color: #ffff00;
+            font-weight: bold;
+            text-align: center;
+        }
+        .lbl-sedang {
+            width: 165px;
+            background-color: #e67e22;
+            color: #000;
+            font-weight: bold;
+            text-align: center;
+        }
+        .lbl-tinggi {
+            width: 165px;
+            background-color: #e74c3c;
+            color: #fff;
+            font-weight: bold;
+            text-align: center;
+        }
+        .lbl-henti {
+            width: 165px;
+            background-color: #0099ff;
+            color: #fff;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .page-break {
+            page-break-before: always;
+            break-before: page;
+        }
+    </style>
+</head>
+<body>
+
+{if: empty($is_mpdf)}
+<!-- TOOLBAR LAYAR BROWSER -->
+<div class="no-print-toolbar">
+    <div>
+        <strong>Formulir Pemantauan Early Warning System (EWS) - Ranap</strong>
+        <span style="font-size: 10.5px; opacity: 0.85; margin-left: 8px;">No. Rawat: {$data.no_rawat} | Pasien: {$data.nm_pasien}</span>
+    </div>
+    <div>
+        <button onclick="window.print()" class="btn-toolbar btn-print"><i class="fa fa-print"></i> Cetak Dokumen</button>
+        <a href="{?=url([ADMIN, 'update_bmt', 'ewscetak', $data.id])?}?pdf=1" target="_blank" class="btn-toolbar btn-pdf"><i class="fa fa-download"></i> Unduh PDF</a>
+        <a href="{?=url([ADMIN, 'update_bmt', 'ewsmanage'])?}" class="btn-toolbar btn-close">Kembali</a>
+    </div>
+</div>
+{/if}
+
+<!-- ======================================================================= -->
+<!-- HALAMAN 1: EARLY WARNING SCORING SYSTEM (DEWASA)                        -->
+<!-- ======================================================================= -->
+<div class="page">
+    <div class="main-container">
+        <!-- KOP RSGM -->
+        <div class="kop-header">
+            {if: !empty($kop_img)}
+            <img src="{$kop_img}" alt="KOP RSGM Gusti Hasan Aman">
+            {else}
+            <div style="font-size: 9pt; font-weight: bold;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+            <div style="font-size: 11pt; font-weight: bold;">RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</div>
+            <div style="font-size: 6.8pt;">Jl. Simpang Ulin No. 28 Banjarmasin Telp/Fax (0511) 3260818 | Email : rsgmgustihasanaman@yahoo.com</div>
+            {/if}
+        </div>
+
+        <!-- HEADER PASIEN DEWASA -->
+        <table class="header-info-table">
+            <tr>
+                <td class="header-title-box">
+                    Early Warning Scoring<br>System (dewasa)
+                </td>
+                <td class="header-nama-box">
+                    Nama: {$data.nm_pasien}
+                </td>
+                <td class="header-jk-box">
+                    Tanggal Lahir: {$data.tgl_lahir_formatted}<br>
+                    Jenis Kelamin : {if: $data.jk_l}<strong style="border: 1px solid #000; border-radius: 50%; padding: 0 4px;">L</strong> / P{else}L / <strong style="border: 1px solid #000; border-radius: 50%; padding: 0 4px;">P</strong>{/if}
+                </td>
+            </tr>
+        </table>
+
+        <!-- GRID OBSERVASI EWS DEWASA DENGAN KOLOM BLUE / SKOR DI TENGAH -->
+        <table class="table-ews">
+            <!-- TANGGAL -->
+            <tr>
+                <td colspan="2" style="text-align: left; padding-left: 4px; font-weight: bold;">Tanggal:</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs" style="font-size: 6.2pt; font-weight: bold;">{$value.tgl}</td>
+                {/loop}
+                <td class="col-score-mid">&nbsp;</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs" style="font-size: 6.2pt; font-weight: bold;">{$value.tgl}</td>
+                {/loop}
+                <td class="col-range-r">&nbsp;</td>
+            </tr>
+            <!-- JAM / SHIFT -->
+            <tr>
+                <td colspan="2" style="text-align: left; padding-left: 4px; font-weight: bold;">Jam:</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs" style="font-size: 6.2pt; font-weight: bold;">{$value.jam}</td>
+                {/loop}
+                <td class="col-score-mid">&nbsp;</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs" style="font-size: 6.2pt; font-weight: bold;">{$value.jam}</td>
+                {/loop}
+                <td class="col-range-r">&nbsp;</td>
+            </tr>
+
+            <!-- LAJU RESPIRASI -->
+            <tr>
+                <td rowspan="7" class="col-param">Laju Respirasi<br>/menit</td>
+                <td class="col-range bg-blue">≤ 5</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-blue">{if: !empty($value.row_le_5)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-blue">BLUE</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-blue">{if: !empty($value.row_le_5)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-blue">≤ 5</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-red">6-8</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-red">{if: !empty($value.row_6_8)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-red">3</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-red">{if: !empty($value.row_6_8)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-red">6-8</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-yellow">9-11</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_9_11)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-yellow">1</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_9_11)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-yellow">9-11</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-white">12-20</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-white">{if: !empty($value.row_12_20)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-white">0</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-white">{if: !empty($value.row_12_20)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-white">12-20</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-peach">21-24</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-peach">{if: !empty($value.row_21_24)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-peach">2</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-peach">{if: !empty($value.row_21_24)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-peach">21-24</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-red">25-34</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-red">{if: !empty($value.row_25_34)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-red">3</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-red">{if: !empty($value.row_25_34)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-red">25-34</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-blue">≥ 35</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-blue">{if: !empty($value.row_ge_35)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-blue">BLUE</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-blue">{if: !empty($value.row_ge_35)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-blue">≥ 35</td>
+            </tr>
+
+            <!-- SATURASI O2 -->
+            <tr>
+                <td rowspan="4" class="col-param">Saturasi O2</td>
+                <td class="col-range bg-white">≥ 96</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-white">{if: !empty($value.row_ge_96)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-white">0</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-white">{if: !empty($value.row_ge_96)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-white">≥ 96</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-yellow">94-95</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_94_95)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-yellow">1</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_94_95)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-yellow">94-95</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-peach">92-93</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-peach">{if: !empty($value.row_92_93)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-peach">2</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-peach">{if: !empty($value.row_92_93)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-peach">92-93</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-red">≤ 91</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-red">{if: !empty($value.row_le_91)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-red">3</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-red">{if: !empty($value.row_le_91)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-red">≤ 91</td>
+            </tr>
+
+            <!-- SUPLEMEN O2 -->
+            <tr>
+                <td class="col-param">Suplemen O2</td>
+                <td class="col-range bg-peach">%</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-peach">{if: !empty($value.row_suplemen_ya)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-peach">2</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-peach">{if: !empty($value.row_suplemen_ya)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-peach">%</td>
+            </tr>
+
+            <!-- TEKANAN DARAH SISTOLIK -->
+            <tr>
+                <td rowspan="7" class="col-param">Tekanan<br>darah<br>sistolik (mmHg)</td>
+                <td class="col-range bg-red">≥ 220</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-red">{if: !empty($value.row_ge_220)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-red">3</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-red">{if: !empty($value.row_ge_220)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-red">≥ 220</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-yellow">181-220</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_181_220)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-yellow">1</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_181_220)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-yellow">181-220</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-white">111-180</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-white">{if: !empty($value.row_111_180)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-white">0</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-white">{if: !empty($value.row_111_180)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-white">111-180</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-yellow">101-110</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_101_110)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-yellow">1</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_101_110)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-yellow">101-110</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-peach">91-100</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-peach">{if: !empty($value.row_91_100)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-peach">2</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-peach">{if: !empty($value.row_91_100)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-peach">91-100</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-red">71-90</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-red">{if: !empty($value.row_71_90)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-red">3</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-red">{if: !empty($value.row_71_90)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-red">71-90</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-blue">≤ 70</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-blue">{if: !empty($value.row_le_70)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-blue">BLUE</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-blue">{if: !empty($value.row_le_70)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-blue">≤ 70</td>
+            </tr>
+
+            <!-- LAJU JANTUNG / NADI -->
+            <tr>
+                <td rowspan="7" class="col-param">Laju Jantung<br>/menit</td>
+                <td class="col-range bg-blue">≥ 140</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-blue">{if: !empty($value.row_ge_140)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-blue">BLUE</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-blue">{if: !empty($value.row_ge_140)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-blue">≥ 140</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-red">131-140</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-red">{if: !empty($value.row_131_140)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-red">3</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-red">{if: !empty($value.row_131_140)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-red">131-140</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-peach">111-130</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-peach">{if: !empty($value.row_111_130)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-peach">2</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-peach">{if: !empty($value.row_111_130)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-peach">111-130</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-yellow">91-110</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_91_110)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-yellow">1</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_91_110)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-yellow">91-110</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-white">51-90</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-white">{if: !empty($value.row_51_90)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-white">0</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-white">{if: !empty($value.row_51_90)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-white">51-90</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-yellow">41-50</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_41_50)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-yellow">1</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_41_50)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-yellow">41-50</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-blue">≤ 40</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-blue">{if: !empty($value.row_le_40)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-blue">BLUE</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-blue">{if: !empty($value.row_le_40)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-blue">≤ 40</td>
+            </tr>
+
+            <!-- KESADARAN -->
+            <tr>
+                <td rowspan="3" class="col-param">Kesadaran</td>
+                <td class="col-range bg-white">Sadar</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-white">{if: !empty($value.row_sadar)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-white">0</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-white">{if: !empty($value.row_sadar)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-white">Sadar</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-red">Nyeri/ Verbal</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-red">{if: !empty($value.row_nyeri_verbal)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-red">3</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-red">{if: !empty($value.row_nyeri_verbal)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-red">Nyeri/ Verbal</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-blue">Unrespon</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-blue">{if: !empty($value.row_unrespon)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-blue">BLUE</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-blue">{if: !empty($value.row_unrespon)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-blue">Unrespon</td>
+            </tr>
+
+            <!-- TEMPERATUR -->
+            <tr>
+                <td rowspan="5" class="col-param">Temperatur<br>(°C)</td>
+                <td class="col-range bg-red">≤ 35</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-red">{if: !empty($value.row_le_35)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-red">3</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-red">{if: !empty($value.row_le_35)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-red">≤ 35</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-yellow">35.1-36</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_35_1_36)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-yellow">1</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_35_1_36)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-yellow">35.1-36</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-white">36.1-38</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-white">{if: !empty($value.row_36_1_38)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-white">0</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-white">{if: !empty($value.row_36_1_38)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-white">36.1-38</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-yellow">38.1-39</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_38_1_39)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-yellow">2</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-yellow">{if: !empty($value.row_38_1_39)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-yellow">38.1-39</td>
+            </tr>
+            <tr>
+                <td class="col-range bg-peach">≥ 39</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs bg-peach">{if: !empty($value.row_ge_39)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-peach">2</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs bg-peach">{if: !empty($value.row_ge_39)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-range-r bg-peach">≥ 39</td>
+            </tr>
+
+            <!-- TOTAL SKOR -->
+            <tr>
+                <td colspan="2" style="text-align: center; font-weight: bold; font-size: 6.8pt; background-color: #f8f9fa;">TOTAL SKOR</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs" style="font-weight: bold; font-size: 6.8pt; background-color: #f8f9fa;">{$value.total_skor}</td>
+                {/loop}
+                <td class="col-score-mid" style="background-color: #f8f9fa;">&nbsp;</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs" style="font-weight: bold; font-size: 6.8pt; background-color: #f8f9fa;">{$value.total_skor}</td>
+                {/loop}
+                <td class="col-range-r" style="background-color: #f8f9fa;">&nbsp;</td>
+            </tr>
+
+            <!-- PARAMETER TAMBAHAN -->
+            <tr>
+                <td rowspan="3" class="col-param" style="font-size: 6pt;">Parameter<br>tambahan<br>yang<br>mendukung</td>
+                <td class="col-range" style="text-align: left; padding-left: 3px;">GDS</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs" style="font-size: 6pt;">{$value.gds}</td>
+                {/loop}
+                <td class="col-score-mid">&nbsp;</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs" style="font-size: 6pt;">{$value.gds}</td>
+                {/loop}
+                <td class="col-range-r" style="text-align: left; padding-left: 2px;">GDS</td>
+            </tr>
+            <tr>
+                <td class="col-range" style="text-align: left; padding-left: 3px;">Skor Nyeri</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs" style="font-size: 6.2pt; font-weight: bold;">{$value.nyeri}</td>
+                {/loop}
+                <td class="col-score-mid">&nbsp;</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs" style="font-size: 6.2pt; font-weight: bold;">{$value.nyeri}</td>
+                {/loop}
+                <td class="col-range-r" style="text-align: left; padding-left: 2px;">Skor Nyeri</td>
+            </tr>
+            <tr>
+                <td class="col-range" style="text-align: left; padding-left: 3px;">Urin Output</td>
+                {loop: $dewasaColsLeft}
+                <td class="col-obs" style="font-size: 6pt;">{$value.urin}</td>
+                {/loop}
+                <td class="col-score-mid">&nbsp;</td>
+                {loop: $dewasaColsRight}
+                <td class="col-obs" style="font-size: 6pt;">{$value.urin}</td>
+                {/loop}
+                <td class="col-range-r" style="text-align: left; padding-left: 2px;">Urin Output</td>
+            </tr>
+        </table>
+
+        <!-- PANDUAN RESPON EWS DEWASA -->
+        <table class="table-panduan">
+            <tr>
+                <td class="lbl-ringan">SKOR 1-4 (resiko ringan)</td>
+                <td>Assessment segera oleh perawat senior, respon segera, mask 5 menit, eskalasi perawatan dan frekuensi monitoring per 4-6 jam. Jika diperlukan assessment oleh dokter jaga bangsal</td>
+            </tr>
+            <tr>
+                <td class="lbl-sedang">SKOR 5-6 (resiko sedang)</td>
+                <td>Assessment segera oleh dokter jaga (respon segera, maks 5 menit), konsultasi DPJP dan spesialis terkait, eksalasi perawatan dan monitoring tiap jam, pertimbangkan perawatan dengan monitoring yang sesuai (HCU)</td>
+            </tr>
+            <tr>
+                <td class="lbl-tinggi">SKOR 7 ATAU LEBIH / 1 PARAMETER<br>KRITERIA BLUE (resiko tinggi)</td>
+                <td>Resusitasi dan monitoring secara kontinyu oleh dokter jaga dan perawat senior. Aktivasi code blue kegawatan medis (666) respon Tim Medis Emergency (TME) segera, maksimal 10 menit, Informasikan dan konsultasikan ke DPJP.</td>
+            </tr>
+            <tr>
+                <td class="lbl-henti">HENTI NAPAS/JANTUNG</td>
+                <td>Lakukan RJP oleh petugas/tim primer, aktivasi code blue henti jantung (666), respon Tim Medis Emergency (TME) segera, maksimal 5 menit, Informasikan dan konsultasikan DPJP</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- FOOTER HALAMAN 1 -->
+    <table style="width: 100%; margin-top: 3px; font-size: 6.2pt;">
+        <tr>
+            <td style="text-align: left; font-weight: bold; width: 30%;">RSGM/Ed-Rev/02/2023</td>
+            <td style="text-align: right; font-style: italic; width: 70%;">Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</td>
+        </tr>
+    </table>
+</div>
+
+<!-- ======================================================================= -->
+<!-- HALAMAN 2: EARLY WARNING SCORING SYSTEM (ANAK / PEWS)                   -->
+<!-- ======================================================================= -->
+<div class="page page-break">
+    <div class="main-container">
+        <!-- KOP RSGM -->
+        <div class="kop-header">
+            {if: !empty($kop_img)}
+            <img src="{$kop_img}" alt="KOP RSGM Gusti Hasan Aman">
+            {else}
+            <div style="font-size: 9pt; font-weight: bold;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+            <div style="font-size: 11pt; font-weight: bold;">RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</div>
+            <div style="font-size: 6.8pt;">Jl. Simpang Ulin No. 28 Banjarmasin Telp/Fax (0511) 3260818 | Email : rsgmgustihasanaman@yahoo.com</div>
+            {/if}
+        </div>
+
+        <!-- HEADER PASIEN ANAK -->
+        <table class="header-info-table">
+            <tr>
+                <td class="header-title-box">
+                    Early Warning Scoring<br>System (anak)
+                </td>
+                <td class="header-nama-box">
+                    Nama: {$data.nm_pasien}
+                </td>
+                <td class="header-jk-box">
+                    Tanggal Lahir: {$data.tgl_lahir_formatted}<br>
+                    Jenis Kelamin : {if: $data.jk_l}<strong style="border: 1px solid #000; border-radius: 50%; padding: 0 4px;">L</strong> / P{else}L / <strong style="border: 1px solid #000; border-radius: 50%; padding: 0 4px;">P</strong>{/if}
+                </td>
+            </tr>
+        </table>
+
+        <!-- GRID OBSERVASI PEWS -->
+        <table class="table-ews">
+            <!-- TANGGAL -->
+            <tr>
+                <td colspan="2" style="text-align: left; padding-left: 4px; font-weight: bold;">Tanggal:</td>
+                {loop: $anakCols}
+                <td class="col-obs" style="font-size: 6.2pt; font-weight: bold;">{$value.tgl}</td>
+                {/loop}
+                <td class="col-score-mid" style="font-weight: bold;">SKOR</td>
+            </tr>
+            <!-- JAM / SHIFT -->
+            <tr>
+                <td colspan="2" style="text-align: left; padding-left: 4px; font-weight: bold;">Jam:</td>
+                {loop: $anakCols}
+                <td class="col-obs" style="font-size: 6.2pt; font-weight: bold;">{$value.jam}</td>
+                {/loop}
+                <td class="col-score-mid">&nbsp;</td>
+            </tr>
+
+            <!-- 1. KEADAAN UMUM -->
+            <tr>
+                <td rowspan="4" class="col-param bg-pews-ku">KEADAAN<br>UMUM</td>
+                <td class="pews-ku-label bg-pews-ku">Interaksi biasa</td>
+                {loop: $anakCols}
+                <td class="col-obs bg-pews-ku">{if: !empty($value.row_ku_0)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-pews-ku">0</td>
+            </tr>
+            <tr>
+                <td class="pews-ku-label bg-pews-ku">somnolen atau rewel tetapi dapat ditenangkan</td>
+                {loop: $anakCols}
+                <td class="col-obs bg-pews-ku">{if: !empty($value.row_ku_1)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-pews-ku">1</td>
+            </tr>
+            <tr>
+                <td class="pews-ku-label bg-pews-ku">Iritabel, tidak dapat ditenangkan</td>
+                {loop: $anakCols}
+                <td class="col-obs bg-pews-ku">{if: !empty($value.row_ku_2)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-pews-ku">2</td>
+            </tr>
+            <tr>
+                <td class="pews-ku-label bg-pews-ku">Letargi, Gelisah, penurunan respon terhadap nyeri</td>
+                {loop: $anakCols}
+                <td class="col-obs bg-pews-ku">{if: !empty($value.row_ku_3)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-pews-ku">3</td>
+            </tr>
+
+            <!-- 2. KARDIO VASKULAR -->
+            <tr>
+                <td rowspan="4" class="col-param">KARDIO<br>VASKULAR</td>
+                <td class="pews-ku-label bg-pews-green">• Tidak sianosis, ATAU Pengisian kapiler &lt;2 detik</td>
+                {loop: $anakCols}
+                <td class="col-obs bg-pews-green">{if: !empty($value.row_kv_0)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-pews-green">0</td>
+            </tr>
+            <tr>
+                <td class="pews-ku-label bg-pews-peach">• Tidak Pucat ATAU Pengisian kapiler 2 detik</td>
+                {loop: $anakCols}
+                <td class="col-obs bg-pews-peach">{if: !empty($value.row_kv_1)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-pews-peach">1</td>
+            </tr>
+            <tr>
+                <td class="pews-ku-label bg-pews-peach">• Tampak siasonik, ATAU Pengisian kapiler &gt; 2 detik, ATAU Takikardi &gt; 20x di atas parameter RR sesuai usia/mt</td>
+                {loop: $anakCols}
+                <td class="col-obs bg-pews-peach">{if: !empty($value.row_kv_2)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-pews-peach">2</td>
+            </tr>
+            <tr>
+                <td class="pews-ku-label bg-pews-peach">• Sianotik dan motlet, ATAU Pengisian Kapier &gt; 5 detik ATAU Takikardi &gt; 30x di atas parameter RR sesuai usia/mt ATAU, Bradikardia (sesuai Usia)</td>
+                {loop: $anakCols}
+                <td class="col-obs bg-pews-peach">{if: !empty($value.row_kv_3)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-pews-peach">3</td>
+            </tr>
+
+            <!-- 3. RESPIRASI -->
+            <tr>
+                <td rowspan="4" class="col-param">RESPIRASI</td>
+                <td class="pews-ku-label bg-pews-green">• Respirasi dalam parameter normal, tidak terdapat retraksi</td>
+                {loop: $anakCols}
+                <td class="col-obs bg-pews-green">{if: !empty($value.row_resp_0)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-pews-green">0</td>
+            </tr>
+            <tr>
+                <td class="pews-ku-label bg-pews-peach">• Respirasi &gt; 10x di atas parameter RR sesuai Usia permenit, ATAU<br>• Menggunakan Otot alat bantu napas, ATAU Menggunakan FiO2 lebih dari 30%</td>
+                {loop: $anakCols}
+                <td class="col-obs bg-pews-peach">{if: !empty($value.row_resp_1)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-pews-peach">1</td>
+            </tr>
+            <tr>
+                <td class="pews-ku-label bg-pews-peach">• Respirasi &gt; 20x di atas parameter RR sesuai usia/menit, ATAU<br>• Ada retraksi, ATAU Menggunakan FiO2 lebih dari 40%</td>
+                {loop: $anakCols}
+                <td class="col-obs bg-pews-peach">{if: !empty($value.row_resp_2)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-pews-peach">2</td>
+            </tr>
+            <tr>
+                <td class="pews-ku-label bg-pews-peach">• Respirasi &gt; 30x di atas parameter normal, ATAU<br>• ≥ 5x di bawah RR sesuai usia per menit dengan retraksi berat ATAU Merintih, ATAU Menggunakan FiO2 lebih dari 50%</td>
+                {loop: $anakCols}
+                <td class="col-obs bg-pews-peach">{if: !empty($value.row_resp_3)}<span class="circle-o">O</span>{/if}</td>
+                {/loop}
+                <td class="col-score-mid bg-pews-peach">3</td>
+            </tr>
+
+            <!-- TOTAL SKOR PEWS -->
+            <tr>
+                <td colspan="2" style="text-align: center; font-weight: bold; font-size: 7.2pt; background-color: #f8f9fa;">TOTAL SKOR</td>
+                {loop: $anakCols}
+                <td class="col-obs" style="font-weight: bold; font-size: 7.2pt; background-color: #f8f9fa;">{$value.total_skor}</td>
+                {/loop}
+                <td class="col-score-mid" style="background-color: #f8f9fa;">&nbsp;</td>
+            </tr>
+        </table>
+
+        <!-- TABEL PARAMETER NORMAL ANAK SESUAI USIA -->
+        <table style="width: 76%; margin: 5px auto; border-collapse: collapse; font-size: 6.2pt; text-align: center;">
+            <tr class="bg-th-blue">
+                <th style="border: 1px solid #000; padding: 2px 4px; width: 25%;">&nbsp;</th>
+                <th style="border: 1px solid #000; padding: 2px 4px; width: 25%;">Usia</th>
+                <th style="border: 1px solid #000; padding: 2px 4px; width: 25%;">Nadi saat istirahat<br>(kali/menit)</th>
+                <th style="border: 1px solid #000; padding: 2px 4px; width: 25%;">Nafas saat istirahat<br>(napas/menit)</th>
+            </tr>
+            <tr style="background-color: #ffffff;">
+                <td style="border: 1px solid #000; padding: 1.5px 3px; font-weight: bold;">Neonatus</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">0 - 1 bulan</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">100 - 180</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">40 - 60</td>
+            </tr>
+            <tr style="background-color: #ffd8b8;">
+                <td style="border: 1px solid #000; padding: 1.5px 3px; font-weight: bold;">Bayi</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">1 - 12 bulan</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">100 - 180</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">35 - 40</td>
+            </tr>
+            <tr style="background-color: #ffffff;">
+                <td style="border: 1px solid #000; padding: 1.5px 3px; font-weight: bold;">Balita</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">13 - 36 bulan</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">70 - 110</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">25 - 30</td>
+            </tr>
+            <tr style="background-color: #ffd8b8;">
+                <td style="border: 1px solid #000; padding: 1.5px 3px; font-weight: bold;">Pra-Sekolah</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">4 - 6 tahun</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">70 - 110</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">21 - 23</td>
+            </tr>
+            <tr style="background-color: #ffffff;">
+                <td style="border: 1px solid #000; padding: 1.5px 3px; font-weight: bold;">Sekolah</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">7 - 12 tahun</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">70 - 110</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">19 - 21</td>
+            </tr>
+            <tr style="background-color: #ffd8b8;">
+                <td style="border: 1px solid #000; padding: 1.5px 3px; font-weight: bold;">Remaja</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">13 - 19 tahun</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">55 - 90</td>
+                <td style="border: 1px solid #000; padding: 1.5px 3px;">16 - 18</td>
+            </tr>
+        </table>
+
+        <!-- PANDUAN RESPON PEWS -->
+        <table class="table-panduan">
+            <tr>
+                <td class="lbl-ringan" style="background-color: #ffffff; color: #000;">SKOR 0-2</td>
+                <td>• Pasien dalam keadaan stabil, jika skor 0 lakukan evaluasi secara rutin tiap 8 jam, jika skor naik 1 atau 2, Lakukan evaluasi setiap 4 jam, jika diperlukan assessment oleh dokter jaga bangsal</td>
+            </tr>
+            <tr>
+                <td class="lbl-ringan" style="background-color: #ffff00;">SKOR 3-4</td>
+                <td>• Ada penurunan kondisi pasien, assessment oleh dokter jaga bangsal, Lakukan evaluasi ulang setiap 2 jam atau lebih cepat, Konsultasi ke DPJP, lakukan terapi sesuai intruksi, jika diperlukan dipindahkan ke area dengan monitoring yang sesuai</td>
+            </tr>
+            <tr>
+                <td class="lbl-tinggi" style="background-color: #ff0000; color: #fff;">SKOR 5 atau lebih</td>
+                <td>• Ada perubahan yang signifikan, Lakukan resusitasi, monitoring secara kontinyu, Aktivasi code blue kegawatan medis (666) respon Tim Medis Emergency (TME) segera, maksimal 10 menit, Informasi dan Konsultasikan ke DPJP</td>
+            </tr>
+            <tr>
+                <td class="lbl-henti" style="background-color: #0099ff; color: #fff;">SKOR 0-5</td>
+                <td>• Lakukan RJP oleh petugas/tim primer, aktivasi code blue henti jantung (666), respon Tim Medis Emergency, maksimal 5 menit, Informasikan dan Konsultasikan ke DPJP</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- FOOTER HALAMAN 2 -->
+    <table style="width: 100%; margin-top: 3px; font-size: 6.2pt;">
+        <tr>
+            <td style="text-align: left; font-weight: bold; width: 30%;">RSGM/Ed-2022</td>
+            <td style="text-align: right; font-style: italic; width: 70%;">Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

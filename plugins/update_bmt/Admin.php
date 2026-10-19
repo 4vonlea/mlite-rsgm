@@ -13051,5 +13051,393 @@ if (ob_get_length()) {
         echo $this->draw('lampiran_persetujuan_tindakan_radiologi/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => false]);
         exit();
     }
+
+    public function anyEwsmanage()
+    {
+        $stmt = $this->db()->pdo()->query(
+            "SELECT e.*, p.nm_pasien, p.jk, p.umur, p.tgl_lahir
+             FROM lampiran_ews e
+             LEFT JOIN reg_periksa rp ON e.no_rawat = rp.no_rawat
+             LEFT JOIN pasien p ON rp.no_rkm_medis = p.no_rkm_medis OR e.no_rkm_medis = p.no_rkm_medis
+             ORDER BY e.id DESC"
+        );
+        $rows = $stmt ? $stmt->fetchAll(\PDO::FETCH_ASSOC) : [];
+
+        $data = [];
+        foreach ($rows as $k => $r) {
+            $r['nomor'] = $k + 1;
+            $r['nama_pasien'] = $r['nm_pasien'] ?? '-';
+            $r['jk_pasien'] = ($r['jk'] == 'L') ? 'Laki-laki' : (($r['jk'] == 'P') ? 'Perempuan' : '-');
+            $r['umur_pasien'] = $r['umur'] ?? '-';
+
+            // Decode Dewasa
+            $dewasa = json_decode($r['detail_dewasa'] ?? '[]', true) ?: [];
+            $r['jml_dewasa'] = count($dewasa);
+            if (!empty($dewasa)) {
+                $lastD = end($dewasa);
+                $skorD = $lastD['total_skor'] ?? 0;
+                $isBlueD = !empty($lastD['is_blue']);
+                $r['skor_terakhir_dewasa'] = $skorD . ($isBlueD ? ' (BLUE)' : '');
+                if ($isBlueD || $skorD >= 7) {
+                    $r['label_class_dewasa'] = 'label-danger';
+                    $r['status_resiko_dewasa'] = 'Resiko Tinggi';
+                } elseif ($skorD >= 5) {
+                    $r['label_class_dewasa'] = 'label-warning';
+                    $r['status_resiko_dewasa'] = 'Resiko Sedang';
+                } elseif ($skorD >= 1) {
+                    $r['label_class_dewasa'] = 'label-info';
+                    $r['status_resiko_dewasa'] = 'Resiko Ringan';
+                } else {
+                    $r['label_class_dewasa'] = 'label-success';
+                    $r['status_resiko_dewasa'] = 'Normal';
+                }
+            } else {
+                $r['skor_terakhir_dewasa'] = '-';
+                $r['label_class_dewasa'] = 'label-default';
+                $r['status_resiko_dewasa'] = '-';
+            }
+
+            // Decode Anak
+            $anak = json_decode($r['detail_anak'] ?? '[]', true) ?: [];
+            $r['jml_anak'] = count($anak);
+            if (!empty($anak)) {
+                $lastA = end($anak);
+                $skorA = $lastA['total_skor'] ?? 0;
+                $r['skor_terakhir_anak'] = $skorA;
+                if ($skorA >= 5) {
+                    $r['label_class_anak'] = 'label-danger';
+                    $r['status_resiko_anak'] = 'Resiko Tinggi';
+                } elseif ($skorA >= 3) {
+                    $r['label_class_anak'] = 'label-warning';
+                    $r['status_resiko_anak'] = 'Resiko Sedang';
+                } else {
+                    $r['label_class_anak'] = 'label-success';
+                    $r['status_resiko_anak'] = 'Stabil (Skor 0-2)';
+                }
+            } else {
+                $r['skor_terakhir_anak'] = '-';
+                $r['label_class_anak'] = 'label-default';
+                $r['status_resiko_anak'] = '-';
+            }
+
+            $data[] = $r;
+        }
+
+        return $this->draw('lampiran_ews/manage.html', ['data' => $data]);
+    }
+
+    public function anyEwsform($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+
+        // AJAX Pasien Lookup
+        if (isset($_GET['ajax_patient']) || isset($_POST['ajax_patient'])) {
+            header('Content-Type: application/json');
+            $no_rawat = trim($_GET['no_rawat'] ?? ($_POST['no_rawat'] ?? ''));
+            $res = ['success' => false];
+            if (!empty($no_rawat)) {
+                $stmt = $this->db()->pdo()->prepare(
+                    "SELECT rp.no_rawat, rp.no_rkm_medis, p.nm_pasien, p.jk, p.tgl_lahir, p.umur, b.nm_bangsal, k.kd_kamar
+                     FROM reg_periksa rp
+                     JOIN pasien p ON rp.no_rkm_medis = p.no_rkm_medis
+                     LEFT JOIN kamar_inap ki ON rp.no_rawat = ki.no_rawat AND ki.stts_pulang = '-'
+                     LEFT JOIN kamar k ON ki.kd_kamar = k.kd_kamar
+                     LEFT JOIN bangsal b ON k.kd_bangsal = b.kd_bangsal
+                     WHERE rp.no_rawat = ? OR rp.no_rkm_medis = ?
+                     LIMIT 1"
+                );
+                $stmt->execute([$no_rawat, $no_rawat]);
+                $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+                if ($row) {
+                    $res = [
+                        'success' => true,
+                        'no_rawat' => $row['no_rawat'],
+                        'no_rkm_medis' => $row['no_rkm_medis'],
+                        'nm_pasien' => $row['nm_pasien'],
+                        'jk' => ($row['jk'] == 'L') ? 'Laki-laki' : 'Perempuan',
+                        'tgl_lahir' => $row['tgl_lahir'],
+                        'umur' => $row['umur'],
+                        'kamar' => $row['nm_bangsal'] ? $row['nm_bangsal'] . ' (' . $row['kd_kamar'] . ')' : ''
+                    ];
+                }
+            }
+            echo json_encode($res);
+            exit();
+        }
+
+        // POST Simpan
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $saveData = [
+                'no_rawat' => trim($_POST['no_rawat'] ?? ''),
+                'no_rkm_medis' => trim($_POST['no_rkm_medis'] ?? ''),
+                'ruangan' => trim($_POST['ruangan'] ?? ''),
+                'tanggal' => trim($_POST['tanggal'] ?? date('Y-m-d')),
+                'detail_dewasa' => trim($_POST['detail_dewasa'] ?? '[]'),
+                'detail_anak' => trim($_POST['detail_anak'] ?? '[]'),
+                'catatan' => trim($_POST['catatan'] ?? ''),
+                'kd_petugas' => trim($_POST['kd_petugas'] ?? ''),
+                'nama_petugas' => trim($_POST['nama_petugas'] ?? ''),
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+
+            if ($id) {
+                $this->db('lampiran_ews')->where('id', $id)->save($saveData);
+                $this->notify('success', 'Formulir EWS Dewasa & Anak berhasil diperbarui.');
+            } else {
+                $saveData['created_at'] = date('Y-m-d H:i:s');
+                $this->db('lampiran_ews')->save($saveData);
+                $this->notify('success', 'Formulir EWS Dewasa & Anak berhasil ditambahkan.');
+            }
+
+            redirect(url([ADMIN, 'update_bmt', 'ewsmanage']));
+            exit();
+        }
+
+        // Default Data
+        $data = [
+            'id' => '',
+            'no_rawat' => '',
+            'no_rkm_medis' => '',
+            'nm_pasien' => '',
+            'jk_pasien' => '',
+            'tgl_lahir_pasien' => '',
+            'umur_pasien' => '',
+            'ruangan' => '',
+            'tanggal' => date('Y-m-d'),
+            'catatan' => '',
+            'kd_petugas' => '',
+            'nama_petugas' => '',
+            'detail_dewasa_json' => '[]',
+            'detail_anak_json' => '[]'
+        ];
+
+        if ($id) {
+            $stmt = $this->db()->pdo()->prepare(
+                "SELECT e.*, p.nm_pasien, p.jk, p.umur, p.tgl_lahir
+                 FROM lampiran_ews e
+                 LEFT JOIN reg_periksa rp ON e.no_rawat = rp.no_rawat
+                 LEFT JOIN pasien p ON rp.no_rkm_medis = p.no_rkm_medis OR e.no_rkm_medis = p.no_rkm_medis
+                 WHERE e.id = ? LIMIT 1"
+            );
+            $stmt->execute([$id]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if ($row) {
+                $data = array_merge($data, $row);
+                $data['jk_pasien'] = ($row['jk'] == 'L') ? 'Laki-laki' : (($row['jk'] == 'P') ? 'Perempuan' : '');
+                $data['tgl_lahir_pasien'] = $row['tgl_lahir'] ?? '';
+                $data['umur_pasien'] = $row['umur'] ?? '';
+                $data['detail_dewasa_json'] = !empty($row['detail_dewasa']) ? $row['detail_dewasa'] : '[]';
+                $data['detail_anak_json'] = !empty($row['detail_anak']) ? $row['detail_anak'] : '[]';
+            }
+        }
+
+        return $this->draw('lampiran_ews/form.html', ['data' => $data, 'id' => $id]);
+    }
+
+    public function getEwshapus($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if ($id) {
+            $this->db('lampiran_ews')->where('id', $id)->delete();
+            $this->notify('success', 'Formulir EWS berhasil dihapus.');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'ewsmanage']));
+        exit();
+    }
+
+    public function getEwscetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        $stmt = $this->db()->pdo()->prepare(
+            "SELECT e.*, p.nm_pasien, p.jk, p.umur, p.tgl_lahir
+             FROM lampiran_ews e
+             LEFT JOIN reg_periksa rp ON e.no_rawat = rp.no_rawat
+             LEFT JOIN pasien p ON rp.no_rkm_medis = p.no_rkm_medis OR e.no_rkm_medis = p.no_rkm_medis
+             WHERE e.id = ? LIMIT 1"
+        );
+        $stmt->execute([$id]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            echo "Data Formulir EWS tidak ditemukan.";
+            exit();
+        }
+
+        $data = $row;
+        $data['jk_l'] = ($row['jk'] == 'L');
+        $data['jk_p'] = ($row['jk'] == 'P');
+        if (!empty($row['tgl_lahir']) && $row['tgl_lahir'] != '0000-00-00') {
+            $tglArr = explode('-', $row['tgl_lahir']);
+            $data['tgl_lahir_formatted'] = (count($tglArr) == 3) ? ((int)$tglArr[2] . '/' . (int)$tglArr[1] . '/' . $tglArr[0]) : $row['tgl_lahir'];
+        } else {
+            $data['tgl_lahir_formatted'] = '-';
+        }
+
+        // Decode 24 Kolom Dewasa (12 Kiri, 1 Kolom Skor/BLUE Tengah, 12 Kanan)
+        $rawDewasa = json_decode($row['detail_dewasa'] ?? '[]', true) ?: [];
+        $dewasaColsLeft = [];
+        $dewasaColsRight = [];
+        for ($i = 0; $i < 24; $i++) {
+            if (isset($rawDewasa[$i])) {
+                $c = $rawDewasa[$i];
+                $resp = $c['respirasi'] ?? '';
+                $sat = $c['saturasi'] ?? '';
+                $sup = $c['suplemen_o2'] ?? '';
+                $tens = $c['tensi'] ?? '';
+                $nad = $c['nadi'] ?? '';
+                $kes = $c['kesadaran'] ?? '';
+                $suh = $c['suhu'] ?? '';
+
+                $colData = [
+                    'tgl' => $c['tgl'] ?? '',
+                    'jam' => $c['jam'] ?? '',
+                    'total_skor' => isset($c['total_skor']) ? $c['total_skor'] : '',
+                    'gds' => $c['gds'] ?? '',
+                    'nyeri' => $c['nyeri'] ?? '',
+                    'urin' => $c['urin'] ?? '',
+                    'row_le_5' => ($resp === 'le_5' || $resp === 'le_8') ? 'O' : '',
+                    'row_6_8' => ($resp === '6_8') ? 'O' : '',
+                    'row_9_11' => ($resp === '9_11') ? 'O' : '',
+                    'row_12_20' => ($resp === '12_20') ? 'O' : '',
+                    'row_21_24' => ($resp === '21_24') ? 'O' : '',
+                    'row_25_34' => ($resp === '25_34') ? 'O' : '',
+                    'row_ge_35' => ($resp === 'ge_35') ? 'O' : '',
+                    'row_ge_96' => ($sat === 'ge_96') ? 'O' : '',
+                    'row_94_95' => ($sat === '94_95') ? 'O' : '',
+                    'row_92_93' => ($sat === '92_93') ? 'O' : '',
+                    'row_le_91' => ($sat === 'le_91') ? 'O' : '',
+                    'row_suplemen_ya' => ($sup === 'ya') ? 'O' : '',
+                    'row_ge_220' => ($tens === 'ge_220') ? 'O' : '',
+                    'row_181_220' => ($tens === '181_220') ? 'O' : '',
+                    'row_111_180' => ($tens === '111_180') ? 'O' : '',
+                    'row_101_110' => ($tens === '101_110') ? 'O' : '',
+                    'row_91_100' => ($tens === '91_100') ? 'O' : '',
+                    'row_71_90' => ($tens === '71_90') ? 'O' : '',
+                    'row_le_70' => ($tens === 'le_70') ? 'O' : '',
+                    'row_ge_140' => ($nad === 'ge_140') ? 'O' : '',
+                    'row_131_140' => ($nad === '131_140') ? 'O' : '',
+                    'row_111_130' => ($nad === '111_130') ? 'O' : '',
+                    'row_91_110' => ($nad === '91_110') ? 'O' : '',
+                    'row_51_90' => ($nad === '51_90') ? 'O' : '',
+                    'row_41_50' => ($nad === '41_50') ? 'O' : '',
+                    'row_le_40' => ($nad === 'le_40') ? 'O' : '',
+                    'row_sadar' => ($kes === 'sadar') ? 'O' : '',
+                    'row_nyeri_verbal' => ($kes === 'nyeri_verbal') ? 'O' : '',
+                    'row_unrespon' => ($kes === 'unrespon') ? 'O' : '',
+                    'row_le_35' => ($suh === 'le_35') ? 'O' : '',
+                    'row_35_1_36' => ($suh === '35_1_36') ? 'O' : '',
+                    'row_36_1_38' => ($suh === '36_1_38') ? 'O' : '',
+                    'row_38_1_39' => ($suh === '38_1_39') ? 'O' : '',
+                    'row_ge_39' => ($suh === 'ge_39') ? 'O' : ''
+                ];
+            } else {
+                $colData = [
+                    'tgl' => '', 'jam' => '', 'total_skor' => '', 'gds' => '', 'nyeri' => '', 'urin' => '',
+                    'row_le_5' => '', 'row_6_8' => '', 'row_9_11' => '', 'row_12_20' => '', 'row_21_24' => '', 'row_25_34' => '', 'row_ge_35' => '',
+                    'row_ge_96' => '', 'row_94_95' => '', 'row_92_93' => '', 'row_le_91' => '', 'row_suplemen_ya' => '',
+                    'row_ge_220' => '', 'row_181_220' => '', 'row_111_180' => '', 'row_101_110' => '', 'row_91_100' => '', 'row_71_90' => '', 'row_le_70' => '',
+                    'row_ge_140' => '', 'row_131_140' => '', 'row_111_130' => '', 'row_91_110' => '', 'row_51_90' => '', 'row_41_50' => '', 'row_le_40' => '',
+                    'row_sadar' => '', 'row_nyeri_verbal' => '', 'row_unrespon' => '',
+                    'row_le_35' => '', 'row_35_1_36' => '', 'row_36_1_38' => '', 'row_38_1_39' => '', 'row_ge_39' => ''
+                ];
+            }
+
+            if ($i < 12) {
+                $dewasaColsLeft[] = $colData;
+            } else {
+                $dewasaColsRight[] = $colData;
+            }
+        }
+
+        // Decode 20 Kolom Anak
+        $rawAnak = json_decode($row['detail_anak'] ?? '[]', true) ?: [];
+        $anakCols = [];
+        for ($i = 0; $i < 20; $i++) {
+            if (isset($rawAnak[$i])) {
+                $c = $rawAnak[$i];
+                $ku = isset($c['keadaan_umum']) ? (string)$c['keadaan_umum'] : '';
+                $kv = isset($c['kardiovaskular']) ? (string)$c['kardiovaskular'] : '';
+                $resp = isset($c['respirasi']) ? (string)$c['respirasi'] : '';
+
+                $anakCols[] = [
+                    'tgl' => $c['tgl'] ?? '',
+                    'jam' => $c['jam'] ?? '',
+                    'total_skor' => isset($c['total_skor']) ? $c['total_skor'] : '',
+                    'row_ku_0' => ($ku === '0') ? 'O' : '',
+                    'row_ku_1' => ($ku === '1') ? 'O' : '',
+                    'row_ku_2' => ($ku === '2') ? 'O' : '',
+                    'row_ku_3' => ($ku === '3') ? 'O' : '',
+                    'row_kv_0' => ($kv === '0') ? 'O' : '',
+                    'row_kv_1' => ($kv === '1') ? 'O' : '',
+                    'row_kv_2' => ($kv === '2') ? 'O' : '',
+                    'row_kv_3' => ($kv === '3') ? 'O' : '',
+                    'row_resp_0' => ($resp === '0') ? 'O' : '',
+                    'row_resp_1' => ($resp === '1') ? 'O' : '',
+                    'row_resp_2' => ($resp === '2') ? 'O' : '',
+                    'row_resp_3' => ($resp === '3') ? 'O' : ''
+                ];
+            } else {
+                $anakCols[] = [
+                    'tgl' => '', 'jam' => '', 'total_skor' => '',
+                    'row_ku_0' => '', 'row_ku_1' => '', 'row_ku_2' => '', 'row_ku_3' => '',
+                    'row_kv_0' => '', 'row_kv_1' => '', 'row_kv_2' => '', 'row_kv_3' => '',
+                    'row_resp_0' => '', 'row_resp_1' => '', 'row_resp_2' => '', 'row_resp_3' => ''
+                ];
+            }
+        }
+
+        if (file_exists(BASE_DIR . '/vendor/autoload.php')) {
+            require_once BASE_DIR . '/vendor/autoload.php';
+        }
+
+        // Unduh PDF Gabungan (Page 1: Dewasa, Page 2: Anak)
+        if (isset($_GET['pdf']) && $_GET['pdf'] == '1' && class_exists('\Mpdf\Mpdf')) {
+            try {
+                @ini_set('display_errors', '0');
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 5,
+                    'margin_right' => 5,
+                    'margin_top' => 5,
+                    'margin_bottom' => 5
+                ]);
+                $kop_img = BASE_DIR . '/assets/img/KOP-SURAT.png';
+                $html = $this->draw('lampiran_ews/cetak.html', [
+                    'data' => $data,
+                    'kop_img' => $kop_img,
+                    'dewasaColsLeft' => $dewasaColsLeft,
+                    'dewasaColsRight' => $dewasaColsRight,
+                    'anakCols' => $anakCols,
+                    'is_mpdf' => true
+                ]);
+                $mpdf->WriteHTML($html);
+                $filename = 'EWS_Dewasa_dan_Anak_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                if (ob_get_length()) {
+                    ob_clean();
+                }
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Throwable $e) {
+                // fallback to html view
+            }
+        }
+
+        // Tampilan Web / HTML Print
+        $kop_img = url('assets/img/KOP-SURAT.png');
+        echo $this->draw('lampiran_ews/cetak.html', [
+            'data' => $data,
+            'kop_img' => $kop_img,
+            'dewasaColsLeft' => $dewasaColsLeft,
+            'dewasaColsRight' => $dewasaColsRight,
+            'anakCols' => $anakCols,
+            'is_mpdf' => false
+        ]);
+        exit();
+    }
 }
+
 
