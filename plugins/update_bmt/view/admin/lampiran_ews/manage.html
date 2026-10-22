@@ -9,7 +9,7 @@
     </div>
     <div class="panel-body">
         <div class="alert alert-info" style="font-size: 12.5px; margin-bottom: 15px;">
-            <i class="fa fa-info-circle"></i> <strong>Tentang Formulir EWS Terpadu:</strong> Formulir ini memantau skor peringatan dini kegawatan pasien rawat inap. Output dokumen cetak dan unduh PDF menggabungkan lembar <strong>EWS Dewasa (Halaman 1)</strong> dan <strong>EWS Anak / PEWS (Halaman 2)</strong> menjadi satu berkas rekam medis terpadu sesuai standar RSGM Gusti Hasan Aman.
+            <i class="fa fa-info-circle"></i> <strong>Tentang Formulir EWS Terpadu:</strong> Formulir ini memantau skor peringatan dini kegawatan pasien rawat inap. Output dokumen cetak dan unduh PDF menggabungkan lembar <strong>EWS Dewasa (Halaman 1)</strong> dan <strong>Lembar Observasi EWS (Halaman 2)</strong> menjadi satu berkas rekam medis terpadu sesuai standar RSGM Gusti Hasan Aman.
         </div>
 
         <div class="table-responsive">
@@ -20,8 +20,8 @@
                         <th style="text-align: center; width: 140px;">No. Rawat & Tanggal</th>
                         <th style="text-align: center;">Identitas Pasien</th>
                         <th style="text-align: center; width: 120px;">Ruangan</th>
-                        <th style="text-align: center; width: 140px;">EWS Dewasa</th>
-                        <th style="text-align: center; width: 140px;">EWS Anak (PEWS)</th>
+                        <th style="text-align: center; width: 140px;">EWS Dewasa (Hal 1)</th>
+                        <th style="text-align: center; width: 140px;">Observasi EWS (Hal 2)</th>
                         <th style="text-align: center; width: 130px;">Petugas</th>
                         <th style="text-align: center; width: 140px;">Aksi</th>
                     </tr>
@@ -70,7 +70,7 @@
                                 <a href="{?=url([ADMIN, 'update_bmt', 'ewscetak', $value.id])?}" target="_blank" class="btn btn-info btn-xs" title="Cetak / Pratinjau Form">
                                     <i class="fa fa-print"></i>
                                 </a>
-                                <a href="{?=url([ADMIN, 'update_bmt', 'ewscetak', $value.id])?}&pdf=1" target="_blank" class="btn btn-danger btn-xs" title="Unduh File PDF (2 Halaman)">
+                                <a href="{?=url([ADMIN, 'update_bmt', 'ewscetak', $value.id])?}?pdf=1" target="_blank" class="btn btn-danger btn-xs" title="Unduh File PDF">
                                     <i class="fa fa-file-pdf-o"></i>
                                 </a>
                                 <a href="{?=url([ADMIN, 'update_bmt', 'ewsform', $value.id])?}" class="btn btn-warning btn-xs" title="Edit Data Observasi">

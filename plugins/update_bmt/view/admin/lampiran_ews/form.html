@@ -1,206 +1,752 @@
 <div class="panel panel-default">
-    <div class="panel-heading">
-        <h3 class="panel-title" style="font-weight: bold;">
-            <i class="fa fa-heartbeat"></i> {if: !empty($id)}Edit{else}Tambah{/if} Formulir EWS Dewasa & Anak (Ranap)
+    <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="panel-title" style="font-weight: bold; font-size: 15px;">
+            <i class="fa fa-heartbeat text-danger"></i> {if: !empty($id)}Edit{else}Tambah{/if} Formulir EWS Ranap (2 Halaman Sesuai Formulir RS)
         </h3>
+        <div>
+            <a href="{?=url([ADMIN, 'update_bmt', 'ewsmanage'])?}" class="btn btn-default btn-sm">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+            </a>
+            {if: !empty($id)}
+            <a href="{?=url([ADMIN, 'update_bmt', 'ewscetak', $id])?}" target="_blank" class="btn btn-info btn-sm">
+                <i class="fa fa-print"></i> Cetak / PDF (2 Halaman)
+            </a>
+            {/if}
+        </div>
     </div>
     <div class="panel-body">
         <form method="POST" action="" class="form-horizontal" id="form-ews">
-            <!-- PENCARIAN PASIEN / NO RAWAT -->
-            <div class="alert alert-info" style="margin-bottom: 20px;">
+            <!-- PENCARIAN & IDENTITAS PASIEN -->
+            <div class="alert alert-info" style="margin-bottom: 15px; padding: 12px 15px;">
                 <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="col-sm-4 control-label">No. Rawat / No. RM <span class="text-danger">*</span></label>
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Masukkan No. Rawat atau No. RM" required>
-                                    <span class="input-group-btn">
-                                        <button class="btn btn-primary" type="button" id="btn-cari-pasien">
-                                            <i class="fa fa-search"></i> Cari Pasien
-                                        </button>
-                                    </span>
-                                </div>
-                            </div>
+                    <div class="col-md-3">
+                        <label style="font-size: 12px; margin-bottom: 3px;">No. Rawat / RM <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" name="no_rawat" id="no_rawat" class="form-control input-sm" value="{$data.no_rawat}" placeholder="No. Rawat / No. RM" required>
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary btn-sm" type="button" id="btn-cari-pasien" title="Cari data pasien dari database">
+                                    <i class="fa fa-search"></i> Cari
+                                </button>
+                            </span>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="col-sm-4 control-label">No. Rekam Medis</label>
-                            <div class="col-sm-8">
-                                <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" placeholder="No. RM" readonly>
-                            </div>
-                        </div>
+                    <div class="col-md-3">
+                        <label style="font-size: 12px; margin-bottom: 3px;">Nama Pasien <span class="text-danger">*</span></label>
+                        <input type="text" name="nama_pasien" id="top_nama_pasien" class="form-control input-sm" value="{$data.nm_pasien}" placeholder="Nama Lengkap Pasien" required style="font-weight: bold;">
                     </div>
-                </div>
-            </div>
-
-            <!-- IDENTITAS PASIEN RAWAT INAP -->
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h4 class="panel-title" style="font-weight: bold; font-size: 13px;">
-                        <i class="fa fa-user"></i> Identitas Pasien & Pengaturan Monitoring EWS
-                    </h4>
-                </div>
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="col-sm-4 control-label">Nama Pasien</label>
-                                <div class="col-sm-8">
-                                    <input type="text" id="nm_pasien" class="form-control" value="{$data.nm_pasien}" readonly>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-4 control-label">Jenis Kelamin / Tgl Lahir</label>
-                                <div class="col-sm-4">
-                                    <input type="text" id="jk_pasien" class="form-control" value="{$data.jk_pasien}" placeholder="JK" readonly>
-                                </div>
-                                <div class="col-sm-4">
-                                    <input type="text" id="tgl_lahir_pasien" class="form-control" value="{$data.tgl_lahir_pasien}" placeholder="Tgl Lahir" readonly>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-4 control-label">Usia Pasien</label>
-                                <div class="col-sm-8">
-                                    <input type="text" id="umur_pasien" class="form-control" value="{$data.umur_pasien}" placeholder="Usia" readonly>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="col-sm-4 control-label">Ruangan Rawat Inap <span class="text-danger">*</span></label>
-                                <div class="col-sm-8">
-                                    <input type="text" name="ruangan" id="ruangan" class="form-control" value="{$data.ruangan}" placeholder="Contoh: Bangsal Bedah / Kamar 203" required>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-4 control-label">Tanggal Mulai EWS</label>
-                                <div class="col-sm-8">
-                                    <input type="date" name="tanggal" id="tanggal" class="form-control" value="{$data.tanggal}" required>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-4 control-label">Petugas / Perawat</label>
-                                <div class="col-sm-8">
-                                    <input type="text" name="nama_petugas" id="nama_petugas" class="form-control" value="{$data.nama_petugas}" placeholder="Nama Petugas Pelaksana">
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-md-2">
+                        <label style="font-size: 12px; margin-bottom: 3px;">Tanggal Lahir</label>
+                        <input type="date" name="tgl_lahir" id="top_tgl_lahir" class="form-control input-sm" value="{$data.tgl_lahir_pasien}">
+                    </div>
+                    <div class="col-md-2">
+                        <label style="font-size: 12px; margin-bottom: 3px;">Jenis Kelamin</label>
+                        <select name="jk" id="top_jk" class="form-control input-sm">
+                            <option value="">- Pilih -</option>
+                            <option value="L" {if: $data.jk == 'L'}selected{/if}>Laki-laki (L)</option>
+                            <option value="P" {if: $data.jk == 'P'}selected{/if}>Perempuan (P)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label style="font-size: 12px; margin-bottom: 3px;">Ruangan / Kamar</label>
+                        <input type="text" name="ruangan" id="ruangan" class="form-control input-sm" value="{$data.ruangan}" placeholder="Ruangan / Kamar" required>
+                        <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{$data.no_rkm_medis}">
+                        <input type="hidden" name="tanggal" id="tanggal" value="{$data.tanggal}">
+                        <input type="hidden" name="nama_petugas" id="nama_petugas" value="{$data.nama_petugas}">
                     </div>
                 </div>
             </div>
 
-            <!-- TABS NAVIGASI DEWASA & ANAK -->
-            <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 20px; font-weight: bold; font-size: 14px;">
+            <!-- TABS NAVIGASI 2 HALAMAN INPUTAN -->
+            <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 15px; font-weight: bold; font-size: 13.5px;">
                 <li role="presentation" class="active">
-                    <a href="#tab-dewasa" aria-controls="tab-dewasa" role="tab" data-toggle="tab">
-                        <i class="fa fa-user-md text-primary"></i> 1. Early Warning Scoring System (DEWASA)
+                    <a href="#tab-halaman1" aria-controls="tab-halaman1" role="tab" data-toggle="tab">
+                        <i class="fa fa-user-md text-primary"></i> 1. Halaman 1 (EWS Dewasa - 24 Kolom)
                     </a>
                 </li>
                 <li role="presentation">
-                    <a href="#tab-anak" aria-controls="tab-anak" role="tab" data-toggle="tab">
-                        <i class="fa fa-child text-warning"></i> 2. Early Warning Scoring System (ANAK / PEWS)
+                    <a href="#tab-halaman2" aria-controls="tab-halaman2" role="tab" data-toggle="tab">
+                        <i class="fa fa-file-text-o text-success"></i> 2. Halaman 2 (Lembar Observasi 16 Kolom)
                     </a>
                 </li>
             </ul>
 
             <div class="tab-content">
                 <!-- ======================================================== -->
-                <!-- TAB 1: EWS DEWASA                                        -->
+                <!-- TAB 1: HALAMAN 1 (EWS DEWASA - 24 KOLOM)                 -->
                 <!-- ======================================================== -->
-                <div role="tabpanel" class="tab-pane active" id="tab-dewasa">
-                    <div class="panel panel-primary">
-                        <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
-                            <h4 class="panel-title" style="font-weight: bold;">
-                                <i class="fa fa-table"></i> Lembar Observasi EWS Dewasa (Maksimal 16 Kolom Observasi)
-                            </h4>
-                            <button type="button" class="btn btn-success btn-xs" id="btn-tambah-dewasa" style="font-weight: bold;">
-                                <i class="fa fa-plus"></i> Tambah Kolom Observasi Dewasa
+                <div role="tabpanel" class="tab-pane active" id="tab-halaman1">
+                    <!-- TOOLBAR CEPAT HALAMAN 1 -->
+                    <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <div style="font-size: 12px; color: #334155;">
+                            <strong><i class="fa fa-info-circle text-info"></i> Petunjuk Pengisian Halaman 1:</strong>
+                            Nama, Tanggal Lahir, dan Jenis Kelamin dapat diketik/diklik langsung pada kotak header formulir di bawah ini. Klik langsung sel baris pengukuran untuk memilih nilai parameter.
+                        </div>
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" class="btn btn-success btn-xs" id="btn-quick-now" title="Isikan tanggal & jam sekarang pada kolom kosong pertama">
+                                <i class="fa fa-clock-o"></i> + Tgl & Jam Sekarang (Hal 1)
+                            </button>
+                            <button type="button" class="btn btn-default btn-xs" id="btn-clear-dewasa" title="Kosongkan seluruh data tabel dewasa">
+                                <i class="fa fa-eraser"></i> Bersihkan Kolom Hal 1
                             </button>
                         </div>
-                        <div class="panel-body">
-                            <div class="alert alert-warning" style="font-size: 12px; margin-bottom: 12px;">
-                                <i class="fa fa-info-circle"></i> Setiap kolom mewakili satu kali pemantauan (Tanggal & Jam/Shift). Pilihlah rentang nilai parameter klinis; sistem otomatis menghitung <strong>Total Skor</strong> dan menentukan tingkat resiko. Pada lembar cetak/PDF, nilai terpilih akan diberi tanda lingkaran <strong>O</strong> persis seperti formulir asli.
+                    </div>
+
+                    <!-- LEMBAR FISIK DOKUMEN EWS DEWASA -->
+                    <div class="ews-sheet-wrapper">
+                        <div class="ews-sheet-container">
+                            <!-- KOP SURAT RSGM -->
+                            <div class="ews-kop-box">
+                                {if: !empty($kop_img)}
+                                <img src="{$kop_img}" alt="KOP RSGM Gusti Hasan Aman" class="ews-kop-img">
+                                {else}
+                                <div style="font-size: 10pt; font-weight: bold;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+                                <div style="font-size: 12pt; font-weight: bold;">RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</div>
+                                <div style="font-size: 7pt;">Jl. Simpang Ulin No. 28 Banjarmasin Kode Pos 70233 Telp/Fax (0511) 3260818<br>Email : rsgmgustihasanaman@yahoo.com Website : rsgm.kalselprov.go.id</div>
+                                {/if}
                             </div>
 
-                            <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
-                                <table class="table table-bordered table-condensed table-hover" id="table-input-dewasa" style="min-width: 900px; font-size: 11.5px;">
-                                    <thead>
-                                        <tr class="info">
-                                            <th style="width: 40px; text-align: center;">Aksi</th>
-                                            <th style="width: 80px; text-align: center;">Tgl (dd/mm)</th>
-                                            <th style="width: 70px; text-align: center;">Jam/Shift</th>
-                                            <th>Laju Respirasi (/mnt)</th>
-                                            <th>Saturasi O2 (%)</th>
-                                            <th style="width: 95px;">O2 Suplemen</th>
-                                            <th>TD Sistolik (mmHg)</th>
-                                            <th>Laju Jantung (/mnt)</th>
-                                            <th>Kesadaran</th>
-                                            <th>Suhu (°C)</th>
-                                            <th style="width: 60px; text-align: center;">Skor</th>
-                                            <th style="width: 60px;">GDS</th>
-                                            <th style="width: 60px;">Nyeri</th>
-                                            <th style="width: 60px;">Urin</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tbody-dewasa">
-                                        <!-- Row rendered via Javascript -->
-                                    </tbody>
+                            <!-- HEADER IDENTITAS PASIEN (SESUAI GAMBAR 1 - BISA DIINPUT LANGSUNG) -->
+                            <table class="ews-patient-header">
+                                <tr>
+                                    <td class="box-title" style="width: 25%;">
+                                        Early Warning Scoring<br>System (dewasa)
+                                    </td>
+                                    <td class="box-name" style="width: 45%; vertical-align: middle;">
+                                        <div style="display: flex; align-items: center; gap: 5px;">
+                                            <span style="font-weight: bold; white-space: nowrap;">Nama:</span>
+                                            <input type="text" id="inp_nama_pasien_h1" class="form-control input-sm inp-box-patient" value="{$data.nm_pasien}" placeholder="Ketik nama pasien di sini..." style="height: 24px; font-weight: bold; font-size: 11px; padding: 1px 6px; border: 1px dashed #94a3b8; background: #fff;">
+                                        </div>
+                                    </td>
+                                    <td class="box-meta" style="width: 30%; vertical-align: middle;">
+                                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                                            <span style="font-weight: bold; white-space: nowrap;">Tanggal Lahir:</span>
+                                            <input type="date" id="inp_tgl_lahir_h1" class="form-control input-sm inp-box-patient" value="{$data.tgl_lahir_pasien}" style="height: 22px; width: 130px; font-size: 10.5px; padding: 0 4px; border: 1px dashed #94a3b8; background: #fff;">
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <span style="font-weight: bold;">Jenis Kelamin :</span>
+                                            <span id="opt_jk_l" class="jk-click-opt {if: $data.jk == 'L'}jk-circle{/if}" data-jk="L" title="Pilih Laki-laki">L</span>
+                                            <span>/</span>
+                                            <span id="opt_jk_p" class="jk-click-opt {if: $data.jk == 'P'}jk-circle{/if}" data-jk="P" title="Pilih Perempuan">P</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- TABEL GRID 24 KOLOM OBSERVASI EWS DEWASA -->
+                            <div class="ews-grid-scroll">
+                                <table class="table-ews-grid" id="table-ews-dewasa">
+                                    <!-- ROW 1: TANGGAL -->
+                                    <tr class="row-header">
+                                        <td colspan="2" class="col-hdr-label">Tanggal:</td>
+                                        <!-- Kolom 0-11 (Kiri) -->
+                                        {loop: $colsLeft}
+                                        <td class="cell-inp-hdr">
+                                            <input type="text" class="inp-cell-tgl" data-col="{$value}" placeholder="dd/mm">
+                                        </td>
+                                        {/loop}
+                                        <!-- Kolom Tengah -->
+                                        <td class="col-score-mid">&nbsp;</td>
+                                        <!-- Kolom 12-23 (Kanan) -->
+                                        {loop: $colsRight}
+                                        <td class="cell-inp-hdr">
+                                            <input type="text" class="inp-cell-tgl" data-col="{$value}" placeholder="dd/mm">
+                                        </td>
+                                        {/loop}
+                                        <td class="col-range-r">&nbsp;</td>
+                                    </tr>
+
+                                    <!-- ROW 2: JAM -->
+                                    <tr class="row-header">
+                                        <td colspan="2" class="col-hdr-label">Jam:</td>
+                                        {loop: $colsLeft}
+                                        <td class="cell-inp-hdr">
+                                            <input type="text" class="inp-cell-jam" data-col="{$value}" placeholder="hh:mm">
+                                        </td>
+                                        {/loop}
+                                        <td class="col-score-mid">&nbsp;</td>
+                                        {loop: $colsRight}
+                                        <td class="cell-inp-hdr">
+                                            <input type="text" class="inp-cell-jam" data-col="{$value}" placeholder="hh:mm">
+                                        </td>
+                                        {/loop}
+                                        <td class="col-range-r">&nbsp;</td>
+                                    </tr>
+
+                                    <!-- 1. LAJU RESPIRASI / MENIT -->
+                                    <tr>
+                                        <td rowspan="7" class="col-param">Laju Respirasi<br>/menit</td>
+                                        <td class="col-range bg-blue">≤ 5</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-blue clickable-cell" data-col="{$value}" data-param="respirasi" data-val="le_5" data-score="BLUE"></td>{/loop}
+                                        <td class="col-score-mid bg-blue">BLUE</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-blue clickable-cell" data-col="{$value}" data-param="respirasi" data-val="le_5" data-score="BLUE"></td>{/loop}
+                                        <td class="col-range-r bg-blue">≤ 5</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-red">6-8</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="respirasi" data-val="6_8" data-score="3"></td>{/loop}
+                                        <td class="col-score-mid bg-red">3</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="respirasi" data-val="6_8" data-score="3"></td>{/loop}
+                                        <td class="col-range-r bg-red">6-8</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-yellow">9-11</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="respirasi" data-val="9_11" data-score="1"></td>{/loop}
+                                        <td class="col-score-mid bg-yellow">1</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="respirasi" data-val="9_11" data-score="1"></td>{/loop}
+                                        <td class="col-range-r bg-yellow">9-11</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-white">12-20</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-white clickable-cell" data-col="{$value}" data-param="respirasi" data-val="12_20" data-score="0"></td>{/loop}
+                                        <td class="col-score-mid bg-white">0</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-white clickable-cell" data-col="{$value}" data-param="respirasi" data-val="12_20" data-score="0"></td>{/loop}
+                                        <td class="col-range-r bg-white">12-20</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-peach">21-24</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-peach clickable-cell" data-col="{$value}" data-param="respirasi" data-val="21_24" data-score="2"></td>{/loop}
+                                        <td class="col-score-mid bg-peach">2</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-peach clickable-cell" data-col="{$value}" data-param="respirasi" data-val="21_24" data-score="2"></td>{/loop}
+                                        <td class="col-range-r bg-peach">21-24</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-red">25-34</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="respirasi" data-val="25_34" data-score="3"></td>{/loop}
+                                        <td class="col-score-mid bg-red">3</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="respirasi" data-val="25_34" data-score="3"></td>{/loop}
+                                        <td class="col-range-r bg-red">25-34</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-blue">≥ 35</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-blue clickable-cell" data-col="{$value}" data-param="respirasi" data-val="ge_35" data-score="BLUE"></td>{/loop}
+                                        <td class="col-score-mid bg-blue">BLUE</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-blue clickable-cell" data-col="{$value}" data-param="respirasi" data-val="ge_35" data-score="BLUE"></td>{/loop}
+                                        <td class="col-range-r bg-blue">≥ 35</td>
+                                    </tr>
+
+                                    <!-- 2. SATURASI O2 -->
+                                    <tr>
+                                        <td rowspan="4" class="col-param">Saturasi O2</td>
+                                        <td class="col-range bg-white">≥ 96</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-white clickable-cell" data-col="{$value}" data-param="saturasi" data-val="ge_96" data-score="0"></td>{/loop}
+                                        <td class="col-score-mid bg-white">0</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-white clickable-cell" data-col="{$value}" data-param="saturasi" data-val="ge_96" data-score="0"></td>{/loop}
+                                        <td class="col-range-r bg-white">≥ 96</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-yellow">94-95</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="saturasi" data-val="94_95" data-score="1"></td>{/loop}
+                                        <td class="col-score-mid bg-yellow">1</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="saturasi" data-val="94_95" data-score="1"></td>{/loop}
+                                        <td class="col-range-r bg-yellow">94-95</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-peach">92-93</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-peach clickable-cell" data-col="{$value}" data-param="saturasi" data-val="92_93" data-score="2"></td>{/loop}
+                                        <td class="col-score-mid bg-peach">2</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-peach clickable-cell" data-col="{$value}" data-param="saturasi" data-val="92_93" data-score="2"></td>{/loop}
+                                        <td class="col-range-r bg-peach">92-93</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-red">≤ 91</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="saturasi" data-val="le_91" data-score="3"></td>{/loop}
+                                        <td class="col-score-mid bg-red">3</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="saturasi" data-val="le_91" data-score="3"></td>{/loop}
+                                        <td class="col-range-r bg-red">≤ 91</td>
+                                    </tr>
+
+                                    <!-- 3. SUPLEMEN O2 -->
+                                    <tr>
+                                        <td class="col-param">Suplemen O2</td>
+                                        <td class="col-range bg-peach">%</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-peach clickable-cell" data-col="{$value}" data-param="suplemen_o2" data-val="ya" data-score="2"></td>{/loop}
+                                        <td class="col-score-mid bg-peach">2</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-peach clickable-cell" data-col="{$value}" data-param="suplemen_o2" data-val="ya" data-score="2"></td>{/loop}
+                                        <td class="col-range-r bg-peach">%</td>
+                                    </tr>
+
+                                    <!-- 4. TEKANAN DARAH SISTOLIK -->
+                                    <tr>
+                                        <td rowspan="7" class="col-param">Tekanan<br>darah<br>sistolik (mmHg)</td>
+                                        <td class="col-range bg-red">≥ 220</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="tensi" data-val="ge_220" data-score="3"></td>{/loop}
+                                        <td class="col-score-mid bg-red">3</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="tensi" data-val="ge_220" data-score="3"></td>{/loop}
+                                        <td class="col-range-r bg-red">≥ 220</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-yellow">181-220</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="tensi" data-val="181_220" data-score="1"></td>{/loop}
+                                        <td class="col-score-mid bg-yellow">1</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="tensi" data-val="181_220" data-score="1"></td>{/loop}
+                                        <td class="col-range-r bg-yellow">181-220</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-white">111-180</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-white clickable-cell" data-col="{$value}" data-param="tensi" data-val="111_180" data-score="0"></td>{/loop}
+                                        <td class="col-score-mid bg-white">0</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-white clickable-cell" data-col="{$value}" data-param="tensi" data-val="111_180" data-score="0"></td>{/loop}
+                                        <td class="col-range-r bg-white">111-180</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-yellow">101-110</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="tensi" data-val="101_110" data-score="1"></td>{/loop}
+                                        <td class="col-score-mid bg-yellow">1</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="tensi" data-val="101_110" data-score="1"></td>{/loop}
+                                        <td class="col-range-r bg-yellow">101-110</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-peach">91-100</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-peach clickable-cell" data-col="{$value}" data-param="tensi" data-val="91_100" data-score="2"></td>{/loop}
+                                        <td class="col-score-mid bg-peach">2</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-peach clickable-cell" data-col="{$value}" data-param="tensi" data-val="91_100" data-score="2"></td>{/loop}
+                                        <td class="col-range-r bg-peach">91-100</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-red">71-90</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="tensi" data-val="71_90" data-score="3"></td>{/loop}
+                                        <td class="col-score-mid bg-red">3</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="tensi" data-val="71_90" data-score="3"></td>{/loop}
+                                        <td class="col-range-r bg-red">71-90</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-blue">≤ 70</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-blue clickable-cell" data-col="{$value}" data-param="tensi" data-val="le_70" data-score="BLUE"></td>{/loop}
+                                        <td class="col-score-mid bg-blue">BLUE</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-blue clickable-cell" data-col="{$value}" data-param="tensi" data-val="le_70" data-score="BLUE"></td>{/loop}
+                                        <td class="col-range-r bg-blue">≤ 70</td>
+                                    </tr>
+
+                                    <!-- 5. LAJU JANTUNG / MENIT -->
+                                    <tr>
+                                        <td rowspan="7" class="col-param">Laju Jantung<br>/menit</td>
+                                        <td class="col-range bg-blue">≥ 140</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-blue clickable-cell" data-col="{$value}" data-param="nadi" data-val="ge_140" data-score="BLUE"></td>{/loop}
+                                        <td class="col-score-mid bg-blue">BLUE</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-blue clickable-cell" data-col="{$value}" data-param="nadi" data-val="ge_140" data-score="BLUE"></td>{/loop}
+                                        <td class="col-range-r bg-blue">≥ 140</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-red">131-140</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="nadi" data-val="131_140" data-score="3"></td>{/loop}
+                                        <td class="col-score-mid bg-red">3</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="nadi" data-val="131_140" data-score="3"></td>{/loop}
+                                        <td class="col-range-r bg-red">131-140</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-peach">111-130</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-peach clickable-cell" data-col="{$value}" data-param="nadi" data-val="111_130" data-score="2"></td>{/loop}
+                                        <td class="col-score-mid bg-peach">2</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-peach clickable-cell" data-col="{$value}" data-param="nadi" data-val="111_130" data-score="2"></td>{/loop}
+                                        <td class="col-range-r bg-peach">111-130</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-yellow">91-110</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="nadi" data-val="91_110" data-score="1"></td>{/loop}
+                                        <td class="col-score-mid bg-yellow">1</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="nadi" data-val="91_110" data-score="1"></td>{/loop}
+                                        <td class="col-range-r bg-yellow">91-110</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-white">51-90</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-white clickable-cell" data-col="{$value}" data-param="nadi" data-val="51_90" data-score="0"></td>{/loop}
+                                        <td class="col-score-mid bg-white">0</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-white clickable-cell" data-col="{$value}" data-param="nadi" data-val="51_90" data-score="0"></td>{/loop}
+                                        <td class="col-range-r bg-white">51-90</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-yellow">41-50</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="nadi" data-val="41_50" data-score="1"></td>{/loop}
+                                        <td class="col-score-mid bg-yellow">1</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="nadi" data-val="41_50" data-score="1"></td>{/loop}
+                                        <td class="col-range-r bg-yellow">41-50</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-blue">≤ 40</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-blue clickable-cell" data-col="{$value}" data-param="nadi" data-val="le_40" data-score="BLUE"></td>{/loop}
+                                        <td class="col-score-mid bg-blue">BLUE</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-blue clickable-cell" data-col="{$value}" data-param="nadi" data-val="le_40" data-score="BLUE"></td>{/loop}
+                                        <td class="col-range-r bg-blue">≤ 40</td>
+                                    </tr>
+
+                                    <!-- 6. KESADARAN -->
+                                    <tr>
+                                        <td rowspan="3" class="col-param">Kesadaran</td>
+                                        <td class="col-range bg-white">Sadar</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-white clickable-cell" data-col="{$value}" data-param="kesadaran" data-val="sadar" data-score="0"></td>{/loop}
+                                        <td class="col-score-mid bg-white">0</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-white clickable-cell" data-col="{$value}" data-param="kesadaran" data-val="sadar" data-score="0"></td>{/loop}
+                                        <td class="col-range-r bg-white">Sadar</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-red">Nyeri/ Verbal</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="kesadaran" data-val="nyeri_verbal" data-score="3"></td>{/loop}
+                                        <td class="col-score-mid bg-red">3</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="kesadaran" data-val="nyeri_verbal" data-score="3"></td>{/loop}
+                                        <td class="col-range-r bg-red">Nyeri/ Verbal</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-blue">Unrespon</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-blue clickable-cell" data-col="{$value}" data-param="kesadaran" data-val="unrespon" data-score="BLUE"></td>{/loop}
+                                        <td class="col-score-mid bg-blue">BLUE</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-blue clickable-cell" data-col="{$value}" data-param="kesadaran" data-val="unrespon" data-score="BLUE"></td>{/loop}
+                                        <td class="col-range-r bg-blue">Unrespon</td>
+                                    </tr>
+
+                                    <!-- 7. TEMPERATUR -->
+                                    <tr>
+                                        <td rowspan="5" class="col-param">Temperatur<br>(°C)</td>
+                                        <td class="col-range bg-red">≤ 35</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="suhu" data-val="le_35" data-score="3"></td>{/loop}
+                                        <td class="col-score-mid bg-red">3</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-red clickable-cell" data-col="{$value}" data-param="suhu" data-val="le_35" data-score="3"></td>{/loop}
+                                        <td class="col-range-r bg-red">≤ 35</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-yellow">35.1-36</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="suhu" data-val="35_1_36" data-score="1"></td>{/loop}
+                                        <td class="col-score-mid bg-yellow">1</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="suhu" data-val="35_1_36" data-score="1"></td>{/loop}
+                                        <td class="col-range-r bg-yellow">35.1-36</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-white">36.1-38</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-white clickable-cell" data-col="{$value}" data-param="suhu" data-val="36_1_38" data-score="0"></td>{/loop}
+                                        <td class="col-score-mid bg-white">0</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-white clickable-cell" data-col="{$value}" data-param="suhu" data-val="36_1_38" data-score="0"></td>{/loop}
+                                        <td class="col-range-r bg-white">36.1-38</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-yellow">38.1-39</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="suhu" data-val="38_1_39" data-score="2"></td>{/loop}
+                                        <td class="col-score-mid bg-yellow">2</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-yellow clickable-cell" data-col="{$value}" data-param="suhu" data-val="38_1_39" data-score="2"></td>{/loop}
+                                        <td class="col-range-r bg-yellow">38.1-39</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range bg-peach">≥ 39</td>
+                                        {loop: $colsLeft}<td class="cell-obs bg-peach clickable-cell" data-col="{$value}" data-param="suhu" data-val="ge_39" data-score="2"></td>{/loop}
+                                        <td class="col-score-mid bg-peach">2</td>
+                                        {loop: $colsRight}<td class="cell-obs bg-peach clickable-cell" data-col="{$value}" data-param="suhu" data-val="ge_39" data-score="2"></td>{/loop}
+                                        <td class="col-range-r bg-peach">≥ 39</td>
+                                    </tr>
+
+                                    <!-- TOTAL SKOR -->
+                                    <tr class="row-total-skor">
+                                        <td colspan="2" class="col-total-label">TOTAL SKOR</td>
+                                        {loop: $colsLeft}
+                                        <td class="cell-obs total-skor-cell" data-col="{$value}">-</td>
+                                        {/loop}
+                                        <td class="col-score-mid" style="background: #f8f9fa;">&nbsp;</td>
+                                        {loop: $colsRight}
+                                        <td class="cell-obs total-skor-cell" data-col="{$value}">-</td>
+                                        {/loop}
+                                        <td class="col-range-r" style="background: #f8f9fa;">&nbsp;</td>
+                                    </tr>
+
+                                    <!-- PARAMETER TAMBAHAN -->
+                                    <tr>
+                                        <td rowspan="3" class="col-param" style="font-size: 6.2pt;">Parameter<br>tambahan<br>yang<br>mendukung</td>
+                                        <td class="col-range" style="text-align: left; padding-left: 3px;">GDS</td>
+                                        {loop: $colsLeft}
+                                        <td class="cell-obs"><input type="text" class="inp-cell-extra" data-col="{$value}" data-param="gds" placeholder="..."></td>
+                                        {/loop}
+                                        <td class="col-score-mid">&nbsp;</td>
+                                        {loop: $colsRight}
+                                        <td class="cell-obs"><input type="text" class="inp-cell-extra" data-col="{$value}" data-param="gds" placeholder="..."></td>
+                                        {/loop}
+                                        <td class="col-range-r" style="text-align: left; padding-left: 2px;">GDS</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range" style="text-align: left; padding-left: 3px;">Skor Nyeri</td>
+                                        {loop: $colsLeft}
+                                        <td class="cell-obs"><input type="text" class="inp-cell-extra" data-col="{$value}" data-param="nyeri" placeholder="0-10"></td>
+                                        {/loop}
+                                        <td class="col-score-mid">&nbsp;</td>
+                                        {loop: $colsRight}
+                                        <td class="cell-obs"><input type="text" class="inp-cell-extra" data-col="{$value}" data-param="nyeri" placeholder="0-10"></td>
+                                        {/loop}
+                                        <td class="col-range-r" style="text-align: left; padding-left: 2px;">Skor Nyeri</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-range" style="text-align: left; padding-left: 3px;">Urin Output</td>
+                                        {loop: $colsLeft}
+                                        <td class="cell-obs"><input type="text" class="inp-cell-extra" data-col="{$value}" data-param="urin" placeholder="cc"></td>
+                                        {/loop}
+                                        <td class="col-score-mid">&nbsp;</td>
+                                        {loop: $colsRight}
+                                        <td class="cell-obs"><input type="text" class="inp-cell-extra" data-col="{$value}" data-param="urin" placeholder="cc"></td>
+                                        {/loop}
+                                        <td class="col-range-r" style="text-align: left; padding-left: 2px;">Urin Output</td>
+                                    </tr>
                                 </table>
                             </div>
+
+                            <!-- PANDUAN RESPON EWS DEWASA (4 KOTAK) -->
+                            <table class="ews-panduan-table">
+                                <tr id="guide-ringan">
+                                    <td class="lbl-ringan" style="width: 175px;">SKOR 1-4 (resiko ringan)</td>
+                                    <td>Assessment segera oleh perawat senior, respon segera, mask 5 menit, eskalasi perawatan dan frekuensi monitoring per4-6 jam. Jika diperlukan assessment oleh dokter jaga bangsal</td>
+                                </tr>
+                                <tr id="guide-sedang">
+                                    <td class="lbl-sedang" style="width: 175px;">SKOR 5-6 (resiko sedang)</td>
+                                    <td>Assessment segera oleh dokter jaga (respon segera, maks 5 menit), konsultasi DPJP dan spesialis terkait, eksalasi perawatan dan monitoring tiap jam, pertimbangkan perawatan dengan monitoring yang sesuai (HCU)</td>
+                                </tr>
+                                <tr id="guide-tinggi">
+                                    <td class="lbl-tinggi" style="width: 175px;">SKOR 7 ATAU LEBIH / 1 PARAMETER<br>KRITERIA BLUE (resiko tinggi)</td>
+                                    <td>Resusitasi dan monitoring secara kontinyu oleh dokter jaga dan perawat senior. Aktivasi code blue kegawatan medis (666) respon Tim Medis Emergency (TME) segera, maksimal 10 menit, informasikan dan konsultasikan ke DPJP.</td>
+                                </tr>
+                                <tr id="guide-henti">
+                                    <td class="lbl-henti" style="width: 175px;">HENTI NAPAS/JANTUNG</td>
+                                    <td>Lakukan RJP oleh petugas/tim primer, aktivasi code blue henti jantung (666), respon Tim Medis Emergency (TME) segera, maksimal 5 menit, informasikan dan konsultasikan DPJP</td>
+                                </tr>
+                            </table>
+
+                            <!-- FOOTER FORMULIR EWS DEWASA -->
+                            <table class="ews-footer-table">
+                                <tr>
+                                    <td style="text-align: left; font-weight: bold; width: 30%;">RSGM/Ed-2022</td>
+                                    <td style="text-align: right; font-style: italic; width: 70%;">
+                                        Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+                                        <span class="ews-square-box"></span>
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
                 </div>
 
                 <!-- ======================================================== -->
-                <!-- TAB 2: EWS ANAK (PEWS)                                   -->
+                <!-- TAB 2: HALAMAN 2 (GAMBAR 2 - 16 KOLOM OBSERVASI)         -->
                 <!-- ======================================================== -->
-                <div role="tabpanel" class="tab-pane" id="tab-anak">
-                    <div class="panel panel-warning">
-                        <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
-                            <h4 class="panel-title" style="font-weight: bold; color: #8a6d3b;">
-                                <i class="fa fa-table"></i> Lembar Observasi EWS Anak (PEWS) (Maksimal 16 Kolom Observasi)
-                            </h4>
-                            <button type="button" class="btn btn-warning btn-xs" id="btn-tambah-anak" style="font-weight: bold; color: #fff;">
-                                <i class="fa fa-plus"></i> Tambah Kolom Observasi Anak
+                <div role="tabpanel" class="tab-pane" id="tab-halaman2">
+                    <!-- TOOLBAR CEPAT HALAMAN 2 -->
+                    <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <div style="font-size: 12px; color: #334155;">
+                            <strong><i class="fa fa-info-circle text-info"></i> Petunjuk Pengisian Halaman 2 (Gambar 2):</strong>
+                            Klik sel pengukuran (Keadaan Umum, Kardiovaskular, Respirasi) untuk menandai nilai (0 s/d 3). Total skor dan baris respon klinis terhitung otomatis.
+                        </div>
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" class="btn btn-success btn-xs" id="btn-quick-now-h2" title="Isikan tanggal & jam sekarang pada kolom Halaman 2">
+                                <i class="fa fa-clock-o"></i> + Tgl & Jam Sekarang (Hal 2)
+                            </button>
+                            <button type="button" class="btn btn-default btn-xs" id="btn-clear-h2" title="Kosongkan seluruh data tabel Halaman 2">
+                                <i class="fa fa-eraser"></i> Bersihkan Kolom Hal 2
                             </button>
                         </div>
-                        <div class="panel-body">
-                            <div class="alert alert-warning" style="font-size: 12px; margin-bottom: 12px;">
-                                <i class="fa fa-info-circle"></i> Penilaian PEWS (Pediatric Early Warning System) mencakup 3 parameter utama: <strong>Keadaan Umum</strong>, <strong>Kardiovaskular</strong>, dan <strong>Respirasi</strong>. Total skor berkisar antara 0 - 9.
+                    </div>
+
+                    <!-- LEMBAR FISIK DOKUMEN HALAMAN 2 -->
+                    <div class="ews-sheet-wrapper">
+                        <div class="ews-sheet-container">
+                            <!-- KOP SURAT RSGM -->
+                            <div class="ews-kop-box">
+                                {if: !empty($kop_img)}
+                                <img src="{$kop_img}" alt="KOP RSGM Gusti Hasan Aman" class="ews-kop-img">
+                                {else}
+                                <div style="font-size: 10pt; font-weight: bold;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+                                <div style="font-size: 12pt; font-weight: bold;">RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</div>
+                                <div style="font-size: 7pt;">Jl. Simpang Ulin No. 28 Banjarmasin Kode Pos 70233 Telp/Fax (0511) 3260818<br>Email : rsgmgustihasanaman@yahoo.com Website : rsgm.kalselprov.go.id</div>
+                                {/if}
                             </div>
 
-                            <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
-                                <table class="table table-bordered table-condensed table-hover" id="table-input-anak" style="min-width: 900px; font-size: 11.5px;">
-                                    <thead>
-                                        <tr class="warning">
-                                            <th style="width: 40px; text-align: center;">Aksi</th>
-                                            <th style="width: 80px; text-align: center;">Tgl (dd/mm)</th>
-                                            <th style="width: 70px; text-align: center;">Jam/Shift</th>
-                                            <th>Keadaan Umum</th>
-                                            <th>Kardiovaskular</th>
-                                            <th>Respirasi</th>
-                                            <th style="width: 70px; text-align: center;">Skor PEWS</th>
-                                            <th style="width: 140px; text-align: center;">Kategori Resiko</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tbody-anak">
-                                        <!-- Row rendered via Javascript -->
-                                    </tbody>
+                            <!-- TABEL OBSERVASI 16 KOLOM (GAMBAR 2) -->
+                            <div class="ews-grid-scroll">
+                                <table class="table-ews-grid table-h2-grid" id="table-ews-h2">
+                                    <!-- ROW 1: TANGGAL -->
+                                    <tr class="row-header">
+                                        <td colspan="2" class="col-hdr-label" style="width: 250px;">Tanggal:</td>
+                                        {loop: $colsH2}
+                                        <td class="cell-inp-hdr" style="width: 32px;">
+                                            <input type="text" class="inp-cell-tgl-h2" data-col="{$value}" placeholder="dd/mm">
+                                        </td>
+                                        {/loop}
+                                        <td class="col-score-mid" style="width: 38px;">SKOR</td>
+                                    </tr>
+                                    <!-- ROW 2: JAM -->
+                                    <tr class="row-header">
+                                        <td colspan="2" class="col-hdr-label">Jam:</td>
+                                        {loop: $colsH2}
+                                        <td class="cell-inp-hdr">
+                                            <input type="text" class="inp-cell-jam-h2" data-col="{$value}" placeholder="hh:mm">
+                                        </td>
+                                        {/loop}
+                                        <td class="col-score-mid">&nbsp;</td>
+                                    </tr>
+
+                                    <!-- 1. KEADAAN UMUM -->
+                                    <tr>
+                                        <td rowspan="4" class="col-param-h2">KEADAAN<br>UMUM</td>
+                                        <td class="h2-sub-label bg-h2-green">Interaksi biasa</td>
+                                        {loop: $colsH2}<td class="cell-obs bg-h2-green clickable-cell-h2" data-col="{$value}" data-param="keadaan_umum" data-val="0"></td>{/loop}
+                                        <td class="col-score-mid bg-h2-green">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="h2-sub-label bg-h2-yellow">somnolen atau rewel tetapi dapat ditenangkan</td>
+                                        {loop: $colsH2}<td class="cell-obs bg-h2-yellow clickable-cell-h2" data-col="{$value}" data-param="keadaan_umum" data-val="1"></td>{/loop}
+                                        <td class="col-score-mid bg-h2-yellow">1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="h2-sub-label bg-h2-peach">Ilritabel, tidak dapat ditenangkan</td>
+                                        {loop: $colsH2}<td class="cell-obs bg-h2-peach clickable-cell-h2" data-col="{$value}" data-param="keadaan_umum" data-val="2"></td>{/loop}
+                                        <td class="col-score-mid bg-h2-peach">2</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="h2-sub-label bg-h2-pink">Letargi, Gelisah, penurunan respon terhadap nyeri</td>
+                                        {loop: $colsH2}<td class="cell-obs bg-h2-pink clickable-cell-h2" data-col="{$value}" data-param="keadaan_umum" data-val="3"></td>{/loop}
+                                        <td class="col-score-mid bg-h2-pink">3</td>
+                                    </tr>
+
+                                    <!-- 2. KARDIO VASKULAR -->
+                                    <tr>
+                                        <td rowspan="4" class="col-param-h2">KARDIO<br>VASKULAR</td>
+                                        <td class="h2-sub-label bg-h2-green">• Tidak sianosis, ATAU Pengisisankapier &lt;2 detik</td>
+                                        {loop: $colsH2}<td class="cell-obs bg-h2-green clickable-cell-h2" data-col="{$value}" data-param="kardiovaskular" data-val="0"></td>{/loop}
+                                        <td class="col-score-mid bg-h2-green">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="h2-sub-label bg-h2-yellow">• Tidak Pucat ATAU Pengisisan kapier 2 detik</td>
+                                        {loop: $colsH2}<td class="cell-obs bg-h2-yellow clickable-cell-h2" data-col="{$value}" data-param="kardiovaskular" data-val="1"></td>{/loop}
+                                        <td class="col-score-mid bg-h2-yellow">1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="h2-sub-label bg-h2-peach">• Tampak siasonik, ATAU Pengisian kapier &gt; 2 detik, ATAU Takikardi &gt; 20x di atas parameter RR sesuai usia/mt</td>
+                                        {loop: $colsH2}<td class="cell-obs bg-h2-peach clickable-cell-h2" data-col="{$value}" data-param="kardiovaskular" data-val="2"></td>{/loop}
+                                        <td class="col-score-mid bg-h2-peach">2</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="h2-sub-label bg-h2-pink">• Sianotik dan motlet, ATAU Pengisisan Kapier &gt; 5 detik ATAU Takikardi &gt; 30x di atas parameter RR sesuai usia/mt ATAU, Bradikardia (sesuai Usia)</td>
+                                        {loop: $colsH2}<td class="cell-obs bg-h2-pink clickable-cell-h2" data-col="{$value}" data-param="kardiovaskular" data-val="3"></td>{/loop}
+                                        <td class="col-score-mid bg-h2-pink">3</td>
+                                    </tr>
+
+                                    <!-- 3. RESPIRASI -->
+                                    <tr>
+                                        <td rowspan="4" class="col-param-h2">RESPIRASI</td>
+                                        <td class="h2-sub-label bg-h2-green">• Respirasi dalam parameter mormal, tidak terdapat retraksi</td>
+                                        {loop: $colsH2}<td class="cell-obs bg-h2-green clickable-cell-h2" data-col="{$value}" data-param="respirasi" data-val="0"></td>{/loop}
+                                        <td class="col-score-mid bg-h2-green">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="h2-sub-label bg-h2-yellow">• Respirasi &gt; 10x di atas parameter RR sesuai Usia permenit, ATAU<br>• Menggunakan Otot alat bantu napas, ATAU Menggunakan FiO2 lebih dari 30%</td>
+                                        {loop: $colsH2}<td class="cell-obs bg-h2-yellow clickable-cell-h2" data-col="{$value}" data-param="respirasi" data-val="1"></td>{/loop}
+                                        <td class="col-score-mid bg-h2-yellow">1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="h2-sub-label bg-h2-peach">• Respirasi &gt; 20x di atas parameter RR sesuai usia/menit, ATAU<br>• Ada retraksi, ATAU Menggunakan FiO2 lebih dari 40%</td>
+                                        {loop: $colsH2}<td class="cell-obs bg-h2-peach clickable-cell-h2" data-col="{$value}" data-param="respirasi" data-val="2"></td>{/loop}
+                                        <td class="col-score-mid bg-h2-peach">2</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="h2-sub-label bg-h2-pink">• Respirasi &gt; 30x di atas parameter normal, ATAU<br>• ≥ 5x di bawah RR sesuai usia per menit dengan retraksi berat ATAU Merintih, ATAU Menggunakan FiO2 lebih dari 50%</td>
+                                        {loop: $colsH2}<td class="cell-obs bg-h2-pink clickable-cell-h2" data-col="{$value}" data-param="respirasi" data-val="3"></td>{/loop}
+                                        <td class="col-score-mid bg-h2-pink">3</td>
+                                    </tr>
+
+                                    <!-- TOTAL SKOR HALAMAN 2 -->
+                                    <tr class="row-total-skor">
+                                        <td colspan="2" class="col-total-label">TOTAL SKOR</td>
+                                        {loop: $colsH2}
+                                        <td class="cell-obs total-skor-h2-cell" data-col="{$value}">-</td>
+                                        {/loop}
+                                        <td class="col-score-mid" style="background: #f8f9fa;">&nbsp;</td>
+                                    </tr>
                                 </table>
                             </div>
+
+                            <!-- TABEL ACUAN TANDA VITAL BERDASARKAN USIA (HALAMAN 2) -->
+                            <table class="table-usia-h2">
+                                <tr>
+                                    <th colspan="2" class="th-usia-blue">Usia</th>
+                                    <th class="th-usia-blue">Nadi saat istirahat<br>(kali/menit)</th>
+                                    <th class="th-usia-blue">Nafas saat istirahat<br>(napas/menit)</th>
+                                </tr>
+                                <tr class="tr-usia-row">
+                                    <td class="td-usia-lbl">Neonatus</td>
+                                    <td>0 - 1 bulan</td>
+                                    <td>100 - 180</td>
+                                    <td>40 - 60</td>
+                                </tr>
+                                <tr class="tr-usia-row">
+                                    <td class="td-usia-lbl">Bayi</td>
+                                    <td>1 - 12 bulan</td>
+                                    <td>100 - 180</td>
+                                    <td>35 - 40</td>
+                                </tr>
+                                <tr class="tr-usia-row">
+                                    <td class="td-usia-lbl">Balita</td>
+                                    <td>13 - 36 bulan</td>
+                                    <td>70 - 110</td>
+                                    <td>25 - 30</td>
+                                </tr>
+                                <tr class="tr-usia-row">
+                                    <td class="td-usia-lbl">Pra-Sekolah</td>
+                                    <td>4 - 6 tahun</td>
+                                    <td>70 - 110</td>
+                                    <td>21 - 23</td>
+                                </tr>
+                                <tr class="tr-usia-row">
+                                    <td class="td-usia-lbl">Sekolah</td>
+                                    <td>7 - 12 tahun</td>
+                                    <td>70 - 110</td>
+                                    <td>19 - 21</td>
+                                </tr>
+                                <tr class="tr-usia-row">
+                                    <td class="td-usia-lbl">Remaja</td>
+                                    <td>13 - 19 tahun</td>
+                                    <td>55 - 90</td>
+                                    <td>16 - 18</td>
+                                </tr>
+                            </table>
+
+                            <!-- TABEL PANDUAN RESPON KLINIS (HALAMAN 2) -->
+                            <table class="ews-panduan-table" style="margin-top: 5px;">
+                                <tr id="guide-h2-stabil">
+                                    <td class="lbl-guide-h2 bg-h2-green-guide">SKOR 0-2</td>
+                                    <td>• Pasien dalam keadaan stabil, jika skor 0 lakukan evaluasi secara rutin tiap 8 jam, jika skor naik 1 atau 2, Lakukan evaluasi setiap 4 jam, jika diperlukan assessment oleh dokter jaga bangsal</td>
+                                </tr>
+                                <tr id="guide-h2-sedang">
+                                    <td class="lbl-guide-h2 bg-h2-yellow-guide">SKOR 3-4</td>
+                                    <td>• Ada penururnan kondisi pasien, assessment oleh dokter jaga bangsal, Lakukan evaluasi ulang setiap 2 jam atau lebih cepat, Konsultasi ke DPJP, lakukan terapi sesuai intruksi, jika diperlukan dipindahkan ke area dengan monitoring yang sesuai</td>
+                                </tr>
+                                <tr id="guide-h2-tinggi">
+                                    <td class="lbl-guide-h2 bg-h2-red-guide">SKOR 5 atau lebih</td>
+                                    <td>• Ada perubahan yang signifikan, Lakukan resusitasi, monitoring secara kontinyu, Aktivasi code blue kegawatan medis (666) respon Tim Medis Emergency (TME) segera, maksimal 10 menit, Informasi dan Konsultasikan ke DPJP</td>
+                                </tr>
+                                <tr id="guide-h2-henti">
+                                    <td class="lbl-guide-h2 bg-h2-blue-guide">SKOR 0-5</td>
+                                    <td>• Lakukan RJP oleh petugas/tim primer, aktivasi code blue henti jantung (666), respon Tim Medis Emergency, maksimal 5 menit, Informasikan dan Konsultasikan ke DPJP</td>
+                                </tr>
+                            </table>
+
+                            <!-- FOOTER HALAMAN 2 -->
+                            <table class="ews-footer-table">
+                                <tr>
+                                    <td style="text-align: left; font-weight: bold; width: 30%;">RSGM/Ed-2022</td>
+                                    <td style="text-align: right; font-style: italic; width: 70%;">
+                                        Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+                                        <span class="ews-square-box"></span>
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- CATATAN TAMBAHAN -->
-            <div class="form-group">
-                <label class="col-sm-2 control-label">Catatan Tambahan</label>
-                <div class="col-sm-10">
-                    <textarea name="catatan" id="catatan" class="form-control" rows="2" placeholder="Catatan instruksi DPJP atau catatan pemantauan khusus...">{$data.catatan}</textarea>
+            <!-- CATATAN TAMBAHAN & PETUGAS -->
+            <div class="row" style="margin-top: 15px;">
+                <div class="col-md-8">
+                    <div class="form-group" style="margin-left: 0; margin-right: 0;">
+                        <label>Catatan Tambahan / Instruksi Dokter DPJP:</label>
+                        <textarea name="catatan" id="catatan" class="form-control" rows="2" placeholder="Catatan instruksi DPJP atau catatan pemantauan khusus...">{$data.catatan}</textarea>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group" style="margin-left: 0; margin-right: 0;">
+                        <label>Nama Petugas Pelaksana:</label>
+                        <input type="text" name="nama_petugas_input" id="nama_petugas_input" class="form-control" value="{$data.nama_petugas}" placeholder="Nama Petugas Pelaksana">
+                    </div>
                 </div>
             </div>
 
@@ -209,371 +755,877 @@
             <input type="hidden" name="detail_anak" id="json_detail_anak" value="">
 
             <!-- BUTTONS -->
-            <div class="text-right" style="margin-top: 20px;">
+            <div class="text-right" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
                 <a href="{?=url([ADMIN, 'update_bmt', 'ewsmanage'])?}" class="btn btn-default">
                     <i class="fa fa-arrow-left"></i> Batal & Kembali
                 </a>
-                <button type="submit" class="btn btn-primary" style="min-width: 130px;" id="btn-simpan">
-                    <i class="fa fa-save"></i> Simpan Lembar EWS
+                <button type="submit" class="btn btn-primary" style="min-width: 170px; font-weight: bold;" id="btn-simpan">
+                    <i class="fa fa-save"></i> Simpan Formulir EWS
                 </button>
             </div>
         </form>
     </div>
 </div>
 
-<script>
-// Data awal dari PHP
-var detailDewasa = {$data.detail_dewasa_json};
-var detailAnak = {$data.detail_anak_json};
-
-if (!Array.isArray(detailDewasa)) { detailDewasa = []; }
-if (!Array.isArray(detailAnak)) { detailAnak = []; }
-
-// Helper Score Dewasa
-function calcSkorDewasa(item) {
-    var score = 0;
-    var isBlue = false;
-
-    // Respirasi
-    if (item.respirasi === 'le_5' || item.respirasi === 'le_8' || item.respirasi === 'ge_35') { isBlue = true; }
-    else if (item.respirasi === '6_8' || item.respirasi === '25_34') { score += 3; }
-    else if (item.respirasi === '21_24') { score += 2; }
-    else if (item.respirasi === '9_11') { score += 1; }
-
-    // Saturasi O2
-    if (item.saturasi === 'le_91') { score += 3; }
-    else if (item.saturasi === '92_93') { score += 2; }
-    else if (item.saturasi === '94_95') { score += 1; }
-
-    // Suplemen O2
-    if (item.suplemen_o2 === 'ya') { score += 2; }
-
-    // Tensi Sistolik
-    if (item.tensi === 'le_70') { isBlue = true; }
-    else if (item.tensi === 'ge_220' || item.tensi === '71_90') { score += 3; }
-    else if (item.tensi === '91_100') { score += 2; }
-    else if (item.tensi === '181_220' || item.tensi === '101_110') { score += 1; }
-
-    // Laju Jantung
-    if (item.nadi === 'ge_140' || item.nadi === 'le_40') { isBlue = true; }
-    else if (item.nadi === '131_140') { score += 3; }
-    else if (item.nadi === '111_130') { score += 2; }
-    else if (item.nadi === '91_110' || item.nadi === '41_50') { score += 1; }
-
-    // Kesadaran
-    if (item.kesadaran === 'unrespon') { isBlue = true; }
-    else if (item.kesadaran === 'nyeri_verbal') { score += 3; }
-
-    // Temperatur
-    if (item.suhu === 'le_35') { score += 3; }
-    else if (item.suhu === '38_1_39' || item.suhu === 'ge_39') { score += 2; }
-    else if (item.suhu === '35_1_36') { score += 1; }
-
-    return { score: score, isBlue: isBlue };
+<style>
+/* ========================================================================== */
+/* STYLING LEMBAR EWS SESUAI CONTOH FORMULIR RSGM GUSTI HASAN AMAN           */
+/* ========================================================================== */
+.ews-sheet-wrapper {
+    background: #525659;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+.ews-sheet-container {
+    background: #ffffff;
+    width: 1000px;
+    margin: 0 auto;
+    padding: 8px 10px;
+    border: 1.5px solid #000;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    font-family: Arial, Helvetica, sans-serif;
+    color: #000;
+}
+.ews-kop-box {
+    text-align: center;
+    border-bottom: 1.5px solid #000;
+    padding-bottom: 3px;
+    margin-bottom: 2px;
+}
+.ews-kop-img {
+    width: 100%;
+    max-height: 65px;
+    object-fit: contain;
 }
 
-// Render Tabel Dewasa
-function renderTableDewasa() {
-    var tbody = $('#tbody-dewasa');
-    tbody.empty();
+/* HEADER INFO PASIEN */
+.ews-patient-header {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 3px;
+}
+.ews-patient-header td {
+    border: 1.5px solid #000;
+    padding: 3px 6px;
+    vertical-align: middle;
+}
+.box-title {
+    font-size: 7.5pt;
+    font-weight: bold;
+    line-height: 1.15;
+    text-align: center;
+}
+.box-name {
+    font-size: 7.2pt;
+}
+.box-meta {
+    font-size: 7.2pt;
+    line-height: 1.25;
+}
+.jk-circle {
+    display: inline-block;
+    border: 1.5px solid #000;
+    border-radius: 50%;
+    padding: 0 5px;
+    font-weight: bold;
+    background: #e2e8f0;
+}
+.jk-click-opt {
+    cursor: pointer;
+    display: inline-block;
+    padding: 0 5px;
+    font-weight: bold;
+    border-radius: 50%;
+    transition: all 0.15s ease;
+}
+.jk-click-opt:hover {
+    background: #cbd5e1;
+}
 
-    if (detailDewasa.length === 0) {
-        tbody.append('<tr><td colspan="14" class="text-center text-muted" style="padding: 15px;"><em>Belum ada kolom observasi EWS Dewasa. Klik tombol "+ Tambah Kolom Observasi Dewasa" untuk menambahkan.</em></td></tr>');
-        return;
+/* TABEL OBSERVASI GRID */
+.ews-grid-scroll {
+    width: 100%;
+    overflow-x: auto;
+}
+.table-ews-grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 6.2pt;
+    table-layout: fixed;
+}
+.table-ews-grid th, .table-ews-grid td {
+    border: 1px solid #000;
+    padding: 0;
+    text-align: center;
+    vertical-align: middle;
+    height: 15.5px;
+}
+.table-ews-grid .col-hdr-label {
+    width: 118px;
+    text-align: left;
+    padding-left: 4px;
+    font-weight: bold;
+    font-size: 6.8pt;
+}
+.table-ews-grid .col-param {
+    width: 76px;
+    font-weight: bold;
+    font-size: 6.5pt;
+    line-height: 1.1;
+    padding: 1px 2px;
+}
+.table-ews-grid .col-range {
+    width: 42px;
+    font-weight: bold;
+    font-size: 6.2pt;
+    line-height: 1;
+}
+.table-ews-grid .col-range-r {
+    width: 42px;
+    font-weight: bold;
+    font-size: 6.2pt;
+    line-height: 1;
+}
+.table-ews-grid .col-score-mid {
+    width: 34px;
+    font-weight: bold;
+    font-size: 6.5pt;
+    text-align: center;
+}
+.table-ews-grid .cell-inp-hdr {
+    width: 28px;
+    padding: 0;
+    background: #fff;
+}
+.table-ews-grid .cell-obs {
+    width: 28px;
+    height: 15.5px;
+    position: relative;
+    user-select: none;
+}
+
+/* WARNA PERSIS SEPERTI GAMBAR CONTOH HALAMAN 1 */
+.bg-blue {
+    background-color: #00b0f0 !important;
+    color: #000 !important;
+    font-weight: bold;
+}
+.bg-red {
+    background-color: #ff4d4d !important;
+    color: #000 !important;
+    font-weight: bold;
+}
+.bg-yellow {
+    background-color: #ffff00 !important;
+    color: #000 !important;
+    font-weight: bold;
+}
+.bg-peach {
+    background-color: #ffb380 !important;
+    color: #000 !important;
+    font-weight: bold;
+}
+.bg-white {
+    background-color: #ffffff !important;
+    color: #000 !important;
+}
+
+/* KLIKABLE SEL HALAMAN 1 & 2 */
+.clickable-cell, .clickable-cell-h2 {
+    cursor: pointer;
+    transition: filter 0.1s ease;
+}
+.clickable-cell:hover, .clickable-cell-h2:hover {
+    filter: brightness(0.85);
+}
+.clickable-cell.is-selected, .clickable-cell-h2.is-selected {
+    box-shadow: inset 0 0 0 2px #000 !important;
+    font-weight: 900;
+}
+.cell-mark-dot {
+    display: inline-block;
+    font-size: 11pt;
+    line-height: 1;
+    color: #000;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* INPUTS DI DALAM GRID */
+.inp-cell-tgl, .inp-cell-jam, .inp-cell-tgl-h2, .inp-cell-jam-h2 {
+    width: 100%;
+    height: 15.5px;
+    border: none;
+    background: transparent;
+    font-size: 6.2pt;
+    font-weight: bold;
+    text-align: center;
+    padding: 0;
+    margin: 0;
+    color: #000;
+}
+.inp-cell-tgl:focus, .inp-cell-jam:focus, .inp-cell-tgl-h2:focus, .inp-cell-jam-h2:focus {
+    outline: 2px solid #3b82f6;
+    background: #eff6ff;
+}
+.inp-cell-extra {
+    width: 100%;
+    height: 15.5px;
+    border: none;
+    background: transparent;
+    font-size: 6pt;
+    text-align: center;
+    padding: 0;
+    margin: 0;
+    color: #000;
+}
+.inp-cell-extra:focus {
+    outline: 1.5px solid #3b82f6;
+    background: #eff6ff;
+}
+
+/* TOTAL SKOR */
+.col-total-label {
+    text-align: center;
+    font-weight: bold;
+    font-size: 6.8pt;
+    background: #f8f9fa;
+}
+.total-skor-cell, .total-skor-h2-cell {
+    font-size: 7.5pt;
+    font-weight: bold;
+    background: #f8f9fa;
+}
+.total-skor-cell.skor-normal { background: #ffffff; color: #000; }
+.total-skor-cell.skor-ringan { background: #ffff00; color: #000; }
+.total-skor-cell.skor-sedang { background: #ffb380; color: #000; }
+.total-skor-cell.skor-tinggi { background: #ff4d4d; color: #fff; }
+.total-skor-cell.skor-blue   { background: #00b0f0; color: #fff; font-size: 6pt; }
+
+/* PANDUAN RESPON UMUM */
+.ews-panduan-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 6pt;
+    line-height: 1.15;
+    border-top: 1.5px solid #000;
+    margin-top: 2px;
+}
+.ews-panduan-table td {
+    border: 1px solid #000;
+    padding: 2.5px 4px;
+    vertical-align: middle;
+}
+.lbl-ringan {
+    background-color: #ffff00;
+    font-weight: bold;
+    text-align: center;
+    color: #000;
+}
+.lbl-sedang {
+    background-color: #ffb380;
+    font-weight: bold;
+    text-align: center;
+    color: #000;
+}
+.lbl-tinggi {
+    background-color: #ff4d4d;
+    color: #fff;
+    font-weight: bold;
+    text-align: center;
+}
+.lbl-henti {
+    background-color: #00b0f0;
+    color: #fff;
+    font-weight: bold;
+    text-align: center;
+}
+.ews-panduan-table tr.active-guidance {
+    outline: 2px solid #000;
+}
+
+/* STYLING KHUSUS HALAMAN 2 (GAMBAR 2 - 16 KOLOM) */
+.col-param-h2 {
+    width: 76px;
+    font-weight: bold;
+    font-size: 6.5pt;
+    text-align: center;
+    padding: 1px 2px;
+}
+.h2-sub-label {
+    width: 220px;
+    text-align: left;
+    padding: 1.5px 5px !important;
+    font-size: 6.2pt;
+    line-height: 1.1;
+}
+.bg-h2-green {
+    background-color: #d9ead3 !important;
+    color: #000;
+}
+.bg-h2-yellow {
+    background-color: #fff2cc !important;
+    color: #000;
+}
+.bg-h2-peach {
+    background-color: #fce5cd !important;
+    color: #000;
+}
+.bg-h2-pink {
+    background-color: #f4cccc !important;
+    color: #000;
+}
+
+/* TABEL ACUAN USIA HALAMAN 2 */
+.table-usia-h2 {
+    width: 68%;
+    margin: 8px auto;
+    border-collapse: collapse;
+    font-size: 6.2pt;
+    text-align: center;
+}
+.table-usia-h2 th, .table-usia-h2 td {
+    border: 1px solid #000;
+    padding: 2px 4px;
+}
+.th-usia-blue {
+    background-color: #8ea9db !important;
+    font-weight: bold;
+    color: #000;
+}
+.tr-usia-row {
+    background-color: #fce5cd !important;
+    color: #000;
+}
+.td-usia-lbl {
+    font-weight: bold;
+    text-align: center;
+    width: 24%;
+}
+
+.lbl-guide-h2 {
+    width: 165px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 6.5pt;
+}
+.bg-h2-green-guide { background-color: #d9ead3 !important; color: #000; }
+.bg-h2-yellow-guide { background-color: #ffff00 !important; color: #000; }
+.bg-h2-red-guide { background-color: #ff0000 !important; color: #fff; }
+.bg-h2-blue-guide { background-color: #00a2e8 !important; color: #fff; }
+
+/* FOOTER */
+.ews-footer-table {
+    width: 100%;
+    margin-top: 4px;
+    font-size: 6.5pt;
+}
+.ews-square-box {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border: 1.2px solid #000;
+    vertical-align: middle;
+    margin-left: 6px;
+}
+</style>
+
+<script>
+// Data Awal Dewasa (24 Kolom) & Halaman 2 (16 Kolom) dari PHP
+var rawDewasaData = {$data.detail_dewasa_json};
+var rawH2Data = {$data.detail_anak_json};
+
+if (!Array.isArray(rawDewasaData)) { rawDewasaData = []; }
+if (!Array.isArray(rawH2Data)) { rawH2Data = []; }
+
+function normVal(val) {
+    if (!val) return '';
+    return String(val).replace(/\./g, '_').replace(/-/g, '_');
+}
+
+// 1. Siapkan Array 24 Kolom Dewasa (Halaman 1)
+var colDewasa = [];
+for (var i = 0; i < 24; i++) {
+    if (rawDewasaData[i]) {
+        colDewasa[i] = Object.assign({
+            tgl: '', jam: '',
+            respirasi: '', saturasi: '', suplemen_o2: '', tensi: '', nadi: '', kesadaran: '', suhu: '',
+            gds: '', nyeri: '', urin: '',
+            total_skor: 0, is_blue: false
+        }, rawDewasaData[i]);
+        if (colDewasa[i].respirasi) colDewasa[i].respirasi = normVal(colDewasa[i].respirasi);
+        if (colDewasa[i].saturasi) colDewasa[i].saturasi = normVal(colDewasa[i].saturasi);
+        if (colDewasa[i].tensi) colDewasa[i].tensi = normVal(colDewasa[i].tensi);
+        if (colDewasa[i].nadi) colDewasa[i].nadi = normVal(colDewasa[i].nadi);
+        if (colDewasa[i].suhu) colDewasa[i].suhu = normVal(colDewasa[i].suhu);
+    } else {
+        colDewasa[i] = {
+            tgl: '', jam: '',
+            respirasi: '', saturasi: '', suplemen_o2: '', tensi: '', nadi: '', kesadaran: '', suhu: '',
+            gds: '', nyeri: '', urin: '',
+            total_skor: 0, is_blue: false
+        };
+    }
+}
+
+// 2. Siapkan Array 16 Kolom Halaman 2 (Gambar 2)
+var colH2 = [];
+for (var j = 0; j < 16; j++) {
+    if (rawH2Data[j]) {
+        colH2[j] = Object.assign({
+            tgl: '', jam: '',
+            keadaan_umum: '',
+            kardiovaskular: '',
+            respirasi: '',
+            total_skor: ''
+        }, rawH2Data[j]);
+        if (colH2[j].keadaan_umum !== undefined && colH2[j].keadaan_umum !== '') colH2[j].keadaan_umum = String(colH2[j].keadaan_umum);
+        if (colH2[j].kardiovaskular !== undefined && colH2[j].kardiovaskular !== '') colH2[j].kardiovaskular = String(colH2[j].kardiovaskular);
+        if (colH2[j].respirasi !== undefined && colH2[j].respirasi !== '') colH2[j].respirasi = String(colH2[j].respirasi);
+    } else {
+        colH2[j] = {
+            tgl: '', jam: '',
+            keadaan_umum: '',
+            kardiovaskular: '',
+            respirasi: '',
+            total_skor: ''
+        };
+    }
+}
+
+// Hitung Skor Dewasa untuk 1 Kolom (Halaman 1)
+function calcScoreCol(item) {
+    var score = 0;
+    var isBlue = false;
+    var hasValue = false;
+
+    // Respirasi
+    var resp = normVal(item.respirasi);
+    if (resp) {
+        hasValue = true;
+        if (resp === 'le_5' || resp === 'ge_35') { isBlue = true; }
+        else if (resp === '6_8' || resp === '25_34') { score += 3; }
+        else if (resp === '21_24') { score += 2; }
+        else if (resp === '9_11') { score += 1; }
     }
 
-    detailDewasa.forEach(function(item, idx) {
-        var calc = calcSkorDewasa(item);
+    // Saturasi O2
+    var sat = normVal(item.saturasi);
+    if (sat) {
+        hasValue = true;
+        if (sat === 'le_91') { score += 3; }
+        else if (sat === '92_93') { score += 2; }
+        else if (sat === '94_95') { score += 1; }
+    }
+
+    // Suplemen O2
+    if (item.suplemen_o2 === 'ya') {
+        hasValue = true;
+        score += 2;
+    }
+
+    // Tensi Sistolik
+    var tens = normVal(item.tensi);
+    if (tens) {
+        hasValue = true;
+        if (tens === 'le_70') { isBlue = true; }
+        else if (tens === 'ge_220' || tens === '71_90') { score += 3; }
+        else if (tens === '91_100') { score += 2; }
+        else if (tens === '181_220' || tens === '101_110') { score += 1; }
+    }
+
+    // Laju Jantung
+    var nad = normVal(item.nadi);
+    if (nad) {
+        hasValue = true;
+        if (nad === 'ge_140' || nad === 'le_40') { isBlue = true; }
+        else if (nad === '131_140') { score += 3; }
+        else if (nad === '111_130') { score += 2; }
+        else if (nad === '91_110' || nad === '41_50') { score += 1; }
+    }
+
+    // Kesadaran
+    if (item.kesadaran) {
+        hasValue = true;
+        if (item.kesadaran === 'unrespon') { isBlue = true; }
+        else if (item.kesadaran === 'nyeri_verbal') { score += 3; }
+    }
+
+    // Temperatur
+    var suh = normVal(item.suhu);
+    if (suh) {
+        hasValue = true;
+        if (suh === 'le_35') { score += 3; }
+        else if (suh === '38_1_39' || suh === 'ge_39') { score += 2; }
+        else if (suh === '35_1_36') { score += 1; }
+    }
+
+    return { score: score, isBlue: isBlue, hasValue: hasValue };
+}
+
+// Refresh Tampilan Grid Dewasa (Halaman 1)
+function refreshGridDewasa() {
+    var lastActiveCol = -1;
+
+    for (var col = 0; col < 24; col++) {
+        var item = colDewasa[col];
+
+        // Set Nilai Input Header
+        $('.inp-cell-tgl[data-col="' + col + '"]').val(item.tgl || '');
+        $('.inp-cell-jam[data-col="' + col + '"]').val(item.jam || '');
+
+        // Set Input Parameter Tambahan
+        $('.inp-cell-extra[data-col="' + col + '"][data-param="gds"]').val(item.gds || '');
+        $('.inp-cell-extra[data-col="' + col + '"][data-param="nyeri"]').val(item.nyeri || '');
+        $('.inp-cell-extra[data-col="' + col + '"][data-param="urin"]').val(item.urin || '');
+
+        // Update Seleksi Sel untuk Tiap Parameter
+        var params = ['respirasi', 'saturasi', 'suplemen_o2', 'tensi', 'nadi', 'kesadaran', 'suhu'];
+        params.forEach(function(param) {
+            $('.clickable-cell[data-col="' + col + '"][data-param="' + param + '"]').each(function() {
+                var cellVal = $(this).data('val');
+                var currentVal = item[param];
+                if (currentVal && normVal(cellVal) === normVal(currentVal)) {
+                    $(this).addClass('is-selected').html('<span class="cell-mark-dot">&#9679;</span>');
+                } else {
+                    $(this).removeClass('is-selected').empty();
+                }
+            });
+        });
+
+        // Hitung & Tampilkan Total Skor
+        var calc = calcScoreCol(item);
         item.total_skor = calc.score;
         item.is_blue = calc.isBlue;
 
-        var badgeClass = 'label-success';
-        var badgeText = calc.score;
-        if (calc.isBlue) {
-            badgeClass = 'label-primary';
-            badgeText = 'BLUE (' + calc.score + ')';
-        } else if (calc.score >= 7) {
-            badgeClass = 'label-danger';
-        } else if (calc.score >= 5) {
-            badgeClass = 'label-warning';
-        } else if (calc.score >= 1) {
-            badgeClass = 'label-warning';
+        var totalCell = $('.total-skor-cell[data-col="' + col + '"]');
+        totalCell.removeClass('skor-normal skor-ringan skor-sedang skor-tinggi skor-blue');
+
+        if (calc.hasValue || item.tgl || item.jam) {
+            lastActiveCol = col;
+            if (calc.isBlue) {
+                totalCell.addClass('skor-blue').html('BLUE (' + calc.score + ')');
+            } else if (calc.score >= 7) {
+                totalCell.addClass('skor-tinggi').html(calc.score);
+            } else if (calc.score >= 5) {
+                totalCell.addClass('skor-sedang').html(calc.score);
+            } else if (calc.score >= 1) {
+                totalCell.addClass('skor-ringan').html(calc.score);
+            } else {
+                totalCell.addClass('skor-normal').html(calc.score);
+            }
+        } else {
+            totalCell.html('-');
         }
-
-        var html = '<tr data-idx="' + idx + '">';
-        html += '<td style="text-align: center; vertical-align: middle;">' +
-                '<button type="button" class="btn btn-danger btn-xs btn-del-dewasa" data-idx="' + idx + '"><i class="fa fa-trash"></i></button>' +
-                '</td>';
-        html += '<td><input type="text" class="form-control input-sm inp-d" data-field="tgl" value="' + (item.tgl || '') + '" placeholder="dd/mm" style="width: 75px;"></td>';
-        html += '<td><input type="text" class="form-control input-sm inp-d" data-field="jam" value="' + (item.jam || '') + '" placeholder="P/S/M" style="width: 65px;"></td>';
-
-        // Respirasi
-        html += '<td><select class="form-control input-sm inp-d" data-field="respirasi">' +
-                '<option value="le_5" ' + (item.respirasi === 'le_5' || item.respirasi === 'le_8' ? 'selected' : '') + '>≤ 5 (BLUE)</option>' +
-                '<option value="6_8" ' + (item.respirasi === '6_8' ? 'selected' : '') + '>6-8 (3)</option>' +
-                '<option value="9_11" ' + (item.respirasi === '9_11' ? 'selected' : '') + '>9-11 (1)</option>' +
-                '<option value="12_20" ' + (item.respirasi === '12_20' ? 'selected' : '') + '>12-20 (0 Normal)</option>' +
-                '<option value="21_24" ' + (item.respirasi === '21_24' ? 'selected' : '') + '>21-24 (2)</option>' +
-                '<option value="25_34" ' + (item.respirasi === '25_34' ? 'selected' : '') + '>25-34 (3)</option>' +
-                '<option value="ge_35" ' + (item.respirasi === 'ge_35' ? 'selected' : '') + '>≥ 35 (BLUE)</option>' +
-                '</select></td>';
-
-        // Saturasi O2
-        html += '<td><select class="form-control input-sm inp-d" data-field="saturasi">' +
-                '<option value="ge_96" ' + (item.saturasi === 'ge_96' ? 'selected' : '') + '>≥ 96 (0 Normal)</option>' +
-                '<option value="94_95" ' + (item.saturasi === '94_95' ? 'selected' : '') + '>94-95 (1)</option>' +
-                '<option value="92_93" ' + (item.saturasi === '92_93' ? 'selected' : '') + '>92-93 (2)</option>' +
-                '<option value="le_91" ' + (item.saturasi === 'le_91' ? 'selected' : '') + '>≤ 91 (3)</option>' +
-                '</select></td>';
-
-        // Suplemen O2
-        html += '<td><select class="form-control input-sm inp-d" data-field="suplemen_o2">' +
-                '<option value="tidak" ' + (item.suplemen_o2 === 'tidak' ? 'selected' : '') + '>Tidak (0)</option>' +
-                '<option value="ya" ' + (item.suplemen_o2 === 'ya' ? 'selected' : '') + '>Ya / % (2)</option>' +
-                '</select></td>';
-
-        // Tensi Sistolik
-        html += '<td><select class="form-control input-sm inp-d" data-field="tensi">' +
-                '<option value="ge_220" ' + (item.tensi === 'ge_220' ? 'selected' : '') + '>≥ 220 (3)</option>' +
-                '<option value="181_220" ' + (item.tensi === '181_220' ? 'selected' : '') + '>181-220 (1)</option>' +
-                '<option value="111_180" ' + (item.tensi === '111_180' ? 'selected' : '') + '>111-180 (0 Normal)</option>' +
-                '<option value="101_110" ' + (item.tensi === '101_110' ? 'selected' : '') + '>101-110 (1)</option>' +
-                '<option value="91_100" ' + (item.tensi === '91_100' ? 'selected' : '') + '>91-100 (2)</option>' +
-                '<option value="71_90" ' + (item.tensi === '71_90' ? 'selected' : '') + '>71-90 (3)</option>' +
-                '<option value="le_70" ' + (item.tensi === 'le_70' ? 'selected' : '') + '>≤ 70 (BLUE)</option>' +
-                '</select></td>';
-
-        // Laju Jantung / Nadi
-        html += '<td><select class="form-control input-sm inp-d" data-field="nadi">' +
-                '<option value="ge_140" ' + (item.nadi === 'ge_140' ? 'selected' : '') + '>≥ 140 (BLUE)</option>' +
-                '<option value="131_140" ' + (item.nadi === '131_140' ? 'selected' : '') + '>131-140 (3)</option>' +
-                '<option value="111_130" ' + (item.nadi === '111_130' ? 'selected' : '') + '>111-130 (2)</option>' +
-                '<option value="91_110" ' + (item.nadi === '91_110' ? 'selected' : '') + '>91-110 (1)</option>' +
-                '<option value="51_90" ' + (item.nadi === '51_90' ? 'selected' : '') + '>51-90 (0 Normal)</option>' +
-                '<option value="41_50" ' + (item.nadi === '41_50' ? 'selected' : '') + '>41-50 (1)</option>' +
-                '<option value="le_40" ' + (item.nadi === 'le_40' ? 'selected' : '') + '>≤ 40 (BLUE)</option>' +
-                '</select></td>';
-
-        // Kesadaran
-        html += '<td><select class="form-control input-sm inp-d" data-field="kesadaran">' +
-                '<option value="sadar" ' + (item.kesadaran === 'sadar' ? 'selected' : '') + '>Sadar (0 Normal)</option>' +
-                '<option value="nyeri_verbal" ' + (item.kesadaran === 'nyeri_verbal' ? 'selected' : '') + '>Nyeri/Verbal (3)</option>' +
-                '<option value="unrespon" ' + (item.kesadaran === 'unrespon' ? 'selected' : '') + '>Unrespon (BLUE)</option>' +
-                '</select></td>';
-
-        // Suhu
-        html += '<td><select class="form-control input-sm inp-d" data-field="suhu">' +
-                '<option value="le_35" ' + (item.suhu === 'le_35' ? 'selected' : '') + '>≤ 35 (3)</option>' +
-                '<option value="35_1_36" ' + (item.suhu === '35_1_36' ? 'selected' : '') + '>35.1-36 (1)</option>' +
-                '<option value="36_1_38" ' + (item.suhu === '36_1_38' ? 'selected' : '') + '>36.1-38 (0 Normal)</option>' +
-                '<option value="38_1_39" ' + (item.suhu === '38_1_39' ? 'selected' : '') + '>38.1-39 (2)</option>' +
-                '<option value="ge_39" ' + (item.suhu === 'ge_39' ? 'selected' : '') + '>≥ 39 (2)</option>' +
-                '</select></td>';
-
-        // Skor
-        html += '<td style="text-align: center; vertical-align: middle;">' +
-                '<span class="label ' + badgeClass + '" style="font-size: 11px;">' + badgeText + '</span>' +
-                '</td>';
-
-        // GDS, Nyeri, Urin
-        html += '<td><input type="text" class="form-control input-sm inp-d" data-field="gds" value="' + (item.gds || '') + '" placeholder="GDS" style="width: 55px;"></td>';
-        html += '<td><input type="text" class="form-control input-sm inp-d" data-field="nyeri" value="' + (item.nyeri || '') + '" placeholder="0-10" style="width: 50px;"></td>';
-        html += '<td><input type="text" class="form-control input-sm inp-d" data-field="urin" value="' + (item.urin || '') + '" placeholder="cc" style="width: 50px;"></td>';
-
-        html += '</tr>';
-        tbody.append(html);
-    });
-}
-
-// Render Tabel Anak (PEWS)
-function renderTableAnak() {
-    var tbody = $('#tbody-anak');
-    tbody.empty();
-
-    if (detailAnak.length === 0) {
-        tbody.append('<tr><td colspan="8" class="text-center text-muted" style="padding: 15px;"><em>Belum ada kolom observasi EWS Anak. Klik tombol "+ Tambah Kolom Observasi Anak" untuk menambahkan.</em></td></tr>');
-        return;
     }
 
-    detailAnak.forEach(function(item, idx) {
-        var score = (parseInt(item.keadaan_umum) || 0) + (parseInt(item.kardiovaskular) || 0) + (parseInt(item.respirasi) || 0);
-        item.total_skor = score;
-
-        var badgeClass = 'label-success';
-        var statusText = 'Skor 0-2 (Stabil)';
-        if (score >= 5) {
-            badgeClass = 'label-danger';
-            statusText = 'Skor ≥5 (Resiko Tinggi)';
-        } else if (score >= 3) {
-            badgeClass = 'label-warning';
-            statusText = 'Skor 3-4 (Resiko Sedang)';
+    // Sorot Panduan Berdasarkan Observasi Terakhir
+    $('#tab-halaman1 .ews-panduan-table tr').removeClass('active-guidance');
+    if (lastActiveCol >= 0) {
+        var lastItem = colDewasa[lastActiveCol];
+        if (lastItem.is_blue || lastItem.total_skor >= 7) {
+            $('#guide-tinggi').addClass('active-guidance');
+        } else if (lastItem.total_skor >= 5) {
+            $('#guide-sedang').addClass('active-guidance');
+        } else if (lastItem.total_skor >= 1) {
+            $('#guide-ringan').addClass('active-guidance');
         }
+    }
+}
 
-        var html = '<tr data-idx="' + idx + '">';
-        html += '<td style="text-align: center; vertical-align: middle;">' +
-                '<button type="button" class="btn btn-danger btn-xs btn-del-anak" data-idx="' + idx + '"><i class="fa fa-trash"></i></button>' +
-                '</td>';
-        html += '<td><input type="text" class="form-control input-sm inp-a" data-field="tgl" value="' + (item.tgl || '') + '" placeholder="dd/mm" style="width: 75px;"></td>';
-        html += '<td><input type="text" class="form-control input-sm inp-a" data-field="jam" value="' + (item.jam || '') + '" placeholder="P/S/M" style="width: 65px;"></td>';
+// Refresh Tampilan Grid Halaman 2 (Gambar 2 - 16 Kolom)
+function refreshGridH2() {
+    var lastActiveColH2 = -1;
 
-        // Keadaan Umum
-        html += '<td><select class="form-control input-sm inp-a" data-field="keadaan_umum">' +
-                '<option value="0" ' + (item.keadaan_umum === '0' ? 'selected' : '') + '>Interaksi biasa (0)</option>' +
-                '<option value="1" ' + (item.keadaan_umum === '1' ? 'selected' : '') + '>Somnolen / rewel dapat ditenangkan (1)</option>' +
-                '<option value="2" ' + (item.keadaan_umum === '2' ? 'selected' : '') + '>Iritabel, tidak dapat ditenangkan (2)</option>' +
-                '<option value="3" ' + (item.keadaan_umum === '3' ? 'selected' : '') + '>Letargi, gelisah, respon nyeri turun (3)</option>' +
-                '</select></td>';
+    for (var col = 0; col < 16; col++) {
+        var item = colH2[col];
 
-        // Kardiovaskular
-        html += '<td><select class="form-control input-sm inp-a" data-field="kardiovaskular">' +
-                '<option value="0" ' + (item.kardiovaskular === '0' ? 'selected' : '') + '>Tidak sianosis, kapiler &lt;2 dtk (0)</option>' +
-                '<option value="1" ' + (item.kardiovaskular === '1' ? 'selected' : '') + '>Tidak pucat, kapiler 2 dtk (1)</option>' +
-                '<option value="2" ' + (item.kardiovaskular === '2' ? 'selected' : '') + '>Sianotik, kapiler &gt;2 dtk / Takikardi (2)</option>' +
-                '<option value="3" ' + (item.kardiovaskular === '3' ? 'selected' : '') + '>Sianotik motlet, kapiler &gt;5 dtk / Bradikardia (3)</option>' +
-                '</select></td>';
+        // Set Input Header
+        $('.inp-cell-tgl-h2[data-col="' + col + '"]').val(item.tgl || '');
+        $('.inp-cell-jam-h2[data-col="' + col + '"]').val(item.jam || '');
 
-        // Respirasi
-        html += '<td><select class="form-control input-sm inp-a" data-field="respirasi">' +
-                '<option value="0" ' + (item.respirasi === '0' ? 'selected' : '') + '>Parameter normal, tanpa retraksi (0)</option>' +
-                '<option value="1" ' + (item.respirasi === '1' ? 'selected' : '') + '>RR &gt;10x di atas normal / FiO2 &gt;30% (1)</option>' +
-                '<option value="2" ' + (item.respirasi === '2' ? 'selected' : '') + '>RR &gt;20x di atas normal / Ada retraksi / FiO2 &gt;40% (2)</option>' +
-                '<option value="3" ' + (item.respirasi === '3' ? 'selected' : '') + '>RR &gt;30x / Retraksi berat / Merintih / FiO2 &gt;50% (3)</option>' +
-                '</select></td>';
+        // Update Seleksi Sel
+        var paramsH2 = ['keadaan_umum', 'kardiovaskular', 'respirasi'];
+        paramsH2.forEach(function(param) {
+            $('.clickable-cell-h2[data-col="' + col + '"][data-param="' + param + '"]').each(function() {
+                var cellVal = String($(this).data('val'));
+                var currentVal = String(item[param]);
+                if (currentVal !== '' && cellVal === currentVal) {
+                    $(this).addClass('is-selected').html('<span class="cell-mark-dot">&#9679;</span>');
+                } else {
+                    $(this).removeClass('is-selected').empty();
+                }
+            });
+        });
 
-        // Skor & Status
-        html += '<td style="text-align: center; vertical-align: middle;"><strong style="font-size: 13px;">' + score + '</strong></td>';
-        html += '<td style="text-align: center; vertical-align: middle;"><span class="label ' + badgeClass + '" style="font-size: 11px;">' + statusText + '</span></td>';
+        // Hitung Total Skor Halaman 2
+        var hasValH2 = (item.keadaan_umum !== '' || item.kardiovaskular !== '' || item.respirasi !== '');
+        var totalCellH2 = $('.total-skor-h2-cell[data-col="' + col + '"]');
 
-        html += '</tr>';
-        tbody.append(html);
-    });
+        if (hasValH2 || item.tgl || item.jam) {
+            lastActiveColH2 = col;
+            var sumH2 = (parseInt(item.keadaan_umum) || 0) + (parseInt(item.kardiovaskular) || 0) + (parseInt(item.respirasi) || 0);
+            item.total_skor = sumH2;
+            totalCellH2.html(sumH2);
+        } else {
+            item.total_skor = '';
+            totalCellH2.html('-');
+        }
+    }
+
+    // Sorot Panduan Halaman 2
+    $('#tab-halaman2 .ews-panduan-table tr').removeClass('active-guidance');
+    if (lastActiveColH2 >= 0) {
+        var lastItemH2 = colH2[lastActiveColH2];
+        var sH2 = parseInt(lastItemH2.total_skor) || 0;
+        if (sH2 >= 5) {
+            $('#guide-h2-tinggi').addClass('active-guidance');
+        } else if (sH2 >= 3) {
+            $('#guide-h2-sedang').addClass('active-guidance');
+        } else {
+            $('#guide-h2-stabil').addClass('active-guidance');
+        }
+    }
+}
+
+// Sinkronisasi Dua Arah Identitas Pasien
+function syncPatientFields(source) {
+    if (source === 'top') {
+        var nm = $('#top_nama_pasien').val();
+        var tgl = $('#top_tgl_lahir').val();
+        var jk = $('#top_jk').val();
+        $('#inp_nama_pasien_h1').val(nm);
+        $('#inp_tgl_lahir_h1').val(tgl);
+        updateJkUi(jk);
+    } else {
+        var nmH1 = $('#inp_nama_pasien_h1').val();
+        var tglH1 = $('#inp_tgl_lahir_h1').val();
+        $('#top_nama_pasien').val(nmH1);
+        $('#top_tgl_lahir').val(tglH1);
+    }
+}
+
+function updateJkUi(jkVal) {
+    $('#top_jk').val(jkVal);
+    if (jkVal === 'L') {
+        $('#opt_jk_l').addClass('jk-circle');
+        $('#opt_jk_p').removeClass('jk-circle');
+    } else if (jkVal === 'P') {
+        $('#opt_jk_p').addClass('jk-circle');
+        $('#opt_jk_l').removeClass('jk-circle');
+    } else {
+        $('#opt_jk_l, #opt_jk_p').removeClass('jk-circle');
+    }
 }
 
 $(document).ready(function() {
-    renderTableDewasa();
-    renderTableAnak();
+    refreshGridDewasa();
+    refreshGridH2();
 
-    // Tambah Kolom Dewasa
-    $('#btn-tambah-dewasa').on('click', function() {
-        if (detailDewasa.length >= 16) {
-            alert('Maksimal 16 kolom pemantauan per lembar dokumen');
+    // Event Sinkronisasi Pasien
+    $('#top_nama_pasien, #top_tgl_lahir').on('keyup change', function() { syncPatientFields('top'); });
+    $('#inp_nama_pasien_h1, #inp_tgl_lahir_h1').on('keyup change', function() { syncPatientFields('sheet'); });
+    $('#top_jk').on('change', function() { updateJkUi($(this).val()); });
+    $('.jk-click-opt').on('click', function() {
+        var jk = $(this).data('jk');
+        updateJkUi(jk);
+    });
+
+    // =========================================================================
+    // EVENT HANDLERS HALAMAN 1 (DEWASA)
+    // =========================================================================
+    $(document).on('click', '.clickable-cell', function() {
+        var col = parseInt($(this).data('col'));
+        var param = $(this).data('param');
+        var val = $(this).data('val');
+
+        if ($(this).hasClass('is-selected')) {
+            colDewasa[col][param] = '';
+        } else {
+            colDewasa[col][param] = val;
+        }
+
+        // Auto isi tgl dan jam jika kosong
+        if (!colDewasa[col].tgl) {
+            var now = new Date();
+            var dd = String(now.getDate()).padStart(2, '0');
+            var mm = String(now.getMonth() + 1).padStart(2, '0');
+            colDewasa[col].tgl = dd + '/' + mm;
+        }
+        if (!colDewasa[col].jam) {
+            var now = new Date();
+            var hh = String(now.getHours()).padStart(2, '0');
+            var ii = String(now.getMinutes()).padStart(2, '0');
+            colDewasa[col].jam = hh + ':' + ii;
+        }
+
+        refreshGridDewasa();
+    });
+
+    $(document).on('change keyup', '.inp-cell-tgl', function() {
+        var col = parseInt($(this).data('col'));
+        colDewasa[col].tgl = $(this).val();
+        refreshGridDewasa();
+    });
+    $(document).on('change keyup', '.inp-cell-jam', function() {
+        var col = parseInt($(this).data('col'));
+        colDewasa[col].jam = $(this).val();
+        refreshGridDewasa();
+    });
+    $(document).on('change keyup', '.inp-cell-extra', function() {
+        var col = parseInt($(this).data('col'));
+        var param = $(this).data('param');
+        colDewasa[col][param] = $(this).val();
+    });
+
+    $('#btn-quick-now').on('click', function() {
+        var now = new Date();
+        var dd = String(now.getDate()).padStart(2, '0');
+        var mm = String(now.getMonth() + 1).padStart(2, '0');
+        var hh = String(now.getHours()).padStart(2, '0');
+        var ii = String(now.getMinutes()).padStart(2, '0');
+        var tglStr = dd + '/' + mm;
+        var jamStr = hh + ':' + ii;
+
+        var targetCol = -1;
+        for (var c = 0; c < 24; c++) {
+            if (!colDewasa[c].tgl && !colDewasa[c].respirasi && !colDewasa[c].tensi) {
+                targetCol = c;
+                break;
+            }
+        }
+        if (targetCol === -1) {
+            alert('Semua 24 kolom observasi Halaman 1 telah terisi.');
             return;
         }
-        var today = new Date();
-        var dd = String(today.getDate()).padStart(2, '0');
-        var mm = String(today.getMonth() + 1).padStart(2, '0');
 
-        detailDewasa.push({
-            tgl: dd + '/' + mm,
-            jam: 'P',
-            respirasi: '12_20',
-            saturasi: 'ge_96',
-            suplemen_o2: 'tidak',
-            tensi: '111_180',
-            nadi: '51_90',
-            kesadaran: 'sadar',
-            suhu: '36_1_38',
-            total_skor: 0,
-            is_blue: false,
-            gds: '',
-            nyeri: '0',
-            urin: ''
-        });
-        renderTableDewasa();
+        colDewasa[targetCol].tgl = tglStr;
+        colDewasa[targetCol].jam = jamStr;
+        colDewasa[targetCol].respirasi = '12_20';
+        colDewasa[targetCol].saturasi = 'ge_96';
+        colDewasa[targetCol].tensi = '111_180';
+        colDewasa[targetCol].nadi = '51_90';
+        colDewasa[targetCol].kesadaran = 'sadar';
+        colDewasa[targetCol].suhu = '36_1_38';
+
+        refreshGridDewasa();
+        $('.inp-cell-jam[data-col="' + targetCol + '"]').focus();
     });
 
-    // Tambah Kolom Anak
-    $('#btn-tambah-anak').on('click', function() {
-        if (detailAnak.length >= 16) {
-            alert('Maksimal 16 kolom pemantauan per lembar dokumen');
+    $('#btn-clear-dewasa').on('click', function() {
+        if (!confirm('Kosongkan seluruh kolom observasi EWS Dewasa (Halaman 1)?')) return;
+        for (var c = 0; c < 24; c++) {
+            colDewasa[c] = {
+                tgl: '', jam: '',
+                respirasi: '', saturasi: '', suplemen_o2: '', tensi: '', nadi: '', kesadaran: '', suhu: '',
+                gds: '', nyeri: '', urin: '',
+                total_skor: 0, is_blue: false
+            };
+        }
+        refreshGridDewasa();
+    });
+
+    // =========================================================================
+    // EVENT HANDLERS HALAMAN 2 (GAMBAR 2 - 16 KOLOM)
+    // =========================================================================
+    $(document).on('click', '.clickable-cell-h2', function() {
+        var col = parseInt($(this).data('col'));
+        var param = $(this).data('param');
+        var val = String($(this).data('val'));
+
+        if ($(this).hasClass('is-selected')) {
+            colH2[col][param] = '';
+        } else {
+            colH2[col][param] = val;
+        }
+
+        if (!colH2[col].tgl) {
+            var now = new Date();
+            var dd = String(now.getDate()).padStart(2, '0');
+            var mm = String(now.getMonth() + 1).padStart(2, '0');
+            colH2[col].tgl = dd + '/' + mm;
+        }
+        if (!colH2[col].jam) {
+            var now = new Date();
+            var hh = String(now.getHours()).padStart(2, '0');
+            var ii = String(now.getMinutes()).padStart(2, '0');
+            colH2[col].jam = hh + ':' + ii;
+        }
+
+        refreshGridH2();
+    });
+
+    $(document).on('change keyup', '.inp-cell-tgl-h2', function() {
+        var col = parseInt($(this).data('col'));
+        colH2[col].tgl = $(this).val();
+        refreshGridH2();
+    });
+    $(document).on('change keyup', '.inp-cell-jam-h2', function() {
+        var col = parseInt($(this).data('col'));
+        colH2[col].jam = $(this).val();
+        refreshGridH2();
+    });
+
+    $('#btn-quick-now-h2').on('click', function() {
+        var now = new Date();
+        var dd = String(now.getDate()).padStart(2, '0');
+        var mm = String(now.getMonth() + 1).padStart(2, '0');
+        var hh = String(now.getHours()).padStart(2, '0');
+        var ii = String(now.getMinutes()).padStart(2, '0');
+        var tglStr = dd + '/' + mm;
+        var jamStr = hh + ':' + ii;
+
+        var targetCol = -1;
+        for (var c = 0; c < 16; c++) {
+            if (!colH2[c].tgl && colH2[c].keadaan_umum === '' && colH2[c].respirasi === '') {
+                targetCol = c;
+                break;
+            }
+        }
+        if (targetCol === -1) {
+            alert('Semua 16 kolom observasi Halaman 2 telah terisi.');
             return;
         }
-        var today = new Date();
-        var dd = String(today.getDate()).padStart(2, '0');
-        var mm = String(today.getMonth() + 1).padStart(2, '0');
 
-        detailAnak.push({
-            tgl: dd + '/' + mm,
-            jam: 'P',
-            keadaan_umum: '0',
-            kardiovaskular: '0',
-            respirasi: '0',
-            total_skor: 0
-        });
-        renderTableAnak();
+        colH2[targetCol].tgl = tglStr;
+        colH2[targetCol].jam = jamStr;
+        colH2[targetCol].keadaan_umum = '0';
+        colH2[targetCol].kardiovaskular = '0';
+        colH2[targetCol].respirasi = '0';
+
+        refreshGridH2();
+        $('.inp-cell-jam-h2[data-col="' + targetCol + '"]').focus();
     });
 
-    // Hapus Kolom Dewasa
-    $(document).on('click', '.btn-del-dewasa', function() {
-        var idx = $(this).data('idx');
-        detailDewasa.splice(idx, 1);
-        renderTableDewasa();
-    });
-
-    // Hapus Kolom Anak
-    $(document).on('click', '.btn-del-anak', function() {
-        var idx = $(this).data('idx');
-        detailAnak.splice(idx, 1);
-        renderTableAnak();
-    });
-
-    // Event input Dewasa
-    $(document).on('change keyup', '.inp-d', function() {
-        var row = $(this).closest('tr');
-        var idx = row.data('idx');
-        var field = $(this).data('field');
-        detailDewasa[idx][field] = $(this).val();
-
-        // Update total score display without re-rendering entire row to keep focus
-        var calc = calcSkorDewasa(detailDewasa[idx]);
-        detailDewasa[idx].total_skor = calc.score;
-        detailDewasa[idx].is_blue = calc.isBlue;
-
-        var badgeClass = 'label-success';
-        var badgeText = calc.score;
-        if (calc.isBlue) {
-            badgeClass = 'label-primary';
-            badgeText = 'BLUE (' + calc.score + ')';
-        } else if (calc.score >= 7) {
-            badgeClass = 'label-danger';
-        } else if (calc.score >= 5) {
-            badgeClass = 'label-warning';
-        } else if (calc.score >= 1) {
-            badgeClass = 'label-warning';
+    $('#btn-clear-h2').on('click', function() {
+        if (!confirm('Kosongkan seluruh kolom observasi Halaman 2?')) return;
+        for (var c = 0; c < 16; c++) {
+            colH2[c] = {
+                tgl: '', jam: '',
+                keadaan_umum: '', kardiovaskular: '', respirasi: '', total_skor: ''
+            };
         }
-        row.find('td:eq(10)').html('<span class="label ' + badgeClass + '" style="font-size: 11px;">' + badgeText + '</span>');
+        refreshGridH2();
     });
 
-    // Event input Anak
-    $(document).on('change keyup', '.inp-a', function() {
-        var row = $(this).closest('tr');
-        var idx = row.data('idx');
-        var field = $(this).data('field');
-        detailAnak[idx][field] = $(this).val();
-
-        var score = (parseInt(detailAnak[idx].keadaan_umum) || 0) + (parseInt(detailAnak[idx].kardiovaskular) || 0) + (parseInt(detailAnak[idx].respirasi) || 0);
-        detailAnak[idx].total_skor = score;
-
-        var badgeClass = 'label-success';
-        var statusText = 'Skor 0-2 (Stabil)';
-        if (score >= 5) {
-            badgeClass = 'label-danger';
-            statusText = 'Skor ≥5 (Resiko Tinggi)';
-        } else if (score >= 3) {
-            badgeClass = 'label-warning';
-            statusText = 'Skor 3-4 (Resiko Sedang)';
-        }
-        row.find('td:eq(6)').html('<strong style="font-size: 13px;">' + score + '</strong>');
-        row.find('td:eq(7)').html('<span class="label ' + badgeClass + '" style="font-size: 11px;">' + statusText + '</span>');
+    $('#nama_petugas_input').on('keyup change', function() {
+        $('#nama_petugas').val($(this).val());
     });
 
-    // Simpan Form: serialize JSON arrays
+    // =========================================================================
+    // SUBMIT FORM: SERIALISASI JSON KE HIDDEN INPUT
+    // =========================================================================
     $('#form-ews').on('submit', function() {
-        $('#json_detail_dewasa').val(JSON.stringify(detailDewasa));
-        $('#json_detail_anak').val(JSON.stringify(detailAnak));
+        $('#json_detail_dewasa').val(JSON.stringify(colDewasa));
+        $('#json_detail_anak').val(JSON.stringify(colH2));
+        $('#nama_petugas').val($('#nama_petugas_input').val());
+        return true;
     });
 
-    // AJAX Pasien Lookup
+    // =========================================================================
+    // AJAX PENCARIAN PASIEN
+    // =========================================================================
     $('#btn-cari-pasien').on('click', function() {
         var noRawat = $('#no_rawat').val().trim();
         if (!noRawat) {
@@ -588,14 +1640,17 @@ $(document).ready(function() {
             ajax_patient: 1,
             no_rawat: noRawat
         }, function(res) {
-            btn.prop('disabled', false).html('<i class="fa fa-search"></i> Cari Pasien');
+            btn.prop('disabled', false).html('<i class="fa fa-search"></i> Cari');
             if (res.success) {
                 $('#no_rawat').val(res.no_rawat);
                 $('#no_rkm_medis').val(res.no_rkm_medis);
-                $('#nm_pasien').val(res.nm_pasien);
-                $('#jk_pasien').val(res.jk);
-                $('#tgl_lahir_pasien').val(res.tgl_lahir);
-                $('#umur_pasien').val(res.umur);
+                $('#top_nama_pasien').val(res.nm_pasien);
+                $('#inp_nama_pasien_h1').val(res.nm_pasien);
+                $('#top_tgl_lahir').val(res.tgl_lahir);
+                $('#inp_tgl_lahir_h1').val(res.tgl_lahir);
+
+                updateJkUi(res.jk_code);
+
                 if (res.kamar && !$('#ruangan').val()) {
                     $('#ruangan').val(res.kamar);
                 }
@@ -603,9 +1658,16 @@ $(document).ready(function() {
                 alert('Pasien dengan No. Rawat / RM tersebut tidak ditemukan.');
             }
         }).fail(function() {
-            btn.prop('disabled', false).html('<i class="fa fa-search"></i> Cari Pasien');
+            btn.prop('disabled', false).html('<i class="fa fa-search"></i> Cari');
             alert('Gagal menghubungi server.');
         });
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $('#btn-cari-pasien').click();
+        }
     });
 });
 </script>
