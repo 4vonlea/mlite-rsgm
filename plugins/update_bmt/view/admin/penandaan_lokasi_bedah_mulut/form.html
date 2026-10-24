@@ -1,0 +1,521 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
+                <h3 class="panel-title" style="font-weight: bold; font-size: 16px;">
+                    <i class="fa fa-cutlery text-danger" style="margin-right: 5px;"></i> {if: !empty($data.id)}Edit{else}Tambah{/if} Penandaan Tepat Lokasi Bedah Mulut
+                </h3>
+                <div>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'penandaanlokasibedahmanage'])?}" class="btn btn-default btn-sm">
+                        <i class="fa fa-arrow-left"></i> Kembali ke Data
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+
+                <form method="POST" action="{?=url([ADMIN, 'update_bmt', 'penandaanlokasibedahsave'])?}" id="form-penandaan-bedah">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="gigi_centang" id="input_gigi_centang" value="{$data.gigi_centang}">
+                    <input type="hidden" name="markers_anatomi" id="input_markers_anatomi" value="{$data.markers_anatomi}">
+
+                    <!-- 1. IDENTITAS PASIEN -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading" style="font-weight: bold; font-size: 13px;">
+                            <i class="fa fa-user"></i> Identitas Pasien
+                        </div>
+                        <div class="panel-body" style="background: #fafafa;">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>No. Rawat <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required placeholder="Contoh: 2026/10/20/000001">
+                                            <span class="input-group-btn">
+                                                <button type="button" class="btn btn-info" id="btn-cari-pasien" title="Cari data pasien">
+                                                    <i class="fa fa-search"></i> Cari
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>No. Rekam Medis</label>
+                                        <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly style="background: #eef1f4;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nama Pasien</label>
+                                        <input type="text" id="nm_pasien" class="form-control" value="{$data.nm_pasien}" readonly style="background: #eef1f4;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Jenis Kelamin</label>
+                                        <input type="text" id="jk" class="form-control" value="{$data.jk}" readonly style="background: #eef1f4;">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Umur Pasien</label>
+                                        <input type="text" id="umur" class="form-control" value="{$data.umur}" readonly style="background: #eef1f4;">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Tanggal Lahir</label>
+                                        <input type="text" id="tgl_lahir" class="form-control" value="{$data.tgl_lahir}" readonly style="background: #eef1f4;">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Tanggal Tindakan</label>
+                                        <input type="date" name="tanggal" class="form-control" value="{$data.tanggal}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. JENIS TINDAKAN -->
+                    <div class="panel panel-default" style="border-left: 4px solid #2980b9;">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label style="font-size: 14px; font-weight: bold; color: #2c3e50;">
+                                            <i class="fa fa-stethoscope text-primary"></i> Jenis Tindakan Pembedahan: <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" name="jenis_tindakan" id="jenis_tindakan" class="form-control input-lg" value="{$data.jenis_tindakan}" required placeholder="Contoh: Odontektomi Gigi 48, Eksisi Mucocele Bibir Bawah, Biopsi Insisi Lidah, dll." style="font-weight: 500; font-size: 15px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. ODONTOGRAM - CENTANG SEKOTAKAN -->
+                    <div class="panel panel-primary">
+                        <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h4 class="panel-title" style="font-weight: bold; font-size: 14px;">
+                                <i class="fa fa-th"></i> I. ODONTOGRAM PENANDAAN GIGI
+                            </h4>
+                            <span class="badge" style="background: #e74c3c; font-size: 11px;">
+                                <i class="fa fa-info-circle"></i> Klik kotak gigi untuk mencentang (centang sekotakan)
+                            </span>
+                        </div>
+                        <div class="panel-body" style="background: #fdfefe;">
+                            
+                            <div class="alert alert-warning" style="font-size: 12px; margin-bottom: 15px; padding: 10px 15px;">
+                                <strong>Perhatian:</strong>
+                                Berilah tanda centang <strong class="text-danger"><i class="fa fa-check"></i></strong> warna merah pada formulir odontogram di lokasi gigi yang akan dilakukan tindakan pembedahan. Cukup klik pada kotak gigi untuk menandai atau membatalkan.
+                            </div>
+
+                            <!-- ODONTOGRAM CONTAINER -->
+                            <div class="odontogram-wrapper" style="overflow-x: auto; padding: 15px 10px; background: #fff; border: 1px solid #dcdde1; border-radius: 6px; text-align: center;">
+                                
+                                {loop: $odonto as $row}
+                                <table class="odo-form">
+                                    {if: $row.label == 'top'}
+                                    <tr>
+                                        {loop: $row.kanan as $t}<td class="tooth-num" data-no="{$t.no}">{$t.no}</td>{/loop}
+                                        <td class="tooth-sep">{$row.arrow}</td>
+                                        {loop: $row.kiri as $t}<td class="tooth-num" data-no="{$t.no}">{$t.no}</td>{/loop}
+                                    </tr>
+                                    {/if}
+                                    <tr>
+                                        {loop: $row.kanan as $t}<td><div class="tooth-cell{if: $t.checked} selected{/if}" data-tooth="{$t.no}" title="Gigi {$t.no}">{$t.svg}</div></td>{/loop}
+                                        <td class="tooth-sep"></td>
+                                        {loop: $row.kiri as $t}<td><div class="tooth-cell{if: $t.checked} selected{/if}" data-tooth="{$t.no}" title="Gigi {$t.no}">{$t.svg}</div></td>{/loop}
+                                    </tr>
+                                    {if: $row.label == 'bottom'}
+                                    <tr>
+                                        {loop: $row.kanan as $t}<td class="tooth-num" data-no="{$t.no}">{$t.no}</td>{/loop}
+                                        <td class="tooth-sep">{$row.arrow}</td>
+                                        {loop: $row.kiri as $t}<td class="tooth-num" data-no="{$t.no}">{$t.no}</td>{/loop}
+                                    </tr>
+                                    {/if}
+                                </table>
+                                {if: $row.label == 'top' && $row.arrow == ''}
+                                <div class="odo-mid">&#9650;<br>&#9660;</div>
+                                {else}
+                                <div style="height: 10px;"></div>
+                                {/if}
+                                {/loop}
+
+                                <!-- SELECTION SUMMARY BAR -->
+                                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ced6e0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                                    <div style="font-size: 13px; text-align: left;">
+                                        <strong>Gigi yang Ditandai:</strong>
+                                        <span id="label-gigi-terpilih" style="margin-left: 5px;">
+                                            <span class="text-muted"><em>Belum ada gigi yang dicentang</em></span>
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-default btn-xs" id="btn-reset-gigi">
+                                            <i class="fa fa-refresh"></i> Reset Semua Tanda Gigi
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- 4. DIAGRAM ANATOMI (MULUT & KEPALA) - BEBAS CENTANG -->
+                    <div class="panel panel-primary">
+                        <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h4 class="panel-title" style="font-weight: bold; font-size: 14px;">
+                                <i class="fa fa-map-marker"></i> II. PENANDAAN LOKASI ANATOMI (MULUT, DEPAN, KANAN, KIRI)
+                            </h4>
+                            <span class="badge" style="background: #27ae60; font-size: 11px;">
+                                <i class="fa fa-mouse-pointer"></i> Bebas centang di bagian mana saja
+                            </span>
+                        </div>
+                        <div class="panel-body" style="background: #fdfefe;">
+                            
+                            <div class="alert alert-success" style="font-size: 12px; margin-bottom: 15px; padding: 10px 15px;">
+                                <i class="fa fa-hand-o-up"></i> <strong>Petunjuk Penandaan Bebas:</strong>
+                                Klik pada bagian mana saja di gambar rongga mulut atau kepala (Depan, Kanan, Kiri) untuk menempatkan tanda centang merah <strong class="text-danger">&#10004;</strong>. Klik kembali pada tanda centang untuk menghapusnya, atau gunakan tombol di bawah.
+                            </div>
+
+                            <!-- DIAGRAM TOOLBAR -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                                <div>
+                                    <span class="label label-danger" id="badge-total-marker" style="font-size: 12px; padding: 5px 8px;">
+                                        <i class="fa fa-check"></i> 0 Titik Ditandai
+                                    </span>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-warning btn-xs" id="btn-undo-marker" style="margin-right: 5px;">
+                                        <i class="fa fa-undo"></i> Hapus Titik Terakhir
+                                    </button>
+                                    <button type="button" class="btn btn-default btn-xs" id="btn-reset-markers">
+                                        <i class="fa fa-trash"></i> Reset Semua Titik Anatomi
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- INTERACTIVE DIAGRAM CANVAS CONTAINER -->
+                            <div style="text-align: center; background: #fff; border: 1.5px solid #bdc3c7; border-radius: 6px; padding: 15px 5px; overflow-x: auto;">
+                                <div id="diagram-container" style="position: relative; display: inline-block; cursor: crosshair; user-select: none;">
+                                    <img id="img-diagram-base" src="{$anatomi_img}" alt="Diagram Anatomi Mulut dan Kepala" style="max-width: 100%; height: auto; display: block; border-radius: 4px;">
+                                    
+                                    <!-- MARKERS OVERLAY LAYER -->
+                                    <div id="markers-layer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+                                        <!-- Dynamic marker checkmarks will be injected here -->
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+                    <!-- 5. PERNYATAAN & TANDA TANGAN -->
+                    <div class="panel panel-default" style="border-top: 3px solid #27ae60;">
+                        <div class="panel-heading" style="font-weight: bold; font-size: 13.5px;">
+                            <i class="fa fa-pencil-square-o"></i> Pernyataan Persetujuan dan Tanda Tangan
+                        </div>
+                        <div class="panel-body">
+                            
+                            <div class="well well-sm" style="background: #f8fafc; font-size: 13px; border-left: 4px solid #27ae60;">
+                                <i class="fa fa-quote-left text-muted"></i>
+                                <em>"Saya menyatakan bahwa lokasi operasi yang telah ditetapkan pada diagram adalah benar"</em>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Kota & Waktu Penandatanganan</label>
+                                        <div class="row">
+                                            <div class="col-xs-7">
+                                                <input type="text" class="form-control" value="Banjarmasin" readonly style="background: #f1f2f6;">
+                                            </div>
+                                            <div class="col-xs-5">
+                                                <input type="time" name="jam" class="form-control" value="{$data.jam}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Hubungan Yang Menyatakan</label>
+                                        <select name="hubungan_pasien" class="form-control" id="hubungan_pasien">
+                                            <option value="Pasien" {if: isset($data.hubungan_pasien) && $data.hubungan_pasien == 'Pasien'}selected{/if}>Pasien (Diri Sendiri)</option>
+                                            <option value="Suami" {if: isset($data.hubungan_pasien) && $data.hubungan_pasien == 'Suami'}selected{/if}>Suami</option>
+                                            <option value="Istri" {if: isset($data.hubungan_pasien) && $data.hubungan_pasien == 'Istri'}selected{/if}>Istri</option>
+                                            <option value="Ayah" {if: isset($data.hubungan_pasien) && $data.hubungan_pasien == 'Ayah'}selected{/if}>Ayah</option>
+                                            <option value="Ibu" {if: isset($data.hubungan_pasien) && $data.hubungan_pasien == 'Ibu'}selected{/if}>Ibu</option>
+                                            <option value="Anak" {if: isset($data.hubungan_pasien) && $data.hubungan_pasien == 'Anak'}selected{/if}>Anak</option>
+                                            <option value="Keluarga" {if: isset($data.hubungan_pasien) && $data.hubungan_pasien == 'Keluarga'}selected{/if}>Keluarga Lainnya</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nama Yang Menyatakan (Pasien/Keluarga) <span class="text-danger">*</span></label>
+                                        <input type="text" name="nama_pasien_keluarga" id="nama_pasien_keluarga" class="form-control" value="{$data.nama_pasien_keluarga}" placeholder="Nama lengkap pasien/wali" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Dokter Operator Bedah <span class="text-danger">*</span></label>
+                                        <select name="kd_dokter" id="kd_dokter" class="form-control" required>
+                                            <option value="">-- Pilih Dokter Bedah Mulut / Operator --</option>
+                                            {loop: $dokter}
+                                            <option value="{$value.kd_dokter}" data-nama="{$value.nm_dokter}" {if: isset($data.kd_dokter) && $data.kd_dokter == $value.kd_dokter}selected{/if}>
+                                                {$value.nm_dokter} ({$value.kd_dokter})
+                                            </option>
+                                            {/loop}
+                                        </select>
+                                        <input type="hidden" name="nama_dokter" id="nama_dokter" value="{$data.nama_dokter}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Nama Saksi (Perawat / Asisten Bedah) <span class="text-danger">*</span></label>
+                                        <input type="text" name="nama_saksi" id="nama_saksi" class="form-control" value="{$data.nama_saksi}" placeholder="Contoh: Ns. Siti Aminah, S.Kep / Saksi Ruang UBS" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label>Catatan Tambahan (Opsional)</label>
+                                        <textarea name="catatan" class="form-control" rows="2" placeholder="Catatan khusus mengenai lokasi pembedahan, anatomi, atau rencana flap...">{$data.catatan}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- SUBMIT BUTTONS -->
+                    <div class="text-right" style="margin-top: 20px;">
+                        <a href="{?=url([ADMIN, 'update_bmt', 'penandaanlokasibedahmanage'])?}" class="btn btn-default btn-lg" style="margin-right: 8px;">
+                            <i class="fa fa-times"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg" id="btn-submit">
+                            <i class="fa fa-check-circle"></i> Simpan Penandaan Lokasi Bedah
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Odontogram Styles - centang sekotakan */
+table.odo-form { border-collapse: separate; border-spacing: 3px 0; margin: 0 auto; }
+table.odo-form td { padding: 0; text-align: center; vertical-align: middle; }
+td.tooth-num { font-size: 11px; font-weight: bold; color: #4b6584; height: 18px; }
+td.tooth-sep { width: 16px; font-size: 13px; font-weight: bold; color: #7f8c8d; }
+.odo-mid { font-size: 12px; line-height: 1; color: #95a5a6; padding: 4px 0 6px 0; }
+.tooth-cell {
+    width: 34px;
+    height: 34px;
+    cursor: pointer;
+    user-select: none;
+    display: inline-block;
+    transition: transform 0.1s ease;
+}
+.tooth-cell svg { width: 34px; height: 34px; display: block; }
+.tooth-cell:hover { transform: scale(1.05); }
+.tooth-cell .tooth-check { display: none; }
+.tooth-cell.selected .tooth-check { display: inline; }
+
+
+/* Anatomical Free Marker Pin Styles */
+.marker-pin {
+    position: absolute;
+    width: 24px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    pointer-events: auto;
+    animation: popIn 0.2s ease-out;
+}
+.marker-pin svg { width: 24px; height: 20px; display: block; overflow: visible; }
+.marker-pin:hover { transform: translate(-50%, -50%) scale(1.3); }
+@keyframes popIn {
+    0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+    80% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+</style>
+
+<script>
+$(document).ready(function() {
+
+    // ==========================================
+    // 1. AJAX CARI DATA PASIEN
+    // ==========================================
+    $('#btn-cari-pasien').on('click', function() {
+        var no_rawat = $('#no_rawat').val().trim();
+        if (!no_rawat) {
+            alert('Silakan masukkan No. Rawat terlebih dahulu!');
+            return;
+        }
+
+        $.getJSON('{?=url([ADMIN, "update_bmt", "penandaanlokasibedahform"])?}', { ajax_patient: 1, no_rawat: no_rawat }, function(res) {
+            if (res.success) {
+                $('#no_rawat').val(res.no_rawat);
+                $('#no_rkm_medis').val(res.no_rkm_medis);
+                $('#nm_pasien').val(res.nm_pasien);
+                $('#jk').val(res.jk);
+                $('#umur').val(res.umur);
+                $('#tgl_lahir').val(res.tgl_lahir);
+
+                // Default nama yang menyatakan = nama pasien jika hubungan = Pasien
+                if ($('#hubungan_pasien').val() === 'Pasien' && !$('#nama_pasien_keluarga').val()) {
+                    $('#nama_pasien_keluarga').val(res.nm_pasien);
+                }
+            } else {
+                alert('Pasien dengan No. Rawat "' + no_rawat + '" tidak ditemukan!');
+            }
+        });
+    });
+
+    $('#hubungan_pasien').on('change', function() {
+        if ($(this).val() === 'Pasien' && $('#nm_pasien').val()) {
+            $('#nama_pasien_keluarga').val($('#nm_pasien').val());
+        }
+    });
+
+    $('#kd_dokter').on('change', function() {
+        var opt = $(this).find('option:selected');
+        $('#nama_dokter').val(opt.data('nama') || '');
+    });
+
+    // ==========================================
+    // 2. ODONTOGRAM - CENTANG SEKOTAKAN
+    // (nama variabel JS sengaja tanpa awalan "$" agar tidak diubah template engine mLITE)
+    // ==========================================
+    var selectedTeeth = {};
+
+    function setTooth(no, on) {
+        no = String(no);
+        if (on) { selectedTeeth[no] = true; } else { delete selectedTeeth[no]; }
+        jQuery('.tooth-cell[data-tooth="' + no + '"]').toggleClass('selected', !!on);
+        jQuery('.tooth-num[data-no="' + no + '"]').toggleClass('selected', !!on);
+    }
+
+    var initTeeth = (jQuery('#input_gigi_centang').val() || '').split(',');
+    for (var i = 0; i < initTeeth.length; i++) {
+        var t = initTeeth[i].trim();
+        if (t) setTooth(t, true);
+    }
+    updateTeethSummary();
+
+    // Klik satu kotak gigi = centang/batal satu gigi penuh
+    jQuery(document).on('click', '.tooth-cell', function(e) {
+        e.preventDefault();
+        var no = String(jQuery(this).data('tooth'));
+        setTooth(no, !selectedTeeth[no]);
+        updateTeethSummary();
+    });
+
+    jQuery('#btn-reset-gigi').on('click', function() {
+        if (Object.keys(selectedTeeth).length && confirm('Apakah Anda yakin ingin mereset semua tanda centang gigi?')) {
+            Object.keys(selectedTeeth).forEach(function(no) { setTooth(no, false); });
+            updateTeethSummary();
+        }
+    });
+
+    function updateTeethSummary() {
+        var keys = Object.keys(selectedTeeth).sort(function(a, b) { return parseInt(a, 10) - parseInt(b, 10); });
+        jQuery('#input_gigi_centang').val(keys.join(','));
+        if (keys.length > 0) {
+            var badges = '';
+            for (var i = 0; i < keys.length; i++) {
+                badges += '<span class="label label-danger" style="margin-right: 4px; font-size: 12px; display: inline-block;">' +
+                          '<i class="fa fa-check"></i> ' + keys[i] + '</span>';
+            }
+            jQuery('#label-gigi-terpilih').html(badges);
+        } else {
+            jQuery('#label-gigi-terpilih').html('<span class="text-muted"><em>Belum ada gigi yang dicentang</em></span>');
+        }
+    }
+
+    // ==========================================
+    // 3. ANATOMI - BEBAS CENTANG DI BAGIAN MANA SAJA
+    // ==========================================
+    var anatomiMarkers = [];
+    try {
+        anatomiMarkers = JSON.parse(jQuery('#input_markers_anatomi').val() || '[]');
+        if (!Array.isArray(anatomiMarkers)) anatomiMarkers = [];
+    } catch (err) {
+        anatomiMarkers = [];
+    }
+
+    var diagramBox = jQuery('#diagram-container');
+    var markerLayer = jQuery('#markers-layer');
+    var diagramImg = document.getElementById('img-diagram-base');
+
+    // Bentuk centang identik dengan yang dirender di hasil cetak/PDF (titik tengah = posisi klik)
+    var CHECK_SVG = '<svg viewBox="-12 -10 24 20" xmlns="http://www.w3.org/2000/svg">' +
+        '<polyline points="-9,0 -3,7 9,-8" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<polyline points="-9,0 -3,7 9,-8" fill="none" stroke="#e10000" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>';
+
+    function renderMarkers() {
+        markerLayer.empty();
+        for (var i = 0; i < anatomiMarkers.length; i++) {
+            var m = anatomiMarkers[i];
+            var pin = jQuery('<div class="marker-pin" title="Klik untuk menghapus tanda ini"></div>');
+            pin.attr('data-index', i).html(CHECK_SVG).css({ left: m.x + '%', top: m.y + '%' });
+            markerLayer.append(pin);
+        }
+        jQuery('#badge-total-marker').html('<i class="fa fa-check"></i> ' + anatomiMarkers.length + ' Titik Ditandai');
+        jQuery('#input_markers_anatomi').val(JSON.stringify(anatomiMarkers));
+    }
+
+    diagramBox.on('click', function(e) {
+        var pinEl = jQuery(e.target).closest('.marker-pin');
+        if (pinEl.length) {
+            var idx = parseInt(pinEl.attr('data-index'), 10);
+            if (!isNaN(idx)) {
+                anatomiMarkers.splice(idx, 1);
+                renderMarkers();
+            }
+            return;
+        }
+        var rect = diagramImg.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return;
+        var x = (e.clientX - rect.left) / rect.width * 100;
+        var y = (e.clientY - rect.top) / rect.height * 100;
+        if (x < 0 || x > 100 || y < 0 || y > 100) return;
+        anatomiMarkers.push({ x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 });
+        renderMarkers();
+    });
+
+    jQuery('#btn-undo-marker').on('click', function() {
+        if (anatomiMarkers.length > 0) {
+            anatomiMarkers.pop();
+            renderMarkers();
+        }
+    });
+
+    jQuery('#btn-reset-markers').on('click', function() {
+        if (anatomiMarkers.length > 0 && confirm('Apakah Anda yakin ingin menghapus semua titik penandaan anatomi?')) {
+            anatomiMarkers = [];
+            renderMarkers();
+        }
+    });
+
+    renderMarkers();
+
+});
+</script>

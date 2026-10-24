@@ -7497,6 +7497,7 @@ if (ob_get_length()) {
                 'ANS3 - ASSESMEN PRASEDASI / ANESTESI' => 'ans3manage',
                 'ANS4 - RENCANA ANESTESI' => 'ans4manage',
                 'LAMPIRAN - SURAT PERNYATAAN PULANG APS' => 'pulangapsmanage',
+                'PENANDAAN TEPAT LOKASI BEDAH MULUT' => 'penandaanlokasibedahmanage',
             ],
             'Ranap' => [
                 'RM.RI 01B - HAK DAN KEWAJIBAN PASIEN' => 'ri01bmanage',
@@ -13533,6 +13534,445 @@ if (ob_get_length()) {
         ]);
         exit();
     }
+
+    // ============================================================
+    // PENANDAAN TEPAT LOKASI BEDAH MULUT (BEDAH - FORM WAJIB)
+    // ============================================================
+
+    public function anyPenandaanlokasibedahmanage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $query = $this->db('penandaan_lokasi_bedah_mulut')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = penandaan_lokasi_bedah_mulut.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('penandaan_lokasi_bedah_mulut.*, COALESCE(penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+            ->desc('penandaan_lokasi_bedah_mulut.id')
+            ->toArray();
+
+        foreach ($query as $k => $v) {
+            $query[$k]['nomor'] = $k + 1;
+            $markers = !empty($v['markers_anatomi']) ? json_decode($v['markers_anatomi'], true) : [];
+            $query[$k]['total_marker'] = is_array($markers) ? count($markers) : 0;
+
+            // Badge gigi disiapkan di sini (template engine tidak mendukung {set:} / loop bersarang)
+            $badges = '';
+            foreach ($this->penandaanParseGigi($v['gigi_centang'] ?? '') as $g) {
+                $badges .= '<span class="label label-danger" style="display: inline-block; margin: 1px 2px; font-size: 11px;"><i class="fa fa-check"></i> ' . htmlspecialchars($g) . '</span>';
+            }
+            $query[$k]['gigi_badges'] = $badges;
+        }
+
+        return $this->draw('penandaan_lokasi_bedah_mulut/manage.html', ['list' => $query, 'data' => $query]);
+    }
+
+    public function getPenandaanlokasibedahform()
+    {
+        // AJAX patient lookup
+        if (isset($_GET['ajax_patient']) && !empty($_GET['no_rawat'])) {
+            $patient = $this->db('reg_periksa')
+                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir, pasien.alamat')
+                ->oneArray();
+            header('Content-Type: application/json');
+            if ($patient) {
+                echo json_encode([
+                    'success' => true,
+                    'no_rawat' => $patient['no_rawat'],
+                    'no_rkm_medis' => $patient['no_rkm_medis'],
+                    'nm_pasien' => $patient['nm_pasien'],
+                    'jk' => $patient['jk'],
+                    'umur' => $patient['umur'],
+                    'tgl_lahir' => $patient['tgl_lahir'],
+                    'alamat' => $patient['alamat']
+                ]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+            exit();
+        }
+
+        $id = $_GET['id'] ?? '';
+        $data = [];
+        if ($id) {
+            $data = $this->db('penandaan_lokasi_bedah_mulut')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = penandaan_lokasi_bedah_mulut.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('penandaan_lokasi_bedah_mulut.id', $id)
+                ->select('penandaan_lokasi_bedah_mulut.*, COALESCE(penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+                ->oneArray();
+        }
+        if (empty($data) || !is_array($data)) {
+            $data = [];
+        }
+        $defaults = [
+            'id' => '', 'no_rawat' => '', 'no_rkm_medis' => '', 'nm_pasien' => '', 'jk' => '',
+            'umur' => '', 'tgl_lahir' => '', 'jenis_tindakan' => '', 'gigi_centang' => '',
+            'markers_anatomi' => '[]', 'tanggal' => date('Y-m-d'), 'jam' => date('H:i'),
+            'nama_pasien_keluarga' => '', 'hubungan_pasien' => 'Pasien', 'kd_dokter' => '',
+            'nama_dokter' => '', 'nama_saksi' => '', 'catatan' => ''
+        ];
+        foreach ($defaults as $key => $def) {
+            if (!isset($data[$key]) || $data[$key] === null || $data[$key] === '') {
+                $data[$key] = $def;
+            }
+        }
+        if (!empty($data['jam'])) {
+            $data['jam'] = substr($data['jam'], 0, 5);
+        }
+
+        // Odontogram (centang sekotakan) disiapkan di controller
+        $gigiMap = array_fill_keys($this->penandaanParseGigi($data['gigi_centang']), true);
+        $odonto = $this->penandaanBuildOdonto($gigiMap, true);
+
+        // Escape seluruh nilai teks agar aman dipakai di atribut value="..." (JSON marker mengandung tanda kutip)
+        foreach ($data as $key => $val) {
+            if (is_string($val)) {
+                $data[$key] = htmlspecialchars($val, ENT_QUOTES, 'UTF-8');
+            }
+        }
+
+        $dokter = $this->db('dokter')->where('status', '1')->toArray();
+
+        return $this->draw('penandaan_lokasi_bedah_mulut/form.html', [
+            'data' => $data,
+            'dokter' => $dokter,
+            'odonto' => $odonto,
+            'anatomi_img' => url('assets/img/penandaan_lokasi_mulut_kepala_clean.png')
+        ]);
+    }
+
+    public function postPenandaanlokasibedahsave()
+    {
+        $id = !empty($_POST['id']) ? (int)$_POST['id'] : null;
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+        $no_rkm_medis = trim($_POST['no_rkm_medis'] ?? '');
+
+        if (empty($no_rkm_medis) && !empty($no_rawat)) {
+            $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+            if ($reg) $no_rkm_medis = $reg['no_rkm_medis'];
+        }
+
+        $kd_dokter = trim($_POST['kd_dokter'] ?? '');
+        $nama_dokter = trim($_POST['nama_dokter'] ?? '');
+        if (!empty($kd_dokter) && empty($nama_dokter)) {
+            $doc = $this->db('dokter')->where('kd_dokter', $kd_dokter)->oneArray();
+            if ($doc) $nama_dokter = $doc['nm_dokter'];
+        }
+
+        // Validasi gigi: hanya nomor gigi yang ada di odontogram
+        $validTeeth = [];
+        foreach ($this->penandaanOdontoRows() as $r) {
+            $validTeeth = array_merge($validTeeth, $r['kanan'], $r['kiri']);
+        }
+        $gigi = array_values(array_intersect($this->penandaanParseGigi($_POST['gigi_centang'] ?? ''), array_map('strval', $validTeeth)));
+
+        // Validasi marker anatomi: array {x, y} dalam persen 0-100
+        $markers = json_decode($_POST['markers_anatomi'] ?? '[]', true);
+        $cleanMarkers = [];
+        if (is_array($markers)) {
+            foreach ($markers as $m) {
+                if (isset($m['x'], $m['y']) && is_numeric($m['x']) && is_numeric($m['y'])) {
+                    $cleanMarkers[] = [
+                        'x' => round(max(0, min(100, (float)$m['x'])), 2),
+                        'y' => round(max(0, min(100, (float)$m['y'])), 2)
+                    ];
+                }
+            }
+        }
+
+        $jam = !empty($_POST['jam']) ? $_POST['jam'] : date('H:i:s');
+        if (strlen($jam) == 5) {
+            $jam .= ':00';
+        }
+
+        $data = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'jenis_tindakan' => trim($_POST['jenis_tindakan'] ?? ''),
+            'gigi_centang' => implode(',', $gigi),
+            'markers_anatomi' => json_encode($cleanMarkers),
+            'gambar_penandaan' => '',
+            'tanggal' => !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d'),
+            'jam' => $jam,
+            'nama_pasien_keluarga' => trim($_POST['nama_pasien_keluarga'] ?? ''),
+            'hubungan_pasien' => trim($_POST['hubungan_pasien'] ?? 'Pasien'),
+            'kd_dokter' => $kd_dokter,
+            'nama_dokter' => $nama_dokter,
+            'nama_saksi' => trim($_POST['nama_saksi'] ?? ''),
+            'catatan' => trim($_POST['catatan'] ?? ''),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        if ($id) {
+            $this->db('penandaan_lokasi_bedah_mulut')->where('id', $id)->save($data);
+            $this->setNotify('success', 'Data Penandaan Tepat Lokasi Bedah Mulut berhasil diperbarui!');
+        } else {
+            $data['created_at'] = date('Y-m-d H:i:s');
+            $this->db('penandaan_lokasi_bedah_mulut')->save($data);
+            $this->setNotify('success', 'Data Penandaan Tepat Lokasi Bedah Mulut berhasil disimpan!');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'penandaanlokasibedahmanage']));
+    }
+
+    public function getPenandaanlokasibedahhapus($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if ($id) {
+            $this->db('penandaan_lokasi_bedah_mulut')->where('id', $id)->delete();
+            $this->setNotify('success', 'Data penandaan lokasi bedah berhasil dihapus!');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'penandaanlokasibedahmanage']));
+    }
+
+    public function getPenandaanlokasibedahcetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('penandaan_lokasi_bedah_mulut')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = penandaan_lokasi_bedah_mulut.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('penandaan_lokasi_bedah_mulut.id', $id)
+            ->select('penandaan_lokasi_bedah_mulut.*, COALESCE(penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->oneArray();
+
+        if (!$data) {
+            $this->setNotify('failure', 'Data penandaan tepat lokasi bedah mulut tidak ditemukan!');
+            redirect(url([ADMIN, 'update_bmt', 'penandaanlokasibedahmanage']));
+        }
+
+        $rmRaw = ltrim($data['no_rkm_medis'] ?? '', "'");
+        $rmPadded = str_pad($rmRaw, 6, '0', STR_PAD_LEFT);
+        $data['no_rkm_medis'] = $rmPadded;
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = substr($rmPadded, $i, 1);
+        }
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir']);
+            if (count($tgl) == 3) {
+                $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+            } else {
+                $data['tgl_lahir_indo'] = $data['tgl_lahir'];
+            }
+        } else {
+            $data['tgl_lahir_indo'] = '-';
+        }
+
+        if (!empty($data['tanggal'])) {
+            $tglSurat = explode('-', $data['tanggal']);
+            if (count($tglSurat) == 3) {
+                $data['tgl_surat_indo'] = (int)$tglSurat[2] . ' ' . $bulan[(int)$tglSurat[1]];
+                $data['tahun_surat'] = substr($tglSurat[0], 2, 2);
+            } else {
+                $data['tgl_surat_indo'] = $data['tanggal'];
+                $data['tahun_surat'] = date('y');
+            }
+        } else {
+            $data['tgl_surat_indo'] = date('j') . ' ' . $bulan[(int)date('n')];
+            $data['tahun_surat'] = date('y');
+        }
+
+        $data['jam'] = !empty($data['jam']) ? substr($data['jam'], 0, 5) : '';
+
+        // Odontogram: centang sekotakan (SVG per kotak gigi, berupa <img> data-URI agar didukung mPDF)
+        $gigiMap = array_fill_keys($this->penandaanParseGigi($data['gigi_centang'] ?? ''), true);
+        $odonto = $this->penandaanBuildOdonto($gigiMap, false);
+
+        // Anatomi: gambar dasar + centang merah dirender server-side (GD)
+        $markers = !empty($data['markers_anatomi']) ? json_decode($data['markers_anatomi'], true) : [];
+        if (!is_array($markers)) $markers = [];
+        $anatomi_src = $this->penandaanRenderAnatomi($markers);
+
+        // Escape teks untuk ditampilkan
+        foreach (['nm_pasien', 'jenis_tindakan', 'nama_pasien_keluarga', 'nama_dokter', 'nama_saksi', 'no_rawat'] as $f) {
+            $data[$f] = htmlspecialchars($data[$f] ?? '', ENT_QUOTES, 'UTF-8');
+        }
+
+        $pdf_url = url([ADMIN, 'update_bmt', 'penandaanlokasibedahcetak', $id]) . '&pdf=1';
+        $is_pdf = isset($_GET['pdf']) && $_GET['pdf'] == 1;
+
+        if ($is_pdf) {
+            try {
+                $oldErr = error_reporting(0);
+                @ini_set('display_errors', '0');
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'margin_left' => 10,
+                    'margin_right' => 10,
+                    'margin_top' => 8,
+                    'margin_bottom' => 8,
+                    'tempDir' => BASE_DIR . '/tmp'
+                ]);
+                $kop_img = BASE_DIR . '/assets/img/KOP-SURAT.png';
+                $html = $this->draw('penandaan_lokasi_bedah_mulut/cetak.html', [
+                    'data' => $data,
+                    'kop_img' => is_file($kop_img) ? $kop_img : '',
+                    'anatomi_src' => $anatomi_src,
+                    'odonto' => $odonto,
+                    'pdf_url' => $pdf_url,
+                    'is_mpdf' => true
+                ]);
+                $mpdf->WriteHTML($html);
+                $filename = 'Penandaan_Bedah_Mulut_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+                $mpdf->Output($filename, 'I');
+                error_reporting($oldErr);
+                exit();
+            } catch (\Throwable $e) {
+                // fallback to HTML
+            }
+        }
+
+        $kop_img = is_file(BASE_DIR . '/assets/img/KOP-SURAT.png') ? url('assets/img/KOP-SURAT.png') : '';
+        echo $this->draw('penandaan_lokasi_bedah_mulut/cetak.html', [
+            'data' => $data,
+            'kop_img' => $kop_img,
+            'anatomi_src' => $anatomi_src,
+            'odonto' => $odonto,
+            'pdf_url' => $pdf_url,
+            'is_mpdf' => false
+        ]);
+        exit();
+    }
+
+    // ---------- Helper Penandaan Tepat Lokasi Bedah Mulut ----------
+
+    private function penandaanParseGigi($str)
+    {
+        $out = [];
+        foreach (explode(',', (string)$str) as $g) {
+            $g = trim($g);
+            if ($g !== '' && ctype_digit($g)) {
+                $out[] = $g;
+            }
+        }
+        return array_values(array_unique($out));
+    }
+
+    private function penandaanOdontoRows()
+    {
+        // Susunan sesuai formulir fisik RSGM
+        return [
+            ['label' => 'top', 'arrow' => '&#9660;', 'kanan' => [18, 17, 16, 15, 14, 13, 12, 11], 'kiri' => [21, 22, 23, 24, 25, 26, 27, 28]],
+            ['label' => 'top', 'arrow' => '', 'kanan' => [55, 54, 53, 52, 51], 'kiri' => [61, 62, 63, 64, 65]],
+            ['label' => 'bottom', 'arrow' => '', 'kanan' => [85, 84, 83, 82, 81], 'kiri' => [71, 72, 73, 74, 75]],
+            ['label' => 'bottom', 'arrow' => '&#9650;', 'kanan' => [48, 47, 46, 45, 44, 43, 42, 41], 'kiri' => [31, 32, 33, 34, 35, 36, 37, 38]],
+        ];
+    }
+
+    private function penandaanToothSvg($no, $checked, $interactive = false)
+    {
+        $s = 'fill="#fff" stroke="#333" stroke-width="1.3"';
+        if (in_array($no % 10, [1, 2, 3])) {
+            // Gigi anterior (insisivus & kaninus): garis tengah horizontal
+            $shape = '<polygon points="1,1 39,1 28,20 12,20" ' . $s . '/>'
+                . '<polygon points="39,1 39,39 28,20" ' . $s . '/>'
+                . '<polygon points="39,39 1,39 12,20 28,20" ' . $s . '/>'
+                . '<polygon points="1,39 1,1 12,20" ' . $s . '/>';
+        } else {
+            // Gigi posterior (premolar & molar): kotak oklusal di tengah
+            $shape = '<polygon points="1,1 39,1 28,12 12,12" ' . $s . '/>'
+                . '<polygon points="39,1 39,39 28,28 28,12" ' . $s . '/>'
+                . '<polygon points="39,39 1,39 12,28 28,28" ' . $s . '/>'
+                . '<polygon points="1,39 1,1 12,12 12,28" ' . $s . '/>'
+                . '<rect x="12" y="12" width="16" height="16" ' . $s . '/>';
+        }
+        $check = ($checked || $interactive)
+            ? '<polyline class="tooth-check" points="7,21 16,31 34,7" fill="none" stroke="#e00000" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>'
+            : '';
+        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">'
+            . '<rect x="0.75" y="0.75" width="38.5" height="38.5" fill="#fff" stroke="#000" stroke-width="1.5"/>'
+            . $shape . $check . '</svg>';
+    }
+
+    private function penandaanBuildOdonto(array $gigiMap, $interactive = false)
+    {
+        $rows = [];
+        foreach ($this->penandaanOdontoRows() as $r) {
+            foreach (['kanan', 'kiri'] as $side) {
+                $teeth = [];
+                foreach ($r[$side] as $no) {
+                    $checked = !empty($gigiMap[(string)$no]);
+                    $svg = $this->penandaanToothSvg($no, $checked, $interactive);
+                    $teeth[] = [
+                        'no' => $no,
+                        'checked' => $checked,
+                        'svg' => $interactive
+                            ? $svg
+                            : '<img src="data:image/svg+xml;base64,' . base64_encode($svg) . '" width="21" height="21" alt="' . $no . '">'
+                    ];
+                }
+                $r[$side] = $teeth;
+            }
+            $rows[] = $r;
+        }
+        return $rows;
+    }
+
+    private function penandaanRenderAnatomi(array $markers)
+    {
+        $src = BASE_DIR . '/assets/img/penandaan_lokasi_mulut_kepala_clean.png';
+        if (!is_file($src)) {
+            return '';
+        }
+        if (!function_exists('imagecreatefrompng')) {
+            return 'data:image/png;base64,' . base64_encode(file_get_contents($src));
+        }
+
+        $base = @imagecreatefrompng($src);
+        if (!$base) {
+            return 'data:image/png;base64,' . base64_encode(file_get_contents($src));
+        }
+        $w = imagesx($base);
+        $h = imagesy($base);
+        $k = 2; // upscale agar garis centang tajam saat dicetak
+        $img = imagecreatetruecolor($w * $k, $h * $k);
+        imagefill($img, 0, 0, imagecolorallocate($img, 255, 255, 255));
+        imagecopyresampled($img, $base, 0, 0, 0, 0, $w * $k, $h * $k, $w, $h);
+        imagedestroy($base);
+
+        $red = imagecolorallocate($img, 225, 0, 0);
+        $t = 3 * $k;
+        imagesetthickness($img, $t);
+        foreach ($markers as $m) {
+            if (!isset($m['x'], $m['y'])) continue;
+            $cx = (float)$m['x'] / 100 * $w * $k;
+            $cy = (float)$m['y'] / 100 * $h * $k;
+            // Geometri sama dengan marker di form (titik pusat = posisi klik)
+            $pts = [
+                [$cx - 9 * $k, $cy],
+                [$cx - 3 * $k, $cy + 7 * $k],
+                [$cx + 9 * $k, $cy - 8 * $k],
+            ];
+            imageline($img, (int)$pts[0][0], (int)$pts[0][1], (int)$pts[1][0], (int)$pts[1][1], $red);
+            imageline($img, (int)$pts[1][0], (int)$pts[1][1], (int)$pts[2][0], (int)$pts[2][1], $red);
+            foreach ($pts as $p) {
+                imagefilledellipse($img, (int)$p[0], (int)$p[1], $t, $t, $red);
+            }
+        }
+
+        ob_start();
+        imagepng($img);
+        $png = ob_get_clean();
+        imagedestroy($img);
+        return 'data:image/png;base64,' . base64_encode($png);
+    }
 }
+
 
 

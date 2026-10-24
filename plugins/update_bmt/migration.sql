@@ -2084,3 +2084,31 @@ CREATE TABLE IF NOT EXISTS `lampiran_ews` (
   KEY `no_rkm_medis` (`no_rkm_medis`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+-- 63. PENANDAAN TEPAT LOKASI BEDAH MULUT (Bedah - Form Wajib)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `penandaan_lokasi_bedah_mulut` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `jenis_tindakan` text DEFAULT NULL,
+  `gigi_centang` text DEFAULT NULL,
+  `markers_anatomi` longtext DEFAULT NULL,
+  `gambar_penandaan` longtext DEFAULT NULL,
+  `tanggal` date DEFAULT NULL,
+  `jam` time DEFAULT NULL,
+  `nama_pasien_keluarga` varchar(150) DEFAULT NULL,
+  `hubungan_pasien` varchar(50) DEFAULT 'Pasien',
+  `kd_dokter` varchar(20) DEFAULT NULL,
+  `nama_dokter` varchar(150) DEFAULT NULL,
+  `nama_saksi` varchar(150) DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal` (`tanggal`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+

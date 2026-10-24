@@ -1400,13 +1400,38 @@ CREATE TABLE IF NOT EXISTS `lampiran_penilaian_kejadian_ilo` (
    - Ditambahkan menu pada `Rekam Medis -> Form RME -> Ranap -> Form Lampiran -> LAMPIRAN - VCT PRA TESTING HIV`.
    - Route URL: `?module=update_bmt&page=vctpratestinghivmanage`.
 
+---
 
-
-
-
-
-
-
-
-
-
+## [1.26.0] - 2026-10-23
+### Added - PENANDAAN TEPAT LOKASI BEDAH MULUT (Bedah - Form Wajib)
+1. **Tabel Database Baru:**
+   - Dibuat tabel `penandaan_lokasi_bedah_mulut` (Tabel ke-63 pada `plugins/update_bmt/migration.sql`) dengan kolom data terstruktur meliputi `id`, `no_rawat`, `no_rkm_medis`, `jenis_tindakan`, `gigi_centang` (JSON array nomor gigi yang dicentang), `markers_anatomi` (JSON array koordinat penandaan anatomi `{x, y, label}`), `gambar_penandaan` (longtext base64 PNG canvas gambar penandaan), `tanggal`, `jam`, `nama_pasien_keluarga`, `hubungan_pasien`, `kd_dokter`, `nama_dokter`, `nama_saksi`, `catatan`, `created_at`, `updated_at`.
+2. **Kesesuaian 100% Format Fisik Dokumen RSGM:**
+   - **Header:** Kop resmi RSGM Gusti Hasan Aman di sebelah kiri, kotak identitas pasien (No. RM dengan 6 kotak digit `[ ][ ][ ][ ][ ][ ]`, Nama Pasien + L/P, Tanggal Lahir) di sebelah kanan.
+   - **Perhatian:** Kotak catatan perhatian resmi (*Harap semua penulisan dilakukan dengan keterbacaan yang jelas, benar dan lengkap. Berilah tanda centang [✓] dengan tinta permanen warna merah pada formulir odontogram di lokasi yang akan dilakukan tindakan pembedahan*).
+   - **Banner Judul:** `PENANDAAN TEPAT LOKASI BEDAH MULUT` dengan garis batas atas dan bawah tebal.
+   - **Jenis Tindakan:** Inputan teks jenis tindakan pembedahan (misal: *Odontektomi Gigi 48*, *Eksisi Mukokel*, dll).
+   - **Grid Odontogram Interaktif ("Centang Sekotakan"):**
+     - Sesuai permintaan pengguna, penandaan gigi dilakukan per satu kotak gigi utuh (bukan per permukaan gigi).
+     - Mengklik kotak gigi mana saja (18..11 ▼ 21..28, 55..51 | 61..65, 85..81 | 71..75, 48..41 ▲ 31..38) akan langsung memunculkan tanda centang merah besar (`✓`) pada kotak gigi tersebut.
+     - Disediakan tombol reset penandaan gigi.
+   - **Diagram Anatomi Interaktif ("Bebas Centang di Bagian Mana"):**
+     - Memuat gambar rongga mulut (*oral cavity*) di kiri serta kepala pandangan Depan, Kanan, dan Kiri di kanan dengan latar putih bersih.
+     - Pengguna dapat mengklik secara bebas di titik mana saja pada rongga mulut maupun kepala untuk menaruh tanda centang merah (`✓`).
+     - Setiap marker dapat dihapus dengan klik marker tersebut, tombol "Hapus Centang Terakhir", atau "Reset Semua Titik".
+     - Kanvas interaktif secara otomatis ter-bake menjadi base64 gambar PNG saat form disimpan.
+   - **Pernyataan & Tanda Tangan 3 Kolom:**
+     - Teks pernyataan: *"Saya menyatakan bahwa lokasi operasi yang telah ditetapkan pada diagram adalah benar"*.
+     - Tempat, tanggal, dan jam: `Banjarmasin, [tanggal], pukul [jam] WITA`.
+     - 3 kolom tanda tangan presisi: **Yang menyatakan, Pasien/Keluarga** (kiri), **Dokter** (tengah), dan **Saksi** (kanan).
+   - **Footer:** Teks resmi *"Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas"*.
+3. **Cetak & Export PDF mPDF:**
+   - Output cetak browser & mPDF presisi 1:1 format A4 potrait sesuai dokumen fisik asli.
+   - Odontogram tercetak dengan tanda centang merah di atas nomor gigi yang dipilih.
+   - Diagram rongga mulut dan kepala tercetak lengkap dengan titik centang merah yang telah ditandai.
+   - Dilengkapi toolbar preview browser (tombol Cetak Dokumen dan Unduh PDF).
+4. **Data Sampel Klinis:**
+   - Dijalankan seeder `seed_penandaan_lokasi_bedah_mulut.php` berisi 3 data pasien realistis (AHMAD SYAFIQ RIFANI - Odontektomi Gigi 48; Jhon Doe - Eksisi Mukokel & Impaksi 38; Jane Doe - Odontektomi Bilateral 18 & 28).
+5. **Navigasi & Menu:**
+   - Ditambahkan menu pada `Rekam Medis -> Form RME -> Bedah -> Form Wajib -> PENANDAAN TEPAT LOKASI BEDAH MULUT`.
+   - Route URL: `?module=update_bmt&page=penandaanlokasibedahmanage`.

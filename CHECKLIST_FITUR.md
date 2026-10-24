@@ -62,7 +62,7 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 11 | Laporan Pembedahan Anestesi Umum | BM4 | ✅ Tersedia | `bm4_laporan_pembedahan` | Form RME -> Bedah & Anestesi |
 | 12 | Checklist Keselamatan Pasien Operasi | - | ⏳ Dalam Rencana | - | Antrean UBS Bedah |
 | 13 | Persetujuan Tindakan Anestesi Lokal | BMI1 | ✅ Tersedia | `bmi1_persetujuan_anestesi_lokal` | Form RME -> Bedah & Anestesi |
-| 14 | Penandaan Tepat Lokasi Bedah Mulut | - | ⏳ Dalam Rencana | - | Antrean UBS Bedah |
+| 14 | Penandaan Tepat Lokasi Bedah Mulut | - | ✅ Tersedia | `penandaan_lokasi_bedah_mulut` | Form RME -> Bedah -> Form Wajib |
 | 15 | Asesmen Bedah Minor | - | ⏳ Dalam Rencana | - | Antrean UBS Bedah |
 | 16 | Pemeriksaan Pra Anestesi Lokal | BMI4 | ✅ Tersedia | `bmi4_pra_anestesi_lokal` | Form RME -> Bedah & Anestesi |
 | 17 | Laporan Bedah Minor | BMI5 | ✅ Tersedia | `bmi5_bedah_minor` | Form RME -> Bedah & Anestesi |
@@ -226,7 +226,7 @@ Berikut daftar lengkap formulir yang masih dalam antrean pengembangan:
 - [ ] Status Anestesi (ANS5)
 - [ ] Asesmen Pra Bedah Mayor
 - [ ] Checklist Keselamatan Pasien Operasi
-- [ ] Penandaan Tepat Lokasi Bedah Mulut
+- [x] Penandaan Tepat Lokasi Bedah Mulut
 - [ ] Asesmen Bedah Minor
 
 ### B. RANAP - Lampiran (14 Form):
