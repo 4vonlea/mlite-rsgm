@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>FORMULIR PENGHENTIAN PENGOBATAN - {$data.no_rawat}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 10mm 12mm 10mm 12mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            color: #000;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 20px 0;
+            line-height: 1.4;
+        }
+        .page {
+            width: 195mm;
+            min-height: 270mm;
+            margin: 0 auto;
+            position: relative;
+            background: #fff;
+            padding: 0;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+        }
+
+        /* Toolbar Layar */
+        .no-print-toolbar {
+            width: 195mm;
+            margin: 0 auto 15px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2c3e50;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-toolbar {
+            padding: 6px 14px;
+            font-size: 13px;
+            border-radius: 3px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-print:hover { background: #219150; }
+        .btn-pdf { background: #e74c3c; color: #fff; }
+        .btn-pdf:hover { background: #c0392b; }
+        .btn-close { background: #95a5a6; color: #fff; }
+        .btn-close:hover { background: #7f8c8d; }
+
+        /* Bingkai Kotak Luar Utama */
+        .form-outer-border {
+            border: 1.5px solid #000;
+            width: 100%;
+            background: #fff;
+        }
+
+        /* Header KOP RS */
+        .kop-container {
+            border-bottom: 1.5px solid #000;
+            padding: 10px 15px 8px 15px;
+            text-align: center;
+        }
+
+        /* Judul Formulir */
+        .title-container {
+            padding: 14px 15px 12px 15px;
+            text-align: center;
+        }
+        .title-text {
+            font-size: 13pt;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Konten Isi Formulir */
+        .form-body {
+            padding: 5px 25px 22px 25px;
+        }
+
+        .intro-text {
+            margin-bottom: 8px;
+            font-size: 11pt;
+        }
+
+        /* Tabel Isian Titik/Garis */
+        .table-data {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 4px 0 10px 0;
+            font-size: 10.5pt;
+        }
+        .table-data td {
+            padding: 3px 0;
+            vertical-align: top;
+        }
+        .table-data td.label-col {
+            width: 240px;
+            white-space: nowrap;
+        }
+        .table-data td.colon-col {
+            width: 15px;
+            text-align: center;
+        }
+        .table-data td.val-col {
+            border-bottom: 1px solid #000;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+
+        .val-short-box {
+            display: inline-block;
+            border-bottom: 1px solid #000;
+            min-width: 90px;
+            text-align: center;
+            padding: 0 5px;
+            margin-right: 5px;
+        }
+
+        /* Paragraf Pernyataan Tengah */
+        .statement-rel {
+            text-align: justify;
+            font-size: 10.5pt;
+            line-height: 1.55;
+            margin: 12px 0 12px 0;
+        }
+        .rel-badge {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        /* Paragraf Penjelasan & Risiko */
+        .statement-text {
+            text-align: justify;
+            font-size: 10.5pt;
+            line-height: 1.5;
+            margin-top: 14px;
+            margin-bottom: 10px;
+        }
+
+        /* Tanda Tangan */
+        .ttd-datetime {
+            text-align: right;
+            margin-top: 18px;
+            margin-bottom: 10px;
+            font-size: 10.5pt;
+            padding-right: 40px;
+        }
+
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10.5pt;
+        }
+        .signature-table td {
+            width: 50%;
+            text-align: center;
+            vertical-align: top;
+            padding: 0 10px;
+        }
+        .sign-title {
+            font-size: 10.5pt;
+            font-weight: 500;
+        }
+        .sign-spacer {
+            height: 62px;
+        }
+        .sign-name {
+            font-size: 10.5pt;
+        }
+        .sign-label {
+            font-size: 9.5pt;
+            color: #222;
+            margin-top: 3px;
+        }
+
+        /* Catatan Kaki */
+        .footer-note-wrap {
+            margin-top: 15px;
+            text-align: right;
+            font-size: 8.5pt;
+            font-style: italic;
+            color: #333;
+        }
+
+        .page-footer-meta {
+            width: 100%;
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8.5pt;
+            font-weight: bold;
+            padding: 0 4px;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                width: 100%;
+                margin: 0;
+            }
+            .no-print, .no-print-toolbar {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body {if: empty($is_mpdf)}onload="if(window.location.search.indexOf('noprint=1')===-1)window.print()"{/if}>
+
+    <!-- Toolbar Layar (Tidak ikut dicetak) -->
+    <div class="no-print-toolbar no-print">
+        <div style="font-size: 14px; font-weight: bold;">
+            Preview Dokumen: Formulir Penghentian Pengobatan ({$data.no_rawat})
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button onclick="window.print()" class="btn-toolbar btn-print">
+                &#128438; Cetak Dokumen
+            </button>
+            <a href="{?=url([ADMIN, 'form_rme', 'penghentianpengobatancetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
+                &#128196; Download PDF
+            </a>
+            <button onclick="window.close()" class="btn-toolbar btn-close">
+                &#10006; Tutup
+            </button>
+        </div>
+    </div>
+
+    <div class="page">
+        <div class="form-outer-border">
+
+            <!-- KOP SURAT RSGM -->
+            <div class="kop-container">
+                <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop Surat RSGM Gusti Hasan Aman" style="width: 100%; max-height: 82px; object-fit: contain; display: block; margin: 0 auto;">
+            </div>
+
+            <!-- JUDUL FORMULIR -->
+            <div class="title-container">
+                <div class="title-text">
+                    FORMULIR PENGHENTIAN PENGOBATAN
+                </div>
+            </div>
+
+            <!-- ISI FORMULIR -->
+            <div class="form-body">
+
+                <div class="intro-text">Saya yang bertanda tangan di bawah ini:</div>
+
+                <!-- Data Pembuat Pernyataan -->
+                <table class="table-data">
+                    <tr>
+                        <td class="label-col">Nama</td>
+                        <td class="colon-col">:</td>
+                        <td class="val-col">
+                            <strong>{$data.nama_pembuat}</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-col">Umur</td>
+                        <td class="colon-col">:</td>
+                        <td>
+                            <span class="val-short-box"><strong>{if: !empty($data.umur_pembuat)}{$data.umur_pembuat}{else}&nbsp;{/if}</strong></span> Thn
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-col">Alamat Rumah</td>
+                        <td class="colon-col">:</td>
+                        <td class="val-col">
+                            {$data.alamat_pembuat}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-col">No. Telepon / Hp</td>
+                        <td class="colon-col">:</td>
+                        <td class="val-col">
+                            {$data.no_telp_pembuat}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-col">Bukti Diri (KTP/SIM/Pasport)</td>
+                        <td class="colon-col">:</td>
+                        <td class="val-col">
+                            {$data.bukti_diri_pembuat}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-col">Hubungan dengan Pasien</td>
+                        <td class="colon-col">:</td>
+                        <td class="val-col">
+                            <strong>{$data.hubungan}{if: !empty($data.hubungan_detail)} ({$data.hubungan_detail}){/if}</strong>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Pernyataan Hubungan -->
+                <div class="statement-rel">
+                    Dengan ini menyatakan untuk dihentikan pengobatan terhadap 
+                    <span class="{if: $data.hubungan == 'Diri Sendiri'}rel-badge{/if}">diri saya sendiri*</span> / 
+                    <span class="{if: $data.hubungan == 'Istri'}rel-badge{/if}">Istri*</span> / 
+                    <span class="{if: $data.hubungan == 'Suami'}rel-badge{/if}">Suami*</span> / 
+                    <span class="{if: $data.hubungan == 'Anak'}rel-badge{/if}">Anak*</span> / 
+                    <span class="{if: $data.hubungan == 'Orang Tua'}rel-badge{/if}">Orang Tua saya*</span>, yaitu:
+                </div>
+
+                <!-- Data Pasien -->
+                <table class="table-data">
+                    <tr>
+                        <td class="label-col">Nama</td>
+                        <td class="colon-col">:</td>
+                        <td class="val-col">
+                            <strong>{$data.nm_pasien}</strong> &nbsp;({if: $data.jk == 'L'}Laki-laki{else}Perempuan{/if})
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-col">Umur</td>
+                        <td class="colon-col">:</td>
+                        <td>
+                            <span class="val-short-box"><strong>{if: !empty($data.umur_pasien_angka)}{$data.umur_pasien_angka}{else}&nbsp;{/if}</strong></span> Thn
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-col">Alamat Rumah</td>
+                        <td class="colon-col">:</td>
+                        <td class="val-col">
+                            {$data.alamat_pasien}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-col">Bukti Diri (KTP/SIM/Pasport)</td>
+                        <td class="colon-col">:</td>
+                        <td class="val-col">
+                            {$data.bukti_diri_pasien}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-col">Perawatan / Kelas / Kamar</td>
+                        <td class="colon-col">:</td>
+                        <td class="val-col">
+                            {$data.perawatan_kelas_kamar}
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Klausul Medis & Pengesahan -->
+                <div class="statement-text">
+                    Yang tujuan, sifat dan perlunya pengobatan tersebut, serta resiko yang dapat ditimbulkan telah cukup dijelaskan oleh Dokter dan telah saya mengerti sepenuhnya.
+                </div>
+
+                <div class="statement-text" style="margin-top: 8px;">
+                    Demikian pernyataan penghentian pengobatan ini saya buat dengan penuh kesadaran dan tanpa paksaan.
+                </div>
+
+                <!-- Tanggal & Jam Penandatanganan -->
+                <div class="ttd-datetime">
+                    {$data.kota}, {if: !empty($data.tanggal_ttd_indo)}{$data.tanggal_ttd_indo}{else}....................{/if} &nbsp;&nbsp;&nbsp; Jam {if: !empty($data.jam_ttd)}{$data.jam_ttd}{else}............{/if}
+                </div>
+
+                <!-- Tabel Tanda Tangan 2 Kolom -->
+                <table class="signature-table">
+                    <tr>
+                        <td>
+                            <div class="sign-title">
+                                Petugas
+                            </div>
+                            <div class="sign-spacer"></div>
+                            <div class="sign-name">
+                                ( {if: !empty($data.nama_petugas)}<strong>{$data.nama_petugas}</strong>{else}................................................{/if} )
+                            </div>
+                            <div class="sign-label">
+                                Nama Jelas
+                                {if: !empty($data.nip_petugas)}<br><span style="font-size: 8.5pt; color: #555;">NIP. {$data.nip_petugas}</span>{/if}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="sign-title">
+                                Pembuat Pernyataan
+                            </div>
+                            <div class="sign-spacer"></div>
+                            <div class="sign-name">
+                                ( {if: !empty($data.pembuat_pernyataan_ttd)}<strong>{$data.pembuat_pernyataan_ttd}</strong>{else}................................................{/if} )
+                            </div>
+                            <div class="sign-label">
+                                Nama Jelas
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+        </div>
+
+        <!-- Catatan Kaki di Bawah Kotak -->
+        <div class="footer-note-wrap">
+            <em>Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</em>
+        </div>
+
+        <!-- Footer Luar Dokumen RS -->
+        <div class="page-footer-meta">
+            <div>RSGM/Ed-Rev/02/2023</div>
+            <div>RM.RI Lampiran</div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Formulir Monitoring Pasien Terpasang Kateter Urin - {$data.no_rawat}</title>
+    <style>
+        {if: empty($is_mpdf)}
+        @page {
+            size: A4 landscape;
+            margin: 5mm 6mm 5mm 6mm;
+        }
+        {/if}
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 7.5pt;
+            line-height: 1.2;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
+            background-color: #f4f6f9;
+            padding: 12px 0;
+        }
+        .page {
+            background: #fff;
+            width: 287mm;
+            min-height: 198mm;
+            margin: 0 auto;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        {/if}
+
+        /* Toolbar Layar Browser */
+        .no-print-toolbar {
+            width: 287mm;
+            margin: 0 auto 10px auto;
+            padding: 8px 14px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+            border-collapse: collapse;
+        }
+        .btn-toolbar {
+            padding: 5px 12px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+
+        /* BINGKAI UTAMA */
+        .outer-border {
+            border: 1.5px solid #000;
+            width: 100%;
+        }
+
+        /* KOP HEADER DUA KOLOM */
+        .kop-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1.5px solid #000;
+        }
+        .kop-left {
+            width: 65%;
+            border-right: 1.5px solid #000;
+            padding: 3px 6px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .kop-left img {
+            width: 100%;
+            max-height: 52px;
+            object-fit: contain;
+        }
+        .kop-right {
+            width: 35%;
+            padding: 3px 8px;
+            font-size: 7.5pt;
+            vertical-align: top;
+        }
+
+        /* KOTAK DIGIT NOMOR RM */
+        .rm-box-table {
+            border-collapse: collapse;
+        }
+        .rm-digit-cell {
+            border: 1px solid #000;
+            width: 13px;
+            height: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 8pt;
+            vertical-align: middle;
+        }
+
+        /* JUDUL FORMULIR */
+        .title-bar {
+            text-align: center;
+            font-weight: bold;
+            font-size: 9.5pt;
+            padding: 4px 0;
+            border-bottom: 1.5px solid #000;
+            letter-spacing: 0.5px;
+            background-color: #fafafa;
+        }
+
+        /* INFO BAR (RUANG, BULAN, MRS, DIAGNOSA) */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7.5pt;
+        }
+        .info-table td {
+            padding: 2.5px 8px;
+            vertical-align: top;
+        }
+
+        /* TABEL GRID MONITORING UTAMA */
+        .grid-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7pt;
+        }
+        .grid-table th, .grid-table td {
+            border: 1px solid #000;
+            padding: 1.5px 1px;
+        }
+        .grid-table th {
+            text-align: center;
+            vertical-align: middle;
+            font-weight: bold;
+            background-color: #fff;
+        }
+        .col-day {
+            width: 4.4mm;
+            text-align: center;
+            vertical-align: middle;
+            font-weight: bold;
+            font-size: 6.8pt;
+        }
+        .col-total {
+            width: 12mm;
+            text-align: center;
+            vertical-align: middle;
+            font-weight: bold;
+        }
+        .col-ketr {
+            width: 18mm;
+            text-align: left;
+            padding-left: 2px !important;
+            font-size: 6.5pt;
+        }
+
+        /* SECTION GEJALA ISK */
+        .gejala-header {
+            background-color: #e0e0e0;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        /* BAGIAN FOOTER / PENGESAHAN */
+        .bottom-section {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7pt;
+            margin-top: 3px;
+        }
+        .bottom-section td {
+            vertical-align: top;
+            padding: 2px 6px;
+        }
+
+        .dot-line {
+            border-bottom: 1px dotted #000;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .no-print, .no-print-toolbar {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body {if: empty($is_mpdf)}onload="if(window.location.search.indexOf('noprint=1')===-1)window.print()"{/if}>
+
+    {if: empty($is_mpdf)}
+    <!-- Toolbar Layar (Otomatis hilang saat diprint) -->
+    <table class="no-print-toolbar no-print">
+        <tr>
+            <td style="font-size: 12px; font-weight: bold; color: #fff;">
+                Preview Formulir: Monitoring Pasien Terpasang Kateter Urin ({$data.no_rawat})
+            </td>
+            <td style="text-align: right;">
+                <button onclick="window.print()" class="btn-toolbar btn-print">
+                    &#128438; Cetak Dokumen
+                </button>
+                <a href="{?=url([ADMIN, 'form_rme', 'monitoringkateterurincetak', $data.id])?}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
+                    &#128196; Download PDF
+                </a>
+                <button onclick="window.close()" class="btn-toolbar btn-close">
+                    &#10006; Tutup
+                </button>
+            </td>
+        </tr>
+    </table>
+
+    <div class="page">
+    {/if}
+
+        <div class="outer-border">
+            <!-- 1. KOP RSGM & IDENTITAS PASIEN -->
+            <table class="kop-table">
+                <tr>
+                    <td class="kop-left">
+                        <img src="{$data.kop_img}" alt="KOP RSGM Gusti Hasan Aman">
+                    </td>
+                    <td class="kop-right">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt;">
+                            <tr>
+                                <td style="width: 65px; padding: 1.5px 0;">No RM</td>
+                                <td style="width: 6px;">:</td>
+                                <td>
+                                    <table class="rm-box-table">
+                                        <tr>
+                                            <td class="rm-digit-cell">{$data.rm0}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm1}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm2}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm3}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm4}</td>
+                                            <td style="width: 2px;"></td>
+                                            <td class="rm-digit-cell">{$data.rm5}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1.5px 0;">Nama Pasien</td>
+                                <td>:</td>
+                                <td class="dot-line">
+                                    <strong>{$data.nm_pasien}</strong> &nbsp;&nbsp;&nbsp;&nbsp; ({if: $data.jk == 'L'}<u>L</u>/P{elseif: $data.jk == 'P'}L/<u>P</u>{else}L/P{/if})
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1.5px 0;">Tanggal Lahir</td>
+                                <td>:</td>
+                                <td class="dot-line">
+                                    {$data.tgl_lahir_indo}
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- 2. JUDUL FORMULIR -->
+            <div class="title-bar">
+                FORMULIR MONITORING PASIEN TERPASANG KATETER URIN
+            </div>
+
+            <!-- 3. DATA RUANG, BULAN, MRS, DIAGNOSA -->
+            <table class="info-table">
+                <tr>
+                    <td style="width: 50%;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="width: 80px; padding: 1px 0;">Ruang</td>
+                                <td style="width: 6px;">:</td>
+                                <td><strong>{$data.ruang}</strong></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1px 0;">Bulan / Tahun</td>
+                                <td>:</td>
+                                <td><strong>{$data.bulan_tahun}</strong></td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width: 50%;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="width: 70px; padding: 1px 0;">Tgl MRS</td>
+                                <td style="width: 6px;">:</td>
+                                <td><strong>{$data.tgl_mrs_indo}</strong></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1px 0;">Diagnosa</td>
+                                <td>:</td>
+                                <td><strong>{$data.diagnosa}</strong></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- 4. TABEL MONITORING UTAMA (31 HARI) -->
+            <table class="grid-table">
+                <thead>
+                    <tr>
+                        <th style="width: 32mm;" rowspan="2">Jenis cath</th>
+                        <th style="width: 60mm;" rowspan="2">Item Pencegahan ISK</th>
+                        <th style="width: 7mm; font-size: 5.5pt; line-height: 1.05; padding: 2px 0;" rowspan="2">
+                            Beri<br>tanda<br>&#10003; bila<br>dilakukan,<br>tanda -<br>bila tidak<br>dilakukan
+                        </th>
+                        <th colspan="31" style="height: 14px;">Tanggal</th>
+                        <th class="col-total" rowspan="2">Total<br>(hari)</th>
+                        <th class="col-ketr" rowspan="2">Ketr</th>
+                    </tr>
+                    <tr>
+                        {loop: range(1, 31)}
+                        <th class="col-day" style="font-size: 6.5pt; padding: 1px 0;">{$value}</th>
+                        {/loop}
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- ITEM PENCEGAHAN ISK (13 BARIS) -->
+                    {loop: $data.grid_pencegahan}
+                    <tr>
+                        {if: $key == 0}
+                        <!-- SPESIFIKASI JENIS & UKURAN CATHETER (ROWSPAN 13) -->
+                        <td rowspan="13" style="vertical-align: top; padding: 4px 5px; font-size: 6.8pt; line-height: 1.35;">
+                            <div style="font-weight: bold; margin-bottom: 2px;">Jenis cath:</div>
+                            <div style="margin-left: 2px;">
+                                {if: $data.jenis_cath == 'Silikon'}&#9632;{else}&#9633;{/if} Silikon<br>
+                                {if: $data.jenis_cath == 'Folley'}&#9632;{else}&#9633;{/if} Folley<br>
+                                {if: $data.jenis_cath == 'Lainnya'}&#9632; {$data.jenis_cath_lainnya}{else}&#9633; ......{/if}
+                            </div>
+
+                            <div style="font-weight: bold; margin-top: 6px; margin-bottom: 2px; border-top: 1px solid #333; padding-top: 4px;">
+                                No.Cath:
+                            </div>
+                            <div style="margin-left: 2px; line-height: 1.25;">
+                                {if: $data.no_cath == '6'}&#9632;{else}&#9633;{/if} 6<br>
+                                {if: $data.no_cath == '8'}&#9632;{else}&#9633;{/if} 8<br>
+                                {if: $data.no_cath == '10'}&#9632;{else}&#9633;{/if} 10<br>
+                                {if: $data.no_cath == '12'}&#9632;{else}&#9633;{/if} 12<br>
+                                {if: $data.no_cath == '14'}&#9632;{else}&#9633;{/if} 14<br>
+                                {if: $data.no_cath == '16'}&#9632;{else}&#9633;{/if} 16<br>
+                                {if: $data.no_cath == '18'}&#9632;{else}&#9633;{/if} 18<br>
+                                {if: $data.no_cath == '20'}&#9632;{else}&#9633;{/if} 20<br>
+                                {if: $data.no_cath == '22'}&#9632;{else}&#9633;{/if} 22<br>
+                                {if: $data.no_cath == 'Lainnya'}&#9632; {$data.no_cath_lainnya}{else}&#9633; ......{/if}
+                            </div>
+                        </td>
+                        {/if}
+
+                        <td style="padding-left: 3px; font-size: 6.8pt; line-height: 1.15;">
+                            {$value.label}
+                        </td>
+                        <td style="text-align: center; font-size: 6.5pt;">
+                            {if: !empty($value.icon)}{$value.icon}{/if}
+                        </td>
+
+                        <!-- 31 HARI -->
+                        {loop: $value.days}
+                        <td class="col-day" style="font-size: 7.5pt; font-weight: bold; {if: $value == '✓' || $value == 'v' || $value == 'V'}color: #27ae60;{elseif: $value == '-'}color: #7f8c8d;{/if}">
+                            {if: $value == 'v' || $value == 'V'}&#10003;{elseif: !empty($value)}{$value}{else}&nbsp;{/if}
+                        </td>
+                        {/loop}
+
+                        <td class="col-total">{if: !empty($value.total)}{$value.total}{else}&nbsp;{/if}</td>
+                        <td class="col-ketr">{if: !empty($value.ketr)}{$value.ketr}{else}&nbsp;{/if}</td>
+                    </tr>
+                    {/loop}
+
+                    <!-- HEADER GROUP GEJALA ISK -->
+                    <tr class="gejala-header">
+                        <td colspan="35" style="text-align: center; font-weight: bold; padding: 2px 0; font-size: 7.5pt; background-color: #e6e6e6;">
+                            GEJALA ISK
+                        </td>
+                    </tr>
+
+                    <!-- ITEM GEJALA ISK (8 BARIS) -->
+                    {loop: $data.grid_gejala}
+                    <tr>
+                        {if: $key == 0}
+                        <td rowspan="6" style="text-align: center; font-weight: bold; vertical-align: middle; width: 6mm;">
+                            a.
+                        </td>
+                        {/if}
+                        {if: $key == 6}
+                        <td style="text-align: center; font-weight: bold; vertical-align: middle; width: 6mm;">
+                            b.
+                        </td>
+                        {/if}
+                        {if: $key == 7}
+                        <td style="text-align: center; font-weight: bold; vertical-align: middle; width: 6mm;">
+                            c.
+                        </td>
+                        {/if}
+
+                        <td style="padding-left: 3px; font-size: 6.8pt; line-height: 1.15;" {if: $key >= 6}colspan="2"{/if}>
+                            {$value.label}
+                        </td>
+                        {if: $key < 6}
+                        <td style="text-align: center; font-size: 6.5pt;"></td>
+                        {/if}
+
+                        <!-- 31 HARI GEJALA -->
+                        {loop: $value.days}
+                        <td class="col-day" style="font-size: 7.5pt; font-weight: bold; {if: $value == '✓' || $value == 'v' || $value == 'V'}color: #e74c3c;{elseif: $value === '0'}color: #2980b9;{/if}">
+                            {if: $value == 'v' || $value == 'V'}&#10003;{elseif: $value !== '' && $value !== null}{$value}{else}&nbsp;{/if}
+                        </td>
+                        {/loop}
+
+                        <td class="col-total">{if: !empty($value.total)}{$value.total}{else}&nbsp;{/if}</td>
+                        <td class="col-ketr">{if: !empty($value.ketr)}{$value.ketr}{else}&nbsp;{/if}</td>
+                    </tr>
+                    {/loop}
+                </tbody>
+            </table>
+
+            <!-- 5. BAGIAN KETERANGAN PETUNJUK, FORMULA ISK & PENGESAHAN -->
+            <table class="bottom-section">
+                <tr>
+                    <td style="width: 52%; font-size: 7pt; line-height: 1.3;">
+                        <strong style="color: #000;">*Diisi oleh Perawat</strong><br>
+                        Isi kolom dengan tanda <strong>&#10003;</strong> bila ditemukan sesuai criteria dan tanda <strong>0</strong> bila tidak ditemukan gejala pada kolom yang tersedia.<br>
+                        
+                        <div style="margin-top: 4px; font-weight: bold;">
+                            <u>Formula perhitungan angka kejadian ISK :</u>
+                        </div>
+                        <div style="margin-top: 3px;">
+                            <table style="display: inline-table; vertical-align: middle; border-collapse: collapse; text-align: center; font-size: 7pt; font-weight: bold;">
+                                <tr>
+                                    <td style="border-bottom: 1px solid #000; padding: 0 4px;">Jumlah pasien ISK</td>
+                                    <td rowspan="2" style="vertical-align: middle; padding-left: 6px; font-size: 7.5pt;">x 1000</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 0 4px;">Jumlah hari pemasangan kateter urin</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </td>
+                    <td style="width: 24%; text-align: center; vertical-align: top; padding-top: 5px;">
+                        <div>Dibuat oleh,</div>
+                        <div style="margin-top: 35px; font-weight: bold;">
+                            ICN
+                        </div>
+                        <div style="font-size: 7pt; margin-top: 2px;">
+                            ( {if: !empty($data.nama_icn)}{$data.nama_icn}{else}....................................{/if} )
+                        </div>
+                    </td>
+                    <td style="width: 24%; text-align: center; vertical-align: top; padding-top: 5px;">
+                        <div>Mengetahui,</div>
+                        <div style="margin-top: 35px; font-weight: bold;">
+                            Head Nurse
+                        </div>
+                        <div style="font-size: 7pt; margin-top: 2px;">
+                            ( {if: !empty($data.nama_head_nurse)}{$data.nama_head_nurse}{else}....................................{/if} )
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
+    {if: empty($is_mpdf)}
+    </div>
+    {/if}
+
+</body>
+</html>

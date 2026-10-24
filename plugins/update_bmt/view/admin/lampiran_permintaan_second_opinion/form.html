@@ -1,0 +1,340 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="panel-title" style="font-weight: bold; font-size: 16px;">
+                    <i class="fa fa-pencil-square-o text-primary"></i> FORMULIR SURAT PERMINTAAN SECOND OPINION
+                </h3>
+                <div>
+                    <a href="{?=url([ADMIN, 'form_rme', 'secondopinionmanage'])?}" class="btn btn-default btn-sm">
+                        <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'form_rme', 'secondopinionsave'])?}" method="post" id="form-second-opinion">
+                    <input type="hidden" name="id" value="{$data.id}">
+
+                    <!-- PETUNJUK PENGISIAN -->
+                    <div class="alert alert-info" style="font-size: 12px; margin-bottom: 20px;">
+                        <strong><i class="fa fa-info-circle"></i> Petunjuk Pengisian:</strong>
+                        <ul style="margin-bottom: 0; padding-left: 20px;">
+                            <li>Harap diisi dengan huruf cetak/tulisan yang jelas, benar dan lengkap.</li>
+                            <li>Tentukan dokter dan fasilitas pelayanan kesehatan (RS) yang dituju untuk permohonan <i>second opinion</i>.</li>
+                            <li>Tuliskan rincian berkas pemeriksaan penunjang yang dipinjam serta estimasi tanggal pengembaliannya ke RSGM.</li>
+                        </ul>
+                    </div>
+
+                    <!-- 1. IDENTITAS PASIEN -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading" style="font-weight: bold;">
+                            <i class="fa fa-user"></i> 1. Identitas Pasien Terkait
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nomor Rawat / Nomor RM <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2025/09/29/000006" required>
+                                            <span class="input-group-btn">
+                                                <button type="button" class="btn btn-primary" id="btn-cari-pasien">
+                                                    <i class="fa fa-search"></i> Cari
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nomor Rekam Medis (No RM)</label>
+                                        <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly style="background-color: #f9f9f9; font-weight: bold;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nama Pasien</label>
+                                        <input type="text" id="nm_pasien" class="form-control" value="{$data.nm_pasien}" readonly style="background-color: #f9f9f9; font-weight: bold;">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Jenis Kelamin / Umur Pasien</label>
+                                        <input type="text" id="info_jk_umur" class="form-control" value="{if: !empty($data.jk)}{if: $data.jk == 'L'}Laki-laki{else}Perempuan{/if} / {$data.umur}{/if}" readonly style="background-color: #f9f9f9;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Tanggal Lahir Pasien</label>
+                                        <input type="text" id="tgl_lahir" class="form-control" value="{$data.tgl_lahir}" readonly style="background-color: #f9f9f9;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Alamat Pasien</label>
+                                        <input type="text" id="alamat_pasien" class="form-control" value="{$data.alamat}" readonly style="background-color: #f9f9f9;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. PEMBUAT PERNYATAAN -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; background-color: #f5f5f5;">
+                            <span><i class="fa fa-id-card-o"></i> 2. Yang Bertanda Tangan Di Bawah Ini (Pembuat Pernyataan)</span>
+                            <button type="button" class="btn btn-default btn-xs" id="btn-copy-pasien" style="font-weight: normal;">
+                                <i class="fa fa-copy"></i> Pembuat Pernyataan adalah Pasien Sendiri
+                            </button>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nama Pembuat Pernyataan <span class="text-danger">*</span></label>
+                                        <input type="text" name="nama_pembuat" id="nama_pembuat" class="form-control" value="{$data.nama_pembuat}" placeholder="Nama lengkap" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Jenis Kelamin</label>
+                                        <select name="jk_pembuat" id="jk_pembuat" class="form-control">
+                                            <option value="L" {if: $data.jk_pembuat == 'L'}selected{/if}>Laki-laki (L)</option>
+                                            <option value="P" {if: $data.jk_pembuat == 'P'}selected{/if}>Perempuan (P)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Nomor Kartu Identitas (KTP / SIM / Paspor)</label>
+                                        <input type="text" name="no_identitas_pembuat" id="no_identitas_pembuat" class="form-control" value="{$data.no_identitas_pembuat}" placeholder="Nomor KTP / SIM">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Umur Pembuat (Tahun)</label>
+                                        <input type="text" name="umur_pembuat" id="umur_pembuat" class="form-control" value="{$data.umur_pembuat}" placeholder="Contoh: 35 Th">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Alamat Pembuat Pernyataan</label>
+                                        <input type="text" name="alamat_pembuat" id="alamat_pembuat" class="form-control" value="{$data.alamat_pembuat}" placeholder="Alamat domisili lengkap">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Hubungan dengan Pasien <span class="text-danger">*</span></label>
+                                        <select name="hubungan" id="hubungan" class="form-control" required>
+                                            <option value="Diri sendiri" {if: $data.hubungan == 'Diri sendiri'}selected{/if}>Diri sendiri</option>
+                                            <option value="Suami" {if: $data.hubungan == 'Suami'}selected{/if}>Suami</option>
+                                            <option value="Isteri" {if: $data.hubungan == 'Isteri'}selected{/if}>Isteri</option>
+                                            <option value="Ayah" {if: $data.hubungan == 'Ayah'}selected{/if}>Ayah</option>
+                                            <option value="Ibu" {if: $data.hubungan == 'Ibu'}selected{/if}>Ibu</option>
+                                            <option value="Anak" {if: $data.hubungan == 'Anak'}selected{/if}>Anak</option>
+                                            <option value="Kakak" {if: $data.hubungan == 'Kakak'}selected{/if}>Kakak</option>
+                                            <option value="Adik" {if: $data.hubungan == 'Adik'}selected{/if}>Adik</option>
+                                            <option value="teman" {if: $data.hubungan == 'teman'}selected{/if}>Teman</option>
+                                            <option value="kerabat" {if: $data.hubungan == 'kerabat'}selected{/if}>Kerabat / Lainnya</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Keterangan Hubungan (Jika Kerabat)</label>
+                                        <input type="text" name="hubungan_detail" id="hubungan_detail" class="form-control" value="{$data.hubungan_detail}" placeholder="Contoh: Paman / Wali">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. PERMINTAAN SECOND OPINION & PEMINJAMAN DOKUMEN -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading" style="font-weight: bold; background-color: #f5f5f5;">
+                            <i class="fa fa-hospital-o"></i> 3. Permintaan Second Opinion & Peminjaman Dokumen Penunjang
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Nama Dokter Tujuan Second Opinion</label>
+                                        <input type="text" name="dokter_tujuan" id="dokter_tujuan" class="form-control" value="{$data.dokter_tujuan}" placeholder="Contoh: drg. Bambang Tri, Sp.BM">
+                                        <small class="text-muted">Dokter tujuan yang diminta untuk alternatif diagnosis / pengobatan.</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Rumah Sakit / Faskes Tujuan Second Opinion</label>
+                                        <input type="text" name="rs_tujuan" id="rs_tujuan" class="form-control" value="{$data.rs_tujuan}" placeholder="Contoh: RSUD Ulin Banjarmasin / RSGM Lain">
+                                        <small class="text-muted">Nama Rumah Sakit atau klinik tujuan konsultasi.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-7">
+                                    <div class="form-group">
+                                        <label>Hasil Pemeriksaan Penunjang Kesehatan yang Dipinjam</label>
+                                        <textarea name="dokumen_penunjang" id="dokumen_penunjang" rows="4" class="form-control" placeholder="Tuliskan berkas yang dipinjam per baris, contoh:&#10;- Foto Rontgen Panoramik Gigi & Mulut&#10;- Hasil Pemeriksaan Laboratorium Darah Rutin&#10;- Salinan Resume Medis Pasien">{$data.dokumen_penunjang}</textarea>
+                                        <small class="text-muted">Gunakan tanda hubung (-) untuk setiap item dokumen pemeriksaan penunjang.</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="form-group">
+                                        <label>Tanggal / Waktu Pengembalian Dokumen yang Dipinjam</label>
+                                        <input type="text" name="tgl_pengembalian_dokumen" id="tgl_pengembalian_dokumen" class="form-control" value="{$data.tgl_pengembalian_dokumen}" placeholder="Contoh: 2026-10-20 atau 3 Hari Kerja">
+                                        <small class="text-muted">Batas waktu peminjaman berkas penunjang kesehatan kembali ke RSGM.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. TANDA TANGAN & PENGESAHAN -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading" style="font-weight: bold; background-color: #f5f5f5;">
+                            <i class="fa fa-pencil"></i> 4. Penandatanganan & Pengesahan Surat
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Kota Surat</label>
+                                        <input type="text" name="kota" class="form-control" value="{$data.kota}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Tanggal Surat <span class="text-danger">*</span></label>
+                                        <input type="date" name="tanggal_ttd" class="form-control" value="{$data.tanggal_ttd}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Nama Pembuat Pernyataan (Tanda Tangan)</label>
+                                        <input type="text" name="pembuat_pernyataan_ttd" id="pembuat_pernyataan_ttd" class="form-control" value="{$data.pembuat_pernyataan_ttd}" placeholder="Nama lengkap yang menyatakan">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Petugas Rumah Sakit</label>
+                                        <select name="nama_petugas" id="nama_petugas" class="form-control">
+                                            <option value="">-- Pilih Petugas / Perawat --</option>
+                                            {loop: $petugas}
+                                            <option value="{$value.nama}" {if: $data.nama_petugas == $value.nama}selected{/if}>{$value.nama} ({$value.nip})</option>
+                                            {/loop}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Saksi Keluarga / Pihak Pasien</label>
+                                        <input type="text" name="nama_saksi" id="nama_saksi" class="form-control" value="{$data.nama_saksi}" placeholder="Nama lengkap saksi">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="text-right">
+                        <a href="{?=url([ADMIN, 'form_rme', 'secondopinionmanage'])?}" class="btn btn-default">
+                            <i class="fa fa-ban"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fa fa-save"></i> Simpan Surat Permintaan Second Opinion
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Auto search pasien
+    $('#btn-cari-pasien').on('click', function() {
+        var noRawat = $('#no_rawat').val().trim();
+        if (!noRawat) {
+            alert('Masukkan Nomor Rawat atau Nomor Rekam Medis terlebih dahulu!');
+            return;
+        }
+
+        $.getJSON('{?=url([ADMIN, "form_rme", "secondopinionform"])?}', {
+            ajax_patient: 1,
+            no_rawat: noRawat
+        }, function(res) {
+            if (res && res.success && res.data) {
+                var p = res.data;
+                $('#no_rawat').val(p.no_rawat);
+                $('#no_rkm_medis').val(p.no_rkm_medis);
+                $('#nm_pasien').val(p.nm_pasien);
+                $('#info_jk_umur').val((p.jk == 'L' ? 'Laki-laki' : 'Perempuan') + ' / ' + p.umur);
+                $('#tgl_lahir').val(p.tgl_lahir);
+                $('#alamat_pasien').val(p.alamat);
+
+                // Jika pembuat pernyataan masih kosong atau hubungan 'Diri sendiri', auto fill pembuat
+                if ($('#hubungan').val() === 'Diri sendiri' && !$('#nama_pembuat').val()) {
+                    copyPasienToPembuat(p);
+                }
+            } else {
+                alert('Data pasien dengan No. Rawat/RM tersebut tidak ditemukan.');
+            }
+        }).fail(function() {
+            alert('Terjadi kesalahan koneksi saat mencari data pasien.');
+        });
+    });
+
+    // Enter di input no_rawat langsung cari
+    $('#no_rawat').on('keypress', function(e) {
+        if (e.which == 13) {
+            e.preventDefault();
+            $('#btn-cari-pasien').click();
+        }
+    });
+
+    function copyPasienToPembuat(p) {
+        if (!p) {
+            p = {
+                nm_pasien: $('#nm_pasien').val(),
+                jk: $('#info_jk_umur').val().indexOf('Laki') !== -1 ? 'L' : 'P',
+                umur: $('#info_jk_umur').val().split('/')[1] ? $('#info_jk_umur').val().split('/')[1].trim() : '',
+                alamat: $('#alamat_pasien').val()
+            };
+        }
+        if (p.nm_pasien) {
+            $('#nama_pembuat').val(p.nm_pasien);
+            $('#pembuat_pernyataan_ttd').val(p.nm_pasien);
+            $('#jk_pembuat').val(p.jk || 'L');
+            $('#umur_pembuat').val(p.umur || '');
+            $('#alamat_pembuat').val(p.alamat || '');
+            $('#hubungan').val('Diri sendiri');
+        }
+    }
+
+    // Tombol copy data pasien ke pembuat
+    $('#btn-copy-pasien').on('click', function() {
+        if (!$('#nm_pasien').val()) {
+            alert('Silakan cari data pasien terlebih dahulu!');
+            return;
+        }
+        copyPasienToPembuat();
+    });
+
+    // Sinkronkan nama pembuat ke tanda tangan jika belum diedit manual
+    $('#nama_pembuat').on('keyup change', function() {
+        if (!$('#pembuat_pernyataan_ttd').val() || $('#pembuat_pernyataan_ttd').val() === $(this).data('prev-val')) {
+            $('#pembuat_pernyataan_ttd').val($(this).val());
+        }
+        $(this).data('prev-val', $(this).val());
+    });
+});
+</script>

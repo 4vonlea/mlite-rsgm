@@ -5,7 +5,7 @@
                 <h3 class="panel-title">Form ANS4 - Rencana Anestesi (Pra Anestesi)</h3>
             </div>
             <div class="panel-body">
-                <form method="post" action="{?=url([ADMIN, 'update_bmt', 'ans4save'])?}">
+                <form method="post" action="{?=url([ADMIN, 'form_rme', 'ans4save'])?}">
                     <input type="hidden" name="id" value="{?=isset($data['id']) ? $data['id'] : ''?}">
                     
                     <div class="row">
@@ -364,7 +364,7 @@
                     
                     <div class="form-group text-center m-t-20">
                         <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
-                        <a href="{?=url([ADMIN, 'update_bmt', 'ans4manage'])?}" class="btn btn-default">Batal</a>
+                        <a href="{?=url([ADMIN, 'form_rme', 'ans4manage'])?}" class="btn btn-default">Batal</a>
                     </div>
                 </form>
             </div>
@@ -389,7 +389,7 @@ $(document).ready(function() {
         var no_rawat = $(this).val();
         if(no_rawat != '') {
             $.ajax({
-                url: '{?=url([ADMIN, 'update_bmt', 'ans4form'])?}&ajax_patient=1&no_rawat=' + no_rawat,
+                url: '{?=url([ADMIN, 'form_rme', 'ans4form'])?}&ajax_patient=1&no_rawat=' + no_rawat,
                 type: 'GET',
                 dataType: 'json',
                 success: function(res) {

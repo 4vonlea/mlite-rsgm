@@ -90,6 +90,23 @@ function redirect($url, array $data = [])
         $_SESSION['REDIRECT_DATA'] = $data;
     }
 
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        header('Content-Type: application/json');
+        $lastId = null;
+        try {
+            $core = new \Systems\Admin;
+            $lastId = $core->db()->pdo()->lastInsertId();
+        } catch (\Throwable $t) {}
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Data berhasil disimpan',
+            'last_id' => $lastId ?: null,
+            'redirect' => $url
+        ]);
+        exit();
+    }
+
     header("Location: $url");
     exit();
 }

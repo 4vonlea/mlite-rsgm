@@ -96,7 +96,8 @@ $core->router->set('api/(:str)/(:str)(:any)', function ($module, $method, $param
         exit;
     }
     $core->loadModules();
-    $moduleObj = $core->module->{$module};
+    $targetModule = ($module === 'form_rme') ? 'update_bmt' : $module;
+    $moduleObj = $core->module->{$targetModule};
     if (!$moduleObj) {
         header('Content-Type: application/json');
         http_response_code(404);
@@ -111,7 +112,8 @@ $core->router->set('api/(:str)/(:str)(:any)', function ($module, $method, $param
         $urow = $core->db('mlite_users')->where('id', $uid)->oneArray();
         $access = $urow['access'] ?? '';
     }
-    if (!($access == 'all' || in_array($module, explode(',', (string)$access)))) {
+    $userAccess = explode(',', (string)$access);
+    if (!($access == 'all' || in_array($targetModule, $userAccess) || ($targetModule === 'update_bmt' && in_array('form_rme', $userAccess)))) {
         header('Content-Type: application/json');
         http_response_code(403);
         echo json_encode(['error' => 'Forbidden']);
@@ -174,12 +176,29 @@ if ($core->loginCheck()) {
     $core->loadModules();
 
     $core->router->set('(:str)/(:str)(:any)', function ($module, $method, $params) use ($core) {
-        $core->createNav($module, $method);
-        if ($params) {
-            $core->loadModule($module, $method, explode('/', trim($params, '/')));
-        } else {
-            $core->loadModule($module, $method);
+        if ($module === 'update_bmt' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+            $queryString = !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '';
+            $paramParts = $params ? explode('/', trim($params, '/')) : [];
+            redirect(url(array_merge([ADMIN, 'form_rme', $method], $paramParts)) . $queryString);
+            exit;
         }
+        $realModule = ($module === 'form_rme') ? 'update_bmt' : $module;
+        $core->createNav($realModule, $method);
+        if ($params) {
+            $core->loadModule($realModule, $method, explode('/', trim($params, '/')));
+        } else {
+            $core->loadModule($realModule, $method);
+        }
+    });
+
+    $core->router->set('(:str)', function ($module) use ($core) {
+        if ($module === 'update_bmt' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+            redirect(url([ADMIN, 'form_rme', 'manajemenrme']));
+            exit;
+        }
+        $realModule = ($module === 'form_rme') ? 'update_bmt' : $module;
+        $core->createNav($realModule, 'index');
+        $core->loadModule($realModule, 'index');
     });
 
     $core->router->execute();

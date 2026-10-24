@@ -5,10 +5,10 @@
                 <h3 class="panel-title">Data ANS4 - Rencana Anestesi</h3>
                 <ul class="nav nav-tabs">
                     <li class="active">
-                        <a href="{?=url([ADMIN, 'update_bmt', 'ans4manage'])?}" role="tab">Data Rencana Anestesi</a>
+                        <a href="{?=url([ADMIN, 'form_rme', 'ans4manage'])?}" role="tab">Data Rencana Anestesi</a>
                     </li>
                     <li>
-                        <a href="{?=url([ADMIN, 'update_bmt', 'ans4form'])?}" role="tab">Tambah Data</a>
+                        <a href="{?=url([ADMIN, 'form_rme', 'ans4form'])?}" role="tab">Tambah Data</a>
                     </li>
                 </ul>
             </div>
@@ -31,13 +31,14 @@
                             <tr>
                                 <td>{$value.no_rawat}</td>
                                 <td>{$value.no_rkm_medis}</td>
-                                <td>{$value.nm_pasien}</td>
+                                <td>{if: !empty($value.nama_pasien)}{$value.nama_pasien}{elseif: !empty($value.nm_pasien)}{$value.nm_pasien}{else}-{/if}</td>
                                 <td>{$value.tanggal}</td>
                                 <td>{$value.jam}</td>
                                 <td>
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans4form'])?}&t={?=$_SESSION['token']?}&id={$value.id}" class="btn btn-xs btn-warning"><i class="fa fa-pencil"></i></a>
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans4cetak'])?}&t={?=$_SESSION['token']?}&id={$value.id}" class="btn btn-xs btn-primary" target="_blank"><i class="fa fa-print"></i></a>
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans4manage'])?}&t={?=$_SESSION['token']?}&action=delete&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?')"><i class="fa fa-trash"></i></a>
+                                    <a href="{?=url([ADMIN, 'form_rme', 'ans4form'])?}&t={?=$_SESSION['token']?}&id={$value.id}" class="btn btn-xs btn-warning"><i class="fa fa-pencil"></i></a>
+                                    <a href="{?=url([ADMIN, 'form_rme', 'ans4cetak'])?}&t={?=$_SESSION['token']?}&id={$value.id}" class="btn btn-xs btn-primary" target="_blank"><i class="fa fa-print"></i></a>
+                                    <a href="{?=url([ADMIN, 'form_rme', 'ans4cetak'])?}&t={?=$_SESSION['token']?}&id={$value.id}&pdf=1" class="btn btn-xs btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
+                                    <a href="{?=url([ADMIN, 'form_rme', 'ans4manage'])?}&t={?=$_SESSION['token']?}&action=delete&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?')"><i class="fa fa-trash"></i></a>
                                 </td>
                             </tr>
                             {/loop}

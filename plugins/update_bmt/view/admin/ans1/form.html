@@ -4,12 +4,12 @@
             <div class="panel-heading">
                 <h3 class="panel-title">ANS1 - Informasi Tindakan Pembiusan</h3>
                 <ul class="nav nav-tabs">
-                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ans1manage'])?}">Data Form</a></li>
+                    <li><a href="{?=url([ADMIN, 'form_rme', 'ans1manage'])?}">Data Form</a></li>
                     <li class="active"><a href="#" data-toggle="tab">Tambah/Edit Data</a></li>
                 </ul>
             </div>
             <div class="panel-body">
-                <form action="{?=url([ADMIN, 'update_bmt', 'ans1save'])?}" method="POST" id="form-ans1" class="form-horizontal">
+                <form action="{?=url([ADMIN, 'form_rme', 'ans1save'])?}" method="POST" id="form-ans1" class="form-horizontal">
                     <input type="hidden" name="id" value="{?=isset_or($data.id)?}">
                     
                     <div class="form-group">
@@ -179,7 +179,7 @@
 
                     <div class="form-group text-center">
                         <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
-                        <a href="{?=url([ADMIN, 'update_bmt', 'ans1manage'])?}" class="btn btn-default">Batal</a>
+                        <a href="{?=url([ADMIN, 'form_rme', 'ans1manage'])?}" class="btn btn-default">Batal</a>
                     </div>
                 </form>
             </div>
@@ -196,7 +196,7 @@ $(document).ready(function() {
         // Disable input while searching
         $('#no_rawat').prop('readonly', true);
         
-        $.get('{?=url([ADMIN, "update_bmt", "ans1form"])?}', {ajax_patient: 1, no_rawat: no_rawat, t: '{?=$_SESSION["token"]?}', _: new Date().getTime()}, function(res) {
+        $.get('{?=url([ADMIN, "form_rme", "ans1form"])?}', {ajax_patient: 1, no_rawat: no_rawat, t: '{?=$_SESSION["token"]?}', _: new Date().getTime()}, function(res) {
             $('#no_rawat').prop('readonly', false);
             if (res && res.success) {
                 $('#no_rawat').val(res.no_rawat);

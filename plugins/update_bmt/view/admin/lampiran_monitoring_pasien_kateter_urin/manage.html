@@ -1,0 +1,136 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
+                <h3 class="panel-title" style="font-weight: bold; font-size: 16px;">
+                    <i class="fa fa-stethoscope text-primary"></i> RML - MONITORING PASIEN KATETER URINE (RANAP)
+                </h3>
+                <div>
+                    <a href="{?=url([ADMIN, 'form_rme', 'monitoringkateterurinform'])?}" class="btn btn-success btn-sm">
+                        <i class="fa fa-plus-circle"></i> Tambah Monitoring Kateter
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+
+                <!-- INFORMASI STANDAR PENCEGAHAN ISK & PENGENDALIAN INFEKSI (PPI) -->
+                <div class="alert alert-info" style="font-size: 12px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <strong><i class="fa fa-info-circle"></i> Standar Akreditasi PPI (Pencegahan & Pengendalian Infeksi) - Monitoring Kateter Urin:</strong><br>
+                            Formulir ini digunakan untuk memantau bundel pencegahan Infeksi Saluran Kemih (CAUTI/ISK) serta deteksi dini tanda gejala klinis ISK pada seluruh pasien rawat inap yang terpasang kateter urin menetap (indwelling catheter) di RSGM Gusti Hasan Aman selama 31 hari pengamatan.
+                            <div style="margin-top: 6px;">
+                                <span class="label label-primary" style="font-size: 11px; padding: 3px 8px;">Bundel Pencegahan ISK (KARS PPI)</span>
+                                <span class="label label-default" style="font-size: 11px; padding: 3px 8px;">Format Dokumen: Formulir Monitoring Pasien Terpasang Kateter Urin</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-right" style="padding-top: 6px;">
+                            <span class="badge" style="background-color: #2c3e50; font-size: 12px; padding: 6px 12px;">
+                                Total Terdata: {?=count($data)?} Pasien
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABEL DATA MONITORING KATETER -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover" id="table-kateter-urin" style="width: 100%;">
+                        <thead>
+                            <tr class="info" style="font-size: 12px;">
+                                <th style="text-align: center; width: 40px;">No</th>
+                                <th>No. Rawat & Tgl MRS</th>
+                                <th>Identitas Pasien</th>
+                                <th>Ruang Perawatan</th>
+                                <th>Periode Bulan/Tahun</th>
+                                <th>Jenis & Ukuran Kateter</th>
+                                <th>Diagnosa Medis</th>
+                                <th>ICN / Head Nurse</th>
+                                <th style="text-align: center; width: 140px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 12px;">
+                            {if: !empty($data)}
+                            {loop: $data}
+                            <tr>
+                                <td style="text-align: center; vertical-align: middle;">{$value.nomor}</td>
+                                <td style="vertical-align: middle;">
+                                    <strong class="text-primary">{$value.no_rawat}</strong><br>
+                                    <small class="text-muted"><i class="fa fa-calendar-check-o"></i> MRS: {$value.tgl_mrs}</small>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <strong>{$value.nm_pasien}</strong><br>
+                                    <span class="label label-default" style="font-size: 10px;">RM: {$value.no_rkm_medis}</span>
+                                    <small class="text-muted">({$value.jk} / {$value.umur})</small>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <i class="fa fa-hospital-o text-muted"></i> {$value.ruang}
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <span class="label label-info" style="font-size: 11px;">
+                                        <i class="fa fa-calendar"></i> {$value.bulan_tahun}
+                                    </span>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <span class="label label-primary" style="font-size: 10px;">
+                                        {if: !empty($value.jenis_cath)}{$value.jenis_cath}{else}Folley{/if}
+                                    </span>
+                                    <span class="label label-success" style="font-size: 10px;">
+                                        No. {if: !empty($value.no_cath)}{$value.no_cath}{else}16{/if}
+                                    </span>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <span style="font-weight: 500;">{$value.diagnosa}</span>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <small class="text-muted">ICN:</small> <strong>{if: !empty($value.nama_icn)}{$value.nama_icn}{else}-{/if}</strong><br>
+                                    <small class="text-muted">Head Nurse:</small> <strong>{if: !empty($value.nama_head_nurse)}{$value.nama_head_nurse}{else}-{/if}</strong>
+                                </td>
+                                <td style="text-align: center; vertical-align: middle;">
+                                    <div class="btn-group" role="group">
+                                        <a href="{?=url([ADMIN, 'form_rme', 'monitoringkateterurincetak', $value.id])?}" target="_blank" class="btn btn-info btn-xs" title="Cetak / Pratinjau Form">
+                                            <i class="fa fa-print"></i>
+                                        </a>
+                                        <a href="{?=url([ADMIN, 'form_rme', 'monitoringkateterurincetak', $value.id])?}&pdf=1" target="_blank" class="btn btn-danger btn-xs" title="Unduh File PDF">
+                                            <i class="fa fa-file-pdf-o"></i>
+                                        </a>
+                                        <a href="{?=url([ADMIN, 'form_rme', 'monitoringkateterurinform', $value.id])?}" class="btn btn-warning btn-xs" title="Edit Lembar Monitoring">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <a href="{?=url([ADMIN, 'form_rme', 'monitoringkateterurinhapus', $value.id])?}" onclick="return confirm('Apakah Anda yakin ingin menghapus data lembar monitoring kateter urin ini?');" class="btn btn-danger btn-xs" title="Hapus Data">
+                                            <i class="fa fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {/loop}
+                            {else}
+                            <tr>
+                                <td colspan="9" style="text-align: center; padding: 25px; color: #7f8c8d;">
+                                    <i class="fa fa-info-circle fa-2x" style="margin-bottom: 8px;"></i><br>
+                                    Belum ada data formulir monitoring kateter urin yang tercatat. Silakan klik tombol <strong>"Tambah Monitoring Kateter"</strong> di atas.
+                                </td>
+                            </tr>
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    if ($.fn.DataTable.isDataTable('#table-kateter-urin')) {
+        $('#table-kateter-urin').DataTable().destroy();
+    }
+    $('#table-kateter-urin').DataTable({
+        "language": {
+            "url": "{?=url('assets/jscripts/dataTables-id.json')?}"
+        },
+        "order": [[0, "asc"]],
+        "pageLength": 10
+    });
+});
+</script>

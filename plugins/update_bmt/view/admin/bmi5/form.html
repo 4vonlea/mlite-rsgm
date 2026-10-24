@@ -4,12 +4,12 @@
             <div class="panel-heading">
                 <h3 class="panel-title">Form Laporan Bedah Minor</h3>
                 <ul class="nav nav-tabs">
-                    <li><a href="{?=url([ADMIN, 'update_bmt', 'bmi5manage'])?}">Data Laporan</a></li>
-                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'bmi5form'])?}">Tambah Baru</a></li>
+                    <li><a href="{?=url([ADMIN, 'form_rme', 'bmi5manage'])?}">Data Laporan</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'form_rme', 'bmi5form'])?}">Tambah Baru</a></li>
                 </ul>
             </div>
             <div class="panel-body">
-                <form action="{?=url([ADMIN, 'update_bmt', 'bmi5save'])?}" method="POST">
+                <form action="{?=url([ADMIN, 'form_rme', 'bmi5save'])?}" method="POST">
                     <input type="hidden" name="id" value="{?=isset($data['id']) ? $data['id'] : ''?}">
                     
                     <div class="row">
@@ -284,7 +284,7 @@
                     </div>
                     
                     <button type="submit" class="btn btn-primary">Simpan</button>
-                    <a href="{?=url([ADMIN, 'update_bmt', 'bmi5manage'])?}" class="btn btn-default">Batal</a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'bmi5manage'])?}" class="btn btn-default">Batal</a>
                 </form>
             </div>
         </div>
@@ -296,7 +296,7 @@ $('#btn-cari-pasien').click(function(){
     var no_rawat = $('#no_rawat').val();
     if(no_rawat) {
         $.ajax({
-            url: '{?=url([ADMIN, 'update_bmt', 'bmi5form'])?}',
+            url: '{?=url([ADMIN, 'form_rme', 'bmi5form'])?}',
             type: 'GET',
             data: { ajax_patient: 1, no_rawat: no_rawat },
             success: function(res) {

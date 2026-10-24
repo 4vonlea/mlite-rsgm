@@ -1,0 +1,537 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
+                <h3 class="panel-title" style="font-weight: bold; font-size: 16px;">
+                    <i class="fa fa-pencil-square-o text-primary"></i> FORMULIR PENILAIAN KEJADIAN PHLEIBITIS (VISUAL INFUSION PHLEIBITIS / VIP)
+                </h3>
+                <div>
+                    <a href="{?=url([ADMIN, 'form_rme', 'penilaianphlebitismanage'])?}" class="btn btn-default btn-sm">
+                        <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'form_rme', 'penilaianphlebitissave'])?}" method="post" id="form-penilaian-phlebitis">
+                    <input type="hidden" name="id" value="{$data.id}">
+
+                    <!-- PETUNJUK RESMI RSGM -->
+                    <div class="alert alert-info" style="font-size: 12px; margin-bottom: 20px;">
+                        <strong><i class="fa fa-info-circle"></i> Petunjuk Pengisian:</strong>
+                        <ul style="margin-bottom: 0; padding-left: 20px;">
+                            <li>Diisi oleh perawat pelaksana/penanggung jawab pasien rawat inap.</li>
+                            <li>Lakukan observasi lokasi tusukan infus setiap shift atau minimal 1x per hari (Hari Perawatan ke-1 s/d 9).</li>
+                            <li>Pilih parameter VIP yang sesuai dengan temuan klinis. Skor, interpretasi, dan rekomendasi intervensi akan otomatis dihitung.</li>
+                        </ul>
+                    </div>
+
+                    <!-- IDENTITAS PASIEN & PEMASANGAN INFUS -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading" style="font-weight: bold;">
+                            <i class="fa fa-user"></i> Identitas Pasien & Pemasangan IV Line
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nomor Rawat / No. RM <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2025/09/29/000006" required>
+                                            <span class="input-group-btn">
+                                                <button type="button" class="btn btn-primary" id="btn-cari-pasien">
+                                                    <i class="fa fa-search"></i> Cari
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nomor Rekam Medis (No RM)</label>
+                                        <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly style="background-color: #f9f9f9; font-weight: bold;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nama Pasien</label>
+                                        <input type="text" id="nm_pasien" class="form-control" value="{$data.nm_pasien}" readonly style="background-color: #f9f9f9; font-weight: bold;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Jenis Kelamin / Umur</label>
+                                        <input type="text" id="info_jk_umur" class="form-control" value="{$data.jk} / {$data.umur}" readonly style="background-color: #f9f9f9;">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Tanggal Lahir</label>
+                                        <input type="text" id="tgl_lahir" class="form-control" value="{$data.tgl_lahir}" readonly style="background-color: #f9f9f9;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Ruangan / Kamar Inap / Bed <span class="text-danger">*</span></label>
+                                        <input type="text" name="kamar_inap" id="kamar_inap" class="form-control" value="{$data.kamar_inap}" placeholder="Contoh: Ruang Melati / Bed 02" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Lokasi Pemasangan IV Line</label>
+                                        <input type="text" name="lokasi_iv_line" id="lokasi_iv_line" class="form-control" list="list_lokasi_iv" value="{$data.lokasi_iv_line}" placeholder="Contoh: Metacarpal Dextra">
+                                        <datalist id="list_lokasi_iv">
+                                            <option value="Metacarpal Dextra">
+                                            <option value="Metacarpal Sinistra">
+                                            <option value="Vena Cephalica Dextra">
+                                            <option value="Vena Cephalica Sinistra">
+                                            <option value="Vena Basilica Dextra">
+                                            <option value="Vena Basilica Sinistra">
+                                            <option value="Dorsum Manus Dextra">
+                                            <option value="Dorsum Manus Sinistra">
+                                            <option value="Antecubiti Dextra">
+                                            <option value="Antecubiti Sinistra">
+                                        </datalist>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Tanggal Mulai Pemasangan Infus</label>
+                                        <input type="date" name="tgl_pemasangan" id="tgl_pemasangan" class="form-control" value="{$data.tgl_pemasangan}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Tipe / Ukuran Kanul Infus</label>
+                                        <input type="text" name="tipe_kanul" id="tipe_kanul" class="form-control" list="list_kanul" value="{$data.tipe_kanul}" placeholder="Contoh: Abocath 22G">
+                                        <datalist id="list_kanul">
+                                            <option value="Abocath 24G Pediatric (Kuning)">
+                                            <option value="Abocath 22G (Biru)">
+                                            <option value="Abocath 20G (Merah Muda)">
+                                            <option value="Abocath 18G (Hijau)">
+                                            <option value="Vasofix Safety 22G">
+                                            <option value="Vasofix Safety 20G">
+                                        </datalist>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PEDOMAN KLINIS KETERANGAN SKALA & INTERVENSI -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading" style="font-weight: bold; background-color: #f5f5f5;">
+                            <i class="fa fa-book"></i> Pedoman Skala Phlebitis & Panduan Intervensi Klinis
+                        </div>
+                        <div class="panel-body" style="font-size: 12px; background-color: #fafafa;">
+                            <div class="row">
+                                <div class="col-md-6" style="border-right: 1px solid #e0e0e0;">
+                                    <h5 style="font-weight: bold; color: #2c3e50; margin-top: 0;">
+                                        <i class="fa fa-tachometer"></i> KETERANGAN SKALA PHLEBITIS
+                                    </h5>
+                                    <table class="table table-bordered table-condensed" style="background-color: #fff; margin-bottom: 0;">
+                                        <tr class="success">
+                                            <td style="width: 70px; font-weight: bold; text-align: center;">0</td>
+                                            <td><strong>Tidak ada tanda phlebitis</strong> &mdash; IV line nampak sehat</td>
+                                        </tr>
+                                        <tr class="warning">
+                                            <td style="font-weight: bold; text-align: center;">1 - 2</td>
+                                            <td><strong>Tahap awal phlebitis</strong> &mdash; Nyeri ringan, eritema/kemerahan atau edema/pembengkakan</td>
+                                        </tr>
+                                        <tr style="background-color: #fff3cd;">
+                                            <td style="font-weight: bold; text-align: center; color: #856404;">3 - 4</td>
+                                            <td><strong>Awal trombophlebitis</strong> &mdash; Nyeri sepanjang kanul, kemerahan, bengkak, vena teraba keras</td>
+                                        </tr>
+                                        <tr class="danger">
+                                            <td style="font-weight: bold; text-align: center;">5</td>
+                                            <td><strong>Stadium lanjut trombophlebitis</strong> &mdash; Semua tanda jelas disertai periksia / demam</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 style="font-weight: bold; color: #2c3e50; margin-top: 0;">
+                                        <i class="fa fa-stethoscope"></i> TINDAKAN INTERVENSI PERAWAT
+                                    </h5>
+                                    <ol style="margin-bottom: 0; padding-left: 20px; line-height: 1.8;">
+                                        <li><strong>Observasi kanul:</strong> Lanjutkan pemantauan rutin kondisi balutan & lokasi penusukan infus.</li>
+                                        <li><strong>Resite kanul:</strong> Lepas kanul dan pasang kanul baru di lokasi/ekstremitas kontralateral.</li>
+                                        <li><strong>Resite kanul dan pertimbangkan perawatan:</strong> Pindah infus, pertimbangkan kompres hangat/dingin & terapi lokal.</li>
+                                        <li><strong>Memulai perawatan:</strong> Lapor DPJP, mulai pengobatan anti-inflamasi/antibiotik sesuai instruksi medis, resite kanul segera.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FORM PEMANTAUAN 9 HARI PERAWATAN -->
+                    <div class="panel panel-primary">
+                        <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: bold; font-size: 14px;">
+                                <i class="fa fa-calendar-check-o"></i> Tabel Pemantauan Skor VIP: Hari Perawatan Ke-1 s/d Ke-9
+                            </span>
+                            <div>
+                                <button type="button" class="btn btn-default btn-xs" id="btn-isi-tgl-otomatis" title="Isi tanggal berurutan mulai dari tanggal pasang infus">
+                                    <i class="fa fa-magic"></i> Auto Tanggal Berurutan
+                                </button>
+                                <button type="button" class="btn btn-default btn-xs" id="btn-isi-petugas-semua" style="margin-left: 5px;">
+                                    <i class="fa fa-clone"></i> Salin Petugas ke Semua Hari
+                                </button>
+                            </div>
+                        </div>
+                        <div class="panel-body" style="padding: 10px;">
+                            <p class="text-muted" style="font-size: 12px; margin-bottom: 12px;">
+                                <i class="fa fa-info-circle"></i> Pilih parameter klinis yang diobservasi pada setiap hari perawatan. Hari yang belum dijalani dapat dibiarkan kosong.
+                            </p>
+
+                            <!-- NAV TABS UNTUK HARI KE-1 s/d 9 -->
+                            <ul class="nav nav-tabs" id="tab-hari-perawatan" role="tablist">
+                                {loop: $data.days}
+                                <li role="presentation" class="{if: $value.hari == 1}active{/if}">
+                                    <a href="#tab-h-{$value.hari}" aria-controls="tab-h-{$value.hari}" role="tab" data-toggle="tab" style="font-weight: bold;">
+                                        Hari Ke-{$value.hari}
+                                        <span class="badge badge-hari-status" id="badge-tab-{$value.hari}" style="background-color: {if: $value.skor !== ''}#27ae60{else}#95a5a6{/if}; font-size: 10px;">
+                                            {if: $value.skor !== ''}Skor {$value.skor}{else}-{/if}
+                                        </span>
+                                    </a>
+                                </li>
+                                {/loop}
+                            </ul>
+
+                            <div class="tab-content" style="border: 1px solid #ddd; border-top: none; padding: 15px; background-color: #fff; border-radius: 0 0 4px 4px;">
+                                {loop: $data.days}
+                                <div role="tabpanel" class="tab-pane {if: $value.hari == 1}active{/if}" id="tab-h-{$value.hari}">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label><i class="fa fa-calendar"></i> Tanggal Pengamatan (Hari Ke-{$value.hari})</label>
+                                                <input type="date" name="hari[{$value.hari}][tgl]" id="tgl_{$value.hari}" class="form-control input-sm input-tgl-hari" value="{$value.tgl}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label><i class="fa fa-user-md"></i> Nama Perawat Penilai</label>
+                                                <input type="text" name="hari[{$value.hari}][petugas]" id="petugas_{$value.hari}" class="form-control input-sm input-petugas-hari" value="{$value.petugas}" placeholder="Nama & Gelar Perawat">
+                                            </div>
+                                            <div class="form-group">
+                                                <label><i class="fa fa-check-square-o"></i> Paraf / Tanda Tangan</label>
+                                                <select name="hari[{$value.hari}][paraf]" id="paraf_{$value.hari}" class="form-control input-sm">
+                                                    <option value="✓" {if: $value.paraf == '✓' || empty($value.paraf)}selected{/if}>✓ (Terverifikasi / Paraf)</option>
+                                                    <option value="-" {if: $value.paraf == '-'}selected{/if}>- (Belum)</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- CARD TOTAL SKOR & STATUS INTERVENSI -->
+                                            <div class="panel panel-default" style="margin-top: 15px; border-left: 4px solid #337ab7;">
+                                                <div class="panel-body" style="padding: 10px;">
+                                                    <div style="font-size: 11px; text-transform: uppercase; color: #7f8c8d; font-weight: bold;">
+                                                        Hasil Penilaian Hari Ke-{$value.hari}:
+                                                    </div>
+                                                    <div style="margin: 6px 0;">
+                                                        <span id="display-total-skor-{$value.hari}" style="font-size: 24px; font-weight: bold; color: #2c3e50;">
+                                                            {if: $value.skor !== ''}{$value.skor}{else}-{/if}
+                                                        </span>
+                                                        <span style="font-size: 12px; color: #7f8c8d;">/ Total Skor</span>
+                                                    </div>
+                                                    <div id="badge-derajat-{$value.hari}">
+                                                        {if: $value.skor === 0}
+                                                            <span class="label label-success">Tidak Ada Tanda Phlebitis</span>
+                                                        {elseif: $value.skor >= 1 && $value.skor <= 2}
+                                                            <span class="label label-warning">Tahap Awal Phlebitis</span>
+                                                        {elseif: $value.skor >= 3 && $value.skor <= 4}
+                                                            <span class="label label-warning" style="background-color: #d97706;">Awal Trombophlebitis</span>
+                                                        {elseif: $value.skor >= 5}
+                                                            <span class="label label-danger">Stadium Lanjut Trombophlebitis</span>
+                                                        {else}
+                                                            <span class="label label-default">Belum Dinilai</span>
+                                                        {/if}
+                                                    </div>
+                                                    <div style="margin-top: 8px; font-size: 11px; color: #34495e;">
+                                                        <strong>Rekomendasi Intervensi:</strong><br>
+                                                        <span id="text-intervensi-{$value.hari}">
+                                                            {if: $value.skor === 0}
+                                                                1. Observasi kanul
+                                                            {elseif: $value.skor == 1}
+                                                                1. Observasi kanul
+                                                            {elseif: $value.skor == 2}
+                                                                2. Resite kanul
+                                                            {elseif: $value.skor >= 3 && $value.skor <= 4}
+                                                                3. Resite kanul dan pertimbangkan perawatan
+                                                            {elseif: $value.skor >= 5}
+                                                                4. Memulai perawatan
+                                                            {else}
+                                                                -
+                                                            {/if}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- PILIHAN PARAMETER KLINIS HARI KE-N -->
+                                        <div class="col-md-9">
+                                            <label style="font-size: 13px; margin-bottom: 8px;">
+                                                <i class="fa fa-list-ul"></i> Pilih Kondisi Klinis / Parameter VIP yang Ditemukan:
+                                            </label>
+
+                                            <!-- OPSI PARAMETER 0 s/d 6 -->
+                                            <div class="list-group list-group-param" id="group-param-{$value.hari}">
+                                                <!-- OPSI KOSONG / BELUM OBSERVASI -->
+                                                <label class="list-group-item {if: $value.param_checked == '' || $value.param_checked == '0'}active-soft{/if}" style="cursor: pointer; margin-bottom: 6px; border-radius: 4px;">
+                                                    <input type="radio" name="hari[{$value.hari}][param_checked]" value="" class="radio-param" data-hari="{$value.hari}" data-skor="" {if: $value.param_checked == '' || empty($value.param_checked)}checked{/if}>
+                                                    <span style="font-weight: normal; color: #7f8c8d; margin-left: 5px;">
+                                                        <em>Belum ada pengamatan / Kosongkan hari ini</em>
+                                                    </span>
+                                                </label>
+
+                                                <!-- PARAMETER 1: SKOR 0 -->
+                                                <label class="list-group-item list-group-item-success" style="cursor: pointer; margin-bottom: 6px; border-radius: 4px;">
+                                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                        <div>
+                                                            <input type="radio" name="hari[{$value.hari}][param_checked]" value="1" class="radio-param" data-hari="{$value.hari}" data-skor="0" {if: $value.param_checked == '1'}checked{/if}>
+                                                            <strong style="margin-left: 5px;">1. IV Line nampak sehat</strong>
+                                                        </div>
+                                                        <span class="badge" style="background-color: #27ae60; font-size: 12px;">Skor 0</span>
+                                                    </div>
+                                                    <small class="text-muted" style="display: block; margin-left: 20px; margin-top: 3px;">
+                                                        Tidak ada nyeri, tidak ada eritema, tidak ada pembengkakan. Kondisi kanul bersih dan paten.
+                                                    </small>
+                                                </label>
+
+                                                <!-- PARAMETER 2: SKOR 1 -->
+                                                <label class="list-group-item list-group-item-warning" style="cursor: pointer; margin-bottom: 6px; border-radius: 4px;">
+                                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                        <div>
+                                                            <input type="radio" name="hari[{$value.hari}][param_checked]" value="2" class="radio-param" data-hari="{$value.hari}" data-skor="1" {if: $value.param_checked == '2'}checked{/if}>
+                                                            <strong style="margin-left: 5px;">2. Salah satu tanda-tanda berikut jelas:</strong>
+                                                        </div>
+                                                        <span class="badge" style="background-color: #f39c12; font-size: 12px;">Skor 1</span>
+                                                    </div>
+                                                    <div style="margin-left: 20px; font-size: 11.5px; margin-top: 3px;">
+                                                        &bull; Sedikit nyeri dekat IV Line<br>
+                                                        &bull; Sedikit kemerahan dekat IV Line
+                                                    </div>
+                                                </label>
+
+                                                <!-- PARAMETER 3: SKOR 2 -->
+                                                <label class="list-group-item list-group-item-warning" style="cursor: pointer; margin-bottom: 6px; border-radius: 4px; border-left: 4px solid #e67e22;">
+                                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                        <div>
+                                                            <input type="radio" name="hari[{$value.hari}][param_checked]" value="3" class="radio-param" data-hari="{$value.hari}" data-skor="2" {if: $value.param_checked == '3'}checked{/if}>
+                                                            <strong style="margin-left: 5px;">3. Dua dari tanda berikut jelas:</strong>
+                                                        </div>
+                                                        <span class="badge" style="background-color: #e67e22; font-size: 12px;">Skor 2</span>
+                                                    </div>
+                                                    <div style="margin-left: 20px; font-size: 11.5px; margin-top: 3px;">
+                                                        &bull; Nyeri pada IV Line<br>
+                                                        &bull; Kemerahan<br>
+                                                        &bull; Pembengkakan
+                                                    </div>
+                                                </label>
+
+                                                <!-- PARAMETER 4: SKOR 3 -->
+                                                <label class="list-group-item" style="cursor: pointer; margin-bottom: 6px; border-radius: 4px; background-color: #fef5e7; border: 1px solid #f8c471; border-left: 4px solid #d35400;">
+                                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                        <div>
+                                                            <input type="radio" name="hari[{$value.hari}][param_checked]" value="4" class="radio-param" data-hari="{$value.hari}" data-skor="3" {if: $value.param_checked == '4'}checked{/if}>
+                                                            <strong style="margin-left: 5px; color: #a04000;">4. Semua tanda-tanda berikut ini adalah jelas:</strong>
+                                                        </div>
+                                                        <span class="badge" style="background-color: #d35400; font-size: 12px;">Skor 3</span>
+                                                    </div>
+                                                    <div style="margin-left: 20px; font-size: 11.5px; margin-top: 3px;">
+                                                        &bull; Nyeri sepanjang kanul<br>
+                                                        &bull; Kemerahan<br>
+                                                        &bull; Pembengkakan
+                                                    </div>
+                                                </label>
+
+                                                <!-- PARAMETER 5: SKOR 4 / 5 -->
+                                                <label class="list-group-item list-group-item-danger" style="cursor: pointer; margin-bottom: 6px; border-radius: 4px; border-left: 4px solid #c0392b;">
+                                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                        <div>
+                                                            <input type="radio" name="hari[{$value.hari}][param_checked]" value="5" class="radio-param" data-hari="{$value.hari}" data-skor="4" {if: $value.param_checked == '5'}checked{/if}>
+                                                            <strong style="margin-left: 5px;">5. Semua tanda-tanda berikut ini adalah jelas (Vena teraba keras):</strong>
+                                                        </div>
+                                                        <span class="badge" style="background-color: #c0392b; font-size: 12px;">Skor 4 / 5</span>
+                                                    </div>
+                                                    <div style="margin-left: 20px; font-size: 11.5px; margin-top: 3px;">
+                                                        &bull; Nyeri sepanjang kanul<br>
+                                                        &bull; Kemerahan<br>
+                                                        &bull; Pembengkakan<br>
+                                                        &bull; Vena teraba keras
+                                                    </div>
+                                                </label>
+
+                                                <!-- PARAMETER 6: SKOR 5 / 6 -->
+                                                <label class="list-group-item list-group-item-danger" style="cursor: pointer; margin-bottom: 6px; border-radius: 4px; background-color: #f2dede; border: 1.5px solid #a94442;">
+                                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                        <div>
+                                                            <input type="radio" name="hari[{$value.hari}][param_checked]" value="6" class="radio-param" data-hari="{$value.hari}" data-skor="5" {if: $value.param_checked == '6'}checked{/if}>
+                                                            <strong style="margin-left: 5px; color: #a94442;">6. Semua tanda-tanda berikut ini adalah jelas disertai Periksia:</strong>
+                                                        </div>
+                                                        <span class="badge" style="background-color: #900c3f; font-size: 12px;">Skor 5 / 6</span>
+                                                    </div>
+                                                    <div style="margin-left: 20px; font-size: 11.5px; margin-top: 3px;">
+                                                        &bull; Nyeri sepanjang kanul<br>
+                                                        &bull; Kemerahan<br>
+                                                        &bull; Pembengkakan<br>
+                                                        &bull; Vena teraba keras<br>
+                                                        &bull; <strong>Periksia (Demam)</strong>
+                                                    </div>
+                                                </label>
+                                            </div>
+
+                                            <input type="hidden" name="hari[{$value.hari}][skor]" id="input_skor_{$value.hari}" value="{$value.skor}">
+                                        </div>
+                                    </div>
+                                </div>
+                                {/loop}
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- CATATAN TAMBAHAN OBSERVASI -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading" style="font-weight: bold;">
+                            <i class="fa fa-commenting-o"></i> Catatan Tambahan Observasi Klinis
+                        </div>
+                        <div class="panel-body">
+                            <textarea name="catatan" id="catatan" rows="3" class="form-control" placeholder="Contoh: Terjadi kemerahan pada hari ke-3, telah dilakukan kompres dingin dan infus di-resite ke tangan kiri. Balutan steril terpasang baik.">{$data.catatan}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- TOMBOL AKSI -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-bottom: 20px;">
+                        <a href="{?=url([ADMIN, 'form_rme', 'penilaianphlebitismanage'])?}" class="btn btn-default">
+                            <i class="fa fa-ban"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fa fa-save"></i> Simpan Penilaian Phlebitis
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // 1. AJAX Cari Pasien
+    $('#btn-cari-pasien').on('click', function() {
+        var noRawat = $('#no_rawat').val().trim();
+        if (!noRawat) {
+            alert('Masukkan Nomor Rawat atau Nomor Rekam Medis terlebih dahulu!');
+            return;
+        }
+
+        $.getJSON('{?=url([ADMIN, "form_rme", "penilaianphlebitisform"])?}', {
+            ajax_patient: 1,
+            no_rawat: noRawat
+        }, function(res) {
+            if (res && res.success) {
+                $('#no_rawat').val(res.no_rawat);
+                $('#no_rkm_medis').val(res.no_rkm_medis);
+                $('#nm_pasien').val(res.nm_pasien);
+                $('#info_jk_umur').val((res.jk == 'L' ? 'Laki-Laki' : 'Perempuan') + ' / ' + res.umur);
+                $('#tgl_lahir').val(res.tgl_lahir);
+                if (res.ruang_perawatan && !$('#kamar_inap').val()) {
+                    $('#kamar_inap').val(res.ruang_perawatan);
+                }
+            } else {
+                alert('Data pasien dengan No. Rawat/RM tersebut tidak ditemukan.');
+            }
+        }).fail(function() {
+            alert('Terjadi kesalahan koneksi saat mencari data pasien.');
+        });
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if (e.which == 13) {
+            e.preventDefault();
+            $('#btn-cari-pasien').click();
+        }
+    });
+
+    // 2. Interactive Radio Handler for Parameter VIP
+    $('.radio-param').on('change', function() {
+        var hari = $(this).data('hari');
+        var skor = $(this).data('skor');
+
+        $('#input_skor_' + hari).val(skor);
+
+        var displaySkor = (skor !== '' && skor !== undefined) ? skor : '-';
+        $('#display-total-skor-' + hari).text(displaySkor);
+
+        var badgeTab = $('#badge-tab-' + hari);
+        var badgeDerajat = $('#badge-derajat-' + hari);
+        var textIntervensi = $('#text-intervensi-' + hari);
+
+        if (skor === '' || skor === undefined) {
+            badgeTab.css('background-color', '#95a5a6').text('-');
+            badgeDerajat.html('<span class="label label-default">Belum Dinilai</span>');
+            textIntervensi.text('-');
+        } else {
+            badgeTab.css('background-color', '#27ae60').text('Skor ' + skor);
+
+            var s = parseInt(skor);
+            if (s === 0) {
+                badgeDerajat.html('<span class="label label-success">Tidak Ada Tanda Phlebitis</span>');
+                textIntervensi.text('1. Observasi kanul');
+            } else if (s === 1) {
+                badgeDerajat.html('<span class="label label-warning">Tahap Awal Phlebitis</span>');
+                textIntervensi.text('1. Observasi kanul');
+            } else if (s === 2) {
+                badgeDerajat.html('<span class="label label-warning">Tahap Awal Phlebitis</span>');
+                textIntervensi.text('2. Resite kanul');
+            } else if (s === 3 || s === 4) {
+                badgeDerajat.html('<span class="label label-warning" style="background-color: #d97706;">Awal Trombophlebitis</span>');
+                textIntervensi.text('3. Resite kanul dan pertimbangkan perawatan');
+            } else if (s >= 5) {
+                badgeDerajat.html('<span class="label label-danger">Stadium Lanjut Trombophlebitis</span>');
+                textIntervensi.text('4. Memulai perawatan');
+            }
+        }
+    });
+
+    // 3. Helper: Auto Tanggal Berurutan
+    $('#btn-isi-tgl-otomatis').on('click', function() {
+        var baseDateStr = $('#tgl_pemasangan').val() || $('#tgl_1').val();
+        if (!baseDateStr) {
+            baseDateStr = new Date().toISOString().split('T')[0];
+            $('#tgl_pemasangan').val(baseDateStr);
+        }
+
+        var baseDate = new Date(baseDateStr);
+        for (var h = 1; h <= 9; h++) {
+            var curr = new Date(baseDate);
+            curr.setDate(baseDate.getDate() + (h - 1));
+            var yyyy = curr.getFullYear();
+            var mm = String(curr.getMonth() + 1).padStart(2, '0');
+            var dd = String(curr.getDate()).padStart(2, '0');
+            $('#tgl_' + h).val(yyyy + '-' + mm + '-' + dd);
+        }
+        alert('Tanggal pemantauan Hari Ke-1 s/d Ke-9 berhasil diisi berurutan!');
+    });
+
+    // 4. Helper: Salin Petugas ke Semua Hari
+    $('#btn-isi-petugas-semua').on('click', function() {
+        var petugas1 = $('#petugas_1').val().trim();
+        if (!petugas1) {
+            alert('Silakan isi Nama Perawat pada Hari Ke-1 terlebih dahulu sebagai acuan!');
+            return;
+        }
+
+        for (var h = 2; h <= 9; h++) {
+            if (!$('#petugas_' + h).val()) {
+                $('#petugas_' + h).val(petugas1);
+            }
+        }
+        alert('Nama petugas berhasil disalin ke hari pemantauan lainnya!');
+    });
+});
+</script>

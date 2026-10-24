@@ -9,7 +9,7 @@
     <link rel="icon" href="{?=url()?}/{$mlite.logo}" type="image/x-icon">
     <link href="{$mlite.path}/assets/css/{$mlite.theme_admin}.min.css?v={$mlite.version}" rel="stylesheet">
     <link href="{$mlite.path}/assets/css/animate.min.css?v={$mlite.version}" rel="stylesheet">
-    <link href="{?=url(THEMES.'/admin/css/style.css?v=1122'.$mlite.version)?}" rel="stylesheet">
+    <link href="{?=url(THEMES.'/admin/css/style.css?v=1124'.$mlite.version)?}" rel="stylesheet">
     <link href="{$mlite.path}/assets/css/font-awesome.css?v={$mlite.version}" rel="stylesheet">
 <style>
 /* ========================================================
@@ -208,11 +208,36 @@
     clear: both;
 }
 
-/* Fix submenu positioning in 2-column layout */
+/* Fix submenu positioning */
+.dropdown-submenu {
+    position: relative;
+}
+
 .dropdown-submenu > .dropdown-menu {
+    top: 0;
     left: 100%;
     margin-top: -6px;
     margin-left: -1px;
+    overflow: visible;
+}
+
+.dropdown-submenu:hover > .dropdown-menu {
+    display: block !important;
+}
+
+.dropdown-menu.scrollable-menu {
+    max-height: 75vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.dropdown-menu.scrollable-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dropdown-menu.scrollable-menu::-webkit-scrollbar-thumb {
+    background: #bbb;
+    border-radius: 3px;
 }
 
 /* Responsive adjustments */
@@ -391,15 +416,15 @@
                       <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">Form RME</a>
                       <ul class="dropdown-menu">
                         {if: $mlite.is_admin}
-                        <li><a href="{?=url([ADMIN, 'update_bmt', 'manajemenrme'])?}" class="dropdown-item">MANAJEMEN FORM RME</a></li>
+                        <li><a href="{?=url([ADMIN, 'form_rme', 'manajemenrme'])?}" class="dropdown-item">MANAJEMEN FORM RME</a></li>
                         {if: !empty($mlite.rme_categories)}<li role="separator" class="divider"></li>{/if}
                         {/if}
                         {loop: $mlite.rme_categories as $cat}
                         <li class="dropdown-submenu">
                           <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">{$cat.nama_kategori}</a>
                           <ul class="dropdown-menu">
-                            {loop: $cat.forms as $form}
-                            <li><a href="{?=url([ADMIN, 'update_bmt', $form.route_manage])?}" class="dropdown-item">{$form.kode_form} - {$form.nama_form}</a></li>
+{loop: $cat.forms as $form}
+                            <li><a href="{?=url([ADMIN, 'form_rme', $form.route_manage])?}" class="dropdown-item">{$form.kode_form} - {$form.nama_form}</a></li>
                             {/loop}
                           </ul>
                         </li>

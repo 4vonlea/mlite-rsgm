@@ -1,0 +1,467 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-book"></i> Formulir Profil Ringkas Medis Rawat Jalan (PRMRJ)</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'form_rme', 'prmrjmanage'])?}"><i class="fa fa-list"></i> Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'form_rme', 'prmrjform'])?}"><i class="fa fa-plus"></i> {if: !empty($data.id)}Edit PRMRJ #{?= $data['id'] ?}{else}Tambah Data PRMRJ{/if}</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="formPrmrj" method="POST" action="{?=url([ADMIN, 'form_rme', 'prmrjsave'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+
+                    <!-- 1. IDENTITAS PASIEN & PENCARIAN -->
+                    <div class="well well-sm" style="background: #fdfdfd; border-left: 4px solid #337ab7;">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label><strong>No. Rawat / No. RM Pasien <span class="text-danger">*</span></strong></label>
+                                    <div class="input-group">
+                                        <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2025/09/29/000006 atau No. RM" required autocomplete="off">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-primary" type="button" id="btnCariPasien"><i class="fa fa-search"></i> Cari</button>
+                                        </span>
+                                    </div>
+                                    <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{$data.no_rkm_medis}">
+                                    <small class="text-muted">Ketik No. Rawat / No. RM lalu tekan Enter atau klik Cari</small>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div id="box_info_pasien" class="alert alert-info no-margin" style="padding: 10px 15px;">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div><strong>Nama Pasien:</strong> <span id="info_nm_pasien">{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}-{/if}</span></div>
+                                            <div><strong>No. RM:</strong> <span id="info_no_rkm_medis">{if: !empty($data.no_rkm_medis)}{$data.no_rkm_medis}{else}-{/if}</span> &nbsp; (<span id="info_jk">{if: !empty($data.jk)}{?= $data['jk'] == 'L' ? 'Laki-Laki' : 'Perempuan' ?}{else}-{/if}</span>)</div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div><strong>Tempat / Tgl Lahir:</strong> <span id="info_ttl">{if: !empty($data.tmp_lahir)}{$data.tmp_lahir}, {/if}{if: !empty($data.tgl_lahir)}{$data.tgl_lahir}{else}-{/if}</span></div>
+                                            <div><strong>Alamat:</strong> <span id="info_alamat">{if: !empty($data.alamat)}{$data.alamat}{else}-{/if}</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row" style="margin-top: 10px;">
+                            <div class="col-md-3">
+                                <div class="form-group no-margin">
+                                    <label><strong>Tanggal Pengisian PRMRJ</strong></label>
+                                    <input type="date" name="tanggal_formulir" id="tanggal_formulir" class="form-control" value="{$data.tanggal_formulir}">
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-group no-margin">
+                                    <label><strong>Dokter Penanggung Jawab (DPJP Utama)</strong></label>
+                                    <input type="text" name="nama_dokter" id="nama_dokter" list="list_dokter" class="form-control" value="{$data.nama_dokter}" placeholder="Pilih atau ketik nama dokter">
+                                    <datalist id="list_dokter">
+                                        {loop: $dokter_list}
+                                        <option value="{$value.nm_dokter}">{$value.kd_dokter} - {$value.nm_dokter}</option>
+                                        {/loop}
+                                    </datalist>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group no-margin">
+                                    <label><strong>NIP / Kode Dokter</strong></label>
+                                    <input type="text" name="nip_dokter" id="nip_dokter" class="form-control" value="{$data.nip_dokter}" placeholder="NIP/SIP Dokter">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. TABEL DIAGNOSA & DPJP (HALAMAN 1) -->
+                    <div class="panel panel-primary" style="margin-top: 15px;">
+                        <div class="panel-heading">
+                            <div class="pull-right">
+                                <button type="button" class="btn btn-xs btn-default" id="btnAddDiag"><i class="fa fa-plus"></i> Tambah Baris Diagnosa</button>
+                            </div>
+                            <h4 class="panel-title"><i class="fa fa-stethoscope"></i> 1. Diagnosa & DPJP Rawat Jalan</h4>
+                        </div>
+                        <div class="panel-body no-padding">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped" id="tblDiagnosa" style="margin-bottom: 0;">
+                                    <thead>
+                                        <tr class="bg-primary" style="color: #fff; font-size: 12px;">
+                                            <th width="3%" class="text-center" rowspan="2">No</th>
+                                            <th width="20%" rowspan="2">Diagnosa</th>
+                                            <th colspan="4" class="text-center">DPJP</th>
+                                            <th colspan="4" class="text-center">DPJP UTAMA</th>
+                                            <th width="12%" rowspan="2">Keterangan</th>
+                                            <th width="3%" class="text-center" rowspan="2">Aksi</th>
+                                        </tr>
+                                        <tr class="bg-primary" style="color: #fff; font-size: 11px;">
+                                            <th width="11%">Nama</th>
+                                            <th width="6%">Tgl Mulai</th>
+                                            <th width="6%">Tgl Akhir</th>
+                                            <th width="5%">TTD</th>
+                                            <th width="11%">Nama</th>
+                                            <th width="6%">Tgl Mulai</th>
+                                            <th width="6%">Tgl Akhir</th>
+                                            <th width="5%">TTD</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyDiagnosa">
+                                        {if: !empty($data.diagnosa_dpjp_list)}
+                                        {loop: $data.diagnosa_dpjp_list}
+                                        <tr>
+                                            <td class="text-center row-num">{$key+1}</td>
+                                            <td><input type="text" name="diag_diagnosa[]" class="form-control input-sm" value="{$value.diagnosa}" placeholder="Diagnosa"></td>
+                                            <td><input type="text" name="diag_dpjp_nama[]" class="form-control input-sm" value="{$value.dpjp_nama}" placeholder="DPJP"></td>
+                                            <td><input type="date" name="diag_dpjp_tgl_mulai[]" class="form-control input-sm" value="{$value.dpjp_tgl_mulai}"></td>
+                                            <td><input type="date" name="diag_dpjp_tgl_akhir[]" class="form-control input-sm" value="{$value.dpjp_tgl_akhir}"></td>
+                                            <td><input type="text" name="diag_dpjp_ttd[]" class="form-control input-sm" value="{$value.dpjp_ttd}" placeholder="Paraf"></td>
+                                            <td><input type="text" name="diag_dpjp_utama_nama[]" class="form-control input-sm" value="{$value.dpjp_utama_nama}" placeholder="DPJP Utama"></td>
+                                            <td><input type="date" name="diag_dpjp_utama_tgl_mulai[]" class="form-control input-sm" value="{$value.dpjp_utama_tgl_mulai}"></td>
+                                            <td><input type="date" name="diag_dpjp_utama_tgl_akhir[]" class="form-control input-sm" value="{$value.dpjp_utama_tgl_akhir}"></td>
+                                            <td><input type="text" name="diag_dpjp_utama_ttd[]" class="form-control input-sm" value="{$value.dpjp_utama_ttd}" placeholder="Paraf"></td>
+                                            <td><input type="text" name="diag_keterangan[]" class="form-control input-sm" value="{$value.keterangan}" placeholder="Keterangan"></td>
+                                            <td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-remove-row"><i class="fa fa-times"></i></button></td>
+                                        </tr>
+                                        {/loop}
+                                        {/if}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. TABEL ALERGI (HALAMAN 1) -->
+                    <div class="panel panel-danger" style="margin-top: 15px;">
+                        <div class="panel-heading">
+                            <div class="pull-right">
+                                <button type="button" class="btn btn-xs btn-default" id="btnAddAlergi"><i class="fa fa-plus"></i> Tambah Baris Alergi</button>
+                            </div>
+                            <h4 class="panel-title"><i class="fa fa-warning"></i> 2. Riwayat Alergi Pasien</h4>
+                        </div>
+                        <div class="panel-body no-padding">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped" id="tblAlergi" style="margin-bottom: 0;">
+                                    <thead>
+                                        <tr class="bg-danger" style="color: #fff;">
+                                            <th width="5%" class="text-center">No</th>
+                                            <th width="25%">Tanggal</th>
+                                            <th width="65%">Alergi (Obat / Makanan / Debu / Zat Lain)</th>
+                                            <th width="5%" class="text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyAlergi">
+                                        {if: !empty($data.riwayat_alergi_list)}
+                                        {loop: $data.riwayat_alergi_list}
+                                        <tr>
+                                            <td class="text-center row-num">{$key+1}</td>
+                                            <td><input type="date" name="alergi_tanggal[]" class="form-control input-sm" value="{$value.tanggal}"></td>
+                                            <td><input type="text" name="alergi_nama[]" class="form-control input-sm" value="{$value.alergi}" placeholder="Nama alergi (contoh: Amoksisilin, Udang, dsb)"></td>
+                                            <td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-remove-row"><i class="fa fa-times"></i></button></td>
+                                        </tr>
+                                        {/loop}
+                                        {/if}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. TABEL DIAGNOSA RAWAT INAP & OPERASI (HALAMAN 2) -->
+                    <div class="row" style="margin-top: 15px;">
+                        <div class="col-md-6">
+                            <div class="panel panel-info">
+                                <div class="panel-heading">
+                                    <div class="pull-right">
+                                        <button type="button" class="btn btn-xs btn-default" id="btnAddRanap"><i class="fa fa-plus"></i> Tambah</button>
+                                    </div>
+                                    <h4 class="panel-title"><i class="fa fa-bed"></i> 3. Diagnosa Rawat Inap (Jika Ada)</h4>
+                                </div>
+                                <div class="panel-body no-padding">
+                                    <table class="table table-bordered table-striped" id="tblRanap" style="margin-bottom: 0;">
+                                        <thead>
+                                            <tr class="bg-info" style="font-size: 12px;">
+                                                <th width="7%" class="text-center">No</th>
+                                                <th width="35%">Tanggal</th>
+                                                <th width="51%">Diagnosa Rawat Inap</th>
+                                                <th width="7%" class="text-center">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbodyRanap">
+                                            {if: !empty($data.diagnosa_ranap_list)}
+                                            {loop: $data.diagnosa_ranap_list}
+                                            <tr>
+                                                <td class="text-center row-num">{$key+1}</td>
+                                                <td><input type="date" name="ranap_tanggal[]" class="form-control input-sm" value="{$value.tanggal}"></td>
+                                                <td><input type="text" name="ranap_diagnosa[]" class="form-control input-sm" value="{$value.diagnosa}" placeholder="Diagnosa saat rawat inap"></td>
+                                                <td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-remove-row"><i class="fa fa-times"></i></button></td>
+                                            </tr>
+                                            {/loop}
+                                            {/if}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="panel panel-warning">
+                                <div class="panel-heading">
+                                    <div class="pull-right">
+                                        <button type="button" class="btn btn-xs btn-default" id="btnAddOperasi"><i class="fa fa-plus"></i> Tambah</button>
+                                    </div>
+                                    <h4 class="panel-title"><i class="fa fa-heartbeat"></i> 4. Operasi / Tindakan</h4>
+                                </div>
+                                <div class="panel-body no-padding">
+                                    <table class="table table-bordered table-striped" id="tblOperasi" style="margin-bottom: 0;">
+                                        <thead>
+                                            <tr class="bg-warning" style="font-size: 12px;">
+                                                <th width="7%" class="text-center">No</th>
+                                                <th width="35%">Tanggal</th>
+                                                <th width="51%">Operasi / Tindakan</th>
+                                                <th width="7%" class="text-center">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbodyOperasi">
+                                            {if: !empty($data.operasi_tindakan_list)}
+                                            {loop: $data.operasi_tindakan_list}
+                                            <tr>
+                                                <td class="text-center row-num">{$key+1}</td>
+                                                <td><input type="date" name="operasi_tanggal[]" class="form-control input-sm" value="{$value.tanggal}"></td>
+                                                <td><input type="text" name="operasi_tindakan[]" class="form-control input-sm" value="{$value.operasi_tindakan}" placeholder="Nama tindakan/operasi bedah"></td>
+                                                <td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-remove-row"><i class="fa fa-times"></i></button></td>
+                                            </tr>
+                                            {/loop}
+                                            {/if}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. TABEL OBAT-OBATAN (HALAMAN 2) -->
+                    <div class="panel panel-success" style="margin-top: 15px;">
+                        <div class="panel-heading">
+                            <div class="pull-right">
+                                <button type="button" class="btn btn-xs btn-default" id="btnAddObat"><i class="fa fa-plus"></i> Tambah Baris Obat</button>
+                            </div>
+                            <h4 class="panel-title"><i class="fa fa-medkit"></i> 5. Obat-Obatan</h4>
+                        </div>
+                        <div class="panel-body no-padding">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped" id="tblObat" style="margin-bottom: 0;">
+                                    <thead>
+                                        <tr class="bg-success" style="color: #fff; font-size: 12px;">
+                                            <th width="4%" class="text-center">No</th>
+                                            <th width="16%">Tanggal Mulai</th>
+                                            <th width="34%">Nama Obat</th>
+                                            <th width="15%">Dosis</th>
+                                            <th width="15%">Frekuensi</th>
+                                            <th width="16%">Tanggal Selesai</th>
+                                            <th width="4%" class="text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyObat">
+                                        {if: !empty($data.obat_obatan_list)}
+                                        {loop: $data.obat_obatan_list}
+                                        <tr>
+                                            <td class="text-center row-num">{$key+1}</td>
+                                            <td><input type="date" name="obat_tgl_mulai[]" class="form-control input-sm" value="{$value.tanggal_mulai}"></td>
+                                            <td><input type="text" name="obat_nama[]" class="form-control input-sm" value="{$value.nama_obat}" placeholder="Nama obat"></td>
+                                            <td><input type="text" name="obat_dosis[]" class="form-control input-sm" value="{$value.dosis}" placeholder="Dosis (misal: 500mg)"></td>
+                                            <td><input type="text" name="obat_frekuensi[]" class="form-control input-sm" value="{$value.frekuensi}" placeholder="Frekuensi (misal: 3x1 sehari)"></td>
+                                            <td><input type="date" name="obat_tgl_selesai[]" class="form-control input-sm" value="{$value.tanggal_selesai}"></td>
+                                            <td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-remove-row"><i class="fa fa-times"></i></button></td>
+                                        </tr>
+                                        {/loop}
+                                        {/if}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Catatan Tambahan -->
+                    <div class="panel panel-default" style="margin-top: 15px;">
+                        <div class="panel-heading">
+                            <h4 class="panel-title"><i class="fa fa-sticky-note"></i> Catatan Tambahan Rekam Medis</h4>
+                        </div>
+                        <div class="panel-body">
+                            <div class="form-group no-margin">
+                                <textarea name="keterangan_tambahan" class="form-control" rows="2" placeholder="Catatan khusus atau keterangan tambahan PRMRJ...">{$data.keterangan_tambahan}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Aksi Simpan -->
+                    <div class="well well-sm" style="margin-top: 20px; text-align: right;">
+                        <a href="{?=url([ADMIN, 'form_rme', 'prmrjmanage'])?}" class="btn btn-default"><i class="fa fa-arrow-left"></i> Kembali</a>
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan Data PRMRJ</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$(document).ready(function() {
+
+    // Helper update row numbers
+    function updateRowNums(tbody) {
+        $(tbody).find('tr').each(function(idx) {
+            $(this).find('.row-num').text(idx + 1);
+        });
+    }
+
+    // Remove row generic
+    $(document).on('click', '.btn-remove-row', function() {
+        var tbody = $(this).closest('tbody');
+        $(this).closest('tr').remove();
+        updateRowNums(tbody);
+    });
+
+    // 1. Add Row Diagnosa
+    $('#btnAddDiag').on('click', function() {
+        var row = '<tr>' +
+            '<td class="text-center row-num"></td>' +
+            '<td><input type="text" name="diag_diagnosa[]" class="form-control input-sm" placeholder="Diagnosa"></td>' +
+            '<td><input type="text" name="diag_dpjp_nama[]" class="form-control input-sm" placeholder="DPJP"></td>' +
+            '<td><input type="date" name="diag_dpjp_tgl_mulai[]" class="form-control input-sm"></td>' +
+            '<td><input type="date" name="diag_dpjp_tgl_akhir[]" class="form-control input-sm"></td>' +
+            '<td><input type="text" name="diag_dpjp_ttd[]" class="form-control input-sm" placeholder="Paraf"></td>' +
+            '<td><input type="text" name="diag_dpjp_utama_nama[]" class="form-control input-sm" placeholder="DPJP Utama"></td>' +
+            '<td><input type="date" name="diag_dpjp_utama_tgl_mulai[]" class="form-control input-sm"></td>' +
+            '<td><input type="date" name="diag_dpjp_utama_tgl_akhir[]" class="form-control input-sm"></td>' +
+            '<td><input type="text" name="diag_dpjp_utama_ttd[]" class="form-control input-sm" placeholder="Paraf"></td>' +
+            '<td><input type="text" name="diag_keterangan[]" class="form-control input-sm" placeholder="Keterangan"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-remove-row"><i class="fa fa-times"></i></button></td>' +
+            '</tr>';
+        $('#tbodyDiagnosa').append(row);
+        updateRowNums('#tbodyDiagnosa');
+    });
+
+    // 2. Add Row Alergi
+    $('#btnAddAlergi').on('click', function() {
+        var today = new Date().toISOString().split('T')[0];
+        var row = '<tr>' +
+            '<td class="text-center row-num"></td>' +
+            '<td><input type="date" name="alergi_tanggal[]" class="form-control input-sm" value="' + today + '"></td>' +
+            '<td><input type="text" name="alergi_nama[]" class="form-control input-sm" placeholder="Nama alergi (Obat/Makanan/Zat)"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-remove-row"><i class="fa fa-times"></i></button></td>' +
+            '</tr>';
+        $('#tbodyAlergi').append(row);
+        updateRowNums('#tbodyAlergi');
+    });
+
+    // 3. Add Row Ranap
+    $('#btnAddRanap').on('click', function() {
+        var today = new Date().toISOString().split('T')[0];
+        var row = '<tr>' +
+            '<td class="text-center row-num"></td>' +
+            '<td><input type="date" name="ranap_tanggal[]" class="form-control input-sm" value="' + today + '"></td>' +
+            '<td><input type="text" name="ranap_diagnosa[]" class="form-control input-sm" placeholder="Diagnosa saat rawat inap"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-remove-row"><i class="fa fa-times"></i></button></td>' +
+            '</tr>';
+        $('#tbodyRanap').append(row);
+        updateRowNums('#tbodyRanap');
+    });
+
+    // 4. Add Row Operasi
+    $('#btnAddOperasi').on('click', function() {
+        var today = new Date().toISOString().split('T')[0];
+        var row = '<tr>' +
+            '<td class="text-center row-num"></td>' +
+            '<td><input type="date" name="operasi_tanggal[]" class="form-control input-sm" value="' + today + '"></td>' +
+            '<td><input type="text" name="operasi_tindakan[]" class="form-control input-sm" placeholder="Nama tindakan/operasi bedah"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-remove-row"><i class="fa fa-times"></i></button></td>' +
+            '</tr>';
+        $('#tbodyOperasi').append(row);
+        updateRowNums('#tbodyOperasi');
+    });
+
+    // 5. Add Row Obat
+    $('#btnAddObat').on('click', function() {
+        var today = new Date().toISOString().split('T')[0];
+        var row = '<tr>' +
+            '<td class="text-center row-num"></td>' +
+            '<td><input type="date" name="obat_tgl_mulai[]" class="form-control input-sm" value="' + today + '"></td>' +
+            '<td><input type="text" name="obat_nama[]" class="form-control input-sm" placeholder="Nama obat"></td>' +
+            '<td><input type="text" name="obat_dosis[]" class="form-control input-sm" placeholder="Dosis"></td>' +
+            '<td><input type="text" name="obat_frekuensi[]" class="form-control input-sm" placeholder="Frekuensi"></td>' +
+            '<td><input type="date" name="obat_tgl_selesai[]" class="form-control input-sm"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-remove-row"><i class="fa fa-times"></i></button></td>' +
+            '</tr>';
+        $('#tbodyObat').append(row);
+        updateRowNums('#tbodyObat');
+    });
+
+    // Initial check: if empty rows on create mode, provide at least 2 default empty rows for Diagnosa, 1 for Alergi, 1 for Obat
+    if ($('#tbodyDiagnosa tr').length === 0) {
+        $('#btnAddDiag').trigger('click');
+        $('#btnAddDiag').trigger('click');
+    }
+    if ($('#tbodyAlergi tr').length === 0) {
+        $('#btnAddAlergi').trigger('click');
+    }
+    if ($('#tbodyRanap tr').length === 0) {
+        $('#btnAddRanap').trigger('click');
+    }
+    if ($('#tbodyOperasi tr').length === 0) {
+        $('#btnAddOperasi').trigger('click');
+    }
+    if ($('#tbodyObat tr').length === 0) {
+        $('#btnAddObat').trigger('click');
+        $('#btnAddObat').trigger('click');
+    }
+
+    // AJAX Cari Pasien
+    $('#btnCariPasien').on('click', function() {
+        var nr = $('#no_rawat').val().trim();
+        if (!nr) {
+            alert('Silakan masukkan No. Rawat atau No. RM terlebih dahulu!');
+            return;
+        }
+
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url: '{?=url([ADMIN, "form_rme", "prmrjform"])?}',
+            type: 'GET',
+            data: { ajax_patient: 1, no_rawat: nr },
+            dataType: 'json',
+            success: function(res) {
+                btn.prop('disabled', false).html('<i class="fa fa-search"></i> Cari');
+                if (res && res.success) {
+                    $('#no_rawat').val(res.no_rawat);
+                    $('#no_rkm_medis').val(res.no_rkm_medis);
+                    $('#info_nm_pasien').text(res.nm_pasien || '-');
+                    $('#info_no_rkm_medis').text(res.no_rkm_medis || '-');
+                    $('#info_jk').text(res.jk === 'L' ? 'Laki-Laki' : (res.jk === 'P' ? 'Perempuan' : '-'));
+                    var ttl = (res.tmp_lahir ? res.tmp_lahir + ', ' : '') + (res.tgl_lahir || '-');
+                    $('#info_ttl').text(ttl);
+                    $('#info_alamat').text(res.alamat || '-');
+
+                    if (res.nm_dokter && !$('#nama_dokter').val()) {
+                        $('#nama_dokter').val(res.nm_dokter);
+                        $('#nip_dokter').val(res.kd_dokter || '');
+                    }
+                } else {
+                    alert('Data pasien dengan No. Rawat/RM tersebut tidak ditemukan!');
+                }
+            },
+            error: function() {
+                btn.prop('disabled', false).html('<i class="fa fa-search"></i> Cari');
+                alert('Gagal menghubungi server untuk pencarian pasien!');
+            }
+        });
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $('#btnCariPasien').trigger('click');
+        }
+    });
+
+});
+</script>

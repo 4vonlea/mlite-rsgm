@@ -4,12 +4,12 @@
             <div class="panel-heading">
                 <h3 class="panel-title">Form Ringkasan Masuk dan Keluar Rumah Sakit (RM.RI 02)</h3>
                 <ul class="nav nav-tabs">
-                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri02manage'])?}">Kelola Data</a></li>
-                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri02form'])?}">Form Data</a></li>
+                    <li><a href="{?=url([ADMIN, 'form_rme', 'ri02manage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'form_rme', 'ri02form'])?}">Form Data</a></li>
                 </ul>
             </div>
             <div class="panel-body">
-                <form action="{?=url([ADMIN, 'update_bmt', 'ri02save'])?}" method="POST">
+                <form action="{?=url([ADMIN, 'form_rme', 'ri02save'])?}" method="POST">
                     <input type="hidden" name="id" value="{$data.id}">
                     <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
                     
@@ -202,7 +202,7 @@
                     </fieldset>
 
                     <button type="submit" class="btn btn-primary">Simpan</button>
-                    <a href="{?=url([ADMIN, 'update_bmt', 'ri02manage'])?}" class="btn btn-default">Kembali</a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'ri02manage'])?}" class="btn btn-default">Kembali</a>
                 </form>
             </div>
         </div>
@@ -214,7 +214,7 @@
     $(document).ready(function() {
         var s2opts = {
             ajax: {
-                url: "{?=url([ADMIN, 'update_bmt', 'ri02form'])?}&ajax_pegawai=1",
+                url: "{?=url([ADMIN, 'form_rme', 'ri02form'])?}&ajax_pegawai=1",
                 dataType: 'json', delay: 250,
                 processResults: function (data) { return { results: data.results }; },
                 cache: true
@@ -243,7 +243,7 @@
         var no_rawat = $('#no_rawat').val();
         if (no_rawat) {
             $.ajax({
-                url: '{?=url([ADMIN, "update_bmt", "ri02form"])?}',
+                url: '{?=url([ADMIN, "form_rme", "ri02form"])?}',
                 type: 'GET',
                 data: { ajax_patient: 1, no_rawat: no_rawat, t: '{?=$_SESSION["token"]?}' },
                 dataType: 'json',

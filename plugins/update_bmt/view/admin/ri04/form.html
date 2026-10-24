@@ -1,12 +1,12 @@
 <article class="row">
     <div class="col-md-12">
-        <form action="{?=url([ADMIN, 'update_bmt', 'ri04save'])?}" method="POST" id="form_ri04">
+        <form action="{?=url([ADMIN, 'form_rme', 'ri04save'])?}" method="POST" id="form_ri04">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h3 class="panel-title">Form Transfer Pasien Internal (RM.RI 04)</h3>
                     <ul class="nav nav-tabs">
-                        <li><a href="{?=url([ADMIN, 'update_bmt', 'ri04manage'])?}">Kelola Data</a></li>
-                        <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri04form'])?}">Tambah Data</a></li>
+                        <li><a href="{?=url([ADMIN, 'form_rme', 'ri04manage'])?}">Kelola Data</a></li>
+                        <li class="active"><a href="{?=url([ADMIN, 'form_rme', 'ri04form'])?}">Tambah Data</a></li>
                     </ul>
                 </div>
                 <div class="panel-body">
@@ -185,7 +185,7 @@
                     <input type="hidden" name="json_dokumen_disertakan" id="json_dokumen_disertakan" value="">
                     <input type="hidden" name="json_informasi_diberikan" id="json_informasi_diberikan" value="">
                     <button type="button" id="btn_simpan_ri04" class="btn btn-primary">Simpan</button>
-                    <a href="{?=url([ADMIN, 'update_bmt', 'ri04manage'])?}" class="btn btn-default">Kembali</a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'ri04manage'])?}" class="btn btn-default">Kembali</a>
                 </div>
             </div>
         </form>
@@ -198,7 +198,7 @@
     $(document).ready(function() {
         var s2opts = {
             ajax: {
-                url: "{?=url([ADMIN, 'update_bmt', 'ri04form'])?}&ajax_pegawai=1",
+                url: "{?=url([ADMIN, 'form_rme', 'ri04form'])?}&ajax_pegawai=1",
                 dataType: 'json', delay: 250,
                 processResults: function (data) { return { results: data.results }; },
                 cache: true
@@ -219,7 +219,7 @@
         var no_rawat = $('#no_rawat').val();
         if (no_rawat) {
             $.ajax({
-                url: '{?=url([ADMIN, "update_bmt", "ri04form"])?}',
+                url: '{?=url([ADMIN, "form_rme", "ri04form"])?}',
                 type: 'GET',
                 data: { ajax_patient: 1, no_rawat: no_rawat, t: '{?=$_SESSION["token"]?}' },
                 dataType: 'json',

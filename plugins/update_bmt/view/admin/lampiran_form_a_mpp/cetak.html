@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>LAMPIRAN - FORM A MANAJER PELAYANAN PASIEN</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 8mm 10mm 8mm 10mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            color: #000;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 20px 0;
+        }
+        .page {
+            width: 195mm;
+            min-height: 275mm;
+            margin: 0 auto 20px auto;
+            background: #fff;
+            padding: 0;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+
+        /* Toolbar Cetak di Layar */
+        .no-print-toolbar {
+            width: 195mm;
+            margin: 0 auto 15px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2c3e50;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 4px;
+        }
+        .btn-toolbar {
+            padding: 6px 14px;
+            font-size: 13px;
+            border-radius: 3px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-print:hover { background: #219150; }
+        .btn-pdf { background: #e74c3c; color: #fff; }
+        .btn-pdf:hover { background: #c0392b; }
+        .btn-close { background: #95a5a6; color: #fff; }
+        .btn-close:hover { background: #7f8c8d; }
+
+        /* Tabel Utama */
+        .form-container {
+            width: 100%;
+            border: 2px solid #000;
+            border-collapse: collapse;
+        }
+
+        /* Header Table */
+        .table-header {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 2px solid #000;
+        }
+        .table-header td {
+            vertical-align: middle;
+            padding: 4px 6px;
+        }
+        .header-left {
+            width: 58%;
+            border-right: 2px solid #000;
+            text-align: center;
+            padding: 4px 6px;
+        }
+        .header-right {
+            width: 42%;
+            font-size: 11px;
+            padding: 6px 10px;
+        }
+
+        /* Kotak Digit No RM */
+        .rm-box-group {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .rm-box {
+            display: inline-block;
+            width: 17px;
+            height: 18px;
+            border: 1.5px solid #000;
+            text-align: center;
+            line-height: 18px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: -1px;
+            background: #fff;
+        }
+        .rm-separator {
+            display: inline-block;
+            width: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Judul Dokumen */
+        .doc-title-row {
+            width: 100%;
+            text-align: center;
+            padding: 6px 0;
+            border-bottom: 2px solid #000;
+        }
+        .doc-title-main {
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+        .doc-title-sub {
+            font-size: 13px;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        /* Tabel Kolom Konten */
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .content-table th {
+            border: 1.5px solid #000;
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            padding: 6px 4px;
+            background: #fff;
+        }
+        .content-table td {
+            border: 1.5px solid #000;
+            vertical-align: top;
+            padding: 8px 10px;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .col-tgl { width: 14%; text-align: center; font-weight: bold; }
+        .col-mpp { width: 16%; text-align: center; font-weight: bold; }
+        .col-catatan { width: 70%; text-align: left; }
+
+        .checkbox-item {
+            margin: 4px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .chk-box {
+            display: inline-block;
+            width: 13px;
+            height: 13px;
+            border: 1.5px solid #000;
+            text-align: center;
+            line-height: 11px;
+            font-size: 11px;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .dotted-fill {
+            display: inline-block;
+            border-bottom: 1px dotted #000;
+            min-width: 250px;
+            padding-left: 5px;
+            font-weight: bold;
+        }
+
+        .circled-val {
+            border: 1.5px solid #000;
+            border-radius: 12px;
+            padding: 1px 7px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .uncircled-val {
+            padding: 1px 4px;
+            color: #555;
+            display: inline-block;
+        }
+
+        /* Catatan Kaki */
+        .footer-note-wrap {
+            width: 100%;
+            margin-top: 6px;
+            text-align: right;
+            padding-right: 5px;
+        }
+        .footer-note {
+            font-size: 8.5px;
+            font-style: italic;
+            color: #d00;
+        }
+        .footer-note-box {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            border: 1px solid #777;
+            margin-left: 3px;
+        }
+
+        .page-footer {
+            width: 100%;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        .page-break {
+            page-break-after: always;
+            break-after: page;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                width: 100%;
+                margin: 0;
+                min-height: auto;
+            }
+            .no-print, .no-print-toolbar {
+                display: none !important;
+            }
+            .page-break {
+                page-break-after: always;
+                break-after: page;
+            }
+        }
+    </style>
+</head>
+<body {if: empty($is_mpdf)}onload="if(window.location.search.indexOf('noprint=1')===-1)window.print()"{/if}>
+
+    <!-- Toolbar Layar (Tidak ikut tercetak) -->
+    <div class="no-print-toolbar no-print">
+        <div style="font-size: 14px; font-weight: bold;">
+            Preview Dokumen: Form A Manajer Pelayanan Pasien ({$data.no_rawat})
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button onclick="window.print()" class="btn-toolbar btn-print">
+                &#128438; Cetak Dokumen
+            </button>
+            <a href="{?=url([ADMIN, 'form_rme', 'formamppcetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
+                &#128196; Download PDF
+            </a>
+            <button onclick="window.close()" class="btn-toolbar btn-close">
+                &#10006; Tutup
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- HALAMAN 1 : SKRINING & ASESMEN MPP        -->
+    <!-- ========================================== -->
+    <div class="page page-break">
+        <div class="form-container">
+            <!-- Header KOP & Identitas Pasien -->
+            <table class="table-header">
+                <tr>
+                    <td class="header-left">
+                        <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop Surat RSGM Gusti Hasan Aman" style="width: 100%; max-height: 72px; object-fit: contain; display: block;">
+                    </td>
+                    <td class="header-right">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <tr>
+                                <td style="width: 85px; padding: 2px 0;"><strong>NO. RM</strong></td>
+                                <td style="width: 10px; padding: 2px 0;">:</td>
+                                <td style="padding: 2px 0;">
+                                    <div class="rm-box-group">
+                                        <span class="rm-box">{$data.rm0}</span><span class="rm-box">{$data.rm1}</span>
+                                        <span class="rm-separator"></span>
+                                        <span class="rm-box">{$data.rm2}</span><span class="rm-box">{$data.rm3}</span>
+                                        <span class="rm-separator"></span>
+                                        <span class="rm-box">{$data.rm4}</span><span class="rm-box">{$data.rm5}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0;"><strong>Nama Pasien</strong></td>
+                                <td style="padding: 2px 0;">:</td>
+                                <td style="padding: 2px 0; border-bottom: 1px dotted #888;">
+                                    <strong>{$data.nm_pasien}</strong> &nbsp; <span style="font-weight: bold; float: right;">{$data.jk_label}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0;"><strong>Tanggal Lahir</strong></td>
+                                <td style="padding: 2px 0;">:</td>
+                                <td style="padding: 2px 0; border-bottom: 1px dotted #888;">
+                                    {$data.tanggal_lahir_indo}
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Judul Dokumen -->
+            <div class="doc-title-row">
+                <div class="doc-title-main">FORM A</div>
+                <div class="doc-title-sub">MANAJER PELAYANAN PASIEN</div>
+            </div>
+
+            <!-- Tabel Konten Halaman 1 -->
+            <table class="content-table">
+                <thead>
+                    <tr>
+                        <th class="col-tgl">Tgl / Hari</th>
+                        <th class="col-mpp">Nama &amp;<br>TTD MPP</th>
+                        <th class="col-catatan">Catatan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="col-tgl" rowspan="2">
+                            {$data.tgl_hari}
+                        </td>
+                        <td class="col-mpp" rowspan="2">
+                            {$data.nama_mpp}
+                            {if: !empty($data.nip_mpp)}<br><small style="font-size:9px;">NIP: {$data.nip_mpp}</small>{/if}
+                        </td>
+                        <td class="col-catatan">
+                            <strong>I. Identifikasi Pasien/Skrining Pasien <i>(beri tanda checklist &check;)</i></strong>
+                            
+                            <div style="margin-top: 8px;">
+                                <div class="checkbox-item">
+                                    <span class="chk-box">{if: $data.skrining_risiko_tinggi == 'Ya'}&#10003;{/if}</span>
+                                    <span>Pasien dengan risiko tinggi</span>
+                                </div>
+                                <div class="checkbox-item">
+                                    <span class="chk-box">{if: $data.skrining_potensi_komplain == 'Ya'}&#10003;{/if}</span>
+                                    <span>Potensi komplain tinggi : pejabat, pasien dg Tk pendidikan tinggi dan pasien yang tidak kooperatif</span>
+                                </div>
+                                <div class="checkbox-item">
+                                    <span class="chk-box">{if: $data.skrining_kognitif_rendah == 'Ya'}&#10003;{/if}</span>
+                                    <span>Pasien dengan fungsi kognitif rendah</span>
+                                </div>
+                                <div class="checkbox-item">
+                                    <span class="chk-box">{if: $data.skrining_penyakit_kronis == 'Ya'}&#10003;{/if}</span>
+                                    <span>Kasus penyakit kronis / Terminal lebih dari 2 dokter spesialis disertai kondisi akut, Katastropik (mendadak memburuk)</span>
+                                </div>
+                                <div class="checkbox-item">
+                                    <span class="chk-box">{if: $data.skrining_gangguan_mental == 'Ya'}&#10003;{/if}</span>
+                                    <span>Riwayat gangguan mental, upaya bunuh diri, krisis keluarga, isu sosial seperti terlantar, tinggal sendiri, narkoba</span>
+                                </div>
+                                <div class="checkbox-item">
+                                    <span class="chk-box">{if: $data.skrining_biaya_tinggi == 'Ya'}&#10003;{/if}</span>
+                                    <span>Perkiraan asuhan biaya tinggi / high cost</span>
+                                </div>
+                                <div class="checkbox-item">
+                                    <span class="chk-box">{if: $data.skrining_sistem_pembiayaan == 'Ya'}&#10003;{/if}</span>
+                                    <span>Kemungkinan system pembiayaan yang komplek (2 asuransi)</span>
+                                </div>
+                                <div class="checkbox-item">
+                                    <span class="chk-box">{if: $data.skrining_los_memanjang == 'Ya'}&#10003;{/if}</span>
+                                    <span>Kasus yang melebihi rata-rata lama dirawat / los memanjang</span>
+                                </div>
+                                <div class="checkbox-item">
+                                    <span class="chk-box">{if: $data.skrining_rencana_pemulangan == 'Ya'}&#10003;{/if}</span>
+                                    <span>Kasus yang diidentifikasi rencana pemulangannya penting/beresiko atau membutuhkan kontinuitas pelayanan</span>
+                                </div>
+                                <div class="checkbox-item">
+                                    <span class="chk-box">{if: $data.skrining_multiple_diagnosis == 'Ya'}&#10003;{/if}</span>
+                                    <span>Multiple diagnosis yang membutuhkan penanganan khusus</span>
+                                </div>
+                                <div class="checkbox-item">
+                                    <span class="chk-box">{if: $data.skrining_kasus_kompleks == 'Ya'}&#10003;{/if}</span>
+                                    <span>Pasien dengan kasus kompleks / rumit, misalnya pasien amputasi</span>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 8px; font-size: 9px; font-style: italic; color: #333;">
+                                * bila hasil skrining &gt;2 checklist dipertimbangkan untuk dilakukan asesmen MPP
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="col-catatan">
+                            <strong>II. Assesment MPP <i>(lingkari &amp; isi sesuai kondisi pasien)</i></strong>
+                            
+                            <table style="width: 100%; border: none; margin-top: 8px; font-size: 11px; line-height: 1.8;">
+                                <tr>
+                                    <td style="width: 25px; border:none; padding:1px 0;">1.</td>
+                                    <td style="width: 140px; border:none; padding:1px 0;">Fisik fungsional</td>
+                                    <td style="width: 10px; border:none; padding:1px 0;">:</td>
+                                    <td style="border:none; padding:1px 0;">
+                                        <span class="{if: $data.fisik_fungsional == 'Partial care'}circled-val{else}uncircled-val{/if}">Partial</span> / 
+                                        <span class="{if: $data.fisik_fungsional == 'Total care'}circled-val{else}uncircled-val{/if}">Total care</span>
+                                        {if: $data.fisik_fungsional == 'Mandiri'} / <span class="circled-val">Mandiri</span>{/if}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none; padding:1px 0;">2.</td>
+                                    <td style="border:none; padding:1px 0;">Kognitif</td>
+                                    <td style="border:none; padding:1px 0;">:</td>
+                                    <td style="border:none; padding:1px 0;">
+                                        <span class="{if: $data.kognitif == 'Kooperatif'}circled-val{else}uncircled-val{/if}">Kooperatif</span> / 
+                                        <span class="{if: $data.kognitif == 'Tidak kooperatif'}circled-val{else}uncircled-val{/if}">Tidak kooperatif</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none; padding:1px 0;">3.</td>
+                                    <td style="border:none; padding:1px 0;">Pemahaman tentang kesehatan</td>
+                                    <td style="border:none; padding:1px 0;">:</td>
+                                    <td style="border:none; padding:1px 0;">
+                                        <span class="{if: $data.pemahaman_kesehatan == 'Kurang'}circled-val{else}uncircled-val{/if}">kurang</span> / 
+                                        <span class="{if: $data.pemahaman_kesehatan == 'Cukup'}circled-val{else}uncircled-val{/if}">cukup</span> / 
+                                        <span class="{if: $data.pemahaman_kesehatan == 'Baik'}circled-val{else}uncircled-val{/if}">baik</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none; padding:1px 0;">4.</td>
+                                    <td style="border:none; padding:1px 0;">Kemampuan dalam menerima perubahan</td>
+                                    <td style="border:none; padding:1px 0;">:</td>
+                                    <td style="border:none; padding:1px 0;">
+                                        <span class="{if: $data.kemampuan_menerima_perubahan == 'Mampu'}circled-val{else}uncircled-val{/if}">mampu</span> / 
+                                        <span class="{if: $data.kemampuan_menerima_perubahan == 'Tidak mampu'}circled-val{else}uncircled-val{/if}">tidak mampu</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none; padding:1px 0;">5.</td>
+                                    <td style="border:none; padding:1px 0;">Dukungan Keluarga</td>
+                                    <td style="border:none; padding:1px 0;">:</td>
+                                    <td style="border:none; padding:1px 0;">
+                                        <span class="{if: $data.dukungan_keluarga == 'Ada'}circled-val{else}uncircled-val{/if}">ada</span> / 
+                                        <span class="{if: $data.dukungan_keluarga == 'Tidak'}circled-val{else}uncircled-val{/if}">tidak</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none; padding:1px 0;">6.</td>
+                                    <td style="border:none; padding:1px 0;">Kepatuhan Pasien</td>
+                                    <td style="border:none; padding:1px 0;">:</td>
+                                    <td style="border:none; padding:1px 0;">
+                                        <span class="{if: $data.kepatuhan_pasien == 'Ya'}circled-val{else}uncircled-val{/if}">ya</span> / 
+                                        <span class="{if: $data.kepatuhan_pasien == 'Tidak'}circled-val{else}uncircled-val{/if}">tidak</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none; padding:1px 0;">7.</td>
+                                    <td style="border:none; padding:1px 0;">Perencanaan Lanjutan</td>
+                                    <td style="border:none; padding:1px 0;">:</td>
+                                    <td style="border:none; padding:1px 0;">
+                                        dirujuk kekomunitas <span class="dotted-fill">{if: !empty($data.perencanaan_lanjutan)}{$data.perencanaan_lanjutan}{else}&nbsp;{/if}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none; padding:1px 0;">8.</td>
+                                    <td style="border:none; padding:1px 0;">Finansial / status asuransi</td>
+                                    <td style="border:none; padding:1px 0;">:</td>
+                                    <td style="border:none; padding:1px 0;">
+                                        <span class="{if: $data.finansial_status == 'PBI'}circled-val{else}uncircled-val{/if}">PBI</span> / 
+                                        <span class="{if: $data.finansial_status == 'NPBI'}circled-val{else}uncircled-val{/if}">NPBI</span> / 
+                                        <span class="{if: $data.finansial_status == 'KSO'}circled-val{else}uncircled-val{/if}">KSO</span> / 
+                                        <span class="{if: $data.finansial_status == 'UMUM'}circled-val{else}uncircled-val{/if}">UMUM</span> / 
+                                        <span class="{if: $data.finansial_status == 'JR'}circled-val{else}uncircled-val{/if}">JR</span> / 
+                                        <span class="{if: $data.finansial_status == 'JKMM'}circled-val{else}uncircled-val{/if}">JKMM</span> / 
+                                        <span class="{if: $data.finansial_status == 'BIAKES'}circled-val{else}uncircled-val{/if}">BIAKES</span> / 
+                                        <span class="{if: $data.finansial_status == 'JAMPERSAL'}circled-val{else}uncircled-val{/if}">JAMPERSAL</span>
+                                        {if: !empty($data.finansial_custom)} / <span class="circled-val">{$data.finansial_custom}</span>{/if}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none; padding:1px 0;">9.</td>
+                                    <td style="border:none; padding:1px 0;">Lain-lain</td>
+                                    <td style="border:none; padding:1px 0;">:</td>
+                                    <td style="border:none; padding:1px 0;">
+                                        <span class="dotted-fill" style="width: 100%; min-width: 300px;">{if: !empty($data.asesmen_lain_lain)}{$data.asesmen_lain_lain}{else}&nbsp;{/if}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer Halaman 1 -->
+        <div class="footer-note-wrap">
+            <span class="footer-note">
+                Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+            </span>
+            <span class="footer-note-box"></span>
+        </div>
+        <div class="page-footer">
+            <div>RSGM/Ed-Rev/02/2023</div>
+            <div>RM.RI Lampiran</div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- HALAMAN 2 : MASALAH, PERENCANAAN & TTD     -->
+    <!-- ========================================== -->
+    <div class="page">
+        <div class="form-container">
+            <!-- Header KOP & Identitas Pasien Halaman 2 -->
+            <table class="table-header">
+                <tr>
+                    <td class="header-left">
+                        <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop Surat RSGM Gusti Hasan Aman" style="width: 100%; max-height: 72px; object-fit: contain; display: block;">
+                    </td>
+                    <td class="header-right">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <tr>
+                                <td style="width: 85px; padding: 2px 0;"><strong>NO. RM</strong></td>
+                                <td style="width: 10px; padding: 2px 0;">:</td>
+                                <td style="padding: 2px 0;">
+                                    <div class="rm-box-group">
+                                        <span class="rm-box">{$data.rm0}</span><span class="rm-box">{$data.rm1}</span>
+                                        <span class="rm-separator"></span>
+                                        <span class="rm-box">{$data.rm2}</span><span class="rm-box">{$data.rm3}</span>
+                                        <span class="rm-separator"></span>
+                                        <span class="rm-box">{$data.rm4}</span><span class="rm-box">{$data.rm5}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0;"><strong>Nama Pasien</strong></td>
+                                <td style="padding: 2px 0;">:</td>
+                                <td style="padding: 2px 0; border-bottom: 1px dotted #888;">
+                                    <strong>{$data.nm_pasien}</strong> &nbsp; <span style="font-weight: bold; float: right;">{$data.jk_label}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0;"><strong>Tanggal Lahir</strong></td>
+                                <td style="padding: 2px 0;">:</td>
+                                <td style="padding: 2px 0; border-bottom: 1px dotted #888;">
+                                    {$data.tanggal_lahir_indo}
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Tabel Konten Halaman 2 -->
+            <table class="content-table">
+                <tbody>
+                    <tr>
+                        <td class="col-tgl" rowspan="2" style="width: 14%;">
+                            {$data.tgl_hari}
+                        </td>
+                        <td class="col-mpp" rowspan="2" style="width: 16%;">
+                            {$data.nama_mpp}
+                            {if: !empty($data.nip_mpp)}<br><small style="font-size:9px;">NIP: {$data.nip_mpp}</small>{/if}
+                        </td>
+                        <td class="col-catatan" style="width: 70%;">
+                            <strong>III. Identifikasi MasalahPasien <i>(isi sesuai dengan masalah yang dihadapi pasien)</i></strong>
+                            
+                            <table style="width: 100%; border: none; margin-top: 8px; font-size: 11px; line-height: 2;">
+                                <tr>
+                                    <td style="width: 25px; border:none; padding:2px 0;">1.</td>
+                                    <td style="width: 180px; border:none; padding:2px 0;">Masalah Biaya/Penjaminan</td>
+                                    <td style="width: 10px; border:none; padding:2px 0;">:</td>
+                                    <td style="border:none; padding:2px 0;">
+                                        <span class="dotted-fill" style="width: 100%; min-width: 280px;">{if: !empty($data.masalah_biaya)}{$data.masalah_biaya}{else}&nbsp;{/if}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none; padding:2px 0;">2.</td>
+                                    <td style="border:none; padding:2px 0;">Masalah Dukungan Keluarga</td>
+                                    <td style="border:none; padding:2px 0;">:</td>
+                                    <td style="border:none; padding:2px 0;">
+                                        <span class="dotted-fill" style="width: 100%; min-width: 280px;">{if: !empty($data.masalah_keluarga)}{$data.masalah_keluarga}{else}&nbsp;{/if}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none; padding:2px 0;">3.</td>
+                                    <td style="border:none; padding:2px 0;">Masalah Pemulangan/rujukan</td>
+                                    <td style="border:none; padding:2px 0;">:</td>
+                                    <td style="border:none; padding:2px 0;">
+                                        <span class="dotted-fill" style="width: 100%; min-width: 280px;">{if: !empty($data.masalah_pemulangan)}{$data.masalah_pemulangan}{else}&nbsp;{/if}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none; padding:2px 0;">4.</td>
+                                    <td style="border:none; padding:2px 0;">Masalah Pemahaman</td>
+                                    <td style="border:none; padding:2px 0;">:</td>
+                                    <td style="border:none; padding:2px 0;">
+                                        <span class="dotted-fill" style="width: 100%; min-width: 280px;">{if: !empty($data.masalah_pemahaman)}{$data.masalah_pemahaman}{else}&nbsp;{/if}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:none; padding:2px 0;">5.</td>
+                                    <td style="border:none; padding:2px 0;">Masalah Ketidak Patuhan</td>
+                                    <td style="border:none; padding:2px 0;">:</td>
+                                    <td style="border:none; padding:2px 0;">
+                                        <span class="dotted-fill" style="width: 100%; min-width: 280px;">{if: !empty($data.masalah_ketidakpatuhan)}{$data.masalah_ketidakpatuhan}{else}&nbsp;{/if}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="col-catatan">
+                            <strong>IV. Perencanaan MPP <i>(lingkari sesuai kondisi pasien)</i></strong>
+                            
+                            <div style="margin-top: 8px;">
+                                <div class="checkbox-item" style="margin-bottom: 6px;">
+                                    <span style="font-weight: bold; width: 18px;">1.</span>
+                                    <span class="{if: $data.rencana_edukasi_ppa == 'Ya'}circled-val{else}uncircled-val{/if}">
+                                        Lakukan koordinasi dengan PPA untuk memberikan edukasi kepada pasien dan keluarga tentang penyakit dan segala permasalahannya termasuk rencana pemulangan pasien
+                                    </span>
+                                </div>
+                                <div class="checkbox-item" style="margin-bottom: 6px;">
+                                    <span style="font-weight: bold; width: 18px;">2.</span>
+                                    <span class="{if: $data.rencana_koordinasi_bpjs == 'Ya'}circled-val{else}uncircled-val{/if}">
+                                        Lakukan komunikasi dan koordinasi dengan BPJS untuk menyelesaikan masalah biaya perawatan pasien
+                                    </span>
+                                </div>
+                                <div class="checkbox-item" style="margin-bottom: 6px;">
+                                    <span style="font-weight: bold; width: 18px;">3.</span>
+                                    <span class="{if: $data.rencana_koordinasi_dpjp == 'Ya'}circled-val{else}uncircled-val{/if}">
+                                        Lakukan komunikasi dan koordinasi dengan DPJP terkait penjamin berdasarkan INA-CBG's
+                                    </span>
+                                </div>
+                                <div class="checkbox-item" style="margin-bottom: 6px;">
+                                    <span style="font-weight: bold; width: 18px;">4.</span>
+                                    <span class="dotted-fill" style="width: 95%;">
+                                        {if: !empty($data.rencana_lain_4)}{$data.rencana_lain_4}{else}&nbsp;{/if}
+                                    </span>
+                                </div>
+                                <div class="checkbox-item" style="margin-bottom: 6px;">
+                                    <span style="font-weight: bold; width: 18px;">5.</span>
+                                    <span class="dotted-fill" style="width: 95%;">
+                                        {if: !empty($data.rencana_lain_5)}{$data.rencana_lain_5}{else}&nbsp;{/if}
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tanda Tangan MPP di Bawah Form Halaman 2 -->
+        <table style="width: 100%; border: none; margin-top: 25px;">
+            <tr>
+                <td style="width: 55%; border: none;"></td>
+                <td style="width: 45%; border: none; text-align: center; font-size: 11px;">
+                    <div>{$data.kota}, {$data.tanggal_ttd_indo}</div>
+                    <div style="font-weight: bold; margin-top: 4px;">Manajer Pelayanan Pasien</div>
+                    <div style="height: 65px;"></div>
+                    <div style="font-weight: bold; text-decoration: underline;">
+                        {if: !empty($data.nama_mpp)}{$data.nama_mpp}{else}( .................................................... ){/if}
+                    </div>
+                    <div style="margin-top: 3px;">
+                        NIP / NIK : {if: !empty($data.nip_mpp)}{$data.nip_mpp}{else}..................................................{/if}
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Footer Halaman 2 -->
+        <div class="footer-note-wrap" style="margin-top: 25px;">
+            <span class="footer-note">
+                Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+            </span>
+            <span class="footer-note-box"></span>
+        </div>
+        <div class="page-footer">
+            <div>RSGM/Ed-Rev/02/2023</div>
+            <div>RM.RI Lampiran</div>
+        </div>
+    </div>
+
+</body>
+</html>

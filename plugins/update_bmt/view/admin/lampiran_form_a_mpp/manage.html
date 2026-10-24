@@ -1,0 +1,73 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-user-md"></i> Lampiran - Form A Manajer Pelayanan Pasien (MPP)</h3>
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="{?=url([ADMIN, 'form_rme', 'formamppmanage'])?}"><i class="fa fa-list"></i> Kelola Data</a></li>
+                    <li><a href="{?=url([ADMIN, 'form_rme', 'formamppform'])?}"><i class="fa fa-plus"></i> Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive no-margin">
+                    <table class="table table-striped table-bordered table-hover no-margin" id="data_table_form_a_mpp">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;" class="text-center">ID</th>
+                                <th style="width: 90px;" class="text-center">No. RM</th>
+                                <th style="width: 150px;">No. Rawat</th>
+                                <th>Nama Pasien</th>
+                                <th>Tgl / Hari</th>
+                                <th>Nama MPP</th>
+                                <th style="width: 100px;" class="text-center">Tgl TTD</th>
+                                <th style="width: 180px;" class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loop: $data}
+                            <tr>
+                                <td class="text-center">{$value.id}</td>
+                                <td class="text-center"><span class="label label-info">{$value.no_rkm_medis}</span></td>
+                                <td><strong>{$value.no_rawat}</strong></td>
+                                <td>{$value.nm_pasien}</td>
+                                <td>{$value.tgl_hari}</td>
+                                <td>{$value.nama_mpp}</td>
+                                <td class="text-center">{$value.tanggal_ttd}</td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <a href="{?=url([ADMIN, 'form_rme', 'formamppcetak'])?}&id={$value.id}" target="_blank" class="btn btn-xs btn-success" title="Cetak / Preview"><i class="fa fa-print"></i> Cetak</a>
+                                        <a href="{?=url([ADMIN, 'form_rme', 'formamppcetak'])?}&id={$value.id}&pdf=1" target="_blank" class="btn btn-xs btn-danger" title="Download PDF"><i class="fa fa-file-pdf-o"></i> PDF</a>
+                                        <a href="{?=url([ADMIN, 'form_rme', 'formamppform'])?}&id={$value.id}" class="btn btn-xs btn-primary" title="Edit Data"><i class="fa fa-edit"></i> Edit</a>
+                                        <a href="{?=url([ADMIN, 'form_rme', 'formampphapus'])?}&id={$value.id}" class="btn btn-xs btn-default text-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?');" title="Hapus"><i class="fa fa-trash text-danger"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {/loop}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+    $(document).ready(function() {
+        $('#data_table_form_a_mpp').DataTable({
+            order: [[0, 'desc']],
+            language: {
+                search: "Cari Data:",
+                lengthMenu: "Tampilkan _MENU_ baris",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                infoEmpty: "Tidak ada data",
+                zeroRecords: "Data tidak ditemukan",
+                paginate: {
+                    first: "Awal",
+                    last: "Akhir",
+                    next: "&rarr;",
+                    previous: "&larr;"
+                }
+            }
+        });
+    });
+</script>

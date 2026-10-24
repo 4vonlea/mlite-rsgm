@@ -4,12 +4,12 @@
             <div class="panel-heading">
                 <h3 class="panel-title">RM.RI 18 - Lembar Edukasi Pasien Dan Keluarga Terintegrasi</h3>
                 <ul class="nav nav-tabs">
-                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri18manage'])?}">Kelola Data</a></li>
-                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri18form'])?}">Tambah Data</a></li>
+                    <li><a href="{?=url([ADMIN, 'form_rme', 'ri18manage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'form_rme', 'ri18form'])?}">Tambah Data</a></li>
                 </ul>
             </div>
             <div class="panel-body">
-                <form id="ri18Form" method="POST" action="{?=url([ADMIN, 'update_bmt', 'ri18save'])?}">
+                <form id="ri18Form" method="POST" action="{?=url([ADMIN, 'form_rme', 'ri18save'])?}">
                     <input type="hidden" name="id" value="{$data.id}">
                     <input type="hidden" name="json_pengkajian" id="json_pengkajian" value="">
                     <input type="hidden" name="json_pelaksanaan" id="json_pelaksanaan" value="">
@@ -208,7 +208,7 @@
                     </div>
 
                     <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
-                    <a href="{?=url([ADMIN, 'update_bmt', 'ri18manage'])?}" class="btn btn-default">Kembali</a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'ri18manage'])?}" class="btn btn-default">Kembali</a>
                 </form>
             </div>
         </div>
@@ -221,7 +221,7 @@
     function initSelect2() {
         var s2opts = {
             ajax: {
-                url: "{?=url([ADMIN, 'update_bmt', 'ri18form'])?}&ajax_pegawai=1",
+                url: "{?=url([ADMIN, 'form_rme', 'ri18form'])?}&ajax_pegawai=1",
                 dataType: 'json', delay: 250,
                 processResults: function (data) { return { results: data.results }; },
                 cache: true
@@ -253,7 +253,7 @@
     $('#no_rawat').on('keypress', function(e) {
         if(e.which === 13) {
             e.preventDefault();
-            $.get("{?=url([ADMIN, 'update_bmt', 'ri18form'])?}&ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
+            $.get("{?=url([ADMIN, 'form_rme', 'ri18form'])?}&ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
                 var d = JSON.parse(res);
                 if (d.success) {
                     $('#no_rawat').val(d.no_rawat);
