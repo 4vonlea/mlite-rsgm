@@ -2111,4 +2111,208 @@ CREATE TABLE IF NOT EXISTS `penandaan_lokasi_bedah_mulut` (
   KEY `tanggal` (`tanggal`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+-- 64. ANS5 - STATUS ANESTESI (Bedah - Form Wajib)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `ans5_status_anestesi` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `tanggal` date DEFAULT NULL,
+  `jam` time DEFAULT NULL,
+  `diagnosa_prabedah` text DEFAULT NULL,
+  `diagnosa_pascabedah` text DEFAULT NULL,
+  `status_fisik` varchar(10) DEFAULT NULL,
+  `gol_darah` varchar(5) DEFAULT NULL,
+  `rh` varchar(5) DEFAULT NULL,
+  `bb` varchar(10) DEFAULT NULL,
+  `tb` varchar(10) DEFAULT NULL,
+  `tindakan` text DEFAULT NULL,
+  `dr_anestesi` varchar(150) DEFAULT NULL,
+  `kd_dokter_anestesi` varchar(20) DEFAULT NULL,
+  `penata_anestesi` varchar(150) DEFAULT NULL,
+  `dr_operator` varchar(150) DEFAULT NULL,
+  `kd_dokter_operator` varchar(20) DEFAULT NULL,
+  `waktu_mulai_pembiusan` varchar(10) DEFAULT NULL,
+  `waktu_selesai_pembiusan` varchar(10) DEFAULT NULL,
+  `lama_pembiusan` varchar(50) DEFAULT NULL,
+  `preinduksi_td_sistolik` varchar(10) DEFAULT NULL,
+  `preinduksi_td_diastolik` varchar(10) DEFAULT NULL,
+  `preinduksi_nadi` varchar(10) DEFAULT NULL,
+  `preinduksi_rr` varchar(10) DEFAULT NULL,
+  `preinduksi_suhu` varchar(10) DEFAULT NULL,
+  `preinduksi_vas` varchar(10) DEFAULT NULL,
+  `grid_data` longtext DEFAULT NULL,
+  `masalah` text DEFAULT NULL,
+  `prosedur_loading_cairan` text DEFAULT NULL,
+  `prosedur_premedikasi` text DEFAULT NULL,
+  `prosedur_maintenance` text DEFAULT NULL,
+  `jenis_anestesi_general` enum('Y','N') DEFAULT 'N',
+  `jenis_anestesi_general_tipe` varchar(100) DEFAULT NULL,
+  `jenis_anestesi_regional` enum('Y','N') DEFAULT 'N',
+  `jenis_anestesi_regional_tipe` varchar(100) DEFAULT NULL,
+  `jenis_anestesi_lain` varchar(255) DEFAULT NULL,
+  `jalan_napas_nasal` enum('Y','N') DEFAULT 'N',
+  `jalan_napas_facemask` enum('Y','N') DEFAULT 'N',
+  `jalan_napas_lma` enum('Y','N') DEFAULT 'N',
+  `jalan_napas_orotrakeal` enum('Y','N') DEFAULT 'N',
+  `jalan_napas_lain` varchar(255) DEFAULT NULL,
+  `posisi_supine` enum('Y','N') DEFAULT 'N',
+  `posisi_lateral` enum('Y','N') DEFAULT 'N',
+  `posisi_prone` enum('Y','N') DEFAULT 'N',
+  `posisi_lithotomi` enum('Y','N') DEFAULT 'N',
+  `posisi_lain` varchar(255) DEFAULT NULL,
+  `penyulit_pembedahan` text DEFAULT NULL,
+  `keadaan_akhir_pembedahan` text DEFAULT NULL,
+  `dokter_anestesi_ttd` varchar(150) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal` (`tanggal`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- Struktur tabel `bm5_checklist_keselamatan_operasi`
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `bm5_checklist_keselamatan_operasi` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `tanggal` date DEFAULT NULL,
+  `jam` time DEFAULT NULL,
+
+  -- SIGN IN (Sebelum Induksi)
+  `sign_in_tanggal` date DEFAULT NULL,
+  `sign_in_jam` varchar(10) DEFAULT NULL,
+  `sign_in_identitas` enum('Ya','Tidak') DEFAULT 'Ya',
+  `sign_in_informed_consent` enum('Ya','Tidak') DEFAULT 'Ya',
+  `sign_in_tanda_operasi` enum('Ya','Tidak Diperlukan') DEFAULT 'Ya',
+  `sign_in_riwayat_alergi` enum('Ya','Tidak') DEFAULT 'Tidak',
+  `sign_in_alergi_ket` varchar(255) DEFAULT NULL,
+  `sign_in_persiapan_alat` enum('Ya','Tidak') DEFAULT 'Ya',
+  `sign_in_pemeriksaan_penunjang` enum('Ya','Tidak') DEFAULT 'Ya',
+  `sign_in_dr_operator` varchar(150) DEFAULT NULL,
+  `sign_in_perawat` varchar(150) DEFAULT NULL,
+
+  -- TIME OUT (Sebelum Insisi)
+  `time_out_tanggal` date DEFAULT NULL,
+  `time_out_jam` varchar(10) DEFAULT NULL,
+  `time_out_perkenalan_tim` enum('Ya','Tidak') DEFAULT 'Ya',
+  `time_out_konfirmasi_pasien` enum('Ya','Tidak') DEFAULT 'Ya',
+  `time_out_antibiotik_profilaksis` enum('Ya','Tidak Perlu') DEFAULT 'Ya',
+  `time_out_tindakan_kritis` enum('Ya','Tidak') DEFAULT 'Ya',
+  `time_out_estimasi_waktu` varchar(100) DEFAULT NULL,
+  `time_out_antisipasi_perdarahan` varchar(255) DEFAULT NULL,
+  `time_out_sterilitas` enum('Ya','Tidak') DEFAULT 'Ya',
+  `time_out_masalah_peralatan` varchar(255) DEFAULT NULL,
+  `time_out_hasil_radiologi` enum('Ya','Tidak Diperlukan') DEFAULT 'Ya',
+  `time_out_dr_operator` varchar(150) DEFAULT NULL,
+  `time_out_perawat` varchar(150) DEFAULT NULL,
+
+  -- SIGN OUT (Sebelum Pasien Meninggalkan Ruang Operasi)
+  `sign_out_tanggal` date DEFAULT NULL,
+  `sign_out_jam` varchar(10) DEFAULT NULL,
+  `sign_out_konfirmasi_tindakan` enum('Ya','Tidak') DEFAULT 'Ya',
+  `sign_out_nama_tindakan` varchar(255) DEFAULT NULL,
+  `sign_out_kelengkapan_alat` enum('Ya','Tidak') DEFAULT 'Ya',
+  `sign_out_pelabelan_spesimen` enum('Ya','Tidak','Tidak Ada') DEFAULT 'Ya',
+  `sign_out_masalah_peralatan` varchar(255) DEFAULT NULL,
+  `sign_out_rencana_kontrol` enum('Ya','Tidak') DEFAULT 'Ya',
+  `sign_out_komplikasi_tindakan` enum('Ya','Tidak') DEFAULT 'Ya',
+  `sign_out_dr_operator` varchar(150) DEFAULT NULL,
+  `sign_out_perawat` varchar(150) DEFAULT NULL,
+
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal` (`tanggal`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- Struktur tabel `bmi3_asesmen_bedah_minor`
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `bmi3_asesmen_bedah_minor` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `tanggal_operasi` date DEFAULT NULL,
+  `jam_operasi` time DEFAULT NULL,
+
+  -- Anamnesis
+  `jenis_anamnesis` enum('Autoanamnesis','Alloanamnesis') DEFAULT 'Autoanamnesis',
+  `anamnesis` text DEFAULT NULL,
+  `keluhan_utama` text DEFAULT NULL,
+
+  -- Riwayat Penyakit Pasien
+  `rp_hipertensi` enum('0','1') DEFAULT '0',
+  `rp_diabetes` enum('0','1') DEFAULT '0',
+  `rp_gastritis` enum('0','1') DEFAULT '0',
+  `rp_darah` enum('0','1') DEFAULT '0',
+  `rp_jantung` enum('0','1') DEFAULT '0',
+  `rp_hati` enum('0','1') DEFAULT '0',
+  `rp_ginjal` enum('0','1') DEFAULT '0',
+  `rp_pengobatan_panjang` enum('0','1') DEFAULT '0',
+  `rp_operasi` enum('0','1') DEFAULT '0',
+  `rp_alergi_obat` enum('0','1') DEFAULT '0',
+  `rp_alergi_makanan` enum('0','1') DEFAULT '0',
+  `rp_sistemik_lain` enum('0','1') DEFAULT '0',
+  `rp_tidak_ada` enum('0','1') DEFAULT '1',
+  `rp_keterangan` varchar(255) DEFAULT NULL,
+
+  -- Riwayat Alergi
+  `riwayat_alergi` text DEFAULT NULL,
+
+  -- Riwayat Pengobatan
+  `pengobatan_pengencer_darah` enum('0','1') DEFAULT '0',
+  `pengobatan_osteoporosis_kanker` enum('0','1') DEFAULT '0',
+  `pengobatan_antibiotik` enum('0','1') DEFAULT '0',
+  `pengobatan_analgetik` enum('0','1') DEFAULT '0',
+  `pengobatan_keterangan` varchar(255) DEFAULT NULL,
+
+  -- Riwayat Penyakit Keluarga
+  `rpk_hipertensi` enum('0','1') DEFAULT '0',
+  `rpk_diabetes` enum('0','1') DEFAULT '0',
+  `rpk_gastritis` enum('0','1') DEFAULT '0',
+  `rpk_darah` enum('0','1') DEFAULT '0',
+  `rpk_jantung` enum('0','1') DEFAULT '0',
+  `rpk_hati` enum('0','1') DEFAULT '0',
+  `rpk_ginjal` enum('0','1') DEFAULT '0',
+  `rpk_pengobatan_panjang` enum('0','1') DEFAULT '0',
+  `rpk_operasi` enum('0','1') DEFAULT '0',
+  `rpk_alergi_obat` enum('0','1') DEFAULT '0',
+  `rpk_alergi_makanan` enum('0','1') DEFAULT '0',
+  `rpk_sistemik_lain` enum('0','1') DEFAULT '0',
+  `rpk_tidak_ada` enum('0','1') DEFAULT '1',
+  `rpk_keterangan` varchar(255) DEFAULT NULL,
+
+  -- Pemeriksaan Fisik
+  `fisik_ekstraoral_check` enum('0','1') DEFAULT '0',
+  `fisik_ekstraoral` text DEFAULT NULL,
+  `fisik_intraoral_check` enum('0','1') DEFAULT '0',
+  `fisik_intraoral` text DEFAULT NULL,
+
+  -- Pemeriksaan Penunjang, Diagnosis, Rencana
+  `pemeriksaan_penunjang` text DEFAULT NULL,
+  `diagnosis` text DEFAULT NULL,
+  `rencana_tindakan` text DEFAULT NULL,
+
+  -- Dokter Gigi
+  `kd_dokter` varchar(20) DEFAULT NULL,
+  `nm_dokter` varchar(150) DEFAULT NULL,
+
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `tanggal_operasi` (`tanggal_operasi`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+
 

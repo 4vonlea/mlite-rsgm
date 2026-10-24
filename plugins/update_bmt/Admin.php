@@ -7496,6 +7496,11 @@ if (ob_get_length()) {
                 'ANS2 - PERSETUJUAN TINDAKAN PEMBIUSAN' => 'ans2manage',
                 'ANS3 - ASSESMEN PRASEDASI / ANESTESI' => 'ans3manage',
                 'ANS4 - RENCANA ANESTESI' => 'ans4manage',
+                'ANS5 - STATUS ANESTESI' => 'ans5manage',
+                'ANS6 - STATUS POST ANESTESI' => 'ans6manage',
+                'ANS7 - SERAH TERIMA PASIEN PASCA OPERASI' => 'ans7manage',
+                'BM5 - CHECKLIST KESELAMATAN PASIEN OPERASI' => 'bm5manage',
+                'BMI3 - ASESMEN BEDAH MINOR' => 'bmi3manage',
                 'LAMPIRAN - SURAT PERNYATAAN PULANG APS' => 'pulangapsmanage',
                 'PENANDAAN TEPAT LOKASI BEDAH MULUT' => 'penandaanlokasibedahmanage',
             ],
@@ -8965,6 +8970,573 @@ if (ob_get_length()) {
         echo $html;
         exit();
     }
+
+    // ============================================================
+    // ANS5 - STATUS ANESTESI
+    // ============================================================
+
+    public function anyAns5manage()
+    {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+            return $this->getAns5hapus($_GET['id']);
+        }
+
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $query = $this->db('ans5_status_anestesi')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans5_status_anestesi.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('ans5_status_anestesi.*, COALESCE(ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+            ->desc('ans5_status_anestesi.id')
+            ->toArray();
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        foreach ($query as $k => $v) {
+            $query[$k]['nomor'] = $k + 1;
+            if (!empty($v['tanggal']) && $v['tanggal'] != '0000-00-00') {
+                $p = explode('-', $v['tanggal']);
+                $query[$k]['tgl_indo'] = (int)$p[2] . ' ' . ($bulan[(int)$p[1]] ?? '') . ' ' . $p[0];
+            } else {
+                $query[$k]['tgl_indo'] = '-';
+            }
+        }
+
+        $this->tpl->set('data', $query);
+        $this->tpl->set('list', $query);
+        return $this->draw('ans5/manage.html', ['data' => $query, 'list' => $query]);
+    }
+
+    public function getAns5manage()
+    {
+        return $this->anyAns5manage();
+    }
+
+    public function anyAns5form($id = null)
+    {
+        // Handle AJAX patient lookup
+        if (isset($_GET['ajax_patient']) && !empty($_GET['no_rawat'])) {
+            $patient = $this->db('reg_periksa')
+                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir, pasien.gol_darah')
+                ->oneArray();
+
+            header('Content-Type: application/json');
+            if ($patient) {
+                echo json_encode([
+                    'success' => true,
+                    'no_rawat' => $patient['no_rawat'],
+                    'no_rkm_medis' => $patient['no_rkm_medis'],
+                    'nm_pasien' => $patient['nm_pasien'],
+                    'jk' => $patient['jk'],
+                    'umur' => $patient['umur'],
+                    'tgl_lahir' => $patient['tgl_lahir'],
+                    'gol_darah' => $patient['gol_darah']
+                ]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+            exit();
+        }
+
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id && isset($_SERVER['REQUEST_URI']) && preg_match('/[?&]id=([0-9]+)/', $_SERVER['REQUEST_URI'], $m)) {
+            $id = $m[1];
+        }
+
+        $data = [];
+        if ($id) {
+            $data = $this->db('ans5_status_anestesi')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans5_status_anestesi.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('ans5_status_anestesi.id', $id)
+                ->select('ans5_status_anestesi.*, COALESCE(ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+                ->oneArray();
+        }
+
+        if (empty($data) || !is_array($data)) {
+            $data = [];
+        }
+
+        $defaults = [
+            'id' => '', 'no_rawat' => '', 'no_rkm_medis' => '', 'nm_pasien' => '', 'jk' => '', 'umur' => '',
+            'tanggal' => date('Y-m-d'), 'diagnosa_prabedah' => '', 'diagnosa_pascabedah' => '',
+            'status_fisik' => '1', 'gol_darah' => '', 'rh' => '+', 'bb' => '', 'tb' => '',
+            'tindakan' => '', 'dr_anestesi' => '', 'kd_dokter_anestesi' => '',
+            'penata_anestesi' => '', 'dr_operator' => '', 'kd_dokter_operator' => '',
+            'waktu_mulai_pembiusan' => '08:00', 'waktu_selesai_pembiusan' => '09:30', 'lama_pembiusan' => '1 Jam 30 Menit',
+            'preinduksi_td_sistolik' => '120', 'preinduksi_td_diastolik' => '80', 'preinduksi_nadi' => '78',
+            'preinduksi_rr' => '18', 'preinduksi_suhu' => '36.5', 'preinduksi_vas' => '0',
+            'grid_data' => '', 'masalah' => '', 'prosedur_loading_cairan' => '', 'prosedur_premedikasi' => '', 'prosedur_maintenance' => '',
+            'jenis_anestesi_general' => 'Y', 'jenis_anestesi_general_tipe' => 'GETA',
+            'jenis_anestesi_regional' => 'N', 'jenis_anestesi_regional_tipe' => '', 'jenis_anestesi_lain' => '',
+            'jalan_napas_nasal' => 'N', 'jalan_napas_facemask' => 'N', 'jalan_napas_lma' => 'N', 'jalan_napas_orotrakeal' => 'Y', 'jalan_napas_lain' => '',
+            'posisi_supine' => 'Y', 'posisi_lateral' => 'N', 'posisi_prone' => 'N', 'posisi_lithotomi' => 'N', 'posisi_lain' => '',
+            'penyulit_pembedahan' => '', 'keadaan_akhir_pembedahan' => '', 'dokter_anestesi_ttd' => ''
+        ];
+
+        foreach ($defaults as $k => $v) {
+            if (!isset($data[$k]) || $data[$k] === null) {
+                $data[$k] = $v;
+            }
+        }
+        $data['grid_data_json'] = htmlspecialchars($data['grid_data'] ?: '{}', ENT_QUOTES, 'UTF-8');
+
+        $dokter = $this->db('dokter')->where('status', '1')->toArray();
+
+        $pasien_list = $this->db('reg_periksa')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+            ->desc('reg_periksa.tgl_registrasi')
+            ->limit(30)
+            ->toArray();
+
+        $this->tpl->set('data', $data);
+        $this->tpl->set('dokter', $dokter);
+        $this->tpl->set('pasien_list', $pasien_list);
+
+        return $this->draw('ans5/form.html', [
+            'data' => $data,
+            'dokter' => $dokter,
+            'pasien_list' => $pasien_list
+        ]);
+    }
+
+    public function getAns5form($id = null)
+    {
+        return $this->anyAns5form($id);
+    }
+
+    public function anyAns5save()
+    {
+        if (empty($_POST)) {
+            redirect(url([ADMIN, 'update_bmt', 'ans5manage']));
+        }
+
+        $id = !empty($_POST['id']) ? (int)$_POST['id'] : null;
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+        $no_rkm_medis = trim($_POST['no_rkm_medis'] ?? '');
+
+        if (empty($no_rkm_medis) && !empty($no_rawat)) {
+            $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+            if ($reg) {
+                $no_rkm_medis = $reg['no_rkm_medis'];
+            }
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'tanggal' => !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d'),
+            'jam' => !empty($_POST['jam']) ? $_POST['jam'] : date('H:i:s'),
+            'diagnosa_prabedah' => trim($_POST['diagnosa_prabedah'] ?? ''),
+            'diagnosa_pascabedah' => trim($_POST['diagnosa_pascabedah'] ?? ''),
+            'status_fisik' => trim($_POST['status_fisik'] ?? '1'),
+            'gol_darah' => trim($_POST['gol_darah'] ?? ''),
+            'rh' => trim($_POST['rh'] ?? '+'),
+            'bb' => trim($_POST['bb'] ?? ''),
+            'tb' => trim($_POST['tb'] ?? ''),
+            'tindakan' => trim($_POST['tindakan'] ?? ''),
+            'dr_anestesi' => trim($_POST['dr_anestesi'] ?? ''),
+            'kd_dokter_anestesi' => trim($_POST['kd_dokter_anestesi'] ?? ''),
+            'penata_anestesi' => trim($_POST['penata_anestesi'] ?? ''),
+            'dr_operator' => trim($_POST['dr_operator'] ?? ''),
+            'kd_dokter_operator' => trim($_POST['kd_dokter_operator'] ?? ''),
+            'waktu_mulai_pembiusan' => trim($_POST['waktu_mulai_pembiusan'] ?? ''),
+            'waktu_selesai_pembiusan' => trim($_POST['waktu_selesai_pembiusan'] ?? ''),
+            'lama_pembiusan' => trim($_POST['lama_pembiusan'] ?? ''),
+            'preinduksi_td_sistolik' => trim($_POST['preinduksi_td_sistolik'] ?? ''),
+            'preinduksi_td_diastolik' => trim($_POST['preinduksi_td_diastolik'] ?? ''),
+            'preinduksi_nadi' => trim($_POST['preinduksi_nadi'] ?? ''),
+            'preinduksi_rr' => trim($_POST['preinduksi_rr'] ?? ''),
+            'preinduksi_suhu' => trim($_POST['preinduksi_suhu'] ?? ''),
+            'preinduksi_vas' => trim($_POST['preinduksi_vas'] ?? ''),
+            'grid_data' => trim($_POST['grid_data'] ?? ''),
+            'masalah' => trim($_POST['masalah'] ?? ''),
+            'prosedur_loading_cairan' => trim($_POST['prosedur_loading_cairan'] ?? ''),
+            'prosedur_premedikasi' => trim($_POST['prosedur_premedikasi'] ?? ''),
+            'prosedur_maintenance' => trim($_POST['prosedur_maintenance'] ?? ''),
+            'jenis_anestesi_general' => (!empty($_POST['jenis_anestesi_general']) && $_POST['jenis_anestesi_general'] == 'Y') ? 'Y' : 'N',
+            'jenis_anestesi_general_tipe' => trim($_POST['jenis_anestesi_general_tipe'] ?? ''),
+            'jenis_anestesi_regional' => (!empty($_POST['jenis_anestesi_regional']) && $_POST['jenis_anestesi_regional'] == 'Y') ? 'Y' : 'N',
+            'jenis_anestesi_regional_tipe' => trim($_POST['jenis_anestesi_regional_tipe'] ?? ''),
+            'jenis_anestesi_lain' => trim($_POST['jenis_anestesi_lain'] ?? ''),
+            'jalan_napas_nasal' => (!empty($_POST['jalan_napas_nasal']) && $_POST['jalan_napas_nasal'] == 'Y') ? 'Y' : 'N',
+            'jalan_napas_facemask' => (!empty($_POST['jalan_napas_facemask']) && $_POST['jalan_napas_facemask'] == 'Y') ? 'Y' : 'N',
+            'jalan_napas_lma' => (!empty($_POST['jalan_napas_lma']) && $_POST['jalan_napas_lma'] == 'Y') ? 'Y' : 'N',
+            'jalan_napas_orotrakeal' => (!empty($_POST['jalan_napas_orotrakeal']) && $_POST['jalan_napas_orotrakeal'] == 'Y') ? 'Y' : 'N',
+            'jalan_napas_lain' => trim($_POST['jalan_napas_lain'] ?? ''),
+            'posisi_supine' => (!empty($_POST['posisi_supine']) && $_POST['posisi_supine'] == 'Y') ? 'Y' : 'N',
+            'posisi_lateral' => (!empty($_POST['posisi_lateral']) && $_POST['posisi_lateral'] == 'Y') ? 'Y' : 'N',
+            'posisi_prone' => (!empty($_POST['posisi_prone']) && $_POST['posisi_prone'] == 'Y') ? 'Y' : 'N',
+            'posisi_lithotomi' => (!empty($_POST['posisi_lithotomi']) && $_POST['posisi_lithotomi'] == 'Y') ? 'Y' : 'N',
+            'posisi_lain' => trim($_POST['posisi_lain'] ?? ''),
+            'penyulit_pembedahan' => trim($_POST['penyulit_pembedahan'] ?? ''),
+            'keadaan_akhir_pembedahan' => trim($_POST['keadaan_akhir_pembedahan'] ?? ''),
+            'dokter_anestesi_ttd' => trim($_POST['dokter_anestesi_ttd'] ?? ''),
+            'updated_at' => $now
+        ];
+
+        if ($id) {
+            $this->db('ans5_status_anestesi')->where('id', $id)->save($saveData);
+            $this->setNotify('success', 'Data Status Anestesi berhasil diperbarui.');
+        } else {
+            $saveData['created_at'] = $now;
+            $this->db('ans5_status_anestesi')->save($saveData);
+            $this->setNotify('success', 'Data Status Anestesi berhasil disimpan.');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'ans5manage']));
+    }
+
+    public function postAns5save()
+    {
+        return $this->anyAns5save();
+    }
+
+    public function anyAns5hapus($id = null)
+    {
+        return $this->getAns5hapus($id);
+    }
+
+    public function getAns5hapus($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if ($id) {
+            $this->db('ans5_status_anestesi')->where('id', $id)->delete();
+            $this->setNotify('success', 'Data Status Anestesi berhasil dihapus.');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'ans5manage']));
+    }
+
+    public function anyAns5cetak($id = null)
+    {
+        return $this->getAns5cetak($id);
+    }
+
+    public function getAns5cetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('ans5_status_anestesi')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans5_status_anestesi.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('ans5_status_anestesi.id', $id)
+            ->select('ans5_status_anestesi.*, COALESCE(ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+            ->oneArray();
+
+        if (!$data) {
+            $this->setNotify('failure', 'Data Status Anestesi tidak ditemukan!');
+            redirect(url([ADMIN, 'update_bmt', 'ans5manage']));
+        }
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        if (!empty($data['tanggal']) && $data['tanggal'] != '0000-00-00') {
+            $p = explode('-', $data['tanggal']);
+            $data['tgl_indo'] = (int)$p[2] . ' ' . ($bulan[(int)$p[1]] ?? '') . ' ' . $p[0];
+        } else {
+            $data['tgl_indo'] = '-';
+        }
+
+        $gridData = [];
+        if (!empty($data['grid_data'])) {
+            $gridData = json_decode($data['grid_data'], true);
+        }
+        if (!is_array($gridData)) {
+            $gridData = [];
+        }
+
+        $chartSvg = $this->renderAns5SvgChart($gridData);
+        $gridBuild = $this->buildAns5CetakGrid($gridData, $chartSvg);
+
+        $is_pdf = isset($_GET['pdf']) && $_GET['pdf'] == 1;
+        $kop_file = BASE_DIR . '/assets/img/KOP-SURAT.png';
+        $kop_img = is_file($kop_file) ? ($is_pdf ? $kop_file : url('assets/img/KOP-SURAT.png')) : '';
+
+        $viewParams = [
+            'data' => $data,
+            'kop_img' => $kop_img,
+            'html_time_headers' => $gridBuild['time_headers'],
+            'html_grid_body' => $gridBuild['body'],
+            'is_mpdf' => $is_pdf
+        ];
+
+        if ($is_pdf) {
+            try {
+                $oldErr = error_reporting(0);
+                @ini_set('display_errors', '0');
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'margin_left' => 6,
+                    'margin_right' => 6,
+                    'margin_top' => 6,
+                    'margin_bottom' => 6,
+                    'tempDir' => BASE_DIR . '/tmp'
+                ]);
+
+                $html = $this->draw('ans5/cetak.html', $viewParams);
+                $mpdf->WriteHTML($html);
+                $filename = 'ANS5_Status_Anestesi_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+                $mpdf->Output($filename, 'I');
+                error_reporting($oldErr);
+                exit();
+            } catch (\Throwable $e) {
+                // fallback to HTML
+            }
+        }
+
+        echo $this->draw('ans5/cetak.html', $viewParams);
+        exit();
+    }
+
+    private function renderAns5SvgChart($gridData)
+    {
+        $w = 640;
+        $h = 160;
+        $padLeft = 32;
+        $padRight = 20;
+        $padTop = 10;
+        $padBottom = 16;
+        $chartW = $w - $padLeft - $padRight;
+        $chartH = $h - $padTop - $padBottom;
+        $minY = 40;
+        $maxY = 200;
+
+        $getY = function($val) use ($padTop, $chartH, $minY, $maxY) {
+            $val = max($minY, min($maxY, (float)$val));
+            return $padTop + $chartH - (($val - $minY) / ($maxY - $minY)) * $chartH;
+        };
+
+        $getX = function($colIdx) use ($padLeft, $chartW) {
+            return $padLeft + ($colIdx / 15) * $chartW;
+        };
+
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $w . ' ' . $h . '" style="width: 100%; height: 160px; display: block;">';
+
+        // Horizontal grid lines
+        $levels = [40, 60, 80, 100, 120, 140, 160, 180, 200];
+        foreach ($levels as $l) {
+            $y = $getY($l);
+            $colStroke = ($l == 100 || $l == 140) ? '#95a5a6' : '#e0e0e0';
+            $strokeW = ($l == 100 || $l == 140) ? '1' : '0.6';
+            $svg .= '<line x1="' . $padLeft . '" y1="' . $y . '" x2="' . ($padLeft + $chartW) . '" y2="' . $y . '" stroke="' . $colStroke . '" stroke-width="' . $strokeW . '" />';
+            $svg .= '<text x="' . ($padLeft - 4) . '" y="' . ($y + 2.5) . '" font-size="7.5" fill="#555" text-anchor="end" font-family="Arial">' . $l . '</text>';
+        }
+
+        // Vertical interval lines
+        for ($c = 0; $c < 16; $c++) {
+            $x = $getX($c);
+            $strokeCol = ($c % 4 == 0) ? '#95a5a6' : '#ececec';
+            $strokeW = ($c % 4 == 0) ? '1' : '0.6';
+            $svg .= '<line x1="' . $x . '" y1="' . $padTop . '" x2="' . $x . '" y2="' . ($padTop + $chartH) . '" stroke="' . $strokeCol . '" stroke-width="' . $strokeW . '" />';
+        }
+
+        // Extract points
+        $nadiPoints = [];
+        $sistolikPoints = [];
+        $diastolikPoints = [];
+        $suhuPoints = [];
+        $events = [];
+
+        $rows = $gridData['rows'] ?? [];
+
+        for ($c = 0; $c < 16; $c++) {
+            $x = $getX($c);
+
+            // Nadi
+            if (isset($rows['vital_nadi'][$c]) && is_numeric($rows['vital_nadi'][$c])) {
+                $ny = $getY($rows['vital_nadi'][$c]);
+                $nadiPoints[] = ['x' => $x, 'y' => $ny];
+            }
+
+            // Sistolik
+            if (isset($rows['vital_sistolik'][$c]) && is_numeric($rows['vital_sistolik'][$c])) {
+                $sy = $getY($rows['vital_sistolik'][$c]);
+                $sistolikPoints[] = ['x' => $x, 'y' => $sy];
+            }
+
+            // Diastolik
+            if (isset($rows['vital_diastolik'][$c]) && is_numeric($rows['vital_diastolik'][$c])) {
+                $dy = $getY($rows['vital_diastolik'][$c]);
+                $diastolikPoints[] = ['x' => $x, 'y' => $dy];
+            }
+
+            // Suhu
+            if (isset($rows['vital_suhu'][$c]) && is_numeric($rows['vital_suhu'][$c])) {
+                $tempVal = (float)$rows['vital_suhu'][$c];
+                $ty = $getY(40 + ($tempVal - 35) * 12);
+                $suhuPoints[] = ['x' => $x, 'y' => $ty];
+            }
+
+            // Event
+            if (!empty($rows['vital_event'][$c])) {
+                $events[] = ['x' => $x, 'char' => $rows['vital_event'][$c]];
+            }
+        }
+
+        // Draw connecting polylines
+        $makePath = function($pts) {
+            $d = '';
+            foreach ($pts as $idx => $p) {
+                $d .= ($idx == 0 ? 'M' : ' L') . round($p['x'], 1) . ',' . round($p['y'], 1);
+            }
+            return $d;
+        };
+
+        if (count($nadiPoints) > 1) {
+            $svg .= '<path d="' . $makePath($nadiPoints) . '" fill="none" stroke="#e74c3c" stroke-width="1.2" />';
+        }
+        if (count($sistolikPoints) > 1) {
+            $svg .= '<path d="' . $makePath($sistolikPoints) . '" fill="none" stroke="#2980b9" stroke-width="1.2" stroke-dasharray="3,2" />';
+        }
+        if (count($diastolikPoints) > 1) {
+            $svg .= '<path d="' . $makePath($diastolikPoints) . '" fill="none" stroke="#27ae60" stroke-width="1.2" stroke-dasharray="3,2" />';
+        }
+        if (count($suhuPoints) > 1) {
+            $svg .= '<path d="' . $makePath($suhuPoints) . '" fill="none" stroke="#f39c12" stroke-width="1" />';
+        }
+
+        // Draw markers
+        foreach ($nadiPoints as $p) {
+            $svg .= '<circle cx="' . round($p['x'], 1) . '" cy="' . round($p['y'], 1) . '" r="2.8" fill="#e74c3c" />';
+        }
+        foreach ($sistolikPoints as $p) {
+            $svg .= '<text x="' . round($p['x'], 1) . '" y="' . round($p['y'] + 3, 1) . '" font-size="10" font-weight="bold" fill="#2980b9" text-anchor="middle" font-family="Arial">∨</text>';
+        }
+        foreach ($diastolikPoints as $p) {
+            $svg .= '<text x="' . round($p['x'], 1) . '" y="' . round($p['y'] + 3, 1) . '" font-size="10" font-weight="bold" fill="#27ae60" text-anchor="middle" font-family="Arial">∧</text>';
+        }
+        foreach ($suhuPoints as $p) {
+            $svg .= '<circle cx="' . round($p['x'], 1) . '" cy="' . round($p['y'], 1) . '" r="2.8" fill="#fff" stroke="#f39c12" stroke-width="1.2" />';
+        }
+        foreach ($events as $ev) {
+            $svg .= '<text x="' . round($ev['x'], 1) . '" y="' . ($padTop + 10) . '" font-size="10" font-weight="bold" fill="#8e44ad" text-anchor="middle" font-family="Arial">' . htmlspecialchars($ev['char']) . '</text>';
+        }
+
+        $svg .= '</svg>';
+        return $svg;
+    }
+
+    private function buildAns5CetakGrid($gridData, $chartSvg)
+    {
+        $times = $gridData['times'] ?? [];
+        $rows = $gridData['rows'] ?? [];
+        $totals = $gridData['totals'] ?? [];
+
+        // 1. Time headers
+        $timeTh = '';
+        for ($c = 0; $c < 16; $c++) {
+            $tVal = !empty($times[$c]) ? htmlspecialchars($times[$c]) : '';
+            if (empty($tVal)) {
+                $sub = ($c % 4) * 15;
+                $tVal = $sub > 0 ? (string)$sub : '';
+            }
+            $timeTh .= '<th style="width: 3.8%; text-align: center; font-size: 7px;">' . $tVal . '</th>';
+        }
+
+        // Helper to format a table row
+        $renderRow = function($id, $label) use ($rows, $totals) {
+            $tr = '<tr>';
+            $tr .= '<td class="label-col">' . htmlspecialchars($label) . '</td>';
+            for ($c = 0; $c < 16; $c++) {
+                $val = isset($rows[$id][$c]) ? htmlspecialchars((string)$rows[$id][$c]) : '';
+                $tr .= '<td>' . ($val !== '' ? $val : '&nbsp;') . '</td>';
+            }
+            $tot = isset($totals[$id]) ? htmlspecialchars((string)$totals[$id]) : '';
+            $tr .= '<td><strong>' . ($tot !== '' ? $tot : '&nbsp;') . '</strong></td>';
+            $tr .= '</tr>';
+            return $tr;
+        };
+
+        $body = '';
+
+        // Gas Inhalasi
+        $body .= $renderRow('gas_o2', 'O2 (L/Mnt)');
+        $body .= $renderRow('gas_halotan', 'Halotan (Vol%)');
+        $body .= $renderRow('gas_isofluran', 'Isofluran (Vol%)');
+        $body .= $renderRow('gas_sevofluran', 'Sevofluran (Vol%)');
+
+        // Obat-Obatan
+        $meds = [
+            'med_ketorolac' => 'Ketorolac (mg)',
+            'med_ondansetron' => 'Ondansetron (mg)',
+            'med_ranitidin' => 'Ranitidin (mg)',
+            'med_midazolam' => 'Midazolam (mg)',
+            'med_fentanyl' => 'Fentanyl (µg)',
+            'med_lidokain' => 'Lidokain (mg)',
+            'med_ketamin' => 'Ketamin (mg)',
+            'med_propofol' => 'Propofol (mg)',
+            'med_atracurium' => 'Atracurium (mg)',
+            'med_efedrin' => 'Efedrin (µg)',
+            'med_obat_lain1' => 'Obat Tambahan 1',
+            'med_obat_lain2' => 'Obat Tambahan 2',
+            'med_epidural' => 'Epidural / Spinal'
+        ];
+        foreach ($meds as $mid => $mlbl) {
+            $body .= $renderRow($mid, $mlbl);
+        }
+
+        // Baris Grafik Tanda Vital
+        $body .= '<tr>';
+        $body .= '<td style="vertical-align: top; padding: 2px; text-align: left; background: #fff;">';
+        $body .= '<table style="width: 100%; border: none; font-size: 6.8px;"><tr>';
+        $body .= '<td style="border: none; vertical-align: top; width: 22px; padding: 0; line-height: 1.15;">';
+        $body .= '<strong>200</strong><br><strong>180</strong><br><strong>160</strong><br><strong>140</strong><br><strong>120</strong><br><strong>100</strong><br><strong>80</strong><br><strong>60</strong><br><strong>40</strong>';
+        $body .= '</td>';
+        $body .= '<td style="border: none; vertical-align: top; padding: 0 0 0 2px;">';
+        $body .= '<div class="legend-box">';
+        $body .= '▼ i.m &nbsp;&nbsp;&nbsp; ↓ i.v<br>';
+        $body .= '• nadi &nbsp;&nbsp; ○ suhu<br>';
+        $body .= '∨ sistole ∧ diastole<br>';
+        $body .= '/// resp spontan<br>';
+        $body .= 'vv resp kontrol<br>';
+        $body .= 'x anestesi ⊙ operasi<br>';
+        $body .= '△ intubasi ▽ ekstubasi<br>';
+        $body .= '* kateter epidural';
+        $body .= '</div>';
+        $body .= '</td>';
+        $body .= '</tr></table>';
+        $body .= '</td>';
+        $body .= '<td colspan="17" style="padding: 0; background: #fff; vertical-align: middle; height: 160px;">';
+        $body .= $chartSvg;
+        $body .= '</td>';
+        $body .= '</tr>';
+
+        // Keterangan Bawah Grafik
+        $body .= $renderRow('ket_tanda_kode', 'Tanda (Kode)');
+        $body .= $renderRow('ket_rsp', 'Rsp. Spontan / Kontrol');
+        $body .= $renderRow('ket_saturasi', 'Saturasi O2 (%)');
+
+        // INPUT CAIRAN
+        $body .= '<tr style="background: #f9f9f9;"><td class="label-col" style="background: #f0f0f0;"><strong>INPUT:</strong></td><td colspan="17" style="border: 0.8px solid #000;"></td></tr>';
+        $body .= $renderRow('in_rl', 'Ringer Laktat/Asetat (cc)');
+        $body .= $renderRow('in_nacl', 'NaCl 0.9% (cc)');
+        $body .= $renderRow('in_koloid', 'Koloid / Darah / Lain (cc)');
+
+        // OUTPUT CAIRAN
+        $body .= '<tr style="background: #f9f9f9;"><td class="label-col" style="background: #f0f0f0;"><strong>OUTPUT:</strong></td><td colspan="17" style="border: 0.8px solid #000;"></td></tr>';
+        $body .= $renderRow('out_darah', 'Pendarahan (cc)');
+        $body .= $renderRow('out_urine', 'Urine (cc)');
+        $body .= $renderRow('out_lain', 'Output Lain (cc)');
+
+        return [
+            'time_headers' => $timeTh,
+            'body' => $body
+        ];
+    }
+
     public function getAns6manage()
     {
         $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
@@ -9760,6 +10332,360 @@ if (ob_get_length()) {
         echo $html;
         exit();
     }
+
+    // ==========================================
+    // BMI3 - ASESMEN BEDAH MINOR (GIGI DAN MULUT)
+    // ==========================================
+
+    public function anyBmi3manage()
+    {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+            return $this->getBmi3hapus($_GET['id']);
+        }
+
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $query = $this->db('bmi3_asesmen_bedah_minor')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bmi3_asesmen_bedah_minor.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('bmi3_asesmen_bedah_minor.*, COALESCE(bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+            ->desc('bmi3_asesmen_bedah_minor.id')
+            ->toArray();
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        foreach ($query as $k => $v) {
+            $query[$k]['nomor'] = $k + 1;
+            if (!empty($v['tanggal_operasi']) && $v['tanggal_operasi'] != '0000-00-00') {
+                $p = explode('-', $v['tanggal_operasi']);
+                $query[$k]['tgl_indo'] = (int)$p[2] . ' ' . ($bulan[(int)$p[1]] ?? '') . ' ' . $p[0];
+            } else {
+                $query[$k]['tgl_indo'] = '-';
+            }
+        }
+
+        $this->tpl->set('data', $query);
+        $this->tpl->set('list', $query);
+        return $this->draw('bmi3/manage.html', ['data' => $query, 'list' => $query]);
+    }
+
+    public function getBmi3manage()
+    {
+        return $this->anyBmi3manage();
+    }
+
+    public function anyBmi3form($id = null)
+    {
+        // Handle AJAX patient lookup
+        if (isset($_GET['ajax_patient']) && !empty($_GET['no_rawat'])) {
+            $patient = $this->db('reg_periksa')
+                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir, pasien.gol_darah')
+                ->oneArray();
+
+            header('Content-Type: application/json');
+            if ($patient) {
+                echo json_encode([
+                    'success' => true,
+                    'no_rawat' => $patient['no_rawat'],
+                    'no_rkm_medis' => $patient['no_rkm_medis'],
+                    'nm_pasien' => $patient['nm_pasien'],
+                    'jk' => $patient['jk'],
+                    'umur' => $patient['umur'],
+                    'tgl_lahir' => $patient['tgl_lahir']
+                ]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+            exit();
+        }
+
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id && isset($_SERVER['REQUEST_URI']) && preg_match('/[?&]id=([0-9]+)/', $_SERVER['REQUEST_URI'], $m)) {
+            $id = $m[1];
+        }
+
+        $data = [];
+        if ($id) {
+            $data = $this->db('bmi3_asesmen_bedah_minor')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bmi3_asesmen_bedah_minor.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('bmi3_asesmen_bedah_minor.id', $id)
+                ->select('bmi3_asesmen_bedah_minor.*, COALESCE(bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+                ->oneArray();
+        }
+
+        if (empty($data) || !is_array($data)) {
+            $data = [];
+        }
+
+        $today = date('Y-m-d');
+        $defaults = [
+            'id' => '', 'no_rawat' => '', 'no_rkm_medis' => '', 'nm_pasien' => '', 'jk' => '', 'umur' => '', 'tgl_lahir' => '',
+            'tanggal_operasi' => $today, 'jam_operasi' => date('H:i'),
+            'jenis_anamnesis' => 'Autoanamnesis', 'anamnesis' => '', 'keluhan_utama' => '',
+            'rp_hipertensi' => '0', 'rp_diabetes' => '0', 'rp_gastritis' => '0', 'rp_darah' => '0', 'rp_jantung' => '0', 'rp_hati' => '0',
+            'rp_ginjal' => '0', 'rp_pengobatan_panjang' => '0', 'rp_operasi' => '0', 'rp_alergi_obat' => '0', 'rp_alergi_makanan' => '0', 'rp_sistemik_lain' => '0', 'rp_tidak_ada' => '1', 'rp_keterangan' => '',
+            'riwayat_alergi' => 'Tidak ada riwayat alergi',
+            'pengobatan_pengencer_darah' => '0', 'pengobatan_osteoporosis_kanker' => '0', 'pengobatan_antibiotik' => '0', 'pengobatan_analgetik' => '0', 'pengobatan_keterangan' => '',
+            'rpk_hipertensi' => '0', 'rpk_diabetes' => '0', 'rpk_gastritis' => '0', 'rpk_darah' => '0', 'rpk_jantung' => '0', 'rpk_hati' => '0',
+            'rpk_ginjal' => '0', 'rpk_pengobatan_panjang' => '0', 'rpk_operasi' => '0', 'rpk_alergi_obat' => '0', 'rpk_alergi_makanan' => '0', 'rpk_sistemik_lain' => '0', 'rpk_tidak_ada' => '1', 'rpk_keterangan' => '',
+            'fisik_ekstraoral_check' => '1', 'fisik_ekstraoral' => '', 'fisik_intraoral_check' => '1', 'fisik_intraoral' => '',
+            'pemeriksaan_penunjang' => '', 'diagnosis' => '', 'rencana_tindakan' => '',
+            'kd_dokter' => '', 'nm_dokter' => ''
+        ];
+
+        foreach ($defaults as $k => $v) {
+            if (!isset($data[$k]) || $data[$k] === null) {
+                $data[$k] = $v;
+            }
+        }
+
+        $dokter = $this->db('dokter')->where('status', '1')->toArray();
+
+        $pasien_list = $this->db('reg_periksa')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+            ->desc('reg_periksa.tgl_registrasi')
+            ->limit(30)
+            ->toArray();
+
+        $this->tpl->set('data', $data);
+        $this->tpl->set('dokter', $dokter);
+        $this->tpl->set('pasien_list', $pasien_list);
+
+        return $this->draw('bmi3/form.html', [
+            'data' => $data,
+            'dokter' => $dokter,
+            'pasien_list' => $pasien_list
+        ]);
+    }
+
+    public function getBmi3form($id = null)
+    {
+        return $this->anyBmi3form($id);
+    }
+
+    public function anyBmi3save()
+    {
+        if (empty($_POST)) {
+            redirect(url([ADMIN, 'update_bmt', 'bmi3manage']));
+        }
+
+        $id = !empty($_POST['id']) ? (int)$_POST['id'] : null;
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+        $no_rkm_medis = trim($_POST['no_rkm_medis'] ?? '');
+
+        if (empty($no_rkm_medis) && !empty($no_rawat)) {
+            $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+            if ($reg) {
+                $no_rkm_medis = $reg['no_rkm_medis'];
+            }
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'tanggal_operasi' => !empty($_POST['tanggal_operasi']) ? $_POST['tanggal_operasi'] : date('Y-m-d'),
+            'jam_operasi' => !empty($_POST['jam_operasi']) ? $_POST['jam_operasi'] : date('H:i:s'),
+
+            'jenis_anamnesis' => trim($_POST['jenis_anamnesis'] ?? 'Autoanamnesis'),
+            'anamnesis' => trim($_POST['anamnesis'] ?? ''),
+            'keluhan_utama' => trim($_POST['keluhan_utama'] ?? ''),
+
+            // Riwayat Penyakit Pasien
+            'rp_hipertensi' => !empty($_POST['rp_hipertensi']) ? '1' : '0',
+            'rp_diabetes' => !empty($_POST['rp_diabetes']) ? '1' : '0',
+            'rp_gastritis' => !empty($_POST['rp_gastritis']) ? '1' : '0',
+            'rp_darah' => !empty($_POST['rp_darah']) ? '1' : '0',
+            'rp_jantung' => !empty($_POST['rp_jantung']) ? '1' : '0',
+            'rp_hati' => !empty($_POST['rp_hati']) ? '1' : '0',
+            'rp_ginjal' => !empty($_POST['rp_ginjal']) ? '1' : '0',
+            'rp_pengobatan_panjang' => !empty($_POST['rp_pengobatan_panjang']) ? '1' : '0',
+            'rp_operasi' => !empty($_POST['rp_operasi']) ? '1' : '0',
+            'rp_alergi_obat' => !empty($_POST['rp_alergi_obat']) ? '1' : '0',
+            'rp_alergi_makanan' => !empty($_POST['rp_alergi_makanan']) ? '1' : '0',
+            'rp_sistemik_lain' => !empty($_POST['rp_sistemik_lain']) ? '1' : '0',
+            'rp_tidak_ada' => !empty($_POST['rp_tidak_ada']) ? '1' : '0',
+            'rp_keterangan' => trim($_POST['rp_keterangan'] ?? ''),
+
+            // Riwayat Alergi
+            'riwayat_alergi' => trim($_POST['riwayat_alergi'] ?? ''),
+
+            // Riwayat Pengobatan
+            'pengobatan_pengencer_darah' => !empty($_POST['pengobatan_pengencer_darah']) ? '1' : '0',
+            'pengobatan_osteoporosis_kanker' => !empty($_POST['pengobatan_osteoporosis_kanker']) ? '1' : '0',
+            'pengobatan_antibiotik' => !empty($_POST['pengobatan_antibiotik']) ? '1' : '0',
+            'pengobatan_analgetik' => !empty($_POST['pengobatan_analgetik']) ? '1' : '0',
+            'pengobatan_keterangan' => trim($_POST['pengobatan_keterangan'] ?? ''),
+
+            // Riwayat Penyakit Keluarga
+            'rpk_hipertensi' => !empty($_POST['rpk_hipertensi']) ? '1' : '0',
+            'rpk_diabetes' => !empty($_POST['rpk_diabetes']) ? '1' : '0',
+            'rpk_gastritis' => !empty($_POST['rpk_gastritis']) ? '1' : '0',
+            'rpk_darah' => !empty($_POST['rpk_darah']) ? '1' : '0',
+            'rpk_jantung' => !empty($_POST['rpk_jantung']) ? '1' : '0',
+            'rpk_hati' => !empty($_POST['rpk_hati']) ? '1' : '0',
+            'rpk_ginjal' => !empty($_POST['rpk_ginjal']) ? '1' : '0',
+            'rpk_pengobatan_panjang' => !empty($_POST['rpk_pengobatan_panjang']) ? '1' : '0',
+            'rpk_operasi' => !empty($_POST['rpk_operasi']) ? '1' : '0',
+            'rpk_alergi_obat' => !empty($_POST['rpk_alergi_obat']) ? '1' : '0',
+            'rpk_alergi_makanan' => !empty($_POST['rpk_alergi_makanan']) ? '1' : '0',
+            'rpk_sistemik_lain' => !empty($_POST['rpk_sistemik_lain']) ? '1' : '0',
+            'rpk_tidak_ada' => !empty($_POST['rpk_tidak_ada']) ? '1' : '0',
+            'rpk_keterangan' => trim($_POST['rpk_keterangan'] ?? ''),
+
+            // Pemeriksaan Fisik
+            'fisik_ekstraoral_check' => !empty($_POST['fisik_ekstraoral_check']) ? '1' : '0',
+            'fisik_ekstraoral' => trim($_POST['fisik_ekstraoral'] ?? ''),
+            'fisik_intraoral_check' => !empty($_POST['fisik_intraoral_check']) ? '1' : '0',
+            'fisik_intraoral' => trim($_POST['fisik_intraoral'] ?? ''),
+
+            // Penunjang, Diagnosis, Rencana
+            'pemeriksaan_penunjang' => trim($_POST['pemeriksaan_penunjang'] ?? ''),
+            'diagnosis' => trim($_POST['diagnosis'] ?? ''),
+            'rencana_tindakan' => trim($_POST['rencana_tindakan'] ?? ''),
+
+            // Dokter
+            'kd_dokter' => trim($_POST['kd_dokter'] ?? ''),
+            'nm_dokter' => trim($_POST['nm_dokter'] ?? ''),
+
+            'updated_at' => $now
+        ];
+
+        if ($id) {
+            $this->db('bmi3_asesmen_bedah_minor')->where('id', $id)->save($saveData);
+            $this->notify('success', 'Data BMI3 Asesmen Bedah Minor berhasil diperbarui.');
+        } else {
+            $saveData['created_at'] = $now;
+            $this->db('bmi3_asesmen_bedah_minor')->save($saveData);
+            $this->notify('success', 'Data BMI3 Asesmen Bedah Minor berhasil disimpan.');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'bmi3manage']));
+    }
+
+    public function postBmi3save()
+    {
+        return $this->anyBmi3save();
+    }
+
+    public function anyBmi3hapus($id = null)
+    {
+        return $this->getBmi3hapus($id);
+    }
+
+    public function getBmi3hapus($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if ($id) {
+            $this->db('bmi3_asesmen_bedah_minor')->where('id', $id)->delete();
+            $this->notify('success', 'Data BMI3 Asesmen Bedah Minor berhasil dihapus.');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'bmi3manage']));
+    }
+
+    public function anyBmi3cetak($id = null)
+    {
+        return $this->getBmi3cetak($id);
+    }
+
+    public function getBmi3cetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id && isset($_SERVER['REQUEST_URI']) && preg_match('/[?&]id=([0-9]+)/', $_SERVER['REQUEST_URI'], $m)) {
+            $id = $m[1];
+        }
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('bmi3_asesmen_bedah_minor')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bmi3_asesmen_bedah_minor.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('bmi3_asesmen_bedah_minor.id', $id)
+            ->select('bmi3_asesmen_bedah_minor.*, COALESCE(bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+            ->oneArray();
+
+        if (!$data) {
+            $this->notify('failure', 'Data Asesmen Bedah Minor tidak ditemukan!');
+            redirect(url([ADMIN, 'update_bmt', 'bmi3manage']));
+        }
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        if (!empty($data['tanggal_operasi']) && $data['tanggal_operasi'] != '0000-00-00') {
+            $p = explode('-', $data['tanggal_operasi']);
+            $data['tgl_operasi_indo'] = (int)$p[2] . ' ' . ($bulan[(int)$p[1]] ?? '') . ' ' . $p[0];
+        } else {
+            $data['tgl_operasi_indo'] = '-';
+        }
+
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir']);
+            $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . ($bulan[(int)$tgl[1]] ?? '') . ' ' . $tgl[0];
+        } else {
+            $data['tgl_lahir_indo'] = '-';
+        }
+
+        // Prepare 6 digits for RM box
+        $clean_rm = preg_replace('/[^0-9]/', '', $data['no_rkm_medis'] ?? '');
+        $padded_rm = str_pad($clean_rm, 6, '0', STR_PAD_LEFT);
+        $rm_digits = str_split($padded_rm);
+        if (count($rm_digits) < 6) {
+            $rm_digits = array_pad($rm_digits, 6, '&nbsp;');
+        }
+
+        $is_pdf = isset($_GET['pdf']) && $_GET['pdf'] == 1;
+        $kop_file = BASE_DIR . '/assets/img/KOP-SURAT.png';
+        $kop_img = is_file($kop_file) ? ($is_pdf ? $kop_file : url('assets/img/KOP-SURAT.png')) : '';
+
+        $viewParams = [
+            'data' => $data,
+            'kop_img' => $kop_img,
+            'rm_digits' => $rm_digits,
+            'is_mpdf' => $is_pdf
+        ];
+
+        if ($is_pdf) {
+            try {
+                $oldErr = error_reporting(0);
+                @ini_set('display_errors', '0');
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 6,
+                    'margin_right' => 6,
+                    'margin_top' => 5,
+                    'margin_bottom' => 5,
+                    'tempDir' => BASE_DIR . '/tmp'
+                ]);
+
+                $html = $this->draw('bmi3/cetak.html', $viewParams);
+                $mpdf->WriteHTML($html);
+                $filename = 'BMI3_Asesmen_Bedah_Minor_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Exception $e) {
+                error_reporting($oldErr);
+                echo "Gagal mengenerate PDF: " . htmlspecialchars($e->getMessage());
+                exit();
+            }
+        }
+
+        echo $this->draw('bmi3/cetak.html', $viewParams);
+        exit();
+    }
+
     public function getBmi4manage()
     {
         $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
@@ -13971,6 +14897,363 @@ if (ob_get_length()) {
         $png = ob_get_clean();
         imagedestroy($img);
         return 'data:image/png;base64,' . base64_encode($png);
+    }
+
+    // ============================================================
+    // BM5 - CHECKLIST KESELAMATAN PASIEN OPERASI
+    // ============================================================
+
+    public function anyBm5manage()
+    {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+            return $this->getBm5hapus($_GET['id']);
+        }
+
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $query = $this->db('bm5_checklist_keselamatan_operasi')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm5_checklist_keselamatan_operasi.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('bm5_checklist_keselamatan_operasi.*, COALESCE(bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+            ->desc('bm5_checklist_keselamatan_operasi.id')
+            ->toArray();
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        foreach ($query as $k => $v) {
+            $query[$k]['nomor'] = $k + 1;
+            if (!empty($v['tanggal']) && $v['tanggal'] != '0000-00-00') {
+                $p = explode('-', $v['tanggal']);
+                $query[$k]['tgl_indo'] = (int)$p[2] . ' ' . ($bulan[(int)$p[1]] ?? '') . ' ' . $p[0];
+            } else {
+                $query[$k]['tgl_indo'] = '-';
+            }
+        }
+
+        $this->tpl->set('data', $query);
+        $this->tpl->set('list', $query);
+        return $this->draw('bm5/manage.html', ['data' => $query, 'list' => $query]);
+    }
+
+    public function getBm5manage()
+    {
+        return $this->anyBm5manage();
+    }
+
+    public function anyBm5form($id = null)
+    {
+        // Handle AJAX patient lookup
+        if (isset($_GET['ajax_patient']) && !empty($_GET['no_rawat'])) {
+            $patient = $this->db('reg_periksa')
+                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir, pasien.gol_darah')
+                ->oneArray();
+
+            header('Content-Type: application/json');
+            if ($patient) {
+                echo json_encode([
+                    'success' => true,
+                    'no_rawat' => $patient['no_rawat'],
+                    'no_rkm_medis' => $patient['no_rkm_medis'],
+                    'nm_pasien' => $patient['nm_pasien'],
+                    'jk' => $patient['jk'],
+                    'umur' => $patient['umur'],
+                    'tgl_lahir' => $patient['tgl_lahir'],
+                    'gol_darah' => $patient['gol_darah']
+                ]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+            exit();
+        }
+
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id && isset($_SERVER['REQUEST_URI']) && preg_match('/[?&]id=([0-9]+)/', $_SERVER['REQUEST_URI'], $m)) {
+            $id = $m[1];
+        }
+
+        $data = [];
+        if ($id) {
+            $data = $this->db('bm5_checklist_keselamatan_operasi')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm5_checklist_keselamatan_operasi.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('bm5_checklist_keselamatan_operasi.id', $id)
+                ->select('bm5_checklist_keselamatan_operasi.*, COALESCE(bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+                ->oneArray();
+        }
+
+        if (empty($data) || !is_array($data)) {
+            $data = [];
+        }
+
+        $today = date('Y-m-d');
+        $nowJam = date('H:i');
+        $defaults = [
+            'id' => '', 'no_rawat' => '', 'no_rkm_medis' => '', 'nm_pasien' => '', 'jk' => '', 'umur' => '',
+            'tanggal' => $today, 'jam' => date('H:i:s'),
+
+            // Sign In
+            'sign_in_tanggal' => $today, 'sign_in_jam' => $nowJam,
+            'sign_in_identitas' => 'Ya', 'sign_in_informed_consent' => 'Ya', 'sign_in_tanda_operasi' => 'Ya',
+            'sign_in_riwayat_alergi' => 'Tidak', 'sign_in_alergi_ket' => '',
+            'sign_in_persiapan_alat' => 'Ya', 'sign_in_pemeriksaan_penunjang' => 'Ya',
+            'sign_in_dr_operator' => '', 'sign_in_perawat' => '',
+
+            // Time Out
+            'time_out_tanggal' => $today, 'time_out_jam' => $nowJam,
+            'time_out_perkenalan_tim' => 'Ya', 'time_out_konfirmasi_pasien' => 'Ya',
+            'time_out_antibiotik_profilaksis' => 'Ya', 'time_out_tindakan_kritis' => 'Ya',
+            'time_out_estimasi_waktu' => '', 'time_out_antisipasi_perdarahan' => '',
+            'time_out_sterilitas' => 'Ya', 'time_out_masalah_peralatan' => '',
+            'time_out_hasil_radiologi' => 'Ya', 'time_out_dr_operator' => '', 'time_out_perawat' => '',
+
+            // Sign Out
+            'sign_out_tanggal' => $today, 'sign_out_jam' => $nowJam,
+            'sign_out_konfirmasi_tindakan' => 'Ya', 'sign_out_nama_tindakan' => '',
+            'sign_out_kelengkapan_alat' => 'Ya', 'sign_out_pelabelan_spesimen' => 'Tidak Ada',
+            'sign_out_masalah_peralatan' => '', 'sign_out_rencana_kontrol' => 'Ya',
+            'sign_out_komplikasi_tindakan' => 'Ya', 'sign_out_dr_operator' => '', 'sign_out_perawat' => ''
+        ];
+
+        foreach ($defaults as $k => $v) {
+            if (!isset($data[$k]) || $data[$k] === null) {
+                $data[$k] = $v;
+            }
+        }
+
+        $dokter = $this->db('dokter')->where('status', '1')->toArray();
+
+        $pasien_list = $this->db('reg_periksa')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+            ->desc('reg_periksa.tgl_registrasi')
+            ->limit(30)
+            ->toArray();
+
+        $this->tpl->set('data', $data);
+        $this->tpl->set('dokter', $dokter);
+        $this->tpl->set('pasien_list', $pasien_list);
+
+        return $this->draw('bm5/form.html', [
+            'data' => $data,
+            'dokter' => $dokter,
+            'pasien_list' => $pasien_list
+        ]);
+    }
+
+    public function getBm5form($id = null)
+    {
+        return $this->anyBm5form($id);
+    }
+
+    public function anyBm5save()
+    {
+        if (empty($_POST)) {
+            redirect(url([ADMIN, 'update_bmt', 'bm5manage']));
+        }
+
+        $id = !empty($_POST['id']) ? (int)$_POST['id'] : null;
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+        $no_rkm_medis = trim($_POST['no_rkm_medis'] ?? '');
+
+        if (empty($no_rkm_medis) && !empty($no_rawat)) {
+            $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+            if ($reg) {
+                $no_rkm_medis = $reg['no_rkm_medis'];
+            }
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'tanggal' => !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d'),
+            'jam' => !empty($_POST['jam']) ? $_POST['jam'] : date('H:i:s'),
+
+            // Sign In
+            'sign_in_tanggal' => !empty($_POST['sign_in_tanggal']) ? $_POST['sign_in_tanggal'] : (!empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d')),
+            'sign_in_jam' => trim($_POST['sign_in_jam'] ?? ''),
+            'sign_in_identitas' => trim($_POST['sign_in_identitas'] ?? 'Ya'),
+            'sign_in_informed_consent' => trim($_POST['sign_in_informed_consent'] ?? 'Ya'),
+            'sign_in_tanda_operasi' => trim($_POST['sign_in_tanda_operasi'] ?? 'Ya'),
+            'sign_in_riwayat_alergi' => trim($_POST['sign_in_riwayat_alergi'] ?? 'Tidak'),
+            'sign_in_alergi_ket' => trim($_POST['sign_in_alergi_ket'] ?? ''),
+            'sign_in_persiapan_alat' => trim($_POST['sign_in_persiapan_alat'] ?? 'Ya'),
+            'sign_in_pemeriksaan_penunjang' => trim($_POST['sign_in_pemeriksaan_penunjang'] ?? 'Ya'),
+            'sign_in_dr_operator' => trim($_POST['sign_in_dr_operator'] ?? ''),
+            'sign_in_perawat' => trim($_POST['sign_in_perawat'] ?? ''),
+
+            // Time Out
+            'time_out_tanggal' => !empty($_POST['time_out_tanggal']) ? $_POST['time_out_tanggal'] : (!empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d')),
+            'time_out_jam' => trim($_POST['time_out_jam'] ?? ''),
+            'time_out_perkenalan_tim' => trim($_POST['time_out_perkenalan_tim'] ?? 'Ya'),
+            'time_out_konfirmasi_pasien' => trim($_POST['time_out_konfirmasi_pasien'] ?? 'Ya'),
+            'time_out_antibiotik_profilaksis' => trim($_POST['time_out_antibiotik_profilaksis'] ?? 'Ya'),
+            'time_out_tindakan_kritis' => trim($_POST['time_out_tindakan_kritis'] ?? 'Ya'),
+            'time_out_estimasi_waktu' => trim($_POST['time_out_estimasi_waktu'] ?? ''),
+            'time_out_antisipasi_perdarahan' => trim($_POST['time_out_antisipasi_perdarahan'] ?? ''),
+            'time_out_sterilitas' => trim($_POST['time_out_sterilitas'] ?? 'Ya'),
+            'time_out_masalah_peralatan' => trim($_POST['time_out_masalah_peralatan'] ?? ''),
+            'time_out_hasil_radiologi' => trim($_POST['time_out_hasil_radiologi'] ?? 'Ya'),
+            'time_out_dr_operator' => trim($_POST['time_out_dr_operator'] ?? ''),
+            'time_out_perawat' => trim($_POST['time_out_perawat'] ?? ''),
+
+            // Sign Out
+            'sign_out_tanggal' => !empty($_POST['sign_out_tanggal']) ? $_POST['sign_out_tanggal'] : (!empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d')),
+            'sign_out_jam' => trim($_POST['sign_out_jam'] ?? ''),
+            'sign_out_konfirmasi_tindakan' => !empty($_POST['sign_out_nama_tindakan']) ? 'Ya' : 'Tidak',
+            'sign_out_nama_tindakan' => trim($_POST['sign_out_nama_tindakan'] ?? ''),
+            'sign_out_kelengkapan_alat' => trim($_POST['sign_out_kelengkapan_alat'] ?? 'Ya'),
+            'sign_out_pelabelan_spesimen' => trim($_POST['sign_out_pelabelan_spesimen'] ?? 'Ya'),
+            'sign_out_masalah_peralatan' => trim($_POST['sign_out_masalah_peralatan'] ?? ''),
+            'sign_out_rencana_kontrol' => trim($_POST['sign_out_rencana_kontrol'] ?? 'Ya'),
+            'sign_out_komplikasi_tindakan' => trim($_POST['sign_out_komplikasi_tindakan'] ?? 'Ya'),
+            'sign_out_dr_operator' => trim($_POST['sign_out_dr_operator'] ?? ''),
+            'sign_out_perawat' => trim($_POST['sign_out_perawat'] ?? ''),
+
+            'updated_at' => $now
+        ];
+
+        if ($id) {
+            $this->db('bm5_checklist_keselamatan_operasi')->where('id', $id)->save($saveData);
+            $this->notify('success', 'Data BM5 Checklist Keselamatan Pasien Operasi berhasil diperbarui.');
+        } else {
+            $saveData['created_at'] = $now;
+            $this->db('bm5_checklist_keselamatan_operasi')->save($saveData);
+            $this->notify('success', 'Data BM5 Checklist Keselamatan Pasien Operasi berhasil disimpan.');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'bm5manage']));
+    }
+
+    public function postBm5save()
+    {
+        return $this->anyBm5save();
+    }
+
+    public function anyBm5hapus($id = null)
+    {
+        return $this->getBm5hapus($id);
+    }
+
+    public function getBm5hapus($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if ($id) {
+            $this->db('bm5_checklist_keselamatan_operasi')->where('id', $id)->delete();
+            $this->notify('success', 'Data BM5 Checklist Keselamatan Pasien Operasi berhasil dihapus.');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'bm5manage']));
+    }
+
+    public function anyBm5cetak($id = null)
+    {
+        return $this->getBm5cetak($id);
+    }
+
+    public function getBm5cetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id && isset($_SERVER['REQUEST_URI']) && preg_match('/[?&]id=([0-9]+)/', $_SERVER['REQUEST_URI'], $m)) {
+            $id = $m[1];
+        }
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('bm5_checklist_keselamatan_operasi')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm5_checklist_keselamatan_operasi.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('bm5_checklist_keselamatan_operasi.id', $id)
+            ->select('bm5_checklist_keselamatan_operasi.*, COALESCE(bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+            ->oneArray();
+
+        if (!$data) {
+            $this->notify('failure', 'Data Checklist Keselamatan Operasi tidak ditemukan!');
+            redirect(url([ADMIN, 'update_bmt', 'bm5manage']));
+        }
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        if (!empty($data['tanggal']) && $data['tanggal'] != '0000-00-00') {
+            $p = explode('-', $data['tanggal']);
+            $data['tgl_indo'] = (int)$p[2] . ' ' . ($bulan[(int)$p[1]] ?? '') . ' ' . $p[0];
+        } else {
+            $data['tgl_indo'] = '-';
+        }
+
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir']);
+            $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . ($bulan[(int)$tgl[1]] ?? '') . ' ' . $tgl[0];
+        } else {
+            $data['tgl_lahir_indo'] = '-';
+        }
+
+        // Format dates for stages to d-m-Y if in YYYY-MM-DD format
+        if (!empty($data['sign_in_tanggal']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $data['sign_in_tanggal'])) {
+            $data['sign_in_tanggal'] = date('d-m-Y', strtotime($data['sign_in_tanggal']));
+        }
+        if (!empty($data['time_out_tanggal']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $data['time_out_tanggal'])) {
+            $data['time_out_tanggal'] = date('d-m-Y', strtotime($data['time_out_tanggal']));
+        }
+        if (!empty($data['sign_out_tanggal']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $data['sign_out_tanggal'])) {
+            $data['sign_out_tanggal'] = date('d-m-Y', strtotime($data['sign_out_tanggal']));
+        }
+
+        // Prepare 6 digits for RM box
+        $clean_rm = preg_replace('/[^0-9]/', '', $data['no_rkm_medis'] ?? '');
+        $padded_rm = str_pad($clean_rm, 6, '0', STR_PAD_LEFT);
+        $rm_digits = str_split($padded_rm);
+        if (count($rm_digits) < 6) {
+            $rm_digits = array_pad($rm_digits, 6, '&nbsp;');
+        }
+
+        $is_pdf = isset($_GET['pdf']) && $_GET['pdf'] == 1;
+        $kop_file = BASE_DIR . '/assets/img/KOP-SURAT.png';
+        $kop_img = is_file($kop_file) ? ($is_pdf ? $kop_file : url('assets/img/KOP-SURAT.png')) : '';
+
+        $viewParams = [
+            'data' => $data,
+            'kop_img' => $kop_img,
+            'rm_digits' => $rm_digits,
+            'is_mpdf' => $is_pdf
+        ];
+
+        if ($is_pdf) {
+            try {
+                $oldErr = error_reporting(0);
+                @ini_set('display_errors', '0');
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4-L',
+                    'orientation' => 'L',
+                    'margin_left' => 6,
+                    'margin_right' => 6,
+                    'margin_top' => 5,
+                    'margin_bottom' => 5,
+                    'tempDir' => BASE_DIR . '/tmp'
+                ]);
+
+                $html = $this->draw('bm5/cetak.html', $viewParams);
+                $mpdf->WriteHTML($html);
+                $filename = 'BM5_Checklist_Keselamatan_Operasi_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Exception $e) {
+                error_reporting($oldErr);
+                echo "Gagal mengenerate PDF: " . htmlspecialchars($e->getMessage());
+            }
+        }
+
+        echo $this->draw('bm5/cetak.html', $viewParams);
+        exit();
     }
 }
 

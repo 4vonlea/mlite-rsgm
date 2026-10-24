@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>BMI3 - Asesmen Bedah Minor (Gigi dan Mulut) - {$data.no_rawat}</title>
+    <style>
+        {if: empty($is_mpdf)}
+        @page {
+            size: A4 portrait;
+            margin: 5mm 6mm 5mm 6mm;
+        }
+        {/if}
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8pt;
+            line-height: 1.25;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
+            background-color: #f4f6f9;
+            padding: 12px 0;
+        }
+        .page {
+            background: #fff;
+            width: 200mm;
+            min-height: 287mm;
+            margin: 0 auto;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        {/if}
+
+        /* Toolbar Layar Browser */
+        .no-print-toolbar {
+            width: 200mm;
+            margin: 0 auto 10px auto;
+            padding: 8px 14px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-toolbar {
+            padding: 5px 12px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+
+        /* BINGKAI UTAMA */
+        .outer-border {
+            border: 1.5px solid #000;
+            width: 100%;
+        }
+
+        /* KOP HEADER DUA KOLOM */
+        .kop-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1.5px solid #000;
+        }
+        .kop-left {
+            width: 58%;
+            border-right: 1.5px solid #000;
+            padding: 3px 5px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .kop-left img {
+            width: 100%;
+            max-height: 48px;
+            object-fit: contain;
+        }
+        .kop-right {
+            width: 42%;
+            padding: 4px 8px;
+            font-size: 7.8pt;
+            vertical-align: top;
+        }
+
+        /* KOTAK DIGIT NOMOR RM */
+        .rm-box-table {
+            border-collapse: collapse;
+            display: inline-table;
+            vertical-align: middle;
+        }
+        .rm-digit-cell {
+            width: 14px;
+            height: 15px;
+            border: 1px solid #000;
+            text-align: center;
+            font-weight: bold;
+            font-size: 8.5pt;
+            padding: 0;
+            line-height: 14px;
+        }
+        .rm-dash-cell {
+            padding: 0 2px;
+            font-weight: bold;
+            font-size: 8.5pt;
+        }
+
+        /* TITLE BAR */
+        .title-bar {
+            text-align: center;
+            font-size: 10.5pt;
+            font-weight: bold;
+            text-decoration: underline;
+            letter-spacing: 0.5px;
+            padding: 4px 0 2px 0;
+            border-bottom: 1px solid #000;
+        }
+
+        /* SUBHEADER WAKTU OPERASI */
+        .op-time-bar {
+            padding: 3px 8px;
+            font-size: 8pt;
+            border-bottom: 1px solid #000;
+        }
+
+        /* TABEL GRID ASESMEN UTAMA */
+        .grid-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .grid-table td {
+            border: 1px solid #000;
+            padding: 4px 6px;
+            vertical-align: top;
+            font-size: 7.8pt;
+            line-height: 1.25;
+        }
+        .grid-label {
+            width: 27%;
+            font-weight: bold;
+            background-color: #fff;
+        }
+        .grid-value {
+            width: 73%;
+        }
+
+        .box-check {
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            border: 1px solid #000;
+            text-align: center;
+            line-height: 10px;
+            font-size: 8pt;
+            font-weight: bold;
+            margin-right: 3px;
+            vertical-align: middle;
+            background: #fff;
+        }
+
+        .check-col-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .check-col-table td {
+            border: none;
+            padding: 1.5px 2px;
+            font-size: 7.8pt;
+            vertical-align: top;
+        }
+
+        /* DOKTER GIGI SIGNATURE */
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .signature-table td {
+            border: none;
+            padding: 4px 10px;
+            vertical-align: top;
+        }
+
+        /* FOOTER RESMI */
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 6.8pt;
+            margin-top: 3px;
+            padding: 1px 4px;
+        }
+
+        @media print {
+            .no-print-toolbar { display: none !important; }
+            body { background: #fff !important; padding: 0 !important; }
+            .page { width: 100% !important; box-shadow: none !important; margin: 0 !important; }
+        }
+    </style>
+</head>
+<body>
+
+{if: empty($is_mpdf)}
+<div class="no-print-toolbar">
+    <div>
+        <i class="fa fa-print"></i> <strong>Pratinjau Cetak: BMI3 - Asesmen Bedah Minor (Gigi dan Mulut)</strong>
+    </div>
+    <div>
+        <button onclick="window.print()" class="btn-toolbar btn-print"><i class="fa fa-print"></i> Cetak Dokumen</button>
+        <a href="{?=url([ADMIN, 'update_bmt', 'bmi3cetak', $data['id']])?}&pdf=1" target="_blank" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
+        <button onclick="window.close()" class="btn-toolbar btn-close">Tutup</button>
+    </div>
+</div>
+{/if}
+
+<div class="page">
+    <div class="outer-border">
+
+        <!-- KOP SURAT & IDENTITAS PASIEN -->
+        <table class="kop-table">
+            <tr>
+                <td class="kop-left">
+                    {if: !empty($kop_img)}
+                        <img src="{$kop_img}" alt="KOP RSGM">
+                    {else}
+                        <div style="font-size: 8.5pt; font-weight: bold;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+                        <div style="font-size: 10.5pt; font-weight: bold;">RSGM GUSTI HASAN AMAN</div>
+                        <div style="font-size: 7pt;">Jl. Simpang Ulin No.28 Telp. (0511) 3260818 BANJARMASIN</div>
+                    {/if}
+                </td>
+                <td class="kop-right">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 7.8pt;">
+                        <tr>
+                            <td style="width: 75px; vertical-align: middle;">No. RM</td>
+                            <td style="width: 8px; vertical-align: middle;">:</td>
+                            <td style="vertical-align: middle;">
+                                <table class="rm-box-table">
+                                    <tr>
+                                        <td class="rm-digit-cell">{$rm_digits[0]}</td>
+                                        <td class="rm-digit-cell">{$rm_digits[1]}</td>
+                                        <td class="rm-dash-cell">&mdash;</td>
+                                        <td class="rm-digit-cell">{$rm_digits[2]}</td>
+                                        <td class="rm-digit-cell">{$rm_digits[3]}</td>
+                                        <td class="rm-dash-cell">&mdash;</td>
+                                        <td class="rm-digit-cell">{$rm_digits[4]}</td>
+                                        <td class="rm-digit-cell">{$rm_digits[5]}</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: middle; padding-top: 3px;">Nama Pasien</td>
+                            <td style="vertical-align: middle; padding-top: 3px;">:</td>
+                            <td style="vertical-align: middle; padding-top: 3px;">
+                                <strong>{$data.nm_pasien}</strong>
+                                &nbsp;&nbsp;
+                                <strong>{$data.jk}</strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: middle; padding-top: 3px;">Tanggal Lahir</td>
+                            <td style="vertical-align: middle; padding-top: 3px;">:</td>
+                            <td style="vertical-align: middle; padding-top: 3px;">{$data.tgl_lahir_indo}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <!-- TITLE BAR -->
+        <div class="title-bar">
+            ASESMEN BEDAH MINOR (GIGI DAN MULUT)
+        </div>
+
+        <!-- TANGGAL & PUKUL OPERASI -->
+        <div class="op-time-bar">
+            Tanggal Operasi : <strong>{$data.tgl_operasi_indo}</strong>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Pukul : <strong>{$data.jam_operasi}</strong>
+        </div>
+
+        <!-- MAIN GRID TABLE -->
+        <table class="grid-table">
+
+            <!-- 1. ANAMNESIS -->
+            <tr>
+                <td class="grid-label">
+                    Anamnesis<br>
+                    (Autoanamnesis /<br>
+                    Alloanamnesis) :
+                </td>
+                <td class="grid-value">
+                    <div style="font-style: italic; font-weight: bold; margin-bottom: 2px;">
+                        ({$data.jenis_anamnesis})
+                    </div>
+                    <div>
+                        {if: !empty($data.anamnesis)}
+                            {$data.anamnesis}
+                        {else}
+                            -
+                        {/if}
+                    </div>
+                </td>
+            </tr>
+
+            <!-- 2. KELUHAN UTAMA -->
+            <tr>
+                <td class="grid-label">
+                    Keluhan Utama :
+                </td>
+                <td class="grid-value">
+                    {if: !empty($data.keluhan_utama)}
+                        {$data.keluhan_utama}
+                    {else}
+                        -
+                    {/if}
+                </td>
+            </tr>
+
+            <!-- 3. RIWAYAT PENYAKIT -->
+            <tr>
+                <td class="grid-label">
+                    Riwayat Penyakit :
+                </td>
+                <td class="grid-value">
+                    <table class="check-col-table">
+                        <tr>
+                            <td style="width: 50%;">
+                                <div><span class="box-check">{if: $data.rp_hipertensi == '1'}&#10003;{/if}</span> Hipertensi</div>
+                                <div><span class="box-check">{if: $data.rp_diabetes == '1'}&#10003;{/if}</span> Diabetes Melitus</div>
+                                <div><span class="box-check">{if: $data.rp_gastritis == '1'}&#10003;{/if}</span> Gastritis / Dispepsia / Masalah lambung</div>
+                                <div><span class="box-check">{if: $data.rp_darah == '1'}&#10003;{/if}</span> Gangguan Darah</div>
+                                <div><span class="box-check">{if: $data.rp_jantung == '1'}&#10003;{/if}</span> Gangguan Jantung</div>
+                                <div><span class="box-check">{if: $data.rp_hati == '1'}&#10003;{/if}</span> Gangguan Hati</div>
+                            </td>
+                            <td style="width: 50%;">
+                                <div><span class="box-check">{if: $data.rp_ginjal == '1'}&#10003;{/if}</span> Gangguan Ginjal</div>
+                                <div><span class="box-check">{if: $data.rp_pengobatan_panjang == '1'}&#10003;{/if}</span> Pengobatan Jangka Panjang</div>
+                                <div><span class="box-check">{if: $data.rp_operasi == '1'}&#10003;{/if}</span> Riwayat Operasi</div>
+                                <div><span class="box-check">{if: $data.rp_alergi_obat == '1'}&#10003;{/if}</span> Alergi Obat-obatan</div>
+                                <div><span class="box-check">{if: $data.rp_alergi_makanan == '1'}&#10003;{/if}</span> Alergi Makanan</div>
+                                <div><span class="box-check">{if: $data.rp_sistemik_lain == '1'}&#10003;{/if}</span> Penyakit / gangguan sistemik lainnya</div>
+                                <div><span class="box-check">{if: $data.rp_tidak_ada == '1'}&#10003;{/if}</span> <strong>Tidak ada</strong></div>
+                            </td>
+                        </tr>
+                    </table>
+                    {if: !empty($data.rp_keterangan)}
+                        <div style="margin-top: 3px; font-size: 7.5pt; font-style: italic;">
+                            Catatan: {$data.rp_keterangan}
+                        </div>
+                    {/if}
+                </td>
+            </tr>
+
+            <!-- 4. RIWAYAT ALERGI -->
+            <tr>
+                <td class="grid-label">
+                    Riwayat Alergi :
+                </td>
+                <td class="grid-value">
+                    {if: !empty($data.riwayat_alergi)}
+                        {$data.riwayat_alergi}
+                    {else}
+                        Tidak ada riwayat alergi
+                    {/if}
+                </td>
+            </tr>
+
+            <!-- 5. RIWAYAT PENGOBATAN -->
+            <tr>
+                <td class="grid-label">
+                    Riwayat Pengobatan :
+                </td>
+                <td class="grid-value">
+                    <table class="check-col-table">
+                        <tr>
+                            <td>
+                                <div><span class="box-check">{if: $data.pengobatan_pengencer_darah == '1'}&#10003;{/if}</span> Pengencer darah</div>
+                                <div><span class="box-check">{if: $data.pengobatan_osteoporosis_kanker == '1'}&#10003;{/if}</span> Obat-obatan osteoporosis / kanker (Bisfofanat, Denosumab)</div>
+                                <div><span class="box-check">{if: $data.pengobatan_antibiotik == '1'}&#10003;{/if}</span> Antibiotik</div>
+                                <div><span class="box-check">{if: $data.pengobatan_analgetik == '1'}&#10003;{/if}</span> Analgetik</div>
+                            </td>
+                        </tr>
+                    </table>
+                    {if: !empty($data.pengobatan_keterangan)}
+                        <div style="margin-top: 3px; font-size: 7.5pt;">
+                            <strong>Keterangan:</strong> {$data.pengobatan_keterangan}
+                        </div>
+                    {/if}
+                </td>
+            </tr>
+
+            <!-- 6. RIWAYAT PENYAKIT DALAM KELUARGA -->
+            <tr>
+                <td class="grid-label">
+                    Riwayat Penyakit dalam keluarga :
+                </td>
+                <td class="grid-value">
+                    <table class="check-col-table">
+                        <tr>
+                            <td style="width: 50%;">
+                                <div><span class="box-check">{if: $data.rpk_hipertensi == '1'}&#10003;{/if}</span> Hipertensi</div>
+                                <div><span class="box-check">{if: $data.rpk_diabetes == '1'}&#10003;{/if}</span> Diabetes Melitus</div>
+                                <div><span class="box-check">{if: $data.rpk_gastritis == '1'}&#10003;{/if}</span> Gastritis / Dispepsia / Masalah lambung</div>
+                                <div><span class="box-check">{if: $data.rpk_darah == '1'}&#10003;{/if}</span> Gangguan Darah</div>
+                                <div><span class="box-check">{if: $data.rpk_jantung == '1'}&#10003;{/if}</span> Gangguan Jantung</div>
+                                <div><span class="box-check">{if: $data.rpk_hati == '1'}&#10003;{/if}</span> Gangguan Hati</div>
+                            </td>
+                            <td style="width: 50%;">
+                                <div><span class="box-check">{if: $data.rpk_ginjal == '1'}&#10003;{/if}</span> Gangguan Ginjal</div>
+                                <div><span class="box-check">{if: $data.rpk_pengobatan_panjang == '1'}&#10003;{/if}</span> Pengobatan Jangka Panjang</div>
+                                <div><span class="box-check">{if: $data.rpk_operasi == '1'}&#10003;{/if}</span> Riwayat Operasi</div>
+                                <div><span class="box-check">{if: $data.rpk_alergi_obat == '1'}&#10003;{/if}</span> Alergi Obat-obatan</div>
+                                <div><span class="box-check">{if: $data.rpk_alergi_makanan == '1'}&#10003;{/if}</span> Alergi Makanan</div>
+                                <div><span class="box-check">{if: $data.rpk_sistemik_lain == '1'}&#10003;{/if}</span> Penyakit / gangguan sistemik lainnya</div>
+                                <div><span class="box-check">{if: $data.rpk_tidak_ada == '1'}&#10003;{/if}</span> <strong>Tidak ada</strong></div>
+                            </td>
+                        </tr>
+                    </table>
+                    {if: !empty($data.rpk_keterangan)}
+                        <div style="margin-top: 3px; font-size: 7.5pt; font-style: italic;">
+                            Catatan: {$data.rpk_keterangan}
+                        </div>
+                    {/if}
+                </td>
+            </tr>
+
+            <!-- 7. PEMERIKSAAN FISIK -->
+            <tr>
+                <td class="grid-label">
+                    Pemeriksaan fisik :
+                </td>
+                <td class="grid-value">
+                    <div style="margin-bottom: 4px;">
+                        <span class="box-check">{if: $data.fisik_ekstraoral_check == '1'}&#10003;{/if}</span>
+                        <strong>Ekstraoral</strong>
+                        {if: !empty($data.fisik_ekstraoral)}
+                            : {$data.fisik_ekstraoral}
+                        {/if}
+                    </div>
+                    <div>
+                        <span class="box-check">{if: $data.fisik_intraoral_check == '1'}&#10003;{/if}</span>
+                        <strong>Intraoral</strong>
+                        {if: !empty($data.fisik_intraoral)}
+                            : {$data.fisik_intraoral}
+                        {/if}
+                    </div>
+                </td>
+            </tr>
+
+            <!-- 8. PEMERIKSAAN PENUNJANG -->
+            <tr>
+                <td class="grid-label">
+                    Pemeriksaan Penunjang :
+                </td>
+                <td class="grid-value">
+                    {if: !empty($data.pemeriksaan_penunjang)}
+                        {$data.pemeriksaan_penunjang}
+                    {else}
+                        -
+                    {/if}
+                </td>
+            </tr>
+
+            <!-- 9. DIAGNOSIS -->
+            <tr>
+                <td class="grid-label">
+                    Diagnosis :
+                </td>
+                <td class="grid-value">
+                    <strong>
+                        {if: !empty($data.diagnosis)}
+                            {$data.diagnosis}
+                        {else}
+                            -
+                        {/if}
+                    </strong>
+                </td>
+            </tr>
+
+            <!-- 10. RENCANA TINDAKAN -->
+            <tr>
+                <td class="grid-label">
+                    Rencana Tindakan :
+                </td>
+                <td class="grid-value">
+                    {if: !empty($data.rencana_tindakan)}
+                        {$data.rencana_tindakan}
+                    {else}
+                        -
+                    {/if}
+                </td>
+            </tr>
+
+            <!-- 11. TANDA TANGAN DOKTER GIGI -->
+            <tr>
+                <td colspan="2" style="border: none; padding-top: 8px; padding-bottom: 4px;">
+                    <table class="signature-table">
+                        <tr>
+                            <td style="width: 55%;">
+                                &nbsp;
+                            </td>
+                            <td style="width: 45%; text-align: center;">
+                                <div>Dokter Gigi</div>
+                                <div style="height: 38px; vertical-align: middle; display: flex; align-items: center; justify-content: center; margin-top: 4px;">
+                                    {if: !empty($data.nm_dokter)}
+                                        <span style="font-size: 7.5pt; color: #27ae60; font-weight: bold;">[Signed & Valid]</span>
+                                    {/if}
+                                </div>
+                                <div style="margin-top: 2px;">
+                                    ( <strong>{if: !empty($data.nm_dokter)}{$data.nm_dokter}{else}................................................{/if}</strong> )
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+        </table>
+
+    </div>
+
+    <!-- FOOTER RESMI DOKUMEN -->
+    <table class="footer-table">
+        <tr>
+            <td style="width: 25%; text-align: left; font-weight: bold;">RSGM/Ed-Rev/02/2023</td>
+            <td style="width: 15%; text-align: center; font-weight: bold;">RM. RJ</td>
+            <td style="width: 60%; text-align: right; font-style: italic;">Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</td>
+        </tr>
+    </table>
+
+</div>
+
+</body>
+</html>

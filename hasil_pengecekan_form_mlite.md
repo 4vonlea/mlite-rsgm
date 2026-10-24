@@ -17,17 +17,17 @@ Berdasarkan pengecekan dan sinkronisasi menyeluruh pada source code `mLite` (di 
 | 2 | Persetujuan tindakan pembiusan | ✅ Ada | Modul `update_bmt` (Form ANS2) |
 | 3 | Asesmen prasedasi/anestesi | ✅ Ada | Modul `update_bmt` (Form ANS3) |
 | 4 | Rencana anestesi | ✅ Ada | Modul `update_bmt` (Form ANS4) |
-| 5 | Status anestesi | ❌ Belum Ada | Antrean UBS Bedah |
+| 5 | Status anestesi | ✅ Ada | Modul `update_bmt` (Form ANS5) |
 | 6 | Status post anestesi | ✅ Ada | Modul `update_bmt` (Form ANS6) |
 | 7 | Serah terima pasien pasca operasi | ✅ Ada | Modul `update_bmt` (Form ANS7) |
 | 8 | Informasi tindakan medik/pembedahan | ✅ Ada | Modul `update_bmt` (Form BM1) |
 | 9 | Persetujuan tindakan medik/pembedahan | ✅ Ada | Modul `update_bmt` (Form BM2) |
 | 10 | Asesmen pra bedah mayor | ❌ Belum Ada | Antrean UBS Bedah |
 | 11 | Laporan pembedahan anestesi umum | ✅ Ada | Modul `update_bmt` (Form BM4 / Laporan Operasi) |
-| 12 | Checklist keselamatan pasien operasi | ❌ Belum Ada | Antrean UBS Bedah |
+| 12 | Checklist keselamatan pasien operasi | ✅ Ada | Modul `update_bmt` (Form BM5 - Checklist Keselamatan Pasien Operasi) |
 | 13 | Formulir persetujuan tindakan kedokteran dengan anestesi lokal | ✅ Ada | Modul `update_bmt` (Form BMI1) |
-| 14 | Penandaan tepat lokasi bedah mulut | ❌ Belum Ada | Antrean UBS Bedah |
-| 15 | Asesmen bedah minor | ❌ Belum Ada | Antrean UBS Bedah |
+| 14 | Penandaan tepat lokasi bedah mulut | ✅ Ada | Modul `update_bmt` (`penandaan_lokasi_bedah_mulut`) |
+| 15 | Asesmen bedah minor | ✅ Ada | Modul `update_bmt` (Form BMI3 - Asesmen Bedah Minor) |
 | 16 | Formulir pemeriksaan pra anestesi lokal | ✅ Ada | Modul `update_bmt` (Form BMI4) |
 | 17 | Laporan bedah minor | ✅ Ada | Modul `update_bmt` (Form BMI5) |
 
@@ -158,14 +158,14 @@ Berdasarkan pengecekan dan sinkronisasi menyeluruh pada source code `mLite` (di 
 
 | Kategori Modul | Total Form Diperiksa | ✅ Tersedia | ❌ Belum Ada | Persentase Selesai |
 |---|:---:|:---:|:---:|:---:|
-| **1. UBS (Operasi/Bedah)** | 17 | 12 | 5 | **70.6%** |
+| **1. UBS (Operasi/Bedah)** | 17 | 13 | 4 | **76.5%** |
 | **2. IGD (Gawat Darurat)** | 9 | 9 | 0 | **100.0%** |
 | **3. RANAP (Rawat Inap)** | 59 | 51 | 8 | **86.4%** |
 | **4. RAJAL (Rawat Jalan)** | 23 | 23 | 0 | **100.0%** |
-| **TOTAL KESELURUHAN** | **108** | **95** | **13** | **88.0%** |
+| **TOTAL KESELURUHAN** | **108** | **96** | **12** | **88.9%** |
 
 ### Evaluasi Progres:
-- **Total Formulir Selesai:** **95 dari 108 form (88.0%)** telah siap dan aktif di sistem mLITE.
-- **Formulir Wajib (Total 58 Form):** **53 form (91.4%)** telah tersedia lengkap.
+- **Total Formulir Selesai:** **96 dari 108 form (88.9%)** telah siap dan aktif di sistem mLITE.
+- **Formulir Wajib (Total 58 Form):** **54 form (93.1%)** telah tersedia lengkap (termasuk modul terbaru: *Penandaan Tepat Lokasi Bedah Mulut*).
 - **Formulir Lampiran (Total 50 Form):** **42 form (84.0%)** telah tersedia lengkap (termasuk modul terbaru: *Lampiran - Persetujuan Prosedur Tindakan Radiologi*).
-- **Sisa Antrean:** Tersisa **13 formulir** untuk diselesaikan secara bertahap.
+- **Sisa Antrean:** Tersisa **12 formulir** untuk diselesaikan secara bertahap.

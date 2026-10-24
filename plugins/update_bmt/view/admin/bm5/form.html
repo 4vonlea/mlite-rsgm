@@ -1,0 +1,591 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
+                <h3 class="panel-title" style="font-weight: bold; font-size: 16px;">
+                    <i class="fa fa-check-square-o text-success"></i> {if: !empty($data.id)}Edit{else}Tambah{/if} BM5 - Checklist Keselamatan Pasien Operasi
+                </h3>
+                <div>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'bm5manage'])?}" class="btn btn-default btn-sm">
+                        <i class="fa fa-arrow-left"></i> Kembali ke Data
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+
+                <form method="POST" action="{?=url([ADMIN, 'update_bmt', 'bm5save'])?}" id="form-checklist-operasi">
+                    <input type="hidden" name="id" value="{$data.id}">
+
+                    <!-- IDENTITAS PASIEN & JADWAL OPERASI -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading" style="font-weight: bold; font-size: 13px;">
+                            <i class="fa fa-user"></i> Identitas Pasien & Waktu Operasi
+                        </div>
+                        <div class="panel-body" style="background: #fafafa;">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>No. Rawat <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required placeholder="2026/10/25/000001">
+                                            <span class="input-group-btn">
+                                                <button type="button" class="btn btn-info" id="btn-modal-pasien" data-toggle="modal" data-target="#modalPasien" title="Cari Pasien">
+                                                    <i class="fa fa-search"></i>
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>No. Rekam Medis</label>
+                                        <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly style="background: #eef1f4;">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Nama Pasien</label>
+                                        <input type="text" id="nm_pasien" class="form-control" value="{$data.nm_pasien}" readonly style="background: #eef1f4;">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>L / P | Umur</label>
+                                        <div class="form-inline">
+                                            <input type="text" id="jk" class="form-control" value="{$data.jk}" readonly style="background: #eef1f4; width: 45px;">
+                                            <input type="text" id="umur" class="form-control" value="{$data.umur}" readonly style="background: #eef1f4; width: calc(100% - 50px);">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Tanggal Operasi</label>
+                                        <input type="date" name="tanggal" id="tanggal" class="form-control" value="{$data.tanggal}" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3 TAHAPAN CHECKLIST (LAYOUT 3 KOLOM) -->
+                    <div class="row">
+
+                        <!-- ==================== KOLOM 1: SIGN IN ==================== -->
+                        <div class="col-md-4">
+                            <div class="panel panel-success" style="border-width: 2px;">
+                                <div class="panel-heading" style="padding: 10px 12px; background-color: #27ae60; color: #fff;">
+                                    <h4 style="margin: 0; font-weight: bold; font-size: 15px;">
+                                        Sebelum Induksi / <em>Sign In</em>
+                                    </h4>
+                                    <div style="font-size: 11px; margin-top: 3px; opacity: 0.9;">
+                                        <i class="fa fa-info-circle"></i> Dengan perawat, dr. Operator
+                                    </div>
+                                </div>
+                                <div class="panel-body" style="background: #fdfefe; min-height: 720px; display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div>
+                                        <!-- Waktu Sign In -->
+                                        <div class="well well-sm" style="background: #edf7ed; border-color: #c8e6c9; padding: 8px 10px; margin-bottom: 12px;">
+                                            <div class="row">
+                                                <div class="col-xs-7">
+                                                    <label style="font-size: 11px; margin-bottom: 2px;">Tgl Sign In</label>
+                                                    <input type="date" name="sign_in_tanggal" class="form-control input-sm" value="{$data.sign_in_tanggal}">
+                                                </div>
+                                                <div class="col-xs-5">
+                                                    <label style="font-size: 11px; margin-bottom: 2px;">Jam</label>
+                                                    <input type="time" name="sign_in_jam" class="form-control input-sm" value="{$data.sign_in_jam}">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Item 1: Identitas Pasien -->
+                                        <div class="form-group" style="border-bottom: 1px dashed #ddd; padding-bottom: 8px;">
+                                            <label style="font-size: 12px; font-weight: 600;">
+                                                1. Apakah identitas pasien sudah benar, rencana tindakan sudah jelas (Nama dan tgl lahir / no RM)?
+                                            </label>
+                                            <div>
+                                                <label class="radio-inline"><input type="radio" name="sign_in_identitas" value="Ya" {if: $data.sign_in_identitas == 'Ya'}checked{/if}> <strong>Ya</strong></label>
+                                                <label class="radio-inline"><input type="radio" name="sign_in_identitas" value="Tidak" {if: $data.sign_in_identitas == 'Tidak'}checked{/if}> Tidak</label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Item 2: Informed Consent -->
+                                        <div class="form-group" style="border-bottom: 1px dashed #ddd; padding-bottom: 8px;">
+                                            <label style="font-size: 12px; font-weight: 600;">
+                                                2. Ada persetujuan tindakan medis yang akan dilakukan (informed consent)?
+                                            </label>
+                                            <div>
+                                                <label class="radio-inline"><input type="radio" name="sign_in_informed_consent" value="Ya" {if: $data.sign_in_informed_consent == 'Ya'}checked{/if}> <strong>Ya</strong></label>
+                                                <label class="radio-inline"><input type="radio" name="sign_in_informed_consent" value="Tidak" {if: $data.sign_in_informed_consent == 'Tidak'}checked{/if}> Tidak</label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Item 3: Tanda Operasi -->
+                                        <div class="form-group" style="border-bottom: 1px dashed #ddd; padding-bottom: 8px;">
+                                            <label style="font-size: 12px; font-weight: 600;">
+                                                3. Apakah area yang akan dioperasi sudah diberi tanda?
+                                            </label>
+                                            <div>
+                                                <label class="radio-inline"><input type="radio" name="sign_in_tanda_operasi" value="Ya" {if: $data.sign_in_tanda_operasi == 'Ya'}checked{/if}> <strong>Ya</strong></label>
+                                                <label class="radio-inline"><input type="radio" name="sign_in_tanda_operasi" value="Tidak Diperlukan" {if: $data.sign_in_tanda_operasi == 'Tidak Diperlukan'}checked{/if}> <strong>Tidak diperlukan</strong></label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Item 4: Riwayat Alergi -->
+                                        <div class="form-group" style="border-bottom: 1px dashed #ddd; padding-bottom: 8px;">
+                                            <label style="font-size: 12px; font-weight: 600;">
+                                                4. Apakah pasien memiliki riwayat alergi?
+                                            </label>
+                                            <div>
+                                                <label class="radio-inline"><input type="radio" name="sign_in_riwayat_alergi" value="Ya" {if: $data.sign_in_riwayat_alergi == 'Ya'}checked{/if}> <strong>Ya</strong></label>
+                                                <label class="radio-inline"><input type="radio" name="sign_in_riwayat_alergi" value="Tidak" {if: $data.sign_in_riwayat_alergi == 'Tidak'}checked{/if}> <strong>Tidak</strong></label>
+                                            </div>
+                                            <input type="text" name="sign_in_alergi_ket" id="sign_in_alergi_ket" class="form-control input-sm" style="margin-top: 5px;" placeholder="Tuliskan jika ada riwayat alergi..." value="{$data.sign_in_alergi_ket}">
+                                        </div>
+
+                                        <!-- Item 5: Persiapan Alat & Obat -->
+                                        <div class="form-group" style="border-bottom: 1px dashed #ddd; padding-bottom: 8px;">
+                                            <label style="font-size: 12px; font-weight: 600;">
+                                                5. Persiapan alat instrumen dan obat-obatan yang akan digunakan:
+                                            </label>
+                                            <div>
+                                                <label class="radio-inline"><input type="radio" name="sign_in_persiapan_alat" value="Ya" {if: $data.sign_in_persiapan_alat == 'Ya'}checked{/if}> <strong>Ya</strong></label>
+                                                <label class="radio-inline"><input type="radio" name="sign_in_persiapan_alat" value="Tidak" {if: $data.sign_in_persiapan_alat == 'Tidak'}checked{/if}> Tidak</label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Item 6: Dokumen Penunjang -->
+                                        <div class="form-group" style="padding-bottom: 8px;">
+                                            <label style="font-size: 12px; font-weight: 600;">
+                                                6. Dokumen pemeriksaan penunjang yang diperlukan (hasil radiologi, dll):
+                                            </label>
+                                            <div>
+                                                <label class="radio-inline"><input type="radio" name="sign_in_pemeriksaan_penunjang" value="Ya" {if: $data.sign_in_pemeriksaan_penunjang == 'Ya'}checked{/if}> <strong>Ya</strong></label>
+                                                <label class="radio-inline"><input type="radio" name="sign_in_pemeriksaan_penunjang" value="Tidak" {if: $data.sign_in_pemeriksaan_penunjang == 'Tidak'}checked{/if}> Tidak</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tim Sign In (Tabel Bawah) -->
+                                    <div class="panel panel-default" style="margin-top: 15px; margin-bottom: 0;">
+                                        <div class="panel-heading" style="padding: 4px 8px; font-weight: bold; font-size: 11px; background: #eaeded;">
+                                            Tim Pengesahan (Sign In)
+                                        </div>
+                                        <div class="panel-body" style="padding: 8px;">
+                                            <div class="form-group" style="margin-bottom: 6px;">
+                                                <label style="font-size: 11px;">dr. Bedah / Operator:</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="text" name="sign_in_dr_operator" id="sign_in_dr_operator" class="form-control" value="{$data.sign_in_dr_operator}" placeholder="Nama dr. Operator">
+                                                    <div class="input-group-btn">
+                                                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+                                                        <ul class="dropdown-menu dropdown-menu-right" style="max-height: 200px; overflow-y: auto;">
+                                                            {loop: $dokter}
+                                                            <li><a href="#" class="pilih-dr-signin" data-nama="{$value.nm_dokter}">{$value.nm_dokter}</a></li>
+                                                            {/loop}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label style="font-size: 11px;">Perawat Bedah:</label>
+                                                <input type="text" name="sign_in_perawat" class="form-control input-sm" value="{$data.sign_in_perawat}" placeholder="Nama Perawat Bedah">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ==================== KOLOM 2: TIME OUT ==================== -->
+                        <div class="col-md-4">
+                            <div class="panel panel-warning" style="border-width: 2px;">
+                                <div class="panel-heading" style="padding: 10px 12px; background-color: #e67e22; color: #fff;">
+                                    <h4 style="margin: 0; font-weight: bold; font-size: 15px;">
+                                        Sebelum Insisi / <em>Time Out</em>
+                                    </h4>
+                                    <div style="font-size: 11px; margin-top: 3px; opacity: 0.9;">
+                                        <i class="fa fa-info-circle"></i> Dengan perawat, dr. Bedah
+                                    </div>
+                                </div>
+                                <div class="panel-body" style="background: #fdfefe; min-height: 720px; display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div>
+                                        <!-- Waktu Time Out -->
+                                        <div class="well well-sm" style="background: #fef5ec; border-color: #f8c471; padding: 8px 10px; margin-bottom: 12px;">
+                                            <div class="row">
+                                                <div class="col-xs-7">
+                                                    <label style="font-size: 11px; margin-bottom: 2px;">Tgl Time Out</label>
+                                                    <input type="date" name="time_out_tanggal" class="form-control input-sm" value="{$data.time_out_tanggal}">
+                                                </div>
+                                                <div class="col-xs-5">
+                                                    <label style="font-size: 11px; margin-bottom: 2px;">Jam</label>
+                                                    <input type="time" name="time_out_jam" class="form-control input-sm" value="{$data.time_out_jam}">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Item 1: Perkenalan Tim Medis -->
+                                        <div class="form-group" style="border-bottom: 1px dashed #ddd; padding-bottom: 8px;">
+                                            <label style="font-size: 12px; font-weight: 600;">
+                                                1. Memastikan bahwa semua anggota tim medis sudah memperkenalkan diri (nama dan peran):
+                                            </label>
+                                            <div>
+                                                <label class="radio-inline"><input type="radio" name="time_out_perkenalan_tim" value="Ya" {if: $data.time_out_perkenalan_tim == 'Ya'}checked{/if}> <strong>Ya</strong></label>
+                                                <label class="radio-inline"><input type="radio" name="time_out_perkenalan_tim" value="Tidak" {if: $data.time_out_perkenalan_tim == 'Tidak'}checked{/if}> Tidak</label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Item 2: Konfirmasi Nama & Area Insisi -->
+                                        <div class="form-group" style="border-bottom: 1px dashed #ddd; padding-bottom: 8px;">
+                                            <label style="font-size: 12px; font-weight: 600;">
+                                                2. Memastikan dan baca ulang nama pasien, tindakan medis dan area yang akan diinsisi:
+                                            </label>
+                                            <div>
+                                                <label class="radio-inline"><input type="radio" name="time_out_konfirmasi_pasien" value="Ya" {if: $data.time_out_konfirmasi_pasien == 'Ya'}checked{/if}> <strong>Ya</strong></label>
+                                                <label class="radio-inline"><input type="radio" name="time_out_konfirmasi_pasien" value="Tidak" {if: $data.time_out_konfirmasi_pasien == 'Tidak'}checked{/if}> Tidak</label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Item 3: Antibiotik Profilaksis -->
+                                        <div class="form-group" style="border-bottom: 1px dashed #ddd; padding-bottom: 8px;">
+                                            <label style="font-size: 12px; font-weight: 600;">
+                                                3. Apakah profilaksis antibiotik sudah diberikan 1 jam sebelumnya?
+                                            </label>
+                                            <div>
+                                                <label class="radio-inline"><input type="radio" name="time_out_antibiotik_profilaksis" value="Ya" {if: $data.time_out_antibiotik_profilaksis == 'Ya'}checked{/if}> <strong>Ya</strong></label>
+                                                <label class="radio-inline"><input type="radio" name="time_out_antibiotik_profilaksis" value="Tidak Perlu" {if: $data.time_out_antibiotik_profilaksis == 'Tidak Perlu'}checked{/if}> <strong>Tidak perlu</strong></label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Item 4: Kejadian Berisiko Dokter -->
+                                        <div style="background: #fbfcfc; border: 1px solid #e5e7e9; padding: 8px; border-radius: 4px; margin-bottom: 8px;">
+                                            <div style="font-weight: bold; font-size: 11px; color: #b9770e; margin-bottom: 4px;">
+                                                <i class="fa fa-user-md"></i> Untuk Dokter Bedah / Operator:
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 6px;">
+                                                <label style="font-size: 11px;">Tindakan berisiko atau tindakan tidak rutin:</label>
+                                                <div>
+                                                    <label class="radio-inline"><input type="radio" name="time_out_tindakan_kritis" value="Ya" {if: $data.time_out_tindakan_kritis == 'Ya'}checked{/if}> Ya</label>
+                                                    <label class="radio-inline"><input type="radio" name="time_out_tindakan_kritis" value="Tidak" {if: $data.time_out_tindakan_kritis == 'Tidak'}checked{/if}> Tidak</label>
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 6px;">
+                                                <label style="font-size: 11px;">Berapa lama tindakan ini akan dikerjakan?</label>
+                                                <input type="text" name="time_out_estimasi_waktu" class="form-control input-sm" placeholder="Contoh: 60 Menit" value="{$data.time_out_estimasi_waktu}">
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label style="font-size: 11px;">Apakah sudah antisipasi perdarahan?</label>
+                                                <input type="text" name="time_out_antisipasi_perdarahan" class="form-control input-sm" placeholder="Kesiapan suction, tampon, hemostatik..." value="{$data.time_out_antisipasi_perdarahan}">
+                                            </div>
+                                        </div>
+
+                                        <!-- Item 5: Kejadian Berisiko Tim Perawat -->
+                                        <div style="background: #fbfcfc; border: 1px solid #e5e7e9; padding: 8px; border-radius: 4px; margin-bottom: 8px;">
+                                            <div style="font-weight: bold; font-size: 11px; color: #2980b9; margin-bottom: 4px;">
+                                                <i class="fa fa-stethoscope"></i> Untuk Tim Perawat:
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 6px;">
+                                                <label style="font-size: 11px;">Apakah sudah dipastikan kesterilannya (Ada indikator kesterilannya)?</label>
+                                                <div>
+                                                    <label class="radio-inline"><input type="radio" name="time_out_sterilitas" value="Ya" {if: $data.time_out_sterilitas == 'Ya'}checked{/if}> Ya</label>
+                                                    <label class="radio-inline"><input type="radio" name="time_out_sterilitas" value="Tidak" {if: $data.time_out_sterilitas == 'Tidak'}checked{/if}> Tidak</label>
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 6px;">
+                                                <label style="font-size: 11px;">Apakah ada masalah dengan peralatan / yang dikhawatirkan?</label>
+                                                <input type="text" name="time_out_masalah_peralatan" class="form-control input-sm" placeholder="Tuliskan jika ada kendala alat..." value="{$data.time_out_masalah_peralatan}">
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label style="font-size: 11px;">Apakah hasil radiologi yang diperlukan sudah ada?</label>
+                                                <div>
+                                                    <label class="radio-inline"><input type="radio" name="time_out_hasil_radiologi" value="Ya" {if: $data.time_out_hasil_radiologi == 'Ya'}checked{/if}> Ya</label>
+                                                    <label class="radio-inline"><input type="radio" name="time_out_hasil_radiologi" value="Tidak Diperlukan" {if: $data.time_out_hasil_radiologi == 'Tidak Diperlukan'}checked{/if}> Tidak diperlukan</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="alert alert-warning" style="padding: 6px 10px; font-size: 11px; margin-bottom: 0;">
+                                            <i class="fa fa-bell"></i> <em>Sebelum dimulai silahkan berdo'a dipimpin oleh operator/kapten</em>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tim Time Out (Tabel Bawah) -->
+                                    <div class="panel panel-default" style="margin-top: 15px; margin-bottom: 0;">
+                                        <div class="panel-heading" style="padding: 4px 8px; font-weight: bold; font-size: 11px; background: #eaeded;">
+                                            Tim Pengesahan (Time Out)
+                                        </div>
+                                        <div class="panel-body" style="padding: 8px;">
+                                            <div class="form-group" style="margin-bottom: 6px;">
+                                                <label style="font-size: 11px;">dr. Bedah / Operator:</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="text" name="time_out_dr_operator" id="time_out_dr_operator" class="form-control" value="{$data.time_out_dr_operator}" placeholder="Nama dr. Operator">
+                                                    <div class="input-group-btn">
+                                                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+                                                        <ul class="dropdown-menu dropdown-menu-right" style="max-height: 200px; overflow-y: auto;">
+                                                            {loop: $dokter}
+                                                            <li><a href="#" class="pilih-dr-timeout" data-nama="{$value.nm_dokter}">{$value.nm_dokter}</a></li>
+                                                            {/loop}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label style="font-size: 11px;">Perawat Bedah:</label>
+                                                <input type="text" name="time_out_perawat" class="form-control input-sm" value="{$data.time_out_perawat}" placeholder="Nama Perawat Bedah">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ==================== KOLOM 3: SIGN OUT ==================== -->
+                        <div class="col-md-4">
+                            <div class="panel panel-primary" style="border-width: 2px;">
+                                <div class="panel-heading" style="padding: 10px 12px; background-color: #2980b9; color: #fff;">
+                                    <h4 style="margin: 0; font-weight: bold; font-size: 15px;">
+                                        Sebelum Pasien Meninggalkan OK / <em>Sign Out</em>
+                                    </h4>
+                                    <div style="font-size: 11px; margin-top: 3px; opacity: 0.9;">
+                                        <i class="fa fa-info-circle"></i> Dengan perawat, dr. Bedah
+                                    </div>
+                                </div>
+                                <div class="panel-body" style="background: #fdfefe; min-height: 720px; display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div>
+                                        <!-- Waktu Sign Out -->
+                                        <div class="well well-sm" style="background: #ebf5fb; border-color: #aed6f1; padding: 8px 10px; margin-bottom: 12px;">
+                                            <div class="row">
+                                                <div class="col-xs-7">
+                                                    <label style="font-size: 11px; margin-bottom: 2px;">Tgl Sign Out</label>
+                                                    <input type="date" name="sign_out_tanggal" class="form-control input-sm" value="{$data.sign_out_tanggal}">
+                                                </div>
+                                                <div class="col-xs-5">
+                                                    <label style="font-size: 11px; margin-bottom: 2px;">Jam</label>
+                                                    <input type="time" name="sign_out_jam" class="form-control input-sm" value="{$data.sign_out_jam}">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div style="font-weight: bold; font-size: 12px; color: #2c3e50; margin-bottom: 8px;">
+                                            Secara verbal perawat memastikan:
+                                        </div>
+
+                                        <!-- Item 1: Nama Tindakan -->
+                                        <div class="form-group" style="border-bottom: 1px dashed #ddd; padding-bottom: 8px;">
+                                            <label style="font-size: 12px; font-weight: 600;">
+                                                1. Nama Tindakan:
+                                            </label>
+                                            <input type="text" name="sign_out_nama_tindakan" class="form-control input-sm" placeholder="Contoh: Odontektomi M3 Bawah Bilateral GA" value="{$data.sign_out_nama_tindakan}">
+                                        </div>
+
+                                        <!-- Item 2: Kelengkapan Alat, Kasa, Jarum -->
+                                        <div class="form-group" style="border-bottom: 1px dashed #ddd; padding-bottom: 8px;">
+                                            <label style="font-size: 12px; font-weight: 600;">
+                                                2. Kelengkapan alat, jumlah kasa dan jarum:
+                                            </label>
+                                            <div>
+                                                <label class="radio-inline"><input type="radio" name="sign_out_kelengkapan_alat" value="Ya" {if: $data.sign_out_kelengkapan_alat == 'Ya'}checked{/if}> <strong>Lengkap (Ya)</strong></label>
+                                                <label class="radio-inline"><input type="radio" name="sign_out_kelengkapan_alat" value="Tidak" {if: $data.sign_out_kelengkapan_alat == 'Tidak'}checked{/if}> Tidak Lengkap</label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Item 3: Pelabelan Spesimen -->
+                                        <div class="form-group" style="border-bottom: 1px dashed #ddd; padding-bottom: 8px;">
+                                            <label style="font-size: 12px; font-weight: 600;">
+                                                3. Pelabelan spesimen (baca label spesimen dan nama pasien dengan keras):
+                                            </label>
+                                            <div>
+                                                <label class="radio-inline"><input type="radio" name="sign_out_pelabelan_spesimen" value="Ya" {if: $data.sign_out_pelabelan_spesimen == 'Ya'}checked{/if}> Ya</label>
+                                                <label class="radio-inline"><input type="radio" name="sign_out_pelabelan_spesimen" value="Tidak" {if: $data.sign_out_pelabelan_spesimen == 'Tidak'}checked{/if}> Tidak</label>
+                                                <label class="radio-inline"><input type="radio" name="sign_out_pelabelan_spesimen" value="Tidak Ada" {if: $data.sign_out_pelabelan_spesimen == 'Tidak Ada'}checked{/if}> Tidak Ada Spesimen</label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Item 4: Masalah Peralatan -->
+                                        <div class="form-group" style="border-bottom: 1px dashed #ddd; padding-bottom: 8px;">
+                                            <label style="font-size: 12px; font-weight: 600;">
+                                                4. Apakah ada masalah peralatan yang perlu disampaikan?
+                                            </label>
+                                            <input type="text" name="sign_out_masalah_peralatan" class="form-control input-sm" placeholder="Tuliskan catatan peralatan jika ada..." value="{$data.sign_out_masalah_peralatan}">
+                                        </div>
+
+                                        <!-- Item 5: Untuk Dokter Bedah -->
+                                        <div style="background: #fbfcfc; border: 1px solid #e5e7e9; padding: 8px; border-radius: 4px; margin-bottom: 8px;">
+                                            <div style="font-weight: bold; font-size: 11px; color: #2980b9; margin-bottom: 4px;">
+                                                <i class="fa fa-user-md"></i> Untuk Dokter Bedah:
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 6px;">
+                                                <label style="font-size: 11px;">Apakah dokter sudah menjelaskan rencana kontrol?</label>
+                                                <div>
+                                                    <label class="radio-inline"><input type="radio" name="sign_out_rencana_kontrol" value="Ya" {if: $data.sign_out_rencana_kontrol == 'Ya'}checked{/if}> Ya</label>
+                                                    <label class="radio-inline"><input type="radio" name="sign_out_rencana_kontrol" value="Tidak" {if: $data.sign_out_rencana_kontrol == 'Tidak'}checked{/if}> Tidak</label>
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label style="font-size: 11px;">Apakah dokter sudah menjelaskan komplikasi dari tindakan?</label>
+                                                <div>
+                                                    <label class="radio-inline"><input type="radio" name="sign_out_komplikasi_tindakan" value="Ya" {if: $data.sign_out_komplikasi_tindakan == 'Ya'}checked{/if}> Ya</label>
+                                                    <label class="radio-inline"><input type="radio" name="sign_out_komplikasi_tindakan" value="Tidak" {if: $data.sign_out_komplikasi_tindakan == 'Tidak'}checked{/if}> Tidak</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tim Sign Out (Tabel Bawah) -->
+                                    <div class="panel panel-default" style="margin-top: 15px; margin-bottom: 0;">
+                                        <div class="panel-heading" style="padding: 4px 8px; font-weight: bold; font-size: 11px; background: #eaeded;">
+                                            Tim Pengesahan (Sign Out)
+                                        </div>
+                                        <div class="panel-body" style="padding: 8px;">
+                                            <div class="form-group" style="margin-bottom: 6px;">
+                                                <label style="font-size: 11px;">dr. Bedah / Operator:</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="text" name="sign_out_dr_operator" id="sign_out_dr_operator" class="form-control" value="{$data.sign_out_dr_operator}" placeholder="Nama dr. Operator">
+                                                    <div class="input-group-btn">
+                                                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+                                                        <ul class="dropdown-menu dropdown-menu-right" style="max-height: 200px; overflow-y: auto;">
+                                                            {loop: $dokter}
+                                                            <li><a href="#" class="pilih-dr-signout" data-nama="{$value.nm_dokter}">{$value.nm_dokter}</a></li>
+                                                            {/loop}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label style="font-size: 11px;">Perawat Bedah:</label>
+                                                <input type="text" name="sign_out_perawat" class="form-control input-sm" value="{$data.sign_out_perawat}" placeholder="Nama Perawat Bedah">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- TOMBOL AKSI -->
+                    <div class="form-group text-center" style="margin-top: 25px; margin-bottom: 30px;">
+                        <button type="submit" class="btn btn-success btn-lg" style="min-width: 180px; font-weight: bold;">
+                            <i class="fa fa-save"></i> Simpan Checklist
+                        </button>
+                        <a href="{?=url([ADMIN, 'update_bmt', 'bm5manage'])?}" class="btn btn-default btn-lg" style="min-width: 130px; margin-left: 10px;">
+                            <i class="fa fa-times"></i> Batal
+                        </a>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PENCARIAN PASIEN -->
+<div class="modal fade" id="modalPasien" tabindex="-1" role="dialog" aria-labelledby="modalPasienLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #fff;"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="modalPasienLabel" style="color: #fff; font-weight: bold;"><i class="fa fa-users"></i> Pilih Pasien Rawat Inap / Bedah</h4>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover dataTable" id="table-pilih-pasien">
+                        <thead>
+                            <tr class="info">
+                                <th>No. Rawat</th>
+                                <th>No. RM</th>
+                                <th>Nama Pasien</th>
+                                <th>JK / Umur</th>
+                                <th>Tgl Registrasi</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loop: $pasien_list}
+                            <tr>
+                                <td>{$value.no_rawat}</td>
+                                <td>{$value.no_rkm_medis}</td>
+                                <td><strong>{$value.nm_pasien}</strong></td>
+                                <td>{$value.jk} / {$value.umur}</td>
+                                <td>{$value.tgl_registrasi}</td>
+                                <td style="text-align: center;">
+                                    <button type="button" class="btn btn-xs btn-success btn-pilih-px"
+                                        data-norawat="{$value.no_rawat}"
+                                        data-norm="{$value.no_rkm_medis}"
+                                        data-nama="{$value.nm_pasien}"
+                                        data-jk="{$value.jk}"
+                                        data-umur="{$value.umur}">
+                                        <i class="fa fa-check"></i> Pilih
+                                    </button>
+                                </td>
+                            </tr>
+                            {/loop}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+
+    // 1. DATA PASIEN SELECTION
+    $(document).on('click', '.btn-pilih-px', function() {
+        var btn = $(this);
+        $('#no_rawat').val(btn.data('norawat'));
+        $('#no_rkm_medis').val(btn.data('norm'));
+        $('#nm_pasien').val(btn.data('nama'));
+        $('#jk').val(btn.data('jk'));
+        $('#umur').val(btn.data('umur'));
+        $('#modalPasien').modal('hide');
+    });
+
+    $('#no_rawat').on('change', function() {
+        var no_rawat = $(this).val().trim();
+        if (no_rawat) {
+            $.getJSON('{?=url([ADMIN, "update_bmt", "bm5form"])?}', { ajax_patient: 1, no_rawat: no_rawat }, function(res) {
+                if (res.success) {
+                    $('#no_rkm_medis').val(res.no_rkm_medis);
+                    $('#nm_pasien').val(res.nm_pasien);
+                    $('#jk').val(res.jk);
+                    $('#umur').val(res.umur);
+                }
+            });
+        }
+    });
+
+    // 2. DOKTER SELECTION
+    $(document).on('click', '.pilih-dr-signin', function(e) {
+        e.preventDefault();
+        var nama = $(this).data('nama');
+        $('#sign_in_dr_operator').val(nama);
+        if (!$('#time_out_dr_operator').val()) $('#time_out_dr_operator').val(nama);
+        if (!$('#sign_out_dr_operator').val()) $('#sign_out_dr_operator').val(nama);
+    });
+
+    $(document).on('click', '.pilih-dr-timeout', function(e) {
+        e.preventDefault();
+        $('#time_out_dr_operator').val($(this).data('nama'));
+    });
+
+    $(document).on('click', '.pilih-dr-signout', function(e) {
+        e.preventDefault();
+        $('#sign_out_dr_operator').val($(this).data('nama'));
+    });
+
+    // 3. DATATABLE PASIEN MODAL
+    $('#table-pilih-pasien').DataTable({
+        "pageLength": 5,
+        "lengthChange": false,
+        "ordering": false
+    });
+
+});
+</script>

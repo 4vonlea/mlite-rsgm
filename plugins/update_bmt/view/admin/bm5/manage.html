@@ -1,0 +1,129 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-check-square-o text-success"></i> BM5 - Checklist Keselamatan Pasien Operasi</h3>
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a href="{?=url([ADMIN, 'update_bmt', 'bm5manage'])?}" role="tab"><i class="fa fa-list"></i> Data Checklist Keselamatan</a>
+                    </li>
+                    <li>
+                        <a href="{?=url([ADMIN, 'update_bmt', 'bm5form'])?}" role="tab"><i class="fa fa-plus-circle"></i> Tambah Data</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive no-margin">
+                    <table class="table table-striped table-hover no-margin dataTable" id="data-table-bm5">
+                        <thead>
+                            <tr class="info">
+                                <th style="width: 40px; text-align: center;">No</th>
+                                <th>No. Rawat</th>
+                                <th>No. RM</th>
+                                <th>Nama Pasien</th>
+                                <th>Tanggal & Waktu</th>
+                                <th>Sign In</th>
+                                <th>Time Out</th>
+                                <th>Sign Out / Tindakan</th>
+                                <th>Operator & Perawat</th>
+                                <th style="width: 140px; text-align: center;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {if: !empty($data)}
+                            {loop: $data}
+                            <tr>
+                                <td style="text-align: center;">{$value.nomor}</td>
+                                <td><span class="label label-info">{$value.no_rawat}</span></td>
+                                <td><strong>{$value.no_rkm_medis}</strong></td>
+                                <td>
+                                    <strong>{$value.nm_pasien}</strong>
+                                    <div class="text-muted" style="font-size: 11px;">
+                                        {if: !empty($value.jk)}{$value.jk}{/if} {if: !empty($value.umur)}| {$value.umur}{/if}
+                                    </div>
+                                </td>
+                                <td>
+                                    {$value.tgl_indo}
+                                    <div class="text-muted" style="font-size: 11px;">
+                                        <i class="fa fa-clock-o"></i> {$value.jam}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="label label-success"><i class="fa fa-check"></i> Sign In</span>
+                                    <div class="text-muted" style="font-size: 11px;">
+                                        {$value.sign_in_jam}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="label label-warning"><i class="fa fa-pause"></i> Time Out</span>
+                                    <div class="text-muted" style="font-size: 11px;">
+                                        {$value.time_out_jam}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="label label-primary"><i class="fa fa-sign-out"></i> Sign Out</span>
+                                    <div style="font-size: 11px; margin-top: 2px;">
+                                        {if: !empty($value.sign_out_nama_tindakan)}
+                                            <strong>{$value.sign_out_nama_tindakan}</strong>
+                                        {else}
+                                            <span class="text-muted">-</span>
+                                        {/if}
+                                    </div>
+                                </td>
+                                <td>
+                                    {if: !empty($value.sign_in_dr_operator)}
+                                        <div style="font-size: 11px;"><i class="fa fa-user-md text-primary"></i> {$value.sign_in_dr_operator}</div>
+                                    {elseif: !empty($value.time_out_dr_operator)}
+                                        <div style="font-size: 11px;"><i class="fa fa-user-md text-primary"></i> {$value.time_out_dr_operator}</div>
+                                    {else}
+                                        <div style="font-size: 11px;">-</div>
+                                    {/if}
+                                    {if: !empty($value.sign_in_perawat)}
+                                        <div class="text-muted" style="font-size: 11px;"><i class="fa fa-user text-info"></i> {$value.sign_in_perawat}</div>
+                                    {/if}
+                                </td>
+                                <td style="text-align: center; white-space: nowrap;">
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'bm5form', $value.id])?}" class="btn btn-xs btn-warning" title="Edit Form"><i class="fa fa-pencil"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'bm5cetak', $value.id])?}" class="btn btn-xs btn-primary" target="_blank" title="Preview / Cetak Web"><i class="fa fa-print"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'bm5cetak', $value.id])?}&pdf=1" class="btn btn-xs btn-danger" target="_blank" title="Unduh File PDF"><i class="fa fa-file-pdf-o"></i> PDF</a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'bm5hapus', $value.id])?}" class="btn btn-xs btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus data Checklist Keselamatan Pasien Operasi ini?')" title="Hapus"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {/loop}
+                            {else}
+                            <tr>
+                                <td colspan="10" class="text-center" style="padding: 25px; color: #888;">
+                                    <i class="fa fa-folder-open-o fa-2x" style="margin-bottom: 8px; display: block;"></i>
+                                    Belum ada data Checklist Keselamatan Pasien Operasi (BM5). Silakan klik tab <strong>Tambah Data</strong> untuk membuat baru.
+                                </td>
+                            </tr>
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$(document).ready(function() {
+    $('#data-table-bm5').DataTable({
+        "ordering": false,
+        "language": {
+            "search": "Cari:",
+            "lengthMenu": "Tampilkan _MENU_ data per halaman",
+            "zeroRecords": "Data tidak ditemukan",
+            "info": "Menampilkan halaman _PAGE_ dari _PAGES_",
+            "infoEmpty": "Tidak ada data yang tersedia",
+            "infoFiltered": "(difilter dari _MAX_ total data)",
+            "paginate": {
+                "first": "Awal",
+                "last": "Akhir",
+                "next": "Berikutnya",
+                "previous": "Sebelumnya"
+            }
+        }
+    });
+});
+</script>

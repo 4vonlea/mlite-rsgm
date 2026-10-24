@@ -1,0 +1,993 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
+                <h3 class="panel-title" style="font-weight: bold; font-size: 16px;">
+                    <i class="fa fa-heartbeat text-danger"></i> {if: !empty($data.id)}Edit{else}Tambah{/if} Form ANS5 - Status Anestesi
+                </h3>
+                <div>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ans5manage'])?}" class="btn btn-default btn-sm">
+                        <i class="fa fa-arrow-left"></i> Kembali ke Data
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+
+                <form method="POST" action="{?=url([ADMIN, 'update_bmt', 'ans5save'])?}" id="form-status-anestesi">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="grid_data" id="input_grid_data" value="{$data.grid_data_json}">
+
+                    <!-- 1. IDENTITAS PASIEN & BEDAH -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading" style="font-weight: bold; font-size: 13px;">
+                            <i class="fa fa-user"></i> Identitas Pasien & Informasi Bedah
+                        </div>
+                        <div class="panel-body" style="background: #fafafa;">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>No. Rawat <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required placeholder="2026/10/24/000001">
+                                            <span class="input-group-btn">
+                                                <button type="button" class="btn btn-info" id="btn-modal-pasien" data-toggle="modal" data-target="#modalPasien" title="Cari Pasien">
+                                                    <i class="fa fa-search"></i>
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>No. Rekam Medis</label>
+                                        <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly style="background: #eef1f4;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nama Pasien</label>
+                                        <input type="text" id="nm_pasien" class="form-control" value="{$data.nm_pasien}" readonly style="background: #eef1f4;">
+                                    </div>
+                                </div>
+                                <div class="col-md-1">
+                                    <div class="form-group">
+                                        <label>L / P</label>
+                                        <input type="text" id="jk" class="form-control" value="{$data.jk}" readonly style="background: #eef1f4;">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Umur Pasien</label>
+                                        <input type="text" id="umur" class="form-control" value="{$data.umur}" readonly style="background: #eef1f4;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Tanggal Operasi</label>
+                                        <input type="date" name="tanggal" id="tanggal" class="form-control" value="{$data.tanggal}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Status Fisik (ASA)</label>
+                                        <div>
+                                            <label class="radio-inline"><input type="radio" name="status_fisik" value="1" {if: $data.status_fisik == '1'}checked{/if}> <strong>1</strong></label>
+                                            <label class="radio-inline"><input type="radio" name="status_fisik" value="2" {if: $data.status_fisik == '2'}checked{/if}> <strong>2</strong></label>
+                                            <label class="radio-inline"><input type="radio" name="status_fisik" value="3" {if: $data.status_fisik == '3'}checked{/if}> <strong>3</strong></label>
+                                            <label class="radio-inline"><input type="radio" name="status_fisik" value="4" {if: $data.status_fisik == '4'}checked{/if}> <strong>4</strong></label>
+                                            <label class="radio-inline"><input type="radio" name="status_fisik" value="5" {if: $data.status_fisik == '5'}checked{/if}> <strong>5</strong></label>
+                                            <label class="radio-inline"><input type="radio" name="status_fisik" value="E" {if: $data.status_fisik == 'E'}checked{/if}> <strong>E</strong></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Golongan Darah & Rhesus</label>
+                                        <div class="form-inline">
+                                            <select name="gol_darah" class="form-control input-sm" style="width: 80px;">
+                                                <option value="" {if: empty($data.gol_darah)}selected{/if}>-</option>
+                                                <option value="A" {if: $data.gol_darah == 'A'}selected{/if}>A</option>
+                                                <option value="B" {if: $data.gol_darah == 'B'}selected{/if}>B</option>
+                                                <option value="O" {if: $data.gol_darah == 'O'}selected{/if}>O</option>
+                                                <option value="AB" {if: $data.gol_darah == 'AB'}selected{/if}>AB</option>
+                                            </select>
+                                            &nbsp; Rh:
+                                            <select name="rh" class="form-control input-sm" style="width: 70px;">
+                                                <option value="+" {if: $data.rh == '+'}selected{/if}>+</option>
+                                                <option value="-" {if: $data.rh == '-'}selected{/if}>-</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Berat Badan (BB)</label>
+                                        <div class="input-group">
+                                            <input type="text" name="bb" class="form-control" value="{$data.bb}" placeholder="Contoh: 60">
+                                            <span class="input-group-addon">Kg</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Tinggi Badan (TB)</label>
+                                        <div class="input-group">
+                                            <input type="text" name="tb" class="form-control" value="{$data.tb}" placeholder="Contoh: 165">
+                                            <span class="input-group-addon">Cm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Diagnosa Pra Bedah</label>
+                                        <input type="text" name="diagnosa_prabedah" class="form-control" value="{$data.diagnosa_prabedah}" placeholder="Diagnosa sebelum operasi">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Diagnosa Pasca Bedah</label>
+                                        <input type="text" name="diagnosa_pascabedah" class="form-control" value="{$data.diagnosa_pascabedah}" placeholder="Diagnosa sesudah operasi">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Tindakan Pembedahan</label>
+                                        <input type="text" name="tindakan" class="form-control" value="{$data.tindakan}" placeholder="Contoh: Odontektomi Gigi 38, 48 / Eksisi Kista Mandibula">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>dr. Anestesi / Asisten</label>
+                                        <div class="input-group">
+                                            <input type="text" name="dr_anestesi" id="dr_anestesi" class="form-control" value="{$data.dr_anestesi}" placeholder="Nama dr. Anestesi">
+                                            <div class="input-group-btn">
+                                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+                                                <ul class="dropdown-menu dropdown-menu-right" style="max-height: 200px; overflow-y: auto;">
+                                                    {loop: $dokter}
+                                                    <li><a href="#" class="pilih-dr-anestesi" data-kd="{$value.kd_dokter}" data-nama="{$value.nm_dokter}">{$value.nm_dokter}</a></li>
+                                                    {/loop}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="kd_dokter_anestesi" id="kd_dokter_anestesi" value="{$data.kd_dokter_anestesi}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Penata Anestesi</label>
+                                        <input type="text" name="penata_anestesi" class="form-control" value="{$data.penata_anestesi}" placeholder="Nama Penata Anestesi">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>dr. Operator / Asisten</label>
+                                        <div class="input-group">
+                                            <input type="text" name="dr_operator" id="dr_operator" class="form-control" value="{$data.dr_operator}" placeholder="Nama dr. Operator">
+                                            <div class="input-group-btn">
+                                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+                                                <ul class="dropdown-menu dropdown-menu-right" style="max-height: 200px; overflow-y: auto;">
+                                                    {loop: $dokter}
+                                                    <li><a href="#" class="pilih-dr-operator" data-kd="{$value.kd_dokter}" data-nama="{$value.nm_dokter}">{$value.nm_dokter}</a></li>
+                                                    {/loop}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="kd_dokter_operator" id="kd_dokter_operator" value="{$data.kd_dokter_operator}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Waktu Mulai Pembiusan</label>
+                                        <input type="time" name="waktu_mulai_pembiusan" id="waktu_mulai_pembiusan" class="form-control" value="{$data.waktu_mulai_pembiusan}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Waktu Selesai Pembiusan</label>
+                                        <input type="time" name="waktu_selesai_pembiusan" id="waktu_selesai_pembiusan" class="form-control" value="{$data.waktu_selesai_pembiusan}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Lama Pembiusan</label>
+                                        <div class="input-group">
+                                            <input type="text" name="lama_pembiusan" id="lama_pembiusan" class="form-control" value="{$data.lama_pembiusan}" placeholder="Contoh: 1 Jam 30 Menit">
+                                            <span class="input-group-btn">
+                                                <button type="button" class="btn btn-default" id="btn-hitung-lama" title="Hitung otomatis durasi pembiusan">
+                                                    <i class="fa fa-calculator"></i> Hitung
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. TANDA VITAL PREINDUKSI -->
+                    <div class="panel panel-warning">
+                        <div class="panel-heading" style="font-weight: bold; font-size: 13px;">
+                            <i class="fa fa-tachometer"></i> Tanda Vital Preinduksi
+                        </div>
+                        <div class="panel-body" style="background: #fffdf8;">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Tekanan Darah (TD)</label>
+                                        <div class="form-inline">
+                                            <input type="number" name="preinduksi_td_sistolik" class="form-control" style="width: 45%;" value="{$data.preinduksi_td_sistolik}" placeholder="Sistole">
+                                            <span> / </span>
+                                            <input type="number" name="preinduksi_td_diastolik" class="form-control" style="width: 45%;" value="{$data.preinduksi_td_diastolik}" placeholder="Diastole">
+                                            <span class="text-muted" style="font-size: 11px;">mmHg</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Nadi</label>
+                                        <div class="input-group">
+                                            <input type="number" name="preinduksi_nadi" class="form-control" value="{$data.preinduksi_nadi}" placeholder="80">
+                                            <span class="input-group-addon">x/mnt</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Respirasi (RR)</label>
+                                        <div class="input-group">
+                                            <input type="number" name="preinduksi_rr" class="form-control" value="{$data.preinduksi_rr}" placeholder="20">
+                                            <span class="input-group-addon">x/mnt</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Suhu</label>
+                                        <div class="input-group">
+                                            <input type="text" name="preinduksi_suhu" class="form-control" value="{$data.preinduksi_suhu}" placeholder="36.5">
+                                            <span class="input-group-addon">°C</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>VAS (Skala Nyeri)</label>
+                                        <div class="input-group">
+                                            <input type="number" min="0" max="10" name="preinduksi_vas" class="form-control" value="{$data.preinduksi_vas}" placeholder="0 - 10">
+                                            <span class="input-group-addon">/ 10</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. TABEL PEMANTAUAN INTRAOPERATIF (CHART & MONITORING GRID) -->
+                    <div class="panel panel-primary">
+                        <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px;">
+                            <span style="font-weight: bold; font-size: 14px;">
+                                <i class="fa fa-line-chart"></i> Lembar Pemantauan Anestesi Intraoperatif (16 Interval Waktu @15 Menit)
+                            </span>
+                            <div>
+                                <button type="button" class="btn btn-warning btn-xs" id="btn-quick-fill-time" title="Isi label jam otomatis per 15 menit dari jam mulai">
+                                    <i class="fa fa-magic"></i> Auto-Generate Waktu (15')
+                                </button>
+                            </div>
+                        </div>
+                        <div class="panel-body" style="padding: 10px;">
+
+                            <!-- GRAFIK HEMODINAMIK PREVIEW -->
+                            <div style="background: #ffffff; border: 1px solid #ccc; border-radius: 4px; padding: 10px; margin-bottom: 15px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: #333; font-size: 13px;"><i class="fa fa-area-chart text-primary"></i> Grafik Tanda Vital Intraoperatif (Real-Time Chart)</strong>
+                                    <div style="font-size: 11px;">
+                                        <span style="display: inline-block; margin-right: 12px;"><span style="color: #e74c3c; font-weight: bold;">●</span> Nadi</span>
+                                        <span style="display: inline-block; margin-right: 12px;"><span style="color: #2980b9; font-weight: bold;">∨</span> Sistole</span>
+                                        <span style="display: inline-block; margin-right: 12px;"><span style="color: #27ae60; font-weight: bold;">∧</span> Diastole</span>
+                                        <span style="display: inline-block; margin-right: 12px;"><span style="color: #f39c12; font-weight: bold;">○</span> Suhu</span>
+                                        <span style="display: inline-block;"><span style="color: #8e44ad; font-weight: bold;">x / ⊙</span> Event</span>
+                                    </div>
+                                </div>
+                                <div id="chart-container" style="width: 100%; height: 210px; background: #fafafa; border: 1px solid #e0e0e0; overflow-x: auto;">
+                                    <svg id="svg-chart" style="width: 100%; min-width: 820px; height: 100%;"></svg>
+                                </div>
+                            </div>
+
+                            <!-- TABEL MONITORING LENGKAP -->
+                            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                                <table class="table table-bordered table-condensed table-striped" id="grid-anestesi" style="min-width: 1100px; font-size: 11px; margin-bottom: 0;">
+                                    <thead>
+                                        <tr class="info" style="text-align: center;">
+                                            <th style="width: 180px; text-align: left; vertical-align: middle;">Parameter / Waktu</th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="0" placeholder="00" value="08:00"></th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="1" placeholder="15" value="08:15"></th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="2" placeholder="30" value="08:30"></th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="3" placeholder="45" value="08:45"></th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="4" placeholder="00" value="09:00"></th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="5" placeholder="15" value="09:15"></th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="6" placeholder="30" value="09:30"></th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="7" placeholder="45" value="09:45"></th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="8" placeholder="00" value="10:00"></th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="9" placeholder="15" value="10:15"></th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="10" placeholder="30" value="10:30"></th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="11" placeholder="45" value="10:45"></th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="12" placeholder="00" value="11:00"></th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="13" placeholder="15" value="11:15"></th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="14" placeholder="30" value="11:30"></th>
+                                            <th style="width: 50px; text-align: center;"><input type="text" class="form-control input-xs col-time" data-col="15" placeholder="45" value="11:45"></th>
+                                            <th style="width: 60px; text-align: center; vertical-align: middle;">Jml</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="grid-tbody">
+                                        <!-- BARIS AKAN DIRENDER OLEH JAVASCRIPT SESUAI STRUKTUR STANDAR -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- 4. MASALAH, PROSEDUR ANESTESI & KLASIFIKASI TEKNIK -->
+                    <div class="row">
+                        <!-- SISI KIRI: MASALAH & PROSEDUR ANESTESI -->
+                        <div class="col-md-6">
+                            <div class="panel panel-default">
+                                <div class="panel-heading" style="font-weight: bold; font-size: 13px;">
+                                    <i class="fa fa-exclamation-triangle text-danger"></i> Masalah & Catatan Selama Pembiusan
+                                </div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label>Masalah :</label>
+                                        <textarea name="masalah" class="form-control" rows="3" placeholder="Catatan masalah/komplikasi bila ada...">{$data.masalah}</textarea>
+                                    </div>
+                                    <hr style="margin: 10px 0;">
+                                    <label style="font-weight: bold; color: #2c3e50;"><i class="fa fa-medkit"></i> Prosedur Anestesi :</label>
+                                    <div class="form-group">
+                                        <label style="font-weight: normal;">• Loading Cairan :</label>
+                                        <input type="text" name="prosedur_loading_cairan" class="form-control input-sm" value="{$data.prosedur_loading_cairan}" placeholder="Contoh: RL 500 cc pre-induksi">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-weight: normal;">• Premedikasi :</label>
+                                        <input type="text" name="prosedur_premedikasi" class="form-control input-sm" value="{$data.prosedur_premedikasi}" placeholder="Contoh: Midazolam 2 mg, Fentanyl 100 mcg">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-weight: normal;">• Maintenance :</label>
+                                        <input type="text" name="prosedur_maintenance" class="form-control input-sm" value="{$data.prosedur_maintenance}" placeholder="Contoh: Isofluran 1.5 - 2 Vol%, N2O:O2 50:50">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SISI KANAN: JENIS ANESTESI, JALAN NAPAS & POSISI -->
+                        <div class="col-md-6">
+                            <div class="panel panel-default">
+                                <div class="panel-heading" style="font-weight: bold; font-size: 13px;">
+                                    <i class="fa fa-sliders text-primary"></i> Karakteristik Teknik Anestesi
+                                </div>
+                                <div class="panel-body">
+                                    <!-- A. JENIS ANESTESI -->
+                                    <div class="form-group">
+                                        <label style="font-weight: bold; color: #2c3e50;">Jenis Anestesi :</label>
+                                        <div class="row">
+                                            <div class="col-xs-12">
+                                                <label class="checkbox-inline">
+                                                    <input type="checkbox" name="jenis_anestesi_general" value="Y" {if: $data.jenis_anestesi_general == 'Y'}checked{/if}> <strong>General</strong>
+                                                </label>
+                                                <input type="text" name="jenis_anestesi_general_tipe" class="form-control input-sm" style="display: inline-block; width: 70%; margin-left: 10px;" value="{$data.jenis_anestesi_general_tipe}" placeholder="GETA / TIVA / LMA / Face Mask">
+                                            </div>
+                                            <div class="col-xs-12" style="margin-top: 6px;">
+                                                <label class="checkbox-inline">
+                                                    <input type="checkbox" name="jenis_anestesi_regional" value="Y" {if: $data.jenis_anestesi_regional == 'Y'}checked{/if}> <strong>Regional</strong>
+                                                </label>
+                                                <input type="text" name="jenis_anestesi_regional_tipe" class="form-control input-sm" style="display: inline-block; width: 70%; margin-left: 5px;" value="{$data.jenis_anestesi_regional_tipe}" placeholder="SAB / Epidural / Caudal">
+                                            </div>
+                                            <div class="col-xs-12" style="margin-top: 6px;">
+                                                <input type="text" name="jenis_anestesi_lain" class="form-control input-sm" value="{$data.jenis_anestesi_lain}" placeholder="Teknik Anestesi Lainnya...">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <hr style="margin: 10px 0;">
+
+                                    <!-- B. JALAN NAPAS -->
+                                    <div class="form-group">
+                                        <label style="font-weight: bold; color: #2c3e50;">Jalan Napas :</label><br>
+                                        <label class="checkbox-inline"><input type="checkbox" name="jalan_napas_nasal" value="Y" {if: $data.jalan_napas_nasal == 'Y'}checked{/if}> Nasal Kanul</label>
+                                        <label class="checkbox-inline"><input type="checkbox" name="jalan_napas_facemask" value="Y" {if: $data.jalan_napas_facemask == 'Y'}checked{/if}> Face Mask</label>
+                                        <label class="checkbox-inline"><input type="checkbox" name="jalan_napas_lma" value="Y" {if: $data.jalan_napas_lma == 'Y'}checked{/if}> LMA</label>
+                                        <label class="checkbox-inline"><input type="checkbox" name="jalan_napas_orotrakeal" value="Y" {if: $data.jalan_napas_orotrakeal == 'Y'}checked{/if}> Orotrakeal</label>
+                                        <input type="text" name="jalan_napas_lain" class="form-control input-sm" style="margin-top: 6px;" value="{$data.jalan_napas_lain}" placeholder="Jalan Napas Lainnya...">
+                                    </div>
+
+                                    <hr style="margin: 10px 0;">
+
+                                    <!-- C. POSISI -->
+                                    <div class="form-group">
+                                        <label style="font-weight: bold; color: #2c3e50;">Posisi Pasien :</label><br>
+                                        <label class="checkbox-inline"><input type="checkbox" name="posisi_supine" value="Y" {if: $data.posisi_supine == 'Y'}checked{/if}> Supine</label>
+                                        <label class="checkbox-inline"><input type="checkbox" name="posisi_lateral" value="Y" {if: $data.posisi_lateral == 'Y'}checked{/if}> Lateral</label>
+                                        <label class="checkbox-inline"><input type="checkbox" name="posisi_prone" value="Y" {if: $data.posisi_prone == 'Y'}checked{/if}> Prone</label>
+                                        <label class="checkbox-inline"><input type="checkbox" name="posisi_lithotomi" value="Y" {if: $data.posisi_lithotomi == 'Y'}checked{/if}> Lithotomi</label>
+                                        <input type="text" name="posisi_lain" class="form-control input-sm" style="margin-top: 6px;" value="{$data.posisi_lain}" placeholder="Posisi Lainnya...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. PENYULIT, KEADAAN AKHIR & PENGESAHAN DOKTER -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading" style="font-weight: bold; font-size: 13px;">
+                            <i class="fa fa-pencil-square-o"></i> Evaluasi Akhir & Pengesahan
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Penyulit Selama Pembedahan</label>
+                                        <textarea name="penyulit_pembedahan" class="form-control" rows="4" placeholder="Tuliskan penyulit jika ada...">{$data.penyulit_pembedahan}</textarea>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Keadaan Akhir Pembedahan</label>
+                                        <textarea name="keadaan_akhir_pembedahan" class="form-control" rows="4" placeholder="Kondisi pasien saat pembedahan selesai...">{$data.keadaan_akhir_pembedahan}</textarea>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Dokter Anestesi (Pengesahan)</label>
+                                        <input type="text" name="dokter_anestesi_ttd" id="dokter_anestesi_ttd" class="form-control" value="{$data.dokter_anestesi_ttd}" placeholder="Nama Lengkap & Gelar">
+                                        <p class="help-block" style="font-size: 11px;">Nama dokter yang menandatangani status anestesi.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOMBOL AKSI -->
+                    <div class="form-group text-center" style="margin-top: 25px; margin-bottom: 30px;">
+                        <button type="submit" class="btn btn-success btn-lg" style="min-width: 160px; font-weight: bold;">
+                            <i class="fa fa-save"></i> Simpan Data
+                        </button>
+                        <a href="{?=url([ADMIN, 'update_bmt', 'ans5manage'])?}" class="btn btn-default btn-lg" style="min-width: 120px; margin-left: 10px;">
+                            <i class="fa fa-times"></i> Batal
+                        </a>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PENCARIAN PASIEN -->
+<div class="modal fade" id="modalPasien" tabindex="-1" role="dialog" aria-labelledby="modalPasienLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #fff;"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="modalPasienLabel" style="color: #fff; font-weight: bold;"><i class="fa fa-users"></i> Pilih Pasien Rawat Inap / Bedah</h4>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover dataTable" id="table-pilih-pasien">
+                        <thead>
+                            <tr class="info">
+                                <th>No. Rawat</th>
+                                <th>No. RM</th>
+                                <th>Nama Pasien</th>
+                                <th>JK / Umur</th>
+                                <th>Tgl Registrasi</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loop: $pasien_list}
+                            <tr>
+                                <td>{$value.no_rawat}</td>
+                                <td>{$value.no_rkm_medis}</td>
+                                <td><strong>{$value.nm_pasien}</strong></td>
+                                <td>{$value.jk} / {$value.umur}</td>
+                                <td>{$value.tgl_registrasi}</td>
+                                <td style="text-align: center;">
+                                    <button type="button" class="btn btn-xs btn-success btn-pilih-px"
+                                        data-norawat="{$value.no_rawat}"
+                                        data-norm="{$value.no_rkm_medis}"
+                                        data-nama="{$value.nm_pasien}"
+                                        data-jk="{$value.jk}"
+                                        data-umur="{$value.umur}"
+                                        data-tgl="{$value.tgl_lahir}">
+                                        <i class="fa fa-check"></i> Pilih
+                                    </button>
+                                </td>
+                            </tr>
+                            {/loop}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.input-xs {
+    height: 22px;
+    padding: 2px 4px;
+    font-size: 11px;
+    line-height: 1.2;
+    border-radius: 2px;
+    text-align: center;
+}
+.row-header {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+.row-subtotal {
+    background-color: #fcf8e3;
+    font-weight: bold;
+}
+</style>
+
+<script>
+$(document).ready(function() {
+
+    // 1. DATA PASIEN
+    $(document).on('click', '.btn-pilih-px', function() {
+        var btn = $(this);
+        $('#no_rawat').val(btn.data('norawat'));
+        $('#no_rkm_medis').val(btn.data('norm'));
+        $('#nm_pasien').val(btn.data('nama'));
+        $('#jk').val(btn.data('jk'));
+        $('#umur').val(btn.data('umur'));
+        $('#modalPasien').modal('hide');
+    });
+
+    $('#no_rawat').on('change', function() {
+        var no_rawat = $(this).val().trim();
+        if (no_rawat) {
+            $.getJSON('{?=url([ADMIN, "update_bmt", "ans5form"])?}', { ajax_patient: 1, no_rawat: no_rawat }, function(res) {
+                if (res.success) {
+                    $('#no_rkm_medis').val(res.no_rkm_medis);
+                    $('#nm_pasien').val(res.nm_pasien);
+                    $('#jk').val(res.jk);
+                    $('#umur').val(res.umur);
+                }
+            });
+        }
+    });
+
+    $(document).on('click', '.pilih-dr-anestesi', function(e) {
+        e.preventDefault();
+        $('#dr_anestesi').val($(this).data('nama'));
+        $('#kd_dokter_anestesi').val($(this).data('kd'));
+        if (!$('#dokter_anestesi_ttd').val()) {
+            $('#dokter_anestesi_ttd').val($(this).data('nama'));
+        }
+    });
+
+    $(document).on('click', '.pilih-dr-operator', function(e) {
+        e.preventDefault();
+        $('#dr_operator').val($(this).data('nama'));
+        $('#kd_dokter_operator').val($(this).data('kd'));
+    });
+
+    $('#btn-hitung-lama').on('click', function() {
+        var start = $('#waktu_mulai_pembiusan').val();
+        var end = $('#waktu_selesai_pembiusan').val();
+        if (start && end) {
+            var sParts = start.split(':');
+            var eParts = end.split(':');
+            var sMins = parseInt(sParts[0], 10) * 60 + parseInt(sParts[1], 10);
+            var eMins = parseInt(eParts[0], 10) * 60 + parseInt(eParts[1], 10);
+            if (eMins < sMins) eMins += 24 * 60; // melewati tengah malam
+            var diff = eMins - sMins;
+            var jam = Math.floor(diff / 60);
+            var mnt = diff % 60;
+            var text = '';
+            if (jam > 0) text += jam + ' Jam ';
+            text += mnt + ' Menit';
+            $('#lama_pembiusan').val(text);
+        } else {
+            alert('Silakan isi Waktu Mulai dan Waktu Selesai Pembiusan terlebih dahulu!');
+        }
+    });
+
+    $('#table-pilih-pasien').DataTable({
+        "pageLength": 5,
+        "lengthChange": false,
+        "ordering": false
+    });
+
+    // 2. STRUKTUR GRID DATA PEMANTAUAN INTRAOPERATIF
+    var gridRowsDef = [
+        // Kategori Gas Inhalasi
+        { cat: 'GAS INHALASI', id: 'gas_o2', label: 'O2 (L/Mnt)', type: 'num' },
+        { cat: 'GAS INHALASI', id: 'gas_halotan', label: 'Halotan (Vol%)', type: 'num' },
+        { cat: 'GAS INHALASI', id: 'gas_isofluran', label: 'Isofluran (Vol%)', type: 'num' },
+        { cat: 'GAS INHALASI', id: 'gas_sevofluran', label: 'Sevofluran (Vol%)', type: 'num' },
+        
+        // Obat-Obatan
+        { cat: 'OBAT-OBATAN', id: 'med_ketorolac', label: 'Ketorolac (mg)', type: 'num' },
+        { cat: 'OBAT-OBATAN', id: 'med_ondansetron', label: 'Ondansetron (mg)', type: 'num' },
+        { cat: 'OBAT-OBATAN', id: 'med_ranitidin', label: 'Ranitidin (mg)', type: 'num' },
+        { cat: 'OBAT-OBATAN', id: 'med_midazolam', label: 'Midazolam (mg)', type: 'num' },
+        { cat: 'OBAT-OBATAN', id: 'med_fentanyl', label: 'Fentanyl (µg)', type: 'num' },
+        { cat: 'OBAT-OBATAN', id: 'med_lidokain', label: 'Lidokain (mg)', type: 'num' },
+        { cat: 'OBAT-OBATAN', id: 'med_ketamin', label: 'Ketamin (mg)', type: 'num' },
+        { cat: 'OBAT-OBATAN', id: 'med_propofol', label: 'Propofol (mg)', type: 'num' },
+        { cat: 'OBAT-OBATAN', id: 'med_atracurium', label: 'Atracurium (mg)', type: 'num' },
+        { cat: 'OBAT-OBATAN', id: 'med_efedrin', label: 'Efedrin (µg)', type: 'num' },
+        { cat: 'OBAT-OBATAN', id: 'med_obat_lain1', label: 'Obat Lain 1 (mg)', type: 'num' },
+        { cat: 'OBAT-OBATAN', id: 'med_obat_lain2', label: 'Obat Lain 2 (mg)', type: 'num' },
+        { cat: 'OBAT-OBATAN', id: 'med_epidural', label: 'Epidural / Spinal', type: 'text' },
+
+        // Tanda Vital & Grafik
+        { cat: 'TANDA VITAL (GRAFIK)', id: 'vital_sistolik', label: 'TD Sistolik (∨)', type: 'num', chart: true },
+        { cat: 'TANDA VITAL (GRAFIK)', id: 'vital_diastolik', label: 'TD Diastolik (∧)', type: 'num', chart: true },
+        { cat: 'TANDA VITAL (GRAFIK)', id: 'vital_nadi', label: 'Nadi / Heart Rate (•)', type: 'num', chart: true },
+        { cat: 'TANDA VITAL (GRAFIK)', id: 'vital_suhu', label: 'Suhu (°C) (○)', type: 'num', chart: true },
+        { cat: 'TANDA VITAL (GRAFIK)', id: 'vital_event', label: 'Event (x, ⊙, △, ▽, *)', type: 'event', chart: true },
+
+        // Keterangan Bawah Grafik
+        { cat: 'KETERANGAN', id: 'ket_tanda_kode', label: 'Tanda (Kode)', type: 'text' },
+        { cat: 'KETERANGAN', id: 'ket_rsp', label: 'Rsp. Spontan / Kontrol', type: 'text' },
+        { cat: 'KETERANGAN', id: 'ket_saturasi', label: 'Saturasi O2 (%)', type: 'num' },
+
+        // INPUT CAIRAN
+        { cat: 'INPUT CAIRAN', id: 'in_rl', label: 'Ringer Laktat/Asetat (cc)', type: 'num', sum: true },
+        { cat: 'INPUT CAIRAN', id: 'in_nacl', label: 'NaCl 0.9% (cc)', type: 'num', sum: true },
+        { cat: 'INPUT CAIRAN', id: 'in_koloid', label: 'Koloid / Darah / Lain (cc)', type: 'num', sum: true },
+
+        // OUTPUT CAIRAN
+        { cat: 'OUTPUT CAIRAN', id: 'out_darah', label: 'Pendarahan (cc)', type: 'num', sum: true },
+        { cat: 'OUTPUT CAIRAN', id: 'out_urine', label: 'Urine (cc)', type: 'num', sum: true },
+        { cat: 'OUTPUT CAIRAN', id: 'out_lain', label: 'Output Lain (cc)', type: 'num', sum: true }
+    ];
+
+    // Load existing grid_data JSON or build initial
+    var loadedData = {};
+    try {
+        var rawJson = $('#input_grid_data').val();
+        if (rawJson) {
+            loadedData = JSON.parse(rawJson);
+        }
+    } catch(err) {
+        loadedData = {};
+    }
+
+    // Set time columns from loaded data if exists
+    if (loadedData.times && Array.isArray(loadedData.times)) {
+        for (var c = 0; c < 16; c++) {
+            if (loadedData.times[c] !== undefined) {
+                $('.col-time[data-col="' + c + '"]').val(loadedData.times[c]);
+            }
+        }
+    }
+
+    // Render Table Rows
+    var tbody = $('#grid-tbody');
+    var currentCat = '';
+
+    for (var i = 0; i < gridRowsDef.length; i++) {
+        var r = gridRowsDef[i];
+        if (r.cat !== currentCat) {
+            currentCat = r.cat;
+            var catTr = '<tr class="row-header"><td colspan="18" style="background: #eef5fa; font-weight: bold; color: #1e6091; padding: 4px 8px;">' +
+                        '<i class="fa fa-chevron-circle-right"></i> ' + currentCat + '</td></tr>';
+            tbody.append(catTr);
+        }
+
+        var tr = $('<tr></tr>');
+        tr.attr('data-row-id', r.id);
+        tr.append('<td><strong>' + r.label + '</strong></td>');
+
+        var rowValues = (loadedData.rows && loadedData.rows[r.id]) ? loadedData.rows[r.id] : [];
+
+        for (var c = 0; c < 16; c++) {
+            var val = (rowValues[c] !== undefined) ? rowValues[c] : '';
+            var inputHtml = '';
+            if (r.type === 'event') {
+                inputHtml = '<select class="form-control input-xs cell-input" data-row="' + r.id + '" data-col="' + c + '" style="padding:0; font-size:10px;">' +
+                            '<option value="">-</option>' +
+                            '<option value="x" ' + (val==='x'?'selected':'') + '>x (Anestesi)</option>' +
+                            '<option value="⊙" ' + (val==='⊙'?'selected':'') + '>⊙ (Operasi)</option>' +
+                            '<option value="△" ' + (val==='△'?'selected':'') + '>△ (Intubasi)</option>' +
+                            '<option value="▽" ' + (val==='▽'?'selected':'') + '>▽ (Ekstubasi)</option>' +
+                            '<option value="*" ' + (val==='*'?'selected':'') + '>* (Kateter)</option>' +
+                            '<option value="▼" ' + (val==='▼'?'selected':'') + '>▼ (i.m)</option>' +
+                            '<option value="↓" ' + (val==='↓'?'selected':'') + '>↓ (i.v)</option>' +
+                            '</select>';
+            } else {
+                inputHtml = '<input type="text" class="form-control input-xs cell-input ' + (r.chart ? 'vital-input' : '') + '" data-row="' + r.id + '" data-col="' + c + '" value="' + val + '">';
+            }
+            tr.append('<td>' + inputHtml + '</td>');
+        }
+
+        // Kolom Jumlah / Total
+        var totalVal = (loadedData.totals && loadedData.totals[r.id] !== undefined) ? loadedData.totals[r.id] : '';
+        tr.append('<td style="text-align: center;"><input type="text" class="form-control input-xs row-total" data-row="' + r.id + '" value="' + totalVal + '" ' + (r.sum ? 'readonly style="background:#f9f9f9; font-weight:bold;"' : '') + '></td>');
+        tbody.append(tr);
+    }
+
+    // Auto-generate time columns
+    $('#btn-quick-fill-time').on('click', function() {
+        var start = $('#waktu_mulai_pembiusan').val();
+        if (!start) start = "08:00";
+        var parts = start.split(':');
+        var curM = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+        for (var c = 0; c < 16; c++) {
+            var h = Math.floor(curM / 60) % 24;
+            var m = curM % 60;
+            var timeStr = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+            $('.col-time[data-col="' + c + '"]').val(timeStr);
+            curM += 15;
+        }
+        renderSvgChart();
+    });
+
+    // Auto-calculate sum for liquid rows and sync to JSON
+    function calculateTotals() {
+        for (var i = 0; i < gridRowsDef.length; i++) {
+            var r = gridRowsDef[i];
+            if (r.sum) {
+                var sum = 0;
+                var hasVal = false;
+                $('.cell-input[data-row="' + r.id + '"]').each(function() {
+                    var v = parseFloat($(this).val());
+                    if (!isNaN(v)) {
+                        sum += v;
+                        hasVal = true;
+                    }
+                });
+                $('.row-total[data-row="' + r.id + '"]').val(hasVal ? sum : '');
+            }
+        }
+    }
+
+    // Save grid state to hidden input
+    function syncGridData() {
+        var state = { times: [], rows: {}, totals: {} };
+        $('.col-time').each(function() {
+            var col = parseInt($(this).data('col'), 10);
+            state.times[col] = $(this).val();
+        });
+        $('.cell-input').each(function() {
+            var rowId = $(this).data('row');
+            var col = parseInt($(this).data('col'), 10);
+            if (!state.rows[rowId]) state.rows[rowId] = [];
+            state.rows[rowId][col] = $(this).val();
+        });
+        $('.row-total').each(function() {
+            var rowId = $(this).data('row');
+            state.totals[rowId] = $(this).val();
+        });
+        $('#input_grid_data').val(JSON.stringify(state));
+    }
+
+    // Event listener for inputs
+    $(document).on('input change', '.cell-input, .col-time, .row-total', function() {
+        calculateTotals();
+        syncGridData();
+        renderSvgChart();
+    });
+
+    // 3. SVG CHART RENDERER (REAL-TIME PREVIEW)
+    function renderSvgChart() {
+        var svg = $('#svg-chart');
+        svg.empty();
+
+        var w = svg.width() || 850;
+        var h = svg.height() || 210;
+        var padLeft = 45;
+        var padRight = 30;
+        var padTop = 15;
+        var padBottom = 25;
+
+        var chartW = w - padLeft - padRight;
+        var chartH = h - padTop - padBottom;
+
+        // Y-axis scale: 40 to 200
+        var minY = 40;
+        var maxY = 200;
+        function getYPos(val) {
+            val = Math.max(minY, Math.min(maxY, val));
+            return padTop + chartH - ((val - minY) / (maxY - minY)) * chartH;
+        }
+
+        function getXPos(colIdx) {
+            return padLeft + (colIdx / 15) * chartW;
+        }
+
+        // Draw horizontal grid lines & labels (every 20 units)
+        var levels = [40, 60, 80, 100, 120, 140, 160, 180, 200];
+        for (var l = 0; l < levels.length; l++) {
+            var yVal = levels[l];
+            var y = getYPos(yVal);
+            // line
+            var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', padLeft);
+            line.setAttribute('y1', y);
+            line.setAttribute('x2', padLeft + chartW);
+            line.setAttribute('y2', y);
+            line.setAttribute('stroke', (yVal === 100 || yVal === 140) ? '#bdc3c7' : '#ecf0f1');
+            line.setAttribute('stroke-width', (yVal === 100 || yVal === 140) ? '1.5' : '1');
+            svg.append(line);
+
+            // text
+            var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', padLeft - 6);
+            text.setAttribute('y', y + 3);
+            text.setAttribute('font-size', '10');
+            text.setAttribute('fill', '#7f8c8d');
+            text.setAttribute('text-anchor', 'end');
+            text.textContent = yVal;
+            svg.append(text);
+        }
+
+        // Draw vertical column lines & time headers
+        for (var c = 0; c < 16; c++) {
+            var x = getXPos(c);
+            var vLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            vLine.setAttribute('x1', x);
+            vLine.setAttribute('y1', padTop);
+            vLine.setAttribute('x2', x);
+            vLine.setAttribute('y2', padTop + chartH);
+            vLine.setAttribute('stroke', (c % 4 === 0) ? '#bdc3c7' : '#f0f0f0');
+            vLine.setAttribute('stroke-width', (c % 4 === 0) ? '1.5' : '1');
+            svg.append(vLine);
+
+            var timeStr = $('.col-time[data-col="' + c + '"]').val() || '';
+            if (timeStr) {
+                var tText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                tText.setAttribute('x', x);
+                tText.setAttribute('y', padTop + chartH + 15);
+                tText.setAttribute('font-size', '9');
+                tText.setAttribute('fill', '#555');
+                tText.setAttribute('text-anchor', 'middle');
+                tText.textContent = timeStr;
+                svg.append(tText);
+            }
+        }
+
+        // Plot curves: Nadi (Red), Sistolik (Blue ∨), Diastolik (Green ∧), Suhu (Orange ○)
+        var nadiPoints = [];
+        var sistolikPoints = [];
+        var diastolikPoints = [];
+        var suhuPoints = [];
+
+        for (var c = 0; c < 16; c++) {
+            var x = getXPos(c);
+
+            // Nadi
+            var nVal = parseFloat($('.cell-input[data-row="vital_nadi"][data-col="' + c + '"]').val());
+            if (!isNaN(nVal)) {
+                var ny = getYPos(nVal);
+                nadiPoints.push({ x: x, y: ny, val: nVal });
+                var dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                dot.setAttribute('cx', x);
+                dot.setAttribute('cy', ny);
+                dot.setAttribute('r', '3.5');
+                dot.setAttribute('fill', '#e74c3c');
+                svg.append(dot);
+            }
+
+            // Sistolik (∨)
+            var sVal = parseFloat($('.cell-input[data-row="vital_sistolik"][data-col="' + c + '"]').val());
+            if (!isNaN(sVal)) {
+                var sy = getYPos(sVal);
+                sistolikPoints.push({ x: x, y: sy, val: sVal });
+                var sText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                sText.setAttribute('x', x);
+                sText.setAttribute('y', sy + 4);
+                sText.setAttribute('font-size', '13');
+                sText.setAttribute('font-weight', 'bold');
+                sText.setAttribute('fill', '#2980b9');
+                sText.setAttribute('text-anchor', 'middle');
+                sText.textContent = '∨';
+                svg.append(sText);
+            }
+
+            // Diastolik (∧)
+            var dVal = parseFloat($('.cell-input[data-row="vital_diastolik"][data-col="' + c + '"]').val());
+            if (!isNaN(dVal)) {
+                var dy = getYPos(dVal);
+                diastolikPoints.push({ x: x, y: dy, val: dVal });
+                var dText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                dText.setAttribute('x', x);
+                dText.setAttribute('y', dy + 4);
+                dText.setAttribute('font-size', '13');
+                dText.setAttribute('font-weight', 'bold');
+                dText.setAttribute('fill', '#27ae60');
+                dText.setAttribute('text-anchor', 'middle');
+                dText.textContent = '∧';
+                svg.append(dText);
+            }
+
+            // Suhu (○) - scaled: normal 36.5 to ~70 scale position or mapped
+            var tVal = parseFloat($('.cell-input[data-row="vital_suhu"][data-col="' + c + '"]').val());
+            if (!isNaN(tVal)) {
+                // Map temp 35-40 C to y scale 40-100
+                var ty = getYPos(40 + (tVal - 35) * 12);
+                suhuPoints.push({ x: x, y: ty, val: tVal });
+                var sDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                sDot.setAttribute('cx', x);
+                sDot.setAttribute('cy', ty);
+                sDot.setAttribute('r', '3.5');
+                sDot.setAttribute('fill', 'none');
+                sDot.setAttribute('stroke', '#f39c12');
+                sDot.setAttribute('stroke-width', '1.5');
+                svg.append(sDot);
+            }
+
+            // Events (x, ⊙, △, ▽, *)
+            var evVal = $('.cell-input[data-row="vital_event"][data-col="' + c + '"]').val();
+            if (evVal) {
+                var evText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                evText.setAttribute('x', x);
+                evText.setAttribute('y', padTop + 14);
+                evText.setAttribute('font-size', '13');
+                evText.setAttribute('font-weight', 'bold');
+                evText.setAttribute('fill', '#8e44ad');
+                evText.setAttribute('text-anchor', 'middle');
+                evText.textContent = evVal;
+                svg.append(evText);
+            }
+        }
+
+        // Draw connecting polylines
+        function drawPolyline(pts, color, width, dash) {
+            if (pts.length < 2) return;
+            var d = '';
+            for (var p = 0; p < pts.length; p++) {
+                d += (p === 0 ? 'M' : ' L') + pts[p].x + ',' + pts[p].y;
+            }
+            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', d);
+            path.setAttribute('fill', 'none');
+            path.setAttribute('stroke', color);
+            path.setAttribute('stroke-width', width);
+            if (dash) path.setAttribute('stroke-dasharray', dash);
+            svg.prepend(path);
+        }
+
+        drawPolyline(nadiPoints, '#e74c3c', 1.5, null);
+        drawPolyline(sistolikPoints, '#2980b9', 1.5, '3,2');
+        drawPolyline(diastolikPoints, '#27ae60', 1.5, '3,2');
+        drawPolyline(suhuPoints, '#f39c12', 1.2, null);
+    }
+
+    // Initial setup
+    calculateTotals();
+    syncGridData();
+    setTimeout(renderSvgChart, 200);
+
+    // Form submit validation & sync
+    $('#form-status-anestesi').on('submit', function() {
+        calculateTotals();
+        syncGridData();
+        return true;
+    });
+
+});
+</script>

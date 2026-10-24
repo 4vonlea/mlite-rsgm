@@ -53,17 +53,17 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 2 | Persetujuan Tindakan Pembiusan | ANS2 | ✅ Tersedia | `ans2_persetujuan_pembiusan` | Form RME -> Bedah & Anestesi |
 | 3 | Asesmen Prasedasi / Anestesi | ANS3 | ✅ Tersedia | `ans3_assesmen_prasedasi_anestesi` | Form RME -> Bedah & Anestesi |
 | 4 | Rencana Anestesi | ANS4 | ✅ Tersedia | `ans4_rencana_anestesi` | Form RME -> Bedah & Anestesi |
-| 5 | Status Anestesi | ANS5 | ⏳ Dalam Rencana | - | Antrean UBS Bedah |
+| 5 | Status Anestesi | ANS5 | ✅ Tersedia | `ans5_status_anestesi` | Form RME -> Bedah -> Form Wajib |
 | 6 | Status Post Anestesi | ANS6 | ✅ Tersedia | `ans6_status_post_anestesi` | Form RME -> Bedah & Anestesi |
 | 7 | Serah Terima Pasien Pasca Operasi | ANS7 | ✅ Tersedia | `ans7_serah_terima` | Form RME -> Bedah & Anestesi |
 | 8 | Informasi Tindakan Medik / Pembedahan | BM1 | ✅ Tersedia | `bm1_informasi_tindakan` | Form RME -> Bedah & Anestesi |
 | 9 | Persetujuan Tindakan Medik / Pembedahan | BM2 | ✅ Tersedia | `bm2_persetujuan_tindakan` | Form RME -> Bedah & Anestesi |
 | 10 | Asesmen Pra Bedah Mayor | - | ⏳ Dalam Rencana | - | Antrean UBS Bedah |
 | 11 | Laporan Pembedahan Anestesi Umum | BM4 | ✅ Tersedia | `bm4_laporan_pembedahan` | Form RME -> Bedah & Anestesi |
-| 12 | Checklist Keselamatan Pasien Operasi | - | ⏳ Dalam Rencana | - | Antrean UBS Bedah |
+| 12 | Checklist Keselamatan Pasien Operasi | BM5 | ✅ Tersedia | `bm5_checklist_keselamatan_operasi` | Form RME -> Bedah -> Form Wajib |
 | 13 | Persetujuan Tindakan Anestesi Lokal | BMI1 | ✅ Tersedia | `bmi1_persetujuan_anestesi_lokal` | Form RME -> Bedah & Anestesi |
 | 14 | Penandaan Tepat Lokasi Bedah Mulut | - | ✅ Tersedia | `penandaan_lokasi_bedah_mulut` | Form RME -> Bedah -> Form Wajib |
-| 15 | Asesmen Bedah Minor | - | ⏳ Dalam Rencana | - | Antrean UBS Bedah |
+| 15 | Asesmen Bedah Minor | BMI3 | ✅ Tersedia | `bmi3_asesmen_bedah_minor` | Form RME -> Bedah -> Form Wajib |
 | 16 | Pemeriksaan Pra Anestesi Lokal | BMI4 | ✅ Tersedia | `bmi4_pra_anestesi_lokal` | Form RME -> Bedah & Anestesi |
 | 17 | Laporan Bedah Minor | BMI5 | ✅ Tersedia | `bmi5_bedah_minor` | Form RME -> Bedah & Anestesi |
 
@@ -223,11 +223,11 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 Berikut daftar lengkap formulir yang masih dalam antrean pengembangan:
 
 ### A. UBS (5 Form):
-- [ ] Status Anestesi (ANS5)
+- [x] Status Anestesi (ANS5)
 - [ ] Asesmen Pra Bedah Mayor
-- [ ] Checklist Keselamatan Pasien Operasi
+- [x] Checklist Keselamatan Pasien Operasi (BM5)
 - [x] Penandaan Tepat Lokasi Bedah Mulut
-- [ ] Asesmen Bedah Minor
+- [x] Asesmen Bedah Minor (BMI3)
 
 ### B. RANAP - Lampiran (14 Form):
 - [ ] Gizi Anak dan Dewasa

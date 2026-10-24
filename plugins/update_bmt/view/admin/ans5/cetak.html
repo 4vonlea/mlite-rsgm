@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>STATUS ANESTESI - {$data.no_rkm_medis}</title>
+    <style>
+        {if: empty($is_mpdf)}
+        @page {
+            size: A4 portrait;
+            margin: 5mm 6mm;
+        }
+        body {
+            background: #f4f6f9;
+            padding: 15px 0;
+        }
+        .cetak-wrapper {
+            background: #fff;
+            width: 196mm;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            padding: 4px;
+        }
+        .no-print-toolbar {
+            width: 196mm;
+            margin: 0 auto 10px auto;
+            padding: 8px 12px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .btn-toolbar {
+            padding: 4px 10px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+        @media print {
+            .no-print-toolbar { display: none !important; }
+            body { background: transparent !important; padding: 0 !important; }
+            .cetak-wrapper { box-shadow: none !important; margin: 0 !important; width: 100% !important; border: 1.5px solid #000 !important; }
+        }
+        {/if}
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8px;
+            color: #000;
+            line-height: 1.15;
+            margin: 0;
+            padding: 0;
+        }
+        .cetak-wrapper {
+            border: 1.5px solid #000;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .table-border {
+            border: 1px solid #000;
+        }
+        .table-border th, .table-border td {
+            border: 1px solid #000;
+            padding: 1.5px 3px;
+            vertical-align: top;
+        }
+        .table-grid {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 7.2px;
+        }
+        .table-grid th, .table-grid td {
+            border: 0.7px solid #000;
+            padding: 1px 1.5px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .table-grid td.label-col {
+            text-align: left;
+            padding-left: 3px;
+            font-weight: bold;
+            font-size: 7.2px;
+            white-space: nowrap;
+        }
+        .header-title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            padding: 3px 0;
+            text-transform: uppercase;
+        }
+        .box-check {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border: 1px solid #000;
+            text-align: center;
+            line-height: 8px;
+            font-size: 7px;
+            margin-right: 1.5px;
+            vertical-align: middle;
+        }
+        .box-check.checked {
+            font-weight: bold;
+            background: #000;
+            color: #fff;
+        }
+        .legend-box {
+            font-size: 6.5px;
+            line-height: 1.15;
+            text-align: left;
+            padding: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    {if: empty($is_mpdf)}
+    <div class="no-print-toolbar">
+        <button onclick="window.print()" class="btn-toolbar btn-print"><i class="fa fa-print"></i> Cetak Dokumen</button>
+        <a href="{?=url([ADMIN, 'update_bmt', 'ans5cetak', $data['id']])?}&pdf=1" target="_blank" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
+        <button onclick="window.close()" class="btn-toolbar btn-close"><i class="fa fa-times"></i> Tutup</button>
+    </div>
+    {/if}
+
+    <div class="cetak-wrapper">
+
+        <!-- HEADER KOP & JUDUL FORM -->
+        <table style="width: 100%; border-bottom: 2px solid #000; margin-bottom: 2px;">
+            <tr>
+                <td style="width: 52%; vertical-align: middle; padding: 1px 2px;">
+                    {if: !empty($kop_img)}
+                        <img src="{$kop_img}" alt="KOP RSGM" style="width: 100%; max-height: 48px;">
+                    {else}
+                        <div style="font-size: 8.5px; line-height: 1.1; text-align: center;">
+                            <strong style="font-size: 9.5px;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</strong><br>
+                            <strong style="font-size: 10.5px;">RSGM GUSTI HASAN AMAN</strong><br>
+                            <span style="font-size: 7.5px;">Jl. Simpang Ulin No.28 Telp. (0511) 3260818 BANJARMASIN</span>
+                        </div>
+                    {/if}
+                </td>
+                <td style="width: 48%; vertical-align: middle; text-align: right; border-left: 1.5px solid #000; padding: 1px 6px;">
+                    <div class="header-title">STATUS ANESTESI</div>
+                    <div style="font-size: 8px; margin-top: 1px;">
+                        <strong>Tanggal :</strong> {?=!empty($data['tgl_indo']) ? $data['tgl_indo'] : '-'?}
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- INFORMASI PASIEN & IDENTITAS OPERASI (GRID KOTAK) -->
+        <table class="table-border" style="margin-bottom: 2px; font-size: 7.8px;">
+            <tr>
+                <td style="width: 17%;"><strong>No RM :</strong> {$data.no_rkm_medis}</td>
+                <td style="width: 25%;"><strong>Nama Pasien :</strong> {$data.nm_pasien}</td>
+                <td style="width: 8%; text-align: center;"><strong>L/P :</strong> {$data.jk}</td>
+                <td style="width: 25%;"><strong>Diagnosa Pra bedah :</strong> {$data.diagnosa_prabedah}</td>
+                <td style="width: 25%;"><strong>dr. Anestesi / Asisten :</strong> {$data.dr_anestesi}</td>
+            </tr>
+            <tr>
+                <td><strong>Umur :</strong> {$data.umur}</td>
+                <td colspan="2">
+                    <strong>Status Fisik :</strong> &nbsp;
+                    <span class="box-check {if: $data.status_fisik == '1'}checked{/if}">1</span> 1 &nbsp;
+                    <span class="box-check {if: $data.status_fisik == '2'}checked{/if}">2</span> 2 &nbsp;
+                    <span class="box-check {if: $data.status_fisik == '3'}checked{/if}">3</span> 3 &nbsp;
+                    <span class="box-check {if: $data.status_fisik == '4'}checked{/if}">4</span> 4 &nbsp;
+                    <span class="box-check {if: $data.status_fisik == '5'}checked{/if}">5</span> 5 &nbsp;
+                    <span class="box-check {if: $data.status_fisik == 'E'}checked{/if}">E</span> E
+                </td>
+                <td><strong>Diagnosa Pasca Bedah :</strong> {$data.diagnosa_pascabedah}</td>
+                <td><strong>Penata Anestesi :</strong> {$data.penata_anestesi}</td>
+            </tr>
+            <tr>
+                <td>
+                    <strong>Gol. Darah :</strong>
+                    <span class="box-check {if: $data.gol_darah == 'A'}checked{/if}">A</span> A &nbsp;
+                    <span class="box-check {if: $data.gol_darah == 'B'}checked{/if}">B</span> B &nbsp;
+                    <span class="box-check {if: $data.gol_darah == 'O'}checked{/if}">O</span> O &nbsp;
+                    <span class="box-check {if: $data.gol_darah == 'AB'}checked{/if}">AB</span> AB &nbsp;
+                    <strong>Rh:</strong> {$data.rh}
+                </td>
+                <td colspan="2">
+                    <strong>BB :</strong> {if: !empty($data.bb)}{$data.bb} Kg{else}___ Kg{/if} &nbsp;&nbsp;&nbsp;
+                    <strong>TB :</strong> {if: !empty($data.tb)}{$data.tb} Cm{else}___ Cm{/if}
+                </td>
+                <td><strong>Tindakan :</strong> {$data.tindakan}</td>
+                <td><strong>dr. Operator / Asisten :</strong> {$data.dr_operator}</td>
+            </tr>
+            <tr>
+                <td colspan="2"><strong>Waktu Mulai Pembiusan :</strong> {if: !empty($data.waktu_mulai_pembiusan)}{$data.waktu_mulai_pembiusan}{else}___ : ___{/if}</td>
+                <td colspan="2"><strong>Waktu Selesai Pembiusan :</strong> {if: !empty($data.waktu_selesai_pembiusan)}{$data.waktu_selesai_pembiusan}{else}___ : ___{/if}</td>
+                <td><strong>Lama Pembiusan :</strong> {$data.lama_pembiusan}</td>
+            </tr>
+        </table>
+
+        <!-- TANDA VITAL PREINDUKSI -->
+        <table class="table-border" style="margin-bottom: 2px; font-size: 7.8px; background: #fafafa;">
+            <tr>
+                <td style="width: 18%; font-weight: bold; background: #eee;">Tanda Vital Preinduksi :</td>
+                <td style="width: 22%;"><strong>TD :</strong> {if: !empty($data.preinduksi_td_sistolik)}{$data.preinduksi_td_sistolik}/{$data.preinduksi_td_diastolik}{else}___ / ___{/if} mmHg</td>
+                <td style="width: 15%;"><strong>Nadi :</strong> {if: !empty($data.preinduksi_nadi)}{$data.preinduksi_nadi}{else}___{/if} x/menit</td>
+                <td style="width: 15%;"><strong>RR :</strong> {if: !empty($data.preinduksi_rr)}{$data.preinduksi_rr}{else}___{/if} x/menit</td>
+                <td style="width: 15%;"><strong>Suhu :</strong> {if: !empty($data.preinduksi_suhu)}{$data.preinduksi_suhu}{else}___{/if} °C</td>
+                <td style="width: 15%;"><strong>VAS :</strong> {if: !empty($data.preinduksi_vas)}{$data.preinduksi_vas}{else}___{/if} / 10</td>
+            </tr>
+        </table>
+
+        <!-- TABEL MONITORING LENGKAP DENGAN GRAFIK (INTRAOPERATIVE GRID) -->
+        <table class="table-grid" style="margin-bottom: 2px;">
+            <thead>
+                <tr style="background: #f2f2f2; font-weight: bold;">
+                    <th style="width: 115px; text-align: left; padding-left: 3px;">Waktu</th>
+                    {$html_time_headers}
+                    <th style="width: 30px; text-align: center;">Jml</th>
+                </tr>
+            </thead>
+            <tbody>
+                {$html_grid_body}
+            </tbody>
+        </table>
+
+        <!-- BAGIAN BAWAH: MASALAH, PROSEDUR, JENIS ANESTESI, JALAN NAPAS & POSISI -->
+        <table class="table-border" style="margin-bottom: 2px; font-size: 7.5px;">
+            <tr>
+                <!-- SISI KIRI: MASALAH & PROSEDUR ANESTESI -->
+                <td style="width: 58%; padding: 2.5px; vertical-align: top;">
+                    <strong>MASALAH :</strong><br>
+                    <div style="min-height: 22px; padding-top: 1px;">
+                        {if: !empty($data.masalah)}{$data.masalah}{else}<em>Tidak ada masalah / komplikasi selama pembiusan.</em>{/if}
+                    </div>
+
+                    <div style="border-top: 0.8px solid #000; margin-top: 2px; padding-top: 2px;">
+                        <strong>PROSEDUR ANESTESI:</strong><br>
+                        • <strong>Loading cairan :</strong> {if: !empty($data.prosedur_loading_cairan)}{$data.prosedur_loading_cairan}{else}-{/if}<br>
+                        • <strong>Premedikasi :</strong> {if: !empty($data.prosedur_premedikasi)}{$data.prosedur_premedikasi}{else}-{/if}<br>
+                        • <strong>Maintenance :</strong> {if: !empty($data.prosedur_maintenance)}{$data.prosedur_maintenance}{else}-{/if}
+                    </div>
+                </td>
+
+                <!-- SISI KANAN: JENIS ANESTESI, JALAN NAPAS, POSISI -->
+                <td style="width: 42%; padding: 2.5px; vertical-align: top; border-left: 1.5px solid #000;">
+                    <strong>JENIS ANESTESI</strong><br>
+                    <span class="box-check {if: $data.jenis_anestesi_general == 'Y'}checked{/if}">✓</span> General : {if: !empty($data.jenis_anestesi_general_tipe)}{$data.jenis_anestesi_general_tipe}{else}GETA / TIVA / LMA / Face Mask{/if}<br>
+                    <span class="box-check {if: $data.jenis_anestesi_regional == 'Y'}checked{/if}">✓</span> Regional : {if: !empty($data.jenis_anestesi_regional_tipe)}{$data.jenis_anestesi_regional_tipe}{else}SAB / Epidural / Caudal{/if}<br>
+                    <span class="box-check {if: !empty($data.jenis_anestesi_lain)}checked{/if}">✓</span> {if: !empty($data.jenis_anestesi_lain)}{$data.jenis_anestesi_lain}{else}................................................................{/if}
+
+                    <div style="border-top: 0.8px solid #000; margin-top: 2px; padding-top: 2px;">
+                        <strong>JALAN NAPAS</strong><br>
+                        <span class="box-check {if: $data.jalan_napas_nasal == 'Y'}checked{/if}">✓</span> Nasal Kanul &nbsp;&nbsp;
+                        <span class="box-check {if: $data.jalan_napas_facemask == 'Y'}checked{/if}">✓</span> Face Mask &nbsp;&nbsp;
+                        <span class="box-check {if: $data.jalan_napas_lma == 'Y'}checked{/if}">✓</span> LMA<br>
+                        <span class="box-check {if: $data.jalan_napas_orotrakeal == 'Y'}checked{/if}">✓</span> Orotrakeal &nbsp;&nbsp;
+                        <span class="box-check {if: !empty($data.jalan_napas_lain)}checked{/if}">✓</span> {if: !empty($data.jalan_napas_lain)}{$data.jalan_napas_lain}{else}.....................................{/if}
+                    </div>
+
+                    <div style="border-top: 0.8px solid #000; margin-top: 2px; padding-top: 2px;">
+                        <strong>POSISI</strong><br>
+                        <span class="box-check {if: $data.posisi_supine == 'Y'}checked{/if}">✓</span> Supine &nbsp;&nbsp;
+                        <span class="box-check {if: $data.posisi_lateral == 'Y'}checked{/if}">✓</span> Lateral &nbsp;&nbsp;
+                        <span class="box-check {if: $data.posisi_prone == 'Y'}checked{/if}">✓</span> Prone<br>
+                        <span class="box-check {if: $data.posisi_lithotomi == 'Y'}checked{/if}">✓</span> Lithotomi &nbsp;&nbsp;
+                        <span class="box-check {if: !empty($data.posisi_lain)}checked{/if}">✓</span> {if: !empty($data.posisi_lain)}{$data.posisi_lain}{else}.....................................{/if}
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- FOOTER: 3 KOLOM PENYULIT, KEADAAN AKHIR & PENGESAHAN DOKTER -->
+        <table class="table-border" style="font-size: 7.5px;">
+            <tr style="background: #f7f7f7;">
+                <td style="width: 35%; font-weight: bold; text-align: center;">PENYULIT SELAMA PEMBEDAHAN</td>
+                <td style="width: 35%; font-weight: bold; text-align: center;">KEADAAN AKHIR PEMBEDAHAN</td>
+                <td style="width: 30%; font-weight: bold; text-align: center;">DOKTER ANESTESI</td>
+            </tr>
+            <tr>
+                <td style="height: 44px; vertical-align: top; padding: 2.5px;">
+                    {if: !empty($data.penyulit_pembedahan)}{$data.penyulit_pembedahan}{else}<em>Tidak ada penyulit.</em>{/if}
+                </td>
+                <td style="height: 44px; vertical-align: top; padding: 2.5px;">
+                    {if: !empty($data.keadaan_akhir_pembedahan)}{$data.keadaan_akhir_pembedahan}{else}<em>Pasien sadar baik, refleks jalan napas adekuat, tanda vital stabil, ditransfer ke Recovery Room (PACU).</em>{/if}
+                </td>
+                <td style="height: 44px; vertical-align: bottom; text-align: center; padding-bottom: 2.5px;">
+                    <div style="font-size: 8px;">
+                        ( <strong>{if: !empty($data.dokter_anestesi_ttd)}{$data.dokter_anestesi_ttd}{elseif: !empty($data.dr_anestesi)}{$data.dr_anestesi}{else}......................................................{/if}</strong> )
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+
+</body>
+</html>

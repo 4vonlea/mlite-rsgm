@@ -1,0 +1,119 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-stethoscope text-primary"></i> BMI3 - Asesmen Bedah Minor (Gigi dan Mulut)</h3>
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a href="{?=url([ADMIN, 'update_bmt', 'bmi3manage'])?}" role="tab"><i class="fa fa-list"></i> Data Asesmen Bedah Minor</a>
+                    </li>
+                    <li>
+                        <a href="{?=url([ADMIN, 'update_bmt', 'bmi3form'])?}" role="tab"><i class="fa fa-plus-circle"></i> Tambah Data</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive no-margin">
+                    <table class="table table-striped table-hover no-margin dataTable" id="data-table-bmi3">
+                        <thead>
+                            <tr class="info">
+                                <th style="width: 40px; text-align: center;">No</th>
+                                <th>No. Rawat</th>
+                                <th>No. RM</th>
+                                <th>Nama Pasien</th>
+                                <th>Tgl & Jam Operasi</th>
+                                <th>Keluhan Utama</th>
+                                <th>Diagnosis</th>
+                                <th>Rencana Tindakan</th>
+                                <th>Dokter Gigi</th>
+                                <th style="width: 140px; text-align: center;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {if: !empty($data)}
+                            {loop: $data}
+                            <tr>
+                                <td style="text-align: center;">{$value.nomor}</td>
+                                <td><span class="label label-info">{$value.no_rawat}</span></td>
+                                <td><strong>{$value.no_rkm_medis}</strong></td>
+                                <td>
+                                    <strong>{$value.nm_pasien}</strong>
+                                    <div class="text-muted" style="font-size: 11px;">
+                                        {if: !empty($value.jk)}{$value.jk}{/if} {if: !empty($value.umur)}| {$value.umur}{/if}
+                                    </div>
+                                </td>
+                                <td>
+                                    {$value.tgl_indo}
+                                    <div class="text-muted" style="font-size: 11px;">
+                                        <i class="fa fa-clock-o"></i> {$value.jam_operasi}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style="font-size: 11px;">
+                                        {if: !empty($value.keluhan_utama)}
+                                            {$value.keluhan_utama}
+                                        {else}
+                                            -
+                                        {/if}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span style="font-size: 11px;">
+                                        <strong>{$value.diagnosis}</strong>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span style="font-size: 11px;">
+                                        {$value.rencana_tindakan}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="font-size: 11px;">
+                                        <i class="fa fa-user-md text-primary"></i> {$value.nm_dokter}
+                                    </div>
+                                </td>
+                                <td style="text-align: center; white-space: nowrap;">
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'bmi3form', $value.id])?}" class="btn btn-xs btn-warning" title="Edit Form"><i class="fa fa-pencil"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'bmi3cetak', $value.id])?}" class="btn btn-xs btn-primary" target="_blank" title="Preview / Cetak Web"><i class="fa fa-print"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'bmi3cetak', $value.id])?}&pdf=1" class="btn btn-xs btn-danger" target="_blank" title="Unduh File PDF"><i class="fa fa-file-pdf-o"></i> PDF</a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'bmi3hapus', $value.id])?}" class="btn btn-xs btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus data Asesmen Bedah Minor ini?')" title="Hapus"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {/loop}
+                            {else}
+                            <tr>
+                                <td colspan="10" class="text-center" style="padding: 25px; color: #888;">
+                                    <i class="fa fa-folder-open-o fa-2x" style="margin-bottom: 8px; display: block;"></i>
+                                    Belum ada data Asesmen Bedah Minor (BMI3). Silakan klik tab <strong>Tambah Data</strong> untuk membuat baru.
+                                </td>
+                            </tr>
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$(document).ready(function() {
+    $('#data-table-bmi3').DataTable({
+        "ordering": false,
+        "language": {
+            "search": "Cari:",
+            "lengthMenu": "Tampilkan _MENU_ data per halaman",
+            "zeroRecords": "Tidak ada data yang cocok",
+            "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            "infoEmpty": "Menampilkan 0 sampai 0 dari 0 data",
+            "infoFiltered": "(disaring dari _MAX_ total data)",
+            "paginate": {
+                "first": "Pertama",
+                "last": "Terakhir",
+                "next": "Selanjutnya",
+                "previous": "Sebelumnya"
+            }
+        }
+    });
+});
+</script>
