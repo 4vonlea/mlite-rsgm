@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>BM3 - Asesmen Pra Bedah Mayor (Gigi dan Mulut) - {$data.no_rawat}</title>
+    <style>
+        {if: empty($is_mpdf)}
+        @page {
+            size: A4 portrait;
+            margin: 5mm 6mm 5mm 6mm;
+        }
+        {/if}
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 7.8pt;
+            line-height: 1.25;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
+            background-color: #f4f6f9;
+            padding: 12px 0;
+        }
+        .page {
+            background: #fff;
+            width: 200mm;
+            min-height: 287mm;
+            margin: 0 auto 15px auto;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        {/if}
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        /* Toolbar Layar Browser */
+        .no-print-toolbar {
+            width: 200mm;
+            margin: 0 auto 10px auto;
+            padding: 8px 14px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-toolbar {
+            padding: 5px 12px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-print { background: #3498db; color: #fff; margin-right: 5px; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-right: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; }
+
+        /* BORDER DOKUMEN */
+        .outer-border {
+            border: 1.5px solid #000;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+        }
+
+        /* HEADER & KOP */
+        .kop-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1.5px solid #000;
+        }
+        .kop-table td {
+            vertical-align: middle;
+            padding: 3px 6px;
+        }
+        .kop-left {
+            width: 58%;
+            border-right: 1.5px solid #000;
+        }
+        .kop-left img {
+            max-height: 44px;
+            max-width: 100%;
+            display: block;
+        }
+        .kop-right {
+            width: 42%;
+            font-size: 7.8pt;
+            line-height: 1.25;
+            padding-left: 8px !important;
+        }
+        .kop-right table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .kop-right table td {
+            padding: 1.5px 0;
+            border: none;
+        }
+
+        /* KOTAK NO. RM */
+        .rm-box-table {
+            border-collapse: collapse;
+            display: inline-table;
+            vertical-align: middle;
+        }
+        .rm-digit-cell {
+            width: 14px;
+            height: 15px;
+            border: 1px solid #000;
+            text-align: center;
+            font-weight: bold;
+            font-size: 8.5pt;
+            padding: 0;
+            line-height: 14px;
+        }
+        .rm-dash-cell {
+            padding: 0 2px;
+            font-weight: bold;
+            font-size: 8.5pt;
+        }
+
+        /* TITLE BAR */
+        .title-bar {
+            text-align: center;
+            font-size: 10.5pt;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            padding: 4px 0 3px 0;
+            border-bottom: 1.5px solid #000;
+            background-color: #f8f9fa;
+        }
+
+        /* SECTION HEADER */
+        .section-header {
+            font-weight: bold;
+            font-size: 8.2pt;
+            padding: 3px 6px;
+            background-color: #f1f2f4;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+        }
+        .section-header:first-child {
+            border-top: none;
+        }
+
+        /* TABEL DATA STANDAR */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table td, .data-table th {
+            border: 1px solid #000;
+            padding: 3px 5px;
+            vertical-align: top;
+            font-size: 7.8pt;
+        }
+
+        /* FORMULA GIGI */
+        .formula-box {
+            font-family: "Courier New", Courier, monospace;
+            font-size: 7.8pt;
+            text-align: center;
+            padding: 3px 0;
+            line-height: 1.25;
+        }
+        .formula-line {
+            border-top: 1px solid #000;
+            margin: 1px auto;
+        }
+
+        /* CHECKBOX BOX */
+        .check-box {
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            border: 1px solid #000;
+            text-align: center;
+            line-height: 10px;
+            font-size: 8pt;
+            font-weight: bold;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+
+        /* FOOTER RESMI */
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 6.8pt;
+            margin-top: 2px;
+            padding: 1px 4px;
+        }
+
+        @media print {
+            .no-print-toolbar { display: none !important; }
+            body { background: #fff !important; padding: 0 !important; }
+            .page { width: 100% !important; box-shadow: none !important; margin: 0 !important; }
+        }
+    </style>
+</head>
+<body>
+
+{if: empty($is_mpdf)}
+<div class="no-print-toolbar">
+    <div>
+        <i class="fa fa-print"></i> <strong>Pratinjau Cetak: BM3 - Asesmen Pra Bedah Mayor (Gigi dan Mulut) [2 Halaman]</strong>
+    </div>
+    <div>
+        <button onclick="window.print()" class="btn-toolbar btn-print"><i class="fa fa-print"></i> Cetak Dokumen</button>
+        <a href="{?=url([ADMIN, 'update_bmt', 'bm3cetak', $data['id']])?}&pdf=1" target="_blank" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Unduh PDF (2 Halaman)</a>
+        <button onclick="window.close()" class="btn-toolbar btn-close">Tutup</button>
+    </div>
+</div>
+{/if}
+
+<!-- ========================================== -->
+<!-- HALAMAN 1 : ANAMNESIS & PEMERIKSAAN FISIK  -->
+<!-- ========================================== -->
+<div class="page">
+    <div class="outer-border">
+
+        <!-- KOP SURAT & IDENTITAS PASIEN -->
+        <table class="kop-table">
+            <tr>
+                <td class="kop-left">
+                    {if: !empty($kop_img)}
+                        <img src="{$kop_img}" alt="KOP RSGM">
+                    {else}
+                        <div style="font-size: 8.5pt; font-weight: bold;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+                        <div style="font-size: 10.5pt; font-weight: bold;">RSGM GUSTI HASAN AMAN</div>
+                        <div style="font-size: 7pt;">Jl. Simpang Ulin No.28 Telp. (0511) 3260818 BANJARMASIN</div>
+                    {/if}
+                </td>
+                <td class="kop-right">
+                    <table>
+                        <tr>
+                            <td style="width: 78px;">No. RM</td>
+                            <td style="width: 6px;">:</td>
+                            <td>
+                                <table style="border-collapse: collapse; display: inline-table; vertical-align: middle;">
+                                    <tr>
+                                        <td style="border: 1px solid #000; width: 14px; height: 15px; text-align: center; font-weight: bold; font-size: 8.5pt; padding: 0; line-height: 14px;">{$rm_digits[0]}</td>
+                                        <td style="border: 1px solid #000; width: 14px; height: 15px; text-align: center; font-weight: bold; font-size: 8.5pt; padding: 0; line-height: 14px;">{$rm_digits[1]}</td>
+                                        <td style="padding: 0 2px; font-weight: bold; font-size: 8.5pt; border: none;">-</td>
+                                        <td style="border: 1px solid #000; width: 14px; height: 15px; text-align: center; font-weight: bold; font-size: 8.5pt; padding: 0; line-height: 14px;">{$rm_digits[2]}</td>
+                                        <td style="border: 1px solid #000; width: 14px; height: 15px; text-align: center; font-weight: bold; font-size: 8.5pt; padding: 0; line-height: 14px;">{$rm_digits[3]}</td>
+                                        <td style="padding: 0 2px; font-weight: bold; font-size: 8.5pt; border: none;">-</td>
+                                        <td style="border: 1px solid #000; width: 14px; height: 15px; text-align: center; font-weight: bold; font-size: 8.5pt; padding: 0; line-height: 14px;">{$rm_digits[4]}</td>
+                                        <td style="border: 1px solid #000; width: 14px; height: 15px; text-align: center; font-weight: bold; font-size: 8.5pt; padding: 0; line-height: 14px;">{$rm_digits[5]}</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Nama Pasien</td>
+                            <td>:</td>
+                            <td><strong>{$data.nm_pasien}</strong> &nbsp;({if: !empty($data.jk)}{$data.jk}{else}-{/if})</td>
+                        </tr>
+                        <tr>
+                            <td>Tanggal Lahir</td>
+                            <td>:</td>
+                            <td>{$data.tgl_lahir_indo} &nbsp;({if: !empty($data.umur)}{$data.umur}{/if})</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <!-- TITLE BAR -->
+        <div class="title-bar">
+            ASESMEN PRA BEDAH MAYOR (GIGI DAN MULUT)
+        </div>
+
+        <!-- 1. ANAMNESIS -->
+        <div class="section-header">ANAMNESIS</div>
+        <table class="data-table" style="border: none;">
+            <tr>
+                <td style="width: 18%; border: none; border-bottom: 1px solid #ccc; font-weight: bold;">Keluhan Utama</td>
+                <td style="width: 2%; border: none; border-bottom: 1px solid #ccc; text-align: center;">:</td>
+                <td style="border: none; border-bottom: 1px solid #ccc;">{if: !empty($data.keluhan_utama)}{$data.keluhan_utama}{else}-{/if}</td>
+            </tr>
+            <tr>
+                <td style="border: none; border-bottom: 1px solid #ccc; font-weight: bold;">Alergi / Obat</td>
+                <td style="border: none; border-bottom: 1px solid #ccc; text-align: center;">:</td>
+                <td style="border: none; border-bottom: 1px solid #ccc;">{if: !empty($data.alergi_obat)}{$data.alergi_obat}{else}Tidak ada{/if}</td>
+            </tr>
+            <tr>
+                <td style="border: none; border-bottom: 1px solid #ccc; font-weight: bold;">Merokok</td>
+                <td style="border: none; border-bottom: 1px solid #ccc; text-align: center;">:</td>
+                <td style="border: none; border-bottom: 1px solid #ccc;">{if: !empty($data.merokok)}{$data.merokok}{else}Tidak merokok{/if}</td>
+            </tr>
+            <tr>
+                <td style="border: none; border-bottom: 1px solid #000; font-weight: bold;">Riwayat Penyakit</td>
+                <td style="border: none; border-bottom: 1px solid #000; text-align: center;">:</td>
+                <td style="border: none; border-bottom: 1px solid #000;">{if: !empty($data.riwayat_penyakit)}{$data.riwayat_penyakit}{else}-{/if}</td>
+            </tr>
+            <tr>
+                <td style="border: none; border-bottom: 1px solid #000; font-weight: bold;">Keadaan Umum</td>
+                <td style="border: none; border-bottom: 1px solid #000; text-align: center;">:</td>
+                <td style="border: none; border-bottom: 1px solid #000;">
+                    <strong>{if: !empty($data.keadaan_umum)}{$data.keadaan_umum}{else}-{/if}</strong> &nbsp;|&nbsp;
+                    Kesadaran : <strong>{if: !empty($data.kesadaran)}{$data.kesadaran}{else}Compos Mentis{/if}</strong> &nbsp;|&nbsp;
+                    GCS : E <strong>{if: !empty($data.gcs_e)}{$data.gcs_e}{else}4{/if}</strong> &nbsp;
+                    V <strong>{if: !empty($data.gcs_v)}{$data.gcs_v}{else}5{/if}</strong> &nbsp;
+                    M <strong>{if: !empty($data.gcs_m)}{$data.gcs_m}{else}6{/if}</strong>
+                </td>
+            </tr>
+            <tr>
+                <td style="border: none; border-bottom: 1px solid #000; font-weight: bold;">TTV</td>
+                <td style="border: none; border-bottom: 1px solid #000; text-align: center;">:</td>
+                <td style="border: none; border-bottom: 1px solid #000;">
+                    TD : <strong>{if: !empty($data.td)}{$data.td}{else}-{/if}</strong> mmHg &nbsp;|&nbsp;
+                    Nadi : <strong>{if: !empty($data.nadi)}{$data.nadi}{else}-{/if}</strong> x/menit &nbsp;|&nbsp;
+                    Pernafasan : <strong>{if: !empty($data.pernafasan)}{$data.pernafasan}{else}-{/if}</strong> x/menit &nbsp;|&nbsp;
+                    T : <strong>{if: !empty($data.suhu)}{$data.suhu}{else}-{/if}</strong> °C &nbsp;|&nbsp;
+                    SpO2 : <strong>{if: !empty($data.spo2)}{$data.spo2}{else}-{/if}</strong> %
+                </td>
+            </tr>
+        </table>
+
+        <!-- 2. PEMERIKSAAN FISIK -->
+        <div class="section-header">PEMERIKSAAN FISIK</div>
+        <table class="data-table" style="border: none;">
+            <tr>
+                <td style="width: 14%; border: none; border-right: 1px solid #000; border-bottom: 1px solid #000; font-weight: bold;">
+                    Lokalis :
+                </td>
+                <td style="border: none; border-bottom: 1px solid #000; padding: 3px 6px;">
+                    <!-- Odontogram / Formula Gigi -->
+                    <div style="background: #fafafa; border: 1px dashed #999; border-radius: 3px; padding: 3px; margin-bottom: 4px;">
+                        <div class="formula-box">
+                            <span style="font-size: 7.2pt; color: #555;">Gigi Dewasa:</span><br>
+                            18 &nbsp;17 &nbsp;16 &nbsp;15 &nbsp;14 &nbsp;13 &nbsp;12 &nbsp;11 &nbsp;|&nbsp; 21 &nbsp;22 &nbsp;23 &nbsp;24 &nbsp;25 &nbsp;26 &nbsp;27 &nbsp;28
+                            <div class="formula-line" style="width: 82%;"></div>
+                            48 &nbsp;47 &nbsp;46 &nbsp;45 &nbsp;44 &nbsp;43 &nbsp;42 &nbsp;41 &nbsp;|&nbsp; 31 &nbsp;32 &nbsp;33 &nbsp;34 &nbsp;35 &nbsp;36 &nbsp;37 &nbsp;38
+                        </div>
+                        <div class="formula-box" style="margin-top: 2px;">
+                            <span style="font-size: 7.2pt; color: #555;">Gigi Susu:</span><br>
+                            55 &nbsp;54 &nbsp;53 &nbsp;52 &nbsp;51 &nbsp;|&nbsp; 61 &nbsp;62 &nbsp;63 &nbsp;64 &nbsp;65
+                            <div class="formula-line" style="width: 55%;"></div>
+                            85 &nbsp;84 &nbsp;83 &nbsp;82 &nbsp;81 &nbsp;|&nbsp; 71 &nbsp;72 &nbsp;73 &nbsp;74 &nbsp;75
+                        </div>
+                    </div>
+
+                    <!-- Keterangan Status Lokalis -->
+                    {if: !empty($data.lokalis_gigi)}
+                    <div style="font-size: 7.5pt; margin-bottom: 3px;">
+                        <strong>Status Gigi Terlibat:</strong> {$data.lokalis_gigi}
+                    </div>
+                    {/if}
+                    {if: !empty($data.ket_lokalis)}
+                    <div style="font-size: 7.5pt; margin-bottom: 4px;">
+                        <strong>Deskripsi Lokalis:</strong> {$data.ket_lokalis}
+                    </div>
+                    {/if}
+
+                    <!-- Diagram Tubuh & Kepala -->
+                    <div style="text-align: center; margin: 4px 0 2px 0;">
+                        {if: !empty($anatomi_img)}
+                            <img src="{$anatomi_img}" style="max-height: 185px; max-width: 98%; border: 1px solid #ccc; display: block; margin: 0 auto;" alt="Skema Lokalis Anatomi Tubuh">
+                        {/if}
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="border: none; border-right: 1px solid #000; font-weight: bold; padding-top: 6px;">
+                    Generalis :
+                </td>
+                <td style="border: none; padding: 5px 6px;">
+                    {if: !empty($data.pemeriksaan_generalis)}
+                        {$data.pemeriksaan_generalis}
+                    {else}
+                        Kepala: Normocephali. Thorax: Cor S1-S2 m(-), Pulmo vesikuler (+/+). Abdomen: Supel. Ekstremitas: Edema (-/-).
+                    {/if}
+                </td>
+            </tr>
+        </table>
+
+    </div>
+
+    <!-- FOOTER HALAMAN 1 -->
+    <table class="footer-table">
+        <tr>
+            <td style="width: 25%; font-weight: bold;">RSGM/Ed-Rev/02/2023</td>
+            <td style="width: 50%; text-align: center; font-style: italic;">Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</td>
+            <td style="width: 25%; text-align: right; font-weight: bold;">RM. UBS &nbsp;|&nbsp; Hal 1 dari 2</td>
+        </tr>
+    </table>
+</div>
+
+{if: !empty($is_mpdf)}
+<pagebreak />
+{else}
+<div class="page-break" style="page-break-before: always;"></div>
+{/if}
+
+<!-- ========================================== -->
+<!-- HALAMAN 2 : PEMERIKSAAN PENUNJANG, ASESMEN -->
+<!-- ========================================== -->
+<div class="page">
+    <div class="outer-border">
+
+        <!-- KOP MINI IDENTITAS HALAMAN 2 -->
+        <table class="kop-table">
+            <tr>
+                <td class="kop-left" style="padding: 4px 8px;">
+                    <strong style="font-size: 8.5pt;">RSGM GUSTI HASAN AMAN</strong><br>
+                    <span style="font-size: 7.2pt; font-weight: bold; text-decoration: underline;">ASESMEN PRA BEDAH MAYOR (GIGI DAN MULUT) - LANJUTAN</span>
+                </td>
+                <td class="kop-right" style="padding: 3px 6px;">
+                    <table>
+                        <tr>
+                            <td style="width: 78px;">No. RM</td>
+                            <td style="width: 6px;">:</td>
+                            <td><strong>{$data.no_rkm_medis}</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Nama Pasien</td>
+                            <td>:</td>
+                            <td><strong>{$data.nm_pasien}</strong> ({if: !empty($data.jk)}{$data.jk}{else}-{/if})</td>
+                        </tr>
+                        <tr>
+                            <td>Tanggal Lahir</td>
+                            <td>:</td>
+                            <td>{$data.tgl_lahir_indo}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <!-- 3. PEMERIKSAAN PENUNJANG -->
+        <div class="section-header">PEMERIKSAAN PENUNJANG</div>
+        <table class="data-table">
+            <thead>
+                <tr style="background-color: #f8f9fa;">
+                    <th style="width: 22%; text-align: center;">Jenis Pemeriksaan</th>
+                    <th style="width: 48%; text-align: center;">Pemeriksaan yang dilakukan</th>
+                    <th style="width: 30%; text-align: center;">Kesan</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Laboratorium -->
+                <tr>
+                    <td style="font-weight: bold;">Laboratorium</td>
+                    <td>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt;">
+                            <tr>
+                                <td style="width: 80px; border: none; padding: 1.5px 0;">DPL</td>
+                                <td style="width: 8px; border: none; padding: 1.5px 0;">:</td>
+                                <td style="border: none; padding: 1.5px 0;">{if: !empty($data.lab_dpl)}{$data.lab_dpl}{else}-{/if}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: none; padding: 1.5px 0;">Hemostatis</td>
+                                <td style="border: none; padding: 1.5px 0;">:</td>
+                                <td style="border: none; padding: 1.5px 0;">{if: !empty($data.lab_hemostatis)}{$data.lab_hemostatis}{else}-{/if}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: none; padding: 1.5px 0;">Lain-lain</td>
+                                <td style="border: none; padding: 1.5px 0;">:</td>
+                                <td style="border: none; padding: 1.5px 0;">{if: !empty($data.lab_lain)}{$data.lab_lain}{else}-{/if}</td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td>{if: !empty($data.kesan_lab)}{$data.kesan_lab}{else}-{/if}</td>
+                </tr>
+                <!-- Radiologi -->
+                <tr>
+                    <td style="font-weight: bold;">Radiologi</td>
+                    <td>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt;">
+                            <tr>
+                                <td style="width: 80px; border: none; padding: 1.5px 0;">Toraks P.A</td>
+                                <td style="width: 8px; border: none; padding: 1.5px 0;">:</td>
+                                <td style="border: none; padding: 1.5px 0;">{if: !empty($data.rad_toraks)}{$data.rad_toraks}{else}-{/if}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: none; padding: 1.5px 0;">Panoramik</td>
+                                <td style="border: none; padding: 1.5px 0;">:</td>
+                                <td style="border: none; padding: 1.5px 0;">{if: !empty($data.rad_panoramik)}{$data.rad_panoramik}{else}-{/if}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: none; padding: 1.5px 0;">CT-Scan</td>
+                                <td style="border: none; padding: 1.5px 0;">:</td>
+                                <td style="border: none; padding: 1.5px 0;">{if: !empty($data.rad_ctscan)}{$data.rad_ctscan}{else}-{/if}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: none; padding: 1.5px 0;">Lain-lain</td>
+                                <td style="border: none; padding: 1.5px 0;">:</td>
+                                <td style="border: none; padding: 1.5px 0;">{if: !empty($data.rad_lain)}{$data.rad_lain}{else}-{/if}</td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td>{if: !empty($data.kesan_rad)}{$data.kesan_rad}{else}-{/if}</td>
+                </tr>
+                <!-- Elektrokardiografi -->
+                <tr>
+                    <td style="font-weight: bold;">Elektrokardiografi</td>
+                    <td>{if: !empty($data.ekg_dilakukan)}{$data.ekg_dilakukan}{else}-{/if}</td>
+                    <td>{if: !empty($data.kesan_ekg)}{$data.kesan_ekg}{else}-{/if}</td>
+                </tr>
+                <!-- Lain-lain -->
+                <tr>
+                    <td style="font-weight: bold;">Lain-lain</td>
+                    <td>{if: !empty($data.penunjang_lain)}{$data.penunjang_lain}{else}-{/if}</td>
+                    <td>{if: !empty($data.kesan_penunjang_lain)}{$data.kesan_penunjang_lain}{else}-{/if}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- 4. ASESMEN -->
+        <div class="section-header">ASESMEN</div>
+        <table class="data-table" style="border: none;">
+            <tr>
+                <td style="width: 25%; border: none; border-bottom: 1px solid #ccc; font-weight: bold;">Diagnosis pra bedah / tindakan</td>
+                <td style="width: 2%; border: none; border-bottom: 1px solid #ccc; text-align: center;">:</td>
+                <td style="border: none; border-bottom: 1px solid #ccc;">
+                    <strong>{if: !empty($data.diagnosis_pra_bedah)}{$data.diagnosis_pra_bedah}{else}-{/if}</strong>
+                </td>
+            </tr>
+            <tr>
+                <td style="border: none; border-bottom: 1px solid #000; font-weight: bold;">Rencana Operasi / tindakan</td>
+                <td style="border: none; border-bottom: 1px solid #000; text-align: center;">:</td>
+                <td style="border: none; border-bottom: 1px solid #000;">
+                    <strong>{if: !empty($data.rencana_operasi)}{$data.rencana_operasi}{else}-{/if}</strong>
+                </td>
+            </tr>
+        </table>
+
+        <!-- 5. RENCANA ANESTESI -->
+        <div class="section-header">RENCANA ANESTESI</div>
+        <div style="padding: 5px 10px; border-bottom: 1px solid #000;">
+            <span class="check-box">{if: $data.rencana_anestesi == 'Umum'}✓{/if}</span> <strong>Umum</strong>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="check-box">{if: $data.rencana_anestesi == 'Sedasi'}✓{/if}</span> <strong>Sedasi</strong>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="check-box">{if: $data.rencana_anestesi == 'Lokal'}✓{/if}</span> <strong>Lokal</strong>
+        </div>
+
+        <!-- 6. EVALUASI PRA BEDAH -->
+        <div class="section-header">EVALUASI PRA BEDAH</div>
+        <table class="data-table" style="border: none;">
+            <tr>
+                <td style="width: 14%; border: none; border-bottom: 1px solid #ccc; font-weight: bold;">Masalah</td>
+                <td style="width: 2%; border: none; border-bottom: 1px solid #ccc; text-align: center;">:</td>
+                <td style="border: none; border-bottom: 1px solid #ccc;">{if: !empty($data.evaluasi_masalah)}{$data.evaluasi_masalah}{else}-{/if}</td>
+            </tr>
+            <tr>
+                <td style="border: none; border-bottom: 1px solid #ccc; font-weight: bold;">Potensi</td>
+                <td style="border: none; border-bottom: 1px solid #ccc; text-align: center;">:</td>
+                <td style="border: none; border-bottom: 1px solid #ccc;">{if: !empty($data.evaluasi_potensi)}{$data.evaluasi_potensi}{else}-{/if}</td>
+            </tr>
+            <tr>
+                <td style="border: none; border-bottom: 1px solid #000; font-weight: bold;">Antisipasi</td>
+                <td style="border: none; border-bottom: 1px solid #000; text-align: center;">:</td>
+                <td style="border: none; border-bottom: 1px solid #000;">{if: !empty($data.evaluasi_antisipasi)}{$data.evaluasi_antisipasi}{else}-{/if}</td>
+            </tr>
+        </table>
+
+        <!-- 7. RENCANA KERJA DAN TERAPI -->
+        <div class="section-header">RENCANA KERJA DAN TERAPI</div>
+        <div style="padding: 4px 8px; min-height: 40px; border-bottom: 1px solid #000; font-size: 7.5pt;">
+            {if: !empty($data.rencana_kerja_terapi)}
+                {?=nl2br($data.rencana_kerja_terapi)?}
+            {else}
+                -
+            {/if}
+        </div>
+
+        <!-- 8. CATATAN PENTING -->
+        <div class="section-header">CATATAN PENTING</div>
+        <div style="padding: 4px 8px; min-height: 35px; border-bottom: 1px solid #000; font-size: 7.5pt;">
+            {if: !empty($data.catatan_penting)}
+                {?=nl2br($data.catatan_penting)?}
+            {else}
+                -
+            {/if}
+        </div>
+
+        <!-- 9. YANG MELAKUKAN PENGKAJIAN -->
+        <div class="section-header">YANG MELAKUKAN PENGKAJIAN</div>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="width: 50%; vertical-align: top; padding: 6px 8px;">
+                    Tanggal / Jam : <strong>{$data.tanggal_pengkajian_indo}</strong>
+                </td>
+                <td style="width: 50%; text-align: center; vertical-align: top; padding: 6px 8px;">
+                    <div>Operator / DPJP</div>
+                    <div style="height: 48px; padding-top: 6px;">
+                        <span style="display: inline-block; border: 1px solid #27ae60; color: #27ae60; font-size: 7pt; font-weight: bold; padding: 2px 6px; border-radius: 3px;">
+                            [SIGNED & VALID]
+                        </span>
+                    </div>
+                    <div style="font-weight: bold; text-decoration: underline;">
+                        ( {if: !empty($data.nm_dokter)}{$data.nm_dokter}{else}..................................................{/if} )
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+
+    <!-- FOOTER HALAMAN 2 -->
+    <table class="footer-table">
+        <tr>
+            <td style="width: 25%; font-weight: bold;">RSGM/Ed-Rev/02/2023</td>
+            <td style="width: 50%; text-align: center; font-style: italic;">Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</td>
+            <td style="width: 25%; text-align: right; font-weight: bold;">RM. UBS &nbsp;|&nbsp; Hal 2 dari 2</td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

@@ -7499,6 +7499,7 @@ if (ob_get_length()) {
                 'ANS5 - STATUS ANESTESI' => 'ans5manage',
                 'ANS6 - STATUS POST ANESTESI' => 'ans6manage',
                 'ANS7 - SERAH TERIMA PASIEN PASCA OPERASI' => 'ans7manage',
+                'BM3 - ASESMEN PRA BEDAH MAYOR' => 'bm3manage',
                 'BM5 - CHECKLIST KESELAMATAN PASIEN OPERASI' => 'bm5manage',
                 'BMI3 - ASESMEN BEDAH MINOR' => 'bmi3manage',
                 'LAMPIRAN - SURAT PERNYATAAN PULANG APS' => 'pulangapsmanage',
@@ -10683,6 +10684,366 @@ if (ob_get_length()) {
         }
 
         echo $this->draw('bmi3/cetak.html', $viewParams);
+        exit();
+    }
+
+    /* =========================================================================
+     * BM3 - ASESMEN PRA BEDAH MAYOR (GIGI DAN MULUT)
+     * ========================================================================= */
+    public function anyBm3manage()
+    {
+        return $this->getBm3manage();
+    }
+
+    public function getBm3manage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/js/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/js/dataTables.bootstrap.min.js'));
+
+        $rows = $this->db('bm3_asesmen_pra_bedah_mayor')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm3_asesmen_pra_bedah_mayor.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->leftJoin('dokter', 'dokter.kd_dokter = bm3_asesmen_pra_bedah_mayor.kd_dokter')
+            ->select('bm3_asesmen_pra_bedah_mayor.*, COALESCE(bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, dokter.nm_dokter')
+            ->desc('bm3_asesmen_pra_bedah_mayor.id')
+            ->toArray();
+
+        $data = [];
+        $no = 1;
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        foreach ($rows as $row) {
+            $row['nomor'] = $no++;
+            if (!empty($row['tanggal_pengkajian']) && $row['tanggal_pengkajian'] != '0000-00-00 00:00:00') {
+                $dt = explode(' ', $row['tanggal_pengkajian']);
+                $p = explode('-', $dt[0]);
+                $row['tgl_indo'] = (int)$p[2] . ' ' . ($bulan[(int)$p[1]] ?? '') . ' ' . $p[0];
+                $row['jam_pengkajian'] = substr($dt[1] ?? '', 0, 5);
+            } else {
+                $row['tgl_indo'] = '-';
+                $row['jam_pengkajian'] = '-';
+            }
+            $data[] = $row;
+        }
+
+        return $this->draw('bm3/manage.html', ['data' => $data]);
+    }
+
+    public function anyBm3form($id = null)
+    {
+        return $this->getBm3form($id);
+    }
+
+    public function getBm3form($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+
+        // AJAX pencarian pasien
+        if (isset($_GET['action']) && $_GET['action'] == 'cari_pasien') {
+            $q = trim($_GET['q'] ?? '');
+            $hasil = [];
+            if (!empty($q)) {
+                $hasil = $this->db('reg_periksa')
+                    ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->whereLike('reg_periksa.no_rawat', "%$q%")
+                    ->orWhereLike('reg_periksa.no_rkm_medis', "%$q%")
+                    ->orWhereLike('pasien.nm_pasien', "%$q%")
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, reg_periksa.umurdaftar, reg_periksa.sttsumur, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->limit(20)
+                    ->toArray();
+            }
+            header('Content-Type: application/json');
+            echo json_encode($hasil);
+            exit();
+        }
+
+        $data = [];
+        if ($id) {
+            $data = $this->db('bm3_asesmen_pra_bedah_mayor')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm3_asesmen_pra_bedah_mayor.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->leftJoin('dokter', 'dokter.kd_dokter = bm3_asesmen_pra_bedah_mayor.kd_dokter')
+                ->where('bm3_asesmen_pra_bedah_mayor.id', $id)
+                ->select('bm3_asesmen_pra_bedah_mayor.*, COALESCE(bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir, dokter.nm_dokter')
+                ->oneArray();
+        }
+
+        if (empty($data)) {
+            $data = [
+                'id' => '',
+                'no_rawat' => '',
+                'no_rkm_medis' => '',
+                'nm_pasien' => '',
+                'jk' => '',
+                'umur' => '',
+                'tgl_lahir' => '',
+                'tanggal_pengkajian' => date('Y-m-d H:i:s'),
+                'kd_dokter' => '',
+                'nm_dokter' => '',
+                'keluhan_utama' => '',
+                'alergi_obat' => 'Tidak Ada',
+                'merokok' => 'Tidak Merokok',
+                'riwayat_penyakit' => '',
+                'keadaan_umum' => 'Tampak Sakit Sedang',
+                'kesadaran' => 'Compos Mentis',
+                'gcs_e' => '4',
+                'gcs_v' => '5',
+                'gcs_m' => '6',
+                'td' => '120/80',
+                'nadi' => '80',
+                'pernafasan' => '20',
+                'suhu' => '36.5',
+                'spo2' => '99',
+                'lokalis_gigi' => '',
+                'ket_lokalis' => '',
+                'pemeriksaan_generalis' => 'Kepala: Normocephali. Thorax: Cor S1-S2 m(-), Pulmo vesikuler (+/+). Abdomen: Supel, bising usus (+) normal. Ekstremitas: Edema (-/-).',
+                'lab_dpl' => '',
+                'lab_hemostatis' => '',
+                'lab_lain' => '',
+                'kesan_lab' => '',
+                'rad_toraks' => '',
+                'rad_panoramik' => '',
+                'rad_ctscan' => '',
+                'rad_lain' => '',
+                'kesan_rad' => '',
+                'ekg_dilakukan' => 'EKG 12 Lead',
+                'kesan_ekg' => 'Normal Sinus Rhythm',
+                'penunjang_lain' => '',
+                'kesan_penunjang_lain' => '',
+                'diagnosis_pra_bedah' => '',
+                'rencana_operasi' => '',
+                'rencana_anestesi' => 'Umum',
+                'evaluasi_masalah' => '',
+                'evaluasi_potensi' => '',
+                'evaluasi_antisipasi' => '',
+                'rencana_kerja_terapi' => "1. Puasa 8 jam pra operasi\n2. Pasang IV line 2 jalur\n3. Inform Consent operasi & anestesi lengkap\n4. Siapkan darah",
+                'catatan_penting' => ''
+            ];
+        }
+
+        // Format tanggal untuk input HTML5 datetime-local
+        if (!empty($data['tanggal_pengkajian'])) {
+            $data['tanggal_pengkajian_html'] = date('Y-m-d\TH:i', strtotime($data['tanggal_pengkajian']));
+        } else {
+            $data['tanggal_pengkajian_html'] = date('Y-m-d\TH:i');
+        }
+
+        // List dokter spesialis bedah mulut / dokter gigi
+        $dokter = $this->db('dokter')
+            ->where('status', '1')
+            ->select('kd_dokter, nm_dokter')
+            ->asc('nm_dokter')
+            ->toArray();
+
+        return $this->draw('bm3/form.html', [
+            'data' => $data,
+            'dokter' => $dokter
+        ]);
+    }
+
+    public function anyBm3save()
+    {
+        return $this->postBm3save();
+    }
+
+    public function postBm3save()
+    {
+        $id = !empty($_POST['id']) ? (int)$_POST['id'] : null;
+
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+        $no_rkm_medis = trim($_POST['no_rkm_medis'] ?? '');
+
+        if (empty($no_rawat)) {
+            $this->notify('failure', 'No. Rawat wajib diisi!');
+            redirect(url([ADMIN, 'update_bmt', 'bm3form', $id]));
+        }
+
+        if (empty($no_rkm_medis)) {
+            $cekPasien = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+            $no_rkm_medis = $cekPasien['no_rkm_medis'] ?? '';
+        }
+
+        $tanggal_pengkajian = !empty($_POST['tanggal_pengkajian']) ? str_replace('T', ' ', $_POST['tanggal_pengkajian']) . ':00' : date('Y-m-d H:i:s');
+        if (strlen($tanggal_pengkajian) > 19) {
+            $tanggal_pengkajian = substr($tanggal_pengkajian, 0, 19);
+        }
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'tanggal_pengkajian' => $tanggal_pengkajian,
+            'kd_dokter' => trim($_POST['kd_dokter'] ?? ''),
+            'keluhan_utama' => trim($_POST['keluhan_utama'] ?? ''),
+            'alergi_obat' => trim($_POST['alergi_obat'] ?? ''),
+            'merokok' => trim($_POST['merokok'] ?? ''),
+            'riwayat_penyakit' => trim($_POST['riwayat_penyakit'] ?? ''),
+            'keadaan_umum' => trim($_POST['keadaan_umum'] ?? ''),
+            'kesadaran' => trim($_POST['kesadaran'] ?? ''),
+            'gcs_e' => trim($_POST['gcs_e'] ?? ''),
+            'gcs_v' => trim($_POST['gcs_v'] ?? ''),
+            'gcs_m' => trim($_POST['gcs_m'] ?? ''),
+            'td' => trim($_POST['td'] ?? ''),
+            'nadi' => trim($_POST['nadi'] ?? ''),
+            'pernafasan' => trim($_POST['pernafasan'] ?? ''),
+            'suhu' => trim($_POST['suhu'] ?? ''),
+            'spo2' => trim($_POST['spo2'] ?? ''),
+            'lokalis_gigi' => trim($_POST['lokalis_gigi'] ?? ''),
+            'ket_lokalis' => trim($_POST['ket_lokalis'] ?? ''),
+            'pemeriksaan_generalis' => trim($_POST['pemeriksaan_generalis'] ?? ''),
+            'lab_dpl' => trim($_POST['lab_dpl'] ?? ''),
+            'lab_hemostatis' => trim($_POST['lab_hemostatis'] ?? ''),
+            'lab_lain' => trim($_POST['lab_lain'] ?? ''),
+            'kesan_lab' => trim($_POST['kesan_lab'] ?? ''),
+            'rad_toraks' => trim($_POST['rad_toraks'] ?? ''),
+            'rad_panoramik' => trim($_POST['rad_panoramik'] ?? ''),
+            'rad_ctscan' => trim($_POST['rad_ctscan'] ?? ''),
+            'rad_lain' => trim($_POST['rad_lain'] ?? ''),
+            'kesan_rad' => trim($_POST['kesan_rad'] ?? ''),
+            'ekg_dilakukan' => trim($_POST['ekg_dilakukan'] ?? ''),
+            'kesan_ekg' => trim($_POST['kesan_ekg'] ?? ''),
+            'penunjang_lain' => trim($_POST['penunjang_lain'] ?? ''),
+            'kesan_penunjang_lain' => trim($_POST['kesan_penunjang_lain'] ?? ''),
+            'diagnosis_pra_bedah' => trim($_POST['diagnosis_pra_bedah'] ?? ''),
+            'rencana_operasi' => trim($_POST['rencana_operasi'] ?? ''),
+            'rencana_anestesi' => trim($_POST['rencana_anestesi'] ?? 'Umum'),
+            'evaluasi_masalah' => trim($_POST['evaluasi_masalah'] ?? ''),
+            'evaluasi_potensi' => trim($_POST['evaluasi_potensi'] ?? ''),
+            'evaluasi_antisipasi' => trim($_POST['evaluasi_antisipasi'] ?? ''),
+            'rencana_kerja_terapi' => trim($_POST['rencana_kerja_terapi'] ?? ''),
+            'catatan_penting' => trim($_POST['catatan_penting'] ?? ''),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        if ($id) {
+            $this->db('bm3_asesmen_pra_bedah_mayor')->where('id', $id)->save($saveData);
+            $this->notify('success', 'Data Asesmen Pra Bedah Mayor (BM3) berhasil diperbarui!');
+        } else {
+            $saveData['created_at'] = date('Y-m-d H:i:s');
+            $this->db('bm3_asesmen_pra_bedah_mayor')->save($saveData);
+            $this->notify('success', 'Data Asesmen Pra Bedah Mayor (BM3) berhasil ditambahkan!');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'bm3manage']));
+    }
+
+    public function anyBm3hapus($id = null)
+    {
+        return $this->getBm3hapus($id);
+    }
+
+    public function getBm3hapus($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if ($id) {
+            $this->db('bm3_asesmen_pra_bedah_mayor')->where('id', $id)->delete();
+            $this->notify('success', 'Data Asesmen Pra Bedah Mayor (BM3) berhasil dihapus!');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'bm3manage']));
+    }
+
+    public function anyBm3cetak($id = null)
+    {
+        return $this->getBm3cetak($id);
+    }
+
+    public function getBm3cetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if (!$id && isset($_SERVER['REQUEST_URI']) && preg_match('/[?&]id=([0-9]+)/', $_SERVER['REQUEST_URI'], $m)) {
+            $id = $m[1];
+        }
+        if (!$id) {
+            echo "ID tidak ditemukan.";
+            exit();
+        }
+
+        $data = $this->db('bm3_asesmen_pra_bedah_mayor')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm3_asesmen_pra_bedah_mayor.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->leftJoin('dokter', 'dokter.kd_dokter = bm3_asesmen_pra_bedah_mayor.kd_dokter')
+            ->where('bm3_asesmen_pra_bedah_mayor.id', $id)
+            ->select('bm3_asesmen_pra_bedah_mayor.*, COALESCE(bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir, dokter.nm_dokter')
+            ->oneArray();
+
+        if (!$data) {
+            $this->notify('failure', 'Data Asesmen Pra Bedah Mayor tidak ditemukan!');
+            redirect(url([ADMIN, 'update_bmt', 'bm3manage']));
+        }
+
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        if (!empty($data['tanggal_pengkajian']) && $data['tanggal_pengkajian'] != '0000-00-00 00:00:00') {
+            $dt = explode(' ', $data['tanggal_pengkajian']);
+            $p = explode('-', $dt[0]);
+            $data['tanggal_pengkajian_indo'] = (int)$p[2] . ' ' . ($bulan[(int)$p[1]] ?? '') . ' ' . $p[0] . ' Pukul ' . substr($dt[1] ?? '', 0, 5) . ' WITA';
+        } else {
+            $data['tanggal_pengkajian_indo'] = '-';
+        }
+
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $tgl = explode('-', $data['tgl_lahir']);
+            $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . ($bulan[(int)$tgl[1]] ?? '') . ' ' . $tgl[0];
+        } else {
+            $data['tgl_lahir_indo'] = '-';
+        }
+
+        // Prepare 6 digits for RM box
+        $clean_rm = preg_replace('/[^0-9]/', '', $data['no_rkm_medis'] ?? '');
+        $padded_rm = str_pad($clean_rm, 6, '0', STR_PAD_LEFT);
+        $rm_digits = str_split($padded_rm);
+        if (count($rm_digits) < 6) {
+            $rm_digits = array_pad($rm_digits, 6, '&nbsp;');
+        }
+
+        $is_pdf = isset($_GET['pdf']) && $_GET['pdf'] == 1;
+        $kop_file = BASE_DIR . '/assets/img/KOP-SURAT.png';
+        $kop_img = is_file($kop_file) ? ($is_pdf ? $kop_file : url('assets/img/KOP-SURAT.png')) : '';
+
+        $anatomi_file = BASE_DIR . '/assets/img/bm3_anatomi_tubuh.png';
+        $anatomi_img = is_file($anatomi_file) ? ($is_pdf ? $anatomi_file : url('assets/img/bm3_anatomi_tubuh.png')) : '';
+
+        $viewParams = [
+            'data' => $data,
+            'kop_img' => $kop_img,
+            'anatomi_img' => $anatomi_img,
+            'rm_digits' => $rm_digits,
+            'is_mpdf' => $is_pdf
+        ];
+
+        if ($is_pdf) {
+            try {
+                $oldErr = error_reporting(0);
+                @ini_set('display_errors', '0');
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'orientation' => 'P',
+                    'margin_left' => 6,
+                    'margin_right' => 6,
+                    'margin_top' => 5,
+                    'margin_bottom' => 5,
+                    'tempDir' => BASE_DIR . '/tmp'
+                ]);
+
+                $html = $this->draw('bm3/cetak.html', $viewParams);
+                $mpdf->WriteHTML($html);
+                $filename = 'BM3_Asesmen_Pra_Bedah_Mayor_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+
+                $mpdf->Output($filename, 'I');
+                exit();
+            } catch (\Exception $e) {
+                error_reporting($oldErr);
+                echo "Gagal mengenerate PDF: " . htmlspecialchars($e->getMessage());
+                exit();
+            }
+        }
+
+        echo $this->draw('bm3/cetak.html', $viewParams);
         exit();
     }
 

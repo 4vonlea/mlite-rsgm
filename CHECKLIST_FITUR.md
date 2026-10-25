@@ -58,7 +58,7 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 7 | Serah Terima Pasien Pasca Operasi | ANS7 | ✅ Tersedia | `ans7_serah_terima` | Form RME -> Bedah & Anestesi |
 | 8 | Informasi Tindakan Medik / Pembedahan | BM1 | ✅ Tersedia | `bm1_informasi_tindakan` | Form RME -> Bedah & Anestesi |
 | 9 | Persetujuan Tindakan Medik / Pembedahan | BM2 | ✅ Tersedia | `bm2_persetujuan_tindakan` | Form RME -> Bedah & Anestesi |
-| 10 | Asesmen Pra Bedah Mayor | - | ⏳ Dalam Rencana | - | Antrean UBS Bedah |
+| 10 | Asesmen Pra Bedah Mayor | BM3 | ✅ Tersedia | `bm3_asesmen_pra_bedah_mayor` | Form RME -> Bedah -> Form Wajib |
 | 11 | Laporan Pembedahan Anestesi Umum | BM4 | ✅ Tersedia | `bm4_laporan_pembedahan` | Form RME -> Bedah & Anestesi |
 | 12 | Checklist Keselamatan Pasien Operasi | BM5 | ✅ Tersedia | `bm5_checklist_keselamatan_operasi` | Form RME -> Bedah -> Form Wajib |
 | 13 | Persetujuan Tindakan Anestesi Lokal | BMI1 | ✅ Tersedia | `bmi1_persetujuan_anestesi_lokal` | Form RME -> Bedah & Anestesi |
@@ -129,7 +129,7 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 2 | Gizi Anak dan Dewasa | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
 | 3 | Asesmen Medis Umum IRNA | AMU | ✅ Tersedia | `asesmen_medis_umum_irna` | Form RME -> Ranap |
 | 4 | Cairan Infus | Lampiran | ✅ Tersedia | `lampiran_cairan_infus` | Form RME -> Ranap |
-| 5 | EWS Dewasa dan Anak | - | ⏳ Dalam Rencana | - | Antrean Lampiran Ranap |
+| 5 | EWS Dewasa dan Anak | - | ✅ Tersedia | `lampiran_ews` | Form RME -> Ranap |
 | 6 | Form A Manajer Pelayanan Pasien | FORM A MPP | ✅ Tersedia | `lampiran_form_a_mpp` | Form RME -> Ranap |
 | 7 | Form Asesmen Nyeri Pasien Anak | - | ✅ Tersedia | `penilaian_awal_keperawatan_ranap` | Terintegrasi di Asesmen Ranap |
 | 8 | Form Asesmen Ulang Status Fungsional | Barthel Index | ✅ Tersedia | `lampiran_asesmen_ulang_status_fungsional` | Form RME -> Ranap |
@@ -195,7 +195,7 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 | 5 | Resume Medis Rawat Jalan | - | ✅ Tersedia | `resume_pasien` | Pelayanan Rawat Jalan |
 | 6 | Skrining Resiko Jatuh | - | ✅ Tersedia | Terintegrasi Asesmen | Pelayanan Rawat Jalan |
 | 7 | Surat Pernyataan Pulang APS | - | ✅ Tersedia | `surat_pulang_aps` | Form RME -> Bedah & Anestesi |
-| 8 | Persetujuan Prosedur Radiologi | - | ⏳ Dalam Rencana | - | Antrean Lampiran Rajal |
+| 8 | Persetujuan Prosedur Radiologi | - | ✅ Tersedia | `lampiran_persetujuan_tindakan_radiologi` | Form RME -> Rajal |
 | 9 | Radiologi | - | ✅ Tersedia | `periksa_radiologi` | Modul Radiologi |
 | 10 | Permintaan Radiologi | - | ✅ Tersedia | `permintaan_radiologi` | Modul Permintaan Radiologi |
 | 11 | Form Profil Ringkas Medis Rawat Jalan | PRMRJ | ✅ Tersedia | `lampiran_profil_ringkas_medis_rajal` | Form RME -> Rajal & Ranap |
@@ -206,44 +206,28 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 
 | Kategori Modul | Total Form Acuan | ✅ Tersedia | ⏳ Belum / Rencana | Persentase Selesai |
 |---|:---:|:---:|:---:|:---:|
-| **1. UBS (Operasi & Bedah)** | 17 | 12 | 5 | **70.6%** |
+| **1. UBS (Operasi & Bedah)** | 17 | 17 | 0 | **100.0%** |
 | **2. IGD (Gawat Darurat)** | 9 | 9 | 0 | **100.0%** |
-| **3. RANAP (Rawat Inap)** | 59 | 43 | 16 | **72.9%** |
-| **4. RAJAL (Rawat Jalan)** | 23 | 22 | 1 | **95.7%** |
-| **TOTAL KESELURUHAN** | **108** | **86** | **22** | **79.6%** |
+| **3. RANAP (Rawat Inap)** | 59 | 52 | 7 | **88.1%** |
+| **4. RAJAL (Rawat Jalan)** | 23 | 23 | 0 | **100.0%** |
+| **TOTAL KESELURUHAN** | **108** | **101** | **7** | **93.5%** |
 
 ### Rincian Kategori:
-- **Formulir Wajib (Total 58 Form)**: **53 Form Tersedia (91.4%)**, tersisa 5 form khusus di UBS Bedah.
-- **Formulir Lampiran (Total 50 Form)**: **35 Form Tersedia (70.0%)**, tersisa 15 formulir lampiran (14 Ranap & 1 Rajal).
+- **Formulir Wajib (Total 58 Form)**: **58 Form Tersedia (100.0%)** (**100% Tuntas** - Seluruh formulir wajib UBS, IGD, RANAP, dan RAJAL telah aktif).
+- **Formulir Lampiran (Total 50 Form)**: **43 Form Tersedia (86.0%)**, tersisa 7 formulir lampiran di Ranap.
 
 ---
 
-## 6. Antrean Formulir Belum Tersedia (20 Form)
+## 6. Antrean Formulir Belum Tersedia (7 Form)
 
 Berikut daftar lengkap formulir yang masih dalam antrean pengembangan:
 
-### A. UBS (5 Form):
-- [x] Status Anestesi (ANS5)
-- [ ] Asesmen Pra Bedah Mayor
-- [x] Checklist Keselamatan Pasien Operasi (BM5)
-- [x] Penandaan Tepat Lokasi Bedah Mulut
-- [x] Asesmen Bedah Minor (BMI3)
-
-### B. RANAP - Lampiran (14 Form):
+### RANAP - Lampiran (7 Form):
 - [ ] Gizi Anak dan Dewasa
-- [ ] EWS Dewasa dan Anak
 - [ ] Rekapitulasi Kejadian Infeksi Daerah OP
 - [ ] HCU
-- [x] Informasi Penundaan dan Kelambatan Pelayanan
-- [x] Penilaian Kejadian Infeksi Luka OP (ILO)
-- [x] Penilaian Kejadian ISK
-- [x] Persetujuan untuk Testing HIV
 - [ ] Surat Pengantar Rawat Inap
-- [x] Surat Pernyataan Bersedia Menunggu
 - [ ] Surat Pernyataan Jaminan Pembiayaan
 - [ ] Transfer Pasien Eksternal (Lembar 1)
 - [ ] Transfer Pasien Eksternal (Lanjutan)
-- [x] VCT Pra Testing HIV
 
-### C. RAJAL - Lampiran (1 Form):
-- [ ] Persetujuan Prosedur Radiologi

@@ -2312,6 +2312,59 @@ CREATE TABLE IF NOT EXISTS `bmi3_asesmen_bedah_minor` (
   KEY `tanggal_operasi` (`tanggal_operasi`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Tabel Form BM3 - ASESMEN PRA BEDAH MAYOR (GIGI DAN MULUT)
+CREATE TABLE IF NOT EXISTS `bm3_asesmen_pra_bedah_mayor` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(17) NOT NULL,
+  `no_rkm_medis` varchar(15) NOT NULL,
+  `tanggal_pengkajian` datetime NOT NULL,
+  `kd_dokter` varchar(20) NOT NULL,
+  `keluhan_utama` text DEFAULT NULL,
+  `alergi_obat` varchar(255) DEFAULT NULL,
+  `merokok` varchar(50) DEFAULT NULL,
+  `riwayat_penyakit` text DEFAULT NULL,
+  `keadaan_umum` varchar(100) DEFAULT NULL,
+  `kesadaran` varchar(50) DEFAULT NULL,
+  `gcs_e` varchar(10) DEFAULT NULL,
+  `gcs_v` varchar(10) DEFAULT NULL,
+  `gcs_m` varchar(10) DEFAULT NULL,
+  `td` varchar(20) DEFAULT NULL,
+  `nadi` varchar(20) DEFAULT NULL,
+  `pernafasan` varchar(20) DEFAULT NULL,
+  `suhu` varchar(20) DEFAULT NULL,
+  `spo2` varchar(20) DEFAULT NULL,
+  `lokalis_gigi` text DEFAULT NULL,
+  `ket_lokalis` text DEFAULT NULL,
+  `pemeriksaan_generalis` text DEFAULT NULL,
+  `lab_dpl` varchar(255) DEFAULT NULL,
+  `lab_hemostatis` varchar(255) DEFAULT NULL,
+  `lab_lain` varchar(255) DEFAULT NULL,
+  `kesan_lab` text DEFAULT NULL,
+  `rad_toraks` varchar(255) DEFAULT NULL,
+  `rad_panoramik` varchar(255) DEFAULT NULL,
+  `rad_ctscan` varchar(255) DEFAULT NULL,
+  `rad_lain` varchar(255) DEFAULT NULL,
+  `kesan_rad` text DEFAULT NULL,
+  `ekg_dilakukan` varchar(255) DEFAULT NULL,
+  `kesan_ekg` varchar(255) DEFAULT NULL,
+  `penunjang_lain` varchar(255) DEFAULT NULL,
+  `kesan_penunjang_lain` varchar(255) DEFAULT NULL,
+  `diagnosis_pra_bedah` text DEFAULT NULL,
+  `rencana_operasi` text DEFAULT NULL,
+  `rencana_anestesi` varchar(50) DEFAULT NULL,
+  `evaluasi_masalah` text DEFAULT NULL,
+  `evaluasi_potensi` text DEFAULT NULL,
+  `evaluasi_antisipasi` text DEFAULT NULL,
+  `rencana_kerja_terapi` text DEFAULT NULL,
+  `catatan_penting` text DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`),
+  KEY `kd_dokter` (`kd_dokter`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 
 

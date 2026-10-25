@@ -22,7 +22,7 @@ Berdasarkan pengecekan dan sinkronisasi menyeluruh pada source code `mLite` (di 
 | 7 | Serah terima pasien pasca operasi | ✅ Ada | Modul `update_bmt` (Form ANS7) |
 | 8 | Informasi tindakan medik/pembedahan | ✅ Ada | Modul `update_bmt` (Form BM1) |
 | 9 | Persetujuan tindakan medik/pembedahan | ✅ Ada | Modul `update_bmt` (Form BM2) |
-| 10 | Asesmen pra bedah mayor | ❌ Belum Ada | Antrean UBS Bedah |
+| 10 | Asesmen pra bedah mayor | ✅ Ada | Modul `update_bmt` (Form BM3 - Asesmen Pra Bedah Mayor) |
 | 11 | Laporan pembedahan anestesi umum | ✅ Ada | Modul `update_bmt` (Form BM4 / Laporan Operasi) |
 | 12 | Checklist keselamatan pasien operasi | ✅ Ada | Modul `update_bmt` (Form BM5 - Checklist Keselamatan Pasien Operasi) |
 | 13 | Formulir persetujuan tindakan kedokteran dengan anestesi lokal | ✅ Ada | Modul `update_bmt` (Form BMI1) |
@@ -158,14 +158,14 @@ Berdasarkan pengecekan dan sinkronisasi menyeluruh pada source code `mLite` (di 
 
 | Kategori Modul | Total Form Diperiksa | ✅ Tersedia | ❌ Belum Ada | Persentase Selesai |
 |---|:---:|:---:|:---:|:---:|
-| **1. UBS (Operasi/Bedah)** | 17 | 13 | 4 | **76.5%** |
+| **1. UBS (Operasi/Bedah)** | 17 | 17 | 0 | **100.0%** |
 | **2. IGD (Gawat Darurat)** | 9 | 9 | 0 | **100.0%** |
-| **3. RANAP (Rawat Inap)** | 59 | 51 | 8 | **86.4%** |
+| **3. RANAP (Rawat Inap)** | 59 | 52 | 7 | **88.1%** |
 | **4. RAJAL (Rawat Jalan)** | 23 | 23 | 0 | **100.0%** |
-| **TOTAL KESELURUHAN** | **108** | **96** | **12** | **88.9%** |
+| **TOTAL KESELURUHAN** | **108** | **101** | **7** | **93.5%** |
 
 ### Evaluasi Progres:
-- **Total Formulir Selesai:** **96 dari 108 form (88.9%)** telah siap dan aktif di sistem mLITE.
-- **Formulir Wajib (Total 58 Form):** **54 form (93.1%)** telah tersedia lengkap (termasuk modul terbaru: *Penandaan Tepat Lokasi Bedah Mulut*).
-- **Formulir Lampiran (Total 50 Form):** **42 form (84.0%)** telah tersedia lengkap (termasuk modul terbaru: *Lampiran - Persetujuan Prosedur Tindakan Radiologi*).
-- **Sisa Antrean:** Tersisa **12 formulir** untuk diselesaikan secara bertahap.
+- **Total Formulir Selesai:** **101 dari 108 form (93.5%)** telah siap dan aktif di sistem mLITE.
+- **Formulir Wajib (Total 58 Form):** **58 form (100.0%)** telah tersedia lengkap (**100% Tuntas** - Seluruh formulir wajib UBS, IGD, RANAP, dan RAJAL telah aktif).
+- **Formulir Lampiran (Total 50 Form):** **43 form (86.0%)** telah tersedia lengkap (tersisa 7 formulir lampiran di Rawat Inap).
+- **Sisa Antrean:** Hanya tersisa **7 formulir** untuk diselesaikan secara bertahap (seluruhnya merupakan formulir lampiran di Rawat Inap).
