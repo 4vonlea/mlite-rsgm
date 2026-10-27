@@ -5,10 +5,9 @@
         <h3 class="panel-title">Laporan Top 10 Besar Penyakit (SIRS)</h3>
       </div>
       <div class="panel-body">
-        <p class="text-muted">
-          Diagnosa utama (prioritas 1) dari <code>diagnosa_pasien</code>, dihitung per kode ICD-10 dan
-          diurutkan dari yang terbanyak, maksimal 10 baris.
-        </p>
+        <div class="alert alert-info" style="margin-bottom: 15px;">
+          <i class="fa fa-info-circle"></i> <strong>Catatan:</strong> Data dihitung berdasarkan <strong>jumlah kunjungan pasien (per Nomor Rawat)</strong> untuk diagnosa utama (prioritas 1), bukan per individu/orang pasien. <em>(Contoh: Jika 1 pasien berobat 3 kali dalam periode ini dengan diagnosa yang sama, maka terhitung 3 kasus).</em>
+        </div>
         <form method="post" action="{?=url([ADMIN, 'sirs', 'top10penyakit'])?}">
           <div class="row">
             <div class="col-md-3">
