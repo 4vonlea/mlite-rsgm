@@ -109,19 +109,19 @@ $("#display").on("click",".antrian", function(event){
 $("#rincian").on("click","#cetak_hasil", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
-  var no_rawat = $('input:text[name=no_rawat]').val();
-  var status = $('input:text[name=status]').val();
-  window.open(baseURL + '/laboratorium/cetakhasil?no_rawat=' + no_rawat + '&status=' + status + '&t=' + mlite.token);
+  var no_rawat = $('input:text[name=no_rawat]').val() || $('input[name=no_rawat]').val();
+  var status = $('input:text[name=status]').val() || $('input[name=status]').val() || 'Ralan';
+  window.open(baseURL + '/laboratorium/cetakhasil?no_rawat=' + encodeURIComponent(no_rawat) + '&status=' + encodeURIComponent(status) + '&t=' + mlite.token);
 });
 
 $("#rincian").on("click",".cetak_hasil", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
-  var no_rawat = $('input:text[name=no_rawat]').val();
-  var status = $('input:text[name=status]').val();
+  var no_rawat = $('input:text[name=no_rawat]').val() || $('input[name=no_rawat]').val();
+  var status = $('input:text[name=status]').val() || $('input[name=status]').val() || 'Ralan';
   var tgl_periksa = $(this).attr("data-tgl_periksa");
   var jam = $(this).attr("data-jam_periksa");
-  window.open(baseURL + '/laboratorium/cetakhasil?no_rawat=' + no_rawat + '&tgl_periksa=' + tgl_periksa + '&jam=' + jam + '&status=' + status + '&t=' + mlite.token);
+  window.open(baseURL + '/laboratorium/cetakhasil?no_rawat=' + encodeURIComponent(no_rawat) + '&tgl_periksa=' + encodeURIComponent(tgl_periksa) + '&jam=' + encodeURIComponent(jam) + '&status=' + encodeURIComponent(status) + '&t=' + mlite.token);
 });
 
 $("#rincian").on("click","#cetak_permintaan", function(event){
@@ -496,6 +496,18 @@ $("#layanan").on("click", ".pilih_layanan", function(event){
   $('#jml_tindakan').val(1);
   updateBiayaLaboratorium();
   $('input:hidden[name=kat]').val(kat);
+
+  // Auto-populate nama_provider with doctor from main form or permintaan
+  var perujukKd = $('#hidden_kd_dokter_perujuk').val();
+  var perujukNm = $('#hidden_nm_dokter_perujuk').val();
+  
+  var selectedKdDokter = perujukKd ? perujukKd : $('select[name=kd_dokter]').val();
+  var selectedNmDokter = perujukNm ? perujukNm : $('select[name=kd_dokter] option:selected').text();
+  
+  if (selectedKdDokter) {
+    $('input:text[name=kode_provider]').val(selectedKdDokter);
+    $('input:text[name=nama_provider]').val(selectedNmDokter);
+  }
 
   $("#layanan").hide();
   $('#provider').show();

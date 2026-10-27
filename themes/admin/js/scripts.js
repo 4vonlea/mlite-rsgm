@@ -65,21 +65,31 @@ $(':radio').kalypto({toggleClass: 'toggleR'});
 
 /* 9. REMOTE MODAL
 --------------------------------------------------------- */
-$('a[data-toggle="modal"]').on('click', function(e) {
-    var target_modal = $(e.currentTarget).data('target');
-    var remote_content = $(e.currentTarget).attr('href');
+$(document).on('click', 'a[data-toggle="modal"]', function(e) {
+    var target_modal = $(this).attr('data-target') || $(this).attr('href');
+    var remote_content = $(this).attr('href');
 
-    if(remote_content.indexOf('#') === 0) return;
+    if(!remote_content || remote_content.indexOf('#') === 0) return;
 
+    e.preventDefault();
     var modal = $(target_modal);
-    var modalContent = $(target_modal + ' .modal-content');
+    if (!modal.length) return;
 
-    modal.off('show.bs.modal');
-    modal.on('show.bs.modal', function () {
-        modalContent.load(remote_content);
-    }).modal();
+    var modalContent = modal.find('.modal-content');
+    modalContent.html('<div class="text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><p style="margin-top:10px;">Memuat data...</p></div>');
+    modal.modal('show');
+
+    modalContent.load(remote_content, function(response, status, xhr) {
+        if (status === "error") {
+            modalContent.html('<div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Error</h4></div><div class="modal-body"><div class="alert alert-danger">Gagal memuat konten (' + xhr.status + ': ' + xhr.statusText + ')</div></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button></div>');
+        }
+    });
 
     return false;
+});
+
+$(document).on('hidden.bs.modal', '#riwayatModal, #asuransiModal', function () {
+    $(this).removeData('bs.modal').find('.modal-content').html('<div class="text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><p style="margin-top:10px;">Memuat data...</p></div>');
 });
 
 /* 10. CUSTOM SELECT

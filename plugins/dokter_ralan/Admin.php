@@ -222,14 +222,119 @@ class Admin extends AdminModule
 
     }
 
+    private function _canInput()
+    {
+        $userId = $_SESSION['mlite_user'] ?? null;
+        if (!$userId) {
+            return false;
+        }
+
+        $role = $this->core->getUserInfo('role', $userId, true);
+        $username = $this->core->getUserInfo('username', $userId, true);
+
+        // 1. Admin diizinkan (role 'admin' atau id 1)
+        if ($role === 'admin' || $userId == 1) {
+            return true;
+        }
+
+        // 2. Dokter diizinkan (role 'medis' atau terdaftar di tabel dokter)
+        if ($role === 'medis' || ($username && $this->db('dokter')->where('kd_dokter', $username)->oneArray())) {
+            return true;
+        }
+
+        // Selain dokter dan admin (perawat/paramedis, petugas lainnya): TIDAK DIPERBOLEHKAN
+        return false;
+    }
+
+    private function _getDokter($no_rawat = null)
+    {
+        // Tolak jika bukan dokter dan bukan admin
+        if (!$this->_canInput()) {
+            return false;
+        }
+
+        $userId = $_SESSION['mlite_user'] ?? null;
+        $role = $this->core->getUserInfo('role', $userId, true);
+        $current_user = $this->core->getUserInfo('username', $userId, true);
+
+        // 1. Jika user login adalah dokter yang terdaftar di tabel dokter
+        if ($current_user && $this->db('dokter')->where('kd_dokter', $current_user)->oneArray()) {
+            return $current_user;
+        }
+
+        // 2. Jika user login adalah admin: gunakan dokter DPJP pasien dari reg_periksa
+        if ($role === 'admin' || $userId == 1) {
+            if (!empty($_POST['kode_provider']) && $this->db('dokter')->where('kd_dokter', $_POST['kode_provider'])->oneArray()) {
+                return $_POST['kode_provider'];
+            }
+            if (!empty($_POST['kd_dokter']) && $this->db('dokter')->where('kd_dokter', $_POST['kd_dokter'])->oneArray()) {
+                return $_POST['kd_dokter'];
+            }
+            if (!$no_rawat && !empty($_POST['no_rawat'])) {
+                $no_rawat = $_POST['no_rawat'];
+            }
+            if ($no_rawat) {
+                $kd_dokter = $this->core->getRegPeriksaInfo('kd_dokter', $no_rawat);
+                if ($kd_dokter && $this->db('dokter')->where('kd_dokter', $kd_dokter)->oneArray()) {
+                    return $kd_dokter;
+                }
+            }
+            $first_doc = $this->db('dokter')->where('status', '1')->oneArray();
+            return $first_doc['kd_dokter'] ?? '-';
+        }
+
+        return false;
+    }
+
+    private function _getNipPegawai($no_rawat = null)
+    {
+        if (!$this->_canInput()) {
+            return false;
+        }
+
+        $userId = $_SESSION['mlite_user'] ?? null;
+        $current_user = $this->core->getUserInfo('username', $userId, true);
+
+        // 1. Jika dokter login terdaftar di tabel pegawai
+        if ($current_user && $this->db('pegawai')->where('nik', $current_user)->oneArray()) {
+            return $current_user;
+        }
+
+        // 2. Jika admin, gunakan dokter DPJP pasien
+        $kd_dokter = $this->_getDokter($no_rawat);
+        if ($kd_dokter && $this->db('pegawai')->where('nik', $kd_dokter)->oneArray()) {
+            return $kd_dokter;
+        }
+
+        $first_peg = $this->db('pegawai')->where('stts_aktif', 'AKTIF')->oneArray();
+        return $first_peg['nik'] ?? '-';
+    }
+
     public function postSaveDetail()
     {
+      if (!$this->_canInput()) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Akses ditolak: Hanya dokter dan admin yang diperbolehkan mengisikan data pemeriksaan/layanan.'
+        ]);
+        exit();
+      }
+
+      $kd_dokter = $this->_getDokter($_POST['no_rawat'] ?? null);
+      if (!$kd_dokter) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Akses ditolak: Hanya dokter dan admin yang diperbolehkan mengisikan data pemeriksaan/layanan.'
+        ]);
+        exit();
+      }
+
       if($_POST['kat'] == 'tindakan') {
         $jns_perawatan = $this->db('jns_perawatan')->where('kd_jenis_prw', $_POST['kd_jenis_prw'])->oneArray();
         $this->db('rawat_jl_dr')->save([
           'no_rawat' => $_POST['no_rawat'],
           'kd_jenis_prw' => $_POST['kd_jenis_prw'],
-          'kd_dokter' => $this->core->getUserInfo('username', null, true),
+          'kd_dokter' => $kd_dokter,
           'tgl_perawatan' => $_POST['tgl_perawatan'],
           'jam_rawat' => $_POST['jam_rawat'],
           'material' => $jns_perawatan['material'],
@@ -261,7 +366,7 @@ class Admin extends AdminModule
                     'tgl_perawatan' => '0000-00-00',
                     'jam' => '00:00:00',
                     'no_rawat' => $_POST['no_rawat'],
-                    'kd_dokter' => $this->core->getUserInfo('username', null, true),
+                    'kd_dokter' => $kd_dokter,
                     'tgl_peresepan' => $_POST['tgl_perawatan'],
                     'jam_peresepan' => $_POST['jam_rawat'],
                     'status' => 'ralan',
@@ -269,7 +374,7 @@ class Admin extends AdminModule
                     'jam_penyerahan' => '00:00:00'
                   ]);
 
-                if ($this->db('resep_obat')->where('no_resep', $no_resep)->where('kd_dokter', $this->core->getUserInfo('username', null, true))->oneArray()) {
+                if ($this->db('resep_obat')->where('no_resep', $no_resep)->where('kd_dokter', $kd_dokter)->oneArray()) {
                   $this->db('resep_dokter')
                     ->save([
                       'no_resep' => $no_resep,
@@ -325,7 +430,7 @@ class Admin extends AdminModule
                   'tgl_perawatan' => '0000-00-00',
                   'jam' => '00:00:00',
                   'no_rawat' => $_POST['no_rawat'],
-                  'kd_dokter' => $this->core->getUserInfo('username', null, true),
+                  'kd_dokter' => $kd_dokter,
                   'tgl_peresepan' => $_POST['tgl_perawatan'],
                   'jam_peresepan' => $_POST['jam_rawat'],
                   'status' => 'ralan',
@@ -333,7 +438,7 @@ class Admin extends AdminModule
                   'jam_penyerahan' => '00:00:00'
                 ]);
 
-              if ($this->db('resep_obat')->where('no_resep', $no_resep)->where('kd_dokter', $this->core->getUserInfo('username', null, true))->oneArray()) {
+              if ($this->db('resep_obat')->where('no_resep', $no_resep)->where('kd_dokter', $kd_dokter)->oneArray()) {
                 $no_racik = $this->db('resep_dokter_racikan')->where('no_resep', $no_resep)->count();
                 $no_racik = $no_racik+1;
                 $this->db('resep_dokter_racikan')
@@ -421,6 +526,7 @@ class Admin extends AdminModule
         $maxRetries = 5;
         $retryCount = 0;
         $success = false;
+        $lastLabError = null;
 
         while ($retryCount < $maxRetries && !$success) {
           $this->db()->pdo()->beginTransaction();
@@ -436,16 +542,16 @@ class Admin extends AdminModule
                 ->save([
                   'noorder' => $noorder,
                   'no_rawat' => $_POST['no_rawat'],
-                  'tgl_permintaan' => $_POST['tgl_perawatan'],
-                  'jam_permintaan' => $_POST['jam_rawat'],
+                  'tgl_permintaan' => date('Y-m-d'),
+                  'jam_permintaan' => date('H:i:s'),
                   'tgl_sampel' => '0000-00-00',
                   'jam_sampel' => '00:00:00',
                   'tgl_hasil' => '0000-00-00',
                   'jam_hasil' => '00:00:00',
-                  'dokter_perujuk' => $this->core->getUserInfo('username', null, true),
+                  'dokter_perujuk' => $kd_dokter,
                   'status' => 'ralan',
-                  'informasi_tambahan' => $_POST['informasi_tambahan'],
-                  'diagnosa_klinis' => $_POST['diagnosa_klinis']
+                  'informasi_tambahan' => isset($_POST['informasi_tambahan']) ? $_POST['informasi_tambahan'] : '',
+                  'diagnosa_klinis' => isset($_POST['diagnosa_klinis']) ? $_POST['diagnosa_klinis'] : ''
                 ]);
               $this->db('permintaan_pemeriksaan_lab')
                 ->save([
@@ -466,28 +572,32 @@ class Admin extends AdminModule
               }
             } else {
               $noorder = $cek_lab['noorder'];
-              $this->db('permintaan_pemeriksaan_lab')
-                ->save([
-                  'noorder' => $noorder,
-                  'kd_jenis_prw' => $_POST['kd_jenis_prw'],
-                  'stts_bayar' => 'Belum'
-                ]);
-              $template_laboratorium = $this->db('template_laboratorium')->where('kd_jenis_prw', $_POST['kd_jenis_prw'])->toArray();
-              $template_count = count($template_laboratorium);
-              for ($i = 0; $i < $template_count; $i++) {
-                $this->db('permintaan_detail_permintaan_lab')
+              $cek_prw = $this->db('permintaan_pemeriksaan_lab')->where('noorder', $noorder)->where('kd_jenis_prw', $_POST['kd_jenis_prw'])->oneArray();
+              if(!$cek_prw) {
+                $this->db('permintaan_pemeriksaan_lab')
                   ->save([
                     'noorder' => $noorder,
                     'kd_jenis_prw' => $_POST['kd_jenis_prw'],
-                    'id_template' => $template_laboratorium[$i]['id_template'],
                     'stts_bayar' => 'Belum'
                   ]);
+                $template_laboratorium = $this->db('template_laboratorium')->where('kd_jenis_prw', $_POST['kd_jenis_prw'])->toArray();
+                $template_count = count($template_laboratorium);
+                for ($i = 0; $i < $template_count; $i++) {
+                  $this->db('permintaan_detail_permintaan_lab')
+                    ->save([
+                      'noorder' => $noorder,
+                      'kd_jenis_prw' => $_POST['kd_jenis_prw'],
+                      'id_template' => $template_laboratorium[$i]['id_template'],
+                      'stts_bayar' => 'Belum'
+                    ]);
+                }
               }
             }
             $this->db()->pdo()->commit();
             $success = true;
           } catch (\Exception $e) {
             $this->db()->pdo()->rollBack();
+            $lastLabError = $e;
             if ($e->getCode() == '23000') {
               $retryCount++;
               usleep(100000);
@@ -495,6 +605,14 @@ class Admin extends AdminModule
             }
             throw $e;
           }
+        }
+        if (!$success) {
+          $detail = $lastLabError ? $lastLabError->getMessage() : 'Gagal menyimpan data permintaan laboratorium.';
+          echo json_encode([
+            'status' => 'error',
+            'message' => 'Gagal menyimpan permintaan laboratorium: ' . $detail
+          ]);
+          exit();
         }
       }
 
@@ -530,16 +648,16 @@ class Admin extends AdminModule
                 ->save([
                   'noorder' => $noorder,
                   'no_rawat' => $_POST['no_rawat'],
-                  'tgl_permintaan' => $_POST['tgl_perawatan'],
-                  'jam_permintaan' => $_POST['jam_rawat'],
+                  'tgl_permintaan' => date('Y-m-d'),
+                  'jam_permintaan' => date('H:i:s'),
                   'tgl_sampel' => '0000-00-00',
                   'jam_sampel' => '00:00:00',
                   'tgl_hasil' => '0000-00-00',
                   'jam_hasil' => '00:00:00',
-                  'dokter_perujuk' => $this->core->getUserInfo('username', null, true),
+                  'dokter_perujuk' => $kd_dokter,
                   'status' => 'ralan',
-                  'informasi_tambahan' => $_POST['informasi_tambahan'],
-                  'diagnosa_klinis' => $_POST['diagnosa_klinis']
+                  'informasi_tambahan' => isset($_POST['informasi_tambahan']) ? $_POST['informasi_tambahan'] : '',
+                  'diagnosa_klinis' => isset($_POST['diagnosa_klinis']) ? $_POST['diagnosa_klinis'] : ''
                 ]);
               $this->db('permintaan_pemeriksaan_radiologi')
                 ->save([
@@ -677,6 +795,14 @@ class Admin extends AdminModule
 
     public function postSaveCopyResep()
     {
+      $kd_dokter = $this->_getDokter($_POST['no_rawat'] ?? null);
+      if (!$kd_dokter) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Akses ditolak: Hanya dokter dan admin yang diperbolehkan mengisikan resep.'
+        ]);
+        exit();
+      }
       $_POST['kode_brng'] = json_decode($_POST['kode_brng'], true);
       $_POST['jml'] = json_decode($_POST['jml'], true);
       $_POST['aturan_pakai'] = json_decode($_POST['aturan_pakai'], true);
@@ -696,7 +822,7 @@ class Admin extends AdminModule
               'tgl_perawatan' => '0000-00-00',
               'jam' => '00:00:00',
               'no_rawat' => $_POST['no_rawat'],
-              'kd_dokter' => $this->core->getUserInfo('username', null, true),
+              'kd_dokter' => $kd_dokter,
               'tgl_peresepan' => $_POST['tgl_perawatan'],
               'jam_peresepan' => $_POST['jam_rawat'],
               'status' => 'ralan',
@@ -944,9 +1070,12 @@ class Admin extends AdminModule
       }
 
       $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->oneArray();
-      $rows_data_resep = $this->db('resep_obat')
-      ->join('reg_periksa', 'reg_periksa.no_rawat=resep_obat.no_rawat')
-      ->where('resep_obat.kd_dokter', $this->core->getUserInfo('username', null, true))
+      $query_data_resep = $this->db('resep_obat')
+      ->join('reg_periksa', 'reg_periksa.no_rawat=resep_obat.no_rawat');
+      if ($this->core->getUserInfo('role') != 'admin' && $this->db('dokter')->where('kd_dokter', $this->core->getUserInfo('username', null, true))->oneArray()) {
+        $query_data_resep = $query_data_resep->where('resep_obat.kd_dokter', $this->core->getUserInfo('username', null, true));
+      }
+      $rows_data_resep = $query_data_resep
       ->where('reg_periksa.no_rkm_medis', $reg_periksa['no_rkm_medis'])
       ->toArray();
 
@@ -1045,9 +1174,12 @@ class Admin extends AdminModule
       }
 
       $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->oneArray();
-      $rows_data_resep = $this->db('resep_obat')
-      ->join('reg_periksa', 'reg_periksa.no_rawat=resep_obat.no_rawat')
-      ->where('resep_obat.kd_dokter', $this->core->getUserInfo('username', null, true))
+      $query_data_resep = $this->db('resep_obat')
+      ->join('reg_periksa', 'reg_periksa.no_rawat=resep_obat.no_rawat');
+      if ($this->core->getUserInfo('role') != 'admin' && $this->db('dokter')->where('kd_dokter', $this->core->getUserInfo('username', null, true))->oneArray()) {
+        $query_data_resep = $query_data_resep->where('resep_obat.kd_dokter', $this->core->getUserInfo('username', null, true));
+      }
+      $rows_data_resep = $query_data_resep
       ->where('reg_periksa.no_rkm_medis', $reg_periksa['no_rkm_medis'])
       ->toArray();
 
@@ -1243,7 +1375,14 @@ class Admin extends AdminModule
 
     public function postSaveSOAP()
     {
-      $_POST['nip'] = $this->core->getUserInfo('username', null, true);
+      if (!$this->_canInput()) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Akses ditolak: Hanya dokter dan admin yang diperbolehkan mengisikan SOAP.'
+        ]);
+        exit();
+      }
+      $_POST['nip'] = $this->_getNipPegawai($_POST['no_rawat'] ?? null);
 
       // Simpan kasus_poli ke tabel pemeriksaan_ralan, dan status_poli ke tabel reg_periksa
       $kasus_poli = 'Lama';
@@ -1463,6 +1602,13 @@ class Admin extends AdminModule
 
     public function postSaveKontrol()
     {
+      if (!$this->_canInput()) {
+        exit();
+      }
+      $kd_dokter = $this->_getDokter($_POST['no_rawat'] ?? null);
+      if (!$kd_dokter) {
+        exit();
+      }
 
       $query = $this->db('skdp_bpjs')->save([
         'tahun' => date('Y'),
@@ -1476,7 +1622,7 @@ class Admin extends AdminModule
         'tanggal_datang' => $_POST['tanggal_datang'],
         'tanggal_rujukan' => $_POST['tanggal_rujukan'],
         'no_antrian' => $this->core->setNoSKDP(),
-        'kd_dokter' => $this->core->getUserInfo('username', null, true),
+        'kd_dokter' => $kd_dokter,
         'status' => 'Menunggu'
       ]);
 
@@ -1487,9 +1633,9 @@ class Admin extends AdminModule
             'jam_booking' => date('H:i:s'),
             'no_rkm_medis' => $_POST['no_rkm_medis'],
             'tanggal_periksa' => $_POST['tanggal_datang'],
-            'kd_dokter' => $this->core->getUserInfo('username', null, true),
+            'kd_dokter' => $kd_dokter,
             'kd_poli' => $this->core->getRegPeriksaInfo('kd_poli', $_POST['no_rawat']),
-            'no_reg' => $this->core->setNoBooking($this->core->getUserInfo('username', null, true), $this->core->getRegPeriksaInfo('kd_poli', $_POST['no_rawat']), $_POST['tanggal_datang']),
+            'no_reg' => $this->core->setNoBooking($kd_dokter, $this->core->getRegPeriksaInfo('kd_poli', $_POST['no_rawat']), $_POST['tanggal_datang']),
             'kd_pj' => $this->core->getRegPeriksaInfo('kd_pj', $_POST['no_rawat']),
             'limit_reg' => 0,
             'waktu_kunjungan' => $_POST['tanggal_datang'].' '.date('H:i:s'),
@@ -1639,6 +1785,88 @@ class Admin extends AdminModule
         ->toArray();
       echo $this->draw('radiologi.html', ['radiologi' => htmlspecialchars_array($radiologi)]);
       exit();
+    }
+
+    public function getLaboratoriumChecklist()
+    {
+        if (!$this->_canInput()) {
+            echo '<div class="alert alert-danger" style="margin:20px;"><i class="fa fa-lock"></i> Akses ditolak: Hanya dokter dan admin yang diperbolehkan mengisikan permintaan laboratorium.</div>';
+            exit();
+        }
+
+        $no_rawat = isset($_GET['no_rawat']) ? $_GET['no_rawat'] : '';
+        $requested_labs = [];
+        $diagnosa_klinis = '';
+        $informasi_tambahan = '';
+
+        if ($no_rawat != '') {
+            $cek_lab = $this->db('permintaan_lab')
+                ->where('no_rawat', $no_rawat)
+                ->where('tgl_permintaan', date('Y-m-d'))
+                ->oneArray();
+            if ($cek_lab) {
+                $diagnosa_klinis = $cek_lab['diagnosa_klinis'];
+                $informasi_tambahan = $cek_lab['informasi_tambahan'];
+            }
+
+            $rows = $this->db('permintaan_lab')
+                ->join('permintaan_pemeriksaan_lab', 'permintaan_pemeriksaan_lab.noorder=permintaan_lab.noorder')
+                ->where('permintaan_lab.no_rawat', $no_rawat)
+                ->toArray();
+            if ($rows) {
+                foreach ($rows as $row) {
+                    $requested_labs[] = $row['kd_jenis_prw'];
+                }
+            }
+        }
+
+        $labs = $this->db('jns_perawatan_lab')->where('status', '1')->toArray();
+        $groups = [
+            'A. HEMATOLOGI' => ['Hematologi', 'Darah Lengkap', 'LED', 'Laju Endap Darah', 'Golongan Darah'],
+            'B. FAAL HEMOSTASIS' => ['Pembekuan', 'Pendarahan', 'Protrombin', 'APTT'],
+            'C. URINALISA' => ['Urin', 'Urine', 'Kehamilan'],
+            'D. FEACES' => ['Feaces', 'Feses', 'Darah Samar'],
+            'E. HATI' => ['SGOT', 'SGPT', 'Gamma GT', 'Alkali', 'Bilirubin', 'Protein', 'Albumin', 'Globulin'],
+            'F. GINJAL' => ['Ureum', 'Kreatinin', 'Asam Urat'],
+            'G. GULA DARAH' => ['Gula Darah'],
+            'H. JANTUNG' => ['LDH', 'CK MB', 'CK-MB', 'Troponin'],
+            'I. LEMAK' => ['Kolestrol', 'Kolesterol', 'LDL', 'HDL', 'Trigliserida', 'Trigliseride'],
+            'J. IMUNOLOGI' => ['HBsAg', 'Anti HBS', 'Anti HCV', 'HIV'],
+            'K. SEROLOGI DAN INFEKSI LAIN' => ['Malaria', 'Widal', 'Typhoid', 'CRP', 'Ns1', 'Dengue', 'Sars Cov-2', 'Sars-Cov-2', 'Covid', 'Sifilis', 'Syphilis', 'Narkoba'],
+            'L. ALERGI' => ['IgE'],
+            'M. BAKTERIOLOGI' => ['Pengecatan Gram', 'BTA', 'Swab', 'Jamur']
+        ];
+
+        $categorized = [];
+        foreach ($groups as $k => $v) {
+            $categorized[$k] = [];
+        }
+
+        foreach ($labs as $lab) {
+            $placed = false;
+            foreach ($groups as $group_name => $keywords) {
+                foreach ($keywords as $kw) {
+                    if (stripos($lab['nm_perawatan'], $kw) !== false) {
+                        $categorized[$group_name][] = $lab;
+                        $placed = true;
+                        break;
+                    }
+                }
+                if ($placed) break;
+            }
+        }
+
+        foreach ($categorized as $k => $v) {
+            if (empty($v)) unset($categorized[$k]);
+        }
+
+        echo $this->draw('laboratorium_checklist.html', [
+            'grouped_labs' => htmlspecialchars_array($categorized),
+            'requested_labs' => $requested_labs,
+            'diagnosa_klinis' => htmlspecialchars($diagnosa_klinis, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            'informasi_tambahan' => htmlspecialchars($informasi_tambahan, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        ]);
+        exit();
     }
 
     public function postAturanPakai()
@@ -1853,9 +2081,12 @@ class Admin extends AdminModule
       }
 
       $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
-      $rows_data_resep = $this->db('resep_obat')
-      ->join('reg_periksa', 'reg_periksa.no_rawat=resep_obat.no_rawat')
-      ->where('resep_obat.kd_dokter', $this->core->getUserInfo('username', null, true))
+      $query_data_resep = $this->db('resep_obat')
+      ->join('reg_periksa', 'reg_periksa.no_rawat=resep_obat.no_rawat');
+      if ($this->core->getUserInfo('role') != 'admin' && $this->db('dokter')->where('kd_dokter', $this->core->getUserInfo('username', null, true))->oneArray()) {
+        $query_data_resep = $query_data_resep->where('resep_obat.kd_dokter', $this->core->getUserInfo('username', null, true));
+      }
+      $rows_data_resep = $query_data_resep
       ->where('reg_periksa.no_rkm_medis', $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat))
       ->toArray();
 
@@ -2087,7 +2318,21 @@ class Admin extends AdminModule
 
     public function postResumeSave()
     {
-      $_POST['kd_dokter']	= $this->core->getUserInfo('username', $_SESSION['mlite_user']);
+      if (!$this->_canInput()) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Akses ditolak: Hanya dokter dan admin yang diperbolehkan mengisikan resume.'
+        ]);
+        exit();
+      }
+      $_POST['kd_dokter']	= $this->_getDokter($_POST['no_rawat'] ?? null);
+      if (!$_POST['kd_dokter']) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Akses ditolak: Hanya dokter dan admin yang diperbolehkan mengisikan resume.'
+        ]);
+        exit();
+      }
 
       if($this->db('resume_pasien')->where('no_rawat', $_POST['no_rawat'])->where('kd_dokter', $_POST['kd_dokter'])->oneArray()) {
         $this->db('resume_pasien')
@@ -2185,7 +2430,7 @@ class Admin extends AdminModule
         
         if (!empty($pemeriksaan_fallback)) {
           // Get current user (dokter) info
-          $current_dokter = $this->core->getUserInfo('username', $_SESSION['mlite_user']);
+          $current_dokter = $this->_getDokter(revertNoRawat($no_rawat));
           $dokter_info = $this->db('dokter')->where('kd_dokter', $current_dokter)->oneArray();
           
           // Calculate BMI if height and weight are available
@@ -2269,7 +2514,21 @@ class Admin extends AdminModule
 
     public function postMedisRalan()
     {
-      $_POST['kd_dokter'] = $this->core->getUserInfo('username', $_SESSION['mlite_user']);
+      if (!$this->_canInput()) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Akses ditolak: Hanya dokter dan admin yang diperbolehkan mengisikan penilaian medis.'
+        ]);
+        exit();
+      }
+      $_POST['kd_dokter'] = $this->_getDokter($_POST['no_rawat'] ?? null);
+      if (!$_POST['kd_dokter']) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Akses ditolak: Hanya dokter dan admin yang diperbolehkan mengisikan penilaian medis.'
+        ]);
+        exit();
+      }
       
       // Handle edit mode
       if(isset($_POST['mode']) && $_POST['mode'] == 'edit' && isset($_POST['original_tanggal'])) {

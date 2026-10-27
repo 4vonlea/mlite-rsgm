@@ -85,7 +85,7 @@
                     <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynik', $value.no_ktp, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal">[BPJS] Cek Nomor KTP</a></li>
                   {/if}
                   <li><a href="#" onclick="openPdfTteModal('{?=isset_or($value.no_rkm_medis)?}','{?=isset_or($value.no_rawat)?}')">Elektronik Rekam Medis</a></li>
-                  {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
+                  {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis'}
                   <li><a href="#soap" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-umur="{?=isset_or($value.umurdaftar)?} {?=isset_or($value.sttsumur)?}" data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}" data-stts_daftar="{?=isset_or($value.stts_daftar)?}" data-status_poli="{?=isset_or($value.status_poli)?}">SOAPIE & Pemeriksaan</a></li>
                   <li><a href="#layanan_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}">Layanan & Obat</a></li>
                   {? \Systems\Lib\Event::call('rsgmgha.dropdown_menu', [$value]) ?}
@@ -102,8 +102,13 @@
                   {/if}
                 </ul>
               </td>
+              {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis'}
               <td style="white-space: nowrap;"><a href="#soap" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}" data-stts_daftar="{?=isset_or($value.stts_daftar)?}" data-status_poli="{?=isset_or($value.status_poli)?}">{?=isset_or($value.nm_pasien)?}</a></td>
               <td style="white-space: nowrap;"><a href="#layanan_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}">{?=isset_or($value.no_rawat)?}</a></td>
+              {else}
+              <td style="white-space: nowrap;">{?=isset_or($value.nm_pasien)?}</td>
+              <td style="white-space: nowrap;">{?=isset_or($value.no_rawat)?}</td>
+              {/if}
               <td style="white-space: nowrap;">
                 <button type="button" name="button" class="btn btn-xs btn-warning antrian"
                   data-no_rawat="{?=isset_or($value.no_rawat)?}"

@@ -1,4 +1,4 @@
-<div id="display_template">
+<div class="display-template-container">
   <div class="table-responsive no-margin">
     <table class="table table-striped no-padding">
       <thead>
@@ -22,12 +22,12 @@
           <td>{$value.nilai_rujukan_la}</td>
           <td>{$value.nilai_rujukan_pd}</td>
           <td>{$value.nilai_rujukan_pa}</td>
-          <td><a href="{?=url([ADMIN,'master','templatelaboratoriumform','{$jnsperawatan.kd_jenis_prw}','{$value.id_template}'])?}" class="btn btn-xs btn-primary" data-toggle="modal" data-target="#templateModalEdit"><span class="fa fa-edit"></span> Edit</a> <button type="button" class="btn btn-xs btn-danger delete_template" data-id_template="{$value.id_template}"><span class="fa fa-trash"></span> Del</button></td>
+          <td><a href="{?=url([ADMIN,'master','templatelaboratoriumform','{$jnsperawatan.kd_jenis_prw}','{$value.id_template}'])?}" class="btn btn-xs btn-primary" data-toggle="modal" data-target="#templateModalEdit"><span class="fa fa-edit"></span> Edit</a> <button type="button" class="btn btn-xs btn-danger delete_template" data-id_template="{$value.id_template}" data-kd_jenis_prw="{$jnsperawatan.kd_jenis_prw}"><span class="fa fa-trash"></span> Del</button></td>
         </tr>
         {/loop}
         {else}
         <tr>
-          <td colspan="3" class="text-center">Tidak ada data perawatan.</td>
+          <td colspan="7" class="text-center">Tidak ada data pemeriksaan.</td>
         </tr>
         {/if}
       </tbody>

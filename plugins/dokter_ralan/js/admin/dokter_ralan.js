@@ -597,25 +597,7 @@ $('.nama_brng').on('input',function(e){
 });
 // end pencarian
 
-// ketika inputbox pencarian diisi
-$('input:text[name=laboratorium]').on('input',function(e){
-  var baseURL = mlite.url + '/' + mlite.admin;
-  var url    = baseURL + '/dokter_ralan/laboratorium?t=' + mlite.token;
-  var laboratorium = $('input:text[name=laboratorium]').val();
 
-  if(laboratorium!="") {
-      $.post(url, {laboratorium: laboratorium} ,function(data) {
-      // tampilkan data yang sudah di perbaharui
-        $("#laboratorium").html(data).show();
-        $("#layanan").hide();
-        $("#obat").hide();
-        $("#racikan").hide();
-        $("#radiologi").hide();
-      });
-  }
-
-});
-// end pencarian
 
 // ketika inputbox pencarian diisi
 $('input:text[name=radiologi]').on('input',function(e){
@@ -1911,5 +1893,115 @@ $(document).on('click', '.btn-tte', function(e) {
                 $('.btn-tte-confirm').click();
             }
         });
+    });
+});
+
+// Checklist Laboratorium
+$(document).ready(function() {
+    $('#form_rincian').on('click', '#btn_modal_lab', function(e) {
+        e.preventDefault();
+        var no_rawat = $('input:text[name=no_rawat]').val();
+        var baseURL = mlite.url + '/' + mlite.admin;
+        $('#modalPermintaanLab').modal('show');
+        $.get(baseURL + '/dokter_ralan/laboratoriumchecklist?no_rawat=' + no_rawat + '&t=' + mlite.token, function(data) {
+            $('#bodyPermintaanLab').html(data);
+        }).fail(function(xhr, status, error) {
+            $('#bodyPermintaanLab').html('<div class="text-center text-danger">Gagal memuat form laboratorium.</div>');
+            console.error('AJAX Error:', error);
+        });
+    });
+
+    $('#btnSimpanPermintaanLab').click(function(e) {
+        e.preventDefault();
+        var checked = [];
+        $('.chk-lab:not(:disabled):checked').each(function() {
+            checked.push({
+                kd_jenis_prw: $(this).val(),
+                nm_perawatan: $(this).data('nama'),
+                biaya: $(this).data('biaya')
+            });
+        });
+
+        if (checked.length === 0) {
+            bootbox.alert("Pilih minimal satu pemeriksaan laboratorium.");
+            return;
+        }
+
+        var no_rawat = $('input:text[name=no_rawat]').val();
+        if(no_rawat == '') {
+            bootbox.alert('Pilih pasien terlebih dahulu (ID Rawat kosong).');
+            return;
+        }
+
+        var tgl_perawatan = $('input:text[name=tgl_perawatan]').val();
+        var jam_reg = $('input:text[name=jam_reg]').val();
+        
+        var informasi_tambahan = $('#modal_info_tambahan').val();
+        if(!informasi_tambahan) informasi_tambahan = $('#informasi_tambahan').val();
+        if(typeof informasi_tambahan === 'undefined') informasi_tambahan = '';
+        
+        var diagnosa_klinis = $('#modal_diagnosa_klinis').val();
+        if(!diagnosa_klinis) diagnosa_klinis = $('input:text[name=diagnosa_klinis]').val();
+        if(typeof diagnosa_klinis === 'undefined') diagnosa_klinis = '';
+        
+        var baseURL = mlite.url + '/' + mlite.admin;
+
+        var btn = $(this);
+        var originalText = btn.html();
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
+
+        function saveLab(index) {
+            if (index >= checked.length) {
+                btn.prop('disabled', false).html(originalText);
+                $('#modalPermintaanLab').modal('hide');
+                
+                // Refresh riwayat rincian
+                var url = baseURL + '/dokter_ralan/rincian?t=' + mlite.token;
+                $.post(url, {no_rawat : no_rawat}, function(data) {
+                    $("#display").hide();
+                    $("#rincian").html(data).show();
+                    $('#rincian .nav-tabs a[href="#lab"]').tab('show');
+                });
+                
+                // WebSocket trigger
+                if(typeof ws != 'undefined' && typeof ws.readyState != 'undefined' && ws.readyState == 1){
+                    let payload = {
+                        'action' : 'permintaan_laboratorium',
+                        'modul' : 'dokter_ralan'
+                    }
+                    ws.send(JSON.stringify(payload));
+                }
+                
+                return;
+            }
+
+            var item = checked[index];
+            var url_save = baseURL + '/dokter_ralan/savedetail?t=' + mlite.token;
+            var action = {
+                'action' : 'permintaan_laboratorium',
+                'no_rawat' : no_rawat,
+                'kd_jenis_prw' : item.kd_jenis_prw,
+                'kat' : 'laboratorium',
+                'tgl_perawatan' : tgl_perawatan,
+                'jam_rawat' : jam_reg,
+                'biaya' : item.biaya,
+                'informasi_tambahan' : informasi_tambahan,
+                'diagnosa_klinis' : diagnosa_klinis
+            };
+
+            $.post(url_save, action, function(data) {
+                if(typeof data === 'string' && data.indexOf('"status":"error"') !== -1){
+                    try { data = $.parseJSON(data); } catch(e){}
+                }
+                if(data && data.status === 'error'){
+                    bootbox.alert(data.message || 'Gagal menyimpan pemeriksaan lab.');
+                }
+                saveLab(index + 1);
+            }).fail(function() {
+                saveLab(index + 1); // Lanjut aja meskipun gagal satu (best effort)
+            });
+        }
+
+        saveLab(0);
     });
 });

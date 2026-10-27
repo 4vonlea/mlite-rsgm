@@ -132,7 +132,8 @@ class Admin extends Main
         if ($row && ($details = $this->getModuleInfo($name))) {
             $isSaveSignature = ($name === 'esignature' && strtolower($method) === 'savesignature' && !empty($_SESSION['mlite_user']));
             $isRadiologiLaporanPacs = ($name === 'laporan' && in_array(strtolower($method), ['laporanradiologipacs', 'hapusradiologipacs']) && in_array($this->getUserInfo('role'), ['radiologi', 'admin']));
-            if (($this->getUserInfo('access') == 'all') || in_array($name, explode(',', $this->getUserInfo('access'))) || $isSaveSignature || $isRadiologiLaporanPacs) {
+            $isPasienRiwayat = ($name === 'pasien' && in_array(strtolower($method), ['riwayatperawatan', 'pdfriwayatperawatan']) && !empty($_SESSION['mlite_user']));
+            if (($this->getUserInfo('access') == 'all') || in_array($name, explode(',', (string)$this->getUserInfo('access'))) || $isSaveSignature || $isRadiologiLaporanPacs || $isPasienRiwayat) {
                 if ($name === 'laporan' && strtolower($method) === 'manage' && $this->getUserInfo('role') === 'radiologi' && !in_array('laporan', explode(',', $this->getUserInfo('access')))) {
                     redirect(url([ADMIN, 'laporan', 'laporanradiologipacs']));
                     exit;

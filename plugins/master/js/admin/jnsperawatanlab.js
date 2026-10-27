@@ -101,30 +101,45 @@ $("#display_template").on("click",".delete_template", function(event){
   event.preventDefault();
   var url = baseURL + '/master/jnsperawatanlabtemplatehapus?t=' + mlite.token;
   var id_template = $(this).attr("data-id_template");
+  var kd_jenis_prw = $(this).attr("data-kd_jenis_prw");
 
+  bootbox.confirm("Apakah Anda yakin ingin menghapus data pemeriksaan ini?", function(result){
+    if (result){
       // mengirimkan perintah penghapusan
       $.post(url, {
         id_template: id_template
-      } ,function(data) {
-        data = JSON.parse(data);
-        $("#form").hide();
-        $("#display_template").hide();
-        if(data.status == 'success') {
-          // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
+      }, function(data) {
+        if (typeof data === 'string') {
+          try {
+            data = JSON.parse(data);
+          } catch(e) {}
+        }
+        if(data && data.status == 'success') {
+          // tampilkan data yang sudah diperbaharui, tampilkan notif
+          if (kd_jenis_prw) {
+            $.post(baseURL + '/master/templatelaboratorium?t=' + mlite.token, {kd_jenis_prw: kd_jenis_prw}, function(htmlData) {
+              $("#display_template").html(htmlData).show();
+            });
+          }
           $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-          "Data template telah dihapus!"+
+          "Data pemeriksaan telah dihapus!"+
           "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
           "</div>").show();
-        }
-        if(data.status == 'error') {
-          // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
+        } else if(data && data.status == 'error') {
           $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-          "Data template gagal dihapus!<br>"+
+          "Data pemeriksaan gagal dihapus!<br>"+
           data.msg+
           "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
           "</div>").show();
         }
+      }).fail(function(xhr, status, error) {
+        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+        "Terjadi kesalahan pada server saat menghapus data pemeriksaan."+
+        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+        "</div>").show();
       });
+    }
+  });
 });
 
 $("#display_template").on("click","#tutup_template", function(event){
@@ -146,13 +161,30 @@ $("#form").on("click","#hapus", function(event){
       $.post(url, {
         kd_jenis_prw: kd_jenis_prw
       } ,function(data) {
-        // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
-        $("#form").hide();
-        $("#tutupform").val("Buka Form");
-        $("#tutupform").attr("id", "bukaform");
-        $("#display").load(baseURL + '/master/jnsperawatanlabdisplay?t=' + mlite.token);
+        if (typeof data === 'string') {
+          try {
+            data = JSON.parse(data);
+          } catch(e) {}
+        }
+        if (data && data.status == 'error') {
+          $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+          data.msg+
+          "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+          "</div>").show();
+        } else {
+          // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
+          $("#form").hide();
+          $("#tutupform").val("Buka Form");
+          $("#tutupform").attr("id", "bukaform");
+          $("#display").load(baseURL + '/master/jnsperawatanlabdisplay?t=' + mlite.token);
+          $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+          "Data jenis perawatan laboratorium telah dihapus!"+
+          "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+          "</div>").show();
+        }
+      }).fail(function() {
         $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-        "Data bahasa telah dihapus!"+
+        "Terjadi kesalahan saat menghapus data."+
         "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
         "</div>").show();
       });
@@ -205,6 +237,14 @@ $("#form").on("click","#kd_jenis_prw", function(event){
 });
 
 function bersih(){
-  $('input:text[name=id]').val("").removeAttr('disabled');
-  $('input:text[name=nama_bahasa]').val("");
+  $('input:text[name=kd_jenis_prw]').val("").removeAttr('disabled');
+  $('input:text[name=nm_perawatan]').val("");
+  $('input:text[name=bagian_rs]').val("0");
+  $('input:text[name=bhp]').val("0");
+  $('input:text[name=tarif_perujuk]').val("0");
+  $('input:text[name=tarif_tindakan_dokter]').val("0");
+  $('input:text[name=tarif_tindakan_petugas]').val("0");
+  $('input:text[name=kso]').val("0");
+  $('input:text[name=menejemen]').val("0");
+  $('input:text[name=total_byr]').val("0");
 }
