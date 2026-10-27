@@ -48,35 +48,60 @@
     
     /* Page Break for print */
     .page-break { page-break-after: always; }
+
+{if: empty($is_mpdf)}
+@media screen {
+    body { background-color: #f4f6f9 !important; padding: 15px 0 !important; }
+    .container, .page, .main-box, .main-container { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; margin: 0 auto 20px auto !important; padding: 8mm 10mm !important; }
+}
+{/if}
+.no-print-toolbar { width: 100%; max-width: 195mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
+.btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-decoration: none; display: inline-block; }
+.btn-print { background: #27ae60; color: #fff; }
+.btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+.btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+@media print {
+    .no-print-toolbar { display: none !important; }
+    body { background: transparent !important; padding: 0 !important; }
+    .container, .page, .main-box, .main-container { box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
+}
+
 </style>
 </head>
 <body>
+
+    {if: empty($is_mpdf)}
+    <div class="no-print-toolbar">
+        <button onclick="window.print()" class="btn-toolbar btn-print"><i class="fa fa-print"></i> Cetak Dokumen</button>
+        <a href="#" onclick="window.open(window.location.href + (window.location.href.indexOf('?') !== -1 ? (window.location.href.indexOf('pdf=1') !== -1 ? '' : '&pdf=1') : '?pdf=1'), '_blank'); return false;" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Download PDF</a>
+        <button onclick="window.close()" class="btn-toolbar btn-close"><i class="fa fa-times"></i> Tutup</button>
+    </div>
+    {/if}
+
 
 <div class="container">
     <!-- HEADER -->
     <table class="table-header">
         <tr>
             <td width="70%" style="text-align:center; vertical-align:middle; padding: 0;">
-                <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat" style="width: 100%; height: auto; max-height: 80px; object-fit: contain;">
+                <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{elseif: !empty($p.kop_img)}{$p.kop_img}{elseif: !empty($d.kop_img)}{$d.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop Surat" style="width: 100%; height: auto; max-height: 80px; object-fit: contain;">
             </td>
             <td width="30%">
                 <table class="table-no-border" style="font-size: 11px;">
                     <tr>
                         <td width="30%">No RM</td>
                         <td width="5%">:</td>
-                        <td>
-                            {?=isset_or($data['no_rkm_medis'])?}
-                        </td>
+                        <td>{if: !empty($data.no_rkm_medis)}{$data.no_rkm_medis}{/if}</td>
                     </tr>
                     <tr>
-                        <td>Nama Pasien</td>
+                        <td style="white-space: nowrap;">Nama Pasien</td>
                         <td>:</td>
-                        <td>{?=isset_or($data['nama_pasien'])?} ({?=isset_or($data['jenis_kelamin'])?})</td>
+                        <td>{if: !empty($data.nama_pasien)}{$data.nama_pasien}{elseif: !empty($data.nm_pasien)}{$data.nm_pasien}{/if}{if: !empty($data.jenis_kelamin)} ({$data.jenis_kelamin}){/if}</td>
                     </tr>
                     <tr>
-                        <td>Tanggal Lahir</td>
+                        <td style="white-space: nowrap;">Tanggal Lahir</td>
                         <td>:</td>
-                        <td>{?=isset_or($data['tanggal_lahir_indo'])?}</td>
+                        <td>{if: !empty($data.tanggal_lahir_indo)}{$data.tanggal_lahir_indo}{elseif: !empty($data.tanggal_lahir)}{$data.tanggal_lahir}{/if}</td>
                     </tr>
                 </table>
             </td>
@@ -101,7 +126,7 @@
             <td width="50%">
                 <div>Cara Datang</div>
                 <div class="cb {if: isset($data['cara_datang']) && $data['cara_datang'] == 'Sendiri'}checked{/if}"></div> Sendiri &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: isset($data['cara_datang']) && $data['cara_datang'] == 'Ambulans'}checked{/if}"></div> Ambulans<br>
-                <div class="cb"></div> Diantar Keluarga &nbsp; <div class="cb"></div> Diantar Polisi (No. ID...........................)
+                <div class="cb {if: isset($data['cara_datang']) && $data['cara_datang'] == 'Diantar Keluarga'}checked{/if}"></div> Diantar Keluarga &nbsp; <div class="cb {if: isset($data['cara_datang']) && $data['cara_datang'] == 'Diantar Polisi'}checked{/if}"></div> Diantar Polisi {if: !empty($data['diantar_oleh'])}(No. ID: {$data['diantar_oleh']}){else}(No. ID...........................){/if}
             </td>
             <td width="50%" rowspan="2">
                 <div>Jenis Kasus</div>
@@ -111,7 +136,7 @@
                         <td width="50%"><div class="cb {if: isset($data['jenis_kasus']) && $data['jenis_kasus'] == 'Trauma'}checked{/if}"></div> Trauma<br><div class="cb {if: isset($data['jenis_kasus']) && $data['jenis_kasus'] == 'Non Trauma'}checked{/if}"></div> Non Trauma</td>
                     </tr>
                     <tr>
-                        <td><div class="cb {if: isset($data['kiriman_dari']) && $data['kiriman_dari'] == 'Puskesmas'}checked{/if}"></div> Puskesmas {?=isset_or($data['kiriman_dari_ket'])?}<br><div class="cb {if: isset($data['kiriman_dari']) && $data['kiriman_dari'] == 'Dokter'}checked{/if}"></div> Dokter {?=isset_or($data['kiriman_dari_ket'])?}</td>
+                        <td><div class="cb {if: (isset($data['kiriman_dari']) && $data['kiriman_dari'] == 'Puskesmas') || !empty($data['rujukan_puskesmas'])}checked{/if}"></div> Puskesmas {?=isset_or($data['kiriman_dari_ket'], isset_or($data['rujukan_puskesmas']))?}<br><div class="cb {if: (isset($data['kiriman_dari']) && $data['kiriman_dari'] == 'Dokter') || !empty($data['rujukan_dokter'])}checked{/if}"></div> Dokter {?=isset_or($data['kiriman_dari_ket'], isset_or($data['rujukan_dokter']))?}</td>
                         <td><div class="cb {if: isset($data['asuransi']) && $data['asuransi'] == 'Asuransi'}checked{/if}"></div> Asuransi<br><div class="cb {if: isset($data['asuransi']) && $data['asuransi'] == 'Umum'}checked{/if}"></div> Umum<br><div class="cb {if: isset($data['asuransi']) && $data['asuransi'] == 'BPJS'}checked{/if}"></div> BPJS</td>
                     </tr>
                 </table>
@@ -120,8 +145,10 @@
         <tr>
             <td>
                 Rujukan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: isset($data['rujukan']) && $data['rujukan'] == 'Tidak'}checked{/if}"></div> Tidak &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: isset($data['rujukan']) && $data['rujukan'] == 'Ya'}checked{/if}"></div> Ya &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: !empty($data['rujukan_rs'])}checked{/if}"></div> RS {?=isset_or($data['rujukan_rs'])?}<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: !empty($data['rujukan_klinik'])}checked{/if}"></div> Klinik {?=isset_or($data['rujukan_klinik'])?}<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Diagnosis Rujukan {?=isset_or($data['diagnosis_rujukan'])?}
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <div class="cb {if: !empty($data['rujukan_puskesmas'])}checked{/if}"></div> Puskesmas {?=isset_or($data['rujukan_puskesmas'])?} &nbsp;
+                <div class="cb {if: !empty($data['rujukan_klinik'])}checked{/if}"></div> Klinik {?=isset_or($data['rujukan_klinik'])?} &nbsp;
+                <div class="cb {if: !empty($data['rujukan_dokter'])}checked{/if}"></div> Dokter {?=isset_or($data['rujukan_dokter'])?}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Diagnosis Rujukan: {?=isset_or($data['diagnosis_rujukan'])?}
             </td>
         </tr>
         <tr>
@@ -143,7 +170,7 @@
     
     <table class="table-body">
         <tr>
-            <td width="50%">Tanggal kunjungan: {?=isset_or($data['tanggal'])?}</td>
+            <td width="50%">Tanggal kunjungan: {if: !empty($data.tanggal_kunjungan)}{$data.tanggal_kunjungan}{elseif: !empty($data.tanggal)}{?=date('Y-m-d', strtotime($data.tanggal))?}{/if} {if: !empty($data.pukul_kunjungan)}Pk. {$data.pukul_kunjungan}{/if}</td>
             <td width="50%"></td>
         </tr>
         <tr>
@@ -255,8 +282,8 @@
 <div class="container">
     <table class="table-no-border" style="margin-top:5px; margin-bottom:5px;">
         <tr>
-            <td width="35%">Nama Pasien: {?=isset_or($data['nama_pasien'])?} ({?=isset_or($data['jenis_kelamin'])?})</td>
-            <td width="30%">Tanggal Lahir: {?=isset_or($data['tanggal_lahir_indo'])?}</td>
+            <td width="35%">Nama Pasien: <b>{if: !empty($data.nama_pasien)}{$data.nama_pasien}{elseif: !empty($data.nm_pasien)}{$data.nm_pasien}{/if}</b>{if: !empty($data.jenis_kelamin)} ({$data.jenis_kelamin}){/if}</td>
+            <td width="30%">Tanggal Lahir: {if: !empty($data.tanggal_lahir_indo)}{$data.tanggal_lahir_indo}{elseif: !empty($data.tanggal_lahir)}{$data.tanggal_lahir}{/if}</td>
             <td width="35%">
                 No. RM: 
                 <div class="box-rm">{?=isset($data['no_rkm_medis'][0])?$data['no_rkm_medis'][0]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][1])?$data['no_rkm_medis'][1]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][2])?$data['no_rkm_medis'][2]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][3])?$data['no_rkm_medis'][3]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][4])?$data['no_rkm_medis'][4]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][5])?$data['no_rkm_medis'][5]:''?}</div>
@@ -359,8 +386,8 @@
             <td colspan="2">
                 <b>EVALUASI</b><br>
                 <div class="cb {if: isset($data['evaluasi_kontrol']) && $data['evaluasi_kontrol'] == 'Ya'}checked{/if}"></div> Kontrol &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tanggal &nbsp;: {?=isset_or($data['evaluasi_kontrol_tgl'])?}<br>
-                <div class="cb {if: isset($data['evaluasi_rujuk']) && $data['evaluasi_rujuk'] == 'Ya'}checked{/if}"></div> Rujuk &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ke RS &nbsp;&nbsp;&nbsp;&nbsp;: {?=isset_or($data['evaluasi_rujuk_rs'])?}<br>
-                <div class="cb {if: isset($data['evaluasi_ranap']) && $data['evaluasi_ranap'] == 'Ya'}checked{/if}"></div> Rawat Inap &nbsp; Ruangan : {?=isset_or($data['evaluasi_ranap_ruang'])?}
+                <div class="cb {if: isset($data['evaluasi_rujuk']) && $data['evaluasi_rujuk'] == 'Ya'}checked{/if}"></div> Rujuk &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ke RS &nbsp;&nbsp;&nbsp;&nbsp;: {?=isset_or($data['evaluasi_rujuk_ke'], isset_or($data['evaluasi_rujuk_rs']))?}<br>
+                <div class="cb {if: (isset($data['evaluasi_rawat_inap']) && $data['evaluasi_rawat_inap'] == 'Ya') || (isset($data['evaluasi_ranap']) && $data['evaluasi_ranap'] == 'Ya')}checked{/if}"></div> Rawat Inap &nbsp; Ruangan : {?=isset_or($data['evaluasi_rawat_inap_ruangan'], isset_or($data['evaluasi_ranap_ruang']))?}
             </td>
         </tr>
         <tr>
@@ -370,10 +397,10 @@
                 NIP. {?=isset_or($data['nip_dpjp'])?}
             </td>
             <td width="50%" class="signature-area">
-                Banjarmasin, {?=isset_or($data['tanggal'])?}<br>
+                Banjarmasin, {if: !empty($data.tanggal_kunjungan)}{$data.tanggal_kunjungan}{elseif: !empty($data.tanggal)}{?=date('d-m-Y', strtotime($data.tanggal))?}{else}{?=date('d-m-Y')?}{/if}<br>
                 <b>Perawat/Terapis Gigi dan Mulut</b><br><br><br><br><br>
-                ( {?=isset_or($data['nm_perawat'], isset_or($data['nip_perawat']))?} )<br>
-                NIP. {?=isset_or($data['nip_perawat'])?}
+                ( {?=isset_or($data['nm_perawat'], isset_or($data['nip']))?} )<br>
+                NIP. {?=isset_or($data['nip'], isset_or($data['nip_perawat']))?}
             </td>
         </tr>
     </table>

@@ -4,12 +4,12 @@
             <div class="panel-heading">
                 <h3 class="panel-title">RM.RJ - 02A Hak dan Kewajiban Pasien</h3>
                 <ul class="nav nav-tabs">
-                    <li><a href="{?=url([ADMIN, 'update_bmt', 'rj02amanage'])?}">Kelola Data</a></li>
-                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'rj02aform'])?}">Tambah Data</a></li>
+                    <li><a href="{?=url([ADMIN, 'form_rme', 'rj02amanage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'form_rme', 'rj02aform'])?}">Tambah Data</a></li>
                 </ul>
             </div>
             <div class="panel-body">
-                <form id="rj02aForm" method="POST" action="{?=url([ADMIN, 'update_bmt', 'rj02asave'])?}">
+                <form id="rj02aForm" method="POST" action="{?=url([ADMIN, 'form_rme', 'rj02asave'])?}">
                     <input type="hidden" name="id" value="{$data.id}">
                     <input type="hidden" name="json_form_data" id="json_form_data" value="">
                     
@@ -50,7 +50,7 @@
 
                     <br>
                     <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
-                    <a href="{?=url([ADMIN, 'update_bmt', 'rj02amanage'])?}" class="btn btn-default">Kembali</a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'rj02amanage'])?}" class="btn btn-default">Kembali</a>
                 </form>
             </div>
         </div>
@@ -63,7 +63,7 @@
     $(document).ready(function() {
         $('.f-pemberi_edukasi').select2({
             ajax: {
-                url: "{?=url([ADMIN, 'update_bmt', 'rj02aform'])?}&ajax_pegawai=1",
+                url: "{?=url([ADMIN, 'form_rme', 'rj02aform'])?}&ajax_pegawai=1",
                 dataType: 'json', delay: 250,
                 processResults: function (data) { return { results: data.results }; },
                 cache: true
@@ -83,7 +83,7 @@
     $('#no_rawat').on('keypress', function(e) {
         if(e.which === 13) {
             e.preventDefault();
-            $.get("{?=url([ADMIN, 'update_bmt', 'rj02aform'])?}&ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
+            $.get("{?=url([ADMIN, 'form_rme', 'rj02aform'])?}&ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
                 var d = JSON.parse(res);
                 if (d.success) {
                     $('#no_rawat').val(d.no_rawat);

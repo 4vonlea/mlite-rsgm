@@ -1,12 +1,12 @@
 <article class="row">
     <div class="col-md-12">
-        <form action="{?=url([ADMIN, 'update_bmt', 'ri09save'])?}" method="POST" id="form_ri09">
+        <form action="{?=url([ADMIN, 'form_rme', 'ri09save'])?}" method="POST" id="form_ri09">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h3 class="panel-title">Form Asesmen Status Fungsional (RM.RI 09)</h3>
                     <ul class="nav nav-tabs">
-                        <li><a href="{?=url([ADMIN, 'update_bmt', 'ri09manage'])?}">Kelola Data</a></li>
-                        <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri09form'])?}">Tambah Data</a></li>
+                        <li><a href="{?=url([ADMIN, 'form_rme', 'ri09manage'])?}">Kelola Data</a></li>
+                        <li class="active"><a href="{?=url([ADMIN, 'form_rme', 'ri09form'])?}">Tambah Data</a></li>
                     </ul>
                 </div>
                 <div class="panel-body">
@@ -64,7 +64,7 @@
                     <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
                     <input type="hidden" name="id" value="{$data.id}">
                     <button type="submit" class="btn btn-primary">Simpan</button>
-                    <a href="{?=url([ADMIN, 'update_bmt', 'ri09manage'])?}" class="btn btn-default">Kembali</a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'ri09manage'])?}" class="btn btn-default">Kembali</a>
                 </div>
             </div>
         </form>
@@ -77,7 +77,7 @@
     $(document).ready(function() {
         var s2opts = {
             ajax: {
-                url: "{?=url([ADMIN, 'update_bmt', 'ri09form'])?}&ajax_pegawai=1",
+                url: "{?=url([ADMIN, 'form_rme', 'ri09form'])?}&ajax_pegawai=1",
                 dataType: 'json', delay: 250,
                 processResults: function (data) { return { results: data.results }; },
                 cache: true
@@ -111,7 +111,7 @@
         var no_rawat = $('#no_rawat').val();
         if (!no_rawat) return;
         $.ajax({
-            url: '{?=url([ADMIN, "update_bmt", "ri09form"])?}',
+            url: '{?=url([ADMIN, "form_rme", "ri09form"])?}',
             type: 'GET',
             data: { ajax_patient: 1, no_rawat: no_rawat, t: '{?=$_SESSION["token"]?}' },
             dataType: 'json',

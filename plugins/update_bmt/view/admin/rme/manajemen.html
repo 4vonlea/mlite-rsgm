@@ -7,14 +7,14 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 <div class="pull-right">
-                    <a href="{?=url([ADMIN, 'update_bmt', 'manajemenrme'])?}" class="btn btn-default btn-xs">
+                    <a href="{?=url([ADMIN, 'form_rme', 'manajemenrme'])?}" class="btn btn-default btn-xs">
                         <i class="fa fa-arrow-left"></i> Kembali
                     </a>
                 </div>
                 <h3 class="panel-title"><i class="fa fa-key text-primary"></i> Hak Akses Form RME: <strong>{$selected_unit.nama_unit}</strong> ({$selected_unit.kode_unit})</h3>
             </div>
             <div class="panel-body">
-                <form action="{?=url([ADMIN, 'update_bmt', 'simpanaksesrme'])?}" method="POST">
+                <form action="{?=url([ADMIN, 'form_rme', 'simpanaksesrme'])?}" method="POST">
                     <input type="hidden" name="kd_poli" value="{$selected_unit.kd_poli}">
                     <input type="hidden" name="unit_id" value="{$selected_unit.id}">
                     <input type="hidden" name="t" value="{$token}">
@@ -80,7 +80,7 @@
                                     <td><strong>{$value.nama_form}</strong></td>
                                     <td><span class="label label-default">{$value.kategori}</span></td>
                                     <td class="text-center">
-                                        <a href="{?=url([ADMIN, 'update_bmt', $value.route_manage])?}" target="_blank" class="btn btn-xs btn-default" title="Buka Formulir">
+                                        <a href="{?=url([ADMIN, 'form_rme', $value.route_manage])?}" target="_blank" class="btn btn-xs btn-default" title="Buka Formulir">
                                             <i class="fa fa-external-link"></i> Buka
                                         </a>
                                     </td>
@@ -94,7 +94,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fa fa-save"></i> Simpan Hak Akses
                         </button>
-                        <a href="{?=url([ADMIN, 'update_bmt', 'manajemenrme'])?}" class="btn btn-default">
+                        <a href="{?=url([ADMIN, 'form_rme', 'manajemenrme'])?}" class="btn btn-default">
                             Batal
                         </a>
                     </div>
@@ -195,7 +195,7 @@
                                     {/if}
                                 </td>
                                 <td class="text-right">
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'manajemenrme'])?}&action=permission&kd_poli={$value.kd_poli}&unit_id={$value.kd_poli}" class="btn btn-xs btn-primary" title="Atur Hak Akses Formulir">
+                                    <a href="{?=url([ADMIN, 'form_rme', 'manajemenrme'])?}&action=permission&kd_poli={$value.kd_poli}&unit_id={$value.kd_poli}" class="btn btn-xs btn-primary" title="Atur Hak Akses Formulir">
                                         <i class="fa fa-key"></i> Atur Hak Akses
                                     </a>
                                 </td>

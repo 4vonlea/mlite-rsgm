@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>FORMULIR STABILISASI PASIEN SEBELUM TRANSFER - {$data.no_rawat}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 8mm 10mm 8mm 10mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10pt;
+            color: #000;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 15px 0;
+            line-height: 1.35;
+        }
+        .page {
+            width: 195mm;
+            min-height: 275mm;
+            margin: 0 auto;
+            position: relative;
+            background: #fff;
+            padding: 8mm 10mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+        }
+
+        /* Toolbar Layar */
+        .no-print-toolbar {
+            width: 195mm;
+            margin: 0 auto 12px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2c3e50;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-toolbar {
+            padding: 6px 14px;
+            font-size: 13px;
+            border-radius: 3px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #2980b9; color: #fff; }
+        .btn-close { background: #7f8c8d; color: #fff; }
+        .btn-toolbar:hover { opacity: 0.9; }
+
+        /* Bingkai Dokumen Utama Sesuai Format Acuan */
+        .document-frame {
+            border: 2px solid #000;
+            padding: 10px 12px;
+            min-height: 245mm;
+            position: relative;
+        }
+
+        /* Kop Surat RSGM */
+        .header-kop-wrap {
+            border-bottom: 2px solid #000;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .kop-img {
+            width: 100%;
+            max-height: 70px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Judul Dokumen */
+        .doc-title {
+            text-align: center;
+            font-size: 13pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 18px;
+        }
+
+        /* Tabel Identitas 2 Kolom */
+        .patient-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10pt;
+            margin-bottom: 12px;
+        }
+        .patient-table td {
+            padding: 3px 0;
+            vertical-align: top;
+        }
+        .dotted-line {
+            display: inline-block;
+            border-bottom: 1px dotted #333;
+            min-width: 180px;
+            font-weight: bold;
+            padding: 0 4px;
+        }
+        .dotted-line-wide {
+            display: inline-block;
+            border-bottom: 1px dotted #333;
+            min-width: 200px;
+            font-weight: bold;
+            padding: 0 4px;
+        }
+
+        /* Checkbox Kotak Sederhana Sesuai Format Fisik */
+        .check-box-icon {
+            display: inline-block;
+            width: 13px;
+            height: 13px;
+            line-height: 11px;
+            border: 1px solid #000;
+            text-align: center;
+            font-size: 10px;
+            vertical-align: middle;
+            margin-right: 3px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .section-row {
+            margin-bottom: 6px;
+            font-size: 10pt;
+            line-height: 1.5;
+        }
+
+        .monitoring-title {
+            text-align: center;
+            font-size: 11pt;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            margin: 18px 0 10px 0;
+            text-transform: uppercase;
+        }
+
+        /* Tabel Monitoring Tanda-Tanda Vital */
+        .table-monitoring {
+            width: 100%;
+            border: 2px solid #000;
+            border-collapse: collapse;
+            font-size: 9pt;
+        }
+        .table-monitoring th, .table-monitoring td {
+            border: 1.5px solid #000;
+            padding: 4px 6px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .table-monitoring th {
+            font-weight: bold;
+            background: #fff;
+        }
+        .table-monitoring td.col-ket {
+            text-align: left;
+            padding-left: 8px;
+        }
+
+        /* Catatan Kaki */
+        .footer-note-text {
+            color: #b02a37;
+            font-style: italic;
+            font-size: 8pt;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+        .footer-meta-bar {
+            width: 100%;
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8pt;
+            font-weight: bold;
+            color: #222;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                width: 100%;
+                padding: 0;
+                margin: 0;
+            }
+            .no-print, .no-print-toolbar {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body {if: empty($is_mpdf)}onload="if(window.location.search.indexOf('noprint=1')===-1)window.print()"{/if}>
+
+    <!-- Toolbar Layar (Tidak dicetak) -->
+    <div class="no-print-toolbar no-print">
+        <div style="font-size: 13px; font-weight: bold;">
+            Preview Dokumen: Formulir Stabilisasi Pasien Sebelum Transfer ({$data.no_rawat})
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button onclick="window.print()" class="btn-toolbar btn-print">
+                &#128438; Cetak Dokumen
+            </button>
+            <a href="{?=url([ADMIN, 'form_rme', 'stabilisasipasiencetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
+                &#128196; Download PDF
+            </a>
+            <button onclick="window.close()" class="btn-toolbar btn-close">
+                &#10006; Tutup
+            </button>
+        </div>
+    </div>
+
+    <div class="page">
+        <!-- BINGKAI LUAR FORMULIR -->
+        <div class="document-frame">
+
+            <!-- KOP SURAT RSGM -->
+            <div class="header-kop-wrap">
+                <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="RSGM Gusti Hasan Aman" class="kop-img">
+            </div>
+
+            <!-- JUDUL DOKUMEN -->
+            <div class="doc-title">
+                FORMULIR STABILISASI PASIEN SEBELUM TRANSFER
+            </div>
+
+            <!-- IDENTITAS PASIEN & DOKTER/PERAWAT (2 KOLOM) -->
+            <table class="patient-table">
+                <tr>
+                    <td style="width: 120px;">Nama Pasien</td>
+                    <td style="width: 12px;">:</td>
+                    <td style="width: 250px;">
+                        <span class="dotted-line">{$data.nm_pasien}</span>
+                    </td>
+                    <td style="width: 110px;">Nama Perawat</td>
+                    <td style="width: 12px;">:</td>
+                    <td>
+                        <span class="dotted-line-wide">{$data.nama_perawat}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Umur</td>
+                    <td>:</td>
+                    <td>
+                        <span class="dotted-line">{$data.umur_angka} Thn &nbsp;({$data.jk})</span>
+                    </td>
+                    <td>Nama Dokter</td>
+                    <td>:</td>
+                    <td>
+                        <span class="dotted-line-wide">{$data.nama_dokter}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Diagnosa</td>
+                    <td>:</td>
+                    <td colspan="4">
+                        <span style="display: inline-block; border-bottom: 1px dotted #333; width: 85%; font-weight: bold; padding: 0 4px;">
+                            {$data.diagnosa}
+                        </span>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- KONDISI KLINIS PASIEN -->
+            <div class="section-row">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 180px; vertical-align: top;">Keadaan umum</td>
+                        <td style="width: 15px; vertical-align: top;">:</td>
+                        <td>
+                            Tampak sakit
+                            &nbsp;
+                            <span class="check-box-icon">{if: $data.keadaan_umum == 'Ringan'}&#10003;{/if}</span> Ringan
+                            &nbsp;&nbsp;
+                            <span class="check-box-icon">{if: $data.keadaan_umum == 'Sedang'}&#10003;{/if}</span> Sedang
+                            &nbsp;&nbsp;
+                            <span class="check-box-icon">{if: $data.keadaan_umum == 'Berat'}&#10003;{/if}</span> Berat
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">Kesadaran Kuantitatif</td>
+                        <td style="vertical-align: top;">:</td>
+                        <td>
+                            GCS E <strong>{if: !empty($data.gcs_e)}{$data.gcs_e}{else}....{/if}</strong>
+                            V <strong>{if: !empty($data.gcs_v)}{$data.gcs_v}{else}....{/if}</strong>
+                            M <strong>{if: !empty($data.gcs_m)}{$data.gcs_m}{else}....{/if}</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">Kesadaran Kualitatif</td>
+                        <td style="vertical-align: top;">:</td>
+                        <td>
+                            <span class="check-box-icon">{if: $data.kesadaran_kualitatif == 'Compos Mentis'}&#10003;{/if}</span> Compos Mentis
+                            &nbsp;&nbsp;&nbsp;
+                            <span class="check-box-icon">{if: $data.kesadaran_kualitatif == 'Apatis'}&#10003;{/if}</span> Apatis
+                            &nbsp;&nbsp;&nbsp;
+                            <span class="check-box-icon">{if: $data.kesadaran_kualitatif == 'Delirium'}&#10003;{/if}</span> Delirium
+                            &nbsp;&nbsp;&nbsp;
+                            <span class="check-box-icon">{if: $data.kesadaran_kualitatif == 'Somnolen'}&#10003;{/if}</span> Somnolen
+                            <br>
+                            <span class="check-box-icon">{if: $data.kesadaran_kualitatif == 'Stupor'}&#10003;{/if}</span> Stupor
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="check-box-icon">{if: $data.kesadaran_kualitatif == 'Koma'}&#10003;{/if}</span> Koma
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">Pernafasan</td>
+                        <td style="vertical-align: top;">:</td>
+                        <td>
+                            <div style="margin-bottom: 2px;">
+                                <span class="check-box-icon">{if: $data.pernafasan == 'Spontan'}&#10003;{/if}</span> Spontan
+                            </div>
+                            <div style="margin-bottom: 2px;">
+                                <span class="check-box-icon">{if: $data.pernafasan == 'Dengan bantuan O2'}&#10003;{/if}</span> Dengan bantuan O2 : <strong>{if: !empty($data.pernafasan_o2)}{$data.pernafasan_o2}{else}...{/if}</strong> Liter/menit
+                            </div>
+                            <div style="margin-bottom: 2px;">
+                                <span class="check-box-icon">{if: $data.pernafasan == 'ETT'}&#10003;{/if}</span> ETT
+                            </div>
+                            <div style="margin-bottom: 2px;">
+                                <span class="check-box-icon">{if: $data.pernafasan == 'Tracheostomi'}&#10003;{/if}</span> Tracheostomi
+                            </div>
+                            <div>
+                                <span class="check-box-icon">{if: $data.pernafasan == 'Ambu bag'}&#10003;{/if}</span> Ambu bag
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">Pasien menggunakan</td>
+                        <td style="vertical-align: top;">:</td>
+                        <td>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="width: 45%;">
+                                        <span class="check-box-icon">{if: !empty($data.alat_iv_line)}&#10003;{/if}</span> IV Line <strong>{if: !empty($data.alat_iv_line_jalur)}{$data.alat_iv_line_jalur}{else}....{/if}</strong> jalur
+                                    </td>
+                                    <td>
+                                        <span class="check-box-icon">{if: !empty($data.alat_kateter)}&#10003;{/if}</span> Kateter
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="check-box-icon">{if: !empty($data.alat_ngt)}&#10003;{/if}</span> NGT
+                                    </td>
+                                    <td>
+                                        <span class="check-box-icon">{if: !empty($data.alat_lain_lain)}&#10003;{/if}</span> Lain-lain {if: !empty($data.alat_lain_lain)}<strong>{$data.alat_lain_lain}</strong>{else}.....................................{/if}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <span class="check-box-icon">{if: !empty($data.alat_drain)}&#10003;{/if}</span> Drain
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- JUDUL MONITORING -->
+            <div class="monitoring-title">
+                MONITORING TANDA-TANDA VITAL
+            </div>
+
+            <!-- TABEL MONITORING -->
+            <table class="table-monitoring">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="width: 14%;">Jam</th>
+                        <th style="width: 18%;">TD</th>
+                        <th style="width: 16%;">HR</th>
+                        <th style="width: 16%;">RR</th>
+                        <th style="width: 12%;">T</th>
+                        <th rowspan="2" style="width: 24%;">Keterangan<br>(tindakan atau pemberian obat)</th>
+                    </tr>
+                    <tr>
+                        <th>Mm Hg</th>
+                        <th>Kali / mnt</th>
+                        <th>Kali / mnt</th>
+                        <th>°C</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {loop: $data.vital_rows}
+                    <tr style="height: 26px;">
+                        <td><strong>{$value.jam}</strong></td>
+                        <td>{$value.td}</td>
+                        <td>{$value.hr}</td>
+                        <td>{$value.rr}</td>
+                        <td>{$value.t}</td>
+                        <td class="col-ket"><small>{$value.ket}</small></td>
+                    </tr>
+                    {/loop}
+                </tbody>
+            </table>
+
+        </div>
+
+        <!-- CATATAN DI BAWAH BINGKAI -->
+        <div class="footer-note-text">
+            *Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+        </div>
+
+        <!-- FOOTER KODE RESMI DOKUMEN -->
+        <div class="footer-meta-bar">
+            <div>RSGM/Ed-Rev/02/2023</div>
+            <div>RM.RI Lampiran</div>
+        </div>
+    </div>
+
+</body>
+</html>

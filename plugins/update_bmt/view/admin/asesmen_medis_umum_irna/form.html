@@ -4,12 +4,12 @@
             <div class="panel-heading">
                 <h3 class="panel-title">Form Asesmen Medis Umum IRNA</h3>
                 <ul class="nav nav-tabs">
-                    <li><a href="{?=url([ADMIN, 'update_bmt', 'amumanage'])?}">Kelola Data</a></li>
-                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'amuform'])?}">Tambah Data</a></li>
+                    <li><a href="{?=url([ADMIN, 'form_rme', 'amumanage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'form_rme', 'amuform'])?}">Tambah Data</a></li>
                 </ul>
             </div>
             <div class="panel-body">
-                <form action="{?=url([ADMIN, 'update_bmt', 'amusave'])?}" method="post" id="form_amu">
+                <form action="{?=url([ADMIN, 'form_rme', 'amusave'])?}" method="post" id="form_amu">
                     <input type="hidden" name="id" value="{$data.id}">
                     <div class="row">
                         <div class="col-md-6">
@@ -373,7 +373,7 @@
 
                     <hr>
                     <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan Data</button>
-                    <a href="{?=url([ADMIN, 'update_bmt', 'amumanage'])?}" class="btn btn-default">Batal</a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'amumanage'])?}" class="btn btn-default">Batal</a>
                 </form>
             </div>
         </div>
@@ -388,7 +388,7 @@
             return;
         }
         $.ajax({
-            url: "{?=url([ADMIN, 'update_bmt', 'amuform'])?}&ajax_patient=1&no_rawat=" + encodeURIComponent(norwt),
+            url: "{?=url([ADMIN, 'form_rme', 'amuform'])?}&ajax_patient=1&no_rawat=" + encodeURIComponent(norwt),
             type: "GET",
             dataType: "json",
             success: function(res) {

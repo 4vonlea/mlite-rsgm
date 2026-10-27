@@ -1,0 +1,294 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-pencil-square-o"></i> Form Lampiran - Formulir B Catatan Implementasi Manajer Pelayanan Pasien (MPP)</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'form_rme', 'formbmppmanage'])?}"><i class="fa fa-list"></i> Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'form_rme', 'formbmppform'])?}"><i class="fa fa-plus"></i> {if: !empty($data.id)}Edit Data #{?= $data['id'] ?}{else}Tambah Data{/if}</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="formBMpp" method="POST" action="{?=url([ADMIN, 'form_rme', 'formbmppsave'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+
+                    <!-- Informasi Pasien -->
+                    <div class="well well-sm" style="background: #fdfdfd; border-left: 4px solid #337ab7;">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label><strong>No. Rawat / No. RM Pasien <span class="text-danger">*</span></strong></label>
+                                    <div class="input-group">
+                                        <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2025/09/29/000021 atau No RM" required autocomplete="off">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-primary" type="button" id="btnCariPasien"><i class="fa fa-search"></i> Cari</button>
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">Ketik No. Rawat / No. RM lalu tekan Enter atau klik Cari</small>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div id="box_info_pasien" class="alert alert-info no-margin" style="padding: 10px 15px;">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div><strong>Nama Pasien:</strong> <span id="info_nm_pasien">{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}-{/if}</span></div>
+                                            <div><strong>No. RM:</strong> <span id="info_no_rkm_medis">{if: !empty($data.no_rkm_medis)}{$data.no_rkm_medis}{else}-{/if}</span> &nbsp; (<span id="info_jk">{if: !empty($data.jk)}{?= $data['jk'] == 'L' ? 'Laki-Laki' : 'Perempuan' ?}{else}-{/if}</span>)</div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div><strong>Tanggal Lahir / Umur:</strong> <span id="info_tgl_lahir">{if: !empty($data.tgl_lahir)}{$data.tgl_lahir}{else}-{/if}</span> (<span id="info_umur">{if: !empty($data.umur)}{$data.umur}{else}-{/if}</span>)</div>
+                                            <div><strong>Alamat:</strong> <span id="info_alamat">{if: !empty($data.alamat)}{$data.alamat}{else}-{/if}</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Header Petugas MPP -->
+                    <div class="row" style="margin-top: 15px;">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label><strong>Nama Petugas / Manajer Pelayanan Pasien (MPP) <span class="text-danger">*</span></strong></label>
+                                <input type="text" name="nama_mpp" id="nama_mpp" list="list_mpp" class="form-control" value="{$data.nama_mpp}" placeholder="Nama Petugas MPP" required>
+                                <datalist id="list_mpp">
+                                    {loop: $petugas_list}
+                                    <option value="{$value.nama}">{$value.nip} - {$value.nama}</option>
+                                    {/loop}
+                                </datalist>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label><strong>NIP / NIK Petugas MPP</strong></label>
+                                <input type="text" name="nip_mpp" id="nip_mpp" class="form-control" value="{$data.nip_mpp}" placeholder="NIP / NIK Petugas MPP">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FORMULIR B - CATATAN IMPLEMENTASI MPP -->
+                    <div class="panel panel-primary" style="margin-top: 15px;">
+                        <div class="panel-heading">
+                            <strong>CATATAN IMPLEMENTASI MANAJER PELAYANAN PASIEN (MPP)</strong>
+                        </div>
+                        <div class="panel-body">
+                            <!-- I. Pelaksanaan Rencana Pelayanan Pasien -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading" style="background-color: #f7f7f7;">
+                                    <strong>I. Pelaksanaan Rencana Pelayanan Pasien</strong>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Tgl / Jam :</label>
+                                                <input type="text" name="tgl_pelaksanaan_1" class="form-control" value="{$data.tgl_pelaksanaan_1}" placeholder="Contoh: 12-10-2026 10:00">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <div class="form-group">
+                                                <label>Catatan Pelaksanaan Rencana :</label>
+                                                <textarea name="catatan_pelaksanaan" class="form-control" rows="3" placeholder="Catatan pelaksanaan rencana pelayanan pasien...">{$data.catatan_pelaksanaan}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- II. Monitoring Pelayanan -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading" style="background-color: #f7f7f7;">
+                                    <strong>II. Monitoring Pelayanan</strong>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Tgl / Jam :</label>
+                                                <input type="text" name="tgl_monitoring_2" class="form-control" value="{$data.tgl_monitoring_2}" placeholder="Contoh: 12-10-2026 11:30">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <div class="form-group">
+                                                <label>Catatan Monitoring Pelayanan :</label>
+                                                <textarea name="catatan_monitoring" class="form-control" rows="3" placeholder="Catatan monitoring pelayanan...">{$data.catatan_monitoring}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- III. Fasilitasi Pelayanan -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading" style="background-color: #f7f7f7;">
+                                    <strong>III. Fasilitasi Pelayanan</strong>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Tgl / Jam :</label>
+                                                <input type="text" name="tgl_fasilitasi_3" class="form-control" value="{$data.tgl_fasilitasi_3}" placeholder="Contoh: 12-10-2026 13:00">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <div class="form-group">
+                                                <label>Catatan Fasilitasi Pelayanan :</label>
+                                                <textarea name="catatan_fasilitasi" class="form-control" rows="3" placeholder="Catatan fasilitasi pelayanan...">{$data.catatan_fasilitasi}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- IV. Advokasi Pelayanan Pasien -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading" style="background-color: #f7f7f7;">
+                                    <strong>IV. Advokasi Pelayanan Pasien</strong>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Tgl / Jam :</label>
+                                                <input type="text" name="tgl_advokasi_4" class="form-control" value="{$data.tgl_advokasi_4}" placeholder="Contoh: 12-10-2026 14:15">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <div class="form-group">
+                                                <label>Catatan Advokasi Pelayanan :</label>
+                                                <textarea name="catatan_advokasi" class="form-control" rows="3" placeholder="Catatan advokasi pelayanan pasien...">{$data.catatan_advokasi}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- V. Hasil Pelayanan -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading" style="background-color: #f7f7f7;">
+                                    <strong>V. Hasil Pelayanan</strong>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Tgl / Jam :</label>
+                                                <input type="text" name="tgl_hasil_5" class="form-control" value="{$data.tgl_hasil_5}" placeholder="Contoh: 12-10-2026 15:30">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <div class="form-group">
+                                                <label>Catatan Hasil Pelayanan :</label>
+                                                <textarea name="catatan_hasil" class="form-control" rows="3" placeholder="Catatan evaluasi hasil pelayanan...">{$data.catatan_hasil}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- VI. Terminasi Pelayanan Pasien, Catatan Kepuasan Pasien/Keluarga Dengan MPP -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading" style="background-color: #f7f7f7;">
+                                    <strong>VI. Terminasi Pelayanan Pasien, Catatan Kepuasan Pasien/Keluarga Dengan MPP</strong>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Tgl / Jam :</label>
+                                                <input type="text" name="tgl_terminasi_6" class="form-control" value="{$data.tgl_terminasi_6}" placeholder="Contoh: 12-10-2026 16:45">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <div class="form-group">
+                                                <label>Catatan Terminasi Pelayanan &amp; Kepuasan :</label>
+                                                <textarea name="catatan_terminasi" class="form-control" rows="3" placeholder="Catatan terminasi dan evaluasi kepuasan pasien/keluarga terhadap MPP...">{$data.catatan_terminasi}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tanda Tangan & Lokasi -->
+                    <div class="panel panel-default" style="margin-top: 15px;">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Kota</label>
+                                        <input type="text" name="kota" class="form-control" value="{if: !empty($data.kota)}{$data.kota}{else}Banjarmasin{/if}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Tanggal Tanda Tangan</label>
+                                        <input type="date" name="tanggal_ttd" class="form-control" value="{if: !empty($data.tanggal_ttd)}{$data.tanggal_ttd}{else}{?= date('Y-m-d') ?}{/if}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Aksi -->
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e5e5;">
+                        <button type="submit" class="btn btn-primary btn-lg" id="btnSimpan"><i class="fa fa-save"></i> Simpan Data</button>
+                        <a href="{?=url([ADMIN, 'form_rme', 'formbmppmanage'])?}" class="btn btn-default btn-lg">Batal / Kembali</a>
+                        {if: !empty($data.id)}
+                        <a href="{?=url([ADMIN, 'form_rme', 'formbmppcetak'])?}&id={$data.id}" target="_blank" class="btn btn-success btn-lg pull-right" style="margin-left: 5px;"><i class="fa fa-print"></i> Cetak Dokumen</a>
+                        <a href="{?=url([ADMIN, 'form_rme', 'formbmppcetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn btn-info btn-lg pull-right"><i class="fa fa-file-pdf-o"></i> Download PDF</a>
+                        {/if}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$(document).ready(function() {
+    function cariPasien() {
+        var no_rawat = $('#no_rawat').val().trim();
+        if (!no_rawat) {
+            alert('Silakan masukkan No. Rawat atau No. RM terlebih dahulu!');
+            return;
+        }
+
+        $('#btnCariPasien').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url: '{?=url([ADMIN, "form_rme", "formbmppform"])?}',
+            type: 'GET',
+            data: { ajax_patient: 1, no_rawat: no_rawat },
+            dataType: 'json',
+            success: function(res) {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search"></i> Cari');
+                if (res.success) {
+                    $('#no_rawat').val(res.no_rawat);
+                    $('#info_nm_pasien').text(res.nm_pasien || '-');
+                    $('#info_no_rkm_medis').text(res.no_rkm_medis || '-');
+                    $('#info_jk').text(res.jk == 'L' ? 'Laki-Laki' : (res.jk == 'P' ? 'Perempuan' : '-'));
+                    $('#info_tgl_lahir').text(res.tgl_lahir || '-');
+                    $('#info_umur').text(res.umur || '-');
+                    $('#info_alamat').text(res.alamat || '-');
+                } else {
+                    alert('Data pasien tidak ditemukan untuk No. Rawat / RM: ' + no_rawat);
+                }
+            },
+            error: function() {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search"></i> Cari');
+                alert('Terjadi kesalahan saat memuat data pasien.');
+            }
+        });
+    }
+
+    $('#btnCariPasien').click(cariPasien);
+    $('#no_rawat').keypress(function(e) {
+        if (e.which == 13) {
+            e.preventDefault();
+            cariPasien();
+        }
+    });
+});
+</script>

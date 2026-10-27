@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penilaian Kejadian Phlebitis (VIP) - {$data.no_rawat}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 4mm 6mm 4mm 6mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8pt;
+            line-height: 1.18;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
+            background-color: #f5f5f5;
+            padding: 10px 0;
+        }
+        .page {
+            background: #fff;
+            width: 200mm;
+            min-height: 285mm;
+            margin: 0 auto;
+            padding: 4mm 6mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        {/if}
+
+        /* Toolbar Layar */
+        .no-print-toolbar {
+            width: 200mm;
+            margin: 0 auto 10px auto;
+            padding: 8px 12px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+        }
+        .btn-toolbar {
+            padding: 5px 12px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+
+        /* HEADER 2 KOLOM: KOP DAN KOTAK PASIEN */
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1.5px solid #000;
+        }
+        .header-table td {
+            padding: 3px 5px;
+            vertical-align: middle;
+        }
+        .header-left {
+            width: 58%;
+            border-right: 1.5px solid #000;
+            padding: 2px !important;
+            text-align: center;
+        }
+        .header-left img.kop-img {
+            width: 100%;
+            max-height: 65px;
+            object-fit: contain;
+        }
+        .header-right {
+            width: 42%;
+            font-size: 8pt;
+            vertical-align: top !important;
+            padding: 4px 6px !important;
+        }
+        /* KOTAK NO RM */
+        .rm-digit-cell {
+            border: 1px solid #000;
+            width: 14px;
+            height: 16px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 8.5pt;
+            padding: 0;
+            vertical-align: middle;
+        }
+
+        /* JUDUL FORMULIR */
+        .title-box {
+            border-left: 1.5px solid #000;
+            border-right: 1.5px solid #000;
+            border-bottom: 1.5px solid #000;
+            padding: 4px 2px;
+            text-align: center;
+            font-weight: bold;
+            position: relative;
+        }
+        .title-main {
+            font-size: 9.5pt;
+            letter-spacing: 0.5px;
+        }
+        .title-sub {
+            font-size: 8pt;
+            letter-spacing: 0.5px;
+            margin-top: 1px;
+        }
+        .watermark-c {
+            display: inline-block;
+            font-size: 8pt;
+            border: 1px solid #777;
+            border-radius: 50%;
+            width: 13px;
+            height: 13px;
+            line-height: 12px;
+            text-align: center;
+            color: #555;
+            margin-top: 1px;
+        }
+
+        /* SUBTITLE DIISI OLEH PERAWAT */
+        .sub-header-nurse {
+            font-size: 7.5pt;
+            font-weight: bold;
+            padding: 4px 1px 2px 1px;
+            text-align: left;
+        }
+
+        /* TABEL UTAMA VIP */
+        .vip-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1.5px solid #000;
+            font-size: 7.5pt;
+        }
+        .vip-table th, .vip-table td {
+            border: 1px solid #000;
+            padding: 3px 3px;
+        }
+        .vip-table th {
+            text-align: center;
+            font-weight: bold;
+            vertical-align: middle;
+            background-color: #fff;
+        }
+        .col-day-hdr {
+            text-align: center;
+            font-size: 7pt;
+            font-weight: bold;
+            padding: 2px 1px !important;
+            width: 5.7%;
+        }
+        .param-cell {
+            vertical-align: top;
+            line-height: 1.25;
+            padding-left: 5px;
+        }
+        .param-bullet {
+            padding-left: 6px;
+            margin: 0;
+            list-style-type: none;
+        }
+        .param-bullet li {
+            position: relative;
+            padding-left: 8px;
+        }
+        .param-bullet li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+        }
+        .check-cell {
+            text-align: center;
+            vertical-align: middle;
+            font-weight: bold;
+            font-size: 10pt;
+            padding: 0 !important;
+        }
+        .total-skor-label {
+            font-weight: bold;
+            font-size: 8pt;
+            text-align: left;
+            padding-left: 6px !important;
+            vertical-align: middle;
+        }
+        .total-skor-val {
+            text-align: center;
+            font-weight: bold;
+            font-size: 8.5pt;
+            vertical-align: middle;
+        }
+        .petugas-label {
+            font-weight: bold;
+            font-size: 7.5pt;
+            text-align: left;
+            padding-left: 6px !important;
+            vertical-align: middle;
+            line-height: 1.15;
+        }
+        .petugas-val {
+            text-align: center;
+            font-size: 6.5pt;
+            vertical-align: middle;
+            line-height: 1.1;
+            padding: 2px 1px !important;
+            word-break: break-word;
+        }
+
+        /* SECTION KETERANGAN & INTERVENSI DI BAWAH TABEL */
+        .legend-box {
+            border-left: 1.5px solid #000;
+            border-right: 1.5px solid #000;
+            border-bottom: 1.5px solid #000;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .legend-box td {
+            vertical-align: top;
+            padding: 6px 10px;
+            border: none;
+        }
+        .legend-title {
+            font-weight: bold;
+            font-size: 8pt;
+            margin-bottom: 4px;
+        }
+        .legend-text {
+            font-size: 7.5pt;
+            line-height: 1.35;
+        }
+
+        /* FOOTER CATATAN MERAH */
+        .footer-note-text {
+            color: #c0392b;
+            font-style: italic;
+            font-size: 7pt;
+            text-align: right;
+            padding-top: 3px;
+            padding-right: 2px;
+        }
+        .footer-meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+            font-size: 7pt;
+            font-weight: bold;
+            color: #222;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                width: 100%;
+                padding: 0;
+                margin: 0;
+            }
+            .no-print, .no-print-toolbar {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body {if: empty($is_mpdf)}onload="if(window.location.search.indexOf('noprint=1')===-1)window.print()"{/if}>
+
+    {if: empty($is_mpdf)}
+    <!-- Toolbar Layar (Otomatis tersembunyi saat dicetak) -->
+    <table class="no-print-toolbar no-print" style="width: 200mm; margin: 0 auto 10px auto;">
+        <tr>
+            <td style="font-size: 12px; font-weight: bold; color: #fff;">
+                Preview Cetak: Penilaian Kejadian Phlebitis (VIP) - {$data.no_rawat}
+            </td>
+            <td style="text-align: right;">
+                <button onclick="window.print()" class="btn-toolbar btn-print">
+                    &#128438; Cetak Dokumen
+                </button>
+                <a href="{?=url([ADMIN, 'form_rme', 'penilaianphlebitiscetak', $data.id])?}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
+                    &#128196; Download PDF
+                </a>
+                <button onclick="window.close()" class="btn-toolbar btn-close">
+                    &#10006; Tutup
+                </button>
+            </td>
+        </tr>
+    </table>
+    {/if}
+
+    {if: empty($is_mpdf)}
+    <div class="page">
+    {/if}
+
+        <!-- 1. KOP SURAT DAN KOTAK IDENTITAS PASIEN -->
+        <table class="header-table">
+            <tr>
+                <td class="header-left">
+                    <img src="{$data.kop_img}" alt="Kop Surat RSGM Gusti Hasan Aman" class="kop-img">
+                </td>
+                <td class="header-right">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
+                        <tr>
+                            <td style="width: 80px; padding: 2px 0;">No RM</td>
+                            <td style="width: 8px;">:</td>
+                            <td>
+                                <table style="border-collapse: collapse; display: inline-table; vertical-align: middle;">
+                                    <tr>
+                                        <td class="rm-digit-cell">{$data.rm0}</td>
+                                        <td style="width: 2px; border: none; padding: 0;"></td>
+                                        <td class="rm-digit-cell">{$data.rm1}</td>
+                                        <td style="width: 2px; border: none; padding: 0;"></td>
+                                        <td class="rm-digit-cell">{$data.rm2}</td>
+                                        <td style="width: 2px; border: none; padding: 0;"></td>
+                                        <td class="rm-digit-cell">{$data.rm3}</td>
+                                        <td style="width: 2px; border: none; padding: 0;"></td>
+                                        <td class="rm-digit-cell">{$data.rm4}</td>
+                                        <td style="width: 2px; border: none; padding: 0;"></td>
+                                        <td class="rm-digit-cell">{$data.rm5}</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 2px 0;">Nama Pasien</td>
+                            <td>:</td>
+                            <td style="font-weight: bold; border-bottom: 1px dotted #333;">
+                                {$data.nm_pasien} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {if: $data.jk == 'L'}<u>L</u> / P{elseif: $data.jk == 'P'}L / <u>P</u>{else}L / P{/if}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 2px 0;">Tanggal Lahir</td>
+                            <td>:</td>
+                            <td style="border-bottom: 1px dotted #333;">
+                                {$data.tgl_lahir_indo} &nbsp; ({$data.umur})
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <!-- 2. JUDUL DOKUMEN -->
+        <div class="title-box">
+            <div class="title-main">PENILAIAN KEJADIAN PHLEIBITIS</div>
+            <div class="title-sub">(VISUAL INFUSION PHLEIBITIS / VIP)</div>
+            <div class="watermark-c">&copy;</div>
+        </div>
+
+        <!-- 3. SUBTITLE -->
+        <div class="sub-header-nurse">
+            Diisi Oleh Perawat
+        </div>
+
+        <!-- 4. TABEL UTAMA VIP -->
+        <table class="vip-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 4%;">No</th>
+                    <th rowspan="2" style="width: 38%;">Parameter</th>
+                    <th rowspan="2" style="width: 6%;">Skor</th>
+                    <th colspan="9" style="width: 52%; padding: 2px 0;">Skor Hari Perawatan Ke</th>
+                </tr>
+                <tr>
+                    <th class="col-day-hdr">1<br><span style="font-weight: normal; font-size: 6.5pt;">{$data.h1_tgl_label}</span></th>
+                    <th class="col-day-hdr">2<br><span style="font-weight: normal; font-size: 6.5pt;">{$data.h2_tgl_label}</span></th>
+                    <th class="col-day-hdr">3<br><span style="font-weight: normal; font-size: 6.5pt;">{$data.h3_tgl_label}</span></th>
+                    <th class="col-day-hdr">4<br><span style="font-weight: normal; font-size: 6.5pt;">{$data.h4_tgl_label}</span></th>
+                    <th class="col-day-hdr">5<br><span style="font-weight: normal; font-size: 6.5pt;">{$data.h5_tgl_label}</span></th>
+                    <th class="col-day-hdr">6<br><span style="font-weight: normal; font-size: 6.5pt;">{$data.h6_tgl_label}</span></th>
+                    <th class="col-day-hdr">7<br><span style="font-weight: normal; font-size: 6.5pt;">{$data.h7_tgl_label}</span></th>
+                    <th class="col-day-hdr">8<br><span style="font-weight: normal; font-size: 6.5pt;">{$data.h8_tgl_label}</span></th>
+                    <th class="col-day-hdr">9<br><span style="font-weight: normal; font-size: 6.5pt;">{$data.h9_tgl_label}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- BARIS PARAMETER 1 -->
+                <tr>
+                    <td style="text-align: center; vertical-align: middle;">1</td>
+                    <td class="param-cell">IV Line nampak sehat</td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: bold;">0</td>
+                    <td class="check-cell">{$data.h1_p1}</td>
+                    <td class="check-cell">{$data.h2_p1}</td>
+                    <td class="check-cell">{$data.h3_p1}</td>
+                    <td class="check-cell">{$data.h4_p1}</td>
+                    <td class="check-cell">{$data.h5_p1}</td>
+                    <td class="check-cell">{$data.h6_p1}</td>
+                    <td class="check-cell">{$data.h7_p1}</td>
+                    <td class="check-cell">{$data.h8_p1}</td>
+                    <td class="check-cell">{$data.h9_p1}</td>
+                </tr>
+
+                <!-- BARIS PARAMETER 2 -->
+                <tr>
+                    <td style="text-align: center; vertical-align: middle;">2</td>
+                    <td class="param-cell">
+                        Salah satu tanda-tanda berikut jelas
+                        <ul class="param-bullet">
+                            <li>Sedikit nyeri dekat IV Line</li>
+                            <li>Sedikit kemerahan dekat IV Line</li>
+                        </ul>
+                    </td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: bold;">1</td>
+                    <td class="check-cell">{$data.h1_p2}</td>
+                    <td class="check-cell">{$data.h2_p2}</td>
+                    <td class="check-cell">{$data.h3_p2}</td>
+                    <td class="check-cell">{$data.h4_p2}</td>
+                    <td class="check-cell">{$data.h5_p2}</td>
+                    <td class="check-cell">{$data.h6_p2}</td>
+                    <td class="check-cell">{$data.h7_p2}</td>
+                    <td class="check-cell">{$data.h8_p2}</td>
+                    <td class="check-cell">{$data.h9_p2}</td>
+                </tr>
+
+                <!-- BARIS PARAMETER 3 -->
+                <tr>
+                    <td style="text-align: center; vertical-align: middle;">3</td>
+                    <td class="param-cell">
+                        Dua dari tanda berikut jelas
+                        <ul class="param-bullet">
+                            <li>Nyeri pada IV Line</li>
+                            <li>Kemerahan</li>
+                            <li>Pembengkakan</li>
+                        </ul>
+                    </td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: bold;">2</td>
+                    <td class="check-cell">{$data.h1_p3}</td>
+                    <td class="check-cell">{$data.h2_p3}</td>
+                    <td class="check-cell">{$data.h3_p3}</td>
+                    <td class="check-cell">{$data.h4_p3}</td>
+                    <td class="check-cell">{$data.h5_p3}</td>
+                    <td class="check-cell">{$data.h6_p3}</td>
+                    <td class="check-cell">{$data.h7_p3}</td>
+                    <td class="check-cell">{$data.h8_p3}</td>
+                    <td class="check-cell">{$data.h9_p3}</td>
+                </tr>
+
+                <!-- BARIS PARAMETER 4 -->
+                <tr>
+                    <td style="text-align: center; vertical-align: middle;">4</td>
+                    <td class="param-cell">
+                        Semua tanda-tanda berikut ini adalah jelas
+                        <ul class="param-bullet">
+                            <li>Nyeri sepanjang kanul</li>
+                            <li>Kemerahan</li>
+                            <li>Pembengkakan</li>
+                        </ul>
+                    </td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: bold;">3</td>
+                    <td class="check-cell">{$data.h1_p4}</td>
+                    <td class="check-cell">{$data.h2_p4}</td>
+                    <td class="check-cell">{$data.h3_p4}</td>
+                    <td class="check-cell">{$data.h4_p4}</td>
+                    <td class="check-cell">{$data.h5_p4}</td>
+                    <td class="check-cell">{$data.h6_p4}</td>
+                    <td class="check-cell">{$data.h7_p4}</td>
+                    <td class="check-cell">{$data.h8_p4}</td>
+                    <td class="check-cell">{$data.h9_p4}</td>
+                </tr>
+
+                <!-- BARIS PARAMETER 5 -->
+                <tr>
+                    <td style="text-align: center; vertical-align: middle;">5</td>
+                    <td class="param-cell">
+                        Semua tanda-tanda berikut ini adalah jelas
+                        <ul class="param-bullet">
+                            <li>Nyeri sepanjang kanul</li>
+                            <li>Kemerahan</li>
+                            <li>Pembengkakan</li>
+                            <li>Vena teraba keras</li>
+                        </ul>
+                    </td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: bold;">5</td>
+                    <td class="check-cell">{$data.h1_p5}</td>
+                    <td class="check-cell">{$data.h2_p5}</td>
+                    <td class="check-cell">{$data.h3_p5}</td>
+                    <td class="check-cell">{$data.h4_p5}</td>
+                    <td class="check-cell">{$data.h5_p5}</td>
+                    <td class="check-cell">{$data.h6_p5}</td>
+                    <td class="check-cell">{$data.h7_p5}</td>
+                    <td class="check-cell">{$data.h8_p5}</td>
+                    <td class="check-cell">{$data.h9_p5}</td>
+                </tr>
+
+                <!-- BARIS PARAMETER 6 -->
+                <tr>
+                    <td style="text-align: center; vertical-align: middle;">6</td>
+                    <td class="param-cell">
+                        Semua tanda-tanda berikut ini adalah jelas
+                        <ul class="param-bullet">
+                            <li>Nyeri sepanjang kanul</li>
+                            <li>Kemerahan</li>
+                            <li>Pembengkakan</li>
+                            <li>Vena teraba keras</li>
+                            <li>Periksia</li>
+                        </ul>
+                    </td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: bold;">6</td>
+                    <td class="check-cell">{$data.h1_p6}</td>
+                    <td class="check-cell">{$data.h2_p6}</td>
+                    <td class="check-cell">{$data.h3_p6}</td>
+                    <td class="check-cell">{$data.h4_p6}</td>
+                    <td class="check-cell">{$data.h5_p6}</td>
+                    <td class="check-cell">{$data.h6_p6}</td>
+                    <td class="check-cell">{$data.h7_p6}</td>
+                    <td class="check-cell">{$data.h8_p6}</td>
+                    <td class="check-cell">{$data.h9_p6}</td>
+                </tr>
+
+                <!-- BARIS TOTAL SKOR -->
+                <tr>
+                    <td colspan="3" class="total-skor-label">TOTAL SKOR</td>
+                    <td class="total-skor-val">{$data.h1_skor}</td>
+                    <td class="total-skor-val">{$data.h2_skor}</td>
+                    <td class="total-skor-val">{$data.h3_skor}</td>
+                    <td class="total-skor-val">{$data.h4_skor}</td>
+                    <td class="total-skor-val">{$data.h5_skor}</td>
+                    <td class="total-skor-val">{$data.h6_skor}</td>
+                    <td class="total-skor-val">{$data.h7_skor}</td>
+                    <td class="total-skor-val">{$data.h8_skor}</td>
+                    <td class="total-skor-val">{$data.h9_skor}</td>
+                </tr>
+
+                <!-- BARIS NAMA & PARAF -->
+                <tr style="height: 38px;">
+                    <td colspan="3" class="petugas-label">Nama & Paraf yang Melakukan Penilaian</td>
+                    <td class="petugas-val">{$data.h1_petugas}</td>
+                    <td class="petugas-val">{$data.h2_petugas}</td>
+                    <td class="petugas-val">{$data.h3_petugas}</td>
+                    <td class="petugas-val">{$data.h4_petugas}</td>
+                    <td class="petugas-val">{$data.h5_petugas}</td>
+                    <td class="petugas-val">{$data.h6_petugas}</td>
+                    <td class="petugas-val">{$data.h7_petugas}</td>
+                    <td class="petugas-val">{$data.h8_petugas}</td>
+                    <td class="petugas-val">{$data.h9_petugas}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- 5. KETERANGAN SKALA DAN INTERVENSI -->
+        <table class="legend-box">
+            <tr>
+                <td style="width: 50%; padding-top: 8px;">
+                    <div class="legend-title">KETERANGAN SKALA PHLEBITIS</div>
+                    <table style="width: 100%; font-size: 7.5pt; line-height: 1.45; border-collapse: collapse;">
+                        <tr>
+                            <td style="width: 40px; padding: 1px 0; vertical-align: top;">0</td>
+                            <td style="width: 15px; padding: 1px 0; vertical-align: top;">=</td>
+                            <td style="padding: 1px 0;">Tidak ada tanda phlebitis</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 1px 0; vertical-align: top;">1-2</td>
+                            <td style="padding: 1px 0; vertical-align: top;">=</td>
+                            <td style="padding: 1px 0;">Tahap awal phlebitis</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 1px 0; vertical-align: top;">3-4</td>
+                            <td style="padding: 1px 0; vertical-align: top;">=</td>
+                            <td style="padding: 1px 0;">Awal trombophlebitis</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 1px 0; vertical-align: top;">5</td>
+                            <td style="padding: 1px 0; vertical-align: top;">=</td>
+                            <td style="padding: 1px 0;">Stadium lanjut trombophlebitis</td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 50%; padding-top: 8px;">
+                    <div class="legend-title">Intervensi:</div>
+                    <ol style="margin: 0; padding-left: 18px; font-size: 7.5pt; line-height: 1.45;">
+                        <li>Observasi kanul</li>
+                        <li>Resite kanul</li>
+                        <li>Resite kanul dan pertimbangkan perawatan</li>
+                        <li>Memulai perawatan</li>
+                    </ol>
+                </td>
+            </tr>
+        </table>
+
+        <!-- 6. CATATAN KERJA SAMA (MERAH KURSIP) -->
+        <table style="width: 100%; border-collapse: collapse; margin-top: 4px;">
+            <tr>
+                <td class="footer-note-text">
+                    Terima kasih atas kerja sama anda telah mengisi formulir ini dengan benar dan jelas
+                </td>
+            </tr>
+        </table>
+
+        <!-- 7. FOOTER KODE RESMI DOKUMEN -->
+        <table class="footer-meta-table">
+            <tr>
+                <td style="text-align: left; width: 50%;">RSGM/Ed-Rev/02/2023</td>
+                <td style="text-align: right; width: 50%;">RM.RI Lampiran</td>
+            </tr>
+        </table>
+
+    {if: empty($is_mpdf)}
+    </div>
+    {/if}
+
+</body>
+</html>

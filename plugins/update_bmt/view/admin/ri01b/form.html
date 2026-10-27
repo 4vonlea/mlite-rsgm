@@ -4,12 +4,12 @@
             <div class="panel-heading">
                 <h3 class="panel-title">Form Hak dan Kewajiban Pasien (RM.RI 01B)</h3>
                 <ul class="nav nav-tabs">
-                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri01bmanage'])?}">Kelola Data</a></li>
-                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri01bform'])?}">Form Data</a></li>
+                    <li><a href="{?=url([ADMIN, 'form_rme', 'ri01bmanage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'form_rme', 'ri01bform'])?}">Form Data</a></li>
                 </ul>
             </div>
             <div class="panel-body">
-                <form action="{?=url([ADMIN, 'update_bmt', 'ri01bsave'])?}" method="post">
+                <form action="{?=url([ADMIN, 'form_rme', 'ri01bsave'])?}" method="post">
                     <input type="hidden" name="id" value="{$data.id}">
                     <div class="form-group">
                         <label>No. Rawat</label>
@@ -57,7 +57,7 @@
                     </div>
 
                     <button type="submit" class="btn btn-primary">Simpan</button>
-                    <a href="{?=url([ADMIN, 'update_bmt', 'ri01bmanage'])?}" class="btn btn-default">Kembali</a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'ri01bmanage'])?}" class="btn btn-default">Kembali</a>
                 </form>
             </div>
         </div>
@@ -70,7 +70,7 @@
     $(document).ready(function() {
         $('.f-nama_pemberi_edukasi').select2({
             ajax: {
-                url: "{?=url([ADMIN, 'update_bmt', 'ri01bform'])?}&ajax_pegawai=1",
+                url: "{?=url([ADMIN, 'form_rme', 'ri01bform'])?}&ajax_pegawai=1",
                 dataType: 'json', delay: 250,
                 processResults: function (data) { return { results: data.results }; },
                 cache: true
@@ -91,7 +91,7 @@
         var no_rawat = $('#no_rawat').val();
         if (no_rawat) {
             $.ajax({
-                url: '{?=url([ADMIN, "update_bmt", "ri01bform"])?}',
+                url: '{?=url([ADMIN, "form_rme", "ri01bform"])?}',
                 type: 'GET',
                 data: {
                     ajax_patient: 1,

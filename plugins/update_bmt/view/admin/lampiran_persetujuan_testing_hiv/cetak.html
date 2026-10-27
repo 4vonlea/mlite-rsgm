@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Persetujuan Untuk Testing HIV - {$data.no_rawat}</title>
+    <style>
+        {if: empty($is_mpdf)}
+        @page {
+            size: A4 portrait;
+            margin: 12mm 15mm 12mm 15mm;
+        }
+        {/if}
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10pt;
+            line-height: 1.45;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
+            background-color: #f4f6f9;
+            padding: 20px 0;
+        }
+        .page {
+            background: #fff;
+            width: 195mm;
+            min-height: 275mm;
+            margin: 0 auto;
+            padding: 15mm 18mm 15mm 18mm;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        {/if}
+
+        /* Toolbar Layar Browser */
+        .no-print-toolbar {
+            width: 195mm;
+            margin: 0 auto 12px auto;
+            padding: 8px 14px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+        }
+        .btn-toolbar {
+            padding: 5px 12px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+
+        /* HEADER TABEL KOP & IDENTITAS PASIEN */
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+        }
+        .header-table td {
+            vertical-align: middle;
+        }
+        .header-kop {
+            width: 60%;
+            text-align: center;
+            padding-right: 12px;
+        }
+        .header-kop img {
+            width: 100%;
+            max-height: 75px;
+            object-fit: contain;
+        }
+        .header-pasien {
+            width: 40%;
+            font-size: 8.5pt;
+            padding-left: 8px;
+            vertical-align: top;
+        }
+        .header-pasien table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .header-pasien td {
+            padding: 2px 0;
+            vertical-align: top;
+            font-size: 8.5pt;
+        }
+
+        /* KOTAK DIGIT RM */
+        .rm-digit-box {
+            display: inline-block;
+            width: 16px;
+            height: 18px;
+            border: 1.2px solid #000;
+            text-align: center;
+            line-height: 17px;
+            font-weight: bold;
+            font-size: 9pt;
+            margin-right: 1px;
+        }
+
+        /* JUDUL FORMULIR */
+        .doc-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 12.5pt;
+            margin-top: 15px;
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
+        }
+
+        /* META KLIEN & TANGGAL */
+        .client-meta {
+            margin-bottom: 14px;
+            font-size: 10pt;
+            line-height: 1.5;
+        }
+
+        /* PARAGRAF KLAUSUL */
+        .clause-p {
+            text-align: justify;
+            margin-bottom: 10px;
+            line-height: 1.45;
+            font-size: 9.8pt;
+        }
+
+        /* DAFTAR a-f */
+        .list-counseling {
+            margin-top: 4px;
+            margin-bottom: 10px;
+            padding-left: 20px;
+            font-size: 9.8pt;
+            line-height: 1.45;
+        }
+        .list-counseling li {
+            margin-bottom: 2px;
+            text-align: justify;
+        }
+
+        /* TANDA TANGAN 2 KOLOM */
+        .sig-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            font-size: 10pt;
+        }
+        .sig-table td {
+            width: 50%;
+            text-align: center;
+            vertical-align: top;
+        }
+
+        .dot-line {
+            letter-spacing: 1px;
+            font-size: 8.5pt;
+        }
+
+        /* FOOTNOTE */
+        .footnote-kerjasama {
+            text-align: right;
+            font-size: 6.8pt;
+            font-style: italic;
+            margin-top: 25px;
+            color: #333;
+        }
+
+        .form-footer-table {
+            width: 100%;
+            margin-top: 6px;
+            font-size: 7.5pt;
+            border-collapse: collapse;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: #fff !important;
+                padding: 0 !important;
+            }
+            .page {
+                box-shadow: none !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+{if: empty($is_mpdf)}
+<div class="no-print no-print-toolbar">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <strong style="font-size: 13px;"><i class="fa fa-heartbeat"></i> Persetujuan Untuk Testing HIV</strong>
+            <span style="font-size: 11px; opacity: 0.8; margin-left: 10px;">(Format Resmi Rekam Medis RSGM Gusti Hasan Aman)</span>
+        </div>
+        <div>
+            <button onclick="window.print()" class="btn-toolbar btn-print">&#128438; Cetak Dokumen</button>
+            <a href="?pdf=1" target="_blank" class="btn-toolbar btn-pdf">&#128196; Download PDF</a>
+            <button onclick="window.close()" class="btn-toolbar btn-close">&#10006; Tutup</button>
+        </div>
+    </div>
+</div>
+{/if}
+
+<div class="page">
+
+    <!-- HEADER: KOP & IDENTITAS PASIEN -->
+    <table class="header-table">
+        <tr>
+            <td class="header-kop">
+                {if: !empty($data.kop_img)}
+                <img src="{$data.kop_img}" alt="KOP RSGM Gusti Hasan Aman">
+                {else}
+                <div style="font-weight: bold; font-size: 10.5pt;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+                <div style="font-weight: bold; font-size: 12.5pt;">RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</div>
+                <div style="font-size: 7.5pt;">Jl. Simpang Ulin Nomor 28 Banjarmasin Kode Pos 70233 Telp/Fax: (0511) 3260818</div>
+                <div style="font-size: 7.5pt;">Email: rsgmgustihasanaman@yahoo.com</div>
+                {/if}
+            </td>
+            <td class="header-pasien">
+                <table>
+                    <tr>
+                        <td style="width: 85px;">No RM</td>
+                        <td style="width: 10px;">:</td>
+                        <td>
+                            <span class="rm-digit-box">{$data.rm0}</span>
+                            <span class="rm-digit-box">{$data.rm1}</span>
+                            <span class="rm-digit-box">{$data.rm2}</span>
+                            <span class="rm-digit-box">{$data.rm3}</span>
+                            <span class="rm-digit-box">{$data.rm4}</span>
+                            <span class="rm-digit-box">{$data.rm5}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Nama Pasien</td>
+                        <td>:</td>
+                        <td>
+                            <strong>{$data.nama_pasien}</strong>
+                            <span style="margin-left: 4px;">{if: $data.jk == 'L' || $data.jk == 'Laki-laki'}(L){else}(P){/if}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Tanggal Lahir</td>
+                        <td>:</td>
+                        <td>{$data.tgl_lahir_pasien_indo}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- JUDUL DOKUMEN -->
+    <div class="doc-title">
+        PERSETUJUAN UNTUK TESTING HIV
+    </div>
+
+    <!-- KODE KLIEN & TANGGAL -->
+    <div class="client-meta">
+        <div>Kode Klien : <strong>{$data.kode_klien}</strong></div>
+        <div>Tanggal : <strong>{$data.tanggal_indo}</strong></div>
+    </div>
+
+    <!-- KLAUSUL 1: INFORMASI HAK PASIEN -->
+    <div class="clause-p">
+        Sebelum menandatangani formulir persetujuan ini, harap mengetahui bahwa :<br>
+        Anda mempunyai hak untuk berpartisipasi didalam pemeriksaan dengan dasar kerahasiaan. Anda mempunyai hak untuk menarik persetujuan dari testing sebelum pemeriksaan tersebut dilangsungkan.
+    </div>
+
+    <!-- KLAUSUL 2: MATERI KONSELING (a - f) -->
+    <div class="clause-p" style="margin-bottom: 2px;">
+        Saya telah menerima informasi dan konseling menyangkut hal-hal berikut ini :
+    </div>
+    <ol type="a" class="list-counseling">
+        <li>Keberadaan dan kegunaan dari testing HIV</li>
+        <li>Tujuan dan kegunaan dari testing HIV</li>
+        <li>Apa yang dapat dan tidak dapat diberitahukan dari testing HIV</li>
+        <li>Keuntungan serta resiko dari testing HIV dan dari mengetahui hasil testing saya</li>
+        <li>Pemahaman dari positif, negatif, false negatif, false positif, dan hasil tes intermediate serta dampak dari masa jendela</li>
+        <li>Pengukuran untuk pencegahan dari pemaparan dan penularan akan HIV</li>
+    </ol>
+
+    <!-- KLAUSUL 3: KESEPAKATAN SUKARELA -->
+    <div class="clause-p">
+        Saya dengan sukarela menyetujui untuk menjalani testing pemeriksaan HIV dengan ketentuan bahwa hasil tes tersebut akan tetap rahasia dan terbuka hanya kepada sayaseorang. Saya menyetujui untuk menerima pelayanan konseling setelah menjalani testing pemeriksaan untuk mendiskusikan hasil hasil testing HIV saya dan- cara cara untuk mengurangi resiko untuk terkena HIV atau menyebarluaskan HIV kepada orang lain untuk waktu kedepannya.
+    </div>
+
+    <!-- KLAUSUL 4: KEBEBASAN KEPUTUSAN -->
+    <div class="clause-p">
+        Saya mengerti bahwa pelayanan kesehatan saya pada klinik ini tidak akan mempengaruhi keputusan saya secara negatif terhadap testing atau tidak menjalani testing atau hasil dari testing HIV saya.
+    </div>
+
+    <!-- KLAUSUL 5: KESEMPATAN BERTANYA -->
+    <div class="clause-p">
+        Saya telah diberikan kesempatan untuk bertanya dan pertanyaan saya ini telah diberikan jawaban yang memuaskan saya.
+    </div>
+
+    <!-- KLAUSUL 6: IZIN PELAKSANAAN TESTING PADA TANGGAL -->
+    <div class="clause-p" style="margin-top: 12px; margin-bottom: 20px;">
+        Saya, dengan ini mengizinkan testing/pemeriksaan HIV untuk dilaksanakan pada tanggal: <strong>{$data.tanggal_pelaksanaan_indo}</strong>
+    </div>
+
+    <!-- TANDA TANGAN 2 KOLOM: PASIEN & KONSELOR -->
+    <table class="sig-table">
+        <tr>
+            <td>
+                Pasien
+                <div style="height: 65px;"></div>
+                <div class="dot-line">..................................................</div>
+                <div style="font-weight: bold; margin-top: 4px;">( {$data.nama_pasien} )</div>
+            </td>
+            <td>
+                Konselor
+                <div style="height: 65px;"></div>
+                <div class="dot-line">..................................................</div>
+                <div style="font-weight: bold; margin-top: 4px;">( {if: !empty($data.nama_konselor)}{$data.nama_konselor}{else}..................................................{/if} )</div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- FOOTNOTE RESMI -->
+    <div class="footnote-kerjasama">
+        Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+    </div>
+
+    <!-- KODE FORMULIR -->
+    <table class="form-footer-table">
+        <tr>
+            <td style="text-align: left; width: 50%;">RSGM/Ed-Rev/02/2023</td>
+            <td style="text-align: right; width: 50%;">RM.RI Lampiran</td>
+        </tr>
+    </table>
+
+</div>
+
+</body>
+</html>

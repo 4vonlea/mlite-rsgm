@@ -4,8 +4,8 @@
             <div class="panel-heading">
                 <h3 class="panel-title">Data Hak dan Kewajiban Pasien (RM.RI 01B)</h3>
                 <ul class="nav nav-tabs">
-                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri01bmanage'])?}">Kelola Data</a></li>
-                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri01bform'])?}">Tambah Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'form_rme', 'ri01bmanage'])?}">Kelola Data</a></li>
+                    <li><a href="{?=url([ADMIN, 'form_rme', 'ri01bform'])?}">Tambah Data</a></li>
                 </ul>
             </div>
             <div class="panel-body">
@@ -25,12 +25,13 @@
                             <tr>
                                 <td>{$value.no_rawat}</td>
                                 <td>{$value.no_rkm_medis}</td>
-                                <td>{$value.nm_pasien}</td>
+                                <td>{if: !empty($value.nama_pasien)}{$value.nama_pasien}{elseif: !empty($value.nm_pasien)}{$value.nm_pasien}{else}-{/if}</td>
                                 <td>{$value.tanggal_jam}</td>
                                 <td>
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ri01bcetak', '?id='.$value.id])?}" class="btn btn-info btn-xs" target="_blank"><i class="fa fa-print"></i></a>
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ri01bform', '?id='.$value.id])?}" class="btn btn-warning btn-xs"><i class="fa fa-edit"></i></a>
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ri01bhapus', '?id='.$value.id])?}" class="btn btn-danger btn-xs" onclick="return confirm('Hapus data ini?');"><i class="fa fa-trash"></i></a>
+                                    <a href="{?=url([ADMIN, 'form_rme', 'ri01bcetak', '?id='.$value.id])?}" class="btn btn-info btn-xs" target="_blank"><i class="fa fa-print"></i></a>
+                                    <a href="{?=url([ADMIN, 'form_rme', 'ri01bcetak', '?id='.$value.id])?}&pdf=1" class="btn btn-xs btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
+                                    <a href="{?=url([ADMIN, 'form_rme', 'ri01bform', '?id='.$value.id])?}" class="btn btn-warning btn-xs"><i class="fa fa-edit"></i></a>
+                                    <a href="{?=url([ADMIN, 'form_rme', 'ri01bhapus', '?id='.$value.id])?}" class="btn btn-danger btn-xs" onclick="return confirm('Hapus data ini?');"><i class="fa fa-trash"></i></a>
                                 </td>
                             </tr>
                             {/loop}

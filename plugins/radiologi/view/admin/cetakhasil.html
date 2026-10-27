@@ -176,6 +176,10 @@ function KirimWA() {
 							<td>{?=number_format($value.biaya, 0, ',', '.')?}</td>
 						</tr>
 		      {/loop}
+					<tr>
+						<th>Total Biaya</th>
+						<th>{?=number_format($jumlah_total_radiologi, 0, ',', '.')?}</th>
+					</tr>
 					{if: $hasil_radiologi}
 					<tr style="border-top: 1px solid #8c8b8b">
 		        <th>Hasil</th>

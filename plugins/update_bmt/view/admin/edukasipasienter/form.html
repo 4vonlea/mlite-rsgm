@@ -4,7 +4,7 @@
       <h3 class="panel-title"><i class="fa fa-file-text-o"></i> RM.RJ-10 &mdash; Lembar Edukasi Pasien dan Keluarga Terintegrasi</h3>
     </div>
     <div class="panel-body">
-      <form method="POST" action="{?=url([ADMIN, 'update_bmt', 'edukasisave'])?}" id="form-edukasi">
+      <form method="POST" action="{?=url([ADMIN, 'form_rme', 'edukasisave'])?}" id="form-edukasi">
         <input type="hidden" name="id" value="{?=isset_or($data['id'])?}">
 
         <!-- Identitas Pasien -->
@@ -285,7 +285,7 @@
 
         <!-- Tombol Simpan -->
         <div class="form-group">
-          <a href="{?=url([ADMIN, 'update_bmt', 'edukasimanage'])?}" class="btn btn-default"><i class="fa fa-arrow-left"></i> Kembali</a>
+          <a href="{?=url([ADMIN, 'form_rme', 'edukasimanage'])?}" class="btn btn-default"><i class="fa fa-arrow-left"></i> Kembali</a>
           <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
         </div>
       </form>
@@ -360,7 +360,7 @@ $(document).ready(function() {
       alert('Masukkan No Rawat terlebih dahulu');
       return;
     }
-    $.get('{?=url([ADMIN, "update_bmt", "patient_info"])?}', {no_rawat: no_rawat}, function(res) {
+    $.get('{?=url([ADMIN, "form_rme", "patient_info"])?}', {no_rawat: no_rawat}, function(res) {
       if (res.success) {
         $('#nama_pasien').val(res.nama_pasien);
         $('#jenis_kelamin').val(res.jenis_kelamin);

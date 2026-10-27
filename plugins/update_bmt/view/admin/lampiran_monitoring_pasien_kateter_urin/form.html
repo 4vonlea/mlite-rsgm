@@ -1,0 +1,518 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
+                <h3 class="panel-title" style="font-weight: bold; font-size: 16px;">
+                    <i class="fa fa-pencil-square-o text-primary"></i> FORMULIR MONITORING PASIEN TERPASANG KATETER URIN
+                </h3>
+                <div>
+                    <a href="{?=url([ADMIN, 'form_rme', 'monitoringkateterurinmanage'])?}" class="btn btn-default btn-sm">
+                        <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'form_rme', 'monitoringkateterurinsave'])?}" method="post" id="form-monitoring-kateter">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="detail_monitoring_json" id="detail_monitoring_json" value='{?=htmlspecialchars(json_encode($data.detail_monitoring_data))?}'>
+
+                    <!-- PETUNJUK RESMI RSGM -->
+                    <div class="alert alert-info" style="font-size: 12px; margin-bottom: 20px;">
+                        <strong><i class="fa fa-info-circle"></i> Petunjuk Pengisian Formulir Monitoring Kateter Urin (PPI):</strong>
+                        <ul style="margin-bottom: 0; padding-left: 20px;">
+                            <li><strong>Diisi oleh Perawat:</strong> Pemantauan dilakukan setiap hari selama kateter urin menetap terpasang pada pasien rawat inap.</li>
+                            <li><strong>Item Pencegahan ISK:</strong> Beri tanda <code>&#10003;</code> (centang) bila dilakukan, atau tanda <code>-</code> (strip) bila tidak dilakukan.</li>
+                            <li><strong>Gejala ISK:</strong> Beri tanda <code>&#10003;</code> bila ditemukan gejala sesuai kriteria, dan tanda <code>0</code> bila tidak ditemukan gejala.</li>
+                            <li>Gunakan tombol cepat <em>"Set Semua &#10003; (Dilakukan)"</em> atau <em>"Set Gejala 0 (Normal)"</em> untuk kemudahan pengisian harian.</li>
+                        </ul>
+                    </div>
+
+                    <!-- 1. DATA IDENTITAS PASIEN & RAWAT -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading" style="font-weight: bold;">
+                            <i class="fa fa-user"></i> Data Pasien & Ruang Perawatan
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nomor Rawat / No. RM <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2025/09/29/000006" required>
+                                            <span class="input-group-btn">
+                                                <button type="button" class="btn btn-primary" id="btn-cari-pasien">
+                                                    <i class="fa fa-search"></i> Cari
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nomor Rekam Medis (No. RM)</label>
+                                        <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly style="background-color: #f9f9f9; font-weight: bold;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nama Pasien</label>
+                                        <input type="text" id="nm_pasien" class="form-control" value="{$data.nm_pasien}" readonly style="background-color: #f9f9f9; font-weight: bold;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Jenis Kelamin</label>
+                                        <input type="text" id="pasien_jk" class="form-control" value="{if: $data.jk == 'L'}Laki-Laki{elseif: $data.jk == 'P'}Perempuan{else}{$data.jk}{/if}" readonly style="background-color: #f9f9f9;">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Tanggal Lahir Pasien</label>
+                                        <input type="text" id="tgl_lahir_pasien" class="form-control" value="{$data.tgl_lahir}" readonly style="background-color: #f9f9f9;">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Umur Pasien</label>
+                                        <input type="text" id="umur_pasien" class="form-control" value="{$data.umur}" readonly style="background-color: #f9f9f9;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Ruangan / Kamar Inap <span class="text-danger">*</span></label>
+                                        <input type="text" name="ruang" id="ruang" class="form-control" value="{$data.ruang}" placeholder="Contoh: Ruang Melati / Bed 02" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Periode Bulan / Tahun <span class="text-danger">*</span></label>
+                                        <input type="text" name="bulan_tahun" id="bulan_tahun" class="form-control" value="{$data.bulan_tahun}" placeholder="Contoh: Oktober 2026" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Tanggal MRS (Masuk Rumah Sakit) <span class="text-danger">*</span></label>
+                                        <input type="date" name="tgl_mrs" id="tgl_mrs" class="form-control" value="{$data.tgl_mrs}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Diagnosa Medis Pasien</label>
+                                        <input type="text" name="diagnosa" id="diagnosa" class="form-control" value="{$data.diagnosa}" placeholder="Contoh: Post Odontektomi M3 Impaksi / Retensio Urin">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. SPESIFIKASI KATETER (JENIS & UKURAN) -->
+                    <div class="panel panel-default" style="border-top: 3px solid #27ae60;">
+                        <div class="panel-heading" style="font-weight: bold;">
+                            <i class="fa fa-tint text-success"></i> Spesifikasi Kateter Urin yang Terpasang
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label>Jenis Catheter (Jenis cath):</label>
+                                    <div style="margin-top: 5px;">
+                                        <label class="radio-inline">
+                                            <input type="radio" name="jenis_cath" value="Silikon" {if: $data.jenis_cath == 'Silikon'}checked{/if}> <strong>Silikon</strong>
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input type="radio" name="jenis_cath" value="Folley" {if: empty($data.jenis_cath) || $data.jenis_cath == 'Folley'}checked{/if}> <strong>Folley</strong>
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input type="radio" name="jenis_cath" value="Lainnya" {if: $data.jenis_cath == 'Lainnya'}checked{/if}> Lainnya:
+                                        </label>
+                                    </div>
+                                    <div style="margin-top: 8px;">
+                                        <input type="text" name="jenis_cath_lainnya" id="jenis_cath_lainnya" class="form-control input-sm" value="{$data.jenis_cath_lainnya}" placeholder="Tuliskan jenis kateter lainnya jika memilih opsi Lainnya">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label>Ukuran / Nomor Catheter (No.Cath):</label>
+                                    <div style="margin-top: 5px; display: flex; flex-wrap: wrap; gap: 12px;">
+                                        <label class="radio-inline" style="margin-left: 0;"><input type="radio" name="no_cath" value="6" {if: $data.no_cath == '6'}checked{/if}> No. <strong>6</strong></label>
+                                        <label class="radio-inline" style="margin-left: 0;"><input type="radio" name="no_cath" value="8" {if: $data.no_cath == '8'}checked{/if}> No. <strong>8</strong></label>
+                                        <label class="radio-inline" style="margin-left: 0;"><input type="radio" name="no_cath" value="10" {if: $data.no_cath == '10'}checked{/if}> No. <strong>10</strong></label>
+                                        <label class="radio-inline" style="margin-left: 0;"><input type="radio" name="no_cath" value="12" {if: $data.no_cath == '12'}checked{/if}> No. <strong>12</strong></label>
+                                        <label class="radio-inline" style="margin-left: 0;"><input type="radio" name="no_cath" value="14" {if: $data.no_cath == '14'}checked{/if}> No. <strong>14</strong></label>
+                                        <label class="radio-inline" style="margin-left: 0;"><input type="radio" name="no_cath" value="16" {if: (empty($data.no_cath) && empty($data.id)) || $data.no_cath == '16'}checked{/if}> No. <strong>16</strong></label>
+                                        <label class="radio-inline" style="margin-left: 0;"><input type="radio" name="no_cath" value="18" {if: $data.no_cath == '18'}checked{/if}> No. <strong>18</strong></label>
+                                        <label class="radio-inline" style="margin-left: 0;"><input type="radio" name="no_cath" value="20" {if: $data.no_cath == '20'}checked{/if}> No. <strong>20</strong></label>
+                                        <label class="radio-inline" style="margin-left: 0;"><input type="radio" name="no_cath" value="22" {if: $data.no_cath == '22'}checked{/if}> No. <strong>22</strong></label>
+                                        <label class="radio-inline" style="margin-left: 0;">
+                                            <input type="radio" name="no_cath" value="Lainnya" {if: $data.no_cath == 'Lainnya'}checked{/if}> Lainnya
+                                        </label>
+                                    </div>
+                                    <div style="margin-top: 8px;">
+                                        <input type="text" name="no_cath_lainnya" id="no_cath_lainnya" class="form-control input-sm" value="{$data.no_cath_lainnya}" placeholder="Tuliskan nomor kateter jika memilih Lainnya">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. TABEL MONITORING 31 HARI INTERAKTIF -->
+                    <div class="panel panel-primary">
+                        <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: bold; font-size: 14px;">
+                                <i class="fa fa-table"></i> Lembar Pemantauan Harian Bundel Pencegahan & Gejala ISK (Tanggal 1 s/d 31)
+                            </span>
+                            <div>
+                                <span class="label label-warning" style="font-size: 11px;">Klik sel tanggal untuk memilih / mengetik tanda: &#10003;, -, atau 0</span>
+                            </div>
+                        </div>
+                        <div class="panel-body" style="padding: 10px;">
+                            
+                            <!-- QUICK ACTIONS PER HARI -->
+                            <div class="well well-sm" style="margin-bottom: 12px; padding: 8px 12px; background: #ecf0f1;">
+                                <div class="row" style="display: flex; align-items: center; flex-wrap: wrap;">
+                                    <div class="col-md-3">
+                                        <label style="margin-bottom: 0; font-size: 12px;"><i class="fa fa-magic"></i> Aksi Cepat Harian:</label>
+                                    </div>
+                                    <div class="col-md-9 text-right">
+                                        <span style="font-size: 11px; margin-right: 8px;">Pilih Hari:</span>
+                                        <select id="quick_day_select" class="form-control input-sm" style="display: inline-block; width: 85px; vertical-align: middle;">
+                                            {loop: range(1, 31)}
+                                            <option value="{$value}">Tgl {$value}</option>
+                                            {/loop}
+                                        </select>
+                                        <button type="button" class="btn btn-success btn-xs" id="btn-quick-bundle-ok" title="Set pencegahan bundel terpenuhi (✓)">
+                                            <i class="fa fa-check"></i> Bundel Terpenuhi (&#10003;)
+                                        </button>
+                                        <button type="button" class="btn btn-info btn-xs" id="btn-quick-gejala-zero" title="Set gejala ISK tidak ada (0)">
+                                            <i class="fa fa-shield"></i> Gejala ISK Normal (0)
+                                        </button>
+                                        <button type="button" class="btn btn-default btn-xs" id="btn-quick-clear-day" title="Kosongkan kolom hari terpilih">
+                                            <i class="fa fa-eraser"></i> Kosongkan
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                                <table class="table table-bordered table-condensed table-hover" id="grid-kateter" style="font-size: 11px; margin-bottom: 0;">
+                                    <thead>
+                                        <tr class="active" style="background-color: #2c3e50; color: #fff;">
+                                            <th style="vertical-align: middle; width: 30px; text-align: center;">No</th>
+                                            <th style="vertical-align: middle; min-width: 250px;">Item Parameter Pemantauan</th>
+                                            {loop: range(1, 31)}
+                                            <th style="vertical-align: middle; width: 26px; text-align: center; padding: 4px 1px; font-weight: bold; {if: $value % 2 == 0}background-color: #34495e;{/if}">
+                                                {$value}
+                                            </th>
+                                            {/loop}
+                                            <th style="vertical-align: middle; width: 55px; text-align: center;">Total</th>
+                                            <th style="vertical-align: middle; min-width: 140px; text-align: center;">Keterangan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- GROUP 1: PENCEGAHAN ISK (13 BARIS) -->
+                                        <tr style="background-color: #d9edf7; font-weight: bold; color: #31708f;">
+                                            <td colspan="34">
+                                                <i class="fa fa-shield"></i> I. ITEM PENCEGAHAN ISK (Beri tanda &#10003; bila dilakukan, tanda - bila tidak dilakukan)
+                                            </td>
+                                        </tr>
+                                        {loop: $items_pencegahan}
+                                        <tr data-row-id="{$value.key}" class="row-monitoring row-pencegahan">
+                                            <td style="text-align: center; font-weight: bold;">{$key + 1}</td>
+                                            <td style="font-weight: 500;">{$value.label}</td>
+                                            {loop: range(1, 31)}
+                                            <td style="padding: 1px; text-align: center;">
+                                                <input type="text" class="cell-day form-control input-xs text-center" 
+                                                       data-day="{$value}" 
+                                                       maxlength="2" 
+                                                       style="width: 100%; height: 22px; padding: 0; font-size: 11px; font-weight: bold;" 
+                                                       placeholder="">
+                                            </td>
+                                            {/loop}
+                                            <td style="padding: 1px;">
+                                                <input type="text" class="cell-total form-control input-xs text-center" 
+                                                       style="width: 100%; height: 22px; padding: 0; font-weight: bold; background: #fafafa;" 
+                                                       placeholder="0">
+                                            </td>
+                                            <td style="padding: 1px;">
+                                                <input type="text" class="cell-ketr form-control input-xs" 
+                                                       style="width: 100%; height: 22px; padding: 2px 4px;" 
+                                                       placeholder="Keterangan...">
+                                            </td>
+                                        </tr>
+                                        {/loop}
+
+                                        <!-- GROUP 2: GEJALA ISK (8 BARIS) -->
+                                        <tr style="background-color: #f2dede; font-weight: bold; color: #a94442;">
+                                            <td colspan="34">
+                                                <i class="fa fa-heartbeat"></i> II. GEJALA ISK (Beri tanda &#10003; bila ditemukan kriteria, tanda 0 bila tidak ditemukan)
+                                            </td>
+                                        </tr>
+                                        {loop: $items_gejala}
+                                        <tr data-row-id="{$value.key}" class="row-monitoring row-gejala">
+                                            <td style="text-align: center; font-weight: bold;">{$value.prefix}</td>
+                                            <td style="font-weight: 500;">{$value.label}</td>
+                                            {loop: range(1, 31)}
+                                            <td style="padding: 1px; text-align: center;">
+                                                <input type="text" class="cell-day form-control input-xs text-center" 
+                                                       data-day="{$value}" 
+                                                       maxlength="2" 
+                                                       style="width: 100%; height: 22px; padding: 0; font-size: 11px; font-weight: bold;" 
+                                                       placeholder="">
+                                            </td>
+                                            {/loop}
+                                            <td style="padding: 1px;">
+                                                <input type="text" class="cell-total form-control input-xs text-center" 
+                                                       style="width: 100%; height: 22px; padding: 0; font-weight: bold; background: #fafafa;" 
+                                                       placeholder="0">
+                                            </td>
+                                            <td style="padding: 1px;">
+                                                <input type="text" class="cell-ketr form-control input-xs" 
+                                                       style="width: 100%; height: 22px; padding: 2px 4px;" 
+                                                       placeholder="Keterangan...">
+                                            </td>
+                                        </tr>
+                                        {/loop}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- RINGKASAN & FORMULA ANGKA KEJADIAN ISK -->
+                            <div class="row" style="margin-top: 15px;">
+                                <div class="col-md-6">
+                                    <div class="panel panel-default" style="border-left: 4px solid #e74c3c;">
+                                        <div class="panel-body" style="padding: 10px 15px;">
+                                            <strong style="color: #c0392b;"><i class="fa fa-calculator"></i> Formula Perhitungan Angka Kejadian ISK:</strong>
+                                            <div style="margin-top: 6px; font-size: 11.5px; line-height: 1.6;">
+                                                $$\text{Angka Kejadian ISK} = \frac{\text{Jumlah Pasien ISK}}{\text{Jumlah Hari Pemasangan Kateter Urin}} \times 1000$$
+                                            </div>
+                                            <div style="margin-top: 8px; font-size: 12px;">
+                                                <span class="label label-default">Jumlah Hari Terpasang: <strong id="lbl-total-hari-pasang">0 Hari</strong></span>
+                                                <span class="label label-danger" style="margin-left: 5px;">Terdeteksi Gejala ISK: <strong id="lbl-terdeteksi-isk">Tidak Ada (0)</strong></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Catatan Tambahan Evaluasi Komite PPI / Perawat:</label>
+                                        <textarea name="catatan" id="catatan" rows="3" class="form-control" placeholder="Contoh: Pemantauan kateter berjalan baik, tidak ditemukan tanda ISK hingga pelepasan pada hari ke-5.">{$data.catatan}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- 4. PENGESAHAN & TANDA TANGAN (ICN & HEAD NURSE) -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading" style="font-weight: bold; background-color: #f5f5f5;">
+                            <i class="fa fa-pencil"></i> Pengesahan Petugas Pemantau
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Dibuat Oleh (Infection Control Nurse / ICN) <span class="text-danger">*</span></label>
+                                        <input type="text" name="nama_icn" id="nama_icn" class="form-control" list="list_petugas" value="{$data.nama_icn}" placeholder="Nama & Gelar ICN" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>NIP / NIK ICN</label>
+                                        <input type="text" name="nip_icn" id="nip_icn" class="form-control" value="{$data.nip_icn}" placeholder="NIP/NIK Petugas">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Mengetahui (Head Nurse / Kepala Ruangan) <span class="text-danger">*</span></label>
+                                        <input type="text" name="nama_head_nurse" id="nama_head_nurse" class="form-control" list="list_petugas" value="{$data.nama_head_nurse}" placeholder="Nama & Gelar Kepala Ruangan" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>NIP / NIK Head Nurse</label>
+                                        <input type="text" name="nip_head_nurse" id="nip_head_nurse" class="form-control" value="{$data.nip_head_nurse}" placeholder="NIP/NIK Kepala Ruangan">
+                                    </div>
+                                </div>
+                            </div>
+                            <datalist id="list_petugas">
+                                {loop: $petugas}
+                                <option value="{$value.nama}">
+                                {/loop}
+                            </datalist>
+                        </div>
+                    </div>
+
+                    <!-- TOMBOL AKSI -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-bottom: 25px;">
+                        <a href="{?=url([ADMIN, 'form_rme', 'monitoringkateterurinmanage'])?}" class="btn btn-default">
+                            <i class="fa fa-ban"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fa fa-save"></i> Simpan Lembar Monitoring Kateter
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // 1. AJAX Cari Pasien
+    $('#btn-cari-pasien').on('click', function() {
+        var noRawat = $('#no_rawat').val().trim();
+        if (!noRawat) {
+            alert('Masukkan Nomor Rawat atau Nomor Rekam Medis terlebih dahulu!');
+            return;
+        }
+
+        $.getJSON('{?=url([ADMIN, "form_rme", "monitoringkateterurinform"])?}', {
+            ajax_patient: 1,
+            no_rawat: noRawat
+        }, function(res) {
+            if (res && res.success) {
+                var d = res.data || res;
+                $('#no_rawat').val(d.no_rawat);
+                $('#no_rkm_medis').val(d.no_rkm_medis);
+                $('#nm_pasien').val(d.nm_pasien);
+                $('#pasien_jk').val(d.jk == 'L' ? 'Laki-Laki' : 'Perempuan');
+                $('#tgl_lahir_pasien').val(d.tgl_lahir);
+                $('#umur_pasien').val(d.umur);
+                if (d.ruang_perawatan && !$('#ruang').val()) {
+                    $('#ruang').val(d.ruang_perawatan);
+                }
+                if (d.tgl_registrasi && !$('#tgl_mrs').val()) {
+                    $('#tgl_mrs').val(d.tgl_registrasi);
+                }
+            } else {
+                alert('Data pasien dengan No. Rawat/RM tersebut tidak ditemukan.');
+            }
+        }).fail(function() {
+            alert('Terjadi kesalahan koneksi saat mencari data pasien.');
+        });
+    });
+
+    // 2. Load Data JSON Tersimpan ke Grid
+    var existingJsonStr = $('#detail_monitoring_json').val();
+    var gridData = {};
+    if (existingJsonStr) {
+        try {
+            gridData = JSON.parse(existingJsonStr);
+        } catch (e) {
+            console.error("Parse JSON error", e);
+        }
+    }
+
+    // Populate data
+    $('.row-monitoring').each(function() {
+        var rowId = $(this).data('row-id');
+        var rowObj = gridData[rowId] || {};
+        var $tr = $(this);
+
+        for (var d = 1; d <= 31; d++) {
+            var val = rowObj['d' + d] || '';
+            $tr.find('.cell-day[data-day="' + d + '"]').val(val);
+        }
+        $tr.find('.cell-total').val(rowObj['total'] || '');
+        $tr.find('.cell-ketr').val(rowObj['ketr'] || '');
+    });
+
+    // Recalculate summary
+    calculateTotals();
+
+    // 3. Quick Actions
+    $('#btn-quick-bundle-ok').on('click', function() {
+        var day = $('#quick_day_select').val();
+        $('.row-pencegahan').each(function() {
+            $(this).find('.cell-day[data-day="' + day + '"]').val('✓');
+        });
+        calculateTotals();
+    });
+
+    $('#btn-quick-gejala-zero').on('click', function() {
+        var day = $('#quick_day_select').val();
+        $('.row-gejala').each(function() {
+            $(this).find('.cell-day[data-day="' + day + '"]').val('0');
+        });
+        calculateTotals();
+    });
+
+    $('#btn-quick-clear-day').on('click', function() {
+        var day = $('#quick_day_select').val();
+        $('.row-monitoring').each(function() {
+            $(this).find('.cell-day[data-day="' + day + '"]').val('');
+        });
+        calculateTotals();
+    });
+
+    // 4. Click to Cycle Cell Value (Optional helper)
+    $(document).on('click', '.cell-day', function() {
+        var current = $(this).val();
+        var isPencegahan = $(this).closest('tr').hasClass('row-pencegahan');
+        if (!current) {
+            $(this).val('✓');
+        } else if (current === '✓') {
+            $(this).val(isPencegahan ? '-' : '0');
+        } else {
+            $(this).val('');
+        }
+        calculateTotals();
+    });
+
+    $(document).on('change keyup', '.cell-day', function() {
+        calculateTotals();
+    });
+
+    function calculateTotals() {
+        var totalHariPemasangan = 0;
+        var totalGejalaIsk = 0;
+        var daysWithCath = {};
+
+        // Recalculate row totals
+        $('.row-monitoring').each(function() {
+            var countCheck = 0;
+            var isGejala = $(this).hasClass('row-gejala');
+
+            $(this).find('.cell-day').each(function() {
+                var v = $(this).val().trim();
+                var d = $(this).data('day');
+                if (v === '✓' || v === 'v' || v === 'V') {
+                    countCheck++;
+                    if (!isGejala) {
+                        daysWithCath[d] = true;
+                    } else {
+                        totalGejalaIsk++;
+                    }
+                }
+            });
+            $(this).find('.cell-total').val(countCheck > 0 ? countCheck : '');
+        });
+
+        totalHariPemasangan = Object.keys(daysWithCath).length;
+        $('#lbl-total-hari-pasang').text(totalHariPemasangan + ' Hari');
+        $('#lbl-terdeteksi-isk').text(totalGejalaIsk > 0 ? ('Ya (' + totalGejalaIsk + ' temuan)') : 'Tidak Ada (0)');
+    }
+
+    // 5. Serialize Grid to JSON on Submit
+    $('#form-monitoring-kateter').on('submit', function() {
+        var out = {};
+        $('.row-monitoring').each(function() {
+            var rowId = $(this).data('row-id');
+            var rowObj = {};
+            for (var d = 1; d <= 31; d++) {
+                var val = $(this).find('.cell-day[data-day="' + d + '"]').val().trim();
+                rowObj['d' + d] = val;
+            }
+            rowObj['total'] = $(this).find('.cell-total').val().trim();
+            rowObj['ketr'] = $(this).find('.cell-ketr').val().trim();
+            out[rowId] = rowObj;
+        });
+
+        $('#detail_monitoring_json').val(JSON.stringify(out));
+        return true;
+    });
+});
+</script>

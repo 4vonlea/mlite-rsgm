@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>FORMULIR B - CATATAN IMPLEMENTASI MANAJER PELAYANAN PASIEN (MPP) - {$data.no_rawat}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 8mm 10mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            color: #000;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 20px 0;
+        }
+        .page {
+            width: 195mm;
+            min-height: 275mm;
+            margin: 0 auto;
+            position: relative;
+            background: #fff;
+            padding: 0;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+        }
+
+        /* Toolbar Layar */
+        .no-print-toolbar {
+            width: 195mm;
+            margin: 0 auto 15px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2c3e50;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-toolbar {
+            padding: 6px 14px;
+            font-size: 13px;
+            border-radius: 3px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-print:hover { background: #219150; }
+        .btn-pdf { background: #e74c3c; color: #fff; }
+        .btn-pdf:hover { background: #c0392b; }
+        .btn-close { background: #95a5a6; color: #fff; }
+        .btn-close:hover { background: #7f8c8d; }
+
+        /* Tabel Utama */
+        .form-container {
+            width: 100%;
+            border: 2px solid #000;
+            border-collapse: collapse;
+        }
+
+        /* Header Table */
+        .table-header {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 2px solid #000;
+        }
+        .table-header td {
+            vertical-align: middle;
+            padding: 4px 6px;
+        }
+        .header-left {
+            width: 58%;
+            border-right: 2px solid #000;
+            text-align: center;
+            padding: 4px 6px;
+        }
+        .header-right {
+            width: 42%;
+            font-size: 11px;
+            padding: 6px 10px;
+        }
+
+        /* Kotak Digit No RM */
+        .rm-box-group {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .rm-box {
+            display: inline-block;
+            width: 17px;
+            height: 19px;
+            border: 1px solid #000;
+            text-align: center;
+            line-height: 19px;
+            font-weight: bold;
+            font-size: 11px;
+            margin-right: 1px;
+        }
+
+        /* Judul Dokumen */
+        .doc-title-wrap {
+            border-bottom: 2px solid #000;
+            text-align: center;
+            padding: 6px 4px;
+            line-height: 1.25;
+        }
+        .doc-title-main {
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        .doc-title-sub {
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        /* Tabel Konten */
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .content-table th {
+            border: 1px solid #000;
+            border-top: none;
+            padding: 5px;
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            background-color: #f9f9f9;
+        }
+        .content-table td {
+            border: 1px solid #000;
+            padding: 8px 10px;
+            vertical-align: top;
+            font-size: 11px;
+            min-height: 80px;
+        }
+        .td-tgl {
+            width: 18%;
+            text-align: center;
+            font-weight: bold;
+        }
+        .td-catatan {
+            width: 82%;
+        }
+        .catatan-header {
+            font-weight: bold;
+            font-size: 11.5px;
+            margin-bottom: 6px;
+        }
+        .catatan-isi {
+            font-size: 11px;
+            line-height: 1.4;
+            min-height: 50px;
+            white-space: pre-line;
+        }
+
+        /* Tanda Tangan */
+        .ttd-section {
+            margin-top: 15px;
+            width: 100%;
+        }
+        .ttd-box {
+            float: right;
+            width: 250px;
+            text-align: center;
+            font-size: 11px;
+            padding-right: 15px;
+        }
+
+        /* Catatan Kaki */
+        .footer-note-wrap {
+            width: 100%;
+            margin-top: 120px;
+            text-align: right;
+            padding-right: 5px;
+            clear: both;
+        }
+        .footer-note {
+            font-size: 9px;
+            font-style: italic;
+            color: #d00;
+        }
+        .page-footer {
+            width: 100%;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                width: 100%;
+                margin: 0;
+            }
+            .no-print, .no-print-toolbar {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body {if: empty($is_mpdf)}onload="if(window.location.search.indexOf('noprint=1')===-1)window.print()"{/if}>
+
+    <!-- Toolbar Layar (Tidak ikut tercetak) -->
+    <div class="no-print-toolbar no-print">
+        <div style="font-size: 14px; font-weight: bold;">
+            Preview Dokumen: Formulir B Catatan Implementasi MPP ({$data.no_rawat})
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button onclick="window.print()" class="btn-toolbar btn-print">
+                &#128438; Cetak Dokumen
+            </button>
+            <a href="{?=url([ADMIN, 'form_rme', 'formbmppcetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
+                &#128196; Download PDF
+            </a>
+            <button onclick="window.close()" class="btn-toolbar btn-close">
+                &#10006; Tutup
+            </button>
+        </div>
+    </div>
+
+    <div class="page">
+        <div class="form-container">
+            <!-- Header KOP & Identitas Pasien -->
+            <table class="table-header">
+                <tr>
+                    <td class="header-left">
+                        <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop Surat RSGM Gusti Hasan Aman" style="width: 100%; max-height: 72px; object-fit: contain; display: block;">
+                    </td>
+                    <td class="header-right">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <tr>
+                                <td style="width: 80px; padding: 2px 0;">No RM</td>
+                                <td style="width: 10px; padding: 2px 0;">:</td>
+                                <td style="padding: 2px 0;">
+                                    <div class="rm-box-group">
+                                        <span class="rm-box">{$data.rm0}</span><span class="rm-box">{$data.rm1}</span><span class="rm-box">{$data.rm2}</span><span class="rm-box">{$data.rm3}</span><span class="rm-box">{$data.rm4}</span><span class="rm-box">{$data.rm5}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0;">Nama Pasien</td>
+                                <td style="padding: 2px 0;">:</td>
+                                <td style="padding: 2px 0;">
+                                    <strong>{$data.nm_pasien}</strong> &nbsp; <span style="font-size: 9.5px;">{$data.jk_label}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0;">Tanggal Lahir</td>
+                                <td style="padding: 2px 0;">:</td>
+                                <td style="padding: 2px 0;">
+                                    {$data.tanggal_lahir_indo}
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Judul Formulir -->
+            <div class="doc-title-wrap">
+                <div class="doc-title-main">FORMULIR B</div>
+                <div class="doc-title-sub">CATATAN IMPLEMENTASI MANAJER PELAYANAN PASIEN (MPP)</div>
+            </div>
+
+            <!-- Tabel Catatan Implementasi Poin I - VI -->
+            <table class="content-table">
+                <thead>
+                    <tr>
+                        <th style="width: 18%;">TGL / JAM</th>
+                        <th style="width: 82%;">CATATAN</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- I. Pelaksanaan Rencana Pelayanan Pasien -->
+                    <tr>
+                        <td class="td-tgl">
+                            {$data.tgl_pelaksanaan_1}
+                        </td>
+                        <td class="td-catatan">
+                            <div class="catatan-header">I. Pelaksanaan Rencana Pelayanan Pasien</div>
+                            <div class="catatan-isi">{if: !empty($data.catatan_pelaksanaan)}{$data.catatan_pelaksanaan}{else}&nbsp;{/if}</div>
+                        </td>
+                    </tr>
+
+                    <!-- II. Monitoring Pelayanan -->
+                    <tr>
+                        <td class="td-tgl">
+                            {$data.tgl_monitoring_2}
+                        </td>
+                        <td class="td-catatan">
+                            <div class="catatan-header">II. Monitoring Pelayanan</div>
+                            <div class="catatan-isi">{if: !empty($data.catatan_monitoring)}{$data.catatan_monitoring}{else}&nbsp;{/if}</div>
+                        </td>
+                    </tr>
+
+                    <!-- III. Fasilitasi Pelayanan -->
+                    <tr>
+                        <td class="td-tgl">
+                            {$data.tgl_fasilitasi_3}
+                        </td>
+                        <td class="td-catatan">
+                            <div class="catatan-header">III. Fasilitasi Pelayanan</div>
+                            <div class="catatan-isi">{if: !empty($data.catatan_fasilitasi)}{$data.catatan_fasilitasi}{else}&nbsp;{/if}</div>
+                        </td>
+                    </tr>
+
+                    <!-- IV. Advokasi Pelayanan Pasien -->
+                    <tr>
+                        <td class="td-tgl">
+                            {$data.tgl_advokasi_4}
+                        </td>
+                        <td class="td-catatan">
+                            <div class="catatan-header">IV. Advokasi Pelayanan Pasien</div>
+                            <div class="catatan-isi">{if: !empty($data.catatan_advokasi)}{$data.catatan_advokasi}{else}&nbsp;{/if}</div>
+                        </td>
+                    </tr>
+
+                    <!-- V. Hasil Pelayanan -->
+                    <tr>
+                        <td class="td-tgl">
+                            {$data.tgl_hasil_5}
+                        </td>
+                        <td class="td-catatan">
+                            <div class="catatan-header">V. Hasil Pelayanan</div>
+                            <div class="catatan-isi">{if: !empty($data.catatan_hasil)}{$data.catatan_hasil}{else}&nbsp;{/if}</div>
+                        </td>
+                    </tr>
+
+                    <!-- VI. Terminasi Pelayanan Pasien -->
+                    <tr>
+                        <td class="td-tgl">
+                            {$data.tgl_terminasi_6}
+                        </td>
+                        <td class="td-catatan">
+                            <div class="catatan-header">VI. Terminasi Pelayanan Pasien, Catatan Kepuasan Pasien/Keluarga Dengan MPP</div>
+                            <div class="catatan-isi">{if: !empty($data.catatan_terminasi)}{$data.catatan_terminasi}{else}&nbsp;{/if}</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tanda Tangan Manajer Pelayanan Pasien -->
+        <div class="ttd-section">
+            <div class="ttd-box">
+                <div>{$data.kota}, {$data.tanggal_ttd_indo}</div>
+                <div style="font-weight: bold; margin-top: 3px;">Manajer Pelayanan Pasien</div>
+                <div style="height: 55px;"></div>
+                <div style="font-weight: bold; text-decoration: underline;">
+                    {if: !empty($data.nama_mpp)}( {$data.nama_mpp} ){else}( ..................................... ){/if}
+                </div>
+                <div style="font-size: 10px; margin-top: 2px;">
+                    NIP / NIK : {if: !empty($data.nip_mpp)}{$data.nip_mpp}{else}.......................{/if}
+                </div>
+            </div>
+        </div>
+
+        <!-- Catatan Kaki Bawah -->
+        <div class="footer-note-wrap">
+            <span class="footer-note">Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</span>
+        </div>
+
+        <!-- Footers Dokumen -->
+        <div class="page-footer">
+            <span>RSGM/Ed-Rev/02/2023</span>
+            <span>RM.RI Lampiran</span>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -127,13 +127,17 @@ class Admin extends Main
 
     public function loadModule($name, $method, $params = [])
     {
+        if ($name === 'form_rme') {
+            $name = 'update_bmt';
+        }
         $row = $this->module->{$name};
 
         if ($row && ($details = $this->getModuleInfo($name))) {
             $isSaveSignature = ($name === 'esignature' && strtolower($method) === 'savesignature' && !empty($_SESSION['mlite_user']));
             $isRadiologiLaporanPacs = ($name === 'laporan' && in_array(strtolower($method), ['laporanradiologipacs', 'hapusradiologipacs']) && in_array($this->getUserInfo('role'), ['radiologi', 'admin']));
+            $userAccess = explode(',', (string)$this->getUserInfo('access'));
             $isPasienRiwayat = ($name === 'pasien' && in_array(strtolower($method), ['riwayatperawatan', 'pdfriwayatperawatan']) && !empty($_SESSION['mlite_user']));
-            if (($this->getUserInfo('access') == 'all') || in_array($name, explode(',', (string)$this->getUserInfo('access'))) || $isSaveSignature || $isRadiologiLaporanPacs || $isPasienRiwayat) {
+            if (($this->getUserInfo('access') == 'all') || in_array($name, $userAccess) || ($name === 'update_bmt' && in_array('form_rme', $userAccess)) || $isSaveSignature || $isRadiologiLaporanPacs || $isPasienRiwayat) {
                 if ($name === 'laporan' && strtolower($method) === 'manage' && $this->getUserInfo('role') === 'radiologi' && !in_array('laporan', explode(',', $this->getUserInfo('access')))) {
                     redirect(url([ADMIN, 'laporan', 'laporanradiologipacs']));
                     exit;
@@ -239,6 +243,9 @@ class Admin extends Main
 
     public function createNav($activeModule, $activeMethod)
     {
+        if ($activeModule === 'form_rme') {
+            $activeModule = 'update_bmt';
+        }
         $nav = [];
         $modules = $this->module->getArray();
 

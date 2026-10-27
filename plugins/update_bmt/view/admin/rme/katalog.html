@@ -4,11 +4,11 @@
             <div class="panel-heading" style="background: linear-gradient(135deg, #0288d1 0%, #01579b 100%); color: #fff; border-radius: 6px 6px 0 0; padding: 15px 20px;">
                 <div class="pull-right">
                     {if: $selected_unit}
-                    <a href="{?=url([ADMIN, 'update_bmt', 'manajemenrme'])?}&tab=akses&unit_id={$selected_unit.id}" class="btn btn-warning btn-sm" style="font-weight: 600;">
+                    <a href="{?=url([ADMIN, 'form_rme', 'manajemenrme'])?}&tab=akses&unit_id={$selected_unit.id}" class="btn btn-warning btn-sm" style="font-weight: 600;">
                         <i class="fa fa-cogs"></i> Kelola Hak Akses Form Unit Ini
                     </a>
                     {else}
-                    <a href="{?=url([ADMIN, 'update_bmt', 'manajemenrme'])?}&tab=akses" class="btn btn-warning btn-sm" style="font-weight: 600;">
+                    <a href="{?=url([ADMIN, 'form_rme', 'manajemenrme'])?}&tab=akses" class="btn btn-warning btn-sm" style="font-weight: 600;">
                         <i class="fa fa-cogs"></i> Manajemen Form RME
                     </a>
                     {/if}
@@ -24,7 +24,7 @@
                 <div class="well well-sm" style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 15px; margin-bottom: 25px;">
                     <div class="row">
                         <div class="col-md-6">
-                            <form method="GET" action="{?=url([ADMIN, 'update_bmt', 'katalogrme'])?}" class="form-inline">
+                            <form method="GET" action="{?=url([ADMIN, 'form_rme', 'katalogrme'])?}" class="form-inline">
                                 <input type="hidden" name="t" value="{$token}">
                                 <label for="select-katalog-unit" style="font-weight: 700; margin-right: 10px; font-size: 14px; color: #333;">
                                     <i class="fa fa-hospital-o text-primary"></i> Pilih Unit Pelayanan:
@@ -87,14 +87,14 @@
                                     </p>
                                 </div>
                                 <div style="display: flex; gap: 6px;">
-                                    <a href="{?=url([ADMIN, 'update_bmt', $value.route_form])?}" class="btn btn-success btn-sm" style="flex: 1; font-weight: 600;">
+                                    <a href="{?=url([ADMIN, 'form_rme', $value.route_form])?}" class="btn btn-success btn-sm" style="flex: 1; font-weight: 600;">
                                         <i class="fa fa-plus-circle"></i> Isi Form
                                     </a>
-                                    <a href="{?=url([ADMIN, 'update_bmt', $value.route_manage])?}" class="btn btn-primary btn-sm" style="flex: 1; font-weight: 600;">
+                                    <a href="{?=url([ADMIN, 'form_rme', $value.route_manage])?}" class="btn btn-primary btn-sm" style="flex: 1; font-weight: 600;">
                                         <i class="fa fa-table"></i> Data
                                     </a>
                                     {if: !empty($value.route_cetak)}
-                                    <a href="{?=url([ADMIN, 'update_bmt', $value.route_cetak])?}" target="_blank" class="btn btn-default btn-sm" title="Preview Cetak">
+                                    <a href="{?=url([ADMIN, 'form_rme', $value.route_cetak])?}" target="_blank" class="btn btn-default btn-sm" title="Preview Cetak">
                                         <i class="fa fa-print"></i>
                                     </a>
                                     {/if}
@@ -109,7 +109,7 @@
                     <i class="fa fa-info-circle fa-3x" style="color: #0288d1; margin-bottom: 10px;"></i>
                     <h4>Belum ada formulir yang diizinkan untuk unit ini</h4>
                     <p class="text-muted">Unit <strong>{$selected_unit.nama_unit}</strong> saat ini belum memiliki form yang di-assign.</p>
-                    <a href="{?=url([ADMIN, 'update_bmt', 'manajemenrme'])?}&tab=akses&unit_id={$selected_unit.id}" class="btn btn-primary" style="margin-top: 10px;">
+                    <a href="{?=url([ADMIN, 'form_rme', 'manajemenrme'])?}&tab=akses&unit_id={$selected_unit.id}" class="btn btn-primary" style="margin-top: 10px;">
                         <i class="fa fa-plus"></i> Atur dan Pilih Form untuk Unit Ini
                     </a>
                 </div>

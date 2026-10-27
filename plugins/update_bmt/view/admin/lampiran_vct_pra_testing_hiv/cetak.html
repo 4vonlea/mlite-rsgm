@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>VCT Pra Testing HIV - {$data.no_rawat}</title>
+    <style>
+        {if: empty($is_mpdf)}
+        @page {
+            size: A4 portrait;
+            margin: 8mm 10mm 8mm 10mm;
+        }
+        {/if}
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8.5pt;
+            line-height: 1.25;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
+            background-color: #f4f6f9;
+            padding: 15px 0;
+        }
+        .page {
+            background: #fff;
+            width: 195mm;
+            min-height: 280mm;
+            margin: 0 auto 20px auto;
+            padding: 8mm 10mm 8mm 10mm;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        {/if}
+
+        /* Toolbar Layar Browser */
+        .no-print-toolbar {
+            width: 195mm;
+            margin: 0 auto 12px auto;
+            padding: 8px 14px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+        }
+        .btn-toolbar {
+            padding: 5px 12px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+
+        /* BINGKAI UTAMA */
+        .outer-border-box {
+            border: 1.5px solid #000;
+            padding: 8px 10px;
+            width: 100%;
+        }
+
+        /* HEADER TABEL KOP & IDENTITAS PASIEN (HALAMAN 1) */
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6px;
+        }
+        .header-table td {
+            vertical-align: middle;
+        }
+        .header-kop {
+            width: 58%;
+            text-align: center;
+            padding-right: 8px;
+        }
+        .header-kop img {
+            width: 100%;
+            max-height: 68px;
+            object-fit: contain;
+        }
+        .header-pasien {
+            width: 42%;
+            font-size: 8pt;
+            padding-left: 6px;
+            vertical-align: top;
+        }
+        .header-pasien table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .header-pasien td {
+            padding: 1.5px 0;
+            vertical-align: top;
+            font-size: 8pt;
+        }
+
+        /* HEADER IDENTITAS PASIEN SINGKAT (HALAMAN 2 & 3) */
+        .subpage-header {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6px;
+            font-size: 8.5pt;
+        }
+        .subpage-header td {
+            padding: 2px 0;
+            vertical-align: middle;
+        }
+
+        /* KOTAK DIGIT RM */
+        .rm-digit-box {
+            display: inline-block;
+            width: 15px;
+            height: 16px;
+            border: 1px solid #000;
+            text-align: center;
+            line-height: 15px;
+            font-weight: bold;
+            font-size: 8pt;
+            margin-right: 1px;
+            vertical-align: middle;
+        }
+
+        /* CHECKBOX PRINT */
+        .cb-box {
+            display: inline-block;
+            width: 13px;
+            height: 13px;
+            border: 1.2px solid #000;
+            text-align: center;
+            line-height: 12px;
+            font-size: 9.5pt;
+            font-weight: bold;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        /* BANNER JUDUL & KODE KLIEN */
+        .banner-box {
+            border: 1.5px solid #000;
+            margin-bottom: 8px;
+        }
+        .banner-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 10.5pt;
+            padding: 3px 6px;
+            border-bottom: 1.2px solid #000;
+            letter-spacing: 0.5px;
+        }
+        .banner-meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8pt;
+        }
+        .banner-meta-table td {
+            padding: 3px 6px;
+            vertical-align: middle;
+        }
+
+        /* SECTION BOX */
+        .section-box {
+            border: 1.2px solid #000;
+            margin-bottom: 8px;
+        }
+        .section-header {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            font-size: 8.5pt;
+            padding: 3px 6px;
+            border-bottom: 1.2px solid #000;
+        }
+
+        /* GRID 3 KOLOM DATA DEMOGRAFI */
+        .grid-demo-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8pt;
+        }
+        .grid-demo-table td {
+            border: 1px solid #000;
+            padding: 5px 6px;
+            vertical-align: top;
+            width: 33.33%;
+        }
+
+        /* TABEL RISIKO INDIVIDU */
+        .table-risiko {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8pt;
+        }
+        .table-risiko td {
+            border: 1px solid #000;
+            padding: 5px 6px;
+            vertical-align: top;
+            width: 33.33%;
+        }
+
+        /* TABEL POTENSI PAJANAN (HALAMAN 2) */
+        .table-pajanan {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7.8pt;
+            margin-bottom: 6px;
+            border: 1px solid #000;
+        }
+        .table-pajanan th, .table-pajanan td {
+            border: 1px solid #000;
+            padding: 2.5px 5px;
+            vertical-align: middle;
+        }
+        .table-pajanan th {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* TABEL 2 KOLOM (PERTANYAAN & KODE) */
+        .table-penyesuaian {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8pt;
+            margin-bottom: 6px;
+            border: 1px solid #000;
+        }
+        .table-penyesuaian td {
+            border: 1px solid #000;
+            padding: 3px 5px;
+            vertical-align: middle;
+        }
+
+        /* FOOTER RSGM */
+        .footer-note {
+            font-size: 7pt;
+            font-style: italic;
+            text-align: right;
+            margin-top: 6px;
+            margin-bottom: 2px;
+        }
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7pt;
+            font-weight: bold;
+        }
+        .footer-table td {
+            padding: 0;
+            vertical-align: bottom;
+        }
+
+        /* PENCETAKAN MULTI-PAGE */
+        .page-break {
+            page-break-after: always;
+        }
+
+        @media print {
+            body {
+                background: transparent;
+                padding: 0;
+            }
+            .no-print-toolbar {
+                display: none !important;
+            }
+            .page {
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                min-height: auto;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    {if: empty($is_mpdf)}
+    <!-- TOOLBAR LAYAR -->
+    <div class="no-print-toolbar">
+        <button onclick="window.print()" class="btn-toolbar btn-print">
+            <i class="fa fa-print"></i> Cetak Dokumen (3 Halaman)
+        </button>
+        <a href="?pdf=1" target="_blank" class="btn-toolbar btn-pdf">
+            <i class="fa fa-file-pdf-o"></i> Download PDF (mPDF 1 File)
+        </a>
+        <button onclick="window.close()" class="btn-toolbar btn-close">
+            <i class="fa fa-times"></i> Tutup
+        </button>
+        <span style="float: right; font-size: 11px; line-height: 24px; color: #bdc3c7;">
+            Formulir VCT Pra Testing HIV RSGM (3 Halaman Terpadu)
+        </span>
+    </div>
+    {/if}
+
+    <!-- ======================================================== -->
+    <!-- HALAMAN 1 DARI 3: DEMOGRAFI & RISIKO INDIVIDU            -->
+    <!-- ======================================================== -->
+    <div class="page">
+        <div class="outer-border-box">
+
+            <!-- HEADER KOP RSGM & IDENTITAS PASIEN -->
+            <table class="header-table">
+                <tr>
+                    <td class="header-kop">
+                        <img src="{$data.kop_img}" alt="Kop RSGM Gusti Hasan Aman">
+                    </td>
+                    <td class="header-pasien">
+                        <table style="border: 1px solid #000; padding: 4px 6px;">
+                            <tr>
+                                <td style="width: 70px; font-weight: bold;">No. RM</td>
+                                <td style="width: 8px;">:</td>
+                                <td>
+                                    <span class="rm-digit-box">{$data.rm0}</span><span class="rm-digit-box">{$data.rm1}</span><span class="rm-digit-box">{$data.rm2}</span><span class="rm-digit-box">{$data.rm3}</span><span class="rm-digit-box">{$data.rm4}</span><span class="rm-digit-box">{$data.rm5}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;">Nama Pasien</td>
+                                <td>:</td>
+                                <td>
+                                    <strong>{$data.nama_pasien}</strong> &nbsp; ({$data.jk})
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;">Tanggal Lahir</td>
+                                <td>:</td>
+                                <td>{$data.tgl_lahir_pasien_indo}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- BANNER JUDUL & KODE KLIEN -->
+            <div class="banner-box">
+                <div class="banner-title">
+                    VCT PRA TESTING HIV
+                </div>
+                <table class="banner-meta-table">
+                    <tr>
+                        <td style="width: 18%; font-weight: bold;">KODE KLIEN</td>
+                        <td style="width: 2%;">:</td>
+                        <td style="width: 32%;"><strong>{$data.kode_klien}</strong></td>
+                        <td style="width: 16%; font-weight: bold;">TANGGAL</td>
+                        <td style="width: 2%;">:</td>
+                        <td style="width: 30%;">{$data.tanggal_slash}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">TANGGAL TES KLIEN</td>
+                        <td>:</td>
+                        <td>{$data.tanggal_tes_klien_slash}</td>
+                        <td style="font-weight: bold;">TEMPAT TES</td>
+                        <td>:</td>
+                        <td>{$data.tempat_tes}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- BAGIAN 1: DATA DEMOGRAFI -->
+            <div class="section-box">
+                <div class="section-header">
+                    1. Data Demografi
+                </div>
+                <table class="grid-demo-table" border="1">
+                    <tr>
+                        <!-- a) Jenis Klien -->
+                        <td>
+                            <strong>a) Jenis Klien</strong><br>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 3px;">
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.jenis_klien == '1'}<strong>[ 1 ]</strong>{else}&nbsp; 1&nbsp;{/if} = Laki-laki
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.jenis_klien == '2'}<strong>[ 2 ]</strong>{else}&nbsp; 2&nbsp;{/if} = Perempuan
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+
+                        <!-- b) Status Hubungan -->
+                        <td>
+                            <strong>b) Status Hubungan</strong><br>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 3px;">
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.status_hubungan == '1'}<strong>[ 1 ]</strong>{else}&nbsp; 1&nbsp;{/if} = Tidak Pernah Kawin
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.status_hubungan == '2'}<strong>[ 2 ]</strong>{else}&nbsp; 2&nbsp;{/if} = Kawin
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.status_hubungan == '3'}<strong>[ 3 ]</strong>{else}&nbsp; 3&nbsp;{/if} = Cerai/Pisah
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.status_hubungan == '4'}<strong>[ 4 ]</strong>{else}&nbsp; 4&nbsp;{/if} = Janda
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+
+                        <!-- c) Jumlah Anak -->
+                        <td>
+                            <strong>c) Jumlah Anak</strong><br>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 3px;">
+                                <tr>
+                                    <td style="border: none; padding: 1px 0; width: 50%;">
+                                        {if: $data.jumlah_anak == '1'}<strong>[ 1 ]</strong>{else}&nbsp;1&nbsp;{/if} = 1
+                                    </td>
+                                    <td style="border: none; padding: 1px 0; width: 50%;">
+                                        {if: $data.jumlah_anak == '5'}<strong>[ 5 ]</strong>{else}&nbsp;5&nbsp;{/if} = 5
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.jumlah_anak == '2'}<strong>[ 2 ]</strong>{else}&nbsp;2&nbsp;{/if} = 2
+                                    </td>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.jumlah_anak == '6'}<strong>[ 6 ]</strong>{else}&nbsp;6&nbsp;{/if} = 6
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.jumlah_anak == '3'}<strong>[ 3 ]</strong>{else}&nbsp;3&nbsp;{/if} = 3
+                                    </td>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.jumlah_anak == '7'}<strong>[ 7 ]</strong>{else}&nbsp;7&nbsp;{/if} = &gt; 6
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.jumlah_anak == '8'}<strong>[ 8 ]</strong>{else}&nbsp;8&nbsp;{/if} = 0
+                                    </td>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.jumlah_anak == '4'}<strong>[ 4 ]</strong>{else}&nbsp;4&nbsp;{/if} = 4
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <!-- d) Umur Klien -->
+                        <td>
+                            <strong>d) Umur Klien</strong><br>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 3px;">
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.umur_klien == '1'}<strong>[ 1 ]</strong>{else}&nbsp; 1&nbsp;{/if} = &lt; 15
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.umur_klien == '2'}<strong>[ 2 ]</strong>{else}&nbsp; 2&nbsp;{/if} = 15-24
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.umur_klien == '3'}<strong>[ 3 ]</strong>{else}&nbsp; 3&nbsp;{/if} = 25-34
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.umur_klien == '4'}<strong>[ 4 ]</strong>{else}&nbsp; 4&nbsp;{/if} = 35-44
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.umur_klien == '5'}<strong>[ 5 ]</strong>{else}&nbsp; 5&nbsp;{/if} = &gt; 45
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+
+                        <!-- e) Pendidikan -->
+                        <td>
+                            <strong>e) Pendidikan</strong><br>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 3px;">
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.pendidikan == '1'}<strong>[ 1 ]</strong>{else}&nbsp; 1&nbsp;{/if} = Tidak Ada
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.pendidikan == '2'}<strong>[ 2 ]</strong>{else}&nbsp; 2&nbsp;{/if} = SD
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.pendidikan == '3'}<strong>[ 3 ]</strong>{else}&nbsp; 3&nbsp;{/if} = SLTP/Sederajat
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.pendidikan == '4'}<strong>[ 4 ]</strong>{else}&nbsp; 4&nbsp;{/if} = SLTA/Sederajat
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.pendidikan == '5'}<strong>[ 5 ]</strong>{else}&nbsp; 5&nbsp;{/if} = Akademi/PT
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+
+                        <!-- f) Pekerjaan -->
+                        <td>
+                            <strong>f) Jumlah Anak <span style="font-size: 7.5pt; font-weight: normal;">(Pekerjaan)</span></strong><br>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 3px;">
+                                <tr>
+                                    <td style="border: none; padding: 0.5px 0;">
+                                        {if: $data.pekerjaan == '0'}<strong>[ 0 ]</strong>{else}&nbsp; 0&nbsp;{/if} = Tidak Bekerja
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 0.5px 0;">
+                                        {if: $data.pekerjaan == '1'}<strong>[ 1 ]</strong>{else}&nbsp; 1&nbsp;{/if} = Bekerja
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 0.5px 0;">
+                                        {if: $data.pekerjaan == '2'}<strong>[ 2 ]</strong>{else}&nbsp; 2&nbsp;{/if} = Pelajar/Mahasiswa
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 0.5px 0;">
+                                        {if: $data.pekerjaan == '3'}<strong>[ 3 ]</strong>{else}&nbsp; 3&nbsp;{/if} = Petani
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 0.5px 0;">
+                                        {if: $data.pekerjaan == '4'}<strong>[ 4 ]</strong>{else}&nbsp; 4&nbsp;{/if} = Profesional
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 0.5px 0;">
+                                        {if: $data.pekerjaan == '5'}<strong>[ 5 ]</strong>{else}&nbsp; 5&nbsp;{/if} = Polisi/ABRI/Satpam
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 0.5px 0;">
+                                        {if: $data.pekerjaan == '6'}<strong>[ 6 ]</strong>{else}&nbsp; 6&nbsp;{/if} = Pekerja Tambang
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 0.5px 0;">
+                                        {if: $data.pekerjaan == '7'}<strong>[ 7 ]</strong>{else}&nbsp; 7&nbsp;{/if} = Tranportasi
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 0.5px 0;">
+                                        {if: $data.pekerjaan == '8'}<strong>[ 8 ]</strong>{else}&nbsp; 8&nbsp;{/if} = Lain-lain
+                                        {if: !empty($data.pekerjaan_lainnya)}<span style="font-size: 7.5pt;">({$data.pekerjaan_lainnya})</span>{/if}
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- BAGIAN 2: PENDIDIKAN RISIKO INDIVIDU -->
+            <div class="section-box">
+                <div class="section-header">
+                    2. Pendidikan Risiko Individu
+                </div>
+                <table class="table-risiko" border="1">
+                    <tr>
+                        <td>
+                            <strong>Klien Punya Pasangan Tetap</strong><br>
+                            <div style="margin-top: 4px;">
+                                {if: $data.pasangan_tetap == '1'}
+                                <strong>[ 1 ]</strong> = Ya, &nbsp; 2 = Tidak
+                                {else}
+                                1 = Ya, &nbsp; <strong>[ 2 ]</strong> = Tidak
+                                {/if}
+                            </div>
+                            <div style="font-style: italic; margin-top: 8px; font-size: 7.5pt; color: #555;">
+                                Jika Y, Isi Kolom B
+                            </div>
+                        </td>
+                        <td>
+                            <strong>Status Pasangan Tetap</strong><br>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 4px;">
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.status_pasangan == '1'}<strong>[ 1 ]</strong>{else}&nbsp; 1&nbsp;{/if} = HIV ( + )
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.status_pasangan == '2'}<strong>[ 2 ]</strong>{else}&nbsp; 2&nbsp;{/if} = HIV ( - )
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none; padding: 1px 0;">
+                                        {if: $data.status_pasangan == '3'}<strong>[ 3 ]</strong>{else}&nbsp; 3&nbsp;{/if} = Tidak Diketahui
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <strong>Tanggal Tes Terakhir</strong><br><br>
+                            <div style="font-weight: bold; font-size: 9pt; padding-top: 3px;">
+                                {$data.tgl_tes_terakhir_slash}
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- CATATAN KAKI & FOOTER HALAMAN 1 -->
+        <div style="margin-top: 8px;">
+            <div style="text-align: right; font-style: italic; font-size: 7pt; margin-bottom: 3px;">
+                Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas &nbsp; <span style="display: inline-block; width: 9px; height: 9px; border: 1px solid #000; vertical-align: middle;"></span>
+            </div>
+            <table class="footer-table">
+                <tr>
+                    <td style="text-align: left; width: 50%;">RSGM/Ed-Rev/02/2023</td>
+                    <td style="text-align: right; width: 50%;">RM.RI Lampiran Hal 1-3</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- PAGE BREAK -->
+    {if: !empty($is_mpdf)}
+    <pagebreak />
+    {else}
+    <div class="page-break"></div>
+    {/if}
+
+    <!-- ======================================================== -->
+    <!-- HALAMAN 2 DARI 3: POTENSI PAJANAN & STRATEGI DIRI        -->
+    <!-- ======================================================== -->
+    <div class="page">
+        <!-- HEADER SUB-PAGE HALAMAN 2 -->
+        <table class="subpage-header">
+            <tr>
+                <td style="width: 45%;">
+                    Nama Pasien : <strong>{$data.nama_pasien}</strong> &nbsp; .{$data.jk}
+                </td>
+                <td style="width: 30%;">
+                    Tanggal Lahir : {$data.tgl_lahir_pasien_indo}
+                </td>
+                <td style="width: 25%; text-align: right;">
+                    NO. RM : &nbsp;
+                    <span class="rm-digit-box">{$data.rm0}</span><span class="rm-digit-box">{$data.rm1}</span><span class="rm-digit-box">{$data.rm2}</span><span class="rm-digit-box">{$data.rm3}</span><span class="rm-digit-box">{$data.rm4}</span><span class="rm-digit-box">{$data.rm5}</span>
+                </td>
+            </tr>
+        </table>
+
+        <!-- BINGKAI BESAR HALAMAN 2 -->
+        <div class="outer-border-box">
+
+            <!-- HEADER TEXT PAJANAN -->
+            <div style="font-weight: bold; font-size: 8.5pt; margin-bottom: 5px;">
+                Tulislah kode dan tanggal potensi pajanan yang paling akhir
+            </div>
+
+            <!-- TABEL PAJANAN -->
+            <table class="table-pajanan" border="1">
+                <thead>
+                    <tr style="background: #f7f9fa;">
+                        <th style="width: 44%; text-align: left;">
+                            Pajanan<br>
+                            <span style="font-weight: normal; font-size: 7.2pt;">1 = Ya, 2 = Tidak</span>
+                        </th>
+                        <th style="width: 26%;">Tanggal Paling Berisiko</th>
+                        <th style="width: 30%;">
+                            Masa Jendela (Window Periode)<br>
+                            <span style="font-weight: normal; font-size: 7.2pt;">( 1 = Ya, 2 = Tidak )</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {loop: $data.pajanan_rows}
+                    <tr>
+                        <td>
+                            {$value.nama}
+                            <span style="float: right; font-weight: bold; padding-right: 10px;">
+                                {if: $value.kode == '1'}[ 1 ]{else}[ 2 ]{/if}
+                            </span>
+                        </td>
+                        <td style="text-align: center;">{$value.tgl}</td>
+                        <td style="text-align: center; font-weight: bold;">
+                            {if: $value.window == '1'}[ 1 ]{else}[ 2 ]{/if}
+                        </td>
+                    </tr>
+                    {/loop}
+
+                    <!-- Pertanyaan Masa Jendela Spans 3 Kolom -->
+                    <tr>
+                        <td colspan="3" style="padding: 4px 6px;">
+                            Klien membutuhkan tes ulang HIV karena masa jendela :<br>
+                            <strong>
+                                {if: $data.tes_ulang_window == 'YA'}<u>YA</u> / TIDAK{else}YA / <u>TIDAK</u>{/if}
+                            </strong>
+                            (harap dilingkari) jika Ya, tanggal tes ulang : <strong>{$data.tgl_tes_ulang_slash}</strong>
+                        </td>
+                    </tr>
+
+                    <!-- 5 Pertanyaan Risiko Tambahan -->
+                    <tr>
+                        <td colspan="2">Klien beresiko dengan orang HIV positif yang dikenal</td>
+                        <td style="text-align: center; font-weight: bold;">
+                            {if: $data.berisiko_orang_hiv == '1'}[ 1 ]{else}[ 2 ]{/if}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            Klien hamilJika Ya, masa kehamilan : 
+                            <strong>{if: !empty($data.trimester_kehamilan)}{$data.trimester_kehamilan}{else}Trimester 1/2/3{/if}</strong>
+                        </td>
+                        <td style="text-align: center; font-weight: bold;">
+                            {if: $data.klien_hamil == '1'}[ 1 ]{else}[ 2 ]{/if}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">Klien menggunakan KB secara teratur</td>
+                        <td style="text-align: center; font-weight: bold;">
+                            {if: $data.kb_teratur == '1'}[ 1 ]{else}[ 2 ]{/if}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            Klien mempunyai riwayat infeksi menularDiperlukan rujukan untuk<br>
+                            pengobatan seksual (1 = Ya, 2 = Tidak)
+                        </td>
+                        <td style="text-align: center; font-weight: bold;">
+                            {if: $data.riwayat_ims == '1'}[ 1 ]{else}[ 2 ]{/if}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">Klien melaporkan gejala TB</td>
+                        <td style="text-align: center; font-weight: bold;">
+                            {if: $data.gejala_tb == '1'}[ 1 ]{else}[ 2 ]{/if}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- BAGIAN 3: PENILAIAN STRATEGI PENYESUAIAN DIRI -->
+            <table class="table-penyesuaian" border="1">
+                <tr>
+                    <td colspan="2" style="background-color: #f2f2f2; font-weight: bold; font-size: 8.2pt; padding: 3px 5px;">
+                        3. Penilaian pribadi atas strategi penyesuaian diri (beri kode 1 = YA, 2 = TIDAK)
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width: 85%;">Klien sangat terindikasi bunuh diri jika hasil tes HIV (+)</td>
+                    <td style="width: 15%; text-align: center; font-weight: bold;">
+                        {if: $data.indikasi_bunuh_diri == '1'}[ 1 ]{else}[ 2 ]{/if}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Klien mempunyai riwayat melukai diri atau usaha bunuh diri</td>
+                    <td style="text-align: center; font-weight: bold;">
+                        {if: $data.riwayat_melukai_diri == '1'}[ 1 ]{else}[ 2 ]{/if}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Klien sangat terindikasi mencederai orang lain jika hasil tes HIV (+)</td>
+                    <td style="text-align: center; font-weight: bold;">
+                        {if: $data.mencederai_orang_lain == '1'}[ 1 ]{else}[ 2 ]{/if}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Klien mempunyai potensi risiko melakukan kekerasan jika hasilnya diberitahu kepada pasangan</td>
+                    <td style="text-align: center; font-weight: bold;">
+                        {if: $data.kekerasan_pasangan == '1'}[ 1 ]{else}[ 2 ]{/if}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Klien mempunyai dukungan personal yang cukup</td>
+                    <td style="text-align: center; font-weight: bold;">
+                        {if: $data.dukungan_personal == '1'}[ 1 ]{else}[ 2 ]{/if}
+                    </td>
+                </tr>
+            </table>
+
+            <!-- CATATAN PENILAIAN PENYESUAIAN INDIVIDU -->
+            <div style="margin-top: 6px; margin-bottom: 6px; font-size: 8pt;">
+                <strong>Catatan penilaian penyesuaian individu :</strong>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 3px;">
+                    <tr>
+                        <td style="border-bottom: 1px solid #000; height: 16px; font-size: 8pt; vertical-align: bottom;">
+                            {if: !empty($data.catatan_penyesuaian)}{$data.catatan_penyesuaian}{/if}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border-bottom: 1px solid #000; height: 16px;">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td style="border-bottom: 1px solid #000; height: 16px;">&nbsp;</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- INTERVENSI KONSELOR (BAGIAN HALAMAN 2) -->
+            <div style="font-size: 8pt; margin-top: 6px;">
+                <div style="margin-bottom: 4px;">
+                    <strong>Intervensi konselor dalam kunjungan kini (Berilah tanda dalam kotak yang tersedia )</strong>
+                </div>
+
+                <div style="margin-bottom: 3px;">
+                    <span class="cb-box">{if: !empty($data.intervensi.hal2_kerahasiaan)}&#10003;{else}&nbsp;{/if}</span> Kerahasiaandan pribadi yang saudara tawarkan pada klien
+                </div>
+                <div style="margin-bottom: 3px;">
+                    <span class="cb-box">{if: !empty($data.intervensi.hal2_dasar_hiv)}&#10003;{else}&nbsp;{/if}</span> Informasi dasar tentang HIV dan penularannya
+                </div>
+                <div style="margin-bottom: 3px;">
+                    <span class="cb-box">{if: !empty($data.intervensi.hal2_potensi_keuntungan)}&#10003;{else}&nbsp;{/if}</span> Informasi dasar potensi keuntungan dan kesulitan tes ( hukum dsb)
+                </div>
+                <div style="margin-bottom: 3px;">
+                    <span class="cb-box">{if: !empty($data.intervensi.hal2_penilaian_risiko)}&#10003;{else}&nbsp;{/if}</span> Penilaian risiko personal
+                </div>
+                <div style="margin-bottom: 3px;">
+                    <span class="cb-box">{if: !empty($data.intervensi.hal2_eksplorasi_hambatan)}&#10003;{else}&nbsp;{/if}</span> Eksplorasi dan pemecahan problem hambatan pengurangan risiko
+                </div>
+                <div style="margin-bottom: 3px;">
+                    <span class="cb-box">{if: !empty($data.intervensi.hal2_kondom)}&#10003;{else}&nbsp;{/if}</span> Penggunaan kondom, termasuk demonstrasi penggunaan kondom
+                </div>
+                <div style="margin-bottom: 3px;">
+                    <span class="cb-box">{if: !empty($data.intervensi.hal2_kesiapan_status)}&#10003;{else}&nbsp;{/if}</span> Kesiapan klien mempelajari status HIV
+                </div>
+            </div>
+
+        </div>
+
+        <!-- CATATAN KAKI & FOOTER HALAMAN 2 -->
+        <div style="margin-top: 8px;">
+            <div style="text-align: right; font-style: italic; font-size: 7pt; margin-bottom: 3px;">
+                Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas &nbsp; <span style="display: inline-block; width: 9px; height: 9px; border: 1px solid #000; vertical-align: middle;"></span>
+            </div>
+            <table class="footer-table">
+                <tr>
+                    <td style="text-align: left; width: 50%;">RSGM/Ed-Rev/02/2023</td>
+                    <td style="text-align: right; width: 50%;">RM.RI Lampiran Hal 2-3</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- PAGE BREAK -->
+    {if: !empty($is_mpdf)}
+    <pagebreak />
+    {else}
+    <div class="page-break"></div>
+    {/if}
+
+    <!-- ======================================================== -->
+    <!-- HALAMAN 3 DARI 3: LANJUTAN INTERVENSI & HASIL & TTD      -->
+    <!-- ======================================================== -->
+    <div class="page">
+        <!-- HEADER SUB-PAGE HALAMAN 3 -->
+        <table class="subpage-header">
+            <tr>
+                <td style="width: 45%;">
+                    Nama Pasien : <strong>{$data.nama_pasien}</strong> &nbsp; .{$data.jk}
+                </td>
+                <td style="width: 30%;">
+                    Tanggal Lahir : {$data.tgl_lahir_pasien_indo}
+                </td>
+                <td style="width: 25%; text-align: right;">
+                    NO. RM : &nbsp;
+                    <span class="rm-digit-box">{$data.rm0}</span><span class="rm-digit-box">{$data.rm1}</span><span class="rm-digit-box">{$data.rm2}</span><span class="rm-digit-box">{$data.rm3}</span><span class="rm-digit-box">{$data.rm4}</span><span class="rm-digit-box">{$data.rm5}</span>
+                </td>
+            </tr>
+        </table>
+
+        <!-- BINGKAI BESAR HALAMAN 3 -->
+        <div class="outer-border-box">
+
+            <!-- LANJUTAN INTERVENSI KONSELOR (HALAMAN 3) -->
+            <div style="font-size: 8pt; margin-top: 4px;">
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 4px;">
+                    <tr>
+                        <td style="width: 22px; vertical-align: top;">
+                            <span class="cb-box">{if: !empty($data.intervensi.hal3_eksplorasi_positif)}&#10003;{else}&nbsp;{/if}</span>
+                        </td>
+                        <td style="vertical-align: top; font-size: 8pt;">
+                            Eksplorasi akan apa yang dilakukan klien ketika hasil tes HIV (+), dan penyesuaian diri yang dimungkinkan ketika hasil tes HIV (+). Termasuk didalamnya penilaian kemungkinan bunuh diri<br>
+                            Pemikiran klien akan perencanaan reproduksi dan keluarga berencana
+                        </td>
+                    </tr>
+                </table>
+
+                <div style="margin-bottom: 4px;">
+                    <span class="cb-box">{if: !empty($data.intervensi.hal3_pemikiran_reproduksi)}&#10003;{else}&nbsp;{/if}</span> Eksplorasi kemungkinan dukungan keluarga dan kawan-kawan
+                </div>
+                <div style="margin-bottom: 4px;">
+                    <span class="cb-box">{if: !empty($data.intervensi.hal3_penilaian_risiko2)}&#10003;{else}&nbsp;{/if}</span> Penilaian risiko personal
+                </div>
+                <div style="margin-bottom: 4px;">
+                    <span class="cb-box">{if: !empty($data.intervensi.hal3_isu_penting)}&#10003;{else}&nbsp;{/if}</span> Isu penting yang dibutuhkan klien lainnya
+                </div>
+                <div style="margin-bottom: 4px;">
+                    <span class="cb-box">{if: !empty($data.intervensi.hal3_info_prosedur)}&#10003;{else}&nbsp;{/if}</span> Informasi dasar tentang tes dan prosedur pemeriksaan sampai didapat hasil
+                </div>
+                <div style="margin-bottom: 4px;">
+                    <span class="cb-box">{if: !empty($data.intervensi.hal3_informed_consent)}&#10003;{else}&nbsp;{/if}</span> Informed consent untuk melakukan tes HIV
+                </div>
+            </div>
+
+            <!-- CATATAN LAINNYA -->
+            <div style="margin-top: 12px; margin-bottom: 12px; font-size: 8pt;">
+                <strong>Catatan lainnya :</strong>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 3px;">
+                    <tr>
+                        <td style="border-bottom: 1px solid #000; height: 16px; font-size: 8pt; vertical-align: bottom;">
+                            {if: !empty($data.catatan_lainnya)}{$data.catatan_lainnya}{/if}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border-bottom: 1px solid #000; height: 16px;">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td style="border-bottom: 1px solid #000; height: 16px;">&nbsp;</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- HASIL PEMERIKSAAN -->
+            <div style="margin-top: 12px; margin-bottom: 15px; font-size: 8.5pt;">
+                <div style="font-weight: bold; margin-bottom: 6px;">Hasil Pemeriksaan (beri tanda)</div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt;">
+                    <tr>
+                        <td style="width: 33%; vertical-align: middle;">
+                            <span class="cb-box">{if: $data.hasil_pemeriksaan == 'Antibody HIV negatif'}&#10003;{else}&nbsp;{/if}</span> Antibody HIV negatif
+                        </td>
+                        <td style="width: 33%; vertical-align: middle;">
+                            <span class="cb-box">{if: $data.hasil_pemeriksaan == 'Antibody HIV positif'}&#10003;{else}&nbsp;{/if}</span> Antibody HIV positif
+                        </td>
+                        <td style="width: 34%; vertical-align: middle;">
+                            <span class="cb-box">{if: $data.hasil_pemeriksaan == 'Indeterminate'}&#10003;{else}&nbsp;{/if}</span> Indeterminate
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- KOTAK TANDA TANGAN -->
+            <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000; margin-top: 10px;" border="1">
+                <tr>
+                    <td style="width: 50%; height: 110px;">
+                        &nbsp;
+                    </td>
+                    <td style="width: 50%; padding: 8px 12px; font-size: 8.5pt; vertical-align: top;">
+                        Tanggal, {$data.tanggal_mengetahui_indo}<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mengetahui,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Konselor<br><br><br><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( <strong>{$data.nama_konselor}</strong> )
+                    </td>
+                </tr>
+            </table>
+
+            <div style="height: 40px;">&nbsp;</div>
+
+        </div>
+
+        <!-- CATATAN KAKI & FOOTER HALAMAN 3 -->
+        <div style="margin-top: 8px;">
+            <div style="text-align: right; font-style: italic; font-size: 7pt; margin-bottom: 3px;">
+                Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas &nbsp; <span style="display: inline-block; width: 9px; height: 9px; border: 1px solid #000; vertical-align: middle;"></span>
+            </div>
+            <table class="footer-table">
+                <tr>
+                    <td style="text-align: left; width: 50%;">RSGM/Ed-Rev/02/2023</td>
+                    <td style="text-align: right; width: 50%;">RM.RI Lampiran Hal 3-3</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>

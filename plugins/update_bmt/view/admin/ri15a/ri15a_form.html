@@ -4,12 +4,12 @@
             <div class="panel-heading">
                 <h3 class="panel-title">RM.RI 15A - Daftar Instruksi Medis Farmakologi</h3>
                 <ul class="nav nav-tabs">
-                    <li><a href="{?=url([ADMIN, 'update_bmt', 'ri15amanage'])?}">Kelola Data</a></li>
-                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ri15aform'])?}">Tambah Data</a></li>
+                    <li><a href="{?=url([ADMIN, 'form_rme', 'ri15amanage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'form_rme', 'ri15aform'])?}">Tambah Data</a></li>
                 </ul>
             </div>
             <div class="panel-body">
-                <form id="ri15aForm" method="POST" action="{?=url([ADMIN, 'update_bmt', 'ri15asave'])?}">
+                <form id="ri15aForm" method="POST" action="{?=url([ADMIN, 'form_rme', 'ri15asave'])?}">
                     <input type="hidden" name="id" value="{$data.id}">
                     <input type="hidden" name="json_detail_obat" id="json_detail_obat" value="">
                     
@@ -82,7 +82,7 @@
                     </div>
 
                     <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
-                    <a href="{?=url([ADMIN, 'update_bmt', 'ri15amanage'])?}" class="btn btn-default">Kembali</a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'ri15amanage'])?}" class="btn btn-default">Kembali</a>
                 </form>
             </div>
         </div>
@@ -93,7 +93,7 @@
     $('#no_rawat').on('keypress', function(e) {
         if(e.which === 13) {
             e.preventDefault();
-            $.get("{?=url([ADMIN, 'update_bmt', 'ri15aform'])?}&ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
+            $.get("{?=url([ADMIN, 'form_rme', 'ri15aform'])?}&ajax_patient=1&no_rawat=' + $(this).val(), function(res) {
                 var d = typeof res === 'string' ? JSON.parse(res) : res;
                 if (d.success) {
                     $('#no_rawat').val(d.no_rawat);

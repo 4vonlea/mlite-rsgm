@@ -6,7 +6,7 @@
   <div class="panel-body">
     <div class="row" style="margin-bottom: 15px;">
       <div class="col-md-12">
-        <a href="{?=url([ADMIN, 'update_bmt', 'edukasiform'])?}" class="btn btn-primary">
+        <a href="{?=url([ADMIN, 'form_rme', 'edukasiform'])?}" class="btn btn-primary">
           <i class="fa fa-plus"></i> Tambah Edukasi Baru
         </a>
       </div>
@@ -30,15 +30,17 @@
             <td>{?=$key+1?}</td>
             <td>{$value.no_rawat}</td>
             <td>{$value.no_rkm_medis}</td>
-            <td>{$value.nama_pasien}</td>
+            <td>{if: !empty($value.nama_pasien)}{$value.nama_pasien}{elseif: !empty($value.nm_pasien)}{$value.nm_pasien}{else}-{/if}</td>
             <td>{$value.tanggal_pengkajian}</td>
             <td>{$value.nama_perawat}</td>
             <td>
-              <a href="{?=url([ADMIN, 'update_bmt', 'edukasiform'])?}&id={$value.id}" class="btn btn-xs btn-warning"><i
+              <a href="{?=url([ADMIN, 'form_rme', 'edukasiform'])?}&id={$value.id}" class="btn btn-xs btn-warning"><i
                   class="fa fa-edit"></i> Edit</a>
-              <a href="{?=url([ADMIN, 'update_bmt', 'edukasicetak'])?}&id={$value.id}" class="btn btn-xs btn-info"
+              <a href="{?=url([ADMIN, 'form_rme', 'edukasicetak'])?}&id={$value.id}" class="btn btn-xs btn-info"
                 target="_blank"><i class="fa fa-print"></i> Cetak</a>
-              <a href="{?=url([ADMIN, 'update_bmt', 'edukasidelete'])?}&id={$value.id}" class="btn btn-xs btn-danger"
+                                    <a href="{?=url([ADMIN, 'form_rme', 'edukasicetak'])?}&id={$value.id}&pdf=1" class="btn btn-xs btn-danger"
+                target="_blank"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
+              <a href="{?=url([ADMIN, 'form_rme', 'edukasidelete'])?}&id={$value.id}" class="btn btn-xs btn-danger"
                 onclick="return confirm('Hapus data ini?')"><i class="fa fa-trash"></i> Hapus</a>
             </td>
           </tr>
