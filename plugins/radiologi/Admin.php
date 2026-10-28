@@ -1319,11 +1319,20 @@ class Admin extends AdminModule
       ->group('no_rawat')
       ->oneArray();
 
-    $rows_permintaan_radiologi = $this->db('permintaan_radiologi')
+    $status_cetak = isset($_GET['status']) ? strtolower($_GET['status']) : '';
+    $query = $this->db('permintaan_radiologi')
       ->join('dokter', 'dokter.kd_dokter=permintaan_radiologi.dokter_perujuk')
-      ->where('no_rawat', $_GET['no_rawat'])
-      ->where('permintaan_radiologi.status', strtolower($_GET['status']))
-      ->toArray();
+      ->where('no_rawat', $_GET['no_rawat']);
+    if (!empty($status_cetak)) {
+      $query = $query->where('permintaan_radiologi.status', $status_cetak);
+    }
+    $rows_permintaan_radiologi = $query->toArray();
+    if (empty($rows_permintaan_radiologi)) {
+      $rows_permintaan_radiologi = $this->db('permintaan_radiologi')
+        ->join('dokter', 'dokter.kd_dokter=permintaan_radiologi.dokter_perujuk')
+        ->where('no_rawat', $_GET['no_rawat'])
+        ->toArray();
+    }
     $permintaan_radiologi = [];
     foreach ($rows_permintaan_radiologi as $row) {
       $rows2 = $this->db('permintaan_pemeriksaan_radiologi')
@@ -1362,38 +1371,121 @@ class Admin extends AdminModule
 
   public function postSaveDetail()
   {
-
-    if ($_POST['kat'] == 'radiologi') {
-      $jns_perawatan = $this->db('jns_perawatan_radiologi')->where('kd_jenis_prw', $_POST['kd_jenis_prw'])->oneArray();
-      $this->db('periksa_radiologi')
-        ->save([
-          'no_rawat' => $_POST['no_rawat'],
-          'nip' => $this->core->getUserInfo('username', null, true),
-          'kd_jenis_prw' => $_POST['kd_jenis_prw'],
-          'tgl_periksa' => $_POST['tgl_perawatan'],
-          'jam' => $_POST['jam_rawat'],
-          'dokter_perujuk' => $_POST['kode_provider'],
-          'bagian_rs' => $jns_perawatan['bagian_rs'],
-          'bhp' => $jns_perawatan['bhp'],
-          'tarif_perujuk' => $jns_perawatan['tarif_perujuk'],
-          'tarif_tindakan_dokter' => $jns_perawatan['tarif_tindakan_dokter'],
-          'tarif_tindakan_petugas' => $jns_perawatan['tarif_tindakan_petugas'],
-          'kso' => $jns_perawatan['kso'],
-          'menejemen' => $jns_perawatan['menejemen'],
-          'biaya' => $jns_perawatan['total_byr'],
-          'kd_dokter' => $this->settings->get('settings.pj_radiologi'),
-          'status' => $_POST['status'],
-          'proyeksi' => '',
-          'kV' => '',
-          'mAS' => '',
-          'FFD' => '',
-          'BSF' => '',
-          'inak' => '',
-          'jml_penyinaran' => '',
-          'dosis' => ''
-        ]);
+    $no_rawat = trim($_POST['no_rawat'] ?? '');
+    if (empty($no_rawat)) {
+      exit();
     }
 
+    // 1. Simpan tindakan radiologi jika dipilih
+    if (($_POST['kat'] ?? '') == 'radiologi' && !empty($_POST['kd_jenis_prw'])) {
+      $jns_perawatan = $this->db('jns_perawatan_radiologi')->where('kd_jenis_prw', $_POST['kd_jenis_prw'])->oneArray();
+      if ($jns_perawatan) {
+        $this->db('periksa_radiologi')
+          ->save([
+            'no_rawat' => $no_rawat,
+            'nip' => $this->core->getUserInfo('username', null, true),
+            'kd_jenis_prw' => $_POST['kd_jenis_prw'],
+            'tgl_periksa' => $_POST['tgl_perawatan'] ?? date('Y-m-d'),
+            'jam' => $_POST['jam_rawat'] ?? date('H:i:s'),
+            'dokter_perujuk' => $_POST['kode_provider'] ?? '',
+            'bagian_rs' => $jns_perawatan['bagian_rs'],
+            'bhp' => $jns_perawatan['bhp'],
+            'tarif_perujuk' => $jns_perawatan['tarif_perujuk'],
+            'tarif_tindakan_dokter' => $jns_perawatan['tarif_tindakan_dokter'],
+            'tarif_tindakan_petugas' => $jns_perawatan['tarif_tindakan_petugas'],
+            'kso' => $jns_perawatan['kso'],
+            'menejemen' => $jns_perawatan['menejemen'],
+            'biaya' => $jns_perawatan['total_byr'],
+            'kd_dokter' => $this->settings->get('settings.pj_radiologi'),
+            'status' => $_POST['status'] ?? 'Ralan',
+            'proyeksi' => '',
+            'kV' => '',
+            'mAS' => '',
+            'FFD' => '',
+            'BSF' => '',
+            'inak' => '',
+            'jml_penyinaran' => '',
+            'dosis' => ''
+          ]);
+      }
+    }
+
+    // 2. Simpan atau perbarui Catatan Khusus & Indikasi Klinis di permintaan_radiologi
+    $informasi_tambahan = trim($_POST['informasi_tambahan'] ?? '');
+    $diagnosa_klinis = trim($_POST['diagnosa_klinis'] ?? '');
+
+    if (!empty($informasi_tambahan) || !empty($diagnosa_klinis)) {
+      $cekPermintaan = $this->db('permintaan_radiologi')
+        ->where('no_rawat', $no_rawat)
+        ->desc('tgl_permintaan')
+        ->desc('jam_permintaan')
+        ->oneArray();
+
+      if (!$cekPermintaan) {
+        $prefix_rad = 'PR' . date('Ymd');
+        $urut = $this->db('permintaan_radiologi')
+          ->like('noorder', $prefix_rad . '%')
+          ->nextRightNumber('noorder', 4);
+        $noorder = $prefix_rad . sprintf('%04d', $urut);
+
+        $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+        $dokter_perujuk = !empty($_POST['kode_provider']) ? $_POST['kode_provider'] : ($reg_periksa['kd_dokter'] ?? $this->settings->get('settings.pj_radiologi'));
+
+        $this->db('permintaan_radiologi')->save([
+          'noorder' => $noorder,
+          'no_rawat' => $no_rawat,
+          'tgl_permintaan' => $_POST['tgl_perawatan'] ?? date('Y-m-d'),
+          'jam_permintaan' => $_POST['jam_rawat'] ?? date('H:i:s'),
+          'tgl_sampel' => $_POST['tgl_perawatan'] ?? date('Y-m-d'),
+          'jam_sampel' => $_POST['jam_rawat'] ?? date('H:i:s'),
+          'tgl_hasil' => '0000-00-00',
+          'jam_hasil' => '00:00:00',
+          'dokter_perujuk' => $dokter_perujuk,
+          'status' => strtolower($_POST['status'] ?? 'ralan'),
+          'informasi_tambahan' => $informasi_tambahan,
+          'diagnosa_klinis' => $diagnosa_klinis
+        ]);
+
+        if (!empty($_POST['kd_jenis_prw'])) {
+          $this->db('permintaan_pemeriksaan_radiologi')->save([
+            'noorder' => $noorder,
+            'kd_jenis_prw' => $_POST['kd_jenis_prw'],
+            'stts_bayar' => 'Belum'
+          ]);
+        }
+      } else {
+        $updateData = [];
+        if (!empty($informasi_tambahan)) {
+          $updateData['informasi_tambahan'] = $informasi_tambahan;
+        }
+        if (!empty($diagnosa_klinis)) {
+          $updateData['diagnosa_klinis'] = $diagnosa_klinis;
+        }
+        if (!empty($updateData)) {
+          $this->db('permintaan_radiologi')
+            ->where('no_rawat', $no_rawat)
+            ->where('noorder', $cekPermintaan['noorder'])
+            ->update($updateData);
+        }
+      }
+    }
+
+    exit();
+  }
+
+  public function postHapusCatatan()
+  {
+    $no_rawat = trim($_POST['no_rawat'] ?? '');
+    $noorder = trim($_POST['noorder'] ?? '');
+
+    if (!empty($no_rawat)) {
+      $query = $this->db('permintaan_radiologi')->where('no_rawat', $no_rawat);
+      if (!empty($noorder)) {
+        $query = $query->where('noorder', $noorder);
+      }
+      $query->update(['informasi_tambahan' => '']);
+    }
+    echo json_encode(['status' => 'success']);
     exit();
   }
 

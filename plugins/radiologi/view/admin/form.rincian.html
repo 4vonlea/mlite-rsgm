@@ -94,6 +94,32 @@
               <input type="text" name="kode_provider" id="kode_provider" class="form-control" placeholder="Kode" readonly style="background-color: #f5f5f5;">
             </div>
           </div>
+
+          <h5 class="page-header" style="border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 15px;">
+            <i class="fa fa-info-circle text-primary"></i> Indikasi & Catatan Khusus (Mandiri / Rujukan)
+          </h5>
+          <div class="form-group">
+            <label class="col-sm-3 control-label">Indikasi Klinis</label>
+            <div class="col-sm-9">
+              <input type="text" name="diagnosa_klinis" id="diagnosa_klinis" class="form-control" placeholder="Contoh: Evaluasi Impaksi M3 / Fraktur / Permintaan Mandiri">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-3 control-label">Catatan Khusus</label>
+            <div class="col-sm-9">
+              <textarea name="informasi_tambahan" id="informasi_tambahan" rows="2" class="form-control" placeholder="Catatan kondisi khusus pasien / kewaspadaan PPI..."></textarea>
+              <div style="margin-top: 6px;" class="quick-tags-container">
+                <button type="button" class="btn btn-xs btn-danger btn-quick-tag" data-tag="Pasien HIV (+)"><i class="fa fa-tag"></i> HIV (+)</button>
+                <button type="button" class="btn btn-xs btn-warning btn-quick-tag" data-tag="Hepatitis B/C"><i class="fa fa-tag"></i> Hepatitis</button>
+                <button type="button" class="btn btn-xs btn-warning btn-quick-tag" data-tag="TB Paru (Airborne)"><i class="fa fa-tag"></i> TB Paru</button>
+                <button type="button" class="btn btn-xs btn-info btn-quick-tag" data-tag="Suspek Hamil"><i class="fa fa-tag"></i> Hamil</button>
+                <button type="button" class="btn btn-xs btn-primary btn-quick-tag" data-tag="CITO"><i class="fa fa-bolt"></i> CITO</button>
+                <button type="button" class="btn btn-xs btn-default btn-quick-tag" data-tag="Kursi Roda / Brankar"><i class="fa fa-wheelchair"></i> Kursi Roda</button>
+                <button type="button" class="btn btn-xs btn-success" id="simpan_catatan_saja" style="margin-left: 5px; font-weight: bold;"><i class="fa fa-save"></i> Simpan Catatan Ini</button>
+                <button type="button" class="btn btn-xs btn-default" id="btn_hapus_catatan_form" style="margin-left: 5px; font-weight: bold; color: #a94442;"><i class="fa fa-trash"></i> Hapus / Reset</button>
+              </div>
+            </div>
+          </div>
           
         </div>
       </div>
@@ -125,6 +151,11 @@
 }
 #layanan .table-responsive {
     border: none;
+}
+.btn-quick-tag {
+    margin-right: 3px;
+    margin-bottom: 3px;
+    font-weight: 600;
 }
 </style>
 
@@ -159,6 +190,22 @@
   $(document).click(function(e) {
       if (!$(e.target).closest('#rawat_jl_dr').length) {
           $('#kode_providerList').fadeOut();
+      }
+  });
+
+  // Handler tombol cepat / quick tags
+  $(document).on('click', '.btn-quick-tag', function(e) {
+      e.preventDefault();
+      var tag = $(this).attr('data-tag');
+      var $target = $(this).closest('.form-group').find('textarea[name=informasi_tambahan]');
+      if ($target.length === 0) {
+          $target = $('textarea[name=informasi_tambahan]');
+      }
+      var current = $target.val().trim();
+      if (current === '') {
+          $target.val(tag);
+      } else if (current.indexOf(tag) === -1) {
+          $target.val(current + ', ' + tag);
       }
   });
 </script>

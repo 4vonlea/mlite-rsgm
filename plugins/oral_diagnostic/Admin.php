@@ -975,11 +975,12 @@ class Admin extends AdminModule
 
     public function anyRadiologi()
     {
-      $radiologi = $this->db('jns_perawatan_radiologi')
-        ->where('status', '1')
-        ->like('nm_perawatan', '%'.htmlspecialchars($_POST['radiologi'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'%')
-        ->limit(10)
-        ->toArray();
+      $search = htmlspecialchars($_POST['radiologi'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      $query = $this->db('jns_perawatan_radiologi')->where('status', '1');
+      if (!empty($search)) {
+        $query = $query->like('nm_perawatan', '%' . $search . '%');
+      }
+      $radiologi = $query->limit(50)->toArray();
       echo $this->draw('radiologi.html', ['radiologi' => htmlspecialchars_array($radiologi)]);
       exit();
     }

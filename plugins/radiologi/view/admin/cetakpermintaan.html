@@ -103,18 +103,28 @@
 			</table>
 			<br>
 			<h4>Permintaan Pemeriksaan Radiologi</h4>
-		  <table width="740px">
+		  <table width="740px" style="border-collapse: collapse;">
 		    <thead>
-		      <tr style="border-top: 1px solid #8c8b8b">
-		        <th>Pemeriksaan</th>
+		      <tr style="border-top: 1px solid #8c8b8b; border-bottom: 1px solid #8c8b8b; background-color: #f5f5f5;">
+		        <th align="left" style="padding: 6px;">Pemeriksaan</th>
+		        <th align="left" style="padding: 6px;">Indikasi Klinis</th>
+		        <th align="left" style="padding: 6px;">Catatan Khusus / PPI</th>
 		      </tr>
 		    </thead>
 
 				<tbody>
 		      {loop: $permintaan_radiologi}
 		        {loop: $value.permintaan_pemeriksaan_radiologi as $data}
-		        <tr>
-		          <td>{?=isset_or($data.nm_perawatan)?}</td>
+		        <tr style="border-bottom: 1px solid #ddd;">
+		          <td style="padding: 6px;"><strong>{?=isset_or($data.nm_perawatan)?}</strong></td>
+		          <td style="padding: 6px;">{?=isset_or($value.diagnosa_klinis, '-')?}</td>
+		          <td style="padding: 6px;">
+		            {if: !empty($value.informasi_tambahan)}
+		              <strong>{?=isset_or($value.informasi_tambahan)?}</strong>
+		            {else}
+		              -
+		            {/if}
+		          </td>
 		        </tr>
 		        {/loop}
 		      {/loop}

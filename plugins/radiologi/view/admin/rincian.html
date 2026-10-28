@@ -65,6 +65,40 @@
 </style>
 <div class="row">
   <div class="col-md-7 col-md-push-5">
+    {if: count($radiologi) > 0}
+      {loop: $radiologi as $rad_alert}
+        {if: !empty($rad_alert.informasi_tambahan)}
+          {if: stripos($rad_alert.informasi_tambahan, 'HIV') !== false || stripos($rad_alert.informasi_tambahan, 'Hepatitis') !== false || stripos($rad_alert.informasi_tambahan, 'TB') !== false || stripos($rad_alert.informasi_tambahan, 'Airborne') !== false}
+            <div class="alert alert-danger" style="margin-bottom: 15px; border-left: 5px solid #d9534f; background-color: #fdf2f2; box-shadow: 0 2px 4px rgba(217,83,79,0.15);">
+              <button type="button" class="btn btn-xs btn-default pull-right hapus_catatan_radiologi" data-noorder="{?=isset_or($rad_alert.noorder)?}" data-no_rawat="{?=isset_or($no_rawat)?}" style="color: #a94442; font-weight: bold; margin-top: -2px;">
+                <i class="fa fa-trash"></i> Hapus Catatan
+              </button>
+              <h4 style="margin: 0 0 5px 0; font-size: 15px; font-weight: bold; color: #a94442;">
+                <i class="fa fa-exclamation-triangle"></i> PERHATIAN KHUSUS / KEWASPADAAN TRANSMISI (PPI):
+              </h4>
+              <span style="font-size: 14px; font-weight: bold; color: #a94442;">{?=isset_or($rad_alert.informasi_tambahan)?}</span>
+              <div style="font-size: 12px; color: #777; margin-top: 4px;">
+                <i class="fa fa-shield"></i> <em>Radiografer wajib menggunakan APD sesuai level PPI, proteksi kaset/sensor, dan lakukan desinfeksi unit rontgen setelah pemeriksaan.</em>
+              </div>
+            </div>
+          {elseif: stripos($rad_alert.informasi_tambahan, 'CITO') !== false}
+            <div class="alert alert-danger" style="margin-bottom: 15px; padding: 10px 15px; font-weight: bold;">
+              <button type="button" class="btn btn-xs btn-default pull-right hapus_catatan_radiologi" data-noorder="{?=isset_or($rad_alert.noorder)?}" data-no_rawat="{?=isset_or($no_rawat)?}" style="color: #a94442; font-weight: bold; margin-top: -2px;">
+                <i class="fa fa-trash"></i> Hapus Catatan
+              </button>
+              <i class="fa fa-bolt"></i> PASIEN CITO / PRIORITAS: {?=isset_or($rad_alert.informasi_tambahan)?}
+            </div>
+          {elseif: stripos($rad_alert.informasi_tambahan, 'Hamil') !== false}
+            <div class="alert alert-warning" style="margin-bottom: 15px; padding: 10px 15px; font-weight: bold;">
+              <button type="button" class="btn btn-xs btn-default pull-right hapus_catatan_radiologi" data-noorder="{?=isset_or($rad_alert.noorder)?}" data-no_rawat="{?=isset_or($no_rawat)?}" style="color: #8a6d3b; font-weight: bold; margin-top: -2px;">
+                <i class="fa fa-trash"></i> Hapus Catatan
+              </button>
+              <i class="fa fa-female"></i> PERINGATAN RADIASI: {?=isset_or($rad_alert.informasi_tambahan)?} (Pastikan konfirmasi dokter perujuk dan gunakan apron pelindung)
+            </div>
+          {/if}
+        {/if}
+      {/loop}
+    {/if}
     <h4 class="page-header" style="margin-top:0;">Rincian Pemeriksaan</h4>
 
 {if: count($periksa_radiologi) > 0}
@@ -283,8 +317,38 @@
           {/if}
           {if: !empty($value.informasi_tambahan)}
           <tr>
-            <td style="background:#fdf8e4; padding-left:15px; border-top: 1px solid #faebcc;"><strong>Info Tambahan</strong></td>
-            <td style="background:#fff; border-top: 1px solid #eee;">{?=isset_or($value.informasi_tambahan)?}</td>
+            <td style="background:#fdf8e4; padding-left:15px; border-top: 1px solid #faebcc; vertical-align: top;"><strong>Info Tambahan / K3</strong></td>
+            <td style="background:#fff; border-top: 1px solid #eee;">
+              {if: stripos($value.informasi_tambahan, 'HIV') !== false || stripos($value.informasi_tambahan, 'Hepatitis') !== false || stripos($value.informasi_tambahan, 'TB') !== false || stripos($value.informasi_tambahan, 'Airborne') !== false}
+                <div class="alert alert-danger" style="margin-bottom: 5px; padding: 8px 12px; border-left: 5px solid #d9534f; background-color: #fdf2f2;">
+                  <button type="button" class="btn btn-xs btn-default pull-right hapus_catatan_radiologi" data-noorder="{?=isset_or($value.noorder)?}" data-no_rawat="{?=isset_or($no_rawat)?}" style="color: #a94442; font-weight: bold; margin-top: -4px;">
+                    <i class="fa fa-trash"></i> Hapus
+                  </button>
+                  <strong style="color: #a94442;"><i class="fa fa-exclamation-triangle"></i> PERHATIAN / KEWASPADAAN TRANSMISI KHUSUS:</strong><br>
+                  <span style="font-size: 13px; font-weight: bold; color: #a94442;">{?=isset_or($value.informasi_tambahan)?}</span>
+                  <div style="font-size: 11px; color: #777; margin-top: 4px;"><i class="fa fa-shield"></i> <em>Wajib gunakan APD sesuai SOP PPI & lakukan desinfeksi kaset/alat setelah tindakan.</em></div>
+                </div>
+              {elseif: stripos($value.informasi_tambahan, 'CITO') !== false}
+                <div class="alert alert-danger" style="margin-bottom: 5px; padding: 6px 10px; font-weight: bold;">
+                  <button type="button" class="btn btn-xs btn-default pull-right hapus_catatan_radiologi" data-noorder="{?=isset_or($value.noorder)?}" data-no_rawat="{?=isset_or($no_rawat)?}" style="color: #a94442; font-weight: bold; margin-top: -4px;">
+                    <i class="fa fa-trash"></i> Hapus
+                  </button>
+                  <i class="fa fa-bolt"></i> CITO / PRIORITAS: {?=isset_or($value.informasi_tambahan)?}
+                </div>
+              {elseif: stripos($value.informasi_tambahan, 'Hamil') !== false}
+                <div class="alert alert-warning" style="margin-bottom: 5px; padding: 6px 10px; font-weight: bold;">
+                  <button type="button" class="btn btn-xs btn-default pull-right hapus_catatan_radiologi" data-noorder="{?=isset_or($value.noorder)?}" data-no_rawat="{?=isset_or($no_rawat)?}" style="color: #8a6d3b; font-weight: bold; margin-top: -4px;">
+                    <i class="fa fa-trash"></i> Hapus
+                  </button>
+                  <i class="fa fa-female"></i> PERINGATAN RADIASI: {?=isset_or($value.informasi_tambahan)?}
+                </div>
+              {else}
+                <span class="label label-info" style="font-size: 12px; white-space: normal; display: inline-block;">{?=isset_or($value.informasi_tambahan)?}</span>
+                <button type="button" class="btn btn-xs btn-default pull-right hapus_catatan_radiologi" data-noorder="{?=isset_or($value.noorder)?}" data-no_rawat="{?=isset_or($no_rawat)?}" style="color: #a94442; font-weight: bold; margin-left: 5px;">
+                  <i class="fa fa-trash"></i> Hapus
+                </button>
+              {/if}
+            </td>
           </tr>
           {/if}
         </table>

@@ -787,20 +787,39 @@ $('input:text[name=layanan]').on('input',function(e){
 });
 // end pencarian
 
-// ketika inputbox pencarian diisi
-$('input:text[name=radiologi]').on('input',function(e){
+// ketika inputbox pencarian diisi atau diklik
+$('input:text[name=radiologi]').on('input focus click', function(e){
   var baseURL = mlite.url + '/' + mlite.admin;
   var url    = baseURL + '/oral_diagnostic/radiologi?t=' + mlite.token;
   var radiologi = $('input:text[name=radiologi]').val();
 
-  if(radiologi!="") {
-      $.post(url, {radiologi: radiologi} ,function(data) {
-      // tampilkan data yang sudah di perbaharui
-        $("#radiologi").html(data).show();
-        $("#layanan").hide();
-      });
-  }
+  $.post(url, {radiologi: radiologi} ,function(data) {
+    $("#radiologi").html(data).show();
+    $("#layanan").hide();
+  });
+});
 
+// tombol toggle daftar radiologi
+$("#form_rincian").on("click", "#btn_toggle_radiologi", function(e){
+  e.preventDefault();
+  if ($("#radiologi").is(":visible")) {
+    $("#radiologi").hide();
+  } else {
+    var baseURL = mlite.url + '/' + mlite.admin;
+    var url    = baseURL + '/oral_diagnostic/radiologi?t=' + mlite.token;
+    var radiologi = $('input:text[name=radiologi]').val();
+
+    $.post(url, {radiologi: radiologi} ,function(data) {
+      $("#radiologi").html(data).show();
+      $("#layanan").hide();
+    });
+  }
+});
+
+// tombol tutup pilihan radiologi
+$("#radiologi").on("click", "#tutup_pilihan_radiologi", function(e){
+  e.preventDefault();
+  $("#radiologi").hide();
 });
 // end pencarian
 
@@ -912,6 +931,7 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
     $('input:text[name=kode_provider2]').val("");
     $('textarea[name=informasi_tambahan]').val("");
     $('input:text[name=diagnosa_klinis]').val("");
+    $('#info_tambahan').hide();
     $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
     "Data pasien telah disimpan!"+
     "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
@@ -1001,6 +1021,11 @@ function bersih(){
   $('input:text[name=telepon]').val("");
   $('input:text[name=pekerjaan]').val("");
   $('input:text[name=layanan]').val("");
+  $('input:text[name=radiologi]').val("");
+  $('textarea[name=informasi_tambahan]').val("");
+  $('input:text[name=diagnosa_klinis]').val("");
+  $('#info_tambahan').hide();
+  $('#radiologi').hide();
   $('input:text[name=obat]').val("");
   $('input:text[name=nama_jenis]').val("");
   $('input:text[name=jumlah_jual]').attr("disabled", true);

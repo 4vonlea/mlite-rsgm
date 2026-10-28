@@ -449,21 +449,23 @@ $("#layanan").on("click", ".pilih_layanan", function(event){
 });
 
 // ketika tombol simpan diklik
-$("#form_rincian").on("click", "#simpan_rincian", function(event){
+$("#form_rincian").on("click", "#simpan_rincian, #simpan_catatan_saja", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
 
-  var no_rawat        = $('input:text[name=no_rawat]').val();
-  var kd_jenis_prw 	  = $('input:hidden[name=kd_jenis_prw]').val();
-  var provider        = $('select[name=provider]').val();
-  var kode_provider   = $('input:text[name=kode_provider]').val();
-  var tgl_perawatan   = $('input:text[name=tgl_perawatan]').val();
-  var jam_rawat       = $('input:text[name=jam_reg]').val();
-  var biaya           = $('input:text[name=biaya]').val();
-  var aturan_pakai    = $('input:text[name=aturan_pakai]').val();
-  var kat             = $('input:hidden[name=kat]').val();
-  var jml             = $('input:text[name=jml]').val();
-  var status          = $('input:text[name=status]').val();
+  var no_rawat        = $('#form_rincian input[name=no_rawat]').val() || $('input:text[name=no_rawat]').val();
+  var kd_jenis_prw 	  = $('#form_rincian input[name=kd_jenis_prw]').val() || '';
+  var provider        = $('#form_rincian select[name=provider]').val() || '';
+  var kode_provider   = $('#form_rincian input[name=kode_provider]').val() || '';
+  var tgl_perawatan   = $('#form_rincian input[name=tgl_perawatan]').val() || '';
+  var jam_rawat       = $('#form_rincian input[name=jam_reg]').val() || '';
+  var biaya           = $('#form_rincian input[name=biaya]').val() || '';
+  var aturan_pakai    = $('#form_rincian input[name=aturan_pakai]').val() || '';
+  var kat             = $('#form_rincian input[name=kat]').val() || '';
+  var jml             = $('#form_rincian input[name=jml]').val() || '';
+  var status          = $('#form_rincian input[name=status]').val() || $('input:text[name=status]').val() || 'Ralan';
+  var diagnosa_klinis = $('#diagnosa_klinis').val() || $('#form_rincian input[name=diagnosa_klinis]').val() || '';
+  var informasi_tambahan = $('#informasi_tambahan').val() || $('#form_rincian textarea[name=informasi_tambahan]').val() || '';
 
   var url = baseURL + '/radiologi/savedetail?t=' + mlite.token;
   $.post(url, {no_rawat : no_rawat,
@@ -476,7 +478,9 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
   aturan_pakai   : aturan_pakai,
   kat            : kat,
   jml            : jml,
-  status         : status
+  status         : status,
+  diagnosa_klinis : diagnosa_klinis,
+  informasi_tambahan : informasi_tambahan
   }, function(data) {
     // tampilkan data
     $("#display").hide();
@@ -485,7 +489,6 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
     }, function(data) {
       // tampilkan data
       $("#rincian").html(data).show();
-      //bersih();
     });
     $('input:hidden[name=kd_jenis_prw]').val("");
     $('input:text[name=nm_perawatan]').val("");
@@ -493,10 +496,41 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
     $('input:text[name=biaya]').val("");
     $('input:text[name=nama_provider]').val("");
     $('input:text[name=kode_provider]').val("");
+    $('#diagnosa_klinis').val("");
+    $('#informasi_tambahan').val("");
     $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-    "Data pasien telah disimpan!"+
+    "Data rincian dan catatan khusus berhasil disimpan!"+
     "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
     "</div>").show();
+  });
+});
+
+// Hapus catatan khusus radiologi
+$(document).on("click", ".hapus_catatan_radiologi, #btn_hapus_catatan_form", function(event){
+  event.preventDefault();
+  var baseURL = mlite.url + '/' + mlite.admin;
+  var no_rawat = $(this).attr("data-no_rawat") || $('#form_rincian input[name=no_rawat]').val() || $('input:text[name=no_rawat]').val();
+  var noorder = $(this).attr("data-noorder") || '';
+  var status = $('#form_rincian input[name=status]').val() || $('input:text[name=status]').val() || 'Ralan';
+
+  bootbox.confirm("Apakah Anda yakin ingin menghapus catatan khusus pasien ini?", function(result){
+    if (result){
+      var url = baseURL + '/radiologi/hapuscatatan?t=' + mlite.token;
+      $.post(url, {
+        no_rawat: no_rawat,
+        noorder: noorder
+      }, function(data) {
+        var rincianUrl = baseURL + '/radiologi/rincian?t=' + mlite.token;
+        $.post(rincianUrl, {no_rawat : no_rawat, status : status}, function(data) {
+          $("#rincian").html(data).show();
+        });
+        $('#informasi_tambahan').val("");
+        $('#notif').html("<div class=\"alert alert-warning alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+        "Catatan khusus telah dihapus!"+
+        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+        "</div>").show();
+      });
+    }
   });
 });
 
@@ -828,6 +862,8 @@ function bersih(){
   $('input:text[name=harga_jual]').val("");
   $('input:text[name=total]').val("");
   $('input:text[name=no_reg]').val("");
+  $('input[name=diagnosa_klinis]').val("");
+  $('textarea[name=informasi_tambahan]').val("");
 }
 
 $(document).click(function (event) {
