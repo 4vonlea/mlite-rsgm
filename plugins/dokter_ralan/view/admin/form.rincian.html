@@ -38,7 +38,12 @@
           <div class="form-group">
             <label for="" class="col-sm-3 control-label">Laboratorium</label>
             <div class="col-sm-4">
-              <input type="text" name="laboratorium" class="form-control" placeholder="Nama Layanan" value="">
+              <div class="input-group">
+                <input type="text" name="laboratorium" class="form-control" placeholder="Nama Layanan" value="">
+                <span class="input-group-btn">
+                  <button class="btn btn-primary" type="button" id="btn_modal_lab" title="Buka Form Laboratorium"><i class="fa fa-list-alt"></i></button>
+                </span>
+              </div>
             </div>
             <label for="" class="col-sm-2 control-label">Radiologi</label>
             <div class="col-sm-3">
@@ -162,6 +167,25 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="modalPermintaanLab" tabindex="-1" role="dialog" aria-labelledby="modalPermintaanLabLabel">
+  <div class="modal-dialog modal-lg" role="document" style="width: 90%; max-width: 1200px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="modalPermintaanLabLabel">Permintaan Pemeriksaan Laboratorium Klinik</h4>
+      </div>
+      <div class="modal-body" id="bodyPermintaanLab" style="background-color: #f9f9f9;">
+        <div class="text-center" style="padding: 30px;"><i class="fa fa-spinner fa-spin fa-3x"></i><br><br>Memuat form laboratorium...</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-primary" id="btnSimpanPermintaanLab"><i class="fa fa-check"></i> Simpan Permintaan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   $('input:text[name=aturan_pakai]').on('input',function(e){
     var baseURL = mlite.url + '/' + mlite.admin;

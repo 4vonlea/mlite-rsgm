@@ -27,13 +27,16 @@ class Site extends SiteModule
              } elseif ($signature['ref_type'] == 'radiologi_hasil') {
                  $signature['jenis_dokumen'] = 'Rekam Medis Elektronik';
                  $signature['nama_dokumen'] = 'Hasil Pemeriksaan Radiologi';
+             } elseif ($signature['ref_type'] == 'laboratorium_hasil') {
+                 $signature['jenis_dokumen'] = 'Rekam Medis Elektronik';
+                 $signature['nama_dokumen'] = 'Hasil Pemeriksaan Laboratorium';
              } elseif ($signature['ref_type'] == 'soap_ranap') {
                  $signature['jenis_dokumen'] = 'Rekam Medis Elektronik';
                  $signature['nama_dokumen'] = 'Catatan Perkembangan Pasien Terintegrasi (CPPT) Rawat Inap';
              }
              
              $no_rawat_clean = '';
-             if ($signature['ref_type'] == 'radiologi_hasil') {
+             if ($signature['ref_type'] == 'radiologi_hasil' || $signature['ref_type'] == 'laboratorium_hasil') {
                  $parts = explode('_', $signature['ref_id']);
                  $no_rawat_clean = isset($parts[1]) ? $parts[1] : '';
              } else if (in_array($signature['ref_type'], ['soap_ralan', 'soap_ranap'])) {

@@ -118,16 +118,20 @@
 <script type="text/javascript">
   $('select').selectator();
   $('#simpan_template').click(function(e){
-    //alert('Simpan Template');
     var baseURL = mlite.url + '/' + mlite.admin;
     e.preventDefault();
     var url = baseURL + '/master/jnsperawatanlabtemplatesave?t=' + mlite.token;
+    var kd_jenis_prw = $('#templateForm input[name=kd_jenis_prw]').val();
     $('#templateModal').modal('hide');
     $('#templateModalEdit').modal('hide');
     $.post(url,
        $('#templateForm').serialize(),
        function(data, status, xhr){
-         $('#display_template').hide();
+         if (kd_jenis_prw) {
+           $.post(baseURL + '/master/templatelaboratorium?t=' + mlite.token, {kd_jenis_prw: kd_jenis_prw}, function(htmlData) {
+             $("#display_template").html(htmlData).show();
+           });
+         }
          $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
          "Data template telah disimpan!"+
          "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+

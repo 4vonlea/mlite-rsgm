@@ -962,7 +962,44 @@ class Admin extends AdminModule
 
     public function postJnsPerawatanLabHapus()
     {
-      $this->jnsperawatanlab->postHapus();
+      try {
+        $kd_jenis_prw = $_POST['kd_jenis_prw'] ?? '';
+        if (empty($kd_jenis_prw)) {
+          echo json_encode(['status' => 'error', 'msg' => 'Kode perawatan tidak valid.']);
+          exit();
+        }
+
+        $cek_periksa = $this->db('periksa_lab')->where('kd_jenis_prw', $kd_jenis_prw)->oneArray();
+        if ($cek_periksa) {
+          echo json_encode([
+            'status' => 'error',
+            'msg' => 'Jenis perawatan tidak dapat dihapus karena sudah ada di pemeriksaan lab pasien (No. Rawat: ' . $cek_periksa['no_rawat'] . ').'
+          ]);
+          exit();
+        }
+
+        $cek_detail = $this->db('detail_periksa_lab')->where('kd_jenis_prw', $kd_jenis_prw)->oneArray();
+        if ($cek_detail) {
+          echo json_encode([
+            'status' => 'error',
+            'msg' => 'Jenis perawatan tidak dapat dihapus karena sudah digunakan pada rincian pemeriksaan pasien (No. Rawat: ' . $cek_detail['no_rawat'] . ').'
+          ]);
+          exit();
+        }
+
+        $query = $this->jnsperawatanlab->postHapus();
+        if ($query) {
+          echo json_encode(['status' => 'success', 'msg' => 'Data jenis perawatan laboratorium telah dihapus!']);
+        } else {
+          echo json_encode(['status' => 'error', 'msg' => 'Data jenis perawatan laboratorium gagal dihapus.']);
+        }
+      } catch (\Exception $e) {
+        $msg = $e->getMessage();
+        if (strpos($msg, 'foreign key constraint') !== false || $e->getCode() == 23000) {
+          $msg = 'Jenis perawatan ini tidak dapat dihapus karena masih terkait dengan data transaksi lain.';
+        }
+        echo json_encode(['status' => 'error', 'msg' => htmlspecialchars($msg, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')]);
+      }
       exit();
     }
 
@@ -988,13 +1025,50 @@ class Admin extends AdminModule
 
     public function postJnsPerawatanLabTemplateHapus()
     {
-      $query = $this->db('template_laboratorium')->where('id_template', $_POST['id_template'])->delete();
-      if($query == 1) {
-        $data['status'] = 'success';
-        echo json_encode(htmlspecialchars_array($data));
-      } else {
+      try {
+        $id_template = $_POST['id_template'] ?? '';
+        if (empty($id_template)) {
+          echo json_encode(['status' => 'error', 'msg' => 'ID template tidak valid.']);
+          exit();
+        }
+
+        // Cek relasi ke detail_periksa_lab
+        $cek_periksa = $this->db('detail_periksa_lab')->where('id_template', $id_template)->oneArray();
+        if ($cek_periksa) {
+          echo json_encode([
+            'status' => 'error',
+            'msg' => 'Pemeriksaan ini tidak dapat dihapus karena sudah digunakan pada riwayat pemeriksaan laboratorium pasien (No. Rawat: ' . $cek_periksa['no_rawat'] . ').'
+          ]);
+          exit();
+        }
+
+        // Cek relasi ke permintaan_detail_permintaan_lab
+        $cek_permintaan = $this->db('permintaan_detail_permintaan_lab')->where('id_template', $id_template)->oneArray();
+        if ($cek_permintaan) {
+          echo json_encode([
+            'status' => 'error',
+            'msg' => 'Pemeriksaan ini tidak dapat dihapus karena terdapat di permintaan pemeriksaan laboratorium (No. Order: ' . $cek_permintaan['noorder'] . ').'
+          ]);
+          exit();
+        }
+
+        $query = $this->db('template_laboratorium')->where('id_template', $id_template)->delete();
+        if($query == 1) {
+          $data['status'] = 'success';
+          echo json_encode(htmlspecialchars_array($data));
+        } else {
+          $data['status'] = 'error';
+          $data['msg'] = 'Data template tidak ditemukan atau gagal dihapus.';
+          echo json_encode(htmlspecialchars_array($data));
+        }
+      } catch (\Exception $e) {
         $data['status'] = 'error';
-        $data['msg'] = htmlspecialchars($query->errorInfo()['2'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $msg = $e->getMessage();
+        if (strpos($msg, 'foreign key constraint') !== false || $e->getCode() == 23000) {
+          $data['msg'] = 'Pemeriksaan ini tidak dapat dihapus karena masih terkait dengan data transaksi lain.';
+        } else {
+          $data['msg'] = htmlspecialchars($msg, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        }
         echo json_encode(htmlspecialchars_array($data));
       }
       exit();

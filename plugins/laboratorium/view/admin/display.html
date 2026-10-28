@@ -30,13 +30,14 @@
                 <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynokartu', $value.no_peserta, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal">[BPJS] Cek Nomor Kartu</a></li>
                 <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynik', $value.no_ktp, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal">[BPJS] Cek Nomor KTP</a></li>
               {/if}
-              <li><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal">Elektronik Rekam Medis</a></li>
+              <li><a href="#" onclick="openPdfTteModal('{?=isset_or($value.no_rkm_medis)?}','{?=isset_or($value.no_rawat)?}')">Elektronik Rekam Medis (PDF)</a></li>
+              <li><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal">Ringkasan Rekam Medis</a></li>
               {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis' || $this->core->getUserInfo('role') == 'laboratorium'}
-              <li><a href="#layanan_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}">Input Pemeriksaan</a></li>
+              <li><a href="#layanan_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-jk="{?=isset_or($value.jk)?}" data-tgl_lahir="{?=isset_or($value.tgl_lahir)?}" data-umurdaftar="{?=isset_or($value.umurdaftar)?}" data-sttsumur="{?=isset_or($value.sttsumur)?}" data-no_tlp="{?=isset_or($value.no_tlp)?}" data-nm_poli="{?=isset_or($value.nm_poli)?}" data-alamat="{?=isset_or($value.alamat)?}">Input Pemeriksaan</a></li>
               {/if}
             </ul>
           </td>
-          <td style="white-space: nowrap;"><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal">{?=isset_or($value.nm_pasien)?}</a></td>
+          <td style="white-space: nowrap;"><a href="#" onclick="openPdfTteModal('{?=isset_or($value.no_rkm_medis)?}','{?=isset_or($value.no_rawat)?}')">{?=isset_or($value.nm_pasien)?}</a></td>
           <td class="edit" data-no_rawat="{?=isset_or($value.no_rawat)?}">{?=isset_or($value.no_rawat)?}</td>
           {if: $type == 'ranap'}
           {else}
@@ -104,7 +105,10 @@
 <div class="modal fade" id="riwayatModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-full" role="document">
         <div class="modal-content">
-            ...
+            <div class="text-center" style="padding:40px;">
+                <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
+                <p style="margin-top:10px;">Memuat rekam medis...</p>
+            </div>
         </div>
     </div>
 </div>
@@ -117,11 +121,24 @@
     var no_rawat = $(this).attr("data-no_rawat");
     var no_rkm_medis = $(this).attr("data-no_rkm_medis");
     var nm_pasien = $(this).attr("data-nm_pasien");
+    var jk = $(this).attr("data-jk");
+    var tgl_lahir = $(this).attr("data-tgl_lahir");
+    var umur = $(this).attr("data-umurdaftar") + " " + $(this).attr("data-sttsumur");
+    var no_tlp = $(this).attr("data-no_tlp");
+    var nm_poli = $(this).attr("data-nm_poli");
+    var alamat = $(this).attr("data-alamat");
     var status = $('input:text[name=status]').val();
 
     $('input:text[name=no_rawat]').val(no_rawat);
-    $('input:text[name=no_rkm_medis]').val(no_rkm_medis);
-    $('input:text[name=nm_pasien]').val(nm_pasien);
+    $('input[name=no_rkm_medis]').val(no_rkm_medis);
+    $('#teks_no_rkm_medis').text(no_rkm_medis);
+    $('input[name=nm_pasien]').val(nm_pasien);
+    $('#teks_nm_pasien').text(nm_pasien);
+    $('#teks_tgl_lahir_umur').text(tgl_lahir + ' / ' + umur);
+    $('#teks_jk').text(jk);
+    $('#teks_no_tlp').text(no_tlp);
+    $('#teks_nm_poli').text(nm_poli);
+    $('#teks_alamat').text(alamat);
     $("#display").hide();
 
     var url = baseURL + '/laboratorium/rincian?t=' + mlite.token;

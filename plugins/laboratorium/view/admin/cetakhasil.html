@@ -1,275 +1,431 @@
-
 <!doctype html>
 <html lang="id">
-	<head>
-		<title>Cetak Hasil</title>
-		<meta charset="UTF-8">
-    <link href="{?=url()?}/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
-		<script src="{?=url()?}/assets/jscripts/jquery.min.js"></script>
-		<script src="{?=url()?}/assets/jscripts/bootstrap.min.js"></script>
-	<style>
-	body{
-		margin: 20px;
-		width: 800px;
-	}
-	table {
-	  border-collapse: collapse;
-	}
-	tr{
-	  border-bottom: 1px solid #8c8b8b;
-	}
-	th,td {padding:3px 0px 3px 10px;}
-	.float{
-		position:fixed;
-		width:120px;
-		height:40px;
-		bottom:40px;
-		right:40px;
-		background-color:#4C9A2A;
-		color:#FFF;
-		text-align:center;
-		box-shadow: 2px 2px 3px #999;
-	}
-	</style>
+<head>
+  <title>Hasil Pemeriksaan Laboratorium - {?=isset_or($pasien.nm_pasien)?}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="{?=url()?}/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+  <link href="{?=url()?}/assets/css/font-awesome.css" rel="stylesheet" type="text/css">
+  <script src="{?=url()?}/assets/jscripts/jquery.min.js"></script>
+  <script src="{?=url()?}/assets/jscripts/bootstrap.min.js"></script>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 8mm 10mm 8mm 10mm;
+    }
+    body {
+      background-color: #f1f5f9;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 10.5px;
+      color: #000000;
+      margin: 0;
+      padding: 15px;
+    }
+    .sheet {
+      background: #ffffff;
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      padding: 10mm 12mm;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      box-sizing: border-box;
+      position: relative;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .table-hasil {
+      margin-top: 6px;
+      margin-bottom: 6px;
+      border: 1px solid #000;
+    }
+    .table-hasil th {
+      background-color: #f2e8dc;
+      border: 1px solid #000;
+      padding: 4px 6px;
+      font-size: 10px;
+      font-weight: bold;
+      color: #000;
+    }
+    .table-hasil td {
+      border: 1px solid #000;
+      padding: 3px 6px;
+      font-size: 10px;
+      vertical-align: middle;
+      color: #000;
+    }
+    .floating-bar {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      z-index: 9999;
+      display: flex;
+      gap: 10px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+      border-radius: 30px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 8px 15px;
+      backdrop-filter: blur(4px);
+    }
+    @media print {
+      body {
+        background: none;
+        padding: 0;
+        margin: 0;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .sheet {
+        box-shadow: none;
+        margin: 0;
+        width: 100%;
+        min-height: auto;
+        padding: 0;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
 
-	<script>
-	function printContent(el){
-	var restorepage = document.body.innerHTML;
-	var printcontent = document.getElementById(el).innerHTML;
-	document.body.innerHTML = printcontent;
-	window.print();
-	document.body.innerHTML = restorepage; window.close();
-	}
-	</script>
-	</head>
+  <!-- Floating Actions (Khusus Layar Browser, Tidak Ikut Tercetak) -->
+  <div class="floating-bar no-print">
+    <button onclick="window.print()" type="button" class="btn btn-primary btn-sm" style="border-radius: 20px; font-weight: bold; padding: 6px 18px;">
+      <i class="fa fa-print"></i> Cetak Dokumen
+    </button>
+    <button type="button" class="btn btn-info btn-sm" data-toggle="modal" href="#waModal" style="border-radius: 20px;">
+      <i class="fa fa-whatsapp"></i> Kirim WA
+    </button>
+    <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" href="#emailModal" style="border-radius: 20px;">
+      <i class="fa fa-envelope"></i> Kirim Email
+    </button>
+    <button onclick="window.close()" type="button" class="btn btn-default btn-sm" style="border-radius: 20px;">
+      <i class="fa fa-times"></i> Tutup
+    </button>
+  </div>
 
-	<body>
-		<div id="faktur" style="margin: auto 0;">
-		<center>
-			<table width="740px">
-				<tr style="border:none;">
-					<td width="80px">
-						<img width="70px" src='{?=url()?}/{$settings.logo}' />
-					</td>
-					<td>
-						<span style="font-size:24px">{$settings.nama_instansi}</span><br>
-						{$settings.alamat} - {$settings.nomor_telepon} - {$settings.email}<br>
-						{$settings.kota} - {$settings.propinsi}
-					</td>
-				</tr>
-			</table>
-			<hr style="border-top: 3px double #8c8b8b;width:740px;">
-			<table width="740px">
-				<tr style="border:none;">
-					<td width="150px">Nama Pasien/RM</td>
-					<td>:</td>
-					<td width="600px">
-						{$pasien.nm_pasien}
-					</td>
-				</tr>
-				<tr style="border:none;">
-					<td width="150px">Umur</td>
-					<td>:</td>
-					<td width="600px">
-						{$pasien.umur}
-					</td>
-				</tr>
-				<tr style="border:none;">
-					<td width="150px">Poli</td>
-					<td>:</td>
-					<td width="600px">
-						{$pasien.nm_poli}
-					</td>
-				</tr>
-				<tr style="border:none;">
-					<td width="150px">Dokter PJ</td>
-					<td>:</td>
-					<td width="600px">
-						{$pj_lab}
-					</td>
-				</tr>
-				<tr style="border:none;">
-					<td width="150px">Dokter Pengirim</td>
-					<td>:</td>
-					<td width="600px">
-						{$dokter_perujuk}
-					</td>
-				</tr>
-				<tr style="border:none;">
-					<td width="150px">Tanggal</td>
-					<td>:</td>
-					<td width="600px">
-						{$pasien.tgl_registrasi}
-					</td>
-				</tr>
-			</table>
-			<br>
-			<h4>Hasil Pemeriksaan Laboratorium</h4>
-		  <table width="740px">
-		    <thead>
-		      <tr style="border-top: 1px solid #8c8b8b">
-		        <th width="20px;">No.</th>
-		        <th>Pemeriksaan</th>
-		        <th>Hasil</th>
-		        <th>Rujukan</th>
-		        <th>Satuan</th>
-		        <th>Keterangan</th>
-		      </tr>
-		    </thead>
-		    <tbody>
-		      {loop: $periksa_lab}
-		      <tr>
-		        <td>{$value.nomor}</td>
-		        <td colspan="5">{$value.nm_perawatan}</td>
-		      </tr>
-		      {loop: $value.detail_periksa_lab as $data2}
-		      <tr>
-		        <td></td>
-		        <td>{$data2.Pemeriksaan}</td>
-		        <td>{$data2.nilai}</td>
-		        <td>
-					{if: $pasien.jk == 'L' && $reg_periksa.umurdaftar < '16'}{$data2.nilai_rujukan_la}{/if}
-					{if: $pasien.jk == 'L' && $reg_periksa.umurdaftar >= '16'}{$data2.nilai_rujukan_ld}{/if}
-					{if: $pasien.jk == 'P' && $reg_periksa.umurdaftar < '16'}{$data2.nilai_rujukan_pa}{/if}
-					{if: $pasien.jk == 'P' && $reg_periksa.umurdaftar >= '16'}{$data2.nilai_rujukan_pd}{/if}		  
-				</td>
-		        <td>{$data2.satuan}</td>
-		        <td>{?=nl2br($data2.keterangan)?}</td>
-		      </tr>
-		      {/loop}
-		      {/loop}
-		    </tbody>
-		  </table>
-			<br>
-			<table width="740px">
-				<tr style="border:none;text-align:center;">
-					<td width="500px"></td>
-					<td>
-							Penanggung Jawab
-							<br>
-							<br>
-							<center>
-							<img src="{$qrCode}" width="100px"/>
-							</center>
-							<br>
-							{$pj_lab}
-					</td>
-				</tr>
-			</table>
-		</center>
-		</div>
-		<br><br><br>
-		<del>
-			<center>
-				<button type="button" class="btn btn-warning" data-toggle="modal" href="#emailModal"><span class="glyphicon glyphicon-send"></span> Kirim Email</button>
-				<button type="button" class="btn btn-info" data-toggle="modal" href="#waModal"><span class="glyphicon glyphicon-send"></span> Kirim WA</button>
-				<button onclick="printContent('faktur')" type="button" class="btn btn-danger"><span class="glyphicon glyphicon-print"></span> Cetak</button>
-			</center>	
-		</del>
-		<!-- Modal -->
-	  <div class="modal fade" id="waModal" tabindex="-1" role="dialog" aria-labelledby="waModalLabel" aria-hidden="true">
-	    <div class="modal-dialog">
-	      <div class="modal-content">
-	        <div class="modal-header">
-	          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-	          <h4 class="modal-title">Kirim WhatsApp</h4>
-	        </div>
-	        <div class="modal-body">
-		        <div class="form-floating number">
-							<label for="floatingPassword">Nomor</label>
-		          <input type="text" name="number" class="form-control" id="number" placeholder="Nomor WhatsApp Tujuan" value="{$pasien.no_tlp}">
-		        </div>
-		        <div class="form-floating message">
-							<label for="floatingPassword">Pesan</label>
-		          <input type="text" name="message" class="form-control" id="message" placeholder="Tulis pesan anda.." value="Hasil Pemeriksaan Laboratorium">
-		        </div>
-	        </div>
-	        <div class="modal-footer">
-	          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
-	          <button type="button" class="btn btn-primary" onclick="KirimWA()" data-dismiss="modal">Kirim</button>
-	        </div>
-	      </div><!-- /.modal-content -->
-	    </div><!-- /.modal-dialog -->
-	  </div><!-- /.modal -->
+  <div class="sheet" id="faktur">
+    <!-- Kop Surat Resmi RSGM GHA -->
+    <div style="margin-bottom: 8px;">
+      <img src="{?=url()?}/assets/img/KOP-SURAT.png" alt="Kop Surat" style="width: 100%; height: auto; display: block;">
+    </div>
 
-		<!-- Modal -->
-	  <div class="modal fade" id="emailModal" tabindex="-1" role="dialog" aria-labelledby="emailModalLabel" aria-hidden="true">
-	    <div class="modal-dialog">
-	      <div class="modal-content">
-	        <div class="modal-header">
-	          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-	          <h4 class="modal-title">Kirim Email</h4>
-	        </div>
-	        <div class="modal-body">
-		        <div class="form-floating number">
-							<label for="floatingPassword">Email</label>
-		          <input type="text" name="email" class="form-control" id="email" placeholder="Email Tujuan" value="{$pasien.email}">
-		        </div>
-		        <div class="form-floating message">
-							<label for="floatingPassword">Nama Pasien</label>
-		          <input type="text" name="receiver" class="form-control" id="receiver" placeholder="Nama Pasien" value="{$pasien.nm_pasien}">
-		        </div>
-	        </div>
-	        <div class="modal-footer">
-	          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
-	          <button type="button" class="btn btn-primary" onclick="KirimEmail()" data-dismiss="modal">Kirim</button>
-	        </div>
-	      </div><!-- /.modal-content -->
-	    </div><!-- /.modal-dialog -->
-	  </div><!-- /.modal -->
+    <!-- Kotak Informasi Pasien & Pemeriksaan -->
+    <div style="border: 1px solid #000; padding: 5px 8px; margin-bottom: 6px;">
+      <table style="width: 100%; font-size: 9.5px; border-collapse: collapse; line-height: 1.35;">
+        <tr>
+          <!-- Kolom Kiri -->
+          <td width="53%" style="vertical-align: top; padding-right: 10px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td width="155px" style="font-weight: bold;">NO.RM / NIK</td>
+                <td width="8px">:</td>
+                <td>{?=isset_or($pasien.no_rkm_medis)?}{if: !empty($pasien.no_ktp)} / {?=$pasien.no_ktp?}{/if}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold;">NAMA</td>
+                <td>:</td>
+                <td>{?=isset_or($pasien.nm_pasien)?}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold;">TTL / UMUR</td>
+                <td>:</td>
+                <td>{?=$ttl_umur?}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold;">JENIS KELAMIN</td>
+                <td>:</td>
+                <td>{?=$jk_label?}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold;">RUANG / ALAMAT</td>
+                <td>:</td>
+                <td>{?=$ruang_alamat?}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold;">DOKTER PENGIRIM</td>
+                <td>:</td>
+                <td>{?=isset_or($dokter_perujuk, '-')?}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold;">DOKTER PENANGGUNG JAWAB</td>
+                <td>:</td>
+                <td>{?=isset_or($pj_lab, 'dr. Burhanuddin Said, Sp.PK')?}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold;">KET.KLINIS</td>
+                <td>:</td>
+                <td>{?=isset_or($ket_klinis, '-')?}</td>
+              </tr>
+            </table>
+          </td>
 
+          <!-- Kolom Kanan -->
+          <td width="47%" style="vertical-align: top;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td width="140px" style="font-weight: bold;">NO.LAB</td>
+                <td width="8px">:</td>
+                <td>{?=isset_or($sk_no_lab, '-')?}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold;">TANGGAL REGISTRASI</td>
+                <td>:</td>
+                <td>{?=$tgl_registrasi_fmt?}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold;">TANGGAL PERIKSA</td>
+                <td>:</td>
+                <td>{?=$tgl_periksa_fmt?}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold;">TANGGAL SELESAI</td>
+                <td>:</td>
+                <td>{?=$tgl_selesai_fmt?}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold;">TANGGAL VALIDASI</td>
+                <td>:</td>
+                <td>{?=$tgl_validasi_fmt?}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold;">RESPONS TIME</td>
+                <td>:</td>
+                <td>{?=isset_or($sk_respons_time, '-')?}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold;">JENIS LAYANAN</td>
+                <td>:</td>
+                <td>{?=isset_or($sk_jenis_layanan, 'REGULAR')?}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Judul Dokumen -->
+    <div style="text-align: center; margin: 8px 0 6px 0;">
+      <span style="font-size: 11px; font-weight: bold; text-decoration: underline; letter-spacing: 0.5px;">HASIL PEMERIKSAAN LABORATORIUM</span>
+    </div>
+
+    <!-- Tabel Hasil Pemeriksaan -->
+    <table class="table-hasil">
+      <thead>
+        <tr>
+          <th width="28%" style="text-align: left;">JENIS PEMERIKSAAN</th>
+          <th width="24%" style="text-align: center;">HASIL</th>
+          <th width="22%" style="text-align: center;">NILAI RUJUKAN</th>
+          <th width="13%" style="text-align: center;">SATUAN</th>
+          <th width="13%" style="text-align: center;">KETERANGAN</th>
+        </tr>
+      </thead>
+      <tbody>
+        {if: empty($periksa_lab)}
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 15px; color: #475569;">
+            Belum ada hasil pemeriksaan laboratorium untuk pasien ini.
+          </td>
+        </tr>
+        {else}
+        {loop: $periksa_lab}
+        <!-- Baris Kategori / Paket Pemeriksaan -->
+        <tr style="background-color: #f0f6fa;">
+          <td colspan="5" style="border: 1px solid #000; padding: 3px 6px; font-weight: bold; color: #b91c1c; font-size: 10px; text-transform: uppercase;">
+            {?=strtoupper($value.nm_perawatan)?}
+          </td>
+        </tr>
+        {loop: $value.detail_periksa_lab as $data2}
+        <tr>
+          <td style="padding: 2.5px 6px; font-size: 9.5px;">{?=isset_or($data2.Pemeriksaan)?}</td>
+          <td style="padding: 2.5px 6px; text-align: center; font-size: 9.5px;">
+            {if: $data2.is_abnormal}
+              <span style="color: #dc2626; font-weight: bold;">{?=$data2.hasil_formatted?}</span>
+            {else}
+              <span>{?=isset_or($data2.nilai, '-')?}</span>
+            {/if}
+          </td>
+          <td style="padding: 2.5px 6px; text-align: center; font-size: 9.5px;">{?=$data2.rujukan_aktif?}</td>
+          <td style="padding: 2.5px 6px; text-align: center; font-size: 9.5px;">{?=isset_or($data2.satuan, '-')?}</td>
+          <td style="padding: 2.5px 6px; text-align: center; font-size: 9.5px;">{?=isset_or($data2.keterangan)?}</td>
+        </tr>
+        {/loop}
+        {/loop}
+        {/if}
+      </tbody>
+    </table>
+
+    <!-- Catatan Kesan, Saran, dan Keterangan Laboratorium -->
+    <table style="width: 100%; margin-top: 6px; font-size: 9.5px; border-collapse: collapse; line-height: 1.35;">
+      <tr>
+        <td width="45px" style="vertical-align: top; font-weight: bold;">Kesan</td>
+        <td width="8px" style="vertical-align: top;">:</td>
+        <td style="vertical-align: top;">{?=isset_or($sk_kesan, '-')?}</td>
+      </tr>
+      <tr>
+        <td style="vertical-align: top; font-weight: bold; padding-top: 3px;">Saran</td>
+        <td style="vertical-align: top; padding-top: 3px;">:</td>
+        <td style="vertical-align: top; padding-top: 3px;">{?=isset_or($sk_saran, '-')?}</td>
+      </tr>
+    </table>
+
+    <div style="margin-top: 6px; font-size: 9px; line-height: 1.3; color: #000;">
+      <strong>Ket :</strong><br>
+      Jika sekiranya ada keraguan tentang hasil pemeriksaan, diharapkan segera menghubungi Laboratorium Klinik RSGM Gusti Hasan Aman Prov. Kalimantan Selatan
+    </div>
+
+    <!-- Tanda Tangan Resmi -->
+    <table style="width: 100%; margin-top: 15px; border-collapse: collapse;">
+      <tr>
+        <td width="55%" style="vertical-align: top;">
+          <div style="border: 1px solid #000; width: 310px; padding: 6px 10px; text-align: center; font-size: 9.5px;">
+            <div style="font-weight: bold; margin-bottom: 5px;">Penanggung Jawab / Expertise</div>
+            {if: !empty($signature_expertise) && !empty($qrCodeExpertise)}
+              <div style="margin: 4px 0;">
+                <img src="{?=$qrCodeExpertise?}" style="width: 65px; height: 65px; display: block; margin: 0 auto;" alt="QR TTD Expertise">
+                <div style="font-size: 8px; color: #166534; font-weight: bold; margin-top: 2px;">Ditandatangani Secara Elektronik</div>
+                <div style="font-size: 7.5px; color: #555;">{?=$tgl_validasi_fmt?}</div>
+              </div>
+            {else}
+              <div style="height: 48px;"></div>
+            {/if}
+            <div style="font-weight: bold; text-decoration: underline;">{?=isset_or($pj_lab, 'dr. Burhanuddin Said, Sp.PK')?}</div>
+            <div style="font-size: 8.5px; margin-top: 2px;">{?=isset_or($pj_lab_sip, 'SIP. 500.16.7.2/0520-SIPO-Sp/XII.25/DPMPTSP')?}</div>
+          </div>
+        </td>
+        <td width="45%" style="vertical-align: top; text-align: center; font-size: 9.5px;">
+          <div style="margin-bottom: 2px;">Tanggal : {?=$tgl_cetak?}</div>
+          <div style="font-weight: bold; margin-bottom: 45px;">Petugas Pelaksana</div>
+          <div style="font-weight: bold; text-decoration: underline;">{?=isset_or($petugas_nama, 'Nida Urrahmah, S.Tr.Kes')?}</div>
+          <div style="font-size: 8.5px; margin-top: 2px;">{?=isset_or($petugas_sip, 'SIP. 500.16.7.2/0073-SIP-ATLM/IX.25/DPMPTSP')?}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Modal WhatsApp -->
+  <div class="modal fade" id="waModal" tabindex="-1" role="dialog" aria-labelledby="waModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title"><i class="fa fa-whatsapp"></i> Kirim Hasil via WhatsApp</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Nomor WhatsApp Tujuan</label>
+            <input type="text" name="number" class="form-control" id="number" placeholder="Nomor WhatsApp Tujuan" value="{?=isset_or($pasien.no_tlp)?}">
+          </div>
+          <div class="form-group">
+            <label>Pesan Pengantar</label>
+            <input type="text" name="message" class="form-control" id="message" placeholder="Tulis pesan..." value="Hasil Pemeriksaan Laboratorium RSGM Gusti Hasan Aman">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+          <button type="button" class="btn btn-primary" onclick="KirimWA()" data-dismiss="modal">Kirim Sekarang</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Email -->
+  <div class="modal fade" id="emailModal" tabindex="-1" role="dialog" aria-labelledby="emailModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title"><i class="fa fa-envelope"></i> Kirim Hasil via Email</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Alamat Email Tujuan</label>
+            <input type="text" name="email" class="form-control" id="email" placeholder="Email Tujuan" value="{?=isset_or($pasien.email)?}">
+          </div>
+          <div class="form-group">
+            <label>Nama Pasien</label>
+            <input type="text" name="receiver" class="form-control" id="receiver" placeholder="Nama Pasien" value="{?=isset_or($pasien.nm_pasien)?}">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+          <button type="button" class="btn btn-primary" onclick="KirimEmail()" data-dismiss="modal">Kirim Sekarang</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  function KirimEmail() {
+    var email = document.getElementById("email").value;
+    var receiver = document.getElementById("receiver").value;
+    var file = "{?=url()?}/uploads/laboratorium/{$filename}.pdf";
+    var pdfUrl = window.location.href + ((window.location.href.indexOf('?') > -1) ? '&action=pdf' : '?action=pdf');
+
+    var btn = $('button[onclick="KirimEmail()"]');
+    var oldText = btn.html();
+    btn.html('<i class="fa fa-spinner fa-spin"></i> Menyiapkan PDF...').prop('disabled', true);
+
+    $.get(pdfUrl, function() {
+      $.post("{?=url([ADMIN,'laboratorium','kirimemail'])?}", {
+        email: email,
+        receiver: receiver,
+        file: file
+      }, function(data) {
+        alert(data);
+        btn.html(oldText).prop('disabled', false);
+      }).fail(function() {
+        alert("Gagal mengirim email.");
+        btn.html(oldText).prop('disabled', false);
+      });
+    }).fail(function() {
+      alert("Gagal menyiapkan file PDF.");
+      btn.html(oldText).prop('disabled', false);
+    });
+  }
+
+  function KirimWA() {
+    var api_key = '{?=isset_or($wagateway.token)?}';
+    var sender = '{?=isset_or($wagateway.phonenumber)?}';
+    var number = document.getElementById("number").value;
+    var message = document.getElementById("message").value;
+    var file = "{?=url()?}/uploads/laboratorium/{$filename}.pdf";
+    var pdfUrl = window.location.href + ((window.location.href.indexOf('?') > -1) ? '&action=pdf' : '?action=pdf');
+
+    var btn = $('button[onclick="KirimWA()"]');
+    var oldText = btn.html();
+    btn.html('<i class="fa fa-spinner fa-spin"></i> Menyiapkan PDF...').prop('disabled', true);
+
+    $.get(pdfUrl, function() {
+      $.post("{?=url([ADMIN,'api','kirimwa'])?}", {
+        api_key: api_key,
+        sender: sender,
+        number: number,
+        message: message
+      });
+
+      $.post("{?=url([ADMIN,'api','kirimwadocument'])?}", {
+        api_key: api_key,
+        sender: sender,
+        number: number,
+        message: message,
+        tipe: 'pdf',
+        file: file
+      }, function(data) {
+        alert("Permintaan kirim WhatsApp telah diproses.");
+        btn.html(oldText).prop('disabled', false);
+      }).fail(function() {
+        alert("Gagal memproses pengiriman WhatsApp.");
+        btn.html(oldText).prop('disabled', false);
+      });
+    }).fail(function() {
+      alert("Gagal menyiapkan file PDF.");
+      btn.html(oldText).prop('disabled', false);
+    });
+  }
+  </script>
 </body>
-
-<script>
-function KirimEmail() {
-	var xhttp = new XMLHttpRequest();
-	var email = document.getElementById("email").value;
-	var receiver = document.getElementById("receiver").value;
-	var file = "{?=url()?}/uploads/laboratorium/{$filename}.pdf";
-	console.log(email + " - " + receiver + " - " + file);
-	xhttp.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) {
-			var data=xhttp.responseText;
-			console.log(data);
-			alert(data);
-		}
-	};
-	xhttp.open("POST", "{?=url([ADMIN,'laboratorium','kirimemail'])?}", true);
-	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-	xhttp.send("email=" + email + "&receiver=" + receiver + "&file=" + file);
-}
-function KirimWA() {
-	var xhttp = new XMLHttpRequest();
-	var api_key = '{$wagateway.token}';
-	var sender = '{$wagateway.phonenumber}';
-	var number = document.getElementById("number").value;
-	var message = document.getElementById("message").value;
-	var tipe = 'pdf';
-	var file = "{?=url()?}/uploads/laboratorium/{$filename}.pdf";
-	console.log(number + " - " + message);
-	xhttp.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) {
-			var data=xhttp.responseText;
-			var timeout = '504 Gateway Time-out';
-			if(data.indexOf(timeout) != -1) {
-    			alert('Timeout!!! Gagal mengirim pesan.');
-			} else {
-    			var jsonResponse = JSON.parse(data);
-    			if(jsonResponse["status"] == true) {
-    				alert('Sukses mengirim pesan.');
-    			} else {
-					alert('Gagal mengirim pesan.\n' + jsonResponse["msg"]);
-    			}
-			}
-		}
-	};
-	xhttp.open("POST", "{?=url([ADMIN,'api','kirimwa'])?}", true);
-	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-	xhttp.send("api_key=" + api_key + "&sender=" + sender + "&number=" + number + "&message=" + message);
-	xhttp.open("POST", "{?=url([ADMIN,'api','kirimwadocument'])?}", true);
-	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-	xhttp.send("api_key=" + api_key + "&sender=" + sender + "&number=" + number + "&message=" + message + "&tipe=" + tipe + "&file=" + file);
-}
-</script>
-
 </html>
