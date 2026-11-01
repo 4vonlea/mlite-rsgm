@@ -1,176 +1,1059 @@
-<div class="row">
-    <div class="col-md-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">{?=isset_or($users.title)?}</h3>
+<style>
+/* ==========================================================================
+   RSGM LUXURY CLINICAL FORM STYLES - USER MANAGEMENT (ADD / EDIT)
+   ========================================================================== */
+.rsgm-user-form-wrap {
+    margin-bottom: 40px;
+}
+
+/* Page Header */
+.rsgm-user-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 22px;
+    box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.05);
+}
+
+.rsgm-user-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.rsgm-user-emblem {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 1px solid #bfdbfe;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.12);
+    flex-shrink: 0;
+}
+
+.rsgm-user-title {
+    margin: 0 0 3px 0;
+    font-size: 19px;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.3px;
+}
+
+.rsgm-user-breadcrumb {
+    font-size: 12px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rsgm-user-breadcrumb a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.rsgm-user-breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.rsgm-btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #334155;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    transition: all 0.16s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.rsgm-btn-back:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #0f172a;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+/* Luxury Cards */
+.rsgm-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05) !important;
+    margin-bottom: 22px !important;
+    overflow: hidden !important;
+}
+
+.rsgm-card-header {
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 13px 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.rsgm-card-header-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.rsgm-card-header-icon.icon-key {
+    background: #fdf2f8;
+    color: #db2777;
+}
+
+.rsgm-card-header-icon.icon-cam {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.rsgm-card-header-icon.icon-summary {
+    background: #f5f3ff;
+    color: #7c3aed;
+}
+
+.rsgm-card-header .panel-title {
+    margin: 0 !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.1px;
+}
+
+.rsgm-card-body {
+    padding: 20px 22px !important;
+}
+
+/* Form Controls & Labels */
+.rsgm-form-group {
+    margin-bottom: 18px;
+}
+
+.rsgm-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    letter-spacing: 0.1px;
+}
+
+.rsgm-label-flex {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.rsgm-input {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 9px !important;
+    height: 38px !important;
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+    color: #0f172a !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+    transition: all 0.16s ease !important;
+}
+
+.rsgm-input:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16) !important;
+    outline: none !important;
+}
+
+.rsgm-textarea {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 9px !important;
+    padding: 10px 12px !important;
+    font-size: 13px !important;
+    color: #0f172a !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+    resize: vertical;
+    transition: all 0.16s ease !important;
+}
+
+.rsgm-textarea:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16) !important;
+    outline: none !important;
+}
+
+.rsgm-addon {
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    border-right: none !important;
+    color: #64748b !important;
+    border-radius: 9px 0 0 9px !important;
+    padding: 6px 12px !important;
+}
+
+.input-group .rsgm-input {
+    border-radius: 0 9px 9px 0 !important;
+}
+
+/* Unified Password Field */
+.rsgm-pwd-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.rsgm-pwd-ico {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.rsgm-pwd-input {
+    width: 100% !important;
+    height: 38px !important;
+    padding-left: 36px !important;
+    padding-right: 40px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 9px !important;
+    background: #ffffff !important;
+    font-size: 13px !important;
+    color: #0f172a !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+    transition: all 0.16s ease !important;
+}
+
+.rsgm-pwd-input:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16) !important;
+    outline: none !important;
+}
+
+.rsgm-pwd-input[disabled] {
+    background-color: #f8fafc !important;
+    color: #94a3b8 !important;
+    cursor: not-allowed !important;
+}
+
+.rsgm-pwd-eye-btn {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s ease;
+    z-index: 3;
+    padding: 0;
+}
+
+.rsgm-pwd-eye-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.rsgm-field-hint {
+    margin: 6px 0 0 0;
+    font-size: 11.5px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Pills & Badges */
+.rsgm-btn-pill-amber {
+    background: #fffbeb !important;
+    border: 1px solid #fcd34d !important;
+    color: #b45309 !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    padding: 2px 8px !important;
+    transition: all 0.15s ease !important;
+}
+
+.rsgm-btn-pill-amber:hover {
+    background: #fef3c7 !important;
+    color: #92400e !important;
+    text-decoration: none !important;
+}
+
+.rsgm-btn-pill-blue {
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    color: #1d4ed8 !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    padding: 3px 9px !important;
+    transition: all 0.15s ease !important;
+}
+
+.rsgm-btn-pill-blue:hover {
+    background: #dbeafe !important;
+    color: #1e40af !important;
+    text-decoration: none !important;
+}
+
+/* Copy Access Box */
+.rsgm-copy-access-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    transition: all 0.18s ease;
+}
+
+.rsgm-copy-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.rsgm-copy-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.rsgm-copy-body {
+    padding-top: 10px;
+    border-top: 1px dashed #cbd5e1;
+    margin-top: 10px;
+}
+
+.rsgm-btn-copy {
+    border-radius: 8px !important;
+    height: 38px !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+}
+
+/* Modules Selection Toolbar */
+.rsgm-modules-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.rsgm-modules-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rsgm-badge-count {
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    color: #1d4ed8 !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 3px 8px !important;
+    border-radius: 6px !important;
+}
+
+.rsgm-modules-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rsgm-btn-pill-action {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 3px 8px !important;
+    transition: all 0.15s ease !important;
+}
+
+.rsgm-btn-pill-action:hover {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+.rsgm-btn-pill-action.text-danger:hover {
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+    color: #b91c1c !important;
+}
+
+/* Avatar Upload Component */
+.rsgm-avatar-wrapper {
+    position: relative;
+    width: 124px;
+    height: 124px;
+    margin: 6px auto 14px auto;
+    border-radius: 24px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid #ffffff;
+    box-shadow: 0 8px 20px -2px rgba(15, 23, 42, 0.12), 0 0 0 1px #e2e8f0;
+    background: #f1f5f9;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rsgm-avatar-wrapper:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 24px -2px rgba(37, 99, 235, 0.22), 0 0 0 2px #3b82f6;
+}
+
+.rsgm-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.rsgm-avatar-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+    backdrop-filter: blur(2px);
+}
+
+.rsgm-avatar-overlay i {
+    font-size: 20px;
+}
+
+.rsgm-avatar-wrapper:hover .rsgm-avatar-overlay {
+    opacity: 1;
+}
+
+.rsgm-avatar-actions {
+    margin-bottom: 10px;
+}
+
+.rsgm-btn-upload-photo {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    color: #334155 !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    padding: 5px 14px !important;
+    transition: all 0.16s ease !important;
+}
+
+.rsgm-btn-upload-photo:hover {
+    background: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+.rsgm-avatar-note {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Summary Card Details */
+.rsgm-summary-meta {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+}
+
+.rsgm-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    padding: 4px 0;
+}
+
+.rsgm-meta-row:not(:last-child) {
+    border-bottom: 1px dashed #e2e8f0;
+    margin-bottom: 4px;
+}
+
+.rsgm-meta-label {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.rsgm-meta-val {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.rsgm-badge-status {
+    background: #ecfdf5 !important;
+    border: 1px solid #a7f3d0 !important;
+    color: #047857 !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 2px 8px !important;
+    border-radius: 6px !important;
+}
+
+.rsgm-security-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 11.5px;
+    color: #1e40af;
+    line-height: 1.45;
+    margin-bottom: 16px;
+}
+
+.rsgm-security-box i {
+    font-size: 14px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+/* Submit & Cancel Buttons */
+.rsgm-action-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.rsgm-btn-submit-main {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+    border: 1px solid #1e40af !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 13.5px !important;
+    color: #ffffff !important;
+    padding: 10px 16px !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28) !important;
+    transition: all 0.18s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+}
+
+.rsgm-btn-submit-main:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.38) !important;
+    transform: translateY(-1px);
+    color: #ffffff !important;
+}
+
+.rsgm-btn-cancel-main {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    color: #475569 !important;
+    background: #ffffff !important;
+    padding: 9px 16px !important;
+    transition: all 0.15s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+}
+
+.rsgm-btn-cancel-main:hover {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-color: #94a3b8 !important;
+    text-decoration: none !important;
+}
+</style>
+
+<div class="rsgm-user-form-wrap">
+    <!-- PAGE HEADER -->
+    <div class="rsgm-user-header">
+        <div class="rsgm-user-header-left">
+            <div class="rsgm-user-emblem">
+                <i class="fa {if: isset($users.form.id)}fa-user-circle{else}fa-user-plus{/if}"></i>
             </div>
-            <div class="panel-body">
-    		<form name="user" action="{?=url(ADMIN.'/users/save/'.@$users.form.id)?}" method="POST" enctype="multipart/form-data">
-    			<fieldset>
-    	            <!--<div class="form-group">
-    	                <label>Pengguna</label>
-    	                <input type="text" name="username" class="form-control" required value="{?=isset_or($users.form.username)?}" />
-    	            </div>-->
-                  {if: !empty($users.user)}
-                  <div class="form-group">
-                      <label>Pengguna</label>
-                      <select name="username" id="username" class="form-control" data-use-search="true" onchange="document.getElementById('fullname').value=this.options[this.selectedIndex].text.split(' -')[0]">
-                          {loop: $users.user}
-                              <option value="{?=isset_or($value.nik)?}"{if: $users.form.username == $value.nik} selected{/if}>{?=isset_or($value.nama)?} - {?=isset_or($value.nik)?}</option>
-                          {/loop}
-                      </select>
-                  </div>
-                  {else}
-                  <div class="form-group">
-    	                <label>Pengguna</label>
-    	                <input type="text" name="username" id="username" class="form-control" placeholder="Nama Pengguna" value="{?=isset_or($users.form.username)?}" />
-    	            </div>
-                  {/if}
-    	            <div class="form-group">
-    	                <label>Nama lengkap</label>
-    	                <input type="text" name="fullname" id="fullname" class="form-control" placeholder="Nama lengkap (optional)" value="{?=isset_or($users.form.fullname)?}" />
-    	            </div>
-					        <div class="form-group">
-    	                <label>Foto</label>
-          						<div>
-          							<img src="{?=isset_or($users.avatarURL)?}" width="96" height="96" class="img-thumbnail" id="photoPreview" style="cursor:pointer;" onclick="$('input[name=photo]').click()" />
-          							<input type="file" name="photo" class="form-control hidden" />
-          						</div>
-    	            </div>
-                  <div class="form-group">
-      	                <label>Deskripsi</label>
-      	                <textarea class="form-control" name="description" placeholder="Deskripsi (optional)" rows="6">{?=isset_or($users.form.description)?}</textarea>
-    	            </div>
-    	            <div class="form-group">
-    	                <label>Email</label>
-    	                <input type="email" name="email" class="form-control" required value="{?=isset_or($users.form.email)?}" />
-    	            </div>
-    	            <div class="form-group">
-    	                <label>Kata kunci {if: isset($users.form.id)}<a href="#" id="passwordChange" class="btn btn-default btn-xs">Ubah</a>{/if}</label>
-    	                <input type="password" name="password" class="form-control" pattern=".{5,}" title="Kata kunci terlalu pendek" {if: isset($users.form.id)}value="********" placeholder="Kata kunci baru" disabled {else}required{/if}/>
-    	            </div>
-                  <div class="form-group">
-                      <label>Role</label>
-                      <select name="role" class="form-control">
-                        {if: !empty($users.user)}
-                        {loop: $users.role}
-                          <option value="{?=isset_or($value)?}"{if: $value == $users.form.role} selected{/if}>{?=isset_or($value)?}</option>
-                        {/loop}
-                        {else}
-                          <option value="pengguna"{if: $users.form.role == 'pengguna'} selected{/if}>Pengguna</option>
-                          <option value="admin"{if: $users.form.role == 'admin'} selected{/if}>Admin</option>
-                        {/if}
-                      </select>
-                  </div>
-                  {if: !empty($users.cap)}
-                  <div class="form-group">
-                      <label>Capability</label>
-                      <select name="cap[]" multiple class="form-control">
-                        {loop: $users.cap}
-                          <option value="{?=isset_or($value.cap)?}" {?=isset_or($value.attr)?}>{?=isset_or($value.nm_cap)?} - {?=isset_or($value.cap)?}</option>
-                        {/loop}
-                      </select>
-                  </div>
-                  {/if}
-    	            <div class="form-group">
-                      <label>Akses</label>
-                        <button type="button" id="btnToggleCopyAccess" class="btn btn-success badge">
-                            <i class="fa fa-copy"></i> Copy Akses
-                        </button>
-                        <div id="copyAccessForm" style="display: none; margin-top: 15px; margin-bottom: 15px;">
-                            <h5><strong>Copy Akses dari Pengguna Lain</strong></h5>
-                            <!-- <small class="text-muted">Pilih pengguna yang sudah ada untuk menyalin pengaturan aksesnya.</small> -->
-                            <div class="input-group">
-                                <select id="copyAccessFromUser" class="form-control" data-use-search="true">
-                                    <option value="">-- Pilih Pengguna untuk Disalin Aksesnya --</option>
-                                    {loop: $users.usersForCopy}
-                                        <option value="{$value.id}" data-access="{$value.access}">{$value.fullname} ({$value.username})</option>
-                                    {/loop}
-                                </select>
-                                <span class="input-group-btn">
-                                    <button type="button" id="btnCopyAccess" class="btn btn-info" disabled>
-                                        <i class="fa fa-copy"></i> Salin Akses
-                                    </button>
-                                </span>
-                            </div>
-                        </div>
-                        <select name="access[]" id="accessSelect" multiple class="form-control" data-keep-open="true" data-use-search="true" data-use-dimmer="false" data-options-height="126px" {if: isset_or($users.form.id, 0) == 1}disabled{/if} required>
-                            {loop: $users.modules}
-                            <option value="{$value.dir}" data-font="<i class='fa fa-{$value.icon}'></i>" {$value.attr}>{$value.name}</option>
-                            {/loop}
-                        </select>
-                    </div>
-    	            <div class="form-group">
-    	                <input type="submit" name="save" class="btn btn-primary" value="Simpan" />
-    	            </div>
-                </fieldset>
-            </form>
+            <div>
+                <h2 class="rsgm-user-title">{?=isset_or($users.title)?}</h2>
+                <div class="rsgm-user-breadcrumb">
+                    <a href="{?=url([ADMIN, 'users', 'manage'])?}">Data Pengguna</a>
+                    <span>&rsaquo;</span>
+                    <span>{?=isset_or($users.title)?}</span>
+                </div>
             </div>
         </div>
+        <div>
+            <a href="{?=url([ADMIN, 'users', 'manage'])?}" class="rsgm-btn-back">
+                <i class="fa fa-arrow-left"></i> Kembali ke Data Pengguna
+            </a>
+        </div>
     </div>
+
+    <!-- MAIN FORM -->
+    <form name="user" action="{?=url(ADMIN.'/users/save/'.@$users.form.id)?}" method="POST" enctype="multipart/form-data" id="userForm">
+        <div class="row">
+            <!-- LEFT COLUMN: Account Details & Access Permissions -->
+            <div class="col-lg-8 col-md-7">
+                <!-- CARD 1: Identitas & Kredensial Akun -->
+                <div class="panel panel-default rsgm-card">
+                    <div class="panel-heading rsgm-card-header">
+                        <div class="rsgm-card-header-icon"><i class="fa fa-id-card-o"></i></div>
+                        <h3 class="panel-title">Identitas & Kredensial Akun</h3>
+                    </div>
+                    <div class="panel-body rsgm-card-body">
+                        <!-- Baris 1: Pengguna / NIK Pegawai (Sepanjang Baris) -->
+                        <div class="form-group rsgm-form-group">
+                            <label class="rsgm-label">Pengguna / NIK Pegawai <span class="text-danger">*</span></label>
+                            {if: !empty($users.user)}
+                            <select name="username" id="username" class="form-control rsgm-input" data-use-search="true" required>
+                                <option value="">-- Pilih Pegawai / NIK --</option>
+                                {loop: $users.user}
+                                    <option value="{?=isset_or($value.nik)?}"{if: $users.form.username == $value.nik} selected{/if}>{?=isset_or($value.nama)?} - {?=isset_or($value.nik)?}</option>
+                                {/loop}
+                            </select>
+                            {else}
+                            <div class="input-group">
+                                <span class="input-group-addon rsgm-addon"><i class="fa fa-user"></i></span>
+                                <input type="text" name="username" id="username" class="form-control rsgm-input" placeholder="Masukkan nama pengguna / NIK" value="{?=isset_or($users.form.username)?}" required />
+                            </div>
+                            {/if}
+                        </div>
+
+                        <!-- Baris 2: Nama Lengkap & Alamat Email -->
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group rsgm-form-group">
+                                    <label class="rsgm-label">Nama Lengkap</label>
+                                    <div class="input-group">
+                                        <span class="input-group-addon rsgm-addon"><i class="fa fa-font"></i></span>
+                                        <input type="text" name="fullname" id="fullname" class="form-control rsgm-input" placeholder="Nama lengkap pengguna" value="{?=isset_or($users.form.fullname)?}" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group rsgm-form-group">
+                                    <label class="rsgm-label">Alamat Email <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-addon rsgm-addon"><i class="fa fa-envelope-o"></i></span>
+                                        <input type="email" name="email" class="form-control rsgm-input" placeholder="contoh@rsgm.ac.id" required value="{?=isset_or($users.form.email)?}" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Baris 3: Password & Role -->
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group rsgm-form-group">
+                                    <div class="rsgm-label-flex">
+                                        <label class="rsgm-label" style="margin-bottom:0;">Kata Sandi (Password) <span class="text-danger">*</span></label>
+                                        {if: isset($users.form.id)}
+                                        <button type="button" id="passwordChange" class="btn btn-xs rsgm-btn-pill-amber">
+                                            <i class="fa fa-key"></i> Ubah Password
+                                        </button>
+                                        {else}
+                                        <button type="button" id="btnSetDefaultPassword" class="btn btn-xs rsgm-btn-pill-blue" title="Gunakan password default 12345678 (Pengguna akan dipaksa ganti sandi saat login pertama kali)">
+                                            <i class="fa fa-magic"></i> Set Default (12345678)
+                                        </button>
+                                        {/if}
+                                    </div>
+                                    <div class="rsgm-pwd-field" style="margin-top:6px;">
+                                        <i class="fa fa-lock rsgm-pwd-ico"></i>
+                                        <input type="password" name="password" id="passwordInput" class="form-control rsgm-pwd-input" minlength="8" title="Password minimal 8 karakter" {if: isset($users.form.id)}value="********" placeholder="Klik tombol 'Ubah Password' di atas untuk mengganti" disabled {else}placeholder="Masukkan kata sandi baru (minimal 8 karakter)" required{/if}/>
+                                        <button type="button" class="rsgm-pwd-eye-btn" id="togglePasswordBtn" title="Tampilkan / Sembunyikan Password">
+                                            <i class="fa fa-eye" id="togglePasswordIcon"></i>
+                                        </button>
+                                    </div>
+                                    <p class="rsgm-field-hint" id="pwdHintDefault" style="display:none; color:#059669; font-weight:600;"><i class="fa fa-check-circle"></i> Password default terpasang (12345678). Pengguna akan wajib mengubahnya saat pertama kali login.</p>
+                                    <p class="rsgm-field-hint" id="pwdHintNormal"><i class="fa fa-info-circle text-info"></i> Minimal 8 karakter.</p>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group rsgm-form-group">
+                                    <label class="rsgm-label" style="margin-bottom:0;">Role / Kelompok Wewenang <span class="text-danger">*</span></label>
+                                    <div class="input-group" style="margin-top:6px;">
+                                        <span class="input-group-addon rsgm-addon"><i class="fa fa-tags"></i></span>
+                                        <select name="role" id="userRoleSelect" class="form-control rsgm-input">
+                                            {if: !empty($users.user)}
+                                            {loop: $users.role}
+                                                <option value="{?=isset_or($value)?}"{if: $value == $users.form.role} selected{/if}>{?=isset_or($value)?}</option>
+                                            {/loop}
+                                            {else}
+                                                <option value="pengguna"{if: $users.form.role == 'pengguna'} selected{/if}>Pengguna</option>
+                                                <option value="admin"{if: $users.form.role == 'admin'} selected{/if}>Admin</option>
+                                            {/if}
+                                        </select>
+                                    </div>
+                                    <p class="rsgm-field-hint"><i class="fa fa-info-circle text-info"></i> Wewenang hak akses peran pengguna.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Baris 4: Deskripsi / Catatan Pengguna (Opsional) -->
+                        <div class="form-group rsgm-form-group" style="margin-bottom:0;">
+                            <label class="rsgm-label">Deskripsi / Catatan Pengguna (Opsional)</label>
+                            <textarea class="form-control rsgm-textarea" name="description" placeholder="Catatan tambahan mengenai wewenang atau departemen kerja pengguna..." rows="3">{?=isset_or($users.form.description)?}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 2: Hak Akses Modul & Wewenang -->
+                <div class="panel panel-default rsgm-card">
+                    <div class="panel-heading rsgm-card-header">
+                        <div class="rsgm-card-header-icon icon-key"><i class="fa fa-shield"></i></div>
+                        <h3 class="panel-title">Hak Akses Modul & Wewenang</h3>
+                    </div>
+                    <div class="panel-body rsgm-card-body">
+                        <!-- Capability Section (if available) -->
+                        {if: !empty($users.cap)}
+                        <div class="form-group rsgm-form-group">
+                            <label class="rsgm-label">Capability (Wewenang Tambahan Pegawai)</label>
+                            <select name="cap[]" multiple class="form-control" data-keep-open="true" data-use-search="true" data-use-dimmer="false" data-options-height="120px">
+                                {loop: $users.cap}
+                                    <option value="{?=isset_or($value.cap)?}" {?=isset_or($value.attr)?}>{?=isset_or($value.nm_cap)?} - {?=isset_or($value.cap)?}</option>
+                                {/loop}
+                            </select>
+                        </div>
+                        {/if}
+
+                        <!-- Copy Access Box -->
+                        <div class="rsgm-copy-access-box">
+                            <div class="rsgm-copy-header">
+                                <div class="rsgm-copy-title">
+                                    <i class="fa fa-copy text-primary"></i> <span>Salin Akses dari Pengguna Lain</span>
+                                </div>
+                                <button type="button" id="btnToggleCopyAccess" class="btn btn-xs rsgm-btn-pill-blue">
+                                    <i class="fa fa-chevron-down" id="toggleCopyIcon"></i> Buka Salin Akses
+                                </button>
+                            </div>
+                            <div id="copyAccessForm" style="display: none;">
+                                <div class="rsgm-copy-body">
+                                    <div class="row">
+                                        <div class="col-sm-8" style="margin-bottom: 8px;">
+                                            <select id="copyAccessFromUser" class="form-control rsgm-input" data-use-search="true">
+                                                <option value="">-- Pilih Pengguna Sumber --</option>
+                                                {loop: $users.usersForCopy}
+                                                    <option value="{$value.id}" data-access="{$value.access}">{$value.fullname} ({$value.username})</option>
+                                                {/loop}
+                                            </select>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <button type="button" id="btnCopyAccess" class="btn btn-info btn-block rsgm-btn-copy" disabled>
+                                                <i class="fa fa-clone"></i> Terapkan Akses
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div style="font-size: 11.5px; color: #64748b; margin-top: 6px;">
+                                        <i class="fa fa-info-circle text-info"></i> Memilih pengguna sumber akan menyalin daftar modul aktif miliknya secara otomatis.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Module Access Multi-Select -->
+                        <div class="form-group rsgm-form-group" style="margin-top: 18px; margin-bottom: 0;">
+                            <div class="rsgm-modules-toolbar">
+                                <div class="rsgm-modules-title">
+                                    <label class="rsgm-label" style="margin-bottom:0;">Daftar Modul yang Diizinkan <span class="text-danger">*</span></label>
+                                    <span id="selectedModulesCount" class="badge rsgm-badge-count">0 Modul Dipilih</span>
+                                </div>
+                                <div class="rsgm-modules-actions">
+                                    <button type="button" id="btnSelectAllModules" class="btn btn-xs rsgm-btn-pill-action" title="Centang semua modul">
+                                        <i class="fa fa-check-square"></i> Pilih Semua
+                                    </button>
+                                    <button type="button" id="btnDeselectAllModules" class="btn btn-xs rsgm-btn-pill-action text-danger" title="Batalkan semua pilihan">
+                                        <i class="fa fa-square-o"></i> Kosongkan
+                                    </button>
+                                </div>
+                            </div>
+
+                            {if: isset_or($users.form.id, 0) == 1}
+                            <div class="alert alert-info" style="margin: 10px 0; border-radius: 10px;">
+                                <i class="fa fa-shield"></i> <strong>Akun Administrator Utama:</strong> Pengguna ini memiliki wewenang akses penuh ke seluruh modul sistem secara otomatis.
+                            </div>
+                            {/if}
+
+                            <div style="margin-top: 8px;">
+                                <select name="access[]" id="accessSelect" multiple class="form-control" data-keep-open="true" data-use-search="true" data-use-dimmer="false" data-options-height="220px" {if: isset_or($users.form.id, 0) == 1}disabled{/if} required>
+                                    {loop: $users.modules}
+                                    <option value="{$value.dir}" data-font="<i class='fa fa-{$value.icon}'></i>" {$value.attr}>{$value.name}</option>
+                                    {/loop}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Avatar & Summary Action Card -->
+            <div class="col-lg-4 col-md-5">
+                <!-- CARD 3: Foto Profil -->
+                <div class="panel panel-default rsgm-card">
+                    <div class="panel-heading rsgm-card-header">
+                        <div class="rsgm-card-header-icon icon-cam"><i class="fa fa-camera"></i></div>
+                        <h3 class="panel-title">Foto Profil Pengguna</h3>
+                    </div>
+                    <div class="panel-body rsgm-card-body text-center">
+                        <div class="rsgm-avatar-wrapper" onclick="$('input[name=photo]').click()" title="Klik untuk memilih foto">
+                            <img src="{?=isset_or($users.avatarURL)?}" class="rsgm-avatar-img" id="photoPreview" alt="Foto Profil" />
+                            <div class="rsgm-avatar-overlay">
+                                <i class="fa fa-camera"></i>
+                                <span>Ganti Foto</span>
+                            </div>
+                        </div>
+                        <input type="file" name="photo" id="photoInput" class="hidden" accept="image/*" />
+                        
+                        <div class="rsgm-avatar-actions">
+                            <button type="button" class="btn btn-sm btn-default rsgm-btn-upload-photo" onclick="$('input[name=photo]').click()">
+                                <i class="fa fa-upload"></i> Pilih Berkas Foto
+                            </button>
+                        </div>
+                        <p class="rsgm-avatar-note">
+                            Format file: <strong>JPG, PNG, GIF</strong><br>
+                            Maksimal disarankan: <strong>2 MB (Persegi 1:1)</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- CARD 4: Tindakan & Ringkasan -->
+                <div class="panel panel-default rsgm-card">
+                    <div class="panel-heading rsgm-card-header">
+                        <div class="rsgm-card-header-icon icon-summary"><i class="fa fa-check-circle-o"></i></div>
+                        <h3 class="panel-title">Tindakan & Simpan</h3>
+                    </div>
+                    <div class="panel-body rsgm-card-body">
+                        <div class="rsgm-summary-meta">
+                            <div class="rsgm-meta-row">
+                                <span class="rsgm-meta-label">Mode Pengelolaan:</span>
+                                <span class="badge rsgm-badge-status">{if: isset($users.form.id)}Sunting Pengguna{else}Pengguna Baru{/if}</span>
+                            </div>
+                            <div class="rsgm-meta-row">
+                                <span class="rsgm-meta-label">Role Terpilih:</span>
+                                <span class="rsgm-meta-val" id="roleBadgeVal">{?=ucwords(isset_or($users.form.role, 'Pengguna'))?}</span>
+                            </div>
+                        </div>
+
+                        <div class="rsgm-security-box">
+                            <i class="fa fa-lock text-primary"></i>
+                            <span>Pastikan kredensial akun dan hak akses modul telah diverifikasi sesuai kewenangan petugas.</span>
+                        </div>
+
+                        <div class="rsgm-action-stack">
+                            <button type="submit" name="save" class="btn btn-primary btn-block rsgm-btn-submit-main">
+                                <i class="fa fa-save"></i> <span>Simpan Data Pengguna</span>
+                            </button>
+                            <a href="{?=url([ADMIN, 'users', 'manage'])?}" class="btn btn-default btn-block rsgm-btn-cancel-main">
+                                <i class="fa fa-times"></i> <span>Batal</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
 
 <script>
-	// Avatar
-	var reader  = new FileReader();
-	reader.addEventListener("load", function() {
-		$("#photoPreview").attr('src', reader.result);
-	}, false);
-	$("input[name=photo]").change(function() {
-		reader.readAsDataURL(this.files[0]);
-	});
-
-	// Password
-	$("#passwordChange").on("click", function() {
-		$("input[name=password]").val("").attr('disabled', false);
-		$(this).remove();
-		return false;
-	})
-
-	// Tombol copy akses
-    $('#btnToggleCopyAccess').on('click', function() {
-        var copyForm = $('#copyAccessForm');
-        var button = $(this);
-        
-        if (copyForm.is(':visible')) {
-            copyForm.slideUp();
-            button.html('<i class="fa fa-copy"></i> Copy Akses');
-            button.removeClass('btn-warning').addClass('btn-success');
-        } else {
-            copyForm.slideDown();
-            button.html('<i class="fa fa-times"></i> Tutup Copy Akses');
-            button.removeClass('btn-success').addClass('btn-warning');
+$(function() {
+    // 1. Live Foto Profil Preview
+    var reader = new FileReader();
+    reader.addEventListener("load", function() {
+        $("#photoPreview").attr('src', reader.result);
+    }, false);
+    $("input[name=photo]").on("change", function() {
+        if (this.files && this.files[0]) {
+            reader.readAsDataURL(this.files[0]);
         }
     });
 
-	// Enable/disable Tombol Salin Akses
-    $('#copyAccessFromUser').on('change', function() {
-        var selectedValue = $(this).val();
-        $('#btnCopyAccess').prop('disabled', !selectedValue);
+    // 2. Auto-fill Nama Lengkap saat memilih NIK Pegawai
+    $("#username").on("change", function() {
+        var selectedText = $(this).find("option:selected").text();
+        if (selectedText && selectedText.indexOf(" -") > -1) {
+            var nama = selectedText.split(" -")[0];
+            $("#fullname").val(nama.trim());
+        }
     });
 
-	// Copy access from selected user
-    $('#btnCopyAccess').on('click', function() {
-        var selectedOption = $('#copyAccessFromUser option:selected');
-        var access = selectedOption.data('access');
+    // 3. Live Role Badge Update
+    $("#userRoleSelect").on("change", function() {
+        var role = $(this).val();
+        $("#roleBadgeVal").text(role.charAt(0).toUpperCase() + role.slice(1));
+    });
+
+    // 4. Ubah Password Button (Edit Mode)
+    $("#passwordChange").on("click", function(e) {
+        e.preventDefault();
+        $("#passwordInput").val("").prop("disabled", false).attr("placeholder", "Masukkan password baru (minimal 8 karakter)").focus();
+        $(this).fadeOut(150, function() {
+            $(this).remove();
+        });
+    });
+
+    // 4b. Set Default Password Button (Add Mode)
+    $("#btnSetDefaultPassword").on("click", function(e) {
+        e.preventDefault();
+        var $pwd = $("#passwordInput");
+        $pwd.val("12345678").prop("disabled", false).attr("type", "text");
+        $("#togglePasswordIcon").removeClass("fa-eye").addClass("fa-eye-slash");
+        $("#pwdHintDefault").fadeIn(200);
+        $("#pwdHintNormal").hide();
+    });
+
+    // 5. Toggle Show/Hide Password
+    $("#togglePasswordBtn").on("click", function(e) {
+        e.preventDefault();
+        var $pwd = $("#passwordInput");
+        var $icon = $("#togglePasswordIcon");
+        if ($pwd.attr("type") === "password") {
+            $pwd.attr("type", "text");
+            $icon.removeClass("fa-eye").addClass("fa-eye-slash");
+        } else {
+            $pwd.attr("type", "password");
+            $icon.removeClass("fa-eye-slash").addClass("fa-eye");
+        }
+    });
+
+    // 6. Toggle Copy Akses Dropdown
+    $("#btnToggleCopyAccess").on("click", function() {
+        var $form = $("#copyAccessForm");
+        var $icon = $("#toggleCopyIcon");
+        var $btn = $(this);
+        if ($form.is(":visible")) {
+            $form.slideUp(180);
+            $icon.removeClass("fa-chevron-up").addClass("fa-chevron-down");
+            $btn.html('<i class="fa fa-chevron-down" id="toggleCopyIcon"></i> Buka Salin Akses');
+        } else {
+            $form.slideDown(180);
+            $icon.removeClass("fa-chevron-down").addClass("fa-chevron-up");
+            $btn.html('<i class="fa fa-chevron-up" id="toggleCopyIcon"></i> Tutup Salin Akses');
+        }
+    });
+
+    // 7. Enable/Disable Tombol Salin Akses
+    $("#copyAccessFromUser").on("change", function() {
+        var selectedValue = $(this).val();
+        $("#btnCopyAccess").prop("disabled", !selectedValue);
+    });
+
+    // 8. Terapkan Salin Akses dari Pengguna Terpilih
+    $("#btnCopyAccess").on("click", function() {
+        var $selectedOption = $("#copyAccessFromUser option:selected");
+        var access = $selectedOption.data("access");
         
-        if(access) {
-            $('#accessSelect option').prop('selected', false);
+        if (access) {
+            $("#accessSelect option").prop("selected", false);
             
-            // Check if access is 'all' - select all available modules
-            if(access.trim() === 'all') {
-                $('#accessSelect option').prop('selected', true);
+            if (access.toString().trim() === "all") {
+                $("#accessSelect option").prop("selected", true);
             } else {
-                // Normal case - select specific modules
-                var accessArray = access.split(',');
+                var accessArray = access.toString().split(",");
                 $.each(accessArray, function(index, value) {
-                    $('#accessSelect option[value="' + value.trim() + '"]').prop('selected', true);
+                    var val = value.trim();
+                    if (val) {
+                        $("#accessSelect option[value='" + val + "']").prop("selected", true);
+                    }
                 });
             }
             
-            $('#accessSelect').trigger('change');
+            $("#accessSelect").trigger("change");
+            if (typeof $.fn.selectator === "function") {
+                try { $("#accessSelect").selectator("refresh"); } catch(e) {}
+            }
+            updateSelectedModulesCount();
             
-            //alert('Akses berhasil disalin dari pengguna: ' + selectedOption.text());
+            // Beri feedback visual halus
+            var origHtml = $(this).html();
+            $(this).html('<i class="fa fa-check"></i> Akses Diterapkan!').addClass("btn-success").removeClass("btn-info");
+            setTimeout(function() {
+                $("#btnCopyAccess").html(origHtml).removeClass("btn-success").addClass("btn-info");
+            }, 1800);
         }
     });
+
+    // 9. Quick Action: Pilih Semua Modul
+    $("#btnSelectAllModules").on("click", function() {
+        $("#accessSelect option").prop("selected", true);
+        $("#accessSelect").trigger("change");
+        if (typeof $.fn.selectator === "function") {
+            try { $("#accessSelect").selectator("refresh"); } catch(e) {}
+        }
+        updateSelectedModulesCount();
+    });
+
+    // 10. Quick Action: Kosongkan Pilihan Modul
+    $("#btnDeselectAllModules").on("click", function() {
+        $("#accessSelect option").prop("selected", false);
+        $("#accessSelect").trigger("change");
+        if (typeof $.fn.selectator === "function") {
+            try { $("#accessSelect").selectator("refresh"); } catch(e) {}
+        }
+        updateSelectedModulesCount();
+    });
+
+    // 11. Live Selected Modules Counter
+    function updateSelectedModulesCount() {
+        var total = $("#accessSelect option").length;
+        var selected = $("#accessSelect option:selected").length;
+        $("#selectedModulesCount").text(selected + " dari " + total + " Modul Dipilih");
+    }
+
+    $("#accessSelect").on("change", updateSelectedModulesCount);
+    updateSelectedModulesCount();
+});
 </script>

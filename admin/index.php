@@ -173,6 +173,27 @@ if (!$skipApi && strpos($__path, 'api/') === 0) {
 
 
 if ($core->loginCheck()) {
+    if (!empty($_SESSION['mlite_force_change'])) {
+        $currPath = trim((string)$core->router->execute(true), '/');
+        $allowedForcePaths = [
+            'profil/ganti_pass',
+            'profil/ganti_save',
+            'profil/javascript',
+            'logout'
+        ];
+        if (!in_array($currPath, $allowedForcePaths)) {
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+                http_response_code(403);
+                header('Content-Type: application/json');
+                echo json_encode(['status' => 'error', 'message' => 'Anda wajib memperbarui kata sandi terlebih dahulu sesuai standar keamanan informasi global (ISO/IEC 27001).']);
+                exit;
+            } else {
+                redirect(url([ADMIN, 'profil', 'ganti_pass']));
+                exit;
+            }
+        }
+    }
+
     $core->loadModules();
 
     $core->router->set('(:str)/(:str)(:any)', function ($module, $method, $params) use ($core) {
@@ -206,14 +227,15 @@ if ($core->loginCheck()) {
     $core->module->finishLoop();
 } else {
     if (isset($_POST['login'])) {
-    if ($core->login($_POST['username'], $_POST['password'], isset($_POST['remember_me']))) {
+        if ($core->login($_POST['username'], $_POST['password'], isset($_POST['remember_me']))) {
+            if (!empty($_SESSION['mlite_force_change'])) {
+                redirect(url([ADMIN, 'profil', 'ganti_pass']));
+                exit;
+            }
             $arrayURL = parseURL();
             if ($arrayURL && count($arrayURL) > 1) {
                 $url = array_merge([ADMIN], $arrayURL);
                 redirect(url($url));
-            }
-            if (!empty($_SESSION['mlite_force_change'])) {
-                redirect(url([ADMIN, 'profil', 'ganti_pass']));
             }
             if(MULTI_APP) {
                 if(!empty(MULTI_APP_REDIRECT)) {

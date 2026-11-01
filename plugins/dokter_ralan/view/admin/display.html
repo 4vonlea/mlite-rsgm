@@ -1,40 +1,3 @@
-<style>
-/* Fix thead tbody alignment for rujukan internal table */
-#rujukan-internal .dataTables {
-  table-layout: fixed !important;
-}
-
-#rujukan-internal .dataTables th,
-#rujukan-internal .dataTables td {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Ensure thead th specifically has white-space: nowrap */
-#rujukan-internal .dataTables thead th {
-  white-space: nowrap !important;
-}
-
-/* Ensure DataTables doesn't override column widths */
-#rujukan-internal .dataTables_wrapper .dataTables_scroll .dataTables_scrollHead table,
-#rujukan-internal .dataTables_wrapper .dataTables_scroll .dataTables_scrollBody table {
-  table-layout: fixed !important;
-}
-
-/* Fix column alignment */
-#rujukan-internal .dataTables tbody td:nth-child(1) { width: 12% !important; }
-#rujukan-internal .dataTables tbody td:nth-child(2) { width: 15% !important; }
-#rujukan-internal .dataTables tbody td:nth-child(3) { width: 12% !important; }
-#rujukan-internal .dataTables tbody td:nth-child(4) { width: 10% !important; }
-#rujukan-internal .dataTables tbody td:nth-child(5) { width: 10% !important; }
-#rujukan-internal .dataTables tbody td:nth-child(6) { width: 12% !important; }
-#rujukan-internal .dataTables tbody td:nth-child(7) { width: 12% !important; }
-#rujukan-internal .dataTables tbody td:nth-child(8) { width: 10% !important; }
-#rujukan-internal .dataTables tbody td:nth-child(9) { width: 10% !important; }
-#rujukan-internal .dataTables tbody td:nth-child(10) { width: 7% !important; }
-
-</style>
 <div id="display">
   <!-- Nav tabs -->
   <ul class="nav nav-tabs" role="tablist">
@@ -53,7 +16,7 @@
   </ul>
 
   <!-- Tab Content -->
-  <div class="tab-content" style="margin-top: 15px;">
+  <div class="tab-content" style="margin-top: 10px;">
     <!-- Tab Dokter Rawat Jalan -->
     <div role="tabpanel" class="tab-pane active" id="dokter-ralan">
       <div class="table-responsive no-margin">
@@ -61,22 +24,21 @@
           <thead>
             <tr>
               <th style="white-space: nowrap;">No. RM</th>
-              <th style="white-space: nowrap;">Nama Pasien</th>
+              <th>Nama Pasien</th>
               <th style="white-space: nowrap;">ID Kunjungan</th>
               <th style="white-space: nowrap;">Antrian</th>
-              <th style="white-space: nowrap;">Poliklinik</th>
-              <th style="white-space: nowrap;">Dokter</th>
+              <th>Poliklinik</th>
+              <th>Dokter</th>
               <th style="white-space: nowrap;">Penjamin</th>
-              <th style="white-space: nowrap;">No. Asuransi</th>
-              <th style="white-space: nowrap;">Tgl. Kunjungan</th>
-              <th style="white-space: nowrap;">Stts. Periksa</th>
-              <th style="white-space: nowrap;">Stts. Lanjut</th>
-              <th style="white-space: nowrap;">Stts. Bayar</th>
+              <th style="white-space: nowrap;">Kunjungan</th>
+              <th style="white-space: nowrap;" title="Status Periksa">Periksa</th>
+              <th style="white-space: nowrap;" title="Status Lanjut">Lanjut</th>
+              <th style="white-space: nowrap;" title="Status Bayar">Bayar</th>
             </tr>
           </thead>
           <tbody>
             {loop: $rawat_jalan.list}
-            <tr{if: $value.stts == 'Sudah'} style="background-color: #dff0d8 !important;"{/if}>
+            <tr{if: $value.stts == 'Sudah'} class="rsgm-row-done"{elseif: $value.stts == 'Dirujuk'} class="rsgm-row-referred"{/if}>
               <td style="white-space: nowrap;">
                 <span class="dropdown-toggle" data-toggle="dropdown" data-disabled="true" aria-expanded="true"><button type="button" name="button" class="btn btn-sm btn-default">{?=isset_or($value.no_rkm_medis)?} <span class="caret"></span></button></span>
                 <ul class="dropdown-menu" role="menu">
@@ -103,11 +65,11 @@
                 </ul>
               </td>
               {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis'}
-              <td style="white-space: nowrap;"><a href="#soap" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}" data-stts_daftar="{?=isset_or($value.stts_daftar)?}" data-status_poli="{?=isset_or($value.status_poli)?}">{?=isset_or($value.nm_pasien)?}</a></td>
+              <td class="rsgm-cell-wrap"><a href="#soap" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}" data-stts_daftar="{?=isset_or($value.stts_daftar)?}" data-status_poli="{?=isset_or($value.status_poli)?}" class="rsgm-patient-link">{?=isset_or($value.nm_pasien)?}</a></td>
               <td style="white-space: nowrap;"><a href="#layanan_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}">{?=isset_or($value.no_rawat)?}</a></td>
               {else}
-              <td style="white-space: nowrap;">{?=isset_or($value.nm_pasien)?}</td>
-              <td style="white-space: nowrap;">{?=isset_or($value.no_rawat)?}</td>
+              <td class="rsgm-cell-wrap"><span class="rsgm-patient-name">{?=isset_or($value.nm_pasien)?}</span></td>
+              <td class="rsgm-visit-id" style="white-space: nowrap;">{?=isset_or($value.no_rawat)?}</td>
               {/if}
               <td style="white-space: nowrap;">
                 <button type="button" name="button" class="btn btn-xs btn-warning antrian"
@@ -115,15 +77,51 @@
                   {if: $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
                   disabled
                   {/if}
-                ><span class="fa fa-print"></span> {?=isset_or($value.no_reg)?}</button> {if: $responsivevoice == 'true'}<button type="button" name="button" class="btn btn-xs btn-primary panggil" data-nm_pasien="{?=strtolower($value.nm_pasien)?}" data-nm_poli="{?=strtolower($value.nm_poli)?}" data-no_reg="{?=strtolower($value.no_reg)}"><i class="fa fa-bullhorn"></i><span class="hidden-xs hidden-sm"> Panggil</span></button>{/if}</td>
-              <td style="white-space: nowrap;">{?=isset_or($value.nm_poli)?}</td>
-              <td style="white-space: nowrap;">{?=isset_or($value.nm_dokter)?}</td>
-              <td style="white-space: nowrap;">{?=isset_or($value.png_jawab)?} {if: $value.kd_pj == 'BPJ'}{if: $value.potensi_prb !=''}<button class="btn btn-xs btn-danger"><span class="fa fa-wheelchair"></span> {?=isset_or($value.potensi_prb)?}</button>{/if}{if: $this->core->ActiveModule('vclaim')}<a href="{?=url([ADMIN, 'icare', 'riwayat', convertNorawat($value.no_rawat)])?}" class="btn btn-xs btn-info" data-toggle="modal" data-target="#riwayatModal"><span class="fa fa-file"></span> iCare</a>{/if}{if: $this->core->ActiveModule('pcare')}<a href="{?=url([ADMIN, 'icare', 'riwayat', convertNorawat($value.no_rawat), 'fktp'])?}" class="btn btn-xs btn-info" data-toggle="modal" data-target="#riwayatModal"><span class="fa fa-file"></span> iCare</a>{/if}{/if}</td>
-              <td style="white-space: nowrap;">{?=isset_or($value.no_peserta)?}</td>
-              <td style="white-space: nowrap;">{?=isset_or($value.tgl_registrasi)?} {?=isset_or($value.jam_reg)?}</td>
-              <td style="white-space: nowrap;">{?=isset_or($value.stts)?}</td>
-              <td style="white-space: nowrap;">{?=isset_or($value.status_lanjut)?}</td>
-              <td style="white-space: nowrap;">{?=isset_or($value.status_bayar)?}</td>
+                ><span class="fa fa-print"></span> {?=isset_or($value.no_reg)?}</button> {if: $responsivevoice == 'true'}<button type="button" name="button" class="btn btn-xs btn-primary panggil" data-nm_pasien="{?=strtolower($value.nm_pasien)?}" data-nm_poli="{?=strtolower($value.nm_poli)?}" data-no_reg="{?=strtolower($value.no_reg)?}"><i class="fa fa-bullhorn"></i><span class="hidden-xs hidden-sm"> Panggil</span></button>{/if}</td>
+              <td class="rsgm-cell-wrap">{?=isset_or($value.nm_poli)?}</td>
+              <td class="rsgm-cell-wrap">{?=isset_or($value.nm_dokter)?}</td>
+              <td style="white-space: nowrap;">
+                {if: $value.kd_pj == 'BPJ'}
+                  <span class="rsgm-badge rsgm-badge-emerald">{?=isset_or($value.png_jawab)?}</span>
+                  {if: $value.potensi_prb !=''}<button class="btn btn-xs btn-danger"><span class="fa fa-wheelchair"></span> {?=isset_or($value.potensi_prb)?}</button>{/if}
+                  {if: $this->core->ActiveModule('vclaim')}<a href="{?=url([ADMIN, 'icare', 'riwayat', convertNorawat($value.no_rawat)])?}" class="btn btn-xs btn-info" data-toggle="modal" data-target="#riwayatModal"><span class="fa fa-file"></span> iCare</a>{/if}
+                  {if: $this->core->ActiveModule('pcare')}<a href="{?=url([ADMIN, 'icare', 'riwayat', convertNorawat($value.no_rawat), 'fktp'])?}" class="btn btn-xs btn-info" data-toggle="modal" data-target="#riwayatModal"><span class="fa fa-file"></span> iCare</a>{/if}
+                {else}
+                  <span class="rsgm-badge rsgm-badge-slate">{?=isset_or($value.png_jawab)?}</span>
+                {/if}
+                {if: !empty($value.no_peserta) && $value.no_peserta != '-'}
+                  <span class="rsgm-cell-sub">{?=isset_or($value.no_peserta)?}</span>
+                {/if}
+              </td>
+              <td style="white-space: nowrap;">
+                <span>{?=isset_or($value.tgl_registrasi)?}</span>
+                <span class="rsgm-cell-sub">{?=isset_or($value.jam_reg)?}</span>
+              </td>
+              <td style="white-space: nowrap;">
+                {if: $value.stts == 'Sudah'}
+                  <span class="rsgm-badge rsgm-badge-emerald">{?=isset_or($value.stts)?}</span>
+                {elseif: $value.stts == 'Dirujuk'}
+                  <span class="rsgm-badge rsgm-badge-indigo">{?=isset_or($value.stts)?}</span>
+                {elseif: $value.stts == 'Batal' || $value.stts == 'Meninggal' || $value.stts == 'Pulang Paksa'}
+                  <span class="rsgm-badge rsgm-badge-rose">{?=isset_or($value.stts)?}</span>
+                {else}
+                  <span class="rsgm-badge rsgm-badge-amber">{?=isset_or($value.stts)?}</span>
+                {/if}
+              </td>
+              <td style="white-space: nowrap;">
+                {if: $value.status_lanjut == 'Ranap'}
+                  <span class="rsgm-badge rsgm-badge-purple">Ranap</span>
+                {else}
+                  <span class="rsgm-badge rsgm-badge-sky">{?=isset_or($value.status_lanjut)?}</span>
+                {/if}
+              </td>
+              <td style="white-space: nowrap;">
+                {if: $value.status_bayar == 'Sudah Bayar'}
+                  <span class="rsgm-badge rsgm-badge-emerald">Lunas</span>
+                {else}
+                  <span class="rsgm-badge rsgm-badge-rose">{?=isset_or($value.status_bayar)?}</span>
+                {/if}
+              </td>
             </tr>
             {/loop}
           </tbody>
@@ -133,16 +131,16 @@
     <!-- Tab Rujukan Internal -->
     <div role="tabpanel" class="tab-pane" id="rujukan-internal">
       <div class="table-responsive no-margin">
-        <table class="table table-striped no-padding dataTables" width="100%" style="table-layout: fixed;">
+        <table class="table table-striped no-padding dataTables" width="100%">
           <thead>
             <tr>
               <th style="white-space: nowrap;">No. RM</th>
-              <th style="white-space: nowrap;">Nama Pasien</th>
+              <th>Nama Pasien</th>
               <th style="white-space: nowrap;">ID Kunjungan</th>
-              <th style="white-space: nowrap;">Poli Asal</th>
-              <th style="white-space: nowrap;">Poli Tujuan</th>
-              <th style="white-space: nowrap;">Dokter Perujuk</th>
-              <th style="white-space: nowrap;">Dokter Tujuan</th>
+              <th>Poli Asal</th>
+              <th>Poli Tujuan</th>
+              <th>Dokter Perujuk</th>
+              <th>Dokter Tujuan</th>
               <th style="white-space: nowrap;">Tgl. Rujukan</th>
               <th style="white-space: nowrap;">Status</th>
               <th style="white-space: nowrap;">Aksi</th>
@@ -151,23 +149,24 @@
           <tbody>
             {loop: $rawat_jalan.list_rujukan_internal} 
             <tr>
-              <td style="white-space: nowrap;">{if: isset($value.no_rkm_medis)}{?=isset_or($value.no_rkm_medis)?}{else}-{/if}</td>
-              <td style="white-space: nowrap;"><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', isset($value.no_rkm_medis) ? $value.no_rkm_medis : '-'])?}" data-toggle="modal" data-target="#riwayatModal">{if: isset($value.nm_pasien)}{?=isset_or($value.nm_pasien)?}{else}-{/if}</a></td>
-              <td style="white-space: nowrap;">{if: isset($value.no_rawat)}{?=isset_or($value.no_rawat)?}{else}-{/if}</td>
-              <td style="white-space: nowrap;">{if: isset($value.poli_asal)}{?=isset_or($value.poli_asal)?}{else}-{/if}</td>
-              <td style="white-space: nowrap;">{if: isset($value.poli_tujuan)}{?=isset_or($value.poli_tujuan)?}{else}-{/if}</td>
-              <td style="white-space: nowrap;">{if: isset($value.dokter_perujuk)}{?=isset_or($value.dokter_perujuk)?}{else}-{/if}</td>
-              <td style="white-space: nowrap;">{if: isset($value.dokter_tujuan)}{?=isset_or($value.dokter_tujuan)?}{else}-{/if}</td>
+              <td style="white-space: nowrap;"><span class="rsgm-rm-plain">{if: isset($value.no_rkm_medis)}{?=isset_or($value.no_rkm_medis)?}{else}-{/if}</span></td>
+              <td class="rsgm-cell-wrap"><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', isset($value.no_rkm_medis) ? $value.no_rkm_medis : '-'])?}" data-toggle="modal" data-target="#riwayatModal" class="rsgm-patient-link">{if: isset($value.nm_pasien)}{?=isset_or($value.nm_pasien)?}{else}-{/if}</a></td>
+              <td class="rsgm-visit-id" style="white-space: nowrap;">{if: isset($value.no_rawat)}{?=isset_or($value.no_rawat)?}{else}-{/if}</td>
+              <td class="rsgm-cell-wrap">{if: isset($value.poli_asal)}{?=isset_or($value.poli_asal)?}{else}-{/if}</td>
+              <td class="rsgm-cell-wrap">{if: isset($value.poli_tujuan)}{?=isset_or($value.poli_tujuan)?}{else}-{/if}</td>
+              <td class="rsgm-cell-wrap">{if: isset($value.dokter_perujuk)}{?=isset_or($value.dokter_perujuk)?}{else}-{/if}</td>
+              <td class="rsgm-cell-wrap">{if: isset($value.dokter_tujuan)}{?=isset_or($value.dokter_tujuan)?}{else}-{/if}</td>
               <td style="white-space: nowrap;">{if: isset($value.tgl_rujukan)}{?=isset_or($value.tgl_rujukan)?}{else}-{/if}</td>
               <td style="white-space: nowrap;">
                 {if: isset($value.keterangan_jawab) && $value.keterangan_jawab != ''}
-                  <span class="label label-success">Sudah Dijawab</span>
+                  <span class="rsgm-badge rsgm-badge-emerald">Sudah Dijawab</span>
                 {else}
-                  <span class="label label-warning">Belum Dijawab</span>
+                  <span class="rsgm-badge rsgm-badge-amber">Belum Dijawab</span>
                 {/if}
               </td>
-              <td style="white-space: nowrap; width: 17%;">
-                <a href="#jawab_rujukan_internal" class="btn btn-xs btn-primary" data-no_rawat="{if: isset($value.no_rawat)}{?=isset_or($value.no_rawat)?}{else}-{/if}" data-kd_dokter="{if: isset($value.kd_dokter)}{?=isset_or($value.kd_dokter)?}{else}-{/if}" data-nm_dokter="{if: isset($value.kd_dokter_tujuan)}{?=isset_or($value.dokter_tujuan)?}{else}-{/if}" data-kd_dokter_tujuan="{if: isset($value.kd_dokter_tujuan)}{?=isset_or($value.kd_dokter_tujuan)?}{else}-{/if}" data-dokter_tujuan="{if: isset($value.dokter_tujuan)}{?=isset_or($value.dokter_tujuan)?}{else}-{/if}" data-kd_poli_tujuan="{if: isset($value.kd_poli_tujuan)}{?=isset_or($value.kd_poli_tujuan)?}{else}-{/if}" data-poli_tujuan="{if: isset($value.poli_tujuan)}{?=isset_or($value.poli_tujuan)?}{else}-{/if}" data-keterangan="{if: isset($value.keterangan)}{?=isset_or($value.keterangan)?}{else}-{/if}" data-keterangan_jawab="{if: isset($value.keterangan_jawab)}{?=isset_or($value.keterangan_jawab)?}{else}-{/if}">Jawab</a><a href="#hapus_rujukan_internal" class="btn btn-xs btn-danger" data-no_rawat="{if: isset($value.no_rawat)}{?=isset_or($value.no_rawat)?}{else}-{/if}">Hapus</a>
+              <td style="white-space: nowrap;">
+                <a href="#jawab_rujukan_internal" class="btn btn-xs btn-primary" data-no_rawat="{if: isset($value.no_rawat)}{?=isset_or($value.no_rawat)?}{else}-{/if}" data-kd_dokter="{if: isset($value.kd_dokter)}{?=isset_or($value.kd_dokter)?}{else}-{/if}" data-nm_dokter="{if: isset($value.kd_dokter_tujuan)}{?=isset_or($value.dokter_tujuan)?}{else}-{/if}" data-kd_dokter_tujuan="{if: isset($value.kd_dokter_tujuan)}{?=isset_or($value.kd_dokter_tujuan)?}{else}-{/if}" data-dokter_tujuan="{if: isset($value.dokter_tujuan)}{?=isset_or($value.dokter_tujuan)?}{else}-{/if}" data-kd_poli_tujuan="{if: isset($value.kd_poli_tujuan)}{?=isset_or($value.kd_poli_tujuan)?}{else}-{/if}" data-poli_tujuan="{if: isset($value.poli_tujuan)}{?=isset_or($value.poli_tujuan)?}{else}-{/if}" data-keterangan="{if: isset($value.keterangan)}{?=isset_or($value.keterangan)?}{else}-{/if}" data-keterangan_jawab="{if: isset($value.keterangan_jawab)}{?=isset_or($value.keterangan_jawab)?}{else}-{/if}">Jawab</a>
+                <a href="#hapus_rujukan_internal" class="btn btn-xs btn-danger" data-no_rawat="{if: isset($value.no_rawat)}{?=isset_or($value.no_rawat)?}{else}-{/if}">Hapus</a>
               </td>
             </tr>
             {/loop}
@@ -382,19 +381,16 @@
         "next":     "›"
       },
       "search": "",
-      "searchPlaceholder": "Search..."
+      "searchPlaceholder": "Cari pasien, RM, dokter..."
     },
     "lengthChange": false,
     "scrollX": false,
     "autoWidth": false,
-    "columnDefs": [
-      { "width": "12%", "targets": [0, 2] },
-      { "width": "15%", "targets": 1 },
-      { "width": "10%", "targets": [3, 4, 7, 8] },
-      { "width": "12%", "targets": [5, 6] },
-      { "width": "7%", "targets": 9 }
-    ],
     dom: "<<'data-table-title'><'datatable-search'f>><'row'<'col-sm-12'tr>><<'pmd-datatable-pagination' l i p>>"
+  });
+  $('.dataTables').each(function() {
+    var dt = $(this).DataTable();
+    $(this).closest('.dataTables_wrapper').find('.data-table-title').html('<h3 class="hidden-xs">Total: ' + dt.rows().count() + '</h3>');
   });
 
 </script>

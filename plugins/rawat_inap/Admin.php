@@ -262,7 +262,7 @@ class Admin extends AdminModule
           ->limit(1)
           ->oneArray();
           if($rawat) {
-            $stts_daftar ="Transaki tanggal ".date('Y-m-d', strtotime($rawat['tgl_registrasi']))." belum diselesaikan" ;
+            $stts_daftar = "Transaksi tanggal ".date('Y-m-d', strtotime($rawat['tgl_registrasi']))." belum diselesaikan" ;
             $bg_status = 'text-danger';
           } else {
             $result = $this->db('reg_periksa')->where('no_rkm_medis', $no_rkm_medis)->oneArray();

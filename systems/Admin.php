@@ -127,6 +127,22 @@ class Admin extends Main
 
     public function loadModule($name, $method, $params = [])
     {
+        // Enforce password change for users flagged with mlite_force_change
+        if (!empty($_SESSION['mlite_force_change'])) {
+            $isProfilGantiPass = ($name === 'profil' && in_array(strtolower($method), ['ganti_pass', 'ganti_save', 'javascript']));
+            if (!$isProfilGantiPass) {
+                if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+                    http_response_code(403);
+                    header('Content-Type: application/json');
+                    echo json_encode(['status' => 'error', 'message' => 'Anda wajib mengganti kata sandi terlebih dahulu sebelum mengakses menu lain.']);
+                } else {
+                    $this->setNotify('warning', 'Demi perlindungan privasi data medis dan standar keamanan informasi global (ISO/IEC 27001), Anda wajib memperbarui kata sandi awal/default terlebih dahulu.');
+                    redirect(url([ADMIN, 'profil', 'ganti_pass']));
+                }
+                exit;
+            }
+        }
+
         if ($name === 'form_rme') {
             $name = 'update_bmt';
         }
@@ -191,12 +207,38 @@ class Admin extends Main
         $methodLower = strtolower($method);
 
         // Menu manajemen unit form RME hanya untuk admin
-        $mgmtMethods = ['manajemenrme', 'simpanaksesrme', 'simpanuserunitrme', 'tambahunitrme', 'hapusunitrme', 'syncunitsimrs'];
+        $mgmtMethods = [
+            'manajemenrme', 'simpanaksesrme', 'simpanuserunitrme', 'tambahunitrme', 'hapusunitrme',
+            'syncunitsimrs', 'togglestatusform', 'editformrme', 'batchstatusform', 'tambahformrme', 'hapusformrme'
+        ];
         if (in_array($methodLower, $mgmtMethods)) {
             $this->setNotify('failure', 'Anda tidak memiliki hak akses untuk Manajemen Form RME.');
             redirect(url([ADMIN, 'dashboard', 'main']));
             exit;
         }
+
+        // Cek apakah formulir yang diminta sedang berstatus nonaktif (sedang dalam perbaikan/penambahan isian)
+        try {
+            $inactiveForms = $this->db('mlite_rme_form')
+                ->where('status', '0')
+                ->select('nama_form, kode_form, route_manage, route_form, route_cetak, catatan, deskripsi')
+                ->toArray();
+            foreach ($inactiveForms as $inact) {
+                $routes = array_filter([
+                    strtolower($inact['route_manage'] ?? ''),
+                    strtolower($inact['route_form'] ?? ''),
+                    strtolower($inact['route_cetak'] ?? '')
+                ]);
+                foreach ($routes as $r) {
+                    if (!empty($r) && (strpos($methodLower, $r) !== false || strpos($r, $methodLower) !== false)) {
+                        $reason = !empty($inact['catatan']) ? $inact['catatan'] : (!empty($inact['deskripsi']) ? $inact['deskripsi'] : 'sedang dalam proses perbaikan atau penambahan isian formulir');
+                        $this->setNotify('warning', 'Formulir RME [' . $inact['kode_form'] . ' - ' . $inact['nama_form'] . '] saat ini sedang DINONAKTIFKAN (' . $reason . '). Silakan hubungi bagian Rekam Medis / IT.');
+                        redirect(url([ADMIN, 'dashboard', 'main']));
+                        exit;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
 
         // Ambil unit yang terkait dengan user dari capability (cap) di Manajemen Pengguna
         $userCap = $this->getUserInfo('cap', $userId);
@@ -209,13 +251,17 @@ class Admin extends Main
         }
 
         // Ambil rute-rute form yang diizinkan untuk unit user
-        $allowedForms = $this->db('mlite_rme_unit_form')
-            ->join('mlite_rme_form', 'mlite_rme_form.id = mlite_rme_unit_form.form_id')
-            ->where('mlite_rme_unit_form.status', '1')
-            ->where('mlite_rme_form.status', '1')
-            ->where('mlite_rme_unit_form.kd_poli', 'IN', $poliCodes)
-            ->select('mlite_rme_form.route_manage, mlite_rme_form.route_form, mlite_rme_form.route_cetak')
-            ->toArray();
+        try {
+            $allowedForms = $this->db('mlite_rme_unit_form')
+                ->join('mlite_rme_form', 'mlite_rme_form.id = mlite_rme_unit_form.form_id')
+                ->where('mlite_rme_unit_form.status', '1')
+                ->where('mlite_rme_form.status', '1')
+                ->where('mlite_rme_unit_form.kd_poli', 'IN', $poliCodes)
+                ->select('mlite_rme_form.route_manage, mlite_rme_form.route_form, mlite_rme_form.route_cetak')
+                ->toArray();
+        } catch (\Throwable $e) {
+            $allowedForms = [];
+        }
 
         $allowedRoutes = [];
         foreach ($allowedForms as $af) {
@@ -243,6 +289,22 @@ class Admin extends Main
 
     public function createNav($activeModule, $activeMethod)
     {
+        if (!empty($_SESSION['mlite_force_change'])) {
+            $this->assign['nav'] = [
+                [
+                    'dir'       => 'profil',
+                    'name'      => 'Ganti Password',
+                    'category'  => 'Keamanan', 
+                    'icon'      => 'key',
+                    'desc'      => 'Ubah Kata Sandi Standar ISO 27001',
+                    'url'       => url([ADMIN, 'profil', 'ganti_pass']),
+                    'active'    => 'active',
+                    'subnav'    => [],
+                ]
+            ];
+            return;
+        }
+
         if ($activeModule === 'form_rme') {
             $activeModule = 'update_bmt';
         }
@@ -439,51 +501,29 @@ class Admin extends Main
             $_SESSION['userAgent']  = $_SERVER['HTTP_USER_AGENT'];
             $_SESSION['IPaddress']  = $_SERVER['REMOTE_ADDR'];
 
-            // Enforce password expiry (30 days) with OTP via WhatsApp
+            // Enforce password change for default password ('12345678') or expired password (without OTP requirement)
+            $forceChange = false;
+            if (trim($password) === '12345678' || password_verify('12345678', $row['password'])) {
+                $forceChange = true;
+            }
+
             try {
-                $expired = false;
                 $expireEnabled = $this->settings->get('settings.password_expire');
                 if ($expireEnabled === 'ya') {
-                    $expired = true;
-                }
-                if (!empty($row['password_changed_at'])) {
-                    $expired = $expired && ((time() - strtotime($row['password_changed_at'])) > (30 * 24 * 60 * 60));
-                }
-                if ($expired) {
-                    $otp = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-                    $expiresAt = date('Y-m-d H:i:s', time() + (10 * 60));
-                    $this->db('mlite_users')->where('id', $row['id'])->save(['otp_code' => $otp, 'otp_expires' => $expiresAt]);
-                    $_SESSION['mlite_force_change'] = true;
-                    // Send OTP to WhatsApp mapped from pegawai.no_telp using username as NIK
-                    $number = '';
-                    $uname = trim((string)$row['username']);
-                    $dokter = $this->db('dokter')->where('kd_dokter', $uname)->oneArray();
-                    if (!empty($dokter) && !empty($dokter['no_telp'])) {
-                        $number = $dokter['no_telp'];
+                    if (!empty($row['password_changed_at'])) {
+                        if ((time() - strtotime($row['password_changed_at'])) > (30 * 24 * 60 * 60)) {
+                            $forceChange = true;
+                        }
                     } else {
-                        $petugas = $this->db('petugas')->where('nip', $uname)->oneArray();
-                        if (!empty($petugas) && !empty($petugas['no_telp'])) {
-                            $number = $petugas['no_telp'];
-                        }
-                    }
-                    if (!empty($number)) {
-                        $waServer = $this->settings->get('wagateway.server');
-                        $waToken = $this->settings->get('wagateway.token');
-                        $waSender = $this->settings->get('wagateway.phonenumber');
-                        if (!empty($waServer) && !empty($waToken) && !empty($waSender)) {
-                            $ch = curl_init();
-                            curl_setopt($ch, CURLOPT_URL, $waServer . '/wagateway/kirimpesan');
-                            curl_setopt($ch, CURLOPT_POST, 1);
-                            $message = 'Kode OTP Anda: ' . $otp . "\nKode ini berlaku 10 menit. Mohon jangan membagikan kode kepada siapapun.";
-                            curl_setopt($ch, CURLOPT_POSTFIELDS, 'type=text&api_key=' . urlencode($waToken) . '&sender=' . urlencode($waSender) . '&number=' . urlencode($number) . '&message=' . urlencode($message));
-                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            curl_exec($ch);
-                            curl_close($ch);
-                        }
+                        $forceChange = true;
                     }
                 }
-            } catch (\Throwable $e) {
-                // Ignore OTP errors, proceed with normal login
+            } catch (\Throwable $e) {}
+
+            if ($forceChange) {
+                $_SESSION['mlite_force_change'] = true;
+            } else {
+                unset($_SESSION['mlite_force_change']);
             }
 
             if ($remember_me) {

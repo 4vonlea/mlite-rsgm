@@ -141,6 +141,7 @@ class Admin extends AdminModule
             }
             $row['editURL'] = url([ADMIN, 'users', 'edit', $row['id']]);
             $row['permURL'] = url([ADMIN, 'users', 'permission', $row['id']]);
+            $row['resetPassURL'] = url([ADMIN, 'users', 'reset_password', $row['id']]);
             $row['delURL']  = url([ADMIN, 'users', 'delete', $row['id']]);
         }
         $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
@@ -245,9 +246,14 @@ class Admin extends AdminModule
             $this->notify('failure', 'Email salah');
         }
         // check if password is longer than 5 characters
-        if (isset($_POST['password']) && strlen($_POST['password']) < 8) {
+        if (!empty($_POST['password']) && strlen($_POST['password']) < 8) {
             $errors++;
-            $this->notify('failure', 'Password terlalu pendek. Minimal 8 karakter serta memuat kombinasi huruf besar, huruf kecil, angka, dan karakter khusus ');
+            $this->notify('failure', 'Password terlalu pendek. Minimal 8 karakter.');
+        }
+
+        // If adding new user and password is empty, default to 12345678
+        if (!$id && empty($_POST['password'])) {
+            $_POST['password'] = '12345678';
         }
         // access to modules
         if ((count($_POST['access']) == count($this->_getModules())) || ($id == 1)) {
@@ -338,6 +344,56 @@ class Admin extends AdminModule
                 $this->notify('failure', 'Tak dapat menghapus pengguna.');
             }
         }
+        redirect(url([ADMIN, 'users', 'manage']));
+    }
+
+    /**
+    * reset user password to default 12345678
+    */
+    public function anyReset_Password($id = null)
+    {
+        $myId = $this->core->getUserInfo('id');
+        $myRole = $this->core->getUserInfo('role', $myId);
+        $myAccess = $this->core->getUserInfo('access', $myId);
+
+        if ($myId != 1 && $myRole !== 'admin' && $myAccess !== 'all') {
+            $this->notify('failure', 'Anda tidak memiliki hak akses untuk mereset kata sandi pengguna.');
+            redirect(url([ADMIN, 'users', 'manage']));
+            return;
+        }
+
+        if (!$id) {
+            $this->notify('failure', 'ID pengguna tidak valid.');
+            redirect(url([ADMIN, 'users', 'manage']));
+            return;
+        }
+
+        $user = $this->db('mlite_users')->where('id', $id)->oneArray();
+        if ($user) {
+            $defaultHash = password_hash('12345678', PASSWORD_BCRYPT);
+            $updateData = ['password' => $defaultHash];
+            try {
+                $hasCols = $this->db()->pdo()->query("SHOW COLUMNS FROM mlite_users LIKE 'password_changed_at'")->fetch();
+                if ($hasCols) {
+                    $updateData['password_changed_at'] = null;
+                }
+                $hasOtp = $this->db()->pdo()->query("SHOW COLUMNS FROM mlite_users LIKE 'otp_code'")->fetch();
+                if ($hasOtp) {
+                    $updateData['otp_code'] = null;
+                    $updateData['otp_expires'] = null;
+                }
+            } catch (\Throwable $e) {}
+
+            $save = $this->db('mlite_users')->where('id', $id)->save($updateData);
+            if ($save) {
+                $this->notify('success', 'Kata sandi pengguna [' . htmlspecialchars($user['username']) . '] berhasil direset ke standar default (12345678). Pengguna wajib mengubah kata sandinya secara mandiri saat login berikutnya.');
+            } else {
+                $this->notify('failure', 'Gagal mereset kata sandi pengguna.');
+            }
+        } else {
+            $this->notify('failure', 'Pengguna tidak ditemukan.');
+        }
+
         redirect(url([ADMIN, 'users', 'manage']));
     }
 

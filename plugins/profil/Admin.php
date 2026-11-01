@@ -463,68 +463,112 @@ class Admin extends AdminModule
     {
         $this->_addHeaderFiles();
         $username = $this->core->getUserInfo('username', null, true);
+        $fullname = $this->core->getUserInfo('fullname', null, true);
         $this->assign['username'] = $username;
-        $this->assign['title'] = 'Ganti Password';
+        $this->assign['fullname'] = !empty($fullname) ? $fullname : $username;
+        $this->assign['title'] = 'Ubah Kata Sandi';
+        $this->assign['is_forced'] = !empty($_SESSION['mlite_force_change']);
 
         return $this->draw('ganti_pass.html', ['ganti_pass' => htmlspecialchars_array($this->assign)]);
     }
 
     public function postGanti_Save($id = null)
     {
-        $errors = 0;
+        $location = url([ADMIN, 'profil', 'ganti_pass']);
 
-        $row_user = $this->db('mlite_users')->where('id', $this->core->getUserInfo('id'))->oneArray();
+        $pass_lama = isset($_POST['pass_lama']) ? (string)$_POST['pass_lama'] : '';
+        $pass_baru = isset($_POST['pass_baru']) ? (string)$_POST['pass_baru'] : '';
+        $pass_konfirmasi = isset($_POST['pass_konfirmasi']) ? (string)$_POST['pass_konfirmasi'] : '';
 
-        // location to redirect
-        if (!$id) {
-            $location = url([ADMIN, 'profil', 'ganti_pass']);
+        // 1. Validasi isian kosong
+        if (trim($pass_lama) === '' || trim($pass_baru) === '') {
+            $this->notify('failure', 'Semua kolom kata sandi wajib diisi.');
+            redirect($location);
+            return;
+        }
+
+        // 2. Verifikasi kata sandi lama
+        $userId = $this->core->getUserInfo('id');
+        $row_user = $this->db('mlite_users')->where('id', $userId)->oneArray();
+
+        if (!$row_user || !password_verify(trim($pass_lama), $row_user['password'])) {
+            $this->notify('failure', 'Kata sandi lama yang Anda masukkan salah.');
+            redirect($location);
+            return;
+        }
+
+        // 3. Kata sandi baru tidak boleh sama dengan default 12345678
+        if (trim($pass_baru) === '12345678') {
+            $this->notify('failure', 'Kata sandi baru tidak boleh menggunakan kata sandi default (12345678). Buatlah kata sandi pribadi yang aman.');
+            redirect($location);
+            return;
+        }
+
+        // 4. Kata sandi baru tidak boleh sama dengan kata sandi lama
+        if ($pass_baru === $pass_lama) {
+            $this->notify('failure', 'Kata sandi baru tidak boleh sama dengan kata sandi lama.');
+            redirect($location);
+            return;
+        }
+
+        // 5. Cek kecocokan konfirmasi kata sandi
+        if ($pass_baru !== $pass_konfirmasi) {
+            $this->notify('failure', 'Konfirmasi kata sandi baru tidak cocok dengan kata sandi baru.');
+            redirect($location);
+            return;
+        }
+
+        // 6. Validasi Kompleksitas Standar Keamanan Global (ISO/IEC 27001):
+        // Minimal 8 karakter, kombinasi huruf besar (A-Z), huruf kecil (a-z), angka (0-9), simbol/karakter khusus
+        $errors = [];
+        if (strlen($pass_baru) < 8) {
+            $errors[] = 'Minimal 8 karakter';
+        }
+        if (!preg_match('/[A-Z]/', $pass_baru)) {
+            $errors[] = 'Minimal 1 huruf besar (A-Z)';
+        }
+        if (!preg_match('/[a-z]/', $pass_baru)) {
+            $errors[] = 'Minimal 1 huruf kecil (a-z)';
+        }
+        if (!preg_match('/[0-9]/', $pass_baru)) {
+            $errors[] = 'Minimal 1 angka (0-9)';
+        }
+        if (!preg_match('/[^a-zA-Z0-9]/', $pass_baru)) {
+            $errors[] = 'Minimal 1 karakter simbol khusus (!@#$%^&* dll)';
+        }
+
+        if (!empty($errors)) {
+            $this->notify('failure', 'Kata sandi baru belum memenuhi standar keamanan global (ISO/IEC 27001): ' . implode(', ', $errors) . '.');
+            redirect($location);
+            return;
+        }
+
+        // 7. Simpan kata sandi baru ke database
+        $passwordHash = password_hash($pass_baru, PASSWORD_BCRYPT);
+        $saveData = ['password' => $passwordHash];
+
+        try {
+            $hasCols = $this->db()->pdo()->query("SHOW COLUMNS FROM mlite_users LIKE 'password_changed_at'")->fetch();
+            if ($hasCols) {
+                $saveData['password_changed_at'] = date('Y-m-d H:i:s');
+            }
+            $hasOtp = $this->db()->pdo()->query("SHOW COLUMNS FROM mlite_users LIKE 'otp_code'")->fetch();
+            if ($hasOtp) {
+                $saveData['otp_code'] = null;
+                $saveData['otp_expires'] = null;
+            }
+        } catch (\Throwable $e) {}
+
+        $query = $this->db('mlite_users')->where('id', $userId)->save($saveData);
+
+        if ($query) {
+            unset($_SESSION['mlite_force_change']);
+            $this->notify('success', 'Kata sandi Anda berhasil diperbarui sesuai standar keamanan global (ISO/IEC 27001). Selamat bertugas!');
+            redirect(url([ADMIN, 'dashboard', 'main']));
         } else {
-            $location = url([ADMIN, 'profil', 'ganti_pass', $id]);
-        }
-
-        // check if required fields are empty
-        if (checkEmptyFields(['pass_lama', 'pass_baru'], $_POST)) {
-            $this->notify('failure', 'Isian kosong');
-            redirect($location, $_POST);
-        }
-
-        // check if password is longer than 5 characters
-        if ($_POST['pass_baru'] == $_POST['pass_lama']) {
-            $errors++;
-            $this->notify('failure', 'Kata kunci sama');
-        }
-
-        // CREATE / EDIT
-        if (!$errors) {
-            unset($_POST['save']);
-
-            if ($row_user && password_verify(trim($_POST['pass_lama']), $row_user['password'])) {
-                // If forced change, require valid OTP
-                if (!empty($_SESSION['mlite_force_change'])) {
-                    $otp = isset_or($_POST['otp_code'], '');
-                    if (empty($otp) || empty($row_user['otp_code']) || empty($row_user['otp_expires']) || ($otp !== $row_user['otp_code']) || (time() > strtotime($row_user['otp_expires']))) {
-                        $this->notify('failure', 'OTP tidak valid atau kedaluwarsa');
-                        redirect($location, $_POST);
-                    }
-                }
-                $password = password_hash($_POST['pass_baru'], PASSWORD_BCRYPT);
-                $saveData = ['password' => $password, 'password_changed_at' => date('Y-m-d H:i:s'), 'otp_code' => null, 'otp_expires' => null];
-                $query = $this->db('mlite_users')->where('id', $this->core->getUserInfo('id'))->save($saveData);
-            }
-
-            if ($query) {
-                $this->notify('success', 'Simpan sukses');
-                if (!empty($_SESSION['mlite_force_change'])) {
-                    unset($_SESSION['mlite_force_change']);
-                }
-            } else {
-                $this->notify('failure', 'Kata kunci lama salah');
-            }
-
+            $this->notify('failure', 'Gagal menyimpan kata sandi. Silakan coba kembali.');
             redirect($location);
         }
-
-        redirect($location, $_POST);
     }
 
     public function getJavascript()

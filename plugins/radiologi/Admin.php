@@ -974,7 +974,7 @@ class Admin extends AdminModule
         ->limit(1)
         ->oneArray();
       if ($rawat) {
-        $stts_daftar = "Transaki tanggal " . date('Y-m-d', strtotime($rawat['tgl_registrasi'])) . " belum diselesaikan";
+        $stts_daftar = "Transaksi tanggal " . date('Y-m-d', strtotime($rawat['tgl_registrasi'])) . " belum diselesaikan";
         $stts_daftar_hidden = $stts_daftar;
         if ($this->settings->get('settings.cekstatusbayar') == 'false') {
           $stts_daftar_hidden = 'Lama';

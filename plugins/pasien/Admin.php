@@ -76,13 +76,27 @@ class Admin extends AdminModule
     $propinsi = $this->db('propinsi')->where('kd_prop', '!=', 1)->asc('nm_prop')->toArray();
     if (isset($_POST['no_rkm_medis'])) {
       $pasien = $this->db('pasien')->where('no_rkm_medis', $_POST['no_rkm_medis'])->oneArray();
-      $pasien['propinsi'] = $this->db('propinsi')->where('kd_prop', $pasien['kd_prop'])->oneArray();
-      $pasien['kabupaten'] = $this->db('kabupaten')->where('kd_kab', $pasien['kd_kab'])->oneArray();
-      $pasien['kecamatan'] = $this->db('kecamatan')->where('kd_kec', $pasien['kd_kec'])->oneArray();
-      $pasien['kelurahan'] = $this->db('kelurahan')->where('kd_kel', $pasien['kd_kel'])->oneArray();
-      $kabupaten_list = $this->db('kabupaten')->where('kd_prop', $pasien['kd_prop'])->asc('nm_kab')->toArray();
-      $kecamatan_list = $this->db('kecamatan')->where('kd_kab', $pasien['kd_kab'])->asc('nm_kec')->toArray();
-      $kelurahan_list = $this->db('kelurahan')->where('kd_kec', $pasien['kd_kec'])->asc('nm_kel')->toArray();
+      $pasien['propinsi'] = (!empty($pasien['kd_prop']) && $pasien['kd_prop'] != 1)
+        ? ($this->db('propinsi')->where('kd_prop', $pasien['kd_prop'])->oneArray() ?: ['nm_prop' => '-'])
+        : ['nm_prop' => '-'];
+      $pasien['kabupaten'] = (!empty($pasien['kd_kab']) && $pasien['kd_kab'] != 1)
+        ? ($this->db('kabupaten')->where('kd_kab', $pasien['kd_kab'])->oneArray() ?: ['nm_kab' => '-'])
+        : ['nm_kab' => '-'];
+      $pasien['kecamatan'] = (!empty($pasien['kd_kec']) && $pasien['kd_kec'] != 1)
+        ? ($this->db('kecamatan')->where('kd_kec', $pasien['kd_kec'])->oneArray() ?: ['nm_kec' => '-'])
+        : ['nm_kec' => '-'];
+      $pasien['kelurahan'] = (!empty($pasien['kd_kel']) && $pasien['kd_kel'] != '1')
+        ? ($this->db('kelurahan')->where('kd_kel', $pasien['kd_kel'])->oneArray() ?: ['nm_kel' => '-'])
+        : ['nm_kel' => '-'];
+      $kabupaten_list = (!empty($pasien['kd_prop']) && $pasien['kd_prop'] != 1)
+        ? $this->db('kabupaten')->like('kd_kab', $pasien['kd_prop'] . '%')->where('kd_kab', '!=', 1)->asc('nm_kab')->toArray()
+        : [];
+      $kecamatan_list = (!empty($pasien['kd_kab']) && $pasien['kd_kab'] != 1)
+        ? $this->db('kecamatan')->like('kd_kec', $pasien['kd_kab'] . '%')->where('kd_kec', '!=', 1)->asc('nm_kec')->toArray()
+        : [];
+      $kelurahan_list = (!empty($pasien['kd_kec']) && $pasien['kd_kec'] != 1)
+        ? $this->db('kelurahan')->like('kd_kel', $pasien['kd_kec'] . '%')->where('kd_kel', '!=', '1')->asc('nm_kel')->toArray()
+        : [];
       echo $this->draw('form.html', [
         'pasien' => htmlspecialchars_array($pasien),
         'penjab' => htmlspecialchars_array($penjab),
@@ -1339,14 +1353,23 @@ class Admin extends AdminModule
       case "propinsi":
         return $this->db('propinsi')->where('kd_prop', '!=', 1)->asc('nm_prop')->toArray();
       case "kabupaten":
-        $kd_prop = isset($_GET['kd_prop']) ? intval($_GET['kd_prop']) : 0;
-        return $this->db('kabupaten')->where('kd_prop', $kd_prop)->asc('nm_kab')->toArray();
+        $kd_prop = isset($_GET['kd_prop']) ? trim((string)$_GET['kd_prop']) : '';
+        if (empty($kd_prop) || $kd_prop === '1') {
+          return [];
+        }
+        return $this->db('kabupaten')->like('kd_kab', $kd_prop . '%')->where('kd_kab', '!=', 1)->asc('nm_kab')->toArray();
       case "kecamatan":
-        $kd_kab = isset($_GET['kd_kab']) ? intval($_GET['kd_kab']) : 0;
-        return $this->db('kecamatan')->where('kd_kab', $kd_kab)->asc('nm_kec')->toArray();
+        $kd_kab = isset($_GET['kd_kab']) ? trim((string)$_GET['kd_kab']) : '';
+        if (empty($kd_kab) || $kd_kab === '1') {
+          return [];
+        }
+        return $this->db('kecamatan')->like('kd_kec', $kd_kab . '%')->where('kd_kec', '!=', 1)->asc('nm_kec')->toArray();
       case "kelurahan":
-        $kd_kec = isset($_GET['kd_kec']) ? $_GET['kd_kec'] : "";
-        return $this->db('kelurahan')->where('kd_kec', $kd_kec)->asc('nm_kel')->toArray();
+        $kd_kec = isset($_GET['kd_kec']) ? trim((string)$_GET['kd_kec']) : '';
+        if (empty($kd_kec) || $kd_kec === '1') {
+          return [];
+        }
+        return $this->db('kelurahan')->like('kd_kel', $kd_kec . '%')->where('kd_kel', '!=', '1')->asc('nm_kel')->toArray();
     }
     return [];
   }
@@ -1536,8 +1559,8 @@ class Admin extends AdminModule
     // $mpdf->SetHTMLHeader($this->core->setPrintHeader());
     // $mpdf->SetHTMLFooter($this->core->setPrintFooter());
 
-    $url = url(ADMIN . '/tmp/riwayat.perawatan.html');
-    $html = file_get_contents($url);
+    $fileTmp = BASE_DIR . '/admin/tmp/riwayat.perawatan.html';
+    $html = file_exists($fileTmp) ? file_get_contents($fileTmp) : '';
     $mpdf->WriteHTML($this->core->setPrintCss(), \Mpdf\HTMLParserMode::HEADER_CSS);
     $mpdf->WriteHTML($css);
     $mpdf->WriteHTML($html);
@@ -1550,7 +1573,8 @@ class Admin extends AdminModule
   public function getExcel()
   {
     $file = "data.pasien.xls";
-    $html = file_get_contents(url(ADMIN . '/tmp/cetak.pasien.html'));
+    $fileTmp = BASE_DIR . '/admin/tmp/cetak.pasien.html';
+    $html = file_exists($fileTmp) ? file_get_contents($fileTmp) : '';
     header("Content-type: application/vnd-ms-excel");
     header("Content-Disposition: attachment; filename=$file");
     echo "<!DOCTYPE html><html><head></head><body>";

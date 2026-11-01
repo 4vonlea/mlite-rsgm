@@ -25,9 +25,9 @@ class Admin extends AdminModule
       return ['status' => 'error', 'message' => 'Invalid User Permission Credentials'];
     }
 
-    $draw = $_GET['draw'] ?? 0;
-    $start = $_GET['start'] ?? 0;
-    $length = $_GET['length'] ?? 10;
+    $draw = intval($_GET['draw'] ?? 0);
+    $start = max(0, intval($_GET['start'] ?? 0));
+    $length = max(1, intval($_GET['length'] ?? 10));
     $columnIndex = $_GET['order'][0]['column'] ?? 0;
     $columnName = $_GET['columns'][$columnIndex]['data'] ?? 'no_rawat';
     $columnSortOrder = strtolower($_GET['order'][0]['dir'] ?? 'asc');
@@ -130,7 +130,14 @@ class Admin extends AdminModule
     $stmt->execute($params);
     $totalRecords = $stmt->rowCount();
 
-    $sql .= " ORDER BY $columnName $columnSortOrder LIMIT $start, $length";
+    $sql .= " ORDER BY (
+      CASE
+        WHEN EXISTS (SELECT 1 FROM permintaan_lab pl WHERE pl.no_rawat = reg_periksa.no_rawat AND (pl.tgl_hasil IS NULL OR pl.tgl_hasil < '2000-01-01') AND (pl.tgl_sampel IS NULL OR pl.tgl_sampel < '2000-01-01')) THEN 3
+        WHEN EXISTS (SELECT 1 FROM permintaan_lab pl WHERE pl.no_rawat = reg_periksa.no_rawat AND (pl.tgl_hasil IS NULL OR pl.tgl_hasil < '2000-01-01')) THEN 2
+        WHEN EXISTS (SELECT 1 FROM permintaan_lab pl WHERE pl.no_rawat = reg_periksa.no_rawat) THEN 1
+        ELSE 0
+      END
+    ) DESC, $columnName $columnSortOrder LIMIT $start, $length";
 
     $stmt = $this->db()->pdo()->prepare($sql);
     $stmt->execute($params);
@@ -858,19 +865,80 @@ class Admin extends AdminModule
     $stmt->execute($params);
     $rows = $stmt->fetchAll();
 
+    $permintaan_by_rawat = [];
+    $no_rawat_list = [];
+    foreach ($rows as $r) {
+      if (!empty($r['no_rawat'])) {
+        $no_rawat_list[$r['no_rawat']] = $r['no_rawat'];
+      }
+    }
+    if (!empty($no_rawat_list)) {
+      $no_rawat_values = array_values($no_rawat_list);
+      $placeholders = implode(',', array_fill(0, count($no_rawat_values), '?'));
+      $stmt_permintaan = $this->db()->pdo()->prepare(
+        "SELECT no_rawat, tgl_sampel, tgl_hasil FROM permintaan_lab WHERE no_rawat IN ($placeholders)"
+      );
+      $stmt_permintaan->execute($no_rawat_values);
+      foreach ($stmt_permintaan->fetchAll(\PDO::FETCH_ASSOC) as $p) {
+        $permintaan_by_rawat[$p['no_rawat']][] = $p;
+      }
+    }
+
     $this->assign['list'] = [];
-    if ($type == 'ranap') {
-      foreach ($rows as $row) {
+    foreach ($rows as $row) {
+      if ($type == 'ranap') {
         $dpjp_ranap = $this->db('dpjp_ranap')
           ->join('dokter', 'dokter.kd_dokter=dpjp_ranap.kd_dokter')
           ->where('no_rawat', $row['no_rawat'])
           ->toArray();
         $row['dokter'] = $dpjp_ranap;
-        $this->assign['list'][] = $row;
       }
-    } else {
-      $this->assign['list'] = $rows;
+
+      $cek_permintaan = $permintaan_by_rawat[$row['no_rawat']] ?? [];
+
+      // Status laboratorium per no_rawat (mirip tampilan status radiologi & apotek):
+      // 3 = Order Baru (ada permintaan belum divalidasi / tgl_sampel kosong)
+      // 2 = Diproses (sudah divalidasi, hasil belum keluar)
+      // 1 = Selesai (semua permintaan sudah ada tgl_hasil)
+      // 0 = Belum ada permintaan
+      $status_lab = '-';
+      $status_prioritas = 0;
+      $status_warna = 'default';
+      if (!empty($cek_permintaan)) {
+        $status_lab = 'Selesai';
+        $status_prioritas = 1;
+        $status_warna = 'success';
+        foreach ($cek_permintaan as $p) {
+          if (!empty($p['tgl_hasil']) && $p['tgl_hasil'] >= '2000-01-01') {
+            continue;
+          }
+          if (empty($p['tgl_sampel']) || $p['tgl_sampel'] == '0000-00-00' || $p['tgl_sampel'] < '2000-01-01') {
+            $status_lab = 'Order Baru';
+            $status_prioritas = 3;
+            $status_warna = 'danger';
+            break;
+          }
+          $status_lab = 'Diproses';
+          $status_prioritas = 2;
+          $status_warna = 'warning';
+        }
+      }
+
+      $row['status_laboratorium'] = $status_lab;
+      $row['status_laboratorium_prioritas'] = $status_prioritas;
+      $row['status_laboratorium_warna'] = $status_warna;
+
+      $this->assign['list'][] = $row;
     }
+
+    usort($this->assign['list'], function ($a, $b) {
+      $pa = isset($a['status_laboratorium_prioritas']) ? $a['status_laboratorium_prioritas'] : 0;
+      $pb = isset($b['status_laboratorium_prioritas']) ? $b['status_laboratorium_prioritas'] : 0;
+      if ($pa != $pb) {
+        return $pb - $pa;
+      }
+      return strcmp(isset($b['tgl_registrasi']) ? $b['tgl_registrasi'] : '', isset($a['tgl_registrasi']) ? $a['tgl_registrasi'] : '');
+    });
 
     if (isset($_POST['no_rawat'])) {
       $this->assign['reg_periksa'] = $this->db('reg_periksa')
@@ -1052,7 +1120,7 @@ class Admin extends AdminModule
         ->limit(1)
         ->oneArray();
       if ($rawat) {
-        $stts_daftar = "Transaki tanggal " . date('Y-m-d', strtotime($rawat['tgl_registrasi'])) . " belum diselesaikan";
+        $stts_daftar = "Transaksi tanggal " . date('Y-m-d', strtotime($rawat['tgl_registrasi'])) . " belum diselesaikan";
         $stts_daftar_hidden = $stts_daftar;
         if ($this->settings->get('settings.cekstatusbayar') == 'false') {
           $stts_daftar_hidden = 'Lama';

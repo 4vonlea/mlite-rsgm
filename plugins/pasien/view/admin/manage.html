@@ -1,27 +1,24 @@
 <div class="row" style="margin-bottom:100px;">
   <div class="col-md-12">
     <div class="panel panel-default">
-      <div class="panel-heading">
-        <div class="btn-group pull-right" style="height: 38px;margin-top:-8px;background-color: #ffffff; border-left: 1px solid #dddddd;border-top: 1px solid #dddddd;border-right: 1px solid #dddddd;border-bottom: 1px solid #ffffff;">
-          <span class="btn btn-sm dropdown-toggle" data-toggle="dropdown">
-            <i class="fa fa-calendar"></i><span class="hidden-xs" style="font-size: 14px;"> Periode Daftar</span>
-          </span>
-          <ul class="dropdown-menu dropdown-menu-right">
-            <li style="padding-left:5px;padding-right:5px;">
-              <input type="text" id="periode_rawat_jalan" class="form-control periode_rawat_jalan" name="periode_rawat_jalan" placeholder="Tanggal Daftar" required>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <input type="text" id="periode_rawat_jalan_akhir" class="form-control periode_rawat_jalan" name="periode_rawat_jalan_akhir" placeholder="Tanggal Daftar" required>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="btn_cetak_pdf" class="btn btn-primary btn-block" style="text-align: left !important;">Export PDF</div>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="btn_export_xls" class="btn btn-primary btn-block" style="text-align: left !important;">Export XLS</div>
-            </li>
-          </ul>
+      <div class="panel-heading rsgm-panel-head">
+        <h3 class="panel-title">
+          <i class="fa fa-users" style="margin-right: 6px; color: #2563eb;"></i> Kelola Pasien
+        </h3>
+        <div class="rsgm-filter-bar">
+          <div class="rsgm-date-range">
+            <i class="fa fa-calendar rsgm-date-ico"></i>
+            <input type="text" id="periode_rawat_jalan" class="form-control periode_rawat_jalan input-sm" name="periode_rawat_jalan" placeholder="Tgl Awal" required>
+            <span class="rsgm-date-sep">&ndash;</span>
+            <input type="text" id="periode_rawat_jalan_akhir" class="form-control periode_rawat_jalan input-sm" name="periode_rawat_jalan_akhir" placeholder="Tgl Akhir" required>
+          </div>
+          <div class="rsgm-filter-pills">
+            <button type="button" id="submit_periode" class="btn btn-sm rsgm-fpill rsgm-fpill-all" onclick="loadData(1)"><i class="fa fa-filter"></i> Filter</button>
+            <span class="rsgm-filter-sep hidden-xs"></span>
+            <button type="button" id="btn_cetak_pdf" class="btn btn-sm rsgm-fpill rsgm-fpill-pdf"><i class="fa fa-file-pdf-o"></i> PDF</button>
+            <button type="button" id="btn_export_xls" class="btn btn-sm rsgm-fpill rsgm-fpill-xls"><i class="fa fa-file-excel-o"></i> XLS</button>
+          </div>
         </div>
-        <h3 class="panel-title">Kelola Pasien</h3>
       </div>
       <div class="panel-body">
         <div class="row">
@@ -32,25 +29,17 @@
           <div id="form"></div>
         </div>
         {/if}
-        <div class="row">
-          <div class="col col-md-6">
-            {if: $mlite_crud_permissions.can_create == 'true'}
-            <div class="searchbox-input form-inline padding-bottom-lg" style="margin-top:5px;margin-bottom:15px;">
-              <div class="input-group" id="index">
-                <input class="btn btn-default" type="button" id="bukaform" value="Buka Form" />
-              </div>
-            </div>
-            {/if}
+        <div class="rsgm-pasien-toolbar">
+          {if: $mlite_crud_permissions.can_create == 'true'}
+          <div id="index">
+            <button class="btn btn-sm btn-primary rsgm-btn-new-pasien" type="button" id="bukaform">
+              <i class="fa fa-user-plus"></i> <span>Pasien Baru</span>
+            </button>
           </div>
-          <div class="col col-md-6">
-            <div class="searchbox-input form-inline pull-right padding-bottom-lg" style="margin-top:5px;margin-bottom:15px;">
-              <div class="input-group">
-                <input type="text" id="searchInput" name="cari" minlength="3" class="form-control" placeholder="Pencarian..." required>
-                <span class="input-group-btn">
-                  <button class="btn btn-default" type="button" onclick="loadData(1)"><span class="glyphicon glyphicon-search"></span></button>
-                </span>
-              </div>
-            </div>
+          {/if}
+          <div class="rsgm-pasien-search">
+            <input type="text" id="searchInput" name="cari" minlength="3" class="form-control" placeholder="Cari nama, No. RM, NIK, alamat, telepon..." required>
+            <button type="button" onclick="loadData(1)" title="Cari"><i class="fa fa-search"></i></button>
           </div>
         </div>
         <div id="display" class="display">
@@ -58,17 +47,17 @@
                 <table class="table table-striped no-padding" width="100%">
                   <thead>
                     <tr>
-                      <th>No. RM</th>
+                      <th style="white-space: nowrap;">No. RM</th>
                       <th>Nama Pasien</th>
-                      <th>Tgl. Lahir</th>
-                      <th>Jenis Kelamin</th>
+                      <th style="white-space: nowrap;">Tgl. Lahir</th>
+                      <th style="white-space: nowrap;" title="Jenis Kelamin">L/P</th>
                       {if: $admin_mode == 'complex'}
-                      <th>Gol. Darah</th>
+                      <th style="white-space: nowrap;">Gol. Darah</th>
                       <th>Pekerjaan</th>
                       {/if}
                       <th>Alamat</th>
-                      <th>Telepon</th>
-                      <th>Tgl. Daftar</th>
+                      <th style="white-space: nowrap;">Telepon</th>
+                      <th style="white-space: nowrap;">Tgl. Daftar</th>
                       <th>Email</th>
                     </tr>
                   </thead>
@@ -77,12 +66,12 @@
                   </tbody>
                 </table>
             </div>
-            <nav class="row clearfix">
-                <div class="col-md-6">
-                  <b id="totalData">Jumlah: 0</b>
+            <nav class="rsgm-table-footer">
+                <div>
+                  <span class="rsgm-total-pill" id="totalData">Jumlah: 0</span>
                 </div>
-                <div class="col-md-6">
-                  <ul class="pagination no-margin pull-right" id="pagination">
+                <div>
+                  <ul class="pagination no-margin" id="pagination">
                   </ul>
                 </div>
             </nav>
@@ -131,11 +120,44 @@
       });
   });
 
+  function safeHref(rawUrl) {
+      var str = String(rawUrl || '').trim();
+      if (!str || /^javascript:/i.test(str) || /^data:/i.test(str) || /^vbscript:/i.test(str)) {
+          return '#';
+      }
+      return str;
+  }
+
+  function createMenuItem(label, href, modalTarget) {
+      var li = document.createElement('li');
+      var a = document.createElement('a');
+      a.setAttribute('href', safeHref(href));
+      if (modalTarget) {
+          a.setAttribute('data-toggle', 'modal');
+          a.setAttribute('data-target', modalTarget);
+      }
+      a.textContent = label;
+      li.appendChild(a);
+      return li;
+  }
+
+  function renderStatusRow(colspan, message, isError) {
+      var tbody = document.getElementById('tableBody');
+      var tr = document.createElement('tr');
+      var td = document.createElement('td');
+      td.setAttribute('colspan', String(colspan));
+      td.className = isError ? 'text-center text-danger' : 'text-center';
+      td.textContent = message;
+      tr.appendChild(td);
+      tbody.replaceChildren(tr);
+  }
+
   function loadData(page = 1) {
       currentPage = page;
       var search = $('#searchInput').val();
       var tgl_awal = $('#periode_rawat_jalan').val();
       var tgl_akhir = $('#periode_rawat_jalan_akhir').val();
+      var colCount = (adminMode == 'complex') ? 10 : 8;
 
       $.ajax({
           url: baseUrl + '/list',
@@ -152,98 +174,168 @@
               if(typeof response === 'string') response = JSON.parse(response);
               
               if(response.status === 'error') {
-                   $('#tableBody').html('<tr><td colspan="10" class="text-center text-danger">' + response.message + '</td></tr>');
+                   renderStatusRow(colCount, response.message || 'Gagal memuat data.', true);
                    return;
               }
 
-              var rows = '';
+              var tbody = document.getElementById('tableBody');
               if(response.data && response.data.length > 0) {
+                  var frag = document.createDocumentFragment();
                   response.data.forEach(function(item) {
-                      rows += '<tr>';
-                      
-                      // Column 1: No RM & Dropdown
-                      rows += '<td>';
-                      rows += '<span class="dropdown-toggle" data-toggle="dropdown" aria-expanded="true"><button type="button" class="btn btn-sm btn-default">' + item.no_rkm_medis + ' <span class="caret"></span></button></span>';
-                      rows += '<ul class="dropdown-menu" role="menu">';
-                      
-                      if(response.meta.cek_vclaim) {
-                          rows += '<li><a href="' + item.cekbynokartu + '" data-toggle="modal" data-target="#asuransiModal">[VClaim] Cek Nomor Kartu</a></li>';
-                          rows += '<li><a href="' + item.cekbynik + '" data-toggle="modal" data-target="#asuransiModal">[VClaim] Cek Nomor KTP</a></li>';
-                      }
-                      if(response.meta.cek_pcare) {
-                          rows += '<li><a href="' + item.pcare_bynokartu + '" data-toggle="modal" data-target="#asuransiModal">[PCare] Cek Nomor Kartu</a></li>';
-                          rows += '<li><a href="' + item.pcare_bynik + '" data-toggle="modal" data-target="#asuransiModal">[PCare] Cek Nomor KTP</a></li>';
-                      }
-                      
-                      rows += '<li class="dropdown-submenu">';
-                      rows += '<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Pendaftaran</a>';
-                      rows += '<ul class="dropdown-menu">';
-                      if(response.meta.active_modules.oral_diagnostic) {
-                          rows += '<li><a href="' + item.oral_diagnostic + '">Oral Diagnostic</a></li>';
-                      }
-                      if(response.meta.active_modules.igd) {
-                          rows += '<li><a href="' + item.igd + '">IGD / UGD</a></li>';
-                      }
-                      rows += '<li><a href="' + item.rawat_jalan + '">Poliklinik / Rawat Jalan</a></li>';
-                      rows += '</ul></li>';
-                      
-                      rows += '<li><a href="' + item.riwayatperawatan + '" data-toggle="modal" data-target="#riwayatModal">Elektronik Rekam Medis</a></li>';
-                      rows += '<li><a href="' + item.folder + '">Folder Berkas Digital</a></li>';
-                      rows += '</ul>';
-                      rows += '</td>';
+                      var tr = document.createElement('tr');
 
-                      // Other Columns
-                      var editClass = canUpdate ? 'class="edit"' : '';
-                      
-                      rows += '<td ' + editClass + ' data-no_rkm_medis="' + item.no_rkm_medis + '"><a href="' + item.riwayatperawatan + '" data-toggle="modal" data-target="#riwayatModal">' + item.nm_pasien + '</a></td>';
-                      rows += '<td ' + editClass + ' data-no_rkm_medis="' + item.no_rkm_medis + '">' + item.tgl_lahir + '</td>';
-                      rows += '<td ' + editClass + ' data-no_rkm_medis="' + item.no_rkm_medis + '">' + (item.jk == 'L' ? 'Laki-Laki' : 'Perempuan') + '</td>';
-                      
-                      if(adminMode == 'complex') {
-                          rows += '<td ' + editClass + ' data-no_rkm_medis="' + item.no_rkm_medis + '">' + (item.gol_darah || '-') + '</td>';
-                          rows += '<td ' + editClass + ' data-no_rkm_medis="' + item.no_rkm_medis + '">' + (item.pekerjaan || '-') + '</td>';
+                      // Column 1: No. RM & Dropdown
+                      var tdRm = document.createElement('td');
+                      tdRm.style.whiteSpace = 'nowrap';
+
+                      var toggleSpan = document.createElement('span');
+                      toggleSpan.className = 'dropdown-toggle';
+                      toggleSpan.setAttribute('data-toggle', 'dropdown');
+                      toggleSpan.setAttribute('aria-expanded', 'true');
+
+                      var rmBtn = document.createElement('button');
+                      rmBtn.type = 'button';
+                      rmBtn.className = 'btn btn-sm rsgm-rm-btn';
+                      rmBtn.appendChild(document.createTextNode((item.no_rkm_medis || '') + ' '));
+                      var caret = document.createElement('span');
+                      caret.className = 'caret';
+                      rmBtn.appendChild(caret);
+                      toggleSpan.appendChild(rmBtn);
+                      tdRm.appendChild(toggleSpan);
+
+                      var menu = document.createElement('ul');
+                      menu.className = 'dropdown-menu';
+                      menu.setAttribute('role', 'menu');
+
+                      if(response.meta && response.meta.cek_vclaim) {
+                          menu.appendChild(createMenuItem('[VClaim] Cek Nomor Kartu', item.cekbynokartu, '#asuransiModal'));
+                          menu.appendChild(createMenuItem('[VClaim] Cek Nomor KTP', item.cekbynik, '#asuransiModal'));
                       }
-                      
-                      rows += '<td ' + editClass + ' data-no_rkm_medis="' + item.no_rkm_medis + '">' + item.alamat + '</td>';
-                      rows += '<td ' + editClass + ' data-no_rkm_medis="' + item.no_rkm_medis + '">' + item.no_tlp + '</td>';
-                      rows += '<td ' + editClass + ' data-no_rkm_medis="' + item.no_rkm_medis + '">' + item.tgl_daftar + '</td>';
-                      rows += '<td ' + editClass + ' data-no_rkm_medis="' + item.no_rkm_medis + '">' + item.email + '</td>';
-                      
-                      rows += '</tr>';
+                      if(response.meta && response.meta.cek_pcare) {
+                          menu.appendChild(createMenuItem('[PCare] Cek Nomor Kartu', item.pcare_bynokartu, '#asuransiModal'));
+                          menu.appendChild(createMenuItem('[PCare] Cek Nomor KTP', item.pcare_bynik, '#asuransiModal'));
+                      }
+
+                      var subLi = document.createElement('li');
+                      subLi.className = 'dropdown-submenu';
+                      var subToggle = document.createElement('a');
+                      subToggle.setAttribute('href', '#');
+                      subToggle.className = 'dropdown-toggle';
+                      subToggle.setAttribute('data-toggle', 'dropdown');
+                      subToggle.setAttribute('role', 'button');
+                      subToggle.setAttribute('aria-haspopup', 'true');
+                      subToggle.setAttribute('aria-expanded', 'false');
+                      subToggle.textContent = 'Pendaftaran';
+                      subLi.appendChild(subToggle);
+
+                      var subMenu = document.createElement('ul');
+                      subMenu.className = 'dropdown-menu';
+                      if(response.meta && response.meta.active_modules && response.meta.active_modules.oral_diagnostic) {
+                          subMenu.appendChild(createMenuItem('Oral Diagnostic', item.oral_diagnostic, null));
+                      }
+                      if(response.meta && response.meta.active_modules && response.meta.active_modules.igd) {
+                          subMenu.appendChild(createMenuItem('IGD / UGD', item.igd, null));
+                      }
+                      subMenu.appendChild(createMenuItem('Poliklinik / Rawat Jalan', item.rawat_jalan, null));
+                      subLi.appendChild(subMenu);
+                      menu.appendChild(subLi);
+
+                      menu.appendChild(createMenuItem('Elektronik Rekam Medis', item.riwayatperawatan, '#riwayatModal'));
+                      menu.appendChild(createMenuItem('Folder Berkas Digital', item.folder, null));
+                      tdRm.appendChild(menu);
+                      tr.appendChild(tdRm);
+
+                      function makeDataCell(text, wrap, nowrap) {
+                          var td = document.createElement('td');
+                          var cls = [];
+                          if (canUpdate) cls.push('edit');
+                          if (wrap) cls.push('rsgm-cell-wrap');
+                          if (cls.length) td.className = cls.join(' ');
+                          if (nowrap) td.style.whiteSpace = 'nowrap';
+                          td.setAttribute('data-no_rkm_medis', item.no_rkm_medis || '');
+                          if (text !== null) {
+                              td.textContent = text || '-';
+                          }
+                          return td;
+                      }
+
+                      // Nama Pasien
+                      var tdName = makeDataCell(null, true, false);
+                      var nameLink = document.createElement('a');
+                      nameLink.className = 'rsgm-patient-link';
+                      nameLink.setAttribute('href', safeHref(item.riwayatperawatan));
+                      nameLink.setAttribute('data-toggle', 'modal');
+                      nameLink.setAttribute('data-target', '#riwayatModal');
+                      nameLink.textContent = item.nm_pasien || '-';
+                      tdName.appendChild(nameLink);
+                      tr.appendChild(tdName);
+
+                      // Tgl. Lahir
+                      tr.appendChild(makeDataCell(item.tgl_lahir, false, true));
+
+                      // Jenis Kelamin (L/P badge)
+                      var tdJk = makeDataCell(null, false, true);
+                      var jkBadge = document.createElement('span');
+                      if (item.jk === 'L') {
+                          jkBadge.className = 'rsgm-badge rsgm-badge-sky';
+                          jkBadge.title = 'Laki-Laki';
+                          jkBadge.textContent = 'L';
+                      } else {
+                          jkBadge.className = 'rsgm-badge rsgm-badge-rose';
+                          jkBadge.title = 'Perempuan';
+                          jkBadge.textContent = 'P';
+                      }
+                      tdJk.appendChild(jkBadge);
+                      tr.appendChild(tdJk);
+
+                      if(adminMode == 'complex') {
+                          tr.appendChild(makeDataCell(item.gol_darah || '-', false, true));
+                          tr.appendChild(makeDataCell(item.pekerjaan || '-', true, false));
+                      }
+
+                      tr.appendChild(makeDataCell(item.alamat || '-', true, false));
+                      tr.appendChild(makeDataCell(item.no_tlp || '-', false, true));
+                      tr.appendChild(makeDataCell(item.tgl_daftar || '-', false, true));
+                      tr.appendChild(makeDataCell(item.email || '-', true, false));
+
+                      frag.appendChild(tr);
                   });
+                  tbody.replaceChildren(frag);
               } else {
-                  rows = '<tr><td colspan="10" class="text-center">Tidak ada data pasien.</td></tr>';
+                  renderStatusRow(colCount, 'Tidak ada data pasien.', false);
               }
-              $('#tableBody').html(rows);
-              $('#totalData').text('Jumlah: ' + response.meta.total);
-              
+
+              $('#totalData').text('Jumlah: ' + (response.meta ? response.meta.total : 0));
+
               // Pagination
-              var totalPages = Math.ceil(response.meta.total / response.meta.per_page);
-              var pagination = '';
-              
-              if(page > 1) {
-                  pagination += '<li><a href="#" onclick="loadData(1)">&laquo;</a></li>';
-                  pagination += '<li><a href="#" onclick="loadData(' + (page - 1) + ')">‹</a></li>';
-              } else {
-                  pagination += '<li class="disabled"><a href="#">&laquo;</a></li>';
-                  pagination += '<li class="disabled"><a href="#">‹</a></li>';
+              var totalPages = Math.max(1, Math.ceil((response.meta.total || 0) / (response.meta.per_page || 10)));
+              var paginationEl = document.getElementById('pagination');
+              var pFrag = document.createDocumentFragment();
+
+              function addPageItem(label, targetPage, disabled) {
+                  var li = document.createElement('li');
+                  if (disabled) li.className = 'disabled';
+                  var a = document.createElement('a');
+                  a.setAttribute('href', '#');
+                  a.textContent = label;
+                  a.addEventListener('click', function(ev) {
+                      ev.preventDefault();
+                      if (!disabled) loadData(targetPage);
+                  });
+                  li.appendChild(a);
+                  pFrag.appendChild(li);
               }
-              
-              pagination += '<li class="disabled"><a href="#">Hal : ' + page + ' dari ' + totalPages + ' Hal</a></li>';
-              
-              if(page < totalPages) {
-                  pagination += '<li><a href="#" onclick="loadData(' + (page + 1) + ')">›</a></li>';
-                  pagination += '<li><a href="#" onclick="loadData(' + totalPages + ')">&raquo;</a></li>';
-              } else {
-                  pagination += '<li class="disabled"><a href="#">›</a></li>';
-                  pagination += '<li class="disabled"><a href="#">&raquo;</a></li>';
-              }
-              
-              $('#pagination').html(pagination);
+
+              addPageItem('\u00AB', 1, page <= 1);
+              addPageItem('\u2039', page - 1, page <= 1);
+              addPageItem('Hal : ' + page + ' dari ' + totalPages, page, true);
+              addPageItem('\u203A', page + 1, page >= totalPages);
+              addPageItem('\u00BB', totalPages, page >= totalPages);
+
+              paginationEl.replaceChildren(pFrag);
           },
-          error: function(xhr) {
-              console.error(xhr);
-              $('#tableBody').html('<tr><td colspan="10" class="text-center text-danger">Gagal memuat data.</td></tr>');
+          error: function() {
+              renderStatusRow(colCount, 'Gagal memuat data.', true);
           }
       });
   }

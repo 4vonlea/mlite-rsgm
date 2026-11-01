@@ -9,249 +9,565 @@
     <link rel="icon" href="{?=url()?}/{$mlite.logo}" type="image/x-icon">
     <link href="{$mlite.path}/assets/css/{$mlite.theme_admin}.min.css?v={$mlite.version}" rel="stylesheet">
     <link href="{$mlite.path}/assets/css/animate.min.css?v={$mlite.version}" rel="stylesheet">
-    <link href="{?=url(THEMES.'/admin/css/style.css?v=1124'.$mlite.version)?}" rel="stylesheet">
+    <link href="{?=url(THEMES.'/admin/css/style.css?v=1139'.$mlite.version)?}" rel="stylesheet">
     <link href="{$mlite.path}/assets/css/font-awesome.css?v={$mlite.version}" rel="stylesheet">
 <style>
-/* ========================================================
-   MODERN HORIZONTAL PILL MENU BAR (SLEEK & COMPACT)
-   ======================================================== */
-.navbar-icon-top {
-  background-color: #ffffff !important;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 4px 12px !important;
-  min-height: 46px !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-}
-.navbar-icon-top .navbar-nav {
-  margin: 0 !important;
-}
-.navbar li.menu-icon {
+/* ==========================================================================
+   RSGM MODERN 2-TIER CLINICAL HEADER (.rsgm-header-nav)
+   Row 1 (.rsgm-topbar)   : 34px Luminous Frosted Slate-50 (Ultra-Clean Luxury)
+   Row 2 (.rsgm-quickbar) : 46px Crisp White (#ffffff) Grouped Clinical Pills
+   Total Height           : 80px (compatible with 86px #content-wrapper offset)
+   ========================================================================== */
+.rsgm-header-nav,
+.navbar.rsgm-header-nav {
+  background-color: transparent !important;
   border: 0 !important;
-  background-color: #f2f2f2 !important;
-  border-radius: 0 !important;
-  margin: 3px 2px !important;
-  transition: all 0.2s ease !important;
-  box-shadow: none !important;
+  min-height: 0 !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.02) !important;
+  z-index: 1030;
 }
-.navbar li.menu-icon:hover {
-  background-color: #e2e2e2 !important;
-  transform: translateY(-1px);
+
+/* --- ROW 1: LUMINOUS FROSTED LUXURY CATEGORY & SYSTEM BAR --- */
+.rsgm-topbar {
+  position: relative !important;
+  z-index: 50 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  min-height: 34px !important;
+  padding: 0 12px !important;
+  background: rgba(248, 250, 252, 0.94) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
 }
-.navbar li.menu-icon:active {
-  transform: translateY(0);
-  box-shadow: none;
+
+.rsgm-topbar-nav,
+.rsgm-topbar-right {
+  display: flex !important;
+  align-items: center !important;
+  float: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+  gap: 3px;
 }
-.navbar-icon-top .navbar-nav > li.menu-icon > a {
+
+.rsgm-topbar-nav > li,
+.rsgm-topbar-right > li {
+  float: none !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.rsgm-topbar-nav > li > a,
+.rsgm-topbar-right > li > a {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px;
+  height: 26px !important;
+  padding: 0 9px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  color: #475569 !important;
+  background-color: transparent !important;
+  border-radius: 6px !important;
+  white-space: nowrap !important;
+  text-decoration: none !important;
+  transition: all 0.15s ease !important;
+}
+
+.rsgm-topbar-nav > li > a:hover,
+.rsgm-topbar-nav > li > a:focus,
+.rsgm-topbar-right > li > a:hover,
+.rsgm-topbar-right > li > a:focus {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.rsgm-topbar-nav > li.open > a,
+.rsgm-topbar-nav > li.open > a:hover,
+.rsgm-topbar-nav > li.open > a:focus,
+.rsgm-topbar-right > li.open > a,
+.rsgm-topbar-right > li.open > a:hover,
+.rsgm-topbar-right > li.open > a:focus {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.rsgm-topbar-nav > li.active > a,
+.rsgm-topbar-right > li.active > a {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px #bfdbfe !important;
+}
+
+.rsgm-topbar-nav > li.rsgm-brand-item > a {
+  padding: 0 8px !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.2px;
+}
+
+.rsgm-topbar-nav > li.rsgm-brand-item > a:hover {
+  background-color: transparent !important;
+}
+
+.rsgm-brand-logo {
+  height: 18px !important;
+  width: 18px !important;
+  object-fit: contain;
+  display: inline-block;
+}
+
+.rsgm-caret {
+  font-size: 11px !important;
+  color: #94a3b8 !important;
+  margin-left: 2px;
+  transition: transform 0.16s ease, color 0.16s ease;
+}
+
+.rsgm-topbar-nav > li > a:hover .rsgm-caret,
+.rsgm-topbar-right > li > a:hover .rsgm-caret,
+.rsgm-topbar li.open > a > .rsgm-caret {
+  color: #475569 !important;
+}
+
+.rsgm-topbar li.open > a > .rsgm-caret {
+  transform: rotate(180deg);
+}
+
+.rsgm-top-ico {
+  font-size: 12px !important;
+  color: #64748b !important;
+  transition: color 0.15s ease;
+}
+
+.rsgm-topbar-nav > li > a:hover .rsgm-top-ico,
+.rsgm-topbar-right > li > a:hover .rsgm-top-ico,
+.rsgm-topbar li.open > a > .rsgm-top-ico {
+  color: #0f172a !important;
+}
+
+.rsgm-topbar-nav > li.active > a .rsgm-top-ico,
+.rsgm-topbar-right > li.active > a .rsgm-top-ico {
+  color: #1d4ed8 !important;
+}
+
+.rsgm-topbar-right > li > a.rsgm-logout-link {
+  color: #dc2626 !important;
+  background-color: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  font-size: 11.5px !important;
+  padding: 0 10px !important;
+  margin-left: 6px;
+  transition: all 0.15s ease !important;
+}
+
+.rsgm-topbar-right > li > a.rsgm-logout-link:hover,
+.rsgm-topbar-right > li > a.rsgm-logout-link:focus {
+  background-color: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.22) !important;
+}
+
+/* --- ROW 2: CRISP WHITE QUICK-ACCESS CLINICAL BAR --- */
+.rsgm-quickbar {
+  position: relative !important;
+  z-index: 10 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  min-height: 46px !important;
+  padding: 5px 12px !important;
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.rsgm-quickbar-nav {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  float: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+  gap: 5px;
+}
+
+.rsgm-quickbar-nav > li {
+  float: none !important;
+  display: flex !important;
+  align-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.rsgm-qsep {
+  width: 1px;
+  height: 22px;
+  background-color: #cbd5e1;
+  margin: 0 4px !important;
+  flex-shrink: 0;
+}
+
+.rsgm-quickbar-nav > li > a.rsgm-qpill {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  height: 38px !important;
-  padding: 0 14px !important;
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.3px !important;
-  color: #444444 !important;
-  text-transform: uppercase;
-  border-radius: 0 !important;
+  gap: 7px;
+  height: 34px !important;
+  padding: 0 12px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.1px !important;
+  text-transform: none !important;
+  color: #334155 !important;
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 7px !important;
   white-space: nowrap !important;
   text-decoration: none !important;
   line-height: 1 !important;
-  background: transparent !important;
+  box-shadow: none !important;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease !important;
 }
-.navbar-icon-top .navbar-nav > li.menu-icon > a > .fa,
-.navbar-icon-top .navbar-nav > li.menu-icon > a > .glyphicon {
-  display: inline-block !important;
-  width: auto !important;
-  margin: 0 8px 0 0 !important;
-  font-size: 17px !important;
+
+.rsgm-quickbar-nav > li > a.rsgm-qpill > i.fa {
+  font-size: 14.5px !important;
   line-height: 1 !important;
-  vertical-align: middle !important;
+  width: auto !important;
+  margin: 0 !important;
   position: static !important;
-  top: auto !important;
-  color: #555555 !important;
-  transition: transform 0.2s ease;
-}
-.navbar li.menu-icon:hover a > .fa,
-.navbar li.menu-icon:hover a > .glyphicon {
-  transform: scale(1.15);
-  color: #222222 !important;
-}
-.navbar li.menu-icon:hover a {
-  color: #222222 !important;
+  transition: transform 0.16s ease, color 0.16s ease;
 }
 
-/* Neutral Monochrome Colors (as shown in reference image) */
-.navbar-icon-top .navbar-nav > li.menu-icon > a > i,
-.navbar-icon-top .navbar-nav > li.menu-icon > a > i.text-primary,
-.navbar-icon-top .navbar-nav > li.menu-icon > a > i.text-success,
-.navbar-icon-top .navbar-nav > li.menu-icon > a > i.text-danger,
-.navbar-icon-top .navbar-nav > li.menu-icon > a > i.text-warning,
-.navbar-icon-top .navbar-nav > li.menu-icon > a > i.text-info,
-.navbar-icon-top .navbar-nav > li.menu-icon > a > i.text-muted {
-  color: #555555 !important;
+/* Subtle Semantic Icon Accents */
+.rsgm-quickbar-nav > li > a.rsgm-qpill > i.ico-launcher { color: #4f46e5 !important; }
+.rsgm-quickbar-nav > li > a.rsgm-qpill > i.ico-pasien   { color: #059669 !important; }
+.rsgm-quickbar-nav > li > a.rsgm-qpill > i.ico-od       { color: #d97706 !important; }
+.rsgm-quickbar-nav > li > a.rsgm-qpill > i.ico-ralan    { color: #2563eb !important; }
+.rsgm-quickbar-nav > li > a.rsgm-qpill > i.ico-igd      { color: #dc2626 !important; }
+.rsgm-quickbar-nav > li > a.rsgm-qpill > i.ico-ranap    { color: #0891b2 !important; }
+.rsgm-quickbar-nav > li > a.rsgm-qpill > i.ico-lab      { color: #7c3aed !important; }
+.rsgm-quickbar-nav > li > a.rsgm-qpill > i.ico-rad      { color: #4338ca !important; }
+.rsgm-quickbar-nav > li > a.rsgm-qpill > i.ico-apotek   { color: #0d9488 !important; }
+
+.rsgm-quickbar-nav > li > a.rsgm-qpill:hover,
+.rsgm-quickbar-nav > li > a.rsgm-qpill:focus {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.06) !important;
 }
 
-/* Logout Button Style (clean, borderless) */
-.navbar-icon-top .navbar-right > li.menu-icon {
-  background-color: #f2f2f2 !important;
-  border: 0 !important;
+.rsgm-quickbar-nav > li > a.rsgm-qpill:hover > i.fa {
+  transform: scale(1.08);
+}
+
+/* Active Module Highlight - RSGM Luxury Royal Pill */
+.rsgm-quickbar-nav > li > a.rsgm-qpill.active,
+.rsgm-quickbar-nav > li > a.rsgm-qpill.active:hover,
+.rsgm-quickbar-nav > li > a.rsgm-qpill.active:focus {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+  border-color: #1e40af !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 10px -1px rgba(37, 99, 235, 0.32), 0 2px 4px -1px rgba(15, 23, 42, 0.06) !important;
+}
+
+.rsgm-quickbar-nav > li > a.rsgm-qpill.active:hover {
+  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4) !important;
+}
+
+.rsgm-quickbar-nav > li > a.rsgm-qpill.active > i.fa {
+  color: #ffffff !important;
+}
+
+/* Disabled Shortcut State */
+.rsgm-quickbar-nav > li > a.rsgm-qpill.disabled,
+.rsgm-quickbar-nav > li > a.rsgm-qpill[disabled] {
+  opacity: 0.42 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  background-color: #f8fafc !important;
   box-shadow: none !important;
 }
-.navbar-icon-top .navbar-right > li.menu-icon > a,
-.navbar-icon-top .navbar-right > li.menu-icon > a > i {
-  color: #dc2626 !important;
+
+.rsgm-quickbar-nav > li > a.rsgm-qpill.disabled > i.fa {
+  color: #94a3b8 !important;
+}
+
+/* --- DROPDOWN MENUS & MULTI-LEVEL SUBMENUS --- */
+.rsgm-header-nav .dropdown-menu {
+  position: absolute !important;
+  z-index: 1050 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.16), 0 4px 10px -3px rgba(15, 23, 42, 0.08) !important;
+  padding: 5px !important;
+  min-width: 220px;
+  margin-top: 4px !important;
+}
+
+.rsgm-header-nav .dropdown-menu > li > a {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px;
+  padding: 7px 10px !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: #334155 !important;
+  border-radius: 5px !important;
+  line-height: 1.35 !important;
+  white-space: nowrap;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.rsgm-header-nav .dropdown-menu > li > a:hover,
+.rsgm-header-nav .dropdown-menu > li > a:focus {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.rsgm-header-nav .dropdown-menu > li.active > a,
+.rsgm-header-nav .dropdown-menu > li.active > a:hover,
+.rsgm-header-nav .dropdown-menu > li.active > a:focus {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  font-weight: 600 !important;
+}
+
+.rsgm-dd-ico {
+  width: 16px !important;
+  text-align: center;
+  font-size: 13px !important;
+  color: #64748b !important;
+  flex-shrink: 0;
+}
+
+.rsgm-dd-subico {
+  width: 12px !important;
+  text-align: center;
+  font-size: 12px !important;
+  color: #94a3b8 !important;
+  flex-shrink: 0;
+}
+
+.rsgm-header-nav .dropdown-menu > li > a:hover > .rsgm-dd-ico,
+.rsgm-header-nav .dropdown-menu > li > a:hover > .rsgm-dd-subico,
+.rsgm-header-nav .dropdown-menu > li.active > a > .rsgm-dd-ico,
+.rsgm-header-nav .dropdown-menu > li.active > a > .rsgm-dd-subico {
+  color: #2563eb !important;
+}
+
+.rsgm-dd-header {
+  padding: 6px 10px 3px !important;
+  font-size: 10.5px !important;
   font-weight: 700 !important;
-}
-.navbar-icon-top .navbar-right > li.menu-icon:hover {
-  background-color: #fee2e2 !important;
-}
-
-/* Disabled State */
-.navbar-icon-top .navbar-nav > li.menu-icon > a.disabled,
-.navbar-icon-top .navbar-nav > li.menu-icon > a[disabled] {
-  opacity: 0.45 !important;
-  cursor: not-allowed !important;
-  pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #94a3b8 !important;
+  user-select: none;
 }
 
-.menu-top .navbar-nav>li>a {
-    font-size: 13.5px;
-}
-.menu-top .navbar-nav>li>a>.fa {
-    position: relative;
-    width: 10px !important;
-    font-size: 13.5px;
-}
-.navbar-icon-top .navbar-nav>li>a>.fa>.badge, .navbar-icon-top .navbar-nav>li>a>.glyphicon>.badge {
-    position: relative;
-    top: -1px;
-    margin-left: 4px;
-    font-family: sans-serif;
-    font-size: 10px;
-    padding: 2px 5px;
+.rsgm-rme-code {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #1e40af;
+  background-color: #dbeafe;
+  border-radius: 4px !important;
+  flex-shrink: 0;
 }
 
-@media (min-width: 768px) {
-    .navbar-icon-top .navbar-brand {
-        padding: 10px 15px;
-    }
-    .navbar-icon-top .navbar-text {
-        margin-top: 10px;
-        margin-bottom: 10px;
-    }
-    .navbar-icon-top .navbar-btn, .navbar-icon-top .navbar-form {
-        margin-top: 5px;
-        margin-bottom: 5px;
-    }
-    .navbar-icon-top .navbar-nav>li>a {
-        text-align: center;
-        display: inline-flex !important;
-        height: 38px !important;
-        vertical-align: middle !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-    }
-    .menu-top .navbar-nav>li>a {
-        text-align: center;
-        display: table-cell;
-        height: 34px;
-        vertical-align: middle;
-        padding-top: 0;
-        padding-bottom: 0;
-        color: #ffffff;
-    }
-    .menu-top .navbar-nav>li>a:hover {
-      border-radius: 0;
-      background-color: #c4c4c4;
-      color: #000000;
-    }
-    .menu-top .navbar-nav>li>a:focus {
-      color: #efefef !important;
-    }
-    .navbar-icon-top .navbar-nav>li>a>.fa, .navbar-icon-top .navbar-nav>li>a>.glyphicon {
-        display: inline-block !important;
-        width: auto !important;
-        margin: 0 8px 0 0 !important;
-        top: 0;
-        line-height: 1 !important;
-    }
+.rsgm-header-nav .dropdown-menu .divider {
+  height: 1px !important;
+  margin: 5px 4px !important;
+  background-color: #e2e8f0 !important;
+  overflow: hidden;
 }
 
-/* Offset Content-Wrapper & Notify for Compact Header */
-#content-wrapper {
-  padding-top: 86px !important;
-}
-#notify {
-  top: 90px !important;
-}
-@media(max-width: 1279px) {
-  #content-wrapper {
-    top: 86px !important;
-  }
-}
-
-
-/* Dropdown menu 2 columns layout */
+/* 2-Column Grid Dropdown (Bridging & Master Data) */
 .dropdown-menu.columns-2 {
-    min-width: 400px;
-    padding: 10px 0;
+  min-width: 440px;
+  padding: 6px !important;
 }
 
 .dropdown-menu.columns-2 > li {
-    float: left;
-    width: 50%;
+  float: left;
+  width: 50%;
 }
 
 .dropdown-menu.columns-2:after {
-    content: "";
-    display: table;
-    clear: both;
+  content: "";
+  display: table;
+  clear: both;
 }
 
-/* Fix submenu positioning */
+.rsgm-header-nav .open > .dropdown-menu.columns-2,
+.rsgm-header-nav .dropdown-submenu:hover > .dropdown-menu.columns-2,
+.rsgm-header-nav .dropdown-submenu.submenu-open > .dropdown-menu.columns-2 {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px 4px;
+}
+
+.rsgm-header-nav .dropdown-menu.columns-2 > li {
+  float: none !important;
+  width: 100% !important;
+}
+
+.rsgm-header-nav .dropdown-menu.columns-2 > li > a {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rsgm-header-nav .dropdown-menu.columns-2 > li.divider {
+  grid-column: 1 / -1;
+}
+
+/* Multi-Level Submenu Flyout */
 .dropdown-submenu {
-    position: relative;
+  position: relative;
 }
 
 .dropdown-submenu > .dropdown-menu {
-    top: 0;
-    left: 100%;
-    margin-top: -6px;
-    margin-left: -1px;
-    overflow: visible;
+  top: 0;
+  left: 100%;
+  margin-top: -6px !important;
+  margin-left: 0 !important;
+  overflow: visible;
+  z-index: 1060 !important;
 }
 
-.dropdown-submenu:hover > .dropdown-menu {
-    display: block !important;
+/* Invisible hover bridge so diagonal mouse travel stays active */
+.rsgm-header-nav .dropdown-submenu > .dropdown-menu::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -8px;
+  width: 8px;
 }
 
+.dropdown-submenu:hover > .dropdown-menu,
+.dropdown-submenu.submenu-open > .dropdown-menu {
+  display: block !important;
+}
+
+/* Clean FontAwesome chevron inside header submenus */
+.rsgm-header-nav .dropdown-submenu > a::after {
+  content: "\f105";
+  font-family: "FontAwesome";
+  border: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  float: none !important;
+  margin: 0 0 0 auto !important;
+  padding-left: 10px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.rsgm-header-nav .dropdown-submenu:hover > a::after {
+  color: #2563eb;
+}
+
+/* Right-aligned dropdowns (Sistem -> Master Data) fly out LEFTWARD */
+.rsgm-header-nav .dropdown-menu-right .dropdown-submenu > .dropdown-menu {
+  left: auto !important;
+  right: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.rsgm-header-nav .dropdown-menu-right .dropdown-submenu > .dropdown-menu::before {
+  left: auto;
+  right: -8px;
+}
+
+.rsgm-header-nav .dropdown-menu-right .dropdown-submenu > a::after {
+  content: "\f104";
+}
+
+/* Scrollable Leaf Menus */
 .dropdown-menu.scrollable-menu {
-    max-height: 75vh !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+  max-height: 75vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 .dropdown-menu.scrollable-menu::-webkit-scrollbar {
-    width: 6px;
+  width: 6px;
 }
 
 .dropdown-menu.scrollable-menu::-webkit-scrollbar-thumb {
-    background: #bbb;
-    border-radius: 3px;
+  background: #cbd5e1;
+  border-radius: 3px !important;
 }
 
-/* Responsive adjustments */
+/* --- MEDIUM DESKTOP (992px - 1199px) COMPACT FIT --- */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .rsgm-topbar {
+    padding: 0 8px !important;
+  }
+  .rsgm-topbar-nav > li > a,
+  .rsgm-topbar-right > li > a {
+    padding: 0 7px !important;
+    font-size: 11.5px !important;
+  }
+  .rsgm-quickbar {
+    padding: 5px 8px !important;
+  }
+  .rsgm-quickbar-nav {
+    gap: 4px;
+  }
+  .rsgm-quickbar-nav > li > a.rsgm-qpill {
+    padding: 0 8px !important;
+    font-size: 11.5px !important;
+    gap: 5px;
+  }
+  .rsgm-qsep {
+    margin: 0 2px !important;
+  }
+}
+
+/* --- CONTENT WRAPPER & NOTIFICATION OFFSET --- */
+#content-wrapper {
+  top: 0 !important;
+  padding-top: 86px !important;
+}
+#notify {
+  top: 84px !important;
+  z-index: 1025;
+}
+@media (max-width: 991px) {
+  #content-wrapper {
+    top: 64px !important;
+    padding-top: 16px !important;
+  }
+}
 @media (max-width: 767px) {
-    .dropdown-menu.columns-2 {
-        min-width: 100%;
-    }
-    
-    .dropdown-menu.columns-2 > li {
-        width: 100%;
-        float: none;
-    }
+  .dropdown-menu.columns-2 {
+    min-width: 100%;
+  }
+  .dropdown-menu.columns-2 > li {
+    width: 100%;
+    float: none;
+  }
 }
-
 </style>
     <!-- PWA Support -->
     <link rel="manifest" href="{$mlite.path}/manifest.json" />
@@ -308,281 +624,460 @@
                 </div>
             </nav>
         </div>
-        <nav class="navbar navbar-inverse navbar-fixed-top visible-lg visible-md" style="margin-bottom:0;font-size:16px;">
-          <div class="container-fluid bg-primary menu-top" style="margin: 0 !important;padding: 0 !important;border-bottom: #b6b6b6 2px solid;">
-            <div id="navbar" class="navbar-collapse collapse">
-              <ul class="nav navbar-nav">
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><img src="{?=url()?}/favicon.png" height="20px"></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="#" data-toggle="modal" data-target="#tentangModal"> Tentang</a></li>
-                    <li><a href="{?=url([ADMIN,'dashboard', 'menu'])?}" data-toggle="modal" data-target="#menuModal"> Menu</a></li>
-                    <li role="separator" class="divider"></li>                  
-                    {loop: $mlite.nav}
-                    {if: $value.category == 'main'}
-                    <li{if: !empty($value.subnav)} class="dropdown-submenu"{/if}>
-                        {if: !empty($value.subnav)}
-                        <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">
-                          {$value.name}
+        <nav class="navbar navbar-fixed-top visible-lg visible-md rsgm-header-nav">
+          <!-- BARIS 1: KATEGORI MODUL & SISTEM (DARK CLINICAL SLATE) -->
+          <div class="rsgm-topbar">
+            <ul class="nav navbar-nav rsgm-topbar-nav">
+              <li class="rsgm-brand-item{if: isset_or($module.dir) == 'dashboard'} active{/if}">
+                <a href="{?=url([ADMIN, 'dashboard', 'main'])?}" title="Beranda - {$mlite.nama_instansi|e}">
+                  <img src="{?=url()?}/favicon.png" alt="Logo" class="rsgm-brand-logo">
+                  <span class="hidden-md">Beranda</span>
+                </a>
+              </li>
+              <li role="separator" class="rsgm-top-sep"></li>
+
+              <!-- 1. Layanan -->
+              <li class="dropdown{if: isset_or($module.category) == 'layanan'} active{/if}">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                  <span>Layanan</span><i class="fa fa-angle-down rsgm-caret"></i>
+                </a>
+                <ul class="dropdown-menu">
+                  {loop: $mlite.nav}
+                  {if: $value.category == 'layanan'}
+                  <li class="{if: !empty($value.subnav)}dropdown-submenu {/if}{if: !empty($value.active)}active{/if}">
+                    {if: !empty($value.subnav)}
+                    <a href="{$value.url}" class="dropdown-item">
+                      <i class="fa fa-{?=isset_or($value.icon, 'circle-o')?} rsgm-dd-ico"></i>
+                      <span>{$value.name}</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      {loop: $value.subnav as $sub}
+                      <li class="{if: !empty($sub.active)}active{/if}">
+                        <a href="{$sub.url}" class="dropdown-item"><i class="fa fa-angle-right rsgm-dd-subico"></i><span>{$sub.name}</span></a>
+                      </li>
+                      {/loop}
+                    </ul>
+                    {else}
+                    <a href="{$value.url}" class="dropdown-item">
+                      <i class="fa fa-{?=isset_or($value.icon, 'circle-o')?} rsgm-dd-ico"></i>
+                      <span>{$value.name}</span>
+                    </a>
+                    {/if}
+                  </li>
+                  {/if}
+                  {/loop}
+                </ul>
+              </li>
+
+              <!-- 2. Farmasi -->
+              <li class="dropdown{if: isset_or($module.category) == 'farmasi'} active{/if}">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                  <span>Farmasi</span><i class="fa fa-angle-down rsgm-caret"></i>
+                </a>
+                <ul class="dropdown-menu">
+                  {loop: $mlite.nav}
+                  {if: $value.category == 'farmasi'}
+                  <li class="{if: !empty($value.subnav)}dropdown-submenu {/if}{if: !empty($value.active)}active{/if}">
+                    {if: !empty($value.subnav)}
+                    <a href="{$value.url}" class="dropdown-item">
+                      <i class="fa fa-{?=isset_or($value.icon, 'circle-o')?} rsgm-dd-ico"></i>
+                      <span>{$value.name}</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      {loop: $value.subnav as $sub}
+                      <li class="{if: !empty($sub.active)}active{/if}">
+                        <a href="{$sub.url}" class="dropdown-item"><i class="fa fa-angle-right rsgm-dd-subico"></i><span>{$sub.name}</span></a>
+                      </li>
+                      {/loop}
+                    </ul>
+                    {else}
+                    <a href="{$value.url}" class="dropdown-item">
+                      <i class="fa fa-{?=isset_or($value.icon, 'circle-o')?} rsgm-dd-ico"></i>
+                      <span>{$value.name}</span>
+                    </a>
+                    {/if}
+                  </li>
+                  {/if}
+                  {/loop}
+                </ul>
+              </li>
+
+              <!-- 3. Rekam Medis (Form RME Dinamis + Modul Rekam Medik) -->
+              <li class="dropdown{if: isset_or($module.category) == 'rekammedik'} active{/if}">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                  <span>Rekam Medis</span><i class="fa fa-angle-down rsgm-caret"></i>
+                </a>
+                <ul class="dropdown-menu">
+                  <li class="dropdown-submenu{if: isset_or($module.dir) == 'form_rme' || isset_or($module.dir) == 'update_bmt'} active{/if}">
+                    <a href="#" class="dropdown-item rsgm-submenu-folder" role="button" aria-expanded="false">
+                      <i class="fa fa-file-text-o rsgm-dd-ico"></i>
+                      <span>Form RME</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      {if: $mlite.is_admin}
+                      <li>
+                        <a href="{?=url([ADMIN, 'form_rme', 'manajemenrme'])?}" class="dropdown-item">
+                          <i class="fa fa-sliders rsgm-dd-ico"></i>
+                          <span>Manajemen Form RME</span>
                         </a>
-                        <ul class="dropdown-menu {if: $value.name == 'Master Data'}columns-2{/if}">
-                            {loop: $value.subnav}
-                            <li><a href="{$value.url}" class="dropdown-item">{$value.name}</a></li>
-                            {/loop}
-                        </ul>
-                        {else} 
-                        <a class="dropdown-item" href="{$value.url}">{$value.name}</a>
-                        {/if}
-                    </li>
-                    {/if}
-                    {/loop}
-                    <li role="separator" class="divider"></li>
-                    <li><a href="#" data-toggle="modal" data-target="#menuModal"> Login</a></li>
-                  </ul>  
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Layanan</a>
-                  <ul class="dropdown-menu">
-                    {loop: $mlite.nav}
-                    {if: $value.category == 'layanan'}
-                    <li{if: !empty($value.subnav)} class="dropdown-submenu"{/if}>
-                        {if: !empty($value.subnav)}
-                        <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">
-                          {$value.name}
-                        </a>
-                        <ul class="dropdown-menu">
-                            {loop: $value.subnav}
-                            <li><a href="{$value.url}" class="dropdown-item">{$value.name}</a></li>
-                            {/loop}
-                        </ul>
-                        {else} 
-                        <a class="dropdown-item" href="{$value.url}">{$value.name}</a>
-                        {/if}
-                    </li>
-                    {/if}
-                    {/loop}
-                  </ul>  
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Manajemen</a>
-                  <ul class="dropdown-menu">
-                    {loop: $mlite.nav}
-                    {if: $value.category == 'manajemen'}
-                    <li{if: !empty($value.subnav)} class="dropdown-submenu"{/if}>
-                        {if: !empty($value.subnav)}
-                        <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">
-                          {$value.name}
-                        </a>
-                        <ul class="dropdown-menu">
-                            {loop: $value.subnav}
-                            <li><a href="{$value.url}" class="dropdown-item">{$value.name}</a></li>
-                            {/loop}
-                        </ul>
-                        {else} 
-                        <a class="dropdown-item" href="{$value.url}">{$value.name}</a>
-                        {/if}
-                    </li>
-                    {/if}
-                    {/loop}
-                  </ul>  
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Farmasi</a>
-                  <ul class="dropdown-menu">
-                    {loop: $mlite.nav}
-                    {if: $value.category == 'farmasi'}
-                    <li{if: !empty($value.subnav)} class="dropdown-submenu"{/if}>
-                        {if: !empty($value.subnav)}
-                        <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">
-                          {$value.name}
-                        </a>
-                        <ul class="dropdown-menu">
-                            {loop: $value.subnav}
-                            <li><a href="{$value.url}" class="dropdown-item">{$value.name}</a></li>
-                            {/loop}
-                        </ul>
-                        {else} 
-                        <a class="dropdown-item" href="{$value.url}">{$value.name}</a>
-                        {/if}
-                    </li>
-                    {/if}
-                    {/loop}
-                  </ul>  
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Rekam Medis</a>
-                  <ul class="dropdown-menu">
-                    <li class="dropdown-submenu">
-                      <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">Form RME</a>
-                      <ul class="dropdown-menu">
-                        {if: $mlite.is_admin}
-                        <li><a href="{?=url([ADMIN, 'form_rme', 'manajemenrme'])?}" class="dropdown-item">MANAJEMEN FORM RME</a></li>
-                        {if: !empty($mlite.rme_categories)}<li role="separator" class="divider"></li>{/if}
-                        {/if}
-                        {loop: $mlite.rme_categories as $cat}
-                        <li class="dropdown-submenu">
-                          <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">{$cat.nama_kategori}</a>
-                          <ul class="dropdown-menu">
-{loop: $cat.forms as $form}
-                            <li><a href="{?=url([ADMIN, 'form_rme', $form.route_manage])?}" class="dropdown-item">{$form.kode_form} - {$form.nama_form}</a></li>
-                            {/loop}
-                          </ul>
-                        </li>
-                        {/loop}
-                        {if: empty($mlite.rme_categories) && !$mlite.is_admin}
-                        <li class="disabled"><a href="#" class="dropdown-item text-muted"><em>(Belum ada form yang diizinkan untuk unit Anda)</em></a></li>
-                        {/if}
-                      </ul>
-                    </li>
-                    <li role="separator" class="divider"></li>
-                    {loop: $mlite.nav}
-                    {if: $value.category == 'rekammedik' && $value.dir != 'update_bmt'}
-                    <li{if: !empty($value.subnav)} class="dropdown-submenu"{/if}>
-                        {if: !empty($value.subnav)}
-                        <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">
-                          {$value.name}
-                        </a>
-                        <ul class="dropdown-menu">
-                            {loop: $value.subnav}
-                            <li><a href="{$value.url}" class="dropdown-item">{$value.name}</a></li>
-                            {/loop}
-                        </ul>
-                        {else} 
-                        <a class="dropdown-item" href="{$value.url}">{$value.name}</a>
-                        {/if}
-                    </li>
-                    {/if}
-                    {/loop}
-                  </ul>  
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Bridging</a>
-                  <ul class="dropdown-menu">
-                    {loop: $mlite.nav}
-                    {if: $value.category == 'bridging'}
-                    <li{if: !empty($value.subnav)} class="dropdown-submenu"{/if}>
-                        {if: !empty($value.subnav)}
-                        <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">
-                          {$value.name}
-                        </a>
-                        <ul class="dropdown-menu">
-                            {loop: $value.subnav}
-                            <li><a href="{$value.url}" class="dropdown-item">{$value.name}</a></li>
-                            {/loop}
-                        </ul>
-                        {else} 
-                        <a class="dropdown-item" href="{$value.url}">{$value.name}</a>
-                        {/if}
-                    </li>
-                    {/if}
-                    {/loop}
-                  </ul>  
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Keuangan</a>
-                  <ul class="dropdown-menu">
-                    {loop: $mlite.nav}
-                    {if: $value.category == 'keuangan'}
-                    <li{if: !empty($value.subnav)} class="dropdown-submenu"{/if}>
-                        {if: !empty($value.subnav)}
-                        <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">
-                          {$value.name}
-                        </a>
-                        <ul class="dropdown-menu">
-                            {loop: $value.subnav}
-                            <li><a href="{$value.url}" class="dropdown-item">{$value.name}</a></li>
-                            {/loop}
-                        </ul>
-                        {else} 
-                        <a class="dropdown-item" href="{$value.url}">{$value.name}</a>
-                        {/if}
-                    </li>
-                    {/if}
-                    {/loop}
-                  </ul>  
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Anjungan</a>
-                  <ul class="dropdown-menu">
-                    {if: $mlite.presensi}
-                    <li><a href="{?=url()?}/anjungan/presensi" target="_blank">Presensi Pegawai</a></li>
-                    {/if}
-                    <li><a href="{?=url()?}/anjungan/bed" target="_blank">Ketersediaan Kamar</a></li>
-                    <li><a href="{?=url()?}/anjungan/pasien" target="_blank">Anjungan Pasien Mandiri</a></li>
-                    <li><a href="{?=url()?}/anjungan/sep" target="_blank">Anjungan Cetak SEP</a></li>
-                    <li><a href="{?=url()?}/anjungan/apotek/ambilantrian" target="_blank">Anjungan Apotek</a></li>
-                    <li><a href="{?=url()?}/jknmobilefktp/apm" target="_blank">Anjungan Pasien FKTP</a></li>
-                    <li role="separator" class="divider"></li>
-                    <li><a href="{?=url()?}/anjungan/loket" target="_blank">Antrian Loket</a></li>
-                    <li><a href="{?=url()?}/anjungan/laboratorium" target="_blank">Antrian Laboratorium</a></li>
-                    <li><a href="{?=url()?}/anjungan/radiologi" target="_blank">Antrian Radiologi</a></li>
-                    <li><a href="{?=url()?}/anjungan/apotek" target="_blank">Antrian Apotek</a></li>
-                    <li><a href="{?=url()?}/anjungan/poli" target="_blank">Antrian Poliklinik</a></li>
-                    <li><a href="{?=url()?}/anjungan/jadwaloperasi" target="_blank">Jadwal Operasi</a></li>
-                    <li><a href="{?=url()?}/jknmobilefktp/display" target="_blank">Display Antrian FKTP</a></li>
-                    <li role="separator" class="divider"></li>
-                    <li><a href="{?=url()?}/anjungan/poli/all" target="_blank">Antrian Poliklinik Alternatif</a></li>
-                    {loop: $mlite.poliklinik}
-                      {if: $value.attr == 'selected'}
-                        <li><a href="{?=url()?}/anjungan/poli/{$value.kd_poli}" target="_blank">Antrian {$value.nm_poli}</a></li>
+                      </li>
+                      {if: !empty($mlite.rme_categories)}<li role="separator" class="divider"></li>{/if}
                       {/if}
-                    {/loop}  
-                  </ul>
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Bantuan</a>
-                  <ul class="dropdown-menu">
-                    <li><a href="#" data-toggle="modal" data-target="#bantuanModal"> Bantuan</a></li>
-                  </ul>  
-                </li>
-              </ul>  
-            </div><!--/.nav-collapse -->
-          </div>          
-          <div class="container-fluid navbar-icon-top">
-            <ul class="nav navbar-nav">
-              <li class="menu-icon"><a href="{?=url([ADMIN,'dashboard', 'menu'])?}" data-toggle="modal" data-target="#menuModal"><i class="fa fa-home text-primary"></i> Menu</a></li>
+                      {loop: $mlite.rme_categories as $cat}
+                      <li class="dropdown-submenu">
+                        <a href="#" class="dropdown-item rsgm-submenu-folder" role="button" aria-expanded="false">
+                          <i class="fa fa-folder-open-o rsgm-dd-ico"></i>
+                          <span>{$cat.nama_kategori}</span>
+                        </a>
+                        <ul class="dropdown-menu scrollable-menu">
+                          {loop: $cat.forms as $form}
+                          <li>
+                            <a href="{?=url([ADMIN, 'form_rme', $form.route_manage])?}" class="dropdown-item">
+                              <span class="rsgm-rme-code">{$form.kode_form}</span>
+                              <span>{$form.nama_form}</span>
+                            </a>
+                          </li>
+                          {/loop}
+                        </ul>
+                      </li>
+                      {/loop}
+                      {if: empty($mlite.rme_categories) && !$mlite.is_admin}
+                      <li class="disabled"><a href="#" class="dropdown-item text-muted"><em>(Belum ada form yang diizinkan untuk unit Anda)</em></a></li>
+                      {/if}
+                    </ul>
+                  </li>
+                  <li role="separator" class="divider"></li>
+                  {loop: $mlite.nav}
+                  {if: $value.category == 'rekammedik' && $value.dir != 'update_bmt'}
+                  <li class="{if: !empty($value.subnav)}dropdown-submenu {/if}{if: !empty($value.active)}active{/if}">
+                    {if: !empty($value.subnav)}
+                    <a href="{$value.url}" class="dropdown-item">
+                      <i class="fa fa-{?=isset_or($value.icon, 'circle-o')?} rsgm-dd-ico"></i>
+                      <span>{$value.name}</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      {loop: $value.subnav as $sub}
+                      <li class="{if: !empty($sub.active)}active{/if}">
+                        <a href="{$sub.url}" class="dropdown-item"><i class="fa fa-angle-right rsgm-dd-subico"></i><span>{$sub.name}</span></a>
+                      </li>
+                      {/loop}
+                    </ul>
+                    {else}
+                    <a href="{$value.url}" class="dropdown-item">
+                      <i class="fa fa-{?=isset_or($value.icon, 'circle-o')?} rsgm-dd-ico"></i>
+                      <span>{$value.name}</span>
+                    </a>
+                    {/if}
+                  </li>
+                  {/if}
+                  {/loop}
+                </ul>
+              </li>
+
+              <!-- 4. Keuangan -->
+              <li class="dropdown{if: isset_or($module.category) == 'keuangan'} active{/if}">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                  <span>Keuangan</span><i class="fa fa-angle-down rsgm-caret"></i>
+                </a>
+                <ul class="dropdown-menu">
+                  {loop: $mlite.nav}
+                  {if: $value.category == 'keuangan'}
+                  <li class="{if: !empty($value.subnav)}dropdown-submenu {/if}{if: !empty($value.active)}active{/if}">
+                    {if: !empty($value.subnav)}
+                    <a href="{$value.url}" class="dropdown-item">
+                      <i class="fa fa-{?=isset_or($value.icon, 'circle-o')?} rsgm-dd-ico"></i>
+                      <span>{$value.name}</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      {loop: $value.subnav as $sub}
+                      <li class="{if: !empty($sub.active)}active{/if}">
+                        <a href="{$sub.url}" class="dropdown-item"><i class="fa fa-angle-right rsgm-dd-subico"></i><span>{$sub.name}</span></a>
+                      </li>
+                      {/loop}
+                    </ul>
+                    {else}
+                    <a href="{$value.url}" class="dropdown-item">
+                      <i class="fa fa-{?=isset_or($value.icon, 'circle-o')?} rsgm-dd-ico"></i>
+                      <span>{$value.name}</span>
+                    </a>
+                    {/if}
+                  </li>
+                  {/if}
+                  {/loop}
+                </ul>
+              </li>
+
+              <!-- 5. Bridging (2 Kolom) -->
+              <li class="dropdown{if: isset_or($module.category) == 'bridging'} active{/if}">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                  <span>Bridging</span><i class="fa fa-angle-down rsgm-caret"></i>
+                </a>
+                <ul class="dropdown-menu columns-2">
+                  {loop: $mlite.nav}
+                  {if: $value.category == 'bridging'}
+                  <li class="{if: !empty($value.subnav)}dropdown-submenu {/if}{if: !empty($value.active)}active{/if}">
+                    {if: !empty($value.subnav)}
+                    <a href="{$value.url}" class="dropdown-item">
+                      <i class="fa fa-{?=isset_or($value.icon, 'circle-o')?} rsgm-dd-ico"></i>
+                      <span>{$value.name}</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      {loop: $value.subnav as $sub}
+                      <li class="{if: !empty($sub.active)}active{/if}">
+                        <a href="{$sub.url}" class="dropdown-item"><i class="fa fa-angle-right rsgm-dd-subico"></i><span>{$sub.name}</span></a>
+                      </li>
+                      {/loop}
+                    </ul>
+                    {else}
+                    <a href="{$value.url}" class="dropdown-item">
+                      <i class="fa fa-{?=isset_or($value.icon, 'circle-o')?} rsgm-dd-ico"></i>
+                      <span>{$value.name}</span>
+                    </a>
+                    {/if}
+                  </li>
+                  {/if}
+                  {/loop}
+                </ul>
+              </li>
+
+              <!-- 6. Manajemen -->
+              <li class="dropdown{if: isset_or($module.category) == 'manajemen'} active{/if}">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                  <span>Manajemen</span><i class="fa fa-angle-down rsgm-caret"></i>
+                </a>
+                <ul class="dropdown-menu">
+                  {loop: $mlite.nav}
+                  {if: $value.category == 'manajemen'}
+                  <li class="{if: !empty($value.subnav)}dropdown-submenu {/if}{if: !empty($value.active)}active{/if}">
+                    {if: !empty($value.subnav)}
+                    <a href="{$value.url}" class="dropdown-item">
+                      <i class="fa fa-{?=isset_or($value.icon, 'circle-o')?} rsgm-dd-ico"></i>
+                      <span>{$value.name}</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      {loop: $value.subnav as $sub}
+                      <li class="{if: !empty($sub.active)}active{/if}">
+                        <a href="{$sub.url}" class="dropdown-item"><i class="fa fa-angle-right rsgm-dd-subico"></i><span>{$sub.name}</span></a>
+                      </li>
+                      {/loop}
+                    </ul>
+                    {else}
+                    <a href="{$value.url}" class="dropdown-item">
+                      <i class="fa fa-{?=isset_or($value.icon, 'circle-o')?} rsgm-dd-ico"></i>
+                      <span>{$value.name}</span>
+                    </a>
+                    {/if}
+                  </li>
+                  {/if}
+                  {/loop}
+                </ul>
+              </li>
+
+              <!-- 7. Anjungan & Display Antrian -->
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                  <span>Anjungan</span><i class="fa fa-angle-down rsgm-caret"></i>
+                </a>
+                <ul class="dropdown-menu scrollable-menu">
+                  <li class="rsgm-dd-header">Layanan Mandiri (APM)</li>
+                  {if: $mlite.presensi}
+                  <li><a href="{?=url()?}/anjungan/presensi" target="_blank" rel="noopener"><i class="fa fa-id-badge rsgm-dd-ico"></i><span>Presensi Pegawai</span></a></li>
+                  {/if}
+                  <li><a href="{?=url()?}/anjungan/bed" target="_blank" rel="noopener"><i class="fa fa-bed rsgm-dd-ico"></i><span>Ketersediaan Kamar</span></a></li>
+                  <li><a href="{?=url()?}/anjungan/pasien" target="_blank" rel="noopener"><i class="fa fa-desktop rsgm-dd-ico"></i><span>Anjungan Pasien Mandiri</span></a></li>
+                  <li><a href="{?=url()?}/anjungan/sep" target="_blank" rel="noopener"><i class="fa fa-print rsgm-dd-ico"></i><span>Anjungan Cetak SEP</span></a></li>
+                  <li><a href="{?=url()?}/anjungan/apotek/ambilantrian" target="_blank" rel="noopener"><i class="fa fa-ticket rsgm-dd-ico"></i><span>Anjungan Apotek</span></a></li>
+                  <li><a href="{?=url()?}/jknmobilefktp/apm" target="_blank" rel="noopener"><i class="fa fa-mobile rsgm-dd-ico"></i><span>Anjungan Pasien FKTP</span></a></li>
+                  <li role="separator" class="divider"></li>
+                  <li class="rsgm-dd-header">Display Antrian</li>
+                  <li><a href="{?=url()?}/anjungan/loket" target="_blank" rel="noopener"><i class="fa fa-television rsgm-dd-ico"></i><span>Antrian Loket</span></a></li>
+                  <li><a href="{?=url()?}/anjungan/laboratorium" target="_blank" rel="noopener"><i class="fa fa-flask rsgm-dd-ico"></i><span>Antrian Laboratorium</span></a></li>
+                  <li><a href="{?=url()?}/anjungan/radiologi" target="_blank" rel="noopener"><i class="fa fa-film rsgm-dd-ico"></i><span>Antrian Radiologi</span></a></li>
+                  <li><a href="{?=url()?}/anjungan/apotek" target="_blank" rel="noopener"><i class="fa fa-medkit rsgm-dd-ico"></i><span>Antrian Apotek</span></a></li>
+                  <li><a href="{?=url()?}/anjungan/poli" target="_blank" rel="noopener"><i class="fa fa-stethoscope rsgm-dd-ico"></i><span>Antrian Poliklinik</span></a></li>
+                  <li><a href="{?=url()?}/anjungan/jadwaloperasi" target="_blank" rel="noopener"><i class="fa fa-calendar-check-o rsgm-dd-ico"></i><span>Jadwal Operasi</span></a></li>
+                  <li><a href="{?=url()?}/jknmobilefktp/display" target="_blank" rel="noopener"><i class="fa fa-television rsgm-dd-ico"></i><span>Display Antrian FKTP</span></a></li>
+                  <li role="separator" class="divider"></li>
+                  <li class="rsgm-dd-header">Antrian Per Poliklinik</li>
+                  <li><a href="{?=url()?}/anjungan/poli/all" target="_blank" rel="noopener"><i class="fa fa-th-list rsgm-dd-ico"></i><span>Antrian Poliklinik Alternatif</span></a></li>
+                  {loop: $mlite.poliklinik}
+                    {if: $value.attr == 'selected'}
+                    <li><a href="{?=url()?}/anjungan/poli/{$value.kd_poli}" target="_blank" rel="noopener"><i class="fa fa-angle-right rsgm-dd-subico"></i><span>Antrian {$value.nm_poli}</span></a></li>
+                    {/if}
+                  {/loop}
+                </ul>
+              </li>
+            </ul>
+
+            <!-- KANAN BARIS 1: SISTEM, BANTUAN, IDENTITAS USER & KELUAR -->
+            <ul class="nav navbar-nav rsgm-topbar-right">
+              <li class="dropdown{if: isset_or($module.category) == 'main' && isset_or($module.dir) != 'dashboard'} active{/if}">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                  <i class="fa fa-cog rsgm-top-ico"></i><span>Sistem</span><i class="fa fa-angle-down rsgm-caret"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-right">
+                  {loop: $mlite.nav}
+                  {if: $value.category == 'main'}
+                  <li class="{if: !empty($value.subnav)}dropdown-submenu {/if}{if: !empty($value.active)}active{/if}">
+                    {if: !empty($value.subnav)}
+                    <a href="{$value.url}" class="dropdown-item">
+                      <i class="fa fa-{?=isset_or($value.icon, 'circle-o')?} rsgm-dd-ico"></i>
+                      <span>{$value.name}</span>
+                    </a>
+                    <ul class="dropdown-menu{if: $value.name == 'Master Data'} columns-2 scrollable-menu{/if}">
+                      {loop: $value.subnav as $sub}
+                      <li class="{if: !empty($sub.active)}active{/if}">
+                        <a href="{$sub.url}" class="dropdown-item"><i class="fa fa-angle-right rsgm-dd-subico"></i><span>{$sub.name}</span></a>
+                      </li>
+                      {/loop}
+                    </ul>
+                    {else}
+                    <a href="{$value.url}" class="dropdown-item">
+                      <i class="fa fa-{?=isset_or($value.icon, 'circle-o')?} rsgm-dd-ico"></i>
+                      <span>{$value.name}</span>
+                    </a>
+                    {/if}
+                  </li>
+                  {/if}
+                  {/loop}
+                  <li role="separator" class="divider"></li>
+                  <li>
+                    <a href="{?=url([ADMIN,'dashboard', 'menu'])?}" data-toggle="modal" data-target="#menuModal">
+                      <i class="fa fa-th-large rsgm-dd-ico"></i><span>Menu Semua Modul</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" data-toggle="modal" data-target="#bantuanModal">
+                      <i class="fa fa-question-circle-o rsgm-dd-ico"></i><span>Bantuan mLITE</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" data-toggle="modal" data-target="#tentangModal">
+                      <i class="fa fa-info-circle rsgm-dd-ico"></i><span>Tentang mLITE</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <a href="{?=url(ADMIN.'/logout')?}" class="rsgm-logout-link" title="Keluar dari sistem">
+                  <i class="fa fa-power-off"></i><span>Keluar</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- BARIS 2: SHORTCUT ALUR KLINIS RSGM (CRISP WHITE GROUPED PILLS) -->
+          <div class="rsgm-quickbar">
+            <ul class="nav navbar-nav rsgm-quickbar-nav">
+              <!-- Grup 1: Launcher -->
+              <li>
+                <a href="{?=url([ADMIN,'dashboard', 'menu'])?}" data-toggle="modal" data-target="#menuModal" class="rsgm-qpill" title="Buka semua modul">
+                  <i class="fa fa-th-large ico-launcher"></i><span>Menu</span>
+                </a>
+              </li>
+
+              <!-- Grup 2: Master Rekam Medis -->
               {if: $mlite.module_pasien}
-              <li class="menu-icon"><a href="{?=url([ADMIN, 'pasien', 'manage'])?}"{if: !$mlite.pasien_access} class="btn disabled"{/if}><i class="fa fa-users {if: $mlite.pasien_access}text-success{else}text-muted{/if}"></i> Pasien</a></li>
+              <li role="separator" class="rsgm-qsep"></li>
+              <li>
+                <a href="{?=url([ADMIN, 'pasien', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'pasien'} active{/if}{if: !$mlite.pasien_access} disabled{/if}">
+                  <i class="fa fa-users ico-pasien"></i><span>Pasien</span>
+                </a>
+              </li>
               {/if}
+
+              <!-- Grup 3: Layanan Medis (Urutan Alur Klinis RSGM) -->
               {if: $this->core->getUserInfo('role', !empty($_SESSION['mlite_user']) ? $_SESSION['mlite_user'] : 1) == 'medis'}
-                {if: $mlite.module_oral_diagnostic && $mlite.oral_diagnostic_access}
-                <li class="menu-icon"><a href="{?=url([ADMIN, 'oral_diagnostic', 'manage'])?}"{if: !$mlite.oral_diagnostic_access} class="btn disabled"{/if}><i class="fa fa-asterisk {if: $mlite.oral_diagnostic_access}text-warning{else}text-muted{/if}"></i> Oral Diag</a></li>
+                {if: ($mlite.module_oral_diagnostic && $mlite.oral_diagnostic_access) || $mlite.dokter_ralan_access || $mlite.dokter_igd_access || $mlite.dokter_ranap_access}
+                <li role="separator" class="rsgm-qsep"></li>
                 {/if}
-                {if: $mlite.dokter_igd_access}
-                <li class="menu-icon"><a href="{?=url([ADMIN, 'dokter_igd', 'manage'])?}"{if: !$mlite.dokter_igd_access} class="btn disabled"{/if}><i class="fa fa-ambulance {if: $mlite.dokter_igd_access}text-danger{else}text-muted{/if}"></i> Dokter IGD</a></li>
+                {if: $mlite.module_oral_diagnostic && $mlite.oral_diagnostic_access}
+                <li>
+                  <a href="{?=url([ADMIN, 'oral_diagnostic', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'oral_diagnostic'} active{/if}{if: !$mlite.oral_diagnostic_access} disabled{/if}">
+                    <i class="fa fa-asterisk ico-od"></i><span>Oral Diag</span>
+                  </a>
+                </li>
                 {/if}
                 {if: $mlite.dokter_ralan_access}
-                <li class="menu-icon"><a href="{?=url([ADMIN, 'dokter_ralan', 'manage'])?}"{if: !$mlite.dokter_ralan_access} class="btn disabled"{/if}><i class="fa fa-wheelchair {if: $mlite.dokter_ralan_access}text-warning{else}text-muted{/if}"></i> Dokter Ralan</a></li>
-                {/if} 
+                <li>
+                  <a href="{?=url([ADMIN, 'dokter_ralan', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'dokter_ralan'} active{/if}{if: !$mlite.dokter_ralan_access} disabled{/if}">
+                    <i class="fa fa-stethoscope ico-ralan"></i><span>Dokter Ralan</span>
+                  </a>
+                </li>
+                {/if}
+                {if: $mlite.dokter_igd_access}
+                <li>
+                  <a href="{?=url([ADMIN, 'dokter_igd', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'dokter_igd'} active{/if}{if: !$mlite.dokter_igd_access} disabled{/if}">
+                    <i class="fa fa-ambulance ico-igd"></i><span>Dokter IGD</span>
+                  </a>
+                </li>
+                {/if}
                 {if: $mlite.dokter_ranap_access}
-                <li class="menu-icon"><a href="{?=url([ADMIN, 'dokter_ranap', 'manage'])?}"{if: !$mlite.dokter_ranap_access} class="btn disabled"{/if}><i class="fa fa-hotel {if: $mlite.dokter_ranap_access}text-info{else}text-muted{/if}"></i> Dokter Ranap</a></li>
+                <li>
+                  <a href="{?=url([ADMIN, 'dokter_ranap', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'dokter_ranap'} active{/if}{if: !$mlite.dokter_ranap_access} disabled{/if}">
+                    <i class="fa fa-bed ico-ranap"></i><span>Dokter Ranap</span>
+                  </a>
+                </li>
                 {/if}
               {else}
-                {if: $mlite.module_oral_diagnostic}
-                <li class="menu-icon"><a href="{?=url([ADMIN, 'oral_diagnostic', 'manage'])?}"{if: !$mlite.oral_diagnostic_access} class="btn disabled"{/if}><i class="fa fa-asterisk {if: $mlite.oral_diagnostic_access}text-warning{else}text-muted{/if}"></i> Oral Diag</a></li>
+                {if: $mlite.module_oral_diagnostic || $mlite.module_rawat_jalan || $mlite.module_igd || $mlite.module_rawat_inap}
+                <li role="separator" class="rsgm-qsep"></li>
                 {/if}
-                {if: $mlite.module_igd}
-                <li class="menu-icon"><a href="{?=url([ADMIN, 'igd', 'manage'])?}"{if: !$mlite.igd_access} class="btn disabled"{/if}><i class="fa fa-ambulance {if: $mlite.igd_access}text-danger{else}text-muted{/if}"></i> IGD</a></li>
+                {if: $mlite.module_oral_diagnostic}
+                <li>
+                  <a href="{?=url([ADMIN, 'oral_diagnostic', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'oral_diagnostic'} active{/if}{if: !$mlite.oral_diagnostic_access} disabled{/if}">
+                    <i class="fa fa-asterisk ico-od"></i><span>Oral Diag</span>
+                  </a>
+                </li>
                 {/if}
                 {if: $mlite.module_rawat_jalan}
-                <li class="menu-icon"><a href="{?=url([ADMIN, 'rawat_jalan', 'manage'])?}"{if: !$mlite.rawat_jalan_access} class="btn disabled"{/if}><i class="fa fa-wheelchair {if: $mlite.rawat_jalan_access}text-warning{else}text-muted{/if}"></i> Poliklinik</a></li>
+                <li>
+                  <a href="{?=url([ADMIN, 'rawat_jalan', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'rawat_jalan'} active{/if}{if: !$mlite.rawat_jalan_access} disabled{/if}">
+                    <i class="fa fa-stethoscope ico-ralan"></i><span>Poliklinik</span>
+                  </a>
+                </li>
+                {/if}
+                {if: $mlite.module_igd}
+                <li>
+                  <a href="{?=url([ADMIN, 'igd', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'igd'} active{/if}{if: !$mlite.igd_access} disabled{/if}">
+                    <i class="fa fa-ambulance ico-igd"></i><span>IGD</span>
+                  </a>
+                </li>
                 {/if}
                 {if: $mlite.module_rawat_inap}
-                <li class="menu-icon"><a href="{?=url([ADMIN, 'rawat_inap', 'manage'])?}"{if: !$mlite.rawat_inap_access} class="btn disabled"{/if}><i class="fa fa-hotel {if: $mlite.rawat_inap_access}text-info{else}text-muted{/if}"></i> Rawat Inap</a></li>
+                <li>
+                  <a href="{?=url([ADMIN, 'rawat_inap', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'rawat_inap'} active{/if}{if: !$mlite.rawat_inap_access} disabled{/if}">
+                    <i class="fa fa-bed ico-ranap"></i><span>Rawat Inap</span>
+                  </a>
+                </li>
                 {/if}
               {/if}
-              {if: $mlite.module_apotek_ralan}
-              <li class="menu-icon"><a href="{?=url([ADMIN, 'apotek_ralan', 'manage'])?}"{if: !$mlite.apotek_ralan_access} class="btn disabled"{/if}><i class="fa fa-medkit {if: $mlite.apotek_ralan_access}text-success{else}text-muted{/if}"></i> Apotek</a></li>
+
+              <!-- Grup 4: Penunjang Medis -->
+              {if: $mlite.module_laboratorium || $mlite.module_radiologi || $mlite.module_apotek_ralan}
+              <li role="separator" class="rsgm-qsep"></li>
               {/if}
               {if: $mlite.module_laboratorium}
-              <li class="menu-icon"><a href="{?=url([ADMIN, 'laboratorium', 'manage'])?}"{if: !$mlite.laboratorium_access} class="btn disabled"{/if}><i class="fa fa-flask {if: $mlite.laboratorium_access}text-warning{else}text-muted{/if}"></i> Laboratorium</a></li>
+              <li>
+                <a href="{?=url([ADMIN, 'laboratorium', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'laboratorium'} active{/if}{if: !$mlite.laboratorium_access} disabled{/if}">
+                  <i class="fa fa-flask ico-lab"></i><span>Laboratorium</span>
+                </a>
+              </li>
               {/if}
               {if: $mlite.module_radiologi}
-              <li class="menu-icon"><a href="{?=url([ADMIN, 'radiologi', 'manage'])?}"{if: !$mlite.radiologi_access} class="btn disabled"{/if}><i class="fa fa-film {if: $mlite.radiologi_access}text-info{else}text-muted{/if}"></i> Radiologi</a></li>
+              <li>
+                <a href="{?=url([ADMIN, 'radiologi', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'radiologi'} active{/if}{if: !$mlite.radiologi_access} disabled{/if}">
+                  <i class="fa fa-film ico-rad"></i><span>Radiologi</span>
+                </a>
+              </li>
               {/if}
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-              <li class="menu-icon"><a href="{?=url(ADMIN.'/logout')?}" class="btn" title="Logout"><i class="fa fa-power-off"></i> Logout</a></li>
+              {if: $mlite.module_apotek_ralan}
+              <li>
+                <a href="{?=url([ADMIN, 'apotek_ralan', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'apotek_ralan'} active{/if}{if: !$mlite.apotek_ralan_access} disabled{/if}">
+                  <i class="fa fa-medkit ico-apotek"></i><span>Apotek</span>
+                </a>
+              </li>
+              {/if}
             </ul>
           </div>
         </nav>
@@ -602,7 +1097,30 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-lg-12" style="margin-bottom:0px !important;">
-                        <h2 class="content-title">{if: $module.name == 'Rawat Jalan' | $module.name == 'Pengguna'}<a href="{?=url([ADMIN,$module.dir,'index'])?}">{$module.name}</a>{else}<a href="{?=url([ADMIN,$module.dir,'manage'])?}">{$module.name}</a>{/if} <a href="{?=url([ADMIN,'dashboard','help',$module.dir])?}" data-toggle="modal" data-target="#moduleModal"><span class="pull-right"><small class="hidden-xs">Help</small> <i class="fa fa-question-circle-o" aria-hidden="true"></i></span></a></h2>
+                        <div class="rsgm-page-header">
+                            <div class="rsgm-page-title-wrap">
+                                <h1 class="content-title rsgm-page-title">
+                                    {if: $module.name == 'Rawat Jalan' | $module.name == 'Pengguna'}<a href="{?=url([ADMIN,$module.dir,'index'])?}">{$module.name}</a>{else}<a href="{?=url([ADMIN,$module.dir,'manage'])?}">{$module.name}</a>{/if}
+                                </h1>
+                            </div>
+                            <nav class="rsgm-breadcrumb-nav" aria-label="Breadcrumb">
+                                <ol class="rsgm-breadcrumb-list">
+                                    <li>
+                                        <a href="{?=url([ADMIN,'dashboard','index'])?}" class="rsgm-bc-home" title="Kembali ke Beranda">
+                                            <i class="fa fa-home"></i> <span>Beranda</span>
+                                        </a>
+                                    </li>
+                                    <li class="rsgm-bc-sep"><i class="fa fa-angle-right"></i></li>
+                                    <li class="rsgm-bc-cat-item">
+                                        <span class="rsgm-bc-cat">{if: $module.dir == 'rawat_jalan' || $module.dir == 'dokter_ralan' || $module.dir == 'oral_diagnostic' || $module.dir == 'igd' || $module.dir == 'dokter_igd' || $module.dir == 'rawat_inap' || $module.dir == 'dokter_ranap' || $module.dir == 'operasi'}Layanan Klinis{elseif: $module.dir == 'laboratorium' || $module.dir == 'radiologi'}Penunjang Medis{elseif: $module.dir == 'apotek_ralan' || $module.dir == 'apotek_ranap'}Farmasi{elseif: $module.dir == 'kasir_rawat_jalan' || $module.dir == 'kasir_rawat_inap'}Keuangan & Kasir{elseif: $module.dir == 'pasien'}Rekam Medis{elseif: !empty($module.category)}{?=ucwords($module.category)?}{else}Sistem{/if}</span>
+                                    </li>
+                                    <li class="rsgm-bc-sep"><i class="fa fa-angle-right"></i></li>
+                                    <li class="rsgm-bc-curr-item">
+                                        <span class="rsgm-bc-curr">{$module.name}</span>
+                                    </li>
+                                </ol>
+                            </nav>
+                        </div>
                         {$module.content}
                     </div>
                 </div>
@@ -612,29 +1130,48 @@
 
     </div>
 
-    <footer class="visible-lg visible-md bg-primary" style="padding-bottom:30px;z-index:1000;">
-      <p class="pull-right">
-        Made with <i class="fa fa-heart text-danger"></i> by <a href="https://basoro.id/" target="_blank"><b>drg. F. Basoro</b>.</a>
-        {$mlite.powered}.
-      </p>
-      <p><i class="fa fa-fw fa-calendar"></i> <span>{$mlite.tanggal}</span> <i class="fa fa-fw fa-clock-o"></i><span id="clock"></span> <i class="fa fa-fw fa-user"></i> <span>{?= sprintf('Login sebagai <strong>%s</strong>', $mlite.username) ?}</span></p>
+    <footer class="visible-lg visible-md rsgm-status-bar">
+      <div class="rsgm-status-left">
+        <span class="rsgm-status-chip">
+          <i class="fa fa-calendar-o rsgm-ico-cal"></i>
+          <span>{$mlite.tanggal}</span>
+        </span>
+        <span class="rsgm-status-chip">
+          <i class="fa fa-clock-o rsgm-ico-clock"></i>
+          <span id="clock"></span>
+          <span class="rsgm-live-dot" title="Sistem Aktif & Terhubung"></span>
+        </span>
+        <span class="rsgm-status-chip rsgm-chip-user">
+          <i class="fa fa-user-circle rsgm-ico-user"></i>
+          <span>{$mlite.username}</span>
+          <span class="rsgm-user-role">{?=ucwords($this->core->getUserInfo('role'))?}</span>
+        </span>
+      </div>
+
+      <div class="rsgm-status-right">
+        <span class="rsgm-credit-text">
+          Made with <i class="fa fa-heart text-danger rsgm-heart-beat"></i> by <a href="https://basoro.id/" target="_blank" class="rsgm-author-link">drg. F. Basoro</a>
+        </span>
+        <span class="rsgm-status-sep">&bull;</span>
+        <span class="rsgm-version-text">{$mlite.powered}</span>
+      </div>
     </footer>
 
     {if: $this->core->getUserInfo('role') == 'medis'}
     <div class="icon-bar hidden-lg hidden-md">
-      <a href="#" data-toggle="modal" data-target="#menuModal"><i class="fa fa-home"></i></a>
-      <a href="{?=url([ADMIN, 'pasien', 'manage'])?}"{if: !$mlite.pasien_access} class="btn disabled"{/if}><i class="fa fa-users"></i></a>
-      <a href="{?=url([ADMIN, 'dokter_igd', 'manage'])?}"{if: !$mlite.dokter_igd_access} class="btn disabled"{/if}><i class="fa fa-ambulance"></i></a>
-      <a href="{?=url([ADMIN, 'dokter_ralan', 'manage'])?}"{if: !$mlite.dokter_ralan_access} class="btn disabled"{/if}><i class="fa fa-wheelchair"></i></a>
-      <a href="{?=url([ADMIN, 'dokter_ranap', 'manage'])?}"{if: !$mlite.dokter_ranap_access} class="btn disabled"{/if}><i class="fa fa-hotel"></i></a>
+      <a href="{?=url([ADMIN,'dashboard', 'menu'])?}" data-toggle="modal" data-target="#menuModal"><i class="fa fa-th-large"></i></a>
+      <a href="{?=url([ADMIN, 'pasien', 'manage'])?}" class="{if: !$mlite.pasien_access}btn disabled{/if}"><i class="fa fa-users"></i></a>
+      <a href="{?=url([ADMIN, 'dokter_ralan', 'manage'])?}" class="{if: !$mlite.dokter_ralan_access}btn disabled{/if}"><i class="fa fa-stethoscope"></i></a>
+      <a href="{?=url([ADMIN, 'dokter_igd', 'manage'])?}" class="{if: !$mlite.dokter_igd_access}btn disabled{/if}"><i class="fa fa-ambulance"></i></a>
+      <a href="{?=url([ADMIN, 'dokter_ranap', 'manage'])?}" class="{if: !$mlite.dokter_ranap_access}btn disabled{/if}"><i class="fa fa-bed"></i></a>
     </div>
     {else}
     <div class="icon-bar hidden-lg hidden-md">
-      <a href="{?=url([ADMIN,'dashboard', 'menu'])?}" data-toggle="modal" data-target="#menuModal"><i class="fa fa-home"></i></a>
-      <a href="{?=url([ADMIN, 'pasien', 'manage'])?}"{if: !$mlite.pasien_access} class="btn disabled"{/if}><i class="fa fa-users"></i></a>
-      <a href="{?=url([ADMIN, 'igd', 'manage'])?}"{if: !$mlite.igd_access} class="btn disabled"{/if}><i class="fa fa-ambulance"></i></a>
-      <a href="{?=url([ADMIN, 'rawat_jalan', 'manage'])?}"{if: !$mlite.rawat_jalan_access} class="btn disabled"{/if}><i class="fa fa-wheelchair"></i></a>
-      <a href="{?=url([ADMIN, 'rawat_inap', 'manage'])?}"{if: !$mlite.rawat_inap_access} class="btn disabled"{/if}><i class="fa fa-hotel"></i></a>
+      <a href="{?=url([ADMIN,'dashboard', 'menu'])?}" data-toggle="modal" data-target="#menuModal"><i class="fa fa-th-large"></i></a>
+      <a href="{?=url([ADMIN, 'pasien', 'manage'])?}" class="{if: !$mlite.pasien_access}btn disabled{/if}"><i class="fa fa-users"></i></a>
+      <a href="{?=url([ADMIN, 'rawat_jalan', 'manage'])?}" class="{if: !$mlite.rawat_jalan_access}btn disabled{/if}"><i class="fa fa-stethoscope"></i></a>
+      <a href="{?=url([ADMIN, 'igd', 'manage'])?}" class="{if: !$mlite.igd_access}btn disabled{/if}"><i class="fa fa-ambulance"></i></a>
+      <a href="{?=url([ADMIN, 'rawat_inap', 'manage'])?}" class="{if: !$mlite.rawat_inap_access}btn disabled{/if}"><i class="fa fa-bed"></i></a>
     </div>
     {/if}
 
@@ -730,6 +1267,23 @@
     }
     </script>
     <!-- End PWA Support -->
+    <script>
+    jQuery(function () {
+      jQuery(document).on('click', '.rsgm-header-nav a.rsgm-submenu-folder, #display .dropdown-submenu > a[href="#"], .display .dropdown-submenu > a[href="#"]', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var parentItem = jQuery(this).parent('.dropdown-submenu');
+        parentItem.siblings('.dropdown-submenu').removeClass('submenu-open');
+        parentItem.toggleClass('submenu-open');
+      });
+      jQuery(document).on('hidden.bs.dropdown', '.rsgm-header-nav .dropdown, #display td, .display td', function () {
+        jQuery(this).find('.submenu-open').removeClass('submenu-open');
+      });
+      jQuery(document).on('click', '.rsgm-period-menu input', function (e) {
+        e.stopPropagation();
+      });
+    });
+    </script>
     <script src="{?= url(THEMES.'/admin/js/scripts.js?v='.$mlite.version) ?}"></script>
     {loop: $mlite.footer}{$value}{/loop}  
 </body>

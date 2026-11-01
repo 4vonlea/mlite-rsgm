@@ -6,7 +6,7 @@ $("#index").on('click', '#bukaform', function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
   $("#form").show().load(baseURL + '/pasien/form?t=' + mlite.token);
-  $("#bukaform").val("Tutup Form");
+  $("#bukaform").addClass('is-open').html('<i class="fa fa-times"></i> <span>Tutup Form</span>').val("Tutup Form");
   $("#bukaform").attr("id", "tutupform");
 });
 
@@ -14,12 +14,15 @@ $("#index").on('click', '#bukaform', function(event){
 $("#index").on('click', '#tutupform', function(event){
   event.preventDefault();
   $("#form").hide();
-  $("#tutupform").val("Buka Form");
+  $("#tutupform").removeClass('is-open').html('<i class="fa fa-user-plus"></i> <span>Pasien Baru</span>').val("Buka Form");
   $("#tutupform").attr("id", "bukaform");
 });
 
 // ketika inputbox no_rm_medis diklik
 $("#form").on("click","#no_rkm_medis", function(event){
+  if ($("#norm_manual").is(':checked') || $(this).prop('disabled')) {
+    return;
+  }
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
   var url = baseURL + '/pasien/maxid?t=' + mlite.token;
@@ -27,6 +30,20 @@ $("#form").on("click","#no_rkm_medis", function(event){
   } ,function(data) {
     $("#no_rkm_medis").val(data);
   });
+});
+
+// ketika toggle manual dicentang / dilepas
+$("#form").on("change", "#norm_manual", function() {
+  var isManual = $(this).is(':checked');
+  var $rmInput = $("#no_rkm_medis");
+  if (isManual) {
+    $rmInput.removeClass('rsgm-auto-input').addClass('is-manual');
+    $rmInput.attr('placeholder', 'No. RM');
+    $rmInput.focus();
+  } else {
+    $rmInput.removeClass('is-manual').addClass('rsgm-auto-input');
+    $rmInput.attr('placeholder', 'Otomatis');
+  }
 });
 
 // tombol batal diklik
@@ -169,7 +186,7 @@ $("#display").on("click", ".edit", function(event){
   $.post(url, {no_rkm_medis: no_rkm_medis} ,function(data) {
     // tampilkan data
     $("#form").html(data).show();
-    $("#bukaform").val("Tutup Form");
+    $("#bukaform").addClass('is-open').html('<i class="fa fa-times"></i> <span>Tutup Form</span>').val("Tutup Form");
     $("#bukaform").attr("id", "tutupform");
     $("#kartu").removeClass('hidden');
     $("#kirimwa").removeClass('hidden');
@@ -276,11 +293,12 @@ $("#form").on("click","#kartu", function(event){
 
 // reset form
 function bersih(){
-  $('input:text[name=no_rkm_medis]').val("").removeAttr('disabled');
+  var $rmInput = $('input:text[name=no_rkm_medis]');
+  $rmInput.val("").removeAttr('disabled').removeClass('is-manual').addClass('rsgm-auto-input').attr('placeholder', 'Otomatis');
+  $('#norm_manual').prop('checked', false).removeAttr('disabled');
   $('input:text[name=nm_pasien]').val("");
   $('#tgl_lahir').val("");
   $('input:radio[name=jk]').val("").removeAttr('checked');
-  $('input:text[name=no_rkm_medis]').val("");
   $('input:text[name=pekerjaan]').val("");
   $('input:text[name=no_ktp]').val("");
   $('textarea[name=alamat]').val("");
@@ -288,9 +306,12 @@ function bersih(){
   $('input:text[name=no_peserta]').val("");
   $('#tgl_daftar').val("");
   $('#email').val("");
-  $('select').selectator('destroy');
+  try {
+    $('select').selectator('destroy');
+  } catch(e) {}
   $('select[name=gol_darah]').val("");
   $('select').selectator();
+  $('#kartu, #kirimwa, #foto, #hapus').addClass('hidden');
 }
 
 // dropdown select pada baris data

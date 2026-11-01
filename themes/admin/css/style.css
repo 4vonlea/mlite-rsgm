@@ -167,7 +167,7 @@ input:focus {
 }
 
 .content-title {
-    margin: 20px 0 30px 0;
+    margin: 0;
 }
 
 h3.panel-title {
@@ -1240,122 +1240,184 @@ select[multiple].form-control {
 }
 
 .modal-fullscreen {
-    background: transparent;
+    background: rgba(248, 250, 252, 0.82) !important;
+    backdrop-filter: blur(28px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+}
+
+body:has(#menuModal.in) .modal-backdrop,
+.modal-backdrop.rsgm-frosted-backdrop {
+    background-color: rgba(15, 23, 42, 0.12) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    opacity: 1 !important;
 }
 
 .modal-fullscreen .modal-content {
-    background: transparent;
-    border: 0;
-    -webkit-box-shadow: none;
-    box-shadow: none;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+    min-height: 100vh !important;
 }
 
 .modal-fullscreen .modal-dialog {
-    margin: 0;
-    margin-right: auto;
-    margin-left: auto;
-    width: 100%;
+    margin: 0 !important;
+    margin-right: auto !important;
+    margin-left: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 100vh !important;
+}
+
+/* ==========================================================================
+   RSGM LUXURY MENU TILES & SUB-MODULE GRID (.modules / .module)
+   Applies to all menu dashboards: /admin/master/manage, /admin/settings/manage,
+   /admin/keuangan/manage, /admin/laporan/manage, /admin/kepegawaian/manage,
+   /admin/farmasi/manage, /admin/operasi/manage, /admin/rawat_jalan/index, etc.
+   ========================================================================== */
+.modules {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)) !important;
+    gap: 16px !important;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 14px 0 32px 0 !important;
 }
 
 .module {
-    display: inline-block;
-    width: 20%;
-    padding-left: 15px;
-    padding-right: 15px;
-    margin-right: -4px;
+    display: block;
+    width: auto;
+    padding: 0;
+    margin: 0;
+}
+
+.module.is-hidden,
+.rsgm-mod-item.is-hidden,
+.rsgm-master-item.is-hidden {
+    display: none !important;
+}
+
+.module .panel,
+.module .panel-default {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin-bottom: 0 !important;
 }
 
 .module .panel-body {
-    display: block;
-    padding: 0px 0px 10.5px 0px;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 18px !important;
+    padding: 22px 14px 18px 14px !important;
+    min-height: 152px !important;
+    text-decoration: none !important;
+    box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.04) !important;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    position: relative !important;
+    cursor: pointer !important;
 }
 
-.module .panel-body h4 {
-    margin-bottom: 0;
+.module .panel-body:hover,
+.module .panel-body:focus {
+    transform: translateY(-5px) scale(1.02) !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 16px 32px -6px rgba(15, 23, 42, 0.14), 0 0 0 1px #3b82f6 !important;
+    text-decoration: none !important;
+    background-color: #ffffff !important;
 }
 
-.module .panel-body:hover {
-    text-decoration: none;
-    background-color: #ddd;
-}
-
+/* Icon Emblem inside .panel-thumb */
 .module .panel-body .panel-thumb {
-    background: #ddd;
-    height: 124px;
-    position: relative;
-    color: #222;
-    overflow: hidden;
+    width: 58px !important;
+    height: 58px !important;
+    min-width: 58px !important;
+    min-height: 58px !important;
+    border-radius: 16px !important;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+    border: 1px solid #bfdbfe !important;
+    color: #2563eb !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    overflow: visible !important;
+    margin-bottom: 2px !important;
+    transition: transform 0.22s ease !important;
 }
 
-.module .panel-body .panel-thumb .fa {
-    font-size: 48px;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    -webkit-transform: translate(-50%, -50%);
-    transition: all 0.3s;
-    -webkit-transition: all 0.3s;
+.module .panel-body:hover .panel-thumb {
+    transform: scale(1.1) !important;
 }
 
-.module .panel-body .panel-thumb img {
-    width: 60px;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    -webkit-transform: translate(-50%, -50%);
-    transition: all 0.3s;
-    -webkit-transition: all 0.3s;
-}
-
-.module .panel-body .panel-thumb .desc {
-    opacity: 0;
-    font-size: 16px;
-    color: #000;
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    padding: 0px 10px;
-    text-align: center;
-    transform: translateY(-50%);
-    -webkit-transform: translateY(-50%);
-    font-weight: 400;
-    transition: all 0.5s;
-    -webkit-transition: all 0.5s;
+.module .panel-body .panel-thumb .fa,
+.module .panel-body .panel-thumb i {
+    font-size: 24px !important;
+    position: static !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    opacity: 1 !important;
+    transition: none !important;
 }
 
 .module .panel-body .panel-thumb:hover .fa {
-    opacity: 0.2;
-    font-size: 200px;
+    opacity: 1 !important;
+    font-size: 24px !important;
 }
 
-.module .panel-body .panel-thumb:hover img {
-    opacity: 0.4;
-    position: absolute;
-    transform: scale(6);
+/* Hide the old clumsy 200px hover effect */
+.module .panel-body .panel-thumb .desc {
+    display: none !important;
 }
 
-.module .panel-body .panel-thumb:hover .desc {
-    opacity: 1;
+/* Title */
+.module .panel-body h4 {
+    margin: 12px 0 0 0 !important;
+    padding: 0 !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.3 !important;
+    letter-spacing: -0.01em !important;
+    transition: color 0.15s ease !important;
+    max-width: 100% !important;
 }
 
-@media (min-width: 992px) and (max-width: 1200px) {
-    .module {
-        width: 33.33%;
+.module .panel-body h4 b {
+    font-weight: 700 !important;
+}
+
+.module .panel-body:hover h4 {
+    color: #2563eb !important;
+}
+
+@media (max-width: 767px) {
+    .modules {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
     }
-}
-
-@media (min-width: 480px) and (max-width: 992px) {
-    .module {
-        width: 50%;
+    .module .panel-body {
+        min-height: 125px !important;
+        padding: 16px 10px 14px 10px !important;
+        border-radius: 14px !important;
     }
-}
-
-@media (max-width: 480px) {
-    .module {
-        width: 100%;
+    .module .panel-body .panel-thumb {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+        font-size: 20px !important;
+    }
+    .module .panel-body h4 {
+        font-size: 12.5px !important;
     }
 }
 
@@ -1536,11 +1598,16 @@ footer.bg-primary a:hover {
     color: #000 !important;
 }
 
-.table>thead>tr>th,
+.table>thead>tr>th {
+    background-color: #f8fafc !important;
+    color: #475569 !important;
+    border-color: #e2e8f0 !important;
+}
+
 .table>tbody>tr>td {
     background-color: #ffffff !important;
-    color: #333333 !important;
-    border-color: #eeeeee !important;
+    color: #334155 !important;
+    border-color: #eef2f6 !important;
 }
 
 .form-control,
@@ -1767,4 +1834,2222 @@ h6,
 .text-success {
     color: #2c3e50;
     /* Warna slate / abu-abu gelap kebiruan yang sangat nyaman di mata */
+}
+
+/* ========================================================
+   MODERN CLINICAL REGISTRATION & PATIENT FORM CARD (.rsgm-reg-form)
+   ======================================================== */
+.rsgm-reg-form {
+    margin-bottom: 16px;
+}
+
+.rsgm-reg-shell {
+    background-color: #ffffff !important;
+    border: 1px solid #dbe3ec !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+    overflow: visible;
+}
+
+.rsgm-reg-grid {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.rsgm-reg-col {
+    width: 50%;
+    flex: 0 0 50%;
+    max-width: 50%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.rsgm-reg-col-main {
+    background-color: #ffffff;
+    border-top-left-radius: 8px !important;
+}
+
+.rsgm-reg-col-side {
+    background-color: #f8fafc;
+    border-left: 1px solid #e2e8f0;
+    border-top-right-radius: 8px !important;
+}
+
+.rsgm-reg-col-side.rsgm-reg-col-editable {
+    background-color: #ffffff;
+}
+
+@media (max-width: 991px) {
+    .rsgm-reg-col {
+        width: 100%;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    .rsgm-reg-col-main {
+        border-top-right-radius: 8px !important;
+    }
+    .rsgm-reg-col-side {
+        border-left: 0;
+        border-top: 1px solid #e2e8f0;
+        border-top-right-radius: 0 !important;
+    }
+}
+
+.rsgm-reg-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 16px;
+    border-bottom: 1px solid #eef2f6;
+}
+
+.rsgm-reg-col-side .rsgm-reg-header {
+    border-bottom-color: #e2e8f0;
+}
+
+.rsgm-reg-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    text-transform: uppercase;
+    letter-spacing: 0.45px;
+    line-height: 1.2;
+}
+
+.rsgm-reg-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px !important;
+    background-color: #eff6ff;
+    color: #2563eb;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.rsgm-reg-col-side .rsgm-reg-icon {
+    background-color: #e2e8f0;
+    color: #334155;
+}
+
+.rsgm-reg-col-side.rsgm-reg-col-editable .rsgm-reg-icon {
+    background-color: #f0fdf4;
+    color: #16a34a;
+}
+
+.rsgm-reg-badge-hint {
+    font-size: 11px;
+    font-weight: 500;
+    color: #64748b;
+    background-color: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 10px !important;
+    white-space: nowrap;
+}
+
+.rsgm-reg-col-side .rsgm-reg-badge-hint {
+    background-color: #e2e8f0;
+    color: #475569;
+}
+
+.rsgm-reg-body {
+    padding: 13px 16px 6px;
+    flex: 1;
+}
+
+.rsgm-reg-body .form-horizontal .form-group {
+    margin-left: -6px;
+    margin-right: -6px;
+    margin-bottom: 10px;
+}
+
+.rsgm-reg-body .form-horizontal [class*="col-sm-"],
+.rsgm-reg-body .form-horizontal [class*="col-md-"] {
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+.rsgm-reg-body .control-label {
+    padding-top: 7px !important;
+    margin-bottom: 0;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+}
+
+@media (min-width: 768px) {
+    .rsgm-reg-body .control-label.rsgm-label-inline {
+        text-align: right !important;
+    }
+}
+
+/* Stacked sub-grid for dense forms (e.g. Tim Operasi) */
+.rsgm-compact-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -6px;
+}
+
+.rsgm-compact-field {
+    width: 50%;
+    padding: 0 6px;
+    margin-bottom: 9px;
+    box-sizing: border-box;
+}
+
+.rsgm-compact-field-full {
+    width: 100%;
+    padding: 0 6px;
+    margin-bottom: 9px;
+    box-sizing: border-box;
+}
+
+.rsgm-compact-label {
+    display: block;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    margin-bottom: 3px;
+}
+
+@media (max-width: 575px) {
+    .rsgm-compact-field {
+        width: 100%;
+    }
+}
+
+/* Unified Form Controls & Placeholders */
+.rsgm-reg-form .form-control {
+    height: 34px !important;
+    padding: 6px 10px !important;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease !important;
+}
+
+.rsgm-reg-form textarea.form-control {
+    height: auto !important;
+}
+
+.rsgm-reg-form .form-control:focus {
+    border-color: #3b82f6 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14) !important;
+}
+
+.rsgm-reg-form .form-control::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+    font-weight: 400 !important;
+}
+
+.rsgm-reg-form .form-control::-webkit-input-placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+    font-weight: 400 !important;
+}
+
+.rsgm-reg-form .form-control::-moz-placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+    font-weight: 400 !important;
+}
+
+.rsgm-reg-form .form-control:-ms-input-placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+    font-weight: 400 !important;
+}
+
+/* Clean Readonly & Disabled Inputs */
+.rsgm-reg-form .form-control[readonly] {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+    font-weight: 600;
+    cursor: default !important;
+}
+
+.rsgm-reg-form .rsgm-reg-col-main .form-control[readonly] {
+    background-color: #f8fafc !important;
+}
+
+.rsgm-reg-form .form-control[disabled] {
+    background-color: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
+    cursor: not-allowed !important;
+}
+
+/* Input Groups (e.g. Manual RM Checkbox) */
+.rsgm-reg-form .input-group .form-control:first-child {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.rsgm-reg-form .input-group-addon {
+    border-radius: 0 6px 6px 0 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-left: 0 !important;
+    background-color: #f8fafc !important;
+    color: #475569 !important;
+}
+
+/* Inline Field Icons, Search Trigger & Click-to-Generate Inputs */
+.rsgm-input-icon {
+    position: relative;
+    display: block;
+}
+
+.rsgm-input-icon > .rsgm-field-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 12.5px;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.rsgm-input-icon > .form-control {
+    padding-left: 29px !important;
+}
+
+.rsgm-input-icon.rsgm-search-wrap > .form-control {
+    padding-right: 64px !important;
+}
+
+.rsgm-search-trigger {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 26px;
+    padding: 0 9px;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 4px !important;
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    line-height: 24px !important;
+    cursor: pointer;
+    z-index: 3;
+    transition: all 0.15s ease;
+}
+
+.rsgm-search-trigger:hover {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+}
+
+.rsgm-reg-form .rsgm-auto-input:not([disabled]) {
+    cursor: pointer !important;
+    background-color: #f8fbff !important;
+    border: 1px dashed #93c5fd !important;
+}
+
+.rsgm-reg-form .rsgm-auto-input:not([disabled]):hover {
+    background-color: #eff6ff !important;
+    border-color: #3b82f6 !important;
+}
+
+/* Selectator Dropdowns Alignment & Polish */
+.rsgm-reg-form .selectator_element.single {
+    height: 34px !important;
+    min-height: 34px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    padding: 0 26px 0 0 !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rsgm-reg-form .selectator_element.disabled {
+    background-color: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
+}
+
+.rsgm-reg-form .selectator_element.focused {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14) !important;
+}
+
+.rsgm-reg-form .selectator_element:after {
+    right: 9px !important;
+    color: #64748b !important;
+    font-size: 9.5px !important;
+}
+
+.rsgm-reg-form .single .selectator_selected_items {
+    padding: 0 10px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.rsgm-reg-form .single .selectator_selected_items .selectator_selected_item {
+    color: #0f172a !important;
+    font-size: 13px !important;
+}
+
+.rsgm-reg-form .selectator_options {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 0 0 6px 6px !important;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12) !important;
+}
+
+.rsgm-reg-form .selectator_input {
+    border-radius: 4px !important;
+    border: 1px solid #cbd5e1 !important;
+    font-size: 12.5px !important;
+}
+
+/* Status Pendaftaran Color Highlights */
+.rsgm-reg-form .rsgm-status-row.has-success .form-control,
+.rsgm-reg-form .rsgm-status-row.text-success .form-control,
+.rsgm-reg-form .rsgm-status-row .form-control.text-success {
+    background-color: #ecfdf5 !important;
+    border-color: #6ee7b7 !important;
+    color: #047857 !important;
+    font-weight: 700 !important;
+}
+
+.rsgm-reg-form .rsgm-status-row.has-info .form-control,
+.rsgm-reg-form .rsgm-status-row.text-info .form-control,
+.rsgm-reg-form .rsgm-status-row .form-control.text-info {
+    background-color: #eff6ff !important;
+    border-color: #93c5fd !important;
+    color: #1d4ed8 !important;
+    font-weight: 700 !important;
+}
+
+.rsgm-reg-form .rsgm-status-row.has-error .form-control,
+.rsgm-reg-form .rsgm-status-row.has-danger .form-control,
+.rsgm-reg-form .rsgm-status-row.text-danger .form-control,
+.rsgm-reg-form .rsgm-status-row .form-control.text-danger {
+    background-color: #fef2f2 !important;
+    border-color: #fca5a5 !important;
+    color: #b91c1c !important;
+    font-weight: 700 !important;
+}
+
+/* Patient Search Results Drawer (#pasien) */
+.rsgm-pasien-drawer:empty {
+    display: none !important;
+}
+
+.rsgm-pasien-box {
+    border-top: 1px solid #bfdbfe;
+    background-color: #f0f7ff;
+    padding: 10px 16px 12px;
+}
+
+.rsgm-pasien-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1e40af;
+}
+
+.rsgm-pasien-close {
+    background: #ffffff;
+    border: 1px solid #bfdbfe;
+    border-radius: 4px !important;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+.rsgm-pasien-close:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #b91c1c;
+}
+
+.rsgm-pasien-scroll {
+    max-height: 215px;
+    overflow-y: auto;
+    overflow-x: auto;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px !important;
+}
+
+.rsgm-pasien-scroll .table {
+    margin-bottom: 0 !important;
+    font-size: 12.5px;
+}
+
+.rsgm-pasien-scroll .table > thead > tr > th {
+    background-color: #f8fafc !important;
+    color: #334155 !important;
+    font-weight: 700;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 7px 10px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    white-space: nowrap;
+}
+
+.rsgm-pasien-scroll .table > tbody > tr > td {
+    padding: 7px 10px !important;
+    vertical-align: middle !important;
+    white-space: nowrap;
+}
+
+.rsgm-pasien-scroll .table > tbody > tr.pilih {
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+}
+
+.rsgm-pasien-scroll .table > tbody > tr.pilih:hover > td {
+    background-color: #eff6ff !important;
+    color: #1d4ed8 !important;
+}
+
+/* Integrated Card Footer Action Bar */
+.rsgm-reg-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 9px 16px;
+    background-color: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    border-radius: 0 0 8px 8px !important;
+}
+
+.rsgm-footer-hint {
+    font-size: 11.5px;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rsgm-reg-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+
+.rsgm-reg-footer .btn {
+    border-radius: 6px !important;
+    padding: 6px 15px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+    letter-spacing: 0.15px !important;
+    transform: none !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rsgm-reg-footer .btn.hidden {
+    display: none !important;
+}
+
+.rsgm-reg-footer .btn:hover {
+    transform: none !important;
+    opacity: 1 !important;
+}
+
+.rsgm-reg-footer #simpan.btn-primary,
+.rsgm-reg-footer #simpan.btn-success {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+}
+
+.rsgm-reg-footer #simpan.btn-primary:hover,
+.rsgm-reg-footer #simpan.btn-success:hover {
+    background-color: #1d4ed8 !important;
+    border-color: #1d4ed8 !important;
+}
+
+.rsgm-reg-footer #simpan_keluar.btn-info {
+    background-color: #0891b2 !important;
+    border-color: #0891b2 !important;
+    color: #ffffff !important;
+}
+
+.rsgm-reg-footer #simpan_keluar.btn-info:hover {
+    background-color: #0e7490 !important;
+    border-color: #0e7490 !important;
+}
+
+.rsgm-reg-footer #hapus.btn-danger {
+    background-color: #ffffff !important;
+    border: 1px solid #fecaca !important;
+    color: #dc2626 !important;
+}
+
+.rsgm-reg-footer #hapus.btn-danger:hover {
+    background-color: #fef2f2 !important;
+    border-color: #f87171 !important;
+    color: #b91c1c !important;
+}
+
+.rsgm-reg-footer #batal {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #475569 !important;
+}
+
+.rsgm-reg-footer #batal:hover {
+    background-color: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+/* ==========================================================================
+   MODERN CLINICAL MANAGEMENT PANEL & DATATABLE DESIGN SYSTEM
+   ========================================================================== */
+
+/* 1. Management Card & Panel Heading */
+.panel-default {
+    border: 1px solid #dbe3ec !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+    background-color: #ffffff !important;
+}
+
+.panel-default > .panel-heading {
+    background-color: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    border-radius: 10px 10px 0 0 !important;
+    padding: 10px 16px !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+}
+
+.panel-default > .panel-heading .panel-title {
+    font-size: 14.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    text-transform: none !important;
+    letter-spacing: -0.1px !important;
+    line-height: 1.35 !important;
+}
+
+/* 2. Panel Heading Filter Toolbar (.rsgm-panel-head) */
+.rsgm-panel-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 10px;
+}
+
+.rsgm-panel-head::before,
+.rsgm-panel-head::after {
+    display: none !important;
+}
+
+.rsgm-panel-head .panel-title {
+    margin: 0 !important;
+    padding: 0 !important;
+    float: none !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rsgm-filter-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.rsgm-date-range {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px !important;
+    padding: 0 5px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rsgm-date-range:focus-within {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.rsgm-date-ico {
+    color: #2563eb;
+    font-size: 12.5px;
+    padding: 0 5px 0 4px;
+}
+
+.rsgm-date-sep {
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 0 3px;
+    user-select: none;
+}
+
+.rsgm-date-range input.form-control {
+    width: 92px !important;
+    height: 26px !important;
+    border: 0 !important;
+    border-radius: 4px !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    padding: 2px 4px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.rsgm-filter-pills {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.rsgm-filter-sep {
+    width: 1px;
+    height: 18px;
+    background-color: #cbd5e1;
+    margin: 0 2px;
+}
+
+.rsgm-fpill,
+.btn.rsgm-fpill {
+    height: 30px !important;
+    padding: 0 10px !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    text-transform: none !important;
+    letter-spacing: 0.1px !important;
+    transform: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+    text-decoration: none !important;
+}
+
+.rsgm-fpill:hover,
+.btn.rsgm-fpill:hover,
+.rsgm-fpill:focus,
+.btn.rsgm-fpill:focus,
+.rsgm-fpill:active,
+.btn.rsgm-fpill:active {
+    transform: none !important;
+    opacity: 1 !important;
+}
+
+.rsgm-fpill-all,
+.btn.rsgm-fpill-all {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+}
+.rsgm-fpill-all:hover,
+.btn.rsgm-fpill-all:hover {
+    background-color: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+.rsgm-fpill-pending,
+.btn.rsgm-fpill-pending {
+    background-color: #fffbeb !important;
+    border: 1px solid #fcd34d !important;
+    color: #b45309 !important;
+}
+.rsgm-fpill-pending:hover,
+.btn.rsgm-fpill-pending:hover {
+    background-color: #fef3c7 !important;
+    border-color: #f59e0b !important;
+    color: #92400e !important;
+}
+
+.rsgm-fpill-done,
+.btn.rsgm-fpill-done {
+    background-color: #f0fdf4 !important;
+    border: 1px solid #86efac !important;
+    color: #15803d !important;
+}
+.rsgm-fpill-done:hover,
+.btn.rsgm-fpill-done:hover {
+    background-color: #dcfce7 !important;
+    border-color: #4ade80 !important;
+    color: #166534 !important;
+}
+
+.rsgm-fpill-paid,
+.btn.rsgm-fpill-paid {
+    background-color: #eff6ff !important;
+    border: 1px solid #93c5fd !important;
+    color: #1d4ed8 !important;
+}
+.rsgm-fpill-paid:hover,
+.btn.rsgm-fpill-paid:hover {
+    background-color: #dbeafe !important;
+    border-color: #60a5fa !important;
+    color: #1e40af !important;
+}
+
+.rsgm-fpill-pdf,
+.btn.rsgm-fpill-pdf {
+    background-color: #fff1f2 !important;
+    border: 1px solid #fda4af !important;
+    color: #be123c !important;
+}
+.rsgm-fpill-pdf:hover,
+.btn.rsgm-fpill-pdf:hover {
+    background-color: #ffe4e6 !important;
+    border-color: #fb7185 !important;
+    color: #9f1239 !important;
+}
+
+.rsgm-fpill-xls,
+.btn.rsgm-fpill-xls {
+    background-color: #f0fdf4 !important;
+    border: 1px solid #86efac !important;
+    color: #166534 !important;
+}
+.rsgm-fpill-xls:hover,
+.btn.rsgm-fpill-xls:hover,
+.rsgm-fpill-xls:focus,
+.btn.rsgm-fpill-xls:focus,
+.rsgm-fpill-xls:active,
+.btn.rsgm-fpill-xls:active {
+    background-color: #dcfce7 !important;
+    border-color: #4ade80 !important;
+    color: #14532d !important;
+}
+
+/* Mode Switcher Pills in Lab / Radiologi / Apotek */
+.rsgm-mode-switch {
+    display: inline-flex;
+    align-items: center;
+    background-color: #e2e8f0;
+    padding: 3px;
+    border-radius: 8px !important;
+    gap: 2px;
+}
+
+.rsgm-mode-switch > a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 11px;
+    border-radius: 6px !important;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569 !important;
+    text-decoration: none !important;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.rsgm-mode-switch > a:hover {
+    color: #0f172a !important;
+    background-color: rgba(255, 255, 255, 0.55);
+}
+
+.rsgm-mode-switch > a.active {
+    background-color: #ffffff !important;
+    color: #1d4ed8 !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+/* Period Dropdown in Inpatient / Operasi / Pasien */
+.rsgm-period-group > .rsgm-period-btn {
+    height: 30px !important;
+    padding: 0 11px !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 7px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+    text-transform: none !important;
+    letter-spacing: 0.1px !important;
+    transform: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+}
+
+.rsgm-period-group > .rsgm-period-btn:hover,
+.rsgm-period-group.open > .rsgm-period-btn {
+    background-color: #eff6ff !important;
+    border-color: #93c5fd !important;
+    color: #1d4ed8 !important;
+    transform: none !important;
+}
+
+.rsgm-period-group > .rsgm-period-btn > .fa-calendar {
+    color: #2563eb;
+}
+
+.rsgm-period-menu {
+    min-width: 225px !important;
+    padding: 10px !important;
+    border-radius: 8px !important;
+    border: 1px solid #dbe3ec !important;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12) !important;
+    margin-top: 6px !important;
+}
+
+.rsgm-period-menu > li + li {
+    margin-top: 6px;
+}
+
+.rsgm-period-menu input.form-control {
+    height: 31px !important;
+    border-radius: 6px !important;
+    border: 1px solid #cbd5e1 !important;
+    font-size: 12.5px !important;
+    font-weight: 500;
+    padding: 4px 10px !important;
+    background-color: #ffffff !important;
+    font-variant-numeric: tabular-nums;
+}
+
+.rsgm-period-menu .btn {
+    border-radius: 6px !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+    letter-spacing: 0.1px !important;
+    transform: none !important;
+    text-align: left !important;
+    background-color: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #334155 !important;
+}
+
+.rsgm-period-menu .btn:hover {
+    background-color: #eff6ff !important;
+    border-color: #93c5fd !important;
+    color: #1d4ed8 !important;
+    transform: none !important;
+}
+
+/* 3. Segmented Clinical Nav Tabs inside #display */
+#display > .nav-tabs,
+.display > .nav-tabs {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    background-color: #f1f5f9;
+    padding: 4px;
+    border-radius: 8px !important;
+    border-bottom: 0 !important;
+    margin-bottom: 4px;
+}
+
+#display > .nav-tabs::before,
+#display > .nav-tabs::after,
+.display > .nav-tabs::before,
+.display > .nav-tabs::after {
+    display: none !important;
+}
+
+#display > .nav-tabs > li,
+.display > .nav-tabs > li {
+    float: none !important;
+    margin-bottom: 0 !important;
+}
+
+#display > .nav-tabs > li > a,
+.display > .nav-tabs > li > a {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px;
+    padding: 6px 13px !important;
+    margin-right: 0 !important;
+    border: 0 !important;
+    border-radius: 6px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+    letter-spacing: 0.1px !important;
+    color: #64748b !important;
+    background-color: transparent !important;
+    transition: all 0.15s ease;
+}
+
+#display > .nav-tabs > li > a:hover,
+.display > .nav-tabs > li > a:hover {
+    color: #0f172a !important;
+    background-color: rgba(255, 255, 255, 0.6) !important;
+    border: 0 !important;
+}
+
+#display > .nav-tabs > li.active > a,
+#display > .nav-tabs > li.active > a:hover,
+#display > .nav-tabs > li.active > a:focus,
+.display > .nav-tabs > li.active > a,
+.display > .nav-tabs > li.active > a:hover,
+.display > .nav-tabs > li.active > a:focus {
+    background-color: #ffffff !important;
+    color: #1d4ed8 !important;
+    border: 0 !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
+}
+
+#display > .nav-tabs > li > a > .badge,
+.display > .nav-tabs > li > a > .badge {
+    border-radius: 999px !important;
+    padding: 2px 7px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    background-color: #e2e8f0 !important;
+    color: #475569 !important;
+    line-height: 1.2;
+}
+
+#display > .nav-tabs > li.active > a > .badge,
+.display > .nav-tabs > li.active > a > .badge {
+    background-color: #dbeafe !important;
+    color: #1e40af !important;
+}
+
+/* 4. DataTables Top Toolbar (.data-table-title + .datatable-search) */
+.dataTables_wrapper > div:first-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.data-table-title {
+    display: inline-flex;
+    align-items: center;
+}
+
+.data-table-title h3,
+.rsgm-total-pill {
+    margin: 0 !important;
+    float: none !important;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px !important;
+    padding: 4px 12px;
+    line-height: 1.35;
+}
+
+.datatable-search {
+    margin-left: auto;
+}
+
+.datatable-search div.dataTables_filter {
+    text-align: right;
+    margin: 0 !important;
+}
+
+.datatable-search div.dataTables_filter label {
+    margin: 0 !important;
+    font-weight: 500;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.datatable-search div.dataTables_filter label::before {
+    content: "\f002";
+    font-family: "FontAwesome";
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 12.5px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.datatable-search div.dataTables_filter input.form-control {
+    margin-left: 0 !important;
+    width: 240px !important;
+    height: 32px !important;
+    padding: 4px 12px 4px 30px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 7px !important;
+    background-color: #ffffff !important;
+    font-size: 12.5px !important;
+    color: #0f172a !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.datatable-search div.dataTables_filter input.form-control::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1;
+}
+
+.datatable-search div.dataTables_filter input.form-control:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+@media (max-width: 575px) {
+    .datatable-search,
+    .datatable-search div.dataTables_filter,
+    .datatable-search div.dataTables_filter label,
+    .datatable-search div.dataTables_filter input.form-control {
+        width: 100% !important;
+    }
+}
+
+/* 5. Clinical Table Header, Body, Sorting & Row Tinting */
+#display .table-responsive,
+.display .table-responsive {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px !important;
+}
+
+#display .table-responsive > .dataTables_wrapper,
+.display .table-responsive > .dataTables_wrapper {
+    padding: 10px 12px;
+}
+
+/* Unclip No. RM dropdowns even when table has only 1-2 rows */
+#display .table-responsive:has(.open),
+.display .table-responsive:has(.open) {
+    overflow: visible !important;
+}
+
+#display table.table,
+.display table.table {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    border-collapse: collapse !important;
+}
+
+#display .table > thead > tr > th,
+.display .table > thead > tr > th {
+    background-color: #f8fafc !important;
+    color: #475569 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.45px;
+    padding: 9px 10px !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+    vertical-align: middle !important;
+    white-space: nowrap;
+}
+
+#display table.dataTable > thead > tr > th.sorting,
+#display table.dataTable > thead > tr > th.sorting_asc,
+#display table.dataTable > thead > tr > th.sorting_desc,
+.display table.dataTable > thead > tr > th.sorting,
+.display table.dataTable > thead > tr > th.sorting_asc,
+.display table.dataTable > thead > tr > th.sorting_desc {
+    padding-right: 20px !important;
+}
+
+#display table.dataTable > thead > tr > th.sorting_asc,
+#display table.dataTable > thead > tr > th.sorting_desc,
+.display table.dataTable > thead > tr > th.sorting_asc,
+.display table.dataTable > thead > tr > th.sorting_desc {
+    color: #1d4ed8 !important;
+    background-color: #f1f5f9 !important;
+}
+
+table.dataTable thead .sorting:before,
+table.dataTable thead .sorting_asc:before,
+table.dataTable thead .sorting_desc:before {
+    display: none !important;
+}
+
+table.dataTable thead .sorting:after,
+table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_desc:after {
+    right: 5px !important;
+    bottom: 8px !important;
+    font-size: 10.5px;
+}
+
+table.dataTable thead .sorting:after {
+    opacity: 0.25 !important;
+}
+
+table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_desc:after {
+    opacity: 0.9 !important;
+    color: #2563eb;
+}
+
+#display .table > tbody > tr > td,
+.display .table > tbody > tr > td {
+    padding: 8px 9px !important;
+    font-size: 12.5px;
+    line-height: 1.38;
+    color: #334155 !important;
+    border-top: 1px solid #f1f5f9 !important;
+    border-bottom: 0 !important;
+    vertical-align: middle !important;
+}
+
+/* Subtle Zebra & Crisp Hover */
+.table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: #ffffff !important;
+}
+
+.table-striped > tbody > tr:nth-of-type(even) > td {
+    background-color: #fafcff !important;
+}
+
+.table > tbody > tr:hover > td {
+    background-color: #f1f5f9 !important;
+}
+
+/* Semantic Row Status Tinting (Overrides Zebra & Base White) */
+.table > tbody > tr.rsgm-row-done > td,
+.table > tbody > tr.bg-sudah > td,
+.table > tbody > tr.success > td {
+    background-color: #f0fdf4 !important;
+}
+
+.table > tbody > tr.rsgm-row-done:hover > td,
+.table > tbody > tr.bg-sudah:hover > td,
+.table > tbody > tr.success:hover > td {
+    background-color: #dcfce7 !important;
+}
+
+.table > tbody > tr.rsgm-row-done > td:first-child,
+.table > tbody > tr.bg-sudah > td:first-child {
+    box-shadow: inset 3px 0 0 #22c55e;
+}
+
+.table > tbody > tr.rsgm-row-referred > td,
+.table > tbody > tr.bg-dirujuk > td,
+.table > tbody > tr.warning > td {
+    background-color: #fefce8 !important;
+}
+
+.table > tbody > tr.rsgm-row-referred:hover > td,
+.table > tbody > tr.bg-dirujuk:hover > td,
+.table > tbody > tr.warning:hover > td {
+    background-color: #fef9c3 !important;
+}
+
+.table > tbody > tr.rsgm-row-referred > td:first-child,
+.table > tbody > tr.bg-dirujuk > td:first-child {
+    box-shadow: inset 3px 0 0 #eab308;
+}
+
+.table > tbody > tr.rsgm-row-unpaid > td {
+    background-color: #fffbeb !important;
+}
+
+.table > tbody > tr.rsgm-row-unpaid:hover > td {
+    background-color: #fef3c7 !important;
+}
+
+.table > tbody > tr.rsgm-row-unpaid > td:first-child {
+    box-shadow: inset 3px 0 0 #f59e0b;
+}
+
+.table > tbody > tr.danger > td {
+    background-color: #fff1f2 !important;
+}
+
+.table > tbody > tr.info > td {
+    background-color: #f0f9ff !important;
+}
+
+#display td.edit,
+.display td.edit,
+#display tr.layanan_obat,
+.display tr.layanan_obat {
+    cursor: pointer;
+}
+
+/* 6. In-Cell Clinical Components */
+
+/* No. RM & Action Dropdown Trigger Chip */
+#display td .btn-default.dropdown-toggle,
+#display td .dropdown-toggle > .btn-default,
+.display td .btn-default.dropdown-toggle,
+.display td .dropdown-toggle > .btn-default,
+.rsgm-rm-btn,
+.rsgm-action-btn {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+    border-radius: 6px !important;
+    padding: 3px 9px !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.1px !important;
+    text-transform: none !important;
+    transform: none !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    line-height: 1.4 !important;
+    transition: all 0.15s ease !important;
+}
+
+#display td .btn-default.dropdown-toggle:hover,
+#display td .btn-default.dropdown-toggle:focus,
+#display td .open > .btn-default.dropdown-toggle,
+#display td.open .btn-default.dropdown-toggle,
+#display td .dropdown-toggle > .btn-default:hover,
+#display td .dropdown-toggle > .btn-default:focus,
+#display td.open .dropdown-toggle > .btn-default,
+.display td .btn-default.dropdown-toggle:hover,
+.display td .btn-default.dropdown-toggle:focus,
+.display td .open > .btn-default.dropdown-toggle,
+.display td.open .btn-default.dropdown-toggle,
+.display td .dropdown-toggle > .btn-default:hover,
+.display td .dropdown-toggle > .btn-default:focus,
+.display td.open .dropdown-toggle > .btn-default,
+.rsgm-rm-btn:hover,
+.rsgm-action-btn:hover {
+    background-color: #eff6ff !important;
+    border-color: #93c5fd !important;
+    color: #1d4ed8 !important;
+    transform: none !important;
+    opacity: 1 !important;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+.rsgm-rm-plain {
+    display: inline-block;
+    padding: 2px 7px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px !important;
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f172a;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Table Row Action Dropdown Menus */
+#display td .dropdown-menu,
+.display td .dropdown-menu,
+.rsgm-menu-action {
+    border-radius: 8px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 4px 10px -4px rgba(15, 23, 42, 0.06) !important;
+    padding: 5px !important;
+    min-width: 185px;
+    z-index: 1050;
+    background-color: #ffffff !important;
+}
+
+#display td .dropdown-menu > li > a,
+.display td .dropdown-menu > li > a,
+.rsgm-menu-action > li > a {
+    border-radius: 5px !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #334155 !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 9px !important;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+#display td .dropdown-menu > li > a i,
+.display td .dropdown-menu > li > a i,
+.rsgm-menu-action > li > a i {
+    width: 16px !important;
+    text-align: center !important;
+    font-size: 12.5px !important;
+    flex-shrink: 0 !important;
+}
+
+#display td .dropdown-menu > li > a:hover,
+#display td .dropdown-menu > li > a:focus,
+.display td .dropdown-menu > li > a:hover,
+.display td .dropdown-menu > li > a:focus,
+.rsgm-menu-action > li > a:hover,
+.rsgm-menu-action > li > a:focus {
+    background-color: #eff6ff !important;
+    color: #1d4ed8 !important;
+}
+
+#display td .dropdown-submenu > a,
+.display td .dropdown-submenu > a {
+    justify-content: space-between !important;
+}
+
+#display td .dropdown-submenu > a::after,
+.display td .dropdown-submenu > a::after {
+    content: "\f105";
+    font-family: "FontAwesome";
+    border: 0 !important;
+    margin: 0 0 0 auto !important;
+    padding-left: 10px;
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+#display td .dropdown-submenu:hover > a::after,
+.display td .dropdown-submenu:hover > a::after {
+    color: #2563eb;
+}
+
+#display td .dropdown-submenu:hover > a::after,
+.display td .dropdown-submenu:hover > a::after {
+    color: #2563eb;
+}
+
+/* Patient Name vs Doctor Typography Hierarchy */
+.rsgm-patient-link,
+#display td > a[data-target="#riwayatModal"],
+.display td > a[data-target="#riwayatModal"],
+#display td > a[href="#soap"],
+.display td > a[href="#soap"] {
+    color: #1e40af !important;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.rsgm-patient-link:hover,
+#display td > a[data-target="#riwayatModal"]:hover,
+.display td > a[data-target="#riwayatModal"]:hover,
+#display td > a[href="#soap"]:hover,
+.display td > a[href="#soap"]:hover {
+    color: #1d4ed8 !important;
+    text-decoration: underline;
+}
+
+.rsgm-patient-name {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.rsgm-doctor-link,
+#display td a[href="#ubah_dokter"],
+.display td a[href="#ubah_dokter"] {
+    color: #334155 !important;
+    font-weight: 500;
+    border-bottom: 1px dashed #cbd5e1;
+    text-decoration: none !important;
+}
+
+.rsgm-doctor-link:hover,
+#display td a[href="#ubah_dokter"]:hover,
+.display td a[href="#ubah_dokter"]:hover {
+    color: #1d4ed8 !important;
+    border-bottom-color: #2563eb;
+}
+
+.rsgm-visit-id,
+#display td > a[href="#layanan_obat"],
+.display td > a[href="#layanan_obat"] {
+    font-size: 12px;
+    color: #475569;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+#display td > a[href="#layanan_obat"],
+.display td > a[href="#layanan_obat"] {
+    color: #334155 !important;
+    font-weight: 500;
+    border-bottom: 1px dashed #cbd5e1;
+    text-decoration: none;
+}
+
+#display td > a[href="#layanan_obat"]:hover,
+.display td > a[href="#layanan_obat"]:hover {
+    color: #1d4ed8 !important;
+    border-bottom-color: #2563eb;
+}
+
+/* Soft Amber Antrian Ticket Pill */
+#display .btn.antrian,
+.display .btn.antrian,
+.rsgm-queue-pill {
+    background-color: #fffbeb !important;
+    border: 1px solid #fcd34d !important;
+    color: #b45309 !important;
+    border-radius: 6px !important;
+    padding: 2px 7px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+    text-transform: none !important;
+    letter-spacing: 0.2px !important;
+    transform: none !important;
+    font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: none !important;
+}
+
+#display .btn.antrian:hover:not([disabled]),
+.display .btn.antrian:hover:not([disabled]) {
+    background-color: #fef3c7 !important;
+    border-color: #f59e0b !important;
+    color: #92400e !important;
+    transform: none !important;
+    opacity: 1 !important;
+}
+
+#display .btn.antrian[disabled],
+.display .btn.antrian[disabled] {
+    opacity: 0.88 !important;
+    cursor: default !important;
+}
+
+/* Compact Table Micro-Buttons (SEP, Panggil, Dirujuk, Jawab/Hapus) */
+#display .btn-xs,
+.display .btn-xs {
+    border-radius: 5px !important;
+    padding: 2px 7px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+    letter-spacing: 0.1px !important;
+    transform: none !important;
+}
+
+#display .btn-xs:hover,
+.display .btn-xs:hover {
+    transform: none !important;
+    opacity: 0.95 !important;
+}
+
+/* Wrapping & Stacked Cell Helpers */
+.rsgm-cell-wrap {
+    white-space: normal !important;
+    min-width: 120px;
+    max-width: 205px;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.rsgm-cell-sub {
+    display: block;
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+    line-height: 1.3;
+    margin-top: 1px;
+    font-variant-numeric: tabular-nums;
+}
+
+.rsgm-cell-sub-alert {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    padding: 1px 6px;
+    border-radius: 4px !important;
+    background-color: #fff1f2;
+    color: #be123c;
+    font-size: 10.5px;
+    font-weight: 600;
+}
+
+.rsgm-doc-list {
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+}
+
+.rsgm-doc-list > li + li {
+    margin-top: 2px;
+}
+
+.rsgm-doc-list .hapus_dpjp {
+    color: #ef4444;
+    cursor: pointer;
+    margin-right: 3px;
+}
+
+/* Semantic Clinical Status Badges */
+.rsgm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px !important;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+.rsgm-badge-emerald {
+    background-color: #ecfdf5 !important;
+    color: #047857 !important;
+    border-color: #a7f3d0 !important;
+}
+
+.rsgm-badge-amber {
+    background-color: #fffbeb !important;
+    color: #b45309 !important;
+    border-color: #fde68a !important;
+}
+
+.rsgm-badge-rose {
+    background-color: #fff1f2 !important;
+    color: #be123c !important;
+    border-color: #fecdd3 !important;
+}
+
+.rsgm-badge-sky {
+    background-color: #f0f9ff !important;
+    color: #0369a1 !important;
+    border-color: #bae6fd !important;
+}
+
+.rsgm-badge-purple {
+    background-color: #faf5ff !important;
+    color: #7e22ce !important;
+    border-color: #e9d5ff !important;
+}
+
+.rsgm-badge-indigo {
+    background-color: #eef2ff !important;
+    color: #4338ca !important;
+    border-color: #c7d2fe !important;
+}
+
+.rsgm-badge-slate {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    border-color: #e2e8f0 !important;
+}
+
+.rsgm-order-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 24px;
+    border-radius: 6px !important;
+    font-size: 12px;
+    border: 1px solid transparent;
+}
+
+/* 7. DataTables Bottom Pagination & Info Footer (.pmd-datatable-pagination & Pasien Footer) */
+.pmd-datatable-pagination,
+.rsgm-table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 12px;
+    margin-top: 8px;
+    border-top: 1px solid #eef2f6;
+}
+
+.pmd-datatable-pagination div.dataTables_info {
+    padding-top: 0 !important;
+    font-size: 12px !important;
+    color: #64748b !important;
+    font-weight: 500;
+}
+
+.pmd-datatable-pagination div.dataTables_paginate {
+    margin: 0 0 0 auto !important;
+}
+
+.pmd-datatable-pagination ul.pagination,
+.rsgm-table-footer ul.pagination {
+    margin: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.pagination > li > a,
+.pagination > li > span {
+    border-radius: 6px !important;
+    padding: 4px 10px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    margin-left: 0 !important;
+}
+
+.pagination > li > a:hover,
+.pagination > li > span:hover,
+.pagination > li > a:focus,
+.pagination > li > span:focus {
+    background-color: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+.pagination > .active > a,
+.pagination > .active > span,
+.pagination > .active > a:hover,
+.pagination > .active > span:hover,
+.pagination > .active > a:focus,
+.pagination > .active > span:focus {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+}
+
+.pagination > .disabled > a,
+.pagination > .disabled > span,
+.pagination > .disabled > a:hover,
+.pagination > .disabled > span:hover {
+    color: #cbd5e1 !important;
+    background-color: #f8fafc !important;
+    border-color: #f1f5f9 !important;
+}
+
+/* Pasien Master Toolbar */
+.rsgm-pasien-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.rsgm-pasien-search {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    margin-left: auto;
+}
+
+.rsgm-pasien-search input.form-control {
+    width: 250px !important;
+    height: 32px !important;
+    padding: 4px 36px 4px 12px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 7px !important;
+    background-color: #ffffff !important;
+    font-size: 12.5px !important;
+    color: #0f172a !important;
+}
+
+.rsgm-pasien-search input.form-control:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+.rsgm-pasien-search > button {
+    position: absolute;
+    right: 3px;
+    top: 3px;
+    height: 26px;
+    width: 28px;
+    border: 0 !important;
+    border-radius: 5px !important;
+    background: transparent !important;
+    color: #64748b !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    transform: none !important;
+}
+
+.rsgm-pasien-search > button:hover {
+    background-color: #eff6ff !important;
+    color: #2563eb !important;
+    transform: none !important;
+}
+
+.rsgm-btn-new-pasien {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    height: 32px !important;
+    padding: 0 14px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    border-radius: 7px !important;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    border: 1px solid #1d4ed8 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.22) !important;
+    transition: all 0.15s ease !important;
+}
+
+.rsgm-btn-new-pasien:hover,
+.rsgm-btn-new-pasien:focus {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
+    border-color: #1e40af !important;
+    color: #ffffff !important;
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3) !important;
+}
+
+.rsgm-btn-new-pasien.is-open {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+    box-shadow: none !important;
+}
+
+.rsgm-btn-new-pasien.is-open:hover {
+    background: #e2e8f0 !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+.rsgm-rm-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    height: 26px !important;
+    padding: 0 9px !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #1e40af !important;
+    background-color: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    border-radius: 6px !important;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.06) !important;
+    transition: all 0.15s ease !important;
+}
+
+.rsgm-rm-btn:hover,
+.rsgm-rm-btn:focus,
+.open > .dropdown-toggle.rsgm-rm-btn {
+    background-color: #dbeafe !important;
+    border-color: #93c5fd !important;
+    color: #1d4ed8 !important;
+}
+
+.rsgm-rm-btn .caret {
+    margin-left: 2px !important;
+    border-top-color: #3b82f6 !important;
+}
+
+/* Compact No. RM (6 Digits) & Inline Manual Checkbox */
+.rsgm-reg-form .rsgm-norm-wrap {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    vertical-align: middle !important;
+}
+
+.rsgm-reg-form #no_rkm_medis.rsgm-norm-input {
+    width: 105px !important;
+    flex: 0 0 105px !important;
+    height: 34px !important;
+    text-align: center !important;
+    font-weight: 700 !important;
+    font-size: 13.5px !important;
+    letter-spacing: 0.8px !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+    border-radius: 6px !important;
+}
+
+.rsgm-reg-form #no_rkm_medis.is-manual {
+    cursor: text !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+.rsgm-reg-form #no_rkm_medis.is-manual:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14) !important;
+}
+
+.rsgm-reg-form .rsgm-manual-check {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+}
+
+.rsgm-reg-form .rsgm-manual-check input[type="checkbox"] {
+    margin: 0 !important;
+    cursor: pointer !important;
+    accent-color: #2563eb !important;
+    width: 15px !important;
+    height: 15px !important;
+    vertical-align: middle !important;
+}
+
+.rsgm-reg-form .rsgm-manual-check:hover {
+    color: #1e40af !important;
+}
+
+.rsgm-reg-form .rsgm-manual-check input[type="checkbox"]:disabled + span,
+.rsgm-reg-form .rsgm-manual-check input[type="checkbox"]:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+}
+
+/* ==========================================================================
+   RSGM MODERN CLINICAL PAGE HEADER & BREADCRUMB (.rsgm-page-header)
+   Ultra-clean, unboxed, airy, modern hospital dashboard aesthetic
+   ========================================================================== */
+.rsgm-page-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 8px 16px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 2px !important;
+    margin: 8px 0 14px 0 !important;
+    box-shadow: none !important;
+}
+
+/* Page Title (Left) */
+.rsgm-page-title-wrap {
+    display: inline-flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.content-title.rsgm-page-title,
+.rsgm-page-title {
+    font-size: 19px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-shadow: none !important;
+}
+
+.content-title.rsgm-page-title a,
+.rsgm-page-title a {
+    color: #0f172a !important;
+    text-decoration: none !important;
+    transition: color 0.15s ease !important;
+}
+
+.content-title.rsgm-page-title a:hover,
+.rsgm-page-title a:hover {
+    color: #2563eb !important;
+}
+
+/* Breadcrumb Trail (Right) */
+.rsgm-breadcrumb-nav {
+    display: inline-flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.rsgm-breadcrumb-list {
+    display: inline-flex !important;
+    align-items: center !important;
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 2px !important;
+}
+
+.rsgm-breadcrumb-list > li {
+    display: inline-flex !important;
+    align-items: center !important;
+    font-size: 12.5px !important;
+    line-height: 1 !important;
+    color: #64748b !important;
+}
+
+.rsgm-bc-home {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    color: #64748b !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    transition: color 0.15s ease !important;
+}
+
+.rsgm-bc-home:hover {
+    color: #2563eb !important;
+    text-decoration: none !important;
+}
+
+.rsgm-bc-sep {
+    font-size: 10px !important;
+    color: #cbd5e1 !important;
+    padding: 0 7px !important;
+    user-select: none !important;
+}
+
+.rsgm-bc-cat {
+    color: #64748b !important;
+    font-weight: 500 !important;
+}
+
+.rsgm-bc-curr {
+    display: inline-flex !important;
+    align-items: center !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    background-color: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 6px !important;
+    padding: 3px 9px !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+}
+
+@media (max-width: 767px) {
+    .rsgm-page-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+        margin: 6px 0 10px 0 !important;
+    }
+    .content-title.rsgm-page-title,
+    .rsgm-page-title {
+        font-size: 17px !important;
+    }
+    .rsgm-breadcrumb-list {
+        flex-wrap: wrap !important;
+    }
+}
+
+/* ==========================================================
+   RSGM CLINICAL STATUS BAR DOCK (MODERN FOOTER)
+   ========================================================== */
+body {
+    padding-bottom: 38px !important;
+}
+
+footer.rsgm-status-bar {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 32px !important;
+    z-index: 1030 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 16px !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-top: 1px solid rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 0 -2px 10px rgba(15, 23, 42, 0.04) !important;
+    font-size: 11.5px !important;
+    color: #475569 !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+}
+
+.rsgm-status-left {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.rsgm-status-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 2px 10px !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 9999px !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    color: #334155 !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0.1px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+}
+
+.rsgm-status-chip i.rsgm-ico-cal {
+    color: #0284c7 !important;
+    font-size: 11px !important;
+}
+
+.rsgm-status-chip i.rsgm-ico-clock {
+    color: #059669 !important;
+    font-size: 11.5px !important;
+}
+
+.rsgm-status-chip i.rsgm-ico-user {
+    color: #6366f1 !important;
+    font-size: 12px !important;
+}
+
+.rsgm-status-chip #clock {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    letter-spacing: 0.3px !important;
+}
+
+.rsgm-live-dot {
+    width: 6.5px !important;
+    height: 6.5px !important;
+    border-radius: 50% !important;
+    background-color: #10b981 !important;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6) !important;
+    display: inline-block !important;
+    margin-left: 2px !important;
+    animation: rsgmPulseLive 2s infinite cubic-bezier(0.4, 0, 0.6, 1) !important;
+}
+
+@keyframes rsgmPulseLive {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+.rsgm-chip-user {
+    gap: 7px !important;
+}
+
+.rsgm-user-role {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+    color: #1d4ed8 !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 1px 7px !important;
+    border-radius: 4px !important;
+    border: 1px solid #bfdbfe !important;
+    text-transform: capitalize !important;
+    letter-spacing: 0.2px !important;
+    line-height: 1.2 !important;
+}
+
+.rsgm-status-right {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 11.5px !important;
+    color: #64748b !important;
+}
+
+.rsgm-author-link {
+    color: #0f172a !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    transition: color 0.15s ease !important;
+}
+
+.rsgm-author-link:hover {
+    color: #2563eb !important;
+    text-decoration: underline !important;
+}
+
+.rsgm-heart-beat {
+    color: #ef4444 !important;
+    display: inline-block !important;
+    animation: rsgmHeartBeat 1.4s ease-in-out infinite !important;
+    transform-origin: center center !important;
+}
+
+@keyframes rsgmHeartBeat {
+    0%, 100% {
+        transform: scale(1);
+    }
+    14% {
+        transform: scale(1.22);
+    }
+    28% {
+        transform: scale(1);
+    }
+    42% {
+        transform: scale(1.15);
+    }
+    70% {
+        transform: scale(1);
+    }
+}
+
+.rsgm-status-sep {
+    color: #cbd5e1 !important;
+    font-size: 9px !important;
+    user-select: none !important;
+}
+
+.rsgm-version-text {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
 }

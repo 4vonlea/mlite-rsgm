@@ -1232,7 +1232,7 @@ class Admin extends AdminModule
           ->limit(1)
           ->oneArray();
           if($rawat) {
-            $stts_daftar = "Transaki tanggal ".date('Y-m-d', strtotime($rawat['tgl_registrasi']))." belum diselesaikan" ;
+            $stts_daftar = "Transaksi tanggal ".date('Y-m-d', strtotime($rawat['tgl_registrasi']))." belum diselesaikan" ;
             $stts_daftar_hidden = $stts_daftar;
             if($this->settings->get('settings.cekstatusbayar') == 'false'){
               $stts_daftar_hidden = 'Lama';
@@ -2915,7 +2915,8 @@ class Admin extends AdminModule
     public function getExcel()
     {
       $file = "data.pasien.rawat.jalan.xls";
-      $html = file_get_contents(url(ADMIN.'/tmp/cetak.rawat_jalan.html'));
+      $fileTmp = BASE_DIR . '/admin/tmp/cetak.rawat_jalan.html';
+      $html = file_exists($fileTmp) ? file_get_contents($fileTmp) : '';
       header("Content-type: application/vnd-ms-excel");
       header("Content-Disposition: attachment; filename=$file");
       echo "<!DOCTYPE html><html><head></head><body>";

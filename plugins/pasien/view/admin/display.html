@@ -1,22 +1,19 @@
-<style>
-  .table th, .table td { white-space: nowrap; }
-</style>
 <div id="display">
   <div class="table-responsive no-margin">
     <table class="table table-striped no-padding" width="100%">
       <thead>
         <tr>
-          <th>No. RM</th>
+          <th style="white-space: nowrap;">No. RM</th>
           <th>Nama Pasien</th>
-          <th>Tgl. Lahir</th>
-          <th>Jenis Kelamin</th>
+          <th style="white-space: nowrap;">Tgl. Lahir</th>
+          <th style="white-space: nowrap;" title="Jenis Kelamin">L/P</th>
           {if: $admin_mode == 'complex'}
-          <th>Gol. Darah</th>
+          <th style="white-space: nowrap;">Gol. Darah</th>
           <th>Pekerjaan</th>
           {/if}
           <th>Alamat</th>
-          <th>Telepon</th>
-          <th>Tgl. Daftar</th>
+          <th style="white-space: nowrap;">Telepon</th>
+          <th style="white-space: nowrap;">Tgl. Daftar</th>
           <th>Email</th>
         </tr>
       </thead>
@@ -24,7 +21,7 @@
         {if: $pasien}
         {loop: $pasien}
         <tr>
-          <td>
+          <td style="white-space: nowrap;">
             <span class="dropdown-toggle" data-toggle="dropdown" data-disabled="true" aria-expanded="true"><button type="button" name="button" class="btn btn-sm btn-default">{?=isset_or($value.no_rkm_medis)?} <span class="caret"></span></button></span>
             <ul class="dropdown-menu" role="menu">
               {if: $cek_vclaim}
@@ -51,17 +48,23 @@
               <li><a href="{?=url([ADMIN, 'pasien', 'folder', $value.no_rkm_medis])?}">Folder Berkas Digital</a></li>
             </ul>
           </td>
-          <td {if: $mlite_crud_permissions.can_update == 'true'}class="edit"{/if} data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}"><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal">{?=isset_or($value.nm_pasien)?}</a></td>
-          <td {if: $mlite_crud_permissions.can_update == 'true'}class="edit"{/if} data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}">{?=isset_or($value.tgl_lahir)?}</td>
-          <td {if: $mlite_crud_permissions.can_update == 'true'}class="edit"{/if} data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}">{if: $value.jk == 'L'}Laki-Laki{else}Perempuan{/if}</td>
+          <td class="rsgm-cell-wrap{if: $mlite_crud_permissions.can_update == 'true'} edit{/if}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}"><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal" class="rsgm-patient-link">{?=isset_or($value.nm_pasien)?}</a></td>
+          <td {if: $mlite_crud_permissions.can_update == 'true'}class="edit"{/if} data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" style="white-space: nowrap;">{?=isset_or($value.tgl_lahir)?}</td>
+          <td {if: $mlite_crud_permissions.can_update == 'true'}class="edit"{/if} data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" style="white-space: nowrap;">
+            {if: $value.jk == 'L'}
+              <span class="rsgm-badge rsgm-badge-sky" title="Laki-Laki">L</span>
+            {else}
+              <span class="rsgm-badge rsgm-badge-rose" title="Perempuan">P</span>
+            {/if}
+          </td>
           {if: $admin_mode == 'complex'}
-          <td {if: $mlite_crud_permissions.can_update == 'true'}class="edit"{/if} data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}">{?=isset_or($value.gol_darah)?}</td>
-          <td {if: $mlite_crud_permissions.can_update == 'true'}class="edit"{/if} data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}">{?=isset_or($value.pekerjaan)?}</td>
+          <td {if: $mlite_crud_permissions.can_update == 'true'}class="edit"{/if} data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" style="white-space: nowrap;">{?=isset_or($value.gol_darah)?}</td>
+          <td class="rsgm-cell-wrap{if: $mlite_crud_permissions.can_update == 'true'} edit{/if}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}">{?=isset_or($value.pekerjaan)?}</td>
           {/if}
-          <td {if: $mlite_crud_permissions.can_update == 'true'}class="edit"{/if} data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}">{?=isset_or($value.alamat)?}</td>
-          <td {if: $mlite_crud_permissions.can_update == 'true'}class="edit"{/if} data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}">{?=isset_or($value.no_tlp)?}</td>
-          <td {if: $mlite_crud_permissions.can_update == 'true'}class="edit"{/if} data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}">{?=isset_or($value.tgl_daftar)?}</td>
-          <td {if: $mlite_crud_permissions.can_update == 'true'}class="edit"{/if} data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}">{?=isset_or($value.email)?}</td>
+          <td class="rsgm-cell-wrap{if: $mlite_crud_permissions.can_update == 'true'} edit{/if}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}">{?=isset_or($value.alamat)?}</td>
+          <td {if: $mlite_crud_permissions.can_update == 'true'}class="edit"{/if} data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" style="white-space: nowrap;">{?=isset_or($value.no_tlp)?}</td>
+          <td {if: $mlite_crud_permissions.can_update == 'true'}class="edit"{/if} data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" style="white-space: nowrap;">{?=isset_or($value.tgl_daftar)?}</td>
+          <td class="rsgm-cell-wrap{if: $mlite_crud_permissions.can_update == 'true'} edit{/if}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}">{?=isset_or($value.email)?}</td>
         </tr>
         {/loop}
         {else}
@@ -72,12 +75,12 @@
       </tbody>
     </table>
   </div>
-  <nav class="row clearfix">
-    <div class="col-md-6">
-      <b>Jumlah: {?=isset_or($jumlah_data)?}</b>
+  <nav class="rsgm-table-footer">
+    <div>
+      <span class="rsgm-total-pill">Jumlah: {?=isset_or($jumlah_data)?}</span>
     </div>
-    <div class="col-md-6">
-      <ul class="pagination no-margin pull-right">
+    <div>
+      <ul class="pagination no-margin">
       {if: isset($halaman)}
         {if: $halaman == 1}
         <li class="disabled"><a href="#">&laquo;</a></li>
@@ -163,14 +166,8 @@
 		return false;
   });
   $(document).on('click', '#btn_export_xls', function() {
-    alert('btn_export_xls');
     var baseURL = mlite.url + '/' + mlite.admin;
     var url    = baseURL + '/pasien/excel?t=' + mlite.token;
-    // var cari = $('input:text[name=cari]').val();
-
-    // $.post(url, {cari: cari} ,function(data) {
-    //   window.open(baseURL + '/pasien/excel?t=' + mlite.token);
-    // });
     window.open(url);
 
 		return false;

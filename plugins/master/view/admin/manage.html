@@ -1,41 +1,371 @@
-<div class="row m-b-xl">
-    <div class="col col-md-12">
-        <div class="input-group">
-          <input type="text" id="cari_submodul" minlength="3" class="form-control" placeholder="Pencarian master data..." required>
-          <span class="input-group-btn">
-            <button class="btn btn-default" type="button"  data-dismiss="modal"><i class="fa fa-close"></i></button>
-          </span>
+<div class="rsgm-master-hub">
+    <!-- SEARCH & FILTER TOOLBAR -->
+    <div class="rsgm-master-toolbar">
+        <div class="rsgm-master-search-bar">
+            <i class="fa fa-search rsgm-master-search-ico"></i>
+            <input type="text" id="cari_submodul" class="rsgm-master-search-input" placeholder="Cari master data (misal: dokter, kamar, icd, obat, tarif)..." autocomplete="off">
+            <span class="rsgm-master-count" id="master_count">{?=count($sub_modules)?} Master Data</span>
+            <button type="button" class="rsgm-master-clear-btn" id="btn_clear_search" title="Bersihkan pencarian" style="display:none;">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+
+        <!-- CATEGORY FILTER PILLS -->
+        <div class="rsgm-master-pills" id="rsgm_master_pills">
+            <button type="button" class="rsgm-master-pill active" data-filter="all"><i class="fa fa-th-large"></i> Semua <span class="badge-count">{?=count($sub_modules)?}</span></button>
+            <button type="button" class="rsgm-master-pill" data-filter="layanan"><i class="fa fa-stethoscope"></i> Layanan & Kamar</button>
+            <button type="button" class="rsgm-master-pill" data-filter="farmasi"><i class="fa fa-medkit"></i> Farmasi & Obat</button>
+            <button type="button" class="rsgm-master-pill" data-filter="diagnosa"><i class="fa fa-heartbeat"></i> Diagnosa & ICD</button>
+            <button type="button" class="rsgm-master-pill" data-filter="wilayah"><i class="fa fa-map-marker"></i> Wilayah & Pasien</button>
+            <button type="button" class="rsgm-master-pill" data-filter="sdm"><i class="fa fa-users"></i> SDM & Organisasi</button>
         </div>
     </div>
-</div>
-<div class="row">
-    <div class="col-md-12">
-        <ul id="list_submodul" class="modules" style="padding:0;margin:0;">
-            {loop: $sub_modules}
-            <li class="module">
-                <div class="panel panel-default">
-                    <a href="{$value.url}" class="panel-body text-center">
-                        <div class="panel-thumb">
-                            <i class="fa fa-{$value.icon}"></i>
-                            <div class="desc">
-                                {$value.desc}
-                            </div>
-                        </div>
-                        <h4><b>{$value.name}</b></h4>
-                    </a>
-                </div>
-            </li>
-            {/loop}
-        </ul>
+
+    <!-- TILES GRID -->
+    <ul id="list_submodul" class="modules rsgm-master-grid">
+        {loop: $sub_modules}
+        <li class="module rsgm-master-item" data-cat="{?=isset_or($value.category, 'layanan')?}" data-name="{?=strtolower($value.name)?}" data-desc="{?=strtolower($value.desc)?}">
+            <div class="panel panel-default">
+                <a href="{$value.url}" class="panel-body text-center">
+                    <div class="panel-thumb cat-{?=isset_or($value.category, 'layanan')?}">
+                        <i class="fa fa-{$value.icon}"></i>
+                    </div>
+                    <h4><b>{$value.name}</b></h4>
+                    <span class="rsgm-master-tag">{?=isset_or($value.desc)?}</span>
+                </a>
+            </div>
+        </li>
+        {/loop}
+    </ul>
+
+    <!-- EMPTY STATE -->
+    <div id="rsgm_master_empty" class="rsgm-master-empty" style="display:none;">
+        <div class="empty-icon"><i class="fa fa-search"></i></div>
+        <h4>Master Data Tidak Ditemukan</h4>
+        <p>Tidak ada master data yang cocok dengan kriteria pencarian Anda.</p>
+        <button type="button" class="btn btn-sm btn-primary" id="btn_reset_master"><i class="fa fa-refresh"></i> Tampilkan Semua Master Data</button>
     </div>
 </div>
+
+<style>
+/* ==========================================================================
+   RSGM MASTER DATA HUB MODERN STYLING
+   ========================================================================== */
+.rsgm-master-hub {
+    margin-top: 4px;
+}
+
+.rsgm-master-toolbar {
+    margin-bottom: 20px;
+}
+
+.rsgm-master-search-bar {
+    max-width: 680px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    padding: 6px 10px 6px 18px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+    gap: 12px;
+    transition: all 0.2s ease;
+}
+
+.rsgm-master-search-bar:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 8px 24px -4px rgba(37, 99, 235, 0.18), 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.rsgm-master-search-ico {
+    color: #64748b;
+    font-size: 16px;
+}
+
+.rsgm-master-search-input {
+    flex: 1;
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    font-size: 14.5px !important;
+    font-weight: 500 !important;
+    color: #0f172a !important;
+    padding: 7px 0 !important;
+    box-shadow: none !important;
+    height: auto !important;
+}
+
+.rsgm-master-search-input::placeholder {
+    color: #94a3b8;
+}
+
+.rsgm-master-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.rsgm-master-clear-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.15s ease;
+}
+
+.rsgm-master-clear-btn:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #dc2626;
+}
+
+/* Category Pills */
+.rsgm-master-pills {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.rsgm-master-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #334155;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    cursor: pointer;
+    transition: all 0.16s ease;
+}
+
+.rsgm-master-pill:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #94a3b8;
+    transform: translateY(-1px);
+}
+
+.rsgm-master-pill.active {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28) !important;
+    transform: translateY(-1px);
+}
+
+.rsgm-master-pill .badge-count {
+    background: rgba(255, 255, 255, 0.25);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+/* Grid & Cards */
+.rsgm-master-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)) !important;
+    gap: 16px !important;
+}
+
+.rsgm-master-item .panel-body {
+    min-height: 154px !important;
+}
+
+.rsgm-master-tag {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 4px;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+/* Category Palettes for Emblems */
+.panel-thumb.cat-layanan {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+    color: #2563eb !important;
+    border: 1px solid #bfdbfe !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12) !important;
+}
+
+.panel-thumb.cat-farmasi {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
+    color: #059669 !important;
+    border: 1px solid #a7f3d0 !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.12) !important;
+}
+
+.panel-thumb.cat-diagnosa {
+    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%) !important;
+    color: #7c3aed !important;
+    border: 1px solid #ddd6fe !important;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.12) !important;
+}
+
+.panel-thumb.cat-wilayah {
+    background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%) !important;
+    color: #0284c7 !important;
+    border: 1px solid #bae6fd !important;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.12) !important;
+}
+
+.panel-thumb.cat-sdm {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+    color: #d97706 !important;
+    border: 1px solid #fde68a !important;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.12) !important;
+}
+
+/* Empty State */
+.rsgm-master-empty {
+    text-align: center;
+    padding: 60px 20px;
+    background: #ffffff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 16px;
+    margin: 20px 0;
+}
+
+.rsgm-master-empty .empty-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #94a3b8;
+}
+
+.rsgm-master-empty h4 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+.rsgm-master-empty p {
+    font-size: 13.5px;
+    color: #64748b;
+    margin-bottom: 18px;
+}
+
+@media (max-width: 767px) {
+    .rsgm-master-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+    .rsgm-master-search-bar {
+        padding: 4px 8px 4px 14px;
+    }
+    .rsgm-master-search-input {
+        font-size: 13.5px !important;
+    }
+    .rsgm-master-pills {
+        gap: 5px;
+    }
+    .rsgm-master-pill {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+}
+</style>
+
 <script>
-$(document).ready(function(){
-  $("#cari_submodul").on("keyup", function() {
-    var value = $(this).val().toLowerCase();
-    $("#list_submodul li").filter(function() {
-      $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+$(function() {
+    var $input = $("#cari_submodul");
+    var $items = $("#list_submodul .rsgm-master-item");
+    var $empty = $("#rsgm_master_empty");
+    var $count = $("#master_count");
+    var $clearBtn = $("#btn_clear_search");
+    var currentFilter = "all";
+
+    function filterMaster() {
+        var query = $.trim($input.val().toLowerCase());
+        var visibleCount = 0;
+
+        if (query.length > 0) {
+            $clearBtn.show();
+        } else {
+            $clearBtn.hide();
+        }
+
+        $items.each(function() {
+            var $item = $(this);
+            var cat = $item.data("cat") || "";
+            var name = ($item.data("name") || "").toString();
+            var desc = ($item.data("desc") || "").toString();
+            var text = $item.text().toLowerCase();
+
+            var matchesCat = (currentFilter === "all" || cat === currentFilter);
+            var matchesQuery = (query === "" || name.indexOf(query) > -1 || desc.indexOf(query) > -1 || text.indexOf(query) > -1);
+
+            if (matchesCat && matchesQuery) {
+                $item.removeClass("is-hidden").show();
+                visibleCount++;
+            } else {
+                $item.addClass("is-hidden").hide();
+            }
+        });
+
+        if (visibleCount === 0) {
+            $empty.show();
+            $("#list_submodul").hide();
+        } else {
+            $empty.hide();
+            $("#list_submodul").show();
+        }
+
+        $count.text(visibleCount + " Master Data");
+    }
+
+    $input.on("keyup input", filterMaster);
+
+    $clearBtn.on("click", function() {
+        $input.val("").focus();
+        filterMaster();
     });
-  });
+
+    $("#rsgm_master_pills").on("click", ".rsgm-master-pill", function() {
+        $("#rsgm_master_pills .rsgm-master-pill").removeClass("active");
+        $(this).addClass("active");
+        currentFilter = $(this).data("filter");
+        filterMaster();
+    });
+
+    $("#btn_reset_master").on("click", function() {
+        $input.val("");
+        $("#rsgm_master_pills .rsgm-master-pill").removeClass("active");
+        $('#rsgm_master_pills .rsgm-master-pill[data-filter="all"]').addClass("active");
+        currentFilter = "all";
+        filterMaster();
+        $input.focus();
+    });
 });
 </script>

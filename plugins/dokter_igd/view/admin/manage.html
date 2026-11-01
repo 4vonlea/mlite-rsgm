@@ -1,27 +1,20 @@
 <div class="row" id="manage" style="margin-bottom:100px;">
   <div class="col-md-12">
     <div class="panel panel-default">
-      <div class="panel-heading clearfix" style="padding-bottom: 0px;">
-        <h3 class="panel-title pull-left" style="padding-top: 7px; margin-bottom: 10px;">Kelola Pasien</h3>
-        
-        <div class="pull-right" style="margin-bottom: 10px;">
-          <div class="form-inline">
-            <div class="form-group">
-              <div class="input-group">
-                <span class="input-group-addon" style="padding: 5px;"><i class="fa fa-calendar"></i></span>
-                <input type="text" id="periode_rawat_jalan" class="form-control periode_rawat_jalan input-sm" name="periode_rawat_jalan" required style="width: 100px;">
-                <span class="input-group-addon" style="padding: 5px;">-</span>
-                <input type="text" id="periode_rawat_jalan_akhir" class="form-control periode_rawat_jalan input-sm" name="periode_rawat_jalan_akhir" required style="width: 100px;">
-              </div>
-            </div>
-            <div class="form-group" style="margin-left: 5px;">
-              <div class="btn-group">
-                <button type="button" id="submit_periode_rawat_jalan" class="btn btn-default btn-sm">Semua</button>
-                <button type="button" id="belum_periode_rawat_jalan" class="btn btn-warning btn-sm">Belum Diperiksa</button>
-                <button type="button" id="selesai_periode_rawat_jalan" class="btn btn-success btn-sm">Selesai Diperiksa</button>
-                <button type="button" id="lunas_periode_rawat_jalan" class="btn btn-info btn-sm">Sudah Bayar</button>
-              </div>
-            </div>
+      <div class="panel-heading rsgm-panel-head">
+        <h3 class="panel-title">Kelola Pasien</h3>
+        <div class="rsgm-filter-bar">
+          <div class="rsgm-date-range">
+            <i class="fa fa-calendar rsgm-date-ico"></i>
+            <input type="text" id="periode_rawat_jalan" class="form-control periode_rawat_jalan input-sm" name="periode_rawat_jalan" required>
+            <span class="rsgm-date-sep">&ndash;</span>
+            <input type="text" id="periode_rawat_jalan_akhir" class="form-control periode_rawat_jalan input-sm" name="periode_rawat_jalan_akhir" required>
+          </div>
+          <div class="rsgm-filter-pills">
+            <button type="button" id="submit_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-all">Semua</button>
+            <button type="button" id="belum_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-pending">Belum Diperiksa</button>
+            <button type="button" id="selesai_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-done">Selesai Diperiksa</button>
+            <button type="button" id="lunas_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-paid">Sudah Bayar</button>
           </div>
         </div>
       </div>

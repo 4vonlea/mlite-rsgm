@@ -1,223 +1,247 @@
-<div id="form">
+<div id="form" class="rsgm-reg-form clearfix">
   <style>
     .single .selectator_selected_items .selectator_selected_item_remove { display: none !important; }
   </style>
-  <div class="col-md-6">
-    <div class="panel panel-default">
-      <div class="panel-body">
-        <div class="form-horizontal">
-          <div class="form-group">
-            <label for="no_rkm_medis" class="col-sm-3 control-label">Nomor RM</label>
-            <div class="col-sm-4">
-              <div class="input-group" style="width: 100%">
-                <input type="text" id="no_rkm_medis" name="no_rkm_medis" class="form-control" value="{$pasien.no_rkm_medis}" {if: !empty($pasien.no_rkm_medis)}disabled{/if}>
-                <span class="input-group-addon"><input type="checkbox" name="manual" id="norm_manual"></span>
+  <div class="col-md-12">
+    <div class="rsgm-reg-shell">
+      <div class="rsgm-reg-grid">
+        <div class="rsgm-reg-col rsgm-reg-col-main">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-user-plus"></i></span>
+              <span>Data Utama &amp; Penjamin Pasien</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">Rekam Medis</span>
+          </div>
+          <div class="rsgm-reg-body">
+            <div class="form-horizontal">
+              <div class="form-group">
+                <label for="no_rkm_medis" class="col-sm-3 control-label">Nomor RM</label>
+                <div class="col-sm-4">
+                  <div class="rsgm-norm-wrap">
+                    <input type="text" id="no_rkm_medis" name="no_rkm_medis" class="form-control rsgm-norm-input rsgm-auto-input" placeholder="Otomatis" value="{$pasien.no_rkm_medis}" maxlength="10" {if: !empty($pasien.no_rkm_medis)}disabled{/if} autocomplete="off">
+                    <label class="rsgm-manual-check" title="Centang jika ingin mengisi No. RM secara manual">
+                      <input type="checkbox" name="manual" id="norm_manual" {if: !empty($pasien.no_rkm_medis)}disabled{/if}>
+                      <span>Manual</span>
+                    </label>
+                  </div>
+                </div>
+                <label for="tgl_daftar" class="col-sm-2 control-label rsgm-label-inline">Tgl. Daftar</label>
+                <div class="col-sm-3">
+                  <input type="text" id="tgl_daftar" name="tgl_daftar" class="form-control tgl_daftar" value="{$pasien.tgl_daftar}">
+                </div>
               </div>
-            </div>
-            <label for="tgl_daftar" class="col-sm-2 control-label">Tgl. Daftar</label>
-            <div class="col-sm-3">
-              <input type="text" id="tgl_daftar" name="tgl_daftar" class="form-control tgl_daftar" value="{$pasien.tgl_daftar}">
+              <div class="form-group">
+                <label for="nm_pasien" class="col-sm-3 control-label">Nama Pasien</label>
+                <div class="col-sm-9">
+                  <input type="text" name="nm_pasien" class="form-control nama" placeholder="Nama lengkap pasien" value="{$pasien.nm_pasien}">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="jk" class="col-sm-3 control-label">Kelamin</label>
+                <div class="col-sm-4">
+                  <select class="form-control" name="jk" id="jk">
+                    <option value="L" {if: $pasien.jk == 'L'}selected{/if}>Laki-Laki</option>
+                    <option value="P" {if: $pasien.jk == 'P'}selected{/if}>Perempuan</option>
+                  </select>
+                </div>
+                <label for="tgl_lahir" class="col-sm-2 control-label rsgm-label-inline">Tgl. Lahir</label>
+                <div class="col-sm-3">
+                  <input type="text" id="tgl_lahir" name="tgl_lahir" class="form-control tgl_lahir" placeholder="YYYY-MM-DD" value="{$pasien.tgl_lahir}">
+                </div>
+              </div>
+              <div class="{if: $admin_mode == 'simple'}hidden{/if}">
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Nama Ibu</label>
+                  <div class="col-sm-4">
+                    <input type="text" name="nm_ibu" class="form-control" placeholder="Nama ibu kandung" value="{$pasien.nm_ibu}">
+                  </div>
+                  <label for="gol_darah" class="col-sm-2 control-label rsgm-label-inline">Gol. Darah</label>
+                  <div class="col-sm-3">
+                    <select class="form-control" name="gol_darah" id="gol_darah">
+                      <option value="O" {if: $pasien.gol_darah == 'O'}selected{/if}>O</option>
+                      <option value="A" {if: $pasien.gol_darah == 'A'}selected{/if}>A</option>
+                      <option value="B" {if: $pasien.gol_darah == 'B'}selected{/if}>B</option>
+                      <option value="AB" {if: $pasien.gol_darah == 'AB'}selected{/if}>AB</option>
+                      <option value="-" {if: $pasien.gol_darah == '-'}selected{/if}>-</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Stts. Nikah</label>
+                  <div class="col-sm-4">
+                    <select name="stts_nikah" class="form-control">
+                      {loop: $stts_nikah}
+                        <option value="{$value}"{if: $value == $pasien.stts_nikah} selected{/if}>{$value}</option>
+                      {/loop}
+                    </select>
+                  </div>
+                  <label class="col-sm-2 control-label rsgm-label-inline">Agama</label>
+                  <div class="col-sm-3">
+                    <select name="agama" class="form-control">
+                      {loop: $agama}
+                        <option value="{$value}"{if: $value == $pasien.agama} selected{/if}>{$value}</option>
+                      {/loop}
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Pekerjaan</label>
+                  <div class="col-sm-4">
+                    <input type="text" name="pekerjaan" class="form-control" placeholder="Pekerjaan" value="{$pasien.pekerjaan}">
+                  </div>
+                  <label for="pnd" class="col-sm-2 control-label rsgm-label-inline">Pendidikan</label>
+                  <div class="col-sm-3">
+                    <select class="form-control" name="pnd" id="pnd">
+                      {loop: $pnd}
+                      <option value="{$value}" {if: $value == $pasien.pnd}selected{/if}>{$value}</option>
+                      {/loop}
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-3 control-label">Penjamin</label>
+                <div class="col-sm-4">
+                  <select class="form-control" name="kd_pj">
+                    {loop: $penjab}
+                    <option value="{$value.kd_pj}" {if: $pasien.kd_pj == $value.kd_pj}selected{/if}>{$value.png_jawab}</option>
+                    {/loop}
+                  </select>
+                </div>
+                <label for="no_peserta" class="col-sm-2 control-label rsgm-label-inline">No. Kartu</label>
+                <div class="col-sm-3">
+                  <input type="text" name="no_peserta" id="no_peserta" class="form-control noKartu" placeholder="No. BPJS / Asuransi" value="{$pasien.no_peserta}">
+                </div>
+              </div>
             </div>
           </div>
-          <div class="form-group">
-            <label for="nm_pasien" class="col-sm-3 control-label">Nama</label>
-            <div class="col-sm-9">
-              <input type="text" name="nm_pasien" class="form-control nama" value="{$pasien.nm_pasien}">
-            </div>
+        </div>
+
+        <div class="rsgm-reg-col rsgm-reg-col-side rsgm-reg-col-editable">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-map-marker"></i></span>
+              <span>Kontak, Keluarga &amp; Domisili</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">Alamat &amp; NIK</span>
           </div>
-          <div class="form-group">
-            <label for="jk" class="col-sm-3 control-label">Sex</label>
-            <div class="col-sm-4">
-              <select class="form-control" name="jk" id="jk">
-                <option value="L" {if: $pasien.jk == 'L'}selected{/if}>Laki-Laki</option>
-                <option value="P" {if: $pasien.jk == 'P'}selected{/if}>Perempuan</option>
-              </select>
-            </div>
-            <label for="tgl_lahir" class="col-sm-2 control-label">Tgl. Lahir</label>
-            <div class="col-sm-3">
-              <input type="text" id="tgl_lahir" name="tgl_lahir" class="form-control tgl_lahir" value="{$pasien.tgl_lahir}">
-            </div>
-          </div>
-          <div class="{if: $admin_mode == 'simple'}hidden{/if}">
-            <div class="form-group">
-              <label for="" class="col-sm-3 control-label">Nama Ibu</label>
-              <div class="col-sm-4">
-                <input type="text" name="nm_ibu" class="form-control" value="{$pasien.nm_ibu}">
+          <div class="rsgm-reg-body">
+            <div class="form-horizontal">
+              <div class="{if: $admin_mode == 'simple'}hidden{/if}">
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Keluarga</label>
+                  <div class="col-sm-4">
+                    <select class="form-control" name="keluarga">
+                      {loop: $keluarga}
+                      <option value="{$value}" {if: $value == $pasien.keluarga}selected{/if}>{$value}</option>
+                      {/loop}
+                    </select>
+                  </div>
+                  <label class="col-sm-1 control-label rsgm-label-inline">Nama</label>
+                  <div class="col-sm-4">
+                    <input type="text" name="namakeluarga" class="form-control" placeholder="Nama penanggung jawab" value="{$pasien.namakeluarga}">
+                  </div>
+                </div>
               </div>
-              <label for="gol_darah" class="col-sm-2 control-label">Darah</label>
-              <div class="col-sm-3">
-                <select class="form-control" name="gol_darah" id="gol_darah">
-                  <option value="O" {if: $pasien.gol_darah == 'O'}selected{/if}>O</option>
-                  <option value="A" {if: $pasien.gol_darah == 'A'}selected{/if}>A</option>
-                  <option value="B" {if: $pasien.gol_darah == 'B'}selected{/if}>B</option>
-                  <option value="AB" {if: $pasien.gol_darah == 'AB'}selected{/if}>AB</option>
-                  <option value="-" {if: $pasien.gol_darah == '-'}selected{/if}>-</option>
-                </select>
+              <div class="form-group">
+                <label for="no_ktp" class="col-sm-3 control-label">Nomor KTP</label>
+                <div class="col-sm-9">
+                  <input type="text" name="no_ktp" id="no_ktp" class="form-control no_ktp" placeholder="16 digit NIK (tekan Enter untuk cek BPJS)" value="{$pasien.no_ktp}">
+                </div>
               </div>
-            </div>
-            <div class="form-group">
-              <label for="stts_nikah" class="col-sm-3 control-label">Status Nikah</label>
-              <div class="col-sm-4">
-                <select name="stts_nikah" class="form-control">
-                  {loop: $stts_nikah}
-                    <option value="{$value}"{if: $value == $pasien.stts_nikah} selected{/if}>{$value}</option>
-                  {/loop}
-                </select>
+              <div class="form-group">
+                <label class="col-sm-3 control-label">Alamat</label>
+                <div class="col-sm-9">
+                  <textarea name="alamat" rows="2" class="form-control" placeholder="Alamat jalan / RT / RW">{$pasien.alamat}</textarea>
+                </div>
               </div>
-              <label for="no_peserta" class="col-sm-2 control-label">Agama</label>
-              <div class="col-sm-3">
-                <select name="agama" class="form-control">
-                  {loop: $agama}
-                    <option value="{$value}"{if: $value == $pasien.agama} selected{/if}>{$value}</option>
-                  {/loop}
-                </select>
+              <div class="{if: $admin_mode == 'simple'}hidden{/if}">
+                <div class="form-group">
+                  <label for="kd_prop" class="col-sm-3 control-label">Propinsi</label>
+                  <div class="col-sm-4">
+                    <select name="kd_prop" id="kd_prop" class="form-control">
+                      <option value="">Pilih Propinsi</option>
+                      {loop: $propinsi as $prov}
+                      <option value="{$prov.kd_prop}" {if: $pasien.kd_prop == $prov.kd_prop}selected{/if}>{$prov.nm_prop}</option>
+                      {/loop}
+                    </select>
+                    <input type="hidden" name="nm_prop" id="nm_prop" value="{$pasien.propinsi.nm_prop}" />
+                  </div>
+                  <label for="kd_kab" class="col-sm-1 control-label rsgm-label-inline">Kota</label>
+                  <div class="col-sm-4">
+                    <select name="kd_kab" id="kd_kab" class="form-control" {if: $pasien.kd_prop == '1'}disabled{/if}>
+                      <option value="">Pilih Kota</option>
+                      {if: isset($kabupaten_list) && count($kabupaten_list) > 0}
+                      {loop: $kabupaten_list as $kab}
+                      <option value="{$kab.kd_kab}" {if: $pasien.kd_kab == $kab.kd_kab}selected{/if}>{$kab.nm_kab}</option>
+                      {/loop}
+                      {/if}
+                    </select>
+                    <input type="hidden" name="nm_kab" id="nm_kab" value="{$pasien.kabupaten.nm_kab}" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="kd_kec" class="col-sm-3 control-label">Kecamatan</label>
+                  <div class="col-sm-4">
+                    <select name="kd_kec" id="kd_kec" class="form-control" {if: $pasien.kd_kab == '1' || $pasien.kd_kab == ''}disabled{/if}>
+                      <option value="">Pilih Kecamatan</option>
+                      {if: isset($kecamatan_list) && count($kecamatan_list) > 0}
+                      {loop: $kecamatan_list as $kec}
+                      <option value="{$kec.kd_kec}" {if: $pasien.kd_kec == $kec.kd_kec}selected{/if}>{$kec.nm_kec}</option>
+                      {/loop}
+                      {/if}
+                    </select>
+                    <input type="hidden" name="nm_kec" id="nm_kec" value="{$pasien.kecamatan.nm_kec}" />
+                  </div>
+                  <label for="kd_kel" class="col-sm-1 control-label rsgm-label-inline">Desa</label>
+                  <div class="col-sm-4">
+                    <select name="kd_kel" id="kd_kel" class="form-control" {if: $pasien.kd_kec == '1' || $pasien.kd_kec == ''}disabled{/if}>
+                      <option value="">Pilih Desa</option>
+                      {if: isset($kelurahan_list) && count($kelurahan_list) > 0}
+                      {loop: $kelurahan_list as $kel}
+                      <option value="{$kel.kd_kel}" {if: $pasien.kd_kel == $kel.kd_kel}selected{/if}>{$kel.nm_kel}</option>
+                      {/loop}
+                      {/if}
+                    </select>
+                    <input type="hidden" name="nm_kel" id="nm_kel" value="{$pasien.kelurahan.nm_kel}" />
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="form-group">
-              <label for="pekerjaan" class="col-sm-3 control-label">Pekerjaan</label>
-              <div class="col-sm-4">
-                <input type="text" name="pekerjaan" class="form-control" value="{$pasien.pekerjaan}">
+              <div class="form-group">
+                <label class="col-sm-3 control-label">Telepon</label>
+                <div class="col-sm-4">
+                  <input type="text" name="no_tlp" class="form-control noTelepon" placeholder="No. HP / WA" value="{$pasien.no_tlp}">
+                </div>
+                <label for="email" class="col-sm-1 control-label rsgm-label-inline">Email</label>
+                <div class="col-sm-4">
+                  <input type="text" id="email" name="email" class="form-control" placeholder="Alamat email" value="{$pasien.email}">
+                </div>
               </div>
-              <label for="pnd" class="col-sm-2 control-label">PND</label>
-              <div class="col-sm-3">
-                <select class="form-control" name="pnd" id="pnd">
-                  {loop: $pnd}
-                  <option value="{$value}" {if: $value == $pasien.pnd}selected{/if}>{$value}</option>
-                  {/loop}
-                </select>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="asuransi" class="col-sm-3 control-label">Penjamin</label>
-            <div class="col-sm-4">
-              <select class="form-control" name="kd_pj">
-                {loop: $penjab}
-                <option value="{$value.kd_pj}" {if: $pasien.kd_pj == $value.kd_pj}selected{/if}>{$value.png_jawab}</option>
-                {/loop}
-              </select>
-            </div>
-            <label for="no_peserta" class="col-sm-2 control-label">No. Kartu</label>
-            <div class="col-sm-3">
-              <input type="text" name="no_peserta" id="no_peserta" class="form-control noKartu" value="{$pasien.no_peserta}">
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-  <div class="col-md-6">
-    <div class="panel panel-default">
-      <div class="panel-body">
-        <div class="form-horizontal">
-          <div class="{if: $admin_mode == 'simple'}hidden{/if}">
-            <div class="form-group">
-              <label for="asuransi" class="col-sm-3 control-label">Keluarga</label>
-              <div class="col-sm-4">
-                <select class="form-control" name="keluarga">
-                  {loop: $keluarga}
-                  <option value="{$value}" {if: $value == $pasien.keluarga}selected{/if}>{$value}</option>
-                  {/loop}
-                </select>
-              </div>
-              <label for="namakeluarga" class="col-sm-1 control-label">Nama</label>
-              <div class="col-sm-4">
-                <input type="text" name="namakeluarga" class="form-control" value="{$pasien.namakeluarga}">
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="no_ktp" class="col-sm-3 control-label">Nomor KTP</label>
-            <div class="col-sm-9">
-              <input type="text" name="no_ktp" id="no_ktp" class="form-control no_ktp" value="{$pasien.no_ktp}">
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="alamat" class="col-sm-3 control-label">Alamat</label>
-            <div class="col-sm-9">
-              <textarea name="alamat" rows="3" class="form-control">{$pasien.alamat}</textarea>
-            </div>
-          </div>
-          <div class="{if: $admin_mode == 'simple'}hidden{/if}">
-            <div class="form-group">
-              <label for="propinsi" class="col-sm-3 control-label">Propinsi</label>
-              <div class="col-sm-4">
-                <select name="kd_prop" id="kd_prop" class="form-control">
-                  <option value="">Pilih Propinsi</option>
-                  {loop: $propinsi as $prov}
-                  <option value="{$prov.kd_prop}" {if: $pasien.kd_prop == $prov.kd_prop}selected{/if}>{$prov.nm_prop}</option>
-                  {/loop}
-                </select>
-                <input type="hidden" name="nm_prop" id="nm_prop" value="{$pasien.propinsi.nm_prop}" />
-              </div>
-              <label for="kota" class="col-sm-1 control-label">Kota</label>
-              <div class="col-sm-4">
-                <select name="kd_kab" id="kd_kab" class="form-control" {if: $pasien.kd_prop == '1'}disabled{/if}>
-                  <option value="">Pilih Kota</option>
-                  {if: isset($kabupaten_list) && count($kabupaten_list) > 0}
-                  {loop: $kabupaten_list as $kab}
-                  <option value="{$kab.kd_kab}" {if: $pasien.kd_kab == $kab.kd_kab}selected{/if}>{$kab.nm_kab}</option>
-                  {/loop}
-                  {/if}
-                </select>
-                <input type="hidden" name="nm_kab" id="nm_kab" value="{$pasien.kabupaten.nm_kab}" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="kecamatan" class="col-sm-3 control-label">Kecamatan</label>
-              <div class="col-sm-4">
-                <select name="kd_kec" id="kd_kec" class="form-control" {if: $pasien.kd_kab == '1' || $pasien.kd_kab == ''}disabled{/if}>
-                  <option value="">Pilih Kecamatan</option>
-                  {if: isset($kecamatan_list) && count($kecamatan_list) > 0}
-                  {loop: $kecamatan_list as $kec}
-                  <option value="{$kec.kd_kec}" {if: $pasien.kd_kec == $kec.kd_kec}selected{/if}>{$kec.nm_kec}</option>
-                  {/loop}
-                  {/if}
-                </select>
-                <input type="hidden" name="nm_kec" id="nm_kec" value="{$pasien.kecamatan.nm_kec}" />
-              </div>
-              <label for="desa" class="col-sm-1 control-label">Desa</label>
-              <div class="col-sm-4">
-                <select name="kd_kel" id="kd_kel" class="form-control" {if: $pasien.kd_kec == '1' || $pasien.kd_kec == ''}disabled{/if}>
-                  <option value="">Pilih Desa</option>
-                  {if: isset($kelurahan_list) && count($kelurahan_list) > 0}
-                  {loop: $kelurahan_list as $kel}
-                  <option value="{$kel.kd_kel}" {if: $pasien.kd_kel == $kel.kd_kel}selected{/if}>{$kel.nm_kel}</option>
-                  {/loop}
-                  {/if}
-                </select>
-                <input type="hidden" name="nm_kel" id="nm_kel" value="{$pasien.kelurahan.nm_kel}" />
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="telepon" class="col-sm-3 control-label">Telepon</label>
-            <div class="col-sm-4">
-              <input type="text" name="no_tlp" class="form-control noTelepon" value="{$pasien.no_tlp}">
-            </div>
-            <label for="email" class="col-sm-1 control-label">Email</label>
-            <div class="col-sm-4">
-              <input type="text" id="email" name="email" class="form-control" value="{$pasien.email}">
-            </div>
-          </div>
+
+      {if: $mlite_crud_permissions.can_create == 'true' || $mlite_crud_permissions.can_update == 'true'}
+      <div class="rsgm-reg-footer">
+        <span class="rsgm-footer-hint hidden-xs">
+          <i class="fa fa-info-circle"></i> Klik kolom <strong>Nomor RM</strong> untuk mengisi nomor otomatis, atau centang kotak untuk manual
+        </span>
+        <div class="rsgm-reg-actions">
+          <button type="button" name="button" class="btn btn-success" id="simpan"><i class="fa fa-save"></i><span class="hidden-xs"> Simpan</span></button>
+          <button type="button" name="button" class="btn btn-info hidden" id="kartu" data-no_rkm_medis="{$pasien.no_rkm_medis}"><i class="fa fa-address-book-o"></i><span class="hidden-xs"> Kartu</span></button>
+          <a href="{$urlUploadPhoto}" name="button" class="btn btn-warning hidden" id="foto"><i class="fa fa-camera"></i><span class="hidden-xs"> Foto</span></a>
+          <button type="button" name="button" class="btn btn-primary hidden" id="kirimwa" data-toggle="modal" data-target="#waModal" data-no_tlp="{$pasien.no_tlp}"><i class="fa fa-whatsapp"></i><span class="hidden-xs"> Kirim WA</span></button>
+          {if: $mlite_crud_permissions.can_delete == 'true'}
+          <button type="button" name="button" class="btn btn-danger hidden" id="hapus"><i class="fa fa-trash-o"></i><span class="hidden-xs"> Hapus</span></button>
+          {/if}
+          <button type="button" name="button" class="btn btn-default" id="batal"><i class="fa fa-times"></i><span class="hidden-xs"> Batal</span></button>
         </div>
       </div>
-    </div>
-  </div>
-  {if: $mlite_crud_permissions.can_create == 'true' || $mlite_crud_permissions.can_update == 'true'}
-  <div class="col-md-12 m-b-xl">
-    <div class="text-center">
-      <button type="button" name="button" class="btn btn-success" id="simpan"><i class="fa fa-save"></i><span class="hidden-xs"> Simpan</span></button>
-      <button type="button" name="button" class="btn btn-info hidden" id="kartu" data-no_rkm_medis="{$pasien.no_rkm_medis}"><i class="fa fa-address-book-o"></i><span class="hidden-xs"> Kartu</span></button>
-      <a href="{$urlUploadPhoto}" name="button" class="btn btn-warning hidden" id="foto"><i class="fa fa-camera"></i><span class="hidden-xs"> Foto</span></a>
-      <button type="button" name="button" class="btn btn-primary hidden" id="kirimwa" data-toggle="modal" data-target="#waModal" data-no_tlp={$pasien.no_tlp}><i class="fa fa-whatsapp"></i><span class="hidden-xs"> Kirim WA</span></button>
-      {if: $mlite_crud_permissions.can_delete == 'true'}
-      <button type="button" name="button" class="btn btn-danger hidden" id="hapus"><i class="fa fa-trash"></i><span class="hidden-xs"> Hapus</span></button>
       {/if}
-      <button type="button" name="button" class="btn btn-primary" id="batal"><i class="fa fa-close"></i><span class="hidden-xs"> Batal</span></button>
     </div>
   </div>
-  {/if}
 </div>
 <div class="modal" id="myModal" data-keyboard="false" data-backdrop="static">
   <div class="modal-dialog">
@@ -283,15 +307,17 @@
 
   function refreshWilayahSelect(selector, html, value, disabled) {
     var $sel = $(selector);
-    if ($sel.data('selectator')) {
+    try {
       $sel.selectator('destroy');
-    }
+    } catch(e) {}
     $sel.html(html);
     if (value) {
       $sel.val(value);
     }
     $sel.prop('disabled', disabled);
-    $sel.selectator();
+    try {
+      $sel.selectator();
+    } catch(e) {}
     return $sel;
   }
 

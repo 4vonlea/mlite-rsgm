@@ -34,6 +34,9 @@
 									<a href="{?=isset_or($value.permURL)?}" class="btn btn-xs btn-info">
 										<i class="fa fa-key"></i> <span class="hidden-xs">Hak Akses</span>
 									</a>
+									<a href="{?=isset_or($value.resetPassURL)?}" class="btn btn-xs btn-warning" data-confirm="Yakin ingin mereset kata sandi pengguna [{?=isset_or($value.username)?}] ke '12345678'? Pengguna akan diwajibkan membuat kata sandi baru sesuai standar keamanan ISO/IEC 27001 saat login berikutnya." title="Reset kata sandi ke 12345678">
+										<i class="fa fa-refresh"></i> <span class="hidden-xs">Reset Pass</span>
+									</a>
 									<a href="{?=isset_or($value.delURL)?}" class="btn btn-xs btn-danger {if: $value.id==1 || $value.id==$myId}disabled{/if}" data-confirm="Anda yakin akan menghapus user ini?">
 										<i class="fa fa-trash-o"></i> <span class="hidden-xs">Hapus</span>
 									</a>

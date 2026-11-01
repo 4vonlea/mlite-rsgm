@@ -15,61 +15,17 @@ class Admin extends AdminModule
 
   public function getMain()
   {
-    $this->core->addJS(url(MODULES . '/dashboard/js/admin/webcam.js?v={$mlite.version}'));
     $settings = $this->settings('settings');
 
-    $day = array(
-      'Sun' => 'AKHAD',
-      'Mon' => 'SENIN',
-      'Tue' => 'SELASA',
-      'Wed' => 'RABU',
-      'Thu' => 'KAMIS',
-      'Fri' => 'JUMAT',
-      'Sat' => 'SABTU'
-    );
-    $hari = $day[date('D', strtotime(date('Y-m-d')))];
-
-    $presensi = $this->db('mlite_modules')->where('dir', 'presensi')->oneArray();
-    $cek_presensi = [];
-    $jam_jaga = [];
-    $cek_rekap = [];
-    $nama_pegawai = '';
-    $pengaturan_presensi = '';
-    $teks = array('');
-    if ($presensi) {
-      if ($this->core->getUserInfo('username', null, true) == 'admin') {
-        $nama_pegawai = 'Administrator';
-      } else {
-        $nama_pegawai = $this->core->getPegawaiInfo('nama', $this->core->getUserInfo('username', null, true));
-      }
-      $idpeg = $this->db('barcode')->where('barcode', $this->core->getUserInfo('username', null, true))->oneArray();
-      if($idpeg) {
-        $cek_presensi = $this->db('temporary_presensi')->where('id', $idpeg['id'])->oneArray();
-        $cek_rekap = $this->db('rekap_presensi')->where('id', $idpeg['id'])->like('jam_datang', '%' . date('Y-m-d') . '%')->oneArray();
-        $jam_jaga = $this->db('jam_jaga')->join('pegawai', 'pegawai.departemen = jam_jaga.dep_id')->where('pegawai.id', $idpeg['id'])->toArray();
-      }
-      $teks = explode(';', $this->settings->get('presensi.helloworld'));
-      $pengaturan_presensi = $this->settings('presensi');
-    }
-    $random_keys = array_rand($teks);
-    $teks = $teks[$random_keys];
     return $this->draw('main.html', [
       'settings' => $settings,
-      'cek_presensi' => $cek_presensi,
-      'cek_rekap' => $cek_rekap,
-      'jam_jaga' => $jam_jaga,
-      'presensi' => $presensi,
-      'nama' => $nama_pegawai,
-      'teks' => $teks,
-      'pengaturan_presensi' => $pengaturan_presensi,
-      'notif_presensi' => $this->settings('settings', 'notif_presensi')
     ]);
   }
 
   public function getMenu()
   {
-    $this->core->addCSS(url(MODULES . '/dashboard/css/admin/dashboard.css?v={$mlite.version}'));
-    $this->core->addJS(url(MODULES . '/dashboard/js/admin/dashboard.js?v={$mlite.version}'), 'footer');
+    $this->core->addCSS(url(MODULES . '/dashboard/css/admin/dashboard.css?v=1139'));
+    $this->core->addJS(url(MODULES . '/dashboard/js/admin/dashboard.js?v=1139'), 'footer');
     echo $this->draw('dashboard.html', ['modules' => htmlspecialchars_array($this->_modulesList())]);
     exit();
   }

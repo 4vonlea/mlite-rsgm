@@ -1,34 +1,540 @@
-<div class="row">
-    <form name="petugas" action="{?=url(ADMIN.'/profil/ganti_save/'.@$ganti_pass.form.id_user)?}" method="POST">
-        <div class="col-md-8">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{?=isset_or($ganti_pass.title)?}</h3>
+<style>
+/* ==========================================================================
+   RSGM LUXURY PASSWORD CHANGE STYLES (ISO/IEC 27001 SECURITY COMPLIANT)
+   ========================================================================== */
+.rsgm-pwd-container {
+    padding: 20px 0 40px;
+}
+
+.rsgm-pwd-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.rsgm-pwd-header {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    padding: 24px 28px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+}
+
+.rsgm-pwd-header-emblem {
+    width: 52px;
+    height: 52px;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(8px);
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #ffffff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.rsgm-pwd-header-title {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    color: #ffffff;
+}
+
+.rsgm-pwd-header-sub {
+    margin: 3px 0 0;
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.88);
+    line-height: 1.4;
+}
+
+.rsgm-pwd-body {
+    padding: 28px;
+}
+
+.rsgm-alert-mandatory {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-left: 4px solid #f59e0b;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    color: #92400e;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.rsgm-alert-mandatory i {
+    font-size: 18px;
+    color: #f59e0b;
+    margin-top: 1px;
+    flex-shrink: 0;
+}
+
+.rsgm-form-group {
+    margin-bottom: 20px;
+}
+
+.rsgm-field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 7px;
+}
+
+.rsgm-field-label .text-danger {
+    color: #ef4444;
+}
+
+.rsgm-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.rsgm-input-wrap .rsgm-input-ico {
+    position: absolute;
+    left: 14px;
+    color: #94a3b8;
+    font-size: 15px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.rsgm-input-wrap .form-control {
+    padding-left: 42px;
+    padding-right: 44px;
+    height: 44px;
+    border-radius: 10px;
+    border: 1.5px solid #cbd5e1;
+    font-size: 14px;
+    color: #0f172a;
+    background: #f8fafc;
+    box-shadow: none;
+    transition: all 0.2s ease;
+}
+
+.rsgm-input-wrap .form-control:focus {
+    background: #ffffff;
+    border-color: #059669;
+    box-shadow: 0 0 0 3.5px rgba(5, 150, 105, 0.15);
+}
+
+.rsgm-btn-eye {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #64748b;
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: color 0.15s ease;
+    z-index: 3;
+}
+
+.rsgm-btn-eye:hover {
+    color: #0f172a;
+    background: #f1f5f9;
+}
+
+/* Strength meter */
+.rsgm-strength-wrap {
+    margin-top: 10px;
+    margin-bottom: 18px;
+}
+
+.rsgm-strength-bar-bg {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.rsgm-strength-bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 3px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.rsgm-strength-text {
+    font-size: 11.5px;
+    font-weight: 600;
+    margin-top: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Requirements Checklist */
+.rsgm-rules-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 22px;
+}
+
+.rsgm-rules-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #475569;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rsgm-rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 8px 12px;
+}
+
+.rsgm-rule-item {
+    font-size: 12px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.rsgm-rule-item i {
+    font-size: 13px;
+    color: #cbd5e1;
+    transition: all 0.2s ease;
+}
+
+.rsgm-rule-item.valid {
+    color: #059669;
+    font-weight: 600;
+}
+
+.rsgm-rule-item.valid i {
+    color: #059669;
+}
+
+/* Submit Button */
+.rsgm-btn-submit {
+    height: 46px;
+    font-size: 14.5px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    border: none;
+    border-radius: 10px;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25);
+    transition: all 0.2s ease;
+}
+
+.rsgm-btn-submit:hover {
+    background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+    box-shadow: 0 6px 18px rgba(5, 150, 105, 0.35);
+    transform: translateY(-1px);
+    color: #ffffff;
+}
+
+.rsgm-pwd-footer {
+    text-align: center;
+    padding-top: 14px;
+    border-top: 1px solid #f1f5f9;
+    margin-top: 20px;
+    font-size: 12px;
+    color: #94a3b8;
+}
+</style>
+
+<div class="container-fluid rsgm-pwd-container">
+    <div class="row">
+        <div class="col-md-8 col-md-offset-2 col-lg-6 col-lg-offset-3">
+            <div class="rsgm-pwd-card">
+                <!-- Header -->
+                <div class="rsgm-pwd-header">
+                    <div class="rsgm-pwd-header-emblem">
+                        <i class="fa fa-shield"></i>
+                    </div>
+                    <div>
+                        <h3 class="rsgm-pwd-header-title">{?=isset_or($ganti_pass.title, 'Ubah Kata Sandi')?}</h3>
+                        <p class="rsgm-pwd-header-sub">Standar Keamanan Informasi &amp; Privasi Data Medis (ISO/IEC 27001)</p>
+                    </div>
                 </div>
-                <div class="panel-body">
-                    <div class="form-group">
-                        <label>Password Lama</label>
-                        <input type="text" name="pass_lama" id="pass_lama" class="form-control" value=""/>
+
+                <div class="rsgm-pwd-body">
+                    {if: !empty($ganti_pass.is_forced)}
+                    <!-- Alert Wajib Ganti Password Default -->
+                    <div class="rsgm-alert-mandatory">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        <div>
+                            <strong>Wajib Memperbarui Kata Sandi:</strong><br/>
+                            Akun Anda terdeteksi masih menggunakan kata sandi awal/default (<code>12345678</code>). Demi perlindungan privasi data medis dan pemenuhan standar keamanan informasi global (ISO/IEC 27001), Anda wajib membuat kata sandi baru pribadi sebelum dapat mengakses sistem.
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Password Baru</label>
-                        <input type="text" name="pass_baru" id="pass_baru" class="form-control" value=""/>
+                    {/if}
+
+                    <form name="formGantiPass" id="formGantiPass" action="{?=url([ADMIN, 'profil', 'ganti_save'])?}" method="POST" autocomplete="off">
+                        <!-- Password Lama -->
+                        <div class="rsgm-form-group">
+                            <label class="rsgm-field-label" for="pass_lama">
+                                Kata Sandi Lama / Default <span class="text-danger">*</span>
+                            </label>
+                            <div class="rsgm-input-wrap">
+                                <i class="fa fa-lock rsgm-input-ico"></i>
+                                <input type="password" name="pass_lama" id="pass_lama" class="form-control" placeholder="Masukkan kata sandi saat ini (misal: 12345678)" required autofocus/>
+                                <button type="button" class="rsgm-btn-eye" data-target="pass_lama" title="Lihat kata sandi">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Password Baru -->
+                        <div class="rsgm-form-group">
+                            <label class="rsgm-field-label" for="pass_baru">
+                                Kata Sandi Baru (Standar ISO/IEC 27001) <span class="text-danger">*</span>
+                            </label>
+                            <div class="rsgm-input-wrap">
+                                <i class="fa fa-key rsgm-input-ico"></i>
+                                <input type="password" name="pass_baru" id="pass_baru" class="form-control" placeholder="Ketik kata sandi baru yang kuat" required/>
+                                <button type="button" class="rsgm-btn-eye" data-target="pass_baru" title="Lihat kata sandi">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Strength Indicator Bar -->
+                            <div class="rsgm-strength-wrap">
+                                <div class="rsgm-strength-bar-bg">
+                                    <div class="rsgm-strength-bar" id="strengthBar"></div>
+                                </div>
+                                <div class="rsgm-strength-text">
+                                    <span style="color:#64748b;">Kekuatan Sandi:</span>
+                                    <span id="strengthLabel" style="color:#94a3b8;">Belum diisi</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Konfirmasi Password Baru -->
+                        <div class="rsgm-form-group">
+                            <label class="rsgm-field-label" for="pass_konfirmasi">
+                                Konfirmasi Kata Sandi Baru <span class="text-danger">*</span>
+                            </label>
+                            <div class="rsgm-input-wrap">
+                                <i class="fa fa-check-circle-o rsgm-input-ico"></i>
+                                <input type="password" name="pass_konfirmasi" id="pass_konfirmasi" class="form-control" placeholder="Ulangi kata sandi baru persis seperti di atas" required/>
+                                <button type="button" class="rsgm-btn-eye" data-target="pass_konfirmasi" title="Lihat kata sandi">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Checklist Standar Kompleksitas Keamanan Global (ISO/IEC 27001) -->
+                        <div class="rsgm-rules-card">
+                            <div class="rsgm-rules-title">
+                                <i class="fa fa-shield text-success"></i> Kriteria Keamanan Kata Sandi (Standar ISO/IEC 27001)
+                            </div>
+                            <div class="rsgm-rules-grid">
+                                <div class="rsgm-rule-item" id="rule-length">
+                                    <i class="fa fa-circle-o"></i> <span>Minimal 8 karakter</span>
+                                </div>
+                                <div class="rsgm-rule-item" id="rule-upper">
+                                    <i class="fa fa-circle-o"></i> <span>Minimal 1 huruf besar (A-Z)</span>
+                                </div>
+                                <div class="rsgm-rule-item" id="rule-lower">
+                                    <i class="fa fa-circle-o"></i> <span>Minimal 1 huruf kecil (a-z)</span>
+                                </div>
+                                <div class="rsgm-rule-item" id="rule-number">
+                                    <i class="fa fa-circle-o"></i> <span>Minimal 1 angka (0-9)</span>
+                                </div>
+                                <div class="rsgm-rule-item" id="rule-symbol">
+                                    <i class="fa fa-circle-o"></i> <span>Minimal 1 simbol khusus (!@#$%^&amp;*)</span>
+                                </div>
+                                <div class="rsgm-rule-item" id="rule-match">
+                                    <i class="fa fa-circle-o"></i> <span>Konfirmasi sandi cocok</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="form-group" style="margin-top: 24px; margin-bottom: 0;">
+                            <button type="submit" name="save" id="btnSubmitPass" class="btn btn-block rsgm-btn-submit">
+                                <i class="fa fa-shield"></i> Simpan &amp; Perbarui Kata Sandi
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="rsgm-pwd-footer">
+                        <i class="fa fa-lock"></i> Terenkripsi aman dengan algoritma Bcrypt standar RSGM Gusti Hasan Aman &amp; mLITE
                     </div>
-                    <div class="form-group" style="display:{?= isset($_SESSION['mlite_force_change']) && $_SESSION['mlite_force_change'] ? 'block' : 'none' ?}">
-                        <label>OTP WhatsApp</label>
-                        <input type="text" name="otp_code" id="otp_code" class="form-control" value="" placeholder="Masukkan kode OTP"/>
-                        <small class="text-muted">Masukkan kode OTP yang dikirim ke WhatsApp Anda.</small>
-                    </div>
-                    <div class="form-group">
-                        <input type="submit" name="save" class="btn btn-primary" value="Simpan" />
-                  </div>
                 </div>
             </div>
         </div>
-    </form>
+    </div>
 </div>
-<!-- {if: $petugas.form.nip !== ''}
-  <script>
-    $('#nip option:not(:selected)').remove();
-  </script>
-{/if} -->
+
+<script type="text/javascript">
+$(document).ready(function() {
+    // 1. Toggle Show/Hide Password Eye Button
+    $('.rsgm-btn-eye').on('click', function(e) {
+        e.preventDefault();
+        var targetId = $(this).attr('data-target');
+        var $input = $('#' + targetId);
+        var $icon = $(this).find('i');
+
+        if ($input.attr('type') === 'password') {
+            $input.attr('type', 'text');
+            $icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            $input.attr('type', 'password');
+            $icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
+
+    // 2. Real-time Password Complexity Validation
+    function validatePassword() {
+        var pwd = $('#pass_baru').val() || '';
+        var confirm = $('#pass_konfirmasi').val() || '';
+
+        var hasLength = pwd.length >= 8;
+        var hasUpper = /[A-Z]/.test(pwd);
+        var hasLower = /[a-z]/.test(pwd);
+        var hasNumber = /[0-9]/.test(pwd);
+        var hasSymbol = /[^a-zA-Z0-9]/.test(pwd);
+        var isNotDefault = pwd !== '12345678';
+        var isMatch = (pwd.length > 0) && (pwd === confirm);
+
+        // Update checklist UI
+        updateRule('#rule-length', hasLength);
+        updateRule('#rule-upper', hasUpper);
+        updateRule('#rule-lower', hasLower);
+        updateRule('#rule-number', hasNumber);
+        updateRule('#rule-symbol', hasSymbol);
+        updateRule('#rule-match', isMatch);
+
+        // Calculate score (0 to 5)
+        var score = 0;
+        if (hasLength) score++;
+        if (hasUpper) score++;
+        if (hasLower) score++;
+        if (hasNumber) score++;
+        if (hasSymbol) score++;
+
+        var percent = (score / 5) * 100;
+        var barColor = '#ef4444'; // red
+        var labelText = 'Sangat Lemah';
+        var labelColor = '#ef4444';
+
+        if (score === 0 && pwd.length === 0) {
+            percent = 0;
+            labelText = 'Belum diisi';
+            labelColor = '#94a3b8';
+        } else if (score <= 2) {
+            barColor = '#ef4444';
+            labelText = 'Lemah (Belum memenuhi syarat)';
+            labelColor = '#ef4444';
+        } else if (score === 3 || score === 4) {
+            barColor = '#f59e0b';
+            labelText = 'Sedang (Perlu simbol / variasi)';
+            labelColor = '#d97706';
+        } else if (score === 5) {
+            if (pwd === '12345678') {
+                barColor = '#ef4444';
+                labelText = 'Ditolak: Kata sandi default';
+                labelColor = '#ef4444';
+            } else {
+                barColor = '#059669';
+                labelText = 'Sangat Kuat (Standar ISO/IEC 27001)';
+                labelColor = '#059669';
+            }
+        }
+
+        $('#strengthBar').css({
+            'width': percent + '%',
+            'background-color': barColor
+        });
+        $('#strengthLabel').text(labelText).css('color', labelColor);
+    }
+
+    function updateRule(selector, isValid) {
+        var $el = $(selector);
+        var $icon = $el.find('i');
+        if (isValid) {
+            $el.addClass('valid');
+            $icon.removeClass('fa-circle-o').addClass('fa-check-circle');
+        } else {
+            $el.removeClass('valid');
+            $icon.removeClass('fa-check-circle').addClass('fa-circle-o');
+        }
+    }
+
+    $('#pass_baru, #pass_konfirmasi').on('input keyup change', validatePassword);
+
+    // 3. Form Submit Validation
+    $('#formGantiPass').on('submit', function(e) {
+        var pwd = $('#pass_baru').val() || '';
+        var confirm = $('#pass_konfirmasi').val() || '';
+        var old = $('#pass_lama').val() || '';
+
+        if (!old) {
+            alert('Silakan masukkan kata sandi lama / default Anda terlebih dahulu.');
+            $('#pass_lama').focus();
+            e.preventDefault();
+            return false;
+        }
+
+        if (pwd === '12345678') {
+            alert('Kata sandi baru tidak boleh menggunakan kata sandi default (12345678). Silakan buat kata sandi baru pribadi.');
+            $('#pass_baru').focus();
+            e.preventDefault();
+            return false;
+        }
+
+        if (pwd === old) {
+            alert('Kata sandi baru tidak boleh sama dengan kata sandi lama.');
+            $('#pass_baru').focus();
+            e.preventDefault();
+            return false;
+        }
+
+        var hasLength = pwd.length >= 8;
+        var hasUpper = /[A-Z]/.test(pwd);
+        var hasLower = /[a-z]/.test(pwd);
+        var hasNumber = /[0-9]/.test(pwd);
+        var hasSymbol = /[^a-zA-Z0-9]/.test(pwd);
+
+        if (!hasLength || !hasUpper || !hasLower || !hasNumber || !hasSymbol) {
+            alert('Kata sandi baru belum memenuhi standar keamanan global (ISO/IEC 27001):\n- Minimal 8 karakter\n- Huruf besar (A-Z)\n- Huruf kecil (a-z)\n- Angka (0-9)\n- Simbol khusus (!@#$%^&* dll)');
+            $('#pass_baru').focus();
+            e.preventDefault();
+            return false;
+        }
+
+        if (pwd !== confirm) {
+            alert('Konfirmasi kata sandi baru tidak cocok. Silakan periksa kembali ketikan Anda.');
+            $('#pass_konfirmasi').focus();
+            e.preventDefault();
+            return false;
+        }
+
+        return true;
+    });
+
+    // Run initial check
+    validatePassword();
+});
+</script>

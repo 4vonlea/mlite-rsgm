@@ -1,247 +1,264 @@
-<div id="form">
-  <div class="col-md-6">
-    <div class="panel panel-default">
-      <div class="panel-body">
-        <div class="form-horizontal">
-          <div class="form-group">
-            <label for="" class="col-sm-3 control-label">Tanggal Masuk</label>
-            <div class="col-sm-9">
-              <input type="text" id="tgl_operasi" name="tgl_operasi" class="form-control tanggal_jam" value="{?=isset_or($operasi.operasi.tgl_operasi)?}">
+<div id="form" class="rsgm-reg-form clearfix">
+  <div class="col-md-12">
+    <div class="rsgm-reg-shell">
+      <div class="rsgm-reg-grid">
+        <div class="rsgm-reg-col rsgm-reg-col-main">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-heartbeat"></i></span>
+              <span>Data Tindakan Operasi &amp; Pasien</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">Kamar Operasi</span>
+          </div>
+          <div class="rsgm-reg-body">
+            <div class="form-horizontal">
+              <div class="form-group">
+                <label for="tgl_operasi" class="col-sm-3 control-label">Tgl. Operasi</label>
+                <div class="col-sm-9">
+                  <div class="rsgm-input-icon">
+                    <i class="fa fa-calendar rsgm-field-icon"></i>
+                    <input type="text" id="tgl_operasi" name="tgl_operasi" class="form-control tanggal_jam" value="{?=isset_or($operasi.operasi.tgl_operasi)?}">
+                  </div>
+                </div>
+              </div>
+              <div class="form-group" id="cari_pasien">
+                <label for="cari_pasien_input" class="col-sm-3 control-label">Pasien</label>
+                <div class="col-sm-9">
+                  <div class="rsgm-input-icon rsgm-search-wrap">
+                    <i class="fa fa-search rsgm-field-icon"></i>
+                    <input type="text" id="cari_pasien_input" name="pasien" class="form-control" placeholder="Ketik Nomor Rawat / Nama / No. RM lalu Enter..." value="">
+                    <button type="button" class="rsgm-search-trigger" title="Cari Pasien (Enter)">Cari &#8629;</button>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-3 control-label">Nomor RM</label>
+                <div class="col-sm-4">
+                  <input type="text" name="no_rkm_medis" class="form-control" placeholder="No. RM" value="{?=isset_or($operasi.operasi.no_rkm_medis)?}" readonly>
+                </div>
+                <label class="col-sm-2 control-label rsgm-label-inline">No. Rawat</label>
+                <div class="col-sm-3">
+                  <input type="text" name="no_rawat" class="form-control" placeholder="No. Rawat" value="{?=isset_or($operasi.operasi.no_rawat)?}" readonly>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-3 control-label">Nama Pasien</label>
+                <div class="col-sm-9">
+                  <div class="rsgm-input-icon">
+                    <i class="fa fa-user-o rsgm-field-icon"></i>
+                    <input type="text" name="nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{?=isset_or($operasi.operasi.nm_pasien)?}" readonly>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-3 control-label">Status</label>
+                <div class="col-sm-4">
+                  <select class="form-control" name="status">
+                    <option value="Ralan"{if: $operasi.operasi.status == 'Ralan'} selected{/if}>Ralan</option>
+                    <option value="Ranap"{if: $operasi.operasi.status == 'Ranap'} selected{/if}>Ranap</option>
+                  </select>
+                </div>
+                <label class="col-sm-2 control-label rsgm-label-inline">Kategori</label>
+                <div class="col-sm-3">
+                  <select class="form-control" name="kategori">
+                    {loop: $operasi.kategori}
+                    <option value="{?=isset_or($value)?}"{if: isset_or($operasi.operasi.kategori) == $value} selected{/if}>{?=isset_or($value)?}</option>
+                    {/loop}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-3 control-label">Anastesi</label>
+                <div class="col-sm-9">
+                  <input type="text" name="jenis_anasthesi" class="form-control" placeholder="Jenis anastesi..." value="{?=isset_or($operasi.operasi.jenis_anasthesi)?}">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-3 control-label">Paket Operasi</label>
+                <div class="col-sm-9">
+                  <select class="form-control" name="kode_paket">
+                    {loop: $operasi.paket_operasi}
+                    <option value="{?=isset_or($value.kode_paket)?}"{if: isset_or($operasi.operasi.kode_paket) == $value.kode_paket} selected{/if}>{?=isset_or($value.nm_perawatan)?}</option>
+                    {/loop}
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="form-group" id="cari_pasien">
-            <label for="pasien" class="col-sm-3 control-label">Pasien</label>
-            <div class="col-sm-9">
-              <input type="text" name="pasien" class="form-control" placeholder="Cari nomor rawat" value="">
-            </div>
+        </div>
+
+        <div class="rsgm-reg-col rsgm-reg-col-side rsgm-reg-col-editable">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-user-md"></i></span>
+              <span>Tim Operasi &amp; Petugas</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">Operator &amp; Asisten</span>
           </div>
-          <div class="form-group">
-            <label for="no_rkm_medis" class="col-sm-3 control-label">Nomor RM</label>
-            <div class="col-sm-9">
-              <input type="text" name="no_rkm_medis" class="form-control" placeholder="Nomor rekam medik" value="{?=isset_or($operasi.operasi.no_rkm_medis)?}" readonly>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="nama_pasien" class="col-sm-3 control-label">Nama Pasien</label>
-            <div class="col-sm-9">
-              <input type="text" name="nm_pasien" class="form-control" placeholder="Nama pasien" value="{?=isset_or($operasi.operasi.nm_pasien)?}" readonly>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="no_rkm_medis" class="col-sm-3 control-label">Nomor Rawat</label>
-            <div class="col-sm-9">
-              <input type="text" name="no_rawat" class="form-control" value="{?=isset_or($operasi.operasi.no_rawat)?}" readonly>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="no_rkm_medis" class="col-sm-3 control-label">Status</label>
-            <div class="col-sm-9">
-              <select class="form-control" name="status">
-                <option value="Ralan"{if: $operasi.operasi.status == 'Ralan'} selected{/if}>Ralan</option>
-                <option value="Ranap"{if: $operasi.operasi.status == 'Ranap'} selected{/if}>Ranap</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="" class="col-sm-3 control-label">Kategori</label>
-            <div class="col-sm-9">
-              <select class="form-control" name="kategori">
-                {loop: $operasi.kategori}
-                <option value="{?=isset_or($value)?}"{if: isset_or($operasi.operasi.kategori) == $value} selected{/if}>{?=isset_or($value)?}</option>
-                {/loop}
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="" class="col-sm-3 control-label">Anastesi</label>
-            <div class="col-sm-9">
-              <input type="text" name="jenis_anasthesi" class="form-control" value="{?=isset_or($operasi.operasi.jenis_anasthesi)?}">
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="id_dokter" class="col-sm-3 control-label">Paket Operasi</label>
-            <div class="col-sm-9">
-              <select class="form-control" name="kode_paket">
-                {loop: $operasi.paket_operasi}
-                <option value="{?=isset_or($value.kode_paket)?}"{if: isset_or($operasi.operasi.kode_paket) == $value.kode_paket} selected{/if}>{?=isset_or($value.nm_perawatan)?}</option>
-                {/loop}
-              </select>
+          <div class="rsgm-reg-body">
+            <div class="rsgm-compact-row">
+              <div class="rsgm-compact-field-full">
+                <label class="rsgm-compact-label">Operator 1 (Utama)</label>
+                <select class="form-control" name="operator1">
+                  {loop: $operasi.dokter}
+                  <option value="{?=isset_or($value.kd_dokter)?}"{if: $operasi.operasi.operator1 == $value.kd_dokter} selected{/if}>{?=isset_or($value.nm_dokter)?}</option>
+                  {/loop}
+                </select>
+              </div>
+              <div class="rsgm-compact-field">
+                <label class="rsgm-compact-label">Operator 2</label>
+                <select class="form-control" name="operator2">
+                  {loop: $operasi.dokter}
+                  <option value="{?=isset_or($value.kd_dokter)?}"{if: $operasi.operasi.operator2 == $value.kd_dokter} selected{/if}>{?=isset_or($value.nm_dokter)?}</option>
+                  {/loop}
+                </select>
+              </div>
+              <div class="rsgm-compact-field">
+                <label class="rsgm-compact-label">Operator 3</label>
+                <select class="form-control" name="operator3">
+                  {loop: $operasi.dokter}
+                  <option value="{?=isset_or($value.kd_dokter)?}">{?=isset_or($value.nm_dokter)?}</option>
+                  {/loop}
+                </select>
+              </div>
+              <div class="rsgm-compact-field">
+                <label class="rsgm-compact-label">Asisten Operator 1</label>
+                <select class="form-control" name="asisten_operator1">
+                  {loop: $operasi.petugas}
+                  <option value="{?=isset_or($value.nip)?}">{?=isset_or($value.nama)?}</option>
+                  {/loop}
+                </select>
+              </div>
+              <div class="rsgm-compact-field">
+                <label class="rsgm-compact-label">Asisten Operator 2</label>
+                <select class="form-control" name="asisten_operator2">
+                  {loop: $operasi.petugas}
+                  <option value="{?=isset_or($value.nip)?}">{?=isset_or($value.nama)?}</option>
+                  {/loop}
+                </select>
+              </div>
+              <div class="rsgm-compact-field">
+                <label class="rsgm-compact-label">Dokter Anastesi</label>
+                <select class="form-control" name="dokter_anestesi">
+                  {loop: $operasi.dokter}
+                  <option value="{?=isset_or($value.kd_dokter)?}">{?=isset_or($value.nm_dokter)?}</option>
+                  {/loop}
+                </select>
+              </div>
+              <div class="rsgm-compact-field">
+                <label class="rsgm-compact-label">Asisten Anastesi</label>
+                <select class="form-control" name="asisten_anestesi">
+                  {loop: $operasi.petugas}
+                  <option value="{?=isset_or($value.nip)?}">{?=isset_or($value.nama)?}</option>
+                  {/loop}
+                </select>
+              </div>
+              <div class="rsgm-compact-field">
+                <label class="rsgm-compact-label">Dokter Anak</label>
+                <select class="form-control" name="dokter_anak">
+                  {loop: $operasi.dokter}
+                  <option value="{?=isset_or($value.kd_dokter)?}">{?=isset_or($value.nm_dokter)?}</option>
+                  {/loop}
+                </select>
+              </div>
+              <div class="rsgm-compact-field">
+                <label class="rsgm-compact-label">Prwt. Resusitasi</label>
+                <select class="form-control" name="perawaat_resusitas">
+                  {loop: $operasi.petugas}
+                  <option value="{?=isset_or($value.nip)?}">{?=isset_or($value.nama)?}</option>
+                  {/loop}
+                </select>
+              </div>
+              <div class="rsgm-compact-field">
+                <label class="rsgm-compact-label">Bidan</label>
+                <select class="form-control" name="bidan">
+                  {loop: $operasi.petugas}
+                  <option value="{?=isset_or($value.nip)?}">{?=isset_or($value.nama)?}</option>
+                  {/loop}
+                </select>
+              </div>
+              <div class="rsgm-compact-field">
+                <label class="rsgm-compact-label">Perawat Luar</label>
+                <select class="form-control" name="perawat_luar">
+                  {loop: $operasi.petugas}
+                  <option value="{?=isset_or($value.nip)?}">{?=isset_or($value.nama)?}</option>
+                  {/loop}
+                </select>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-  <div class="col-md-6">
-    <div id="pasien">
-    </div>
-    <div class="panel panel-default">
-      <div class="panel-body">
-        <div class="form-horizontal">
-          <div class="form-group">
-            <label for="id_dokter" class="col-sm-3 control-label">Operator 1</label>
-            <div class="col-sm-9">
-              <select class="form-control" name="operator1">
-                {loop: $operasi.dokter}
-                <option value="{?=isset_or($value.kd_dokter)?}"{if: $operasi.operasi.operator1 == $value.kd_dokter} selected{/if}>{?=isset_or($value.nm_dokter)?}</option>
-                {/loop}
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="id_dokter" class="col-sm-3 control-label">Operator 2</label>
-            <div class="col-sm-9">
-              <select class="form-control" name="operator2">
-                {loop: $operasi.dokter}
-                <option value="{?=isset_or($value.kd_dokter)?}"{if: $operasi.operasi.operator2 == $value.kd_dokter} selected{/if}>{?=isset_or($value.nm_dokter)?}</option>
-                {/loop}
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="id_dokter" class="col-sm-3 control-label">Operator 3</label>
-            <div class="col-sm-9">
-              <select class="form-control" name="operator3">
-                {loop: $operasi.dokter}
-                <option value="{?=isset_or($value.kd_dokter)?}">{?=isset_or($value.nm_dokter)?}</option>
-                {/loop}
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="id_dokter" class="col-sm-3 control-label">Asisten Operator 1</label>
-            <div class="col-sm-9">
-              <select class="form-control" name="asisten_operator1">
-                {loop: $operasi.petugas}
-                <option value="{?=isset_or($value.nip)?}">{?=isset_or($value.nama)?}</option>
-                {/loop}
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="id_dokter" class="col-sm-3 control-label">Asisten Operator 2</label>
-            <div class="col-sm-9">
-              <select class="form-control" name="asisten_operator2">
-                {loop: $operasi.petugas}
-                <option value="{?=isset_or($value.nip)?}">{?=isset_or($value.nama)?}</option>
-                {/loop}
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="id_dokter" class="col-sm-3 control-label">Dokter Anak</label>
-            <div class="col-sm-9">
-              <select class="form-control" name="dokter_anak">
-                {loop: $operasi.dokter}
-                <option value="{?=isset_or($value.kd_dokter)?}">{?=isset_or($value.nm_dokter)?}</option>
-                {/loop}
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="id_dokter" class="col-sm-3 control-label">Prwt. Resusitasi</label>
-            <div class="col-sm-9">
-              <select class="form-control" name="perawaat_resusitas">
-                {loop: $operasi.petugas}
-                <option value="{?=isset_or($value.nip)?}">{?=isset_or($value.nama)?}</option>
-                {/loop}
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="id_dokter" class="col-sm-3 control-label">Dokter Anastesi</label>
-            <div class="col-sm-9">
-              <select class="form-control" name="dokter_anestesi">
-                {loop: $operasi.dokter}
-                <option value="{?=isset_or($value.kd_dokter)?}">{?=isset_or($value.nm_dokter)?}</option>
-                {/loop}
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="id_dokter" class="col-sm-3 control-label">Asisten Anastesi</label>
-            <div class="col-sm-9">
-              <select class="form-control" name="asisten_anestesi">
-                {loop: $operasi.petugas}
-                <option value="{?=isset_or($value.nip)?}">{?=isset_or($value.nama)?}</option>
-                {/loop}
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="id_dokter" class="col-sm-3 control-label">Bidan</label>
-            <div class="col-sm-9">
-              <select class="form-control" name="bidan">
-                {loop: $operasi.petugas}
-                <option value="{?=isset_or($value.nip)?}">{?=isset_or($value.nama)?}</option>
-                {/loop}
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="id_dokter" class="col-sm-3 control-label">Perawat Luar</label>
-            <div class="col-sm-9">
-              <select class="form-control" name="perawat_luar">
-                {loop: $operasi.petugas}
-                <option value="{?=isset_or($value.nip)?}">{?=isset_or($value.nama)?}</option>
-                {/loop}
-              </select>
-            </div>
-          </div>
+
+      <div id="pasien" class="rsgm-pasien-drawer"></div>
+
+      <div class="rsgm-reg-footer">
+        <span class="rsgm-footer-hint hidden-xs">
+          <i class="fa fa-info-circle"></i> Pastikan paket operasi dan susunan tim operator telah sesuai
+        </span>
+        <div class="rsgm-reg-actions">
+          <button type="button" name="button" class="btn btn-primary" id="simpan"><i class="fa fa-save"></i><span class="hidden-xs"> Simpan</span></button>
+          <button type="button" name="button" class="btn btn-danger" id="hapus"><i class="fa fa-trash-o"></i><span class="hidden-xs"> Hapus</span></button>
+          <button type="button" name="button" class="btn btn-default" id="batal"><i class="fa fa-times"></i><span class="hidden-xs"> Batal</span></button>
         </div>
       </div>
-    </div>
-  </div>
-  <div class="col-md-12 m-b-xl">
-    <div class="text-center">
-      <button type="button" name="button" class="btn btn-primary" id="simpan"><i class="fa fa-save"></i><span class="hidden-xs"> Simpan</span></button>
-      <button type="button" name="button" class="btn btn-danger" id="hapus"><i class="fa fa-trash"></i><span class="hidden-xs"> Hapus</span></button>
-      <button type="button" name="button" class="btn btn-warning" id="batal"><i class="fa fa-close"></i><span class="hidden-xs"> Batal</span></button>
     </div>
   </div>
 </div>
 <script type="text/javascript">
-  $('select').selectator();
-  // ketika inputbox pencarian no rm/nama pasien diisi
-  $('input:text[name=pasien]').on('keydown',function(e){
+  function cariPasienOperasi() {
     var baseURL = mlite.url + '/' + mlite.admin;
-    if(event.which==13){
-    var url    = baseURL + '/operasi/pasien?t=' + mlite.token;
+    var url = baseURL + '/operasi/pasien?t=' + mlite.token;
     var cari = $('input:text[name=pasien]').val();
+    if (cari !== "") {
+      $.post(url, {cari: cari}, function(data) {
+        $("#pasien").html(data).show();
+      });
+    } else {
+      $("#pasien").hide();
+    }
+  }
 
-    if(cari!="") {
-        $.post(url, {cari: cari} ,function(data) {
-        // tampilkan data yang sudah di perbaharui
-          $("#pasien").html(data).show();
-        });
-    }
-    else {
-        $("#pasien").hide();
-    }
+  $('select').selectator();
+
+  $('input:text[name=pasien]').on('keydown', function(e) {
+    var key = e.which || e.keyCode;
+    if (key == 13) {
+      e.preventDefault();
+      cariPasienOperasi();
     }
   });
+
+  $('.rsgm-search-trigger').on('click', function(e) {
+    e.preventDefault();
+    cariPasienOperasi();
+  });
+
+  $("#pasien").on("click", ".rsgm-pasien-close", function(e) {
+    e.preventDefault();
+    $("#pasien").hide();
+  });
+
   // ketika baris data diklik
-  $("#pasien").on("click", ".pilih", function(event){
-    var baseURL = mlite.url + '/' + mlite.admin;
+  $("#pasien").on("click", ".pilih", function(event) {
     event.preventDefault();
 
-    var no_rkm_medis		   = $(this).attr("data-no_rkm_medis");
+    var no_rkm_medis = $(this).attr("data-no_rkm_medis");
     var nm_pasien    = $(this).attr("data-nm_pasien");
-    var no_rawat      = $(this).attr("data-no_rawat");
+    var no_rawat     = $(this).attr("data-no_rawat");
 
     $('input:text[name=no_rkm_medis]').val(no_rkm_medis);
     $('input:text[name=nm_pasien]').val(nm_pasien);
     $('input:text[name=no_rawat]').val(no_rawat);
 
     $("#pasien").hide();
-
   });
 </script>
 <script type="text/javascript">
-   $(function () {
-       $('.tanggal_jam').datetimepicker({
-         format: 'YYYY-MM-DD HH:mm:ss',
-         locale: 'id'
-       });
-   });
+  $(function () {
+    $('.tanggal_jam').datetimepicker({
+      format: 'YYYY-MM-DD HH:mm:ss',
+      locale: 'id'
+    });
+  });
 </script>

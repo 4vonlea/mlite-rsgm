@@ -1,24 +1,26 @@
 <div class="row" id="manage" style="margin-bottom:100px;">
   <div class="col-md-12">
     <div class="panel panel-default">
-      <div class="panel-heading">
-        <div class="btn-group pull-right" style="margin-top:-8px;">
-          <span class="btn btn-sm dropdown-toggle" data-toggle="dropdown">
-            <i class="fa fa-calendar"></i><span class="hidden-xs"> Periode Operasi</span>
-          </span>
-          <ul class="dropdown-menu dropdown-menu-right">
-            <li style="padding-left:5px;padding-right:5px;">
-              <input type="text" id="periode_rawat" class="form-control periode_rawat" name="periode_rawat" required>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <input type="text" id="periode_rawat_akhir" class="form-control periode_rawat" name="periode_rawat_akhir" required>
-            </li>
-            <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
-              <div id="submit_periode_rawat" class="btn btn-primary btn-block">Submit</div>
-            </li>
-          </ul>
-        </div>
+      <div class="panel-heading rsgm-panel-head">
         <h3 class="panel-title">Kelola Pasien</h3>
+        <div class="rsgm-filter-bar">
+          <div class="btn-group rsgm-period-group">
+            <span class="btn btn-sm dropdown-toggle rsgm-period-btn" data-toggle="dropdown">
+              <i class="fa fa-calendar"></i><span>Periode Operasi</span> <span class="caret"></span>
+            </span>
+            <ul class="dropdown-menu dropdown-menu-right rsgm-period-menu">
+              <li>
+                <input type="text" id="periode_rawat" class="form-control periode_rawat" name="periode_rawat" required>
+              </li>
+              <li>
+                <input type="text" id="periode_rawat_akhir" class="form-control periode_rawat" name="periode_rawat_akhir" required>
+              </li>
+              <li>
+                <div id="submit_periode_rawat" class="btn btn-default btn-block">Tampilkan</div>
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
       <div class="panel-body">
         <div class="row">

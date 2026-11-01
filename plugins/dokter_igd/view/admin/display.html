@@ -4,22 +4,21 @@
       <thead>
         <tr>
           <th style="white-space: nowrap;">No. RM</th>
-          <th style="white-space: nowrap;">Nama Pasien</th>
+          <th>Nama Pasien</th>
           <th style="white-space: nowrap;">ID Kunjungan</th>
           <th style="white-space: nowrap;">Antrian</th>
-          <th style="white-space: nowrap;">Poliklinik</th>
-          <th style="white-space: nowrap;">Dokter</th>
+          <th>Poliklinik</th>
+          <th>Dokter</th>
           <th style="white-space: nowrap;">Penjamin</th>
-          <th style="white-space: nowrap;">No. Asuransi</th>
-          <th style="white-space: nowrap;">Tgl. Kunjungan</th>
-          <th style="white-space: nowrap;">Stts. Periksa</th>
-          <th style="white-space: nowrap;">Stts. Lanjut</th>
-          <th style="white-space: nowrap;">Stts. Bayar</th>
+          <th style="white-space: nowrap;">Kunjungan</th>
+          <th style="white-space: nowrap;" title="Status Periksa">Periksa</th>
+          <th style="white-space: nowrap;" title="Status Lanjut">Lanjut</th>
+          <th style="white-space: nowrap;" title="Status Bayar">Bayar</th>
         </tr>
       </thead>
       <tbody>
         {loop: $rawat_jalan.list}
-        <tr{if: $value.stts == 'Sudah'} style="background-color: #dff0d8 !important;"{/if}>
+        <tr{if: $value.stts == 'Sudah'} class="rsgm-row-done"{elseif: $value.stts == 'Dirujuk'} class="rsgm-row-referred"{/if}>
           <td style="white-space: nowrap;">
             <span class="dropdown-toggle" data-toggle="dropdown" data-disabled="true" aria-expanded="true"><button type="button" name="button" class="btn btn-sm btn-default">{?=isset_or($value.no_rkm_medis)?} <span class="caret"></span></button></span>
             <ul class="dropdown-menu" role="menu">
@@ -37,17 +36,50 @@
               {/if}
             </ul>
           </td>
-          <td style="white-space: nowrap;"><a href="#soap" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}">{?=isset_or($value.nm_pasien)?}</a></td>
+          <td class="rsgm-cell-wrap"><a href="#soap" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" class="rsgm-patient-link">{?=isset_or($value.nm_pasien)?}</a></td>
           <td style="white-space: nowrap;"><a href="#layanan_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}">{?=isset_or($value.no_rawat)?}</a></td>
-          <td style="white-space: nowrap;">{?=isset_or($value.no_reg)?}</td>
-          <td style="white-space: nowrap;">{?=isset_or($value.nm_poli)?}</td>
-          <td style="white-space: nowrap;">{?=isset_or($value.nm_dokter)?}</td>
-          <td style="white-space: nowrap;">{?=isset_or($value.png_jawab)?}</td>
-          <td style="white-space: nowrap;">{?=isset_or($value.no_peserta)?}</td>
-          <td style="white-space: nowrap;">{?=isset_or($value.tgl_registrasi)?} {?=isset_or($value.jam_reg)?}</td>
-          <td style="white-space: nowrap;">{?=isset_or($value.stts)?}</td>
-          <td style="white-space: nowrap;">{?=isset_or($value.status_lanjut)?}</td>
-          <td style="white-space: nowrap;">{?=isset_or($value.status_bayar)?}</td>
+          <td style="white-space: nowrap;"><span class="rsgm-queue-pill">{?=isset_or($value.no_reg)?}</span></td>
+          <td class="rsgm-cell-wrap">{?=isset_or($value.nm_poli)?}</td>
+          <td class="rsgm-cell-wrap">{?=isset_or($value.nm_dokter)?}</td>
+          <td style="white-space: nowrap;">
+            {if: $value.kd_pj == 'BPJ'}
+              <span class="rsgm-badge rsgm-badge-emerald">{?=isset_or($value.png_jawab)?}</span>
+            {else}
+              <span class="rsgm-badge rsgm-badge-slate">{?=isset_or($value.png_jawab)?}</span>
+            {/if}
+            {if: !empty($value.no_peserta) && $value.no_peserta != '-'}
+              <span class="rsgm-cell-sub">{?=isset_or($value.no_peserta)?}</span>
+            {/if}
+          </td>
+          <td style="white-space: nowrap;">
+            <span>{?=isset_or($value.tgl_registrasi)?}</span>
+            <span class="rsgm-cell-sub">{?=isset_or($value.jam_reg)?}</span>
+          </td>
+          <td style="white-space: nowrap;">
+            {if: $value.stts == 'Sudah'}
+              <span class="rsgm-badge rsgm-badge-emerald">{?=isset_or($value.stts)?}</span>
+            {elseif: $value.stts == 'Dirujuk'}
+              <span class="rsgm-badge rsgm-badge-indigo">{?=isset_or($value.stts)?}</span>
+            {elseif: $value.stts == 'Batal' || $value.stts == 'Meninggal' || $value.stts == 'Pulang Paksa'}
+              <span class="rsgm-badge rsgm-badge-rose">{?=isset_or($value.stts)?}</span>
+            {else}
+              <span class="rsgm-badge rsgm-badge-amber">{?=isset_or($value.stts)?}</span>
+            {/if}
+          </td>
+          <td style="white-space: nowrap;">
+            {if: $value.status_lanjut == 'Ranap'}
+              <span class="rsgm-badge rsgm-badge-purple">Ranap</span>
+            {else}
+              <span class="rsgm-badge rsgm-badge-sky">{?=isset_or($value.status_lanjut)?}</span>
+            {/if}
+          </td>
+          <td style="white-space: nowrap;">
+            {if: $value.status_bayar == 'Sudah Bayar'}
+              <span class="rsgm-badge rsgm-badge-emerald">Lunas</span>
+            {else}
+              <span class="rsgm-badge rsgm-badge-rose">{?=isset_or($value.status_bayar)?}</span>
+            {/if}
+          </td>
         </tr>
         {/loop}
       </tbody>
@@ -245,14 +277,15 @@
         "next":     "›"
       },
       "search": "",
-      "searchPlaceholder": "Search..."
+      "searchPlaceholder": "Cari pasien, RM, dokter..."
     },
     "lengthChange": false,
-    "scrollX": true,
+    "scrollX": false,
+    "autoWidth": false,
     dom: "<<'data-table-title'><'datatable-search'f>><'row'<'col-sm-12'tr>><<'pmd-datatable-pagination' l i p>>"
   });
   var t = $(".dataTables").DataTable().rows().count();
-  $(".data-table-title").html('<h3 style="display:inline;float:left;margin-top:0;" class="hidden-xs">Total: ' + t + '</h3>');
+  $(".data-table-title").html('<h3 class="hidden-xs">Total: ' + t + '</h3>');
 </script>
 <script type="text/javascript">
    $(function () {
