@@ -1426,7 +1426,10 @@ body:has(#menuModal.in) .modal-backdrop,
     background-color: #555;
     overflow: auto;
     bottom: 0;
+    left: 0;
+    right: 0;
     position: fixed;
+    z-index: 1030;
 }
 
 .icon-bar a {
@@ -3885,11 +3888,12 @@ table.dataTable thead .sorting_desc:after {
 /* ==========================================================
    RSGM CLINICAL STATUS BAR DOCK (MODERN FOOTER)
    ========================================================== */
-body {
-    padding-bottom: 38px !important;
-}
+@media (min-width: 992px) {
+    body {
+        padding-bottom: 38px !important;
+    }
 
-footer.rsgm-status-bar {
+    footer.rsgm-status-bar {
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
@@ -4052,4 +4056,23 @@ footer.rsgm-status-bar {
     font-size: 11px !important;
     font-weight: 500 !important;
     color: #64748b !important;
+}
+}
+
+/* Sembunyikan footer status bar di mobile/tablet (< 992px) agar menu navigasi tidak tertutup */
+@media (max-width: 991px) {
+    footer.rsgm-status-bar,
+    .rsgm-status-bar {
+        display: none !important;
+    }
+    body {
+        padding-bottom: 56px !important;
+    }
+    .icon-bar {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 1030 !important;
+    }
 }

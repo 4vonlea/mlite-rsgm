@@ -50,13 +50,32 @@
 			<td  align = "center"  >
 			BUKTI PEMBAYARAN<br>
 				Kode Faktur : {?=isset_or($billing.kd_billing)?}<br>
+				Waktu : {?=isset_or($billing.tgl_billing)?} {?=isset_or($billing.jam_billing)?}<br>
 				Nama Pasien : {?=isset_or($pasien.nm_pasien)?}<br>
 				No RM : {?=isset_or($pasien.no_rkm_medis)?}<br>
 				Alamat : {?=isset_or($pasien.alamat)?}<br>
 			</td>
 			</tr>
-				<tr >
-			<td align = "right" >Jumlah
+			{if: !empty($rincian_alokasi)}
+			<tr>
+				<td>
+					<table width="100%" style="font-size: 8pt; border-top: 1px dashed #777; border-bottom: 1px dashed #777; margin: 4px 0;">
+						<tr>
+							<th align="left" style="padding: 2px 0;">Pos Layanan</th>
+							<th align="right" style="padding: 2px 0;">Dibayar</th>
+						</tr>
+						{loop: $rincian_alokasi}
+						<tr>
+							<td style="padding: 1px 0;">{?=isset_or($value.nama)?}</td>
+							<td align="right" style="padding: 1px 0;">Rp. {?= number_format($value.bayar,0,',','.')?}</td>
+						</tr>
+						{/loop}
+					</table>
+				</td>
+			</tr>
+			{/if}
+			<tr >
+			<td align = "right" >Jumlah Tagihan
 			Rp. {?= number_format($billing.jumlah_total,2,',','.')?}</td>
 		</tr>
 		<tr >
@@ -65,18 +84,30 @@
 		</tr>
 		<tr >
 			<td align = "right">Jumlah Bayar
-				Rp. {?= number_format($billing.jumlah_harus_bayar,2,',','.')?}</td>
+				Rp. {?= number_format($billing.jumlah_bayar,2,',','.')?}</td>
 		</tr>
+		{if: !empty($billing.keterangan)}
+		<tr>
+			<td style="font-size: 8pt;" align="right"><b>Keterangan:</b> {?=isset_or($billing.keterangan)?}</td>
+		</tr>
+		{/if}
+		{if: !empty($total_bayar_semua)}
+		<tr>
+			<td style="font-size: 8pt; color: #444;" align="right"><i>Total Akumulasi Masuk: Rp. {?= number_format($total_bayar_semua,0,',','.')?}</i></td>
+		</tr>
+		{/if}
 		<tr >
 
-			<td style="font-size: 9pt;" ><i>Terbilang : # {?=terbilang($billing.jumlah_harus_bayar,3,"")?} Rupiah # </i></td>
+			<td style="font-size: 9pt;" ><i>Terbilang : # {?=terbilang($billing.jumlah_bayar,3,"")?} Rupiah # </i></td>
 		</tr>
+		<tr>
 			<td >
 			<p align="center" >{?=isset_or($settings.kota)?},  {?=date('d-m-Y')?}<br>
 			 Kasir<br><br><br>
 			{?=isset_or($fullname)?}<br>
 			</p>
 		</td>
+		</tr>
 		</table></center>
 		</div>
 

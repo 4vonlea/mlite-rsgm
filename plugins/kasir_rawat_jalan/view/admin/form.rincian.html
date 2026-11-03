@@ -1,140 +1,167 @@
-<div id="form_rincian">
-  <div class="col-md-6">
-    <div class="panel panel-default">
-      <div class="panel-body">
-        <div class="form-horizontal">
-          <div class="form-group">
-            <label for="" class="col-sm-3 control-label">No. Faktur</label>
-            <div class="col-sm-9">
-              <input type="text" name="kd_billing" class="form-control" value="{?=isset_or($rawat_jalan.kd_billing)?}" placeholder="Kode billing" readonly>
-            </div>
+<div id="form_rincian" class="rsgm-reg-form" style="display:none; margin-bottom: 24px;">
+  <div class="rsgm-reg-shell">
+    <div class="rsgm-reg-grid">
+      <!-- Kolom 1: Faktur & Input Layanan -->
+      <div class="rsgm-reg-col rsgm-reg-col-main">
+        <div class="rsgm-reg-header">
+          <div class="rsgm-reg-title">
+            <span class="rsgm-reg-icon"><i class="fa fa-file-text-o"></i></span>
+            <span>Data Faktur &amp; Input Layanan</span>
           </div>
-          <div class="form-group">
-            <label for="" class="col-sm-3 control-label">Tanggal</label>
-            <div class="col-sm-4">
-              <input type="text" id="tgl_billing" name="tgl_billing" class="form-control tanggal" value="{?=date('Y-m-d')?}">
-            </div>
-            <label for="" class="col-sm-1 control-label">Jam</label>
-            <div class="col-sm-4">
-              <input type="text" id="jam_billing" name="jam_billing" class="form-control jam" value="{?=date('H:i:s')?}">
-            </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="rsgm-reg-badge-hint">Kasir Entri</span>
+            <button type="button" id="btn_tutup_form_rincian" class="btn btn-xs btn-default" style="border-radius: 6px; padding: 3px 10px; font-weight: 600; color: #64748b; border-color: #cbd5e1;" title="Sembunyikan Form">
+              <i class="fa fa-times"></i> Tutup
+            </button>
           </div>
-          <div class="form-group">
-            <label for="" class="col-sm-3 control-label">Id Rawat</label>
-            <div class="col-sm-9">
-              <input type="text" name="no_rawat" placeholder="ID Rawat Jalan" class="form-control" value="" readonly>
+        </div>
+        <div class="rsgm-reg-body">
+          <div class="form-horizontal">
+            <div class="form-group">
+              <label for="" class="col-sm-3 control-label">No. Faktur</label>
+              <div class="col-sm-9">
+                <input type="text" name="kd_billing" class="form-control" value="{?=isset_or($rawat_jalan.kd_billing)?}" placeholder="Kode billing" readonly style="background:#f8fafc; font-family:monospace; font-weight:600;">
+              </div>
             </div>
+            <div class="form-group">
+              <label for="" class="col-sm-3 control-label">Tanggal / Jam</label>
+              <div class="col-sm-5">
+                <input type="text" id="tgl_billing" name="tgl_billing" class="form-control tanggal" value="{?=date('Y-m-d')?}">
+              </div>
+              <div class="col-sm-4">
+                <input type="text" id="jam_billing" name="jam_billing" class="form-control jam" value="{?=date('H:i:s')?}">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="" class="col-sm-3 control-label">Id Rawat</label>
+              <div class="col-sm-9">
+                <input type="text" name="no_rawat" placeholder="ID Rawat Jalan" class="form-control" value="" readonly style="background:#f8fafc; font-family:monospace;">
+              </div>
+            </div>
+            {if: $rawat_jalan.input_kasir == 'ya'}
+            <div class="form-group">
+              <label for="" class="col-sm-3 control-label">Tindakan</label>
+              <div class="col-sm-9">
+                <input type="text" name="layanan" class="form-control" placeholder="Ketik nama tindakan / layanan...">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="" class="col-sm-3 control-label">Obat / BHP</label>
+              <div class="col-sm-9">
+                <input type="text" name="obat" class="form-control" placeholder="Ketik nama obat atau BHP...">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="" class="col-sm-3 control-label">Lab / Rad</label>
+              <div class="col-sm-5">
+                <input type="text" name="laboratorium" class="form-control" placeholder="Layanan Lab" value="" {if: empty($cek_laboratorium)}disabled{/if}>
+              </div>
+              <div class="col-sm-4">
+                <input type="text" name="radiologi" class="form-control" placeholder="Layanan Rad" value="" {if: empty($cek_radiologi)}disabled{/if}>
+              </div>
+            </div>
+            {/if}
           </div>
-          {if: $rawat_jalan.input_kasir == 'ya'}
-          <div class="form-group">
-            <label for="" class="col-sm-3 control-label">Tindakan</label>
-            <div class="col-sm-4">
-              <input type="text" name="layanan" class="form-control" placeholder="Input tindakan/layanan" value="">
-            </div>
-            <label for="" class="col-sm-1 control-label">Obat</label>
-            <div class="col-sm-4">
-              <input type="text" name="obat" class="form-control" placeholder="Input obat/BHP" value="">
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="" class="col-sm-3 control-label">Laboratorium</label>
-            <div class="col-sm-4">
-              <input type="text" name="laboratorium" class="form-control" placeholder="Nama Layanan" value="" {if: empty($cek_laboratorium)}disabled{/if}>
-            </div>
-            <label for="" class="col-sm-1 control-label">Rad.</label>
-            <div class="col-sm-4">
-              <input type="text" name="radiologi" class="form-control" placeholder="Nama Layanan" value="" {if: empty($cek_radiologi)}disabled{/if}>
-            </div>
-          </div>
-          {/if}
         </div>
       </div>
-    </div>
-  </div>
-  <div class="col-md-6">
-    <div id="layanan"></div>
-    <div id="obat"></div>
-    <div id="laboratorium"></div>
-    <div id="radiologi"></div>
-    <div class="panel panel-default">
-      <div class="panel-body">
-        <div class="form-horizontal">
-          <div class="form-group">
-            <label for="id_pasien" class="col-sm-3 control-label">Nomor RM</label>
-            <div class="col-sm-9">
-              <input type="text" name="no_rkm_medis" class="form-control" placeholder="Nomor Rekam Medik" value="" readonly>
-              <input type="hidden" name="tgl_registrasi_hidden" id="tgl_registrasi_hidden">
-              <input type="hidden" name="jam_reg_hidden" id="jam_reg_hidden">
-            </div>
+
+      <!-- Kolom 2: Identitas Pasien & Provider -->
+      <div class="rsgm-reg-col rsgm-reg-col-side rsgm-reg-col-editable">
+        <div class="rsgm-reg-header">
+          <div class="rsgm-reg-title">
+            <span class="rsgm-reg-icon"><i class="fa fa-user-circle"></i></span>
+            <span>Identitas Pasien &amp; Petugas</span>
           </div>
-          <div class="form-group">
-            <label for="nama_pasien" class="col-sm-3 control-label">Nama Pasien</label>
-            <div class="col-sm-9">
-              <input type="text" name="nm_pasien" class="form-control" placeholder="Nama pasien" value="" readonly>
+          <span class="rsgm-reg-badge-hint">Pelaksana Medis</span>
+        </div>
+        <div class="rsgm-reg-body">
+          <div id="layanan"></div>
+          <div id="obat"></div>
+          <div id="laboratorium"></div>
+          <div id="radiologi"></div>
+          <div class="form-horizontal">
+            <div class="form-group">
+              <label for="id_pasien" class="col-sm-3 control-label">No. RM</label>
+              <div class="col-sm-9">
+                <input type="text" name="no_rkm_medis" class="form-control" placeholder="Nomor Rekam Medik" value="" readonly style="background:#f8fafc; font-weight:700;">
+                <input type="hidden" name="tgl_registrasi_hidden" id="tgl_registrasi_hidden">
+                <input type="hidden" name="jam_reg_hidden" id="jam_reg_hidden">
+              </div>
             </div>
-          </div>
-          <div class="form-group">
-            <label for="tgl_perawatan" class="col-sm-3 control-label">Jenis</label>
-            <div class="col-sm-4">
-              <input type="hidden" name="kd_jenis_prw" class="form-control" value="">
-              <input type="text" name="nm_perawatan" id="nm_perawatan" class="form-control" placeholder="Nama tindakan/layanan/obat/BHP" value="" readonly>
-              <input type="hidden" name="kat" class="form-control" value="">
+            <div class="form-group">
+              <label for="nama_pasien" class="col-sm-3 control-label">Nama Pasien</label>
+              <div class="col-sm-9">
+                <input type="text" name="nm_pasien" class="form-control" placeholder="Nama pasien" value="" readonly style="background:#f8fafc; font-weight:700; color:#1e40af;">
+              </div>
             </div>
-            <label for="pnd" class="col-sm-1 control-label">Biaya</label>
-            <div class="col-sm-4">
-              <input type="text" id="biaya" name="biaya" class="form-control" value="" readonly>
+            <div class="form-group">
+              <label for="tgl_perawatan" class="col-sm-3 control-label">Jenis &amp; Biaya</label>
+              <div class="col-sm-5">
+                <input type="hidden" name="kd_jenis_prw" class="form-control" value="">
+                <input type="text" name="nm_perawatan" id="nm_perawatan" class="form-control" placeholder="Item terpilih" value="" readonly style="background:#f8fafc;">
+                <input type="hidden" name="kat" class="form-control" value="">
+              </div>
+              <div class="col-sm-4">
+                <div class="input-group">
+                  <span class="input-group-addon" style="font-size:11px; padding:2px 6px;">Rp</span>
+                  <input type="text" id="biaya" name="biaya" class="form-control" value="" readonly style="background:#f8fafc; font-weight:700; text-align:right;">
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="form-group" id="provider">
-            <label for="jenis" class="col-sm-3 control-label">Jenis Provider</label>
-            <div class="col-sm-6">
-              <select class="form-control" name="provider" id="pilih_provider">
-                <option value="">Pilih provider</option>
-                <option value="rawat_jl_dr">Dokter</option>
-                <option value="rawat_jl_pr">Perawat</option>
-                <option value="rawat_jl_drpr">Dokter & Perawat</option>
-              </select>
+            <div class="form-group" id="provider">
+              <label for="jenis" class="col-sm-3 control-label">Provider</label>
+              <div class="col-sm-6">
+                <select class="form-control" name="provider" id="pilih_provider">
+                  <option value="">Pilih provider</option>
+                  <option value="rawat_jl_dr">Dokter</option>
+                  <option value="rawat_jl_pr">Perawat</option>
+                  <option value="rawat_jl_drpr">Dokter &amp; Perawat</option>
+                </select>
+              </div>
+              <label for="" class="col-sm-1 control-label">Jml</label>
+              <div class="col-sm-2">
+                <input type="text" name="jml_tindakan" id="jml_tindakan" class="form-control" value="1" style="text-align:center; font-weight:700;">
+              </div>
             </div>
-            <label for="" class="col-sm-1 control-label">Jml</label>
-            <div class="col-sm-2">
-              <input type="text" name="jml_tindakan" id="jml_tindakan" class="form-control" value="1">
+            <div class="form-group" id="rawat_jl_dr">
+              <label for="" class="col-sm-3 control-label">Dokter</label>
+              <div class="col-sm-6">
+                <input type="text" name="nama_provider" id="nama_provider" class="form-control" placeholder="Cari nama dokter...">
+                <ul class="list-group" id="kode_providerList" style="z-index:1000;position:absolute;width:100%;"></ul>
+              </div>
+              <div class="col-sm-3">
+                <input type="text" name="kode_provider" id="kode_provider" class="form-control" placeholder="Kode" readonly style="background:#f8fafc;">
+              </div>
             </div>
-          </div>
-          <div class="form-group" id="rawat_jl_dr">
-            <label for="" class="col-sm-3 control-label">Nama Dokter</label>
-            <div class="col-sm-6">
-              <input type="text" name="nama_provider" id="nama_provider" class="form-control" value="">
-              <ul class="list-group" id="kode_providerList" style="z-index:1000;position:absolute;width:100%;"></ul>
+            <div class="form-group" id="rawat_jl_pr">
+              <label for="" class="col-sm-3 control-label">Perawat</label>
+              <div class="col-sm-6">
+                <input type="text" name="nama_provider2" id="nama_provider2" class="form-control" placeholder="Cari nama perawat...">
+                <ul class="list-group" id="kode_providerList2" style="z-index:1000;position:absolute;width:100%;"></ul>
+              </div>
+              <div class="col-sm-3">
+                <input type="text" name="kode_provider2" id="kode_provider2" class="form-control" placeholder="Kode" readonly style="background:#f8fafc;">
+              </div>
             </div>
-            <label for="" class="col-sm-1 control-label">Kode</label>
-            <div class="col-sm-2">
-              <input type="text" name="kode_provider" id="kode_provider" class="form-control" value="">
+            <div class="form-group" id="aturan_pakai">
+              <label class="col-md-3 control-label">Aturan Pakai</label>
+              <div class="col-sm-6">
+                <input type="text" class="form-control" name="aturan_pakai" id="aturan_pakai" placeholder="Ketik aturan pakai...">
+                <ul class="list-group" id="aturan_pakaiList" style="z-index:1000;position:absolute;width:100%;"></ul>
+              </div>
+              <label for="" class="col-sm-1 control-label">Jml</label>
+              <div class="col-sm-2">
+                <input type="text" name="jml" id="jml" class="form-control" value="10" style="text-align:center; font-weight:700;">
+              </div>
             </div>
-          </div>
-          <div class="form-group" id="rawat_jl_pr">
-            <label for="" class="col-sm-3 control-label">Nama Perawat</label>
-            <div class="col-sm-6">
-              <input type="text" name="nama_provider2" id="nama_provider2" class="form-control" value="">
-              <ul class="list-group" id="kode_providerList2" style="z-index:1000;position:absolute;width:100%;"></ul>
+            <div style="margin-top: 14px; text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
+              <button type="button" id="btn_batal_form_rincian" class="btn btn-default" style="padding: 7px 16px; font-weight: 600; border-radius: 6px; color: #64748b; border-color: #cbd5e1;">
+                <i class="fa fa-times"></i> Batal / Tutup
+              </button>
+              <button type="button" name="button" class="btn btn-primary" id="simpan_rincian" style="padding: 7px 20px; font-weight: 600; border-radius: 6px; box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
+                <i class="fa fa-plus-circle"></i><span class="hidden-xs"> Masukkan Rincian</span>
+              </button>
             </div>
-            <label for="" class="col-sm-1 control-label">Kode</label>
-            <div class="col-sm-2">
-              <input type="text" name="kode_provider2" id="kode_provider2" class="form-control" value="">
-            </div>
-          </div>
-          <div class="form-group" id="aturan_pakai">
-            <label class="col-md-3 control-label">Aturan Pakai</label>
-            <div class="col-sm-6">
-              <input type="text" class="form-control" name="aturan_pakai" id="aturan_pakai" value="">
-              <ul class="list-group" id="aturan_pakaiList" style="z-index:1000;position:absolute;width:100%;"></ul>
-            </div>
-            <label for="" class="col-sm-1 control-label">Jml</label>
-            <div class="col-sm-2">
-              <input type="text" name="jml" id="jml" class="form-control" value="10">
-            </div>
-          </div>
-          <div class="m-t-xl">
-            <button type="button" name="button" class="btn btn-primary" id="simpan_rincian"><i class="fa fa-save"></i><span class="hidden-xs"> Masukkan Rincian</span></button>
           </div>
         </div>
       </div>

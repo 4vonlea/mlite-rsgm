@@ -1,8 +1,13 @@
 <div class="row" id="manage" style="margin-bottom:100px;">
   <div class="col-md-12">
-    <div class="panel panel-default">
-      <div class="panel-heading rsgm-panel-head">
-        <h3 class="panel-title">Kelola Pasien Rawat Jalan</h3>
+    <div class="panel panel-default" style="border: 1px solid #dbe3ec; border-radius: 12px; box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05); overflow: visible; background: #ffffff;">
+      <div class="panel-heading rsgm-panel-head" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+        <h3 class="panel-title" style="display: flex; align-items: center; gap: 9px;">
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 7px; background: #eff6ff; color: #2563eb; font-size: 13.5px;">
+            <i class="fa fa-calculator"></i>
+          </span>
+          <span>Kasir Rawat Jalan</span>
+        </h3>
         <div class="rsgm-filter-bar">
           <div class="rsgm-date-range">
             <i class="fa fa-calendar rsgm-date-ico"></i>
@@ -18,7 +23,7 @@
           </div>
         </div>
       </div>
-      <div class="panel-body">
+      <div class="panel-body" style="padding: 20px;">
         <div class="row">
           <div id="notif"></div>
         </div>
@@ -40,7 +45,7 @@
 <script type="text/javascript">
    $(function () {
        $('.periode_rawat_jalan').datetimepicker({
-         defaultDate: '{?=date('Y-m-d')?}',
+         defaultDate: "{?=date('Y-m-d')?}",
          format: 'YYYY-MM-DD',
          locale: 'id'
        });

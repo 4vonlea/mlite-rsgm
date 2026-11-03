@@ -70,6 +70,7 @@ class Admin extends AdminModule
         foreach ($data as &$row) {
              $row['total_tagihan'] = $row['jumlah_harus_bayar'];
         }
+        unset($row);
 
         header('Content-Type: application/json');
         echo json_encode([
@@ -327,8 +328,36 @@ class Admin extends AdminModule
         exit;
     }
 
+    private function _checkSchema()
+    {
+        static $checked = false;
+        if ($checked) return;
+        $checked = true;
+        try {
+            $this->db()->pdo()->exec("CREATE TABLE IF NOT EXISTS `mlite_billing_rincian` (
+              `id` int(11) NOT NULL AUTO_INCREMENT,
+              `kd_billing` varchar(100) NOT NULL,
+              `no_rawat` varchar(17) NOT NULL,
+              `kategori` varchar(50) NOT NULL,
+              `nama` varchar(100) NOT NULL,
+              `tagihan` double NOT NULL DEFAULT 0,
+              `bayar` double NOT NULL DEFAULT 0,
+              `sisa` double NOT NULL DEFAULT 0,
+              `tgl_billing` date NOT NULL,
+              `jam_billing` time NOT NULL,
+              PRIMARY KEY (`id`),
+              KEY `kd_billing` (`kd_billing`),
+              KEY `no_rawat` (`no_rawat`),
+              KEY `kategori` (`kategori`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+        } catch (\Exception $e) {
+            // fail-safe
+        }
+    }
+
     public function anyManage()
     {
+        $this->_checkSchema();
         $tgl_kunjungan = date('Y-m-d');
         $tgl_kunjungan_akhir = date('Y-m-d');
         $status_periksa = '';
@@ -417,12 +446,17 @@ class Admin extends AdminModule
         $rows = $stmt->fetchAll();
 
         $this->assign['list'] = [];
+        $pdo = $this->db()->pdo();
         foreach ($rows as $row) {
-          $get_billing = $this->db('mlite_billing')->where('no_rawat', $row['no_rawat'])->like('kd_billing', 'RJ%')->oneArray();
-          if(empty($get_faktur)) {
-            $row['kd_billing'] = 'RJ.'.date('d.m.Y.H.i.s');
-            $row['tgl_billing'] = date('Y-m-d H:i');
+          $billings = $this->db('mlite_billing')->where('no_rawat', $row['no_rawat'])->like('kd_billing', 'RJ%')->toArray();
+          $total_bayar = 0;
+          foreach ($billings as $b) {
+            $total_bayar += floatval($b['jumlah_bayar']);
           }
+          $row['total_bayar'] = $total_bayar;
+          $row['jml_faktur'] = count($billings);
+          $row['kd_billing'] = 'RJ.'.date('d.m.Y.H.i.s');
+          $row['tgl_billing'] = date('Y-m-d H:i');
           $this->assign['list'][] = $row;
         }
 
@@ -594,6 +628,10 @@ class Admin extends AdminModule
           ]);
       }
 
+      if (!empty($_POST['no_rawat'])) {
+        $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->update(['status_bayar' => 'Belum Bayar']);
+      }
+
       exit();
     }
 
@@ -694,6 +732,7 @@ class Admin extends AdminModule
 
     public function anyRincian()
     {
+        $this->_checkSchema();
 
       $cek_laboratorium = $this->db('mlite_modules')->where('dir', 'laboratorium')->oneArray();
       $cek_radiologi = $this->db('mlite_modules')->where('dir', 'radiologi')->oneArray();
@@ -705,6 +744,19 @@ class Admin extends AdminModule
       if($poliklinik['stts_daftar'] == 'Lama') {
         $poliklinik['registrasi'] = $poliklinik['registrasilama'];
       }
+
+      $pasien = $this->db('reg_periksa')
+        ->join('pasien', 'pasien.no_rkm_medis=reg_periksa.no_rkm_medis')
+        ->join('poliklinik', 'poliklinik.kd_poli=reg_periksa.kd_poli')
+        ->join('dokter', 'dokter.kd_dokter=reg_periksa.kd_dokter')
+        ->join('penjab', 'penjab.kd_pj=reg_periksa.kd_pj')
+        ->where('reg_periksa.no_rawat', $_POST['no_rawat'])
+        ->select('pasien.*')
+        ->select('reg_periksa.*')
+        ->select(['nm_poli' => 'poliklinik.nm_poli'])
+        ->select(['nm_dokter' => 'dokter.nm_dokter'])
+        ->select(['png_jawab' => 'penjab.png_jawab'])
+        ->oneArray();
 
       $rows_rawat_jl_dr = $this->db('rawat_jl_dr')->where('no_rawat', $_POST['no_rawat'])->toArray();
       $rows_rawat_jl_pr = $this->db('rawat_jl_pr')->where('no_rawat', $_POST['no_rawat'])->toArray();
@@ -933,6 +985,132 @@ class Admin extends AdminModule
         $tambahan_biaya[] = $row;
       }
 
+      $no_rawat = $_POST['no_rawat'];
+
+      // Ambil data riwayat billing sebelumnya untuk no_rawat ini
+      $riwayat_billing = $this->db('mlite_billing')
+        ->leftJoin('mlite_users', 'mlite_users.id = mlite_billing.id_user')
+        ->where('no_rawat', $no_rawat)
+        ->like('kd_billing', 'RJ%')
+        ->asc('id_billing')
+        ->select('mlite_billing.*')
+        ->select(['nama_petugas' => 'mlite_users.fullname'])
+        ->toArray();
+
+      // Lampirkan rincian alokasi per faktur
+      foreach ($riwayat_billing as $k => $rb) {
+        $riwayat_billing[$k]['rincian_item'] = $this->db('mlite_billing_rincian')
+          ->where('kd_billing', $rb['kd_billing'])
+          ->where('bayar', '>', 0)
+          ->toArray();
+      }
+
+      // Ambil akumulasi pembayaran per pos dari mlite_billing_rincian
+      $rincian_sudah_bayar = $this->db('mlite_billing_rincian')
+        ->where('no_rawat', $no_rawat)
+        ->toArray();
+
+      $sudah_bayar_pos = [
+        'pendaftaran' => 0,
+        'tindakan' => 0,
+        'obat' => 0,
+        'laboratorium' => 0,
+        'radiologi' => 0,
+        'operasi' => 0,
+        'obat_pulang' => 0,
+        'tambahan' => 0
+      ];
+
+      foreach ($rincian_sudah_bayar as $rsb) {
+        if (isset($sudah_bayar_pos[$rsb['kategori']])) {
+          $sudah_bayar_pos[$rsb['kategori']] += floatval($rsb['bayar']);
+        }
+      }
+
+      $total_sudah_bayar_sebelumnya = 0;
+      foreach ($riwayat_billing as $billing_row) {
+        $total_sudah_bayar_sebelumnya += floatval($billing_row['jumlah_bayar']);
+      }
+
+      // Fallback untuk riwayat lama yang belum ada di mlite_billing_rincian
+      $sum_rincian = array_sum($sudah_bayar_pos);
+      if ($sum_rincian == 0 && $total_sudah_bayar_sebelumnya > 0) {
+        $sisa_alokasi = $total_sudah_bayar_sebelumnya;
+        $tagihan_temp = [
+          'pendaftaran' => floatval($poliklinik['registrasi']),
+          'radiologi' => floatval($jumlah_total_radiologi),
+          'laboratorium' => floatval($jumlah_total_lab),
+          'tindakan' => floatval($jumlah_total),
+          'obat' => floatval($jumlah_total_obat),
+          'operasi' => floatval($jumlah_total_operasi + $jumlah_total_obat_operasi),
+          'obat_pulang' => floatval($jumlah_total_obat_pulang),
+          'tambahan' => floatval($jumlah_total_tambahan)
+        ];
+        foreach ($tagihan_temp as $kat => $tag) {
+          if ($sisa_alokasi <= 0) break;
+          $byr = min($tag, $sisa_alokasi);
+          $sudah_bayar_pos[$kat] = $byr;
+          $sisa_alokasi -= $byr;
+        }
+      }
+
+      $biaya_registrasi = floatval($poliklinik['registrasi']);
+      $biaya_operasi_total = floatval($jumlah_total_operasi + $jumlah_total_obat_operasi);
+
+      $pos_billing = [
+        'pendaftaran' => [
+          'nama' => 'Pendaftaran',
+          'tagihan' => $biaya_registrasi,
+          'sudah_bayar' => $sudah_bayar_pos['pendaftaran'],
+          'sisa' => max(0, $biaya_registrasi - $sudah_bayar_pos['pendaftaran'])
+        ],
+        'tindakan' => [
+          'nama' => 'Tindakan',
+          'tagihan' => floatval($jumlah_total),
+          'sudah_bayar' => $sudah_bayar_pos['tindakan'],
+          'sisa' => max(0, floatval($jumlah_total) - $sudah_bayar_pos['tindakan'])
+        ],
+        'obat' => [
+          'nama' => 'Obat dan BHP',
+          'tagihan' => floatval($jumlah_total_obat),
+          'sudah_bayar' => $sudah_bayar_pos['obat'],
+          'sisa' => max(0, floatval($jumlah_total_obat) - $sudah_bayar_pos['obat'])
+        ],
+        'laboratorium' => [
+          'nama' => 'Laboratorium',
+          'tagihan' => floatval($jumlah_total_lab),
+          'sudah_bayar' => $sudah_bayar_pos['laboratorium'],
+          'sisa' => max(0, floatval($jumlah_total_lab) - $sudah_bayar_pos['laboratorium'])
+        ],
+        'radiologi' => [
+          'nama' => 'Radiologi',
+          'tagihan' => floatval($jumlah_total_radiologi),
+          'sudah_bayar' => $sudah_bayar_pos['radiologi'],
+          'sisa' => max(0, floatval($jumlah_total_radiologi) - $sudah_bayar_pos['radiologi'])
+        ],
+        'operasi' => [
+          'nama' => 'Operasi',
+          'tagihan' => $biaya_operasi_total,
+          'sudah_bayar' => $sudah_bayar_pos['operasi'],
+          'sisa' => max(0, $biaya_operasi_total - $sudah_bayar_pos['operasi'])
+        ],
+        'obat_pulang' => [
+          'nama' => 'Obat Pulang',
+          'tagihan' => floatval($jumlah_total_obat_pulang),
+          'sudah_bayar' => $sudah_bayar_pos['obat_pulang'],
+          'sisa' => max(0, floatval($jumlah_total_obat_pulang) - $sudah_bayar_pos['obat_pulang'])
+        ],
+        'tambahan' => [
+          'nama' => 'Biaya Tambahan',
+          'tagihan' => floatval($jumlah_total_tambahan),
+          'sudah_bayar' => $sudah_bayar_pos['tambahan'],
+          'sisa' => max(0, floatval($jumlah_total_tambahan) - $sudah_bayar_pos['tambahan'])
+        ]
+      ];
+
+      $grand_total_tagihan = $biaya_registrasi + $jumlah_total + $jumlah_total_obat + $jumlah_total_lab + $jumlah_total_radiologi + $biaya_operasi_total + $jumlah_total_obat_pulang + $jumlah_total_tambahan;
+      $grand_total_sisa = max(0, $grand_total_tagihan - $total_sudah_bayar_sebelumnya);
+
       echo $this->draw('rincian.html', [
         'rawat_jl_dr' => $rawat_jl_dr,
         'rawat_jl_pr' => $rawat_jl_pr,
@@ -943,7 +1121,7 @@ class Admin extends AdminModule
         'jumlah_total_embalase' => $jumlah_total_embalase,
         'jumlah_total_tuslah' => $jumlah_total_tuslah,
         'poliklinik' => htmlspecialchars_array($poliklinik),
-        'biaya_registrasi' => htmlspecialchars_array($poliklinik)['registrasi'],
+        'biaya_registrasi' => $biaya_registrasi,
         'detail_pemberian_obat' => htmlspecialchars_array($detail_pemberian_obat),
         'periksa_lab' => $periksa_lab,
         'jumlah_total_lab' => $jumlah_total_lab,
@@ -951,10 +1129,17 @@ class Admin extends AdminModule
         'jumlah_total_radiologi' => $jumlah_total_radiologi,
         'jumlah_total_operasi' => $jumlah_total_operasi,
         'jumlah_total_obat_operasi' => $jumlah_total_obat_operasi,
+        'biaya_operasi_total' => $biaya_operasi_total,
         'resep_pulang' => htmlspecialchars_array($resep_pulang),
         'jumlah_total_obat_pulang' => $jumlah_total_obat_pulang,
         'tambahan_biaya' => $tambahan_biaya,
         'jumlah_total_tambahan' => $jumlah_total_tambahan,
+        'pos_billing' => $pos_billing,
+        'riwayat_billing' => $riwayat_billing,
+        'total_sudah_bayar_sebelumnya' => $total_sudah_bayar_sebelumnya,
+        'grand_total_tagihan' => $grand_total_tagihan,
+        'grand_total_sisa' => $grand_total_sisa,
+        'pasien' => htmlspecialchars_array($pasien ?? []),
         'no_rawat' => htmlspecialchars($_POST['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
       ]);
       exit();
@@ -1069,23 +1254,32 @@ class Admin extends AdminModule
     public function postSave()
     {
       $_POST['id_user']	= $this->core->getUserInfo('id');
+      $tgl_jurnal = !empty($_POST['tgl_billing']) ? $_POST['tgl_billing'] : date('Y-m-d');
+
+      $parseJumlah = function($val) {
+          if (strpos($val, ',') !== false) {
+              $val = substr($val, 0, strpos($val, ','));
+          }
+          return floatval(preg_replace('/[^0-9]/', '', $val));
+      };
 
       if($this->settings('keuangan', 'jurnal_kasir') == 1) {
           // jurnal_pendaftaran //
-          if($_POST['jurnal_pendaftaran'] != '0,00') {
+          $jumlah_pendaftaran = isset($_POST['jurnal_pendaftaran']) ? $parseJumlah($_POST['jurnal_pendaftaran']) : 0;
+          if($jumlah_pendaftaran > 0) {
               $no_jurnal_pendaftaran = $this->core->setNoJurnal();
               $keterangan = $this->db('mlite_rekening')
                   ->where('kd_rek', $this->settings('keuangan', 'akun_kredit_pendaftaran'))
                   ->oneArray();
-              $jumlah = str_replace(".", "", substr($_POST['jurnal_pendaftaran'], 0, strpos($_POST['jurnal_pendaftaran'], ",")));
+              $jumlah = $jumlah_pendaftaran;
               
               $query_jurnal_pendaftaran = $this->db('mlite_jurnal')->save([
                   'no_jurnal' => $no_jurnal_pendaftaran,
                   'no_bukti' => $_POST['no_rawat'],
-                  'tgl_jurnal' => date('Y-m-d'),
+                  'tgl_jurnal' => $tgl_jurnal,
                   'jenis' => 'U',
-                  'kegiatan' => $keterangan['nm_rek'],
-                  'keterangan' => $keterangan['nm_rek'].' '.$_POST['no_rawat'].'. Diposting oleh '.$this->core->getUserInfo('fullname', null, true).'.'
+                  'kegiatan' => $keterangan['nm_rek'] ?? 'Pendaftaran',
+                  'keterangan' => ($keterangan['nm_rek'] ?? 'Pendaftaran').' '.$_POST['no_rawat'].'. Diposting oleh '.$this->core->getUserInfo('fullname', null, true).'.'
               ]);
               
               if($query_jurnal_pendaftaran) {
@@ -1112,20 +1306,21 @@ class Admin extends AdminModule
           // End jurnal_pendaftaran // 
 
           // jurnal_tindakan_ralan //
-          if($_POST['jurnal_tindakan_ralan'] != '0,00') {
+          $jumlah_tindakan = isset($_POST['jurnal_tindakan_ralan']) ? $parseJumlah($_POST['jurnal_tindakan_ralan']) : 0;
+          if($jumlah_tindakan > 0) {
               $no_jurnal_tindakan_ralan = $this->core->setNoJurnal();
               $keterangan = $this->db('mlite_rekening')
                   ->where('kd_rek', $this->settings('keuangan', 'akun_kredit_tindakan'))
                   ->oneArray();
-              $jumlah = str_replace(".", "", substr($_POST['jurnal_tindakan_ralan'], 0, strpos($_POST['jurnal_tindakan_ralan'], ",")));
+              $jumlah = $jumlah_tindakan;
               
               $query_jurnal_tindakan_ralan = $this->db('mlite_jurnal')->save([
                   'no_jurnal' => $no_jurnal_tindakan_ralan,
                   'no_bukti' => $_POST['no_rawat'],
-                  'tgl_jurnal' => date('Y-m-d'),
+                  'tgl_jurnal' => $tgl_jurnal,
                   'jenis' => 'U',
-                  'kegiatan' => $keterangan['nm_rek'],
-                  'keterangan' => $keterangan['nm_rek'].' '.$_POST['no_rawat'].'. Diposting oleh '.$this->core->getUserInfo('fullname', null, true).'.'
+                  'kegiatan' => $keterangan['nm_rek'] ?? 'Tindakan',
+                  'keterangan' => ($keterangan['nm_rek'] ?? 'Tindakan').' '.$_POST['no_rawat'].'. Diposting oleh '.$this->core->getUserInfo('fullname', null, true).'.'
               ]);
               
               if($query_jurnal_tindakan_ralan) {
@@ -1152,20 +1347,21 @@ class Admin extends AdminModule
           // End jurnal_tindakan_ralan //
 
           // jurnal_obat_bhp //
-          if($_POST['jurnal_obat_bhp'] != '0,00') {
+          $jumlah_obat = isset($_POST['jurnal_obat_bhp']) ? $parseJumlah($_POST['jurnal_obat_bhp']) : 0;
+          if($jumlah_obat > 0) {
               $no_jurnal_obat_bhp = $this->core->setNoJurnal();
               $keterangan = $this->db('mlite_rekening')
                   ->where('kd_rek', $this->settings('keuangan', 'akun_kredit_obat_bhp'))
                   ->oneArray();
-              $jumlah = str_replace(".", "", substr($_POST['jurnal_obat_bhp'], 0, strpos($_POST['jurnal_obat_bhp'], ",")));
+              $jumlah = $jumlah_obat;
               
               $query_jurnal_obat_bhp = $this->db('mlite_jurnal')->save([
                   'no_jurnal' => $no_jurnal_obat_bhp,
                   'no_bukti' => $_POST['no_rawat'],
-                  'tgl_jurnal' => date('Y-m-d'),
+                  'tgl_jurnal' => $tgl_jurnal,
                   'jenis' => 'U',
-                  'kegiatan' => $keterangan['nm_rek'],
-                  'keterangan' => $keterangan['nm_rek'].' '.$_POST['no_rawat'].'. Diposting oleh '.$this->core->getUserInfo('fullname', null, true).'.'
+                  'kegiatan' => $keterangan['nm_rek'] ?? 'Obat dan BHP',
+                  'keterangan' => ($keterangan['nm_rek'] ?? 'Obat dan BHP').' '.$_POST['no_rawat'].'. Diposting oleh '.$this->core->getUserInfo('fullname', null, true).'.'
               ]);
               
               if($query_jurnal_obat_bhp) {
@@ -1192,20 +1388,21 @@ class Admin extends AdminModule
           // End jurnal_obat_bhp //
 
           // jurnal_laboratorium //
-          if($_POST['jurnal_laboratorium'] != '0,00') {
+          $jumlah_lab = isset($_POST['jurnal_laboratorium']) ? $parseJumlah($_POST['jurnal_laboratorium']) : 0;
+          if($jumlah_lab > 0) {
               $no_jurnal_laboratorium = $this->core->setNoJurnal();
               $keterangan = $this->db('mlite_rekening')
                   ->where('kd_rek', $this->settings('keuangan', 'akun_kredit_laboratorium'))
                   ->oneArray();
-              $jumlah = str_replace(".", "", substr($_POST['jurnal_laboratorium'], 0, strpos($_POST['jurnal_laboratorium'], ",")));
+              $jumlah = $jumlah_lab;
               
               $query_jurnal_laboratorium = $this->db('mlite_jurnal')->save([
                   'no_jurnal' => $no_jurnal_laboratorium,
                   'no_bukti' => $_POST['no_rawat'],
-                  'tgl_jurnal' => date('Y-m-d'),
+                  'tgl_jurnal' => $tgl_jurnal,
                   'jenis' => 'U',
-                  'kegiatan' => $keterangan['nm_rek'],
-                  'keterangan' => $keterangan['nm_rek'].' '.$_POST['no_rawat'].'. Diposting oleh '.$this->core->getUserInfo('fullname', null, true).'.'
+                  'kegiatan' => $keterangan['nm_rek'] ?? 'Laboratorium',
+                  'keterangan' => ($keterangan['nm_rek'] ?? 'Laboratorium').' '.$_POST['no_rawat'].'. Diposting oleh '.$this->core->getUserInfo('fullname', null, true).'.'
               ]);
               
               if($query_jurnal_laboratorium) {
@@ -1232,20 +1429,21 @@ class Admin extends AdminModule
           // End jurnal_laboratorium //
 
           // jurnal_radiologi//
-          if($_POST['jurnal_radiologi'] != '0,00') {
+          $jumlah_radiologi = isset($_POST['jurnal_radiologi']) ? $parseJumlah($_POST['jurnal_radiologi']) : 0;
+          if($jumlah_radiologi > 0) {
               $no_jurnal_radiologi = $this->core->setNoJurnal();
               $keterangan = $this->db('mlite_rekening')
                   ->where('kd_rek', $this->settings('keuangan', 'akun_kredit_radiologi'))
                   ->oneArray();
-              $jumlah = str_replace(".", "", substr($_POST['jurnal_radiologi'], 0, strpos($_POST['jurnal_radiologi'], ",")));
+              $jumlah = $jumlah_radiologi;
               
               $query_jurnal_radiologi = $this->db('mlite_jurnal')->save([
                   'no_jurnal' => $no_jurnal_radiologi,
                   'no_bukti' => $_POST['no_rawat'],
-                  'tgl_jurnal' => date('Y-m-d'),
+                  'tgl_jurnal' => $tgl_jurnal,
                   'jenis' => 'U',
-                  'kegiatan' => $keterangan['nm_rek'],
-                  'keterangan' => $keterangan['nm_rek'].' '.$_POST['no_rawat'].'. Diposting oleh '.$this->core->getUserInfo('fullname', null, true).'.'
+                  'kegiatan' => $keterangan['nm_rek'] ?? 'Radiologi',
+                  'keterangan' => ($keterangan['nm_rek'] ?? 'Radiologi').' '.$_POST['no_rawat'].'. Diposting oleh '.$this->core->getUserInfo('fullname', null, true).'.'
               ]);
               
               if($query_jurnal_radiologi) {
@@ -1278,9 +1476,103 @@ class Admin extends AdminModule
       unset($_POST['jurnal_laboratorium']);
       unset($_POST['jurnal_radiologi']);
 
-      $query = $this->db('mlite_billing')->save($_POST);
+      $alokasi = isset($_POST['alokasi']) ? json_decode($_POST['alokasi'], true) : [];
+      $sisa_setelah_bayar = isset($_POST['sisa_setelah_bayar']) ? floatval(preg_replace('/[^0-9]/', '', $_POST['sisa_setelah_bayar'])) : 0;
+
+      unset($_POST['alokasi']);
+      unset($_POST['pelayanan']);
+      unset($_POST['nama_pelayanan']);
+      unset($_POST['sisa_setelah_bayar']);
+      unset($_POST['catatan_billing']);
+      unset($_POST['cara_bayar']);
+      unset($_POST['jumlah_total_layanan']);
+      unset($_POST['total_sudah_bayar']);
+
+      $kd_billing = !empty($_POST['kd_billing']) ? $_POST['kd_billing'] : ('RJ.' . date('d.m.Y.H.i.s'));
+      $cek_kd = $this->db('mlite_billing')->where('kd_billing', $kd_billing)->oneArray();
+      if ($cek_kd) {
+        $kd_billing = 'RJ.' . date('d.m.Y.H.i.s') . '.' . rand(10, 99);
+      }
+      $_POST['kd_billing'] = $kd_billing;
+
+      $data_billing = [
+        'kd_billing' => $_POST['kd_billing'],
+        'no_rawat' => $_POST['no_rawat'],
+        'jumlah_total' => preg_replace('/[^0-9]/', '', $_POST['jumlah_total'] ?? 0),
+        'potongan' => preg_replace('/[^0-9]/', '', $_POST['potongan'] ?? 0),
+        'jumlah_harus_bayar' => preg_replace('/[^0-9]/', '', $_POST['jumlah_harus_bayar'] ?? 0),
+        'jumlah_bayar' => preg_replace('/[^0-9]/', '', $_POST['jumlah_bayar'] ?? 0),
+        'tgl_billing' => $_POST['tgl_billing'],
+        'jam_billing' => $_POST['jam_billing'],
+        'id_user' => $_POST['id_user'],
+        'keterangan' => $_POST['keterangan'] ?? 'Tunai'
+      ];
+
+      $query = $this->db('mlite_billing')->save($data_billing);
       if($query) {
-        $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->update(['status_bayar' => 'Sudah Bayar']);
+        if (!empty($alokasi) && is_array($alokasi)) {
+          foreach ($alokasi as $kat => $val) {
+            $bayar_pos = floatval($val['bayar'] ?? 0);
+            if ($bayar_pos > 0 || floatval($val['tagihan'] ?? 0) > 0) {
+              $this->db('mlite_billing_rincian')->save([
+                'kd_billing' => $_POST['kd_billing'],
+                'no_rawat' => $_POST['no_rawat'],
+                'kategori' => $kat,
+                'nama' => $val['nama'] ?? $kat,
+                'tagihan' => floatval($val['tagihan'] ?? 0),
+                'bayar' => $bayar_pos,
+                'sisa' => floatval($val['sisa'] ?? 0),
+                'tgl_billing' => $_POST['tgl_billing'],
+                'jam_billing' => $_POST['jam_billing']
+              ]);
+            }
+          }
+        }
+
+        // Cek total tagihan seluruh layanan untuk no_rawat ini
+        $no_rawat = $_POST['no_rawat'];
+        $poliklinik = $this->db('poliklinik')->join('reg_periksa', 'reg_periksa.kd_poli=poliklinik.kd_poli')->where('reg_periksa.no_rawat', $no_rawat)->oneArray();
+        $biaya_reg = floatval($poliklinik['registrasi'] ?? 0);
+
+        $pdo = $this->db()->pdo();
+
+        $qDr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_dr WHERE no_rawat = ?");
+        $qDr->execute([$no_rawat]);
+        $total_dr = floatval($qDr->fetchColumn());
+
+        $qPr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_pr WHERE no_rawat = ?");
+        $qPr->execute([$no_rawat]);
+        $total_pr = floatval($qPr->fetchColumn());
+
+        $qDrpr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_drpr WHERE no_rawat = ?");
+        $qDrpr->execute([$no_rawat]);
+        $total_drpr = floatval($qDrpr->fetchColumn());
+
+        $qObat = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM detail_pemberian_obat WHERE no_rawat = ? AND status = 'Ralan'");
+        $qObat->execute([$no_rawat]);
+        $total_obat = floatval($qObat->fetchColumn());
+
+        $qLab = $pdo->prepare("SELECT COALESCE(SUM(biaya), 0) FROM periksa_lab WHERE no_rawat = ? AND status = 'Ralan'");
+        $qLab->execute([$no_rawat]);
+        $total_lab = floatval($qLab->fetchColumn());
+
+        $qRad = $pdo->prepare("SELECT COALESCE(SUM(biaya), 0) FROM periksa_radiologi WHERE no_rawat = ? AND status = 'Ralan'");
+        $qRad->execute([$no_rawat]);
+        $total_rad = floatval($qRad->fetchColumn());
+
+        $qTambahan = $pdo->prepare("SELECT COALESCE(SUM(besar_biaya), 0) FROM tambahan_biaya WHERE no_rawat = ?");
+        $qTambahan->execute([$no_rawat]);
+        $total_tambahan = floatval($qTambahan->fetchColumn());
+
+        $total_layanan = $biaya_reg + $total_dr + $total_pr + $total_drpr + $total_obat + $total_lab + $total_rad + $total_tambahan;
+
+        // Total yang sudah masuk dari mlite_billing (termasuk yang barusan)
+        $qByr = $pdo->prepare("SELECT COALESCE(SUM(jumlah_bayar), 0) FROM mlite_billing WHERE no_rawat = ? AND kd_billing LIKE 'RJ%'");
+        $qByr->execute([$no_rawat]);
+        $total_terbayar = floatval($qByr->fetchColumn());
+
+        $status_bayar = ($total_terbayar >= $total_layanan && $total_layanan > 0) ? 'Sudah Bayar' : 'Belum Bayar';
+        $this->db('reg_periksa')->where('no_rawat', $no_rawat)->update(['status_bayar' => $status_bayar]);
       }
       exit();
     }
@@ -2106,6 +2398,22 @@ class Admin extends AdminModule
         /* ===============================
         * PREPARE TEMPLATE DATA
         * =============================== */
+        $riwayat_pembayaran = $this->db('mlite_billing')
+          ->where('no_rawat', $_GET['no_rawat'])
+          ->like('kd_billing', 'RJ%')
+          ->asc('id_billing')
+          ->toArray();
+        $total_terbayar_semua = 0;
+        foreach ($riwayat_pembayaran as $k => $rp) {
+          $total_terbayar_semua += floatval($rp['jumlah_bayar']);
+          $riwayat_pembayaran[$k]['items'] = $this->db('mlite_billing_rincian')
+            ->where('kd_billing', $rp['kd_billing'])
+            ->where('bayar', '>', 0)
+            ->toArray();
+        }
+        $this->tpl->set('riwayat_pembayaran', $riwayat_pembayaran);
+        $this->tpl->set('total_terbayar_semua', $total_terbayar_semua);
+
         $this->tpl->set('billing_obat', $this->settings->get('settings.billing_obat'));
         $this->tpl->set('wagateway', $this->settings->get('wagateway'));
         $this->tpl->set('billing', $result);
@@ -2151,10 +2459,49 @@ class Admin extends AdminModule
         echo $html;
         break;
         case "kecil":
-        $result = $this->db('mlite_billing')->where('no_rawat', $_GET['no_rawat'])->like('kd_billing', 'RJ%')->desc('id_billing')->oneArray();
-        $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $_GET['no_rawat'])->oneArray();
+        $kd_billing = isset($_GET['kd_billing']) ? $_GET['kd_billing'] : '';
+        if (!empty($kd_billing)) {
+          $result = $this->db('mlite_billing')->where('kd_billing', $kd_billing)->oneArray();
+        } else {
+          $result = $this->db('mlite_billing')->where('no_rawat', $_GET['no_rawat'])->like('kd_billing', 'RJ%')->desc('id_billing')->oneArray();
+        }
+        $no_rawat = $result['no_rawat'] ?? ($_GET['no_rawat'] ?? '');
+        $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
         $pasien = $this->db('pasien')->where('no_rkm_medis', $reg_periksa['no_rkm_medis'])->oneArray();
-        echo $this->draw('billing.kecil.html', ['billing' => htmlspecialchars_array($result), 'pasien' => $pasien, 'fullname' => $this->core->getUserInfo('fullname', null, true)]);
+
+        // Ambil rincian alokasi per pos untuk faktur ini
+        $rincian_alokasi = [];
+        if (!empty($result['kd_billing'])) {
+          $rincian_alokasi = $this->db('mlite_billing_rincian')
+            ->where('kd_billing', $result['kd_billing'])
+            ->where('bayar', '>', 0)
+            ->toArray();
+        }
+
+        // Cari petugas kasir yang mencatat faktur ini
+        $kasir_faktur = $this->db('mlite_users')->where('id', $result['id_user'] ?? 0)->oneArray();
+        $nama_kasir = !empty($kasir_faktur['fullname']) ? $kasir_faktur['fullname'] : $this->core->getUserInfo('fullname', null, true);
+
+        // Hitung total akumulasi sampai faktur ini
+        $total_bayar_semua = 0;
+        $semua_faktur = $this->db('mlite_billing')
+          ->where('no_rawat', $no_rawat)
+          ->like('kd_billing', 'RJ%')
+          ->toArray();
+        foreach ($semua_faktur as $sf) {
+          if ($sf['id_billing'] <= ($result['id_billing'] ?? 0)) {
+            $total_bayar_semua += floatval($sf['jumlah_bayar']);
+          }
+        }
+
+        echo $this->draw('billing.kecil.html', [
+          'billing' => htmlspecialchars_array($result),
+          'pasien' => $pasien,
+          'fullname' => $nama_kasir,
+          'rincian_alokasi' => $rincian_alokasi,
+          'total_bayar_semua' => $total_bayar_semua,
+          'settings' => $this->settings('settings')
+        ]);
         break;
       }
       exit();
@@ -2213,9 +2560,11 @@ class Admin extends AdminModule
       exit();
     }
 
-    public function getJavascript()
+    public function getJavascript(...$args)
     {
         header('Content-type: text/javascript');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
         echo $this->draw(MODULES.'/kasir_rawat_jalan/js/admin/kasir_rawat_jalan.js');
         exit();
     }
@@ -2286,19 +2635,92 @@ class Admin extends AdminModule
 
     public function anyReport()
     {
+        $this->_checkSchema();
         $this->_addHeaderFiles();
         $awal = isset($_GET['awal']) ? $_GET['awal'] : date('Y-m-d').' 00:00:00';
         $akhir = isset($_GET['akhir']) ? $_GET['akhir'] : date('Y-m-d').' 23:59:59';
         $penjamin = isset($_GET['penjamin']) ? $_GET['penjamin'] : '';
 
         $pdo = $this->db()->pdo();
-        $stmt = $pdo->prepare("SELECT b.id_user, COALESCE(p.nama, u.fullname) AS nama_kasir, COUNT(*) transaksi, IFNULL(SUM(b.jumlah_harus_bayar),0) total, MIN(CONCAT(b.tgl_billing,' ',b.jam_billing)) mulai, MAX(CONCAT(b.tgl_billing,' ',b.jam_billing)) selesai FROM mlite_billing b INNER JOIN ( SELECT no_rawat, MAX(CONCAT(tgl_billing,' ',jam_billing)) AS max_waktu FROM mlite_billing WHERE kd_billing LIKE 'RJ%' AND CONCAT(tgl_billing,' ',jam_billing) BETWEEN ? AND ? GROUP BY no_rawat ) latest ON latest.no_rawat=b.no_rawat AND CONCAT(b.tgl_billing,' ',b.jam_billing)=latest.max_waktu LEFT JOIN reg_periksa rp ON rp.no_rawat=b.no_rawat LEFT JOIN mlite_users u ON u.id=b.id_user LEFT JOIN pegawai p ON p.nik=u.username WHERE b.kd_billing LIKE 'RJ%' GROUP BY b.id_user, nama_kasir");
+        $stmt = $pdo->prepare("SELECT 
+            b.id_user, 
+            COALESCE(p.nama, u.fullname, 'Kasir') AS nama_kasir, 
+            COUNT(b.id_billing) AS transaksi, 
+            IFNULL(SUM(b.jumlah_bayar), 0) AS total, 
+            MIN(CONCAT(b.tgl_billing,' ',b.jam_billing)) AS mulai, 
+            MAX(CONCAT(b.tgl_billing,' ',b.jam_billing)) AS selesai 
+        FROM mlite_billing b 
+        LEFT JOIN mlite_users u ON u.id = b.id_user 
+        LEFT JOIN pegawai p ON p.nik = u.username 
+        WHERE b.kd_billing LIKE 'RJ%' 
+        AND CONCAT(b.tgl_billing,' ',b.jam_billing) BETWEEN ? AND ? 
+        GROUP BY b.id_user, nama_kasir 
+        ORDER BY total DESC");
         $stmt->execute([$awal, $akhir]);
         $rows = $stmt->fetchAll();
 
-        $detailStmt = $pdo->prepare("SELECT b.id_user, COALESCE(p.nama, u.fullname) AS nama_kasir, b.kd_billing, b.no_rawat, rp.no_rkm_medis, pas.nm_pasien, pol.nm_poli, dok.nm_dokter, pj.png_jawab, b.jumlah_harus_bayar, CONCAT(b.tgl_billing,' ',b.jam_billing) AS waktu, b.keterangan FROM mlite_billing b INNER JOIN ( SELECT no_rawat, MAX(CONCAT(tgl_billing,' ',jam_billing)) AS max_waktu FROM mlite_billing WHERE kd_billing LIKE 'RJ%' AND CONCAT(tgl_billing,' ',jam_billing) BETWEEN ? AND ? GROUP BY no_rawat ) latest ON latest.no_rawat=b.no_rawat AND CONCAT(b.tgl_billing,' ',b.jam_billing)=latest.max_waktu LEFT JOIN reg_periksa rp ON rp.no_rawat=b.no_rawat LEFT JOIN pasien pas ON pas.no_rkm_medis=rp.no_rkm_medis LEFT JOIN poliklinik pol ON pol.kd_poli=rp.kd_poli LEFT JOIN dokter dok ON dok.kd_dokter=rp.kd_dokter LEFT JOIN penjab pj ON pj.kd_pj=rp.kd_pj LEFT JOIN mlite_users u ON u.id=b.id_user LEFT JOIN pegawai p ON p.nik=u.username WHERE b.kd_billing LIKE 'RJ%' ORDER BY waktu ASC");
+        $detailStmt = $pdo->prepare("SELECT 
+            b.id_billing,
+            b.id_user, 
+            COALESCE(p.nama, u.fullname, 'Kasir') AS nama_kasir, 
+            b.kd_billing, 
+            b.no_rawat, 
+            rp.no_rkm_medis, 
+            pas.nm_pasien, 
+            pol.nm_poli, 
+            dok.nm_dokter, 
+            pj.png_jawab, 
+            b.jumlah_bayar, 
+            b.jumlah_harus_bayar,
+            CONCAT(b.tgl_billing,' ',b.jam_billing) AS waktu, 
+            b.keterangan 
+        FROM mlite_billing b 
+        LEFT JOIN reg_periksa rp ON rp.no_rawat = b.no_rawat 
+        LEFT JOIN pasien pas ON pas.no_rkm_medis = rp.no_rkm_medis 
+        LEFT JOIN poliklinik pol ON pol.kd_poli = rp.kd_poli 
+        LEFT JOIN dokter dok ON dok.kd_dokter = rp.kd_dokter 
+        LEFT JOIN penjab pj ON pj.kd_pj = rp.kd_pj 
+        LEFT JOIN mlite_users u ON u.id = b.id_user 
+        LEFT JOIN pegawai p ON p.nik = u.username 
+        WHERE b.kd_billing LIKE 'RJ%' 
+        AND CONCAT(b.tgl_billing,' ',b.jam_billing) BETWEEN ? AND ? 
+        ORDER BY waktu DESC, b.id_billing DESC");
         $detailStmt->execute([$awal, $akhir]);
-        $details = $detailStmt->fetchAll();
+        $details = $detailStmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $kd_billings = array_filter(array_column($details, 'kd_billing'));
+        $sub_map = [];
+        if (!empty($kd_billings)) {
+            $inClause = implode(',', array_fill(0, count($kd_billings), '?'));
+            $rincianStmt = $pdo->prepare("SELECT kd_billing, kategori, nama, bayar, tagihan, sisa 
+                FROM mlite_billing_rincian 
+                WHERE kd_billing IN ($inClause) AND bayar > 0 
+                ORDER BY id ASC");
+            $rincianStmt->execute(array_values($kd_billings));
+            while ($r = $rincianStmt->fetch(\PDO::FETCH_ASSOC)) {
+                $sub_map[$r['kd_billing']][] = $r;
+            }
+        }
+
+        foreach ($details as &$d) {
+            $kdBil = $d['kd_billing'];
+            if (isset($sub_map[$kdBil]) && !empty($sub_map[$kdBil])) {
+                $d['sub_rincian'] = $sub_map[$kdBil];
+                $parts = [];
+                foreach ($sub_map[$kdBil] as $sr) {
+                    $parts[] = $sr['nama'] . ': Rp ' . number_format($sr['bayar'], 0, ',', '.');
+                }
+                $d['sub_rincian_text'] = implode(', ', $parts);
+            } else {
+                $d['sub_rincian'] = [];
+                $cleanKet = $d['keterangan'] ?? 'Tunai';
+                if (strpos($cleanKet, ' - ') !== false) {
+                    $cleanKet = trim(explode(' - ', $cleanKet, 2)[1]);
+                }
+                $d['sub_rincian_text'] = $cleanKet;
+            }
+        }
+        unset($d);
 
         return $this->draw('report.html', ['awal' => $awal, 'akhir' => $akhir, 'penjamin' => $penjamin, 'rows' => $rows, 'details' => $details]);
     }
@@ -2317,13 +2739,70 @@ class Admin extends AdminModule
         }
 
         header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="laporan_kasir.csv"');
+        header('Content-Disposition: attachment; filename="laporan_kasir_'.date('Ymd_His').'.csv"');
         $pdo = $this->db()->pdo();
-        $stmt = $pdo->prepare("SELECT b.id_user, COALESCE(p.nama, u.fullname) AS nama_kasir, b.kd_billing, b.jumlah_harus_bayar, CONCAT(b.tgl_billing,' ',b.jam_billing) waktu FROM mlite_billing b INNER JOIN ( SELECT no_rawat, MAX(CONCAT(tgl_billing,' ',jam_billing)) AS max_waktu FROM mlite_billing WHERE kd_billing LIKE 'RJ%' AND CONCAT(tgl_billing,' ',jam_billing) BETWEEN ? AND ? GROUP BY no_rawat ) latest ON latest.no_rawat=b.no_rawat AND CONCAT(b.tgl_billing,' ',b.jam_billing)=latest.max_waktu LEFT JOIN reg_periksa rp ON rp.no_rawat=b.no_rawat LEFT JOIN mlite_users u ON u.id=b.id_user LEFT JOIN pegawai p ON p.nik=u.username WHERE b.kd_billing LIKE 'RJ%' $where_penjamin ORDER BY waktu ASC");
+        $stmt = $pdo->prepare("SELECT 
+            b.kd_billing, 
+            CONCAT(b.tgl_billing,' ',b.jam_billing) AS waktu,
+            b.no_rawat, 
+            rp.no_rkm_medis, 
+            pas.nm_pasien, 
+            pol.nm_poli, 
+            dok.nm_dokter, 
+            pj.png_jawab, 
+            COALESCE(p.nama, u.fullname, 'Kasir') AS nama_kasir, 
+            b.jumlah_bayar, 
+            b.keterangan 
+        FROM mlite_billing b 
+        LEFT JOIN reg_periksa rp ON rp.no_rawat = b.no_rawat 
+        LEFT JOIN pasien pas ON pas.no_rkm_medis = rp.no_rkm_medis 
+        LEFT JOIN poliklinik pol ON pol.kd_poli = rp.kd_poli 
+        LEFT JOIN dokter dok ON dok.kd_dokter = rp.kd_dokter 
+        LEFT JOIN penjab pj ON pj.kd_pj = rp.kd_pj 
+        LEFT JOIN mlite_users u ON u.id = b.id_user 
+        LEFT JOIN pegawai p ON p.nik = u.username 
+        WHERE b.kd_billing LIKE 'RJ%' 
+        AND CONCAT(b.tgl_billing,' ',b.jam_billing) BETWEEN ? AND ? 
+        $where_penjamin 
+        ORDER BY waktu ASC");
         $stmt->execute([$awal, $akhir]);
-        echo "id_user,nama_kasir,kd_billing,jumlah_harus_bayar,waktu\n";
+        $rows_data = [];
+        $kd_billings = [];
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-            echo $row['id_user'].",".($row['nama_kasir'] ?? '').",".$row['kd_billing'].",".$row['jumlah_harus_bayar'].",".$row['waktu']."\n";
+            $rows_data[] = $row;
+            if (!empty($row['kd_billing'])) {
+                $kd_billings[] = $row['kd_billing'];
+            }
+        }
+
+        $sub_map = [];
+        if (!empty($kd_billings)) {
+            $inClause = implode(',', array_fill(0, count($kd_billings), '?'));
+            $rincianStmt = $pdo->prepare("SELECT kd_billing, nama, bayar FROM mlite_billing_rincian WHERE kd_billing IN ($inClause) AND bayar > 0 ORDER BY id ASC");
+            $rincianStmt->execute(array_values($kd_billings));
+            while ($r = $rincianStmt->fetch(\PDO::FETCH_ASSOC)) {
+                $sub_map[$r['kd_billing']][] = $r['nama'] . ' (Rp ' . number_format($r['bayar'], 0, ',', '.') . ')';
+            }
+        }
+
+        echo "No Faktur,Waktu,No Rawat,No RM,Nama Pasien,Poliklinik,Dokter DPJP,Penjamin,Petugas Kasir,Alokasi Layanan (Sub Rincian),Jumlah Bayar\n";
+        foreach ($rows_data as $row) {
+            $kdBil = $row['kd_billing'];
+            $alokasiText = isset($sub_map[$kdBil]) && !empty($sub_map[$kdBil])
+                ? implode('; ', $sub_map[$kdBil])
+                : ($row['keterangan'] ?? 'Tunai');
+
+            echo '"' . str_replace('"', '""', $row['kd_billing'] ?? '') . '","'
+                . str_replace('"', '""', $row['waktu'] ?? '') . '","'
+                . str_replace('"', '""', $row['no_rawat'] ?? '') . '","'
+                . str_replace('"', '""', $row['no_rkm_medis'] ?? '') . '","'
+                . str_replace('"', '""', $row['nm_pasien'] ?? '') . '","'
+                . str_replace('"', '""', $row['nm_poli'] ?? '') . '","'
+                . str_replace('"', '""', $row['nm_dokter'] ?? '') . '","'
+                . str_replace('"', '""', $row['png_jawab'] ?? '') . '","'
+                . str_replace('"', '""', $row['nama_kasir'] ?? '') . '","'
+                . str_replace('"', '""', $alokasiText) . '","'
+                . ($row['jumlah_bayar'] ?? 0) . "\"\n";
         }
         exit();
     }
@@ -2353,7 +2832,7 @@ class Admin extends AdminModule
             b.keterangan AS pembayaran,
             MIN(CONCAT(b.tgl_billing,' ',b.jam_billing)) AS tgl_kunjungan,
             MAX(CONCAT(b.tgl_billing,' ',b.jam_billing)) AS tgl_tagihan,
-            SUM(b.jumlah_harus_bayar) AS tagihan,
+            b.jumlah_bayar AS tagihan,
             (
                 (SELECT IFNULL(SUM(besar_biaya),0) FROM tambahan_biaya WHERE no_rawat=b.no_rawat AND (nama_biaya LIKE '%CSU%' OR nama_biaya LIKE '%CSSD%')) +
                 (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_pr WHERE no_rawat=b.no_rawat AND (kd_jenis_prw LIKE 'SDD%' OR kd_jenis_prw LIKE 'SL%' OR kd_jenis_prw LIKE 'STD%' OR kd_jenis_prw LIKE 'STDU%' OR kd_jenis_prw LIKE 'STP%' OR kd_jenis_prw LIKE 'SB%')) +
@@ -2391,6 +2870,24 @@ class Admin extends AdminModule
         $stmt->execute([$awal, $akhir]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
+        $kd_billings = array_filter(array_column($rows, 'kd_billing'));
+        if (!empty($kd_billings)) {
+            $inClause = implode(',', array_fill(0, count($kd_billings), '?'));
+            $rincianStmt = $pdo->prepare("SELECT kd_billing, nama, bayar FROM mlite_billing_rincian WHERE kd_billing IN ($inClause) AND bayar > 0 ORDER BY id ASC");
+            $rincianStmt->execute(array_values($kd_billings));
+            $sub_map = [];
+            while ($r = $rincianStmt->fetch(\PDO::FETCH_ASSOC)) {
+                $sub_map[$r['kd_billing']][] = $r['nama'] . ': Rp ' . number_format($r['bayar'], 0, ',', '.');
+            }
+            foreach ($rows as &$r) {
+                $kdBil = $r['kd_billing'];
+                if (isset($sub_map[$kdBil]) && !empty($sub_map[$kdBil])) {
+                    $r['pembayaran'] = implode(', ', $sub_map[$kdBil]);
+                }
+            }
+            unset($r);
+        }
+
         $tot_tagihan = 0;
         $tot_csu = 0;
         $tot_laundry = 0;
@@ -2413,6 +2910,7 @@ class Admin extends AdminModule
             $tot_lab_gigi += $row['lab_gigi'];
             $tot_bersih += $bersih;
         }
+        unset($row);
 
         echo $this->draw('cetak_report.html', [
             'awal' => $awal, 

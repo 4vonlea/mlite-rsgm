@@ -242,9 +242,28 @@
 				<td>Rp. <span class="pull-right">{?= number_format($data.besar_biaya,2,',','.')?}</span></td>
 			</tr>
 			{/loop}
+			{if: !empty($riwayat_pembayaran) && count($riwayat_pembayaran) > 1}
+			<tr border='1', height='20px'>
+				<td>XII</td>
+				<td colspan="4"><strong>Riwayat Pembayaran Cicilan / Uang Masuk</strong></td>
+			</tr>
+			{loop: $riwayat_pembayaran as $rp}
+			<tr border='0', height='18px'>
+				<td></td>
+				<td colspan="2">- Faktur {?=isset_or($rp.kd_billing)?} ({?=isset_or($rp.tgl_billing)?}) : <i>{?=isset_or($rp.keterangan)?}</i></td>
+				<td align="right">Rp.</td>
+				<td><span class="pull-right">{?= number_format($rp.jumlah_bayar,2,',','.')?}</span></td>
+			</tr>
+			{/loop}
+			<tr border='1', height='20px'>
+				<td colspan="3"></td>
+				<td><strong>Total Masuk</strong></td>
+				<td>Rp. <span class="pull-right" style="font-weight:bold;">{?= number_format($total_terbayar_semua,2,',','.')?}</span></td>
+			</tr>
+			{/if}
 			<tr >
 				<td colspan="2"></td>
-				<td colspan="2">Jumlah</td>
+				<td colspan="2">Jumlah Tagihan Layanan</td>
 				<td>Rp. <span class="pull-right">{?= number_format($billing.jumlah_total,2,',','.')?}</span></td>
 			</tr>
 			<tr >
@@ -254,8 +273,8 @@
 			</tr>
 			<tr >
 				<td colspan="2"></td>
-				<td colspan="2">Jumlah Bayar</td>
-				<td>Rp. <span class="pull-right">{?= number_format($billing.jumlah_harus_bayar,2,',','.')?}</span></td>
+				<td colspan="2">Jumlah Bayar Transaksi Ini</td>
+				<td>Rp. <span class="pull-right">{?= number_format($billing.jumlah_bayar,2,',','.')?}</span></td>
 			</tr>
 			<tr >
 				<td style="font-size: 9pt;" colspan="6"><i>Terbilang : # {?=terbilang($billing.jumlah_harus_bayar,3,"")?} Rupiah # </i></td>
@@ -335,7 +354,6 @@
 	    </div><!-- /.modal-dialog -->
 	  </div><!-- /.modal -->
 
-</body>
 <script>
 function KirimEmail() {
 	var xhttp = new XMLHttpRequest();
@@ -379,4 +397,5 @@ function KirimWA() {
 	xhttp.send("api_key=" + api_key + "&sender=" + sender + "&number=" + number + "&message=" + message + "&tipe=" + tipe + "&file=" + file);
 }
 </script>
+</body>
 </html>

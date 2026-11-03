@@ -9,9 +9,14 @@
     <link rel="icon" href="{?=url()?}/{$mlite.logo}" type="image/x-icon">
     <link href="{$mlite.path}/assets/css/{$mlite.theme_admin}.min.css?v={$mlite.version}" rel="stylesheet">
     <link href="{$mlite.path}/assets/css/animate.min.css?v={$mlite.version}" rel="stylesheet">
-    <link href="{?=url(THEMES.'/admin/css/style.css?v=1139'.$mlite.version)?}" rel="stylesheet">
+    <link href="{?=url(THEMES.'/admin/css/style.css?v=1140'.$mlite.version)?}" rel="stylesheet">
     <link href="{$mlite.path}/assets/css/font-awesome.css?v={$mlite.version}" rel="stylesheet">
 <style>
+@media (max-width: 991px) {
+  footer.rsgm-status-bar, .rsgm-status-bar { display: none !important; }
+  body { padding-bottom: 56px !important; }
+  .icon-bar { position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 1030 !important; }
+}
 /* ==========================================================================
    RSGM MODERN 2-TIER CLINICAL HEADER (.rsgm-header-nav)
    Row 1 (.rsgm-topbar)   : 34px Luminous Frosted Slate-50 (Ultra-Clean Luxury)

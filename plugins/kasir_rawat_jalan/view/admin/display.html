@@ -60,6 +60,8 @@
           <td style="white-space: nowrap;" data-order="{?=isset_or($value.status_bayar)?}">
             {if: $value.status_bayar == 'Sudah Bayar'}
               <span class="rsgm-badge rsgm-badge-emerald">Lunas</span>
+            {elseif: isset($value.total_bayar) && $value.total_bayar > 0}
+              <span class="rsgm-badge rsgm-badge-amber" title="Sudah dicicil Rp {?=number_format($value.total_bayar,0,',','.')?}">Cicilan ({?=$value.jml_faktur?}x)</span>
             {else}
               <span class="rsgm-badge rsgm-badge-rose">{?=isset_or($value.status_bayar)?}</span>
             {/if}

@@ -149,6 +149,18 @@ $("#display").on("click", ".layanan_obat", function (event) {
   var tgl_registrasi = $(this).attr("data-tgl_registrasi");
   var jam_reg = $(this).attr("data-jam_reg");
 
+  var now = new Date();
+  var d = String(now.getDate()).padStart(2, '0');
+  var m = String(now.getMonth() + 1).padStart(2, '0');
+  var y = now.getFullYear();
+  var h = String(now.getHours()).padStart(2, '0');
+  var min = String(now.getMinutes()).padStart(2, '0');
+  var s = String(now.getSeconds()).padStart(2, '0');
+  var newKdBilling = 'RJ.' + d + '.' + m + '.' + y + '.' + h + '.' + min + '.' + s;
+  $('input:text[name=kd_billing]').val(newKdBilling);
+  $('#tgl_billing').val(y + '-' + m + '-' + d);
+  $('#jam_billing').val(h + ':' + min + ':' + s);
+
   $('input:text[name=no_rawat]').val(no_rawat);
   $('input:text[name=no_rkm_medis]').val(no_rkm_medis);
   $('input:text[name=nm_pasien]').val(nm_pasien);
@@ -161,10 +173,13 @@ $("#display").on("click", ".layanan_obat", function (event) {
     no_rawat: no_rawat,
   }, function (data) {
     // tampilkan data
-    $("#form_rincian").show();
+    $("#form_rincian").hide();
     $("#form").hide();
     $("#notif").hide();
     $("#rincian").html(data).show();
+  }).fail(function (xhr, status, error) {
+    alert("Gagal memuat rincian kasir: " + error + " (Status: " + xhr.status + "). Silakan cek error log server.");
+    $("#display").show();
   });
 });
 
@@ -404,6 +419,10 @@ $("#form_rincian").on("click", "#simpan_rincian", function (event) {
     $('input:text[name=kode_provider]').val("");
     $('input:text[name=kode_provider2]').val("");
     $('input:text[name=jml_tindakan]').val(1);
+    $('input:text[name=layanan]').val("");
+    $('input:text[name=obat]').val("");
+    $("#form_rincian").slideUp(250);
+    $("#btn_toggle_form_rincian").html('<i class="fa fa-plus-circle"></i> Input Layanan Kasir').removeClass('btn-warning').addClass('btn-primary');
     $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
       "Data pasien telah disimpan!" +
       "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
@@ -569,210 +588,54 @@ $("#rincian").on("click", ".hapus_radiologi", function (event) {
   });
 });
 
-// ketika inputbox potongan faktur diisi
-$("#rincian").on("input", "#potongan_faktur2", function (event) {
+// Helper pembersih angka nominal
+function cleanNominal(val) {
+  if (!val) return 0;
+  var num = String(val).replace(/[^0-9]/g, '');
+  return num ? Number(num) : 0;
+}
+
+// Catatan: Logika interaksi Modal Pembayaran Multi-Select & Alokasi terintegrasi langsung di rincian.html.
+
+// Cetak Nota dari Riwayat Sebelumnya
+$(document).on("click", ".btn_cetak_riwayat", function (event) {
   event.preventDefault();
-
-  var jumlah_total_belanja = $('input:text[name=jumlah_total]').val()
-  var potongan_faktur = $('input:text[name=potongan_faktur]').val();
-  potongan_faktur = potongan_faktur.replace(/\.|R|p/g, '');
-  var jumlah_diskon = (Number(jumlah_total_belanja)) - (Number(potongan_faktur));
-
-  $('input:text[name=jumlah_harus_bayar]').val(jumlah_diskon);
-  $('input:text[name=terbilang_jumlah_harus_bayar]').val(terbilang(Number(jumlah_diskon)));
-
-
-  var jumlah_bayar = $('input:text[name=jumlah_bayar]').val();
-  jumlah_bayar = jumlah_bayar.replace(/\.|R|p/g, '')
-  var kembalian = (Number(jumlah_bayar)) - (Number(jumlah_diskon));
-
-  if (kembalian < 0) {
-    $('input:text[name=kembalian]').val("");
-    $('input:text[name=terbilang_kembalian]').val("Kurang Bayar");
-  }
-  else if (jumlah_bayar == "" || jumlah_bayar == 0) {
-    $('input:text[name=kembalian]').val(0);
-    $('input:text[name=jumlah_bayar]').val(0);
-    $('input:text[name=terbilang_kembalian]').val("");
-  } else {
-    $('input:text[name=kembalian]').val(kembalian);
-    $('input:text[name=terbilang_kembalian]').val(terbilang(Number(kembalian)));
-  }
-});
-// end potongan faktur
-
-// ketika inputbox jumlah bayar diisi
-$("#rincian").on("input", "#jumlah_bayar2", function (event) {
-  event.preventDefault();
-
-  var jumlah_harus_bayar = $('input:text[name=jumlah_harus_bayar]').val();
-  var jumlah_bayar = $('input:text[name=jumlah_bayar]').val();
-  jumlah_bayar = jumlah_bayar.replace(/\.|R|p/g, '')
-  var kembalian = (Number(jumlah_bayar)) - (Number(jumlah_harus_bayar));
-
-  if (kembalian < 0) {
-    $('input:text[name=kembalian]').val("");
-    $('input:text[name=terbilang_kembalian]').val("Kurang Bayar");
-  }
-  else if (jumlah_bayar == "" || jumlah_bayar == 0) {
-    $('input:text[name=kembalian]').val(0);
-    $('input:text[name=jumlah_bayar]').val(0);
-    $('input:text[name=terbilang_kembalian]').val("");
-  } else {
-    $('input:text[name=kembalian]').val(kembalian);
-    $('input:text[name=terbilang_kembalian]').val(terbilang(Number(kembalian)));
-  }
-
-});
-// end jumlah bayar
-
-// tombol simpan semua yang dibawah di klick
-$("#rincian").on("click", "#simpan_billing", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
-  event.preventDefault();
-  var kd_billing = $('input:text[name=kd_billing]').val();
-  var no_rawat = $('input:text[name=no_rawat]').val();
-  var jumlah_total = $('input:text[name=jumlah_total]').val();
-  var potongan_faktur = $('input:text[name=potongan_faktur]').val();
-  potongan_faktur = potongan_faktur.replace(/\.|R|p/g, '')
-  var jumlah_harus_bayar = $('input:text[name=jumlah_harus_bayar]').val();
-  var jumlah_bayar = $('input:text[name=jumlah_bayar]').val();
-  jumlah_bayar = jumlah_bayar.replace(/\.|R|p/g, '')
-  var tgl_billing = $('#tgl_billing').val();
-  var jam_billing = $('#jam_billing').val();
-  var keterangan = $('select[name=keterangan]').val();
-  var jurnal_pendaftaran = $('#jurnal_pendaftaran').text();
-  var jurnal_tindakan_ralan = $('#jurnal_tindakan_ralan').text();
-  var jurnal_obat_bhp = $('#jurnal_obat_bhp').text();
-  var jurnal_laboratorium = $('#jurnal_laboratorium').text();
-  var jurnal_radiologi = $('#jurnal_radiologi').text();
-
-  var tgl_registrasi = $('#tgl_registrasi_hidden').val();
-  var jam_reg = $('#jam_reg_hidden').val();
-  var datetime_billing = new Date(tgl_billing + 'T' + jam_billing);
-  var datetime_reg = new Date(tgl_registrasi + 'T' + jam_reg);
-
-  if (potongan_faktur == "") {
-    alert("potongan belum diisi ");
-    $('input:text[name=potongan_faktur]').focus();
-
-  }
-  else if (Number(jumlah_bayar) < Number(jumlah_harus_bayar && keterangan != 'Tunai')) {
-    alert("Jumlah bayar masih kurang ! ");
-    $('input:text[name=jumlah_bayar]').focus();
-  }
-  else if (datetime_billing < datetime_reg) {
-    $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
-      "Tanggal dan jam faktur tidak boleh sebelum tanggal dan jam kunjungan!" +
-      "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
-      "</div>").show();
-    $('html, body').animate({ scrollTop: 0 }, 'fast');
-  }
-  else {
-    // tampilkan dialog konfirmasi
-    bootbox.confirm("Apakah data faktur sudah sesuai?", function (result) {
-      // ketika ditekan tombol ok
-      if (result) {
-        // mengirimkan perintah penghapusan
-        var url = baseURL + '/kasir_rawat_jalan/save?t=' + mlite.token;
-        $.post(url, {
-          kd_billing: kd_billing,
-          no_rawat: no_rawat,
-          jumlah_total: jumlah_total,
-          potongan: potongan_faktur,
-          tgl_billing: tgl_billing,
-          jam_billing: jam_billing,
-          jumlah_harus_bayar: jumlah_harus_bayar,
-          jumlah_bayar: jumlah_bayar,
-          keterangan: keterangan,
-          jurnal_pendaftaran: jurnal_pendaftaran,
-          jurnal_tindakan_ralan: jurnal_tindakan_ralan,
-          jurnal_obat_bhp: jurnal_obat_bhp,
-          jurnal_laboratorium: jurnal_laboratorium,
-          jurnal_radiologi: jurnal_radiologi,
-        }, function (data) {
-          var url = baseURL + '/kasir_rawat_jalan/rincian?t=' + mlite.token;
-          $.post(url, {
-            no_rawat: no_rawat,
-          }, function (data) {
-            // tampilkan data
-            $("#rincian").html(data).show();
-          });
-          $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
-            "Data rincian faktur rawat jalan telah disimpan!" +
-            "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
-            "</div>").show();
-
-        });
-      }
-    });
-
-  }
-
-});
-
-// ketika tombol antrian ditekan
-$("#rincian").on("click", "#cetak_billing", function (event) {
-  var baseURL = mlite.url + '/' + mlite.admin;
-  event.preventDefault();
-  var url = baseURL + '/kasir_rawat_jalan/faktur?t=' + mlite.token;
+  var kd_billing = $(this).attr("data-kd_billing");
   var no_rawat = $(this).attr("data-no_rawat");
-  $.post(url, {
-    no_rawat: no_rawat,
-  }, function (data) {
-    // tampilkan data
-    if (data == 'OK') {
-      bootbox.confirm("Apakah data faktur sudah sesuai? Jika berbeda, silahkan simpan dulu sebelum mencetak!", function (result) {
-        // ketika ditekan tombol ok
-        if (result) {
-          window.open(baseURL + '/kasir_rawat_jalan/faktur?show=besar&no_rawat=' + no_rawat + '&t=' + mlite.token);
-        }
-      });
-    } else {
-      bootbox.alert("Data faktur belum disimpan. Silahkan simpan dulu sebelum mencetak?");
-    }
-  });
+  window.open(baseURL + '/kasir_rawat_jalan/faktur?show=kecil&no_rawat=' + encodeURIComponent(no_rawat) + '&kd_billing=' + encodeURIComponent(kd_billing) + '&t=' + mlite.token);
 });
 
-// ketika tombol antrian ditekan
-$("#rincian").on("click", "#cetak_billing_kecil", function (event) {
+// Cetak Invoice Besar
+$(document).on("click", "#cetak_billing", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
-  var url = baseURL + '/kasir_rawat_jalan/faktur?t=' + mlite.token;
-  var no_rawat = $(this).attr("data-no_rawat");
-  $.post(url, {
-    no_rawat: no_rawat,
-  }, function (data) {
-    // tampilkan data
-    if (data == 'OK') {
-      bootbox.confirm("Apakah data faktur sudah sesuai? Jika berbeda, silahkan simpan dulu sebelum mencetak!", function (result) {
-        // ketika ditekan tombol ok
-        if (result) {
-          window.open(baseURL + '/kasir_rawat_jalan/faktur?show=kecil&no_rawat=' + no_rawat + '&t=' + mlite.token);
-        }
-      });
-    } else {
-      bootbox.alert("Data faktur belum disimpan. Silahkan simpan dulu sebelum mencetak!");
-    }
-  });
+  var no_rawat = $(this).attr("data-no_rawat") || $('input:text[name=no_rawat]').val();
+  window.open(baseURL + '/kasir_rawat_jalan/faktur?show=besar&no_rawat=' + encodeURIComponent(no_rawat) + '&t=' + mlite.token);
 });
 
-$("#rincian").on("click", "#selesai_billing", function (event) {
+// Cetak Nota Terakhir (Kecil)
+$(document).on("click", "#cetak_billing_kecil", function (event) {
+  var baseURL = mlite.url + '/' + mlite.admin;
+  event.preventDefault();
+  var no_rawat = $(this).attr("data-no_rawat") || $('input:text[name=no_rawat]').val();
+  window.open(baseURL + '/kasir_rawat_jalan/faktur?show=kecil&no_rawat=' + encodeURIComponent(no_rawat) + '&t=' + mlite.token);
+});
+
+// Selesai Billing & Kembali ke Daftar Pasien
+$(document).on("click", "#selesai_billing", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
   $("#layanan").hide();
   $("#obat").hide();
   bersih();
-  //$("#display").show();
   $("#rincian").hide();
   $("#form_rincian").hide();
   var url = baseURL + '/kasir_rawat_jalan/display?t=' + mlite.token;
   $.post(url, {}, function (data) {
-    // tampilkan data
     $("#display").html(data).show();
     $("#notif").hide();
   });
-
 });
 
 function bersih() {
@@ -798,13 +661,13 @@ function bersih() {
 
 /* Fungsi formatRupiah */
 function formatRupiah(angka, prefix) {
+  if (!angka) return '';
   var number_string = angka.replace(/[^,\d]/g, '').toString(),
     split = number_string.split(','),
     sisa = split[0].length % 3,
     rupiah = split[0].substr(0, sisa),
     ribuan = split[0].substr(sisa).match(/\d{3}/gi);
 
-  // tambahkan titik jika yang di input sudah menjadi angka ribuan
   if (ribuan) {
     separator = sisa ? '.' : '';
     rupiah += separator + ribuan.join('.');
@@ -817,113 +680,40 @@ function formatRupiah(angka, prefix) {
 function terbilang(a) {
   var bilangan = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
 
-  // 1 - 11
   if (a < 12) {
     var kalimat = bilangan[a];
-  }
-  // 12 - 19
-  else if (a < 20) {
+  } else if (a < 20) {
     var kalimat = bilangan[a - 10] + ' Belas';
-  }
-  // 20 - 99
-  else if (a < 100) {
-    var utama = a / 10;
-    var depan = parseInt(String(utama).substr(0, 1));
+  } else if (a < 100) {
+    var utama = Math.floor(a / 10);
     var belakang = a % 10;
-    var kalimat = bilangan[depan] + ' Puluh ' + bilangan[belakang];
-  }
-  // 100 - 199
-  else if (a < 200) {
+    var kalimat = bilangan[utama] + ' Puluh ' + bilangan[belakang];
+  } else if (a < 200) {
     var kalimat = 'Seratus ' + terbilang(a - 100);
-  }
-  // 200 - 999
-  else if (a < 1000) {
-    var utama = a / 100;
-    var depan = parseInt(String(utama).substr(0, 1));
+  } else if (a < 1000) {
+    var utama = Math.floor(a / 100);
     var belakang = a % 100;
-    var kalimat = bilangan[depan] + ' Ratus ' + terbilang(belakang);
-  }
-  // 1,000 - 1,999
-  else if (a < 2000) {
+    var kalimat = bilangan[utama] + ' Ratus ' + terbilang(belakang);
+  } else if (a < 2000) {
     var kalimat = 'Seribu ' + terbilang(a - 1000);
-  }
-  // 2,000 - 9,999
-  else if (a < 10000) {
-    var utama = a / 1000;
-    var depan = parseInt(String(utama).substr(0, 1));
+  } else if (a < 1000000) {
+    var utama = Math.floor(a / 1000);
     var belakang = a % 1000;
-    var kalimat = bilangan[depan] + ' Ribu ' + terbilang(belakang);
-  }
-  // 10,000 - 99,999
-  else if (a < 100000) {
-    var utama = a / 100;
-    var depan = parseInt(String(utama).substr(0, 2));
-    var belakang = a % 1000;
-    var kalimat = terbilang(depan) + ' Ribu ' + terbilang(belakang);
-  }
-  // 100,000 - 999,999
-  else if (a < 1000000) {
-    var utama = a / 1000;
-    var depan = parseInt(String(utama).substr(0, 3));
-    var belakang = a % 1000;
-    var kalimat = terbilang(depan) + ' Ribu ' + terbilang(belakang);
-  }
-  // 1,000,000 - 	99,999,999
-  else if (a < 100000000) {
-    var utama = a / 1000000;
-    var depan = parseInt(String(utama).substr(0, 4));
+    var kalimat = terbilang(utama) + ' Ribu ' + terbilang(belakang);
+  } else if (a < 1000000000) {
+    var utama = Math.floor(a / 1000000);
     var belakang = a % 1000000;
-    var kalimat = terbilang(depan) + ' Juta ' + terbilang(belakang);
-  }
-  else if (a < 1000000000) {
-    var utama = a / 1000000;
-    var depan = parseInt(String(utama).substr(0, 4));
-    var belakang = a % 1000000;
-    var kalimat = terbilang(depan) + ' Juta ' + terbilang(belakang);
-  }
-  else if (a < 10000000000) {
-    var utama = a / 1000000000;
-    var depan = parseInt(String(utama).substr(0, 1));
+    var kalimat = terbilang(utama) + ' Juta ' + terbilang(belakang);
+  } else if (a < 1000000000000) {
+    var utama = Math.floor(a / 1000000000);
     var belakang = a % 1000000000;
-    var kalimat = terbilang(depan) + ' Milyar ' + terbilang(belakang);
-  }
-  else if (a < 100000000000) {
-    var utama = a / 1000000000;
-    var depan = parseInt(String(utama).substr(0, 2));
-    var belakang = a % 1000000000;
-    var kalimat = terbilang(depan) + ' Milyar ' + terbilang(belakang);
-  }
-  else if (a < 1000000000000) {
-    var utama = a / 1000000000;
-    var depan = parseInt(String(utama).substr(0, 3));
-    var belakang = a % 1000000000;
-    var kalimat = terbilang(depan) + ' Milyar ' + terbilang(belakang);
-  }
-  else if (a < 10000000000000) {
-    var utama = a / 10000000000;
-    var depan = parseInt(String(utama).substr(0, 1));
-    var belakang = a % 10000000000;
-    var kalimat = terbilang(depan) + ' Triliun ' + terbilang(belakang);
-  }
-  else if (a < 100000000000000) {
-    var utama = a / 1000000000000;
-    var depan = parseInt(String(utama).substr(0, 2));
+    var kalimat = terbilang(utama) + ' Milyar ' + terbilang(belakang);
+  } else if (a < 1000000000000000) {
+    var utama = Math.floor(a / 1000000000000);
     var belakang = a % 1000000000000;
-    var kalimat = terbilang(depan) + ' Triliun ' + terbilang(belakang);
-  }
-
-  else if (a < 1000000000000000) {
-    var utama = a / 1000000000000;
-    var depan = parseInt(String(utama).substr(0, 3));
-    var belakang = a % 1000000000000;
-    var kalimat = terbilang(depan) + ' Triliun ' + terbilang(belakang);
-  }
-
-  else if (a < 10000000000000000) {
-    var utama = a / 1000000000000000;
-    var depan = parseInt(String(utama).substr(0, 1));
-    var belakang = a % 1000000000000000;
-    var kalimat = terbilang(depan) + ' Kuadriliun ' + terbilang(belakang);
+    var kalimat = terbilang(utama) + ' Triliun ' + terbilang(belakang);
+  } else {
+    var kalimat = '';
   }
 
   var pisah = kalimat.split(' ');
@@ -934,11 +724,31 @@ function terbilang(a) {
   return full.join(' ');
 }
 
-$("#form_rincian").on("click", "#jam_billing", function (event) {
-  var baseURL = mlite.url + '/' + mlite.admin;
-  var url = baseURL + '/kasir_rawat_jalan/cekwaktu?t=' + mlite.token;
-  $.post(url, {
-  }, function (data) {
-    $("#form_rincian #jam_billing").val(data);
-  });
+// Toggle Form Input Layanan Kasir
+$(document).off('click', '#btn_toggle_form_rincian, .btn-trigger-form-rincian').on('click', '#btn_toggle_form_rincian, .btn-trigger-form-rincian', function (e) {
+  e.preventDefault();
+  var focusTarget = $(this).data('focus') || 'layanan';
+  if ($("#form_rincian").is(":visible")) {
+    $("#form_rincian").slideUp(250);
+    $("#btn_toggle_form_rincian").html('<i class="fa fa-plus-circle"></i> Input Layanan Kasir').removeClass('btn-warning').addClass('btn-primary');
+  } else {
+    $("#form_rincian").slideDown(250, function () {
+      $('html, body').animate({
+        scrollTop: $("#form_rincian").offset().top - 20
+      }, 300);
+      if (focusTarget === 'obat') {
+        $('input:text[name=obat]').focus();
+      } else {
+        $('input:text[name=layanan]').focus();
+      }
+    });
+    $("#btn_toggle_form_rincian").html('<i class="fa fa-chevron-up"></i> Tutup Input Layanan').removeClass('btn-primary').addClass('btn-warning');
+  }
+});
+
+// Tutup / Batal Form Input Layanan Kasir
+$(document).off('click', '#btn_tutup_form_rincian, #btn_batal_form_rincian').on('click', '#btn_tutup_form_rincian, #btn_batal_form_rincian', function (e) {
+  e.preventDefault();
+  $("#form_rincian").slideUp(250);
+  $("#btn_toggle_form_rincian").html('<i class="fa fa-plus-circle"></i> Input Layanan Kasir').removeClass('btn-warning').addClass('btn-primary');
 });

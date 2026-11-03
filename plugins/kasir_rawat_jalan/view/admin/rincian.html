@@ -1,397 +1,2086 @@
-<div class="dokter_ralan_view">
-    <ul class="nav nav-tabs" role="tablist">
-        <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Rekap Billing</a></li>
-        <li role="presentation"><a href="#pendaftaran" aria-controls="home" role="tab" data-toggle="tab">Pendaftaran</a></li>
-        <li role="presentation"><a href="#tindakan" aria-controls="resep" role="tab" data-toggle="tab">Tindakan</a></li>
-        <li role="presentation"><a href="#obatbhp" aria-controls="soap" role="tab" data-toggle="tab">Obat & BHP</a></li>
-        <li role="presentation"><a href="#lab" aria-controls="lab" role="tab" data-toggle="tab">Laboratorium</a></li>
-        <li role="presentation"><a href="#rad" aria-controls="rad" role="tab" data-toggle="tab">Radiologi</a></li>
-        <li role="presentation"><a href="#operasi" aria-controls="rad" role="tab" data-toggle="tab">Operasi</a></li>
-        <li role="presentation"><a href="#biayalain" aria-controls="biayalain" role="tab" data-toggle="tab">Biaya Lainnya</a></li>
-    </ul>
+<style>
+  /* RSGM Luxury Theme for Kasir Rawat Jalan Management */
+  .rsgm-billing-shell {
+    font-family: inherit;
+    color: #1e293b;
+  }
 
-    <div class="tab-content">
-        <div role="tabpanel" class="tab-pane fade in active" id="home">
-          <h4>Rekap Billing</h4>
-          <div class="table-responsive no-margin">
-            <table class="table table-striped table-bordered no-padding" width="100%">
-              <thead>
-                <tr>
-                  <th width="20px;">No.</th>
-                  <th>Sub Rincian</th>
-                  <th width="300px;">Sub Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>1.</td>
-                  <td>Pendaftaran</td>
-                  <td>Rp. <span class="pull-right" id="jurnal_pendaftaran">{?= number_format($poliklinik.registrasi,2,',','.')?}</span></td>
-                </tr>
-                <tr>
-                  <td>2.</td>
-                  <td>Tindakan</td>
-                  <td>Rp. <span class="pull-right" id="jurnal_tindakan_ralan">{?= number_format($jumlah_total,2,',','.')?}</span></td>
-                </tr>
-                <tr>
-                  <td>3.</td>
-                  <td>Obat dan BHP</td>
-                  <td>Rp. <span class="pull-right" id="jurnal_obat_bhp">{?= number_format($jumlah_total_obat,2,',','.')?}</span></td>
-                </tr>
-                <tr>
-                  <td>4.</td>
-                  <td>Laboratorium</td>
-                  <td>Rp. <span class="pull-right" id="jurnal_laboratorium">{?= number_format($jumlah_total_lab,2,',','.')?}</span></td>
-                </tr>
-                <tr>
-                  <td>5.</td>
-                  <td>Radiologi</td>
-                  <td>Rp. <span class="pull-right" id="jurnal_radiologi">{?= number_format($jumlah_total_radiologi,2,',','.')?}</span></td>
-                </tr>
-                <tr>
-                  <td>6.</td>
-                  <td>Operasi</td>
-                  <td>Rp. <span class="pull-right" id="jurnal_radiologi">{?= number_format($jumlah_total_operasi + $jumlah_total_obat_operasi,2,',','.')?}</span></td>
-                </tr>
-                <tr>
-                  <td>7.</td>
-                  <td>Obat Pulang</td>
-                  <td>Rp. <span class="pull-right">{?= number_format($jumlah_total_obat_pulang,2,',','.')?}</span></td>
-                </tr>
-                <tr>
-                  <td>8.</td>
-                  <td>Biaya Tambahan (termasuk UTD)</td>
-                  <td>Rp. <span class="pull-right">{?= number_format($jumlah_total_tambahan,2,',','.')?}</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div role="tabpanel" class="tab-pane fade in" id="pendaftaran">
-          <h4>Pendaftaran</h4>
-          <div class="table-responsive no-margin">
-            <table class="table table-striped table-bordered no-padding" width="100%">
-              <thead>
-                <tr>
-                  <th width="20px;">No.</th>
-                  <th>Nama Poliklinik</th>
-                  <th>Jumlah</th>
-                  <th>Harga</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>1.</td>
-                  <td>{?=isset_or($poliklinik.nm_poli)?}</td>
-                  <td>1</td>
-                  <td>Rp. <span class="pull-right">{?= number_format($poliklinik.registrasi,2,',','.')?}</span></td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th colspan="3">Total Biaya Pendaftaran</th>
-                  <th>Rp. <span class="pull-right">{?= number_format($biaya_registrasi,2,',','.')?}</span></th>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-        <div role="tabpanel" class="tab-pane fade in" id="tindakan">
-          <h4>Rincian Tindakan</h4>
-          <div class="table-responsive no-margin">
-            <table class="table table-striped table-bordered no-padding" width="100%">
-              <thead>
-                <tr>
-                  <th width="20px;">No.</th>
-                  <th>Nama Item</th>
-                  <th>Provider</th>
-                  <th>Tarif</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loop: $tindakan}
-                <tr>
-                  <td>{?=isset_or($value.nomor)?}</td>
-                  <td>{?=isset_or($value.nm_perawatan)?}</td>
-                  <td>{?=isset_or($value.provider)?}</td>
-                  <td>Rp. <span class="pull-right">{?= number_format($value.biaya_rawat,2,',','.')?}</span></td>
-                  <td><button type="button" class="btn btn-danger btn-xs hapus_detail" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}" data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}" data-jam_rawat="{?=isset_or($value.jam_rawat)?}" data-provider="{if: $value.provider == 'Dokter'}rawat_jl_dr{elseif: $value.provider == 'Perawat'}rawat_jl_pr{else}rawat_jl_drpr{/if}"><i class="fa fa-close"></i><span class="hidden-xs"> Hapus</span></button></td>
-                </tr>
-                {/loop}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th colspan="3">Total Biaya Tindakan</th>
-                  <th>Rp. <span class="pull-right">{?= number_format($jumlah_total,2,',','.')?}</span></th>
-                  <th></th>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-        <div role="tabpanel" class="tab-pane fade in resep" id="obatbhp">
-          <h4>Pemberian Obat & BHP</h4>
-          <div class="table-responsive no-margin">
-            <table class="table table-striped table-bordered no-padding" width="100%">
-              <thead>
-                <tr>
-                  <th width="20px;">No.</th>
-                  <th>Nama Obat/BHP</th>
-                  <th>Jumlah</th>
-                  <th>Harga</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loop: $detail_pemberian_obat}
-                <tr>
-                  <td>{?=isset_or($value.nomor)?}</td>
-                  <td>{?=isset_or($value.nama_brng)?}</td>
-                  <td>{if: $value.jml > 0}{?=isset_or($value.jml)?}{/if}</td>
-                  <td>Rp. <span class="pull-right">{?= number_format(($value.biaya_obat * $value.jml),2,',','.')?}</span></td>
-                  <td colspan="2">
-                    <button type="button" class="btn btn-danger btn-xs hapus_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_perawatan)?}" data-jam_peresepan="{?=isset_or($value.jam)?}" data-kode_brng="{?=isset_or($value.kode_brng)?}" data-jml="{?=isset_or($value.jml)?}"><i class="fa fa-close"></i><span class="hidden-xs"> Hapus</span></button>
-                  </td>
-                </tr>
-                {/loop}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th colspan="3">Subtotal Obat</th>
-                  <th>Rp. <span class="pull-right">{?= number_format($jumlah_total_obat - $jumlah_total_embalase - $jumlah_total_tuslah,2,',','.')?}</span></th>
-                  <th></th>
-                </tr>
-                <tr>
-                  <th colspan="3">Total Embalase</th>
-                  <th>Rp. <span class="pull-right">{?= number_format($jumlah_total_embalase,2,',','.')?}</span></th>
-                  <th></th>
-                </tr>
-                <tr>
-                  <th colspan="3">Total Tuslah</th>
-                  <th>Rp. <span class="pull-right">{?= number_format($jumlah_total_tuslah,2,',','.')?}</span></th>
-                  <th></th>
-                </tr>
-                <tr>
-                  <th colspan="3">Total Keseluruhan Obat & BHP</th>
-                  <th>Rp. <span class="pull-right">{?= number_format($jumlah_total_obat,2,',','.')?}</span></th>
-                  <th></th>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-        <div role="tabpanel" class="tab-pane fade in" id="lab">
-          <h4>Pemeriksaan Laboratorium</h4>
-          <div class="table-responsive no-margin">
-            <table class="table table-striped table-bordered no-padding" width="100%">
-              <thead>
-                <tr>
-                  <th width="20px;">No.</th>
-                  <th>Nama Pemeriksaan</th>
-                  <th>Harga</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loop: $periksa_lab}
-                <tr>
-                  <td>{?=isset_or($value.nomor)?}</td>
-                  <td>{?=isset_or($value.nm_perawatan)?}</td>
-                  <td>Rp. <span class="pull-right">{?= number_format($value.biaya,2,',','.')?}</span></td>
-                  <td colspan="2">
-                    <button type="button" class="btn btn-danger btn-xs hapus_laboratorium" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}" data-jam_periksa="{?=isset_or($value.jam)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}"><i class="fa fa-close"></i><span class="hidden-xs"> Hapus</span></button>
-                  </td>
-                </tr>
-                {/loop}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th colspan="2">Total Biaya Laboratorium</th>
-                  <th>Rp. <span class="pull-right">{?= number_format($jumlah_total_lab,2,',','.')?}</span></th>
-                  <th></th>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-        <div role="tabpanel" class="tab-pane fade in" id="rad">
-          <h4>Pemeriksaan Radiologi</h4>
-          <div class="table-responsive no-margin">
-            <table class="table table-striped table-bordered no-padding" width="100%">
-              <thead>
-                <tr>
-                  <td width="20px;">No.</td>
-                  <th>Nama Pemeriksaan</th>
-                  <th>Harga</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loop: $periksa_radiologi}
-                <tr>
-                  <td>{?=isset_or($value.nomor)?}</td>
-                  <td>{?=isset_or($value.nm_perawatan)?}</td>
-                  <td>Rp. <span class="pull-right">{?= number_format($value.biaya,2,',','.')?}</span></td>
-                  <td colspan="2">
-                    <button type="button" class="btn btn-danger btn-xs hapus_radiologi" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}" data-jam_periksa="{?=isset_or($value.jam)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}"><i class="fa fa-close"></i><span class="hidden-xs"> Hapus</span></button>
-                  </td>
-                </tr>
-                {/loop}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th colspan="2">Total Biaya Radiologi</th>
-                  <th>Rp. <span class="pull-right">{?= number_format($jumlah_total_radiologi,2,',','.')?}</span></th>
-                  <th></th>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-        <div role="tabpanel" class="tab-pane fade in" id="operasi">
-          <h4>Tindakan dan Obat Operasi</h4>
-          <div class="table-responsive no-margin">
-            <table class="table table-striped table-bordered no-padding" width="100%">
-              <thead>
-                <tr>
-                  <td width="20px;">No.</td>
-                  <th>Jenis Biaya</th>
-                  <th>Harga</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>Tindakan Operasi</td>
-                  <td>Rp. <span class="pull-right">{?= number_format($jumlah_total_operasi,2,',','.')?}</span></td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>Obat dan BHP Operasi</td>
-                  <td>Rp. <span class="pull-right">{?= number_format($jumlah_total_obat_operasi,2,',','.')?}</span></td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th colspan="2">Total Biaya Operasi</th>
-                  <th>Rp. <span class="pull-right">{?= number_format($jumlah_total_operasi + $jumlah_total_obat_operasi,2,',','.')?}</span></th>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-        <div role="tabpanel" class="tab-pane fade in" id="biayalain">
-          <h4>Biaya Lainnya</h4>
-          <div class="table-responsive no-margin">
-            <table class="table table-striped table-bordered no-padding" width="100%">
-              <thead>
-                <tr>
-                  <th width="20px;">No.</th>
-                  <th>Nama Item</th>
-                  <th>Jumlah</th>
-                  <th>Harga</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loop: $resep_pulang}
-                <tr>
-                  <td>{?=isset_or($value.nomor)?}</td>
-                  <td>{?=isset_or($value.nama_brng)?}</td>
-                  <td>{?=isset_or($value.jml_barang)?}</td>
-                  <td>Rp. <span class="pull-right">{?= number_format($value.total,2,',','.')?}</span></td>
-                </tr>
-                {/loop}
-                {loop: $tambahan_biaya}
-                <tr>
-                  <td>{?=isset_or($value.nomor)?}</td>
-                  <td>{?=isset_or($value.nama_biaya)?}</td>
-                  <td>1</td>
-                  <td>Rp. <span class="pull-right">{?= number_format($value.besar_biaya,2,',','.')?}</span></td>
-                </tr>
-                {/loop}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th colspan="3">Total Obat Pulang</th>
-                  <th>Rp. <span class="pull-right">{?= number_format($jumlah_total_obat_pulang,2,',','.')?}</span></th>
-                </tr>
-                <tr>
-                  <th colspan="3">Total Biaya Tambahan (termasuk UTD)</th>
-                  <th>Rp. <span class="pull-right">{?= number_format($jumlah_total_tambahan,2,',','.')?}</span></th>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-    </div>
-</div>
+  /* 1. Patient Banner Card */
+  .rsgm-patient-banner {
+    background: #ffffff;
+    border: 1px solid #dbe3ec;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05);
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .rsgm-patient-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+  }
+  .rsgm-pb-body {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .rsgm-pb-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 280px;
+  }
+  .rsgm-pb-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    border: 1px solid #bfdbfe;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+  }
+  .rsgm-pb-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .rsgm-pb-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .rsgm-pb-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: #64748b;
+  }
+  .rsgm-pb-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
 
-<div class="col-md-6 col-md-offset-6">
-  <div class="form-horizontal">
-    <div class="form-group">
-      <label class="col-sm-5 control-label">Jumlah Tagihan</label>
-      <div class="col-sm-7">
-        <input type="text" class="form-control" style="text-align:right;font-weight:bold" placeholder="0" value="{?=($biaya_registrasi + $jumlah_total + $jumlah_total_obat + $jumlah_total_lab + $jumlah_total_radiologi + $jumlah_total_operasi + $jumlah_total_obat_operasi + $jumlah_total_obat_pulang + $jumlah_total_tambahan)?}" name="jumlah_total" maxlength="11" disabled>
+  /* 2. Sleek Billing Navigation Tabs */
+  .rsgm-billing-tabs-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 20px;
+    list-style: none;
+  }
+  .rsgm-billing-tabs-nav > li {
+    margin: 0;
+  }
+  .rsgm-billing-tabs-nav > li > a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none !important;
+    background: transparent;
+    transition: all 0.18s ease;
+  }
+  .rsgm-billing-tabs-nav > li > a:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+  }
+  .rsgm-billing-tabs-nav > li.active > a,
+  .rsgm-billing-tabs-nav > li.active > a:focus,
+  .rsgm-billing-tabs-nav > li.active > a:hover {
+    background: #ffffff !important;
+    color: #2563eb !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  }
+  .rsgm-billing-tabs-nav > li > a i {
+    font-size: 13.5px;
+  }
+
+  /* 3. Executive KPI Metric Deck */
+  .rsgm-kpi-deck {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .rsgm-kpi-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .rsgm-kpi-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  }
+  .rsgm-kpi-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .rsgm-kpi-icon-blue {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+  }
+  .rsgm-kpi-icon-emerald {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+  }
+  .rsgm-kpi-icon-rose {
+    background: #fff1f2;
+    color: #e11d48;
+    border: 1px solid #fecdd3;
+  }
+  .rsgm-kpi-content {
+    min-width: 0;
+    flex: 1;
+  }
+  .rsgm-kpi-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #64748b;
+    margin-bottom: 2px;
+  }
+  .rsgm-kpi-val {
+    font-size: 19px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.2;
+    font-family: inherit;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .rsgm-kpi-sub {
+    font-size: 11.5px;
+    color: #94a3b8;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* 4. Luxury Card Container for Tables */
+  .rsgm-card {
+    background: #ffffff;
+    border: 1px solid #dbe3ec;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .rsgm-card-header {
+    padding: 14px 20px;
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .rsgm-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .rsgm-card-title i {
+    color: #2563eb;
+    font-size: 15px;
+  }
+  .rsgm-card-body {
+    padding: 0;
+  }
+
+  /* Tables in Card */
+  .rsgm-table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .rsgm-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 11px 16px;
+    border-bottom: 1px solid #e2e8f0 !important;
+    border-top: none !important;
+  }
+  .rsgm-table td {
+    padding: 11px 16px;
+    font-size: 13px;
+    color: #1e293b;
+    border-bottom: 1px solid #f1f5f9;
+    border-top: none !important;
+    vertical-align: middle !important;
+  }
+  .rsgm-table tbody tr:hover td {
+    background-color: #f8fafc;
+  }
+  .rsgm-table tfoot th, .rsgm-table tfoot td {
+    background: #f8fafc;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    border-top: 2px solid #e2e8f0 !important;
+    border-bottom: none !important;
+  }
+
+  /* Bottom Actions Bar */
+  .rsgm-actions-bar {
+    padding: 14px 20px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* 5. Luxury Modal Styling */
+  #modalPembayaran .modal-dialog {
+    max-width: 520px;
+    margin: 45px auto;
+  }
+  #modalPembayaran .modal-content {
+    border-radius: 16px;
+    box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35);
+    border: none;
+    overflow: visible;
+    background: #ffffff;
+    position: relative;
+  }
+  #modalPembayaran .modal-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #3b82f6 100%);
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+  }
+  #modalPembayaran .modal-header {
+    border-bottom: 1px solid #f1f5f9;
+    padding: 18px 24px 14px 24px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+  }
+  #modalPembayaran .modal-title-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  #modalPembayaran .modal-title-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    color: #4f46e5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.15);
+  }
+  #modalPembayaran .modal-title-text {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 17px;
+    margin: 0;
+    line-height: 1.2;
+  }
+  #modalPembayaran .modal-sub-title {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+  }
+  #modalPembayaran .modal-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    border: none;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  #modalPembayaran .modal-close-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+  }
+  #modalPembayaran .modal-body {
+    padding: 22px 24px 14px 24px;
+  }
+  #modalPembayaran .form-label-custom {
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 7px;
+    display: block;
+    font-size: 13px;
+  }
+  #modalPembayaran .form-control {
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #0f172a;
+    box-shadow: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  #modalPembayaran .form-control:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+  }
+
+  /* Multi-Select Trigger & Floating Panel */
+  #modal_pelayanan_btn {
+    height: 44px !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px !important;
+    cursor: pointer;
+    background: #ffffff;
+    user-select: none;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+  }
+  #modal_pelayanan_btn:hover {
+    border-color: #94a3b8;
+  }
+  #modal_pelayanan_btn.open {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+  }
+  #modal_pelayanan_panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 10550;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.18), 0 4px 8px -2px rgba(15, 23, 42, 0.06);
+    margin-top: 4px;
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 6px 0;
+  }
+  .pelayanan-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .pelayanan-item-row:hover {
+    background: #f1f5f9;
+  }
+  .pelayanan-item-row.selected {
+    background: #f0f4ff;
+  }
+  .pelayanan-item-row.disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    background: #fafafa;
+  }
+  .pelayanan-item-row input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    cursor: pointer;
+    margin: 0;
+    accent-color: #6366f1;
+  }
+
+  /* Segmented Cara Bayar Cards */
+  .cara-bayar-grid {
+    display: flex;
+    gap: 12px;
+  }
+  .cara-bayar-card {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #64748b;
+    background: #ffffff;
+    margin: 0;
+    transition: all 0.18s ease;
+  }
+  .cara-bayar-card input[type="radio"] {
+    margin: 0;
+    width: 17px;
+    height: 17px;
+    accent-color: #6366f1;
+    cursor: pointer;
+  }
+  .cara-bayar-card:hover {
+    border-color: #94a3b8;
+    background: #f8fafc;
+  }
+  .cara-bayar-card.active {
+    border-color: #6366f1 !important;
+    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%) !important;
+    color: #4f46e5 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15) !important;
+  }
+  .cara-bayar-card i {
+    font-size: 15px;
+  }
+
+  /* Modal Footer */
+  #modalPembayaran .modal-footer {
+    border-top: 1px solid #f1f5f9;
+    padding: 16px 24px;
+    background: #f8fafc;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    align-items: center;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+  }
+  .btn-simpan-luxury {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 10px 28px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35) !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-simpan-luxury:hover {
+    background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%) !important;
+    box-shadow: 0 6px 18px rgba(79, 70, 229, 0.45) !important;
+    transform: translateY(-1px);
+  }
+  .btn-cancel-luxury {
+    background: #ffffff !important;
+    color: #64748b !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    transition: all 0.15s ease !important;
+  }
+  .btn-cancel-luxury:hover {
+    background: #f1f5f9 !important;
+    color: #334155 !important;
+    border-color: #94a3b8 !important;
+  }
+</style>
+
+<div class="rsgm-billing-shell dokter_ralan_view">
+
+  <!-- ========================================== -->
+  <!-- 1. PATIENT HEADER / CLINICAL BANNER        -->
+  <!-- ========================================== -->
+  <div class="rsgm-patient-banner">
+    <div class="rsgm-pb-body">
+      <div class="rsgm-pb-left">
+        <div class="rsgm-pb-avatar">
+          <i class="fa fa-user"></i>
+        </div>
+        <div class="rsgm-pb-info">
+          <div class="rsgm-pb-name">
+            <span>{?=isset_or($pasien.nm_pasien, 'Data Pasien')?}</span>
+            {if: isset($pasien.jk)}
+              <span class="rsgm-badge rsgm-badge-slate" style="font-size: 11px;">
+                {if: $pasien.jk == 'L'}Laki-laki{elseif: $pasien.jk == 'P'}Perempuan{else}{?=$pasien.jk?}{/if}
+              </span>
+            {/if}
+          </div>
+          <div class="rsgm-pb-meta">
+            <span><strong>No. RM:</strong> <span style="font-family: monospace; font-weight: 700; color: #0f172a;">{?=isset_or($pasien.no_rkm_medis, '-')?}</span></span>
+            <span>&bull;</span>
+            <span><strong>No. Rawat:</strong> <span style="font-family: monospace; color: #475569;">{?=isset_or($no_rawat)?}</span></span>
+            <span>&bull;</span>
+            <span>
+              {if: isset($pasien.png_jawab) && strpos(strtolower($pasien.png_jawab), 'bpjs') !== false}
+                <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-shield"></i> {?=$pasien.png_jawab?}</span>
+              {elseif: isset($pasien.png_jawab)}
+                <span class="rsgm-badge rsgm-badge-slate">{?=$pasien.png_jawab?}</span>
+              {/if}
+            </span>
+          </div>
+          <div style="font-size: 12px; color: #475569; margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <span><i class="fa fa-hospital-o text-primary"></i> <strong>{?=isset_or($pasien.nm_poli, $poliklinik.nm_poli)?}</strong></span>
+            <span>&bull;</span>
+            <span><i class="fa fa-user-md text-primary"></i> DPJP: <strong>{?=isset_or($pasien.nm_dokter, '-')?}</strong></span>
+            <span>&bull;</span>
+            <span><i class="fa fa-calendar-check-o text-primary"></i> Kunjungan: <strong>{?=isset_or($pasien.tgl_registrasi, '-')?}</strong> <span style="font-family: monospace; background: #f1f5f9; padding: 1px 6px; border-radius: 4px; color: #334155; font-size: 11.5px;"><i class="fa fa-clock-o text-muted"></i> {?=isset_or($pasien.jam_reg, '')?}</span></span>
+          </div>
+        </div>
       </div>
-      <input type="text" class="form-control" style="background:white;color:blue;border:none;box-shadow:none;text-align:right;font-weight:bold" placeholder="jumlah total"  value="{?=terbilang(($biaya_registrasi + $jumlah_total + $jumlah_total_obat + $jumlah_total_lab + $jumlah_total_radiologi + $jumlah_total_operasi + $jumlah_total_obat_operasi + $jumlah_total_obat_pulang + $jumlah_total_tambahan),3,"")?}" name="terbilang_jumlah_total" disabled >
-    </div>
-    <div class="form-group">
-      <label class="col-sm-5 control-label">Potongan</label>
-      <div class="col-sm-7">
-        <input type="text" class="form-control" style="text-align:right;font-weight:bold" placeholder="Potongan Faktur" value="" name="potongan_faktur" id="potongan_faktur2" maxlength="15" tabindex="1" />
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="col-sm-5 control-label">Jumlah Harus Bayar</label>
-      <div class="col-sm-7">
-        <input type="text" class="form-control" style="text-align:right;font-weight:bold" placeholder="0" value="{?=($biaya_registrasi + $jumlah_total + $jumlah_total_obat + $jumlah_total_lab + $jumlah_total_radiologi + $jumlah_total_operasi + $jumlah_total_obat_operasi + $jumlah_total_obat_pulang + $jumlah_total_tambahan)?}" name="jumlah_harus_bayar" maxlength="11" disabled />
-      </div>
-      <input type="text" class="form-control" style="background:white;color:blue;border:none;box-shadow:none;text-align:right;font-weight:bold" placeholder="jumlah total"  value="{?=terbilang(($biaya_registrasi + $jumlah_total + $jumlah_total_obat + $jumlah_total_lab + $jumlah_total_radiologi + $jumlah_total_operasi + $jumlah_total_obat_operasi + $jumlah_total_obat_pulang + $jumlah_total_tambahan),3,"")?}" name="terbilang_jumlah_harus_bayar" disabled >
-    </div>
-    <div class="form-group">
-      <label class="col-sm-5 control-label">Jumlah Bayar</label>
-      <div class="col-sm-7">
-        <input type="text" class="form-control" style="text-align:right;font-weight:bold" placeholder="Jumlah Bayar" value="0" name="jumlah_bayar" id="jumlah_bayar2" maxlength="15" tabindex="2" />
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="col-sm-5 control-label">Kembalian</label>
-      <div class="col-sm-7">
-        <input type="text" class="form-control" style="text-align:right;font-weight:bold"  placeholder="Kembalian" value="0" name="kembalian" disabled maxlength="11" />
-      </div>
-      <input type="text" class="form-control" style="background:white;color:blue;border:none;box-shadow:none;text-align:right;font-weight:bold" name="terbilang_kembalian" disabled >
-    </div>
-    <div class="form-group">
-      <label for="keterangan" class="col-sm-5 control-label">Cara Bayar</label>
-      <div class="col-sm-7">
-        <select class="form-control" name="keterangan" id="keterangan">
-          <option value="Tunai">Tunai</option>
-          <option value="Kurang Bayar">Kurang Bayar</option>
-          <option value="Belum Bayar">Belum Bayar</option>
-        </select>
+
+      <div class="rsgm-pb-right">
+        {if: $grand_total_sisa == 0 && $grand_total_tagihan > 0}
+          <span class="rsgm-badge rsgm-badge-emerald" style="font-size: 13px; padding: 6px 14px; font-weight: 700;">
+            <i class="fa fa-check-circle"></i> LUNAS
+          </span>
+        {elseif: $total_sudah_bayar_sebelumnya > 0}
+          <span class="rsgm-badge rsgm-badge-amber" style="font-size: 13px; padding: 6px 14px; font-weight: 700;">
+            <i class="fa fa-clock-o"></i> CICILAN ({?=count($riwayat_billing)?}x)
+          </span>
+        {else}
+          <span class="rsgm-badge rsgm-badge-rose" style="font-size: 13px; padding: 6px 14px; font-weight: 700;">
+            <i class="fa fa-exclamation-circle"></i> BELUM BAYAR
+          </span>
+        {/if}
+        <button type="button" class="btn btn-primary" id="btn_toggle_form_rincian" style="border-radius: 8px; font-weight: 600; padding: 8px 16px; box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
+          <i class="fa fa-plus-circle"></i> Input Layanan Kasir
+        </button>
+        <button type="button" class="btn btn-default" id="btn_kembali_ke_daftar" style="border-radius: 8px; font-weight: 600; color: #475569; border-color: #cbd5e1; padding: 8px 16px;">
+          <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+        </button>
       </div>
     </div>
   </div>
-  <div class="pull-right">
-    <button type="button" name="button" class="btn btn-success" id="simpan_billing"><span class="fa fa-save"></span><span class="hidden-xs"> Simpan</span></button>
-    <button type="button" name="button" class="btn btn-primary" id="cetak_billing_kecil" data-no_rawat="{?=isset_or($no_rawat)?}"><span class="fa fa-file-o"></span><span class="hidden-xs"> Nota</span></button>
-    <button type="button" name="button" class="btn btn-info" id="cetak_billing" data-no_rawat="{?=isset_or($no_rawat)?}"><span class="fa fa-file"></span><span class="hidden-xs"> Invoice</span></button>
-    <button type="button" name="button" class="btn btn-warning" id="selesai_billing"><span class="fa fa-check"></span><span class="hidden-xs"> Selesai</span></button>
+
+  <!-- ========================================== -->
+  <!-- 2. BILLING NAVIGATION TABS                 -->
+  <!-- ========================================== -->
+  <ul class="rsgm-billing-tabs-nav" role="tablist">
+    <li role="presentation" class="active">
+      <a href="#home" aria-controls="home" role="tab" data-toggle="tab">
+        <i class="fa fa-calculator text-primary"></i> Rekap Billing
+      </a>
+    </li>
+    <li role="presentation">
+      <a href="#pendaftaran" aria-controls="pendaftaran" role="tab" data-toggle="tab">
+        <i class="fa fa-id-card-o text-muted"></i> Pendaftaran
+      </a>
+    </li>
+    <li role="presentation">
+      <a href="#tindakan" aria-controls="tindakan" role="tab" data-toggle="tab">
+        <i class="fa fa-stethoscope text-info"></i> Tindakan {if: !empty($tindakan)}<span class="badge" style="background: #e2e8f0; color: #334155; font-size: 11px;">{?=count($tindakan)?}</span>{/if}
+      </a>
+    </li>
+    <li role="presentation">
+      <a href="#obatbhp" aria-controls="obatbhp" role="tab" data-toggle="tab">
+        <i class="fa fa-medkit text-success"></i> Obat &amp; BHP {if: !empty($detail_pemberian_obat)}<span class="badge" style="background: #e2e8f0; color: #334155; font-size: 11px;">{?=count($detail_pemberian_obat)?}</span>{/if}
+      </a>
+    </li>
+    <li role="presentation">
+      <a href="#lab" aria-controls="lab" role="tab" data-toggle="tab">
+        <i class="fa fa-flask text-warning"></i> Lab {if: !empty($periksa_lab)}<span class="badge" style="background: #e2e8f0; color: #334155; font-size: 11px;">{?=count($periksa_lab)?}</span>{/if}
+      </a>
+    </li>
+    <li role="presentation">
+      <a href="#rad" aria-controls="rad" role="tab" data-toggle="tab">
+        <i class="fa fa-heartbeat text-danger"></i> Radiologi {if: !empty($periksa_radiologi)}<span class="badge" style="background: #e2e8f0; color: #334155; font-size: 11px;">{?=count($periksa_radiologi)?}</span>{/if}
+      </a>
+    </li>
+    <li role="presentation">
+      <a href="#operasi" aria-controls="operasi" role="tab" data-toggle="tab">
+        <i class="fa fa-hospital-o text-primary"></i> Operasi
+      </a>
+    </li>
+    <li role="presentation">
+      <a href="#biayalain" aria-controls="biayalain" role="tab" data-toggle="tab">
+        <i class="fa fa-plus-circle text-muted"></i> Biaya Lainnya
+      </a>
+    </li>
+  </ul>
+
+  <!-- ========================================== -->
+  <!-- 3. TAB PANELS CONTENT                      -->
+  <!-- ========================================== -->
+  <div class="tab-content">
+    
+    <!-- TAB 1: REKAP BILLING -->
+    <div role="tabpanel" class="tab-pane fade in active" id="home">
+
+      <!-- Executive KPI Cards Deck -->
+      <div class="rsgm-kpi-deck">
+        <div class="rsgm-kpi-card">
+          <div class="rsgm-kpi-icon rsgm-kpi-icon-blue">
+            <i class="fa fa-calculator"></i>
+          </div>
+          <div class="rsgm-kpi-content">
+            <div class="rsgm-kpi-label">Total Tagihan</div>
+            <div class="rsgm-kpi-val">Rp {?=number_format($grand_total_tagihan,0,',','.')?}</div>
+            <div class="rsgm-kpi-sub"><i class="fa fa-info-circle"></i> Akumulasi seluruh layanan</div>
+          </div>
+        </div>
+
+        <div class="rsgm-kpi-card">
+          <div class="rsgm-kpi-icon rsgm-kpi-icon-emerald">
+            <i class="fa fa-check-circle"></i>
+          </div>
+          <div class="rsgm-kpi-content">
+            <div class="rsgm-kpi-label">Sudah Dibayar</div>
+            <div class="rsgm-kpi-val" style="color: #059669;">Rp {?=number_format($total_sudah_bayar_sebelumnya,0,',','.')?}</div>
+            <div class="rsgm-kpi-sub"><i class="fa fa-history"></i> {?=count($riwayat_billing)?}x transaksi pembayaran</div>
+          </div>
+        </div>
+
+        <div class="rsgm-kpi-card">
+          <div class="rsgm-kpi-icon {if: $grand_total_sisa > 0}rsgm-kpi-icon-rose{else}rsgm-kpi-icon-emerald{/if}">
+            <i class="fa fa-credit-card"></i>
+          </div>
+          <div class="rsgm-kpi-content">
+            <div class="rsgm-kpi-label">Sisa Tagihan</div>
+            <div class="rsgm-kpi-val" style="color: {if: $grand_total_sisa > 0}#e11d48{else}#059669{/if};">
+              Rp {?=number_format($grand_total_sisa,0,',','.')?}
+            </div>
+            <div class="rsgm-kpi-sub">
+              {if: $grand_total_sisa == 0 && $grand_total_tagihan > 0}
+                <span class="rsgm-badge rsgm-badge-emerald" style="font-size: 10.5px;">Tagihan Lunas</span>
+              {elseif: $grand_total_sisa > 0}
+                <span class="rsgm-badge rsgm-badge-rose" style="font-size: 10.5px;">Perlu Pelunasan</span>
+              {else}
+                <span class="text-muted">Tidak ada tagihan</span>
+              {/if}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabel Rekap Billing Sub Rincian Card -->
+      <div class="rsgm-card">
+        <div class="rsgm-card-header">
+          <h4 class="rsgm-card-title">
+            <i class="fa fa-list-alt"></i> Rekap Sub Rincian Layanan &amp; Alokasi
+          </h4>
+          <div>
+            {if: $grand_total_sisa > 0}
+            <button type="button" class="btn btn-primary btn_buka_modal_bayar" data-toggle="modal" data-target="#modalPembayaran" data-kategori="semua" data-nama="Semua Layanan" data-tagihan="{?=$grand_total_tagihan?}" data-sisa="{?=$grand_total_sisa?}" style="font-weight: 600; padding: 7px 18px; border-radius: 8px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
+              <i class="fa fa-plus-circle"></i> Tambah Pembayaran
+            </button>
+            {else}
+            <span class="rsgm-badge rsgm-badge-emerald" style="font-size: 12.5px; padding: 6px 14px;">
+              <i class="fa fa-check-circle"></i> Tagihan Lunas
+            </span>
+            {/if}
+          </div>
+        </div>
+
+        <div class="table-responsive no-margin">
+          <table class="rsgm-table" id="tabel_rekap_alokasi" width="100%">
+            <thead>
+              <tr>
+                <th width="45px" class="text-center">No.</th>
+                <th>Sub Rincian Layanan</th>
+                <th width="180px" class="text-right">Total Tagihan</th>
+                <th width="180px" class="text-right">Sudah Dibayar</th>
+                <th width="180px" class="text-right">Sisa Tagihan</th>
+                <th width="130px" class="text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- 1. Pendaftaran -->
+              <tr data-kategori="pendaftaran" data-nama="Pendaftaran">
+                <td class="text-center text-muted">1.</td>
+                <td><strong>Pendaftaran</strong></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.pendaftaran.tagihan?}">{?= number_format($pos_billing.pendaftaran.tagihan,2,',','.')?}</span></td>
+                <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.pendaftaran.sudah_bayar?}">{?= number_format($pos_billing.pendaftaran.sudah_bayar,2,',','.')?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.pendaftaran.sisa > 0}#e11d48{else}#059669{/if};">
+                  Rp. <span class="val-sisa" data-val="{?=$pos_billing.pendaftaran.sisa?}">{?= number_format($pos_billing.pendaftaran.sisa,2,',','.')?}</span>
+                </td>
+                <td class="text-center">
+                  {if: $pos_billing.pendaftaran.sisa == 0 && $pos_billing.pendaftaran.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
+                  {elseif: $pos_billing.pendaftaran.sudah_bayar > 0}
+                    <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
+                  {elseif: $pos_billing.pendaftaran.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-rose">Belum Bayar</span>
+                  {else}
+                    <span class="text-muted" style="font-size:11px;">-</span>
+                  {/if}
+                </td>
+              </tr>
+
+              <!-- 2. Tindakan -->
+              <tr data-kategori="tindakan" data-nama="Tindakan">
+                <td class="text-center text-muted">2.</td>
+                <td><strong>Tindakan</strong></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.tindakan.tagihan?}">{?= number_format($pos_billing.tindakan.tagihan,2,',','.')?}</span></td>
+                <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.tindakan.sudah_bayar?}">{?= number_format($pos_billing.tindakan.sudah_bayar,2,',','.')?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.tindakan.sisa > 0}#e11d48{else}#059669{/if};">
+                  Rp. <span class="val-sisa" data-val="{?=$pos_billing.tindakan.sisa?}">{?= number_format($pos_billing.tindakan.sisa,2,',','.')?}</span>
+                </td>
+                <td class="text-center">
+                  {if: $pos_billing.tindakan.sisa == 0 && $pos_billing.tindakan.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
+                  {elseif: $pos_billing.tindakan.sudah_bayar > 0}
+                    <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
+                  {elseif: $pos_billing.tindakan.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-rose">Belum Bayar</span>
+                  {else}
+                    <span class="text-muted" style="font-size:11px;">-</span>
+                  {/if}
+                </td>
+              </tr>
+
+              <!-- 3. Obat & BHP -->
+              <tr data-kategori="obat" data-nama="Obat dan BHP">
+                <td class="text-center text-muted">3.</td>
+                <td><strong>Obat dan BHP</strong></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.obat.tagihan?}">{?= number_format($pos_billing.obat.tagihan,2,',','.')?}</span></td>
+                <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.obat.sudah_bayar?}">{?= number_format($pos_billing.obat.sudah_bayar,2,',','.')?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.obat.sisa > 0}#e11d48{else}#059669{/if};">
+                  Rp. <span class="val-sisa" data-val="{?=$pos_billing.obat.sisa?}">{?= number_format($pos_billing.obat.sisa,2,',','.')?}</span>
+                </td>
+                <td class="text-center">
+                  {if: $pos_billing.obat.sisa == 0 && $pos_billing.obat.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
+                  {elseif: $pos_billing.obat.sudah_bayar > 0}
+                    <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
+                  {elseif: $pos_billing.obat.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-rose">Belum Bayar</span>
+                  {else}
+                    <span class="text-muted" style="font-size:11px;">-</span>
+                  {/if}
+                </td>
+              </tr>
+
+              <!-- 4. Laboratorium -->
+              <tr data-kategori="laboratorium" data-nama="Laboratorium">
+                <td class="text-center text-muted">4.</td>
+                <td><strong>Laboratorium</strong></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.laboratorium.tagihan?}">{?= number_format($pos_billing.laboratorium.tagihan,2,',','.')?}</span></td>
+                <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.laboratorium.sudah_bayar?}">{?= number_format($pos_billing.laboratorium.sudah_bayar,2,',','.')?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.laboratorium.sisa > 0}#e11d48{else}#059669{/if};">
+                  Rp. <span class="val-sisa" data-val="{?=$pos_billing.laboratorium.sisa?}">{?= number_format($pos_billing.laboratorium.sisa,2,',','.')?}</span>
+                </td>
+                <td class="text-center">
+                  {if: $pos_billing.laboratorium.sisa == 0 && $pos_billing.laboratorium.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
+                  {elseif: $pos_billing.laboratorium.sudah_bayar > 0}
+                    <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
+                  {elseif: $pos_billing.laboratorium.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-rose">Belum Bayar</span>
+                  {else}
+                    <span class="text-muted" style="font-size:11px;">-</span>
+                  {/if}
+                </td>
+              </tr>
+
+              <!-- 5. Radiologi -->
+              <tr data-kategori="radiologi" data-nama="Radiologi">
+                <td class="text-center text-muted">5.</td>
+                <td><strong>Radiologi</strong></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.radiologi.tagihan?}">{?= number_format($pos_billing.radiologi.tagihan,2,',','.')?}</span></td>
+                <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.radiologi.sudah_bayar?}">{?= number_format($pos_billing.radiologi.sudah_bayar,2,',','.')?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.radiologi.sisa > 0}#e11d48{else}#059669{/if};">
+                  Rp. <span class="val-sisa" data-val="{?=$pos_billing.radiologi.sisa?}">{?= number_format($pos_billing.radiologi.sisa,2,',','.')?}</span>
+                </td>
+                <td class="text-center">
+                  {if: $pos_billing.radiologi.sisa == 0 && $pos_billing.radiologi.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
+                  {elseif: $pos_billing.radiologi.sudah_bayar > 0}
+                    <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
+                  {elseif: $pos_billing.radiologi.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-rose">Belum Bayar</span>
+                  {else}
+                    <span class="text-muted" style="font-size:11px;">-</span>
+                  {/if}
+                </td>
+              </tr>
+
+              <!-- 6. Operasi -->
+              <tr data-kategori="operasi" data-nama="Operasi">
+                <td class="text-center text-muted">6.</td>
+                <td><strong>Operasi</strong></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.operasi.tagihan?}">{?= number_format($pos_billing.operasi.tagihan,2,',','.')?}</span></td>
+                <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.operasi.sudah_bayar?}">{?= number_format($pos_billing.operasi.sudah_bayar,2,',','.')?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.operasi.sisa > 0}#e11d48{else}#059669{/if};">
+                  Rp. <span class="val-sisa" data-val="{?=$pos_billing.operasi.sisa?}">{?= number_format($pos_billing.operasi.sisa,2,',','.')?}</span>
+                </td>
+                <td class="text-center">
+                  {if: $pos_billing.operasi.sisa == 0 && $pos_billing.operasi.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
+                  {elseif: $pos_billing.operasi.sudah_bayar > 0}
+                    <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
+                  {elseif: $pos_billing.operasi.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-rose">Belum Bayar</span>
+                  {else}
+                    <span class="text-muted" style="font-size:11px;">-</span>
+                  {/if}
+                </td>
+              </tr>
+
+              <!-- 7. Obat Pulang -->
+              <tr data-kategori="obat_pulang" data-nama="Obat Pulang">
+                <td class="text-center text-muted">7.</td>
+                <td><strong>Obat Pulang</strong></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.obat_pulang.tagihan?}">{?= number_format($pos_billing.obat_pulang.tagihan,2,',','.')?}</span></td>
+                <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.obat_pulang.sudah_bayar?}">{?= number_format($pos_billing.obat_pulang.sudah_bayar,2,',','.')?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.obat_pulang.sisa > 0}#e11d48{else}#059669{/if};">
+                  Rp. <span class="val-sisa" data-val="{?=$pos_billing.obat_pulang.sisa?}">{?= number_format($pos_billing.obat_pulang.sisa,2,',','.')?}</span>
+                </td>
+                <td class="text-center">
+                  {if: $pos_billing.obat_pulang.sisa == 0 && $pos_billing.obat_pulang.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
+                  {elseif: $pos_billing.obat_pulang.sudah_bayar > 0}
+                    <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
+                  {elseif: $pos_billing.obat_pulang.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-rose">Belum Bayar</span>
+                  {else}
+                    <span class="text-muted" style="font-size:11px;">-</span>
+                  {/if}
+                </td>
+              </tr>
+
+              <!-- 8. Biaya Tambahan -->
+              <tr data-kategori="tambahan" data-nama="Biaya Tambahan">
+                <td class="text-center text-muted">8.</td>
+                <td><strong>Biaya Tambahan (termasuk UTD)</strong></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.tambahan.tagihan?}">{?= number_format($pos_billing.tambahan.tagihan,2,',','.')?}</span></td>
+                <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.tambahan.sudah_bayar?}">{?= number_format($pos_billing.tambahan.sudah_bayar,2,',','.')?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.tambahan.sisa > 0}#e11d48{else}#059669{/if};">
+                  Rp. <span class="val-sisa" data-val="{?=$pos_billing.tambahan.sisa?}">{?= number_format($pos_billing.tambahan.sisa,2,',','.')?}</span>
+                </td>
+                <td class="text-center">
+                  {if: $pos_billing.tambahan.sisa == 0 && $pos_billing.tambahan.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
+                  {elseif: $pos_billing.tambahan.sudah_bayar > 0}
+                    <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
+                  {elseif: $pos_billing.tambahan.tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-rose">Belum Bayar</span>
+                  {else}
+                    <span class="text-muted" style="font-size:11px;">-</span>
+                  {/if}
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colspan="2" class="text-right" style="font-weight: 800; color: #0f172a;">TOTAL KESELURUHAN</th>
+                <th class="text-right" style="font-family: monospace; font-weight: 800; color: #0f172a;">Rp. <span id="foot_grand_tagihan">{?= number_format($grand_total_tagihan,2,',','.')?}</span></th>
+                <th class="text-right text-muted" style="font-family: monospace; font-weight: 800;">Rp. <span id="foot_sudah_bayar">{?= number_format($total_sudah_bayar_sebelumnya,2,',','.')?}</span></th>
+                <th class="text-right" style="font-family: monospace; font-weight: 800; color: {if: $grand_total_sisa > 0}#e11d48{else}#059669{/if};">
+                  Rp. <span id="foot_total_sisa">{?= number_format($grand_total_sisa,2,',','.')?}</span>
+                </th>
+                <th class="text-center">
+                  {if: $grand_total_sisa == 0 && $grand_total_tagihan > 0}
+                    <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
+                  {elseif: $total_sudah_bayar_sebelumnya > 0}
+                    <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
+                  {else}
+                    <span class="rsgm-badge rsgm-badge-rose">Belum Bayar</span>
+                  {/if}
+                </th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Card Footer / Actions Bar -->
+        <div class="rsgm-actions-bar">
+          <div style="font-size: 12.5px; color: #64748b;">
+            <i class="fa fa-info-circle text-primary"></i> Data sinkron dengan pos rincian transaksi pasien rawat jalan.
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            {if: $grand_total_sisa > 0}
+            <button type="button" class="btn btn-primary btn_buka_modal_bayar" data-toggle="modal" data-target="#modalPembayaran" data-kategori="semua" data-nama="Semua Layanan" data-tagihan="{?=$grand_total_tagihan?}" data-sisa="{?=$grand_total_sisa?}" style="font-weight: 600; border-radius: 8px;">
+              <i class="fa fa-money"></i> Bayar Sekarang
+            </button>
+            {/if}
+            <button type="button" class="btn btn-default" id="cetak_billing_kecil" data-no_rawat="{?=isset_or($no_rawat)?}" title="Cetak nota pembayaran terakhir" style="border-radius: 8px; font-weight: 600;">
+              <i class="fa fa-print"></i> Nota Terakhir
+            </button>
+            <button type="button" class="btn btn-info" id="cetak_billing" data-no_rawat="{?=isset_or($no_rawat)?}" title="Cetak resume invoice lengkap" style="border-radius: 8px; font-weight: 600;">
+              <i class="fa fa-file-text-o"></i> Invoice Lengkap
+            </button>
+            <button type="button" class="btn btn-warning" id="selesai_billing" style="border-radius: 8px; font-weight: 600;">
+              <i class="fa fa-check"></i> Selesai
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hidden Hooks untuk Jurnal Akuntansi & Kompatibilitas Sistem -->
+      <input type="hidden" id="jumlah_total_layanan" value="{?=$grand_total_tagihan?}">
+      <input type="hidden" id="total_sudah_bayar" value="{?=$total_sudah_bayar_sebelumnya?}">
+      <input type="hidden" id="grand_total_sisa_val" value="{?=$grand_total_sisa?}">
+      <input type="hidden" id="no_rawat_val" value="{?=isset_or($no_rawat)?}">
+
+      <!-- Riwayat Pembayaran Card -->
+      {if: !empty($riwayat_billing)}
+      <div class="rsgm-card">
+        <div class="rsgm-card-header">
+          <h4 class="rsgm-card-title">
+            <i class="fa fa-history text-info"></i> Riwayat Pembayaran ({?=count($riwayat_billing)?}x Transaksi)
+          </h4>
+          <span class="rsgm-badge rsgm-badge-slate" style="font-size: 11.5px;">Tercatat di Jurnal Kasir</span>
+        </div>
+        <div class="table-responsive no-margin">
+          <table class="rsgm-table" width="100%">
+            <thead>
+              <tr>
+                <th width="170px">No. Faktur</th>
+                <th width="150px">Waktu Pembayaran</th>
+                <th width="140px">Petugas / Kasir</th>
+                <th>Alokasi Sub Rincian Layanan</th>
+                <th width="140px">Keterangan</th>
+                <th width="150px" class="text-right">Nominal Masuk</th>
+                <th width="90px" class="text-center">Cetak</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loop: $riwayat_billing as $rb}
+              <tr>
+                <td><span style="font-family: monospace; font-size: 11.5px; background: #0f172a; color: #f8fafc; border-radius: 4px; padding: 2px 7px;">{?=isset_or($rb.kd_billing)?}</span></td>
+                <td><span style="color: #475569; font-size: 12.5px;">{?=isset_or($rb.tgl_billing)?} {?=isset_or($rb.jam_billing)?}</span></td>
+                <td><strong style="color: #1e293b; font-size: 12.5px;">{?=isset_or($rb.nama_petugas)?}</strong></td>
+                <td>
+                  {if: !empty($rb.rincian_item)}
+                    <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                      {loop: $rb.rincian_item as $item}
+                        <span class="rsgm-badge rsgm-badge-slate" style="font-size: 11px;">
+                          {?=isset_or($item.nama)?}: <strong style="color: #0f172a;">Rp {?=number_format($item.bayar,0,',','.')?}</strong>
+                        </span>
+                      {/loop}
+                    </div>
+                  {else}
+                    <span class="text-muted">-</span>
+                  {/if}
+                </td>
+                <td><span style="font-size: 12px; color: #64748b;">{?=isset_or($rb.keterangan)?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-weight: 700; color: #059669; font-size: 13.5px;">
+                  Rp. {?=number_format($rb.jumlah_bayar,0,',','.')?}
+                </td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-xs btn-primary btn_cetak_riwayat" data-kd_billing="{?=isset_or($rb.kd_billing)?}" data-no_rawat="{?=isset_or($rb.no_rawat)?}" title="Cetak Nota Pembayaran Ini" style="border-radius: 4px; font-weight: 600;">
+                    <i class="fa fa-print"></i> Nota
+                  </button>
+                </td>
+              </tr>
+              {/loop}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {/if}
+
+    </div>
+
+    <!-- TAB 2: PENDAFTARAN -->
+    <div role="tabpanel" class="tab-pane fade in" id="pendaftaran">
+      <div class="rsgm-card">
+        <div class="rsgm-card-header">
+          <h4 class="rsgm-card-title"><i class="fa fa-id-card-o"></i> Rincian Biaya Pendaftaran</h4>
+        </div>
+        <div class="table-responsive no-margin">
+          <table class="rsgm-table" width="100%">
+            <thead>
+              <tr>
+                <th width="40px" class="text-center">No.</th>
+                <th>Nama Poliklinik</th>
+                <th width="100px" class="text-center">Jumlah</th>
+                <th width="180px" class="text-right">Harga</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-center text-muted">1.</td>
+                <td><strong>{?=isset_or($poliklinik.nm_poli)?}</strong></td>
+                <td class="text-center">1</td>
+                <td class="text-right" style="font-family: monospace;">Rp. {?= number_format($poliklinik.registrasi,2,',','.')?}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colspan="3" class="text-right">Total Biaya Pendaftaran</th>
+                <th class="text-right" style="font-family: monospace;">Rp. {?= number_format($biaya_registrasi,2,',','.')?}</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: TINDAKAN -->
+    <div role="tabpanel" class="tab-pane fade in" id="tindakan">
+      <div class="rsgm-card">
+        <div class="rsgm-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h4 class="rsgm-card-title"><i class="fa fa-stethoscope"></i> Rincian Tindakan / Layanan Medis</h4>
+          <button type="button" class="btn btn-xs btn-primary btn-trigger-form-rincian" data-focus="layanan" style="border-radius: 6px; font-weight: 600; padding: 5px 12px; box-shadow: 0 1px 3px rgba(37,99,235,0.2);">
+            <i class="fa fa-plus-circle"></i> Tambah Tindakan
+          </button>
+        </div>
+        <div class="table-responsive no-margin">
+          <table class="rsgm-table" width="100%">
+            <thead>
+              <tr>
+                <th width="40px" class="text-center">No.</th>
+                <th>Nama Tindakan / Pemeriksaan</th>
+                <th width="150px">Provider</th>
+                <th width="180px" class="text-right">Tarif</th>
+                <th width="90px" class="text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loop: $tindakan}
+              <tr>
+                <td class="text-center text-muted">{?=isset_or($value.nomor)?}</td>
+                <td><strong>{?=isset_or($value.nm_perawatan)?}</strong></td>
+                <td><span class="rsgm-badge rsgm-badge-slate">{?=isset_or($value.provider)?}</span></td>
+                <td class="text-right" style="font-family: monospace;">Rp. {?= number_format($value.biaya_rawat,2,',','.')?}</td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-danger btn-xs hapus_detail" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}" data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}" data-jam_rawat="{?=isset_or($value.jam_rawat)?}" data-provider="{if: $value.provider == 'Dokter'}rawat_jl_dr{elseif: $value.provider == 'Perawat'}rawat_jl_pr{else}rawat_jl_drpr{/if}" style="border-radius: 4px;">
+                    <i class="fa fa-close"></i> Hapus
+                  </button>
+                </td>
+              </tr>
+              {/loop}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colspan="3" class="text-right">Total Biaya Tindakan</th>
+                <th class="text-right" style="font-family: monospace;">Rp. {?= number_format($jumlah_total,2,',','.')?}</th>
+                <th></th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: OBAT & BHP -->
+    <div role="tabpanel" class="tab-pane fade in resep" id="obatbhp">
+      <div class="rsgm-card">
+        <div class="rsgm-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h4 class="rsgm-card-title"><i class="fa fa-medkit"></i> Pemberian Obat &amp; BHP Farmasi</h4>
+          <button type="button" class="btn btn-xs btn-primary btn-trigger-form-rincian" data-focus="obat" style="border-radius: 6px; font-weight: 600; padding: 5px 12px; box-shadow: 0 1px 3px rgba(37,99,235,0.2);">
+            <i class="fa fa-plus-circle"></i> Tambah Obat / BHP
+          </button>
+        </div>
+        <div class="table-responsive no-margin">
+          <table class="rsgm-table" width="100%">
+            <thead>
+              <tr>
+                <th width="40px" class="text-center">No.</th>
+                <th>Nama Obat / BHP</th>
+                <th width="70px" class="text-center">Jumlah</th>
+                <th width="120px" class="text-right">Harga</th>
+                <th width="120px" class="text-right">Total</th>
+                <th width="100px" class="text-right">Embalase</th>
+                <th width="90px" class="text-right">Tuslah</th>
+                <th width="140px" class="text-right">Subtotal</th>
+                <th width="80px" class="text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loop: $detail_pemberian_obat}
+              <tr>
+                <td class="text-center text-muted">{?=isset_or($value.nomor)?}</td>
+                <td><strong>{?=isset_or($value.nama_brng)?}</strong></td>
+                <td class="text-center">{?=isset_or($value.jml)?}</td>
+                <td class="text-right" style="font-family: monospace;">Rp. {?= number_format($value.biaya_obat,2,',','.')?}</td>
+                <td class="text-right" style="font-family: monospace;">Rp. {?= number_format($value.total,2,',','.')?}</td>
+                <td class="text-right text-muted" style="font-family: monospace;">Rp. {?= number_format($value.embalase,2,',','.')?}</td>
+                <td class="text-right text-muted" style="font-family: monospace;">Rp. {?= number_format($value.tuslah,2,',','.')?}</td>
+                <td class="text-right" style="font-family: monospace; font-weight: 700; color: #0f172a;">Rp. {?= number_format($value.total + $value.embalase + $value.tuslah,2,',','.')?}</td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-danger btn-xs hapus_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_peresepan)?}" data-jam_peresepan="{?=isset_or($value.jam_peresepan)?}" data-kode_brng="{?=isset_or($value.kode_brng)?}" data-jml="{?=isset_or($value.jml)?}" style="border-radius: 4px;">
+                    <i class="fa fa-close"></i> Hapus
+                  </button>
+                </td>
+              </tr>
+              {/loop}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colspan="7" class="text-right">Total Biaya Obat &amp; BHP</th>
+                <th colspan="2" class="text-right" style="font-family: monospace; font-weight: 800;">Rp. {?= number_format($jumlah_total_obat,2,',','.')?}</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: LABORATORIUM -->
+    <div role="tabpanel" class="tab-pane fade in" id="lab">
+      <div class="rsgm-card">
+        <div class="rsgm-card-header">
+          <h4 class="rsgm-card-title"><i class="fa fa-flask"></i> Pemeriksaan Laboratorium</h4>
+        </div>
+        <div class="table-responsive no-margin">
+          <table class="rsgm-table" width="100%">
+            <thead>
+              <tr>
+                <th width="40px" class="text-center">No.</th>
+                <th>Nama Pemeriksaan</th>
+                <th width="180px" class="text-right">Harga</th>
+                <th width="90px" class="text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loop: $periksa_lab}
+              <tr>
+                <td class="text-center text-muted">{?=isset_or($value.nomor)?}</td>
+                <td><strong>{?=isset_or($value.nm_perawatan)?}</strong></td>
+                <td class="text-right" style="font-family: monospace;">Rp. {?= number_format($value.biaya,2,',','.')?}</td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-danger btn-xs hapus_laboratorium" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}" data-jam_periksa="{?=isset_or($value.jam)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}" style="border-radius: 4px;">
+                    <i class="fa fa-close"></i> Hapus
+                  </button>
+                </td>
+              </tr>
+              {/loop}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colspan="2" class="text-right">Total Biaya Laboratorium</th>
+                <th class="text-right" style="font-family: monospace;">Rp. {?= number_format($jumlah_total_lab,2,',','.')?}</th>
+                <th></th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: RADIOLOGI -->
+    <div role="tabpanel" class="tab-pane fade in" id="rad">
+      <div class="rsgm-card">
+        <div class="rsgm-card-header">
+          <h4 class="rsgm-card-title"><i class="fa fa-heartbeat"></i> Pemeriksaan Radiologi</h4>
+        </div>
+        <div class="table-responsive no-margin">
+          <table class="rsgm-table" width="100%">
+            <thead>
+              <tr>
+                <th width="40px" class="text-center">No.</th>
+                <th>Nama Pemeriksaan</th>
+                <th width="180px" class="text-right">Harga</th>
+                <th width="90px" class="text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loop: $periksa_radiologi}
+              <tr>
+                <td class="text-center text-muted">{?=isset_or($value.nomor)?}</td>
+                <td><strong>{?=isset_or($value.nm_perawatan)?}</strong></td>
+                <td class="text-right" style="font-family: monospace;">Rp. {?= number_format($value.biaya,2,',','.')?}</td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-danger btn-xs hapus_radiologi" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}" data-jam_periksa="{?=isset_or($value.jam)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}" style="border-radius: 4px;">
+                    <i class="fa fa-close"></i> Hapus
+                  </button>
+                </td>
+              </tr>
+              {/loop}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colspan="2" class="text-right">Total Biaya Radiologi</th>
+                <th class="text-right" style="font-family: monospace;">Rp. {?= number_format($jumlah_total_radiologi,2,',','.')?}</th>
+                <th></th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 7: OPERASI -->
+    <div role="tabpanel" class="tab-pane fade in" id="operasi">
+      <div class="rsgm-card">
+        <div class="rsgm-card-header">
+          <h4 class="rsgm-card-title"><i class="fa fa-hospital-o"></i> Tindakan dan Obat Operasi</h4>
+        </div>
+        <div class="table-responsive no-margin">
+          <table class="rsgm-table" width="100%">
+            <thead>
+              <tr>
+                <th width="40px" class="text-center">No.</th>
+                <th>Jenis Biaya Operasi</th>
+                <th width="180px" class="text-right">Harga</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-center text-muted">1.</td>
+                <td><strong>Tindakan Operasi</strong></td>
+                <td class="text-right" style="font-family: monospace;">Rp. {?= number_format($jumlah_total_operasi,2,',','.')?}</td>
+              </tr>
+              <tr>
+                <td class="text-center text-muted">2.</td>
+                <td><strong>Obat dan BHP Operasi</strong></td>
+                <td class="text-right" style="font-family: monospace;">Rp. {?= number_format($jumlah_total_obat_operasi,2,',','.')?}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colspan="2" class="text-right">Total Biaya Operasi</th>
+                <th class="text-right" style="font-family: monospace;">Rp. {?= number_format($jumlah_total_operasi + $jumlah_total_obat_operasi,2,',','.')?}</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 8: BIAYA LAINNYA -->
+    <div role="tabpanel" class="tab-pane fade in" id="biayalain">
+      <div class="rsgm-card">
+        <div class="rsgm-card-header">
+          <h4 class="rsgm-card-title"><i class="fa fa-plus-circle"></i> Biaya Lainnya &amp; Resep Pulang</h4>
+        </div>
+        <div class="table-responsive no-margin">
+          <table class="rsgm-table" width="100%">
+            <thead>
+              <tr>
+                <th width="40px" class="text-center">No.</th>
+                <th>Nama Item</th>
+                <th width="100px" class="text-center">Jumlah</th>
+                <th width="180px" class="text-right">Harga</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loop: $resep_pulang}
+              <tr>
+                <td class="text-center text-muted">{?=isset_or($value.nomor)?}</td>
+                <td><strong>{?=isset_or($value.nama_brng)?}</strong> (Resep Pulang)</td>
+                <td class="text-center">{?=isset_or($value.jml_barang)?}</td>
+                <td class="text-right" style="font-family: monospace;">Rp. {?= number_format($value.total,2,',','.')?}</td>
+              </tr>
+              {/loop}
+              {loop: $tambahan_biaya}
+              <tr>
+                <td class="text-center text-muted">{?=isset_or($value.nomor)?}</td>
+                <td><strong>{?=isset_or($value.nama_biaya)?}</strong></td>
+                <td class="text-center">1</td>
+                <td class="text-right" style="font-family: monospace;">Rp. {?= number_format($value.besar_biaya,2,',','.')?}</td>
+              </tr>
+              {/loop}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colspan="3" class="text-right">Total Obat Pulang</th>
+                <th class="text-right" style="font-family: monospace;">Rp. {?= number_format($jumlah_total_obat_pulang,2,',','.')?}</th>
+              </tr>
+              <tr>
+                <th colspan="3" class="text-right">Total Biaya Tambahan (termasuk UTD)</th>
+                <th class="text-right" style="font-family: monospace;">Rp. {?= number_format($jumlah_total_tambahan,2,',','.')?}</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
+
+<!-- ========================================== -->
+<!-- 4. MODAL DIALOG PEMBAYARAN (LUXURY)        -->
+<!-- ========================================== -->
+<div class="modal fade" id="modalPembayaran" tabindex="-1" role="dialog" aria-labelledby="modalPembayaranLabel" aria-hidden="true" style="z-index: 1060;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <div class="modal-title-icon">
+            <i class="fa fa-credit-card"></i>
+          </div>
+          <div>
+            <h4 class="modal-title-text" id="modalPembayaranLabel">Pembayaran Billing</h4>
+            <div class="modal-sub-title">Pasien: <strong style="color: #1e293b;">{?=isset_or($pasien.nm_pasien, 'Rawat Jalan')?}</strong> &bull; RM: {?=isset_or($pasien.no_rkm_medis, '-')?} &bull; Kunjungan: {?=isset_or($pasien.tgl_registrasi, '-')?} {?=isset_or($pasien.jam_reg, '')?}</div>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" data-dismiss="modal" aria-label="Close">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form id="form_modal_bayar" onsubmit="return false;">
+          
+          <!-- Tanggal & Jam Input (DD-MM-YYYY HH:mm:ss) -->
+          <div class="form-group" style="margin-bottom: 18px;">
+            <label class="form-label-custom" for="modal_tgl_jam">Tanggal &amp; Waktu Pembayaran</label>
+            <div class="input-group" style="width: 100%;">
+              <span class="input-group-addon" style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-right: none; border-radius: 8px 0 0 8px; color: #64748b; padding: 0 14px; line-height: 40px; font-size: 14px;">
+                <i class="fa fa-calendar"></i>
+              </span>
+              <input type="text" class="form-control" id="modal_tgl_jam" name="modal_tgl_jam" value="{?=date('d-m-Y H:i:s')?}" style="height: 44px; font-size: 14px; color: #0f172a; border-radius: 0 8px 8px 0; padding: 8px 14px; font-weight: 500;">
+            </div>
+            <small style="color: #94a3b8; font-size: 11.5px; margin-top: 4px; display: block;">Format: DD-MM-YYYY HH:mm:ss (dapat disesuaikan jika bayar susulan)</small>
+          </div>
+
+          <!-- Pelayanan (Multi-Select) Dropdown -->
+          <div class="form-group" style="margin-bottom: 18px; position: relative;" id="group_modal_pelayanan">
+            <label class="form-label-custom" style="display: flex; justify-content: space-between; align-items: center;">
+              <span>Sub Rincian Layanan <small style="font-weight: normal; color: #64748b; font-size: 11.5px;">(Bisa multi-pilih)</small></span>
+              <span id="selected_count_badge" class="rsgm-badge rsgm-badge-indigo" style="font-size: 11px; display: none;">0 Dipilih</span>
+            </label>
+
+            <!-- Trigger Button -->
+            <div id="modal_pelayanan_btn" class="form-control">
+              <div id="modal_pelayanan_text" style="font-size: 13.5px; font-weight: 500; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 8px;">
+                Semua Layanan (Total Sisa: Rp {?=number_format($grand_total_sisa,0,',','.')?})
+              </div>
+              <i class="fa fa-chevron-down" id="modal_pelayanan_arrow" style="color: #64748b; font-size: 12px; transition: transform 0.2s;"></i>
+            </div>
+
+            <!-- Floating Multi-Select Panel -->
+            <div id="modal_pelayanan_panel" style="display: none;">
+              <!-- Option: Pilih Semua -->
+              <div class="pelayanan-item-row" data-kategori="semua" style="border-bottom: 1.5px solid #f1f5f9; background: #f8fafc; font-weight: 700;">
+                <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #1e293b;">
+                  <input type="checkbox" id="chk_pelayanan_all">
+                  <span>Pilih Semua Layanan</span>
+                </label>
+                <span class="rsgm-badge rsgm-badge-slate" style="font-size: 11px;">Total Sisa: Rp {?=number_format($grand_total_sisa,0,',','.')?}</span>
+              </div>
+
+              <!-- List Sub Rincian -->
+              {if: $pos_billing.pendaftaran.tagihan > 0}
+              <div class="pelayanan-item-row {if: $pos_billing.pendaftaran.sisa == 0}disabled{/if}" data-kategori="pendaftaran" data-nama="Pendaftaran" data-tagihan="{?=$pos_billing.pendaftaran.tagihan?}" data-sisa="{?=$pos_billing.pendaftaran.sisa?}">
+                <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
+                  <input type="checkbox" class="chk_pelayanan_sub" value="pendaftaran" {if: $pos_billing.pendaftaran.sisa == 0}disabled{/if}>
+                  <span>Pendaftaran</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: {if: $pos_billing.pendaftaran.sisa > 0}#e11d48{else}#059669{/if}; font-family: monospace;">
+                  {if: $pos_billing.pendaftaran.sisa > 0}Sisa: Rp {?=number_format($pos_billing.pendaftaran.sisa,0,',','.')?}{else}<i class="fa fa-check"></i> Lunas{/if}
+                </span>
+              </div>
+              {/if}
+
+              {if: $pos_billing.tindakan.tagihan > 0}
+              <div class="pelayanan-item-row {if: $pos_billing.tindakan.sisa == 0}disabled{/if}" data-kategori="tindakan" data-nama="Tindakan" data-tagihan="{?=$pos_billing.tindakan.tagihan?}" data-sisa="{?=$pos_billing.tindakan.sisa?}">
+                <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
+                  <input type="checkbox" class="chk_pelayanan_sub" value="tindakan" {if: $pos_billing.tindakan.sisa == 0}disabled{/if}>
+                  <span>Tindakan</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: {if: $pos_billing.tindakan.sisa > 0}#e11d48{else}#059669{/if}; font-family: monospace;">
+                  {if: $pos_billing.tindakan.sisa > 0}Sisa: Rp {?=number_format($pos_billing.tindakan.sisa,0,',','.')?}{else}<i class="fa fa-check"></i> Lunas{/if}
+                </span>
+              </div>
+              {/if}
+
+              {if: $pos_billing.obat.tagihan > 0}
+              <div class="pelayanan-item-row {if: $pos_billing.obat.sisa == 0}disabled{/if}" data-kategori="obat" data-nama="Obat dan BHP" data-tagihan="{?=$pos_billing.obat.tagihan?}" data-sisa="{?=$pos_billing.obat.sisa?}">
+                <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
+                  <input type="checkbox" class="chk_pelayanan_sub" value="obat" {if: $pos_billing.obat.sisa == 0}disabled{/if}>
+                  <span>Obat dan BHP</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: {if: $pos_billing.obat.sisa > 0}#e11d48{else}#059669{/if}; font-family: monospace;">
+                  {if: $pos_billing.obat.sisa > 0}Sisa: Rp {?=number_format($pos_billing.obat.sisa,0,',','.')?}{else}<i class="fa fa-check"></i> Lunas{/if}
+                </span>
+              </div>
+              {/if}
+
+              {if: $pos_billing.laboratorium.tagihan > 0}
+              <div class="pelayanan-item-row {if: $pos_billing.laboratorium.sisa == 0}disabled{/if}" data-kategori="laboratorium" data-nama="Laboratorium" data-tagihan="{?=$pos_billing.laboratorium.tagihan?}" data-sisa="{?=$pos_billing.laboratorium.sisa?}">
+                <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
+                  <input type="checkbox" class="chk_pelayanan_sub" value="laboratorium" {if: $pos_billing.laboratorium.sisa == 0}disabled{/if}>
+                  <span>Laboratorium</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: {if: $pos_billing.laboratorium.sisa > 0}#e11d48{else}#059669{/if}; font-family: monospace;">
+                  {if: $pos_billing.laboratorium.sisa > 0}Sisa: Rp {?=number_format($pos_billing.laboratorium.sisa,0,',','.')?}{else}<i class="fa fa-check"></i> Lunas{/if}
+                </span>
+              </div>
+              {/if}
+
+              {if: $pos_billing.radiologi.tagihan > 0}
+              <div class="pelayanan-item-row {if: $pos_billing.radiologi.sisa == 0}disabled{/if}" data-kategori="radiologi" data-nama="Radiologi" data-tagihan="{?=$pos_billing.radiologi.tagihan?}" data-sisa="{?=$pos_billing.radiologi.sisa?}">
+                <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
+                  <input type="checkbox" class="chk_pelayanan_sub" value="radiologi" {if: $pos_billing.radiologi.sisa == 0}disabled{/if}>
+                  <span>Radiologi</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: {if: $pos_billing.radiologi.sisa > 0}#e11d48{else}#059669{/if}; font-family: monospace;">
+                  {if: $pos_billing.radiologi.sisa > 0}Sisa: Rp {?=number_format($pos_billing.radiologi.sisa,0,',','.')?}{else}<i class="fa fa-check"></i> Lunas{/if}
+                </span>
+              </div>
+              {/if}
+
+              {if: $pos_billing.operasi.tagihan > 0}
+              <div class="pelayanan-item-row {if: $pos_billing.operasi.sisa == 0}disabled{/if}" data-kategori="operasi" data-nama="Operasi" data-tagihan="{?=$pos_billing.operasi.tagihan?}" data-sisa="{?=$pos_billing.operasi.sisa?}">
+                <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
+                  <input type="checkbox" class="chk_pelayanan_sub" value="operasi" {if: $pos_billing.operasi.sisa == 0}disabled{/if}>
+                  <span>Operasi</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: {if: $pos_billing.operasi.sisa > 0}#e11d48{else}#059669{/if}; font-family: monospace;">
+                  {if: $pos_billing.operasi.sisa > 0}Sisa: Rp {?=number_format($pos_billing.operasi.sisa,0,',','.')?}{else}<i class="fa fa-check"></i> Lunas{/if}
+                </span>
+              </div>
+              {/if}
+
+              {if: $pos_billing.obat_pulang.tagihan > 0}
+              <div class="pelayanan-item-row {if: $pos_billing.obat_pulang.sisa == 0}disabled{/if}" data-kategori="obat_pulang" data-nama="Obat Pulang" data-tagihan="{?=$pos_billing.obat_pulang.tagihan?}" data-sisa="{?=$pos_billing.obat_pulang.sisa?}">
+                <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
+                  <input type="checkbox" class="chk_pelayanan_sub" value="obat_pulang" {if: $pos_billing.obat_pulang.sisa == 0}disabled{/if}>
+                  <span>Obat Pulang</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: {if: $pos_billing.obat_pulang.sisa > 0}#e11d48{else}#059669{/if}; font-family: monospace;">
+                  {if: $pos_billing.obat_pulang.sisa > 0}Sisa: Rp {?=number_format($pos_billing.obat_pulang.sisa,0,',','.')?}{else}<i class="fa fa-check"></i> Lunas{/if}
+                </span>
+              </div>
+              {/if}
+
+              {if: $pos_billing.tambahan.tagihan > 0}
+              <div class="pelayanan-item-row {if: $pos_billing.tambahan.sisa == 0}disabled{/if}" data-kategori="tambahan" data-nama="Biaya Tambahan" data-tagihan="{?=$pos_billing.tambahan.tagihan?}" data-sisa="{?=$pos_billing.tambahan.sisa?}">
+                <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
+                  <input type="checkbox" class="chk_pelayanan_sub" value="tambahan" {if: $pos_billing.tambahan.sisa == 0}disabled{/if}>
+                  <span>Biaya Tambahan</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: {if: $pos_billing.tambahan.sisa > 0}#e11d48{else}#059669{/if}; font-family: monospace;">
+                  {if: $pos_billing.tambahan.sisa > 0}Sisa: Rp {?=number_format($pos_billing.tambahan.sisa,0,',','.')?}{else}<i class="fa fa-check"></i> Lunas{/if}
+                </span>
+              </div>
+              {/if}
+            </div>
+          </div>
+
+          <!-- Nominal Bayar Input (Formatted Rupiah - Prominent) -->
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label-custom" for="modal_nominal_bayar">Nominal Bayar</label>
+            <div class="input-group" style="width: 100%;">
+              <span class="input-group-addon" style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-right: none; border-radius: 8px 0 0 8px; color: #334155; font-weight: 800; font-size: 16px; padding: 0 16px; line-height: 46px;">Rp</span>
+              <input type="text" class="form-control" id="modal_nominal_bayar" name="modal_nominal_bayar" placeholder="0" style="height: 48px; font-size: 18px; font-weight: 800; color: #0f172a; border-radius: 0 8px 8px 0; padding: 8px 16px; font-family: monospace;">
+            </div>
+            <div id="modal_terbilang_box" style="display: none; margin-top: 8px; padding: 7px 14px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; color: #4338ca; font-size: 12.5px; font-weight: 600;">
+              <i class="fa fa-info-circle" style="margin-right: 4px;"></i> <span id="modal_terbilang"></span>
+            </div>
+          </div>
+
+          <!-- Rincian Alokasi Per Layanan (Muncul otomatis jika >1 layanan dipilih) -->
+          <div id="box_alokasi_multi" style="display: none; margin-bottom: 18px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 12px 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <span style="font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.3px;">
+                <i class="fa fa-sliders" style="margin-right: 4px; color: #6366f1;"></i> Alokasi Pembayaran per Sub Rincian
+              </span>
+              <a href="javascript:void(0)" id="btn_reset_alokasi" style="font-size: 11.5px; font-weight: 600; color: #6366f1; text-decoration: none;">
+                <i class="fa fa-refresh"></i> Reset Sesuai Sisa
+              </a>
+            </div>
+            <div id="list_alokasi_multi">
+              <!-- Dynamically populated rows -->
+            </div>
+          </div>
+
+          <!-- Cara Pembayaran Segmented Cards -->
+          <div class="form-group" style="margin-bottom: 20px;">
+            <label class="form-label-custom">Metode Pembayaran</label>
+            <div class="cara-bayar-grid">
+              <label class="cara-bayar-card active" id="label_cara_tunai">
+                <input type="radio" name="modal_cara_bayar" value="Tunai" checked>
+                <i class="fa fa-money text-success"></i>
+                <span>Tunai</span>
+              </label>
+              <label class="cara-bayar-card" id="label_cara_nontunai">
+                <input type="radio" name="modal_cara_bayar" value="Non Tunai">
+                <i class="fa fa-credit-card text-primary"></i>
+                <span>Non Tunai</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Catatan / Keterangan Pembayaran -->
+          <div class="form-group" style="margin-bottom: 6px;">
+            <label class="form-label-custom" for="modal_catatan">Catatan / Keterangan <span style="font-weight: normal; color: #94a3b8; font-size: 11.5px;">(Opsional)</span></label>
+            <input type="text" class="form-control" id="modal_catatan" name="modal_catatan" placeholder="Keterangan transaksi pembayaran kasir..." style="height: 42px; font-size: 13.5px; color: #0f172a; padding: 8px 14px;">
+          </div>
+
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-cancel-luxury" data-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-simpan-luxury" id="btn_simpan_modal_bayar">
+          <i class="fa fa-check"></i> Simpan Pembayaran
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script type="text/javascript">
   $(".alert-dismissible").fadeTo(3000, 500).slideUp(500);
-</script>
-<script type="text/javascript">
-  $('select').selectator();
-  var potongan_faktur2 = document.getElementById('potongan_faktur2');
-  potongan_faktur2.addEventListener('keyup', function(e){
-  	potongan_faktur2.value = formatRupiah(this.value, 'Rp.');
+
+  // Helper pembersih angka
+  if (typeof window.cleanNominal !== 'function') {
+    window.cleanNominal = function(val) {
+      if (!val) return 0;
+      var num = String(val).replace(/[^0-9]/g, '');
+      return num ? Number(num) : 0;
+    };
+  }
+
+  // Helper format rupiah
+  if (typeof window.formatRupiah !== 'function') {
+    window.formatRupiah = function(angka, prefix) {
+      if (!angka) return '';
+      var number_string = String(angka).replace(/[^,\d]/g, '').toString(),
+        split = number_string.split(','),
+        sisa = split[0].length % 3,
+        rupiah = split[0].substr(0, sisa),
+        ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+      if (ribuan) {
+        var separator = sisa ? '.' : '';
+        rupiah += separator + ribuan.join('.');
+      }
+
+      rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+      return prefix == undefined ? rupiah : (rupiah ? 'Rp.' + rupiah : '');
+    };
+  }
+
+  // Helper terbilang
+  if (typeof window.terbilang !== 'function') {
+    window.terbilang = function(a) {
+      var bilangan = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
+      var kalimat = '';
+      if (a < 12) {
+        kalimat = bilangan[a];
+      } else if (a < 20) {
+        kalimat = bilangan[a - 10] + ' Belas';
+      } else if (a < 100) {
+        kalimat = bilangan[Math.floor(a / 10)] + ' Puluh ' + bilangan[a % 10];
+      } else if (a < 200) {
+        kalimat = 'Seratus ' + window.terbilang(a - 100);
+      } else if (a < 1000) {
+        kalimat = bilangan[Math.floor(a / 100)] + ' Ratus ' + window.terbilang(a % 100);
+      } else if (a < 2000) {
+        kalimat = 'Seribu ' + window.terbilang(a - 1000);
+      } else if (a < 1000000) {
+        kalimat = window.terbilang(Math.floor(a / 1000)) + ' Ribu ' + window.terbilang(a % 1000);
+      } else if (a < 1000000000) {
+        kalimat = window.terbilang(Math.floor(a / 1000000)) + ' Juta ' + window.terbilang(a % 1000000);
+      } else if (a < 1000000000000) {
+        kalimat = window.terbilang(Math.floor(a / 1000000000)) + ' Milyar ' + window.terbilang(a % 1000000000);
+      }
+      var pisah = kalimat.split(' ');
+      var full = [];
+      for (var i = 0; i < pisah.length; i++) {
+        if (pisah[i] != "") { full.push(pisah[i]); }
+      }
+      return full.join(' ');
+    };
+  }
+
+  // Helper Update Multi-Select & Alokasi
+  function updateMultiSelectPelayanan(options) {
+    options = options || {};
+    var keepNominal = options.keepNominal || false;
+
+    var totalActive = $('.chk_pelayanan_sub:not(:disabled)').length;
+    var checkedSubs = $('.chk_pelayanan_sub:checked');
+    var checkedCount = checkedSubs.length;
+
+    // Sinkronisasi status Checkbox "Pilih Semua"
+    if (totalActive > 0 && checkedCount === totalActive) {
+      $('#chk_pelayanan_all').prop('checked', true);
+    } else {
+      $('#chk_pelayanan_all').prop('checked', false);
+    }
+
+    // Update highlight visual baris
+    $('.pelayanan-item-row').each(function() {
+      var chk = $(this).find('input[type="checkbox"]');
+      if (chk.is(':checked')) {
+        $(this).addClass('selected');
+      } else {
+        $(this).removeClass('selected');
+      }
+    });
+
+    // Kumpulkan info layanan yang dicentang
+    var selectedList = [];
+    var totalSisaSelected = 0;
+    checkedSubs.each(function() {
+      var row = $(this).closest('.pelayanan-item-row');
+      var kat = $(this).val();
+      var nama = row.attr('data-nama') || kat;
+      var tagihan = window.cleanNominal(row.attr('data-tagihan'));
+      var sisa = window.cleanNominal(row.attr('data-sisa'));
+      totalSisaSelected += sisa;
+      selectedList.push({
+        kategori: kat,
+        nama: nama,
+        tagihan: tagihan,
+        sisa: sisa
+      });
+    });
+
+    // Update label & badge tombol pemicu dropdown
+    var textEl = $('#modal_pelayanan_text');
+    var badgeEl = $('#selected_count_badge');
+
+    if (checkedCount === 0) {
+      textEl.html('<span style="color: #94a3b8;">-- Pilih Pelayanan --</span>');
+      badgeEl.hide();
+    } else if (totalActive > 1 && checkedCount === totalActive) {
+      textEl.html('<strong style="color: #1e293b;">Semua Layanan</strong> <span style="color: #64748b; font-size: 12.5px;">(Total Sisa: Rp ' + window.formatRupiah(String(totalSisaSelected)) + ')</span>');
+      badgeEl.text('Semua (' + checkedCount + ')').show();
+    } else if (checkedCount === 1) {
+      textEl.html('<strong style="color: #1e293b;">' + selectedList[0].nama + '</strong> <span style="color: #64748b; font-size: 12.5px;">(Sisa: Rp ' + window.formatRupiah(String(totalSisaSelected)) + ')</span>');
+      badgeEl.text('1 Layanan').show();
+    } else {
+      var names = selectedList.map(function(x) { return x.nama; }).join(', ');
+      textEl.html('<strong style="color: #1e293b;">' + checkedCount + ' Layanan:</strong> <span style="color: #475569; font-size: 12.5px;">' + names + '</span> <span style="color: #64748b; font-size: 12px;">(Total: Rp ' + window.formatRupiah(String(totalSisaSelected)) + ')</span>');
+      badgeEl.text(checkedCount + ' Dipilih').show();
+    }
+
+    // Update input nominal master jika tidak dipertahankan manual
+    if (!keepNominal) {
+      $('#modal_nominal_bayar').val(window.formatRupiah(String(totalSisaSelected)));
+      if (totalSisaSelected > 0) {
+        $('#modal_terbilang').text(window.terbilang(Number(totalSisaSelected)) + ' Rupiah');
+        $('#modal_terbilang_box').show();
+      } else {
+        $('#modal_terbilang_box').hide();
+      }
+    }
+
+    // Render kotak alokasi nominal jika memilih > 1 layanan
+    var masterNominal = window.cleanNominal($('#modal_nominal_bayar').val());
+    if (checkedCount > 1) {
+      var htmlAlloc = '';
+      var sisaDistrib = masterNominal;
+
+      selectedList.forEach(function(item) {
+        var allocVal = 0;
+        if (sisaDistrib > 0) {
+          allocVal = Math.min(item.sisa, sisaDistrib);
+          sisaDistrib -= allocVal;
+        }
+        htmlAlloc += '<div class="row-alokasi-item" data-kategori="' + item.kategori + '" style="margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;">' +
+          '<div style="flex: 1; min-width: 0;">' +
+            '<div style="font-size: 13px; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + item.nama + '</div>' +
+            '<div style="font-size: 11px; color: #64748b;">Tagihan: Rp ' + window.formatRupiah(String(item.tagihan)) + ' | Sisa: <strong style="color: #e11d48;">Rp ' + window.formatRupiah(String(item.sisa)) + '</strong></div>' +
+          '</div>' +
+          '<div style="width: 145px; flex-shrink: 0;">' +
+            '<div class="input-group input-group-sm" style="width: 100%;">' +
+              '<span class="input-group-addon" style="background: #f1f5f9; border-color: #cbd5e1; font-weight: 700; font-size: 11px; padding: 2px 7px;">Rp</span>' +
+              '<input type="text" class="form-control input-sm input-alokasi-item" data-kategori="' + item.kategori + '" data-nama="' + item.nama + '" data-tagihan="' + item.tagihan + '" data-sisa="' + item.sisa + '" data-max="' + item.sisa + '" value="' + window.formatRupiah(String(allocVal)) + '" style="font-weight: 700; text-align: right; height: 32px; font-size: 13px; border-color: #cbd5e1; border-radius: 0 6px 6px 0; font-family: monospace;">' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      });
+
+      $('#list_alokasi_multi').html(htmlAlloc);
+      $('#box_alokasi_multi').slideDown(150);
+    } else {
+      $('#box_alokasi_multi').slideUp(150);
+      $('#list_alokasi_multi').empty();
+    }
+  }
+
+  // Pindahkan modal ke body agar tidak tertutup backdrop / CSS overflow
+  $('body > #modalPembayaran').remove();
+  $('#modalPembayaran').appendTo('body');
+
+  // Toggle dropdown panel
+  $(document).off('click', '#modal_pelayanan_btn').on('click', '#modal_pelayanan_btn', function(e) {
+    e.stopPropagation();
+    var panel = $('#modal_pelayanan_panel');
+    panel.toggle();
+    if (panel.is(':visible')) {
+      $(this).addClass('open');
+      $('#modal_pelayanan_arrow').css('transform', 'rotate(180deg)');
+    } else {
+      $(this).removeClass('open');
+      $('#modal_pelayanan_arrow').css('transform', 'rotate(0deg)');
+    }
   });
 
-  var jumlah_bayar2 = document.getElementById('jumlah_bayar2');
-  jumlah_bayar2.addEventListener('keyup', function(e){
-  	jumlah_bayar2.value = formatRupiah(this.value, 'Rp.');
+  // Tutup panel dropdown jika klik di luar
+  $(document).off('click.close_pelayanan').on('click.close_pelayanan', function(e) {
+    if (!$(e.target).closest('#group_modal_pelayanan').length) {
+      $('#modal_pelayanan_panel').hide();
+      $('#modal_pelayanan_btn').removeClass('open');
+      $('#modal_pelayanan_arrow').css('transform', 'rotate(0deg)');
+    }
   });
+
+  // Checkbox "Pilih Semua"
+  $(document).off('click', '#chk_pelayanan_all, .pelayanan-item-row[data-kategori="semua"]').on('click', '#chk_pelayanan_all, .pelayanan-item-row[data-kategori="semua"]', function(e) {
+    var isChk = $(e.target).is('#chk_pelayanan_all');
+    var chkAll = $('#chk_pelayanan_all');
+    if (!isChk) {
+      chkAll.prop('checked', !chkAll.prop('checked'));
+    }
+    var shouldCheck = chkAll.prop('checked');
+    $('.chk_pelayanan_sub:not(:disabled)').prop('checked', shouldCheck);
+    updateMultiSelectPelayanan();
+  });
+
+  // Klik baris sub-layanan
+  $(document).off('click', '.pelayanan-item-row:not([data-kategori="semua"])').on('click', '.pelayanan-item-row:not([data-kategori="semua"])', function(e) {
+    if ($(this).hasClass('disabled')) return;
+    var chk = $(this).find('.chk_pelayanan_sub');
+    if (!$(e.target).is('.chk_pelayanan_sub')) {
+      chk.prop('checked', !chk.prop('checked'));
+    }
+    updateMultiSelectPelayanan();
+  });
+
+  // Tombol Reset Alokasi sesuai Sisa
+  $(document).off('click', '#btn_reset_alokasi').on('click', '#btn_reset_alokasi', function(e) {
+    e.preventDefault();
+    updateMultiSelectPelayanan({ keepNominal: false });
+  });
+
+  // Handler Buka Modal
+  $(document).off('click', '.btn_buka_modal_bayar').on('click', '.btn_buka_modal_bayar', function(e) {
+    e.preventDefault();
+    var kat = $(this).attr('data-kategori') || 'semua';
+
+    $('#modal_pelayanan_panel').hide();
+    $('#modal_pelayanan_btn').removeClass('open');
+    $('#modal_pelayanan_arrow').css('transform', 'rotate(0deg)');
+
+    if (kat !== 'semua') {
+      $('.chk_pelayanan_sub').prop('checked', false);
+      $('.chk_pelayanan_sub[value="' + kat + '"]:not(:disabled)').prop('checked', true);
+    } else {
+      var unpaidCount = 0;
+      $('.chk_pelayanan_sub:not(:disabled)').each(function() {
+        var sisa = window.cleanNominal($(this).closest('.pelayanan-item-row').attr('data-sisa'));
+        if (sisa > 0) {
+          $(this).prop('checked', true);
+          unpaidCount++;
+        } else {
+          $(this).prop('checked', false);
+        }
+      });
+      if (unpaidCount === 0) {
+        $('.chk_pelayanan_sub:not(:disabled)').prop('checked', true);
+      }
+    }
+
+    updateMultiSelectPelayanan({ keepNominal: false });
+
+    var now = new Date();
+    var pad = function(n) { return n < 10 ? '0' + n : n; };
+    var nowStr = pad(now.getDate()) + '-' + pad(now.getMonth() + 1) + '-' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+    $('#modal_tgl_jam').val(nowStr);
+
+    $('input[name=modal_cara_bayar][value="Tunai"]').prop('checked', true);
+    $('.cara-bayar-card').removeClass('active');
+    $('#label_cara_tunai').addClass('active');
+
+    $('#modal_catatan').val('');
+
+    $('#modalPembayaran').modal('show');
+    setTimeout(function() {
+      $('#modal_nominal_bayar').focus().select();
+    }, 400);
+  });
+
+  // Handler Ganti Cara Bayar (Tunai / Non Tunai)
+  $(document).off('change', 'input[name=modal_cara_bayar]').on('change', 'input[name=modal_cara_bayar]', function() {
+    $('.cara-bayar-card').removeClass('active');
+    $(this).closest('.cara-bayar-card').addClass('active');
+  });
+
+  // Handler Input Master Nominal di Modal
+  $(document).off('input keyup', '#modal_nominal_bayar').on('input keyup', '#modal_nominal_bayar', function() {
+    var clean = window.cleanNominal($(this).val());
+    $(this).val(window.formatRupiah(String(clean)));
+    if (clean > 0) {
+      $('#modal_terbilang').text(window.terbilang(Number(clean)) + ' Rupiah');
+      $('#modal_terbilang_box').show();
+    } else {
+      $('#modal_terbilang_box').hide();
+    }
+
+    // Auto distribute ke input alokasi jika ada
+    if ($('#list_alokasi_multi .input-alokasi-item').length > 0) {
+      var sisaDistrib = clean;
+      $('#list_alokasi_multi .input-alokasi-item').each(function() {
+        var sisaItem = window.cleanNominal($(this).attr('data-sisa'));
+        var allocVal = 0;
+        if (sisaDistrib > 0) {
+          allocVal = Math.min(sisaItem, sisaDistrib);
+          sisaDistrib -= allocVal;
+        }
+        $(this).val(window.formatRupiah(String(allocVal)));
+      });
+    }
+  });
+
+  // Handler Input Per Item Alokasi
+  $(document).off('input keyup', '.input-alokasi-item').on('input keyup', '.input-alokasi-item', function() {
+    var v = window.cleanNominal($(this).val());
+    var sisaItem = window.cleanNominal($(this).attr('data-sisa'));
+    if (v > sisaItem && sisaItem > 0) {
+      v = sisaItem;
+    }
+    $(this).val(window.formatRupiah(String(v)));
+
+    var sumTotal = 0;
+    $('.input-alokasi-item').each(function() {
+      sumTotal += window.cleanNominal($(this).val());
+    });
+
+    $('#modal_nominal_bayar').val(window.formatRupiah(String(sumTotal)));
+    if (sumTotal > 0) {
+      $('#modal_terbilang').text(window.terbilang(Number(sumTotal)) + ' Rupiah');
+      $('#modal_terbilang_box').show();
+    } else {
+      $('#modal_terbilang_box').hide();
+    }
+  });
+
+  // Handler Simpan di Modal
+  $(document).off('click', '#btn_simpan_modal_bayar').on('click', '#btn_simpan_modal_bayar', function(e) {
+    e.preventDefault();
+    var baseURL = mlite.url + '/' + mlite.admin;
+    var no_rawat = $('input:text[name=no_rawat]').val() || $('#no_rawat_val').val();
+
+    if (!no_rawat) {
+      alert("Nomor rawat pasien tidak ditemukan!");
+      return;
+    }
+
+    var checkedSubs = $('.chk_pelayanan_sub:checked');
+    if (checkedSubs.length === 0) {
+      alert("Pilih minimal satu layanan yang akan dibayar!");
+      $('#modal_pelayanan_btn').click();
+      return;
+    }
+
+    var nominal_bayar = window.cleanNominal($('#modal_nominal_bayar').val());
+    if (nominal_bayar <= 0) {
+      alert("Nominal pembayaran harus lebih dari Rp 0!");
+      $('#modal_nominal_bayar').focus();
+      return;
+    }
+
+    var dtStr = $('#modal_tgl_jam').val().trim();
+    var tgl_billing = '';
+    var jam_billing = '';
+    var kd_parts = '';
+    var m = dtStr.match(/^(\d{1,2})-(\d{1,2})-(\d{4})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})$/);
+    if (m) {
+      var d = ('0' + m[1]).slice(-2);
+      var mo = ('0' + m[2]).slice(-2);
+      var y = m[3];
+      var h = ('0' + m[4]).slice(-2);
+      var mi = ('0' + m[5]).slice(-2);
+      var s = ('0' + m[6]).slice(-2);
+      tgl_billing = y + '-' + mo + '-' + d;
+      jam_billing = h + ':' + mi + ':' + s;
+      kd_parts = d + '.' + mo + '.' + y + '.' + h + '.' + mi + '.' + s;
+    } else {
+      var now = new Date();
+      var pad = function(n) { return n < 10 ? '0' + n : n; };
+      var d = pad(now.getDate());
+      var mo = pad(now.getMonth() + 1);
+      var y = now.getFullYear();
+      var h = pad(now.getHours());
+      var mi = pad(now.getMinutes());
+      var s = pad(now.getSeconds());
+      tgl_billing = y + '-' + mo + '-' + d;
+      jam_billing = h + ':' + mi + ':' + s;
+      kd_parts = d + '.' + mo + '.' + y + '.' + h + '.' + mi + '.' + s;
+    }
+    var kd_billing = 'RJ.' + kd_parts;
+
+    var alokasi = {};
+    var sum_pendaftaran = 0;
+    var sum_tindakan = 0;
+    var sum_obat = 0;
+    var sum_lab = 0;
+    var sum_rad = 0;
+    var namesPaid = [];
+
+    if (checkedSubs.length === 1) {
+      var row = checkedSubs.closest('.pelayanan-item-row');
+      var kat = checkedSubs.val();
+      var namaKat = row.attr('data-nama') || kat;
+      var tagihanKat = window.cleanNominal(row.attr('data-tagihan'));
+      var sisaKat = window.cleanNominal(row.attr('data-sisa'));
+      namesPaid.push(namaKat);
+
+      alokasi[kat] = {
+        nama: namaKat,
+        tagihan: tagihanKat,
+        bayar: nominal_bayar,
+        sisa: Math.max(0, sisaKat - nominal_bayar)
+      };
+
+      if (kat === 'pendaftaran') sum_pendaftaran += nominal_bayar;
+      if (kat === 'tindakan') sum_tindakan += nominal_bayar;
+      if (kat === 'obat' || kat === 'obat_pulang') sum_obat += nominal_bayar;
+      if (kat === 'laboratorium') sum_lab += nominal_bayar;
+      if (kat === 'radiologi') sum_rad += nominal_bayar;
+    } else {
+      $('.input-alokasi-item').each(function() {
+        var kat = $(this).attr('data-kategori');
+        var namaKat = $(this).attr('data-nama') || kat;
+        var tagihanKat = window.cleanNominal($(this).attr('data-tagihan'));
+        var sisaKat = window.cleanNominal($(this).attr('data-sisa'));
+        var b = window.cleanNominal($(this).val());
+        if (b > 0) {
+          namesPaid.push(namaKat);
+        }
+
+        alokasi[kat] = {
+          nama: namaKat,
+          tagihan: tagihanKat,
+          bayar: b,
+          sisa: Math.max(0, sisaKat - b)
+        };
+
+        if (kat === 'pendaftaran') sum_pendaftaran += b;
+        if (kat === 'tindakan') sum_tindakan += b;
+        if (kat === 'obat' || kat === 'obat_pulang') sum_obat += b;
+        if (kat === 'laboratorium') sum_lab += b;
+        if (kat === 'radiologi') sum_rad += b;
+      });
+    }
+
+    var cara_bayar = $('input[name=modal_cara_bayar]:checked').val() || 'Tunai';
+    var catatan = $('#modal_catatan').val().trim();
+    var labelLayanan = '';
+    var totalActive = $('.chk_pelayanan_sub:not(:disabled)').length;
+    if (checkedSubs.length === totalActive && totalActive > 1) {
+      labelLayanan = 'Semua Layanan';
+    } else if (namesPaid.length > 0) {
+      labelLayanan = namesPaid.join(', ');
+    } else {
+      labelLayanan = 'Pembayaran';
+    }
+
+    var keterangan = cara_bayar + (catatan ? ' - ' + catatan : ' - ' + labelLayanan);
+
+    var btnEl = $('#btn_simpan_modal_bayar');
+    btnEl.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
+
+    var saveUrl = baseURL + '/kasir_rawat_jalan/save?t=' + mlite.token;
+    $.post(saveUrl, {
+      kd_billing: kd_billing,
+      no_rawat: no_rawat,
+      jumlah_total: nominal_bayar,
+      potongan: 0,
+      jumlah_harus_bayar: nominal_bayar,
+      jumlah_bayar: nominal_bayar,
+      tgl_billing: tgl_billing,
+      jam_billing: jam_billing,
+      keterangan: keterangan,
+      alokasi: JSON.stringify(alokasi),
+      jurnal_pendaftaran: sum_pendaftaran + ',00',
+      jurnal_tindakan_ralan: sum_tindakan + ',00',
+      jurnal_obat_bhp: sum_obat + ',00',
+      jurnal_laboratorium: sum_lab + ',00',
+      jurnal_radiologi: sum_rad + ',00'
+    }, function(data) {
+      btnEl.prop('disabled', false).html('<i class="fa fa-check"></i> Simpan Pembayaran');
+      $('#modalPembayaran').modal('hide');
+      $('body').removeClass('modal-open');
+      $('.modal-backdrop').remove();
+
+      var rincianUrl = baseURL + '/kasir_rawat_jalan/rincian?t=' + mlite.token;
+      $.post(rincianUrl, {
+        no_rawat: no_rawat
+      }, function(res) {
+        $("#rincian").html(res).show();
+      });
+
+      $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:8px; margin-top: -10px; margin-bottom: 15px;\">" +
+        "Pembayaran rawat jalan berhasil disimpan! No. Faktur: <strong>" + kd_billing + "</strong>" +
+        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
+        "</div>").show();
+
+      bootbox.confirm("Pembayaran berhasil disimpan (" + kd_billing + ")!<br><br>Apakah Anda ingin langsung mencetak Nota Pembayaran?", function(printOk) {
+        if (printOk) {
+          window.open(baseURL + '/kasir_rawat_jalan/faktur?show=kecil&no_rawat=' + encodeURIComponent(no_rawat) + '&kd_billing=' + encodeURIComponent(kd_billing) + '&t=' + mlite.token);
+        }
+      });
+    }).fail(function() {
+      btnEl.prop('disabled', false).html('<i class="fa fa-check"></i> Simpan Pembayaran');
+      alert("Terjadi kesalahan saat menyimpan pembayaran. Silakan coba lagi!");
+    });
+  });
+
+  // Handler Tombol Kembali ke Daftar
+  $(document).off('click', '#btn_kembali_ke_daftar').on('click', '#btn_kembali_ke_daftar', function(e) {
+    e.preventDefault();
+    $('#selesai_billing').click();
+  });
+
+  // Sync state tombol toggle form input layanan kasir
+  if ($("#form_rincian").is(":visible")) {
+    $("#btn_toggle_form_rincian").html('<i class="fa fa-chevron-up"></i> Tutup Input Layanan').removeClass('btn-primary').addClass('btn-warning');
+  } else {
+    $("#btn_toggle_form_rincian").html('<i class="fa fa-plus-circle"></i> Input Layanan Kasir').removeClass('btn-warning').addClass('btn-primary');
+  }
 </script>
