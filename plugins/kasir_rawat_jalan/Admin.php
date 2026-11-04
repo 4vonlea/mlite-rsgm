@@ -125,19 +125,24 @@ class Admin extends AdminModule
             ->join('jns_perawatan', 'jns_perawatan.kd_jenis_prw = rawat_jl_dr.kd_jenis_prw')
             ->where('no_rawat', $no_rawat)->toArray();
         foreach ($tindakan_dr as $t) {
+            $is_coass = ($t['stts_bayar'] == 'Suspen');
             $details[] = [
                 'kategori' => 'Tindakan Dokter',
-                'nama' => $t['nm_perawatan'],
-                'biaya' => $t['biaya_rawat'],
+                'nama' => $t['nm_perawatan'] . ($is_coass ? ' (Tidak Di-claim)' : ''),
+                'biaya' => $is_coass ? 0 : $t['biaya_rawat'],
+                'biaya_asli' => $t['biaya_rawat'],
+                'is_coass' => $is_coass,
                 'jumlah' => 1,
-                'subtotal' => $t['biaya_rawat'],
+                'subtotal' => $is_coass ? 0 : $t['biaya_rawat'],
                 'kd_jenis_prw' => $t['kd_jenis_prw'],
                 'tgl_perawatan' => $t['tgl_perawatan'],
                 'jam_rawat' => $t['jam_rawat'],
                 'provider' => 'rawat_jl_dr',
                 'type' => 'tindakan'
             ];
-            $total_biaya += $t['biaya_rawat'];
+            if (!$is_coass) {
+                $total_biaya += $t['biaya_rawat'];
+            }
         }
 
         // 3. Tindakan Perawat
@@ -145,19 +150,24 @@ class Admin extends AdminModule
             ->join('jns_perawatan', 'jns_perawatan.kd_jenis_prw = rawat_jl_pr.kd_jenis_prw')
             ->where('no_rawat', $no_rawat)->toArray();
         foreach ($tindakan_pr as $t) {
+            $is_coass = ($t['stts_bayar'] == 'Suspen');
             $details[] = [
                 'kategori' => 'Tindakan Perawat',
-                'nama' => $t['nm_perawatan'],
-                'biaya' => $t['biaya_rawat'],
+                'nama' => $t['nm_perawatan'] . ($is_coass ? ' (Tidak Di-claim)' : ''),
+                'biaya' => $is_coass ? 0 : $t['biaya_rawat'],
+                'biaya_asli' => $t['biaya_rawat'],
+                'is_coass' => $is_coass,
                 'jumlah' => 1,
-                'subtotal' => $t['biaya_rawat'],
+                'subtotal' => $is_coass ? 0 : $t['biaya_rawat'],
                 'kd_jenis_prw' => $t['kd_jenis_prw'],
                 'tgl_perawatan' => $t['tgl_perawatan'],
                 'jam_rawat' => $t['jam_rawat'],
                 'provider' => 'rawat_jl_pr',
                 'type' => 'tindakan'
             ];
-            $total_biaya += $t['biaya_rawat'];
+            if (!$is_coass) {
+                $total_biaya += $t['biaya_rawat'];
+            }
         }
 
         // 4. Tindakan Dokter & Perawat
@@ -165,19 +175,24 @@ class Admin extends AdminModule
             ->join('jns_perawatan', 'jns_perawatan.kd_jenis_prw = rawat_jl_drpr.kd_jenis_prw')
             ->where('no_rawat', $no_rawat)->toArray();
         foreach ($tindakan_drpr as $t) {
+            $is_coass = ($t['stts_bayar'] == 'Suspen');
             $details[] = [
                 'kategori' => 'Tindakan Dokter & Perawat',
-                'nama' => $t['nm_perawatan'],
-                'biaya' => $t['biaya_rawat'],
+                'nama' => $t['nm_perawatan'] . ($is_coass ? ' (Tidak Di-claim)' : ''),
+                'biaya' => $is_coass ? 0 : $t['biaya_rawat'],
+                'biaya_asli' => $t['biaya_rawat'],
+                'is_coass' => $is_coass,
                 'jumlah' => 1,
-                'subtotal' => $t['biaya_rawat'],
+                'subtotal' => $is_coass ? 0 : $t['biaya_rawat'],
                 'kd_jenis_prw' => $t['kd_jenis_prw'],
                 'tgl_perawatan' => $t['tgl_perawatan'],
                 'jam_rawat' => $t['jam_rawat'],
                 'provider' => 'rawat_jl_drpr',
                 'type' => 'tindakan'
             ];
-            $total_biaya += $t['biaya_rawat'];
+            if (!$is_coass) {
+                $total_biaya += $t['biaya_rawat'];
+            }
         }
 
         // 5. Obat & BHP
@@ -664,6 +679,182 @@ class Admin extends AdminModule
       exit();
     }
 
+    public function anyToggleSuspen()
+    {
+      return $this->postToggleSuspen();
+    }
+
+    public function postToggleSuspen()
+    {
+      header('Content-Type: application/json');
+      $table = $_POST['provider'] ?? '';
+      if (in_array($table, ['rawat_jl_dr', 'rawat_jl_pr', 'rawat_jl_drpr'])) {
+        $q = $this->db($table)
+          ->where('no_rawat', $_POST['no_rawat'])
+          ->where('kd_jenis_prw', $_POST['kd_jenis_prw'])
+          ->where('tgl_perawatan', $_POST['tgl_perawatan'])
+          ->where('jam_rawat', $_POST['jam_rawat']);
+        
+        if (!empty($_POST['kd_dokter']) && in_array($table, ['rawat_jl_dr', 'rawat_jl_drpr'])) {
+          $q->where('kd_dokter', $_POST['kd_dokter']);
+        }
+        if (!empty($_POST['nip']) && in_array($table, ['rawat_jl_pr', 'rawat_jl_drpr'])) {
+          $q->where('nip', $_POST['nip']);
+        }
+        $row = $q->oneArray();
+
+        if ($row) {
+          $new_stts = ($row['stts_bayar'] == 'Suspen') ? 'Belum' : 'Suspen';
+          $update_q = $this->db($table)
+            ->where('no_rawat', $_POST['no_rawat'])
+            ->where('kd_jenis_prw', $_POST['kd_jenis_prw'])
+            ->where('tgl_perawatan', $_POST['tgl_perawatan'])
+            ->where('jam_rawat', $_POST['jam_rawat']);
+          if (!empty($_POST['kd_dokter']) && in_array($table, ['rawat_jl_dr', 'rawat_jl_drpr'])) {
+            $update_q->where('kd_dokter', $_POST['kd_dokter']);
+          }
+          if (!empty($_POST['nip']) && in_array($table, ['rawat_jl_pr', 'rawat_jl_drpr'])) {
+            $update_q->where('nip', $_POST['nip']);
+          }
+          $update_q->update(['stts_bayar' => $new_stts]);
+
+          echo json_encode(['status' => 'success', 'stts_bayar' => $new_stts]);
+          exit();
+        }
+      }
+      echo json_encode(['status' => 'error', 'message' => 'Data tindakan tidak ditemukan']);
+      exit();
+    }
+
+    public function getCoassKategori($no_rawat)
+    {
+      $setting = $this->db('mlite_settings')
+        ->where('module', 'kasir_coass')
+        ->where('field', $no_rawat)
+        ->oneArray();
+      $cats = [];
+      if ($setting && !empty($setting['value'])) {
+        $decoded = json_decode($setting['value'], true);
+        if (is_array($decoded)) $cats = $decoded;
+      }
+      
+      // Fallback untuk tindakan jika di rawat_jl_dr / pr / drpr sudah berstatus Suspen
+      $has_suspen = $this->db('rawat_jl_dr')->where('no_rawat', $no_rawat)->where('stts_bayar', 'Suspen')->oneArray()
+        || $this->db('rawat_jl_pr')->where('no_rawat', $no_rawat)->where('stts_bayar', 'Suspen')->oneArray()
+        || $this->db('rawat_jl_drpr')->where('no_rawat', $no_rawat)->where('stts_bayar', 'Suspen')->oneArray();
+      if ($has_suspen && !isset($cats['tindakan'])) {
+        $cats['tindakan'] = true;
+      }
+      return $cats;
+    }
+
+    public function setCoassKategori($no_rawat, array $cats)
+    {
+      $exists = $this->db('mlite_settings')
+        ->where('module', 'kasir_coass')
+        ->where('field', $no_rawat)
+        ->oneArray();
+      if ($exists) {
+        $this->db('mlite_settings')
+          ->where('module', 'kasir_coass')
+          ->where('field', $no_rawat)
+          ->update(['value' => json_encode($cats)]);
+      } else {
+        $this->db('mlite_settings')->save([
+          'module' => 'kasir_coass',
+          'field' => $no_rawat,
+          'value' => json_encode($cats)
+        ]);
+      }
+    }
+
+    public function anyToggleSubCoass()
+    {
+      return $this->postToggleSubCoass();
+    }
+
+    public function postToggleSubCoass()
+    {
+      header('Content-Type: application/json');
+      $no_rawat = $_POST['no_rawat'] ?? '';
+      $kategori = $_POST['kategori'] ?? '';
+
+      if (empty($no_rawat) || empty($kategori)) {
+        echo json_encode(['status' => 'error', 'message' => 'Parameter tidak lengkap']);
+        exit();
+      }
+
+      $coass_cats = $this->getCoassKategori($no_rawat);
+      $is_currently_coass = !empty($coass_cats[$kategori]);
+
+      if ($is_currently_coass) {
+        unset($coass_cats[$kategori]);
+        $new_state = false;
+      } else {
+        $coass_cats[$kategori] = true;
+        $new_state = true;
+      }
+
+      $this->setCoassKategori($no_rawat, $coass_cats);
+
+      // Jika kategori adalah tindakan, sinkronkan juga tabel Khanza (rawat_jl_dr, rawat_jl_pr, rawat_jl_drpr)
+      if ($kategori === 'tindakan') {
+        $stts = $new_state ? 'Suspen' : 'Belum';
+        $this->db('rawat_jl_dr')->where('no_rawat', $no_rawat)->update(['stts_bayar' => $stts]);
+        $this->db('rawat_jl_pr')->where('no_rawat', $no_rawat)->update(['stts_bayar' => $stts]);
+        $this->db('rawat_jl_drpr')->where('no_rawat', $no_rawat)->update(['stts_bayar' => $stts]);
+      }
+
+      // Update status_bayar reg_periksa
+      $pdo = $this->db()->pdo();
+      $poliklinik = $this->db('poliklinik')->join('reg_periksa', 'reg_periksa.kd_poli=poliklinik.kd_poli')->where('reg_periksa.no_rawat', $no_rawat)->oneArray();
+      $biaya_reg = !empty($coass_cats['pendaftaran']) ? 0 : floatval(($poliklinik['stts_daftar'] ?? '') == 'Lama' ? ($poliklinik['registrasilama'] ?? 0) : ($poliklinik['registrasi'] ?? 0));
+
+      $qDr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_dr WHERE no_rawat = ? AND stts_bayar != 'Suspen'");
+      $qDr->execute([$no_rawat]);
+      $total_dr = !empty($coass_cats['tindakan']) ? 0 : floatval($qDr->fetchColumn());
+
+      $qPr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_pr WHERE no_rawat = ? AND stts_bayar != 'Suspen'");
+      $qPr->execute([$no_rawat]);
+      $total_pr = !empty($coass_cats['tindakan']) ? 0 : floatval($qPr->fetchColumn());
+
+      $qDrpr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_drpr WHERE no_rawat = ? AND stts_bayar != 'Suspen'");
+      $qDrpr->execute([$no_rawat]);
+      $total_drpr = !empty($coass_cats['tindakan']) ? 0 : floatval($qDrpr->fetchColumn());
+
+      $qObat = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM detail_pemberian_obat WHERE no_rawat = ? AND status = 'Ralan'");
+      $qObat->execute([$no_rawat]);
+      $total_obat = !empty($coass_cats['obat']) ? 0 : floatval($qObat->fetchColumn());
+
+      $qLab = $pdo->prepare("SELECT COALESCE(SUM(biaya), 0) FROM periksa_lab WHERE no_rawat = ? AND status = 'Ralan'");
+      $qLab->execute([$no_rawat]);
+      $total_lab = !empty($coass_cats['laboratorium']) ? 0 : floatval($qLab->fetchColumn());
+
+      $qRad = $pdo->prepare("SELECT COALESCE(SUM(biaya), 0) FROM periksa_radiologi WHERE no_rawat = ? AND status = 'Ralan'");
+      $qRad->execute([$no_rawat]);
+      $total_rad = !empty($coass_cats['radiologi']) ? 0 : floatval($qRad->fetchColumn());
+
+      $qTambahan = $pdo->prepare("SELECT COALESCE(SUM(besar_biaya), 0) FROM tambahan_biaya WHERE no_rawat = ?");
+      $qTambahan->execute([$no_rawat]);
+      $total_tambahan = !empty($coass_cats['tambahan']) ? 0 : floatval($qTambahan->fetchColumn());
+
+      $total_layanan = $biaya_reg + $total_dr + $total_pr + $total_drpr + $total_obat + $total_lab + $total_rad + $total_tambahan;
+
+      $qByr = $pdo->prepare("SELECT COALESCE(SUM(jumlah_bayar), 0) FROM mlite_billing WHERE no_rawat = ? AND kd_billing LIKE 'RJ%'");
+      $qByr->execute([$no_rawat]);
+      $total_terbayar = floatval($qByr->fetchColumn());
+
+      $status_bayar = ($total_terbayar >= $total_layanan) ? 'Sudah Bayar' : 'Belum Bayar';
+      $this->db('reg_periksa')->where('no_rawat', $no_rawat)->update(['status_bayar' => $status_bayar]);
+
+      echo json_encode([
+        'status' => 'success',
+        'kategori' => $kategori,
+        'is_coass' => $new_state
+      ]);
+      exit();
+    }
+
     public function postHapusLaboratorium()
     {
       $this->db('periksa_lab')
@@ -763,6 +954,7 @@ class Admin extends AdminModule
       $rows_rawat_jl_drpr = $this->db('rawat_jl_drpr')->where('no_rawat', $_POST['no_rawat'])->toArray();
 
       $jumlah_total = 0;
+      $jumlah_total_coass = 0;
       $rawat_jl_dr = [];
       $rawat_jl_pr = [];
       $rawat_jl_drpr = [];
@@ -772,8 +964,14 @@ class Admin extends AdminModule
         foreach ($rows_rawat_jl_dr as $row) {
           $jns_perawatan = $this->db('jns_perawatan')->where('kd_jenis_prw', $row['kd_jenis_prw'])->oneArray();
           $row['nm_perawatan'] = $jns_perawatan['nm_perawatan'];
-          $jumlah_total = $jumlah_total + $row['biaya_rawat'];
           $row['provider'] = 'Dokter';
+          $row['provider_table'] = 'rawat_jl_dr';
+          $row['is_coass'] = ($row['stts_bayar'] == 'Suspen');
+          if($row['is_coass']) {
+            $jumlah_total_coass += $row['biaya_rawat'];
+          } else {
+            $jumlah_total += $row['biaya_rawat'];
+          }
           $rawat_jl_dr[] = $row;
         }
       }
@@ -782,8 +980,14 @@ class Admin extends AdminModule
         foreach ($rows_rawat_jl_pr as $row) {
           $jns_perawatan = $this->db('jns_perawatan')->where('kd_jenis_prw', $row['kd_jenis_prw'])->oneArray();
           $row['nm_perawatan'] = $jns_perawatan['nm_perawatan'];
-          $jumlah_total = $jumlah_total + $row['biaya_rawat'];
           $row['provider'] = 'Perawat';
+          $row['provider_table'] = 'rawat_jl_pr';
+          $row['is_coass'] = ($row['stts_bayar'] == 'Suspen');
+          if($row['is_coass']) {
+            $jumlah_total_coass += $row['biaya_rawat'];
+          } else {
+            $jumlah_total += $row['biaya_rawat'];
+          }
           $rawat_jl_pr[] = $row;
         }
       }
@@ -792,8 +996,14 @@ class Admin extends AdminModule
         foreach ($rows_rawat_jl_drpr as $row) {
           $jns_perawatan = $this->db('jns_perawatan')->where('kd_jenis_prw', $row['kd_jenis_prw'])->oneArray();
           $row['nm_perawatan'] = $jns_perawatan['nm_perawatan'];
-          $jumlah_total = $jumlah_total + $row['biaya_rawat'];
           $row['provider'] = 'Dokter & Perawat';
+          $row['provider_table'] = 'rawat_jl_drpr';
+          $row['is_coass'] = ($row['stts_bayar'] == 'Suspen');
+          if($row['is_coass']) {
+            $jumlah_total_coass += $row['biaya_rawat'];
+          } else {
+            $jumlah_total += $row['biaya_rawat'];
+          }
           $rawat_jl_drpr[] = $row;
         }
       }
@@ -1065,61 +1275,140 @@ class Admin extends AdminModule
         }
       }
 
-      $biaya_registrasi = floatval($poliklinik['registrasi']);
-      $biaya_operasi_total = floatval($jumlah_total_operasi + $jumlah_total_obat_operasi);
+      $coass_kategori = $this->getCoassKategori($no_rawat);
+
+      // 1. Pendaftaran
+      $biaya_registrasi_asli = floatval($poliklinik['registrasi']);
+      $is_coass_reg = !empty($coass_kategori['pendaftaran']);
+      $tagihan_pendaftaran = $is_coass_reg ? 0 : $biaya_registrasi_asli;
+      $biaya_registrasi = $tagihan_pendaftaran;
+      $coass_registrasi = $is_coass_reg ? $biaya_registrasi_asli : 0;
+
+      // 2. Tindakan
+      $is_coass_tindakan = !empty($coass_kategori['tindakan']);
+      $biaya_tindakan_asli = $jumlah_total + $jumlah_total_coass;
+      if ($is_coass_tindakan) {
+        $tagihan_tindakan = 0;
+        $coass_tindakan = $biaya_tindakan_asli;
+      } else {
+        $tagihan_tindakan = $jumlah_total;
+        $coass_tindakan = $jumlah_total_coass;
+      }
+
+      // 3. Obat & BHP
+      $biaya_obat_asli = floatval($jumlah_total_obat);
+      $is_coass_obat = !empty($coass_kategori['obat']);
+      $tagihan_obat = $is_coass_obat ? 0 : $biaya_obat_asli;
+      $coass_obat = $is_coass_obat ? $biaya_obat_asli : 0;
+
+      // 4. Laboratorium
+      $biaya_lab_asli = floatval($jumlah_total_lab);
+      $is_coass_lab = !empty($coass_kategori['laboratorium']);
+      $tagihan_lab = $is_coass_lab ? 0 : $biaya_lab_asli;
+      $coass_lab = $is_coass_lab ? $biaya_lab_asli : 0;
+
+      // 5. Radiologi
+      $biaya_rad_asli = floatval($jumlah_total_radiologi);
+      $is_coass_rad = !empty($coass_kategori['radiologi']);
+      $tagihan_rad = $is_coass_rad ? 0 : $biaya_rad_asli;
+      $coass_rad = $is_coass_rad ? $biaya_rad_asli : 0;
+
+      // 6. Operasi
+      $biaya_operasi_asli = floatval($jumlah_total_operasi + $jumlah_total_obat_operasi);
+      $is_coass_operasi = !empty($coass_kategori['operasi']);
+      $tagihan_operasi = $is_coass_operasi ? 0 : $biaya_operasi_asli;
+      $biaya_operasi_total = $tagihan_operasi;
+      $coass_operasi = $is_coass_operasi ? $biaya_operasi_asli : 0;
+
+      // 7. Obat Pulang
+      $biaya_obat_pulang_asli = floatval($jumlah_total_obat_pulang);
+      $is_coass_obat_pulang = !empty($coass_kategori['obat_pulang']);
+      $tagihan_obat_pulang = $is_coass_obat_pulang ? 0 : $biaya_obat_pulang_asli;
+      $coass_obat_pulang = $is_coass_obat_pulang ? $biaya_obat_pulang_asli : 0;
+
+      // 8. Tambahan
+      $biaya_tambahan_asli = floatval($jumlah_total_tambahan);
+      $is_coass_tambahan = !empty($coass_kategori['tambahan']);
+      $tagihan_tambahan = $is_coass_tambahan ? 0 : $biaya_tambahan_asli;
+      $coass_tambahan = $is_coass_tambahan ? $biaya_tambahan_asli : 0;
 
       $pos_billing = [
         'pendaftaran' => [
           'nama' => 'Pendaftaran',
-          'tagihan' => $biaya_registrasi,
+          'tagihan_asli' => $biaya_registrasi_asli,
+          'tagihan' => $tagihan_pendaftaran,
+          'tagihan_coass' => $coass_registrasi,
+          'is_coass' => $is_coass_reg,
           'sudah_bayar' => $sudah_bayar_pos['pendaftaran'],
-          'sisa' => max(0, $biaya_registrasi - $sudah_bayar_pos['pendaftaran'])
+          'sisa' => max(0, $tagihan_pendaftaran - $sudah_bayar_pos['pendaftaran'])
         ],
         'tindakan' => [
           'nama' => 'Tindakan',
-          'tagihan' => floatval($jumlah_total),
+          'tagihan_asli' => $biaya_tindakan_asli,
+          'tagihan' => $tagihan_tindakan,
+          'tagihan_coass' => $coass_tindakan,
+          'is_coass' => $is_coass_tindakan || ($coass_tindakan > 0 && $tagihan_tindakan == 0),
           'sudah_bayar' => $sudah_bayar_pos['tindakan'],
-          'sisa' => max(0, floatval($jumlah_total) - $sudah_bayar_pos['tindakan'])
+          'sisa' => max(0, $tagihan_tindakan - $sudah_bayar_pos['tindakan'])
         ],
         'obat' => [
           'nama' => 'Obat dan BHP',
-          'tagihan' => floatval($jumlah_total_obat),
+          'tagihan_asli' => $biaya_obat_asli,
+          'tagihan' => $tagihan_obat,
+          'tagihan_coass' => $coass_obat,
+          'is_coass' => $is_coass_obat,
           'sudah_bayar' => $sudah_bayar_pos['obat'],
-          'sisa' => max(0, floatval($jumlah_total_obat) - $sudah_bayar_pos['obat'])
+          'sisa' => max(0, $tagihan_obat - $sudah_bayar_pos['obat'])
         ],
         'laboratorium' => [
           'nama' => 'Laboratorium',
-          'tagihan' => floatval($jumlah_total_lab),
+          'tagihan_asli' => $biaya_lab_asli,
+          'tagihan' => $tagihan_lab,
+          'tagihan_coass' => $coass_lab,
+          'is_coass' => $is_coass_lab,
           'sudah_bayar' => $sudah_bayar_pos['laboratorium'],
-          'sisa' => max(0, floatval($jumlah_total_lab) - $sudah_bayar_pos['laboratorium'])
+          'sisa' => max(0, $tagihan_lab - $sudah_bayar_pos['laboratorium'])
         ],
         'radiologi' => [
           'nama' => 'Radiologi',
-          'tagihan' => floatval($jumlah_total_radiologi),
+          'tagihan_asli' => $biaya_rad_asli,
+          'tagihan' => $tagihan_rad,
+          'tagihan_coass' => $coass_rad,
+          'is_coass' => $is_coass_rad,
           'sudah_bayar' => $sudah_bayar_pos['radiologi'],
-          'sisa' => max(0, floatval($jumlah_total_radiologi) - $sudah_bayar_pos['radiologi'])
+          'sisa' => max(0, $tagihan_rad - $sudah_bayar_pos['radiologi'])
         ],
         'operasi' => [
           'nama' => 'Operasi',
-          'tagihan' => $biaya_operasi_total,
+          'tagihan_asli' => $biaya_operasi_asli,
+          'tagihan' => $tagihan_operasi,
+          'tagihan_coass' => $coass_operasi,
+          'is_coass' => $is_coass_operasi,
           'sudah_bayar' => $sudah_bayar_pos['operasi'],
-          'sisa' => max(0, $biaya_operasi_total - $sudah_bayar_pos['operasi'])
+          'sisa' => max(0, $tagihan_operasi - $sudah_bayar_pos['operasi'])
         ],
         'obat_pulang' => [
           'nama' => 'Obat Pulang',
-          'tagihan' => floatval($jumlah_total_obat_pulang),
+          'tagihan_asli' => $biaya_obat_pulang_asli,
+          'tagihan' => $tagihan_obat_pulang,
+          'tagihan_coass' => $coass_obat_pulang,
+          'is_coass' => $is_coass_obat_pulang,
           'sudah_bayar' => $sudah_bayar_pos['obat_pulang'],
-          'sisa' => max(0, floatval($jumlah_total_obat_pulang) - $sudah_bayar_pos['obat_pulang'])
+          'sisa' => max(0, $tagihan_obat_pulang - $sudah_bayar_pos['obat_pulang'])
         ],
         'tambahan' => [
           'nama' => 'Biaya Tambahan',
-          'tagihan' => floatval($jumlah_total_tambahan),
+          'tagihan_asli' => $biaya_tambahan_asli,
+          'tagihan' => $tagihan_tambahan,
+          'tagihan_coass' => $coass_tambahan,
+          'is_coass' => $is_coass_tambahan,
           'sudah_bayar' => $sudah_bayar_pos['tambahan'],
-          'sisa' => max(0, floatval($jumlah_total_tambahan) - $sudah_bayar_pos['tambahan'])
+          'sisa' => max(0, $tagihan_tambahan - $sudah_bayar_pos['tambahan'])
         ]
       ];
 
-      $grand_total_tagihan = $biaya_registrasi + $jumlah_total + $jumlah_total_obat + $jumlah_total_lab + $jumlah_total_radiologi + $biaya_operasi_total + $jumlah_total_obat_pulang + $jumlah_total_tambahan;
+      $grand_total_tagihan = $tagihan_pendaftaran + $tagihan_tindakan + $tagihan_obat + $tagihan_lab + $tagihan_rad + $tagihan_operasi + $tagihan_obat_pulang + $tagihan_tambahan;
+      $grand_total_coass = $coass_registrasi + $coass_tindakan + $coass_obat + $coass_lab + $coass_rad + $coass_operasi + $coass_obat_pulang + $coass_tambahan;
       $grand_total_sisa = max(0, $grand_total_tagihan - $total_sudah_bayar_sebelumnya);
 
       echo $this->draw('rincian.html', [
@@ -1127,7 +1416,8 @@ class Admin extends AdminModule
         'rawat_jl_pr' => $rawat_jl_pr,
         'rawat_jl_drpr' => $rawat_jl_drpr,
         'tindakan' => $tindakan,
-        'jumlah_total' => $jumlah_total,
+        'jumlah_total' => $tagihan_tindakan,
+        'jumlah_total_coass' => $coass_tindakan,
         'jumlah_total_obat' => $jumlah_total_obat,
         'jumlah_total_embalase' => $jumlah_total_embalase,
         'jumlah_total_tuslah' => $jumlah_total_tuslah,
@@ -1146,6 +1436,8 @@ class Admin extends AdminModule
         'tambahan_biaya' => $tambahan_biaya,
         'jumlah_total_tambahan' => $jumlah_total_tambahan,
         'pos_billing' => $pos_billing,
+        'coass_kategori' => $coass_kategori,
+        'grand_total_coass' => $grand_total_coass,
         'riwayat_billing' => $riwayat_billing,
         'total_sudah_bayar_sebelumnya' => $total_sudah_bayar_sebelumnya,
         'grand_total_tagihan' => $grand_total_tagihan,
@@ -1274,7 +1566,7 @@ class Admin extends AdminModule
           return floatval(preg_replace('/[^0-9]/', '', $val));
       };
 
-      if($this->settings('keuangan', 'jurnal_kasir') == 1) {
+      if($this->settings('keuangan', 'jurnal_kasir') == 1 && empty($_POST['tidak_diklaim'])) {
           // jurnal_pendaftaran //
           $jumlah_pendaftaran = isset($_POST['jurnal_pendaftaran']) ? $parseJumlah($_POST['jurnal_pendaftaran']) : 0;
           if($jumlah_pendaftaran > 0) {
@@ -1488,8 +1780,10 @@ class Admin extends AdminModule
       unset($_POST['jurnal_radiologi']);
 
       $alokasi = isset($_POST['alokasi']) ? json_decode($_POST['alokasi'], true) : [];
+      $tidak_diklaim = !empty($_POST['tidak_diklaim']);
       $sisa_setelah_bayar = isset($_POST['sisa_setelah_bayar']) ? floatval(preg_replace('/[^0-9]/', '', $_POST['sisa_setelah_bayar'])) : 0;
 
+      unset($_POST['tidak_diklaim']);
       unset($_POST['alokasi']);
       unset($_POST['pelayanan']);
       unset($_POST['nama_pelayanan']);
@@ -1499,6 +1793,22 @@ class Admin extends AdminModule
       unset($_POST['jumlah_total_layanan']);
       unset($_POST['total_sudah_bayar']);
 
+      // Jika transaksi ditandai Tidak Diklaim (Ditanggung Coass)
+      if ($tidak_diklaim) {
+        $coass_cats = $this->getCoassKategori($_POST['no_rawat']);
+        if (!empty($alokasi) && is_array($alokasi)) {
+          foreach ($alokasi as $kat => $val) {
+            $coass_cats[$kat] = true;
+            if ($kat === 'tindakan') {
+              $this->db('rawat_jl_dr')->where('no_rawat', $_POST['no_rawat'])->update(['stts_bayar' => 'Suspen']);
+              $this->db('rawat_jl_pr')->where('no_rawat', $_POST['no_rawat'])->update(['stts_bayar' => 'Suspen']);
+              $this->db('rawat_jl_drpr')->where('no_rawat', $_POST['no_rawat'])->update(['stts_bayar' => 'Suspen']);
+            }
+          }
+        }
+        $this->setCoassKategori($_POST['no_rawat'], $coass_cats);
+      }
+
       $kd_billing = !empty($_POST['kd_billing']) ? $_POST['kd_billing'] : ('RJ.' . date('d.m.Y.H.i.s'));
       $cek_kd = $this->db('mlite_billing')->where('kd_billing', $kd_billing)->oneArray();
       if ($cek_kd) {
@@ -1506,17 +1816,22 @@ class Admin extends AdminModule
       }
       $_POST['kd_billing'] = $kd_billing;
 
+      $ket_billing = $_POST['keterangan'] ?? 'Tunai';
+      if ($tidak_diklaim && strpos($ket_billing, 'Tidak Di-claim') === false && strpos($ket_billing, 'Ditanggung Coass') === false) {
+        $ket_billing = 'Tidak Di-claim' . (!empty($ket_billing) && $ket_billing !== 'Tunai' ? ' - ' . $ket_billing : '');
+      }
+
       $data_billing = [
         'kd_billing' => $_POST['kd_billing'],
         'no_rawat' => $_POST['no_rawat'],
         'jumlah_total' => preg_replace('/[^0-9]/', '', $_POST['jumlah_total'] ?? 0),
         'potongan' => preg_replace('/[^0-9]/', '', $_POST['potongan'] ?? 0),
-        'jumlah_harus_bayar' => preg_replace('/[^0-9]/', '', $_POST['jumlah_harus_bayar'] ?? 0),
-        'jumlah_bayar' => preg_replace('/[^0-9]/', '', $_POST['jumlah_bayar'] ?? 0),
+        'jumlah_harus_bayar' => $tidak_diklaim ? 0 : preg_replace('/[^0-9]/', '', $_POST['jumlah_harus_bayar'] ?? 0),
+        'jumlah_bayar' => $tidak_diklaim ? 0 : preg_replace('/[^0-9]/', '', $_POST['jumlah_bayar'] ?? 0),
         'tgl_billing' => $_POST['tgl_billing'],
         'jam_billing' => $_POST['jam_billing'],
         'id_user' => $_POST['id_user'],
-        'keterangan' => $_POST['keterangan'] ?? 'Tunai'
+        'keterangan' => $ket_billing
       ];
 
       $query = $this->db('mlite_billing')->save($data_billing);
@@ -1543,37 +1858,38 @@ class Admin extends AdminModule
         // Cek total tagihan seluruh layanan untuk no_rawat ini
         $no_rawat = $_POST['no_rawat'];
         $poliklinik = $this->db('poliklinik')->join('reg_periksa', 'reg_periksa.kd_poli=poliklinik.kd_poli')->where('reg_periksa.no_rawat', $no_rawat)->oneArray();
-        $biaya_reg = floatval($poliklinik['registrasi'] ?? 0);
+        $coass_cats = $this->getCoassKategori($no_rawat);
+        $biaya_reg = !empty($coass_cats['pendaftaran']) ? 0 : floatval($poliklinik['registrasi'] ?? 0);
 
         $pdo = $this->db()->pdo();
 
-        $qDr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_dr WHERE no_rawat = ?");
+        $qDr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_dr WHERE no_rawat = ? AND stts_bayar != 'Suspen'");
         $qDr->execute([$no_rawat]);
-        $total_dr = floatval($qDr->fetchColumn());
+        $total_dr = !empty($coass_cats['tindakan']) ? 0 : floatval($qDr->fetchColumn());
 
-        $qPr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_pr WHERE no_rawat = ?");
+        $qPr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_pr WHERE no_rawat = ? AND stts_bayar != 'Suspen'");
         $qPr->execute([$no_rawat]);
-        $total_pr = floatval($qPr->fetchColumn());
+        $total_pr = !empty($coass_cats['tindakan']) ? 0 : floatval($qPr->fetchColumn());
 
-        $qDrpr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_drpr WHERE no_rawat = ?");
+        $qDrpr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_drpr WHERE no_rawat = ? AND stts_bayar != 'Suspen'");
         $qDrpr->execute([$no_rawat]);
-        $total_drpr = floatval($qDrpr->fetchColumn());
+        $total_drpr = !empty($coass_cats['tindakan']) ? 0 : floatval($qDrpr->fetchColumn());
 
         $qObat = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM detail_pemberian_obat WHERE no_rawat = ? AND status = 'Ralan'");
         $qObat->execute([$no_rawat]);
-        $total_obat = floatval($qObat->fetchColumn());
+        $total_obat = !empty($coass_cats['obat']) ? 0 : floatval($qObat->fetchColumn());
 
         $qLab = $pdo->prepare("SELECT COALESCE(SUM(biaya), 0) FROM periksa_lab WHERE no_rawat = ? AND status = 'Ralan'");
         $qLab->execute([$no_rawat]);
-        $total_lab = floatval($qLab->fetchColumn());
+        $total_lab = !empty($coass_cats['laboratorium']) ? 0 : floatval($qLab->fetchColumn());
 
         $qRad = $pdo->prepare("SELECT COALESCE(SUM(biaya), 0) FROM periksa_radiologi WHERE no_rawat = ? AND status = 'Ralan'");
         $qRad->execute([$no_rawat]);
-        $total_rad = floatval($qRad->fetchColumn());
+        $total_rad = !empty($coass_cats['radiologi']) ? 0 : floatval($qRad->fetchColumn());
 
         $qTambahan = $pdo->prepare("SELECT COALESCE(SUM(besar_biaya), 0) FROM tambahan_biaya WHERE no_rawat = ?");
         $qTambahan->execute([$no_rawat]);
-        $total_tambahan = floatval($qTambahan->fetchColumn());
+        $total_tambahan = !empty($coass_cats['tambahan']) ? 0 : floatval($qTambahan->fetchColumn());
 
         $total_layanan = $biaya_reg + $total_dr + $total_pr + $total_drpr + $total_obat + $total_lab + $total_rad + $total_tambahan;
 
@@ -1582,7 +1898,7 @@ class Admin extends AdminModule
         $qByr->execute([$no_rawat]);
         $total_terbayar = floatval($qByr->fetchColumn());
 
-        $status_bayar = ($total_terbayar >= $total_layanan && $total_layanan > 0) ? 'Sudah Bayar' : 'Belum Bayar';
+        $status_bayar = ($total_layanan == 0 || $total_terbayar >= $total_layanan) ? 'Sudah Bayar' : 'Belum Bayar';
         $this->db('reg_periksa')->where('no_rawat', $no_rawat)->update(['status_bayar' => $status_bayar]);
       }
       exit();
@@ -1616,6 +1932,23 @@ class Admin extends AdminModule
           $no_rawat = $billing['no_rawat'];
         }
 
+        // Jika faktur yang dihapus adalah transaksi Tidak Di-claim, kembalikan statusnya
+        if (strpos($billing['keterangan'] ?? '', 'Tidak Di-claim') !== false || strpos($billing['keterangan'] ?? '', 'Ditanggung Coass') !== false) {
+          $rincian_coass = $pdo->prepare("SELECT kategori FROM mlite_billing_rincian WHERE kd_billing = ?");
+          $rincian_coass->execute([$kd_billing]);
+          $coass_rows = $rincian_coass->fetchAll(\PDO::FETCH_ASSOC);
+          $coass_cats = $this->getCoassKategori($no_rawat);
+          foreach ($coass_rows as $cr) {
+            unset($coass_cats[$cr['kategori']]);
+            if ($cr['kategori'] === 'tindakan') {
+              $pdo->prepare("UPDATE rawat_jl_dr SET stts_bayar = 'Belum' WHERE no_rawat = ?")->execute([$no_rawat]);
+              $pdo->prepare("UPDATE rawat_jl_pr SET stts_bayar = 'Belum' WHERE no_rawat = ?")->execute([$no_rawat]);
+              $pdo->prepare("UPDATE rawat_jl_drpr SET stts_bayar = 'Belum' WHERE no_rawat = ?")->execute([$no_rawat]);
+            }
+          }
+          $this->setCoassKategori($no_rawat, $coass_cats);
+        }
+
         // Hapus data rincian alokasi per sub-layanan jika ada
         $delRincian = $pdo->prepare("DELETE FROM mlite_billing_rincian WHERE kd_billing = ?");
         $delRincian->execute([$kd_billing]);
@@ -1626,35 +1959,36 @@ class Admin extends AdminModule
 
         // Hitung ulang akumulasi tagihan dan sisa pembayaran untuk no_rawat ini
         $poliklinik = $this->db('poliklinik')->join('reg_periksa', 'reg_periksa.kd_poli=poliklinik.kd_poli')->where('reg_periksa.no_rawat', $no_rawat)->oneArray();
-        $biaya_reg = floatval($poliklinik['registrasi'] ?? 0);
+        $coass_cats = $this->getCoassKategori($no_rawat);
+        $biaya_reg = !empty($coass_cats['pendaftaran']) ? 0 : floatval($poliklinik['registrasi'] ?? 0);
 
-        $qDr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_dr WHERE no_rawat = ?");
+        $qDr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_dr WHERE no_rawat = ? AND stts_bayar != 'Suspen'");
         $qDr->execute([$no_rawat]);
-        $total_dr = floatval($qDr->fetchColumn());
+        $total_dr = !empty($coass_cats['tindakan']) ? 0 : floatval($qDr->fetchColumn());
 
-        $qPr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_pr WHERE no_rawat = ?");
+        $qPr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_pr WHERE no_rawat = ? AND stts_bayar != 'Suspen'");
         $qPr->execute([$no_rawat]);
-        $total_pr = floatval($qPr->fetchColumn());
+        $total_pr = !empty($coass_cats['tindakan']) ? 0 : floatval($qPr->fetchColumn());
 
-        $qDrpr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_drpr WHERE no_rawat = ?");
+        $qDrpr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_drpr WHERE no_rawat = ? AND stts_bayar != 'Suspen'");
         $qDrpr->execute([$no_rawat]);
-        $total_drpr = floatval($qDrpr->fetchColumn());
+        $total_drpr = !empty($coass_cats['tindakan']) ? 0 : floatval($qDrpr->fetchColumn());
 
         $qObat = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM detail_pemberian_obat WHERE no_rawat = ? AND status = 'Ralan'");
         $qObat->execute([$no_rawat]);
-        $total_obat = floatval($qObat->fetchColumn());
+        $total_obat = !empty($coass_cats['obat']) ? 0 : floatval($qObat->fetchColumn());
 
         $qLab = $pdo->prepare("SELECT COALESCE(SUM(biaya), 0) FROM periksa_lab WHERE no_rawat = ? AND status = 'Ralan'");
         $qLab->execute([$no_rawat]);
-        $total_lab = floatval($qLab->fetchColumn());
+        $total_lab = !empty($coass_cats['laboratorium']) ? 0 : floatval($qLab->fetchColumn());
 
         $qRad = $pdo->prepare("SELECT COALESCE(SUM(biaya), 0) FROM periksa_radiologi WHERE no_rawat = ? AND status = 'Ralan'");
         $qRad->execute([$no_rawat]);
-        $total_rad = floatval($qRad->fetchColumn());
+        $total_rad = !empty($coass_cats['radiologi']) ? 0 : floatval($qRad->fetchColumn());
 
         $qTambahan = $pdo->prepare("SELECT COALESCE(SUM(besar_biaya), 0) FROM tambahan_biaya WHERE no_rawat = ?");
         $qTambahan->execute([$no_rawat]);
-        $total_tambahan = floatval($qTambahan->fetchColumn());
+        $total_tambahan = !empty($coass_cats['tambahan']) ? 0 : floatval($qTambahan->fetchColumn());
 
         $total_layanan = $biaya_reg + $total_dr + $total_pr + $total_drpr + $total_obat + $total_lab + $total_rad + $total_tambahan;
 
@@ -1663,7 +1997,11 @@ class Admin extends AdminModule
         $qByr->execute([$no_rawat]);
         $total_terbayar = floatval($qByr->fetchColumn());
 
-        $status_bayar = ($total_terbayar >= $total_layanan && $total_layanan > 0) ? 'Sudah Bayar' : 'Belum Bayar';
+        $qBillingCount = $pdo->prepare("SELECT COUNT(*) FROM mlite_billing WHERE no_rawat = ? AND kd_billing LIKE 'RJ%'");
+        $qBillingCount->execute([$no_rawat]);
+        $hasBilling = ($qBillingCount->fetchColumn() > 0);
+
+        $status_bayar = ($hasBilling && ($total_layanan == 0 || $total_terbayar >= $total_layanan)) ? 'Sudah Bayar' : 'Belum Bayar';
         $updStts = $pdo->prepare("UPDATE reg_periksa SET status_bayar = ? WHERE no_rawat = ?");
         $updStts->execute([$status_bayar, $no_rawat]);
 
@@ -1713,7 +2051,7 @@ class Admin extends AdminModule
         unset($payload['tgl_bayar']);
         unset($payload['jam_bayar']);
 
-        if($this->settings('keuangan', 'jurnal_kasir') == 1) {
+        if($this->settings('keuangan', 'jurnal_kasir') == 1 && empty($_POST['tidak_diklaim'])) {
             // jurnal_pendaftaran //
             if(isset($payload['jurnal_pendaftaran']) && $payload['jurnal_pendaftaran'] != '0' && $payload['jurnal_pendaftaran'] != 0) {
                 $no_jurnal_pendaftaran = $this->core->setNoJurnal();
@@ -2327,50 +2665,86 @@ class Admin extends AdminModule
           ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
           ->oneArray();
 
-        $result_detail['rawat_jl_dr'] = $this->db('rawat_jl_dr')
+        $rawat_jl_dr_query = $this->db('rawat_jl_dr')
           ->select('jns_perawatan.nm_perawatan')
+          ->select('rawat_jl_dr.stts_bayar')
           ->select(['biaya_rawat' => 'rawat_jl_dr.biaya_rawat'])
           ->select(['jml' => 'COUNT(rawat_jl_dr.kd_jenis_prw)'])
           ->select(['total_biaya_rawat_dr' => 'SUM(rawat_jl_dr.biaya_rawat)'])
           ->join('jns_perawatan', 'jns_perawatan.kd_jenis_prw = rawat_jl_dr.kd_jenis_prw')
           ->where('rawat_jl_dr.no_rawat', $_GET['no_rawat'])
-          ->group('jns_perawatan.nm_perawatan')
+          ->group('jns_perawatan.nm_perawatan, rawat_jl_dr.stts_bayar')
           ->toArray();
 
         $total_rawat_jl_dr = 0;
-        foreach ($result_detail['rawat_jl_dr'] as $row) {
-          $total_rawat_jl_dr += $row['biaya_rawat'];
+        $total_coass_dr = 0;
+        $result_detail['rawat_jl_dr'] = [];
+        foreach ($rawat_jl_dr_query as $row) {
+          if ($row['stts_bayar'] == 'Suspen') {
+            $total_coass_dr += $row['total_biaya_rawat_dr'];
+            $row['nm_perawatan'] .= ' (Tidak Di-claim)';
+            $row['biaya_rawat'] = 0;
+            $row['total_biaya_rawat_dr'] = 0;
+          } else {
+            $total_rawat_jl_dr += $row['biaya_rawat'];
+          }
+          $result_detail['rawat_jl_dr'][] = $row;
         }
 
-        $result_detail['rawat_jl_pr'] = $this->db('rawat_jl_pr')
+        $rawat_jl_pr_query = $this->db('rawat_jl_pr')
           ->select('jns_perawatan.nm_perawatan')
+          ->select('rawat_jl_pr.stts_bayar')
           ->select(['biaya_rawat' => 'rawat_jl_pr.biaya_rawat'])
           ->select(['jml' => 'COUNT(rawat_jl_pr.kd_jenis_prw)'])
           ->select(['total_biaya_rawat_pr' => 'SUM(rawat_jl_pr.biaya_rawat)'])
           ->join('jns_perawatan', 'jns_perawatan.kd_jenis_prw = rawat_jl_pr.kd_jenis_prw')
           ->where('rawat_jl_pr.no_rawat', $_GET['no_rawat'])
-          ->group('jns_perawatan.nm_perawatan')
+          ->group('jns_perawatan.nm_perawatan, rawat_jl_pr.stts_bayar')
           ->toArray();
 
         $total_rawat_jl_pr = 0;
-        foreach ($result_detail['rawat_jl_pr'] as $row) {
-          $total_rawat_jl_pr += $row['biaya_rawat'];
+        $total_coass_pr = 0;
+        $result_detail['rawat_jl_pr'] = [];
+        foreach ($rawat_jl_pr_query as $row) {
+          if ($row['stts_bayar'] == 'Suspen') {
+            $total_coass_pr += $row['total_biaya_rawat_pr'];
+            $row['nm_perawatan'] .= ' (Tidak Di-claim)';
+            $row['biaya_rawat'] = 0;
+            $row['total_biaya_rawat_pr'] = 0;
+          } else {
+            $total_rawat_jl_pr += $row['biaya_rawat'];
+          }
+          $result_detail['rawat_jl_pr'][] = $row;
         }
 
-        $result_detail['rawat_jl_drpr'] = $this->db('rawat_jl_drpr')
+        $rawat_jl_drpr_query = $this->db('rawat_jl_drpr')
           ->select('jns_perawatan.nm_perawatan')
+          ->select('rawat_jl_drpr.stts_bayar')
           ->select(['biaya_rawat' => 'rawat_jl_drpr.biaya_rawat'])
           ->select(['jml' => 'COUNT(rawat_jl_drpr.kd_jenis_prw)'])
           ->select(['total_biaya_rawat_drpr' => 'SUM(rawat_jl_drpr.biaya_rawat)'])
           ->join('jns_perawatan', 'jns_perawatan.kd_jenis_prw = rawat_jl_drpr.kd_jenis_prw')
           ->where('rawat_jl_drpr.no_rawat', $_GET['no_rawat'])
-          ->group('jns_perawatan.nm_perawatan')
+          ->group('jns_perawatan.nm_perawatan, rawat_jl_drpr.stts_bayar')
           ->toArray();
 
         $total_rawat_jl_drpr = 0;
-        foreach ($result_detail['rawat_jl_drpr'] as $row) {
-          $total_rawat_jl_drpr += $row['biaya_rawat'];
+        $total_coass_drpr = 0;
+        $result_detail['rawat_jl_drpr'] = [];
+        foreach ($rawat_jl_drpr_query as $row) {
+          if ($row['stts_bayar'] == 'Suspen') {
+            $total_coass_drpr += $row['total_biaya_rawat_drpr'];
+            $row['nm_perawatan'] .= ' (Tidak Di-claim)';
+            $row['biaya_rawat'] = 0;
+            $row['total_biaya_rawat_drpr'] = 0;
+          } else {
+            $total_rawat_jl_drpr += $row['biaya_rawat'];
+          }
+          $result_detail['rawat_jl_drpr'][] = $row;
         }
+
+        $total_coass_all = $total_coass_dr + $total_coass_pr + $total_coass_drpr;
+        $this->tpl->set('total_coass_all', $total_coass_all);
 
         // Exclude racikan items from detail_pemberian_obat
         $exclude_jams = [];
@@ -2497,6 +2871,84 @@ class Admin extends AdminModule
           ->where('no_rawat', $_GET['no_rawat'])
           ->toArray();
 
+        $coass_cats = $this->getCoassKategori($_GET['no_rawat']);
+
+        // Pendaftaran
+        if (!empty($coass_cats['pendaftaran']) && isset($result_detail['poliklinik'])) {
+          $reg_biaya = floatval(($result_detail['poliklinik']['stts_daftar'] ?? '') == 'Lama' ? ($result_detail['poliklinik']['registrasilama'] ?? 0) : ($result_detail['poliklinik']['registrasi'] ?? 0));
+          $total_coass_all += $reg_biaya;
+          $result_detail['poliklinik']['nm_poli'] .= ' (Tidak Di-claim)';
+          $result_detail['poliklinik']['registrasi'] = 0;
+        }
+
+        // Obat dan BHP
+        if (!empty($coass_cats['obat']) && !empty($result_detail['detail_pemberian_obat'])) {
+          foreach ($result_detail['detail_pemberian_obat'] as $k => $row) {
+            $total_coass_all += floatval($row['total'] ?? 0);
+            $result_detail['detail_pemberian_obat'][$k]['biaya_obat'] = 0;
+            $result_detail['detail_pemberian_obat'][$k]['total'] = 0;
+            $result_detail['detail_pemberian_obat'][$k]['nama_brng'] .= ' (Tidak Di-claim)';
+          }
+          $total_detail_pemberian_obat = 0;
+        }
+
+        // Laboratorium
+        if (!empty($coass_cats['laboratorium']) && !empty($result_detail['periksa_lab'])) {
+          foreach ($result_detail['periksa_lab'] as $k => $row) {
+            $total_coass_all += floatval($row['biaya'] ?? 0);
+            $result_detail['periksa_lab'][$k]['biaya'] = 0;
+            $result_detail['periksa_lab'][$k]['nm_perawatan'] .= ' (Tidak Di-claim)';
+          }
+          $total_periksa_lab = 0;
+        }
+
+        // Radiologi
+        if (!empty($coass_cats['radiologi']) && !empty($result_detail['periksa_radiologi'])) {
+          foreach ($result_detail['periksa_radiologi'] as $k => $row) {
+            $total_coass_all += floatval($row['biaya'] ?? 0);
+            $result_detail['periksa_radiologi'][$k]['biaya'] = 0;
+            $result_detail['periksa_radiologi'][$k]['nm_perawatan'] .= ' (Tidak Di-claim)';
+          }
+          $total_periksa_radiologi = 0;
+        }
+
+        // Operasi
+        if (!empty($coass_cats['operasi'])) {
+          if (!empty($result_detail['operasi'])) {
+            foreach ($result_detail['operasi'] as $k => $row) {
+              $total_coass_all += floatval($row['jumlah'] ?? 0);
+              $result_detail['operasi'][$k]['jumlah'] = 0;
+              $result_detail['operasi'][$k]['nm_perawatan'] .= ' (Tidak Di-claim)';
+            }
+          }
+          if (!empty($result_detail['obat_operasi'])) {
+            foreach ($result_detail['obat_operasi'] as $k => $row) {
+              $total_coass_all += floatval($row['harga'] ?? 0);
+              $result_detail['obat_operasi'][$k]['harga'] = 0;
+            }
+          }
+        }
+
+        // Obat Pulang
+        if (!empty($coass_cats['obat_pulang']) && !empty($result_detail['resep_pulang'])) {
+          foreach ($result_detail['resep_pulang'] as $k => $row) {
+            $total_coass_all += floatval($row['total'] ?? 0);
+            $result_detail['resep_pulang'][$k]['total'] = 0;
+            $result_detail['resep_pulang'][$k]['nama_brng'] .= ' (Tidak Di-claim)';
+          }
+        }
+
+        // Biaya Tambahan
+        if (!empty($coass_cats['tambahan']) && !empty($result_detail['tambahan_biaya'])) {
+          foreach ($result_detail['tambahan_biaya'] as $k => $row) {
+            $total_coass_all += floatval($row['besar_biaya'] ?? 0);
+            $result_detail['tambahan_biaya'][$k]['besar_biaya'] = 0;
+            $result_detail['tambahan_biaya'][$k]['nama_biaya'] .= ' (Tidak Di-claim)';
+          }
+        }
+
+        $this->tpl->set('total_coass_all', $total_coass_all);
+
         $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $_GET['no_rawat'])->oneArray();
         $pasien = $this->db('pasien')->where('no_rkm_medis', $reg_periksa['no_rkm_medis'])->oneArray();
 
@@ -2613,12 +3065,85 @@ class Admin extends AdminModule
           }
         }
 
+        $coass_cats = $this->getCoassKategori($no_rawat);
+        $total_coass_all = 0;
+        $pdo = $this->db()->pdo();
+
+        // Pendaftaran
+        if (!empty($coass_cats['pendaftaran'])) {
+          $qPol = $pdo->prepare("SELECT registrasi, registrasilama, stts_daftar FROM poliklinik JOIN reg_periksa ON reg_periksa.kd_poli=poliklinik.kd_poli WHERE reg_periksa.no_rawat = ?");
+          $qPol->execute([$no_rawat]);
+          $pRow = $qPol->fetch(\PDO::FETCH_ASSOC);
+          if ($pRow) {
+            $regCost = ($pRow['stts_daftar'] == 'Lama') ? $pRow['registrasilama'] : $pRow['registrasi'];
+            $total_coass_all += floatval($regCost);
+          }
+        }
+
+        // Tindakan
+        $qCoass = $pdo->prepare("
+          SELECT (
+            (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_dr WHERE no_rawat = ? AND stts_bayar = 'Suspen') +
+            (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_pr WHERE no_rawat = ? AND stts_bayar = 'Suspen') +
+            (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_drpr WHERE no_rawat = ? AND stts_bayar = 'Suspen')
+          ) AS total_coass
+        ");
+        $qCoass->execute([$no_rawat, $no_rawat, $no_rawat]);
+        $total_coass_all += floatval($qCoass->fetchColumn());
+
+        // Obat & BHP
+        if (!empty($coass_cats['obat'])) {
+          $qOb = $pdo->prepare("SELECT IFNULL(SUM(total),0) FROM detail_pemberian_obat WHERE no_rawat = ? AND status = 'Ralan'");
+          $qOb->execute([$no_rawat]);
+          $total_coass_all += floatval($qOb->fetchColumn());
+        }
+
+        // Laboratorium
+        if (!empty($coass_cats['laboratorium'])) {
+          $qLb = $pdo->prepare("SELECT IFNULL(SUM(biaya),0) FROM periksa_lab WHERE no_rawat = ? AND status = 'Ralan'");
+          $qLb->execute([$no_rawat]);
+          $total_coass_all += floatval($qLb->fetchColumn());
+        }
+
+        // Radiologi
+        if (!empty($coass_cats['radiologi'])) {
+          $qRd = $pdo->prepare("SELECT IFNULL(SUM(biaya),0) FROM periksa_radiologi WHERE no_rawat = ? AND status = 'Ralan'");
+          $qRd->execute([$no_rawat]);
+          $total_coass_all += floatval($qRd->fetchColumn());
+        }
+
+        // Operasi
+        if (!empty($coass_cats['operasi'])) {
+          $qOp = $pdo->prepare("SELECT IFNULL(SUM(biayaoperator1+biayaoperator2+biayaoperator3+biayaasisten_operator1+biayaasisten_operator2+biayadokter_anak+biayaperawaat_resusitas+biayadokter_anestesi+biayaasisten_anestesi+biayabidan+biayaperawat_luar),0) FROM operasi WHERE no_rawat = ? AND status = 'Ralan'");
+          $qOp->execute([$no_rawat]);
+          $total_coass_all += floatval($qOp->fetchColumn());
+
+          $qObOp = $pdo->prepare("SELECT IFNULL(SUM(hargasatuan * jumlah),0) FROM beri_obat_operasi WHERE no_rawat = ?");
+          $qObOp->execute([$no_rawat]);
+          $total_coass_all += floatval($qObOp->fetchColumn());
+        }
+
+        // Obat pulang
+        if (!empty($coass_cats['obat_pulang'])) {
+          $qOpul = $pdo->prepare("SELECT IFNULL(SUM(total),0) FROM resep_pulang WHERE no_rawat = ?");
+          $qOpul->execute([$no_rawat]);
+          $total_coass_all += floatval($qOpul->fetchColumn());
+        }
+
+        // Tambahan
+        if (!empty($coass_cats['tambahan'])) {
+          $qTb = $pdo->prepare("SELECT IFNULL(SUM(besar_biaya),0) FROM tambahan_biaya WHERE no_rawat = ?");
+          $qTb->execute([$no_rawat]);
+          $total_coass_all += floatval($qTb->fetchColumn());
+        }
+
         echo $this->draw('billing.kecil.html', [
           'billing' => htmlspecialchars_array($result),
           'pasien' => $pasien,
           'fullname' => $nama_kasir,
           'rincian_alokasi' => $rincian_alokasi,
           'total_bayar_semua' => $total_bayar_semua,
+          'total_coass_all' => $total_coass_all,
           'settings' => $this->settings('settings')
         ]);
         break;
@@ -2954,23 +3479,23 @@ class Admin extends AdminModule
             b.jumlah_bayar AS tagihan,
             (
                 (SELECT IFNULL(SUM(besar_biaya),0) FROM tambahan_biaya WHERE no_rawat=b.no_rawat AND (nama_biaya LIKE '%CSU%' OR nama_biaya LIKE '%CSSD%')) +
-                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_pr WHERE no_rawat=b.no_rawat AND (kd_jenis_prw LIKE 'SDD%' OR kd_jenis_prw LIKE 'SL%' OR kd_jenis_prw LIKE 'STD%' OR kd_jenis_prw LIKE 'STDU%' OR kd_jenis_prw LIKE 'STP%' OR kd_jenis_prw LIKE 'SB%')) +
-                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_dr WHERE no_rawat=b.no_rawat AND (kd_jenis_prw LIKE 'SDD%' OR kd_jenis_prw LIKE 'SL%' OR kd_jenis_prw LIKE 'STD%' OR kd_jenis_prw LIKE 'STDU%' OR kd_jenis_prw LIKE 'STP%' OR kd_jenis_prw LIKE 'SB%')) +
-                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_drpr WHERE no_rawat=b.no_rawat AND (kd_jenis_prw LIKE 'SDD%' OR kd_jenis_prw LIKE 'SL%' OR kd_jenis_prw LIKE 'STD%' OR kd_jenis_prw LIKE 'STDU%' OR kd_jenis_prw LIKE 'STP%' OR kd_jenis_prw LIKE 'SB%'))
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_pr WHERE no_rawat=b.no_rawat AND stts_bayar != 'Suspen' AND (kd_jenis_prw LIKE 'SDD%' OR kd_jenis_prw LIKE 'SL%' OR kd_jenis_prw LIKE 'STD%' OR kd_jenis_prw LIKE 'STDU%' OR kd_jenis_prw LIKE 'STP%' OR kd_jenis_prw LIKE 'SB%')) +
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_dr WHERE no_rawat=b.no_rawat AND stts_bayar != 'Suspen' AND (kd_jenis_prw LIKE 'SDD%' OR kd_jenis_prw LIKE 'SL%' OR kd_jenis_prw LIKE 'STD%' OR kd_jenis_prw LIKE 'STDU%' OR kd_jenis_prw LIKE 'STP%' OR kd_jenis_prw LIKE 'SB%')) +
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_drpr WHERE no_rawat=b.no_rawat AND stts_bayar != 'Suspen' AND (kd_jenis_prw LIKE 'SDD%' OR kd_jenis_prw LIKE 'SL%' OR kd_jenis_prw LIKE 'STD%' OR kd_jenis_prw LIKE 'STDU%' OR kd_jenis_prw LIKE 'STP%' OR kd_jenis_prw LIKE 'SB%'))
             ) AS csu,
             (
                 (SELECT IFNULL(SUM(besar_biaya),0) FROM tambahan_biaya WHERE no_rawat=b.no_rawat AND LOWER(nama_biaya) LIKE '%laundry%') +
-                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_pr WHERE no_rawat=b.no_rawat AND kd_jenis_prw LIKE 'ULA%') +
-                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_dr WHERE no_rawat=b.no_rawat AND kd_jenis_prw LIKE 'ULA%') +
-                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_drpr WHERE no_rawat=b.no_rawat AND kd_jenis_prw LIKE 'ULA%')
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_pr WHERE no_rawat=b.no_rawat AND stts_bayar != 'Suspen' AND kd_jenis_prw LIKE 'ULA%') +
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_dr WHERE no_rawat=b.no_rawat AND stts_bayar != 'Suspen' AND kd_jenis_prw LIKE 'ULA%') +
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_drpr WHERE no_rawat=b.no_rawat AND stts_bayar != 'Suspen' AND kd_jenis_prw LIKE 'ULA%')
             ) AS laundry,
             (SELECT IFNULL(SUM(biaya),0) FROM periksa_radiologi WHERE no_rawat=b.no_rawat AND status='Ralan') AS radiologi,
             (
                 (SELECT IFNULL(SUM(total+embalase+tuslah),0) FROM detail_pemberian_obat WHERE no_rawat=b.no_rawat AND status='Ralan') +
                 (SELECT IFNULL(SUM(total),0) FROM resep_pulang WHERE no_rawat=b.no_rawat) +
-                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_pr WHERE no_rawat=b.no_rawat AND kd_jenis_prw LIKE 'FART%') +
-                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_dr WHERE no_rawat=b.no_rawat AND kd_jenis_prw LIKE 'FART%') +
-                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_drpr WHERE no_rawat=b.no_rawat AND kd_jenis_prw LIKE 'FART%')
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_pr WHERE no_rawat=b.no_rawat AND stts_bayar != 'Suspen' AND kd_jenis_prw LIKE 'FART%') +
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_dr WHERE no_rawat=b.no_rawat AND stts_bayar != 'Suspen' AND kd_jenis_prw LIKE 'FART%') +
+                (SELECT IFNULL(SUM(biaya_rawat),0) FROM rawat_jl_drpr WHERE no_rawat=b.no_rawat AND stts_bayar != 'Suspen' AND kd_jenis_prw LIKE 'FART%')
             ) AS apotek,
             (SELECT IFNULL(SUM(pl.biaya),0) FROM periksa_lab pl WHERE pl.no_rawat=b.no_rawat AND pl.status='Ralan' AND pl.kd_jenis_prw LIKE 'LABK%') AS lab_klinik,
             (SELECT IFNULL(SUM(pl.biaya),0) FROM periksa_lab pl WHERE pl.no_rawat=b.no_rawat AND pl.status='Ralan' AND pl.kd_jenis_prw LIKE 'LABG%') AS lab_gigi

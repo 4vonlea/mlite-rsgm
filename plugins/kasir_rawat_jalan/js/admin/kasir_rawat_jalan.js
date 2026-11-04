@@ -475,6 +475,67 @@ $("#rincian").on("click", ".hapus_detail", function (event) {
   });
 });
 
+// ketika tombol toggle status suspen / coass per sub rincian layanan ditekan
+$("#rincian").on("click", ".btn-toggle-sub-coass", function (event) {
+  var baseURL = mlite.url + '/' + mlite.admin;
+  event.preventDefault();
+  var btn = $(this);
+  var url = baseURL + '/kasir_rawat_jalan/togglesubcoass?t=' + mlite.token;
+  var no_rawat = btn.attr("data-no_rawat");
+  var kategori = btn.attr("data-kategori");
+
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+  $.post(url, {
+    no_rawat: no_rawat,
+    kategori: kategori
+  }, function (res) {
+    var rincianUrl = baseURL + '/kasir_rawat_jalan/rincian?t=' + mlite.token;
+    $.post(rincianUrl, { no_rawat: no_rawat }, function (data) {
+      $("#rincian").html(data).show();
+    });
+  }).fail(function () {
+    btn.prop('disabled', false);
+    alert("Gagal mengubah status klaim sub rincian. Silakan coba lagi.");
+  });
+});
+
+// ketika tombol toggle status suspen / coass ditekan
+$("#rincian").on("click", ".btn-toggle-suspen", function (event) {
+  var baseURL = mlite.url + '/' + mlite.admin;
+  event.preventDefault();
+  var btn = $(this);
+  var url = baseURL + '/kasir_rawat_jalan/togglesuspen?t=' + mlite.token;
+  var no_rawat = btn.attr("data-no_rawat");
+  var kd_jenis_prw = btn.attr("data-kd_jenis_prw");
+  var tgl_perawatan = btn.attr("data-tgl_perawatan");
+  var jam_rawat = btn.attr("data-jam_rawat");
+  var kd_dokter = btn.attr("data-kd_dokter");
+  var nip = btn.attr("data-nip");
+  var provider = btn.attr("data-provider");
+
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+  $.post(url, {
+    no_rawat: no_rawat,
+    kd_jenis_prw: kd_jenis_prw,
+    tgl_perawatan: tgl_perawatan,
+    jam_rawat: jam_rawat,
+    kd_dokter: kd_dokter,
+    nip: nip,
+    provider: provider
+  }, function (res) {
+    var rincianUrl = baseURL + '/kasir_rawat_jalan/rincian?t=' + mlite.token;
+    $.post(rincianUrl, { no_rawat: no_rawat }, function (data) {
+      $("#rincian").html(data).show();
+      $('#rincian .nav-tabs a[href="#tindakan"]').tab('show');
+    });
+  }).fail(function () {
+    btn.prop('disabled', false);
+    alert("Gagal mengubah status klaim tindakan. Silakan coba lagi.");
+  });
+});
+
 // ketika tombol hapus ditekan
 $("#rincian").on("click", ".hapus_obat", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;

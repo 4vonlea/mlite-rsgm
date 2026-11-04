@@ -948,13 +948,22 @@
               <tr data-kategori="pendaftaran" data-nama="Pendaftaran">
                 <td class="text-center text-muted">1.</td>
                 <td><strong>Pendaftaran</strong></td>
-                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.pendaftaran.tagihan?}">{?= number_format($pos_billing.pendaftaran.tagihan,2,',','.')?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">
+                  {if: !empty($pos_billing.pendaftaran.is_coass)}
+                    <small class="text-muted" style="text-decoration: line-through; display: block; font-size: 11px;">Rp. {?= number_format($pos_billing.pendaftaran.tagihan_asli,2,',','.')?}</small>
+                    <strong style="color: #059669;">Rp. 0,00</strong>
+                  {else}
+                    Rp. <span class="val-tagihan" data-val="{?=$pos_billing.pendaftaran.tagihan?}">{?= number_format($pos_billing.pendaftaran.tagihan,2,',','.')?}</span>
+                  {/if}
+                </td>
                 <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.pendaftaran.sudah_bayar?}">{?= number_format($pos_billing.pendaftaran.sudah_bayar,2,',','.')?}</span></td>
                 <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.pendaftaran.sisa > 0}#e11d48{else}#059669{/if};">
                   Rp. <span class="val-sisa" data-val="{?=$pos_billing.pendaftaran.sisa?}">{?= number_format($pos_billing.pendaftaran.sisa,2,',','.')?}</span>
                 </td>
                 <td class="text-center">
-                  {if: $pos_billing.pendaftaran.sisa == 0 && $pos_billing.pendaftaran.tagihan > 0}
+                  {if: !empty($pos_billing.pendaftaran.is_coass)}
+                    <span class="rsgm-badge rsgm-badge-amber" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;"><i class="fa fa-ban"></i> Tidak Di-claim</span>
+                  {elseif: $pos_billing.pendaftaran.sisa == 0 && $pos_billing.pendaftaran.tagihan > 0}
                     <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
                   {elseif: $pos_billing.pendaftaran.sudah_bayar > 0}
                     <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
@@ -969,14 +978,28 @@
               <!-- 2. Tindakan -->
               <tr data-kategori="tindakan" data-nama="Tindakan">
                 <td class="text-center text-muted">2.</td>
-                <td><strong>Tindakan</strong></td>
-                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.tindakan.tagihan?}">{?= number_format($pos_billing.tindakan.tagihan,2,',','.')?}</span></td>
+                <td>
+                  <strong>Tindakan</strong>
+                  {if: !empty($pos_billing.tindakan.tagihan_coass) && $pos_billing.tindakan.tagihan_coass > 0 && empty($pos_billing.tindakan.is_coass)}
+                    <br><span style="font-size: 11px; color: #b45309; font-weight: 600;"><i class="fa fa-ban"></i> Sebagian Tidak Di-claim: Rp. {?= number_format($pos_billing.tindakan.tagihan_coass,0,',','.')?}</span>
+                  {/if}
+                </td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">
+                  {if: !empty($pos_billing.tindakan.is_coass)}
+                    <small class="text-muted" style="text-decoration: line-through; display: block; font-size: 11px;">Rp. {?= number_format($pos_billing.tindakan.tagihan_asli,2,',','.')?}</small>
+                    <strong style="color: #059669;">Rp. 0,00</strong>
+                  {else}
+                    Rp. <span class="val-tagihan" data-val="{?=$pos_billing.tindakan.tagihan?}">{?= number_format($pos_billing.tindakan.tagihan,2,',','.')?}</span>
+                  {/if}
+                </td>
                 <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.tindakan.sudah_bayar?}">{?= number_format($pos_billing.tindakan.sudah_bayar,2,',','.')?}</span></td>
                 <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.tindakan.sisa > 0}#e11d48{else}#059669{/if};">
                   Rp. <span class="val-sisa" data-val="{?=$pos_billing.tindakan.sisa?}">{?= number_format($pos_billing.tindakan.sisa,2,',','.')?}</span>
                 </td>
                 <td class="text-center">
-                  {if: $pos_billing.tindakan.sisa == 0 && $pos_billing.tindakan.tagihan > 0}
+                  {if: !empty($pos_billing.tindakan.is_coass)}
+                    <span class="rsgm-badge rsgm-badge-amber" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;"><i class="fa fa-ban"></i> Tidak Di-claim</span>
+                  {elseif: $pos_billing.tindakan.sisa == 0 && $pos_billing.tindakan.tagihan > 0}
                     <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
                   {elseif: $pos_billing.tindakan.sudah_bayar > 0}
                     <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
@@ -992,13 +1015,22 @@
               <tr data-kategori="obat" data-nama="Obat dan BHP">
                 <td class="text-center text-muted">3.</td>
                 <td><strong>Obat dan BHP</strong></td>
-                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.obat.tagihan?}">{?= number_format($pos_billing.obat.tagihan,2,',','.')?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">
+                  {if: !empty($pos_billing.obat.is_coass)}
+                    <small class="text-muted" style="text-decoration: line-through; display: block; font-size: 11px;">Rp. {?= number_format($pos_billing.obat.tagihan_asli,2,',','.')?}</small>
+                    <strong style="color: #059669;">Rp. 0,00</strong>
+                  {else}
+                    Rp. <span class="val-tagihan" data-val="{?=$pos_billing.obat.tagihan?}">{?= number_format($pos_billing.obat.tagihan,2,',','.')?}</span>
+                  {/if}
+                </td>
                 <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.obat.sudah_bayar?}">{?= number_format($pos_billing.obat.sudah_bayar,2,',','.')?}</span></td>
                 <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.obat.sisa > 0}#e11d48{else}#059669{/if};">
                   Rp. <span class="val-sisa" data-val="{?=$pos_billing.obat.sisa?}">{?= number_format($pos_billing.obat.sisa,2,',','.')?}</span>
                 </td>
                 <td class="text-center">
-                  {if: $pos_billing.obat.sisa == 0 && $pos_billing.obat.tagihan > 0}
+                  {if: !empty($pos_billing.obat.is_coass)}
+                    <span class="rsgm-badge rsgm-badge-amber" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;"><i class="fa fa-ban"></i> Tidak Di-claim</span>
+                  {elseif: $pos_billing.obat.sisa == 0 && $pos_billing.obat.tagihan > 0}
                     <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
                   {elseif: $pos_billing.obat.sudah_bayar > 0}
                     <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
@@ -1014,13 +1046,22 @@
               <tr data-kategori="laboratorium" data-nama="Laboratorium">
                 <td class="text-center text-muted">4.</td>
                 <td><strong>Laboratorium</strong></td>
-                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.laboratorium.tagihan?}">{?= number_format($pos_billing.laboratorium.tagihan,2,',','.')?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">
+                  {if: !empty($pos_billing.laboratorium.is_coass)}
+                    <small class="text-muted" style="text-decoration: line-through; display: block; font-size: 11px;">Rp. {?= number_format($pos_billing.laboratorium.tagihan_asli,2,',','.')?}</small>
+                    <strong style="color: #059669;">Rp. 0,00</strong>
+                  {else}
+                    Rp. <span class="val-tagihan" data-val="{?=$pos_billing.laboratorium.tagihan?}">{?= number_format($pos_billing.laboratorium.tagihan,2,',','.')?}</span>
+                  {/if}
+                </td>
                 <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.laboratorium.sudah_bayar?}">{?= number_format($pos_billing.laboratorium.sudah_bayar,2,',','.')?}</span></td>
                 <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.laboratorium.sisa > 0}#e11d48{else}#059669{/if};">
                   Rp. <span class="val-sisa" data-val="{?=$pos_billing.laboratorium.sisa?}">{?= number_format($pos_billing.laboratorium.sisa,2,',','.')?}</span>
                 </td>
                 <td class="text-center">
-                  {if: $pos_billing.laboratorium.sisa == 0 && $pos_billing.laboratorium.tagihan > 0}
+                  {if: !empty($pos_billing.laboratorium.is_coass)}
+                    <span class="rsgm-badge rsgm-badge-amber" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;"><i class="fa fa-ban"></i> Tidak Di-claim</span>
+                  {elseif: $pos_billing.laboratorium.sisa == 0 && $pos_billing.laboratorium.tagihan > 0}
                     <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
                   {elseif: $pos_billing.laboratorium.sudah_bayar > 0}
                     <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
@@ -1036,13 +1077,22 @@
               <tr data-kategori="radiologi" data-nama="Radiologi">
                 <td class="text-center text-muted">5.</td>
                 <td><strong>Radiologi</strong></td>
-                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.radiologi.tagihan?}">{?= number_format($pos_billing.radiologi.tagihan,2,',','.')?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">
+                  {if: !empty($pos_billing.radiologi.is_coass)}
+                    <small class="text-muted" style="text-decoration: line-through; display: block; font-size: 11px;">Rp. {?= number_format($pos_billing.radiologi.tagihan_asli,2,',','.')?}</small>
+                    <strong style="color: #059669;">Rp. 0,00</strong>
+                  {else}
+                    Rp. <span class="val-tagihan" data-val="{?=$pos_billing.radiologi.tagihan?}">{?= number_format($pos_billing.radiologi.tagihan,2,',','.')?}</span>
+                  {/if}
+                </td>
                 <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.radiologi.sudah_bayar?}">{?= number_format($pos_billing.radiologi.sudah_bayar,2,',','.')?}</span></td>
                 <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.radiologi.sisa > 0}#e11d48{else}#059669{/if};">
                   Rp. <span class="val-sisa" data-val="{?=$pos_billing.radiologi.sisa?}">{?= number_format($pos_billing.radiologi.sisa,2,',','.')?}</span>
                 </td>
                 <td class="text-center">
-                  {if: $pos_billing.radiologi.sisa == 0 && $pos_billing.radiologi.tagihan > 0}
+                  {if: !empty($pos_billing.radiologi.is_coass)}
+                    <span class="rsgm-badge rsgm-badge-amber" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;"><i class="fa fa-ban"></i> Tidak Di-claim</span>
+                  {elseif: $pos_billing.radiologi.sisa == 0 && $pos_billing.radiologi.tagihan > 0}
                     <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
                   {elseif: $pos_billing.radiologi.sudah_bayar > 0}
                     <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
@@ -1058,13 +1108,22 @@
               <tr data-kategori="operasi" data-nama="Operasi">
                 <td class="text-center text-muted">6.</td>
                 <td><strong>Operasi</strong></td>
-                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.operasi.tagihan?}">{?= number_format($pos_billing.operasi.tagihan,2,',','.')?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">
+                  {if: !empty($pos_billing.operasi.is_coass)}
+                    <small class="text-muted" style="text-decoration: line-through; display: block; font-size: 11px;">Rp. {?= number_format($pos_billing.operasi.tagihan_asli,2,',','.')?}</small>
+                    <strong style="color: #059669;">Rp. 0,00</strong>
+                  {else}
+                    Rp. <span class="val-tagihan" data-val="{?=$pos_billing.operasi.tagihan?}">{?= number_format($pos_billing.operasi.tagihan,2,',','.')?}</span>
+                  {/if}
+                </td>
                 <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.operasi.sudah_bayar?}">{?= number_format($pos_billing.operasi.sudah_bayar,2,',','.')?}</span></td>
                 <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.operasi.sisa > 0}#e11d48{else}#059669{/if};">
                   Rp. <span class="val-sisa" data-val="{?=$pos_billing.operasi.sisa?}">{?= number_format($pos_billing.operasi.sisa,2,',','.')?}</span>
                 </td>
                 <td class="text-center">
-                  {if: $pos_billing.operasi.sisa == 0 && $pos_billing.operasi.tagihan > 0}
+                  {if: !empty($pos_billing.operasi.is_coass)}
+                    <span class="rsgm-badge rsgm-badge-amber" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;"><i class="fa fa-ban"></i> Tidak Di-claim</span>
+                  {elseif: $pos_billing.operasi.sisa == 0 && $pos_billing.operasi.tagihan > 0}
                     <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
                   {elseif: $pos_billing.operasi.sudah_bayar > 0}
                     <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
@@ -1080,13 +1139,22 @@
               <tr data-kategori="obat_pulang" data-nama="Obat Pulang">
                 <td class="text-center text-muted">7.</td>
                 <td><strong>Obat Pulang</strong></td>
-                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.obat_pulang.tagihan?}">{?= number_format($pos_billing.obat_pulang.tagihan,2,',','.')?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">
+                  {if: !empty($pos_billing.obat_pulang.is_coass)}
+                    <small class="text-muted" style="text-decoration: line-through; display: block; font-size: 11px;">Rp. {?= number_format($pos_billing.obat_pulang.tagihan_asli,2,',','.')?}</small>
+                    <strong style="color: #059669;">Rp. 0,00</strong>
+                  {else}
+                    Rp. <span class="val-tagihan" data-val="{?=$pos_billing.obat_pulang.tagihan?}">{?= number_format($pos_billing.obat_pulang.tagihan,2,',','.')?}</span>
+                  {/if}
+                </td>
                 <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.obat_pulang.sudah_bayar?}">{?= number_format($pos_billing.obat_pulang.sudah_bayar,2,',','.')?}</span></td>
                 <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.obat_pulang.sisa > 0}#e11d48{else}#059669{/if};">
                   Rp. <span class="val-sisa" data-val="{?=$pos_billing.obat_pulang.sisa?}">{?= number_format($pos_billing.obat_pulang.sisa,2,',','.')?}</span>
                 </td>
                 <td class="text-center">
-                  {if: $pos_billing.obat_pulang.sisa == 0 && $pos_billing.obat_pulang.tagihan > 0}
+                  {if: !empty($pos_billing.obat_pulang.is_coass)}
+                    <span class="rsgm-badge rsgm-badge-amber" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;"><i class="fa fa-ban"></i> Tidak Di-claim</span>
+                  {elseif: $pos_billing.obat_pulang.sisa == 0 && $pos_billing.obat_pulang.tagihan > 0}
                     <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
                   {elseif: $pos_billing.obat_pulang.sudah_bayar > 0}
                     <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
@@ -1102,13 +1170,22 @@
               <tr data-kategori="tambahan" data-nama="Biaya Tambahan">
                 <td class="text-center text-muted">8.</td>
                 <td><strong>Biaya Tambahan (termasuk UTD)</strong></td>
-                <td class="text-right" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-tagihan" data-val="{?=$pos_billing.tambahan.tagihan?}">{?= number_format($pos_billing.tambahan.tagihan,2,',','.')?}</span></td>
+                <td class="text-right" style="font-family: monospace; font-size: 13px;">
+                  {if: !empty($pos_billing.tambahan.is_coass)}
+                    <small class="text-muted" style="text-decoration: line-through; display: block; font-size: 11px;">Rp. {?= number_format($pos_billing.tambahan.tagihan_asli,2,',','.')?}</small>
+                    <strong style="color: #059669;">Rp. 0,00</strong>
+                  {else}
+                    Rp. <span class="val-tagihan" data-val="{?=$pos_billing.tambahan.tagihan?}">{?= number_format($pos_billing.tambahan.tagihan,2,',','.')?}</span>
+                  {/if}
+                </td>
                 <td class="text-right text-muted" style="font-family: monospace; font-size: 13px;">Rp. <span class="val-sudah-bayar" data-val="{?=$pos_billing.tambahan.sudah_bayar?}">{?= number_format($pos_billing.tambahan.sudah_bayar,2,',','.')?}</span></td>
                 <td class="text-right" style="font-family: monospace; font-size: 13px; font-weight: 700; color: {if: $pos_billing.tambahan.sisa > 0}#e11d48{else}#059669{/if};">
                   Rp. <span class="val-sisa" data-val="{?=$pos_billing.tambahan.sisa?}">{?= number_format($pos_billing.tambahan.sisa,2,',','.')?}</span>
                 </td>
                 <td class="text-center">
-                  {if: $pos_billing.tambahan.sisa == 0 && $pos_billing.tambahan.tagihan > 0}
+                  {if: !empty($pos_billing.tambahan.is_coass)}
+                    <span class="rsgm-badge rsgm-badge-amber" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;"><i class="fa fa-ban"></i> Tidak Di-claim</span>
+                  {elseif: $pos_billing.tambahan.sisa == 0 && $pos_billing.tambahan.tagihan > 0}
                     <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
                   {elseif: $pos_billing.tambahan.sudah_bayar > 0}
                     <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
@@ -1121,6 +1198,17 @@
               </tr>
             </tbody>
             <tfoot>
+              {if: !empty($grand_total_coass) && $grand_total_coass > 0}
+              <tr style="background: #fffbeb; color: #92400e;">
+                <th colspan="2" class="text-right" style="font-weight: 700; font-size: 12px;">
+                  <i class="fa fa-ban"></i> TOTAL TIDAK DI-CLAIM (BEBAS BIAYA PASIEN)
+                </th>
+                <th class="text-right" style="font-family: monospace; font-weight: 700;">Rp. {?= number_format($grand_total_coass,2,',','.')?}</th>
+                <th colspan="3" class="text-left" style="font-size: 11px; font-weight: normal; vertical-align: middle;">
+                  <em>Tidak dimasukkan ke tagihan kasir pasien</em>
+                </th>
+              </tr>
+              {/if}
               <tr>
                 <th colspan="2" class="text-right" style="font-weight: 800; color: #0f172a;">TOTAL KESELURUHAN</th>
                 <th class="text-right" style="font-family: monospace; font-weight: 800; color: #0f172a;">Rp. <span id="foot_grand_tagihan">{?= number_format($grand_total_tagihan,2,',','.')?}</span></th>
@@ -1133,6 +1221,8 @@
                     <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check"></i> Lunas</span>
                   {elseif: $total_sudah_bayar_sebelumnya > 0}
                     <span class="rsgm-badge rsgm-badge-amber">Cicilan</span>
+                  {elseif: $grand_total_tagihan == 0 && !empty($grand_total_coass)}
+                    <span class="rsgm-badge rsgm-badge-amber" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;"><i class="fa fa-ban"></i> Lunas (Non-Klaim)</span>
                   {else}
                     <span class="rsgm-badge rsgm-badge-rose">Belum Bayar</span>
                   {/if}
@@ -1288,30 +1378,49 @@
               <tr>
                 <th width="40px" class="text-center">No.</th>
                 <th>Nama Tindakan / Pemeriksaan</th>
-                <th width="150px">Provider</th>
-                <th width="180px" class="text-right">Tarif</th>
-                <th width="90px" class="text-center">Aksi</th>
+                <th width="140px">Provider</th>
+                <th width="160px" class="text-right">Tarif Pasien</th>
+                <th width="80px" class="text-center">Aksi</th>
               </tr>
             </thead>
             <tbody>
               {loop: $tindakan}
-              <tr>
+              <tr {if: $value.is_coass}style="background-color: #fefce8;"{/if}>
                 <td class="text-center text-muted">{?=isset_or($value.nomor)?}</td>
-                <td><strong>{?=isset_or($value.nm_perawatan)?}</strong></td>
+                <td>
+                  <strong>{?=isset_or($value.nm_perawatan)?}</strong>
+                  {if: $value.is_coass}
+                    <br><span class="label label-warning" style="font-size: 10px; font-weight: normal; padding: 2px 6px;"><i class="fa fa-graduation-cap"></i> Ditanggung Coass</span>
+                  {/if}
+                </td>
                 <td><span class="rsgm-badge rsgm-badge-slate">{?=isset_or($value.provider)?}</span></td>
-                <td class="text-right" style="font-family: monospace;">Rp. {?= number_format($value.biaya_rawat,2,',','.')?}</td>
+                <td class="text-right" style="font-family: monospace;">
+                  {if: $value.is_coass}
+                    <span style="text-decoration: line-through; color: #94a3b8; font-size: 11px;">Rp. {?= number_format($value.biaya_rawat,2,',','.')?}</span><br>
+                    <strong style="color: #059669;">Rp. 0,00</strong>
+                  {else}
+                    Rp. {?= number_format($value.biaya_rawat,2,',','.')?}
+                  {/if}
+                </td>
                 <td class="text-center">
                   <button type="button" class="btn btn-tbl-delete hapus_detail" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}" data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}" data-jam_rawat="{?=isset_or($value.jam_rawat)?}" data-provider="{if: $value.provider == 'Dokter'}rawat_jl_dr{elseif: $value.provider == 'Perawat'}rawat_jl_pr{else}rawat_jl_drpr{/if}" title="Hapus Tindakan">
-                    <i class="fa fa-trash-o"></i> Hapus
+                    <i class="fa fa-trash-o"></i>
                   </button>
                 </td>
               </tr>
               {/loop}
             </tbody>
             <tfoot>
+              {if: !empty($jumlah_total_coass) && $jumlah_total_coass > 0}
+              <tr style="background: #fffbeb; color: #92400e;">
+                <th colspan="4" class="text-right"><i class="fa fa-graduation-cap"></i> Total Ditanggung Coass (Bebas Biaya Pasien)</th>
+                <th class="text-right" style="font-family: monospace;">Rp. {?= number_format($jumlah_total_coass,2,',','.')?}</th>
+                <th></th>
+              </tr>
+              {/if}
               <tr>
-                <th colspan="3" class="text-right">Total Biaya Tindakan</th>
-                <th class="text-right" style="font-family: monospace;">Rp. {?= number_format($jumlah_total,2,',','.')?}</th>
+                <th colspan="4" class="text-right">Tagihan Tindakan Pasien (Masuk RS)</th>
+                <th class="text-right" style="font-family: monospace; font-size: 14px; font-weight: 700; color: #1e293b;">Rp. {?= number_format($jumlah_total,2,',','.')?}</th>
                 <th></th>
               </tr>
             </tfoot>
@@ -1609,7 +1718,17 @@
               </div>
 
               <!-- List Sub Rincian -->
-              {if: $pos_billing.pendaftaran.tagihan > 0}
+              {if: !empty($pos_billing.pendaftaran.is_coass)}
+              <div class="pelayanan-item-row disabled" style="background:#fefce8; opacity:0.85;">
+                <label style="margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #92400e;">
+                  <i class="fa fa-graduation-cap"></i>
+                  <span>Pendaftaran (Ditanggung Coass)</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: #b45309; font-family: monospace;">
+                  Rp {?=number_format($pos_billing.pendaftaran.tagihan_coass,0,',','.')?} (Bebas Pasien)
+                </span>
+              </div>
+              {elseif: $pos_billing.pendaftaran.tagihan > 0}
               <div class="pelayanan-item-row {if: $pos_billing.pendaftaran.sisa == 0}disabled{/if}" data-kategori="pendaftaran" data-nama="Pendaftaran" data-tagihan="{?=$pos_billing.pendaftaran.tagihan?}" data-sisa="{?=$pos_billing.pendaftaran.sisa?}">
                 <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
                   <input type="checkbox" class="chk_pelayanan_sub" value="pendaftaran" {if: $pos_billing.pendaftaran.sisa == 0}disabled{/if}>
@@ -1621,11 +1740,21 @@
               </div>
               {/if}
 
-              {if: $pos_billing.tindakan.tagihan > 0}
+              {if: !empty($pos_billing.tindakan.is_coass)}
+              <div class="pelayanan-item-row disabled" style="background:#fefce8; opacity:0.85;">
+                <label style="margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #92400e;">
+                  <i class="fa fa-ban"></i>
+                  <span>Tindakan (Tidak Di-claim)</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: #b45309; font-family: monospace;">
+                  Rp {?=number_format($pos_billing.tindakan.tagihan_coass,0,',','.')?} (Bebas Pasien)
+                </span>
+              </div>
+              {elseif: $pos_billing.tindakan.tagihan > 0}
               <div class="pelayanan-item-row {if: $pos_billing.tindakan.sisa == 0}disabled{/if}" data-kategori="tindakan" data-nama="Tindakan" data-tagihan="{?=$pos_billing.tindakan.tagihan?}" data-sisa="{?=$pos_billing.tindakan.sisa?}">
                 <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
                   <input type="checkbox" class="chk_pelayanan_sub" value="tindakan" {if: $pos_billing.tindakan.sisa == 0}disabled{/if}>
-                  <span>Tindakan</span>
+                  <span>Tindakan {if: !empty($pos_billing.tindakan.tagihan_coass) && $pos_billing.tindakan.tagihan_coass > 0}<small class="text-warning" style="font-weight:600;">(Non-Klaim: Rp {?=number_format($pos_billing.tindakan.tagihan_coass,0,',','.')?})</small>{/if}</span>
                 </label>
                 <span style="font-size: 12px; font-weight: 700; color: {if: $pos_billing.tindakan.sisa > 0}#e11d48{else}#059669{/if}; font-family: monospace;">
                   {if: $pos_billing.tindakan.sisa > 0}Sisa: Rp {?=number_format($pos_billing.tindakan.sisa,0,',','.')?}{else}<i class="fa fa-check"></i> Lunas{/if}
@@ -1633,7 +1762,17 @@
               </div>
               {/if}
 
-              {if: $pos_billing.obat.tagihan > 0}
+              {if: !empty($pos_billing.obat.is_coass)}
+              <div class="pelayanan-item-row disabled" style="background:#fefce8; opacity:0.85;">
+                <label style="margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #92400e;">
+                  <i class="fa fa-ban"></i>
+                  <span>Obat dan BHP (Tidak Di-claim)</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: #b45309; font-family: monospace;">
+                  Rp {?=number_format($pos_billing.obat.tagihan_coass,0,',','.')?} (Bebas Pasien)
+                </span>
+              </div>
+              {elseif: $pos_billing.obat.tagihan > 0}
               <div class="pelayanan-item-row {if: $pos_billing.obat.sisa == 0}disabled{/if}" data-kategori="obat" data-nama="Obat dan BHP" data-tagihan="{?=$pos_billing.obat.tagihan?}" data-sisa="{?=$pos_billing.obat.sisa?}">
                 <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
                   <input type="checkbox" class="chk_pelayanan_sub" value="obat" {if: $pos_billing.obat.sisa == 0}disabled{/if}>
@@ -1645,7 +1784,17 @@
               </div>
               {/if}
 
-              {if: $pos_billing.laboratorium.tagihan > 0}
+              {if: !empty($pos_billing.laboratorium.is_coass)}
+              <div class="pelayanan-item-row disabled" style="background:#fefce8; opacity:0.85;">
+                <label style="margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #92400e;">
+                  <i class="fa fa-ban"></i>
+                  <span>Laboratorium (Tidak Di-claim)</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: #b45309; font-family: monospace;">
+                  Rp {?=number_format($pos_billing.laboratorium.tagihan_coass,0,',','.')?} (Bebas Pasien)
+                </span>
+              </div>
+              {elseif: $pos_billing.laboratorium.tagihan > 0}
               <div class="pelayanan-item-row {if: $pos_billing.laboratorium.sisa == 0}disabled{/if}" data-kategori="laboratorium" data-nama="Laboratorium" data-tagihan="{?=$pos_billing.laboratorium.tagihan?}" data-sisa="{?=$pos_billing.laboratorium.sisa?}">
                 <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
                   <input type="checkbox" class="chk_pelayanan_sub" value="laboratorium" {if: $pos_billing.laboratorium.sisa == 0}disabled{/if}>
@@ -1657,7 +1806,17 @@
               </div>
               {/if}
 
-              {if: $pos_billing.radiologi.tagihan > 0}
+              {if: !empty($pos_billing.radiologi.is_coass)}
+              <div class="pelayanan-item-row disabled" style="background:#fefce8; opacity:0.85;">
+                <label style="margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #92400e;">
+                  <i class="fa fa-ban"></i>
+                  <span>Radiologi (Tidak Di-claim)</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: #b45309; font-family: monospace;">
+                  Rp {?=number_format($pos_billing.radiologi.tagihan_coass,0,',','.')?} (Bebas Pasien)
+                </span>
+              </div>
+              {elseif: $pos_billing.radiologi.tagihan > 0}
               <div class="pelayanan-item-row {if: $pos_billing.radiologi.sisa == 0}disabled{/if}" data-kategori="radiologi" data-nama="Radiologi" data-tagihan="{?=$pos_billing.radiologi.tagihan?}" data-sisa="{?=$pos_billing.radiologi.sisa?}">
                 <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
                   <input type="checkbox" class="chk_pelayanan_sub" value="radiologi" {if: $pos_billing.radiologi.sisa == 0}disabled{/if}>
@@ -1669,7 +1828,17 @@
               </div>
               {/if}
 
-              {if: $pos_billing.operasi.tagihan > 0}
+              {if: !empty($pos_billing.operasi.is_coass)}
+              <div class="pelayanan-item-row disabled" style="background:#fefce8; opacity:0.85;">
+                <label style="margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #92400e;">
+                  <i class="fa fa-ban"></i>
+                  <span>Operasi (Tidak Di-claim)</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: #b45309; font-family: monospace;">
+                  Rp {?=number_format($pos_billing.operasi.tagihan_coass,0,',','.')?} (Bebas Pasien)
+                </span>
+              </div>
+              {elseif: $pos_billing.operasi.tagihan > 0}
               <div class="pelayanan-item-row {if: $pos_billing.operasi.sisa == 0}disabled{/if}" data-kategori="operasi" data-nama="Operasi" data-tagihan="{?=$pos_billing.operasi.tagihan?}" data-sisa="{?=$pos_billing.operasi.sisa?}">
                 <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
                   <input type="checkbox" class="chk_pelayanan_sub" value="operasi" {if: $pos_billing.operasi.sisa == 0}disabled{/if}>
@@ -1681,7 +1850,17 @@
               </div>
               {/if}
 
-              {if: $pos_billing.obat_pulang.tagihan > 0}
+              {if: !empty($pos_billing.obat_pulang.is_coass)}
+              <div class="pelayanan-item-row disabled" style="background:#fefce8; opacity:0.85;">
+                <label style="margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #92400e;">
+                  <i class="fa fa-ban"></i>
+                  <span>Obat Pulang (Tidak Di-claim)</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: #b45309; font-family: monospace;">
+                  Rp {?=number_format($pos_billing.obat_pulang.tagihan_coass,0,',','.')?} (Bebas Pasien)
+                </span>
+              </div>
+              {elseif: $pos_billing.obat_pulang.tagihan > 0}
               <div class="pelayanan-item-row {if: $pos_billing.obat_pulang.sisa == 0}disabled{/if}" data-kategori="obat_pulang" data-nama="Obat Pulang" data-tagihan="{?=$pos_billing.obat_pulang.tagihan?}" data-sisa="{?=$pos_billing.obat_pulang.sisa?}">
                 <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
                   <input type="checkbox" class="chk_pelayanan_sub" value="obat_pulang" {if: $pos_billing.obat_pulang.sisa == 0}disabled{/if}>
@@ -1693,7 +1872,17 @@
               </div>
               {/if}
 
-              {if: $pos_billing.tambahan.tagihan > 0}
+              {if: !empty($pos_billing.tambahan.is_coass)}
+              <div class="pelayanan-item-row disabled" style="background:#fefce8; opacity:0.85;">
+                <label style="margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #92400e;">
+                  <i class="fa fa-ban"></i>
+                  <span>Biaya Tambahan (Tidak Di-claim)</span>
+                </label>
+                <span style="font-size: 12px; font-weight: 700; color: #b45309; font-family: monospace;">
+                  Rp {?=number_format($pos_billing.tambahan.tagihan_coass,0,',','.')?} (Bebas Pasien)
+                </span>
+              </div>
+              {elseif: $pos_billing.tambahan.tagihan > 0}
               <div class="pelayanan-item-row {if: $pos_billing.tambahan.sisa == 0}disabled{/if}" data-kategori="tambahan" data-nama="Biaya Tambahan" data-tagihan="{?=$pos_billing.tambahan.tagihan?}" data-sisa="{?=$pos_billing.tambahan.sisa?}">
                 <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; color: #334155;">
                   <input type="checkbox" class="chk_pelayanan_sub" value="tambahan" {if: $pos_billing.tambahan.sisa == 0}disabled{/if}>
@@ -1704,6 +1893,22 @@
                 </span>
               </div>
               {/if}
+            </div>
+          </div>
+
+          <!-- Checkbox Opsi Tidak Diklaim -->
+          <div class="form-group" style="margin-bottom: 16px;">
+            <div id="box_modal_tidak_diklaim" style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 10px 14px; transition: all 0.2s;">
+              <label style="margin: 0; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 13.5px; color: #92400e; font-weight: 600;">
+                <span style="display: flex; align-items: center; gap: 9px;">
+                  <input type="checkbox" id="modal_tidak_diklaim" name="tidak_diklaim" value="1" style="width: 18px; height: 18px; cursor: pointer; margin: 0; accent-color: #d97706;">
+                  <span><i class="fa fa-ban"></i> Tidak di-claim (Non-Klaim)</span>
+                </span>
+                <span class="rsgm-badge rsgm-badge-amber" style="font-size: 10.5px; background: #fef3c7; color: #92400e; border: 1px solid #fcd34d;">Bebas Pasien</span>
+              </label>
+              <div id="modal_tidak_diklaim_info" style="display: none; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #fde68a; color: #b45309; font-size: 12px; line-height: 1.45;">
+                <i class="fa fa-info-circle"></i> Layanan yang dipilih dibebaskan dari tagihan kasir pasien (tidak di-claim). <strong>Tidak akan dimasukkan ke kas / pendapatan rumah sakit.</strong>
+              </div>
             </div>
           </div>
 
@@ -1735,9 +1940,9 @@
           </div>
 
           <!-- Cara Pembayaran Segmented Cards -->
-          <div class="form-group" style="margin-bottom: 20px;">
+          <div class="form-group" id="group_metode_bayar" style="margin-bottom: 20px;">
             <label class="form-label-custom">Metode Pembayaran</label>
-            <div class="cara-bayar-grid">
+            <div class="cara-bayar-grid" id="container_cara_bayar">
               <label class="cara-bayar-card active" id="label_cara_tunai">
                 <input type="radio" name="modal_cara_bayar" value="Tunai" checked>
                 <i class="fa fa-money text-success"></i>
@@ -1748,6 +1953,9 @@
                 <i class="fa fa-credit-card text-primary"></i>
                 <span>Non Tunai</span>
               </label>
+            </div>
+            <div id="info_metode_coass" style="display: none; background: #fffbeb; border: 1.5px dashed #fcd34d; border-radius: 8px; padding: 10px 14px; text-align: center; color: #92400e; font-size: 13px; font-weight: 600;">
+              <i class="fa fa-ban" style="color: #d97706;"></i> Metode: <strong>Tidak Di-claim (Bebas Pasien)</strong>
             </div>
           </div>
 
@@ -1900,12 +2108,23 @@
 
     // Update input nominal master jika tidak dipertahankan manual
     if (!keepNominal) {
-      $('#modal_nominal_bayar').val(window.formatRupiah(String(totalSisaSelected)));
-      if (totalSisaSelected > 0) {
-        $('#modal_terbilang').text(window.terbilang(Number(totalSisaSelected)) + ' Rupiah');
-        $('#modal_terbilang_box').show();
+      if ($('#modal_tidak_diklaim').is(':checked')) {
+        $('#modal_nominal_bayar').attr('data-prev-val', totalSisaSelected);
+        $('#modal_nominal_bayar').val('0');
+        $('#modal_terbilang').html('<strong>Bebas Biaya Pasien</strong> (Total Tidak Di-claim: Rp ' + window.formatRupiah(String(totalSisaSelected)) + ')');
+        $('#modal_terbilang_box').show().css({
+          'background': '#fffbeb',
+          'border-color': '#fcd34d',
+          'color': '#92400e'
+        });
       } else {
-        $('#modal_terbilang_box').hide();
+        $('#modal_nominal_bayar').val(window.formatRupiah(String(totalSisaSelected)));
+        if (totalSisaSelected > 0) {
+          $('#modal_terbilang').text(window.terbilang(Number(totalSisaSelected)) + ' Rupiah');
+          $('#modal_terbilang_box').show().removeAttr('style');
+        } else {
+          $('#modal_terbilang_box').hide();
+        }
       }
     }
 
@@ -2037,12 +2256,82 @@
     $('.cara-bayar-card').removeClass('active');
     $('#label_cara_tunai').addClass('active');
 
+    // Reset opsi Tidak Diklaim
+    $('#modal_tidak_diklaim').prop('checked', false);
+    $('#box_modal_tidak_diklaim').css({
+      'background': '#fffbeb',
+      'border-color': '#fde68a'
+    });
+    $('#modal_tidak_diklaim_info').hide();
+    $('#modal_nominal_bayar').prop('readonly', false).css('background', '#ffffff').removeAttr('data-prev-val');
+    $('#container_cara_bayar').show();
+    $('#info_metode_coass').hide();
+    $('#btn_simpan_modal_bayar').html('<i class="fa fa-check"></i> Simpan Pembayaran').removeAttr('style');
+
     $('#modal_catatan').val('');
 
     $('#modalPembayaran').modal('show');
     setTimeout(function() {
       $('#modal_nominal_bayar').focus().select();
     }, 400);
+  });
+
+  // Handler Centang Tidak Di-claim (Ditanggung Coass) di Modal Pembayaran
+  $(document).off('change', '#modal_tidak_diklaim').on('change', '#modal_tidak_diklaim', function() {
+    var isChecked = $(this).is(':checked');
+    if (isChecked) {
+      $('#box_modal_tidak_diklaim').css({
+        'background': '#fef3c7',
+        'border-color': '#f59e0b'
+      });
+      $('#modal_tidak_diklaim_info').slideDown(150);
+
+      var curVal = window.cleanNominal($('#modal_nominal_bayar').val());
+      if (curVal > 0) {
+        $('#modal_nominal_bayar').attr('data-prev-val', curVal);
+      }
+      var origVal = window.cleanNominal($('#modal_nominal_bayar').attr('data-prev-val')) || curVal;
+
+      $('#modal_nominal_bayar').val('0').prop('readonly', true).css('background', '#f8fafc');
+      $('#modal_terbilang').html('<strong>Bebas Biaya Pasien</strong> (Total Tidak Di-claim: Rp ' + window.formatRupiah(String(origVal)) + ')');
+      $('#modal_terbilang_box').show().css({
+        'background': '#fffbeb',
+        'border-color': '#fcd34d',
+        'color': '#92400e'
+      });
+
+      $('#box_alokasi_multi').slideUp(150);
+      $('#container_cara_bayar').hide();
+      $('#info_metode_coass').show();
+
+      if (!$('#modal_catatan').val().trim()) {
+        $('#modal_catatan').val('Tidak Di-claim');
+      }
+
+      $('#btn_simpan_modal_bayar')
+        .html('<i class="fa fa-ban"></i> Simpan (Tidak Di-claim)')
+        .css('background', '#d97706');
+    } else {
+      $('#box_modal_tidak_diklaim').css({
+        'background': '#fffbeb',
+        'border-color': '#fde68a'
+      });
+      $('#modal_tidak_diklaim_info').slideUp(150);
+
+      $('#modal_nominal_bayar').prop('readonly', false).css('background', '#ffffff');
+      $('#container_cara_bayar').show();
+      $('#info_metode_coass').hide();
+
+      if ($('#modal_catatan').val().trim() === 'Tidak Di-claim' || $('#modal_catatan').val().trim() === 'Ditanggung Coass') {
+        $('#modal_catatan').val('');
+      }
+
+      $('#btn_simpan_modal_bayar')
+        .html('<i class="fa fa-check"></i> Simpan Pembayaran')
+        .removeAttr('style');
+
+      updateMultiSelectPelayanan({ keepNominal: false });
+    }
   });
 
   // Handler Ganti Cara Bayar (Tunai / Non Tunai)
@@ -2118,8 +2407,9 @@
       return;
     }
 
+    var isTidakDiklaim = $('#modal_tidak_diklaim').is(':checked') ? 1 : 0;
     var nominal_bayar = window.cleanNominal($('#modal_nominal_bayar').val());
-    if (nominal_bayar <= 0) {
+    if (!isTidakDiklaim && nominal_bayar <= 0) {
       alert("Nominal pembayaran harus lebih dari Rp 0!");
       $('#modal_nominal_bayar').focus();
       return;
@@ -2154,7 +2444,6 @@
       kd_parts = d + '.' + mo + '.' + y + '.' + h + '.' + mi + '.' + s;
     }
     var kd_billing = 'RJ.' + kd_parts;
-
     var alokasi = {};
     var sum_pendaftaran = 0;
     var sum_tindakan = 0;
@@ -2163,7 +2452,23 @@
     var sum_rad = 0;
     var namesPaid = [];
 
-    if (checkedSubs.length === 1) {
+    if (isTidakDiklaim) {
+      nominal_bayar = 0;
+      checkedSubs.each(function() {
+        var row = $(this).closest('.pelayanan-item-row');
+        var kat = $(this).val();
+        var namaKat = row.attr('data-nama') || kat;
+        var tagihanKat = window.cleanNominal(row.attr('data-tagihan'));
+        namesPaid.push(namaKat);
+
+        alokasi[kat] = {
+          nama: namaKat,
+          tagihan: tagihanKat,
+          bayar: 0,
+          sisa: 0
+        };
+      });
+    } else if (checkedSubs.length === 1) {
       var row = checkedSubs.closest('.pelayanan-item-row');
       var kat = checkedSubs.val();
       var namaKat = row.attr('data-nama') || kat;
@@ -2209,21 +2514,41 @@
       });
     }
 
-    var cara_bayar = $('input[name=modal_cara_bayar]:checked').val() || 'Tunai';
     var catatan = $('#modal_catatan').val().trim();
-    var keterangan = cara_bayar + (catatan ? ' - ' + catatan : '');
+    var keterangan = '';
+    if (isTidakDiklaim) {
+      keterangan = 'Tidak Di-claim' + (catatan && catatan !== 'Tidak Di-claim' ? ' - ' + catatan : '');
+    } else {
+      var cara_bayar = $('input[name=modal_cara_bayar]:checked').val() || 'Tunai';
+      keterangan = cara_bayar + (catatan ? ' - ' + catatan : '');
+    }
 
     var btnEl = $('#btn_simpan_modal_bayar');
     btnEl.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
 
+    var totalServiceVal = 0;
+    if (isTidakDiklaim) {
+      var prevVal = window.cleanNominal($('#modal_nominal_bayar').attr('data-prev-val'));
+      var sumTagihanChecked = 0;
+      checkedSubs.each(function() {
+        var row = $(this).closest('.pelayanan-item-row');
+        var sisaKat = window.cleanNominal(row.attr('data-sisa'));
+        var tagihanKat = window.cleanNominal(row.attr('data-tagihan'));
+        sumTagihanChecked += (sisaKat > 0 ? sisaKat : tagihanKat);
+      });
+      totalServiceVal = prevVal > 0 ? prevVal : sumTagihanChecked;
+    } else {
+      totalServiceVal = nominal_bayar;
+    }
     var saveUrl = baseURL + '/kasir_rawat_jalan/save?t=' + mlite.token;
     $.post(saveUrl, {
       kd_billing: kd_billing,
       no_rawat: no_rawat,
-      jumlah_total: nominal_bayar,
+      jumlah_total: totalServiceVal,
       potongan: 0,
-      jumlah_harus_bayar: nominal_bayar,
-      jumlah_bayar: nominal_bayar,
+      jumlah_harus_bayar: isTidakDiklaim ? 0 : nominal_bayar,
+      jumlah_bayar: isTidakDiklaim ? 0 : nominal_bayar,
+      tidak_diklaim: isTidakDiklaim,
       tgl_billing: tgl_billing,
       jam_billing: jam_billing,
       keterangan: keterangan,
@@ -2246,8 +2571,12 @@
         $("#rincian").html(res).show();
       });
 
+      var notifMsg = isTidakDiklaim
+        ? "Layanan berhasil ditandai Tidak Di-claim (Bebas Pasien)! No. Faktur: <strong>" + kd_billing + "</strong>"
+        : "Pembayaran rawat jalan berhasil disimpan! No. Faktur: <strong>" + kd_billing + "</strong>";
+
       $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:8px; margin-top: -10px; margin-bottom: 15px;\">" +
-        "Pembayaran rawat jalan berhasil disimpan! No. Faktur: <strong>" + kd_billing + "</strong>" +
+        notifMsg +
         "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
         "</div>").show();
     }).fail(function() {

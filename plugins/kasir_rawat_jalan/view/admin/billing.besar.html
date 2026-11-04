@@ -261,6 +261,13 @@
 				<td>Rp. <span class="pull-right" style="font-weight:bold;">{?= number_format($total_terbayar_semua,2,',','.')?}</span></td>
 			</tr>
 			{/if}
+			{if: !empty($total_coass_all) && $total_coass_all > 0}
+			<tr style="color: #b45309;">
+				<td colspan="2"></td>
+				<td colspan="2"><em>* Layanan Tidak Di-claim (Non-Klaim)</em></td>
+				<td><em>Rp. <span class="pull-right">{?= number_format($total_coass_all,2,',','.')?}</span></em></td>
+			</tr>
+			{/if}
 			<tr >
 				<td colspan="2"></td>
 				<td colspan="2">Jumlah Tagihan Layanan</td>

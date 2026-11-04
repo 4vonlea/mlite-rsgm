@@ -96,6 +96,11 @@
 			<td style="font-size: 8pt; color: #444;" align="right"><i>Total Akumulasi Masuk: Rp. {?= number_format($total_bayar_semua,0,',','.')?}</i></td>
 		</tr>
 		{/if}
+		{if: !empty($total_coass_all) && $total_coass_all > 0}
+		<tr>
+			<td style="font-size: 8pt; color: #b45309;" align="right"><i>* Tidak Di-claim: Rp. {?= number_format($total_coass_all,0,',','.')?} (Bebas Pasien)</i></td>
+		</tr>
+		{/if}
 		<tr >
 
 			<td style="font-size: 9pt;" ><i>Terbilang : # {?=terbilang($billing.jumlah_bayar,3,"")?} Rupiah # </i></td>
