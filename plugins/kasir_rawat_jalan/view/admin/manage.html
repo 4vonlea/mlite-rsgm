@@ -1,3 +1,29 @@
+<style>
+  .rsgm-fpill-all.active {
+    background-color: #0f172a !important;
+    border-color: #0f172a !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25) !important;
+  }
+  .rsgm-fpill-pending.active {
+    background-color: #f59e0b !important;
+    border-color: #d97706 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25) !important;
+  }
+  .rsgm-fpill-done.active {
+    background-color: #10b981 !important;
+    border-color: #059669 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25) !important;
+  }
+  .rsgm-fpill-paid.active {
+    background-color: #2563eb !important;
+    border-color: #1d4ed8 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25) !important;
+  }
+</style>
 <div class="row" id="manage" style="margin-bottom:100px;">
   <div class="col-md-12">
     <div class="panel panel-default" style="border: 1px solid #dbe3ec; border-radius: 12px; box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05); overflow: visible; background: #ffffff;">
@@ -16,7 +42,7 @@
             <input type="text" id="periode_rawat_jalan_akhir" class="form-control periode_rawat_jalan input-sm" name="periode_rawat_jalan_akhir" required>
           </div>
           <div class="rsgm-filter-pills">
-            <button type="button" id="submit_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-all">Semua</button>
+            <button type="button" id="submit_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-all active">Semua</button>
             <button type="button" id="belum_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-pending">Belum Diperiksa</button>
             <button type="button" id="selesai_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-done">Selesai Diperiksa</button>
             <button type="button" id="lunas_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-paid">Sudah Bayar</button>

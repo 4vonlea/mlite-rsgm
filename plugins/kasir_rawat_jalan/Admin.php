@@ -1003,6 +1003,17 @@ class Admin extends AdminModule
           ->where('kd_billing', $rb['kd_billing'])
           ->where('bayar', '>', 0)
           ->toArray();
+
+        // Bersihkan keterangan agar hanya menampilkan metode bayar (Tunai / Non Tunai) tanpa akhiran jenis layanan
+        $ket = trim($rb['keterangan'] ?? 'Tunai');
+        if (preg_match('/^(Tunai|Non Tunai)/i', $ket, $m)) {
+          $prefix = (strtolower($m[1]) === 'non tunai') ? 'Non Tunai' : 'Tunai';
+          $suffix = trim(substr($ket, strlen($m[0])));
+          if (empty($suffix) || preg_match('/^-\s*(Semua Layanan|Tindakan|Pendaftaran|Obat.*|Laboratorium|Radiologi|Operasi|Biaya Tambahan|Biaya Lainnya|Pembayaran)$/i', $suffix)) {
+            $ket = $prefix;
+          }
+        }
+        $riwayat_billing[$k]['keterangan'] = $ket;
       }
 
       // Ambil akumulasi pembayaran per pos dari mlite_billing_rincian
@@ -1575,6 +1586,114 @@ class Admin extends AdminModule
         $this->db('reg_periksa')->where('no_rawat', $no_rawat)->update(['status_bayar' => $status_bayar]);
       }
       exit();
+    }
+
+    public function anyHapusBilling()
+    {
+      header('Content-Type: application/json');
+
+      $kd_billing = $_POST['kd_billing'] ?? ($_GET['kd_billing'] ?? '');
+      $no_rawat = $_POST['no_rawat'] ?? ($_GET['no_rawat'] ?? '');
+
+      if (empty($kd_billing)) {
+        echo json_encode(['status' => 'error', 'message' => 'Nomor faktur pembayaran tidak ditemukan.']);
+        exit();
+      }
+
+      try {
+        $pdo = $this->db()->pdo();
+
+        $checkStmt = $pdo->prepare("SELECT * FROM mlite_billing WHERE kd_billing = ? LIMIT 1");
+        $checkStmt->execute([$kd_billing]);
+        $billing = $checkStmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$billing) {
+          echo json_encode(['status' => 'error', 'message' => 'Data faktur pembayaran tidak ditemukan dalam database.']);
+          exit();
+        }
+
+        if (empty($no_rawat)) {
+          $no_rawat = $billing['no_rawat'];
+        }
+
+        // Hapus data rincian alokasi per sub-layanan jika ada
+        $delRincian = $pdo->prepare("DELETE FROM mlite_billing_rincian WHERE kd_billing = ?");
+        $delRincian->execute([$kd_billing]);
+
+        // Hapus data billing transaksi
+        $delBilling = $pdo->prepare("DELETE FROM mlite_billing WHERE kd_billing = ?");
+        $delBilling->execute([$kd_billing]);
+
+        // Hitung ulang akumulasi tagihan dan sisa pembayaran untuk no_rawat ini
+        $poliklinik = $this->db('poliklinik')->join('reg_periksa', 'reg_periksa.kd_poli=poliklinik.kd_poli')->where('reg_periksa.no_rawat', $no_rawat)->oneArray();
+        $biaya_reg = floatval($poliklinik['registrasi'] ?? 0);
+
+        $qDr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_dr WHERE no_rawat = ?");
+        $qDr->execute([$no_rawat]);
+        $total_dr = floatval($qDr->fetchColumn());
+
+        $qPr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_pr WHERE no_rawat = ?");
+        $qPr->execute([$no_rawat]);
+        $total_pr = floatval($qPr->fetchColumn());
+
+        $qDrpr = $pdo->prepare("SELECT COALESCE(SUM(biaya_rawat), 0) FROM rawat_jl_drpr WHERE no_rawat = ?");
+        $qDrpr->execute([$no_rawat]);
+        $total_drpr = floatval($qDrpr->fetchColumn());
+
+        $qObat = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM detail_pemberian_obat WHERE no_rawat = ? AND status = 'Ralan'");
+        $qObat->execute([$no_rawat]);
+        $total_obat = floatval($qObat->fetchColumn());
+
+        $qLab = $pdo->prepare("SELECT COALESCE(SUM(biaya), 0) FROM periksa_lab WHERE no_rawat = ? AND status = 'Ralan'");
+        $qLab->execute([$no_rawat]);
+        $total_lab = floatval($qLab->fetchColumn());
+
+        $qRad = $pdo->prepare("SELECT COALESCE(SUM(biaya), 0) FROM periksa_radiologi WHERE no_rawat = ? AND status = 'Ralan'");
+        $qRad->execute([$no_rawat]);
+        $total_rad = floatval($qRad->fetchColumn());
+
+        $qTambahan = $pdo->prepare("SELECT COALESCE(SUM(besar_biaya), 0) FROM tambahan_biaya WHERE no_rawat = ?");
+        $qTambahan->execute([$no_rawat]);
+        $total_tambahan = floatval($qTambahan->fetchColumn());
+
+        $total_layanan = $biaya_reg + $total_dr + $total_pr + $total_drpr + $total_obat + $total_lab + $total_rad + $total_tambahan;
+
+        // Total yang masih terbayar di mlite_billing
+        $qByr = $pdo->prepare("SELECT COALESCE(SUM(jumlah_bayar), 0) FROM mlite_billing WHERE no_rawat = ? AND kd_billing LIKE 'RJ%'");
+        $qByr->execute([$no_rawat]);
+        $total_terbayar = floatval($qByr->fetchColumn());
+
+        $status_bayar = ($total_terbayar >= $total_layanan && $total_layanan > 0) ? 'Sudah Bayar' : 'Belum Bayar';
+        $updStts = $pdo->prepare("UPDATE reg_periksa SET status_bayar = ? WHERE no_rawat = ?");
+        $updStts->execute([$status_bayar, $no_rawat]);
+
+        echo json_encode([
+          'status' => 'success',
+          'message' => 'Riwayat pembayaran dengan No. Faktur <strong>' . htmlspecialchars($kd_billing, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</strong> berhasil dihapus.'
+        ]);
+        exit();
+      } catch (\Throwable $e) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Gagal menghapus pembayaran: ' . $e->getMessage()
+        ]);
+        exit();
+      }
+    }
+
+    public function anyHapus_billing()
+    {
+      return $this->anyHapusBilling();
+    }
+
+    public function postHapusBilling()
+    {
+      return $this->anyHapusBilling();
+    }
+
+    public function postHapus_billing()
+    {
+      return $this->anyHapusBilling();
     }
 
     public function apiSimpanKasir()

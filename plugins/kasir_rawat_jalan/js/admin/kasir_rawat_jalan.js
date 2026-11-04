@@ -4,6 +4,12 @@ $("#notif").hide();
 $('#provider').hide();
 $('#aturan_pakai').hide();
 
+// Filter pill active state sync
+$('#manage').on('click', '.rsgm-filter-pills .rsgm-fpill', function () {
+  $('.rsgm-filter-pills .rsgm-fpill').removeClass('active');
+  $(this).addClass('active');
+});
+
 $('#manage').on('click', '#submit_periode_rawat_jalan', function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
@@ -422,7 +428,7 @@ $("#form_rincian").on("click", "#simpan_rincian", function (event) {
     $('input:text[name=layanan]').val("");
     $('input:text[name=obat]').val("");
     $("#form_rincian").slideUp(250);
-    $("#btn_toggle_form_rincian").html('<i class="fa fa-plus-circle"></i> Input Layanan Kasir').removeClass('btn-warning').addClass('btn-primary');
+    $("#btn_toggle_form_rincian").html('<i class="fa fa-plus-circle"></i> Input Layanan Kasir').removeClass('btn-rsgm-open').addClass('btn-rsgm-primary');
     $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
       "Data pasien telah disimpan!" +
       "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
@@ -606,6 +612,89 @@ $(document).on("click", ".btn_cetak_riwayat", function (event) {
   window.open(baseURL + '/kasir_rawat_jalan/faktur?show=kecil&no_rawat=' + encodeURIComponent(no_rawat) + '&kd_billing=' + encodeURIComponent(kd_billing) + '&t=' + mlite.token);
 });
 
+// Hapus / Batalkan Riwayat Pembayaran
+$(document).on("click", ".btn_hapus_riwayat", function (event) {
+  event.preventDefault();
+  var baseURL = mlite.url + '/' + mlite.admin;
+  var kd_billing = $(this).attr("data-kd_billing");
+  var no_rawat = $(this).attr("data-no_rawat") || $('input:text[name=no_rawat]').val();
+  var nominal = $(this).attr("data-nominal") || '';
+
+  var confirmMsg = '<div style="text-align: center; padding: 10px 0;">' +
+    '<i class="fa fa-exclamation-triangle text-danger" style="font-size: 38px; margin-bottom: 12px; display: block;"></i>' +
+    '<h4 style="font-weight: 700; margin-top: 0; color: #0f172a;">Batalkan & Hapus Pembayaran?</h4>' +
+    '<p style="color: #475569; font-size: 13px; line-height: 1.5;">Apakah Anda yakin ingin membatalkan dan menghapus riwayat transaksi pembayaran ini?</p>' +
+    '<div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 10px 14px; margin: 12px auto; text-align: left; max-width: 320px; font-size: 12.5px;">' +
+      '<div><strong>No. Faktur:</strong> <span style="font-family: monospace; color: #1e293b;">' + kd_billing + '</span></div>' +
+      (nominal ? '<div style="margin-top: 4px;"><strong>Nominal:</strong> <span style="color: #059669; font-weight: 700;">Rp. ' + nominal + '</span></div>' : '') +
+    '</div>' +
+    '<small style="color: #e11d48; font-weight: 600;">Status tagihan pasien akan disesuaikan kembali secara otomatis.</small>' +
+  '</div>';
+
+  var executeDelete = function() {
+    var url = baseURL + '/kasir_rawat_jalan/hapus_billing?t=' + mlite.token;
+    $.post(url, { kd_billing: kd_billing, no_rawat: no_rawat }, function (response) {
+      var res = typeof response === 'object' ? response : {};
+      try {
+        if (typeof response === 'string') res = JSON.parse(response);
+      } catch (e) {
+        res = { status: 'success', message: 'Riwayat pembayaran berhasil dihapus.' };
+      }
+
+      if (res.status === 'success') {
+        var rincianUrl = baseURL + '/kasir_rawat_jalan/rincian?t=' + mlite.token;
+        $.post(rincianUrl, { no_rawat: no_rawat }, function (data) {
+          $("#rincian").html(data).show();
+        });
+
+        $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:8px; margin-top: -10px; margin-bottom: 15px;\">" +
+          res.message +
+          "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
+          "</div>").show();
+        $(".alert-dismissible").fadeTo(3500, 500).slideUp(500);
+      } else {
+        alert(res.message || 'Gagal menghapus pembayaran.');
+      }
+    }).fail(function (xhr) {
+      var msg = "Terjadi kesalahan pada server saat menghapus pembayaran.";
+      if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+        msg = xhr.responseJSON.message;
+      } else if (xhr && xhr.responseText) {
+        try {
+          var parsed = JSON.parse(xhr.responseText);
+          if (parsed.message) msg = parsed.message;
+        } catch (err) {}
+      }
+      alert(msg);
+    });
+  };
+
+  if (typeof bootbox !== 'undefined' && bootbox.confirm) {
+    bootbox.confirm({
+      message: confirmMsg,
+      buttons: {
+        cancel: {
+          label: '<i class="fa fa-times"></i> Batal',
+          className: 'btn-default'
+        },
+        confirm: {
+          label: '<i class="fa fa-trash"></i> Ya, Hapus Pembayaran',
+          className: 'btn-danger'
+        }
+      },
+      callback: function (result) {
+        if (result) {
+          executeDelete();
+        }
+      }
+    });
+  } else {
+    if (confirm("Apakah Anda yakin ingin menghapus pembayaran " + kd_billing + "?")) {
+      executeDelete();
+    }
+  }
+});
+
 // Cetak Invoice Besar
 $(document).on("click", "#cetak_billing", function (event) {
   var baseURL = mlite.url + '/' + mlite.admin;
@@ -730,7 +819,7 @@ $(document).off('click', '#btn_toggle_form_rincian, .btn-trigger-form-rincian').
   var focusTarget = $(this).data('focus') || 'layanan';
   if ($("#form_rincian").is(":visible")) {
     $("#form_rincian").slideUp(250);
-    $("#btn_toggle_form_rincian").html('<i class="fa fa-plus-circle"></i> Input Layanan Kasir').removeClass('btn-warning').addClass('btn-primary');
+    $("#btn_toggle_form_rincian").html('<i class="fa fa-plus-circle"></i> Input Layanan Kasir').removeClass('btn-rsgm-open').addClass('btn-rsgm-primary');
   } else {
     $("#form_rincian").slideDown(250, function () {
       $('html, body').animate({
@@ -742,7 +831,7 @@ $(document).off('click', '#btn_toggle_form_rincian, .btn-trigger-form-rincian').
         $('input:text[name=layanan]').focus();
       }
     });
-    $("#btn_toggle_form_rincian").html('<i class="fa fa-chevron-up"></i> Tutup Input Layanan').removeClass('btn-primary').addClass('btn-warning');
+    $("#btn_toggle_form_rincian").html('<i class="fa fa-chevron-up"></i> Tutup Input Layanan').removeClass('btn-rsgm-primary').addClass('btn-rsgm-open');
   }
 });
 
@@ -750,5 +839,5 @@ $(document).off('click', '#btn_toggle_form_rincian, .btn-trigger-form-rincian').
 $(document).off('click', '#btn_tutup_form_rincian, #btn_batal_form_rincian').on('click', '#btn_tutup_form_rincian, #btn_batal_form_rincian', function (e) {
   e.preventDefault();
   $("#form_rincian").slideUp(250);
-  $("#btn_toggle_form_rincian").html('<i class="fa fa-plus-circle"></i> Input Layanan Kasir').removeClass('btn-warning').addClass('btn-primary');
+  $("#btn_toggle_form_rincian").html('<i class="fa fa-plus-circle"></i> Input Layanan Kasir').removeClass('btn-rsgm-open').addClass('btn-rsgm-primary');
 });
