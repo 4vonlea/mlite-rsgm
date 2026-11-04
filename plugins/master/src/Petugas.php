@@ -57,7 +57,8 @@ class Petugas
             'alamat' => '',
             'kd_jbtn' => '',
             'no_telp' => '',
-            'status' => ''
+            'status' => '',
+            'no_sip' => ''
           ];
         }
 
@@ -85,16 +86,28 @@ class Petugas
           ->toArray();
 
         if(isset($_POST['cari'])) {
+          $cari = trim($_POST['cari']);
+          $countRecords = $this->db('petugas')
+            ->leftJoin('jabatan', 'jabatan.kd_jbtn=petugas.kd_jbtn')
+            ->like('petugas.nip', '%'.$cari.'%')
+            ->orLike('petugas.nama', '%'.$cari.'%')
+            ->orLike('petugas.no_sip', '%'.$cari.'%')
+            ->toArray();
+          $totalCount = is_array($countRecords) ? count($countRecords) : 0;
+          $return['totalRecords'] = $totalCount;
+          $return['jumlah_data']  = $totalCount;
+          $return['jml_halaman']  = ceil($totalCount / $offset);
+          $return['halaman']      = 1;
+
           $return['list'] = $this->db('petugas')
-            ->join('jabatan', 'jabatan.kd_jbtn=petugas.kd_jbtn')
-            ->like('nip', '%'.$_POST['cari'].'%')
-            ->orLike('nama', '%'.$_POST['cari'].'%')
-            ->desc('nip')
+            ->leftJoin('jabatan', 'jabatan.kd_jbtn=petugas.kd_jbtn')
+            ->like('petugas.nip', '%'.$cari.'%')
+            ->orLike('petugas.nama', '%'.$cari.'%')
+            ->orLike('petugas.no_sip', '%'.$cari.'%')
+            ->desc('petugas.nip')
             ->offset(0)
             ->limit($perpage)
             ->toArray();
-          $jumlah_data = is_array($return['list']) ? count($return['list']) : 0;
-          $jml_halaman = ceil($jumlah_data / $offset);
         }
         if(isset($_POST['halaman'])){
           $offset     = (($_POST['halaman'] - 1) * $perpage);
@@ -112,10 +125,25 @@ class Petugas
 
     public function postSave()
     {
-      if (!$this->db('petugas')->where('nip', $_POST['nip'])->oneArray()) {
-        $query = $this->db('petugas')->save($_POST);
+      $data = [
+        'nip' => $_POST['nip'] ?? '',
+        'nama' => $_POST['nama'] ?? '',
+        'jk' => $_POST['jk'] ?? '',
+        'tmp_lahir' => $_POST['tmp_lahir'] ?? '',
+        'tgl_lahir' => $_POST['tgl_lahir'] ?? '',
+        'gol_darah' => $_POST['gol_darah'] ?? '',
+        'agama' => $_POST['agama'] ?? '',
+        'stts_nikah' => $_POST['stts_nikah'] ?? '',
+        'alamat' => $_POST['alamat'] ?? '',
+        'kd_jbtn' => $_POST['kd_jbtn'] ?? '',
+        'no_telp' => $_POST['no_telp'] ?? '',
+        'status' => $_POST['status'] ?? '1',
+        'no_sip' => isset($_POST['no_sip']) ? trim($_POST['no_sip']) : ''
+      ];
+      if (!$this->db('petugas')->where('nip', $data['nip'])->oneArray()) {
+        $query = $this->db('petugas')->save($data);
       } else {
-        $query = $this->db('petugas')->where('nip', $_POST['nip'])->save($_POST);
+        $query = $this->db('petugas')->where('nip', $data['nip'])->save($data);
       }
       return $query;
     }

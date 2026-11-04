@@ -582,6 +582,7 @@ class Admin extends AdminModule
     public function getPetugasJS()
     {
         header('Content-type: text/javascript');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
         echo $this->draw(MODULES.'/master/js/admin/petugas.js');
         exit();
     }

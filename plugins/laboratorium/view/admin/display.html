@@ -164,43 +164,55 @@
     </div>
 </div>
 <script type="text/javascript">
-  $(document).on('click', 'a[href="#layanan_obat"]', function(event){
-    {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_update', 'laboratorium') == true}
-    var baseURL = mlite.url + '/' + mlite.admin;
+  $(document).off('click', 'a[href="#layanan_obat"]').on('click', 'a[href="#layanan_obat"]', function(event){
     event.preventDefault();
-
+    {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis' || $this->core->getUserInfo('role') == 'laboratorium' || $this->core->checkPermission($this->core->getUserInfo('username'), 'can_update', 'laboratorium') == true || $this->core->checkPermission($this->core->getUserInfo('username'), 'can_create', 'laboratorium') == true}
+    var baseURL = mlite.url + '/' + mlite.admin;
     var no_rawat = $(this).attr("data-no_rawat");
     var no_rkm_medis = $(this).attr("data-no_rkm_medis");
     var nm_pasien = $(this).attr("data-nm_pasien");
     var jk = $(this).attr("data-jk");
     var tgl_lahir = $(this).attr("data-tgl_lahir");
-    var umur = $(this).attr("data-umurdaftar") + " " + $(this).attr("data-sttsumur");
-    var no_tlp = $(this).attr("data-no_tlp");
-    var nm_poli = $(this).attr("data-nm_poli");
-    var alamat = $(this).attr("data-alamat");
-    var status = $('input:text[name=status]').val();
+    var umur = ($(this).attr("data-umurdaftar") || '') + " " + ($(this).attr("data-sttsumur") || '');
+    var no_tlp = $(this).attr("data-no_tlp") || '';
+    var nm_poli = $(this).attr("data-nm_poli") || '';
+    var alamat = $(this).attr("data-alamat") || '';
+    var status = $('input[name=status]').val() || '';
 
     $('input:text[name=no_rawat]').val(no_rawat);
     $('input[name=no_rkm_medis]').val(no_rkm_medis);
-    $('#teks_no_rkm_medis').text(no_rkm_medis);
+    $('#teks_no_rkm_medis').text(no_rkm_medis || '-');
     $('input[name=nm_pasien]').val(nm_pasien);
-    $('#teks_nm_pasien').text(nm_pasien);
-    $('#teks_tgl_lahir_umur').text(tgl_lahir + ' / ' + umur);
-    $('#teks_jk').text(jk);
-    $('#teks_no_tlp').text(no_tlp);
-    $('#teks_nm_poli').text(nm_poli);
-    $('#teks_alamat').text(alamat);
+    $('#teks_nm_pasien').text(nm_pasien || '-');
+    $('#teks_tgl_lahir_umur').text((tgl_lahir || '-') + ' / ' + (umur.trim() || '-'));
+    $('#teks_jk').text(jk || '-');
+    $('#teks_no_tlp').text(no_tlp || '-');
+    $('#teks_nm_poli').text(nm_poli || '-');
+    $('#teks_alamat').text(alamat || '-');
+
     $("#display").hide();
+    $("#form").hide();
+    $("#notif").hide();
+    $("#form_rincian").show();
+    $("#rincian").html('<div class="text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><p style="margin-top:10px;">Memuat rincian pemeriksaan laboratorium...</p></div>').show();
 
     var url = baseURL + '/laboratorium/rincian?t=' + mlite.token;
-    $.post(url, {no_rawat : no_rawat, status : status
-    }, function(data) {
-      // tampilkan data
-      $("#form_rincian").show();
-      $("#form").hide();
-      $("#notif").hide();
+    $.post(url, {no_rawat : no_rawat, status : status}, function(data) {
       $("#rincian").html(data).show();
+    }).fail(function(xhr, status, error) {
+      $("#form_rincian").hide();
+      $("#display").show();
+      var msg = "Gagal memuat rincian pemeriksaan.";
+      if (xhr && xhr.responseText) {
+        try {
+          var parsed = JSON.parse(xhr.responseText);
+          if (parsed && parsed.message) msg += " " + parsed.message;
+        } catch(e) {}
+      }
+      bootbox.alert(msg);
     });
+    {else}
+    bootbox.alert("Anda tidak memiliki hak akses untuk membuka pemeriksaan laboratorium.");
     {/if}
   });
 

@@ -300,7 +300,9 @@
           <div style="margin-bottom: 2px;">Tanggal : {?=$tgl_cetak?}</div>
           <div style="font-weight: bold; margin-bottom: 45px;">Petugas Pelaksana</div>
           <div style="font-weight: bold; text-decoration: underline;">{?=isset_or($petugas_nama, 'Nida Urrahmah, S.Tr.Kes')?}</div>
-          <div style="font-size: 8.5px; margin-top: 2px;">{?=isset_or($petugas_sip, 'SIP. 500.16.7.2/0073-SIP-ATLM/IX.25/DPMPTSP')?}</div>
+          {if: !empty($petugas_sip) && $petugas_sip !== '-'}
+          <div style="font-size: 8.5px; margin-top: 2px;">{?=$petugas_sip?}</div>
+          {/if}
         </td>
       </tr>
     </table>

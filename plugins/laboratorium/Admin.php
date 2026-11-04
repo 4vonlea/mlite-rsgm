@@ -645,7 +645,17 @@ class Admin extends AdminModule
 
         // Simpan langsung tgl_selesai ke detail_cetak_lab jika belum ada
         $now = $nowDate . ' ' . $nowTime;
-        $sk = $this->db('detail_cetak_lab')->where('no_rawat', $input['no_rawat'])->oneArray();
+        $sk = null;
+        try {
+          $sk = $this->db('detail_cetak_lab')->where('no_rawat', $input['no_rawat'])->oneArray();
+        } catch (\Throwable $e) {
+          $this->ensureDetailCetakLabTable();
+          try {
+            $sk = $this->db('detail_cetak_lab')->where('no_rawat', $input['no_rawat'])->oneArray();
+          } catch (\Throwable $e2) {
+            $sk = null;
+          }
+        }
         if ($sk) {
           $up = [];
           if (empty($sk['tgl_selesai'])) $up['tgl_selesai'] = $now;
@@ -1523,9 +1533,60 @@ class Admin extends AdminModule
     $tgl_validasi_fmt = !empty($sk_tgl_validasi) ? $formatTglIndo($sk_tgl_validasi) : '-';
     $tgl_cetak = $formatTglIndo(!empty($sk_tgl_validasi) ? $sk_tgl_validasi : (!empty($sk_tgl_periksa) ? $sk_tgl_periksa : date('Y-m-d')), false);
 
+    // Petugas Pelaksana & No. SIP dari tabel petugas
+    $petugas_nama = !empty($sk_petugas_pelaksana) ? trim($sk_petugas_pelaksana) : '';
+    if (empty($petugas_nama) && !empty($rows[0]['nip'])) {
+      $ptgNip = $this->db('petugas')->where('nip', $rows[0]['nip'])->oneArray();
+      if ($ptgNip && !empty($ptgNip['nama'])) {
+        $petugas_nama = $ptgNip['nama'];
+      }
+    }
+    if (empty($petugas_nama)) {
+      $petugas_nama = $this->core->getUserInfo('fullname', null, true);
+    }
+    if (empty($petugas_nama)) {
+      $petugas_nama = 'Nida Urrahmah, S.Tr.Kes';
+    }
+
+    $petugas_sip = '';
+    $petugasRow = null;
+    try {
+      $petugasRow = $this->db('petugas')->where('nama', $petugas_nama)->oneArray();
+      if (!$petugasRow) {
+        $petugasRow = $this->db('petugas')->where('nip', $petugas_nama)->oneArray();
+      }
+      if (!$petugasRow && !empty($rows[0]['nip'])) {
+        $petugasRow = $this->db('petugas')->where('nip', $rows[0]['nip'])->oneArray();
+      }
+      if (!$petugasRow) {
+        $usr = $this->db('mlite_users')->where('fullname', $petugas_nama)->oneArray();
+        if ($usr && !empty($usr['username'])) {
+          $petugasRow = $this->db('petugas')->where('nip', $usr['username'])->oneArray();
+        }
+      }
+      if (!$petugasRow && !empty($petugas_nama)) {
+        $cleanPetugasNama = trim(explode(',', $petugas_nama)[0]);
+        if (strlen($cleanPetugasNama) >= 3) {
+          $petugasRow = $this->db('petugas')->where('nama', 'LIKE', '%' . $cleanPetugasNama . '%')->oneArray();
+        }
+      }
+    } catch (\Throwable $e) {}
+
+    if ($petugasRow && !empty($petugasRow['no_sip'])) {
+      $rawSip = trim($petugasRow['no_sip']);
+      if ($rawSip !== '' && $rawSip !== '-') {
+        $petugas_sip = (stripos($rawSip, 'SIP') === 0) ? $rawSip : ('SIP. ' . $rawSip);
+      }
+    }
+
     $pj_lab_sip = 'SIP. 500.16.7.2/0520-SIPO-Sp/XII.25/DPMPTSP';
-    $petugas_nama = !empty($sk_petugas_pelaksana) ? $sk_petugas_pelaksana : 'Nida Urrahmah, S.Tr.Kes';
-    $petugas_sip = 'SIP. 500.16.7.2/0073-SIP-ATLM/IX.25/DPMPTSP';
+    try {
+      $drPj = $this->db('dokter')->where('kd_dokter', '251')->orWhere('nm_dokter', 'LIKE', '%Burhanuddin%')->oneArray();
+      if ($drPj && !empty($drPj['no_ijn_praktek']) && $drPj['no_ijn_praktek'] !== '-') {
+        $rawDrSip = trim($drPj['no_ijn_praktek']);
+        $pj_lab_sip = (stripos($rawDrSip, 'SIP') === 0) ? $rawDrSip : ('SIP. ' . $rawDrSip);
+      }
+    } catch (\Throwable $e) {}
 
     $is_male = (isset($pasien['jk']) && strtoupper($pasien['jk']) == 'L');
     $is_adult = (isset($reg_periksa['umurdaftar']) && ((int)$reg_periksa['umurdaftar'] >= 16 || $reg_periksa['sttsumur'] == 'Th'));
@@ -2112,6 +2173,35 @@ class Admin extends AdminModule
     return sprintf('%d:%02d:%02d', floor($diff / 3600), floor(($diff % 3600) / 60), $diff % 60);
   }
 
+  private function ensureDetailCetakLabTable()
+  {
+    try {
+      $sql = "CREATE TABLE IF NOT EXISTS `detail_cetak_lab` (
+        `no_rawat` varchar(17) NOT NULL,
+        `tgl_registrasi` varchar(25) DEFAULT '',
+        `tgl_periksa` varchar(25) DEFAULT '',
+        `saran` varchar(300) NOT NULL DEFAULT '',
+        `kesan` varchar(300) NOT NULL DEFAULT '',
+        `tgl_selesai` varchar(20) DEFAULT '',
+        `tgl_validasi` varchar(20) DEFAULT '',
+        `no_lab` varchar(50) DEFAULT '',
+        `respons_time` varchar(50) DEFAULT '',
+        `jenis_layanan` varchar(50) DEFAULT '',
+        `petugas_pelaksana` varchar(100) DEFAULT '',
+        PRIMARY KEY (`no_rawat`),
+        CONSTRAINT `detail_cetak_lab_ibfk_1` FOREIGN KEY (`no_rawat`) REFERENCES `reg_periksa` (`no_rawat`) ON DELETE CASCADE ON UPDATE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=latin1;";
+      $this->db()->pdo()->exec($sql);
+    } catch (\Throwable $e) {}
+
+    try {
+      $check = $this->db()->pdo()->query("SHOW COLUMNS FROM `petugas` LIKE 'no_sip'")->fetch(\PDO::FETCH_ASSOC);
+      if (!$check) {
+        $this->db()->pdo()->exec("ALTER TABLE `petugas` ADD COLUMN `no_sip` VARCHAR(120) NOT NULL DEFAULT '' AFTER `status`");
+      }
+    } catch (\Throwable $e) {}
+  }
+
   public function postHapusLaboratorium()
   {
     $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->oneArray();
@@ -2244,9 +2334,21 @@ class Admin extends AdminModule
     $pasien = $this->db('pasien')->where('no_rkm_medis', $this->core->getRegPeriksaInfo('no_rkm_medis', $_POST['no_rawat']))->oneArray();
     $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->oneArray();
 
-    $sk = $this->db('detail_cetak_lab')
-      ->where('no_rawat', $_POST['no_rawat'])
-      ->oneArray();
+    $sk = null;
+    try {
+      $sk = $this->db('detail_cetak_lab')
+        ->where('no_rawat', $_POST['no_rawat'])
+        ->oneArray();
+    } catch (\Throwable $e) {
+      $this->ensureDetailCetakLabTable();
+      try {
+        $sk = $this->db('detail_cetak_lab')
+          ->where('no_rawat', $_POST['no_rawat'])
+          ->oneArray();
+      } catch (\Throwable $e2) {
+        $sk = null;
+      }
+    }
 
     $sk_no_lab = (isset($sk['no_lab']) && $sk['no_lab'] != '') ? $sk['no_lab'] : (isset($laboratorium[0]['noorder']) ? $laboratorium[0]['noorder'] : '');
 
@@ -2372,7 +2474,8 @@ class Admin extends AdminModule
       'no_rawat' => htmlspecialchars($_POST['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
       'laboratorium' => htmlspecialchars_array($laboratorium),
       'pasien' => $pasien,
-      'reg_periksa' => $reg_periksa
+      'reg_periksa' => $reg_periksa,
+      'petugas_list' => $this->db('petugas')->where('status', '1')->toArray()
     ]);
     exit();
   }
@@ -2498,7 +2601,17 @@ class Admin extends AdminModule
         // Setiap order baru memulai siklus baru: Periksa diisi default waktu registrasi,
         // sedangkan Selesai/Validasi/Respons Time dikosongkan agar tidak membawa nilai order sebelumnya.
         $now = date('Y-m-d H:i:s');
-        $sk = $this->db('detail_cetak_lab')->where('no_rawat', $no_rawat)->oneArray();
+        $sk = null;
+        try {
+          $sk = $this->db('detail_cetak_lab')->where('no_rawat', $no_rawat)->oneArray();
+        } catch (\Throwable $e) {
+          $this->ensureDetailCetakLabTable();
+          try {
+            $sk = $this->db('detail_cetak_lab')->where('no_rawat', $no_rawat)->oneArray();
+          } catch (\Throwable $e2) {
+            $sk = null;
+          }
+        }
         $sk_update = [
           'no_lab' => $noorder,
           'tgl_registrasi' => $now,

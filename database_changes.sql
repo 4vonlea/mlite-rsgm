@@ -34,3 +34,9 @@ CREATE TABLE IF NOT EXISTS `mlite_billing_rincian` (
   KEY `no_rawat` (`no_rawat`),
   KEY `kategori` (`kategori`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+-- --------------------------------------------------------
+-- Kolom No. SIP pada tabel petugas untuk cetak hasil laboratorium & layanan klinis
+-- --------------------------------------------------------
+ALTER TABLE `petugas` ADD COLUMN `no_sip` varchar(120) NOT NULL DEFAULT '' AFTER `status`;
+
