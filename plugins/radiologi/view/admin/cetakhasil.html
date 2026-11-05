@@ -1,10 +1,9 @@
-
 <!doctype html>
 <html lang="id">
 	<head>
 		<title>Cetak Hasil</title>
 		<meta charset="UTF-8">
-    <link href="{?=url()?}/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+		<link href="{?=url()?}/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
 		<script src="{?=url()?}/assets/jscripts/jquery.min.js"></script>
 		<script src="{?=url()?}/assets/jscripts/bootstrap.min.js"></script>
 	<style>
@@ -30,9 +29,27 @@
 		text-align:center;
 		box-shadow: 2px 2px 3px #999;
 	}
+	@media print {
+		.no-print, del, .btn, .modal, #emailModal, #waModal {
+			display: none !important;
+		}
+		body {
+			margin: 0;
+			width: 100% !important;
+			background: #fff;
+		}
+		#faktur {
+			box-shadow: none !important;
+			padding: 0 !important;
+		}
+	}
 	</style>
 
 	<script>
+function printContent(el) {
+    window.print();
+}
+
 function KirimEmail() {
     var email = document.getElementById("email").value;
     var receiver = document.getElementById("receiver").value;
@@ -172,7 +189,7 @@ function KirimWA() {
 		    <tbody>
 		      {loop: $periksa_radiologi}
 						<tr>
-							<td >{$value.nm_perawatan}</td>
+							<td>{$value.nm_perawatan}</td>
 							<td>{?=number_format($value.biaya, 0, ',', '.')?}</td>
 						</tr>
 		      {/loop}
@@ -188,7 +205,12 @@ function KirimWA() {
 					{/if}
 					{loop: $hasil_radiologi}
 					<tr>
-						<td colspan="2">{?=nl2br($value.hasil)?}</td>
+						<td colspan="2">
+							{if: !empty($value.nm_perawatan) && count($hasil_radiologi) > 1}
+							<strong>{$value.nm_perawatan}:</strong><br>
+							{/if}
+							{?=nl2br($value.hasil)?}
+						</td>
 					</tr>
 					{/loop}
 					{if: $gambar_radiologi}
@@ -199,7 +221,12 @@ function KirimWA() {
 					{/if}
 					{loop: $gambar_radiologi}
 					<tr>
-						<td colspan="2"><img src="{?=WEBAPPS_URL.'/radiologi/'.$value.lokasi_gambar?}" height="400px"></td>
+						<td colspan="2" style="text-align: center;">
+							{if: !empty($value.nm_perawatan) && count($gambar_radiologi) > 1}
+							<div style="text-align: left; font-weight: bold; margin-bottom: 5px;">{$value.nm_perawatan}</div>
+							{/if}
+							<img src="{?=WEBAPPS_URL.'/radiologi/'.$value.lokasi_gambar?}" style="max-height: 400px; max-width: 720px;">
+						</td>
 					</tr>
 					{/loop}
 		    </tbody>
@@ -223,6 +250,9 @@ function KirimWA() {
 								<i>Ditandatangani secara elektronik oleh:</i>
 							</div>
 							{$signature.signer_name}
+							{else}
+							<br><br><br>
+							{$pj_radiologi}
 							{/if}
 					</td>
 				</tr>
@@ -230,13 +260,13 @@ function KirimWA() {
 		</center>
 		</div>
 		<br><br><br>
-		<del>
+		<div class="no-print">
 			<center>
 				<button type="button" class="btn btn-warning" data-toggle="modal" href="#emailModal"><span class="glyphicon glyphicon-send"></span> Kirim Email</button>
 				<button type="button" class="btn btn-info" data-toggle="modal" href="#waModal"><span class="glyphicon glyphicon-send"></span> Kirim WA</button>
 				<button onclick="printContent('faktur')" type="button" class="btn btn-danger"><span class="glyphicon glyphicon-print"></span> Cetak</button>
 			</center>	
-		</del>
+		</div>
 		<!-- Modal -->
 	  <div class="modal fade" id="waModal" tabindex="-1" role="dialog" aria-labelledby="waModalLabel" aria-hidden="true">
 	    <div class="modal-dialog">
@@ -290,76 +320,4 @@ function KirimWA() {
 	  </div><!-- /.modal -->
 
 </body>
-
-<script>
-function KirimEmail() {
-    var email = document.getElementById("email").value;
-    var receiver = document.getElementById("receiver").value;
-    var file = "{?=url()?}/uploads/radiologi/{$filename}.pdf";
-    var pdfUrl = window.location.href;
-    pdfUrl += (pdfUrl.indexOf('?') > -1) ? '&action=pdf' : '?action=pdf';
-
-    var btn = $('button[onclick="KirimEmail()"]');
-    var oldText = btn.html();
-    btn.html('<i class="fa fa-spinner fa-spin"></i> Memproses...').prop('disabled', true);
-
-    $.get(pdfUrl, function() {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                var data = xhttp.responseText;
-                alert(data);
-                btn.html(oldText).prop('disabled', false);
-            }
-        };
-        xhttp.open("POST", "{?=url([ADMIN,'radiologi','kirimemail'])?}", true);
-        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhttp.send("email=" + email + "&receiver=" + receiver + "&file=" + file);
-    }).fail(function() {
-        alert("Gagal membuat dokumen PDF.");
-        btn.html(oldText).prop('disabled', false);
-    });
-}
-
-function KirimWA() {
-    var api_key = '{$wagateway.token}';
-    var sender = '{$wagateway.phonenumber}';
-    var number = document.getElementById("number").value;
-    var message = document.getElementById("message").value;
-    var tipe = 'pdf';
-    var file = "{?=url()?}/uploads/radiologi/{$filename}.pdf";
-    var pdfUrl = window.location.href;
-    pdfUrl += (pdfUrl.indexOf('?') > -1) ? '&action=pdf' : '?action=pdf';
-
-    var btn = $('button[onclick="KirimWA()"]');
-    var oldText = btn.html();
-    btn.html('<i class="fa fa-spinner fa-spin"></i> Memproses...').prop('disabled', true);
-
-    $.get(pdfUrl, function() {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                var data = xhttp.responseText;
-                if(data.indexOf('504 Gateway Time-out') != -1) {
-                    alert('Timeout!!! Gagal mengirim pesan.');
-                } else {
-                    var jsonResponse = JSON.parse(data);
-                    if(jsonResponse["status"] == true) {
-                        alert('Sukses mengirim pesan.');
-                    } else {
-                        alert('Gagal mengirim pesan.\n' + jsonResponse["msg"]);
-                    }
-                }
-                btn.html(oldText).prop('disabled', false);
-            }
-        };
-        xhttp.open("POST", "{?=url([ADMIN,'api','kirimwadocument'])?}", true);
-        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhttp.send("api_key=" + api_key + "&sender=" + sender + "&number=" + number + "&message=" + message + "&tipe=" + tipe + "&file=" + file);
-    }).fail(function() {
-        alert("Gagal membuat dokumen PDF.");
-        btn.html(oldText).prop('disabled', false);
-    });
-}
-</script>
 </html>

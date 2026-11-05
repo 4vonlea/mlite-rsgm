@@ -1,70 +1,483 @@
 <style>
-  .pacs-gallery-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 60px;
-    height: 100px;
-    background: rgba(0, 0, 0, 0.3);
-    color: #fff;
+  /* =========================================================
+   * RSGM LUXURY RADIOLOGY & MINI PACS DESIGN SYSTEM
+   * ========================================================= */
+  .rsgm-rad-header-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+  .rsgm-rad-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.3px;
+    margin: 0;
+  }
+  .rsgm-badge-count {
+    background: #e0f2fe;
+    color: #0369a1;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid #bae6fd;
+  }
+  .btn-rsgm-emerald {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 13px;
     border: none;
-    font-size: 30px;
+    border-radius: 8px;
+    padding: 8px 16px;
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-rsgm-emerald:hover {
+    background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+  }
+  .btn-rsgm-white {
+    background: #ffffff !important;
+    color: #047857 !important;
+    font-weight: 800;
+    font-size: 13px;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-rsgm-white:hover {
+    background: #f8fafc !important;
+    color: #065f46 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  .rsgm-rad-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .rsgm-rad-card:hover {
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  }
+  .rsgm-rad-card-header {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 12px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .rsgm-rad-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .rsgm-badge-no {
+    background: #0284c7;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .rsgm-rad-price {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+    font-family: monospace;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 6px;
+  }
+  .rsgm-rad-card-body {
+    padding: 14px 18px;
+  }
+  .rsgm-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px 20px;
+    background: #fafafa;
+    border: 1px solid #f1f5f9;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: #334155;
+    margin-bottom: 12px;
+  }
+  .rsgm-meta-item strong {
+    color: #64748b;
+    font-size: 11px;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
+  }
+  .rsgm-btn-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .btn-rad-action {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn-rad-hasil {
+    background: #0284c7;
+    color: #fff !important;
+  }
+  .btn-rad-hasil:hover {
+    background: #0369a1;
+    transform: translateY(-1px);
+  }
+  .btn-rad-cetak {
+    background: #f59e0b;
+    color: #fff !important;
+  }
+  .btn-rad-cetak:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+  }
+  .btn-rad-tte {
+    background: #10b981;
+    color: #fff !important;
+  }
+  .btn-rad-tte:hover {
+    background: #059669;
+    transform: translateY(-1px);
+  }
+  .btn-rad-pacs {
+    background: #6366f1;
+    color: #fff !important;
+  }
+  .btn-rad-pacs:hover {
+    background: #4f46e5;
+    transform: translateY(-1px);
+  }
+  .btn-rad-del {
+    background: #fee2e2;
+    color: #ef4444 !important;
+    border: 1px solid #fecaca;
+  }
+  .btn-rad-del:hover {
+    background: #ef4444;
+    color: #fff !important;
+    transform: translateY(-1px);
+  }
+  .rsgm-hasil-panel {
+    background: #f8fafc;
+    border-left: 4px solid #0284c7;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin-top: 12px;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  }
+  .rsgm-hasil-text {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #1e293b;
+    margin: 0;
+  }
+  .rsgm-total-bar {
+    background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 16px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 18px;
+    box-shadow: 0 4px 15px rgba(4, 120, 87, 0.25);
+  }
+  .rsgm-total-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 20px;
+  }
+
+  /* =========================================================
+   * MINI PACS PRO GALLERY & DARK VIEWER
+   * ========================================================= */
+  .rsgm-pacs-container {
+    background: #0f172a;
+    border-radius: 14px;
+    padding: 20px;
+    margin-top: 25px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    color: #f8fafc;
+  }
+  .rsgm-pacs-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #1e293b;
+  }
+  .rsgm-pacs-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #f8fafc;
+    letter-spacing: 0.3px;
+    margin: 0;
+  }
+  .rsgm-pacs-study-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .rsgm-pacs-study-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: #cbd5e1;
+  }
+  .rsgm-pacs-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .rsgm-pacs-thumb-item {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    background: #020617;
+    border: 2px solid #334155;
+    border-radius: 8px;
+    overflow: hidden;
     cursor: pointer;
-    transition: background 0.3s;
-    z-index: 10;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .rsgm-pacs-thumb-item:hover {
+    border-color: #38bdf8;
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 8px 20px rgba(56, 189, 248, 0.35);
+  }
+  .rsgm-pacs-thumb-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  .rsgm-pacs-thumb-item:hover img {
+    transform: scale(1.08);
+  }
+  .rsgm-pacs-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    color: #38bdf8;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .rsgm-pacs-thumb-item:hover .rsgm-pacs-overlay {
+    opacity: 1;
+  }
+
+  /* PACS Modal Workstation */
+  .modal-pacs-dark .modal-content {
+    background: #090d16;
+    color: #f8fafc;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .modal-pacs-dark .modal-header {
+    background: #0f172a;
+    border-bottom: 1px solid #1e293b;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-pacs-dark .modal-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .modal-pacs-dark .close {
+    color: #94a3b8;
+    opacity: 0.9;
+    font-size: 24px;
+    text-shadow: none;
+    transition: color 0.2s;
+  }
+  .modal-pacs-dark .close:hover {
+    color: #ffffff;
+  }
+  .pacs-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .btn-dark-pacs {
+    background: #1e293b;
+    color: #cbd5e1;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
     outline: none !important;
   }
-
-  .pacs-gallery-nav:hover {
-    background: rgba(0, 0, 0, 0.6);
+  .btn-dark-pacs:hover, .btn-dark-pacs.active {
+    background: #38bdf8;
+    color: #0f172a;
+    border-color: #38bdf8;
   }
-
-  .pacs-gallery-prev {
-    left: 0;
-    border-radius: 0 5px 5px 0;
-  }
-
-  .pacs-gallery-next {
-    right: 0;
-    border-radius: 5px 0 0 5px;
-  }
-
   #pacsViewerImageContainer {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #000;
+    background-color: #020617;
+    background-image: radial-gradient(#1e293b 1px, transparent 1px);
+    background-size: 20px 20px;
     height: 100%;
     position: relative;
+    overflow: hidden;
+    cursor: grab;
   }
-
   #pacsViewerImage {
-    max-width: 100%;
-    max-height: 100%;
+    max-width: 90%;
+    max-height: 90%;
     object-fit: contain;
+    transition: transform 0.15s ease-out, filter 0.15s ease-out;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.6);
   }
-
-  .modal-pacs-dark .modal-content {
-    background: #1a1a1a;
-    color: #fff;
-    border: none;
+  .pacs-gallery-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 80px;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    z-index: 20;
+    outline: none !important;
   }
-
-  .modal-pacs-dark .modal-header {
-    border-bottom: 1px solid #333;
-    padding: 10px 15px;
+  .pacs-gallery-nav:hover {
+    background: #38bdf8;
+    color: #0f172a;
   }
-
-  .modal-pacs-dark .close {
-    color: #fff;
-    opacity: 0.8;
+  .pacs-gallery-prev {
+    left: 0;
+    border-radius: 0 8px 8px 0;
+  }
+  .pacs-gallery-next {
+    right: 0;
+    border-radius: 8px 0 0 8px;
+  }
+  .pacs-filmstrip-bar {
+    background: #0a0f1d;
+    border-top: 1px solid #1e293b;
+    padding: 8px 12px;
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    align-items: center;
+  }
+  .pacs-filmstrip-item {
+    width: 60px;
+    height: 60px;
+    border-radius: 4px;
+    border: 2px solid #334155;
+    background: #000;
+    overflow: hidden;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .pacs-filmstrip-item.active {
+    border-color: #38bdf8;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  }
+  .pacs-filmstrip-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 </style>
+
 <div class="row">
+  <!-- =========================================================
+   * KOLOM KANAN: RINCIAN PEMERIKSAAN & MINI PACS
+   * ========================================================= -->
   <div class="col-md-7 col-md-push-5">
+
+    <!-- Notifikasi Khusus PPI / K3 / CITO -->
     {if: count($radiologi) > 0}
       {loop: $radiologi as $rad_alert}
         {if: !empty($rad_alert.informasi_tambahan)}
@@ -99,340 +512,413 @@
         {/if}
       {/loop}
     {/if}
-    <h4 class="page-header" style="margin-top:0;">Rincian Pemeriksaan</h4>
 
-{if: count($periksa_radiologi) > 0}
-<div class="row">
-  {loop: $periksa_radiologi}
-  <div class="col-md-12">
-    <div class="panel panel-info">
-      <div class="panel-heading" style="padding: 12px 15px;">
-        <h3 class="panel-title" style="display:inline-block; font-size: 18px; font-weight: bold; color: #31708f; text-transform: uppercase; margin: 0;">
-          <span class="label label-primary" style="margin-right: 8px; font-size: 14px; vertical-align: middle;">{?=isset_or($value.nomor)?}</span>
-          {if: $value.periksa_radiologi}
-            {loop: $value.periksa_radiologi as $data0}
-              <span style="vertical-align: middle;">{?=isset_or($data0.nm_perawatan)?}</span>
-            {/loop}
-          {else}
-             <span style="vertical-align: middle;">Pemeriksaan Radiologi</span>
-          {/if}
-        </h3>
-        {if: $value.periksa_radiologi}
-          {loop: $value.periksa_radiologi as $data0}
-            <span class="pull-right" style="font-weight:bold; font-size: 18px; color: #31708f; margin-top: -2px;">Rp {?= number_format($data0.biaya,2,',','.')?}</span>
-          {/loop}
+    <!-- Header & Tombol Cetak Semua Sekaligus -->
+    <div class="rsgm-rad-header-wrap">
+      <div class="rsgm-rad-title">
+        <i class="fa fa-file-text-o text-primary"></i>
+        <span>Rincian Pemeriksaan</span>
+        {if: count($periksa_radiologi) > 0}
+        <span class="rsgm-badge-count">{?=count($periksa_radiologi)?} Layanan Selesai</span>
         {/if}
       </div>
-      <div class="panel-body" style="padding: 10px 15px;">
-        <div class="row">
-          <div class="col-md-8">
-            <table class="table table-condensed table-borderless" style="margin-bottom:0; background: transparent;">
-              <tr>
-                <td width="120px" style="border:none; padding: 2px;"><strong>Dokter Perujuk</strong></td>
-                <td style="border:none; padding: 2px;">: {?=isset_or($value.nm_dokter)?}</td>
-                <td width="100px" style="border:none; padding: 2px;"><strong>Petugas</strong></td>
-                <td style="border:none; padding: 2px;">: {?=isset_or($value.nama_petugas)?}</td>
-              </tr>
-              <tr>
-                <td style="border:none; padding: 2px;"><strong>Cara Bayar</strong></td>
-                <td style="border:none; padding: 2px;">: {?=isset_or($value.png_jawab)?}</td>
-                <td style="border:none; padding: 2px;"><strong>Waktu</strong></td>
-                <td style="border:none; padding: 2px;">: {?=isset_or($value.tgl_periksa)?} {?=isset_or($value.jam)?}</td>
-              </tr>
-            </table>
+      {if: count($periksa_radiologi) > 0}
+      <div>
+        <button type="button" class="btn btn-rsgm-emerald cetak_hasil_semua"
+          data-no_rawat="{?=isset_or($no_rawat)?}"
+          data-status="{?=isset_or($periksa_radiologi.0.status_periksa, 'Ralan')?}"
+          title="Cetak seluruh hasil pemeriksaan radiologi pasien dalam 1 kali cetak (tanpa per item)">
+          <i class="fa fa-print"></i> Cetak Semua Hasil (1x Cetak)
+        </button>
+      </div>
+      {/if}
+    </div>
+
+    <!-- List Kartu Rincian Pemeriksaan Radiologi -->
+    {if: count($periksa_radiologi) > 0}
+    <div>
+      {loop: $periksa_radiologi}
+      <div class="rsgm-rad-card">
+        <!-- Header Kartu -->
+        <div class="rsgm-rad-card-header">
+          <div class="rsgm-rad-card-title">
+            <span class="rsgm-badge-no">{?=isset_or($value.nomor)?}</span>
+            {if: $value.periksa_radiologi}
+              {loop: $value.periksa_radiologi as $data0}
+                <span>{?=isset_or($data0.nm_perawatan)?}</span>
+              {/loop}
+            {else}
+               <span>Pemeriksaan Radiologi</span>
+            {/if}
           </div>
-          <div class="col-md-4 text-right">
-            <div class="btn-group" style="margin-top:5px;">
-              <button type="button" class="btn btn-primary btn-sm hasil_radiologi"
-                data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}"
-                data-jam_periksa="{?=isset_or($value.jam)?}" data-status="{?=isset_or($value.status_periksa)?}">
-                <i class="fa fa-edit"></i> Hasil
-              </button>
-              <button type="button" class="btn btn-warning btn-sm cetak_hasil"
-                id="btn-cetak-{?=isset_or($value.ref_id)?}"
-                data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}" data-jam_periksa="{?=isset_or($value.jam)?}"
-                data-status="{?=isset_or($value.status_periksa)?}">
-                <i class="fa fa-print"></i> Cetak
-              </button>
-              {if: !$value.signature}
-              <button type="button" class="btn btn-success btn-sm btn-tte"
-                data-ref_type="radiologi_hasil" 
-                data-ref_id="{?=isset_or($value.ref_id)?}" 
-                data-signer_name="{?=isset_or($current_user_name)?}">
-                <i class="fa fa-certificate"></i> Tanda Tangani
-              </button>
-              {/if}
-              <a href="{?=url([ADMIN,'orthanc','bridgingorthanc',convertNorawat($value.no_rawat), strtolower($value.status_periksa), $value.tgl_periksa, $value.jam])?}"
-                class="btn btn-info btn-sm" data-toggle="modal" data-target="#orthancModal">
-                <i class="fa fa-image"></i> PACS
-              </a>
-              <button type="button" class="btn btn-danger btn-sm hapus_radiologi"
-                data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}"
-                data-jam_periksa="{?=isset_or($value.jam)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}"
-                data-status="{?=isset_or($value.status_periksa)?}">
-                <i class="fa fa-trash"></i>
-              </button>
-            </div>
-          </div>
+          {if: $value.periksa_radiologi}
+            {loop: $value.periksa_radiologi as $data0}
+              <div class="rsgm-rad-price">Rp {?= number_format($data0.biaya,2,',','.')?}</div>
+            {/loop}
+          {/if}
         </div>
 
-        {if: $value.hasil_radiologi}
-        <hr style="margin: 10px 0; border-top: 1px dashed #ccc;">
-        <div class="row">
-          <div class="col-md-12">
-            <h6 style="margin-top: 0; font-weight: bold; color: #333;"><i class="fa fa-file-text-o"></i> Hasil Pemeriksaan:</h6>
+        <!-- Body Kartu -->
+        <div class="rsgm-rad-card-body">
+          <div class="row">
+            <div class="col-md-7">
+              <div class="rsgm-meta-grid">
+                <div class="rsgm-meta-item">
+                  <strong><i class="fa fa-user-md text-primary"></i> Dokter Perujuk</strong>
+                  {?=isset_or($value.nm_dokter, '-')?}
+                </div>
+                <div class="rsgm-meta-item">
+                  <strong><i class="fa fa-id-badge text-info"></i> Petugas / Radiografer</strong>
+                  {?=isset_or($value.nama_petugas, '-')?}
+                </div>
+                <div class="rsgm-meta-item">
+                  <strong><i class="fa fa-credit-card text-success"></i> Cara Bayar</strong>
+                  <span class="label label-default" style="font-weight: 600;">{?=isset_or($value.png_jawab, '-')?}</span>
+                </div>
+                <div class="rsgm-meta-item">
+                  <strong><i class="fa fa-clock-o text-muted"></i> Waktu Pelaksanaan</strong>
+                  {?=isset_or($value.tgl_periksa)?} {?=isset_or($value.jam)?}
+                </div>
+              </div>
+            </div>
+
+            <!-- Tombol Aksi Item -->
+            <div class="col-md-5 text-right">
+              <div class="rsgm-btn-group" style="justify-content: flex-end; margin-top: 4px;">
+                <button type="button" class="btn btn-rad-action btn-rad-hasil hasil_radiologi"
+                  data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}"
+                  data-jam_periksa="{?=isset_or($value.jam)?}" data-status="{?=isset_or($value.status_periksa)?}"
+                  title="Input atau ubah expertise hasil radiologi">
+                  <i class="fa fa-edit"></i> Hasil
+                </button>
+                <button type="button" class="btn btn-rad-action btn-rad-cetak cetak_hasil"
+                  id="btn-cetak-{?=isset_or($value.ref_id)?}"
+                  data-no_rawat="{?=isset_or($value.no_rawat, $no_rawat)?}"
+                  data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}" data-jam_periksa="{?=isset_or($value.jam)?}"
+                  data-status="{?=isset_or($value.status_periksa)?}"
+                  title="Cetak hasil rontgen item ini saja">
+                  <i class="fa fa-print"></i> Cetak
+                </button>
+                {if: !$value.signature}
+                <button type="button" class="btn btn-rad-action btn-rad-tte btn-tte"
+                  data-ref_type="radiologi_hasil" 
+                  data-ref_id="{?=isset_or($value.ref_id)?}" 
+                  data-signer_name="{?=isset_or($current_user_name)?}"
+                  title="Tanda tangani digital (TTE)">
+                  <i class="fa fa-certificate"></i> Tanda Tangani
+                </button>
+                {/if}
+                <a href="{?=url([ADMIN,'orthanc','bridgingorthanc',convertNorawat($value.no_rawat), strtolower($value.status_periksa), $value.tgl_periksa, $value.jam])?}"
+                  class="btn btn-rad-action btn-rad-pacs" data-toggle="modal" data-target="#orthancModal"
+                  title="Buka Orthanc PACS Viewer">
+                  <i class="fa fa-image"></i> PACS
+                </a>
+                <button type="button" class="btn btn-rad-action btn-rad-del hapus_radiologi"
+                  data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}"
+                  data-jam_periksa="{?=isset_or($value.jam)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}"
+                  data-status="{?=isset_or($value.status_periksa)?}"
+                  title="Hapus tindakan ini">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section Hasil Pemeriksaan -->
+          {if: $value.hasil_radiologi}
+          <div class="rsgm-hasil-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <strong style="color: #0369a1; font-size: 13px;">
+                <i class="fa fa-file-text-o"></i> Bacaan / Hasil Expertise Dokter Radiologi:
+              </strong>
+            </div>
             {loop: $value.hasil_radiologi as $data1}
-            <div class="well well-sm" style="background:#fcfcfc; border: 1px solid #eee; position:relative; padding-right: 40px;">
-              {?=nl2br(isset_or($data1.hasil))?}
+            <div style="position: relative; padding-right: 36px; margin-bottom: 6px;">
+              <p class="rsgm-hasil-text">{?=nl2br(isset_or($data1.hasil))?}</p>
               <button type="button" class="btn btn-danger btn-xs hapus_hasil_radiologi"
                 data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}"
-                data-jam_periksa="{?=isset_or($value.jam)?}" style="position:absolute; top:8px; right:8px;" title="Hapus Hasil">
+                data-jam_periksa="{?=isset_or($value.jam)?}" style="position:absolute; top:0; right:0;" title="Hapus Hasil">
                 <i class="fa fa-trash"></i>
               </button>
             </div>
             {/loop}
             
+            <!-- TTE QR Code Sign Container -->
             <div id="sign_container_{?=isset_or($value.ref_id)?}" class="text-right" style="margin-top: 10px;">
               {if: $value.signature}
-              <a href="{?=url()?}/esignature/verify/{?=isset_or($value.signature.signature_hash)?}" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">
-                <div class="qr_{?=substr($value.signature.signature_hash, 0, 8)?}" style="margin-top:10px;margin-bottom:10px; display:inline-block;"></div>
-              </a>
-              <script>
-                  jQuery('.qr_{?=substr($value.signature.signature_hash, 0, 8)?}').qrcode({
-                      width: 100,
-                      height: 100,
-                      text: "{?=isset_or($value.signature.signature_hash)?}"
-                  });
-              </script>
-              <br><small class="text-muted"><i class="fa fa-check-circle text-success"></i> Ditandatangani oleh {?=isset_or($value.signature.signer_name)?}</small>
+              <div style="display: inline-block; text-align: center; background: #fff; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <a href="{?=url()?}/esignature/verify/{?=isset_or($value.signature.signature_hash)?}" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">
+                  <div class="qr_{?=substr($value.signature.signature_hash, 0, 8)?}" style="display:inline-block;"></div>
+                </a>
+                <script>
+                    jQuery('.qr_{?=substr($value.signature.signature_hash, 0, 8)?}').qrcode({
+                        width: 80,
+                        height: 80,
+                        text: "{?=isset_or($value.signature.signature_hash)?}"
+                    });
+                </script>
+                <div style="font-size: 10.5px; color: #16a34a; font-weight: 600; margin-top: 3px;">
+                  <i class="fa fa-check-circle"></i> Ditandatangani oleh {?=isset_or($value.signature.signer_name)?}
+                </div>
+              </div>
               {/if}
             </div>
-
           </div>
-        </div>
-        {/if}
+          {/if}
 
-        {if: $value.gambar_radiologi}
-        <hr style="margin: 10px 0; border-top: 1px dashed #ccc;">
-        <div class="row">
-          <div class="col-md-12">
-            <h6 style="margin-top: 0; font-weight: bold; color: #333;"><i class="fa fa-picture-o"></i> Gambar Terlampir:</h6>
-            <div style="display:flex; flex-wrap:wrap; gap:10px;">
+          <!-- Section Gambar Terlampir -->
+          {if: $value.gambar_radiologi}
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e2e8f0;">
+            <strong style="font-size: 12.5px; color: #475569; display: block; margin-bottom: 8px;">
+              <i class="fa fa-picture-o text-primary"></i> Lampiran Gambar Rontgen:
+            </strong>
+            <div style="display:flex; flex-wrap:wrap; gap:12px;">
               {loop: $value.gambar_radiologi as $data2}
-              <div style="border:1px solid #ddd; padding:5px; border-radius:4px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                <img src="{?=WEBAPPS_URL.'/radiologi/'.$data2.lokasi_gambar?}" style="height:120px; object-fit:contain; cursor:pointer; transition: transform 0.2s;" onclick="window.open(this.src)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+              <div style="border:1px solid #cbd5e1; padding:4px; border-radius:8px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.06); transition: all 0.2s;" onmouseover="this.style.borderColor='#38bdf8'" onmouseout="this.style.borderColor='#cbd5e1'">
+                <img src="{?=WEBAPPS_URL.'/radiologi/'.$data2.lokasi_gambar?}" style="height:110px; border-radius: 4px; object-fit:contain; cursor:pointer;" onclick="window.open(this.src)" title="Klik untuk perbesar">
               </div>
               {/loop}
             </div>
           </div>
-        </div>
-        {/if}
+          {/if}
 
+        </div>
+      </div>
+      {/loop}
+    </div>
+
+    <!-- Total Biaya Radiologi Bar -->
+    <div class="rsgm-total-bar">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div class="rsgm-total-icon">
+          <i class="fa fa-calculator"></i>
+        </div>
+        <div>
+          <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; opacity: 0.9;">Total Biaya Radiologi ({?=count($periksa_radiologi)?} Tindakan)</div>
+          <div style="font-size: 22px; font-weight: 800; font-family: monospace;">Rp {?= number_format($jumlah_total_radiologi,2,',','.')?}</div>
+        </div>
+      </div>
+      <div>
+        <button type="button" class="btn btn-rsgm-white cetak_hasil_semua"
+          data-no_rawat="{?=isset_or($no_rawat)?}"
+          data-status="{?=isset_or($periksa_radiologi.0.status_periksa, 'Ralan')?}"
+          title="Cetak seluruh hasil pemeriksaan radiologi pasien dalam 1 kali cetak">
+          <i class="fa fa-print"></i> Cetak Semua Hasil (1x Cetak)
+        </button>
       </div>
     </div>
-  </div>
-  {/loop}
-</div>
-<div class="alert alert-success text-right" style="padding: 10px 15px;">
-  <h4 style="margin:0;">Total Biaya Radiologi: <strong>Rp {?= number_format($jumlah_total_radiologi,2,',','.')?}</strong></h4>
-</div>
-{else}
-<div class="alert alert-warning"><i class="fa fa-info-circle"></i> Belum ada rincian pemeriksaan radiologi.</div>
-{/if}
-<br>
+    {else}
+    <div class="alert alert-info" style="border-radius: 8px;"><i class="fa fa-info-circle"></i> Belum ada rincian pemeriksaan radiologi yang diinputkan untuk pasien ini.</div>
+    {/if}
 
-{if: !empty($mini_pacs)}
-<h4>Mini PACS</h4>
-<div class="table-responsive no-margin">
-  <table class="table table-striped table-bordered no-padding" width="100%">
-    <tbody>
-      {loop: $mini_pacs as $mp}
-      <tr>
-        <td>
-          <h5 style="margin-top:0;"><strong>Study:</strong> {?=isset_or($mp.description)?} / {?=isset_or($mp.modality)?}
-          </h5>
-          <div style="display:flex; flex-wrap: wrap; gap: 15px;">
+    <!-- =========================================================
+     * SECTION MINI PACS PRO ARCHIVE & DICOM VIEWER
+     * ========================================================= -->
+    {if: !empty($mini_pacs)}
+    <div class="rsgm-pacs-container">
+      <div class="rsgm-pacs-head">
+        <div class="rsgm-pacs-title">
+          <i class="fa fa-television text-info"></i>
+          <span>Arsip Digital Mini PACS &amp; DICOM Viewer</span>
+        </div>
+        <div>
+          <span class="badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; padding: 5px 12px; font-weight: 700;">
+            {?=count($mini_pacs)?} Studi DICOM
+          </span>
+        </div>
+      </div>
+
+      <div>
+        {loop: $mini_pacs as $mp}
+        <div class="rsgm-pacs-study-card">
+          <div class="rsgm-pacs-study-header">
+            <div>
+              <span class="label" style="background: #0284c7; padding: 4px 8px; font-size: 11px; margin-right: 6px;">{?=isset_or($mp.modality, 'DX')?}</span>
+              <strong style="color: #f1f5f9;">{?=isset_or($mp.description, 'Pemeriksaan Radiografi Digital')?}</strong>
+            </div>
+            <div>
+              <small style="color: #94a3b8;"><i class="fa fa-calendar"></i> {?=isset_or($mp.date, '-')?}</small>
+            </div>
+          </div>
+
+          <div class="rsgm-pacs-grid">
             {loop: $mp.series as $s}
             {loop: $s.instances as $ins}
-            <div style="text-align: center;">
-              <a href="#" data-url="{?=url([ADMIN,'api','mini_pacs','instancejpg',$ins.id])?}" class="open_viewer_modal"
-                data-gallery="study-{?=isset_or($mp.id)?}">
-                <div
-                  style="width: 100px; height: 100px; background-color: #333; color: white; display:flex; align-items:center; justify-content:center; border: 2px solid #555; border-radius: 4px; margin-bottom: 5px; overflow:hidden;"
-                  title="View in PACS">
-                  {if: file_exists(UPLOADS.'/pacs/'.$ins.sop_instance_uid.'_thumb.jpg')}
-                  <img src="{?=url('uploads/pacs/'.$ins.sop_instance_uid.'_thumb.jpg')?}"
-                    style="width: 100%; height: 100%; object-fit: cover;">
-                  {else}
-                  <img src="{?=url([ADMIN,'api','mini_pacs','instancejpg',$ins.id])?}"
-                    style="width: 100%; height: 100%; object-fit: cover;"
-                    onerror="this.onerror=null; this.style.display='none'; $(this).parent().append('<i class=\'fa fa-picture-o fa-3x\' style=\'color: #4bd396;\'></i>');">
-                  {/if}
-                </div>
-              </a>
-              <!-- <br>
-              <button class="btn btn-xs btn-primary send_dicom_router" data-id="{?=isset_or($ins.id)?}"><i
-                  class="fa fa-share-square-o"></i> Kirim ke Dicom Router</button>
-              <br>
-              <button class="btn btn-xs btn-success btn-send-satusehat" data-id="{?=isset_or($mp.id)?}"
-                style="margin-top: 5px;"><i class="fa fa-cloud-upload"></i> Kirim ke Satu Sehat</button> -->
+            <div class="rsgm-pacs-thumb-item open_viewer_modal"
+                 data-url="{?=url([ADMIN,'api','mini_pacs','instancejpg',$ins.id])?}"
+                 data-gallery="study-{?=isset_or($mp.id)?}"
+                 title="Buka DICOM Viewer: {?=isset_or($mp.description)?}">
+              {if: file_exists(UPLOADS.'/pacs/'.$ins.sop_instance_uid.'_thumb.jpg')}
+              <img src="{?=url('uploads/pacs/'.$ins.sop_instance_uid.'_thumb.jpg')?}">
+              {else}
+              <img src="{?=url([ADMIN,'api','mini_pacs','instancejpg',$ins.id])?}"
+                onerror="this.onerror=null; this.style.display='none'; $(this).parent().append('<div style=\'display:flex;height:100%;align-items:center;justify-content:center;\'><i class=\'fa fa-picture-o fa-2x\' style=\'color: #38bdf8;\'></i></div>');">
+              {/if}
+              <div class="rsgm-pacs-overlay">
+                <i class="fa fa-search-plus fa-2x"></i>
+                <span style="margin-top: 4px;">Lihat DICOM</span>
+              </div>
             </div>
             {/loop}
             {/loop}
           </div>
-        </td>
-      </tr>
-      {/loop}
-    </tbody>
-  </table>
-</div>
-<br>
-{/if}
-
-  </div>
-  <div class="col-md-5 col-md-pull-7">
-    <h4 class="page-header" style="margin-top:0;">Permintaan e-Radiologi</h4>
-{if: count($radiologi) > 0}
-<div class="row">
-  {loop: $radiologi}
-  <div class="col-md-12">
-    <div class="panel panel-warning">
-      <div class="panel-heading" style="padding: 10px 15px;">
-        <h3 class="panel-title" style="display: inline-block;">
-          <i class="fa fa-file-text-o"></i> Order: <strong>{?=isset_or($value.noorder)?}</strong>
-        </h3>
-        <span class="pull-right"><i class="fa fa-clock-o"></i> {?=isset_or($value.tgl_permintaan)?} {?=isset_or($value.jam_permintaan)?}</span>
-      </div>
-      <div class="panel-body" style="padding: 0;">
-        <table class="table table-condensed" style="margin-bottom:0;">
-          <tr>
-            <td width="35%" style="border-top:none; background:#fdf8e4; padding-left:15px;"><strong>Dokter Perujuk</strong></td>
-            <td style="border-top:none; background:#fff;">{?=isset_or($value.nm_dokter)?}</td>
-          </tr>
-          {if: !empty($value.diagnosa_klinis)}
-          <tr>
-            <td style="background:#fdf8e4; padding-left:15px; border-top: 1px solid #faebcc;"><strong>Diagnosis Klinis</strong></td>
-            <td style="background:#fff; border-top: 1px solid #eee;">{?=isset_or($value.diagnosa_klinis)?}</td>
-          </tr>
-          {/if}
-          {if: !empty($value.informasi_tambahan)}
-          <tr>
-            <td style="background:#fdf8e4; padding-left:15px; border-top: 1px solid #faebcc; vertical-align: top;"><strong>Info Tambahan / K3</strong></td>
-            <td style="background:#fff; border-top: 1px solid #eee;">
-              {if: stripos($value.informasi_tambahan, 'HIV') !== false || stripos($value.informasi_tambahan, 'Hepatitis') !== false || stripos($value.informasi_tambahan, 'TB') !== false || stripos($value.informasi_tambahan, 'Airborne') !== false}
-                <div class="alert alert-danger" style="margin-bottom: 5px; padding: 8px 12px; border-left: 5px solid #d9534f; background-color: #fdf2f2;">
-                  <button type="button" class="btn btn-xs btn-default pull-right hapus_catatan_radiologi" data-noorder="{?=isset_or($value.noorder)?}" data-no_rawat="{?=isset_or($no_rawat)?}" style="color: #a94442; font-weight: bold; margin-top: -4px;">
-                    <i class="fa fa-trash"></i> Hapus
-                  </button>
-                  <strong style="color: #a94442;"><i class="fa fa-exclamation-triangle"></i> PERHATIAN / KEWASPADAAN TRANSMISI KHUSUS:</strong><br>
-                  <span style="font-size: 13px; font-weight: bold; color: #a94442;">{?=isset_or($value.informasi_tambahan)?}</span>
-                  <div style="font-size: 11px; color: #777; margin-top: 4px;"><i class="fa fa-shield"></i> <em>Wajib gunakan APD sesuai SOP PPI & lakukan desinfeksi kaset/alat setelah tindakan.</em></div>
-                </div>
-              {elseif: stripos($value.informasi_tambahan, 'CITO') !== false}
-                <div class="alert alert-danger" style="margin-bottom: 5px; padding: 6px 10px; font-weight: bold;">
-                  <button type="button" class="btn btn-xs btn-default pull-right hapus_catatan_radiologi" data-noorder="{?=isset_or($value.noorder)?}" data-no_rawat="{?=isset_or($no_rawat)?}" style="color: #a94442; font-weight: bold; margin-top: -4px;">
-                    <i class="fa fa-trash"></i> Hapus
-                  </button>
-                  <i class="fa fa-bolt"></i> CITO / PRIORITAS: {?=isset_or($value.informasi_tambahan)?}
-                </div>
-              {elseif: stripos($value.informasi_tambahan, 'Hamil') !== false}
-                <div class="alert alert-warning" style="margin-bottom: 5px; padding: 6px 10px; font-weight: bold;">
-                  <button type="button" class="btn btn-xs btn-default pull-right hapus_catatan_radiologi" data-noorder="{?=isset_or($value.noorder)?}" data-no_rawat="{?=isset_or($no_rawat)?}" style="color: #8a6d3b; font-weight: bold; margin-top: -4px;">
-                    <i class="fa fa-trash"></i> Hapus
-                  </button>
-                  <i class="fa fa-female"></i> PERINGATAN RADIASI: {?=isset_or($value.informasi_tambahan)?}
-                </div>
-              {else}
-                <span class="label label-info" style="font-size: 12px; white-space: normal; display: inline-block;">{?=isset_or($value.informasi_tambahan)?}</span>
-                <button type="button" class="btn btn-xs btn-default pull-right hapus_catatan_radiologi" data-noorder="{?=isset_or($value.noorder)?}" data-no_rawat="{?=isset_or($no_rawat)?}" style="color: #a94442; font-weight: bold; margin-left: 5px;">
-                  <i class="fa fa-trash"></i> Hapus
-                </button>
-              {/if}
-            </td>
-          </tr>
-          {/if}
-        </table>
-        
-        <table class="table table-striped table-bordered" style="margin-bottom:0; border-left:none; border-right:none; border-bottom:none;">
-          <thead>
-            <tr class="active">
-              <th style="padding-left:15px;">Nama Pemeriksaan</th>
-              <th width="30%" class="text-center">Status Bayar</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loop: $value.permintaan_pemeriksaan_radiologi as $data}
-            <tr>
-              <td style="padding-left:15px;">{?=isset_or($data.nm_perawatan)?}</td>
-              <td class="text-center">
-                {if: $data.stts_bayar == 'Belum'}
-                  <span class="label label-danger">Belum</span>
-                {else}
-                  <span class="label label-success">Lunas</span>
-                {/if}
-              </td>
-            </tr>
-            {/loop}
-          </tbody>
-        </table>
-      </div>
-      <div class="panel-footer" style="background: #f9f9f9;">
-          <button type="button" class="btn btn-sm btn-default cetak_permintaan"><i class="fa fa-print"></i> Cetak</button>
-          
-          {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_update', 'radiologi') == true}
-          <div class="pull-right">
-            <button type="button"
-              class="btn btn-success btn-sm {if: $value.tgl_sampel !== '0000-00-00' || $value.jam_sampel !== '00:00:00'}disabled{else}validasi_permintaan_radiologi{/if}"
-              data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_permintaan="{?=isset_or($value.tgl_permintaan)?}"
-              data-jam_permintaan="{?=isset_or($value.jam_permintaan)?}" data-noorder="{?=isset_or($value.noorder)?}">
-              <i class="fa fa-check"></i> Validasi
-            </button>
-            
-            <button type="button"
-              class="btn btn-primary btn-sm {if: $value.tgl_hasil !== '0000-00-00' || $value.jam_hasil !== '00:00:00'}disabled{else}validasi_hasil_radiologi{/if}"
-              data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_permintaan="{?=isset_or($value.tgl_permintaan)?}"
-              data-jam_permintaan="{?=isset_or($value.jam_permintaan)?}" data-noorder="{?=isset_or($value.noorder)?}">
-              <i class="fa fa-check-square-o"></i> Selesai
-            </button>
-          </div>
-          {/if}
-          <div class="clearfix"></div>
+        </div>
+        {/loop}
       </div>
     </div>
+    {/if}
+
   </div>
-  {/loop}
-</div>
-{else}
-<div class="alert alert-info"><i class="fa fa-info-circle"></i> Tidak ada permintaan e-Radiologi.</div>
-{/if}
+
+  <!-- =========================================================
+   * KOLOM KIRI: PERMINTAAN E-RADIOLOGI
+   * ========================================================= -->
+  <div class="col-md-5 col-md-pull-7">
+    <div class="rsgm-rad-header-wrap">
+      <div class="rsgm-rad-title" style="font-size: 16px;">
+        <i class="fa fa-envelope-open-o text-warning"></i>
+        <span>Permintaan e-Radiologi</span>
+        {if: count($radiologi) > 0}
+        <span class="rsgm-badge-count" style="background:#fef3c7; color:#92400e; border-color:#fde68a;">{?=count($radiologi)?} Order</span>
+        {/if}
+      </div>
+    </div>
+
+    {if: count($radiologi) > 0}
+    <div>
+      {loop: $radiologi}
+      <div class="rsgm-rad-card" style="border-left: 4px solid #f59e0b;">
+        <div class="rsgm-rad-card-header" style="background: #fffbeb;">
+          <h4 style="margin:0; font-size: 13.5px; font-weight: 700; color: #92400e;">
+            <i class="fa fa-tag"></i> Order: <strong>{?=isset_or($value.noorder)?}</strong>
+          </h4>
+          <span style="font-size: 11.5px; color: #b45309;"><i class="fa fa-clock-o"></i> {?=isset_or($value.tgl_permintaan)?} {?=isset_or($value.jam_permintaan)?}</span>
+        </div>
+        <div style="padding: 12px 16px;">
+          <table class="table table-condensed table-borderless" style="margin-bottom:8px; font-size: 12.5px;">
+            <tr>
+              <td width="35%" style="color:#64748b; padding: 3px 0;"><strong>Dokter Perujuk</strong></td>
+              <td style="color:#0f172a; padding: 3px 0;">: {?=isset_or($value.nm_dokter, '-')?}</td>
+            </tr>
+            {if: !empty($value.diagnosa_klinis)}
+            <tr>
+              <td style="color:#64748b; padding: 3px 0;"><strong>Diagnosis Klinis</strong></td>
+              <td style="color:#0f172a; padding: 3px 0;">: {?=isset_or($value.diagnosa_klinis)?}</td>
+            </tr>
+            {/if}
+            {if: !empty($value.informasi_tambahan)}
+            <tr>
+              <td style="color:#64748b; padding: 3px 0; vertical-align: top;"><strong>Catatan Tambahan</strong></td>
+              <td style="padding: 3px 0;">: <span class="label label-info">{?=isset_or($value.informasi_tambahan)?}</span></td>
+            </tr>
+            {/if}
+          </table>
+
+          <table class="table table-bordered table-striped" style="margin-bottom:10px; font-size: 12px;">
+            <thead>
+              <tr style="background: #f8fafc;">
+                <th>Nama Pemeriksaan</th>
+                <th width="30%" class="text-center">Status Bayar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loop: $value.permintaan_pemeriksaan_radiologi as $data}
+              <tr>
+                <td>{?=isset_or($data.nm_perawatan)?}</td>
+                <td class="text-center">
+                  {if: $data.stts_bayar == 'Belum'}
+                    <span class="label label-danger">Belum</span>
+                  {else}
+                    <span class="label label-success">Lunas</span>
+                  {/if}
+                </td>
+              </tr>
+              {/loop}
+            </tbody>
+          </table>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; pt-2; border-top: 1px solid #f1f5f9; padding-top: 8px;">
+            <button type="button" class="btn btn-sm btn-default cetak_permintaan" style="font-weight: 600;"><i class="fa fa-print"></i> Cetak</button>
+            {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_update', 'radiologi') == true}
+            <div style="display: flex; gap: 6px;">
+              <button type="button"
+                class="btn btn-success btn-sm {if: $value.tgl_sampel !== '0000-00-00' || $value.jam_sampel !== '00:00:00'}disabled{else}validasi_permintaan_radiologi{/if}"
+                data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_permintaan="{?=isset_or($value.tgl_permintaan)?}"
+                data-jam_permintaan="{?=isset_or($value.jam_permintaan)?}" data-noorder="{?=isset_or($value.noorder)?}">
+                <i class="fa fa-check"></i> Validasi
+              </button>
+              
+              <button type="button"
+                class="btn btn-primary btn-sm {if: $value.tgl_hasil !== '0000-00-00' || $value.jam_hasil !== '00:00:00'}disabled{else}validasi_hasil_radiologi{/if}"
+                data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_permintaan="{?=isset_or($value.tgl_permintaan)?}"
+                data-jam_permintaan="{?=isset_or($value.jam_permintaan)?}" data-noorder="{?=isset_or($value.noorder)?}">
+                <i class="fa fa-check-square-o"></i> Selesai
+              </button>
+            </div>
+            {/if}
+          </div>
+
+        </div>
+      </div>
+      {/loop}
+    </div>
+    {else}
+    <div class="alert alert-info" style="border-radius: 8px;"><i class="fa fa-info-circle"></i> Tidak ada permintaan e-Radiologi aktif.</div>
+    {/if}
   </div>
 </div>
 
+<!-- =========================================================
+ * MODAL PACS WORKSTATION VIEWER PRO
+ * ========================================================= -->
 <div class="modal fade modal-pacs-dark" id="pacsViewerModal" tabindex="-1" role="dialog"
   aria-labelledby="pacsViewerModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg" style="width: 95vw; height: 95vh; margin: 2.5vh auto;" role="document">
-    <div class="modal-content" style="height: 100%;">
+    <div class="modal-content" style="height: 100%; display: flex; flex-direction: column;">
+      
+      <!-- Top Diagnostic Header & Controls -->
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-        <h4 class="modal-title" id="pacsViewerModalLabel">Mini PACS Viewer <small id="pacsGalleryCounter"
-            style="color: #aaa; margin-left: 10px;"></small></h4>
-      </div>
-      <div class="modal-body" style="padding: 0; height: calc(100% - 50px);">
-        <div id="pacsViewerImageContainer">
-          <button type="button" class="pacs-gallery-nav pacs-gallery-prev" id="prevPacsBtn"><i
-              class="fa fa-chevron-left"></i></button>
-          <img id="pacsViewerImage" src="" style="display:none;">
-          <iframe id="pacsViewerIframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
-          <button type="button" class="pacs-gallery-nav pacs-gallery-next" id="nextPacsBtn"><i
-              class="fa fa-chevron-right"></i></button>
+        <div class="modal-title" id="pacsViewerModalLabel">
+          <i class="fa fa-television text-info"></i>
+          <span>DICOM Viewer Pro</span>
+          <span id="pacsGalleryCounter" class="badge" style="background: #0284c7; margin-left: 8px;"></span>
+        </div>
+        
+        <div class="pacs-toolbar">
+          <button type="button" class="btn btn-dark-pacs" id="pacsZoomIn" title="Perbesar / Zoom In (+)"><i class="fa fa-search-plus"></i></button>
+          <button type="button" class="btn btn-dark-pacs" id="pacsZoomOut" title="Perkecil / Zoom Out (-)"><i class="fa fa-search-minus"></i></button>
+          <button type="button" class="btn btn-dark-pacs" id="pacsRotateLeft" title="Putar Kiri 90°"><i class="fa fa-rotate-left"></i></button>
+          <button type="button" class="btn btn-dark-pacs" id="pacsRotateRight" title="Putar Kanan 90°"><i class="fa fa-rotate-right"></i></button>
+          <button type="button" class="btn btn-dark-pacs" id="pacsInvert" title="Invert Contrast (Negative/Bone View)"><i class="fa fa-adjust"></i> Invert</button>
+          <button type="button" class="btn btn-dark-pacs" id="pacsBrightness" title="Atur Kecerahan (Brightness)"><i class="fa fa-sun-o"></i></button>
+          <button type="button" class="btn btn-dark-pacs" id="pacsReset" title="Reset Tampilan (0)"><i class="fa fa-refresh"></i> Reset</button>
+          <button type="button" class="btn btn-dark-pacs" id="pacsFullscreen" title="Layar Penuh"><i class="fa fa-arrows-alt"></i></button>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="margin-left: 10px;">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
       </div>
+
+      <!-- Main Viewer Viewport -->
+      <div class="modal-body" style="padding: 0; flex: 1; position: relative; overflow: hidden;">
+        <div id="pacsViewerImageContainer">
+          <button type="button" class="pacs-gallery-nav pacs-gallery-prev" id="prevPacsBtn" title="Gambar Sebelumnya (Panah Kiri)"><i class="fa fa-chevron-left"></i></button>
+          <img id="pacsViewerImage" src="" style="display:none;" draggable="false">
+          <iframe id="pacsViewerIframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+          <button type="button" class="pacs-gallery-nav pacs-gallery-next" id="nextPacsBtn" title="Gambar Berikutnya (Panah Kanan)"><i class="fa fa-chevron-right"></i></button>
+        </div>
+      </div>
+
+      <!-- Bottom Filmstrip Thumbnails -->
+      <div class="pacs-filmstrip-bar" id="pacsFilmstrip">
+        <!-- Injected dynamically via JS -->
+      </div>
+
     </div>
   </div>
 </div>
 
+<!-- Modal Respon Satu Sehat -->
 <div class="modal fade" id="satusehatModal" tabindex="-1" role="dialog" aria-labelledby="satusehatModalLabel">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
@@ -456,10 +942,43 @@
 </div>
 
 <script>
+  /* =========================================================
+   * LOGIKA PACS VIEWER PRO WORKSTATION
+   * ========================================================= */
   var pacsGallery = {
     images: [],
-    currentIndex: 0
+    thumbs: [],
+    currentIndex: 0,
+    zoom: 1.0,
+    rotate: 0,
+    invert: false,
+    brightness: 1.0
   };
+
+  function applyPacsTransform() {
+    var filterStr = "";
+    if (pacsGallery.invert) filterStr += " invert(1)";
+    if (pacsGallery.brightness !== 1.0) filterStr += " brightness(" + pacsGallery.brightness + ")";
+    
+    $("#pacsViewerImage").css({
+      "transform": "scale(" + pacsGallery.zoom + ") rotate(" + pacsGallery.rotate + "deg)",
+      "filter": filterStr.trim()
+    });
+
+    if (pacsGallery.invert) {
+      $("#pacsInvert").addClass("active");
+    } else {
+      $("#pacsInvert").removeClass("active");
+    }
+  }
+
+  function resetPacsTransform() {
+    pacsGallery.zoom = 1.0;
+    pacsGallery.rotate = 0;
+    pacsGallery.invert = false;
+    pacsGallery.brightness = 1.0;
+    applyPacsTransform();
+  }
 
   function updatePacsGallery() {
     if (pacsGallery.images.length <= 1) {
@@ -470,26 +989,43 @@
     }
 
     var currentUrl = pacsGallery.images[pacsGallery.currentIndex];
+    resetPacsTransform();
 
     // Check if it's an image endpoint
-    if (currentUrl.indexOf('instancejpg') !== -1) {
+    if (currentUrl.indexOf('instancejpg') !== -1 || currentUrl.match(/\.(jpg|jpeg|png|webp)/i)) {
       $("#pacsViewerIframe").hide().attr("src", "");
       $("#pacsViewerImage").show().attr("src", currentUrl);
+      $(".pacs-toolbar button:not(.close)").show();
     } else {
       $("#pacsViewerImage").hide().attr("src", "");
       $("#pacsViewerIframe").show().attr("src", currentUrl);
+      $(".pacs-toolbar button:not(.close)").hide();
     }
+
+    // Update filmstrip active state
+    $(".pacs-filmstrip-item").removeClass("active");
+    $(".pacs-filmstrip-item[data-idx='" + pacsGallery.currentIndex + "']").addClass("active");
   }
 
+  // Open Viewer Modal Handler
   $("#rincian").off("click", ".open_viewer_modal").on("click", ".open_viewer_modal", function (event) {
     event.preventDefault();
     var studyId = $(this).attr("data-gallery");
     var currentUrl = $(this).attr("data-url");
 
-    // Re-collect images in same gallery
     pacsGallery.images = [];
+    pacsGallery.thumbs = [];
+    $("#pacsFilmstrip").empty();
+
+    var idx = 0;
     $('.open_viewer_modal[data-gallery="' + studyId + '"]').each(function () {
-      pacsGallery.images.push($(this).attr("data-url"));
+      var imgUrl = $(this).attr("data-url");
+      pacsGallery.images.push(imgUrl);
+
+      var thumbSrc = $(this).find('img').attr('src') || imgUrl;
+      var filmItem = $('<div class="pacs-filmstrip-item" data-idx="' + idx + '" title="Gambar ' + (idx + 1) + '"><img src="' + thumbSrc + '"></div>');
+      $("#pacsFilmstrip").append(filmItem);
+      idx++;
     });
 
     pacsGallery.currentIndex = pacsGallery.images.indexOf(currentUrl);
@@ -499,41 +1035,138 @@
     $("#pacsViewerModal").modal('show');
   });
 
-  $("#prevPacsBtn").on("click", function () {
+  // Filmstrip Item Click
+  $("#pacsFilmstrip").off("click", ".pacs-filmstrip-item").on("click", ".pacs-filmstrip-item", function () {
+    var idx = parseInt($(this).attr("data-idx"));
+    if (!isNaN(idx) && idx >= 0 && idx < pacsGallery.images.length) {
+      pacsGallery.currentIndex = idx;
+      updatePacsGallery();
+    }
+  });
+
+  // Controls: Prev & Next
+  $("#prevPacsBtn").off("click").on("click", function () {
     if (pacsGallery.currentIndex > 0) {
       pacsGallery.currentIndex--;
-      updatePacsGallery();
     } else {
       pacsGallery.currentIndex = pacsGallery.images.length - 1;
-      updatePacsGallery();
     }
+    updatePacsGallery();
   });
 
-  $("#nextPacsBtn").on("click", function () {
+  $("#nextPacsBtn").off("click").on("click", function () {
     if (pacsGallery.currentIndex < pacsGallery.images.length - 1) {
       pacsGallery.currentIndex++;
-      updatePacsGallery();
     } else {
       pacsGallery.currentIndex = 0;
-      updatePacsGallery();
+    }
+    updatePacsGallery();
+  });
+
+  // Diagnostics Toolbar Actions
+  $("#pacsZoomIn").off("click").on("click", function () {
+    if (pacsGallery.zoom < 4.0) {
+      pacsGallery.zoom += 0.25;
+      applyPacsTransform();
     }
   });
 
-  $(document).on("keydown", function (e) {
+  $("#pacsZoomOut").off("click").on("click", function () {
+    if (pacsGallery.zoom > 0.4) {
+      pacsGallery.zoom -= 0.25;
+      applyPacsTransform();
+    }
+  });
+
+  $("#pacsRotateLeft").off("click").on("click", function () {
+    pacsGallery.rotate = (pacsGallery.rotate - 90) % 360;
+    applyPacsTransform();
+  });
+
+  $("#pacsRotateRight").off("click").on("click", function () {
+    pacsGallery.rotate = (pacsGallery.rotate + 90) % 360;
+    applyPacsTransform();
+  });
+
+  $("#pacsInvert").off("click").on("click", function () {
+    pacsGallery.invert = !pacsGallery.invert;
+    applyPacsTransform();
+  });
+
+  $("#pacsBrightness").off("click").on("click", function () {
+    if (pacsGallery.brightness === 1.0) pacsGallery.brightness = 1.3;
+    else if (pacsGallery.brightness === 1.3) pacsGallery.brightness = 1.6;
+    else if (pacsGallery.brightness === 1.6) pacsGallery.brightness = 0.7;
+    else pacsGallery.brightness = 1.0;
+    applyPacsTransform();
+  });
+
+  $("#pacsReset").off("click").on("click", function () {
+    resetPacsTransform();
+  });
+
+  $("#pacsFullscreen").off("click").on("click", function () {
+    var el = document.getElementById("pacsViewerModal");
+    if (!document.fullscreenElement) {
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    } else {
+      if (document.exitFullscreen) document.exitFullscreen();
+    }
+  });
+
+  // Keyboard Shortcuts for PACS Viewer
+  $(document).off("keydown.pacsViewer").on("keydown.pacsViewer", function (e) {
     if ($("#pacsViewerModal").is(":visible")) {
       if (e.keyCode === 37) { // Left
         $("#prevPacsBtn").click();
       } else if (e.keyCode === 39) { // Right
         $("#nextPacsBtn").click();
+      } else if (e.key === "+" || e.key === "=") {
+        $("#pacsZoomIn").click();
+      } else if (e.key === "-" || e.key === "_") {
+        $("#pacsZoomOut").click();
+      } else if (e.key === "r" || e.key === "R") {
+        $("#pacsRotateRight").click();
+      } else if (e.key === "i" || e.key === "I") {
+        $("#pacsInvert").click();
+      } else if (e.key === "0") {
+        $("#pacsReset").click();
       }
     }
   });
 
+  // Clean on Close
   $('#pacsViewerModal').off('hidden.bs.modal').on('hidden.bs.modal', function () {
     $("#pacsViewerIframe").attr("src", "");
     $("#pacsViewerImage").attr("src", "");
+    resetPacsTransform();
   });
 
+  /* =========================================================
+   * HANDLER CETAK SEMUA HASIL & ITEM SEKALIGUS
+   * ========================================================= */
+  $("#rincian").off("click", ".cetak_hasil").on("click", ".cetak_hasil", function(event){
+    var baseURL = mlite.url + '/' + mlite.admin;
+    event.preventDefault();
+    var no_rawat = $(this).attr("data-no_rawat") || $('input:text[name=no_rawat]').val() || $('input[name=no_rawat]').val();
+    var tgl_periksa = $(this).attr("data-tgl_periksa");
+    var jam = $(this).attr("data-jam_periksa");
+    var status = $(this).attr("data-status") || $('input:text[name=status]').val() || 'Ralan';
+    window.open(baseURL + '/radiologi/cetakhasil?no_rawat=' + encodeURIComponent(no_rawat) + '&tgl_periksa=' + encodeURIComponent(tgl_periksa) + '&jam=' + encodeURIComponent(jam) + '&status=' + encodeURIComponent(status) + '&t=' + mlite.token);
+  });
+
+  $("#rincian").off("click", ".cetak_hasil_semua").on("click", ".cetak_hasil_semua", function(event){
+    var baseURL = mlite.url + '/' + mlite.admin;
+    event.preventDefault();
+    var no_rawat = $(this).attr("data-no_rawat") || $('input:text[name=no_rawat]').val() || $('input[name=no_rawat]').val();
+    var status = $(this).attr("data-status") || $('input:text[name=status]').val() || 'Ralan';
+    window.open(baseURL + '/radiologi/cetakhasil?no_rawat=' + encodeURIComponent(no_rawat) + '&jam=all&status=' + encodeURIComponent(status) + '&t=' + mlite.token);
+  });
+
+  /* =========================================================
+   * HANDLERS DICOM ROUTER & SATU SEHAT (PRESERVED)
+   * ========================================================= */
   $("#rincian").off("click", ".send_dicom_router").on("click", ".send_dicom_router", function (event) {
     event.preventDefault();
     var instance_id = $(this).attr("data-id");
@@ -548,7 +1181,7 @@
         if (res.status === 'success') {
           bootbox.alert({
             title: "Pengiriman DICOM Berhasil",
-            message: "Proses C-STORE ke Router telah djalankan<br><div style='max-height: 200px; overflow-y: auto; background:#333; color:#fff; padding:10px; border-radius:4px; font-family:monospace; margin-top:10px; font-size:12px; white-space:pre-wrap;'>" + res.log + "</div>"
+            message: "Proses C-STORE ke Router telah dijalankan<br><div style='max-height: 200px; overflow-y: auto; background:#333; color:#fff; padding:10px; border-radius:4px; font-family:monospace; margin-top:10px; font-size:12px; white-space:pre-wrap;'>" + res.log + "</div>"
           });
         } else {
           bootbox.alert("Gagal: " + res.message);
@@ -565,10 +1198,9 @@
   $("#rincian").off("click", ".btn-send-satusehat").on("click", ".btn-send-satusehat", function (e) {
     e.preventDefault();
     var id = $(this).data("id");
-    alert(id);
     if (confirm("Kirim DICOM ke Satu Sehat?")) {
       var btn = $(this);
-      var oText = '<i class="fa fa-cloud-upload"></i> Kirim ke Satu Sehat'; // fixed fallback
+      var oText = '<i class="fa fa-cloud-upload"></i> Kirim ke Satu Sehat';
       btn.html('<i class="fa fa-spinner fa-spin"></i> Loading...').prop("disabled", true);
 
       $.ajax({
@@ -598,5 +1230,4 @@
       });
     }
   });
-
 </script>

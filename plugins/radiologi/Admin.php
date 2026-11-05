@@ -1101,10 +1101,11 @@ class Admin extends AdminModule
       $this->tpl->noParse_array(htmlspecialchars_array($settings))
     );
 
-    $no_rawat = $_GET['no_rawat'];
-    $tgl = $_GET['tgl_periksa'];
-    $jam = $_GET['jam'];
-    $status = $_GET['status'];
+    $no_rawat = $_GET['no_rawat'] ?? '';
+    $tgl = $_GET['tgl_periksa'] ?? '';
+    $jam = $_GET['jam'] ?? '';
+    $status = $_GET['status'] ?? '';
+    $is_all = (empty($jam) || $jam === 'all');
 
     /* =======================
      * PJ RADIOLOGI + QR
@@ -1113,21 +1114,34 @@ class Admin extends AdminModule
       ->where('kd_dokter', $this->settings->get('settings.pj_radiologi'))
       ->oneArray();
 
-    $ref_id = 'radiologi_' . str_replace('/', '', $no_rawat) . '_' . $tgl . '_' . str_replace(':', '', $jam);
-    try {
-        $signature = $this->db('mlite_esignatures')
-          ->where('ref_type', 'radiologi_hasil')
-          ->where('ref_id', $ref_id)
-          ->oneArray();
-    } catch (\Throwable $e) {
-        $signature = null;
+    if ($is_all) {
+      $ref_id = 'radiologi_' . str_replace('/', '', $no_rawat);
+      try {
+          $signature = $this->db('mlite_esignatures')
+            ->where('ref_type', 'radiologi_hasil')
+            ->like('ref_id', $ref_id . '%')
+            ->desc('id')
+            ->oneArray();
+      } catch (\Throwable $e) {
+          $signature = null;
+      }
+    } else {
+      $ref_id = 'radiologi_' . str_replace('/', '', $no_rawat) . '_' . $tgl . '_' . str_replace(':', '', $jam);
+      try {
+          $signature = $this->db('mlite_esignatures')
+            ->where('ref_type', 'radiologi_hasil')
+            ->where('ref_id', $ref_id)
+            ->oneArray();
+      } catch (\Throwable $e) {
+          $signature = null;
+      }
     }
 
     if ($signature) {
         $qrUrl = $signature['signature_hash'];
         $qr = QRCode::getMinimumQRCode($qrUrl, QR_ERROR_CORRECT_LEVEL_L);
     } else {
-        $qr = QRCode::getMinimumQRCode($pj_radiologi['nm_dokter'], QR_ERROR_CORRECT_LEVEL_L);
+        $qr = QRCode::getMinimumQRCode($pj_radiologi['nm_dokter'] ?? 'Dokter Radiologi', QR_ERROR_CORRECT_LEVEL_L);
     }
     $im = $qr->createImage(4, 4);
     $qrPath = BASE_DIR . '/' . ADMIN . '/tmp/qrcode.png';
@@ -1145,27 +1159,117 @@ class Admin extends AdminModule
       ->where('no_rawat', $no_rawat)
       ->oneArray();
 
-    $dokter_perujuk = $this->db('periksa_radiologi')
-      ->join('pegawai', 'pegawai.nik=periksa_radiologi.dokter_perujuk')
-      ->where('no_rawat', $no_rawat)
-      ->where('tgl_periksa', $tgl)
-      ->where('jam', $jam)
-      ->oneArray();
-
     /* =======================
-     * PERIKSA RADIOLOGI
+     * PERIKSA RADIOLOGI & DOKTER PERUJUK
      * ======================= */
-    $rows = $this->db('periksa_radiologi')
-      ->join('jns_perawatan_radiologi', 'jns_perawatan_radiologi.kd_jenis_prw=periksa_radiologi.kd_jenis_prw')
-      ->join('reg_periksa', 'reg_periksa.no_rawat=periksa_radiologi.no_rawat')
-      ->join('dokter', 'dokter.kd_dokter=periksa_radiologi.kd_dokter')
-      ->join('penjab', 'penjab.kd_pj=reg_periksa.kd_pj')
-      ->join('petugas', 'petugas.nip=periksa_radiologi.nip')
-      ->where('periksa_radiologi.status', $status)
-      ->where('periksa_radiologi.no_rawat', $no_rawat)
-      ->where('periksa_radiologi.tgl_periksa', $tgl)
-      ->where('periksa_radiologi.jam', $jam)
-      ->toArray();
+    if ($is_all) {
+      $dokter_perujuk = $this->db('periksa_radiologi')
+        ->join('pegawai', 'pegawai.nik=periksa_radiologi.dokter_perujuk')
+        ->where('no_rawat', $no_rawat)
+        ->oneArray();
+
+      if (!$dokter_perujuk) {
+        $dokter_perujuk = $this->db('reg_periksa')
+          ->join('dokter', 'dokter.kd_dokter=reg_periksa.kd_dokter')
+          ->where('no_rawat', $no_rawat)
+          ->select(['dokter.nm_dokter as nama', 'reg_periksa.no_rawat', 'reg_periksa.tgl_registrasi as tgl_periksa', 'reg_periksa.kd_poli'])
+          ->oneArray();
+      }
+
+      $rowsQuery = $this->db('periksa_radiologi')
+        ->join('jns_perawatan_radiologi', 'jns_perawatan_radiologi.kd_jenis_prw=periksa_radiologi.kd_jenis_prw')
+        ->join('reg_periksa', 'reg_periksa.no_rawat=periksa_radiologi.no_rawat')
+        ->join('dokter', 'dokter.kd_dokter=periksa_radiologi.kd_dokter')
+        ->join('penjab', 'penjab.kd_pj=reg_periksa.kd_pj')
+        ->join('petugas', 'petugas.nip=periksa_radiologi.nip')
+        ->where('periksa_radiologi.no_rawat', $no_rawat);
+
+      if (!empty($status)) {
+        $rowsQuery = $rowsQuery->where('periksa_radiologi.status', $status);
+      }
+      if (!empty($tgl)) {
+        $rowsQuery = $rowsQuery->where('periksa_radiologi.tgl_periksa', $tgl);
+      }
+      $rows = $rowsQuery->toArray();
+
+      if (empty($rows)) {
+        $rows = $this->db('periksa_radiologi')
+          ->join('jns_perawatan_radiologi', 'jns_perawatan_radiologi.kd_jenis_prw=periksa_radiologi.kd_jenis_prw')
+          ->join('reg_periksa', 'reg_periksa.no_rawat=periksa_radiologi.no_rawat')
+          ->join('dokter', 'dokter.kd_dokter=periksa_radiologi.kd_dokter')
+          ->join('penjab', 'penjab.kd_pj=reg_periksa.kd_pj')
+          ->join('petugas', 'petugas.nip=periksa_radiologi.nip')
+          ->where('periksa_radiologi.no_rawat', $no_rawat)
+          ->toArray();
+      }
+
+      $hasilQuery = $this->db('hasil_radiologi')->where('no_rawat', $no_rawat);
+      if (!empty($tgl)) {
+        $hasilQuery = $hasilQuery->where('tgl_periksa', $tgl);
+      }
+      $hasil_radiologi = $hasilQuery->toArray();
+
+      $gambarQuery = $this->db('gambar_radiologi')->where('no_rawat', $no_rawat);
+      if (!empty($tgl)) {
+        $gambarQuery = $gambarQuery->where('tgl_periksa', $tgl);
+      }
+      $gambar_radiologi = $gambarQuery->toArray();
+
+    } else {
+      $dokter_perujuk = $this->db('periksa_radiologi')
+        ->join('pegawai', 'pegawai.nik=periksa_radiologi.dokter_perujuk')
+        ->where('no_rawat', $no_rawat)
+        ->where('tgl_periksa', $tgl)
+        ->where('jam', $jam)
+        ->oneArray();
+
+      if (!$dokter_perujuk) {
+        $dokter_perujuk = $this->db('reg_periksa')
+          ->join('dokter', 'dokter.kd_dokter=reg_periksa.kd_dokter')
+          ->where('no_rawat', $no_rawat)
+          ->select(['dokter.nm_dokter as nama', 'reg_periksa.no_rawat', 'reg_periksa.tgl_registrasi as tgl_periksa', 'reg_periksa.kd_poli'])
+          ->oneArray();
+      }
+
+      $rowsQuery = $this->db('periksa_radiologi')
+        ->join('jns_perawatan_radiologi', 'jns_perawatan_radiologi.kd_jenis_prw=periksa_radiologi.kd_jenis_prw')
+        ->join('reg_periksa', 'reg_periksa.no_rawat=periksa_radiologi.no_rawat')
+        ->join('dokter', 'dokter.kd_dokter=periksa_radiologi.kd_dokter')
+        ->join('penjab', 'penjab.kd_pj=reg_periksa.kd_pj')
+        ->join('petugas', 'petugas.nip=periksa_radiologi.nip')
+        ->where('periksa_radiologi.no_rawat', $no_rawat)
+        ->where('periksa_radiologi.tgl_periksa', $tgl)
+        ->where('periksa_radiologi.jam', $jam);
+
+      if (!empty($status)) {
+        $rowsQuery = $rowsQuery->where('periksa_radiologi.status', ucfirst(strtolower($status)));
+      }
+      $rows = $rowsQuery->toArray();
+
+      if (empty($rows)) {
+        $rows = $this->db('periksa_radiologi')
+          ->join('jns_perawatan_radiologi', 'jns_perawatan_radiologi.kd_jenis_prw=periksa_radiologi.kd_jenis_prw')
+          ->join('reg_periksa', 'reg_periksa.no_rawat=periksa_radiologi.no_rawat')
+          ->join('dokter', 'dokter.kd_dokter=periksa_radiologi.kd_dokter')
+          ->join('penjab', 'penjab.kd_pj=reg_periksa.kd_pj')
+          ->join('petugas', 'petugas.nip=periksa_radiologi.nip')
+          ->where('periksa_radiologi.no_rawat', $no_rawat)
+          ->where('periksa_radiologi.jam', $jam)
+          ->toArray();
+      }
+
+      $hasil_radiologi = $this->db('hasil_radiologi')
+        ->where('no_rawat', $no_rawat)
+        ->where('tgl_periksa', $tgl)
+        ->where('jam', $jam)
+        ->toArray();
+
+      $gambar_radiologi = $this->db('gambar_radiologi')
+        ->where('no_rawat', $no_rawat)
+        ->where('tgl_periksa', $tgl)
+        ->where('jam', $jam)
+        ->toArray();
+    }
 
     $periksa_radiologi = [];
     $jumlah_total_radiologi = 0;
@@ -1174,28 +1278,44 @@ class Admin extends AdminModule
     foreach ($rows as $row) {
       $jumlah_total_radiologi += $row['biaya'];
       $row['nomor'] = $no++;
-      $row['status_periksa'] = $status;
+      $row['status_periksa'] = !empty($row['status']) ? $row['status'] : $status;
       $periksa_radiologi[] = $row;
     }
 
-    $hasil_radiologi = $this->db('hasil_radiologi')
-      ->where('no_rawat', $no_rawat)
-      ->where('tgl_periksa', $tgl)
-      ->where('jam', $jam)
-      ->toArray();
+    // Hubungkan nama pemeriksaan ke setiap hasil radiologi
+    foreach ($hasil_radiologi as &$h) {
+      $matched = $this->db('periksa_radiologi')
+        ->join('jns_perawatan_radiologi', 'jns_perawatan_radiologi.kd_jenis_prw=periksa_radiologi.kd_jenis_prw')
+        ->where('periksa_radiologi.no_rawat', $no_rawat)
+        ->where('periksa_radiologi.tgl_periksa', $h['tgl_periksa'])
+        ->where('periksa_radiologi.jam', $h['jam'])
+        ->oneArray();
+      $h['nm_perawatan'] = $matched['nm_perawatan'] ?? '';
+    }
+    unset($h);
 
-    $gambar_radiologi = $this->db('gambar_radiologi')
-      ->where('no_rawat', $no_rawat)
-      ->where('tgl_periksa', $tgl)
-      ->where('jam', $jam)
-      ->toArray();
+    // Hubungkan nama pemeriksaan ke setiap gambar radiologi
+    foreach ($gambar_radiologi as &$g) {
+      $matched = $this->db('periksa_radiologi')
+        ->join('jns_perawatan_radiologi', 'jns_perawatan_radiologi.kd_jenis_prw=periksa_radiologi.kd_jenis_prw')
+        ->where('periksa_radiologi.no_rawat', $no_rawat)
+        ->where('periksa_radiologi.tgl_periksa', $g['tgl_periksa'])
+        ->where('periksa_radiologi.jam', $g['jam'])
+        ->oneArray();
+      $g['nm_perawatan'] = $matched['nm_perawatan'] ?? '';
+    }
+    unset($g);
 
     /* =======================
      * FILENAME PDF
      * ======================= */
-    $filename = convertNorawat($dokter_perujuk['no_rawat'])
-      . '_' . $dokter_perujuk['kd_jenis_prw']
-      . '_' . $dokter_perujuk['tgl_periksa'];
+    if ($is_all) {
+      $filename = convertNorawat($no_rawat) . '_SEMUA_RADIOLOGI_' . ($tgl ?: date('Y-m-d'));
+    } else {
+      $filename = convertNorawat($dokter_perujuk['no_rawat'] ?? $no_rawat)
+        . '_' . ($dokter_perujuk['kd_jenis_prw'] ?? 'RAD')
+        . '_' . ($dokter_perujuk['tgl_periksa'] ?? ($tgl ?: date('Y-m-d')));
+    }
 
     $pdfPath = UPLOADS . '/radiologi/' . $filename . '.pdf';
     if (file_exists($pdfPath)) {
@@ -1214,10 +1334,11 @@ class Admin extends AdminModule
             'gambar_radiologi' => $gambar_radiologi,
             'jumlah_total_radiologi' => $jumlah_total_radiologi,
             'qrCode' => $qrCode,
-            'pj_radiologi' => $pj_radiologi['nm_dokter'],
-            'dokter_perujuk' => htmlspecialchars_array($dokter_perujuk)['nama'],
+            'pj_radiologi' => $pj_radiologi['nm_dokter'] ?? '',
+            'dokter_perujuk' => htmlspecialchars_array($dokter_perujuk)['nama'] ?? ($dokter_perujuk['nm_dokter'] ?? '-'),
             'pasien' => $pasien,
             'filename' => $filename,
+            'is_all' => $is_all,
             'no_rawat' => htmlspecialchars($_GET['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             'wagateway' => $this->settings->get('wagateway'),
             'signature' => $signature
@@ -1230,9 +1351,10 @@ class Admin extends AdminModule
     $this->tpl->set('gambar_radiologi', $gambar_radiologi);
     $this->tpl->set('jumlah_total_radiologi', $jumlah_total_radiologi);
     $this->tpl->set('qrCode', $qrCode);
-    $this->tpl->set('pj_radiologi', $pj_radiologi['nm_dokter']);
-    $this->tpl->set('dokter_perujuk', $dokter_perujuk['nama']);
+    $this->tpl->set('pj_radiologi', $pj_radiologi['nm_dokter'] ?? '');
+    $this->tpl->set('dokter_perujuk', $dokter_perujuk['nama'] ?? ($dokter_perujuk['nm_dokter'] ?? '-'));
     $this->tpl->set('pasien', $pasien);
+    $this->tpl->set('is_all', $is_all);
     $this->tpl->set('filename', $filename);
     $this->tpl->set('no_rawat', $no_rawat);
     $this->tpl->set('wagateway', $this->settings->get('wagateway'));

@@ -109,14 +109,22 @@ $("#display").on("click",".antrian", function(event){
   window.open(baseURL + '/radiologi/antrian?no_rawat=' + no_rawat + '&t=' + mlite.token);
 });
 
-$("#rincian").on("click",".cetak_hasil", function(event){
+$("#rincian").off("click", ".cetak_hasil").on("click", ".cetak_hasil", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
-  var no_rawat = $('input:text[name=no_rawat]').val();
+  var no_rawat = $(this).attr("data-no_rawat") || $('input:text[name=no_rawat]').val() || $('input[name=no_rawat]').val();
   var tgl_periksa = $(this).attr("data-tgl_periksa");
   var jam = $(this).attr("data-jam_periksa");
-  var status = $('input:text[name=status]').val();
-  window.open(baseURL + '/radiologi/cetakhasil?no_rawat=' + no_rawat + '&tgl_periksa=' + tgl_periksa + '&jam=' + jam + '&status=' + status + '&t=' + mlite.token);
+  var status = $(this).attr("data-status") || $('input:text[name=status]').val() || 'Ralan';
+  window.open(baseURL + '/radiologi/cetakhasil?no_rawat=' + encodeURIComponent(no_rawat) + '&tgl_periksa=' + encodeURIComponent(tgl_periksa) + '&jam=' + encodeURIComponent(jam) + '&status=' + encodeURIComponent(status) + '&t=' + mlite.token);
+});
+
+$("#rincian").off("click", ".cetak_hasil_semua").on("click", ".cetak_hasil_semua", function(event){
+  var baseURL = mlite.url + '/' + mlite.admin;
+  event.preventDefault();
+  var no_rawat = $(this).attr("data-no_rawat") || $('input:text[name=no_rawat]').val() || $('input[name=no_rawat]').val();
+  var status = $(this).attr("data-status") || $('input:text[name=status]').val() || 'Ralan';
+  window.open(baseURL + '/radiologi/cetakhasil?no_rawat=' + encodeURIComponent(no_rawat) + '&jam=all&status=' + encodeURIComponent(status) + '&t=' + mlite.token);
 });
 
 $("#rincian").on("click",".cetak_permintaan", function(event){
