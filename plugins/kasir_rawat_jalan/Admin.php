@@ -1335,6 +1335,7 @@ class Admin extends AdminModule
       $pos_billing = [
         'pendaftaran' => [
           'nama' => 'Pendaftaran',
+          'ada' => ($biaya_registrasi_asli > 0),
           'tagihan_asli' => $biaya_registrasi_asli,
           'tagihan' => $tagihan_pendaftaran,
           'tagihan_coass' => $coass_registrasi,
@@ -1344,6 +1345,7 @@ class Admin extends AdminModule
         ],
         'tindakan' => [
           'nama' => 'Tindakan',
+          'ada' => !empty($tindakan),
           'tagihan_asli' => $biaya_tindakan_asli,
           'tagihan' => $tagihan_tindakan,
           'tagihan_coass' => $coass_tindakan,
@@ -1353,6 +1355,7 @@ class Admin extends AdminModule
         ],
         'obat' => [
           'nama' => 'Obat dan BHP',
+          'ada' => !empty($detail_pemberian_obat) || !empty($rows_obat_racikan),
           'tagihan_asli' => $biaya_obat_asli,
           'tagihan' => $tagihan_obat,
           'tagihan_coass' => $coass_obat,
@@ -1362,6 +1365,7 @@ class Admin extends AdminModule
         ],
         'laboratorium' => [
           'nama' => 'Laboratorium',
+          'ada' => !empty($periksa_lab),
           'tagihan_asli' => $biaya_lab_asli,
           'tagihan' => $tagihan_lab,
           'tagihan_coass' => $coass_lab,
@@ -1371,6 +1375,7 @@ class Admin extends AdminModule
         ],
         'radiologi' => [
           'nama' => 'Radiologi',
+          'ada' => !empty($periksa_radiologi),
           'tagihan_asli' => $biaya_rad_asli,
           'tagihan' => $tagihan_rad,
           'tagihan_coass' => $coass_rad,
@@ -1380,6 +1385,7 @@ class Admin extends AdminModule
         ],
         'operasi' => [
           'nama' => 'Operasi',
+          'ada' => !empty($jumlah_total_operasi) || !empty($biaya_operasi_total),
           'tagihan_asli' => $biaya_operasi_asli,
           'tagihan' => $tagihan_operasi,
           'tagihan_coass' => $coass_operasi,
@@ -1389,6 +1395,7 @@ class Admin extends AdminModule
         ],
         'obat_pulang' => [
           'nama' => 'Obat Pulang',
+          'ada' => !empty($resep_pulang),
           'tagihan_asli' => $biaya_obat_pulang_asli,
           'tagihan' => $tagihan_obat_pulang,
           'tagihan_coass' => $coass_obat_pulang,
@@ -1398,6 +1405,7 @@ class Admin extends AdminModule
         ],
         'tambahan' => [
           'nama' => 'Biaya Tambahan',
+          'ada' => !empty($tambahan_biaya),
           'tagihan_asli' => $biaya_tambahan_asli,
           'tagihan' => $tagihan_tambahan,
           'tagihan_coass' => $coass_tambahan,
@@ -1410,6 +1418,22 @@ class Admin extends AdminModule
       $grand_total_tagihan = $tagihan_pendaftaran + $tagihan_tindakan + $tagihan_obat + $tagihan_lab + $tagihan_rad + $tagihan_operasi + $tagihan_obat_pulang + $tagihan_tambahan;
       $grand_total_coass = $coass_registrasi + $coass_tindakan + $coass_obat + $coass_lab + $coass_rad + $coass_operasi + $coass_obat_pulang + $coass_tambahan;
       $grand_total_sisa = max(0, $grand_total_tagihan - $total_sudah_bayar_sebelumnya);
+
+      $has_tindakan = !empty($tindakan);
+      $has_obat = !empty($detail_pemberian_obat) || !empty($rows_obat_racikan);
+      $has_lab = !empty($periksa_lab);
+      $has_rad = !empty($periksa_radiologi);
+      $has_operasi = !empty($jumlah_total_operasi) || !empty($biaya_operasi_total);
+      $has_obat_pulang = !empty($resep_pulang);
+      $has_tambahan = !empty($tambahan_biaya);
+
+      $has_layanan_poli = $has_tindakan || $has_obat || $has_lab || $has_rad || $has_operasi || $has_obat_pulang || $has_tambahan;
+
+      $has_pemeriksaan_ralan = $this->db('pemeriksaan_ralan')->where('no_rawat', $no_rawat)->oneArray();
+      $has_diagnosa = $this->db('diagnosa_pasien')->where('no_rawat', $no_rawat)->oneArray();
+      $stts_periksa = $pasien['stts'] ?? '';
+
+      $has_perawatan_poli = $has_layanan_poli || !empty($has_pemeriksaan_ralan) || !empty($has_diagnosa) || ($stts_periksa == 'Sudah');
 
       echo $this->draw('rincian.html', [
         'rawat_jl_dr' => $rawat_jl_dr,
@@ -1442,6 +1466,9 @@ class Admin extends AdminModule
         'total_sudah_bayar_sebelumnya' => $total_sudah_bayar_sebelumnya,
         'grand_total_tagihan' => $grand_total_tagihan,
         'grand_total_sisa' => $grand_total_sisa,
+        'has_layanan_poli' => $has_layanan_poli,
+        'has_perawatan_poli' => $has_perawatan_poli,
+        'stts_periksa' => $stts_periksa,
         'pasien' => htmlspecialchars_array($pasien ?? []),
         'no_rawat' => htmlspecialchars($_POST['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
       ]);
@@ -1839,7 +1866,7 @@ class Admin extends AdminModule
         if (!empty($alokasi) && is_array($alokasi)) {
           foreach ($alokasi as $kat => $val) {
             $bayar_pos = floatval($val['bayar'] ?? 0);
-            if ($bayar_pos > 0 || floatval($val['tagihan'] ?? 0) > 0) {
+            if ($bayar_pos > 0 || floatval($val['tagihan'] ?? 0) > 0 || !empty($val['nama'])) {
               $this->db('mlite_billing_rincian')->save([
                 'kd_billing' => $_POST['kd_billing'],
                 'no_rawat' => $_POST['no_rawat'],
@@ -1900,6 +1927,12 @@ class Admin extends AdminModule
 
         $status_bayar = ($total_layanan == 0 || $total_terbayar >= $total_layanan) ? 'Sudah Bayar' : 'Belum Bayar';
         $this->db('reg_periksa')->where('no_rawat', $no_rawat)->update(['status_bayar' => $status_bayar]);
+
+        if ($status_bayar === 'Sudah Bayar') {
+          $pdo->prepare("UPDATE rawat_jl_dr SET stts_bayar = 'Sudah' WHERE no_rawat = ? AND stts_bayar = 'Belum'")->execute([$no_rawat]);
+          $pdo->prepare("UPDATE rawat_jl_pr SET stts_bayar = 'Sudah' WHERE no_rawat = ? AND stts_bayar = 'Belum'")->execute([$no_rawat]);
+          $pdo->prepare("UPDATE rawat_jl_drpr SET stts_bayar = 'Sudah' WHERE no_rawat = ? AND stts_bayar = 'Belum'")->execute([$no_rawat]);
+        }
       }
       exit();
     }
@@ -2004,6 +2037,12 @@ class Admin extends AdminModule
         $status_bayar = ($hasBilling && ($total_layanan == 0 || $total_terbayar >= $total_layanan)) ? 'Sudah Bayar' : 'Belum Bayar';
         $updStts = $pdo->prepare("UPDATE reg_periksa SET status_bayar = ? WHERE no_rawat = ?");
         $updStts->execute([$status_bayar, $no_rawat]);
+
+        if (!$hasBilling) {
+          $pdo->prepare("UPDATE rawat_jl_dr SET stts_bayar = 'Belum' WHERE no_rawat = ? AND stts_bayar = 'Sudah'")->execute([$no_rawat]);
+          $pdo->prepare("UPDATE rawat_jl_pr SET stts_bayar = 'Belum' WHERE no_rawat = ? AND stts_bayar = 'Sudah'")->execute([$no_rawat]);
+          $pdo->prepare("UPDATE rawat_jl_drpr SET stts_bayar = 'Belum' WHERE no_rawat = ? AND stts_bayar = 'Sudah'")->execute([$no_rawat]);
+        }
 
         echo json_encode([
           'status' => 'success',
