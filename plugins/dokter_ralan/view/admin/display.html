@@ -43,22 +43,22 @@
                 <span class="dropdown-toggle" data-toggle="dropdown" data-disabled="true" aria-expanded="true"><button type="button" name="button" class="btn btn-sm btn-default">{?=isset_or($value.no_rkm_medis)?} <span class="caret"></span></button></span>
                 <ul class="dropdown-menu" role="menu">
                   {if: $cek_vclaim}
-                    <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynokartu', $value.no_peserta, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal">[BPJS] Cek Nomor Kartu</a></li>
-                    <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynik', $value.no_ktp, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal">[BPJS] Cek Nomor KTP</a></li>
+                    <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynokartu', $value.no_peserta, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal"><i class="fa fa-credit-card text-success"></i> [BPJS] Cek Nomor Kartu</a></li>
+                    <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynik', $value.no_ktp, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal"><i class="fa fa-id-card-o text-success"></i> [BPJS] Cek Nomor KTP</a></li>
                   {/if}
-                  <li><a href="#" onclick="openPdfTteModal('{?=isset_or($value.no_rkm_medis)?}','{?=isset_or($value.no_rawat)?}')">Elektronik Rekam Medis</a></li>
+                  <li><a href="#" onclick="openPdfTteModal('{?=isset_or($value.no_rkm_medis)?}','{?=isset_or($value.no_rawat)?}')"><i class="fa fa-file-pdf-o text-danger"></i> Elektronik Rekam Medis</a></li>
                   {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis'}
-                  <li><a href="#soap" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-umur="{?=isset_or($value.umurdaftar)?} {?=isset_or($value.sttsumur)?}" data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}" data-stts_daftar="{?=isset_or($value.stts_daftar)?}" data-status_poli="{?=isset_or($value.status_poli)?}">SOAPIE & Pemeriksaan</a></li>
-                  <li><a href="#layanan_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}">Layanan & Obat</a></li>
+                  <li><a href="#soap" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-umur="{?=isset_or($value.umurdaftar)?} {?=isset_or($value.sttsumur)?}" data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}" data-stts_daftar="{?=isset_or($value.stts_daftar)?}" data-status_poli="{?=isset_or($value.status_poli)?}"><i class="fa fa-stethoscope text-primary"></i> SOAPIE &amp; Pemeriksaan</a></li>
+                  <li><a href="#layanan_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}"><i class="fa fa-medkit text-info"></i> Layanan &amp; Obat</a></li>
                   {? \Systems\Lib\Event::call('rsgmgha.dropdown_menu', [$value]) ?}
-                  <li><a href="#rujuk_internal" data-no_rawat="{?=isset_or($value.no_rawat)?}">Rujuk Internal</a></li>
+                  <li><a href="#rujuk_internal" data-no_rawat="{?=isset_or($value.no_rawat)?}"><i class="fa fa-share text-warning"></i> Rujuk Internal</a></li>
                   <li class="dropdown-submenu">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Surat-Surat</a>
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i class="fa fa-envelope-o text-muted"></i> Surat-Surat</a>
                     <ul class="dropdown-menu">
-                      <li><a href="#surat_kontrol" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}">Surat Kontrol</a></li>
-                      <li><a href="{?=url([ADMIN,'dokter_ralan','suratrujukan',convertNorawat($value.no_rawat)])?}" target="_blank">Surat Rujukan</a></li>
-                      <li><a href="{?=url([ADMIN,'dokter_ralan','suratsehat',convertNorawat($value.no_rawat)])?}" target="_blank">Surat Keterangan Sehat</a></li>
-                      <li><a href="{?=url([ADMIN,'dokter_ralan','suratsakit',convertNorawat($value.no_rawat)])?}" target="_blank">Surat Keterangan Sakit</a></li>
+                      <li><a href="#surat_kontrol" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}"><i class="fa fa-calendar-check-o"></i> Surat Kontrol</a></li>
+                      <li><a href="{?=url([ADMIN,'dokter_ralan','suratrujukan',convertNorawat($value.no_rawat)])?}" target="_blank"><i class="fa fa-external-link"></i> Surat Rujukan</a></li>
+                      <li><a href="{?=url([ADMIN,'dokter_ralan','suratsehat',convertNorawat($value.no_rawat)])?}" target="_blank"><i class="fa fa-check-circle-o"></i> Surat Keterangan Sehat</a></li>
+                      <li><a href="{?=url([ADMIN,'dokter_ralan','suratsakit',convertNorawat($value.no_rawat)])?}" target="_blank"><i class="fa fa-bed"></i> Surat Keterangan Sakit</a></li>
                     </ul>
                   </li>
                   {/if}

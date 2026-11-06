@@ -1,53 +1,72 @@
-<div id="form_soap">
+<div id="form_soap" class="rsgm-reg-form clearfix">
   <div class="col-md-3">
-    <div class="panel panel-default">
-      <div class="panel-body">
+    <div class="rsgm-reg-shell" style="height: 100%;">
+      <div class="rsgm-reg-header">
+        <h4 class="rsgm-reg-title">
+          <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+          <span>Data Pasien</span>
+        </h4>
+        <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
+      </div>
+      <div class="rsgm-reg-body">
         <div class="form-group">
-          <label for="tanggal">Tanggal</label>
-          <input type="text" id="soap_tgl_perawatan" name="tgl_perawatan" class="form-control tanggal"
-            value="{?=date('Y-m-d')?}">
+          <label for="soap_tgl_perawatan">Tanggal</label>
+          <div class="rsgm-input-icon">
+            <i class="fa fa-calendar rsgm-field-icon"></i>
+            <input type="text" id="soap_tgl_perawatan" name="tgl_perawatan" class="form-control tanggal" value="{?=date('Y-m-d')?}">
+          </div>
         </div>
         <div class="form-group">
-          <label for="jam">Jam</label>
-          <input type="text" id="soap_jam_rawat" name="jam_rawat" class="form-control jam" value="{?=date('H:i:s')?}">
+          <label for="soap_jam_rawat">Jam</label>
+          <div class="rsgm-input-icon">
+            <i class="fa fa-clock-o rsgm-field-icon"></i>
+            <input type="text" id="soap_jam_rawat" name="jam_rawat" class="form-control jam" value="{?=date('H:i:s')?}">
+          </div>
         </div>
         <div class="form-group">
-          <label for="id_pendaftaran">Id Rawat</label>
-          <input type="text" id="soap_no_rawat" name="no_rawat" placeholder="ID Pendaftaran" class="form-control"
-            value="" readonly>
+          <label for="soap_no_rawat">Id Rawat</label>
+          <div class="rsgm-input-icon">
+            <i class="fa fa-hashtag rsgm-field-icon"></i>
+            <input type="text" id="soap_no_rawat" name="no_rawat" placeholder="ID Pendaftaran" class="form-control" value="" readonly>
+          </div>
         </div>
         <div class="form-group">
-          <label for="id_pasien">Nomor RM</label>
-          <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" placeholder="Nomor Rekam Medik"
-            value="" readonly>
+          <label for="no_rkm_medis">Nomor RM</label>
+          <div class="rsgm-input-icon">
+            <i class="fa fa-address-card-o rsgm-field-icon"></i>
+            <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" placeholder="Nomor Rekam Medik" value="" readonly>
+          </div>
         </div>
         <div class="form-group">
-          <label for="nama_pasien">Nama Pasien</label>
-          <input type="text" name="nm_pasien" class="form-control" placeholder="Nama pasien" value="" readonly>
+          <label>Nama Pasien</label>
+          <div class="rsgm-input-icon">
+            <i class="fa fa-user-o rsgm-field-icon"></i>
+            <input type="text" name="nm_pasien" class="form-control" placeholder="Nama pasien" value="" readonly>
+          </div>
         </div>
         <div class="form-group">
-          <label for="nama_pasien">Umur</label>
+          <label>Umur</label>
           <input type="text" name="umur" class="form-control" placeholder="Umur pasien" value="" readonly>
         </div>
-        <div class="row" style="border-top: 1px dashed #ccc; padding-top: 10px; margin-top: 10px; margin-left: 0; margin-right: 0;">
+        <div class="row" style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-top: 10px; margin-left: 0; margin-right: 0;">
           <div class="col-xs-6" style="padding-left: 0;">
-            <div class="form-group">
+            <div class="form-group" style="margin-bottom: 0;">
               <label class="control-label" style="display:block; margin-bottom:6px;">Kunjungan</label>
-              <label class="radio-inline" style="margin-right:12px;">
+              <label class="radio-inline" style="margin-right:10px; font-size: 12px;">
                 <input type="radio" name="stts_daftar" id="soap_stts_daftar_lama" value="Lama"> Lama
               </label>
-              <label class="radio-inline">
+              <label class="radio-inline" style="font-size: 12px;">
                 <input type="radio" name="stts_daftar" id="soap_stts_daftar_baru" value="Baru"> Baru
               </label>
             </div>
           </div>
           <div class="col-xs-6" style="padding-right: 0;">
-            <div class="form-group">
+            <div class="form-group" style="margin-bottom: 0;">
               <label class="control-label" style="display:block; margin-bottom:6px;">Jenis Kasus</label>
-              <label class="radio-inline" style="margin-right:12px;">
+              <label class="radio-inline" style="margin-right:10px; font-size: 12px;">
                 <input type="radio" name="kasus_poli" id="soap_kasus_poli_lama" value="Lama"> Lama
               </label>
-              <label class="radio-inline">
+              <label class="radio-inline" style="font-size: 12px;">
                 <input type="radio" name="kasus_poli" id="soap_kasus_poli_baru" value="Baru"> Baru
               </label>
             </div>
@@ -56,231 +75,274 @@
       </div>
     </div>
   </div>
+
   <div class="col-md-9">
-    <div class="panel panel-default">
-      <div class="panel-body">
-        <div id="autofill_info" class="alert alert-info" style="display:none; padding:8px 12px; margin-bottom:12px;">
-          <strong>Data otomatis:</strong> <span id="autofill_info_text"></span>
+    <div class="rsgm-reg-shell">
+      <div class="rsgm-reg-header">
+        <h4 class="rsgm-reg-title">
+          <span class="rsgm-reg-icon"><i class="fa fa-stethoscope"></i></span>
+          <span>Pemeriksaan Fisik &amp; Catatan Perkembangan Pasien (SOAP)</span>
+        </h4>
+        <span class="rsgm-reg-badge-hint hidden-xs">Rekam Medis Rawat Jalan</span>
+      </div>
+      <div class="rsgm-reg-body">
+        <div id="autofill_info" class="alert alert-info" style="display:none; padding:8px 12px; margin-bottom:12px; border-radius: 6px;">
+          <i class="fa fa-magic"></i> <strong>Data otomatis:</strong> <span id="autofill_info_text"></span>
         </div>
-        <h4 class="{if: $admin_mode == 'simple'}hidden{/if}">Pemeriksaan</h4>
-        <div class="form-group {if: $admin_mode == 'simple'}hidden{/if}">
+
+        <div class="rsgm-soap-section {if: $admin_mode == 'simple'}hidden{/if}">
+          <div class="rsgm-soap-sec-title">
+            <i class="fa fa-heartbeat text-primary"></i> <span>Tanda Vital &amp; Pemeriksaan Fisik</span>
+          </div>
           <div class="row">
             <div class="col-sm-2">
-              <label for="nama_pasien">Tensi(mmHg)</label>
-              <input type="text" name="tensi" class="form-control" placeholder="" value="-">
+              <div class="form-group">
+                <label>Tensi (mmHg)</label>
+                <input type="text" name="tensi" class="form-control" placeholder="120/80" value="-">
+              </div>
             </div>
             <div class="col-sm-2">
-              <label for="nama_pasien">Suhu(C)</label>
-              <input type="text" name="suhu_tubuh" class="form-control" placeholder="" value="">
+              <div class="form-group">
+                <label>Suhu (&deg;C)</label>
+                <input type="text" name="suhu_tubuh" class="form-control" placeholder="36.5" value="">
+              </div>
             </div>
             <div class="col-sm-2">
-              <label for="nama_pasien">Nadi(/mnt)</label>
-              <input type="text" name="nadi" class="form-control" placeholder="" value="">
+              <div class="form-group">
+                <label>Nadi (/mnt)</label>
+                <input type="text" name="nadi" class="form-control" placeholder="80" value="">
+              </div>
             </div>
             <div class="col-sm-2">
-              <label for="nama_pasien">RR(/mnt)</label>
-              <input type="text" name="respirasi" class="form-control" placeholder="" value="">
+              <div class="form-group">
+                <label>RR (/mnt)</label>
+                <input type="text" name="respirasi" class="form-control" placeholder="20" value="">
+              </div>
             </div>
             <div class="col-sm-2">
-              <label for="nama_pasien">Tinggi(cm)</label>
-              <input type="text" name="tinggi" class="form-control" placeholder="" value="">
+              <div class="form-group">
+                <label>Tinggi (cm)</label>
+                <input type="text" name="tinggi" class="form-control" placeholder="165" value="">
+              </div>
             </div>
             <div class="col-sm-2">
-              <label for="nama_pasien">Berat(kg)</label>
-              <input type="text" name="berat" class="form-control" placeholder="" value="">
+              <div class="form-group">
+                <label>Berat (kg)</label>
+                <input type="text" name="berat" class="form-control" placeholder="60" value="">
+              </div>
             </div>
           </div>
-        </div>
-        <div class="form-group {if: $admin_mode == 'simple'}hidden{/if}">
           <div class="row">
             <div class="col-sm-3">
-              <label for="nama_pasien">Kesadaran</label>
-              <input type="text" name="kesadaran" class="form-control" placeholder="" value="Compos Mentis">
-              <ul class="list-group" id="kesadaranList" style="z-index:1000;position:absolute;width:100%;"></ul>
+              <div class="form-group" style="margin-bottom: 0; position: relative;">
+                <label>Kesadaran</label>
+                <input type="text" name="kesadaran" class="form-control" placeholder="" value="Compos Mentis">
+                <ul class="list-group" id="kesadaranList" style="z-index:1050;position:absolute;width:100%;"></ul>
+              </div>
             </div>
             <div class="col-sm-2">
-              <label for="nama_pasien">SPO2</label>
-              <input type="text" name="spo2" class="form-control" placeholder="" value="">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>SPO2 (%)</label>
+                <input type="text" name="spo2" class="form-control" placeholder="99" value="">
+              </div>
             </div>
             <div class="col-sm-2">
-              <label for="nama_pasien">GCS(E,V,M)</label>
-              <input type="text" name="gcs" class="form-control" placeholder="" value="">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>GCS (E,V,M)</label>
+                <input type="text" name="gcs" class="form-control" placeholder="4,5,6" value="">
+              </div>
             </div>
             <div class="col-sm-2">
-              <label for="nama_pasien">Alergi</label>
-              <input type="text" name="alergi" class="form-control" placeholder="" value="">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Alergi</label>
+                <input type="text" name="alergi" class="form-control" placeholder="Tidak ada" value="">
+              </div>
             </div>
             <div class="col-sm-3">
-              <label for="lingkar_perut">Lingkar Perut</label>
-              <input type="text" name="lingkar_perut" class="form-control" placeholder="" value="-">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Lingkar Perut (cm)</label>
+                <input type="text" name="lingkar_perut" class="form-control" placeholder="-" value="-">
+              </div>
             </div>
           </div>
         </div>
-        <h4>SOAP</h4>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="jenis">Subyektif</label>
-              <textarea name="keluhan" id="keluhan" rows="2" class="form-control"></textarea>
+
+        <div class="rsgm-soap-section" style="margin-bottom: 0;">
+          <div class="rsgm-soap-sec-title">
+            <i class="fa fa-file-text-o text-primary"></i> <span>Catatan Klinis SOAPIE</span>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="keluhan"><span class="rsgm-soap-tag rsgm-soap-tag-s">S</span> Subyektif (Keluhan)</label>
+                <textarea name="keluhan" id="keluhan" rows="2" class="form-control" placeholder="Keluhan utama &amp; riwayat penyakit sekarang..."></textarea>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="pemeriksaan"><span class="rsgm-soap-tag rsgm-soap-tag-o">O</span> Obyektif (Pemeriksaan)</label>
+                <textarea name="pemeriksaan" id="pemeriksaan" rows="2" class="form-control" placeholder="Temuan pemeriksaan fisik &amp; ekstra/intraoral..."></textarea>
+              </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="jenis">Obyektif</label>
-              <textarea name="pemeriksaan" id="pemeriksaan" rows="2" class="form-control"></textarea>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="penilaian"><span class="rsgm-soap-tag rsgm-soap-tag-a">A</span> Assesment (Penilaian / Diagnosa)</label>
+                <textarea name="penilaian" id="penilaian" rows="2" class="form-control" placeholder="Diagnosa kerja / banding..."></textarea>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="rtl"><span class="rsgm-soap-tag rsgm-soap-tag-p">P</span> Plan (Rencana / RTL)</label>
+                <textarea name="rtl" id="rtl" rows="2" class="form-control" placeholder="Rencana terapi, tindakan, atau edukasi..."></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="row {if: $admin_mode == 'simple'}hidden{/if}">
+            <div class="col-md-6">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="instruksi"><span class="rsgm-soap-tag rsgm-soap-tag-i">I</span> Instruksi</label>
+                <textarea name="instruksi" id="instruksi" rows="2" class="form-control" value="-" placeholder="Instruksi medis / keperawatan..."></textarea>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="evaluasi"><span class="rsgm-soap-tag rsgm-soap-tag-e">E</span> Evaluasi</label>
+                <textarea name="evaluasi" id="evaluasi" rows="2" class="form-control" value="-" placeholder="Evaluasi hasil tindakan / terapi..."></textarea>
+              </div>
             </div>
           </div>
         </div>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="jenis">Assesment</label>
-              <textarea name="penilaian" id="penilaian" rows="2" class="form-control"></textarea>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="jenis">Plan</label>
-              <textarea name="rtl" id="rtl" rows="2" class="form-control"></textarea>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group {if: $admin_mode == 'simple'}hidden{/if}">
-              <label for="jenis">Instruksi</label>
-              <textarea name="instruksi" id="instruksi" rows="2" class="form-control" value="-"></textarea>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group {if: $admin_mode == 'simple'}hidden{/if}">
-              <label for="jenis">Evaluasi</label>
-              <textarea name="evaluasi" id="evaluasi" rows="2" class="form-control" value="-"></textarea>
-            </div>
-          </div>
-        </div>
-        <div class="m-t-xl">
-          <button type="button" name="button" class="btn btn-primary" id="simpan_soap"><i class="fa fa-save"></i><span
-              class="hidden-xs"> Simpan</span></button>
+      </div>
+
+      <div class="rsgm-reg-footer">
+        <div class="rsgm-reg-actions" style="margin-left: 0;">
+          <button type="button" name="button" class="btn btn-primary" id="simpan_soap"><i class="fa fa-save"></i><span class="hidden-xs"> Simpan SOAP</span></button>
           <span class="{if: $admin_mode == 'simple'}hidden{/if}">
-            <button type="button" name="button" class="btn btn-danger" id="buka_icd10dan9"><i
-                class="fa fa-download"></i><span class="hidden-xs"> ICD 10 & 9</span></button>
+            <button type="button" name="button" class="btn btn-danger" id="buka_icd10dan9"><i class="fa fa-tags"></i><span class="hidden-xs"> ICD 10 &amp; 9</span></button>
           </span>
-          <button type="button" name="button" class="btn btn-info" id="eresep"><i class="fa fa-medkit"></i><span
-              class="hidden-xs"> E-Resep</span></button>
-          <button type="button" name="button" class="btn btn-info" id="buka_riwayat"><i class="fa fa-file-o"></i><span
-              class="hidden-xs"> Riwayat</span></button>
-          <button type="button" name="button" class="btn btn-success" id="selesai_soap"><i class="fa fa-check"></i><span
-              class="hidden-xs"> Selesai</span></button>
-          <span class="pull-right">
-            <a href="#" class="btn btn-info" id="odontogram"><i class="fa fa-bell"></i><span class="hidden-xs">
-                Odontogram</span></a>
-            <a href="#" class="btn btn-warning resume"><i class="fa fa-file-text"></i><span class="hidden-xs">
-                Resume</span></a>
-            <a href="#" class="btn btn-warning assesment"><i class="fa fa-file-text"></i><span class="hidden-xs">
-                Assesment</span></a>
-          </span>
+          <button type="button" name="button" class="btn btn-info" id="eresep"><i class="fa fa-medkit"></i><span class="hidden-xs"> E-Resep</span></button>
+          <button type="button" name="button" class="btn btn-info" id="buka_riwayat"><i class="fa fa-history"></i><span class="hidden-xs"> Riwayat</span></button>
+          <button type="button" name="button" class="btn btn-success" id="selesai_soap"><i class="fa fa-check"></i><span class="hidden-xs"> Selesai</span></button>
+        </div>
+        <div class="rsgm-reg-actions">
+          <a href="#" class="btn btn-info" id="odontogram"><i class="fa fa-bell"></i><span class="hidden-xs"> Odontogram</span></a>
+          <a href="#" class="btn btn-warning resume"><i class="fa fa-file-text"></i><span class="hidden-xs"> Resume</span></a>
+          <a href="#" class="btn btn-warning assesment"><i class="fa fa-file-text"></i><span class="hidden-xs"> Assesment</span></a>
         </div>
       </div>
     </div>
-    <div id="icd10dan9">
-      <div class="panel panel-default">
-        <div class="panel-body">
-          <div class="form-group">
-            <div class="row">
-              <div class="col-sm-6">
-                <div class="form-group icd10">
-                  <label for="">Diagnosa (ICD 10)</label>
-                  <button id="filter" class="btn btn-default">
-                    <span id="kode_icd10">kode</span>
-                  </button>
-                  <div class="btn-group">
-                    <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
-                      <span data-bind="label" id="prioritas_icd10"></span> <span class="caret"></span>
+
+    <div id="icd10dan9" style="margin-top: 12px;">
+      <div class="rsgm-reg-shell">
+        <div class="rsgm-reg-header">
+          <h4 class="rsgm-reg-title">
+            <span class="rsgm-reg-icon"><i class="fa fa-tags"></i></span>
+            <span>Pengkodean Diagnosa (ICD-10), Prosedur (ICD-9) &amp; SNOMED-CT</span>
+          </h4>
+          <span class="rsgm-reg-badge-hint hidden-xs">Koding Klinis</span>
+        </div>
+        <div class="rsgm-reg-body">
+          <div class="row">
+            <div class="col-sm-6">
+              <div class="form-group icd10" style="margin-bottom: 0;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                  <label style="margin-bottom: 0;">Diagnosa (ICD 10)</label>
+                  <div>
+                    <button id="filter" class="btn btn-default btn-xs">
+                      <span id="kode_icd10">kode</span>
                     </button>
-                    <ul class="dropdown-menu" role="menu" style="min-width:0px;">
-                      <li><a>1</a></li>
-                      <li><a>2</a></li>
-                      <li><a>3</a></li>
-                      <li><a>4</a></li>
-                      <li><a>5</a></li>
-                      <li><a>6</a></li>
-                      <li><a>7</a></li>
-                      <li><a>8</a></li>
-                      <li><a>9</a></li>
-                    </ul>
-                  </div>
-                  <div class="input-group" style="position: relative;">
-                    <input type="text" name="icd10" id="icd10" class="form-control" />
-                    <input type="hidden" name="status" class="form-control" value="Ralan" />
-                    <ul class="list-group" id="icd10List"
-                      style="z-index:1000;position:absolute;width:100%;top: 100%; left: 0"></ul>
-                    <span class="input-group-btn">
-                      <button id="simpan_icd10" class="btn btn-primary btn-block">
-                        <span class="glyphicon glyphicon-plus simpan_icd10"></span>
+                    <div class="btn-group">
+                      <button class="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown">
+                        Prioritas: <span data-bind="label" id="prioritas_icd10"></span> <span class="caret"></span>
                       </button>
-                    </span>
+                      <ul class="dropdown-menu" role="menu" style="min-width:0px;">
+                        <li><a>1</a></li>
+                        <li><a>2</a></li>
+                        <li><a>3</a></li>
+                        <li><a>4</a></li>
+                        <li><a>5</a></li>
+                        <li><a>6</a></li>
+                        <li><a>7</a></li>
+                        <li><a>8</a></li>
+                        <li><a>9</a></li>
+                      </ul>
+                    </div>
                   </div>
-                  <div class="input-group" style="margin-top: 6px;">
-                    <input type="text" name="snomed_concept_id" id="snomed_concept_id" class="form-control" placeholder="SNOMED Concept ID" />
-                    <span class="input-group-btn">
-                      <button type="button" id="ai_generate_snomed" class="btn btn-default" title="Generate SNOMED-CT dari AI">
-                        <i class="fa fa-gear"></i>
-                      </button>
-                    </span>
-                  </div>
-                  <input type="text" name="snomed_term" id="snomed_term" class="form-control" placeholder="SNOMED Term" style="margin-top: 6px;" />
-                  <button type="button" id="simpan_mapping_snomed" class="btn btn-info btn-xs" style="margin-top: 6px;">
-                    <i class="fa fa-save"></i><span class="hidden-xs"> Simpan Mapping SNOMED</span>
-                  </button>
                 </div>
+                <div class="input-group" style="position: relative;">
+                  <input type="text" name="icd10" id="icd10" class="form-control" placeholder="Ketik kode atau nama diagnosa ICD-10..." />
+                  <input type="hidden" name="status" class="form-control" value="Ralan" />
+                  <ul class="list-group" id="icd10List" style="z-index:1050;position:absolute;width:100%;top: 100%; left: 0; max-height: 200px; overflow-y: auto;"></ul>
+                  <span class="input-group-btn">
+                    <button id="simpan_icd10" class="btn btn-primary btn-block" title="Simpan ICD-10">
+                      <span class="glyphicon glyphicon-plus simpan_icd10"></span>
+                    </button>
+                  </span>
+                </div>
+                <div class="input-group" style="margin-top: 6px;">
+                  <input type="text" name="snomed_concept_id" id="snomed_concept_id" class="form-control" placeholder="SNOMED Concept ID" />
+                  <span class="input-group-btn">
+                    <button type="button" id="ai_generate_snomed" class="btn btn-default" title="Generate SNOMED-CT dari AI">
+                      <i class="fa fa-gear"></i>
+                    </button>
+                  </span>
+                </div>
+                <input type="text" name="snomed_term" id="snomed_term" class="form-control" placeholder="SNOMED Term" style="margin-top: 6px;" />
+                <button type="button" id="simpan_mapping_snomed" class="btn btn-info btn-xs" style="margin-top: 6px;">
+                  <i class="fa fa-save"></i><span class="hidden-xs"> Simpan Mapping SNOMED</span>
+                </button>
               </div>
-              <div class="col-sm-6">
-                <div class="form-group icd9">
-                  <label for="">Prosedur (ICD 9)</label>
-                  <button id="filter" class="btn btn-default">
-                    <span id="kode_icd9">kode</span>
-                  </button>
-                  <div class="btn-group">
-                    <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
-                      <span data-bind="label" id="prioritas_icd9"></span> <span class="caret"></span>
+            </div>
+            <div class="col-sm-6">
+              <div class="form-group icd9" style="margin-bottom: 0;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                  <label style="margin-bottom: 0;">Prosedur (ICD 9)</label>
+                  <div>
+                    <button id="filter" class="btn btn-default btn-xs">
+                      <span id="kode_icd9">kode</span>
                     </button>
-                    <ul class="dropdown-menu" role="menu" style="min-width:0px;">
-                      <li><a>1</a></li>
-                      <li><a>2</a></li>
-                      <li><a>3</a></li>
-                      <li><a>4</a></li>
-                      <li><a>5</a></li>
-                      <li><a>6</a></li>
-                      <li><a>7</a></li>
-                      <li><a>8</a></li>
-                      <li><a>9</a></li>
-                    </ul>
-                  </div>
-                  <div class="input-group" style="position: relative;">
-                    <input type="text" name="icd9" id="icd9" class="form-control" />
-                    <input type="hidden" name="status" class="form-control" value="Ralan" />
-                    <ul class="list-group" id="icd9List"
-                      style="z-index:1000;position:absolute;width:100%;top: 100%; left: 0"></ul>
-                    <span class="input-group-btn">
-                      <button id="simpan_icd9" class="btn btn-primary btn-block">
-                        <span class="glyphicon glyphicon-plus"></span>
+                    <div class="btn-group">
+                      <button class="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown">
+                        Prioritas: <span data-bind="label" id="prioritas_icd9"></span> <span class="caret"></span>
                       </button>
-                    </span>
+                      <ul class="dropdown-menu" role="menu" style="min-width:0px;">
+                        <li><a>1</a></li>
+                        <li><a>2</a></li>
+                        <li><a>3</a></li>
+                        <li><a>4</a></li>
+                        <li><a>5</a></li>
+                        <li><a>6</a></li>
+                        <li><a>7</a></li>
+                        <li><a>8</a></li>
+                        <li><a>9</a></li>
+                      </ul>
+                    </div>
                   </div>
-                  <div class="input-group" style="margin-top: 6px;">
-                    <input type="text" name="snomed_concept_id_icd9" id="snomed_concept_id_icd9" class="form-control" placeholder="SNOMED Concept ID (ICD-9)" />
-                    <span class="input-group-btn">
-                      <button type="button" id="ai_generate_snomed_icd9" class="btn btn-default" title="Generate SNOMED-CT Prosedur dari AI">
-                        <i class="fa fa-gear"></i>
-                      </button>
-                    </span>
-                  </div>
-                  <input type="text" name="snomed_term_icd9" id="snomed_term_icd9" class="form-control" placeholder="SNOMED Term (ICD-9)" style="margin-top: 6px;" />
-                  <button type="button" id="simpan_mapping_snomed_icd9" class="btn btn-info btn-xs" style="margin-top: 6px;">
-                    <i class="fa fa-save"></i><span class="hidden-xs"> Simpan Mapping SNOMED ICD-9</span>
-                  </button>
                 </div>
+                <div class="input-group" style="position: relative;">
+                  <input type="text" name="icd9" id="icd9" class="form-control" placeholder="Ketik kode atau nama prosedur ICD-9..." />
+                  <input type="hidden" name="status" class="form-control" value="Ralan" />
+                  <ul class="list-group" id="icd9List" style="z-index:1050;position:absolute;width:100%;top: 100%; left: 0; max-height: 200px; overflow-y: auto;"></ul>
+                  <span class="input-group-btn">
+                    <button id="simpan_icd9" class="btn btn-primary btn-block" title="Simpan ICD-9">
+                      <span class="glyphicon glyphicon-plus"></span>
+                    </button>
+                  </span>
+                </div>
+                <div class="input-group" style="margin-top: 6px;">
+                  <input type="text" name="snomed_concept_id_icd9" id="snomed_concept_id_icd9" class="form-control" placeholder="SNOMED Concept ID (ICD-9)" />
+                  <span class="input-group-btn">
+                    <button type="button" id="ai_generate_snomed_icd9" class="btn btn-default" title="Generate SNOMED-CT Prosedur dari AI">
+                      <i class="fa fa-gear"></i>
+                    </button>
+                  </span>
+                </div>
+                <input type="text" name="snomed_term_icd9" id="snomed_term_icd9" class="form-control" placeholder="SNOMED Term (ICD-9)" style="margin-top: 6px;" />
+                <button type="button" id="simpan_mapping_snomed_icd9" class="btn btn-info btn-xs" style="margin-top: 6px;">
+                  <i class="fa fa-save"></i><span class="hidden-xs"> Simpan Mapping SNOMED ICD-9</span>
+                </button>
               </div>
             </div>
           </div>
@@ -425,7 +487,6 @@
       snomed_term: snomed_term
     }, function (data) {
       $("#display_icd").show().load(baseURL + '/dokter_ralan/displayicd?no_rawat=' + no_rawat + '&t=' + mlite.token);
-      //bersih();
       $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
         "Data ICD 9 (Prosedur) pasien telah disimpan!" +
         "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
@@ -458,7 +519,6 @@
       snomed_term: snomed_term
     }, function (data) {
       $("#display_icd").show().load(baseURL + '/dokter_ralan/displayicd?no_rawat=' + no_rawat + '&t=' + mlite.token);
-      //bersih();
       $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
         "Data ICD 10 (Diagnosa) pasien telah disimpan!" +
         "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +

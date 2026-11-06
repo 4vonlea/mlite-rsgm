@@ -1,125 +1,164 @@
-<style>
-  table th,
-  table td {
-    padding: 5px;
-  }
-</style>
-<h4>ICD 10 dan ICD 9</h4>
-<div class="table-responsive no-margin">
-  <table class="table table-bordered no-padding icd" width="100%">
-    <tr class="isi">
-      <td valign="top" width="200px">Diagnosa/Penyakit/ICD 10</td>
-      <td valign="top" width="1px" align="center">:</td>
-      <td valign="top">
-        <table width="100%" align="center" cellpadding="3px" cellspacing="0" class="icd">
-          <tr align="center">
-            <td valign="top" width="100px" bgcolor="#eee">Kode</td>
-            <td valign="top" bgcolor="#eee">Nama Penyakit</td>
-            <td valign="top" width="10px" bgcolor="#eee">Prioritas</td>
-            <td valign="top" width="10px" bgcolor="#eee">Aksi</td>
-          </tr>
-          {loop: $diagnosa}
-          <tr>
-            <td valign="top" width="100px">{?=isset_or($value.kd_penyakit)?}</td>
-            <td valign="top">{?=isset_or($value.nama)?}</td>
-            <td valign="top" width="10px">{?=isset_or($value.prioritas)?}</td>
-            <td valign="top" width="10px">
-              <button type="button" name="button" class="btn btn-danger btn-xs hapus_icd10"
-                data-no_rawat="{?=isset_or($value.no_rawat)?}" data-prioritas="{?=isset_or($value.prioritas)?}"><span
-                  class="fa fa-trash"></span><span class="hidden-xs"> Hapus</span></button>
+<div class="rsgm-rincian-card" style="margin-bottom: 14px;">
+  <div class="rsgm-rincian-card-head">
+    <div class="rsgm-rincian-card-title">
+      <span class="rsgm-rincian-icon rsgm-rincian-icon-rose"><i class="fa fa-tags"></i></span>
+      <div>
+        <h5>Diagnosa (ICD-10), Prosedur (ICD-9) &amp; Mapping SNOMED-CT</h5>
+        <small>Ringkasan kodefikasi klinis kunjungan pasien</small>
+      </div>
+    </div>
+  </div>
+  <div class="rsgm-rincian-card-body">
+    <div class="table-responsive no-margin">
+      <table class="table table-bordered rsgm-rincian-table icd" width="100%">
+        <tbody>
+          <tr class="isi">
+            <th width="210" style="background-color: #f8fafc; vertical-align: top;">Diagnosa / Penyakit (ICD-10)</th>
+            <td style="padding: 8px !important;">
+              <table class="table table-bordered table-condensed icd" width="100%" style="margin-bottom: 0;">
+                <thead>
+                  <tr>
+                    <th width="110">Kode</th>
+                    <th>Nama Penyakit</th>
+                    <th width="90" class="text-center">Prioritas</th>
+                    <th width="90" class="text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {if: !empty($diagnosa)}
+                  {loop: $diagnosa}
+                  <tr>
+                    <td><span class="rsgm-badge rsgm-badge-rose">{?=isset_or($value.kd_penyakit)?}</span></td>
+                    <td><strong>{?=isset_or($value.nama)?}</strong></td>
+                    <td class="text-center"><span class="rsgm-badge rsgm-badge-slate">{?=isset_or($value.prioritas)?}</span></td>
+                    <td class="text-center">
+                      <button type="button" name="button" class="btn btn-danger btn-xs hapus_icd10" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-prioritas="{?=isset_or($value.prioritas)?}"><span class="fa fa-trash-o"></span><span class="hidden-xs"> Hapus</span></button>
+                    </td>
+                  </tr>
+                  {/loop}
+                  {else}
+                  <tr>
+                    <td colspan="4" class="text-center text-muted" style="font-size: 12px;">Belum ada diagnosa ICD-10.</td>
+                  </tr>
+                  {/if}
+                </tbody>
+              </table>
             </td>
           </tr>
-          {/loop}
-        </table>
-      </td>
-    </tr>
-    <tr class="isi">
-      <td valign="top" width="200px">Prosedur Tindakan/ICD 9</td>
-      <td valign="top" width="1px" align="center">:</td>
-      <td valign="top">
-        <table width="100%" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-          <tr align="center">
-            <td valign="top" width="100px" bgcolor="#eee">Kode</td>
-            <td valign="top" bgcolor="#eee">Nama Tindakan</td>
-            <td valign="top" width="10px" bgcolor="#eee">Prioritas</td>
-            <td valign="top" width="10px" bgcolor="#eee">Aksi</td>
-          </tr>
-          {loop: $prosedur}
-          <tr>
-            <td valign="top" width="100px">{?=isset_or($value.kode)?}</td>
-            <td valign="top">{?=isset_or($value.nama)?}</td>
-            <td valign="top" width="10px">{?=isset_or($value.prioritas)?}</td>
-            <td valign="top" width="10px">
-              <button type="button" name="button" class="btn btn-danger btn-xs hapus_icd9"
-                data-no_rawat="{?=isset_or($value.no_rawat)?}" data-prioritas="{?=isset_or($value.prioritas)?}"><span
-                  class="fa fa-trash"></span><span class="hidden-xs"> Hapus</span></button>
+          <tr class="isi">
+            <th style="background-color: #f8fafc; vertical-align: top;">Prosedur Tindakan (ICD-9)</th>
+            <td style="padding: 8px !important;">
+              <table class="table table-bordered table-condensed tbl_form" width="100%" style="margin-bottom: 0;">
+                <thead>
+                  <tr>
+                    <th width="110">Kode</th>
+                    <th>Nama Tindakan</th>
+                    <th width="90" class="text-center">Prioritas</th>
+                    <th width="90" class="text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {if: !empty($prosedur)}
+                  {loop: $prosedur}
+                  <tr>
+                    <td><span class="rsgm-badge rsgm-badge-sky">{?=isset_or($value.kode)?}</span></td>
+                    <td><strong>{?=isset_or($value.nama)?}</strong></td>
+                    <td class="text-center"><span class="rsgm-badge rsgm-badge-slate">{?=isset_or($value.prioritas)?}</span></td>
+                    <td class="text-center">
+                      <button type="button" name="button" class="btn btn-danger btn-xs hapus_icd9" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-prioritas="{?=isset_or($value.prioritas)?}"><span class="fa fa-trash-o"></span><span class="hidden-xs"> Hapus</span></button>
+                    </td>
+                  </tr>
+                  {/loop}
+                  {else}
+                  <tr>
+                    <td colspan="4" class="text-center text-muted" style="font-size: 12px;">Belum ada prosedur ICD-9.</td>
+                  </tr>
+                  {/if}
+                </tbody>
+              </table>
             </td>
           </tr>
-          {/loop}
-        </table>
-      </td>
-    </tr>
-    <tr class="isi">
-      <td valign="top" width="200px">Mapping SNOMED-CT</td>
-      <td valign="top" width="1px" align="center">:</td>
-      <td valign="top">
-        <table width="100%" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-           <tr align="center">
-             <td valign="top" width="90px" bgcolor="#eee">Kode ICD 10</td>
-             <td valign="top" bgcolor="#eee">Nama Diagnosa</td>
-             <td valign="top" width="120px" bgcolor="#eee">Concept ID</td>
-             <td valign="top" bgcolor="#eee">SNOMED Term</td>
-             <td valign="top" width="70px" bgcolor="#eee">Status</td>
-             <td valign="top" width="10px" bgcolor="#eee">Aksi</td>
-           </tr>
-           {loop: $mapping_snomed}
-           <tr>
-             <td valign="top">{?=isset_or($value.kd_penyakit)?}</td>
-             <td valign="top">{?=isset_or($value.nm_penyakit)?}</td>
-             <td valign="top">{?=isset_or($value.snomed_concept_id)?}</td>
-             <td valign="top">{?=isset_or($value.snomed_term)?}</td>
-             <td valign="top">{?=isset_or($value.status_penyakit)?}</td>
-             <td valign="top" width="10px">
-               <button type="button" name="button" class="btn btn-danger btn-xs hapus_mapping_snomed" data-id="{?=isset_or($value.id)?}" data-no_rawat="{?=isset_or($value.no_rawat)?}"><span class="fa fa-trash"></span><span class="hidden-xs"> Hapus</span></button>
-             </td>
-           </tr>
-           {/loop}
-        </table>
-      </td>
-    </tr>
-    <tr class="isi">
-      <td valign="top" width="200px">Mapping SNOMED-CT ICD 9</td>
-      <td valign="top" width="1px" align="center">:</td>
-      <td valign="top">
-        <table width="100%" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-           <tr align="center">
-             <td valign="top" width="90px" bgcolor="#eee">Kode ICD 9</td>
-             <td valign="top" bgcolor="#eee">Nama Prosedur</td>
-             <td valign="top" width="120px" bgcolor="#eee">Concept ID</td>
-             <td valign="top" bgcolor="#eee">SNOMED Term</td>
-             <td valign="top" width="10px" bgcolor="#eee">Aksi</td>
-           </tr>
-           {loop: $mapping_snomed_icd9}
-           <tr>
-             <td valign="top">{?=isset_or($value.kd_tindakan)?}</td>
-             <td valign="top">{?=isset_or($value.nm_tindakan)?}</td>
-             <td valign="top">{?=isset_or($value.snomed_concept_id)?}</td>
-             <td valign="top">{?=isset_or($value.snomed_term)?}</td>
-             <td valign="top" width="10px">
-               <button type="button" name="button" class="btn btn-danger btn-xs hapus_mapping_snomed_icd9" data-id="{?=isset_or($value.id)?}" data-no_rawat="{?=isset_or($value.no_rawat)?}"><span class="fa fa-trash"></span><span class="hidden-xs"> Hapus</span></button>
-             </td>
-           </tr>
-           {/loop}
-        </table>
-      </td>
-    </tr>
-  </table>
+          <tr class="isi">
+            <th style="background-color: #f8fafc; vertical-align: top;">Mapping SNOMED-CT (ICD-10)</th>
+            <td style="padding: 8px !important;">
+              <table class="table table-bordered table-condensed tbl_form" width="100%" style="margin-bottom: 0;">
+                <thead>
+                  <tr>
+                    <th width="100">Kode ICD-10</th>
+                    <th>Nama Diagnosa</th>
+                    <th width="130">Concept ID</th>
+                    <th>SNOMED Term</th>
+                    <th width="80" class="text-center">Status</th>
+                    <th width="90" class="text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {if: !empty($mapping_snomed)}
+                  {loop: $mapping_snomed}
+                  <tr>
+                    <td><span class="rsgm-badge rsgm-badge-rose">{?=isset_or($value.kd_penyakit)?}</span></td>
+                    <td>{?=isset_or($value.nm_penyakit)?}</td>
+                    <td><code>{?=isset_or($value.snomed_concept_id)?}</code></td>
+                    <td>{?=isset_or($value.snomed_term)?}</td>
+                    <td class="text-center"><span class="rsgm-badge rsgm-badge-emerald">{?=isset_or($value.status_penyakit)?}</span></td>
+                    <td class="text-center">
+                      <button type="button" name="button" class="btn btn-danger btn-xs hapus_mapping_snomed" data-id="{?=isset_or($value.id)?}" data-no_rawat="{?=isset_or($value.no_rawat)?}"><span class="fa fa-trash-o"></span><span class="hidden-xs"> Hapus</span></button>
+                    </td>
+                  </tr>
+                  {/loop}
+                  {else}
+                  <tr>
+                    <td colspan="6" class="text-center text-muted" style="font-size: 12px;">Belum ada mapping SNOMED-CT ICD-10.</td>
+                  </tr>
+                  {/if}
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          <tr class="isi">
+            <th style="background-color: #f8fafc; vertical-align: top;">Mapping SNOMED-CT (ICD-9)</th>
+            <td style="padding: 8px !important;">
+              <table class="table table-bordered table-condensed tbl_form" width="100%" style="margin-bottom: 0;">
+                <thead>
+                  <tr>
+                    <th width="100">Kode ICD-9</th>
+                    <th>Nama Prosedur</th>
+                    <th width="130">Concept ID</th>
+                    <th>SNOMED Term</th>
+                    <th width="90" class="text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {if: !empty($mapping_snomed_icd9)}
+                  {loop: $mapping_snomed_icd9}
+                  <tr>
+                    <td><span class="rsgm-badge rsgm-badge-sky">{?=isset_or($value.kd_tindakan)?}</span></td>
+                    <td>{?=isset_or($value.nm_tindakan)?}</td>
+                    <td><code>{?=isset_or($value.snomed_concept_id)?}</code></td>
+                    <td>{?=isset_or($value.snomed_term)?}</td>
+                    <td class="text-center">
+                      <button type="button" name="button" class="btn btn-danger btn-xs hapus_mapping_snomed_icd9" data-id="{?=isset_or($value.id)?}" data-no_rawat="{?=isset_or($value.no_rawat)?}"><span class="fa fa-trash-o"></span><span class="hidden-xs"> Hapus</span></button>
+                    </td>
+                  </tr>
+                  {/loop}
+                  {else}
+                  <tr>
+                    <td colspan="5" class="text-center text-muted" style="font-size: 12px;">Belum ada mapping SNOMED-CT ICD-9.</td>
+                  </tr>
+                  {/if}
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 <script type="text/javascript">
   $(".alert-dismissible").fadeTo(3000, 500).slideUp(500);
 </script>
 <script type="text/javascript">
-  // ketika tombol hapus ditekan
   $("#display_icd").on("click", ".hapus_icd10", function (event) {
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
@@ -180,7 +219,6 @@
   });
 </script>
 <script type="text/javascript">
-  // ketika tombol hapus ditekan
   $("#display_icd").on("click", ".hapus_icd9", function (event) {
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
@@ -188,7 +226,6 @@
     var no_rawat = $(this).attr("data-no_rawat");
     var prioritas = $(this).attr("data-prioritas");
 
-    // mengirimkan perintah penghapusan
     $.post(url, {
       no_rawat: no_rawat,
       prioritas: prioritas

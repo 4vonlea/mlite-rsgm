@@ -1,165 +1,211 @@
-/* manage.css - PACS Professional UI */
+/* manage.css - PACS Professional Clinical UI */
 .pacs-table {
     border-collapse: separate;
     border-spacing: 0;
     width: 100% !important;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
 }
 
-.pacs-table thead th {
-    background-color: #f1f1f1;
-    color: #333;
-    font-weight: 600;
-    border-bottom: 1px solid #ccc;
+.pacs-table thead tr.header-labels th {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+    font-weight: 700;
+    border-bottom: 1px solid #1e293b;
     vertical-align: middle;
-    padding: 8px;
-    font-size: 13px;
+    padding: 11px 10px !important;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
     white-space: nowrap;
 }
 
 .pacs-table td {
     vertical-align: middle !important;
-    padding: 10px 8px !important;
+    padding: 11px 10px !important;
     font-size: 13px;
-    border-bottom: 1px solid #eee;
+    color: #1e293b;
+    border-bottom: 1px solid #f1f5f9;
 }
 
 .pacs-table tbody tr {
     cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.pacs-table tbody tr:hover {
+    background-color: #f8fafc !important;
 }
 
 /* Filter Row */
 .filter-row th {
-    background-color: #fff !important;
-    padding: 4px 8px !important;
+    background-color: #f8fafc !important;
+    padding: 6px 8px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
 }
 
-.filter-row input {
+.filter-row input,
+.filter-row select {
     width: 100%;
-    padding: 4px 8px;
+    padding: 5px 9px;
     font-size: 12px;
-    border: 1px solid #ddd;
-    border-radius: 2px;
+    color: #0f172a;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.filter-row input:focus,
+.filter-row select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 /* Toolbar Row */
 .toolbar-row th {
-    background-color: #dcdcdc !important;
-    padding: 6px 10px !important;
+    background-color: #f1f5f9 !important;
+    padding: 8px 12px !important;
 }
 
 .pacs-toolbar {
     display: flex;
-    gap: 4px;
+    gap: 6px;
 }
 
 .pacs-toolbar .btn-pacs-tool {
-    padding: 4px 10px;
-    background: #7f8c8d;
+    padding: 5px 12px;
+    background: #334155;
     color: #fff;
     border: none;
-    border-radius: 4px;
-    font-size: 16px;
+    border-radius: 6px !important;
+    font-size: 15px;
     cursor: pointer;
+    transition: all 0.15s ease;
 }
 
 .pacs-toolbar .btn-pacs-tool:hover {
-    background: #95a5a6;
+    background: #1e293b;
 }
 
-.btn-pacs-primary { background: #3498db !important; }
-.btn-pacs-success { background: #27ae60 !important; }
-.btn-pacs-danger { background: #e74c3c !important; }
+.btn-pacs-primary { background: #0284c7 !important; color: #fff !important; }
+.btn-pacs-success { background: #059669 !important; color: #fff !important; }
+.btn-pacs-danger { background: #e11d48 !important; color: #fff !important; }
 
 /* Expansion Row */
 .pacs-details-row {
-    background-color: #f9f9f9;
+    background-color: #0f172a !important;
 }
 
 .pacs-details-container {
-    padding: 15px 30px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 18px 24px;
+    background: #0f172a;
+    color: #f8fafc;
+    border-left: 4px solid #38bdf8;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .pacs-details-top {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 15px;
+    gap: 20px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
 }
 
 .pacs-metadata-card {
     flex: 1;
+    min-width: 300px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 14px 18px;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px 30px;
+    gap: 10px 28px;
 }
 
 .pacs-meta-item {
     display: flex;
     justify-content: space-between;
-    border-bottom: 1px dotted #ccc;
-    padding-bottom: 2px;
+    border-bottom: 1px dashed #334155;
+    padding-bottom: 4px;
+    gap: 10px;
 }
 
 .pacs-meta-label {
-    font-weight: bold;
-    color: #444;
+    font-weight: 700;
+    color: #94a3b8;
     font-size: 12px;
 }
 
 .pacs-meta-val {
-    color: #333;
+    color: #f1f5f9;
+    font-weight: 600;
     font-size: 12px;
+    text-align: right;
 }
 
 .pacs-details-actions {
-    width: 250px;
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    padding-left: 20px;
+    gap: 8px;
     align-content: flex-start;
 }
 
 .pacs-details-actions .btn {
     width: 44px;
-    height: 40px;
-    display: flex;
+    height: 42px;
+    display: inline-flex !important;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    background: #7f8c8d;
-    color: white;
-    border: none;
-    border-radius: 4px;
+    font-size: 17px;
+    background: #1e293b;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    border-radius: 8px !important;
+    text-transform: none !important;
+    transform: none !important;
+    transition: all 0.15s ease;
 }
 
 .pacs-details-actions .btn:hover {
-    background: #95a5a6;
+    background: #334155;
+    transform: none !important;
 }
 
 /* Series Table */
 .pacs-series-section {
-    margin-top: 20px;
+    margin-top: 16px;
 }
 
 .pacs-series-table {
     width: 100%;
-    border-top: 2px solid #444;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #1e293b;
 }
 
 .pacs-series-table th {
-    padding: 8px;
-    font-size: 12px;
+    padding: 9px 12px;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
     text-align: left;
-    border-bottom: 1px solid #ddd;
-    color: #555;
-    background: #f1f1f1;
+    border-bottom: 1px solid #334155;
+    color: #38bdf8;
+    background: #020617;
 }
 
 .pacs-series-table td {
-    padding: 8px;
-    font-size: 12px;
-    border-bottom: 1px solid #eee;
+    padding: 9px 12px;
+    font-size: 12.5px;
+    color: #e2e8f0;
+    border-bottom: 1px solid #334155;
 }
 
 /* Scroll Custom */
@@ -168,9 +214,9 @@
     height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-    background: #ccc;
+    background: #cbd5e1;
     border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #bbb;
+    background: #94a3b8;
 }

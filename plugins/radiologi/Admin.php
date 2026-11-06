@@ -1807,6 +1807,18 @@ class Admin extends AdminModule
       $mini_pacs = [];
     }
 
+    $ref_id_all = 'radiologi_' . str_replace('/', '', $no_rawat);
+    $signature_all = null;
+    try {
+      $signature_all = $this->db('mlite_esignatures')
+        ->where('ref_type', 'radiologi_hasil')
+        ->like('ref_id', $ref_id_all . '%')
+        ->desc('id')
+        ->oneArray();
+    } catch (\Throwable $e) {
+      $signature_all = null;
+    }
+
     echo $this->draw('rincian.html', [
       'periksa_radiologi' => htmlspecialchars_array($periksa_radiologi), 
       'jumlah_total_radiologi' => $jumlah_total_radiologi, 
@@ -1815,7 +1827,9 @@ class Admin extends AdminModule
       'mini_pacs' => htmlspecialchars_array($mini_pacs),
       'current_user' => $this->core->getUserInfo('username'),
       'current_user_name' => $this->core->getUserInfo('fullname'),
-      'pj_radiologi' => $this->settings->get('settings.pj_radiologi')
+      'pj_radiologi' => $this->settings->get('settings.pj_radiologi'),
+      'ref_id_all' => $ref_id_all,
+      'signature_all' => htmlspecialchars_array($signature_all ?: [])
     ]);
     exit();
   }

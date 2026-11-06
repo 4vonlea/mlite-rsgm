@@ -1,329 +1,473 @@
-<ul class="nav nav-tabs" role="tablist">
-    <li role="presentation" class="active"><a href="#resep" aria-controls="resep" role="tab" data-toggle="tab">Resep Dokter</a></li>
-    <li role="presentation"><a href="#data_resep" aria-controls="resep" role="tab" data-toggle="tab">Data Resep</a></li>
-    <li role="presentation"><a href="#tindakan" aria-controls="home" role="tab" data-toggle="tab">Tindakan</a></li>
-    <li role="presentation"><a href="#lab" aria-controls="lab" role="tab" data-toggle="tab">Laboratorium</a></li>
-    <li role="presentation"><a href="#rad" aria-controls="rad" role="tab" data-toggle="tab">Radiologi</a></li>
-</ul>
+<div class="rsgm-rincian-wrap">
+  <ul class="nav nav-tabs rsgm-rincian-tabs" role="tablist">
+    <li role="presentation" class="active">
+      <a href="#resep" aria-controls="resep" role="tab" data-toggle="tab">
+        <i class="fa fa-medkit"></i> <span>Resep Dokter</span>
+        <span class="badge">{?=count($resep) + count($resep_racikan)?}</span>
+      </a>
+    </li>
+    <li role="presentation">
+      <a href="#data_resep" aria-controls="resep" role="tab" data-toggle="tab">
+        <i class="fa fa-history"></i> <span>Data Resep</span>
+        <span class="badge">{?=count($data_resep)?}</span>
+      </a>
+    </li>
+    <li role="presentation">
+      <a href="#tindakan" aria-controls="home" role="tab" data-toggle="tab">
+        <i class="fa fa-stethoscope"></i> <span>Tindakan</span>
+        <span class="badge">{?=count($rawat_jl_dr) + count($rawat_jl_pr) + count($rawat_jl_drpr)?}</span>
+      </a>
+    </li>
+    <li role="presentation">
+      <a href="#lab" aria-controls="lab" role="tab" data-toggle="tab">
+        <i class="fa fa-flask"></i> <span>Laboratorium</span>
+        <span class="badge">{?=count($laboratorium)?}</span>
+      </a>
+    </li>
+    <li role="presentation">
+      <a href="#rad" aria-controls="rad" role="tab" data-toggle="tab">
+        <i class="fa fa-heartbeat"></i> <span>Radiologi</span>
+        <span class="badge">{?=count($radiologi)?}</span>
+      </a>
+    </li>
+  </ul>
 
-<div class="tab-content">
+  <div class="tab-content rsgm-rincian-content">
+    <!-- TAB 1: RESEP DOKTER -->
     <div role="tabpanel" class="tab-pane fade in active" id="resep">
-      <h4>Permintaan e-Resep</h4>
-      {if: isset($resep)}
-      <h5>Non Racikan</h5>
-      <div class="table-responsive no-margin">
-        <table class="table table-striped table-bordered no-padding" width="100%">
-          <thead>
-            <tr>
-              <th>Nama Dokter</th>
-              <th>Nomor Resep</th>
-              <th>Tanggal Peresepan</th>
-              <th colspan="2">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loop: $resep}
-            <tr>
-              <td>{?=isset_or($value.nm_dokter)?}</td>
-              <td>{?=isset_or($value.no_resep)?}</td>
-              <td>{?=isset_or($value.tgl_peresepan)?} {?=isset_or($value.jam_peresepan)?}</td>
-              <td colspan="2">
-                <button type="button" class="btn btn-danger btn-xs {if: $value.tgl_perawatan !== '0000-00-00'}disabled{else}hapus_resep_obat{/if}" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_peresepan)?}" data-jam_peresepan="{?=isset_or($value.jam_peresepan)?}" data-no_resep="{?=isset_or($value.no_resep)?}"><i class="fa fa-close"></i><span class="hidden-xs"> Hapus Resep</span></button>
-              </td>
-            </tr>
-            <tr>
-              <th>Nama Obat</th>
-              <th>Jumlah</th>
-              <th>Aturan Pakai</th>
-              <th>Harga</th>
-              <th>Aksi</th>
-            </tr>
-            {loop: $value.resep_dokter as $data}
-              <tr>
-                <td>{?=isset_or($data.nama_brng)?}</td>
-                <td>{?=isset_or($data.jml)?}</td>
-                <td>{?=isset_or($data.aturan_pakai)?}</td>
-                <td>Rp. <span class="pull-right">{?= number_format(($data.ralan * $data.jml),2,',','.')?}</span></td>
-                <td><button type="button" class="btn btn-danger btn-xs {if: $value.tgl_perawatan !== '0000-00-00'}disabled{else}hapus_resep_dokter{/if}" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-kd_jenis_prw="{?=isset_or($data.kode_brng)?}" data-no_resep="{?=isset_or($value.no_resep)?}"><i class="fa fa-close"></i><span class="hidden-xs"> Hapus Obat</span></button></td>
-              </tr>
-            {/loop}
-            {/loop}
-          </tbody>
-          <tfoot>
-            <tr>
-              <th colspan="3">Total Biaya Obat</th>
-              <th>Rp. <span class="pull-right">{?= number_format($jumlah_total_resep,2,',','.')?}</span></th>
-              <th></th>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-      {/if}
-      <h5>Racikan </h5>
-      <div class="table-responsive no-margin">
-        <table class="table table-striped table-bordered no-padding" width="100%">
-          <thead>
-            <tr>
-              <th>Nama Dokter</th>
-              <th>Nomor Resep</th>
-              <th>Tanggal Peresepan</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loop: $resep_racikan}
-            <tr>
-              <td>{?=isset_or($value.nm_dokter)?}</td>
-              <td>{?=isset_or($value.no_resep)?}</td>
-              <td>{?=isset_or($value.tgl_peresepan)?} {?=isset_or($value.jam_peresepan)?}</td>
-              <td>
-                <button type="button" class="btn btn-danger btn-xs hapus_resep_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_peresepan)?}" data-jam_peresepan="{?=isset_or($value.jam_peresepan)?}" data-no_resep="{?=isset_or($value.no_resep)?}"><i class="fa fa-close"></i><span class="hidden-xs"> Hapus Resep</span></button>
-              </td>
-            </tr>
-            <tr>
-              <th>Nama Racikan</th>
-              <th>Jml. Racik</th>
-              <th>Aturan Pakai</th>
-              <th>Keterangan</th>
-            </tr>
-            <tr>
-              <td>{if: isset($value.nama_racik)}{?=isset_or($value.nama_racik)?}{else}-{/if}</td>
-              <td>{if: isset($value.jml_dr)}{?=isset_or($value.jml_dr)?}{else}-{/if}</td>
-              <td>{if: isset($value.aturan_pakai)}{?=isset_or($value.aturan_pakai)?}{else}-{/if}</td>
-              <td>{if: isset($value.keterangan)}{?=isset_or($value.keterangan)?}{else}-{/if}</td>
-            </tr>
-            <tr>
-              <th>Nama Obat</th>
-              <th>Kandungan</th>
-              <th>Jumlah</th>
-              <th>Harga</th>
-            </tr>
-            {loop: $value.resep_dokter_racikan_detail as $data}
-              <tr>
-                <td>{?=isset_or($data.nama_brng)?}</td>
-                <td>{?=isset_or($data.kandungan)?}</td>
-                <td>{?=isset_or($data.jml)?}</td>
-                <td>Rp. <span class="pull-right">{?= number_format(($data.ralan * $data.jml),2,',','.')?}</span></td>
-              </tr>
-            {/loop}
-            {/loop}
-          </tbody>
-          <tfoot>
-            <tr>
-              <th colspan="3">Total Biaya Obat Racikan</th>
-              <th>Rp. <span class="pull-right">{?= number_format($jumlah_total_resep_racikan,2,',','.')?}</span></th>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </div>
-    <div role="tabpanel" class="tab-pane fade in" id="tindakan">
-      <h4>Rincian Tindakan</h4>
-      <div class="table-responsive no-margin">
-        <table class="table table-striped table-bordered no-padding" width="100%">
-          <thead>
-            <tr>
-              <th>Tanggal</th>
-              <th>Nama Item</th>
-              <th>Provider</th>
-              <th>Tarif</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loop: $rawat_jl_dr}
-            <tr>
-              <td>{?=isset_or($value.tgl_perawatan)?} {?=isset_or($value.jam_rawat)?}</td>
-              <td>{?=isset_or($value.nm_perawatan)?}</td>
-              <td>Dokter</td>
-              <td>Rp. <span class="pull-right">{?= number_format($value.biaya_rawat,2,',','.')?}</span></td>
-              <td><button type="button" class="btn btn-danger btn-xs hapus_detail" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}" data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}" data-jam_rawat="{?=isset_or($value.jam_rawat)?}" data-provider="{?=isset_or($value.provider)?}"><i class="fa fa-close"></i><span class="hidden-xs"> Hapus</span></button></td>
-            </tr>
-            {/loop}
-            {loop: $rawat_jl_pr}
-            <tr>
-              <td>{?=isset_or($value.tgl_perawatan)?} {?=isset_or($value.jam_rawat)?}</td>
-              <td>{?=isset_or($value.nm_perawatan)?}</td>
-              <td>Perawat</td>
-              <td>Rp. <span class="pull-right">{?= number_format($value.biaya_rawat,2,',','.')?}</span></td>
-              <td><button type="button" class="btn btn-danger btn-xs hapus_detail" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}" data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}" data-jam_rawat="{?=isset_or($value.jam_rawat)?}" data-provider="{?=isset_or($value.provider)?}"><i class="fa fa-close"></i><span class="hidden-xs"> Hapus</span></button></td>
-            </tr>
-            {/loop}
-            {loop: $rawat_jl_drpr}
-            <tr>
-              <td>{?=isset_or($value.tgl_perawatan)?} {?=isset_or($value.jam_rawat)?}</td>
-              <td>{?=isset_or($value.nm_perawatan)?}</td>
-              <td>Dokter & Perawat</td>
-              <td>Rp. <span class="pull-right">{?= number_format($value.biaya_rawat,2,',','.')?}</span></td>
-              <td><button type="button" class="btn btn-danger btn-xs hapus_detail" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}" data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}" data-jam_rawat="{?=isset_or($value.jam_rawat)?}" data-provider="{?=isset_or($value.provider)?}"><i class="fa fa-close"></i><span class="hidden-xs"> Hapus</span></button></td>
-            </tr>
-            {/loop}
-          </tbody>
-          <tfoot>
-            <tr>
-              <th colspan="3">Total Biaya Tindakan</th>
-              <th>Rp. <span class="pull-right">{?= number_format($jumlah_total,2,',','.')?}</span></th>
-              <th></th>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </div>
-    <div role="tabpanel" class="tab-pane fade in" id="data_resep">
-      <h4>Data e-Resep</h4>
-      <div id="display_copy_resep"></div>
-      <div class="table-responsive no-margin">
-        <table class="table table-striped table-bordered no-padding" width="100%">
-          <thead>
-            <tr>
-              <th>Nomor Resep</th>
-              <th>Tanggal/Jam</th>
-              <th>Detail Resep</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loop: $data_resep}
-            <tr>
-              <td>{?=isset_or($value.no_resep)?}</td>
-              <td>{?=isset_or($value.tgl_peresepan)?} {?=isset_or($value.jam_peresepan)?}</td>
-              <td>
-                <ul>
-                {loop: $value.resep_dokter as $data}
-                  <li>{?=isset_or($data.nama_brng)?} - {?=isset_or($data.jml)?} - {?=isset_or($data.aturan_pakai)?}</li>
-                {/loop}
-                </ul>
-                {if: !empty($value.resep_racikan)}
-                <br>
-                <ul>
-                {loop: $value.resep_racikan as $racikan}
-                  <li>{?=isset_or($racikan.nama_racik)?} ({?=isset_or($racikan.jml_dr)?}) - {?=isset_or($racikan.aturan_pakai)?}
-                    <ul>
-                      {loop: $racikan.detail as $detail}
-                        <li>- {?=isset_or($detail.nama_brng)?} ({?=isset_or($detail.jml)?})</li>
-                      {/loop}
-                    </ul>
-                  </li>
-                {/loop}
-                </ul>
-                {/if}
-              </td>
-              <td colspan="2">
-                <button type="button" class="btn btn-danger btn-xs copy_resep" data-no_resep="{?=isset_or($value.no_resep)?}"><i class="fa fa-clone"></i><span class="hidden-xs"> Copy</span></button>
-              </td>
-            </tr>
-            {/loop}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div role="tabpanel" class="tab-pane fade in" id="lab">
-      <h4 style="margin-bottom: 20px;">Permintaan Laboratorium</h4>
-      {if: empty($laboratorium)}
-        <div class="alert alert-info">Belum ada permintaan laboratorium.</div>
-      {else}
-        {loop: $laboratorium}
-        <div class="panel panel-info" style="margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-          <div class="panel-heading" style="padding: 10px 15px;">
-            <div class="row">
-              <div class="col-md-8" style="text-transform: none;">
-                <i class="fa fa-file-text-o"></i> <strong>Order:</strong> {?=isset_or($value.noorder)?} &nbsp;&nbsp;|&nbsp;&nbsp;
-                <i class="fa fa-calendar"></i> {?=isset_or($value.tgl_permintaan)?} {?=isset_or($value.jam_permintaan)?} &nbsp;&nbsp;|&nbsp;&nbsp;
-                <i class="fa fa-user-md"></i> {?=str_replace(['DRG. ','DR. ','DRG ','DR '], ['drg. ','dr. ','drg. ','dr. '], isset_or($value.nm_dokter))?}
-              </div>
-              <div class="col-md-4 text-right">
-                <button type="button" class="btn btn-danger btn-xs {if: $value.tgl_sampel !== '0000-00-00' || $value.jam_sampel !== '00:00:00'}disabled{else}hapus_permintaan_lab{/if}" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_permintaan="{?=isset_or($value.tgl_permintaan)?}" data-jam_permintaan="{?=isset_or($value.jam_permintaan)?}" data-noorder="{?=isset_or($value.noorder)?}"><i class="fa fa-trash"></i><span class="hidden-xs"> Hapus Order</span></button>
-              </div>
+      <!-- Non Racikan -->
+      <div class="rsgm-rincian-card">
+        <div class="rsgm-rincian-card-head">
+          <div class="rsgm-rincian-card-title">
+            <span class="rsgm-rincian-icon rsgm-rincian-icon-blue"><i class="fa fa-medkit"></i></span>
+            <div>
+              <h5>Permintaan e-Resep (Non-Racikan)</h5>
+              <small>Daftar obat jadi &amp; BHP yang diresepkan pada kunjungan ini</small>
             </div>
           </div>
-          <div class="panel-body" style="padding: 15px;">
-            {if: $value.diagnosa_klinis != '' || $value.informasi_tambahan != ''}
-            <div class="well well-sm" style="background-color: #f9f9f9; border: 1px dashed #ddd; margin-bottom: 15px;">
-              {if: $value.diagnosa_klinis != ''}
-              <div style="margin-bottom: 5px;"><strong>Diagnosa Klinis:</strong> {?=isset_or($value.diagnosa_klinis)?}</div>
-              {/if}
-              {if: $value.informasi_tambahan != ''}
-              <div><strong>Informasi Tambahan:</strong> {?=isset_or($value.informasi_tambahan)?}</div>
-              {/if}
+          <span class="rsgm-rincian-total">Total Non-Racik: <strong>Rp {?= number_format($jumlah_total_resep,2,',','.')?}</strong></span>
+        </div>
+        <div class="rsgm-rincian-card-body">
+          {if: !empty($resep)}
+          <div class="table-responsive no-margin">
+            <table class="table table-bordered rsgm-rincian-table" width="100%">
+              <tbody>
+                {loop: $resep}
+                <tr class="rsgm-resep-group-row">
+                  <td colspan="4">
+                    <span class="rsgm-badge rsgm-badge-indigo"><i class="fa fa-hashtag"></i> {?=isset_or($value.no_resep)?}</span>
+                    <strong style="margin-left: 8px; color: #0f172a;"><i class="fa fa-user-md text-primary"></i> {?=isset_or($value.nm_dokter)?}</strong>
+                    <span class="text-muted" style="margin-left: 10px; font-size: 12px;"><i class="fa fa-clock-o"></i> {?=isset_or($value.tgl_peresepan)?} {?=isset_or($value.jam_peresepan)?}</span>
+                  </td>
+                  <td class="text-right" width="130">
+                    <button type="button" class="btn btn-danger btn-xs {if: $value.tgl_perawatan !== '0000-00-00'}disabled{else}hapus_resep_obat{/if}" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_peresepan)?}" data-jam_peresepan="{?=isset_or($value.jam_peresepan)?}" data-no_resep="{?=isset_or($value.no_resep)?}"><i class="fa fa-trash-o"></i><span class="hidden-xs"> Hapus Resep</span></button>
+                  </td>
+                </tr>
+                <tr class="rsgm-resep-subhead">
+                  <th>Nama Obat / BHP</th>
+                  <th width="10%" class="text-center">Jumlah</th>
+                  <th width="28%">Aturan Pakai</th>
+                  <th width="18%" class="text-right">Subtotal</th>
+                  <th width="12%" class="text-center">Aksi</th>
+                </tr>
+                {loop: $value.resep_dokter as $data}
+                <tr>
+                  <td><strong>{?=isset_or($data.nama_brng)?}</strong></td>
+                  <td class="text-center"><span class="rsgm-badge rsgm-badge-slate">{?=isset_or($data.jml)?}</span></td>
+                  <td>{?=isset_or($data.aturan_pakai)?}</td>
+                  <td class="text-right" style="font-variant-numeric: tabular-nums; font-weight: 600;">Rp {?= number_format(($data.ralan * $data.jml),2,',','.')?}</td>
+                  <td class="text-center">
+                    <button type="button" class="btn btn-danger btn-xs {if: $value.tgl_perawatan !== '0000-00-00'}disabled{else}hapus_resep_dokter{/if}" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-kd_jenis_prw="{?=isset_or($data.kode_brng)?}" data-no_resep="{?=isset_or($value.no_resep)?}"><i class="fa fa-times"></i><span class="hidden-xs"> Hapus</span></button>
+                  </td>
+                </tr>
+                {/loop}
+                {/loop}
+              </tbody>
+              <tfoot>
+                <tr class="rsgm-rincian-tfoot">
+                  <th colspan="3" class="text-right">Total Biaya Obat Non-Racikan</th>
+                  <th class="text-right">Rp {?= number_format($jumlah_total_resep,2,',','.')?}</th>
+                  <th></th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          {else}
+          <div class="rsgm-rincian-empty">
+            <i class="fa fa-medkit"></i>
+            <span>Belum ada resep obat non-racikan yang diinputkan.</span>
+          </div>
+          {/if}
+        </div>
+      </div>
+
+      <!-- Racikan -->
+      <div class="rsgm-rincian-card" style="margin-top: 14px;">
+        <div class="rsgm-rincian-card-head">
+          <div class="rsgm-rincian-card-title">
+            <span class="rsgm-rincian-icon rsgm-rincian-icon-purple"><i class="fa fa-mortar-board"></i></span>
+            <div>
+              <h5>Permintaan e-Resep (Racikan)</h5>
+              <small>Daftar komposisi obat racikan pada kunjungan ini</small>
             </div>
-            {/if}
-            
-            <table class="table table-bordered table-striped table-condensed" style="margin-bottom: 0;">
+          </div>
+          <span class="rsgm-rincian-total">Total Racikan: <strong>Rp {?= number_format($jumlah_total_resep_racikan,2,',','.')?}</strong></span>
+        </div>
+        <div class="rsgm-rincian-card-body">
+          {if: !empty($resep_racikan)}
+          <div class="table-responsive no-margin">
+            <table class="table table-bordered rsgm-rincian-table" width="100%">
+              <tbody>
+                {loop: $resep_racikan}
+                <tr class="rsgm-resep-group-row">
+                  <td colspan="3">
+                    <span class="rsgm-badge rsgm-badge-purple"><i class="fa fa-hashtag"></i> {?=isset_or($value.no_resep)?}</span>
+                    <strong style="margin-left: 8px; color: #0f172a;"><i class="fa fa-user-md text-primary"></i> {?=isset_or($value.nm_dokter)?}</strong>
+                    <span class="text-muted" style="margin-left: 10px; font-size: 12px;"><i class="fa fa-clock-o"></i> {?=isset_or($value.tgl_peresepan)?} {?=isset_or($value.jam_peresepan)?}</span>
+                  </td>
+                  <td class="text-right" width="140">
+                    <button type="button" class="btn btn-danger btn-xs hapus_resep_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_peresepan="{?=isset_or($value.tgl_peresepan)?}" data-jam_peresepan="{?=isset_or($value.jam_peresepan)?}" data-no_resep="{?=isset_or($value.no_resep)?}"><i class="fa fa-trash-o"></i><span class="hidden-xs"> Hapus Resep</span></button>
+                  </td>
+                </tr>
+                <tr class="rsgm-resep-subhead">
+                  <th>Nama Racikan</th>
+                  <th width="15%" class="text-center">Jml. Racik</th>
+                  <th width="30%">Aturan Pakai</th>
+                  <th width="25%">Keterangan</th>
+                </tr>
+                <tr>
+                  <td><strong>{if: isset($value.nama_racik)}{?=isset_or($value.nama_racik)?}{else}-{/if}</strong></td>
+                  <td class="text-center"><span class="rsgm-badge rsgm-badge-purple">{if: isset($value.jml_dr)}{?=isset_or($value.jml_dr)?}{else}-{/if}</span></td>
+                  <td>{if: isset($value.aturan_pakai)}{?=isset_or($value.aturan_pakai)?}{else}-{/if}</td>
+                  <td>{if: isset($value.keterangan)}{?=isset_or($value.keterangan)?}{else}-{/if}</td>
+                </tr>
+                <tr class="rsgm-resep-subhead">
+                  <th>Komposisi Obat</th>
+                  <th class="text-center">Kandungan</th>
+                  <th class="text-center">Jumlah</th>
+                  <th class="text-right">Subtotal</th>
+                </tr>
+                {loop: $value.resep_dokter_racikan_detail as $data}
+                <tr>
+                  <td>{?=isset_or($data.nama_brng)?}</td>
+                  <td class="text-center">{?=isset_or($data.kandungan)?}</td>
+                  <td class="text-center">{?=isset_or($data.jml)?}</td>
+                  <td class="text-right" style="font-variant-numeric: tabular-nums; font-weight: 600;">Rp {?= number_format(($data.ralan * $data.jml),2,',','.')?}</td>
+                </tr>
+                {/loop}
+                {/loop}
+              </tbody>
+              <tfoot>
+                <tr class="rsgm-rincian-tfoot">
+                  <th colspan="3" class="text-right">Total Biaya Obat Racikan</th>
+                  <th class="text-right">Rp {?= number_format($jumlah_total_resep_racikan,2,',','.')?}</th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          {else}
+          <div class="rsgm-rincian-empty">
+            <i class="fa fa-mortar-board"></i>
+            <span>Belum ada resep obat racikan yang diinputkan.</span>
+          </div>
+          {/if}
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: DATA RESEP (RIWAYAT & COPY RESEP) -->
+    <div role="tabpanel" class="tab-pane fade in" id="data_resep">
+      <div id="display_copy_resep"></div>
+      <div class="rsgm-rincian-card">
+        <div class="rsgm-rincian-card-head">
+          <div class="rsgm-rincian-card-title">
+            <span class="rsgm-rincian-icon rsgm-rincian-icon-sky"><i class="fa fa-history"></i></span>
+            <div>
+              <h5>Riwayat Data e-Resep Pasien</h5>
+              <small>Salin (Copy) resep dari kunjungan sebelumnya untuk mempercepat peresepan</small>
+            </div>
+          </div>
+        </div>
+        <div class="rsgm-rincian-card-body">
+          {if: !empty($data_resep)}
+          <div class="table-responsive no-margin">
+            <table class="table table-striped table-bordered rsgm-rincian-table" width="100%">
               <thead>
-                <tr style="background-color: #f5f5f5;">
-                  <th>Nama Pemeriksaan</th>
-                  <th width="150" class="text-center">Status Bayar</th>
-                  <th width="150" class="text-center">Aksi</th>
+                <tr>
+                  <th width="16%">Nomor Resep</th>
+                  <th width="18%">Tanggal / Jam</th>
+                  <th>Rincian Obat &amp; Aturan Pakai</th>
+                  <th width="12%" class="text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {loop: $value.permintaan_pemeriksaan_lab as $data}
+                {loop: $data_resep}
                 <tr>
+                  <td><span class="rsgm-badge rsgm-badge-indigo">{?=isset_or($value.no_resep)?}</span></td>
+                  <td style="font-variant-numeric: tabular-nums;">{?=isset_or($value.tgl_peresepan)?} <span class="text-muted">{?=isset_or($value.jam_peresepan)?}</span></td>
                   <td>
-                    <strong>{?=isset_or($data.nm_perawatan)?}</strong>
-                    {if: !empty($data.permintaan_detail_permintaan_lab)}
-                    <ul style="margin: 5px 0 0 15px; padding-left: 0; font-size: 13px; color: #555;">
-                      {loop: $data.permintaan_detail_permintaan_lab as $data2}
-                      <li style="margin-bottom: 3px;">
-                        {?=isset_or($data2.template_laboratorium.Pemeriksaan)?} 
-                        <a href="javascript:void(0);" class="text-danger hapus_detail_permintaan" data-noorder="{?=isset_or($value.noorder)?}" data-kd_jenis_prw="{?=isset_or($data.kd_jenis_prw)?}" data-id_template="{?=isset_or($data2.template_laboratorium.id_template)?}" title="Hapus Parameter" style="margin-left: 5px;"><i class="fa fa-times"></i></a>
+                    {if: !empty($value.resep_dokter)}
+                    <ul class="rsgm-resep-list">
+                      {loop: $value.resep_dokter as $data}
+                      <li><strong>{?=isset_or($data.nama_brng)?}</strong> <span class="rsgm-badge rsgm-badge-slate">{?=isset_or($data.jml)?}</span> &mdash; <span class="text-muted">{?=isset_or($data.aturan_pakai)?}</span></li>
+                      {/loop}
+                    </ul>
+                    {/if}
+                    {if: !empty($value.resep_racikan)}
+                    <ul class="rsgm-resep-list" style="margin-top: 6px;">
+                      {loop: $value.resep_racikan as $racikan}
+                      <li>
+                        <span class="rsgm-badge rsgm-badge-purple">Racikan</span> <strong>{?=isset_or($racikan.nama_racik)?}</strong> ({?=isset_or($racikan.jml_dr)?}) &mdash; {?=isset_or($racikan.aturan_pakai)?}
+                        <ul style="margin-top: 3px; padding-left: 18px;">
+                          {loop: $racikan.detail as $detail}
+                          <li>{?=isset_or($detail.nama_brng)?} ({?=isset_or($detail.jml)?})</li>
+                          {/loop}
+                        </ul>
                       </li>
                       {/loop}
                     </ul>
                     {/if}
                   </td>
-                  <td class="text-center" style="vertical-align: middle;">{?=isset_or($data.stts_bayar)?}</td>
-                  <td class="text-center" style="vertical-align: middle;">
-                    <button type="button" class="btn btn-danger btn-xs hapus_permintaan" data-noorder="{?=isset_or($value.noorder)?}" data-kd_jenis_prw="{?=isset_or($data.kd_jenis_prw)?}" title="Hapus Seluruh Pemeriksaan {?=isset_or($data.nm_perawatan)?}"><i class="fa fa-trash"></i> Hapus</button>
+                  <td class="text-center">
+                    <button type="button" class="btn btn-primary btn-xs copy_resep" data-no_resep="{?=isset_or($value.no_resep)?}"><i class="fa fa-clone"></i><span class="hidden-xs"> Copy Resep</span></button>
                   </td>
                 </tr>
                 {/loop}
               </tbody>
             </table>
           </div>
+          {else}
+          <div class="rsgm-rincian-empty">
+            <i class="fa fa-history"></i>
+            <span>Belum ada riwayat data e-Resep sebelumnya untuk pasien ini.</span>
+          </div>
+          {/if}
         </div>
-        {/loop}
-      {/if}
-    </div>
-    <div role="tabpanel" class="tab-pane fade in" id="rad">
-      <h4>Permintaan Radiologi</h4>
-      <div class="table-responsive no-margin">
-        <table class="table table-striped table-bordered no-padding" width="100%">
-          <thead>
-            <tr>
-              <th>Tanggal</th>
-              <th>Nama Item</th>
-              <th>Info Tambahan</th>
-              <th>Diagnosa Klinis</th>
-              <th>Unit/Kelas</th>
-              <th>Tarif</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loop: $radiologi}
-            <tr>
-              <td>{?=isset_or($value.tgl_permintaan)?} {?=isset_or($value.jam_permintaan)?}</td>
-              <td>{?=isset_or($value.nm_perawatan)?}</td>
-              <td>{?=isset_or($value.informasi_tambahan)?}</td>
-              <td>{?=isset_or($value.diagnosa_klinis)?}</td>
-              <td>{?=isset_or($value.kelas)?}</td>
-              <td>Rp. <span class="pull-right">{?= number_format($value.total_byr,2,',','.')?}</span></td>
-              <td><button type="button" class="btn btn-danger btn-xs hapus_permintaan_rad" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-noorder="{?=isset_or($value.noorder)?}"><i class="fa fa-close"></i><span class="hidden-xs"> Hapus</span></button></td>
-            </tr>
-            {/loop}
-          </tbody>
-          <tfoot>
-            <tr>
-              <th colspan="5">Total Biaya Radiologi</th>
-              <th>Rp. <span class="pull-right">{?= number_format($jumlah_total_rad,2,',','.')?}</span></th>
-              <th></th>
-            </tr>
-          </tfoot>
-        </table>
       </div>
     </div>
+
+    <!-- TAB 3: TINDAKAN -->
+    <div role="tabpanel" class="tab-pane fade in" id="tindakan">
+      <div class="rsgm-rincian-card">
+        <div class="rsgm-rincian-card-head">
+          <div class="rsgm-rincian-card-title">
+            <span class="rsgm-rincian-icon rsgm-rincian-icon-emerald"><i class="fa fa-stethoscope"></i></span>
+            <div>
+              <h5>Rincian Tindakan &amp; Layanan Poliklinik</h5>
+              <small>Daftar tindakan medis yang telah diberikan kepada pasien</small>
+            </div>
+          </div>
+          <span class="rsgm-rincian-total">Total Tindakan: <strong>Rp {?= number_format($jumlah_total,2,',','.')?}</strong></span>
+        </div>
+        <div class="rsgm-rincian-card-body">
+          {if: !empty($rawat_jl_dr) || !empty($rawat_jl_pr) || !empty($rawat_jl_drpr)}
+          <div class="table-responsive no-margin">
+            <table class="table table-striped table-bordered rsgm-rincian-table" width="100%">
+              <thead>
+                <tr>
+                  <th width="18%">Tanggal &amp; Jam</th>
+                  <th>Nama Tindakan / Layanan</th>
+                  <th width="16%" class="text-center">Pelaksana</th>
+                  <th width="18%" class="text-right">Tarif</th>
+                  <th width="12%" class="text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loop: $rawat_jl_dr}
+                <tr>
+                  <td style="font-variant-numeric: tabular-nums;">{?=isset_or($value.tgl_perawatan)?} <span class="text-muted">{?=isset_or($value.jam_rawat)?}</span></td>
+                  <td><strong>{?=isset_or($value.nm_perawatan)?}</strong></td>
+                  <td class="text-center"><span class="rsgm-badge rsgm-badge-sky"><i class="fa fa-user-md"></i> Dokter</span></td>
+                  <td class="text-right" style="font-variant-numeric: tabular-nums; font-weight: 600;">Rp {?= number_format($value.biaya_rawat,2,',','.')?}</td>
+                  <td class="text-center"><button type="button" class="btn btn-danger btn-xs hapus_detail" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}" data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}" data-jam_rawat="{?=isset_or($value.jam_rawat)?}" data-provider="{?=isset_or($value.provider)?}"><i class="fa fa-trash-o"></i><span class="hidden-xs"> Hapus</span></button></td>
+                </tr>
+                {/loop}
+                {loop: $rawat_jl_pr}
+                <tr>
+                  <td style="font-variant-numeric: tabular-nums;">{?=isset_or($value.tgl_perawatan)?} <span class="text-muted">{?=isset_or($value.jam_rawat)?}</span></td>
+                  <td><strong>{?=isset_or($value.nm_perawatan)?}</strong></td>
+                  <td class="text-center"><span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-user"></i> Perawat</span></td>
+                  <td class="text-right" style="font-variant-numeric: tabular-nums; font-weight: 600;">Rp {?= number_format($value.biaya_rawat,2,',','.')?}</td>
+                  <td class="text-center"><button type="button" class="btn btn-danger btn-xs hapus_detail" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}" data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}" data-jam_rawat="{?=isset_or($value.jam_rawat)?}" data-provider="{?=isset_or($value.provider)?}"><i class="fa fa-trash-o"></i><span class="hidden-xs"> Hapus</span></button></td>
+                </tr>
+                {/loop}
+                {loop: $rawat_jl_drpr}
+                <tr>
+                  <td style="font-variant-numeric: tabular-nums;">{?=isset_or($value.tgl_perawatan)?} <span class="text-muted">{?=isset_or($value.jam_rawat)?}</span></td>
+                  <td><strong>{?=isset_or($value.nm_perawatan)?}</strong></td>
+                  <td class="text-center"><span class="rsgm-badge rsgm-badge-indigo"><i class="fa fa-users"></i> Dokter &amp; Perawat</span></td>
+                  <td class="text-right" style="font-variant-numeric: tabular-nums; font-weight: 600;">Rp {?= number_format($value.biaya_rawat,2,',','.')?}</td>
+                  <td class="text-center"><button type="button" class="btn btn-danger btn-xs hapus_detail" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}" data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}" data-jam_rawat="{?=isset_or($value.jam_rawat)?}" data-provider="{?=isset_or($value.provider)?}"><i class="fa fa-trash-o"></i><span class="hidden-xs"> Hapus</span></button></td>
+                </tr>
+                {/loop}
+              </tbody>
+              <tfoot>
+                <tr class="rsgm-rincian-tfoot">
+                  <th colspan="3" class="text-right">Total Biaya Tindakan</th>
+                  <th class="text-right">Rp {?= number_format($jumlah_total,2,',','.')?}</th>
+                  <th></th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          {else}
+          <div class="rsgm-rincian-empty">
+            <i class="fa fa-stethoscope"></i>
+            <span>Belum ada tindakan poliklinik yang diinputkan.</span>
+          </div>
+          {/if}
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: LABORATORIUM -->
+    <div role="tabpanel" class="tab-pane fade in" id="lab">
+      <div class="rsgm-rincian-card">
+        <div class="rsgm-rincian-card-head">
+          <div class="rsgm-rincian-card-title">
+            <span class="rsgm-rincian-icon rsgm-rincian-icon-amber"><i class="fa fa-flask"></i></span>
+            <div>
+              <h5>Permintaan Pemeriksaan Laboratorium</h5>
+              <small>Daftar order pemeriksaan laboratorium klinik</small>
+            </div>
+          </div>
+        </div>
+        <div class="rsgm-rincian-card-body">
+          {if: empty($laboratorium)}
+          <div class="rsgm-rincian-empty">
+            <i class="fa fa-flask"></i>
+            <span>Belum ada permintaan pemeriksaan laboratorium.</span>
+          </div>
+          {else}
+            {loop: $laboratorium}
+            <div class="panel panel-default" style="margin-bottom: 14px;">
+              <div class="panel-heading" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 10px 14px !important;">
+                <div style="font-size: 12.5px; color: #334155;">
+                  <span class="rsgm-badge rsgm-badge-amber"><i class="fa fa-file-text-o"></i> {?=isset_or($value.noorder)?}</span>
+                  <span style="margin-left: 8px;"><i class="fa fa-calendar text-muted"></i> {?=isset_or($value.tgl_permintaan)?} {?=isset_or($value.jam_permintaan)?}</span>
+                  <span style="margin-left: 8px;"><i class="fa fa-user-md text-primary"></i> <strong>{?=str_replace(['DRG. ','DR. ','DRG ','DR '], ['drg. ','dr. ','drg. ','dr. '], isset_or($value.nm_dokter))?}</strong></span>
+                </div>
+                <div>
+                  <button type="button" class="btn btn-danger btn-xs {if: $value.tgl_sampel !== '0000-00-00' || $value.jam_sampel !== '00:00:00'}disabled{else}hapus_permintaan_lab{/if}" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_permintaan="{?=isset_or($value.tgl_permintaan)?}" data-jam_permintaan="{?=isset_or($value.jam_permintaan)?}" data-noorder="{?=isset_or($value.noorder)?}"><i class="fa fa-trash-o"></i><span class="hidden-xs"> Hapus Order</span></button>
+                </div>
+              </div>
+              <div class="panel-body" style="padding: 12px 14px;">
+                {if: $value.diagnosa_klinis != '' || $value.informasi_tambahan != ''}
+                <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-size: 12.5px;">
+                  {if: $value.diagnosa_klinis != ''}
+                  <div style="margin-bottom: 3px;"><strong>Diagnosa Klinis:</strong> {?=isset_or($value.diagnosa_klinis)?}</div>
+                  {/if}
+                  {if: $value.informasi_tambahan != ''}
+                  <div><strong>Informasi Tambahan:</strong> {?=isset_or($value.informasi_tambahan)?}</div>
+                  {/if}
+                </div>
+                {/if}
+                <div class="table-responsive no-margin">
+                  <table class="table table-bordered table-striped rsgm-rincian-table" style="margin-bottom: 0;">
+                    <thead>
+                      <tr>
+                        <th>Nama Pemeriksaan &amp; Parameter</th>
+                        <th width="140" class="text-center">Status Bayar</th>
+                        <th width="130" class="text-center">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loop: $value.permintaan_pemeriksaan_lab as $data}
+                      <tr>
+                        <td>
+                          <strong>{?=isset_or($data.nm_perawatan)?}</strong>
+                          {if: !empty($data.permintaan_detail_permintaan_lab)}
+                          <ul style="margin: 5px 0 0 16px; padding-left: 0; font-size: 12.5px; color: #475569;">
+                            {loop: $data.permintaan_detail_permintaan_lab as $data2}
+                            <li style="margin-bottom: 2px;">
+                              {?=isset_or($data2.template_laboratorium.Pemeriksaan)?}
+                              <a href="javascript:void(0);" class="text-danger hapus_detail_permintaan" data-noorder="{?=isset_or($value.noorder)?}" data-kd_jenis_prw="{?=isset_or($data.kd_jenis_prw)?}" data-id_template="{?=isset_or($data2.template_laboratorium.id_template)?}" title="Hapus Parameter" style="margin-left: 6px;"><i class="fa fa-times"></i></a>
+                            </li>
+                            {/loop}
+                          </ul>
+                          {/if}
+                        </td>
+                        <td class="text-center" style="vertical-align: middle;">
+                          <span class="rsgm-badge {if: $data.stts_bayar == 'Sudah'}rsgm-badge-emerald{else}rsgm-badge-amber{/if}">{?=isset_or($data.stts_bayar)?}</span>
+                        </td>
+                        <td class="text-center" style="vertical-align: middle;">
+                          <button type="button" class="btn btn-danger btn-xs hapus_permintaan" data-noorder="{?=isset_or($value.noorder)?}" data-kd_jenis_prw="{?=isset_or($data.kd_jenis_prw)?}" title="Hapus Seluruh Pemeriksaan {?=isset_or($data.nm_perawatan)?}"><i class="fa fa-trash-o"></i> Hapus</button>
+                        </td>
+                      </tr>
+                      {/loop}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            {/loop}
+          {/if}
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: RADIOLOGI -->
+    <div role="tabpanel" class="tab-pane fade in" id="rad">
+      <div class="rsgm-rincian-card">
+        <div class="rsgm-rincian-card-head">
+          <div class="rsgm-rincian-card-title">
+            <span class="rsgm-rincian-icon rsgm-rincian-icon-rose"><i class="fa fa-heartbeat"></i></span>
+            <div>
+              <h5>Permintaan Pemeriksaan Radiologi</h5>
+              <small>Daftar order pencitraan radiologi dental &amp; umum</small>
+            </div>
+          </div>
+          <span class="rsgm-rincian-total">Total Radiologi: <strong>Rp {?= number_format($jumlah_total_rad,2,',','.')?}</strong></span>
+        </div>
+        <div class="rsgm-rincian-card-body">
+          {if: !empty($radiologi)}
+          <div class="table-responsive no-margin">
+            <table class="table table-striped table-bordered rsgm-rincian-table" width="100%">
+              <thead>
+                <tr>
+                  <th width="16%">Tanggal &amp; Jam</th>
+                  <th>Nama Pemeriksaan</th>
+                  <th width="18%">Info Tambahan</th>
+                  <th width="18%">Diagnosa Klinis</th>
+                  <th width="10%" class="text-center">Kelas</th>
+                  <th width="16%" class="text-right">Tarif</th>
+                  <th width="10%" class="text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loop: $radiologi}
+                <tr>
+                  <td style="font-variant-numeric: tabular-nums;">{?=isset_or($value.tgl_permintaan)?} <span class="text-muted">{?=isset_or($value.jam_permintaan)?}</span></td>
+                  <td><strong>{?=isset_or($value.nm_perawatan)?}</strong></td>
+                  <td>{?=isset_or($value.informasi_tambahan)?}</td>
+                  <td>{?=isset_or($value.diagnosa_klinis)?}</td>
+                  <td class="text-center"><span class="rsgm-badge rsgm-badge-slate">{?=isset_or($value.kelas)?}</span></td>
+                  <td class="text-right" style="font-variant-numeric: tabular-nums; font-weight: 600;">Rp {?= number_format($value.total_byr,2,',','.')?}</td>
+                  <td class="text-center"><button type="button" class="btn btn-danger btn-xs hapus_permintaan_rad" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-noorder="{?=isset_or($value.noorder)?}"><i class="fa fa-trash-o"></i><span class="hidden-xs"> Hapus</span></button></td>
+                </tr>
+                {/loop}
+              </tbody>
+              <tfoot>
+                <tr class="rsgm-rincian-tfoot">
+                  <th colspan="5" class="text-right">Total Biaya Radiologi</th>
+                  <th class="text-right">Rp {?= number_format($jumlah_total_rad,2,',','.')?}</th>
+                  <th></th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          {else}
+          <div class="rsgm-rincian-empty">
+            <i class="fa fa-heartbeat"></i>
+            <span>Belum ada permintaan pemeriksaan radiologi.</span>
+          </div>
+          {/if}
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
 <!-- Modal -->
 <div class="modal fade" id="detailModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
@@ -342,9 +486,7 @@
     var noorder = $(this).attr("data-noorder");
     var tgl_permintaan = $(this).attr("data-tgl_permintaan");
     var jam_permintaan = $(this).attr("data-jam_permintaan");
-    console.log(noorder + ' - ' + kd_jenis_prw + ' - ' + tgl_permintaan + ' - ' + jam_permintaan);
     bootbox.confirm("Apakah Anda yakin ingin menghapus data ini?", function(result){
-      // ketika ditekan tombol ok
       if (result){
           $.post(url, {
             no_rawat: no_rawat,
@@ -352,12 +494,10 @@
             tgl_permintaan: tgl_permintaan,
             jam_permintaan: jam_permintaan
           } ,function(data) {
-            console.log(data);
             var activeTab = $('#rincian .nav-tabs .active a').attr('href');
             var url = baseURL + '/dokter_ralan/rincian?t=' + mlite.token;
             $.post(url, {no_rawat : no_rawat,
             }, function(data) {
-              // tampilkan data
               $("#rincian").html(data).show();
               if(activeTab) {
                   $('#rincian .nav-tabs a[href="' + activeTab + '"]').tab('show');
@@ -374,21 +514,17 @@
     var no_rawat = $('input:text[name=no_rawat]').val();
     var noorder = $(this).attr("data-noorder");
     var kd_jenis_prw = $(this).attr("data-kd_jenis_prw");
-    //console.log(noorder + ' - ' + kd_jenis_prw + ' - ' + tgl_permintaan + ' - ' + jam_permintaan);
     bootbox.confirm("Apakah Anda yakin ingin menghapus data ini?", function(result){
-      // ketika ditekan tombol ok
       if (result){
           $.post(url, {
             no_rawat: no_rawat,
             noorder: noorder,
             kd_jenis_prw: kd_jenis_prw
           } ,function(data) {
-            console.log(data);
             var activeTab = $('#rincian .nav-tabs .active a').attr('href');
             var url = baseURL + '/dokter_ralan/rincian?t=' + mlite.token;
             $.post(url, {no_rawat : no_rawat,
             }, function(data) {
-              // tampilkan data
               $("#rincian").html(data).show();
               if(activeTab) {
                   $('#rincian .nav-tabs a[href="' + activeTab + '"]').tab('show');
@@ -397,9 +533,6 @@
           });
       }
     });
-    //$('#detailModal').modal('hidden');
-    //$('body').removeClass('modal-open')
-    //$('.modal-backdrop').remove()
   });
   $("#rincian").on("click",".hapus_detail_permintaan", function(event){
     event.preventDefault();
@@ -408,7 +541,6 @@
     var noorder = $(this).attr("data-noorder");
     var kd_jenis_prw = $(this).attr("data-kd_jenis_prw");
     var id_template = $(this).attr("data-id_template");
-    //console.log(noorder + ' - ' + kd_jenis_prw + ' - ' + id_template);
     $.post(url, {
       noorder: noorder,
       kd_jenis_prw: kd_jenis_prw,
@@ -419,15 +551,11 @@
       var url = baseURL + '/dokter_ralan/rincian?t=' + mlite.token;
       $.post(url, {no_rawat : no_rawat,
       }, function(data) {
-        // tampilkan data
         $("#rincian").html(data).show();
         if(activeTab) {
             $('#rincian .nav-tabs a[href="' + activeTab + '"]').tab('show');
         }
       });
     });
-    //$('#detailModal').modal('hidden');
-    //$('body').removeClass('modal-open')
-    //$('.modal-backdrop').remove()
   });
 </script>

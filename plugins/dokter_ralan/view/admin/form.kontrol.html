@@ -1,90 +1,102 @@
-<div id="form_kontrol">
+<div id="form_kontrol" class="rsgm-reg-form clearfix">
   <div class="col-md-3">
-    <div class="panel panel-default">
-      <div class="panel-body">
-          <div class="form-group">
-            <label for="id_pendaftaran">Id Rawat</label>
+    <div class="rsgm-reg-shell">
+      <div class="rsgm-reg-header">
+        <h4 class="rsgm-reg-title">
+          <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+          <span>Data Pasien</span>
+        </h4>
+      </div>
+      <div class="rsgm-reg-body">
+        <div class="form-group">
+          <label for="kontrol_no_rawat">Id Rawat</label>
+          <div class="rsgm-input-icon">
+            <i class="fa fa-hashtag rsgm-field-icon"></i>
             <input type="text" id="kontrol_no_rawat" name="no_rawat" placeholder="ID Pendaftaran" class="form-control" value="" readonly>
           </div>
-          <div class="form-group">
-            <label for="id_pasien">Nomor RM</label>
+        </div>
+        <div class="form-group">
+          <label>Nomor RM</label>
+          <div class="rsgm-input-icon">
+            <i class="fa fa-address-card-o rsgm-field-icon"></i>
             <input type="text" name="no_rkm_medis" class="form-control" placeholder="Nomor Rekam Medik" value="" readonly>
           </div>
-          <div class="form-group">
-            <label for="nama_pasien">Nama Pasien</label>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Nama Pasien</label>
+          <div class="rsgm-input-icon">
+            <i class="fa fa-user-o rsgm-field-icon"></i>
             <input type="text" name="nm_pasien" class="form-control" placeholder="Nama pasien" value="" readonly>
           </div>
+        </div>
       </div>
     </div>
   </div>
   <div class="col-md-9">
-    <div class="panel panel-default">
-      <div class="panel-body">
+    <div class="rsgm-reg-shell">
+      <div class="rsgm-reg-header">
+        <h4 class="rsgm-reg-title">
+          <span class="rsgm-reg-icon"><i class="fa fa-calendar-check-o"></i></span>
+          <span>Surat Rencana Kontrol (SKDP) &amp; Booking Kunjungan</span>
+        </h4>
+        <span class="rsgm-reg-badge-hint hidden-xs">Jadwal Kontrol</span>
+      </div>
+      <div class="rsgm-reg-body">
         <div class="row clearfix">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label>Diagnosa</label>
-                    <input type="text" name="diagnosa" class="form-control" />
-                </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Diagnosa</label>
+              <input type="text" name="diagnosa" class="form-control" placeholder="Diagnosa pasien..." />
             </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label>Tindakan / Terapi</label>
-                    <input type="text" name="terapi" class="form-control" />
-                </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Tindakan / Terapi</label>
+              <input type="text" name="terapi" class="form-control" placeholder="Tindakan atau terapi yang diberikan..." />
             </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label>Alasan Kontrol</label>
-                    <textarea name="alasan1" class="form-control" rows="3"></textarea>
-                </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Alasan Kontrol</label>
+              <textarea name="alasan1" class="form-control" rows="3" placeholder="Alasan perlu kontrol kembali..."></textarea>
             </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label>Rencana Tindak Lanjut</label>
-                    <textarea name="rtl1" class="form-control" rows="3"></textarea>
-                </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Rencana Tindak Lanjut</label>
+              <textarea name="rtl1" class="form-control" rows="3" placeholder="Rencana tindak lanjut pada kunjungan berikutnya..."></textarea>
             </div>
-            <!--
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label>Dokter</label>
-                    <select class="form-control" name="dokter" data-use-search="true">
-
-                    </select>
-                </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label>Tanggal Surat</label>
+              <div class="rsgm-input-icon">
+                <i class="fa fa-calendar rsgm-field-icon"></i>
+                <input type="text" name="tanggal_rujukan" class="form-control tanggal" value="{?=date('Y-m-d')?}" />
+              </div>
             </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label>Poli/Unit</label>
-                    <select class="form-control" name="poli" data-use-search="true">
-
-                    </select>
-                </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label>Tanggal Datang</label>
+              <div class="rsgm-input-icon">
+                <i class="fa fa-calendar-plus-o rsgm-field-icon"></i>
+                <input type="text" name="tanggal_datang" class="form-control tanggal" placeholder="YYYY-MM-DD" />
+              </div>
             </div>
-            -->
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label>Tanggal Surat</label>
-                    <input type="text" name="tanggal_rujukan" class="form-control tanggal" value="{?=date('Y-m-d')?}" />
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label>Tanggal Datang</label>
-                    <input type="text" name="tanggal_datang" class="form-control tanggal" />
-                </div>
-            </div>
+          </div>
         </div>
-        <div class="row clearfix">
-            <div class="col-md-12">
-                <button type="button" class="btn btn-primary" id="simpan_kontrol">Simpan</button>
-                <button type="button" class="btn btn-danger" id="selesai_kontrol">Selesai</button>
-                <button type="button" class="btn btn-warning pull-right" id="simpan_kontrol_bpjs">Kontrol BPJS</button>
-            </div>
+      </div>
+      <div class="rsgm-reg-footer">
+        <span class="rsgm-footer-hint hidden-xs">
+          <i class="fa fa-info-circle"></i> Simpan jadwal rencana kontrol internal atau kirim ke VClaim BPJS
+        </span>
+        <div class="rsgm-reg-actions">
+          <button type="button" class="btn btn-primary" id="simpan_kontrol"><i class="fa fa-save"></i> Simpan</button>
+          <button type="button" class="btn btn-warning" id="simpan_kontrol_bpjs"><i class="fa fa-cloud-upload"></i> Kontrol BPJS</button>
+          <button type="button" class="btn btn-default" id="selesai_kontrol"><i class="fa fa-check"></i> Selesai</button>
         </div>
       </div>
     </div>
   </div>
 </div>
-<br><br>

@@ -1,30 +1,32 @@
-<div class="panel panel-default">
-  <div class="panel-body">
-    <div class="table-responsive no-margin">
-      <table class="table table-stripped">
-        <thead>
-          <tr>
-            <th>ID Tindakan</th>
-            <th>Nama Tindakan</th>
-            <th>Tarif</th>
-          </tr>
-        </thead>
-        <tbody>
-          {if: $laboratorium}
-          {loop: $laboratorium}
-          <tr class="pilih_laboratorium" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}" data-nm_perawatan="{?=isset_or($value.nm_perawatan)?}" data-biaya="{?=isset_or($value.total_byr)?}" data-kat="laboratorium">
-            <td>{?=isset_or($value.kd_jenis_prw)?}</td>
-            <td>{?=isset_or($value.nm_perawatan)?}</td>
-            <td>Rp. <span class="pull-right">{?= number_format($value.total_byr,2,',','.')?}</span></td>
-          </tr>
-          {/loop}
-          {else}
-          <tr>
-            <td colspan="3"class="text-center">Data layanan tidak ditemukan.</td>
-          </tr>
-          {/if}
-        </tbody>
-      </table>
-    </div>
+<div class="rsgm-pasien-box">
+  <div class="rsgm-pasien-head">
+    <span><i class="fa fa-flask"></i> Hasil Pencarian Pemeriksaan Laboratorium &mdash; Klik baris untuk memilih</span>
+    <button type="button" class="rsgm-pasien-close"><i class="fa fa-times"></i> Tutup</button>
+  </div>
+  <div class="rsgm-pasien-scroll">
+    <table class="table table-striped table-hover" width="100%">
+      <thead>
+        <tr>
+          <th width="18%">ID Pemeriksaan</th>
+          <th>Nama Pemeriksaan Laboratorium</th>
+          <th width="24%" class="text-right">Tarif</th>
+        </tr>
+      </thead>
+      <tbody>
+        {if: $laboratorium}
+        {loop: $laboratorium}
+        <tr class="pilih_laboratorium pilih" data-kd_jenis_prw="{?=isset_or($value.kd_jenis_prw)?}" data-nm_perawatan="{?=isset_or($value.nm_perawatan)?}" data-biaya="{?=isset_or($value.total_byr)?}" data-kat="laboratorium">
+          <td><span class="rsgm-badge rsgm-badge-amber">{?=isset_or($value.kd_jenis_prw)?}</span></td>
+          <td><strong>{?=isset_or($value.nm_perawatan)?}</strong></td>
+          <td class="text-right" style="font-variant-numeric: tabular-nums; font-weight: 600;">Rp {?= number_format($value.total_byr,2,',','.')?}</td>
+        </tr>
+        {/loop}
+        {else}
+        <tr>
+          <td colspan="3" class="text-center text-muted">Data layanan laboratorium tidak ditemukan.</td>
+        </tr>
+        {/if}
+      </tbody>
+    </table>
   </div>
 </div>

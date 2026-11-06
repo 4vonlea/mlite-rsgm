@@ -552,48 +552,69 @@ $("#rincian").on("click",".hasil_radiologi", function(event){
   var status = $(this).attr("data-status");
 
   var set_stok = ''
-      + '<div class="form-group">'
-      + '<div class="form-group">'
-      + '<label>Hasil</label>'
-      + '<textarea name="hasil" id="hasil" rows="4" class="form-control""></textarea>'
-      + '</div>'
-      + '<div class="form-group">'
-      + '<label>Upload</label>'
-      + '<form method="post" action="" enctype="multipart/form-data">'
-      + '  Select file : <input type="file" name="file" id="file" class="form-control"><br>'
-      + '  <input type="button" class="btn btn-info" value="Upload" id="btn_upload">'
-      + '  <input type="button" class="btn btn-success" value="Upload Mini PACS (CR)" id="btn_upload_pacs" style="margin-left: 5px;">'
-      + '</form>'
-      + '<div id="preview"></div>'
-      + '</div>'
-      + '<div id="preview_hasil"></div>'
-      + '</div>'
-      + '';
+      + '<div style="padding: 4px 2px;">'
+      + '  <div class="form-group" style="margin-bottom: 16px;">'
+      + '    <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #334155; display: block; margin-bottom: 6px;">'
+      + '      <i class="fa fa-file-text-o text-primary"></i> Bacaan / Hasil Expertise Dokter Radiologi'
+      + '    </label>'
+      + '    <textarea name="hasil" id="hasil" rows="5" class="form-control" placeholder="Ketik deskripsi hasil bacaan / expertise radiologi di sini..." style="border-radius: 8px !important; border: 1px solid #cbd5e1; font-size: 13px; padding: 10px 12px; line-height: 1.55;"></textarea>'
+      + '  </div>'
+      + '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">'
+      + '    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">'
+      + '      <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #0f172a; margin: 0;">'
+      + '        <i class="fa fa-television text-info"></i> Unggah Citra Rontgen &amp; Konversi DICOM Mini PACS'
+      + '      </label>'
+      + '      <span style="font-size: 11px; color: #64748b; background: #fff; border: 1px solid #cbd5e1; border-radius: 999px; padding: 2px 10px; font-weight: 600;">Format: JPG / PNG</span>'
+      + '    </div>'
+      + '    <form method="post" action="" enctype="multipart/form-data">'
+      + '      <div class="row" style="margin-bottom: 12px;">'
+      + '        <div class="col-sm-8" style="margin-bottom: 8px;">'
+      + '          <input type="file" name="file" id="file" class="form-control" accept="image/*" style="border-radius: 7px !important; border: 1px solid #cbd5e1; height: 36px; padding: 5px 10px; background: #fff;">'
+      + '        </div>'
+      + '        <div class="col-sm-4">'
+      + '          <select id="pacs_modality" class="form-control" style="border-radius: 7px !important; border: 1px solid #cbd5e1; height: 36px; font-size: 12.5px; font-weight: 600; background: #fff;">'
+      + '            <option value="CR">Modality: CR (Radiografi)</option>'
+      + '            <option value="PX">Modality: PX (Panoramic)</option>'
+      + '            <option value="IO">Modality: IO (Intraoral)</option>'
+      + '            <option value="DX">Modality: DX (Digital X-Ray)</option>'
+      + '            <option value="CT">Modality: CT / CBCT</option>'
+      + '          </select>'
+      + '        </div>'
+      + '      </div>'
+      + '      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">'
+      + '        <button type="button" class="btn btn-info" id="btn_upload" style="border-radius: 7px !important; text-transform: none !important; transform: none !important; font-weight: 600; font-size: 12.5px; padding: 7px 14px !important; background: #2563eb !important; border-color: #1d4ed8 !important; color: #fff !important;">'
+      + '          <i class="fa fa-picture-o"></i> Upload Lampiran Gambar'
+      + '        </button>'
+      + '        <button type="button" class="btn btn-success" id="btn_upload_pacs" style="border-radius: 7px !important; text-transform: none !important; transform: none !important; font-weight: 600; font-size: 12.5px; padding: 7px 14px !important; background: #0f172a !important; border-color: #334155 !important; color: #38bdf8 !important;">'
+      + '          <i class="fa fa-television"></i> Upload &amp; Konversi ke Mini PACS (DICOM)'
+      + '        </button>'
+      + '      </div>'
+      + '    </form>'
+      + '    <div id="preview" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;"></div>'
+      + '  </div>'
+      + '  <div id="preview_hasil"></div>'
+      + '</div>';
 
   // tampilkan dialog konfirmasi
   var box = bootbox.dialog({
     message: set_stok,
     size: 'large',
-    title: 'Input Hasil Radiologi',
+    title: '<i class="fa fa-edit text-primary"></i> Input Expertise &amp; Citra Radiologi',
     buttons: {
       main: {
-        label: 'Simpan',
+        label: '<i class="fa fa-save"></i> Simpan Hasil Expertise',
         className: 'btn-primary',
         callback() {
           var hasil = $('#hasil').val();
-          //console.log(tgl_keluar);
           $.post(url, {
             no_rawat: no_rawat,
             tgl_periksa: tgl_periksa,
             jam_periksa: jam_periksa,
             hasil: hasil
           } ,function(data) {
-            // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
-            //$("#display").load(baseURL + '/rawat_inap/display?t=' + mlite.token);
             var url = baseURL + '/radiologi/rincian?t=' + mlite.token;
             $.post(url, {no_rawat : no_rawat, status : status
             }, function(data) {
-              // tampilkan data
               $("#rincian").html(data).show();
             });
             $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
@@ -604,7 +625,7 @@ $("#rincian").on("click",".hasil_radiologi", function(event){
         }
       },
       cancel: {
-        label: "Cancel",
+        label: "Tutup",
         className: "btn-default"
       }
     }
@@ -617,11 +638,19 @@ $("#rincian").on("click",".hasil_radiologi", function(event){
 
       var fd = new FormData();
       var files = $('#file')[0].files[0];
+      if(!files) {
+        bootbox.alert("Silakan pilih file gambar terlebih dahulu.");
+        return;
+      }
       fd.append('file',files);
       fd.append('no_rawat',no_rawat);
       fd.append('tgl_periksa',tgl_periksa);
       fd.append('jam_periksa',jam_periksa);
-      // AJAX request
+
+      var btn = $(this);
+      var oldHtml = btn.html();
+      btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Mengunggah...');
+
       $.ajax({
         url: url,
         type: 'post',
@@ -631,14 +660,22 @@ $("#rincian").on("click",".hasil_radiologi", function(event){
         dataType: 'json',
         success: function(data)
         {
+            btn.prop('disabled', false).html(oldHtml);
             if(data.status == 'success')
             {
-                $('#preview').append("<img src='"+data.result+"' width='100' height='100' style='display: inline-block;'>");
+                $('#preview').append("<div style='border:1px solid #cbd5e1; padding:4px; border-radius:8px; background:#fff;'><img src='"+data.result+"' style='height:90px; border-radius:4px; object-fit:contain;'></div>");
+                $.post(baseURL + '/radiologi/rincian?t=' + mlite.token, {no_rawat: no_rawat, status: status}, function(rincianHtml) {
+                  $("#rincian").html(rincianHtml).show();
+                });
             }
             else if(data.status == 'failure')
             {
                 bootbox.alert(data.result);
             }
+        },
+        error: function() {
+            btn.prop('disabled', false).html(oldHtml);
+            bootbox.alert("Terjadi kesalahan saat mengunggah lampiran gambar.");
         }
       });
     });
@@ -653,13 +690,14 @@ $("#rincian").on("click",".hasil_radiologi", function(event){
         bootbox.alert("Silakan pilih file gambar (JPEG/PNG) terlebih dahulu.");
         return;
       }
+      var modality = $('#pacs_modality').val() || 'CR';
       fd.append('file_image',files);
       fd.append('no_rawat',no_rawat);
-      fd.append('modality','CR');
+      fd.append('modality',modality);
 
       var btn = $(this);
-      var oldVal = btn.val();
-      btn.prop('disabled', true).val('Uploading...');
+      var oldHtml = btn.html();
+      btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Mengonversi DICOM...');
 
       $.ajax({
         url: url,
@@ -670,22 +708,25 @@ $("#rincian").on("click",".hasil_radiologi", function(event){
         dataType: 'json',
         success: function(data)
         {
-            btn.prop('disabled', false).val(oldVal);
+            btn.prop('disabled', false).html(oldHtml);
             if(data.status == 'success')
             {
-                bootbox.alert("Berhasil mengunggah dan mengkonversi ke Mini PACS!");
+                bootbox.alert("Berhasil mengunggah dan mengonversi citra ke Mini PACS (DICOM)!");
                 if(data.result) {
-                    $('#preview').append("<img src='"+data.result+"' width='100' height='100' style='display: inline-block; margin: 5px; border: 2px solid #555;'>");
+                    $('#preview').append("<div style='border:2px solid #38bdf8; padding:4px; border-radius:8px; background:#0f172a;'><img src='"+data.result+"' style='height:90px; border-radius:4px; object-fit:contain;'></div>");
                 }
+                $.post(baseURL + '/radiologi/rincian?t=' + mlite.token, {no_rawat: no_rawat, status: status}, function(rincianHtml) {
+                  $("#rincian").html(rincianHtml).show();
+                });
             }
             else
             {
-                bootbox.alert(data.message || 'Gagal mengunggah');
+                bootbox.alert(data.message || 'Gagal mengunggah ke Mini PACS');
             }
         },
         error: function() {
-            btn.prop('disabled', false).val(oldVal);
-            bootbox.alert("Terjadi kesalahan jaringan.");
+            btn.prop('disabled', false).html(oldHtml);
+            bootbox.alert("Terjadi kesalahan jaringan saat menghubungi server Mini PACS.");
         }
       });
     });
@@ -1064,16 +1105,20 @@ $(document).on('click', '.btn-tte', function(e) {
                                 var verifyUrl = mlite.url + '/esignature/verify/' + res.hash;
                                 var qrClass = 'qr_' + res.hash.substring(0, 8);
                                 container.html(
-                                    '<a href="'+verifyUrl+'" target="_blank" style="cursor:default; text-decoration:none; color:inherit;"><div class="' + qrClass + '" style="margin-top:10px;margin-bottom:10px; display:inline-block;"></div></a>' +
-                                    '<br><small class="text-muted"><i class="fa fa-check-circle text-success"></i> Ditandatangani oleh ' + signer_name + '</small>'
+                                    '<div style="display: inline-flex; align-items: center; gap: 10px; background: #ffffff; padding: 6px 12px; border-radius: 8px; border: 1px solid #a7f3d0;">' +
+                                      '<a href="'+verifyUrl+'" target="_blank" style="cursor:default; text-decoration:none; color:inherit;"><div class="' + qrClass + '" style="display:inline-block; vertical-align: middle;"></div></a>' +
+                                      '<div style="text-align: left;">' +
+                                        '<div style="font-size: 11.5px; color: #047857; font-weight: 700;"><i class="fa fa-check-circle"></i> Sudah Ditandatangani (TTE)</div>' +
+                                        '<div style="font-size: 11px; color: #475569; font-weight: 600;">' + signer_name + '</div>' +
+                                      '</div>' +
+                                    '</div>'
                                 );
                                 $('.' + qrClass).qrcode({
-                                    width: 100,
-                                    height: 100,
+                                    width: 54,
+                                    height: 54,
                                     text: res.hash
                                 });
-                                                                $('#btn-cetak-'+ref_id).removeAttr('disabled').removeAttr('title');
-                                // Hide the TTE button
+                                $('#btn-cetak-'+ref_id).removeAttr('disabled').removeAttr('title');
                                 $('button[data-ref_id="'+ref_id+'"]').hide();
                                                         } else {
                                 // fallback if container not found

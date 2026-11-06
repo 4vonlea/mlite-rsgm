@@ -1,165 +1,188 @@
-<div class="row" id="form_rincian">
-  <div class="col-md-5">
-    <div class="panel panel-info">
-      <div class="panel-heading"><i class="fa fa-search"></i> Pencarian Tindakan</div>
-      <div class="panel-body" style="background-color: #fcfcfc;">
-        <div class="form-horizontal">
-          <div class="form-group">
-            <label class="col-sm-3 control-label">Tanggal</label>
-            <div class="col-sm-5" style="padding-right: 5px;">
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-                <input type="text" id="tgl_perawatan" name="tgl_perawatan" class="form-control tanggal" value="{?=date('Y-m-d')?}">
-              </div>
-            </div>
-            <div class="col-sm-4" style="padding-left: 0;">
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
-                <input type="text" id="jam_reg" name="jam_reg" class="form-control jam" value="{?=date('H:i:s')?}">
-              </div>
-            </div>
+<div id="form_rincian" class="rsgm-reg-form clearfix">
+  <div class="col-md-12">
+    <div class="rsgm-reg-shell">
+      <div class="rsgm-reg-grid">
+        <div class="rsgm-reg-col rsgm-reg-col-main">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-search"></i></span>
+              <span>Pencarian Tindakan &amp; Data Pasien</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">Order Radiologi</span>
           </div>
-          <div class="form-group">
-            <label class="col-sm-3 control-label">Status</label>
-            <div class="col-sm-9">
-              <input type="text" name="status" class="form-control" value="{if: $type == 'ranap'}Ranap{else}Ralan{/if}" readonly>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-sm-3 control-label">Cari Tindakan</label>
-            <div class="col-sm-9">
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-search"></i></span>
-                <input type="text" name="layanan" class="form-control" placeholder="Ketik nama tindakan/layanan..." autocomplete="off">
+          <div class="rsgm-reg-body">
+            <div class="form-horizontal">
+              <div class="form-group">
+                <label class="col-sm-3 control-label">Tanggal</label>
+                <div class="col-sm-4">
+                  <div class="rsgm-input-icon">
+                    <i class="fa fa-calendar rsgm-field-icon"></i>
+                    <input type="text" id="tgl_perawatan" name="tgl_perawatan" class="form-control tanggal" value="{?=date('Y-m-d')?}">
+                  </div>
+                </div>
+                <label class="col-sm-2 control-label rsgm-label-inline">Jam</label>
+                <div class="col-sm-3">
+                  <div class="rsgm-input-icon">
+                    <i class="fa fa-clock-o rsgm-field-icon"></i>
+                    <input type="text" id="jam_reg" name="jam_reg" class="form-control jam" value="{?=date('H:i:s')?}">
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-3 control-label">No. Rawat</label>
+                <div class="col-sm-5">
+                  <div class="rsgm-input-icon">
+                    <i class="fa fa-hashtag rsgm-field-icon"></i>
+                    <input type="text" name="no_rawat" class="form-control" placeholder="Nomor Rawat" value="" readonly>
+                  </div>
+                </div>
+                <label class="col-sm-2 control-label rsgm-label-inline">Status</label>
+                <div class="col-sm-2">
+                  <input type="text" name="status" class="form-control text-center" value="{if: $type == 'ranap'}Ranap{else}Ralan{/if}" readonly>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-3 control-label">Pasien</label>
+                <div class="col-sm-3">
+                  <div class="rsgm-input-icon">
+                    <i class="fa fa-address-card-o rsgm-field-icon"></i>
+                    <input type="text" name="no_rkm_medis" class="form-control" placeholder="No. RM" value="" readonly>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="rsgm-input-icon">
+                    <i class="fa fa-user-o rsgm-field-icon"></i>
+                    <input type="text" name="nm_pasien" class="form-control" placeholder="Nama Pasien" value="" readonly>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-3 control-label">Cari Tindakan</label>
+                <div class="col-sm-9">
+                  <div class="rsgm-input-icon">
+                    <i class="fa fa-search rsgm-field-icon"></i>
+                    <input type="text" name="layanan" class="form-control" placeholder="Ketik nama tindakan / pemeriksaan radiologi..." autocomplete="off">
+                  </div>
+                </div>
+              </div>
+              <div class="form-group" id="rawat_jl_dr">
+                <label class="col-sm-3 control-label">Dokter PJ</label>
+                <div class="col-sm-6" style="position: relative;">
+                  <div class="rsgm-input-icon">
+                    <i class="fa fa-user-md rsgm-field-icon"></i>
+                    <input type="text" name="nama_provider" id="nama_provider" class="form-control" placeholder="Ketik nama dokter radiologi..." autocomplete="off">
+                  </div>
+                  <ul class="list-group" id="kode_providerList" style="z-index:1050; position:absolute; width:100%; display:none; max-height:200px; overflow-y:auto; box-shadow: 0 8px 20px rgba(15,23,42,0.12);"></ul>
+                </div>
+                <div class="col-sm-3">
+                  <input type="text" name="kode_provider" id="kode_provider" class="form-control" placeholder="Kode Dokter" readonly>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        
-        <!-- Search Results Area -->
-        <div id="layanan" style="max-height: 350px; overflow-y: auto; border-top: 1px solid #eee; padding-top:10px; display:none; background: #fff; border-radius: 4px; box-shadow: inset 0 1px 3px rgba(0,0,0,.05);"></div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="col-md-7">
-    <div class="panel panel-primary">
-      <div class="panel-heading"><i class="fa fa-check-square-o"></i> Detail Tindakan Terpilih</div>
-      <div class="panel-body">
-        <div class="form-horizontal">
-          
-          <h5 class="page-header" style="margin-top:0; border-bottom: 2px solid #eee; padding-bottom: 5px;">Data Pasien</h5>
-          <div class="form-group">
-            <label class="col-sm-3 control-label">No. Rawat</label>
-            <div class="col-sm-9">
-              <input type="text" name="no_rawat" class="form-control" value="" readonly style="background-color: #f5f5f5;">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-sm-3 control-label">Pasien</label>
-            <div class="col-sm-3" style="padding-right: 5px;">
-              <input type="text" name="no_rkm_medis" class="form-control" placeholder="No RM" value="" readonly style="background-color: #f5f5f5;">
-            </div>
-            <div class="col-sm-6" style="padding-left: 0;">
-              <input type="text" name="nm_pasien" class="form-control" placeholder="Nama Pasien" value="" readonly style="background-color: #f5f5f5;">
-            </div>
-          </div>
-          
-          <h5 class="page-header" style="border-bottom: 2px solid #eee; padding-bottom: 5px;">Data Tindakan</h5>
-          <div class="form-group">
-            <label class="col-sm-3 control-label">Tindakan</label>
-            <div class="col-sm-9">
-              <input type="hidden" name="kd_jenis_prw" class="form-control" value="">
-              <input type="text" name="nm_perawatan" class="form-control" placeholder="Pilih tindakan dari pencarian di kiri" value="" readonly style="background-color: #e8f4f8; border-color: #bce8f1; color: #31708f; font-weight: bold;">
-              <input type="hidden" name="kat" class="form-control" value="">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-sm-3 control-label">Biaya</label>
-            <div class="col-sm-9">
-              <div class="input-group">
-                <span class="input-group-addon" style="background-color: #eee;">Rp</span>
-                <input type="text" id="biaya" name="biaya" class="form-control" value="" readonly style="background-color: #f5f5f5; font-weight: bold;">
-              </div>
-            </div>
-          </div>
-          
-          <div class="form-group" id="rawat_jl_dr">
-            <label class="col-sm-3 control-label">Dokter PJ</label>
-            <div class="col-sm-6" style="padding-right: 5px; position: relative;">
-              <input type="text" name="nama_provider" id="nama_provider" class="form-control" placeholder="Ketik nama dokter..." autocomplete="off">
-              <ul class="list-group shadow-sm" id="kode_providerList" style="z-index:1000; position:absolute; width:100%; display:none; max-height:200px; overflow-y:auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></ul>
-            </div>
-            <div class="col-sm-3" style="padding-left: 0;">
-              <input type="text" name="kode_provider" id="kode_provider" class="form-control" placeholder="Kode" readonly style="background-color: #f5f5f5;">
-            </div>
-          </div>
 
-          <h5 class="page-header" style="border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 15px;">
-            <i class="fa fa-info-circle text-primary"></i> Indikasi & Catatan Khusus (Mandiri / Rujukan)
-          </h5>
-          <div class="form-group">
-            <label class="col-sm-3 control-label">Indikasi Klinis</label>
-            <div class="col-sm-9">
-              <input type="text" name="diagnosa_klinis" id="diagnosa_klinis" class="form-control" placeholder="Contoh: Evaluasi Impaksi M3 / Fraktur / Permintaan Mandiri">
-            </div>
+        <div class="rsgm-reg-col rsgm-reg-col-side rsgm-reg-col-editable">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-check-square-o"></i></span>
+              <span>Detail Tindakan &amp; Catatan Klinis</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">Indikasi &amp; PPI</span>
           </div>
-          <div class="form-group">
-            <label class="col-sm-3 control-label">Catatan Khusus</label>
-            <div class="col-sm-9">
-              <textarea name="informasi_tambahan" id="informasi_tambahan" rows="2" class="form-control" placeholder="Catatan kondisi khusus pasien / kewaspadaan PPI..."></textarea>
-              <div style="margin-top: 6px;" class="quick-tags-container">
-                <button type="button" class="btn btn-xs btn-danger btn-quick-tag" data-tag="Pasien HIV (+)"><i class="fa fa-tag"></i> HIV (+)</button>
-                <button type="button" class="btn btn-xs btn-warning btn-quick-tag" data-tag="Hepatitis B/C"><i class="fa fa-tag"></i> Hepatitis</button>
-                <button type="button" class="btn btn-xs btn-warning btn-quick-tag" data-tag="TB Paru (Airborne)"><i class="fa fa-tag"></i> TB Paru</button>
-                <button type="button" class="btn btn-xs btn-info btn-quick-tag" data-tag="Suspek Hamil"><i class="fa fa-tag"></i> Hamil</button>
-                <button type="button" class="btn btn-xs btn-primary btn-quick-tag" data-tag="CITO"><i class="fa fa-bolt"></i> CITO</button>
-                <button type="button" class="btn btn-xs btn-default btn-quick-tag" data-tag="Kursi Roda / Brankar"><i class="fa fa-wheelchair"></i> Kursi Roda</button>
-                <button type="button" class="btn btn-xs btn-success" id="simpan_catatan_saja" style="margin-left: 5px; font-weight: bold;"><i class="fa fa-save"></i> Simpan Catatan Ini</button>
-                <button type="button" class="btn btn-xs btn-default" id="btn_hapus_catatan_form" style="margin-left: 5px; font-weight: bold; color: #a94442;"><i class="fa fa-trash"></i> Hapus / Reset</button>
+          <div class="rsgm-reg-body">
+            <div class="form-horizontal">
+              <div class="form-group">
+                <label class="col-sm-3 control-label">Tindakan</label>
+                <div class="col-sm-5">
+                  <input type="hidden" name="kd_jenis_prw" class="form-control" value="">
+                  <input type="text" name="nm_perawatan" class="form-control" placeholder="Pilih tindakan dari pencarian di kiri..." value="" readonly style="background-color: #eff6ff !important; border-color: #bfdbfe !important; color: #1e40af !important;">
+                  <input type="hidden" name="kat" class="form-control" value="">
+                </div>
+                <label class="col-sm-1 control-label rsgm-label-inline">Biaya</label>
+                <div class="col-sm-3">
+                  <input type="text" id="biaya" name="biaya" class="form-control text-right" placeholder="Rp 0" value="" readonly style="font-variant-numeric: tabular-nums;">
+                </div>
               </div>
+
+              <div class="rsgm-rincian-subbox" style="margin-top: 4px;">
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Indikasi Klinis</label>
+                  <div class="col-sm-9">
+                    <div class="rsgm-input-icon">
+                      <i class="fa fa-stethoscope rsgm-field-icon"></i>
+                      <input type="text" name="diagnosa_klinis" id="diagnosa_klinis" class="form-control" placeholder="Contoh: Evaluasi Impaksi M3 / Fraktur / Permintaan Mandiri">
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 6px;">
+                  <label class="col-sm-3 control-label">Catatan Khusus</label>
+                  <div class="col-sm-9">
+                    <textarea name="informasi_tambahan" id="informasi_tambahan" rows="2" class="form-control" placeholder="Catatan kondisi khusus pasien / kewaspadaan PPI..."></textarea>
+                    <div class="rsgm-quick-tags quick-tags-container" style="margin-top: 7px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px;">
+                      <button type="button" class="btn btn-xs btn-danger btn-quick-tag" data-tag="Pasien HIV (+)"><i class="fa fa-tag"></i> HIV (+)</button>
+                      <button type="button" class="btn btn-xs btn-warning btn-quick-tag" data-tag="Hepatitis B/C"><i class="fa fa-tag"></i> Hepatitis</button>
+                      <button type="button" class="btn btn-xs btn-warning btn-quick-tag" data-tag="TB Paru (Airborne)"><i class="fa fa-tag"></i> TB Paru</button>
+                      <button type="button" class="btn btn-xs btn-info btn-quick-tag" data-tag="Suspek Hamil"><i class="fa fa-tag"></i> Hamil</button>
+                      <button type="button" class="btn btn-xs btn-primary btn-quick-tag" data-tag="CITO"><i class="fa fa-bolt"></i> CITO</button>
+                      <button type="button" class="btn btn-xs btn-default btn-quick-tag" data-tag="Kursi Roda / Brankar"><i class="fa fa-wheelchair"></i> Kursi Roda</button>
+                    </div>
+                    <div style="margin-top: 8px; padding-top: 7px; border-top: 1px dashed #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                      <span style="font-size: 11px; color: #64748b;"><i class="fa fa-info-circle"></i> Simpan catatan tanpa menambah tindakan:</span>
+                      <div style="display: inline-flex; gap: 5px;">
+                        <button type="button" class="btn btn-xs btn-success" id="simpan_catatan_saja" style="border-radius: 6px !important; padding: 3px 10px !important; font-size: 11.5px !important; font-weight: 600 !important; text-transform: none !important; transform: none !important;"><i class="fa fa-save"></i> Simpan Catatan Ini</button>
+                        <button type="button" class="btn btn-xs btn-default" id="btn_hapus_catatan_form" style="border-radius: 6px !important; padding: 3px 10px !important; font-size: 11.5px !important; font-weight: 600 !important; text-transform: none !important; transform: none !important; background-color: #fff1f2 !important; border-color: #fecdd3 !important; color: #be123c !important;"><i class="fa fa-trash"></i> Hapus / Reset</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
-          
         </div>
       </div>
-      <div class="panel-footer text-right" style="background-color: #f9f9f9;">
-        <button type="button" class="btn btn-primary" id="simpan_rincian" {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_create', 'radiologi') == false}disabled{/if}>
-          <i class="fa fa-save"></i> Masukkan Rincian
-        </button>
-        <button type="button" class="btn btn-default" id="selesai">
-          <i class="fa fa-check"></i> Selesai
-        </button>
+
+      <!-- Search Results Drawer -->
+      <div id="layanan" class="rsgm-pasien-drawer"></div>
+
+      <div class="rsgm-reg-footer">
+        <span class="rsgm-footer-hint hidden-xs">
+          <i class="fa fa-info-circle"></i> Cari &amp; pilih pemeriksaan radiologi di atas lalu klik <strong>Masukkan Rincian</strong>
+        </span>
+        <div class="rsgm-reg-actions">
+          <button type="button" class="btn btn-primary" id="simpan_rincian" {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_create', 'radiologi') == false}disabled{/if}>
+            <i class="fa fa-save"></i> Masukkan Rincian
+          </button>
+          <button type="button" class="btn btn-success" id="selesai">
+            <i class="fa fa-check"></i> Selesai
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <style>
-/* Custom styling for better UX */
 #kode_providerList li {
     cursor: pointer;
-    padding: 10px 15px;
+    padding: 8px 12px;
     border-left: 3px solid transparent;
+    font-size: 12.5px;
 }
 #kode_providerList li:hover {
-    background-color: #f8f9fa;
-    border-left: 3px solid #337ab7; /* matching panel-primary */
-}
-#layanan table {
-    margin-bottom: 0;
-}
-#layanan .table-responsive {
-    border: none;
-}
-.btn-quick-tag {
-    margin-right: 3px;
-    margin-bottom: 3px;
-    font-weight: 600;
+    background-color: #eff6ff;
+    border-left: 3px solid #2563eb;
+    color: #1e40af;
 }
 </style>
 
 <script>
+  $(document).on("click", "#form_rincian .rsgm-pasien-close", function(e) {
+    e.preventDefault();
+    $('#layanan').hide();
+  });
+
   $('input:text[name=nama_provider]').on('input',function(e){
     var baseURL = mlite.url + '/' + mlite.admin;
     var url    = baseURL + '/radiologi/providerlist?t=' + mlite.token;
