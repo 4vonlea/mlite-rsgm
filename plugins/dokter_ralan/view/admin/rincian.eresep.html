@@ -155,7 +155,7 @@
           var url = baseURL + '/dokter_ralan/rincianeresep?t=' + mlite.token;
           $.post(url, {no_rawat : no_rawat,
           }, function(data) {
-            $("#rincian").html(data).show();
+            $("#rincian_eresep").html(data).show();
           });
           $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
           "Data rincian rawat jalan telah dihapus!"+

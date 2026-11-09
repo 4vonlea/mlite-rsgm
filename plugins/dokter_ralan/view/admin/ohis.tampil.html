@@ -1,31 +1,53 @@
-<h4>History OHIS</h4>
-<table class="table table-bordered table-striped table-hover display nowrap" width="100%">
-  <thead>
-    <tr>
-      <th>Tanggal</th>
-      <th>Debris Index</th>
-      <th>Calculus Index</th>
-      <th>Index OHIS</th>
-      <th>Kriteria OHIS</th>
-      <th>Aksi</th>
-    </tr>
-  </thead>
-  <tbody>
-    {loop: $ohis}
-      <tr>
-        <td>{?=isset_or($value.tgl_input)?}</td>
-        <td>{?=isset_or($value.debris)?}</td>
-        <td>{?=isset_or($value.calculus)?}</td>
-        <td>{?=isset_or($value.nilai)?}</td>
-        <td>{?=isset_or($value.kriteria)?}</td>
-        <td><a href="#" class="btn btn-xs btn-danger deleteohis" data-tgl_input="{?=isset_or($value.tgl_input)?}"><span class="fa fa-trash"></span><span class="hidden-xs">Hapus</span></a></td>
-      </tr>
-    {/loop}
-  </tbody>
-</table>
+<div class="rsgm-rincian-card">
+  <div class="rsgm-rincian-card-head">
+    <div class="rsgm-rincian-card-title">
+      <span class="rsgm-rincian-icon rsgm-rincian-icon-emerald"><i class="fa fa-check-square-o"></i></span>
+      <div>
+        <h5>History OHIS</h5>
+        <small>Riwayat penilaian Debris Index, Calculus Index, dan Kriteria OHIS</small>
+      </div>
+    </div>
+    <span class="rsgm-rincian-total">Total: <strong>{?=count($ohis)?}</strong> entri</span>
+  </div>
+  <div class="rsgm-rincian-card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover rsgm-rincian-table display nowrap" width="100%">
+        <thead>
+          <tr>
+            <th style="width: 130px;">Tanggal</th>
+            <th>Debris Index</th>
+            <th>Calculus Index</th>
+            <th>Index OHIS</th>
+            <th>Kriteria OHIS</th>
+            <th class="text-center" style="width: 90px;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {if: !empty($ohis)}
+            {loop: $ohis}
+              <tr>
+                <td>{?=isset_or($value.tgl_input)?}</td>
+                <td>{?=isset_or($value.debris)?}</td>
+                <td>{?=isset_or($value.calculus)?}</td>
+                <td><strong>{?=isset_or($value.nilai)?}</strong></td>
+                <td><span class="label label-info" style="font-size: 11px; border-radius: 5px; padding: 3px 8px;">{?=isset_or($value.kriteria)?}</span></td>
+                <td class="text-center"><a href="#" class="btn btn-xs btn-danger deleteohis" data-tgl_input="{?=isset_or($value.tgl_input)?}"><span class="fa fa-trash"></span> <span class="hidden-xs">Hapus</span></a></td>
+              </tr>
+            {/loop}
+          {else}
+            <tr class="rsgm-empty-row">
+              <td colspan="6" class="text-center text-muted" style="padding: 18px !important;"><i class="fa fa-info-circle"></i> Belum ada riwayat pemeriksaan OHIS.</td>
+            </tr>
+          {/if}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 <script type="text/javascript">
 $(document).ready(function(){
-  $(".deleteohis").click(function(){
+  $(".deleteohis").click(function(e){
+    e.preventDefault();
     var baseURL = mlite.url + '/' + mlite.admin;
     var id_pasien = $('input:text[name=no_rkm_medis]').val();
     var tgl_input  = $(this).attr("data-tgl_input");

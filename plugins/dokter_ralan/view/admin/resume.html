@@ -1,87 +1,124 @@
-<div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span> Tutup</button>
-    <h4 class="modal-title">Resume Perawatan</h4>
+<div class="modal-header" style="display: flex; align-items: center; justify-content: space-between;">
+  <h4 class="modal-title">
+    <span class="rsgm-rincian-icon rsgm-rincian-icon-amber"><i class="fa fa-file-text-o"></i></span>
+    <span>Resume Medis Rawat Jalan</span>
+  </h4>
+  <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="margin-top: 0;"><span aria-hidden="true">&times;</span></button>
 </div>
-<div class="modal-body">
-  <div class="row">
-    <div class="col-md-12">
-      <div class="form-group">
-          <label>Nomor Rawat</label>
-          <input type="text" name="no_rawat_resume" class="form-control" placeholder="Nomor Rawat" required value="{?=isset_or($reg_periksa.no_rawat)?}" readonly />
+<div class="modal-body" style="background-color: #f8fafc;">
+  <div class="rsgm-reg-form" style="margin-bottom: 14px;">
+    <div class="rsgm-reg-shell">
+      <div class="rsgm-reg-header">
+        <h4 class="rsgm-reg-title">
+          <span class="rsgm-reg-icon"><i class="fa fa-pencil-square-o"></i></span>
+          <span>Formulir Ringkasan / Resume Perawatan Pasien</span>
+        </h4>
+        <span class="rsgm-reg-badge-hint hidden-xs">Resume Ralan</span>
+      </div>
+      <div class="rsgm-reg-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="rsgm-compact-label">Nomor Rawat</label>
+              <div class="rsgm-input-icon">
+                <i class="fa fa-hashtag rsgm-field-icon"></i>
+                <input type="text" name="no_rawat_resume" class="form-control" placeholder="Nomor Rawat" required value="{?=isset_or($reg_periksa.no_rawat)?}" readonly />
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="rsgm-compact-label">Kondisi Pulang</label>
+              <select name="kondisi_pulang" id="kondisi_pulang" class="form-control">
+                <option value="Hidup">Hidup</option>
+                <option value="Meninggal">Meninggal</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <div class="form-group">
+              <label for="keluhan_utama" class="rsgm-compact-label"><span class="rsgm-soap-tag rsgm-soap-tag-s">S</span> Keluhan Utama &amp; Riwayat Singkat</label>
+              <textarea name="keluhan_utama" id="keluhan_utama" class="form-control" rows="2" placeholder="Keluhan utama pasien...">{if: $resume_pasien}{?=isset_or($resume_pasien.keluhan_utama,'')?}{else}{?=isset_or($data_resume.pemeriksaan_ralan.keluhan,'')?}{/if}</textarea>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group" style="margin-bottom: 6px;">
+              <label for="diagnosa_resume" class="rsgm-compact-label"><span class="rsgm-soap-tag rsgm-soap-tag-a">A</span> Diagnosa Utama</label>
+              <textarea name="diagnosa_resume" id="diagnosa_resume" class="form-control" rows="2" placeholder="Diagnosa utama...">{if: $resume_pasien}{?=isset_or($resume_pasien.diagnosa_utama,'')?}{else}{?=isset_or($data_resume.diagnosa.nm_penyakit,'')?}{/if}</textarea>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group" style="margin-bottom: 6px;">
+              <label for="prosedur_resume" class="rsgm-compact-label"><span class="rsgm-soap-tag rsgm-soap-tag-p">P</span> Prosedur / Tindakan Utama</label>
+              <textarea name="prosedur_resume" id="prosedur_resume" class="form-control" rows="2" placeholder="Prosedur / tindakan yang diberikan...">{if: $resume_pasien}{?=isset_or($resume_pasien.prosedur_utama,'')?}{else}{?=isset_or($data_resume.prosedur.deskripsi_panjang,'')?}{/if}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="rsgm-reg-footer">
+        <span class="rsgm-footer-hint hidden-xs"><i class="fa fa-info-circle"></i> Periksa kembali ringkasan klinis sebelum menyimpan resume</span>
+        <div class="rsgm-reg-actions">
+          <button type="button" class="btn btn-primary" id="simpan_resume" style="background-color: #2563eb !important; border-color: #2563eb !important; color: #fff !important;"><i class="fa fa-save"></i> Simpan Resume</button>
+        </div>
       </div>
     </div>
-    <div class="col-md-12">
-      <div class="form-group">
-          <label>Keluhan</label>
-          <textarea name="keluhan_utama" id="keluhan_utama" class="form-control" cols="3">{if: $resume_pasien}{?=isset_or($resume_pasien.keluhan_utama,'')?}{else}{?=isset_or($data_resume.pemeriksaan_ralan.keluhan,'')?}{/if}</textarea>
+  </div>
+
+  <div class="tampildata">
+    <div class="rsgm-rincian-card">
+      <div class="rsgm-rincian-card-head">
+        <div class="rsgm-rincian-card-title">
+          <span class="rsgm-rincian-icon rsgm-rincian-icon-emerald"><i class="fa fa-check-square-o"></i></span>
+          <div>
+            <h5>Data Resume Tersimpan</h5>
+            <small>Ringkasan medis kunjungan rawat jalan</small>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="col-md-12">
-      <div class="form-group">
-          <label>Diagnosa</label>
-          <textarea name="diagnosa_resume" id="diagnosa_resume" class="form-control" cols="3">{if: $resume_pasien}{?=isset_or($resume_pasien.diagnosa_utama,'')?}{else}{?=isset_or($data_resume.diagnosa.nm_penyakit,'')?}{/if}</textarea>
+      <div class="rsgm-rincian-card-body">
+        <div class="table-responsive no-margin">
+          <table class="table table-striped table-bordered rsgm-rincian-table" width="100%">
+            <thead>
+              <tr>
+                <th width="140">Nomor Rawat</th>
+                <th>Keluhan</th>
+                <th>Diagnosa</th>
+                <th>Prosedur</th>
+                <th width="95" class="text-center">Pulang</th>
+                <th>Dokter</th>
+                <th width="85" class="text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {if: $resume_pasien}
+              <tr>
+                <td><span class="rsgm-badge rsgm-badge-indigo">{?=isset_or($resume_pasien.no_rawat)?}</span></td>
+                <td>{?=isset_or($resume_pasien.keluhan_utama)?}</td>
+                <td><strong>{?=isset_or($resume_pasien.diagnosa_utama)?}</strong></td>
+                <td>{?=isset_or($resume_pasien.prosedur_utama)?}</td>
+                <td class="text-center"><span class="rsgm-badge {if: $resume_pasien.kondisi_pulang == 'Hidup'}rsgm-badge-emerald{else}rsgm-badge-rose{/if}">{?=isset_or($resume_pasien.kondisi_pulang)?}</span></td>
+                <td>{?=isset_or($resume_pasien.nm_dokter)?}</td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-danger btn-xs hapus_resume" data-no_rawat="{?=isset_or($resume_pasien.no_rawat)?}">
+                    <i class="fa fa-trash-o"></i> Hapus
+                  </button>
+                </td>
+              </tr>
+              {else}
+              <tr>
+                <td colspan="7" class="text-center text-muted" style="padding: 14px !important;">Belum ada data resume perawatan untuk kunjungan ini.</td>
+              </tr>
+              {/if}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-    <div class="col-md-12">
-      <div class="form-group">
-          <label>Prosedur</label>
-          <textarea name="prosedur_resume" id="prosedur_resume" class="form-control" cols="3">{if: $resume_pasien}{?=isset_or($resume_pasien.prosedur_utama,'')?}{else}{?=isset_or($data_resume.prosedur.deskripsi_panjang,'')?}{/if}</textarea>
-      </div>
-    </div>
-    <div class="col-md-12">
-      <div class="form-group">
-          <label>Kondisi Pulang</label>
-          <select name="kondisi_pulang" id="kondisi_pulang" class="form-control">
-              <option value="Hidup">Hidup</option>
-              <option value="Meninggal">Meninggal</option>
-          </select>
-      </div>
-    </div>
-    <div class="col-md-12">
-      <button class="btn btn-success" id="simpan_resume">Simpan</button>
-    </div>
-    <br>
-    <div class="tampildata">
-      <table class="table" width="100%">
-        <thead>
-          <tr>
-            <th>Nomor Rawat</th>
-            <th>Keluhan</th>
-            <th>Diagnosa</th>
-            <th>Prosedur</th>
-            <th>Pulang</th>
-            <th>Dokter</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {if: $resume_pasien}
-          <tr>
-            <td>{?=isset_or($resume_pasien.no_rawat)?}</td>
-            <td>{?=isset_or($resume_pasien.keluhan_utama)?}</td>
-            <td>{?=isset_or($resume_pasien.diagnosa_utama)?}</td>
-            <td>{?=isset_or($resume_pasien.prosedur_utama)?}</td>
-            <td>{?=isset_or($resume_pasien.kondisi_pulang)?}</td>
-            <td>{?=isset_or($resume_pasien.nm_dokter)?}</td>
-            <td>
-              <button type="button" class="btn btn-danger btn-xs hapus_resume" data-no_rawat="{?=isset_or($resume_pasien.no_rawat)?}">
-                <i class="fa fa-trash"></i> Hapus
-              </button>
-            </td>
-          </tr>
-          {else}
-          <tr>
-            <td colspan="7">Tidak ada data</td>
-          </tr>
-          {/if}
-        </tbody>
-      </table>
     </div>
   </div>
 </div>
 
 <div class="modal-footer">
-    <button type="button" class="btn btn-primary" data-dismiss="modal">Tutup</button>
+  <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Tutup</button>
 </div>
 
 <script type="text/javascript">
@@ -115,16 +152,13 @@ $(document).ready(function(){
     var no_rawat = $(this).attr('data-no_rawat');
     var set_no_rawat = no_rawat.replace(/\//g, '');
     
-    // Tampilkan dialog konfirmasi
     if(confirm('Apakah Anda yakin ingin menghapus data resume ini?')) {
       var url = baseURL + '/dokter_ralan/resumedelete/?t=' + mlite.token;
       $.post(url, {
         no_rawat: no_rawat
       }, function(data) {
         console.log(data);
-        // Refresh tampilan data setelah berhasil menghapus
         $('.tampildata').load(baseURL + '/dokter_ralan/resumetampil/' + set_no_rawat + '?t=' + mlite.token);
-        // Tampilkan notifikasi
         alert('Data resume berhasil dihapus!');
       }).fail(function() {
         alert('Gagal menghapus data resume!');

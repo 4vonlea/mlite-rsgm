@@ -14,6 +14,7 @@
           <th style="white-space: nowrap;" title="Status Periksa">Periksa</th>
           <th style="white-space: nowrap;" title="Status Lanjut">Lanjut</th>
           <th style="white-space: nowrap;" title="Status Bayar">Bayar</th>
+          <th style="white-space: nowrap;" title="Metode Pembayaran Kasir">Metode</th>
         </tr>
       </thead>
       <tbody>
@@ -64,6 +65,19 @@
               <span class="rsgm-badge rsgm-badge-amber" title="Sudah dicicil Rp {?=number_format($value.total_bayar,0,',','.')?}">Cicilan ({?=$value.jml_faktur?}x)</span>
             {else}
               <span class="rsgm-badge rsgm-badge-rose">{?=isset_or($value.status_bayar)?}</span>
+            {/if}
+          </td>
+          <td style="white-space: nowrap;" data-order="{?=isset_or($value.metode_bayar)?}">
+            {if: $value.metode_bayar == 'Tunai'}
+              <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-money"></i> Tunai</span>
+            {elseif: $value.metode_bayar == 'Non Tunai'}
+              <span class="rsgm-badge rsgm-badge-indigo"><i class="fa fa-credit-card"></i> Non Tunai</span>
+            {elseif: strpos($value.metode_bayar, 'Non Tunai') !== false && strpos($value.metode_bayar, 'Tunai') !== false}
+              <span class="rsgm-badge rsgm-badge-purple" title="{?=$value.metode_bayar?}"><i class="fa fa-exchange"></i> Campuran</span>
+            {elseif: $value.metode_bayar == 'Tidak Di-claim'}
+              <span class="rsgm-badge rsgm-badge-amber"><i class="fa fa-ban"></i> Bebas Biaya</span>
+            {else}
+              <span class="text-muted" style="color: #94a3b8; font-size: 11px;">-</span>
             {/if}
           </td>
         </tr>

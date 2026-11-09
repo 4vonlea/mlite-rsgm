@@ -1,33 +1,74 @@
-<div class="row" style="margin-bottom: 20px;">
-  <div class="col-md-6">
-    <div class="form-group" style="margin-bottom: 0;">
-      <label>Diagnosa Klinis</label>
-      <input type="text" id="modal_diagnosa_klinis" class="form-control" placeholder="Isi diagnosa klinis pasien" value="{?=isset_or($diagnosa_klinis)?}">
-    </div>
-  </div>
-  <div class="col-md-6">
-    <div class="form-group" style="margin-bottom: 0;">
-      <label>Informasi Tambahan</label>
-      <input type="text" id="modal_info_tambahan" class="form-control" placeholder="Keterangan klinis lainnya" value="{?=isset_or($informasi_tambahan)?}">
+<div class="rsgm-reg-form" style="margin-bottom: 14px;">
+  <div class="rsgm-reg-shell">
+    <div class="rsgm-reg-body" style="padding: 12px 16px;">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="modal_diagnosa_klinis" class="rsgm-compact-label"><i class="fa fa-stethoscope text-primary"></i> Diagnosa Klinis / Indikasi</label>
+            <input type="text" id="modal_diagnosa_klinis" class="form-control" placeholder="Isi diagnosa klinis pasien..." value="{?=isset_or($diagnosa_klinis)?}">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="modal_info_tambahan" class="rsgm-compact-label"><i class="fa fa-info-circle text-primary"></i> Informasi Tambahan / Catatan Klinis</label>
+            <input type="text" id="modal_info_tambahan" class="form-control" placeholder="Keterangan klinis lainnya (CITO, puasa, dll)..." value="{?=isset_or($informasi_tambahan)?}">
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
-<hr style="margin-top: 10px; margin-bottom: 20px;">
 
-<div style="column-count: 3; column-gap: 20px;">
+<style>
+  .rsgm-lab-masonry {
+    column-count: 3;
+    column-gap: 14px;
+  }
+  @media (max-width: 991px) {
+    .rsgm-lab-masonry { column-count: 2; }
+  }
+  @media (max-width: 640px) {
+    .rsgm-lab-masonry { column-count: 1; }
+  }
+  .rsgm-lab-cat-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 14px;
+  }
+  .rsgm-lab-chk-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    margin: 0 !important;
+    border-radius: 6px !important;
+    font-size: 12.5px;
+    font-weight: 500 !important;
+    color: #1e293b;
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+  }
+  .rsgm-lab-chk-row:hover {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+  }
+</style>
+
+<div class="rsgm-lab-masonry">
   {loop: $grouped_labs}
-  <div class="panel panel-default" style="margin-bottom: 15px; border-top: 3px solid #3498db; break-inside: avoid; page-break-inside: avoid;">
-    <div class="panel-heading" style="padding: 8px 15px;">
-      <h3 class="panel-title" style="font-size: 14px; font-weight: bold;">{?=isset_or($key)?}</h3>
-    </div>
-    <div class="panel-body" style="padding: 10px 15px;">
-      {loop: $value as $item}
-      <div class="checkbox" style="margin-top: 5px; margin-bottom: 5px;">
-        <label style="font-size: 13px;">
-          <input type="checkbox" class="chk-lab" value="{?=isset_or($item.kd_jenis_prw)?}" data-nama="{?=isset_or($item.nm_perawatan)?}" data-biaya="{?=isset_or($item.total_byr)?}" {if: in_array($item.kd_jenis_prw, $requested_labs)}checked disabled{/if}>
-          {?=isset_or($item.nm_perawatan)?}
-        </label>
+  <div class="rsgm-rincian-card rsgm-lab-cat-card">
+    <div class="rsgm-rincian-card-head" style="padding: 8px 14px;">
+      <div class="rsgm-rincian-card-title">
+        <span class="rsgm-rincian-icon rsgm-rincian-icon-amber" style="width: 24px; height: 24px; font-size: 11.5px;"><i class="fa fa-flask"></i></span>
+        <h5>{?=isset_or($key)?}</h5>
       </div>
+    </div>
+    <div class="rsgm-rincian-card-body" style="padding: 8px 10px;">
+      {loop: $value as $item}
+      <label class="rsgm-lab-chk-row">
+        <input type="checkbox" class="chk-lab" value="{?=isset_or($item.kd_jenis_prw)?}" data-nama="{?=isset_or($item.nm_perawatan)?}" data-biaya="{?=isset_or($item.total_byr)?}" {if: in_array($item.kd_jenis_prw, $requested_labs)}checked disabled{/if} style="margin: 0;">
+        <span>{?=isset_or($item.nm_perawatan)?}</span>
+      </label>
       {/loop}
     </div>
   </div>

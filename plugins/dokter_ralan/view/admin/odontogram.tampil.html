@@ -1,27 +1,47 @@
-<h4>History Odontogram</h4>
-<table class="table table-bordered table-striped table-hover display nowrap" width="100%">
-  <thead>
-    <tr>
-      <th>Tanggal</th>
-      <th>Elemen</th>
-      <th>Kondisi</th>
-      <th>Catatan</th>
-      <th>Aksi</th>
-    </tr>
-  </thead>
-  <tbody>
-    {loop: $odontogram}
-      <tr>
-        <td>{?=isset_or($value.tgl_input)?}</td>
-        <td>{?=str_replace('gg_','Gigi ',$value.pemeriksaan)?}</td>
-        <td class="edit-kondisi" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}"><span class="kondisi-text">{?=isset_or($value.kondisi)?}</span><input type="text" class="form-control input-sm input-kondisi" value="{?=isset_or($value.kondisi)?}" style="display:none;" /></td>
-        <td class="edit-catatan" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}"><span class="catatan-text">{?=isset_or($value.catatan)?}</span><input type="text" class="form-control input-sm input-catatan" value="{?=isset_or($value.catatan)?}" style="display:none;" /></td>
-
-        <td><a href="#" class="btn btn-xs btn-danger delete" data-id="{?=isset_or($value.id)?}" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}" data-catatan="{?=isset_or($value.catatan)?}"><span class="fa fa-trash"></span><span class="hidden-xs">Hapus</span></a></td>
-      </tr>
-    {/loop}
-  </tbody>
-</table>
+<div class="rsgm-rincian-card">
+  <div class="rsgm-rincian-card-head">
+    <div class="rsgm-rincian-card-title">
+      <span class="rsgm-rincian-icon rsgm-rincian-icon-blue"><i class="fa fa-history"></i></span>
+      <div>
+        <h5>History Odontogram</h5>
+        <small>Klik 2x pada kolom Kondisi atau Catatan untuk mengubah data secara langsung</small>
+      </div>
+    </div>
+    <span class="rsgm-rincian-total">Total: <strong>{?=count($odontogram)?}</strong> catatan</span>
+  </div>
+  <div class="rsgm-rincian-card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover rsgm-rincian-table display nowrap" width="100%">
+        <thead>
+          <tr>
+            <th style="width: 115px;">Tanggal</th>
+            <th style="width: 150px;">Elemen</th>
+            <th style="width: 130px;">Kondisi</th>
+            <th>Catatan</th>
+            <th class="text-center" style="width: 90px;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {if: !empty($odontogram)}
+            {loop: $odontogram}
+              <tr>
+                <td>{?=isset_or($value.tgl_input)?}</td>
+                <td><strong>{?=str_replace('gg_','Gigi ',$value.pemeriksaan)?}</strong></td>
+                <td class="edit-kondisi" title="Klik 2x untuk edit kondisi" style="cursor: pointer;" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}"><span class="kondisi-text rsgm-odo-kondisi-pill">{?=isset_or($value.kondisi)?}</span><input type="text" class="form-control input-sm input-kondisi" value="{?=isset_or($value.kondisi)?}" style="display:none;" /></td>
+                <td class="edit-catatan" title="Klik 2x untuk edit catatan" style="cursor: pointer;" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}"><span class="catatan-text">{?=isset_or($value.catatan)?}</span><input type="text" class="form-control input-sm input-catatan" value="{?=isset_or($value.catatan)?}" style="display:none;" /></td>
+                <td class="text-center"><a href="#" class="btn btn-xs btn-danger delete" data-id="{?=isset_or($value.id)?}" data-tgl_input="{?=isset_or($value.tgl_input)?}" data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}" data-kondisi="{?=isset_or($value.kondisi)?}" data-catatan="{?=isset_or($value.catatan)?}"><span class="fa fa-trash"></span> <span class="hidden-xs">Hapus</span></a></td>
+              </tr>
+            {/loop}
+          {else}
+            <tr class="rsgm-empty-row">
+              <td colspan="5" class="text-center text-muted" style="padding: 18px !important;"><i class="fa fa-info-circle"></i> Belum ada riwayat pemeriksaan odontogram.</td>
+            </tr>
+          {/if}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 <script type="text/javascript">
 $(document).ready(function(){
   $(".edit-catatan").dblclick(function() {
@@ -106,7 +126,8 @@ $(document).ready(function(){
       }
   });
 
-  $(".delete").click(function(){
+  $(".delete").click(function(e){
+    e.preventDefault();
     var baseURL = mlite.url + '/' + mlite.admin;
     var id_pasien = $('input:text[name=no_rkm_medis]').val();
     var gg_xx  = $(this).attr("data-pemeriksaan");
@@ -127,4 +148,3 @@ $(document).ready(function(){
   });
 });
 </script>
-
