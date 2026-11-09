@@ -131,10 +131,18 @@ class Templates
             $content = file_get_contents($file);
 
             if ($this->searchTags($content) && ($counter < 3)) {
-                file_put_contents($tmpFile, $content);
+                if (file_exists($tmpFile) && !is_writable($tmpFile)) {
+                    @unlink($tmpFile);
+                }
+                @file_put_contents($tmpFile, $content);
+                @chmod($tmpFile, 0666);
                 $content = $this->execute($tmpFile, ++$counter);
             }
-            file_put_contents($tmpFile, $this->parse($content));
+            if (file_exists($tmpFile) && !is_writable($tmpFile)) {
+                @unlink($tmpFile);
+            }
+            @file_put_contents($tmpFile, $this->parse($content));
+            @chmod($tmpFile, 0666);
 
             // Safely extract template data with security checks
             if (is_array($this->data) && !empty($this->data)) {

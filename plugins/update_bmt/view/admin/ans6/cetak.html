@@ -175,7 +175,7 @@
         <button onclick="window.print()" class="btn-toolbar btn-print">
             <i class="fa fa-print"></i> Cetak Dokumen
         </button>
-        <a href="?pdf=1" target="_blank" class="btn-toolbar btn-pdf">
+        <a href="{?=url([ADMIN, 'update_bmt', 'ans6cetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
             <i class="fa fa-file-pdf-o"></i> Download PDF
         </a>
         <button onclick="window.close()" class="btn-toolbar btn-close">

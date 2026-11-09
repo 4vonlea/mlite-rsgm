@@ -5,6 +5,20 @@ use Systems\AdminModule;
 
 class Admin extends AdminModule
 {
+    public function init()
+    {
+        \Systems\Lib\Event::add('rsgmgha.dropdown_menu', function ($row) {
+            $no_rawat = $row['no_rawat'] ?? '';
+            if (!empty($no_rawat)) {
+                echo '<li><a href="' . url([ADMIN, 'update_bmt', 'skriningluarrsform']) . '&no_rawat=' . urlencode($no_rawat) . '">Skrining Luar RS</a></li>';
+                echo '<li><a href="' . url([ADMIN, 'update_bmt', 'rmgd3form']) . '&no_rawat=' . urlencode($no_rawat) . '">RM.GD 3 - Lembar Triase</a></li>';
+                echo '<li><a href="' . url([ADMIN, 'update_bmt', 'form']) . '&no_rawat=' . urlencode($no_rawat) . '">RM.GD 4 - Asesmen Keperawatan UGD</a></li>';
+                echo '<li><a href="' . url([ADMIN, 'update_bmt', 'rmgd5form']) . '&no_rawat=' . urlencode($no_rawat) . '">RM.GD 5 - Asesmen Medis Gigi UGD</a></li>';
+                echo '<li><a href="' . url([ADMIN, 'update_bmt', 'rmgd6form']) . '&no_rawat=' . urlencode($no_rawat) . '">RM.GD 6 - Asesmen Medis Umum UGD</a></li>';
+            }
+        });
+    }
+
     // ==========================================
     // LAMPIRAN - ASESMEN MEDIS UMUM IRNA
     // ==========================================
@@ -2724,6 +2738,7 @@ if (ob_get_length()) {
         }
 
         $id = $_GET['id'] ?? '';
+        $no_rawat_get = trim($_GET['no_rawat'] ?? '');
         $data = [];
         if (!empty($id)) {
             $data = $this->db('lampiran_skrining_luar_rs')
@@ -2732,25 +2747,43 @@ if (ob_get_length()) {
                 ->where('lampiran_skrining_luar_rs.id', $id)
                 ->select('lampiran_skrining_luar_rs.*, COALESCE(lampiran_skrining_luar_rs.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                 ->oneArray();
+        } elseif (!empty($no_rawat_get)) {
+            $data = $this->db('lampiran_skrining_luar_rs')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = lampiran_skrining_luar_rs.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(lampiran_skrining_luar_rs.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('lampiran_skrining_luar_rs.no_rawat', $no_rawat_get)
+                ->select('lampiran_skrining_luar_rs.*, COALESCE(lampiran_skrining_luar_rs.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->desc('lampiran_skrining_luar_rs.id')
+                ->oneArray();
         }
 
         if (empty($data)) {
+            $reg_prefill = [];
+            if (!empty($no_rawat_get)) {
+                $reg_prefill = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->leftJoin('penjab', 'penjab.kd_pj = reg_periksa.kd_pj')
+                    ->where('reg_periksa.no_rawat', $no_rawat_get)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, penjab.png_jawab')
+                    ->oneArray();
+            }
+            $rmPrefill = !empty($reg_prefill['no_rkm_medis']) ? str_pad(ltrim($reg_prefill['no_rkm_medis'], "'"), 6, '0', STR_PAD_LEFT) : '';
             $data = [
                 'id' => '',
-                'no_rawat' => '',
-                'no_rkm_medis' => '',
+                'no_rawat' => $reg_prefill['no_rawat'] ?? $no_rawat_get,
+                'no_rkm_medis' => $rmPrefill,
                 'tanggal_skrining' => date('Y-m-d'),
                 'jam_skrining' => date('H:i:s'),
-                'nm_pasien' => '',
-                'jk' => '',
-                'tmp_lahir' => '',
-                'tgl_lahir' => '',
-                'umur' => '',
-                'status_pembayaran' => 'BPJS',
+                'nm_pasien' => $reg_prefill['nm_pasien'] ?? '',
+                'jk' => $reg_prefill['jk'] ?? '',
+                'tmp_lahir' => $reg_prefill['tmp_lahir'] ?? '',
+                'tgl_lahir' => $reg_prefill['tgl_lahir'] ?? '',
+                'umur' => $reg_prefill['umur'] ?? '',
+                'status_pembayaran' => $reg_prefill['png_jawab'] ?? 'BPJS',
                 'asal_rujukan' => '',
                 'alasan_dirujuk' => '',
                 'diagnosa' => '',
-                'keadaan_umum' => 'Baik',
+                'keadaan_umum' => 'Tampak sakit sedang',
                 'kesadaran' => 'Compos Mentis',
                 'tensi' => '120/80',
                 'nadi' => '80',
@@ -7487,9 +7520,13 @@ if (ob_get_length()) {
     {
         return [
             'Rawat Jalan' => [
+                'RM.GD 3 - LEMBAR TRIASE UGD (ATS & DENTAL SDcep)' => 'rmgd3manage',
                 'RM.GD 4 - ASESMEN KEPERAWATAN.ASUHAN GIGI DAN MULUT UGD' => 'manage',
+                'RM.GD 5 - ASESMEN MEDIS GIGI UNIT GAWAT DARURAT' => 'rmgd5manage',
+                'RM.GD 6 - ASESMEN MEDIS UMUM UNIT GAWAT DARURAT' => 'rmgd6manage',
                 'RM.RJ-10 - LEMBAR EDUKASI PASIEN DAN KELUARGA TERINTEGRASI' => 'edukasimanage',
                 'LAMPIRAN - FORMULIR PROFIL RINGKAS MEDIS RAWAT JALAN (PRMRJ)' => 'prmrjmanage',
+                'LAMPIRAN - FORMULIR SKRINING DARI LUAR RUMAH SAKIT' => 'skriningluarrsmanage',
             ],
             'Bedah' => [
                 'ANS1 - INFORMASI TINDAKAN PEMBIUSAN' => 'ans1manage',
@@ -7773,6 +7810,13 @@ if (ob_get_length()) {
 
     public function anyManage()
     {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['no_rawat'])) {
+            $no_rawat = $_GET['no_rawat'];
+            $this->db('asesmen_keperawatan_gigi_ugd')->where('no_rawat', $no_rawat)->delete();
+            $this->notify('success', 'Data berhasil dihapus');
+            redirect(url([ADMIN, 'update_bmt', 'manage']));
+        }
+
         $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
         $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
         $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
@@ -7781,6 +7825,7 @@ if (ob_get_length()) {
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = asesmen_keperawatan_gigi_ugd.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->select('asesmen_keperawatan_gigi_ugd.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, reg_periksa.no_rkm_medis')
+            ->desc('asesmen_keperawatan_gigi_ugd.tanggal')
             ->toArray();
 
         return $this->draw('akgmu/manage.html', ['asesmen' => $asesmen]);
@@ -7790,25 +7835,94 @@ if (ob_get_length()) {
     {
         $no_rawat = $_GET['no_rawat'] ?? '';
         $data = $this->db('asesmen_keperawatan_gigi_ugd')->where('no_rawat', $no_rawat)->oneArray();
+        if (!$data) {
+            $data = [
+                'no_rawat' => $no_rawat,
+                'tanggal_kunjungan' => date('Y-m-d'),
+                'pukul_kunjungan' => date('H:i'),
+                'pukul_ttd' => date('H:i'),
+                'penyakit_jantung' => 'Tidak Ada',
+                'hipertensi' => 'Tidak Ada',
+                'diabetes' => 'Tidak Ada',
+                'hepatitis' => 'Tidak Ada',
+                'haemophilia' => 'Tidak Ada',
+                'tuberculosis' => 'Tidak Ada',
+                'hiv_aids' => 'Tidak Ada',
+                'penyakit_lainnya' => 'Tidak Ada',
+                'penyakit_menular' => 'Tidak Menular',
+                'alergi_obat' => 'Tidak Ada',
+                'alergi_makanan' => 'Tidak Ada',
+                'status_pernikahan' => 'Menikah',
+                'tinggal_bersama' => 'Ya',
+                'dirawat_sesama_gender' => 'Tidak',
+                'pantangan_makanan' => 'Tidak',
+                'hari_tindakan' => 'Tidak',
+                'bahasa_digunakan' => 'Indonesia',
+                'ekonomi' => 'Sedang',
+                'status_fungsional' => 'Mandiri',
+                'mst_penurunan_opsi' => '0',
+                'mst_penurunan_bb' => '0',
+                'mst_asupan_makanan' => '0',
+                'mst_diagnosis_khusus' => 'Tidak',
+                'strong_kurus' => '0',
+                'strong_penurunan_bb' => '0',
+                'strong_kondisi' => '0',
+                'strong_penyakit' => '0',
+                'nyeri_keluhan' => 'Tidak',
+                'nyeri_menjalar' => 'Tidak',
+                'skala_nyeri' => '0',
+                'asesmen_jatuh_a' => 'Tidak',
+                'asesmen_jatuh_b' => 'Tidak',
+                'asesmen_jatuh_hasil' => 'Tidak Berisiko'
+            ];
+        }
 
-        // Jika ada no_rawat, coba ambil data pasien dari relasi untuk pre-fill
+        // Jika ada no_rawat, coba ambil data pasien & triase dari relasi untuk pre-fill
         if (!empty($no_rawat)) {
             $reg = $this->db('reg_periksa')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $no_rawat)
-                ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
+                ->select('reg_periksa.no_rkm_medis, reg_periksa.kd_dokter, reg_periksa.tgl_registrasi, reg_periksa.jam_reg, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat, pasien.gol_darah')
                 ->oneArray();
 
             if ($reg) {
-                // Hanya isi jika belum ada di data asesmen
                 if (empty($data['nama_pasien']))   $data['nama_pasien']   = $reg['nm_pasien'] ?? '';
                 if (empty($data['jenis_kelamin'])) $data['jenis_kelamin'] = $reg['jk'] ?? '';
                 if (empty($data['tanggal_lahir'])) $data['tanggal_lahir'] = $reg['tgl_lahir'] ?? '';
+                if (empty($data['alamat_kontak'])) $data['alamat_kontak'] = $reg['alamat'] ?? '';
+                if (empty($data['gol_darah']))     $data['gol_darah']     = $reg['gol_darah'] ?? '';
+                if (empty($data['nip_dpjp']))      $data['nip_dpjp']      = $reg['kd_dokter'] ?? '';
                 $data['no_rkm_medis'] = $reg['no_rkm_medis'] ?? '';
+            }
+
+            // Pre-fill dari RM.GD 3 Triase jika belum ada
+            $triase = $this->db('rm_gd3_triase')->where('no_rawat', $no_rawat)->oneArray();
+            if ($triase) {
+                if (empty($data['jam_mulai_triase']))   $data['jam_mulai_triase']   = $triase['jam_kunjungan'] ?? '';
+                if (empty($data['jam_selesai_triase'])) $data['jam_selesai_triase'] = $triase['jam_selesai_triase'] ?? '';
+                if (empty($data['petugas_triase']))     $data['petugas_triase']     = $triase['petugas_triase'] ?? '';
+                if (empty($data['keluhan_utama']))      $data['keluhan_utama']      = $triase['keluhan'] ?? '';
+            }
+
+            // Pre-fill TTV dari pemeriksaan_ralan jika belum ada
+            $soap = $this->db('pemeriksaan_ralan')->where('no_rawat', $no_rawat)->desc('tgl_perawatan')->desc('jam_rawat')->oneArray();
+            if ($soap) {
+                if (empty($data['kesadaran'])) $data['kesadaran'] = $soap['kesadaran'] ?? '';
+                if (empty($data['td']))        $data['td']        = $soap['tensi'] ?? '';
+                if (empty($data['nadi']))      $data['nadi']      = $soap['nadi'] ?? '';
+                if (empty($data['rr']))        $data['rr']        = $soap['respirasi'] ?? '';
+                if (empty($data['suhu']))      $data['suhu']      = $soap['suhu_tubuh'] ?? '';
+                if (empty($data['saturasi']))  $data['saturasi']  = $soap['spo2'] ?? '';
+                if (empty($data['bb']))        $data['bb']        = $soap['berat'] ?? '';
+                if (empty($data['tb']))        $data['tb']        = $soap['tinggi'] ?? '';
+                if (empty($data['keluhan_utama'])) $data['keluhan_utama'] = $soap['keluhan'] ?? '';
             }
         }
 
-        return $this->draw('akgmu/form.html', ['data' => $data, 'no_rawat' => $no_rawat]);
+        $dokter = $this->db('dokter')->where('status', '1')->toArray();
+        $petugas = $this->db('petugas')->where('status', '1')->toArray();
+
+        return $this->draw('akgmu/form.html', ['data' => $data, 'no_rawat' => $no_rawat, 'dokter' => $dokter, 'petugas' => $petugas]);
     }
 
     // AJAX: ambil info pasien berdasarkan no_rawat
@@ -7829,7 +7943,7 @@ if (ob_get_length()) {
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
-                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat, pasien.gol_darah')
                 ->desc('reg_periksa.tgl_registrasi')
                 ->desc('reg_periksa.jam_reg')
                 ->oneArray();
@@ -7842,6 +7956,8 @@ if (ob_get_length()) {
                     'jenis_kelamin' => $reg['jk'] ?? '',
                     'tanggal_lahir' => $reg['tgl_lahir'] ?? '',
                     'no_rkm_medis'  => $reg['no_rkm_medis'] ?? '',
+                    'alamat'        => $reg['alamat'] ?? '',
+                    'gol_darah'     => $reg['gol_darah'] ?? '',
                 ];
             }
         }
@@ -7855,15 +7971,50 @@ if (ob_get_length()) {
     {
         $data = $_POST;
         if (isset($data['no_rawat'])) {
+            $checkboxFields = [
+                'riwayat_kebiasaan_merokok', 'riwayat_kebiasaan_alkohol', 'riwayat_kebiasaan_napza', 'riwayat_kebiasaan_lainnya',
+                'hambatan_fisik_tidak_ada', 'hambatan_fisik_pendengaran', 'hambatan_fisik_bicara', 'hambatan_fisik_penglihatan',
+                'nyeri_tl_edukasi', 'nyeri_tl_terapi', 'nyeri_tl_konsul',
+                'asesmen_jatuh_tindakan_lapor', 'asesmen_jatuh_tindakan_tidak', 'asesmen_jatuh_tindakan_edukasi',
+                'asesmen_jatuh_tindakan_kalung', 'asesmen_jatuh_tindakan_alat', 'asesmen_jatuh_tindakan_dampingi',
+                'penunjang_lab', 'penunjang_rontgen', 'penunjang_lain',
+                'evaluasi_kontrol', 'evaluasi_rujuk', 'evaluasi_rawat_inap'
+            ];
+            foreach ($checkboxFields as $field) {
+                $data[$field] = isset($data[$field]) && $data[$field] === 'Ya' ? 'Ya' : 'Tidak';
+            }
+
+            if (isset($data['mst_penurunan_opsi'])) {
+                if ($data['mst_penurunan_opsi'] === '2b') {
+                    $data['mst_penurunan_bb'] = 2;
+                } else {
+                    $data['mst_penurunan_bb'] = (int)$data['mst_penurunan_opsi'];
+                }
+            }
+
+            $data['flacc_wajah'] = (int)($data['flacc_wajah'] ?? 0);
+            $data['flacc_kaki'] = (int)($data['flacc_kaki'] ?? 0);
+            $data['flacc_aktivitas'] = (int)($data['flacc_aktivitas'] ?? 0);
+            $data['flacc_menangis'] = (int)($data['flacc_menangis'] ?? 0);
+            $data['flacc_consolability'] = (int)($data['flacc_consolability'] ?? 0);
+            $data['flacc_total'] = $data['flacc_wajah'] + $data['flacc_kaki'] + $data['flacc_aktivitas'] + $data['flacc_menangis'] + $data['flacc_consolability'];
+
+            if (empty($data['tanggal_kunjungan'])) {
+                $data['tanggal_kunjungan'] = !empty($data['tanggal']) ? substr($data['tanggal'], 0, 10) : date('Y-m-d');
+            }
+            if (empty($data['pukul_kunjungan'])) {
+                $data['pukul_kunjungan'] = date('H:i');
+            }
+
             $cek = $this->db('asesmen_keperawatan_gigi_ugd')->where('no_rawat', $data['no_rawat'])->oneArray();
             if ($cek) {
                 $this->db('asesmen_keperawatan_gigi_ugd')->where('no_rawat', $data['no_rawat'])->save($data);
             } else {
-                $data['tanggal'] = date('Y-m-d H:i:s');
+                $data['tanggal'] = $data['tanggal_kunjungan'] . ' ' . ($data['pukul_kunjungan'] ?: date('H:i:s'));
                 $this->db('asesmen_keperawatan_gigi_ugd')->save($data);
             }
         }
-        $this->notify('success', 'Data berhasil disimpan');
+        $this->notify('success', 'Data Asesmen Keperawatan UGD berhasil disimpan');
         redirect(url([ADMIN, 'update_bmt', 'manage']));
     }
 
@@ -7872,35 +8023,53 @@ if (ob_get_length()) {
         $no_rawat = $_GET['no_rawat'] ?? '';
         $data = $this->db('asesmen_keperawatan_gigi_ugd')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = asesmen_keperawatan_gigi_ugd.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->leftJoin('dokter', 'dokter.kd_dokter = asesmen_keperawatan_gigi_ugd.nip_dpjp')
             ->leftJoin('petugas', 'petugas.nip = asesmen_keperawatan_gigi_ugd.nip')
             ->where('asesmen_keperawatan_gigi_ugd.no_rawat', $no_rawat)
-            ->select('asesmen_keperawatan_gigi_ugd.*, reg_periksa.no_rkm_medis, dokter.nm_dokter, petugas.nama AS nm_perawat')
+            ->select('asesmen_keperawatan_gigi_ugd.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, dokter.nm_dokter, petugas.nama AS nm_perawat')
             ->oneArray();
 
-        // Fallback no_rkm_medis
-        if (empty($data['no_rkm_medis'])) {
-            $data['no_rkm_medis'] = '';
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
         }
 
-        // Format tanggal lahir ke format Indonesia
+        if (empty($data['nama_pasien']) && !empty($data['nm_pasien'])) {
+            $data['nama_pasien'] = $data['nm_pasien'];
+        }
+
+        // Fallback no_rkm_medis & 6 box digits
+        $rm = str_pad((string)($data['no_rkm_medis'] ?? ''), 6, '0', STR_PAD_LEFT);
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = isset($rm[$i]) ? $rm[$i] : '';
+        }
+
+        // Format tanggal lahir ke format dd/mm/yyyy atau Indonesia
         if (!empty($data['tanggal_lahir'])) {
-            $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
             $tgl = explode('-', $data['tanggal_lahir']);
             if (count($tgl) == 3) {
-                $data['tanggal_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+                $data['tanggal_lahir_indo'] = $tgl[2] . ' / ' . $tgl[1] . ' / ' . $tgl[0];
             } else {
                 $data['tanggal_lahir_indo'] = $data['tanggal_lahir'];
             }
+        } else {
+            $data['tanggal_lahir_indo'] = '';
         }
+
+        // Format tanggal kunjungan dd / mm / yyyy
+        $tgl_kunj = !empty($data['tanggal_kunjungan']) ? $data['tanggal_kunjungan'] : substr($data['tanggal'] ?? date('Y-m-d'), 0, 10);
+        $tk = explode('-', $tgl_kunj);
+        $data['tgl_kunj_indo'] = count($tk) == 3 ? ($tk[2] . ' / ' . $tk[1] . ' / ' . $tk[0]) : $tgl_kunj;
+        $data['pukul_kunj_indo'] = !empty($data['pukul_kunjungan']) ? substr($data['pukul_kunjungan'], 0, 5) : (strlen($data['tanggal'] ?? '') > 10 ? substr($data['tanggal'], 11, 5) : '');
+        $data['pukul_ttd_indo'] = !empty($data['pukul_ttd']) ? substr($data['pukul_ttd'], 0, 5) : $data['pukul_kunj_indo'];
 
         $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
         $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
         $html = $this->draw('akgmu/cetak.html', ['data' => $data, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
         if ($is_mpdf) {
 @ini_set('display_errors', '0');
-            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 8, 'margin_right' => 8, 'margin_top' => 8, 'margin_bottom' => 8]);
             $mpdf->WriteHTML($html);
 if (ob_get_length()) {
     ob_clean();
@@ -15615,6 +15784,1704 @@ if (ob_get_length()) {
 
         echo $this->draw('bm5/cetak.html', $viewParams);
         exit();
+    }
+
+    // ==========================================
+    // RM.GD 3 - LEMBAR TRIASE UGD (ATS & DENTAL SDcep)
+    // ==========================================
+
+    private function _getTriaseCriteriaLists($ats_checked = [], $sdcep_checked = [])
+    {
+        $ats1_items = [
+            'Henti Jantung',
+            'Henti Nafas Respirasi <10x/mnt',
+            'TD systole < 80 mmHg (dewasa) atau shock berat pada anak',
+            'Tidak respon atau respon nyeri saja (GCS<9)',
+            'Saat kejang atau prolog kejang',
+            'IV overdose dan tidak respon atau hipoventilasi',
+            'Gangguan jalan nafas berat (stridor)'
+        ];
+        $ats2_items = [
+            'Resiko jalan nafas distress pernafasan berat',
+            'Nyeri dada karena jantung',
+            'Nyeri berat apapun sebabnya',
+            'Penurunan kesadaran apapun sebabnya (GCS < 13)',
+            'Akut hemiparese / disfasia',
+            'Demam dengan letargi',
+            'Terkena cairan asam atau basa ke mata',
+            'Mayor trauma fraktur/amputasi',
+            'Akral dingin, hipotensi, HR<50 atau >150 (dewasa)'
+        ];
+        $ats3_items = [
+            'Krisis hipertensi',
+            'Kehilangan darah berat, semua penyebab',
+            'Sesak nafas berat',
+            'Saturasi O2 90-95%',
+            'Seizure (Peringatan/Aura)',
+            'Demam karena immunosupresi (pasien kanker)',
+            'Muntah terus menerus',
+            'Dehidrasi',
+            'Cedera kepala dengan kehilangan kesadaran',
+            'Nyeri sedang (perlu analgetik)',
+            'Nyeri dada non cardiac',
+            'Nyeri abdomen tanpa faktor resiko tinggi atau usia > 65 tahun'
+        ];
+        $ats4_items = [
+            'Perdarahan ringan',
+            'Aspirasi benda asing, tanpa distres pernafasan',
+            'Trauma dada (tanpa nyeri tulang dan distres)',
+            'Sulit menelan (tanpa distres)',
+            'CKR, tanpa kehilangan kesadaran',
+            'Nyeri sedang',
+            'Muntah atau diare (tanpa dehidrasi)',
+            'Mata merah karena benda asing (visus normal)',
+            'Trauma tungkai ringan (terkilir, susp.fraktur, VL ringan), TTV normal'
+        ];
+        $ats5_items = [
+            'Nyeri ringan tanpa resiko',
+            'Luka ringan (luka lecet)',
+            'Kontrol luka',
+            'Gejala ringan'
+        ];
+
+        $sdcep1_items = [
+            'Trauma melibatkan laserasi fasial/ oral',
+            'Trauma melibatkan luka dentoalveolar',
+            'Pembengkakan orofasial yang sangat terlihat dan bertambah parah',
+            'Perdarahan post ekstraksi yang tidak terkontrol',
+            'Keadaan yang menghasilkan keadaan sistemik akut atau peningkatan temperatur tubuh sebagai akibat dari infeksi gigi',
+            'Trismus yang parah',
+            'Keadaan orodental yang menyebabkan kondisi eksaserbasi sistemik'
+        ];
+        $sdcep2_items = [
+            'Infeksi gigi dan jaringan lunak tanpa efek sistemik',
+            'Rasa sakit yang parah pada gigi dan fasial yang tidak dapat diatasi sendiri oleh pasien',
+            'Fraktur gigi satu atau lebih dengan terbukanya pulpa'
+        ];
+        $sdcep3_items = [
+            'Rasa sakit ringan sampai sedang yang tidak berhubungan dengan kondisi mendesak',
+            'Trauma dental minor',
+            'Perdarahan post ekstraksi yang dapat dikontrol sendiri oleh pasien',
+            'Kehilangan mahkota tiruan, bridges atau veneer',
+            'Patah atau kehilangan gigi tiruan',
+            'Patah posts',
+            'Patah atau lepasnya tambalan',
+            'Perawatan rutin',
+            'Gusi Berdarah'
+        ];
+
+        $mapList = function ($items, $checked) {
+            $out = [];
+            foreach ($items as $lbl) {
+                $out[] = [
+                    'label' => $lbl,
+                    'checked' => in_array($lbl, $checked)
+                ];
+            }
+            return $out;
+        };
+
+        return [
+            'ats1_list' => $mapList($ats1_items, $ats_checked),
+            'ats2_list' => $mapList($ats2_items, $ats_checked),
+            'ats3_list' => $mapList($ats3_items, $ats_checked),
+            'ats4_list' => $mapList($ats4_items, $ats_checked),
+            'ats5_list' => $mapList($ats5_items, $ats_checked),
+            'sdcep1_list' => $mapList($sdcep1_items, $sdcep_checked),
+            'sdcep2_list' => $mapList($sdcep2_items, $sdcep_checked),
+            'sdcep3_list' => $mapList($sdcep3_items, $sdcep_checked),
+        ];
+    }
+
+    public function anyRmgd3manage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $rows = $this->db('mlite_triase_igd')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = mlite_triase_igd.no_rkm_medis')
+            ->leftJoin('petugas', 'petugas.nip = mlite_triase_igd.petugas_id')
+            ->select('mlite_triase_igd.*, pasien.nm_pasien, pasien.jk, petugas.nama as nama_petugas')
+            ->desc('mlite_triase_igd.id_triase')
+            ->toArray();
+
+        foreach ($rows as &$r) {
+            if (!empty($r['tgl_triase'])) {
+                $ts = strtotime($r['tgl_triase']);
+                $r['tgl_triase_fmt'] = date('d-m-Y', $ts);
+                $r['jam_mulai_fmt'] = date('H:i', $ts) . ' WITA';
+            } else {
+                $r['tgl_triase_fmt'] = '-';
+                $r['jam_mulai_fmt'] = '';
+            }
+            if (empty($r['nama_petugas'])) {
+                $r['nama_petugas'] = $r['petugas_id'] ?? '-';
+            }
+        }
+
+        return $this->draw('rmgd3_triase/manage.html', ['data' => $rows]);
+    }
+
+    public function getRmgd3manage()
+    {
+        return $this->anyRmgd3manage();
+    }
+
+    public function anyRmgd3form($id = null)
+    {
+        if (isset($_GET['ajax_patient'])) {
+            $q = trim($_GET['no_rawat'] ?? '');
+            if (is_numeric($q) && strlen($q) < 6) {
+                $q = str_pad($q, 6, '0', STR_PAD_LEFT);
+            }
+            $result = ['success' => false];
+            if (!empty($q)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $q)
+                    ->orWhere('reg_periksa.no_rkm_medis', $q)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+                if ($reg) {
+                    $result = [
+                        'success' => true,
+                        'no_rawat' => $reg['no_rawat'],
+                        'no_rkm_medis' => $reg['no_rkm_medis'],
+                        'nama_pasien' => $reg['nm_pasien'],
+                        'jk' => $reg['jk'],
+                        'tgl_lahir' => $reg['tgl_lahir']
+                    ];
+                }
+            }
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit();
+        }
+
+        $id = $id ?? ($_GET['id'] ?? null);
+        $no_rawat_param = trim($_GET['no_rawat'] ?? '');
+
+        $data = [
+            'id_triase' => '',
+            'no_rawat' => $no_rawat_param,
+            'no_rkm_medis' => '',
+            'nm_pasien' => '',
+            'tgl_triase_input' => date('Y-m-d\TH:i'),
+            'jam_selesai_triase' => date('H:i'),
+            'petugas_id' => $this->core->getUserInfo('username', null, true),
+            'kesadaran' => 'Compos Mentis',
+            'airway' => 'Bebas',
+            'breathing' => 'Spontan',
+            'circulation' => 'Baik',
+            'tekanan_darah' => '',
+            'nadi' => '',
+            'respirasi' => '',
+            'suhu' => '',
+            'spo2' => '',
+            'gcs_e' => '4',
+            'gcs_v' => '5',
+            'gcs_m' => '6',
+            'kategori' => 'Hijau',
+            'skala_triase' => '4',
+            'keluhan_utama' => '',
+            'diagnosa_awal' => '',
+            'ats_skala' => '',
+            'ats_items' => '[]',
+            'sdcep_skala' => '',
+            'sdcep_items' => '[]',
+            'doa_status' => 0,
+            'doa_items' => '[]',
+            'jam_doa' => ''
+        ];
+
+        $row = null;
+        if (!empty($id)) {
+            $row = $this->db('mlite_triase_igd')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = mlite_triase_igd.no_rkm_medis')
+                ->where('mlite_triase_igd.id_triase', $id)
+                ->select('mlite_triase_igd.*, pasien.nm_pasien')
+                ->oneArray();
+        } elseif (!empty($no_rawat_param)) {
+            $row = $this->db('mlite_triase_igd')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = mlite_triase_igd.no_rkm_medis')
+                ->where('mlite_triase_igd.no_rawat', $no_rawat_param)
+                ->select('mlite_triase_igd.*, pasien.nm_pasien')
+                ->desc('mlite_triase_igd.id_triase')
+                ->oneArray();
+            if (!$row) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $no_rawat_param)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+                    ->oneArray();
+                if ($reg) {
+                    $data['no_rawat'] = $reg['no_rawat'];
+                    $data['no_rkm_medis'] = $reg['no_rkm_medis'];
+                    $data['nm_pasien'] = $reg['nm_pasien'];
+                }
+            }
+        }
+
+        if ($row) {
+            $data = array_merge($data, $row);
+            if (!empty($row['tgl_triase'])) {
+                $data['tgl_triase_input'] = date('Y-m-d\TH:i', strtotime($row['tgl_triase']));
+            }
+            if (empty($data['jam_selesai_triase']) && !empty($row['tgl_triase'])) {
+                $data['jam_selesai_triase'] = date('H:i', strtotime($row['tgl_triase']));
+            }
+        }
+
+        $ats_checked = !empty($data['ats_items']) ? (json_decode($data['ats_items'], true) ?: []) : [];
+        $sdcep_checked = !empty($data['sdcep_items']) ? (json_decode($data['sdcep_items'], true) ?: []) : [];
+        $doa_checked = !empty($data['doa_items']) ? (json_decode($data['doa_items'], true) ?: []) : [];
+
+        $lists = $this->_getTriaseCriteriaLists($ats_checked, $sdcep_checked);
+        $doa_map = [
+            'tanda_kehidupan' => in_array('Tanda Kehidupan (-)', $doa_checked),
+            'pupil' => in_array('Pupil RCL/RCTL (-/-)', $doa_checked),
+            'denyut_nadi' => in_array('Denyut Nadi (-)', $doa_checked),
+            'ekg_flat' => in_array('EKG flat', $doa_checked),
+        ];
+
+        $petugas = $this->db('petugas')->where('status', '1')->toArray();
+        $pasien_list = $this->db('reg_periksa')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien')
+            ->desc('reg_periksa.tgl_registrasi')
+            ->desc('reg_periksa.jam_reg')
+            ->limit(40)
+            ->toArray();
+
+        return $this->draw('rmgd3_triase/form.html', array_merge([
+            'data' => $data,
+            'petugas' => $petugas,
+            'pasien_list' => $pasien_list,
+            'doa_map' => $doa_map
+        ], $lists));
+    }
+
+    public function getRmgd3form($id = null)
+    {
+        return $this->anyRmgd3form($id);
+    }
+
+    public function anyRmgd3save()
+    {
+        if (empty($_POST)) {
+            redirect(url([ADMIN, 'update_bmt', 'rmgd3manage']));
+        }
+
+        $id_triase = !empty($_POST['id_triase']) ? (int)$_POST['id_triase'] : null;
+        $no_rawat = trim($_POST['no_rawat'] ?? '');
+        $no_rkm_medis = trim($_POST['no_rkm_medis'] ?? '');
+
+        if (empty($no_rkm_medis) && !empty($no_rawat)) {
+            $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+            if ($reg) {
+                $no_rkm_medis = $reg['no_rkm_medis'];
+            }
+        }
+
+        $tgl_triase = !empty($_POST['tgl_triase']) ? date('Y-m-d H:i:s', strtotime($_POST['tgl_triase'])) : date('Y-m-d H:i:s');
+        $jam_selesai = trim($_POST['jam_selesai_triase'] ?? date('H:i'));
+        $tgl_selesai = date('Y-m-d', strtotime($tgl_triase)) . ' ' . (strlen($jam_selesai) == 5 ? $jam_selesai . ':00' : $jam_selesai);
+
+        $ats_items = isset($_POST['ats_items']) && is_array($_POST['ats_items']) ? array_values($_POST['ats_items']) : [];
+        $sdcep_items = isset($_POST['sdcep_items']) && is_array($_POST['sdcep_items']) ? array_values($_POST['sdcep_items']) : [];
+        $doa_items = isset($_POST['doa_items']) && is_array($_POST['doa_items']) ? array_values($_POST['doa_items']) : [];
+        $jam_doa = trim($_POST['jam_doa'] ?? '');
+        $doa_status = (!empty($doa_items) || !empty($jam_doa)) ? 1 : 0;
+
+        $ats_skala = trim($_POST['ats_skala'] ?? '');
+        $skala_triase = trim($_POST['skala_triase'] ?? '');
+        if (empty($ats_skala) && !empty($skala_triase)) {
+            $ats_skala = 'ATS ' . $skala_triase;
+        } elseif (!empty($ats_skala) && empty($skala_triase)) {
+            $skala_triase = preg_replace('/[^1-5]/', '', $ats_skala);
+        }
+
+        $saveData = [
+            'no_rawat' => $no_rawat,
+            'no_rkm_medis' => $no_rkm_medis,
+            'tgl_triase' => $tgl_triase,
+            'jam_selesai_triase' => $jam_selesai,
+            'tgl_selesai_triase' => $tgl_selesai,
+            'petugas_id' => !empty($_POST['petugas_id']) ? $_POST['petugas_id'] : $this->core->getUserInfo('username', null, true),
+            'kesadaran' => !empty($_POST['kesadaran']) ? $_POST['kesadaran'] : 'Compos Mentis',
+            'airway' => !empty($_POST['airway']) ? $_POST['airway'] : 'Bebas',
+            'breathing' => !empty($_POST['breathing']) ? $_POST['breathing'] : 'Spontan',
+            'circulation' => !empty($_POST['circulation']) ? $_POST['circulation'] : 'Baik',
+            'tekanan_darah' => $_POST['tekanan_darah'] !== '' ? $_POST['tekanan_darah'] : null,
+            'nadi' => $_POST['nadi'] !== '' ? (int)$_POST['nadi'] : null,
+            'respirasi' => $_POST['respirasi'] !== '' ? (int)$_POST['respirasi'] : null,
+            'suhu' => $_POST['suhu'] !== '' ? $_POST['suhu'] : null,
+            'spo2' => $_POST['spo2'] !== '' ? (int)$_POST['spo2'] : null,
+            'gcs_e' => $_POST['gcs_e'] !== '' ? (int)$_POST['gcs_e'] : null,
+            'gcs_v' => $_POST['gcs_v'] !== '' ? (int)$_POST['gcs_v'] : null,
+            'gcs_m' => $_POST['gcs_m'] !== '' ? (int)$_POST['gcs_m'] : null,
+            'kategori' => !empty($_POST['kategori']) ? $_POST['kategori'] : 'Hijau',
+            'skala_triase' => in_array($skala_triase, ['1','2','3','4','5']) ? $skala_triase : null,
+            'keluhan_utama' => $_POST['keluhan_utama'] ?? '',
+            'diagnosa_awal' => $_POST['diagnosa_awal'] ?? '',
+            'ats_skala' => $ats_skala,
+            'ats_items' => json_encode($ats_items, JSON_UNESCAPED_UNICODE),
+            'sdcep_skala' => trim($_POST['sdcep_skala'] ?? ''),
+            'sdcep_items' => json_encode($sdcep_items, JSON_UNESCAPED_UNICODE),
+            'doa_status' => $doa_status,
+            'doa_items' => json_encode($doa_items, JSON_UNESCAPED_UNICODE),
+            'jam_doa' => $jam_doa,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        if ($id_triase) {
+            $fields = array_keys($saveData);
+            $set_clause = [];
+            foreach ($fields as $f) {
+                $set_clause[] = "`{$f}` = :{$f}";
+            }
+            $sql = "UPDATE mlite_triase_igd SET " . implode(', ', $set_clause) . " WHERE id_triase = :id_triase";
+            $saveData['id_triase'] = $id_triase;
+            $stmt = $this->db()->pdo()->prepare($sql);
+            $stmt->execute($saveData);
+            $this->notify('success', 'Data Lembar Triase (RM.GD 3) berhasil diperbarui.');
+        } else {
+            $fields = array_keys($saveData);
+            $placeholders = ':' . implode(', :', $fields);
+            $escaped = array_map(function($f) { return "`{$f}`"; }, $fields);
+            $sql = "INSERT INTO mlite_triase_igd (" . implode(', ', $escaped) . ") VALUES (" . $placeholders . ")";
+            $stmt = $this->db()->pdo()->prepare($sql);
+            $stmt->execute($saveData);
+            $this->notify('success', 'Data Lembar Triase (RM.GD 3) berhasil disimpan.');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'rmgd3manage']));
+    }
+
+    public function postRmgd3save()
+    {
+        return $this->anyRmgd3save();
+    }
+
+    public function anyRmgd3hapus($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if ($id) {
+            $this->db('mlite_triase_igd')->where('id_triase', $id)->delete();
+            $this->notify('success', 'Data Lembar Triase berhasil dihapus.');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'rmgd3manage']));
+    }
+
+    public function getRmgd3hapus($id = null)
+    {
+        return $this->anyRmgd3hapus($id);
+    }
+
+    public function anyRmgd3cetak($id = null)
+    {
+        return $this->getRmgd3cetak($id);
+    }
+
+    public function getRmgd3cetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        $no_rawat = $_GET['no_rawat'] ?? null;
+
+        $q = $this->db('mlite_triase_igd')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = mlite_triase_igd.no_rkm_medis')
+            ->leftJoin('petugas', 'petugas.nip = mlite_triase_igd.petugas_id')
+            ->select('mlite_triase_igd.*, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, petugas.nama as nama_petugas');
+
+        if (!empty($id)) {
+            $data = $q->where('mlite_triase_igd.id_triase', $id)->oneArray();
+        } elseif (!empty($no_rawat)) {
+            $data = $q->where('mlite_triase_igd.no_rawat', $no_rawat)->desc('mlite_triase_igd.id_triase')->oneArray();
+        } else {
+            echo "ID atau No. Rawat tidak ditemukan.";
+            exit();
+        }
+
+        if (!$data) {
+            echo "Data Triase tidak ditemukan.";
+            exit();
+        }
+
+        if (empty($data['nama_petugas'])) {
+            $data['nama_petugas'] = $data['petugas_id'] ?? '-';
+        }
+        $data['jk_label'] = ($data['jk'] ?? '') == 'L' ? 'L' : (($data['jk'] ?? '') == 'P' ? 'P' : '-');
+        $data['tgl_lahir_fmt'] = (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') ? date('d / m / Y', strtotime($data['tgl_lahir'])) : '-';
+
+        if (!empty($data['tgl_triase'])) {
+            $ts = strtotime($data['tgl_triase']);
+            $data['tgl_kunjungan_fmt'] = date('d / m / Y', $ts);
+            $data['jam_mulai_fmt'] = date('H:i', $ts);
+            $data['tgl_selesai_fmt'] = date('d / m / Y', $ts);
+        } else {
+            $data['tgl_kunjungan_fmt'] = '.... / .... / 20....';
+            $data['jam_mulai_fmt'] = '........';
+            $data['tgl_selesai_fmt'] = '.... / .... / 20....';
+        }
+
+        $data['jam_selesai_fmt'] = !empty($data['jam_selesai_triase']) ? $data['jam_selesai_triase'] : $data['jam_mulai_fmt'];
+
+        $clean_rm = preg_replace('/[^0-9]/', '', $data['no_rkm_medis'] ?? '');
+        $padded_rm = str_pad($clean_rm, 6, '0', STR_PAD_LEFT);
+        $rm_digits = str_split(substr($padded_rm, -6));
+
+        $ats_checked = !empty($data['ats_items']) ? (json_decode($data['ats_items'], true) ?: []) : [];
+        $sdcep_checked = !empty($data['sdcep_items']) ? (json_decode($data['sdcep_items'], true) ?: []) : [];
+        $doa_checked = !empty($data['doa_items']) ? (json_decode($data['doa_items'], true) ?: []) : [];
+
+        $lists = $this->_getTriaseCriteriaLists($ats_checked, $sdcep_checked);
+        $doa_map = [
+            'tanda_kehidupan' => in_array('Tanda Kehidupan (-)', $doa_checked),
+            'pupil' => in_array('Pupil RCL/RCTL (-/-)', $doa_checked),
+            'denyut_nadi' => in_array('Denyut Nadi (-)', $doa_checked),
+            'ekg_flat' => in_array('EKG flat', $doa_checked),
+        ];
+
+        $is_pdf = isset($_GET['pdf']) && $_GET['pdf'] == 1;
+        $kop_file = BASE_DIR . '/assets/img/KOP-SURAT.png';
+        $kop_img = is_file($kop_file) ? ($is_pdf ? $kop_file : url('assets/img/KOP-SURAT.png')) : '';
+
+        $viewParams = array_merge([
+            'data' => $data,
+            'kop_img' => $kop_img,
+            'rm_digits' => $rm_digits,
+            'doa_map' => $doa_map,
+            'is_mpdf' => $is_pdf
+        ], $lists);
+
+        if ($is_pdf) {
+            $oldErr = error_reporting(0);
+            @ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf([
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'orientation' => 'P',
+                'margin_left' => 8,
+                'margin_right' => 8,
+                'margin_top' => 6,
+                'margin_bottom' => 6,
+                'tempDir' => BASE_DIR . '/tmp'
+            ]);
+            $html = $this->draw('rmgd3_triase/cetak.html', $viewParams);
+            $mpdf->WriteHTML($html);
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            $mpdf->Output('RM_GD_03_Lembar_Triase_' . str_replace('/', '_', $data['no_rawat']) . '.pdf', 'I');
+            exit();
+        }
+
+        echo $this->draw('rmgd3_triase/cetak.html', $viewParams);
+        exit();
+    }
+
+    // =========================================================================
+    // RM.GD 5 - ASESMEN MEDIS GIGI UNIT GAWAT DARURAT
+    // =========================================================================
+
+    public function anyRmgd5manage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $rows = $this->db('asesmen_medis_gigi_ugd')
+            ->leftJoin('dokter', 'dokter.kd_dokter = asesmen_medis_gigi_ugd.kd_dokter')
+            ->select('asesmen_medis_gigi_ugd.*, dokter.nm_dokter')
+            ->desc('asesmen_medis_gigi_ugd.id')
+            ->toArray();
+
+        return $this->draw('rmgd5_medis_gigi/manage.html', ['data' => $rows]);
+    }
+
+    public function getRmgd5manage()
+    {
+        return $this->anyRmgd5manage();
+    }
+
+    public function anyRmgd5form($id = null)
+    {
+        if (isset($_GET['ajax_patient'])) {
+            $q = trim($_GET['no_rawat'] ?? '');
+            if (is_numeric($q) && strlen($q) < 6) {
+                $q = str_pad($q, 6, '0', STR_PAD_LEFT);
+            }
+            $result = ['success' => false];
+            if (!empty($q)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $q)
+                    ->orWhere('reg_periksa.no_rkm_medis', $q)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.kd_dokter, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.gol_darah')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+                if ($reg) {
+                    $triase = $this->db('mlite_triase_igd')
+                        ->leftJoin('petugas', 'petugas.nip = mlite_triase_igd.petugas_id')
+                        ->where('mlite_triase_igd.no_rawat', $reg['no_rawat'])
+                        ->select('mlite_triase_igd.*, petugas.nama as nama_petugas')
+                        ->desc('mlite_triase_igd.id_triase')
+                        ->oneArray();
+                    $pem = $this->db('pemeriksaan_ralan')
+                        ->where('no_rawat', $reg['no_rawat'])
+                        ->desc('tgl_perawatan')
+                        ->desc('jam_rawat')
+                        ->oneArray();
+
+                    $result = [
+                        'success' => true,
+                        'no_rawat' => $reg['no_rawat'],
+                        'no_rkm_medis' => $reg['no_rkm_medis'],
+                        'nama_pasien' => $reg['nm_pasien'],
+                        'jk' => $reg['jk'],
+                        'tgl_lahir' => $reg['tgl_lahir'],
+                        'gol_darah' => $reg['gol_darah'] ?? '',
+                        'kd_dokter' => $reg['kd_dokter'] ?? '',
+                        'triase' => $triase ?: null,
+                        'pemeriksaan' => $pem ?: null
+                    ];
+                }
+            }
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit();
+        }
+
+        $id = $id ?? ($_GET['id'] ?? null);
+        $no_rawat_param = trim($_GET['no_rawat'] ?? '');
+
+        $data = [
+            'id' => '',
+            'no_rawat' => $no_rawat_param,
+            'no_rkm_medis' => '',
+            'nama_pasien' => '',
+            'jenis_kelamin' => '',
+            'tanggal_lahir' => '',
+            'jenis_kasus' => 'Non Trauma',
+            'sumber_data' => 'Auto Anamnesis',
+            'kategori_pasien' => 'Pasien Dewasa (18-65 tahun)',
+            'tanggal_kunjungan' => date('Y-m-d'),
+            'pukul_kunjungan' => date('H:i'),
+            'triase' => 'Hijau',
+            'jam_mulai_triase' => '',
+            'jam_selesai_triase' => '',
+            'petugas_triase' => '',
+            'jn_paten' => 'Ya',
+            'jn_obstruksi_parsial' => 'Tidak',
+            'jn_stridor' => 'Tidak',
+            'jn_snoring' => 'Tidak',
+            'jn_gurgling' => 'Tidak',
+            'jn_wheezing' => 'Tidak',
+            'jn_obstruksi_total' => 'Tidak',
+            'jn_trauma_jalan_napas' => 'Tidak',
+            'jn_resiko_aspirasi' => 'Tidak',
+            'jn_benda_asing' => 'Tidak',
+            'jn_kesimpulan' => 'Aman',
+            'napas_spontan' => 'Spontan',
+            'napas_reguler' => 'Reguler',
+            'napas_gerakan_dada' => 'Simetris',
+            'napas_jejas_dada' => 'Tidak',
+            'napas_jejas_kanan' => 'Tidak',
+            'napas_jejas_kiri' => 'Tidak',
+            'napas_tipe_normal' => 'Ya',
+            'napas_tipe_takipnue' => 'Tidak',
+            'napas_tipe_kussmaul' => 'Tidak',
+            'napas_tipe_hiperventilasi' => 'Tidak',
+            'napas_tipe_biot' => 'Tidak',
+            'napas_tipe_cheyne_stokes' => 'Tidak',
+            'napas_tipe_apneustic' => 'Tidak',
+            'napas_kesimpulan' => 'Aman',
+            'sirk_nadi_irama' => 'Reguler',
+            'sirk_nadi_kekuatan' => 'Kuat',
+            'sirk_kulit_normal' => 'Ya',
+            'sirk_kulit_pucat' => 'Tidak',
+            'sirk_kulit_jaundice' => 'Tidak',
+            'sirk_kulit_sianosis' => 'Tidak',
+            'sirk_kulit_berkeringat' => 'Tidak',
+            'sirk_akral_suhu' => 'Hangat',
+            'sirk_akral_lembab' => 'Kering',
+            'sirk_crt' => '< 2 detik',
+            'sirk_kesimpulan' => 'Aman',
+            'dis_gcs_e' => '4',
+            'dis_gcs_m' => '6',
+            'dis_gcs_v' => '5',
+            'dis_pupil' => 'Isokor',
+            'dis_diameter_kanan' => '2',
+            'dis_diameter_kiri' => '2',
+            'dis_refleks_kanan' => '+',
+            'dis_refleks_kiri' => '+',
+            'eks_tidak_kelainan' => 'Ya',
+            'eks_tidak_tampak_jelas' => 'Tidak',
+            'eks_deformitas' => 'Tidak',
+            'eks_contusio' => 'Tidak',
+            'eks_abrasi' => 'Tidak',
+            'eks_penetrasi' => 'Tidak',
+            'eks_luka_bakar' => 'Tidak',
+            'eks_laserasi' => 'Tidak',
+            'eks_ekskoriasi' => 'Tidak',
+            'keluhan_utama' => '',
+            'riwayat_penyakit_sekarang' => '',
+            'riwayat_penyakit_dahulu' => '',
+            'riwayat_penyakit_keluarga' => '',
+            'riwayat_alergi' => 'Tidak',
+            'riwayat_alergi_ket' => '',
+            'riwayat_penggunaan_obat' => '',
+            'rp_menular_hiv' => 'Tidak',
+            'rp_menular_tbc' => 'Tidak',
+            'rp_menular_hepatitis' => 'Tidak',
+            'rp_menular_lainnya' => 'Tidak',
+            'rp_menular_lainnya_ket' => '',
+            'rp_jantung' => 'Tidak Ada',
+            'rp_hipertensi' => 'Tidak Ada',
+            'rp_diabetes' => 'Tidak Ada',
+            'rp_haemophilia' => 'Tidak Ada',
+            'rp_ginjal' => 'Tidak Ada',
+            'rp_ginjal_ket' => '',
+            'rp_sistemik_lain' => 'Tidak Ada',
+            'rp_sistemik_lain_ket' => '',
+            'rp_operasi' => 'Tidak Ada',
+            'rp_operasi_ket' => '',
+            'anak_ke' => '',
+            'anak_dari_saudara' => '',
+            'anak_cara_lahir' => '',
+            'anak_cara_lahir_ket' => '',
+            'anak_umur_lahir' => '',
+            'anak_kelainan_bawaan' => '',
+            'anak_kelainan_bawaan_ket' => '',
+            'imun_bcg' => 'Tidak',
+            'imun_campak' => 'Tidak',
+            'imun_campak_kali' => '',
+            'imun_polio' => 'Tidak',
+            'imun_polio_kali' => '',
+            'imun_hepatitis_b' => 'Tidak',
+            'imun_hepatitis_b_kali' => '',
+            'imun_dpt' => 'Tidak',
+            'imun_dpt_kali' => '',
+            'imun_lainnya' => 'Tidak',
+            'imun_lainnya_ket' => '',
+            'imun_lainnya_kali' => '',
+            'tk_gigi_pertama' => '',
+            'tk_duduk' => '',
+            'tk_berjalan' => '',
+            'tk_bicara' => '',
+            'tk_membaca' => '',
+            'geriatri_penglihatan' => 'Tidak',
+            'geriatri_pendengaran' => 'Tidak',
+            'geriatri_berkemih' => 'Tidak',
+            'geriatri_daya_ingat' => 'Tidak',
+            'geriatri_bicara' => 'Tidak',
+            'geriatri_gigi_palsu' => 'Tidak',
+            'geriatri_lainnya' => 'Tidak',
+            'geriatri_lainnya_ket' => '',
+            'keadaan_umum' => 'Baik',
+            'kesadaran' => 'Compos Mentis',
+            'td' => '',
+            'nadi' => '',
+            'rr' => '',
+            'saturasi' => '',
+            'suhu' => '',
+            'gol_darah' => '',
+            'bb' => '',
+            'tb' => '',
+            'eo_kepala_leher' => '',
+            'eo_kepala' => 'DBN',
+            'eo_wajah' => 'Simetris',
+            'eo_tmj' => 'DBN',
+            'eo_tiroid' => 'DBN',
+            'eo_leher' => 'DBN',
+            'eo_limfe_submandibular_dextra' => 'DBN',
+            'eo_limfe_submandibular_sinistra' => 'DBN',
+            'eo_limfe_submentalis' => 'DBN',
+            'eo_limfe_cervikalis' => 'DBN',
+            'io_elemen_gigi' => '',
+            'io_gigi_karies' => 'Tidak',
+            'io_karies_superfisial' => 'Tidak',
+            'io_karies_media' => 'Tidak',
+            'io_karies_profunda' => 'Tidak',
+            'io_sisa_akar' => 'Tidak',
+            'io_perkusi_sakit' => 'Tidak',
+            'io_druk_sakit' => 'Tidak',
+            'io_diskolorisasi' => 'Tidak',
+            'io_palpasi_sakit' => 'Tidak',
+            'io_gingiva' => 'Tidak',
+            'io_gingiva_normal' => 'Tidak',
+            'io_gingiva_hiperemis' => 'Tidak',
+            'io_gingiva_resesi' => 'Tidak',
+            'io_kalkulus' => 'Tidak',
+            'io_luksasi' => 'Tidak',
+            'io_luksasi_derajat' => '',
+            'io_fraktur_mahkota' => 'Tidak',
+            'io_fraktur_lokasi' => '',
+            'io_lainnya' => '',
+            'io_tes_termal' => '',
+            'io_tes_kavitas' => '',
+            'io_tes_penunjang' => '',
+            'io_kfile_1_kode' => '',
+            'io_kfile_1_mm' => '',
+            'io_kfile_2_kode' => '',
+            'io_kfile_2_mm' => '',
+            'io_kfile_3_kode' => '',
+            'io_kfile_3_mm' => '',
+            'io_kfile_4_kode' => '',
+            'io_kfile_4_mm' => '',
+            'io_vitalitas_gigi' => '',
+            'nyeri_keluhan' => 'Tidak',
+            'nyeri_lokasi' => '',
+            'nyeri_durasi' => '',
+            'nyeri_frekuensi' => '',
+            'nyeri_karakteristik' => '',
+            'nyeri_menjalar' => 'Tidak',
+            'nyeri_menjalar_ket' => '',
+            'nyeri_memberat' => '',
+            'nyeri_hilang' => '',
+            'nyeri_tl_edukasi' => 'Tidak',
+            'nyeri_tl_terapi' => 'Tidak',
+            'nyeri_tl_konsul' => 'Tidak',
+            'nyeri_tl_konsul_ke' => '',
+            'skala_nyeri' => '0',
+            'flacc_wajah' => 0,
+            'flacc_kaki' => 0,
+            'flacc_aktivitas' => 0,
+            'flacc_menangis' => 0,
+            'flacc_consolability' => 0,
+            'flacc_total' => 0,
+            'penunjang_lab' => 'Tidak',
+            'penunjang_rontgen' => 'Tidak',
+            'penunjang_lain' => 'Tidak',
+            'penunjang_lain_ket' => '',
+            'diagnosis' => '',
+            'diagnosis_banding' => '',
+            'rencana_tindak_lanjut' => '',
+            'evaluasi_kontrol' => 'Tidak',
+            'evaluasi_kontrol_tgl' => '',
+            'evaluasi_rujuk' => 'Tidak',
+            'evaluasi_rujuk_rs' => '',
+            'evaluasi_ranap' => 'Tidak',
+            'evaluasi_ranap_ruangan' => '',
+            'tanggal_ttd' => date('Y-m-d'),
+            'pukul_ttd' => date('H:i'),
+            'kd_dokter' => $this->core->getUserInfo('username', null, true)
+        ];
+
+        if ($id) {
+            $row = $this->db('asesmen_medis_gigi_ugd')->where('id', $id)->oneArray();
+            if ($row) {
+                $data = array_merge($data, $row);
+            }
+        } elseif (!empty($no_rawat_param)) {
+            $existing = $this->db('asesmen_medis_gigi_ugd')
+                ->where('no_rawat', $no_rawat_param)
+                ->desc('id')
+                ->oneArray();
+            if ($existing) {
+                $data = array_merge($data, $existing);
+            } else {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $no_rawat_param)
+                    ->select('reg_periksa.*, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.gol_darah')
+                    ->oneArray();
+                if ($reg) {
+                    $data['no_rkm_medis'] = $reg['no_rkm_medis'];
+                    $data['nama_pasien'] = $reg['nm_pasien'];
+                    $data['jenis_kelamin'] = $reg['jk'];
+                    $data['tanggal_lahir'] = $reg['tgl_lahir'];
+                    $data['gol_darah'] = $reg['gol_darah'] ?? '';
+                    if (!empty($reg['kd_dokter'])) {
+                        $data['kd_dokter'] = $reg['kd_dokter'];
+                    }
+                    if (!empty($reg['tgl_lahir'])) {
+                        $age = (int)date('Y') - (int)date('Y', strtotime($reg['tgl_lahir']));
+                        if ($age < 18) {
+                            $data['kategori_pasien'] = 'Pasien Anak (0-<18 tahun)';
+                        } elseif ($age > 65) {
+                            $data['kategori_pasien'] = 'Pasien Geriatri (>65 tahun)';
+                        } else {
+                            $data['kategori_pasien'] = 'Pasien Dewasa (18-65 tahun)';
+                        }
+                    }
+                }
+                $triase = $this->db('mlite_triase_igd')
+                    ->leftJoin('petugas', 'petugas.nip = mlite_triase_igd.petugas_id')
+                    ->where('mlite_triase_igd.no_rawat', $no_rawat_param)
+                    ->select('mlite_triase_igd.*, petugas.nama as nama_petugas')
+                    ->desc('mlite_triase_igd.id_triase')
+                    ->oneArray();
+                if ($triase) {
+                    $data['triase'] = $triase['kategori'] ?? 'Hijau';
+                    if (!empty($triase['tgl_triase'])) {
+                        $data['jam_mulai_triase'] = date('H:i', strtotime($triase['tgl_triase']));
+                    }
+                    $data['jam_selesai_triase'] = $triase['jam_selesai_triase'] ?? $data['jam_mulai_triase'];
+                    $data['petugas_triase'] = !empty($triase['nama_petugas']) ? $triase['nama_petugas'] : ($triase['petugas_id'] ?? '');
+                    if (!empty($triase['keluhan_utama'])) {
+                        $data['keluhan_utama'] = $triase['keluhan_utama'];
+                    }
+                    if (!empty($triase['tekanan_darah'])) {
+                        $data['td'] = $triase['tekanan_darah'];
+                    }
+                    if (!empty($triase['nadi'])) {
+                        $data['nadi'] = $triase['nadi'];
+                    }
+                    if (!empty($triase['respirasi'])) {
+                        $data['rr'] = $triase['respirasi'];
+                    }
+                    if (!empty($triase['suhu'])) {
+                        $data['suhu'] = $triase['suhu'];
+                    }
+                    if (!empty($triase['spo2'])) {
+                        $data['saturasi'] = $triase['spo2'];
+                    }
+                    if (!empty($triase['gcs_e'])) {
+                        $data['dis_gcs_e'] = $triase['gcs_e'];
+                    }
+                    if (!empty($triase['gcs_m'])) {
+                        $data['dis_gcs_m'] = $triase['gcs_m'];
+                    }
+                    if (!empty($triase['gcs_v'])) {
+                        $data['dis_gcs_v'] = $triase['gcs_v'];
+                    }
+                }
+                $pem = $this->db('pemeriksaan_ralan')
+                    ->where('no_rawat', $no_rawat_param)
+                    ->desc('tgl_perawatan')
+                    ->desc('jam_rawat')
+                    ->oneArray();
+                if ($pem) {
+                    if (empty($data['keluhan_utama']) && !empty($pem['keluhan'])) {
+                        $data['keluhan_utama'] = $pem['keluhan'];
+                    }
+                    if (empty($data['td']) && !empty($pem['tensi'])) {
+                        $data['td'] = $pem['tensi'];
+                    }
+                    if (empty($data['nadi']) && !empty($pem['nadi'])) {
+                        $data['nadi'] = $pem['nadi'];
+                    }
+                    if (empty($data['rr']) && !empty($pem['respirasi'])) {
+                        $data['rr'] = $pem['respirasi'];
+                    }
+                    if (empty($data['suhu']) && !empty($pem['suhu_tubuh'])) {
+                        $data['suhu'] = $pem['suhu_tubuh'];
+                    }
+                    if (empty($data['saturasi']) && !empty($pem['spo2'])) {
+                        $data['saturasi'] = $pem['spo2'];
+                    }
+                    if (!empty($pem['berat'])) {
+                        $data['bb'] = $pem['berat'];
+                    }
+                    if (!empty($pem['tinggi'])) {
+                        $data['tb'] = $pem['tinggi'];
+                    }
+                    if (!empty($pem['kesadaran'])) {
+                        $data['kesadaran'] = $pem['kesadaran'];
+                    }
+                    if (!empty($pem['alergi'])) {
+                        $data['riwayat_alergi'] = ($pem['alergi'] !== '-' && strtolower($pem['alergi']) !== 'tidak ada') ? 'Ya' : 'Tidak';
+                        $data['riwayat_alergi_ket'] = $pem['alergi'];
+                    }
+                    if (!empty($pem['penilaian'])) {
+                        $data['diagnosis'] = $pem['penilaian'];
+                    }
+                    if (!empty($pem['rtl'])) {
+                        $data['rencana_tindak_lanjut'] = $pem['rtl'];
+                    }
+                }
+            }
+        }
+
+        $dokter = $this->db('dokter')->where('status', '1')->toArray();
+
+        return $this->draw('rmgd5_medis_gigi/form.html', [
+            'data' => $data,
+            'dokter' => $dokter
+        ]);
+    }
+
+    public function getRmgd5form($id = null)
+    {
+        return $this->anyRmgd5form($id);
+    }
+
+    public function anyRmgd5save()
+    {
+        $post = $_POST;
+        $id = $post['id'] ?? '';
+        unset($post['id'], $post['save']);
+
+        $checkboxes = [
+            'jn_paten', 'jn_obstruksi_parsial', 'jn_stridor', 'jn_snoring', 'jn_gurgling', 'jn_wheezing',
+            'jn_obstruksi_total', 'jn_trauma_jalan_napas', 'jn_resiko_aspirasi', 'jn_benda_asing',
+            'napas_jejas_dada', 'napas_jejas_kanan', 'napas_jejas_kiri',
+            'napas_tipe_normal', 'napas_tipe_takipnue', 'napas_tipe_kussmaul', 'napas_tipe_hiperventilasi',
+            'napas_tipe_biot', 'napas_tipe_cheyne_stokes', 'napas_tipe_apneustic',
+            'sirk_kulit_normal', 'sirk_kulit_pucat', 'sirk_kulit_jaundice', 'sirk_kulit_sianosis', 'sirk_kulit_berkeringat',
+            'eks_tidak_kelainan', 'eks_tidak_tampak_jelas', 'eks_deformitas', 'eks_contusio', 'eks_abrasi',
+            'eks_penetrasi', 'eks_luka_bakar', 'eks_laserasi', 'eks_ekskoriasi',
+            'rp_menular_hiv', 'rp_menular_tbc', 'rp_menular_hepatitis', 'rp_menular_lainnya',
+            'imun_bcg', 'imun_campak', 'imun_polio', 'imun_hepatitis_b', 'imun_dpt', 'imun_lainnya',
+            'geriatri_penglihatan', 'geriatri_pendengaran', 'geriatri_berkemih', 'geriatri_daya_ingat',
+            'geriatri_bicara', 'geriatri_gigi_palsu', 'geriatri_lainnya',
+            'io_gigi_karies', 'io_karies_superfisial', 'io_karies_media', 'io_karies_profunda',
+            'io_sisa_akar', 'io_perkusi_sakit', 'io_druk_sakit', 'io_diskolorisasi', 'io_palpasi_sakit',
+            'io_gingiva', 'io_gingiva_normal', 'io_gingiva_hiperemis', 'io_gingiva_resesi',
+            'io_kalkulus', 'io_luksasi', 'io_fraktur_mahkota',
+            'nyeri_tl_edukasi', 'nyeri_tl_terapi', 'nyeri_tl_konsul',
+            'penunjang_lab', 'penunjang_rontgen', 'penunjang_lain',
+            'evaluasi_kontrol', 'evaluasi_rujuk', 'evaluasi_ranap'
+        ];
+
+        foreach ($checkboxes as $cb) {
+            if (!isset($post[$cb])) {
+                $post[$cb] = 'Tidak';
+            }
+        }
+
+        if (empty($post['tanggal_kunjungan'])) {
+            $post['tanggal_kunjungan'] = date('Y-m-d');
+        }
+        if (empty($post['tanggal_lahir'])) {
+            $post['tanggal_lahir'] = null;
+        }
+        if (empty($post['evaluasi_kontrol_tgl'])) {
+            $post['evaluasi_kontrol_tgl'] = null;
+        }
+        if (empty($post['tanggal_ttd'])) {
+            $post['tanggal_ttd'] = date('Y-m-d');
+        }
+
+        $post['flacc_wajah'] = (int)($post['flacc_wajah'] ?? 0);
+        $post['flacc_kaki'] = (int)($post['flacc_kaki'] ?? 0);
+        $post['flacc_aktivitas'] = (int)($post['flacc_aktivitas'] ?? 0);
+        $post['flacc_menangis'] = (int)($post['flacc_menangis'] ?? 0);
+        $post['flacc_consolability'] = (int)($post['flacc_consolability'] ?? 0);
+        $post['flacc_total'] = $post['flacc_wajah'] + $post['flacc_kaki'] + $post['flacc_aktivitas'] + $post['flacc_menangis'] + $post['flacc_consolability'];
+
+        if (!empty($id)) {
+            $this->db('asesmen_medis_gigi_ugd')->where('id', $id)->save($post);
+            $this->notify('success', 'Data Asesmen Medis Gigi UGD berhasil diperbarui.');
+        } else {
+            $this->db('asesmen_medis_gigi_ugd')->save($post);
+            $this->notify('success', 'Data Asesmen Medis Gigi UGD berhasil disimpan.');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'rmgd5manage']));
+    }
+
+    public function postRmgd5save()
+    {
+        return $this->anyRmgd5save();
+    }
+
+    public function anyRmgd5hapus($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if ($id) {
+            $this->db('asesmen_medis_gigi_ugd')->where('id', $id)->delete();
+            $this->notify('success', 'Data Asesmen Medis Gigi UGD berhasil dihapus.');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'rmgd5manage']));
+    }
+
+    public function getRmgd5hapus($id = null)
+    {
+        return $this->anyRmgd5hapus($id);
+    }
+
+    public function anyRmgd5cetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        $data = $this->db('asesmen_medis_gigi_ugd')
+            ->leftJoin('dokter', 'dokter.kd_dokter = asesmen_medis_gigi_ugd.kd_dokter')
+            ->where('asesmen_medis_gigi_ugd.id', $id)
+            ->select('asesmen_medis_gigi_ugd.*, dokter.nm_dokter')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $clean_rm = preg_replace('/[^0-9]/', '', $data['no_rkm_medis'] ?? '');
+        $padded_rm = str_pad($clean_rm, 6, '0', STR_PAD_LEFT);
+        $rm_digits = str_split(substr($padded_rm, -6));
+
+        $data['tgl_lahir_fmt'] = !empty($data['tanggal_lahir']) ? date('d-m-Y', strtotime($data['tanggal_lahir'])) : '-';
+        $data['tgl_kunjungan_fmt'] = !empty($data['tanggal_kunjungan']) ? date('d / m / Y', strtotime($data['tanggal_kunjungan'])) : '.... / .... / 20....';
+        $data['tgl_ttd_fmt'] = !empty($data['tanggal_ttd']) ? date('d / m / Y', strtotime($data['tanggal_ttd'])) : '.... / .... / 20....';
+        $data['kontrol_tgl_fmt'] = !empty($data['evaluasi_kontrol_tgl']) ? date('d-m-Y', strtotime($data['evaluasi_kontrol_tgl'])) : '........................';
+
+        $is_pdf = isset($_GET['pdf']) && $_GET['pdf'] == 1;
+        $kop_file = BASE_DIR . '/assets/img/KOP-SURAT.png';
+        $kop_img = is_file($kop_file) ? ($is_pdf ? $kop_file : url('assets/img/KOP-SURAT.png')) : '';
+
+        $viewParams = [
+            'data' => $data,
+            'kop_img' => $kop_img,
+            'rm_digits' => $rm_digits,
+            'is_mpdf' => $is_pdf
+        ];
+
+        if ($is_pdf) {
+            $oldErr = error_reporting(0);
+            @ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf([
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'orientation' => 'P',
+                'margin_left' => 8,
+                'margin_right' => 8,
+                'margin_top' => 6,
+                'margin_bottom' => 6,
+                'tempDir' => BASE_DIR . '/tmp'
+            ]);
+            $html = $this->draw('rmgd5_medis_gigi/cetak.html', $viewParams);
+            $mpdf->WriteHTML($html);
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            $mpdf->Output('RM_GD_05_Asesmen_Medis_Gigi_UGD_' . str_replace('/', '_', $data['no_rawat']) . '.pdf', 'I');
+            exit();
+        }
+
+        echo $this->draw('rmgd5_medis_gigi/cetak.html', $viewParams);
+        exit();
+    }
+
+    public function getRmgd5cetak($id = null)
+    {
+        return $this->anyRmgd5cetak($id);
+    }
+
+    // =========================================================================
+    // RM.GD 6 - ASESMEN MEDIS UMUM UNIT GAWAT DARURAT
+    // =========================================================================
+
+    public function anyRmgd6manage()
+    {
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
+
+        $rows = $this->db('asesmen_medis_umum_ugd')
+            ->leftJoin('dokter', 'dokter.kd_dokter = asesmen_medis_umum_ugd.kd_dokter')
+            ->select('asesmen_medis_umum_ugd.*, dokter.nm_dokter')
+            ->desc('asesmen_medis_umum_ugd.id')
+            ->toArray();
+
+        return $this->draw('rmgd6_medis_umum/manage.html', ['data' => $rows]);
+    }
+
+    public function getRmgd6manage()
+    {
+        return $this->anyRmgd6manage();
+    }
+
+    public function anyRmgd6form($id = null)
+    {
+        if (isset($_GET['ajax_patient'])) {
+            $q = trim($_GET['no_rawat'] ?? '');
+            if (is_numeric($q) && strlen($q) < 6) {
+                $q = str_pad($q, 6, '0', STR_PAD_LEFT);
+            }
+            $result = ['success' => false];
+            if (!empty($q)) {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $q)
+                    ->orWhere('reg_periksa.no_rkm_medis', $q)
+                    ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.kd_dokter, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.gol_darah')
+                    ->desc('reg_periksa.tgl_registrasi')
+                    ->desc('reg_periksa.jam_reg')
+                    ->oneArray();
+                if ($reg) {
+                    $triase = $this->db('mlite_triase_igd')
+                        ->leftJoin('petugas', 'petugas.nip = mlite_triase_igd.petugas_id')
+                        ->where('mlite_triase_igd.no_rawat', $reg['no_rawat'])
+                        ->select('mlite_triase_igd.*, petugas.nama as nama_petugas')
+                        ->desc('mlite_triase_igd.id_triase')
+                        ->oneArray();
+                    $pem = $this->db('pemeriksaan_ralan')
+                        ->where('no_rawat', $reg['no_rawat'])
+                        ->desc('tgl_perawatan')
+                        ->desc('jam_rawat')
+                        ->oneArray();
+                    $lokFile = 'lokalis_' . str_replace('/', '', $reg['no_rawat']) . '.png';
+                    $lokExists = is_file(UPLOADS . '/lokalis/' . $lokFile);
+
+                    $result = [
+                        'success' => true,
+                        'no_rawat' => $reg['no_rawat'],
+                        'no_rkm_medis' => $reg['no_rkm_medis'],
+                        'nama_pasien' => $reg['nm_pasien'],
+                        'jk' => $reg['jk'],
+                        'tgl_lahir' => $reg['tgl_lahir'],
+                        'gol_darah' => $reg['gol_darah'] ?? '',
+                        'kd_dokter' => $reg['kd_dokter'] ?? '',
+                        'triase' => $triase ?: null,
+                        'pemeriksaan' => $pem ?: null,
+                        'lokalis_url' => $lokExists ? (url(UPLOADS) . '/lokalis/' . $lokFile) : ''
+                    ];
+                }
+            }
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit();
+        }
+
+        $id = $id ?? ($_GET['id'] ?? null);
+        $no_rawat_param = trim($_GET['no_rawat'] ?? '');
+
+        $data = [
+            'id' => '',
+            'no_rawat' => $no_rawat_param,
+            'no_rkm_medis' => '',
+            'nama_pasien' => '',
+            'jenis_kelamin' => '',
+            'tanggal_lahir' => '',
+            'jenis_kasus' => 'Non Trauma',
+            'sumber_data' => 'Auto Anamnesis',
+            'kategori_pasien' => 'Pasien Dewasa (18-65 tahun)',
+            'tanggal_kunjungan' => date('Y-m-d'),
+            'pukul_kunjungan' => date('H:i'),
+            'triase' => 'ATS 4',
+            'jam_mulai_triase' => '',
+            'jam_selesai_triase' => '',
+            'petugas_triase' => '',
+            'jn_paten' => 'Ya',
+            'jn_obstruksi_parsial' => 'Tidak',
+            'jn_stridor' => 'Tidak',
+            'jn_snoring' => 'Tidak',
+            'jn_gurgling' => 'Tidak',
+            'jn_wheezing' => 'Tidak',
+            'jn_obstruksi_total' => 'Tidak',
+            'jn_trauma_jalan_napas' => 'Tidak',
+            'jn_resiko_aspirasi' => 'Tidak',
+            'jn_benda_asing' => 'Tidak',
+            'jn_kesimpulan' => 'Aman',
+            'napas_spontan' => 'Spontan',
+            'napas_reguler' => 'Reguler',
+            'napas_gerakan_dada' => 'Simetris',
+            'napas_jejas_dada' => 'Tidak',
+            'napas_jejas_kanan' => 'Tidak',
+            'napas_jejas_kiri' => 'Tidak',
+            'napas_tipe_normal' => 'Ya',
+            'napas_tipe_takipnue' => 'Tidak',
+            'napas_tipe_kussmaul' => 'Tidak',
+            'napas_tipe_hiperventilasi' => 'Tidak',
+            'napas_tipe_biot' => 'Tidak',
+            'napas_tipe_cheyne_stokes' => 'Tidak',
+            'napas_tipe_apneustic' => 'Tidak',
+            'napas_kesimpulan' => 'Aman',
+            'sirk_nadi_irama' => 'Reguler',
+            'sirk_nadi_kekuatan' => 'Kuat',
+            'sirk_kulit_normal' => 'Ya',
+            'sirk_kulit_pucat' => 'Tidak',
+            'sirk_kulit_jaundice' => 'Tidak',
+            'sirk_kulit_sianosis' => 'Tidak',
+            'sirk_kulit_berkeringat' => 'Tidak',
+            'sirk_akral_suhu' => 'Hangat',
+            'sirk_akral_lembab' => 'Kering',
+            'sirk_crt' => '< 2 detik',
+            'sirk_kesimpulan' => 'Aman',
+            'dis_gcs_e' => '4',
+            'dis_gcs_m' => '6',
+            'dis_gcs_v' => '5',
+            'dis_pupil' => 'Isokor',
+            'dis_diameter_kanan' => '2',
+            'dis_diameter_kiri' => '2',
+            'dis_refleks_kanan' => '+',
+            'dis_refleks_kiri' => '+',
+            'eks_tidak_kelainan' => 'Ya',
+            'eks_tidak_tampak_jelas' => 'Tidak',
+            'eks_deformitas' => 'Tidak',
+            'eks_contusio' => 'Tidak',
+            'eks_abrasi' => 'Tidak',
+            'eks_penetrasi' => 'Tidak',
+            'eks_luka_bakar' => 'Tidak',
+            'eks_laserasi' => 'Tidak',
+            'eks_ekskoriasi' => 'Tidak',
+            'keluhan_utama' => '',
+            'riwayat_penyakit_sekarang' => '',
+            'riwayat_penyakit_dahulu' => '',
+            'riwayat_penyakit_keluarga' => '',
+            'riwayat_alergi' => 'Tidak',
+            'riwayat_alergi_ket' => '',
+            'riwayat_penggunaan_obat' => '',
+            'rp_menular_hiv' => 'Tidak',
+            'rp_menular_tbc' => 'Tidak',
+            'rp_menular_hepatitis' => 'Tidak',
+            'rp_menular_lainnya' => 'Tidak',
+            'rp_menular_lainnya_ket' => '',
+            'rp_jantung' => 'Tidak Ada',
+            'rp_hipertensi' => 'Tidak Ada',
+            'rp_diabetes' => 'Tidak Ada',
+            'rp_haemophilia' => 'Tidak Ada',
+            'rp_ginjal' => 'Tidak Ada',
+            'rp_ginjal_ket' => '',
+            'rp_sistemik_lain' => 'Tidak Ada',
+            'rp_sistemik_lain_ket' => '',
+            'rp_operasi' => 'Tidak Ada',
+            'rp_operasi_ket' => '',
+            'anak_ke' => '',
+            'anak_dari_saudara' => '',
+            'anak_cara_lahir' => '',
+            'anak_cara_lahir_ket' => '',
+            'anak_umur_lahir' => '',
+            'anak_kelainan_bawaan' => '',
+            'anak_kelainan_bawaan_ket' => '',
+            'imun_bcg' => 'Tidak',
+            'imun_campak' => 'Tidak',
+            'imun_campak_kali' => '',
+            'imun_polio' => 'Tidak',
+            'imun_polio_kali' => '',
+            'imun_hepatitis_b' => 'Tidak',
+            'imun_hepatitis_b_kali' => '',
+            'imun_dpt' => 'Tidak',
+            'imun_dpt_kali' => '',
+            'imun_lainnya' => 'Tidak',
+            'imun_lainnya_ket' => '',
+            'imun_lainnya_kali' => '',
+            'tk_gigi_pertama' => '',
+            'tk_duduk' => '',
+            'tk_berjalan' => '',
+            'tk_bicara' => '',
+            'tk_membaca' => '',
+            'geriatri_penglihatan' => 'Tidak',
+            'geriatri_pendengaran' => 'Tidak',
+            'geriatri_berkemih' => 'Tidak',
+            'geriatri_daya_ingat' => 'Tidak',
+            'geriatri_bicara' => 'Tidak',
+            'geriatri_gigi_palsu' => 'Tidak',
+            'geriatri_lainnya' => 'Tidak',
+            'geriatri_lainnya_ket' => '',
+            'keadaan_umum' => 'Baik',
+            'kesadaran' => 'Compos Mentis',
+            'td' => '',
+            'nadi' => '',
+            'rr' => '',
+            'saturasi' => '',
+            'suhu' => '',
+            'gol_darah' => '',
+            'bb' => '',
+            'tb' => '',
+            'sg_kepala' => 'DBN',
+            'sg_mata' => 'DBN',
+            'sg_tht' => 'DBN',
+            'sg_leher' => 'DBN',
+            'sg_thorax' => 'DBN',
+            'sg_abdomen' => 'DBN',
+            'sg_genitalia' => 'DBN',
+            'sg_ekstremitas' => 'DBN',
+            'status_lokalis' => '',
+            'lokalis_img' => '',
+            'nyeri_keluhan' => 'Tidak',
+            'nyeri_lokasi' => '',
+            'nyeri_durasi' => '',
+            'nyeri_frekuensi' => '',
+            'nyeri_karakteristik' => '',
+            'nyeri_menjalar' => 'Tidak',
+            'nyeri_menjalar_ket' => '',
+            'nyeri_memberat' => '',
+            'nyeri_hilang' => '',
+            'nyeri_tl_edukasi' => 'Tidak',
+            'nyeri_tl_terapi' => 'Tidak',
+            'nyeri_tl_konsul' => 'Tidak',
+            'nyeri_tl_konsul_ke' => '',
+            'skala_nyeri' => '0',
+            'flacc_wajah' => 0,
+            'flacc_kaki' => 0,
+            'flacc_aktivitas' => 0,
+            'flacc_menangis' => 0,
+            'flacc_consolability' => 0,
+            'flacc_total' => 0,
+            'penunjang_lab' => 'Tidak',
+            'penunjang_rontgen' => 'Tidak',
+            'penunjang_lain' => 'Tidak',
+            'penunjang_lain_ket' => '',
+            'diagnosis' => '',
+            'diagnosis_banding' => '',
+            'rencana_tindak_lanjut' => '',
+            'evaluasi_kontrol' => 'Tidak',
+            'evaluasi_kontrol_tgl' => '',
+            'evaluasi_rujuk' => 'Tidak',
+            'evaluasi_rujuk_rs' => '',
+            'evaluasi_ranap' => 'Tidak',
+            'evaluasi_ranap_ruangan' => '',
+            'tanggal_ttd' => date('Y-m-d'),
+            'pukul_ttd' => date('H:i'),
+            'kd_dokter' => $this->core->getUserInfo('username', null, true)
+        ];
+
+        if ($id) {
+            $row = $this->db('asesmen_medis_umum_ugd')->where('id', $id)->oneArray();
+            if ($row) {
+                $data = array_merge($data, $row);
+            }
+        } elseif (!empty($no_rawat_param)) {
+            $existing = $this->db('asesmen_medis_umum_ugd')
+                ->where('no_rawat', $no_rawat_param)
+                ->desc('id')
+                ->oneArray();
+            if ($existing) {
+                $data = array_merge($data, $existing);
+            } else {
+                $reg = $this->db('reg_periksa')
+                    ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                    ->where('reg_periksa.no_rawat', $no_rawat_param)
+                    ->select('reg_periksa.*, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.gol_darah')
+                    ->oneArray();
+                if ($reg) {
+                    $data['no_rkm_medis'] = $reg['no_rkm_medis'];
+                    $data['nama_pasien'] = $reg['nm_pasien'];
+                    $data['jenis_kelamin'] = $reg['jk'];
+                    $data['tanggal_lahir'] = $reg['tgl_lahir'];
+                    $data['gol_darah'] = $reg['gol_darah'] ?? '';
+                    if (!empty($reg['kd_dokter'])) {
+                        $data['kd_dokter'] = $reg['kd_dokter'];
+                    }
+                    if (!empty($reg['tgl_lahir'])) {
+                        $age = (int)date('Y') - (int)date('Y', strtotime($reg['tgl_lahir']));
+                        if ($age < 18) {
+                            $data['kategori_pasien'] = 'Pasien Anak (0-<18 tahun)';
+                        } elseif ($age > 65) {
+                            $data['kategori_pasien'] = 'Pasien Geriatri (>65 tahun)';
+                        } else {
+                            $data['kategori_pasien'] = 'Pasien Dewasa (18-65 tahun)';
+                        }
+                    }
+                }
+                $triase = $this->db('mlite_triase_igd')
+                    ->leftJoin('petugas', 'petugas.nip = mlite_triase_igd.petugas_id')
+                    ->where('mlite_triase_igd.no_rawat', $no_rawat_param)
+                    ->select('mlite_triase_igd.*, petugas.nama as nama_petugas')
+                    ->desc('mlite_triase_igd.id_triase')
+                    ->oneArray();
+                if ($triase) {
+                    if (!empty($triase['ats_skala'])) {
+                        $data['triase'] = $triase['ats_skala'];
+                    } elseif (!empty($triase['skala_triase'])) {
+                        $data['triase'] = 'ATS ' . $triase['skala_triase'];
+                    }
+                    if (!empty($triase['tgl_triase'])) {
+                        $data['jam_mulai_triase'] = date('H:i', strtotime($triase['tgl_triase']));
+                    }
+                    $data['jam_selesai_triase'] = $triase['jam_selesai_triase'] ?? $data['jam_mulai_triase'];
+                    $data['petugas_triase'] = !empty($triase['nama_petugas']) ? $triase['nama_petugas'] : ($triase['petugas_id'] ?? '');
+                    if (!empty($triase['keluhan_utama'])) {
+                        $data['keluhan_utama'] = $triase['keluhan_utama'];
+                    }
+                    if (!empty($triase['tekanan_darah'])) {
+                        $data['td'] = $triase['tekanan_darah'];
+                    }
+                    if (!empty($triase['nadi'])) {
+                        $data['nadi'] = $triase['nadi'];
+                    }
+                    if (!empty($triase['respirasi'])) {
+                        $data['rr'] = $triase['respirasi'];
+                    }
+                    if (!empty($triase['suhu'])) {
+                        $data['suhu'] = $triase['suhu'];
+                    }
+                    if (!empty($triase['spo2'])) {
+                        $data['saturasi'] = $triase['spo2'];
+                    }
+                    if (!empty($triase['gcs_e'])) {
+                        $data['dis_gcs_e'] = $triase['gcs_e'];
+                    }
+                    if (!empty($triase['gcs_m'])) {
+                        $data['dis_gcs_m'] = $triase['gcs_m'];
+                    }
+                    if (!empty($triase['gcs_v'])) {
+                        $data['dis_gcs_v'] = $triase['gcs_v'];
+                    }
+                }
+                $pem = $this->db('pemeriksaan_ralan')
+                    ->where('no_rawat', $no_rawat_param)
+                    ->desc('tgl_perawatan')
+                    ->desc('jam_rawat')
+                    ->oneArray();
+                if ($pem) {
+                    if (empty($data['keluhan_utama']) && !empty($pem['keluhan'])) {
+                        $data['keluhan_utama'] = $pem['keluhan'];
+                    }
+                    if (empty($data['td']) && !empty($pem['tensi'])) {
+                        $data['td'] = $pem['tensi'];
+                    }
+                    if (empty($data['nadi']) && !empty($pem['nadi'])) {
+                        $data['nadi'] = $pem['nadi'];
+                    }
+                    if (empty($data['rr']) && !empty($pem['respirasi'])) {
+                        $data['rr'] = $pem['respirasi'];
+                    }
+                    if (empty($data['suhu']) && !empty($pem['suhu_tubuh'])) {
+                        $data['suhu'] = $pem['suhu_tubuh'];
+                    }
+                    if (empty($data['saturasi']) && !empty($pem['spo2'])) {
+                        $data['saturasi'] = $pem['spo2'];
+                    }
+                    if (!empty($pem['berat'])) {
+                        $data['bb'] = $pem['berat'];
+                    }
+                    if (!empty($pem['tinggi'])) {
+                        $data['tb'] = $pem['tinggi'];
+                    }
+                    if (!empty($pem['kesadaran'])) {
+                        $data['kesadaran'] = $pem['kesadaran'];
+                    }
+                    if (!empty($pem['alergi'])) {
+                        $data['riwayat_alergi'] = ($pem['alergi'] !== '-' && strtolower($pem['alergi']) !== 'tidak ada') ? 'Ya' : 'Tidak';
+                        $data['riwayat_alergi_ket'] = $pem['alergi'];
+                    }
+                    if (!empty($pem['penilaian'])) {
+                        $data['diagnosis'] = $pem['penilaian'];
+                    }
+                    if (!empty($pem['rtl'])) {
+                        $data['rencana_tindak_lanjut'] = $pem['rtl'];
+                    }
+                }
+                $pmi = $this->db('penilaian_medis_igd')
+                    ->where('no_rawat', $no_rawat_param)
+                    ->oneArray();
+                if ($pmi) {
+                    if (empty($data['keluhan_utama']) && !empty($pmi['keluhan_utama'])) {
+                        $data['keluhan_utama'] = $pmi['keluhan_utama'];
+                    }
+                    if (!empty($pmi['rps'])) {
+                        $data['riwayat_penyakit_sekarang'] = $pmi['rps'];
+                    }
+                    if (!empty($pmi['rpd'])) {
+                        $data['riwayat_penyakit_dahulu'] = $pmi['rpd'];
+                    }
+                    if (!empty($pmi['rpk'])) {
+                        $data['riwayat_penyakit_keluarga'] = $pmi['rpk'];
+                    }
+                    if (!empty($pmi['rpo'])) {
+                        $data['riwayat_penggunaan_obat'] = $pmi['rpo'];
+                    }
+                    if (!empty($pmi['ket_lokalis'])) {
+                        $data['status_lokalis'] = $pmi['ket_lokalis'];
+                    }
+                    if (!empty($pmi['diagnosis'])) {
+                        $data['diagnosis'] = $pmi['diagnosis'];
+                    }
+                    if (!empty($pmi['tata'])) {
+                        $data['rencana_tindak_lanjut'] = $pmi['tata'];
+                    }
+                }
+            }
+        }
+
+        $lokalis_existing_url = '';
+        if (!empty($data['no_rawat'])) {
+            $lokFile = 'lokalis_' . str_replace('/', '', $data['no_rawat']) . '.png';
+            if (is_file(UPLOADS . '/lokalis/' . $lokFile)) {
+                $lokalis_existing_url = url(UPLOADS) . '/lokalis/' . $lokFile;
+            }
+        }
+
+        $dokter = $this->db('dokter')->where('status', '1')->toArray();
+
+        return $this->draw('rmgd6_medis_umum/form.html', [
+            'data' => $data,
+            'dokter' => $dokter,
+            'lokalis_existing_url' => $lokalis_existing_url
+        ]);
+    }
+
+    public function getRmgd6form($id = null)
+    {
+        return $this->anyRmgd6form($id);
+    }
+
+    public function anyRmgd6save()
+    {
+        $post = $_POST;
+        $id = $post['id'] ?? '';
+        unset($post['id'], $post['save']);
+
+        $checkboxes = [
+            'jn_paten', 'jn_obstruksi_parsial', 'jn_stridor', 'jn_snoring', 'jn_gurgling', 'jn_wheezing',
+            'jn_obstruksi_total', 'jn_trauma_jalan_napas', 'jn_resiko_aspirasi', 'jn_benda_asing',
+            'napas_jejas_dada', 'napas_jejas_kanan', 'napas_jejas_kiri',
+            'napas_tipe_normal', 'napas_tipe_takipnue', 'napas_tipe_kussmaul', 'napas_tipe_hiperventilasi',
+            'napas_tipe_biot', 'napas_tipe_cheyne_stokes', 'napas_tipe_apneustic',
+            'sirk_kulit_normal', 'sirk_kulit_pucat', 'sirk_kulit_jaundice', 'sirk_kulit_sianosis', 'sirk_kulit_berkeringat',
+            'eks_tidak_kelainan', 'eks_tidak_tampak_jelas', 'eks_deformitas', 'eks_contusio', 'eks_abrasi',
+            'eks_penetrasi', 'eks_luka_bakar', 'eks_laserasi', 'eks_ekskoriasi',
+            'rp_menular_hiv', 'rp_menular_tbc', 'rp_menular_hepatitis', 'rp_menular_lainnya',
+            'imun_bcg', 'imun_campak', 'imun_polio', 'imun_hepatitis_b', 'imun_dpt', 'imun_lainnya',
+            'geriatri_penglihatan', 'geriatri_pendengaran', 'geriatri_berkemih', 'geriatri_daya_ingat',
+            'geriatri_bicara', 'geriatri_gigi_palsu', 'geriatri_lainnya',
+            'nyeri_tl_edukasi', 'nyeri_tl_terapi', 'nyeri_tl_konsul',
+            'penunjang_lab', 'penunjang_rontgen', 'penunjang_lain',
+            'evaluasi_kontrol', 'evaluasi_rujuk', 'evaluasi_ranap'
+        ];
+
+        foreach ($checkboxes as $cb) {
+            if (!isset($post[$cb])) {
+                $post[$cb] = 'Tidak';
+            }
+        }
+
+        if (empty($post['tanggal_kunjungan'])) {
+            $post['tanggal_kunjungan'] = date('Y-m-d');
+        }
+        if (empty($post['tanggal_lahir'])) {
+            $post['tanggal_lahir'] = null;
+        }
+        if (empty($post['evaluasi_kontrol_tgl'])) {
+            $post['evaluasi_kontrol_tgl'] = null;
+        }
+        if (empty($post['tanggal_ttd'])) {
+            $post['tanggal_ttd'] = date('Y-m-d');
+        }
+
+        // Simpan juga ke UPLOADS/lokalis/lokalis_{no_rawat}.png jika ada lokalis_img
+        if (!empty($post['lokalis_img']) && strpos($post['lokalis_img'], 'data:image/png;base64,') === 0 && !empty($post['no_rawat'])) {
+            $rawImg = base64_decode(str_replace('data:image/png;base64,', '', $post['lokalis_img']));
+            if (!is_dir(UPLOADS . '/lokalis/')) {
+                @mkdir(UPLOADS . '/lokalis/', 0777, true);
+            }
+            $lokFilename = 'lokalis_' . str_replace('/', '', $post['no_rawat']) . '.png';
+            @file_put_contents(UPLOADS . '/lokalis/' . $lokFilename, $rawImg);
+        }
+
+        $post['flacc_wajah'] = (int)($post['flacc_wajah'] ?? 0);
+        $post['flacc_kaki'] = (int)($post['flacc_kaki'] ?? 0);
+        $post['flacc_aktivitas'] = (int)($post['flacc_aktivitas'] ?? 0);
+        $post['flacc_menangis'] = (int)($post['flacc_menangis'] ?? 0);
+        $post['flacc_consolability'] = (int)($post['flacc_consolability'] ?? 0);
+        $post['flacc_total'] = $post['flacc_wajah'] + $post['flacc_kaki'] + $post['flacc_aktivitas'] + $post['flacc_menangis'] + $post['flacc_consolability'];
+
+        if (!empty($id)) {
+            $this->db('asesmen_medis_umum_ugd')->where('id', $id)->save($post);
+            $this->notify('success', 'Data Asesmen Medis Umum UGD berhasil diperbarui.');
+        } else {
+            $this->db('asesmen_medis_umum_ugd')->save($post);
+            $this->notify('success', 'Data Asesmen Medis Umum UGD berhasil disimpan.');
+        }
+
+        redirect(url([ADMIN, 'update_bmt', 'rmgd6manage']));
+    }
+
+    public function postRmgd6save()
+    {
+        return $this->anyRmgd6save();
+    }
+
+    public function anyRmgd6hapus($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        if ($id) {
+            $this->db('asesmen_medis_umum_ugd')->where('id', $id)->delete();
+            $this->notify('success', 'Data Asesmen Medis Umum UGD berhasil dihapus.');
+        }
+        redirect(url([ADMIN, 'update_bmt', 'rmgd6manage']));
+    }
+
+    public function getRmgd6hapus($id = null)
+    {
+        return $this->anyRmgd6hapus($id);
+    }
+
+    public function anyRmgd6cetak($id = null)
+    {
+        $id = $id ?? ($_GET['id'] ?? null);
+        $data = $this->db('asesmen_medis_umum_ugd')
+            ->leftJoin('dokter', 'dokter.kd_dokter = asesmen_medis_umum_ugd.kd_dokter')
+            ->where('asesmen_medis_umum_ugd.id', $id)
+            ->select('asesmen_medis_umum_ugd.*, dokter.nm_dokter')
+            ->oneArray();
+
+        if (!$data) {
+            echo "Data tidak ditemukan.";
+            exit();
+        }
+
+        $clean_rm = preg_replace('/[^0-9]/', '', $data['no_rkm_medis'] ?? '');
+        $padded_rm = str_pad($clean_rm, 6, '0', STR_PAD_LEFT);
+        $rm_digits = str_split(substr($padded_rm, -6));
+
+        $data['tgl_lahir_fmt'] = !empty($data['tanggal_lahir']) ? date('d-m-Y', strtotime($data['tanggal_lahir'])) : '-';
+        $data['tgl_kunjungan_fmt'] = !empty($data['tanggal_kunjungan']) ? date('d / m / Y', strtotime($data['tanggal_kunjungan'])) : '.... / .... / 20....';
+        $data['tgl_ttd_fmt'] = !empty($data['tanggal_ttd']) ? date('d / m / Y', strtotime($data['tanggal_ttd'])) : '.... / .... / 20....';
+        $data['kontrol_tgl_fmt'] = !empty($data['evaluasi_kontrol_tgl']) ? date('d-m-Y', strtotime($data['evaluasi_kontrol_tgl'])) : '........................';
+
+        $is_pdf = isset($_GET['pdf']) && $_GET['pdf'] == 1;
+        $kop_file = BASE_DIR . '/assets/img/KOP-SURAT.png';
+        $kop_img = is_file($kop_file) ? ($is_pdf ? $kop_file : url('assets/img/KOP-SURAT.png')) : '';
+
+        // Gambar Status Lokalis (dari kolom lokalis_img, atau file uploads/lokalis/lokalis_{no_rawat}.png, atau default anatomi)
+        $lokalis_src = '';
+        if (!empty($data['lokalis_img'])) {
+            $lokalis_src = $data['lokalis_img'];
+        } else {
+            $lokFile = 'lokalis_' . str_replace('/', '', $data['no_rawat']) . '.png';
+            if (is_file(UPLOADS . '/lokalis/' . $lokFile)) {
+                $lokalis_src = $is_pdf ? (UPLOADS . '/lokalis/' . $lokFile) : (url(UPLOADS) . '/lokalis/' . $lokFile);
+            } else {
+                $defLok = BASE_DIR . '/assets/img/bm3_anatomi_tubuh.png';
+                if (is_file($defLok)) {
+                    $lokalis_src = $is_pdf ? $defLok : url('assets/img/bm3_anatomi_tubuh.png');
+                }
+            }
+        }
+
+        $viewParams = [
+            'data' => $data,
+            'kop_img' => $kop_img,
+            'lokalis_src' => $lokalis_src,
+            'rm_digits' => $rm_digits,
+            'is_mpdf' => $is_pdf
+        ];
+
+        if ($is_pdf) {
+            $oldErr = error_reporting(0);
+            @ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf([
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'orientation' => 'P',
+                'margin_left' => 8,
+                'margin_right' => 8,
+                'margin_top' => 6,
+                'margin_bottom' => 6,
+                'tempDir' => BASE_DIR . '/tmp'
+            ]);
+            $html = $this->draw('rmgd6_medis_umum/cetak.html', $viewParams);
+            $mpdf->WriteHTML($html);
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            $mpdf->Output('RM_GD_06_Asesmen_Medis_Umum_UGD_' . str_replace('/', '_', $data['no_rawat']) . '.pdf', 'I');
+            exit();
+        }
+
+        echo $this->draw('rmgd6_medis_umum/cetak.html', $viewParams);
+        exit();
+    }
+
+    public function getRmgd6cetak($id = null)
+    {
+        return $this->anyRmgd6cetak($id);
     }
 }
 

@@ -408,7 +408,7 @@
         <button onclick="window.print()" class="btn-toolbar btn-print">
             <i class="fa fa-print"></i> Cetak Dokumen
         </button>
-        <a href="{?=url([ADMIN, 'update_bmt', 'ewscetak', $data.id])?}?pdf=1" target="_blank" class="btn-toolbar btn-pdf">
+        <a href="{?=url([ADMIN, 'update_bmt', 'ewscetak', $data.id])?}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
             <i class="fa fa-file-pdf-o"></i> Unduh PDF
         </a>
         <a href="{?=url([ADMIN, 'update_bmt', 'ewsmanage'])?}" class="btn-toolbar btn-close" onclick="if(window.opener){window.close();return false;}">

@@ -181,7 +181,7 @@
         </div>
         <div>
             <button onclick="window.print()" class="btn-toolbar btn-print">&#128438; Cetak Dokumen</button>
-            <a href="?pdf=1" target="_blank" class="btn-toolbar btn-pdf">&#128196; Download PDF</a>
+            <a href="{?=url([ADMIN, 'update_bmt', 'bersediamenunggucetak', $data.id])?}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">&#128196; Download PDF</a>
             <button onclick="window.close()" class="btn-toolbar btn-close">&#10006; Tutup</button>
         </div>
     </div>

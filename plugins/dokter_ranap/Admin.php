@@ -6,6 +6,7 @@ use Systems\AdminModule;
 class Admin extends AdminModule
 {
     protected array $assign = [];
+    private $_uploads = WEBAPPS_PATH.'/berkasrawat/pages/upload';
 
     public function navigation()
     {
@@ -34,8 +35,9 @@ class Admin extends AdminModule
           $status_periksa = $_POST['status_periksa'];
         }
         $cek_vclaim = $this->db('mlite_modules')->where('dir', 'vclaim')->oneArray();
+        $master_berkas_digital = $this->db('master_berkas_digital')->toArray();
         $this->_Display($tgl_masuk, $tgl_masuk_akhir, $status_pulang, $status_periksa);
-        return $this->draw('manage.html', ['rawat_inap' => htmlspecialchars_array($this->assign), 'cek_vclaim' => htmlspecialchars_array($cek_vclaim)]);
+        return $this->draw('manage.html', ['rawat_inap' => htmlspecialchars_array($this->assign), 'cek_vclaim' => htmlspecialchars_array($cek_vclaim), 'master_berkas_digital' => htmlspecialchars_array($master_berkas_digital)]);
     }
 
     public function anyDisplay()
@@ -2381,6 +2383,8 @@ class Admin extends AdminModule
 
     private function _addHeaderFiles()
     {
+        $this->core->addCSS(url('assets/jscripts/lightbox/lightbox.min.css'));
+        $this->core->addJS(url('assets/jscripts/lightbox/lightbox.min.js'));
         $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
         $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
         $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
@@ -2389,6 +2393,58 @@ class Admin extends AdminModule
         $this->core->addJS(url('assets/jscripts/bootstrap-datetimepicker.js'));
         $this->core->addJS('https://cdn.jsdelivr.net/npm/chart.js');
         $this->core->addJS(url([ADMIN, 'dokter_ranap', 'javascript']), 'footer');
+    }
+
+    public function anyBerkasDigital()
+    {
+      $berkas_digital = $this->db('berkas_digital_perawatan')->where('no_rawat', $_POST['no_rawat'])->toArray();
+      echo $this->draw('berkasdigital.html', ['berkas_digital' => htmlspecialchars_array($berkas_digital)]);
+      exit();
+    }
+
+    public function postSaveBerkasDigital()
+    {
+      if(MULTI_APP) {
+        $curl = curl_init();
+        $filePath = $_FILES['file']['tmp_name'];
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => substr(rtrim(WEBAPPS_URL, '/'), 0, strrpos(rtrim(WEBAPPS_URL, '/'), '/')).'/api/berkasdigital',
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 0,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('file'=> new \CURLFILE($filePath),'token' => $this->settings->get('api.berkasdigital_key'), 'no_rawat' => $_POST['no_rawat'], 'kode' => $_POST['kode']),
+          CURLOPT_HTTPHEADER => array(),
+        ));
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $json = json_decode($response, true);
+        if($json['status'] == 'Success') {
+          echo '<br><img src="'.WEBAPPS_URL.'/berkasrawat/'.$json['msg'].'" width="150" />';
+        } else {
+          echo 'Gagal menambahkan gambar';
+        }
+      } else {
+        $dir    = $this->_uploads;
+        $cntr   = 0;
+        $image = $_FILES['file']['tmp_name'];
+        $img = new \Systems\Lib\Image();
+        $id = convertNorawat($_POST['no_rawat']);
+        if ($img->load($image)) {
+            $imgName = time().$cntr++;
+            $imgPath = $dir.'/'.$id.'_'.$imgName.'.'.$img->getInfos('type');
+            $lokasi_file = 'pages/upload/'.$id.'_'.$imgName.'.'.$img->getInfos('type');
+            $img->save($imgPath);
+            $query = $this->db('berkas_digital_perawatan')->save(['no_rawat' => $_POST['no_rawat'], 'kode' => $_POST['kode'], 'lokasi_file' => $lokasi_file]);
+            if($query) {
+              echo '<br><img src="'.WEBAPPS_URL.'/berkasrawat/'.$lokasi_file.'" width="150" />';
+            }
+        }
+      }
+      exit();
     }
 
 }

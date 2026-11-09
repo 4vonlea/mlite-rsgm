@@ -1,0 +1,67 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">RM.GD 5 - Data Asesmen Medis Gigi Unit Gawat Darurat</h3>
+  </div>
+  <div class="panel-body">
+    <div class="row" style="margin-bottom: 15px;">
+      <div class="col-md-12">
+        <a href="{?=url([ADMIN, 'update_bmt', 'rmgd5form'])?}" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Asesmen Medis Gigi UGD</a>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped" id="table-rmgd5">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>No. Rawat</th>
+            <th>No. RM</th>
+            <th>Nama Pasien</th>
+            <th>Tanggal Kunjungan</th>
+            <th>Triase</th>
+            <th>Diagnosis</th>
+            <th>DPJP</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loop: $data}
+          <tr>
+            <td>{?= $key + 1 ?}</td>
+            <td>{$value.no_rawat}</td>
+            <td>{$value.no_rkm_medis}</td>
+            <td>{$value.nama_pasien}</td>
+            <td>{$value.tanggal_kunjungan} {$value.pukul_kunjungan}</td>
+            <td>
+              {if: $value.triase == 'Merah'}
+              <span class="label label-danger">Merah</span>
+              {elseif: $value.triase == 'Kuning'}
+              <span class="label label-warning">Kuning</span>
+              {elseif: $value.triase == 'Hijau'}
+              <span class="label label-success">Hijau</span>
+              {elseif: $value.triase == 'Hitam (DOA)'}
+              <span class="label label-default" style="background:#111;color:#fff;">Hitam (DOA)</span>
+              {else}
+              {$value.triase}
+              {/if}
+            </td>
+            <td>{$value.diagnosis}</td>
+            <td>{?= !empty($value.nm_dokter) ? $value.nm_dokter : $value.kd_dokter ?}</td>
+            <td>
+              <a href="{?=url([ADMIN, 'update_bmt', 'rmgd5form'])?}&id={$value.id}" class="btn btn-xs btn-warning"><i class="fa fa-edit"></i> Edit</a>
+              <a href="{?=url([ADMIN, 'update_bmt', 'rmgd5cetak'])?}&id={$value.id}" class="btn btn-xs btn-info" target="_blank"><i class="fa fa-print"></i> Cetak</a>
+              <a href="{?=url([ADMIN, 'update_bmt', 'rmgd5cetak'])?}&id={$value.id}&pdf=1" class="btn btn-xs btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
+              <a href="{?=url([ADMIN, 'update_bmt', 'rmgd5hapus'])?}&id={$value.id}" class="btn btn-xs btn-default" onclick="return confirm('Yakin ingin menghapus data Asesmen Medis Gigi UGD ini?')"><i class="fa fa-trash"></i> Hapus</a>
+            </td>
+          </tr>
+          {/loop}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+$(document).ready(function() {
+  $('#table-rmgd5').DataTable();
+});
+</script>
+

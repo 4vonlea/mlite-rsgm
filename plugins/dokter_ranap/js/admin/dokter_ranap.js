@@ -5,6 +5,7 @@ var vitalSignsChart = null;
 $("#form_rincian").hide();
 $("#form_soap").hide();
 $("#form_sep").hide();
+$("#form_berkasdigital").hide();
 $("#histori_pelayanan").hide();
 $("#notif").hide();
 $('#provider').hide();

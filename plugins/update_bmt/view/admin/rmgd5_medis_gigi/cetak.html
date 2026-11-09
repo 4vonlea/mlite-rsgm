@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>RM.GD - 05 Asesmen Medis Gigi Unit Gawat Darurat - {$data.nama_pasien}</title>
+  <style>
+    @page {
+      margin: 6mm 8mm;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 9pt;
+      color: #000;
+      margin: 0;
+      padding: 0;
+      background: #f4f6f9;
+    }
+    .toolbar-print {
+      max-width: 210mm;
+      margin: 10px auto;
+      background: #2c3e50;
+      padding: 10px 15px;
+      border-radius: 4px;
+      color: #fff;
+    }
+    .toolbar-print a, .toolbar-print button {
+      display: inline-block;
+      padding: 6px 12px;
+      margin-right: 6px;
+      border: none;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: bold;
+      color: #fff;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .btn-print { background: #27ae60; }
+    .btn-pdf { background: #e74c3c; }
+    .btn-close { background: #7f8c8d; }
+    .page-sheet {
+      width: 210mm;
+      margin: 0 auto 12px auto;
+      background: #fff;
+      padding: 6mm 8mm;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.18);
+    }
+    @media print {
+      body { background: #fff; }
+      .toolbar-print { display: none !important; }
+      .page-sheet {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+      }
+      .page-break {
+        page-break-before: always;
+      }
+    }
+    {if: $is_mpdf}
+    body { background: #fff; font-size: 8.4pt; }
+    .page-sheet { width: 100%; margin: 0; padding: 0; box-shadow: none; }
+    .page-break { page-break-before: always; }
+    {/if}
+
+    table.form-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1.2px solid #000;
+    }
+    table.form-tbl td, table.form-tbl th {
+      border: 1px solid #000;
+      padding: 3px 5px;
+      vertical-align: top;
+      line-height: 1.25;
+    }
+    table.no-border, table.no-border td {
+      border: none !important;
+      padding: 1px 2px;
+    }
+    .rm-box {
+      display: inline-block;
+      width: 16px;
+      height: 18px;
+      line-height: 17px;
+      text-align: center;
+      border: 1px solid #000;
+      font-weight: bold;
+      margin-right: 1px;
+      font-size: 9pt;
+    }
+    .cb {
+      font-family: DejaVu Sans, Arial, sans-serif;
+      font-size: 9.5pt;
+    }
+    .sec-header {
+      background: #8b2323;
+      color: #fff;
+      font-weight: bold;
+      text-align: center;
+      padding: 3px 5px;
+      font-size: 9pt;
+      letter-spacing: 0.4px;
+    }
+    .sub-header {
+      background: #e9ecef;
+      font-weight: bold;
+      padding: 2px 5px;
+      font-size: 8.5pt;
+    }
+    .circled {
+      border: 1.2px solid #000;
+      border-radius: 10px;
+      padding: 0 5px;
+      font-weight: bold;
+    }
+    .dotted {
+      border-bottom: 1px dotted #000;
+      display: inline-block;
+      min-width: 60px;
+    }
+    .footer-meta {
+      width: 100%;
+      margin-top: 3px;
+      font-size: 7.5pt;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+{if: !$is_mpdf}
+<div class="toolbar-print">
+  <button type="button" class="btn-print" onclick="window.print()">Cetak Dokumen</button>
+  <a href="{?=url([ADMIN, 'update_bmt', 'rmgd5cetak'])?}&id={$data.id}&pdf=1" class="btn-pdf">Download PDF</a>
+  <button type="button" class="btn-close" onclick="window.close()">Tutup</button>
+</div>
+{/if}
+
+<!-- ======================= HALAMAN 1 ======================= -->
+<div class="page-sheet">
+  <!-- HEADER KOP & IDENTITAS PASIEN -->
+  <table class="form-tbl">
+    <tr>
+      <td width="58%" style="vertical-align:middle;text-align:center;">
+        {if: !empty($kop_img)}
+        <img src="{$kop_img}" style="max-width:100%;height:65px;object-fit:contain;">
+        {else}
+        <div style="font-weight:bold;font-size:10pt;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+        <div style="font-weight:bold;font-size:11pt;">RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</div>
+        <div style="font-size:7.5pt;">Jl. Simpang Ulin Nomor 28 Banjarmasin Kode Pos 70233 Telp/Fax (0511) 3260818</div>
+        {/if}
+      </td>
+      <td width="42%" style="vertical-align:middle;">
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="30%"><strong>No RM</strong></td>
+            <td width="4%">:</td>
+            <td>
+              {loop: $rm_digits}
+              <span class="rm-box">{$value}</span>
+              {/loop}
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Nama Pasien</strong></td>
+            <td>:</td>
+            <td style="border-bottom:1px dotted #000 !important;">
+              <strong>{$data.nama_pasien}</strong>
+              <span style="float:right;">({$data.jenis_kelamin})</span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Tanggal Lahir</strong></td>
+            <td>:</td>
+            <td style="border-bottom:1px dotted #000 !important;">{$data.tgl_lahir_fmt}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <div style="font-size:7pt;font-style:italic;margin:2px 0;">
+    Perhatian : * Harap semua penulisan dilakukan dengan keterbacaan yang jelas, benar dan lengkap. * Berilah tanda centang (&radic;) pada kotak pilihan yang telah disediakan. * Berilah tanda lingkar pada pilihan yang telah disediakan.
+  </div>
+
+  <table class="form-tbl">
+    <!-- JUDUL FORM -->
+    <tr>
+      <td colspan="3" style="text-align:center;background:#f7f7f7;padding:4px;">
+        <div style="font-size:11pt;font-weight:bold;">ASESMEN MEDIS GIGI UNIT GAWAT DARURAT</div>
+        <div style="font-size:7.5pt;font-style:italic;">(dilengkapi dalam waktu 2 jam pertama pasien datang)</div>
+      </td>
+    </tr>
+
+    <!-- JENIS KASUS, SUMBER DATA, KATEGORI PASIEN -->
+    <tr>
+      <td width="32%">
+        <strong>Jenis Kasus</strong><br>
+        <span class="cb">{if: $data.jenis_kasus == 'Trauma'}&#9745;{else}&#9744;{/if}</span> Trauma<br>
+        <span class="cb">{if: $data.jenis_kasus == 'Non Trauma'}&#9745;{else}&#9744;{/if}</span> Non Trauma
+      </td>
+      <td width="34%">
+        <strong>Sumber Data</strong><br>
+        <span class="cb">{if: $data.sumber_data == 'Auto Anamnesis'}&#9745;{else}&#9744;{/if}</span> Auto Anamnesis<br>
+        <span class="cb">{if: $data.sumber_data == 'Allo Anamnesis'}&#9745;{else}&#9744;{/if}</span> Allo Anamnesis
+      </td>
+      <td width="34%">
+        <span class="cb">{if: $data.kategori_pasien == 'Pasien Anak (0-<18 tahun)'}&#9745;{else}&#9744;{/if}</span> Pasien Anak (0-&lt;18 tahun)<br>
+        <span class="cb">{if: $data.kategori_pasien == 'Pasien Dewasa (18-65 tahun)'}&#9745;{else}&#9744;{/if}</span> Pasien Dewasa (18-65 tahun)<br>
+        <span class="cb">{if: $data.kategori_pasien == 'Pasien Geriatri (>65 tahun)'}&#9745;{else}&#9744;{/if}</span> Pasien Geriatri (&gt;65 tahun)
+      </td>
+    </tr>
+
+    <!-- TANGGAL KUNJUNGAN & TRIASE -->
+    <tr>
+      <td colspan="3" style="padding:3px 5px;">
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="55%">
+              <strong>Tanggal kunjungan :</strong> {$data.tgl_kunjungan_fmt}
+            </td>
+            <td width="45%">
+              <strong>Pukul :</strong> {?= !empty($data.pukul_kunjungan) ? $data.pukul_kunjungan : '...........' ?} WITA
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding-top:2px;border-top:1px solid #ccc !important;">
+              <strong>TRIASE :</strong>
+              &nbsp;<span class="cb">{if: $data.triase == 'Merah'}&#9745;{else}&#9744;{/if}</span> <span style="background:#e74c3c;color:#fff;padding:0 4px;">Merah</span>
+              &nbsp;&nbsp;<span class="cb">{if: $data.triase == 'Kuning'}&#9745;{else}&#9744;{/if}</span> <span style="background:#f1c40f;color:#000;padding:0 4px;">Kuning</span>
+              &nbsp;&nbsp;<span class="cb">{if: $data.triase == 'Hijau'}&#9745;{else}&#9744;{/if}</span> <span style="background:#2ecc71;color:#fff;padding:0 4px;">Hijau</span>
+              &nbsp;&nbsp;<span class="cb">{if: $data.triase == 'Hitam (DOA)'}&#9745;{else}&#9744;{/if}</span> <span style="background:#222;color:#fff;padding:0 4px;">Hitam (DOA)</span>
+              <br>
+              <strong>Jam Mulai Triase :</strong> {?= !empty($data.jam_mulai_triase) ? $data.jam_mulai_triase : '...........' ?}
+              &nbsp;&nbsp;&nbsp;&nbsp;<strong>Jam Selesai Triase :</strong> {?= !empty($data.jam_selesai_triase) ? $data.jam_selesai_triase : '...........' ?}
+              &nbsp;&nbsp;&nbsp;&nbsp;<strong>Petugas Triase :</strong> {?= !empty($data.petugas_triase) ? $data.petugas_triase : '........................' ?}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- SURVEI PRIMER -->
+    <tr>
+      <td colspan="3" class="sec-header">SURVEI PRIMER</td>
+    </tr>
+    <tr>
+      <!-- JALAN NAPAS -->
+      <td width="32%">
+        <strong>JALAN NAPAS</strong><br>
+        <span class="cb">{if: $data.jn_paten == 'Ya'}&#9745;{else}&#9744;{/if}</span> Paten<br>
+        <span class="cb">{if: $data.jn_obstruksi_parsial == 'Ya'}&#9745;{else}&#9744;{/if}</span> Obstruksi Parsial<br>
+        <div style="padding-left:14px;">
+          <span class="cb">{if: $data.jn_stridor == 'Ya'}&#9745;{else}&#9744;{/if}</span> Stridor<br>
+          <span class="cb">{if: $data.jn_snoring == 'Ya'}&#9745;{else}&#9744;{/if}</span> Snoring<br>
+          <span class="cb">{if: $data.jn_gurgling == 'Ya'}&#9745;{else}&#9744;{/if}</span> Gurgling<br>
+          <span class="cb">{if: $data.jn_wheezing == 'Ya'}&#9745;{else}&#9744;{/if}</span> Wheezing
+        </div>
+        <span class="cb">{if: $data.jn_obstruksi_total == 'Ya'}&#9745;{else}&#9744;{/if}</span> Obstruksi Total<br>
+        <span class="cb">{if: $data.jn_trauma_jalan_napas == 'Ya'}&#9745;{else}&#9744;{/if}</span> Trauma Jalan Napas: Fasial / Leher / Inhalasi<br>
+        <span class="cb">{if: $data.jn_resiko_aspirasi == 'Ya'}&#9745;{else}&#9744;{/if}</span> Resiko Aspirasi<br>
+        <span class="cb">{if: $data.jn_benda_asing == 'Ya'}&#9745;{else}&#9744;{/if}</span> Benda Asing<br>
+        <div style="margin-top:4px;">
+          <strong>Kesimpulan :</strong>
+          <span class="{if: $data.jn_kesimpulan == 'Aman'}circled{/if}">Aman</span> /
+          <span class="{if: $data.jn_kesimpulan == 'Mengancam Nyawa'}circled{/if}">Mengancam Nyawa</span>
+        </div>
+      </td>
+
+      <!-- PERNAPASAN -->
+      <td width="35%">
+        <strong>PERNAPASAN</strong><br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="50%"><span class="cb">{if: $data.napas_spontan == 'Spontan'}&#9745;{else}&#9744;{/if}</span> Spontan</td>
+            <td width="50%"><span class="cb">{if: $data.napas_spontan == 'Tidak Spontan'}&#9745;{else}&#9744;{/if}</span> Tidak Spontan</td>
+          </tr>
+          <tr>
+            <td><span class="cb">{if: $data.napas_reguler == 'Reguler'}&#9745;{else}&#9744;{/if}</span> Reguler</td>
+            <td><span class="cb">{if: $data.napas_reguler == 'Irreguler'}&#9745;{else}&#9744;{/if}</span> Irreguler</td>
+          </tr>
+        </table>
+        <strong>Gerakan Dada</strong><br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="50%"><span class="cb">{if: $data.napas_gerakan_dada == 'Simetris'}&#9745;{else}&#9744;{/if}</span> Simetris</td>
+            <td width="50%"><span class="cb">{if: $data.napas_gerakan_dada == 'Tidak Simetris'}&#9745;{else}&#9744;{/if}</span> Tidak Simetris</td>
+          </tr>
+        </table>
+        <span class="cb">{if: $data.napas_jejas_dada == 'Ya'}&#9745;{else}&#9744;{/if}</span> Jejas dinding dada<br>
+        <div style="padding-left:14px;">
+          <span class="cb">{if: $data.napas_jejas_kanan == 'Ya'}&#9745;{else}&#9744;{/if}</span> Kanan
+          &nbsp;&nbsp;&nbsp;<span class="cb">{if: $data.napas_jejas_kiri == 'Ya'}&#9745;{else}&#9744;{/if}</span> Kiri
+        </div>
+        <strong>Tipe pernapasan</strong><br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="50%"><span class="cb">{if: $data.napas_tipe_normal == 'Ya'}&#9745;{else}&#9744;{/if}</span> Normal</td>
+            <td width="50%"><span class="cb">{if: $data.napas_tipe_takipnue == 'Ya'}&#9745;{else}&#9744;{/if}</span> Takipnue</td>
+          </tr>
+          <tr>
+            <td><span class="cb">{if: $data.napas_tipe_kussmaul == 'Ya'}&#9745;{else}&#9744;{/if}</span> Kussmaul</td>
+            <td><span class="cb">{if: $data.napas_tipe_hiperventilasi == 'Ya'}&#9745;{else}&#9744;{/if}</span> Hiperventilasi</td>
+          </tr>
+          <tr>
+            <td><span class="cb">{if: $data.napas_tipe_biot == 'Ya'}&#9745;{else}&#9744;{/if}</span> Biot</td>
+            <td><span class="cb">{if: $data.napas_tipe_cheyne_stokes == 'Ya'}&#9745;{else}&#9744;{/if}</span> Cheyne Stoke</td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="cb">{if: $data.napas_tipe_apneustic == 'Ya'}&#9745;{else}&#9744;{/if}</span> Apneustic</td>
+          </tr>
+        </table>
+        <div style="margin-top:4px;">
+          <strong>Kesimpulan :</strong>
+          <span class="{if: $data.napas_kesimpulan == 'Aman'}circled{/if}">Aman</span> /
+          <span class="{if: $data.napas_kesimpulan == 'Mengancam Nyawa'}circled{/if}">Mengancam Nyawa</span>
+        </div>
+      </td>
+
+      <!-- SIRKULASI -->
+      <td width="33%">
+        <strong>SIRKULASI</strong><br>
+        <strong>Nadi</strong><br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="50%"><span class="cb">{if: $data.sirk_nadi_irama == 'Reguler'}&#9745;{else}&#9744;{/if}</span> Reguler</td>
+            <td width="50%"><span class="cb">{if: $data.sirk_nadi_irama == 'Irreguler'}&#9745;{else}&#9744;{/if}</span> Irreguler</td>
+          </tr>
+          <tr>
+            <td><span class="cb">{if: $data.sirk_nadi_kekuatan == 'Kuat'}&#9745;{else}&#9744;{/if}</span> Kuat</td>
+            <td><span class="cb">{if: $data.sirk_nadi_kekuatan == 'Lemah'}&#9745;{else}&#9744;{/if}</span> Lemah</td>
+          </tr>
+        </table>
+        <strong>Kulit/Mukosa</strong><br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="50%"><span class="cb">{if: $data.sirk_kulit_normal == 'Ya'}&#9745;{else}&#9744;{/if}</span> Normal</td>
+            <td width="50%"><span class="cb">{if: $data.sirk_kulit_pucat == 'Ya'}&#9745;{else}&#9744;{/if}</span> Pucat</td>
+          </tr>
+          <tr>
+            <td><span class="cb">{if: $data.sirk_kulit_jaundice == 'Ya'}&#9745;{else}&#9744;{/if}</span> Jaundice</td>
+            <td><span class="cb">{if: $data.sirk_kulit_sianosis == 'Ya'}&#9745;{else}&#9744;{/if}</span> Sianosis</td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="cb">{if: $data.sirk_kulit_berkeringat == 'Ya'}&#9745;{else}&#9744;{/if}</span> Berkeringat</td>
+          </tr>
+        </table>
+        <strong>Akral</strong><br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="50%"><span class="cb">{if: $data.sirk_akral_suhu == 'Hangat'}&#9745;{else}&#9744;{/if}</span> Hangat</td>
+            <td width="50%"><span class="cb">{if: $data.sirk_akral_suhu == 'Dingin'}&#9745;{else}&#9744;{/if}</span> Dingin</td>
+          </tr>
+          <tr>
+            <td><span class="cb">{if: $data.sirk_akral_lembab == 'Kering'}&#9745;{else}&#9744;{/if}</span> Kering</td>
+            <td><span class="cb">{if: $data.sirk_akral_lembab == 'Basah'}&#9745;{else}&#9744;{/if}</span> Basah</td>
+          </tr>
+        </table>
+        <strong>CRT</strong><br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="50%"><span class="cb">{if: $data.sirk_crt == '< 2 detik'}&#9745;{else}&#9744;{/if}</span> &lt; 2 detik</td>
+            <td width="50%"><span class="cb">{if: $data.sirk_crt == '> 2 detik'}&#9745;{else}&#9744;{/if}</span> &gt; 2 detik</td>
+          </tr>
+        </table>
+        <div style="margin-top:4px;">
+          <strong>Kesimpulan :</strong>
+          <span class="{if: $data.sirk_kesimpulan == 'Aman'}circled{/if}">Aman</span> /
+          <span class="{if: $data.sirk_kesimpulan == 'Mengancam Nyawa'}circled{/if}">Mengancam Nyawa</span>
+        </div>
+      </td>
+    </tr>
+
+    <!-- DISABILITAS & EKSPOSUR -->
+    <tr>
+      <td>
+        <strong>DISABILITAS</strong><br>
+        GCS : E <strong>{?= !empty($data.dis_gcs_e) ? $data.dis_gcs_e : '....' ?}</strong>
+        M <strong>{?= !empty($data.dis_gcs_m) ? $data.dis_gcs_m : '....' ?}</strong>
+        V <strong>{?= !empty($data.dis_gcs_v) ? $data.dis_gcs_v : '....' ?}</strong><br>
+        <strong>Pupil</strong><br>
+        &bull; <span class="{if: $data.dis_pupil == 'Isokor'}circled{/if}">Isokor</span> /
+        <span class="{if: $data.dis_pupil == 'Anisokor'}circled{/if}">Anisokor</span><br>
+        &bull; Diameter <strong>{?= !empty($data.dis_diameter_kanan) ? $data.dis_diameter_kanan : '....' ?}</strong> / <strong>{?= !empty($data.dis_diameter_kiri) ? $data.dis_diameter_kiri : '....' ?}</strong> mm<br>
+        &bull; Refleks Cahaya <strong>{?= !empty($data.dis_refleks_kanan) ? $data.dis_refleks_kanan : '....' ?}</strong> / <strong>{?= !empty($data.dis_refleks_kiri) ? $data.dis_refleks_kiri : '....' ?}</strong>
+      </td>
+      <td colspan="2">
+        <strong>EKSPOSUR</strong><br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="38%"><span class="cb">{if: $data.eks_tidak_kelainan == 'Ya'}&#9745;{else}&#9744;{/if}</span> Tidak terdapat kelainan</td>
+            <td width="31%"><span class="cb">{if: $data.eks_contusio == 'Ya'}&#9745;{else}&#9744;{/if}</span> Contusio</td>
+            <td width="31%"><span class="cb">{if: $data.eks_luka_bakar == 'Ya'}&#9745;{else}&#9744;{/if}</span> Luka bakar</td>
+          </tr>
+          <tr>
+            <td><span class="cb">{if: $data.eks_tidak_tampak_jelas == 'Ya'}&#9745;{else}&#9744;{/if}</span> Tidak tampak jelas</td>
+            <td><span class="cb">{if: $data.eks_abrasi == 'Ya'}&#9745;{else}&#9744;{/if}</span> Abrasi</td>
+            <td><span class="cb">{if: $data.eks_laserasi == 'Ya'}&#9745;{else}&#9744;{/if}</span> Laserasi</td>
+          </tr>
+          <tr>
+            <td><span class="cb">{if: $data.eks_deformitas == 'Ya'}&#9745;{else}&#9744;{/if}</span> Deformitas</td>
+            <td><span class="cb">{if: $data.eks_penetrasi == 'Ya'}&#9745;{else}&#9744;{/if}</span> Penetrasi</td>
+            <td><span class="cb">{if: $data.eks_ekskoriasi == 'Ya'}&#9745;{else}&#9744;{/if}</span> Ekskoriasi</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- SURVEI SEKUNDER -->
+    <tr>
+      <td colspan="3" class="sub-header" style="text-align:center;">SURVEI SEKUNDER</td>
+    </tr>
+    <tr>
+      <td colspan="3">
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="27%"><strong>KELUHAN UTAMA :</strong></td>
+            <td width="73%">{$data.keluhan_utama}</td>
+          </tr>
+          <tr>
+            <td><strong>RIWAYAT PENYAKIT SEKARANG :</strong></td>
+            <td>{$data.riwayat_penyakit_sekarang}</td>
+          </tr>
+          <tr>
+            <td><strong>RIWAYAT PENYAKIT DAHULU :</strong></td>
+            <td>{$data.riwayat_penyakit_dahulu}</td>
+          </tr>
+          <tr>
+            <td><strong>RIWAYAT PENYAKIT KELUARGA :</strong></td>
+            <td>{$data.riwayat_penyakit_keluarga}</td>
+          </tr>
+          <tr>
+            <td><strong>RIWAYAT ALERGI :</strong></td>
+            <td>
+              <span class="cb">{if: $data.riwayat_alergi == 'Tidak'}&#9745;{else}&#9744;{/if}</span> Tidak
+              &nbsp;&nbsp;&nbsp;&nbsp;
+              <span class="cb">{if: $data.riwayat_alergi == 'Ya'}&#9745;{else}&#9744;{/if}</span> Ya, sebutkan : {?= !empty($data.riwayat_alergi_ket) ? $data.riwayat_alergi_ket : '................................................' ?}
+            </td>
+          </tr>
+          <tr>
+            <td><strong>RIWAYAT PENGGUNAAN OBAT :</strong></td>
+            <td>{$data.riwayat_penggunaan_obat}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- RIWAYAT PENYAKIT -->
+    <tr>
+      <td colspan="3">
+        <strong>RIWAYAT PENYAKIT :</strong><br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td colspan="2">
+              1. Penyakit Menular :
+              <span class="cb">{if: $data.rp_menular_hiv == 'Ya'}&#9745;{else}&#9744;{/if}</span> HIV/AIDS &nbsp;
+              <span class="cb">{if: $data.rp_menular_tbc == 'Ya'}&#9745;{else}&#9744;{/if}</span> TBC &nbsp;
+              <span class="cb">{if: $data.rp_menular_hepatitis == 'Ya'}&#9745;{else}&#9744;{/if}</span> Hepatitis &nbsp;
+              <span class="cb">{if: $data.rp_menular_lainnya == 'Ya'}&#9745;{else}&#9744;{/if}</span> Lainnya : {?= !empty($data.rp_menular_lainnya_ket) ? $data.rp_menular_lainnya_ket : '........................................' ?}
+              <br><span style="font-size:7.5pt;font-style:italic;padding-left:12px;">(Jika ada, Lihat Pengkajian Penyakit Menular)</span>
+            </td>
+          </tr>
+          <tr>
+            <td width="28%">2. Penyakit Jantung</td>
+            <td width="72%">: <span class="{if: $data.rp_jantung == 'Tidak Ada'}circled{/if}">Tidak Ada</span> / <span class="{if: $data.rp_jantung == 'Ada'}circled{/if}">Ada</span></td>
+          </tr>
+          <tr>
+            <td>3. Hipertensi</td>
+            <td>: <span class="{if: $data.rp_hipertensi == 'Tidak Ada'}circled{/if}">Tidak Ada</span> / <span class="{if: $data.rp_hipertensi == 'Ada'}circled{/if}">Ada</span></td>
+          </tr>
+          <tr>
+            <td>4. Diabetes</td>
+            <td>: <span class="{if: $data.rp_diabetes == 'Tidak Ada'}circled{/if}">Tidak Ada</span> / <span class="{if: $data.rp_diabetes == 'Ada'}circled{/if}">Ada</span></td>
+          </tr>
+          <tr>
+            <td>5. Haemophilia</td>
+            <td>: <span class="{if: $data.rp_haemophilia == 'Tidak Ada'}circled{/if}">Tidak Ada</span> / <span class="{if: $data.rp_haemophilia == 'Ada'}circled{/if}">Ada</span></td>
+          </tr>
+          <tr>
+            <td>6. Gangguan Ginjal</td>
+            <td>: <span class="{if: $data.rp_ginjal == 'Tidak Ada'}circled{/if}">Tidak Ada</span> / <span class="{if: $data.rp_ginjal == 'Ada'}circled{/if}">Ada</span> {?= !empty($data.rp_ginjal_ket) ? ' - ' . $data.rp_ginjal_ket : '........................................................' ?}</td>
+          </tr>
+          <tr>
+            <td>7. Penyakit Sistemik Lainnya</td>
+            <td>: <span class="{if: $data.rp_sistemik_lain == 'Tidak Ada'}circled{/if}">Tidak Ada</span> / <span class="{if: $data.rp_sistemik_lain == 'Ada'}circled{/if}">Ada</span> {?= !empty($data.rp_sistemik_lain_ket) ? ' - ' . $data.rp_sistemik_lain_ket : '........................................................' ?}</td>
+          </tr>
+          <tr>
+            <td>8. Riwayat Operasi</td>
+            <td>: <span class="{if: $data.rp_operasi == 'Tidak Ada'}circled{/if}">Tidak Ada</span> / <span class="{if: $data.rp_operasi == 'Ada'}circled{/if}">Ada</span> {?= !empty($data.rp_operasi_ket) ? ' - ' . $data.rp_operasi_ket : '........................................................' ?}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- KHUSUS PASIEN ANAK & KHUSUS PASIEN GERIATRI -->
+    <tr>
+      <td colspan="2" width="65%">
+        <strong>(KHUSUS PASIEN ANAK)</strong><br>
+        <strong>RIWAYAT KELAHIRAN</strong><br>
+        Anak ke <strong>{?= !empty($data.anak_ke) ? $data.anak_ke : '......' ?}</strong> dari <strong>{?= !empty($data.anak_dari_saudara) ? $data.anak_dari_saudara : '......' ?}</strong> saudara<br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="26%">Cara Kelahiran</td>
+            <td width="35%">: <span class="cb">{if: $data.anak_cara_lahir == 'Spontan'}&#9745;{else}&#9744;{/if}</span> Spontan</td>
+            <td width="39%"><span class="cb">{if: $data.anak_cara_lahir == 'Lain-lain'}&#9745;{else}&#9744;{/if}</span> Lain-lain : {?= !empty($data.anak_cara_lahir_ket) ? $data.anak_cara_lahir_ket : '.............' ?}</td>
+          </tr>
+          <tr>
+            <td>Umur Kelahiran</td>
+            <td>: <span class="cb">{if: $data.anak_umur_lahir == 'Cukup Bulan'}&#9745;{else}&#9744;{/if}</span> Cukup Bulan</td>
+            <td><span class="cb">{if: $data.anak_umur_lahir == 'Kurang Bulan'}&#9745;{else}&#9744;{/if}</span> Kurang Bulan</td>
+          </tr>
+          <tr>
+            <td>Kelainan Bawaan</td>
+            <td>: <span class="cb">{if: $data.anak_kelainan_bawaan == 'Tidak Ada'}&#9745;{else}&#9744;{/if}</span> Tidak Ada</td>
+            <td><span class="cb">{if: $data.anak_kelainan_bawaan == 'Ada'}&#9745;{else}&#9744;{/if}</span> Ada : {?= !empty($data.anak_kelainan_bawaan_ket) ? $data.anak_kelainan_bawaan_ket : '.............' ?}</td>
+          </tr>
+        </table>
+        <strong>RIWAYAT IMUNISASI</strong><br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="32%"><span class="cb">{if: $data.imun_bcg == 'Ya'}&#9745;{else}&#9744;{/if}</span> BCG</td>
+            <td width="34%"><span class="cb">{if: $data.imun_polio == 'Ya'}&#9745;{else}&#9744;{/if}</span> Polio {?= !empty($data.imun_polio_kali) ? $data.imun_polio_kali : '......' ?} Kali</td>
+            <td width="34%"><span class="cb">{if: $data.imun_dpt == 'Ya'}&#9745;{else}&#9744;{/if}</span> DPT {?= !empty($data.imun_dpt_kali) ? $data.imun_dpt_kali : '......' ?} Kali</td>
+          </tr>
+          <tr>
+            <td><span class="cb">{if: $data.imun_campak == 'Ya'}&#9745;{else}&#9744;{/if}</span> Campak {?= !empty($data.imun_campak_kali) ? $data.imun_campak_kali : '......' ?} Kali</td>
+            <td><span class="cb">{if: $data.imun_hepatitis_b == 'Ya'}&#9745;{else}&#9744;{/if}</span> Hepatitis B {?= !empty($data.imun_hepatitis_b_kali) ? $data.imun_hepatitis_b_kali : '......' ?} Kali</td>
+            <td><span class="cb">{if: $data.imun_lainnya == 'Ya'}&#9745;{else}&#9744;{/if}</span> Lainnya {?= !empty($data.imun_lainnya_ket) ? $data.imun_lainnya_ket : '......' ?} {?= !empty($data.imun_lainnya_kali) ? $data.imun_lainnya_kali : '...' ?} Kali</td>
+          </tr>
+        </table>
+        <strong>RIWAYAT TUMBUH KEMBANG</strong><br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="52%">Pertumbuhan gigi pertama, usia : {?= !empty($data.tk_gigi_pertama) ? $data.tk_gigi_pertama : '............' ?}</td>
+            <td width="48%">Mulai bisa bicara, usia : {?= !empty($data.tk_bicara) ? $data.tk_bicara : '............' ?}</td>
+          </tr>
+          <tr>
+            <td>Mulai bisa duduk, usia : {?= !empty($data.tk_duduk) ? $data.tk_duduk : '............' ?}</td>
+            <td>Mulai bisa membaca, usia : {?= !empty($data.tk_membaca) ? $data.tk_membaca : '............' ?}</td>
+          </tr>
+          <tr>
+            <td colspan="2">Berjalan sendiri, usia : {?= !empty($data.tk_berjalan) ? $data.tk_berjalan : '............' ?}</td>
+          </tr>
+        </table>
+      </td>
+      <td width="35%">
+        <strong>(KHUSUS PASIEN GERIATRI)</strong><br>
+        <strong>PENYAKIT LAIN</strong><br>
+        <span class="cb">{if: $data.geriatri_penglihatan == 'Ya'}&#9745;{else}&#9744;{/if}</span> Gangguan Penglihatan<br>
+        <span class="cb">{if: $data.geriatri_pendengaran == 'Ya'}&#9745;{else}&#9744;{/if}</span> Gangguan Pendengaran<br>
+        <span class="cb">{if: $data.geriatri_berkemih == 'Ya'}&#9745;{else}&#9744;{/if}</span> Gangguan Berkemih<br>
+        <span class="cb">{if: $data.geriatri_daya_ingat == 'Ya'}&#9745;{else}&#9744;{/if}</span> Gangguan Daya Ingat<br>
+        <span class="cb">{if: $data.geriatri_bicara == 'Ya'}&#9745;{else}&#9744;{/if}</span> Gangguan Bicara<br>
+        <span class="cb">{if: $data.geriatri_gigi_palsu == 'Ya'}&#9745;{else}&#9744;{/if}</span> Memakai Gigi Palsu<br>
+        <span class="cb">{if: $data.geriatri_lainnya == 'Ya'}&#9745;{else}&#9744;{/if}</span> Lain-lain : {?= !empty($data.geriatri_lainnya_ket) ? $data.geriatri_lainnya_ket : '............................' ?}
+      </td>
+    </tr>
+  </table>
+
+  <table class="no-border footer-meta">
+    <tr>
+      <td width="50%">RSGM/Ed-Rev/03/2023</td>
+      <td width="50%" style="text-align:right;font-weight:bold;">RM.GD - 05 Hal 1-2</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ======================= HALAMAN 2 ======================= -->
+<div class="page-sheet page-break">
+  <!-- BARIS IDENTITAS RINGKAS HALAMAN 2 -->
+  <table class="no-border" width="100%" style="margin-bottom:3px;">
+    <tr>
+      <td width="38%">
+        <strong>Nama Pasien :</strong> {?= !empty($data.nama_pasien) ? $data.nama_pasien : '........................' ?} ({$data.jenis_kelamin})
+      </td>
+      <td width="30%">
+        <strong>Tanggal Lahir :</strong> {$data.tgl_lahir_fmt}
+      </td>
+      <td width="32%" style="text-align:right;">
+        <strong>No. RM :</strong>
+        {loop: $rm_digits}
+        <span class="rm-box">{$value}</span>
+        {/loop}
+      </td>
+    </tr>
+  </table>
+
+  <table class="form-tbl">
+    <!-- PEMERIKSAAN FISIK -->
+    <tr>
+      <td colspan="2">
+        <strong>PEMERIKSAAN FISIK</strong><br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="25%">Keadaan Umum : <strong>{?= !empty($data.keadaan_umum) ? $data.keadaan_umum : '...............' ?}</strong></td>
+            <td width="25%">Tekanan Darah : <strong>{?= !empty($data.td) ? $data.td : '.........' ?}</strong> mmHg</td>
+            <td width="25%">Frekuensi Napas : <strong>{?= !empty($data.rr) ? $data.rr : '......' ?}</strong> x/menit</td>
+            <td width="12%">Suhu : <strong>{?= !empty($data.suhu) ? $data.suhu : '......' ?}</strong> &deg;C</td>
+            <td width="13%">BB : <strong>{?= !empty($data.bb) ? $data.bb : '......' ?}</strong> kg</td>
+          </tr>
+          <tr>
+            <td>Kesadaran : <strong>{?= !empty($data.kesadaran) ? $data.kesadaran : '...............' ?}</strong></td>
+            <td>Frekuensi Nadi : <strong>{?= !empty($data.nadi) ? $data.nadi : '.........' ?}</strong> x/menit</td>
+            <td>Saturasi Oksigen : <strong>{?= !empty($data.saturasi) ? $data.saturasi : '......' ?}</strong> %</td>
+            <td>Gol. Darah : <strong>{?= !empty($data.gol_darah) ? $data.gol_darah : '...' ?}</strong></td>
+            <td>TB : <strong>{?= !empty($data.tb) ? $data.tb : '......' ?}</strong> cm</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- PEMERIKSAAN EKSTRAORAL -->
+    <tr>
+      <td colspan="2">
+        <strong>PEMERIKSAAN EKSTRAORAL</strong><br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="39%">
+              <table class="no-border" width="100%">
+                <tr>
+                  <td width="34%"><u><strong>Kepala-Leher</strong></u></td>
+                  <td width="66%">: {?= !empty($data.eo_kepala_leher) ? $data.eo_kepala_leher : '........................................' ?}</td>
+                </tr>
+                <tr>
+                  <td>Kepala</td>
+                  <td>: {?= !empty($data.eo_kepala) ? $data.eo_kepala : '........................................' ?}</td>
+                </tr>
+                <tr>
+                  <td>Wajah</td>
+                  <td>: {?= !empty($data.eo_wajah) ? $data.eo_wajah : '........................................' ?}</td>
+                </tr>
+                <tr>
+                  <td>TMJ</td>
+                  <td>: {?= !empty($data.eo_tmj) ? $data.eo_tmj : '........................................' ?}</td>
+                </tr>
+                <tr>
+                  <td>Kel. Tiroid</td>
+                  <td>: {?= !empty($data.eo_tiroid) ? $data.eo_tiroid : '........................................' ?}</td>
+                </tr>
+                <tr>
+                  <td>Leher</td>
+                  <td>: {?= !empty($data.eo_leher) ? $data.eo_leher : '........................................' ?}</td>
+                </tr>
+              </table>
+            </td>
+            <td width="16%" style="text-align:center;vertical-align:middle;">
+              <svg width="68" height="72" viewBox="0 0 80 86" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22,78 C24,65 25,58 25,52 C18,48 16,38 17,28 C18,14 28,6 42,6 C56,6 64,15 64,28 C64,33 67,37 68,40 C69,42 66,44 64,45 C64,49 64,53 62,56 C60,59 54,60 48,59 C47,65 49,72 52,78" fill="none" stroke="#333" stroke-width="1.3"/>
+                <path d="M35,32 C32,32 30,36 32,40 C34,43 37,42 37,38" fill="none" stroke="#333" stroke-width="1.1"/>
+                <circle cx="55" cy="30" r="1.8" fill="#333"/>
+                <circle cx="36" cy="48" r="2.2" fill="none" stroke="#555" stroke-dasharray="1.5,1.5"/>
+                <circle cx="45" cy="54" r="2.5" fill="none" stroke="#555" stroke-dasharray="1.5,1.5"/>
+                <circle cx="34" cy="60" r="2.2" fill="none" stroke="#555" stroke-dasharray="1.5,1.5"/>
+              </svg>
+              <div style="font-size:6pt;font-style:italic;">*Lingkari daerah yang dimaksud</div>
+            </td>
+            <td width="45%">
+              <table class="no-border" width="100%">
+                <tr>
+                  <td colspan="2"><u><strong>Kelenjar Limfe</strong></u></td>
+                </tr>
+                <tr>
+                  <td colspan="2">Submandibular</td>
+                </tr>
+                <tr>
+                  <td width="28%">&nbsp;&nbsp;- Dextra</td>
+                  <td width="72%">: {?= !empty($data.eo_limfe_submandibular_dextra) ? $data.eo_limfe_submandibular_dextra : '..............................................' ?}</td>
+                </tr>
+                <tr>
+                  <td>&nbsp;&nbsp;- Sinistra</td>
+                  <td>: {?= !empty($data.eo_limfe_submandibular_sinistra) ? $data.eo_limfe_submandibular_sinistra : '..............................................' ?}</td>
+                </tr>
+                <tr>
+                  <td>Submentalis</td>
+                  <td>: {?= !empty($data.eo_limfe_submentalis) ? $data.eo_limfe_submentalis : '..............................................' ?}</td>
+                </tr>
+                <tr>
+                  <td>Cervikalis</td>
+                  <td>: {?= !empty($data.eo_limfe_cervikalis) ? $data.eo_limfe_cervikalis : '..............................................' ?}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- PEMERIKSAAN INTRAORAL -->
+    <tr>
+      <td colspan="2">
+        <strong>PEMERIKSAAN INTRAORAL</strong><br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="54%">
+              Elemen Gigi : <strong>{?= !empty($data.io_elemen_gigi) ? $data.io_elemen_gigi : '......................................................' ?}</strong><br>
+              <span class="cb">{if: $data.io_gigi_karies == 'Ya'}&#9745;{else}&#9744;{/if}</span> Gigi karies :
+              &nbsp;&nbsp;<span class="cb">{if: $data.io_karies_superfisial == 'Ya'}&#9745;{else}&#9744;{/if}</span> Superfisial
+              &nbsp;&nbsp;<span class="cb">{if: $data.io_karies_media == 'Ya'}&#9745;{else}&#9744;{/if}</span> Media
+              &nbsp;&nbsp;<span class="cb">{if: $data.io_karies_profunda == 'Ya'}&#9745;{else}&#9744;{/if}</span> Profunda<br>
+              <span class="cb">{if: $data.io_sisa_akar == 'Ya'}&#9745;{else}&#9744;{/if}</span> Sisa akar<br>
+              <span class="cb">{if: $data.io_perkusi_sakit == 'Ya'}&#9745;{else}&#9744;{/if}</span> Perkusi sakit<br>
+              <span class="cb">{if: $data.io_druk_sakit == 'Ya'}&#9745;{else}&#9744;{/if}</span> Druk sakit<br>
+              <span class="cb">{if: $data.io_diskolorisasi == 'Ya'}&#9745;{else}&#9744;{/if}</span> Diskolorisasi<br>
+              <span class="cb">{if: $data.io_palpasi_sakit == 'Ya'}&#9745;{else}&#9744;{/if}</span> Palpasi sakit/sensitif<br>
+              <span class="cb">{if: $data.io_gingiva == 'Ya'}&#9745;{else}&#9744;{/if}</span> Gingiva sekitar gigi :
+              &nbsp;<span class="cb">{if: $data.io_gingiva_normal == 'Ya'}&#9745;{else}&#9744;{/if}</span> Normal
+              &nbsp;<span class="cb">{if: $data.io_gingiva_hiperemis == 'Ya'}&#9745;{else}&#9744;{/if}</span> Hiperemis
+              &nbsp;<span class="cb">{if: $data.io_gingiva_resesi == 'Ya'}&#9745;{else}&#9744;{/if}</span> Resesi<br>
+              <span class="cb">{if: $data.io_kalkulus == 'Ya'}&#9745;{else}&#9744;{/if}</span> Kalkulus<br>
+              <span class="cb">{if: $data.io_luksasi == 'Ya'}&#9745;{else}&#9744;{/if}</span> Gigi Luksasi <strong>{?= !empty($data.io_luksasi_derajat) ? $data.io_luksasi_derajat : '........' ?}</strong> derajat<br>
+              <span class="cb">{if: $data.io_fraktur_mahkota == 'Ya'}&#9745;{else}&#9744;{/if}</span> Fraktur pada mahkota, lokasi fraktur : {?= !empty($data.io_fraktur_lokasi) ? $data.io_fraktur_lokasi : '................................' ?}<br>
+              Lainnya : <strong>{?= !empty($data.io_lainnya) ? $data.io_lainnya : '........................................................................' ?}</strong>
+            </td>
+            <td width="46%">
+              <strong>Tes Termal :</strong><br>
+              &nbsp;&nbsp;<span class="cb">{if: $data.io_tes_termal == 'Tidak bereaksi'}&#9745;{else}&#9744;{/if}</span> Tidak bereaksi
+              &nbsp;&nbsp;<span class="cb">{if: $data.io_tes_termal == 'Bereaksi dengan dingin'}&#9745;{else}&#9744;{/if}</span> Bereaksi dengan dingin<br>
+              <strong>Tes Kavitas :</strong><br>
+              &nbsp;&nbsp;<span class="cb">{if: $data.io_tes_kavitas == 'Tidak bereaksi'}&#9745;{else}&#9744;{/if}</span> Tidak bereaksi
+              &nbsp;&nbsp;<span class="cb">{if: $data.io_tes_kavitas == 'Bereaksi'}&#9745;{else}&#9744;{/if}</span> Bereaksi<br>
+              <strong>Tes Penunjang (K-File No. 10) :</strong><br>
+              &nbsp;&nbsp;<span class="cb">{if: $data.io_tes_penunjang == 'Tidak bereaksi'}&#9745;{else}&#9744;{/if}</span> Tidak bereaksi
+              &nbsp;&nbsp;<span class="cb">{if: $data.io_tes_penunjang == 'Bereaksi, masuk saluran akar'}&#9745;{else}&#9744;{/if}</span> Bereaksi, masuk saluran akar<br>
+              <table class="no-border" width="100%" style="margin:3px 0 4px 10px;">
+                <tr>
+                  <td width="50%">{?= !empty($data.io_kfile_1_kode) ? $data.io_kfile_1_kode : '..........' ?} : {?= !empty($data.io_kfile_1_mm) ? $data.io_kfile_1_mm : '..........' ?} mm</td>
+                  <td width="50%">{?= !empty($data.io_kfile_3_kode) ? $data.io_kfile_3_kode : '..........' ?} : {?= !empty($data.io_kfile_3_mm) ? $data.io_kfile_3_mm : '..........' ?} mm</td>
+                </tr>
+                <tr>
+                  <td>{?= !empty($data.io_kfile_2_kode) ? $data.io_kfile_2_kode : '..........' ?} : {?= !empty($data.io_kfile_2_mm) ? $data.io_kfile_2_mm : '..........' ?} mm</td>
+                  <td>{?= !empty($data.io_kfile_4_kode) ? $data.io_kfile_4_kode : '..........' ?} : {?= !empty($data.io_kfile_4_mm) ? $data.io_kfile_4_mm : '..........' ?} mm</td>
+                </tr>
+              </table>
+              <strong>Vitalitas Gigi :</strong>
+              &nbsp;<span class="cb">{if: $data.io_vitalitas_gigi == 'Vital'}&#9745;{else}&#9744;{/if}</span> Vital
+              &nbsp;&nbsp;<span class="cb">{if: $data.io_vitalitas_gigi == 'Non Vital'}&#9745;{else}&#9744;{/if}</span> Non Vital
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- ASESMEN NYERI -->
+    <tr>
+      <td width="54%">
+        <strong>ASESMEN NYERI</strong><br>
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="34%">Pasien mengeluh nyeri</td>
+            <td width="66%">:
+              <span class="cb">{if: $data.nyeri_keluhan == 'Ya'}&#9745;{else}&#9744;{/if}</span> Ya
+              &nbsp;&nbsp;&nbsp;<span class="cb">{if: $data.nyeri_keluhan == 'Tidak'}&#9745;{else}&#9744;{/if}</span> Tidak
+            </td>
+          </tr>
+          <tr>
+            <td>Lokasi</td>
+            <td>: {?= !empty($data.nyeri_lokasi) ? $data.nyeri_lokasi : '......................................................' ?}</td>
+          </tr>
+          <tr>
+            <td>Durasi</td>
+            <td>: {?= !empty($data.nyeri_durasi) ? $data.nyeri_durasi : '......................................................' ?}</td>
+          </tr>
+          <tr>
+            <td>Frekuensi</td>
+            <td>:
+              <span class="cb">{if: $data.nyeri_frekuensi == 'Jarang'}&#9745;{else}&#9744;{/if}</span> Jarang
+              &nbsp;<span class="cb">{if: $data.nyeri_frekuensi == 'Hilang Timbul'}&#9745;{else}&#9744;{/if}</span> Hilang Timbul
+              &nbsp;<span class="cb">{if: $data.nyeri_frekuensi == 'Menetap'}&#9745;{else}&#9744;{/if}</span> Menetap
+            </td>
+          </tr>
+          <tr>
+            <td>Karakteristik</td>
+            <td>:
+              <span class="cb">{if: $data.nyeri_karakteristik == 'Tajam'}&#9745;{else}&#9744;{/if}</span> Tajam
+              &nbsp;<span class="cb">{if: $data.nyeri_karakteristik == 'Tumpul'}&#9745;{else}&#9744;{/if}</span> Tumpul
+              &nbsp;<span class="cb">{if: $data.nyeri_karakteristik == 'Terbakar/panas'}&#9745;{else}&#9744;{/if}</span> Terbakar/panas
+            </td>
+          </tr>
+          <tr>
+            <td>Menjalar</td>
+            <td>:
+              <span class="cb">{if: $data.nyeri_menjalar == 'Tidak'}&#9745;{else}&#9744;{/if}</span> Tidak
+              &nbsp;<span class="cb">{if: $data.nyeri_menjalar == 'Ya'}&#9745;{else}&#9744;{/if}</span> Ya, ke : {?= !empty($data.nyeri_menjalar_ket) ? $data.nyeri_menjalar_ket : '............................' ?}
+            </td>
+          </tr>
+          <tr>
+            <td>Nyeri memberat jika</td>
+            <td>: {?= !empty($data.nyeri_memberat) ? $data.nyeri_memberat : '......................................................' ?}</td>
+          </tr>
+          <tr>
+            <td>Nyeri hilang jika</td>
+            <td>: {?= !empty($data.nyeri_hilang) ? $data.nyeri_hilang : '......................................................' ?}</td>
+          </tr>
+          <tr>
+            <td>Tindak lanjut</td>
+            <td>:
+              <span class="cb">{if: $data.nyeri_tl_edukasi == 'Ya'}&#9745;{else}&#9744;{/if}</span> Edukasi<br>
+              &nbsp;&nbsp;<span class="cb">{if: $data.nyeri_tl_terapi == 'Ya'}&#9745;{else}&#9744;{/if}</span> Terapi Medikamentosa / Non Medikamentosa<br>
+              &nbsp;&nbsp;<span class="cb">{if: $data.nyeri_tl_konsul == 'Ya'}&#9745;{else}&#9744;{/if}</span> Konsul ke : {?= !empty($data.nyeri_tl_konsul_ke) ? $data.nyeri_tl_konsul_ke : '........................................' ?}
+            </td>
+          </tr>
+        </table>
+      </td>
+      <td width="46%">
+        <strong>Skala Nyeri</strong><br>
+        <table width="100%" style="border-collapse:collapse;text-align:center;margin-top:4px;font-size:7.5pt;">
+          <tr>
+            <td colspan="1" style="border:none;">Tidak<br>Nyeri</td>
+            <td colspan="3" style="border:none;">Nyeri<br>Ringan</td>
+            <td colspan="3" style="border:none;">Nyeri<br>Sedang</td>
+            <td colspan="4" style="border:none;">Nyeri<br>Berat</td>
+          </tr>
+          <tr>
+            <td style="border:1px solid #000;padding:2px;{if: $data.skala_nyeri == '0'}background:#222;color:#fff;font-weight:bold;{/if}">0</td>
+            <td style="border:1px solid #000;padding:2px;{if: $data.skala_nyeri == '1'}background:#222;color:#fff;font-weight:bold;{/if}">1</td>
+            <td style="border:1px solid #000;padding:2px;{if: $data.skala_nyeri == '2'}background:#222;color:#fff;font-weight:bold;{/if}">2</td>
+            <td style="border:1px solid #000;padding:2px;{if: $data.skala_nyeri == '3'}background:#222;color:#fff;font-weight:bold;{/if}">3</td>
+            <td style="border:1px solid #000;padding:2px;{if: $data.skala_nyeri == '4'}background:#222;color:#fff;font-weight:bold;{/if}">4</td>
+            <td style="border:1px solid #000;padding:2px;{if: $data.skala_nyeri == '5'}background:#222;color:#fff;font-weight:bold;{/if}">5</td>
+            <td style="border:1px solid #000;padding:2px;{if: $data.skala_nyeri == '6'}background:#222;color:#fff;font-weight:bold;{/if}">6</td>
+            <td style="border:1px solid #000;padding:2px;{if: $data.skala_nyeri == '7'}background:#222;color:#fff;font-weight:bold;{/if}">7</td>
+            <td style="border:1px solid #000;padding:2px;{if: $data.skala_nyeri == '8'}background:#222;color:#fff;font-weight:bold;{/if}">8</td>
+            <td style="border:1px solid #000;padding:2px;{if: $data.skala_nyeri == '9'}background:#222;color:#fff;font-weight:bold;{/if}">9</td>
+            <td style="border:1px solid #000;padding:2px;{if: $data.skala_nyeri == '10'}background:#222;color:#fff;font-weight:bold;{/if}">10</td>
+          </tr>
+        </table>
+        <table width="100%" style="border-collapse:collapse;text-align:center;margin-top:4px;font-size:6.5pt;">
+          <tr>
+            <td width="16.6%" style="border:none;">
+              <svg width="24" height="24" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="10.5" cy="12" r="1.4" fill="#000"/><circle cx="19.5" cy="12" r="1.4" fill="#000"/><path d="M9.5,18 Q15,23 20.5,18" fill="none" stroke="#000" stroke-width="1.3"/></svg>
+              <div>Tidak<br>Nyeri</div>
+            </td>
+            <td width="16.6%" style="border:none;">
+              <svg width="24" height="24" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="10.5" cy="12" r="1.4" fill="#000"/><circle cx="19.5" cy="12" r="1.4" fill="#000"/><path d="M10,19 Q15,21.5 20,19" fill="none" stroke="#000" stroke-width="1.3"/></svg>
+              <div>Sedikit<br>Nyeri</div>
+            </td>
+            <td width="16.6%" style="border:none;">
+              <svg width="24" height="24" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="10.5" cy="12" r="1.4" fill="#000"/><circle cx="19.5" cy="12" r="1.4" fill="#000"/><line x1="10" y1="19.5" x2="20" y2="19.5" stroke="#000" stroke-width="1.3"/></svg>
+              <div>Sedikit<br>Lebih Nyeri</div>
+            </td>
+            <td width="16.6%" style="border:none;">
+              <svg width="24" height="24" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="10.5" cy="12" r="1.4" fill="#000"/><circle cx="19.5" cy="12" r="1.4" fill="#000"/><path d="M10,20.5 Q15,17.5 20,20.5" fill="none" stroke="#000" stroke-width="1.3"/></svg>
+              <div>Lebih<br>Nyeri Lagi</div>
+            </td>
+            <td width="16.6%" style="border:none;">
+              <svg width="24" height="24" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="10.5" cy="12" r="1.4" fill="#000"/><circle cx="19.5" cy="12" r="1.4" fill="#000"/><path d="M9.5,21.5 Q15,16 20.5,21.5" fill="none" stroke="#000" stroke-width="1.3"/></svg>
+              <div>Sangat<br>Nyeri</div>
+            </td>
+            <td width="16.6%" style="border:none;">
+              <svg width="24" height="24" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="none" stroke="#000" stroke-width="1.3"/><path d="M8.5,10.5 L12,13 M12,10.5 L8.5,13" stroke="#000" stroke-width="1.2"/><path d="M18,10.5 L21.5,13 M21.5,10.5 L18,13" stroke="#000" stroke-width="1.2"/><path d="M9.5,22 Q15,15.5 20.5,22" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="8" cy="16" r="1" fill="#000"/><circle cx="22" cy="16" r="1" fill="#000"/></svg>
+              <div>Nyeri<br>Sangat Hebat</div>
+            </td>
+          </tr>
+        </table>
+        <div style="margin-top:4px;font-size:7pt;border-top:1px dashed #999;padding-top:3px;">
+          <em>*Untuk pasien anak &lt;6 tahun menggunakan skala FLACC :</em><br>
+          Wajah ({$data.flacc_wajah}) + Kaki ({$data.flacc_kaki}) + Aktivitas ({$data.flacc_aktivitas}) + Menangis ({$data.flacc_menangis}) + Consolability ({$data.flacc_consolability}) = <strong>Total FLACC : {$data.flacc_total}</strong>
+        </div>
+      </td>
+    </tr>
+
+    <!-- PEMERIKSAAN PENUNJANG & DIAGNOSIS / DIAGNOSIS BANDING -->
+    <tr>
+      <td width="54%">
+        <strong>PEMERIKSAAN PENUNJANG</strong><br>
+        <span class="cb">{if: $data.penunjang_lab == 'Ya'}&#9745;{else}&#9744;{/if}</span> Laboratorium<br>
+        <span class="cb">{if: $data.penunjang_rontgen == 'Ya'}&#9745;{else}&#9744;{/if}</span> Rontgen<br>
+        <span class="cb">{if: $data.penunjang_lain == 'Ya'}&#9745;{else}&#9744;{/if}</span> Lain-lain, yaitu : {?= !empty($data.penunjang_lain_ket) ? $data.penunjang_lain_ket : '................................................' ?}
+      </td>
+      <td width="46%">
+        <strong>DIAGNOSIS DAN DIAGNOSIS BANDING</strong><br>
+        <div style="margin-top:2px;">
+          <strong>Diagnosis :</strong> {?= !empty($data.diagnosis) ? nl2br(htmlspecialchars($data.diagnosis)) : '......................................................' ?}
+        </div>
+        <div style="margin-top:4px;">
+          <strong>Diagnosis Banding (DD) :</strong> {?= !empty($data.diagnosis_banding) ? nl2br(htmlspecialchars($data.diagnosis_banding)) : '......................................................' ?}
+        </div>
+      </td>
+    </tr>
+
+    <!-- RENCANA DAN TINDAK LANJUT PERAWATAN -->
+    <tr>
+      <td colspan="2" style="min-height:90px;">
+        <strong>RENCANA DAN TINDAK LANJUT PERAWATAN, TERMASUK KEBUTUHAN EDUKASI</strong><br>
+        <div style="min-height:70px;margin-top:4px;white-space:pre-line;">{?= !empty($data.rencana_tindak_lanjut) ? $data.rencana_tindak_lanjut : '' ?}</div>
+      </td>
+    </tr>
+
+    <!-- EVALUASI & TTD DPJP -->
+    <tr>
+      <td colspan="2">
+        <table class="no-border" width="100%">
+          <tr>
+            <td width="55%">
+              <strong>EVALUASI</strong><br>
+              <table class="no-border" width="100%" style="margin-top:4px;">
+                <tr>
+                  <td width="28%"><span class="cb">{if: $data.evaluasi_kontrol == 'Ya'}&#9745;{else}&#9744;{/if}</span> Kontrol</td>
+                  <td width="72%">Tanggal : <strong>{$data.kontrol_tgl_fmt}</strong></td>
+                </tr>
+                <tr>
+                  <td><span class="cb">{if: $data.evaluasi_rujuk == 'Ya'}&#9745;{else}&#9744;{/if}</span> Rujuk</td>
+                  <td>ke RS : <strong>{?= !empty($data.evaluasi_rujuk_rs) ? $data.evaluasi_rujuk_rs : '......................................................' ?}</strong></td>
+                </tr>
+                <tr>
+                  <td><span class="cb">{if: $data.evaluasi_ranap == 'Ya'}&#9745;{else}&#9744;{/if}</span> Rawat Inap</td>
+                  <td>Ruangan : <strong>{?= !empty($data.evaluasi_ranap_ruangan) ? $data.evaluasi_ranap_ruangan : '......................................................' ?}</strong></td>
+                </tr>
+              </table>
+            </td>
+            <td width="45%" style="text-align:center;">
+              Banjarmasin, {$data.tgl_ttd_fmt} Pukul {?= !empty($data.pukul_ttd) ? $data.pukul_ttd : '...........' ?} WITA<br>
+              <strong>DPJP</strong>
+              <br><br><br><br>
+              ( <u><strong>{?= !empty($data.nm_dokter) ? $data.nm_dokter : (!empty($data.kd_dokter) ? $data.kd_dokter : '................................................') ?}</strong></u> )<br>
+              <span style="font-size:7.5pt;">Tanda Tangan &amp; Nama Jelas</span>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <div style="text-align:right;font-size:7.5pt;font-style:italic;margin-top:3px;">
+    Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+  </div>
+  <table class="no-border footer-meta">
+    <tr>
+      <td width="50%">RSGM/Ed-Rev/03/2023</td>
+      <td width="50%" style="text-align:right;font-weight:bold;">RM.GD - 05 Hal 2-2</td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>
+

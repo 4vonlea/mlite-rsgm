@@ -936,19 +936,36 @@
           <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form" style="margin-bottom: 10px;">
             <!-- Header Informasi Dasar -->
             <tr>
-              <td colspan="4" bgcolor="#d9edf7" style="font-weight: bold; text-align: center;">INFORMASI TRIASE IGD</td>
+              <td colspan="4" bgcolor="#d9edf7" style="font-weight: bold; text-align: center;">
+                INFORMASI TRIASE IGD (RM.GD - 03)
+                {if: !empty($data.id_triase)}
+                &nbsp;
+                <a href="{?=url([ADMIN, 'update_bmt', 'rmgd3cetak'])?}&id={$data.id_triase}" target="_blank" class="btn btn-xs btn-success"><i class="fa fa-print"></i> Cetak Lembar Triase</a>
+                <a href="{?=url([ADMIN, 'update_bmt', 'rmgd3cetak'])?}&id={$data.id_triase}&pdf=1" target="_blank" class="btn btn-xs btn-danger"><i class="fa fa-file-pdf-o"></i> Download PDF</a>
+                {/if}
+              </td>
             </tr>
             <tr>
-              <td valign="top" width="25%" bgcolor="#eee">Tanggal/Jam Triase</td>
+              <td valign="top" width="25%" bgcolor="#eee">Tanggal/Jam Mulai Triase</td>
               <td valign="top" width="25%">{?=isset_or($data.tgl_triase)?}</td>
-              <td valign="top" width="25%" bgcolor="#eee">Petugas</td>
-              <td valign="top" width="25%">{?=isset_or($data.petugas_id)?}</td>
+              <td valign="top" width="25%" bgcolor="#eee">Jam Selesai Triase</td>
+              <td valign="top" width="25%"><strong>{?=isset_or($data.jam_selesai_triase, '-')?} WITA</strong></td>
             </tr>
             <tr>
-              <td valign="top" bgcolor="#eee">No. Rawat</td>
-              <td valign="top">{?=isset_or($data.no_rawat)?}</td>
-              <td valign="top" bgcolor="#eee">No. RM</td>
-              <td valign="top">{?=isset_or($data.no_rkm_medis)?}</td>
+              <td valign="top" bgcolor="#eee">No. Rawat / No. RM</td>
+              <td valign="top">{?=isset_or($data.no_rawat)?} / {?=isset_or($data.no_rkm_medis)?}</td>
+              <td valign="top" bgcolor="#eee">Petugas Triase</td>
+              <td valign="top">{?=isset_or($data.nama_petugas)?} ({?=isset_or($data.petugas_id)?})</td>
+            </tr>
+            <tr>
+              <td valign="top" bgcolor="#eee">Triase Umum (ATS)</td>
+              <td valign="top"><strong>{?=isset_or($data.ats_skala, '-')?}</strong><br><small>{?=isset_or($data.ats_items_text, '-')?}</small></td>
+              <td valign="top" bgcolor="#eee">Triase Dental (SDcep)</td>
+              <td valign="top"><strong>{?=isset_or($data.sdcep_skala, '-')?}</strong><br><small>{?=isset_or($data.sdcep_items_text, '-')?}</small></td>
+            </tr>
+            <tr>
+              <td valign="top" bgcolor="#eee">DOA (Death on Arrival)</td>
+              <td valign="top" colspan="3">{?=isset_or($data.doa_items_text, '-')?} {if: !empty($data.jam_doa)}| <strong>Jam DOA: {$data.jam_doa} WITA</strong>{/if}</td>
             </tr>
             
             <!-- Keluhan dan Diagnosa -->

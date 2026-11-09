@@ -1102,9 +1102,15 @@ class Admin extends AdminModule
         ->toArray();
 
       $row['triase_igd'] = $this->db('mlite_triase_igd')
-        ->where('no_rawat', $row['no_rawat'])
-        // ->desc('tgl_triase')
+        ->leftJoin('petugas', 'petugas.nip=mlite_triase_igd.petugas_id')
+        ->select('mlite_triase_igd.*, petugas.nama as nama_petugas')
+        ->where('mlite_triase_igd.no_rawat', $row['no_rawat'])
         ->toArray();
+      foreach ($row['triase_igd'] as &$tr) {
+        $tr['ats_items_text'] = !empty($tr['ats_items']) ? implode(', ', json_decode($tr['ats_items'], true) ?: []) : '-';
+        $tr['sdcep_items_text'] = !empty($tr['sdcep_items']) ? implode(', ', json_decode($tr['sdcep_items'], true) ?: []) : '-';
+        $tr['doa_items_text'] = !empty($tr['doa_items']) ? implode(', ', json_decode($tr['doa_items'], true) ?: []) : '-';
+      }
 
       if (file_exists(UPLOADS . '/lokalis/lokalis_' . convertNoRawat($row['no_rawat']) . '.png')) {
         $row['lokalis'] = url(UPLOADS . '/lokalis/lokalis_' . convertNoRawat($row['no_rawat']) . '.png');

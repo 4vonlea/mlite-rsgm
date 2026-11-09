@@ -141,7 +141,8 @@
           <span class="pull-right">
             <a href="#" class="btn btn-warning resume"><i class="fa fa-file-text"></i><span class="hidden-xs"> Resume</span></a>
             <a href="#" class="btn btn-info" id="odontogram"><i class="fa fa-bell"></i><span class="hidden-xs"> Odontogram</span></a>
-            <a href="#" class="btn btn-warning assesment" id="buka_assessment"><i class="fa fa-file-text"></i><span class="hidden-xs"> Assesment</span></a>
+            <a href="#" class="btn btn-warning assesment" id="buka_assessment"><i class="fa fa-file-text"></i><span class="hidden-xs"> Asesmen Medis Gigi</span></a>
+            <a href="#" class="btn btn-primary" id="buka_assessment_umum"><i class="fa fa-stethoscope"></i><span class="hidden-xs"> Asesmen Medis Umum</span></a>
           </span>
         </div>
       </div>
@@ -298,35 +299,21 @@
 </div>
 
 <script type="text/javascript">
-  // Handler untuk tombol Assessment
-  $("#form_soap").on("click","#buka_assessment", function(event){
+  // Handler untuk tombol Assessment -> langsung membuka RM.GD 5 Asesmen Medis Gigi UGD
+  $("#form_soap").on("click","#buka_assessment, #assessment, .assesment", function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var no_rawat = $('input:text[name=no_rawat]').val();
-    var loadURL = baseURL + '/dokter_igd/medisigd/' + no_rawat.replaceAll('/','') + '?t=' + mlite.token;
-
-    var modal = $('#assessmentModal');
-    var modalContent = $('#assessmentModal .modal-content');
-
-    modal.off('show.bs.modal');
-    modal.on('show.bs.modal', function () {
-        modalContent.load(loadURL);
-    }).modal();
+    window.open(baseURL + '/update_bmt/rmgd5form?no_rawat=' + encodeURIComponent(no_rawat) + '&t=' + mlite.token, '_blank');
     return false;
   });
-  $("#form_soap").on("click","#assessment", function(event){
+
+  // Handler untuk tombol Asesmen Medis Umum -> langsung membuka RM.GD 6 Asesmen Medis Umum UGD
+  $("#form_soap").on("click","#buka_assessment_umum", function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var no_rawat = $('input:text[name=no_rawat]').val();
-    var loadURL = baseURL + '/dokter_igd/medisigd/' + no_rawat.replaceAll('/','') + '?t=' + mlite.token;
-
-    var modal = $('#assessmentModal');
-    var modalContent = $('#assessmentModal .modal-content');
-
-    modal.off('show.bs.modal');
-    modal.on('show.bs.modal', function () {
-        modalContent.load(loadURL);
-    }).modal();
+    window.open(baseURL + '/update_bmt/rmgd6form?no_rawat=' + encodeURIComponent(no_rawat) + '&t=' + mlite.token, '_blank');
     return false;
   });
 </script>

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>LEMBAR TRIASE (RM.GD - 03) - {$data.no_rawat}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 6mm 8mm 6mm 8mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8.5pt;
+            color: #000;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 10px 0;
+            line-height: 1.25;
+        }
+        .page {
+            width: 194mm;
+            margin: 0 auto;
+            position: relative;
+            background: #fff;
+            padding: 5mm 6mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+        }
+
+        /* Toolbar Layar */
+        .no-print-toolbar {
+            width: 194mm;
+            margin: 0 auto 10px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2c3e50;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-toolbar {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 3px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 4px;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; }
+        .btn-close { background: #7f8c8d; color: #fff; }
+
+        /* Tabel Bingkai Utama */
+        .outer-table {
+            width: 100%;
+            border: 1.5px solid #000;
+            border-collapse: collapse;
+        }
+        .outer-table > tbody > tr > td {
+            border: 1px solid #000;
+            padding: 3px 5px;
+            vertical-align: top;
+        }
+
+        /* Header Identitas */
+        .rm-digit-box {
+            display: inline-block;
+            width: 15px;
+            height: 16px;
+            line-height: 16px;
+            border: 1px solid #000;
+            text-align: center;
+            font-weight: bold;
+            font-size: 9pt;
+            margin-right: 1px;
+        }
+        .id-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8.5pt;
+        }
+        .id-table td {
+            border: none !important;
+            padding: 2px 2px;
+            vertical-align: middle;
+        }
+
+        /* Judul */
+        .title-bar {
+            text-align: center;
+            font-weight: bold;
+            font-size: 10.5pt;
+            padding: 3px 0;
+            letter-spacing: 0.5px;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+        }
+
+        /* Checkbox kotak & bulat */
+        .cb-box {
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            line-height: 10px;
+            border: 1px solid #000;
+            background: #fff;
+            color: #000;
+            text-align: center;
+            font-size: 9px;
+            font-weight: bold;
+            vertical-align: middle;
+            margin-right: 3px;
+        }
+        .cb-item {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            line-height: 7px;
+            border: 1px solid #000;
+            background: #fff;
+            color: #000;
+            text-align: center;
+            font-size: 7.5px;
+            font-weight: bold;
+            vertical-align: top;
+            margin-top: 2px;
+            margin-right: 3px;
+        }
+
+        /* Tabel ATS & SDcep */
+        .triase-grid {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .triase-grid th, .triase-grid td {
+            border: 1px solid #000;
+            padding: 2.5px 4px;
+            vertical-align: top;
+            font-size: 7.5pt;
+            line-height: 1.2;
+        }
+        .triase-grid th {
+            text-align: center;
+            font-weight: bold;
+            font-size: 7.5pt;
+            padding: 3px 2px;
+        }
+        .sub-header-time {
+            text-align: center;
+            font-weight: bold;
+            font-size: 7pt;
+            padding: 2px !important;
+        }
+
+        /* Warna Header sesuai RM Fisik */
+        .bg-ats1 { background-color: #d9232a !important; color: #000 !important; }
+        .bg-ats2 { background-color: #f39c12 !important; color: #000 !important; }
+        .bg-ats3 { background-color: #f1c40f !important; color: #000 !important; }
+        .bg-ats4 { background-color: #27ae60 !important; color: #000 !important; }
+        .bg-ats5 { background-color: #2ecc71 !important; color: #000 !important; }
+
+        .item-row {
+            margin-bottom: 2.5px;
+            display: block;
+        }
+        .item-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .item-table td {
+            border: none !important;
+            padding: 1px 0 !important;
+            vertical-align: top;
+            font-size: 7.4pt;
+            line-height: 1.18;
+        }
+
+        @media print {
+            body { background: #fff !important; padding: 0 !important; }
+            .page { width: 100% !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
+            .no-print-toolbar { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+{if: empty($is_mpdf)}
+<div class="no-print-toolbar">
+    <div>
+        <strong>RM.GD - 03 : LEMBAR TRIASE</strong> &mdash; {$data.no_rawat} ({$data.nm_pasien})
+    </div>
+    <div>
+        <button onclick="window.print()" class="btn-toolbar btn-print">Cetak Dokumen</button>
+        <a href="{?=url([ADMIN, 'update_bmt', 'rmgd3cetak'])?}&id={$data.id_triase}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">Download PDF</a>
+        <button onclick="window.close()" class="btn-toolbar btn-close">Tutup</button>
+    </div>
+</div>
+{/if}
+
+<div class="page">
+    <table class="outer-table">
+        <!-- BARIS 1: KOP & IDENTITAS PASIEN -->
+        <tr>
+            <td width="60%" style="vertical-align: middle; text-align: center; padding: 3px 5px;">
+                {if: !empty($kop_img)}
+                <img src="{$kop_img}" alt="Kop RSGM" style="width: 100%; max-height: 68px; object-fit: contain;">
+                {else}
+                <div style="font-weight: bold; font-size: 10pt;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+                <div style="font-weight: bold; font-size: 12pt;">RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</div>
+                <div style="font-size: 7.5pt;">Jl. Simpang Ulin Nomor 28 Banjarmasin Kode Pos 70233 Telp/Fax (0511) 3260818</div>
+                {/if}
+            </td>
+            <td width="40%" style="vertical-align: middle; padding: 4px 6px;">
+                <table class="id-table">
+                    <tr>
+                        <td width="30%"><strong>No RM</strong></td>
+                        <td width="4%">:</td>
+                        <td>
+                            {loop: $rm_digits}
+                            <span class="rm-digit-box">{$value}</span>
+                            {/loop}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Nama Pasien</strong></td>
+                        <td>:</td>
+                        <td style="border-bottom: 1px dotted #000 !important;">
+                            <strong>{$data.nm_pasien}</strong> &nbsp; ({$data.jk_label})
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tanggal Lahir</strong></td>
+                        <td>:</td>
+                        <td style="border-bottom: 1px dotted #000 !important;">
+                            {$data.tgl_lahir_fmt}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- BARIS 2: PERHATIAN -->
+        <tr>
+            <td colspan="2" style="font-size: 7pt; font-style: italic; padding: 2px 6px; line-height: 1.2;">
+                <strong>Perhatian :</strong><br>
+                * Harap semua penulisan dilakukan dengan keterbacaan yang jelas, benar dan lengkap.<br>
+                * Berilah tanda centang (&radic;) pada kotak pilihan yang telah disediakan.<br>
+                * Berilah tanda lingkar pada pilihan yang telah disediakan.
+            </td>
+        </tr>
+
+        <!-- BARIS 3: JUDUL LEMBAR TRIASE -->
+        <tr>
+            <td colspan="2" class="title-bar">
+                LEMBAR TRIASE
+            </td>
+        </tr>
+
+        <!-- BARIS 4: TANGGAL KUNJUNGAN, PUKUL MULAI & SELESAI TRIASE, KELUHAN -->
+        <tr>
+            <td colspan="2" style="padding: 4px 6px; font-size: 8.5pt;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="border: none; width: 42%; padding: 1px 0;">
+                            Tanggal kunjungan : <span style="border-bottom: 1px dotted #000; padding: 0 8px; font-weight: bold;">{$data.tgl_kunjungan_fmt}</span>
+                        </td>
+                        <td style="border: none; width: 29%; padding: 1px 0;">
+                            Pukul Mulai : <span style="border-bottom: 1px dotted #000; padding: 0 8px; font-weight: bold;">{$data.jam_mulai_fmt} WITA</span>
+                        </td>
+                        <td style="border: none; width: 29%; padding: 1px 0;">
+                            Jam Selesai Triase : <span style="border-bottom: 1px dotted #000; padding: 0 8px; font-weight: bold;">{$data.jam_selesai_fmt} WITA</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" style="border: none; padding: 3px 0 1px 0;">
+                            Keluhan : <span style="border-bottom: 1px dotted #000; display: inline-block; width: 88%; font-weight: bold;">{$data.keluhan_utama}</span>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- BARIS 5: TABEL PASIEN UMUM (ATS) -->
+        <tr>
+            <td colspan="2" style="padding: 0;">
+                <div style="padding: 3px 6px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000;">
+                    Pasien Umum menggunakan <em>Australasian Triage Scale (ATS)</em>
+                </div>
+                <table class="triase-grid">
+                    <thead>
+                        <tr>
+                            <th width="20%" class="bg-ats1">
+                                <span class="cb-box">{if: $data.ats_skala == 'ATS 1' || $data.skala_triase == '1'}&radic;{else}&nbsp;{/if}</span>
+                                RESUSITASI<br>(ATS 1)
+                            </th>
+                            <th width="20%" class="bg-ats2">
+                                <span class="cb-box">{if: $data.ats_skala == 'ATS 2' || $data.skala_triase == '2'}&radic;{else}&nbsp;{/if}</span>
+                                EMERGENSI<br>(ATS 2)
+                            </th>
+                            <th width="20%" class="bg-ats3">
+                                <span class="cb-box">{if: $data.ats_skala == 'ATS 3' || $data.skala_triase == '3'}&radic;{else}&nbsp;{/if}</span>
+                                URGENSI<br>(ATS 3)
+                            </th>
+                            <th width="20%" class="bg-ats4">
+                                <span class="cb-box">{if: $data.ats_skala == 'ATS 4' || $data.skala_triase == '4'}&radic;{else}&nbsp;{/if}</span>
+                                SEMI-URGENSI<br>(ATS 4)
+                            </th>
+                            <th width="20%" class="bg-ats5">
+                                <span class="cb-box">{if: $data.ats_skala == 'ATS 5' || $data.skala_triase == '5'}&radic;{else}&nbsp;{/if}</span>
+                                LESS URGENSI<br>(ATS 5)
+                            </th>
+                        </tr>
+                        <tr>
+                            <td class="sub-header-time bg-ats1">Ditangani segera</td>
+                            <td class="sub-header-time bg-ats2">Ditangani dalam 10 menit</td>
+                            <td class="sub-header-time bg-ats3">Ditangani dalam 30 menit</td>
+                            <td class="sub-header-time bg-ats4">Ditangani dalam 60 menit</td>
+                            <td class="sub-header-time bg-ats5">Ditangani dalam 120 menit</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <!-- ATS 1 -->
+                            <td>
+                                <table class="item-table">
+                                    {loop: $ats1_list}
+                                    <tr>
+                                        <td width="12"><span class="cb-item">{if: $value.checked}&radic;{else}&nbsp;{/if}</span></td>
+                                        <td>{$value.label}</td>
+                                    </tr>
+                                    {/loop}
+                                </table>
+                            </td>
+                            <!-- ATS 2 -->
+                            <td>
+                                <table class="item-table">
+                                    {loop: $ats2_list}
+                                    <tr>
+                                        <td width="12"><span class="cb-item">{if: $value.checked}&radic;{else}&nbsp;{/if}</span></td>
+                                        <td>{$value.label}</td>
+                                    </tr>
+                                    {/loop}
+                                </table>
+                            </td>
+                            <!-- ATS 3 -->
+                            <td>
+                                <table class="item-table">
+                                    {loop: $ats3_list}
+                                    <tr>
+                                        <td width="12"><span class="cb-item">{if: $value.checked}&radic;{else}&nbsp;{/if}</span></td>
+                                        <td>{$value.label}</td>
+                                    </tr>
+                                    {/loop}
+                                </table>
+                            </td>
+                            <!-- ATS 4 -->
+                            <td>
+                                <table class="item-table">
+                                    {loop: $ats4_list}
+                                    <tr>
+                                        <td width="12"><span class="cb-item">{if: $value.checked}&radic;{else}&nbsp;{/if}</span></td>
+                                        <td>{$value.label}</td>
+                                    </tr>
+                                    {/loop}
+                                </table>
+                            </td>
+                            <!-- ATS 5 -->
+                            <td>
+                                <table class="item-table">
+                                    {loop: $ats5_list}
+                                    <tr>
+                                        <td width="12"><span class="cb-item">{if: $value.checked}&radic;{else}&nbsp;{/if}</span></td>
+                                        <td>{$value.label}</td>
+                                    </tr>
+                                    {/loop}
+                                </table>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+
+        <!-- BARIS 6: TABEL PASIEN GIGI DAN MULUT (SDcep) -->
+        <tr>
+            <td colspan="2" style="padding: 0;">
+                <div style="padding: 3px 6px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000;">
+                    Pasien Gigi dan Mulut menggunakan <em>Scottish Dental Clinical Effectiveness Programme (SDcep)</em>
+                </div>
+                <table class="triase-grid">
+                    <thead>
+                        <tr>
+                            <th width="33.33%" class="bg-ats1">
+                                <span class="cb-box">{if: $data.sdcep_skala == 'EMERGENCY CARE'}&radic;{else}&nbsp;{/if}</span>
+                                EMERGENCY CARE
+                            </th>
+                            <th width="33.33%" class="bg-ats3">
+                                <span class="cb-box">{if: $data.sdcep_skala == 'URGENT CARE'}&radic;{else}&nbsp;{/if}</span>
+                                URGENT CARE
+                            </th>
+                            <th width="33.34%" class="bg-ats4">
+                                <span class="cb-box">{if: $data.sdcep_skala == 'ADVICE SELF HELP AND ROUTING CARE'}&radic;{else}&nbsp;{/if}</span>
+                                ADVICE SELF HELP AND ROUTING CARE
+                            </th>
+                        </tr>
+                        <tr>
+                            <td class="sub-header-time bg-ats1">Ditangani segera</td>
+                            <td class="sub-header-time bg-ats3">Ditangani dalam 30 menit</td>
+                            <td class="sub-header-time bg-ats4">Ditangani dalam 120 menit</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <!-- EMERGENCY CARE -->
+                            <td>
+                                <table class="item-table">
+                                    {loop: $sdcep1_list}
+                                    <tr>
+                                        <td width="12"><span class="cb-item">{if: $value.checked}&radic;{else}&nbsp;{/if}</span></td>
+                                        <td>{$value.label}</td>
+                                    </tr>
+                                    {/loop}
+                                </table>
+                            </td>
+                            <!-- URGENT CARE -->
+                            <td>
+                                <table class="item-table">
+                                    {loop: $sdcep2_list}
+                                    <tr>
+                                        <td width="12"><span class="cb-item">{if: $value.checked}&radic;{else}&nbsp;{/if}</span></td>
+                                        <td>{$value.label}</td>
+                                    </tr>
+                                    {/loop}
+                                </table>
+                            </td>
+                            <!-- ADVICE SELF HELP AND ROUTING CARE -->
+                            <td>
+                                <table class="item-table">
+                                    {loop: $sdcep3_list}
+                                    <tr>
+                                        <td width="12"><span class="cb-item">{if: $value.checked}&radic;{else}&nbsp;{/if}</span></td>
+                                        <td>{$value.label}</td>
+                                    </tr>
+                                    {/loop}
+                                </table>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+
+        <!-- BARIS 7: DOA / DEATH ON ARRIVAL (SEJAJAR DALAM 1 BARIS) -->
+        <tr>
+            <td colspan="2" style="padding: 4px 6px; font-size: 8pt;">
+                <div style="font-weight: bold; text-decoration: underline; margin-bottom: 3px;">DOA / <em>Death on Arrival:</em></div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="border: none; width: 20%; vertical-align: middle; padding: 1px 0;">
+                            <span class="cb-box">{if: $doa_map.tanda_kehidupan}&radic;{else}&nbsp;{/if}</span> Tanda Kehidupan (-)
+                        </td>
+                        <td style="border: none; width: 22%; vertical-align: middle; padding: 1px 0;">
+                            <span class="cb-box">{if: $doa_map.pupil}&radic;{else}&nbsp;{/if}</span> Pupil RCL/RCTL (-/-)
+                        </td>
+                        <td style="border: none; width: 18%; vertical-align: middle; padding: 1px 0;">
+                            <span class="cb-box">{if: $doa_map.denyut_nadi}&radic;{else}&nbsp;{/if}</span> Denyut Nadi (-)
+                        </td>
+                        <td style="border: none; width: 15%; vertical-align: middle; padding: 1px 0;">
+                            <span class="cb-box">{if: $doa_map.ekg_flat}&radic;{else}&nbsp;{/if}</span> EKG flat
+                        </td>
+                        <td style="border: none; width: 25%; vertical-align: middle; text-align: right; padding: 1px 0;">
+                            <strong>Jam DOA :</strong> <span style="border-bottom: 1px dotted #000; display: inline-block; min-width: 55px; text-align: center; font-weight: bold;">{if: !empty($data.jam_doa)}{$data.jam_doa}{else}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{/if}</span> <strong>WITA</strong>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- BARIS 8: TANDA TANGAN PETUGAS TRIASE -->
+        <tr>
+            <td colspan="2" style="padding: 6px 10px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="border: none; width: 55%; vertical-align: top; font-size: 7.5pt; color: #333;">
+                            {if: !empty($data.tekanan_darah) || !empty($data.nadi) || !empty($data.respirasi) || !empty($data.suhu) || !empty($data.spo2)}
+                            <div><strong>Tanda Vital &amp; Pemeriksaan:</strong></div>
+                            <div>
+                                TD: {?=isset_or($data.tekanan_darah, '-')?} mmHg |
+                                Nadi: {?=isset_or($data.nadi, '-')?} x/mnt |
+                                RR: {?=isset_or($data.respirasi, '-')?} x/mnt |
+                                Suhu: {?=isset_or($data.suhu, '-')?} &deg;C |
+                                SpO2: {?=isset_or($data.spo2, '-')?} %
+                            </div>
+                            <div>
+                                Kesadaran: {?=isset_or($data.kesadaran, '-')?} |
+                                GCS: E{?=isset_or($data.gcs_e, '-')?}V{?=isset_or($data.gcs_v, '-')?}M{?=isset_or($data.gcs_m, '-')?} |
+                                Kategori: <strong>{?=isset_or($data.kategori, '-')?}</strong>
+                            </div>
+                            {if: !empty($data.diagnosa_awal)}
+                            <div>Diagnosa Awal: {$data.diagnosa_awal}</div>
+                            {/if}
+                            {/if}
+                        </td>
+                        <td style="border: none; width: 45%; text-align: center; font-size: 8.5pt;">
+                            <div>Banjarmasin, <span style="border-bottom: 1px dotted #000; padding: 0 6px;">{$data.tgl_selesai_fmt}</span> Pukul <span style="border-bottom: 1px dotted #000; padding: 0 6px; font-weight: bold;">{$data.jam_selesai_fmt}</span> WITA</div>
+                            <div style="margin-top: 2px; font-weight: bold;">Petugas Triase</div>
+                            <div style="height: 42px;"></div>
+                            <div>( <span style="border-bottom: 1px dotted #000; padding: 0 15px; font-weight: bold;">{$data.nama_petugas}</span> )</div>
+                            <div style="font-size: 7.5pt;">Tanda Tangan &amp; Nama Jelas</div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- FOOTER -->
+    <table style="width: 100%; border-collapse: collapse; margin-top: 3px; font-size: 7.5pt;">
+        <tr>
+            <td colspan="2" style="text-align: right; font-style: italic; padding-bottom: 2px;">
+                Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align: left; font-weight: bold;">RSGM/Ed-Rev/01/2020</td>
+            <td style="text-align: right; font-weight: bold;">RM.GD - 03 Hal 1 - 1</td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>
+

@@ -149,21 +149,24 @@
         }
 
         /* Footer Kaki Halaman */
-        .footer-note-text {
-            color: #b02a37;
-            font-style: italic;
-            font-size: 8pt;
-            margin-top: 5px;
-            font-weight: 500;
-        }
-        .footer-meta-bar {
+        .footer-bottom-bar {
             width: 100%;
-            margin-top: 25px;
+            margin-top: 8px;
             display: flex;
             justify-content: space-between;
-            font-size: 8pt;
+            align-items: center;
+            font-size: 8.5pt;
+        }
+        .footer-code-text {
             font-weight: bold;
+            font-size: 7.5pt;
             color: #222;
+        }
+        .footer-note-text {
+            color: #111;
+            font-style: italic;
+            font-size: 8.5pt;
+            font-weight: bold;
         }
 
         @media print {
@@ -277,22 +280,16 @@
                     </td>
                 </tr>
 
-                <!-- BARIS II: DIAGNOSA -->
+                <!-- BARIS II, KEADAAN PASIEN & PENATALAKSANAAN (Satu Kotak Sesuai Formulir Asli) -->
                 <tr>
-                    <td colspan="2" style="padding: 6px 8px;">
-                        <div style="font-size: 9.5pt;">
-                            <strong>II. &nbsp;DIAGNOSA &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</strong>
-                            &nbsp;
+                    <td colspan="2" style="padding: 8px 10px;">
+                        <div style="font-size: 9.5pt; margin-bottom: 12px;">
+                            <strong>II. &nbsp;DIAGNOSA</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                             <span style="font-weight: bold;">{if: !empty($data.diagnosa)}{$data.diagnosa}{else}........................................................................................................................................................{/if}</span>
                         </div>
-                    </td>
-                </tr>
 
-                <!-- BARIS III: KEADAAN PASIEN -->
-                <tr>
-                    <td colspan="2" style="padding: 6px 8px;">
-                        <div style="font-weight: bold; margin-bottom: 3px;">III. &nbsp;KEADAAN PASIEN</div>
-                        <table class="inner-table-identitas" style="margin-left: 18px; width: 95%;">
+                        <div style="font-weight: bold; margin-bottom: 3px; margin-left: 18px;">KEADAAN PASIEN</div>
+                        <table class="inner-table-identitas" style="margin-left: 18px; width: 95%; margin-bottom: 12px;">
                             <tr>
                                 <td style="width: 150px;">a. Keadaan Umum</td>
                                 <td style="width: 10px;">:</td>
@@ -314,29 +311,24 @@
                                 </td>
                             </tr>
                         </table>
-                    </td>
-                </tr>
 
-                <!-- BARIS IV: PENATALAKSANAAN -->
-                <tr>
-                    <td colspan="2" style="padding: 6px 8px;">
-                        <div style="font-weight: bold; margin-bottom: 3px;">IV. &nbsp;PENATALAKSANAAN</div>
+                        <div style="font-weight: bold; margin-bottom: 3px; margin-left: 18px;">PENATALAKSANAAN</div>
                         <div style="margin-left: 18px; font-size: 9.5pt;">
                             <div style="font-weight: bold; margin-bottom: 2px;">a. Terapi</div>
-                            <div style="min-height: 48px; padding-left: 12px; margin-bottom: 6px; line-height: 1.4;">
+                            <div style="min-height: 55px; padding-left: 12px; margin-bottom: 8px; line-height: 1.4;">
                                 {if: !empty($data.terapi)}
                                 {?= nl2br(htmlspecialchars($data['terapi'])) ?}
                                 {else}
-                                <span style="color: #999; font-style: italic;">-</span>
+                                <span style="color: #555;">( - )</span>
                                 {/if}
                             </div>
 
                             <div style="font-weight: bold; margin-bottom: 2px;">b. Tindakan</div>
-                            <div style="min-height: 48px; padding-left: 12px; line-height: 1.4;">
+                            <div style="min-height: 55px; padding-left: 12px; line-height: 1.4;">
                                 {if: !empty($data.tindakan)}
                                 {?= nl2br(htmlspecialchars($data['tindakan'])) ?}
                                 {else}
-                                <span style="color: #999; font-style: italic;">-</span>
+                                <span style="color: #555;">( - )</span>
                                 {/if}
                             </div>
                         </div>
@@ -390,17 +382,17 @@
                 <tr>
                     <td style="width: 58%; padding: 8px 10px;">
                         <div style="font-size: 9.5pt;">
-                            <div style="font-weight: bold; margin-bottom: 6px;"><u>VI. &nbsp;KETERANGAN :</u></div>
+                            <div style="font-weight: bold; margin-bottom: 6px;">VI. &nbsp;KETERANGAN :</div>
                             <div style="margin-left: 18px; margin-bottom: 8px;">
-                                <span style="font-size: 11pt; font-weight: bold; margin-right: 35px;">
-                                    <span class="check-box-icon" style="width: 15px; height: 15px; line-height: 13px;">{if: $data.keterangan_status == 'TERIMA'}&#10003;{/if}</span> TERIMA
+                                <span style="font-size: 10pt; font-weight: bold; margin-right: 35px;">
+                                    <span class="check-box-icon" style="width: 14px; height: 14px; line-height: 12px;">{if: $data.keterangan_status == 'TERIMA'}&#10003;{/if}</span> TERIMA
                                 </span>
-                                <span style="font-size: 11pt; font-weight: bold;">
-                                    <span class="check-box-icon" style="width: 15px; height: 15px; line-height: 13px;">{if: $data.keterangan_status == 'TOLAK'}&#10003;{/if}</span> TOLAK
+                                <span style="font-size: 10pt; font-weight: bold;">
+                                    <span class="check-box-icon" style="width: 14px; height: 14px; line-height: 12px;">{if: $data.keterangan_status == 'TOLAK'}&#10003;{/if}</span> TOLAK
                                 </span>
                             </div>
                             <div style="margin-left: 18px;">
-                                <u>Alasan :</u>
+                                Alasan :
                                 <div style="padding-left: 6px; margin-top: 3px; min-height: 45px; line-height: 1.35; font-style: {if: empty($data.alasan_keterangan)}italic{else}normal{/if}; color: #333;">
                                     {if: !empty($data.alasan_keterangan)}
                                     {$data.alasan_keterangan}
@@ -428,15 +420,10 @@
             </tbody>
         </table>
 
-        <!-- CATATAN DI BAWAH BINGKAI -->
-        <div class="footer-note-text">
-            *Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
-        </div>
-
-        <!-- FOOTER KODE RESMI DOKUMEN -->
-        <div class="footer-meta-bar">
-            <div>RSGM/Ed-Rev/02/2023</div>
-            <div>RM.RI Lampiran</div>
+        <!-- FOOTER KODE RESMI & CATATAN DI BAWAH BINGKAI -->
+        <div class="footer-bottom-bar">
+            <div class="footer-code-text">RSGM/Ed-Rev/01/2020</div>
+            <div class="footer-note-text">Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</div>
         </div>
     </div>
 

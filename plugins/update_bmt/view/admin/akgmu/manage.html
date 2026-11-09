@@ -1,6 +1,6 @@
 <div class="panel panel-default">
   <div class="panel-heading">
-    <h3 class="panel-title">Data Asesmen Gigi dan Mulut UGD</h3>
+    <h3 class="panel-title">RM.GD 4 - Data Asesmen Keperawatan Unit Gawat Darurat</h3>
   </div>
   <div class="panel-body">
     <div class="row" style="margin-bottom: 15px;">
@@ -34,6 +34,7 @@
               <a href="{?=url([ADMIN, 'update_bmt', 'form'])?}&no_rawat={$value.no_rawat}" class="btn btn-xs btn-warning"><i class="fa fa-edit"></i> Edit</a>
               <a href="{?=url([ADMIN, 'update_bmt', 'cetak'])?}&no_rawat={$value.no_rawat}" class="btn btn-xs btn-info" target="_blank"><i class="fa fa-print"></i> Cetak</a>
               <a href="{?=url([ADMIN, 'update_bmt', 'cetak'])?}&no_rawat={$value.no_rawat}&pdf=1" class="btn btn-xs btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
+              <a href="{?=url([ADMIN, 'update_bmt', 'manage'])?}&action=delete&no_rawat={$value.no_rawat}" class="btn btn-xs btn-default" onclick="return confirm('Yakin ingin menghapus data asesmen ini?')"><i class="fa fa-trash"></i> Hapus</a>
             </td>
           </tr>
           {/loop}
