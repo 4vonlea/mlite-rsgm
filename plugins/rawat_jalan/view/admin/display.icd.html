@@ -1,62 +1,97 @@
-<style>
-  table th,
-  table td {
-    padding: 5px;
-  }
-</style>
-<h4 class="text-primary" style="border-bottom: 2px solid #3498db; padding-bottom: 5px; display: inline-block; margin-top: 10px;">ICD 9 dan ICD 10</h4>
-<div class="table-responsive no-margin" style="margin-bottom: 20px;">
-  <table class="table table-bordered no-padding icd" width="100%" style="background-color: #fcfcfc;">
-    <tr class="isi">
-      <td valign="top" width="200px" style="font-weight: 600; padding: 15px;">Diagnosa/Penyakit/ICD 10</td>
-      <td valign="top" width="1px" align="center" style="padding: 15px;">:</td>
-      <td valign="top" style="padding: 0;">
-        <table width="100%" align="center" class="table table-striped" style="margin-bottom: 0; background-color: transparent;">
-           <tr align="center" style="background-color: #f2f2f2;">
-             <th valign="top" width="100px" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Kode</th>
-             <th valign="top" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Nama Penyakit</th>
-             <th valign="top" width="80px" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Prioritas</th>
-             <th valign="top" width="80px" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Aksi</th>
-           </tr>
-           {loop: $diagnosa}
-           <tr>
-             <td valign="top" width="100px" align="center">{?=isset_or($value.kd_penyakit)?}</td>
-             <td valign="top">{?=isset_or($value.nama)?}</td>
-             <td valign="top" width="80px" align="center">{?=isset_or($value.prioritas)?}</td>
-             <td valign="top" width="80px" align="center">
-               <button type="button" name="button" class="btn btn-danger btn-xs hapus_icd10" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-prioritas="{?=isset_or($value.prioritas)?}"><span class="fa fa-trash"></span><span class="hidden-xs"> Hapus</span></button>
-             </td>
-           </tr>
-           {/loop}
+<div class="rsgm-icd-grid">
+  <!-- Kartu Diagnosa ICD-10 -->
+  <div class="rsgm-rincian-card">
+    <div class="rsgm-rincian-card-head">
+      <div class="rsgm-rincian-card-title">
+        <span class="rsgm-rincian-icon rsgm-rincian-icon-rose"><i class="fa fa-stethoscope"></i></span>
+        <div>
+          <h5>Diagnosa / Penyakit (ICD-10)</h5>
+          <small>Daftar kode diagnosa medis kunjungan pasien</small>
+        </div>
+      </div>
+      <span class="rsgm-rincian-total">Total: <strong>{?=count($diagnosa)?}</strong></span>
+    </div>
+    <div class="rsgm-rincian-card-body">
+      <div class="table-responsive no-margin">
+        <table class="table table-striped table-bordered rsgm-rincian-table icd" width="100%">
+          <thead>
+            <tr>
+              <th width="95" class="text-center">Kode</th>
+              <th>Nama Penyakit</th>
+              <th width="80" class="text-center">Prioritas</th>
+              <th width="85" class="text-center">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {if: !empty($diagnosa)}
+            {loop: $diagnosa}
+            <tr>
+              <td class="text-center"><span class="rsgm-badge rsgm-badge-rose">{?=isset_or($value.kd_penyakit)?}</span></td>
+              <td><strong>{?=isset_or($value.nama)?}</strong></td>
+              <td class="text-center"><span class="rsgm-badge rsgm-badge-slate">{?=isset_or($value.prioritas)?}</span></td>
+              <td class="text-center">
+                <button type="button" name="button" class="btn btn-danger btn-xs hapus_icd10" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-prioritas="{?=isset_or($value.prioritas)?}"><span class="fa fa-trash-o"></span><span class="hidden-xs"> Hapus</span></button>
+              </td>
+            </tr>
+            {/loop}
+            {else}
+            <tr>
+              <td colspan="4" class="text-center text-muted" style="padding: 14px !important; font-size: 12px;">Belum ada diagnosa ICD-10 yang diinputkan.</td>
+            </tr>
+            {/if}
+          </tbody>
         </table>
-      </td>
-    </tr>
-    <tr class="isi">
-      <td valign="top" width="200px" style="font-weight: 600; padding: 15px;">Prosedur Tindakan/ICD 9</td>
-      <td valign="top" width="1px" align="center" style="padding: 15px;">:</td>
-      <td valign="top" style="padding: 0;">
-        <table width="100%" align="center" class="table table-striped" style="margin-bottom: 0; background-color: transparent;">
-           <tr align="center" style="background-color: #f2f2f2;">
-             <th valign="top" width="100px" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Kode</th>
-             <th valign="top" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Nama Tindakan</th>
-             <th valign="top" width="80px" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Prioritas</th>
-             <th valign="top" width="80px" style="text-align: center; border-bottom: 2px solid #e0e0e0; color: #555;">Aksi</th>
-           </tr>
-           {loop: $prosedur}
-           <tr>
-             <td valign="top" width="100px" align="center">{?=isset_or($value.kode)?}</td>
-             <td valign="top">{?=isset_or($value.nama)?}</td>
-             <td valign="top" width="80px" align="center">{?=isset_or($value.prioritas)?}</td>
-             <td valign="top" width="80px" align="center">
-               <button type="button" name="button" class="btn btn-danger btn-xs hapus_icd9" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-prioritas="{?=isset_or($value.prioritas)?}"><span class="fa fa-trash"></span><span class="hidden-xs"> Hapus</span></button>
-             </td>
-           </tr>
-           {/loop}
+      </div>
+    </div>
+  </div>
+
+  <!-- Kartu Prosedur ICD-9 -->
+  <div class="rsgm-rincian-card">
+    <div class="rsgm-rincian-card-head">
+      <div class="rsgm-rincian-card-title">
+        <span class="rsgm-rincian-icon rsgm-rincian-icon-sky"><i class="fa fa-medkit"></i></span>
+        <div>
+          <h5>Prosedur / Tindakan (ICD-9-CM)</h5>
+          <small>Daftar kode prosedur klinis kunjungan pasien</small>
+        </div>
+      </div>
+      <span class="rsgm-rincian-total">Total: <strong>{?=count($prosedur)?}</strong></span>
+    </div>
+    <div class="rsgm-rincian-card-body">
+      <div class="table-responsive no-margin">
+        <table class="table table-striped table-bordered rsgm-rincian-table icd" width="100%">
+          <thead>
+            <tr>
+              <th width="95" class="text-center">Kode</th>
+              <th>Nama Tindakan</th>
+              <th width="80" class="text-center">Prioritas</th>
+              <th width="85" class="text-center">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {if: !empty($prosedur)}
+            {loop: $prosedur}
+            <tr>
+              <td class="text-center"><span class="rsgm-badge rsgm-badge-sky">{?=isset_or($value.kode)?}</span></td>
+              <td><strong>{?=isset_or($value.nama)?}</strong></td>
+              <td class="text-center"><span class="rsgm-badge rsgm-badge-slate">{?=isset_or($value.prioritas)?}</span></td>
+              <td class="text-center">
+                <button type="button" name="button" class="btn btn-danger btn-xs hapus_icd9" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-prioritas="{?=isset_or($value.prioritas)?}"><span class="fa fa-trash-o"></span><span class="hidden-xs"> Hapus</span></button>
+              </td>
+            </tr>
+            {/loop}
+            {else}
+            <tr>
+              <td colspan="4" class="text-center text-muted" style="padding: 14px !important; font-size: 12px;">Belum ada prosedur ICD-9 yang diinputkan.</td>
+            </tr>
+            {/if}
+          </tbody>
         </table>
-      </td>
-    </tr>
-  </table>
+      </div>
+    </div>
+  </div>
 </div>
+
 <script type="text/javascript">
   $(".alert-dismissible").fadeTo(3000, 500).slideUp(500);
 </script>

@@ -402,7 +402,7 @@
     });
   });
 
-  $('a[href="#layanan_obat"]').click(function(event){
+  $(document).on('click', 'a[href="#layanan_obat"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
 
@@ -432,7 +432,7 @@
     });
   });
 
-  $('a[href="#berkas_digital"]').click(function(event){
+  $(document).on('click', 'a[href="#berkas_digital"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
 
@@ -463,7 +463,7 @@
     });
   });
 
-  $('a[href="#status_rawat"]').click(function(event){
+  $(document).on('click', 'a[href="#status_rawat"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var url = baseURL + '/rawat_jalan/statusrawat?t=' + mlite.token;
@@ -536,7 +536,7 @@
     });
   });
 
-  $('a[href="#status_lanjut"]').click(function(event){
+  $(document).on('click', 'a[href="#status_lanjut"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var url = baseURL + '/rawat_jalan/statuslanjut?t=' + mlite.token;
@@ -607,7 +607,7 @@
     return false;
   });
 
-  $('a[href="#obat_kronis"]').click(function(event){
+  $(document).on('click', 'a[href="#obat_kronis"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var url = baseURL + '/rawat_jalan/obatkronis?t=' + mlite.token;
@@ -630,7 +630,7 @@
       }
     });
   });
-  $('a[href="#kps"]').click(function(event){
+  $(document).on('click', 'a[href="#kps"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var url = baseURL + '/rawat_jalan/kps?t=' + mlite.token;
@@ -715,7 +715,7 @@
   });
 </script>
 <script>
-  $('a[href="#surat_kontrol"]').click(function(event){
+  $(document).on('click', 'a[href="#surat_kontrol"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
 

@@ -462,14 +462,44 @@ class Admin extends AdminModule
 
         $this->assign['list'] = [];
         $pdo = $this->db()->pdo();
+        $no_rawats = array_filter(array_column($rows, 'no_rawat'));
+        $billing_map = [];
+        if (!empty($no_rawats)) {
+          $inClause = implode(',', array_fill(0, count($no_rawats), '?'));
+          $bStmt = $pdo->prepare("SELECT no_rawat, jumlah_bayar, keterangan FROM mlite_billing WHERE kd_billing LIKE 'RJ%' AND no_rawat IN ($inClause)");
+          $bStmt->execute(array_values($no_rawats));
+          while ($b = $bStmt->fetch(\PDO::FETCH_ASSOC)) {
+            $billing_map[$b['no_rawat']][] = $b;
+          }
+        }
+
         foreach ($rows as $row) {
-          $billings = $this->db('mlite_billing')->where('no_rawat', $row['no_rawat'])->like('kd_billing', 'RJ%')->toArray();
+          $billings = $billing_map[$row['no_rawat']] ?? [];
           $total_bayar = 0;
+          $metode_list = [];
           foreach ($billings as $b) {
             $total_bayar += floatval($b['jumlah_bayar']);
+            $ket = trim($b['keterangan'] ?? '');
+            if (preg_match('/non[\s_-]*tunai/i', $ket) || preg_match('/transfer|debit|kredit|edc|qris|bank/i', $ket)) {
+              $m = 'Non Tunai';
+            } elseif (preg_match('/tidak\s*di-?claim|coass/i', $ket)) {
+              $m = 'Tidak Di-claim';
+            } else {
+              $m = 'Tunai';
+            }
+            if (!in_array($m, $metode_list)) {
+              $metode_list[] = $m;
+            }
           }
           $row['total_bayar'] = $total_bayar;
           $row['jml_faktur'] = count($billings);
+          if (count($metode_list) > 0) {
+            $row['metode_bayar'] = implode(' & ', $metode_list);
+          } elseif ($row['status_bayar'] == 'Sudah Bayar') {
+            $row['metode_bayar'] = 'Tunai';
+          } else {
+            $row['metode_bayar'] = '-';
+          }
           $row['kd_billing'] = 'RJ.'.date('d.m.Y.H.i.s');
           $row['tgl_billing'] = date('Y-m-d H:i');
           $this->assign['list'][] = $row;
@@ -3330,6 +3360,8 @@ class Admin extends AdminModule
             COALESCE(p.nama, u.fullname, 'Kasir') AS nama_kasir, 
             COUNT(b.id_billing) AS transaksi, 
             IFNULL(SUM(b.jumlah_bayar), 0) AS total, 
+            IFNULL(SUM(CASE WHEN LOWER(b.keterangan) LIKE '%non%tunai%' OR LOWER(b.keterangan) LIKE '%transfer%' OR LOWER(b.keterangan) LIKE '%edc%' OR LOWER(b.keterangan) LIKE '%debit%' OR LOWER(b.keterangan) LIKE '%qris%' THEN b.jumlah_bayar ELSE 0 END), 0) AS total_nontunai,
+            IFNULL(SUM(CASE WHEN LOWER(b.keterangan) NOT LIKE '%non%tunai%' AND LOWER(b.keterangan) NOT LIKE '%transfer%' AND LOWER(b.keterangan) NOT LIKE '%edc%' AND LOWER(b.keterangan) NOT LIKE '%debit%' AND LOWER(b.keterangan) NOT LIKE '%qris%' AND LOWER(b.keterangan) NOT LIKE '%tidak%di-claim%' THEN b.jumlah_bayar ELSE 0 END), 0) AS total_tunai,
             MIN(CONCAT(b.tgl_billing,' ',b.jam_billing)) AS mulai, 
             MAX(CONCAT(b.tgl_billing,' ',b.jam_billing)) AS selesai 
         FROM mlite_billing b 
@@ -3386,6 +3418,15 @@ class Admin extends AdminModule
         }
 
         foreach ($details as &$d) {
+            $ket = trim($d['keterangan'] ?? '');
+            if (preg_match('/non[\s_-]*tunai/i', $ket) || preg_match('/transfer|debit|kredit|edc|qris|bank/i', $ket)) {
+                $d['metode_bayar'] = 'Non Tunai';
+            } elseif (preg_match('/tidak\s*di-?claim|coass/i', $ket)) {
+                $d['metode_bayar'] = 'Tidak Di-claim';
+            } else {
+                $d['metode_bayar'] = 'Tunai';
+            }
+
             $kdBil = $d['kd_billing'];
             if (isset($sub_map[$kdBil]) && !empty($sub_map[$kdBil])) {
                 $d['sub_rincian'] = $sub_map[$kdBil];
@@ -3468,12 +3509,20 @@ class Admin extends AdminModule
             }
         }
 
-        echo "No Faktur,Waktu,No Rawat,No RM,Nama Pasien,Poliklinik,Dokter DPJP,Penjamin,Petugas Kasir,Alokasi Layanan (Sub Rincian),Jumlah Bayar\n";
+        echo "No Faktur,Waktu,No Rawat,No RM,Nama Pasien,Poliklinik,Dokter DPJP,Penjamin,Petugas Kasir,Metode Pembayaran,Alokasi Layanan (Sub Rincian),Jumlah Bayar\n";
         foreach ($rows_data as $row) {
             $kdBil = $row['kd_billing'];
             $alokasiText = isset($sub_map[$kdBil]) && !empty($sub_map[$kdBil])
                 ? implode('; ', $sub_map[$kdBil])
                 : ($row['keterangan'] ?? 'Tunai');
+            $ket = trim($row['keterangan'] ?? '');
+            if (preg_match('/non[\s_-]*tunai/i', $ket) || preg_match('/transfer|debit|kredit|edc|qris|bank/i', $ket)) {
+                $metode = 'Non Tunai';
+            } elseif (preg_match('/tidak\s*di-?claim|coass/i', $ket)) {
+                $metode = 'Tidak Di-claim';
+            } else {
+                $metode = 'Tunai';
+            }
 
             echo '"' . str_replace('"', '""', $row['kd_billing'] ?? '') . '","'
                 . str_replace('"', '""', $row['waktu'] ?? '') . '","'
@@ -3484,6 +3533,7 @@ class Admin extends AdminModule
                 . str_replace('"', '""', $row['nm_dokter'] ?? '') . '","'
                 . str_replace('"', '""', $row['png_jawab'] ?? '') . '","'
                 . str_replace('"', '""', $row['nama_kasir'] ?? '') . '","'
+                . str_replace('"', '""', $metode) . '","'
                 . str_replace('"', '""', $alokasiText) . '","'
                 . ($row['jumlah_bayar'] ?? 0) . "\"\n";
         }
@@ -3512,7 +3562,11 @@ class Admin extends AdminModule
             pas.nm_pasien,
             pol.nm_poli,
             dok.nm_dokter,
-            b.keterangan AS pembayaran,
+            CASE 
+              WHEN LOWER(b.keterangan) LIKE '%non%tunai%' OR LOWER(b.keterangan) LIKE '%transfer%' OR LOWER(b.keterangan) LIKE '%edc%' OR LOWER(b.keterangan) LIKE '%debit%' OR LOWER(b.keterangan) LIKE '%qris%' THEN 'Non Tunai'
+              WHEN LOWER(b.keterangan) LIKE '%tidak%di-claim%' OR LOWER(b.keterangan) LIKE '%coass%' THEN 'Tidak Di-claim'
+              ELSE 'Tunai'
+            END AS pembayaran,
             MIN(CONCAT(b.tgl_billing,' ',b.jam_billing)) AS tgl_kunjungan,
             MAX(CONCAT(b.tgl_billing,' ',b.jam_billing)) AS tgl_tagihan,
             b.jumlah_bayar AS tagihan,

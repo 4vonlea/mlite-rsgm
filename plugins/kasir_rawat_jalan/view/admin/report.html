@@ -115,6 +115,7 @@
   }
   .rsgm-badge-dark { background: #0f172a; color: #f8fafc; font-family: monospace; }
   .rsgm-badge-emerald { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+  .rsgm-badge-indigo { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
   .rsgm-badge-blue { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
   .rsgm-badge-slate { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
   .rsgm-badge-amber { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
@@ -177,9 +178,15 @@
 
             <!-- Filter Status & Action Pills -->
             <div class="rsgm-filter-pills">
-              <button type="button" id="pill_semua" class="btn btn-sm rsgm-fpill rsgm-fpill-all active" onclick="setPenjaminFilter('')">Semua</button>
+              <button type="button" id="pill_semua" class="btn btn-sm rsgm-fpill rsgm-fpill-all active" onclick="setPenjaminFilter('')">Semua Penjamin</button>
               <button type="button" id="pill_umum" class="btn btn-sm rsgm-fpill rsgm-fpill-pending" onclick="setPenjaminFilter('UMUM')">Umum</button>
               <button type="button" id="pill_bpjs" class="btn btn-sm rsgm-fpill rsgm-fpill-paid" onclick="setPenjaminFilter('BPJ')">BPJS</button>
+
+              <span class="rsgm-filter-sep hidden-xs"></span>
+
+              <button type="button" id="pill_metode_semua" class="btn btn-sm rsgm-fpill rsgm-fpill-all active" onclick="setMetodeFilter('')">Semua Metode</button>
+              <button type="button" id="pill_metode_tunai" class="btn btn-sm rsgm-fpill" onclick="setMetodeFilter('Tunai')" style="font-weight: 600;"><i class="fa fa-money text-success"></i> Tunai</button>
+              <button type="button" id="pill_metode_nontunai" class="btn btn-sm rsgm-fpill" onclick="setMetodeFilter('Non Tunai')" style="font-weight: 600;"><i class="fa fa-credit-card text-primary"></i> Non Tunai</button>
 
               <span class="rsgm-filter-sep hidden-xs"></span>
 
@@ -208,7 +215,7 @@
         <div class="rsgm-summary-banner">
           <div class="rsgm-summary-item">
             <div class="rsgm-summary-icon" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;">
-              <i class="fa fa-money"></i>
+              <i class="fa fa-calculator"></i>
             </div>
             <div>
               <div class="rsgm-summary-label">Total Penerimaan Kas</div>
@@ -218,6 +225,26 @@
 
           <div class="rsgm-summary-item">
             <div class="rsgm-summary-icon" style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;">
+              <i class="fa fa-money"></i>
+            </div>
+            <div>
+              <div class="rsgm-summary-label">Penerimaan Tunai</div>
+              <div class="rsgm-summary-val" id="stat_total_tunai" style="color: #059669;">Rp. 0,00</div>
+            </div>
+          </div>
+
+          <div class="rsgm-summary-item">
+            <div class="rsgm-summary-icon" style="background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe;">
+              <i class="fa fa-credit-card"></i>
+            </div>
+            <div>
+              <div class="rsgm-summary-label">Penerimaan Non Tunai</div>
+              <div class="rsgm-summary-val" id="stat_total_nontunai" style="color: #4f46e5;">Rp. 0,00</div>
+            </div>
+          </div>
+
+          <div class="rsgm-summary-item">
+            <div class="rsgm-summary-icon" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1;">
               <i class="fa fa-check-circle"></i>
             </div>
             <div>
@@ -253,10 +280,12 @@
               <tr>
                 <th width="80px">ID User</th>
                 <th>Nama Petugas Kasir</th>
-                <th width="140px" class="text-center">Jml Transaksi</th>
-                <th width="180px">Waktu Transaksi Awal</th>
-                <th width="180px">Waktu Transaksi Akhir</th>
-                <th width="200px" class="text-right">Total Kas Diterima</th>
+                <th width="120px" class="text-center">Jml Transaksi</th>
+                <th width="140px" class="text-right">Tunai</th>
+                <th width="140px" class="text-right">Non Tunai</th>
+                <th width="150px">Waktu Transaksi Awal</th>
+                <th width="150px">Waktu Transaksi Akhir</th>
+                <th width="170px" class="text-right">Total Kas Diterima</th>
               </tr>
             </thead>
             <tbody id="rows">
@@ -268,6 +297,8 @@
                 <th class="text-center" style="padding: 12px 16px; vertical-align: middle;">
                   <span class="rsgm-badge rsgm-badge-blue" id="foot_rekap_transaksi" style="font-size: 12px; padding: 4px 10px;">0 Transaksi</span>
                 </th>
+                <th class="text-right" style="padding: 12px 16px; font-family: monospace; font-size: 13.5px; color: #059669; font-weight: 800; vertical-align: middle;" id="foot_rekap_tunai">Rp. 0,00</th>
+                <th class="text-right" style="padding: 12px 16px; font-family: monospace; font-size: 13.5px; color: #4f46e5; font-weight: 800; vertical-align: middle;" id="foot_rekap_nontunai">Rp. 0,00</th>
                 <th colspan="2"></th>
                 <th class="text-right" style="padding: 12px 16px; font-family: monospace; font-size: 16px; color: #059669; font-weight: 800; vertical-align: middle;" id="foot_rekap_total">Rp. 0,00</th>
               </tr>
@@ -296,15 +327,16 @@
             <thead>
               <tr>
                 <th width="40px" class="text-center">No.</th>
-                <th width="190px">No. Faktur</th>
-                <th width="140px">Waktu Bayar</th>
-                <th width="160px">No. Rawat &amp; RM</th>
+                <th width="180px">No. Faktur</th>
+                <th width="130px">Waktu Bayar</th>
+                <th width="150px">No. Rawat &amp; RM</th>
                 <th>Identitas Pasien</th>
                 <th>Poliklinik &amp; DPJP</th>
-                <th width="130px">Petugas Kasir</th>
-                <th width="220px">Alokasi Layanan</th>
-                <th width="150px" class="text-right">Nominal Masuk</th>
-                <th width="70px" class="text-center">Cetak</th>
+                <th width="120px">Petugas Kasir</th>
+                <th width="110px" class="text-center">Metode</th>
+                <th width="210px">Alokasi Layanan</th>
+                <th width="140px" class="text-right">Nominal Masuk</th>
+                <th width="60px" class="text-center">Cetak</th>
               </tr>
             </thead>
             <tbody id="details">
@@ -312,7 +344,7 @@
             </tbody>
             <tfoot>
               <tr style="background: #f8fafc; font-weight: 700; border-top: 2px solid #cbd5e1;">
-                <th colspan="8" class="text-right" style="padding: 12px 16px; font-size: 12px; color: #1e293b; vertical-align: middle;">
+                <th colspan="9" class="text-right" style="padding: 12px 16px; font-size: 12px; color: #1e293b; vertical-align: middle;">
                   TOTAL NOMINAL TRANSAKSI:
                   <span class="rsgm-badge rsgm-badge-emerald" id="foot_detail_count" style="font-size: 12px; padding: 4px 10px; margin-left: 8px;">0 Transaksi</span>
                 </th>
@@ -332,6 +364,7 @@
   var allData = {?= json_encode($rows ?? []) ?};
   var allDetails = {?= json_encode($details ?? []) ?};
   var currentPenjamin = "{?=isset_or($penjamin)?}";
+  var currentMetode = "";
   var currentSearchQuery = "";
 
   function updateActionLinks() {
@@ -369,8 +402,17 @@
     renderReportTables();
   }
 
+  function setMetodeFilter(metode) {
+    currentMetode = metode;
+    $('#pill_metode_semua').toggleClass('active', metode === '');
+    $('#pill_metode_tunai').toggleClass('active', metode === 'Tunai');
+    $('#pill_metode_nontunai').toggleClass('active', metode === 'Non Tunai');
+    renderReportTables();
+  }
+
   function renderReportTables() {
     var penjamin = currentPenjamin;
+    var metode = currentMetode;
     var query = (currentSearchQuery || '').trim().toLowerCase();
 
     // 1. Filter by Penjamin
@@ -385,7 +427,14 @@
       });
     }
 
-    // 2. Filter by Search Query
+    // 2. Filter by Metode Pembayaran
+    if (metode !== '') {
+      filtered = filtered.filter(function(d) {
+        return (d.metode_bayar || 'Tunai') === metode;
+      });
+    }
+
+    // 3. Filter by Search Query
     if (query !== '') {
       filtered = filtered.filter(function(d) {
         var combined = [
@@ -396,6 +445,7 @@
           d.nm_poli,
           d.nm_dokter,
           d.nama_kasir,
+          d.metode_bayar || '',
           d.keterangan,
           d.png_jawab,
           d.sub_rincian_text || ''
@@ -404,11 +454,13 @@
       });
     }
 
-    // 3. Render Details Table & Calculate Stats
+    // 4. Render Details Table & Calculate Stats
     var dtbody = document.getElementById('details');
     dtbody.innerHTML = '';
 
     var totalNominal = 0;
+    var totalTunai = 0;
+    var totalNonTunai = 0;
     var summaryMap = {};
     var baseURL = mlite.url + '/' + mlite.admin;
 
@@ -416,12 +468,29 @@
       var bayar = Number(d.jumlah_bayar !== undefined ? d.jumlah_bayar : (d.jumlah_harus_bayar || 0));
       totalNominal += bayar;
 
+      var metBayar = d.metode_bayar || 'Tunai';
+      if (metBayar === 'Non Tunai') {
+        totalNonTunai += bayar;
+      } else if (metBayar === 'Tunai') {
+        totalTunai += bayar;
+      }
+
       var isBpjs = d.png_jawab && d.png_jawab.toUpperCase().indexOf('BPJS') !== -1;
       var badgePenj = isBpjs 
         ? '<span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-shield"></i> ' + (d.png_jawab || 'BPJS') + '</span>'
         : '<span class="rsgm-badge rsgm-badge-slate">' + (d.png_jawab || 'UMUM') + '</span>';
 
       var printUrl = baseURL + '/kasir_rawat_jalan/faktur?show=kecil&no_rawat=' + encodeURIComponent(d.no_rawat || '') + '&kd_billing=' + encodeURIComponent(d.kd_billing || '') + '&t=' + mlite.token;
+
+      // Badge Metode Pembayaran
+      var badgeMetode = '';
+      if (metBayar === 'Non Tunai') {
+        badgeMetode = '<span class="rsgm-badge rsgm-badge-indigo" style="font-weight: 700;"><i class="fa fa-credit-card"></i> Non Tunai</span>';
+      } else if (metBayar === 'Tidak Di-claim') {
+        badgeMetode = '<span class="rsgm-badge rsgm-badge-amber" style="font-weight: 700;"><i class="fa fa-ban"></i> Bebas Biaya</span>';
+      } else {
+        badgeMetode = '<span class="rsgm-badge rsgm-badge-emerald" style="font-weight: 700;"><i class="fa fa-money"></i> Tunai</span>';
+      }
 
       // Render Sub Rincian Layanan
       var alokasiHtml = '';
@@ -481,6 +550,7 @@
         '<td>' +
           '<div style="font-weight: 600; color: #334155;"><i class="fa fa-user-circle-o text-muted"></i> ' + (d.nama_kasir || 'Kasir') + '</div>' +
         '</td>' +
+        '<td class="text-center" style="white-space: nowrap;">' + badgeMetode + '</td>' +
         '<td>' + alokasiHtml + '</td>' +
         '<td class="text-right" style="font-family: monospace; font-weight: 700; font-size: 13.5px; color: #059669;">' +
           'Rp. ' + bayar.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
@@ -500,37 +570,54 @@
           nama_kasir: d.nama_kasir || 'Kasir',
           transaksi: 0,
           total: 0,
+          total_tunai: 0,
+          total_nontunai: 0,
           mulai: d.waktu,
           selesai: d.waktu
         };
       }
       summaryMap[key].transaksi++;
       summaryMap[key].total += bayar;
+      if (metBayar === 'Non Tunai') {
+        summaryMap[key].total_nontunai += bayar;
+      } else if (metBayar === 'Tunai') {
+        summaryMap[key].total_tunai += bayar;
+      }
       if (d.waktu < summaryMap[key].mulai) summaryMap[key].mulai = d.waktu;
       if (d.waktu > summaryMap[key].selesai) summaryMap[key].selesai = d.waktu;
     });
 
     if (filtered.length === 0) {
-      dtbody.innerHTML = '<tr><td colspan="10" class="text-center" style="padding: 30px; color: #94a3b8;"><i class="fa fa-folder-open-o" style="font-size: 28px; display: block; margin-bottom: 8px;"></i>Tidak ada data transaksi yang cocok dengan kriteria filter.</td></tr>';
+      dtbody.innerHTML = '<tr><td colspan="11" class="text-center" style="padding: 30px; color: #94a3b8;"><i class="fa fa-folder-open-o" style="font-size: 28px; display: block; margin-bottom: 8px;"></i>Tidak ada data transaksi yang cocok dengan kriteria filter.</td></tr>';
     }
 
-    // 4. Render Rekap Kasir Table
+    // 5. Render Rekap Kasir Table
     var tbody = document.getElementById('rows');
     tbody.innerHTML = '';
     var totalKasirCount = Object.keys(summaryMap).length;
     var totalRekapTransaksi = 0;
     var totalRekapUang = 0;
+    var totalRekapTunai = 0;
+    var totalRekapNonTunai = 0;
 
     Object.keys(summaryMap).forEach(function(key) {
       var r = summaryMap[key];
       totalRekapTransaksi += r.transaksi;
       totalRekapUang += r.total;
+      totalRekapTunai += r.total_tunai;
+      totalRekapNonTunai += r.total_nontunai;
 
       var tr = document.createElement('tr');
       tr.innerHTML = 
         '<td><span class="rsgm-badge rsgm-badge-slate">' + (r.id_user || '-') + '</span></td>' +
         '<td><strong style="color: #0f172a;"><i class="fa fa-user-circle text-primary"></i> ' + (r.nama_kasir || 'Kasir') + '</strong></td>' +
         '<td class="text-center"><span class="rsgm-badge rsgm-badge-blue" style="font-size: 12px; padding: 4px 10px;">' + (r.transaksi || 0) + ' Transaksi</span></td>' +
+        '<td class="text-right" style="font-family: monospace; font-weight: 700; font-size: 13px; color: #059669;">' +
+          'Rp. ' + r.total_tunai.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
+        '</td>' +
+        '<td class="text-right" style="font-family: monospace; font-weight: 700; font-size: 13px; color: #4f46e5;">' +
+          'Rp. ' + r.total_nontunai.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
+        '</td>' +
         '<td><span style="font-family: monospace; font-size: 11.5px; color: #475569;">' + (r.mulai || '-') + '</span></td>' +
         '<td><span style="font-family: monospace; font-size: 11.5px; color: #475569;">' + (r.selesai || '-') + '</span></td>' +
         '<td class="text-right" style="font-family: monospace; font-weight: 700; font-size: 14px; color: #059669;">' +
@@ -540,17 +627,21 @@
     });
 
     if (totalKasirCount === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding: 24px; color: #94a3b8;">Tidak ada data petugas kasir pada periode ini.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 24px; color: #94a3b8;">Tidak ada data petugas kasir pada periode ini.</td></tr>';
     }
 
-    // Update Footers (Under currency columns on the RIGHT)
+    // Update Footers
     $('#foot_rekap_transaksi').text(totalRekapTransaksi + ' Transaksi');
+    $('#foot_rekap_tunai').text('Rp. ' + totalRekapTunai.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    $('#foot_rekap_nontunai').text('Rp. ' + totalRekapNonTunai.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     $('#foot_rekap_total').text('Rp. ' + totalRekapUang.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     $('#foot_detail_count').text(filtered.length + ' Transaksi');
     $('#foot_detail_total').text('Rp. ' + totalNominal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 
     // Update Top Summary Banner
     $('#stat_total_uang').text('Rp. ' + totalNominal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    $('#stat_total_tunai').text('Rp. ' + totalTunai.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    $('#stat_total_nontunai').text('Rp. ' + totalNonTunai.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     $('#stat_total_transaksi').text(filtered.length + ' Transaksi');
     $('#badge_count_kasir').text(totalKasirCount + ' Petugas Kasir');
     $('#badge_count_kasir_sub').text(totalKasirCount + ' Petugas Kasir');

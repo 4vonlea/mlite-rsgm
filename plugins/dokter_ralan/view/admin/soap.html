@@ -6,341 +6,564 @@
   </div>
 </div>
 
-<div class="rsgm-rincian-card">
+<div class="rsgm-rincian-card rsgm-cppt-shell" style="margin-bottom: 20px;">
   <div class="rsgm-rincian-card-head">
     <div class="rsgm-rincian-card-title">
       <span class="rsgm-rincian-icon rsgm-rincian-icon-blue"><i class="fa fa-history"></i></span>
       <div>
-        <h5>Rincian Riwayat Pemeriksaan &amp; Catatan SOAP</h5>
-        <small>Riwayat pemeriksaan fisik, tanda vital, dan catatan perkembangan pasien</small>
+        <h5 style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span>Riwayat Pemeriksaan &amp; CPPT (SOAPIE)</span>
+          <span class="rsgm-rincian-total" style="padding: 2px 9px; font-size: 11px;">Total: <strong>{?= (is_array($pemeriksaan) ? count($pemeriksaan) : 0) + ($admin_mode == 'complex' && !empty($pemeriksaan_ranap) && is_array($pemeriksaan_ranap) ? count($pemeriksaan_ranap) : 0) ?}</strong></span>
+        </h5>
+        <small>Klik baris pemeriksa untuk membuka/melipat rincian tanda vital &amp; SOAPIE</small>
       </div>
     </div>
-    <span class="rsgm-rincian-total">Total Catatan: <strong>{?=count($pemeriksaan)?}</strong></span>
-  </div>
-  <div class="rsgm-rincian-card-body">
+
     {if: !empty($pemeriksaan) || (!empty($pemeriksaan_ranap) && $admin_mode == 'complex')}
-    <div class="table-responsive no-margin">
-      <table class="table table-bordered rsgm-rincian-table" width="100%">
-        <thead>
-          <tr>
-            <th width="36" class="text-center">No</th>
-            <th width="200">Tanggal &amp; Unit</th>
-            {if: $admin_mode == 'complex'}
-            <th>Suhu(C)</th>
-            <th>Tensi(mmHg)</th>
-            <th>Nadi(/menit)</th>
-            <th>RR(/menit)</th>
-            <th>Tinggi(cm)</th>
-            <th>Berat(Kg)</th>
-            <th>GCS(E,V,M)</th>
-            <th>SPO2</th>
-            <th>Alergi</th>
-            <th>Instruksi &amp; Evaluasi</th>
-            {else}
-            <th colspan="3">Catatan SOAP</th>
-            {/if}
-          </tr>
-        </thead>
-        <tbody>
-          {if: $pemeriksaan}
-          {loop: $pemeriksaan}
-          <tr>
-            {if: $admin_mode == 'complex'}
-            <td rowspan="7" class="text-center" style="vertical-align:top; font-weight: 700;">{?=isset_or($value.nomor)?}</td>
-            <td rowspan="6" style="vertical-align:top;white-space: nowrap;">
-              <strong><i class="fa fa-calendar text-primary"></i> {?=isset_or($value.tgl_perawatan)?}</strong> <span class="text-muted">{?=isset_or($value.jam_rawat)?}</span><br>
-              <span class="text-muted" style="font-size: 11.5px;">{?=isset_or($value.departemen_petugas)?}</span>
-              <div style="margin-top: 6px; display: flex; flex-direction: column; gap: 4px;">
-                <span>Kunjungan: <span class="rsgm-badge {if: $value.stts_daftar == 'Baru'}rsgm-badge-amber{else}rsgm-badge-slate{/if}">{?=isset_or($value.stts_daftar)?}</span></span>
-                <span>Kasus: <span class="rsgm-badge {if: isset_or($value.kasus_poli, $value.status_poli) == 'Baru'}rsgm-badge-sky{else}rsgm-badge-slate{/if}">{?=isset_or($value.kasus_poli, $value.status_poli)?}</span></span>
-              </div>
-            </td>
-            <td>{?=isset_or($value.suhu_tubuh)?}</td>
-            <td>{?=isset_or($value.tensi)?}</td>
-            <td>{?=isset_or($value.nadi)?}</td>
-            <td>{?=isset_or($value.respirasi)?}</td>
-            <td>{?=isset_or($value.tinggi)?}</td>
-            <td>{?=isset_or($value.berat)?}</td>
-            <td>{?=isset_or($value.gcs)?}</td>
-            <td>{?=isset_or($value.spo2)?}</td>
-            <td>{?=isset_or($value.alergi)?}</td>
-            <td rowspan="7" style="vertical-align:top;">
-              <div style="margin-bottom: 6px;"><strong>Instruksi:</strong><br>{?=isset_or($value.instruksi)?}</div>
-              <div style="margin-bottom: 8px;"><strong>Evaluasi:</strong><br>{?=isset_or($value.evaluasi)?}</div>
-              {if: isset($value.is_signed) && $value.is_signed}
-                <a href="{?=url(['esignature', 'verify', $value.signature_hash])?}" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">
-                  <div class="qrcodePetugasValid{?=isset_or($value.nomor)?}" style="margin-top:8px;width:40px;margin-right: 120px;"></div>
-                </a>
-                <strong style="display: block; margin-top: 4px; font-size: 12px;">{?=isset_or($value.nama_petugas)?}</strong>
-                <script>
-                  jQuery('.qrcodePetugasValid{?=isset_or($value.nomor)?}').qrcode({
-                    width: 120,
-                    height: 120,
-                    text: "{?=isset_or($value.signature_hash)?}"
-                  });
-                </script>
-              {else}
-                <div id="sign_container_{?=isset_or($value.sign_ref_id)?}">
-                  {if: $current_user == $value.nip}
-                  <button type="button" class="btn btn-primary btn-xs btn-tte"
-                     data-ref_type="soap_ralan"
-                     data-ref_id="{?=isset_or($value.sign_ref_id)?}"
-                     data-signer_name="{?=isset_or($value.nama_petugas)?}">
-                     <i class="fa fa-pencil"></i> Tanda Tangani
-                  </button><br><br>
-                  {/if}
-                  <strong style="font-size: 12px;">{?=isset_or($value.nama_petugas)?}</strong>
-                </div>
+    <div class="rsgm-cppt-controls">
+      <div class="rsgm-cppt-search">
+        <i class="fa fa-search"></i>
+        <input type="text" class="js-cppt-filter" placeholder="Cari pemeriksa / catatan..." autocomplete="off">
+      </div>
+      <div class="rsgm-cppt-view-group hidden-xs" role="group" aria-label="Mode Tampilan">
+        <button type="button" class="rsgm-cppt-vbtn active js-cppt-layout" data-layout="stack" title="Tampilan 1 Kolom">
+          <i class="fa fa-bars"></i> 1 Kolom
+        </button>
+        <button type="button" class="rsgm-cppt-vbtn js-cppt-layout" data-layout="grid2" title="Tampilan 2 Kolom Berdampingan">
+          <i class="fa fa-th-large"></i> 2 Kolom
+        </button>
+      </div>
+      <button type="button" class="rsgm-cppt-actbtn js-cppt-expand-all" title="Buka semua rincian">
+        <i class="fa fa-angle-double-down"></i> <span class="hidden-xs">Buka Semua</span>
+      </button>
+      <button type="button" class="rsgm-cppt-actbtn js-cppt-collapse-all" title="Lipat semua rincian">
+        <i class="fa fa-angle-double-up"></i> <span class="hidden-xs">Ringkas</span>
+      </button>
+    </div>
+    {/if}
+  </div>
+
+  <div class="rsgm-rincian-card-body" style="padding: 10px 12px;">
+    {if: !empty($pemeriksaan) || (!empty($pemeriksaan_ranap) && $admin_mode == 'complex')}
+    <div class="rsgm-cppt-viewport">
+      <div class="rsgm-cppt-list js-cppt-list">
+        {if: $pemeriksaan}
+        {loop: $pemeriksaan}
+        <div class="rsgm-cppt-card js-cppt-item {if: $value.nomor == count($pemeriksaan)}is-open{/if}">
+          <div class="rsgm-cppt-head">
+            <div class="rsgm-cppt-ident">
+              <span class="rsgm-cppt-chev"><i class="fa fa-chevron-down"></i></span>
+              <span class="rsgm-soap-entry-no">#{?=isset_or($value.nomor)?}</span>
+              <span class="rsgm-cppt-ppa">
+                <span class="rsgm-cppt-avatar"><i class="fa fa-user-md"></i></span>
+                <span>{?=isset_or($value.nama_petugas, '-')?}</span>
+              </span>
+              <span class="rsgm-badge rsgm-badge-indigo">Ralan</span>
+              {if: !empty($value.departemen_petugas) && $value.departemen_petugas != '-'}
+              <span class="rsgm-badge rsgm-badge-slate">{?=isset_or($value.departemen_petugas)?}</span>
               {/if}
-            </td>
-            {else}
-            <td rowspan="5" class="text-center" style="vertical-align:top; font-weight: 700;">{?=isset_or($value.nomor)?}</td>
-            <td rowspan="4" style="vertical-align:top;white-space: nowrap;">
-              <b>Rawat Jalan</b><br>
-              {?=isset_or($value.tgl_perawatan)?} {?=isset_or($value.jam_rawat)?}<br>
-              {?=isset_or($value.departemen_petugas)?}<br><br>
-              Kunjungan: <span class="rsgm-badge {if: $value.stts_daftar == 'Baru'}rsgm-badge-amber{else}rsgm-badge-slate{/if}">{?=isset_or($value.stts_daftar)?}</span><br>
-              Kasus: <span class="rsgm-badge {if: isset_or($value.kasus_poli, $value.status_poli) == 'Baru'}rsgm-badge-sky{else}rsgm-badge-slate{/if}">{?=isset_or($value.kasus_poli, $value.status_poli)?}</span>
-            </td>
-            {/if}
-          </tr>
-          {if: $admin_mode == 'complex'}
-          <tr>
-            <th colspan="2" style="background-color: #f8fafc;">Kesadaran</th>
-            <td colspan="7">{?=isset_or($value.kesadaran)?}</td>
-          </tr>
-          <tr>
-            <th colspan="2" style="background-color: #f8fafc;">Lingkar Perut</th>
-            <td colspan="7">{?=isset_or($value.lingkar_perut)?}</td>
-          </tr>
-          {/if}
-          <tr>
-            <th colspan="2" width="120" style="background-color: #f8fafc;"><span class="rsgm-soap-tag rsgm-soap-tag-s">S</span> Subyektif</th>
-            <td colspan="7">{?=isset_or($value.keluhan)?}</td>
-          </tr>
-          <tr>
-            <th colspan="2" style="background-color: #f8fafc;"><span class="rsgm-soap-tag rsgm-soap-tag-o">O</span> Obyektif</th>
-            <td colspan="7">{?=isset_or($value.pemeriksaan)?}</td>
-          </tr>
-          <tr>
-            <th colspan="2" style="background-color: #f8fafc;"><span class="rsgm-soap-tag rsgm-soap-tag-a">A</span> Assesment</th>
-            <td colspan="7">{?=isset_or($value.penilaian)?}</td>
-          </tr>
-          <tr>
-            <td style="background-color: #f8fafc;">
-              <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-                <button type="button" name="button" class="btn btn-primary btn-xs copy_soap"
-                  data-suhu_tubuh="{?=isset_or($value.suhu_tubuh)?}"
-                  data-tensi="{?=isset_or($value.tensi)?}"
-                  data-nadi="{?=isset_or($value.nadi)?}"
-                  data-respirasi="{?=isset_or($value.respirasi)?}"
-                  data-tinggi="{?=isset_or($value.tinggi)?}"
-                  data-berat="{?=isset_or($value.berat)?}"
-                  data-gcs="{?=isset_or($value.gcs)?}"
-                  data-kesadaran="{?=isset_or($value.kesadaran)?}"
-                  data-alergi="{?=isset_or($value.alergi)?}"
-                  data-lingkar_perut="{?=isset_or($value.lingkar_perut)?}"
-                  data-keluhan="{?=isset_or($value.keluhan)?}"
-                  data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}"
-                  data-penilaian="{?=isset_or($value.penilaian)?}"
-                  data-rtl="{?=isset_or($value.rtl)?}"
-                  data-instruksi="{?=isset_or($value.instruksi)?}"
-                  data-evaluasi="{?=isset_or($value.evaluasi)?}"
-                  data-spo2="{?=isset_or($value.spo2)?}"
-                  data-stts_daftar="{?=isset_or($value.stts_daftar)?}"
-                  data-kasus_poli="{?=isset_or($value.kasus_poli, $value.status_poli)?}"
-                  data-status_poli="{?=isset_or($value.status_poli)?}"
-                  ><span class="fa fa-copy"></span><span class="hidden-xs"> Copy</span></button>
-                <button type="button" name="button" class="btn btn-success btn-xs edit_soap"
-                  data-no_rawat="{?=isset_or($value.no_rawat)?}"
-                  data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}"
-                  data-jam_rawat="{?=isset_or($value.jam_rawat)?}"
-                  data-suhu_tubuh="{?=isset_or($value.suhu_tubuh)?}"
-                  data-tensi="{?=isset_or($value.tensi)?}"
-                  data-nadi="{?=isset_or($value.nadi)?}"
-                  data-respirasi="{?=isset_or($value.respirasi)?}"
-                  data-tinggi="{?=isset_or($value.tinggi)?}"
-                  data-berat="{?=isset_or($value.berat)?}"
-                  data-gcs="{?=isset_or($value.gcs)?}"
-                  data-kesadaran="{?=isset_or($value.kesadaran)?}"
-                  data-alergi="{?=isset_or($value.alergi)?}"
-                  data-lingkar_perut="{?=isset_or($value.lingkar_perut)?}"
-                  data-keluhan="{?=isset_or($value.keluhan)?}"
-                  data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}"
-                  data-penilaian="{?=isset_or($value.penilaian)?}"
-                  data-rtl="{?=isset_or($value.rtl)?}"
-                  data-instruksi="{?=isset_or($value.instruksi)?}"
-                  data-evaluasi="{?=isset_or($value.evaluasi)?}"
-                  data-spo2="{?=isset_or($value.spo2)?}"
-                  data-stts_daftar="{?=isset_or($value.stts_daftar)?}"
-                  data-kasus_poli="{?=isset_or($value.kasus_poli, $value.status_poli)?}"
-                  data-status_poli="{?=isset_or($value.status_poli)?}"
-                  {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip}disabled{/if}
-                  ><span class="fa fa-edit"></span><span class="hidden-xs"> Edit</span></button>
-                <button type="button" name="button" class="btn btn-danger btn-xs hapus_soap"
-                  data-no_rawat="{?=isset_or($value.no_rawat)?}"
-                  data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}"
-                  data-jam_rawat="{?=isset_or($value.jam_rawat)?}"
-                  {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip}disabled{/if}
-                  ><span class="fa fa-trash-o"></span><span class="hidden-xs"> Hapus</span></button>
-                {if: $admin_mode != 'complex'}
+              <span class="rsgm-cppt-time">
+                <i class="fa fa-clock-o text-muted"></i> {?=isset_or($value.tgl_perawatan)?} <b>{?=isset_or($value.jam_rawat)?}</b>
+              </span>
+            </div>
+
+            <div class="rsgm-cppt-digest">
+              {if: $admin_mode == 'complex'}
+              <span class="rsgm-cppt-vmini">TD {?=isset_or($value.tensi, '-')?} &bull; S {?=isset_or($value.suhu_tubuh, '-')?}&deg; &bull; N {?=isset_or($value.nadi, '-')?}</span>
+              {if: !empty($value.alergi) && $value.alergi != '-'}
+              <span class="rsgm-cppt-alert-mini"><i class="fa fa-exclamation-triangle"></i> Alergi: {?=isset_or($value.alergi)?}</span>
+              {/if}
+              {/if}
+              <span class="rsgm-cppt-smini">
+                <strong>A:</strong> {?=isset_or($value.penilaian, '-')?} &middot; <strong>S:</strong> {?=isset_or($value.keluhan, '-')?}
+              </span>
+            </div>
+
+            <div class="rsgm-soap-entry-actions">
+              {if: isset($value.is_signed) && $value.is_signed}
+              <span class="rsgm-cppt-tte-pill is-valid" title="Terverifikasi Tanda Tangan Elektronik"><i class="fa fa-check-circle"></i> <span class="hidden-xs">TTE</span></span>
+              {else}
+              <span class="rsgm-cppt-tte-pill is-pending hidden-xs" title="Belum ditandatangani secara elektronik"><i class="fa fa-clock-o"></i> Non-TTE</span>
+              {/if}
+              <button type="button" name="button" class="btn btn-primary btn-xs copy_soap"
+                title="Salin ke Form SOAP"
+                data-suhu_tubuh="{?=isset_or($value.suhu_tubuh)?}"
+                data-tensi="{?=isset_or($value.tensi)?}"
+                data-nadi="{?=isset_or($value.nadi)?}"
+                data-respirasi="{?=isset_or($value.respirasi)?}"
+                data-tinggi="{?=isset_or($value.tinggi)?}"
+                data-berat="{?=isset_or($value.berat)?}"
+                data-gcs="{?=isset_or($value.gcs)?}"
+                data-kesadaran="{?=isset_or($value.kesadaran)?}"
+                data-alergi="{?=isset_or($value.alergi)?}"
+                data-lingkar_perut="{?=isset_or($value.lingkar_perut)?}"
+                data-keluhan="{?=isset_or($value.keluhan)?}"
+                data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}"
+                data-penilaian="{?=isset_or($value.penilaian)?}"
+                data-rtl="{?=isset_or($value.rtl)?}"
+                data-instruksi="{?=isset_or($value.instruksi)?}"
+                data-evaluasi="{?=isset_or($value.evaluasi)?}"
+                data-spo2="{?=isset_or($value.spo2)?}"
+                data-stts_daftar="{?=isset_or($value.stts_daftar)?}"
+                data-kasus_poli="{?=isset_or($value.kasus_poli, $value.status_poli)?}"
+                data-status_poli="{?=isset_or($value.status_poli)?}"
+                ><span class="fa fa-copy"></span><span class="hidden-xs"> Copy</span></button>
+              <button type="button" name="button" class="btn btn-success btn-xs edit_soap"
+                title="Edit Catatan SOAP"
+                data-no_rawat="{?=isset_or($value.no_rawat)?}"
+                data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}"
+                data-jam_rawat="{?=isset_or($value.jam_rawat)?}"
+                data-suhu_tubuh="{?=isset_or($value.suhu_tubuh)?}"
+                data-tensi="{?=isset_or($value.tensi)?}"
+                data-nadi="{?=isset_or($value.nadi)?}"
+                data-respirasi="{?=isset_or($value.respirasi)?}"
+                data-tinggi="{?=isset_or($value.tinggi)?}"
+                data-berat="{?=isset_or($value.berat)?}"
+                data-gcs="{?=isset_or($value.gcs)?}"
+                data-kesadaran="{?=isset_or($value.kesadaran)?}"
+                data-alergi="{?=isset_or($value.alergi)?}"
+                data-lingkar_perut="{?=isset_or($value.lingkar_perut)?}"
+                data-keluhan="{?=isset_or($value.keluhan)?}"
+                data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}"
+                data-penilaian="{?=isset_or($value.penilaian)?}"
+                data-rtl="{?=isset_or($value.rtl)?}"
+                data-instruksi="{?=isset_or($value.instruksi)?}"
+                data-evaluasi="{?=isset_or($value.evaluasi)?}"
+                data-spo2="{?=isset_or($value.spo2)?}"
+                data-stts_daftar="{?=isset_or($value.stts_daftar)?}"
+                data-kasus_poli="{?=isset_or($value.kasus_poli, $value.status_poli)?}"
+                data-status_poli="{?=isset_or($value.status_poli)?}"
+                {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip}disabled{/if}
+                ><span class="fa fa-edit"></span><span class="hidden-xs"> Edit</span></button>
+              <button type="button" name="button" class="btn btn-danger btn-xs hapus_soap"
+                title="Hapus Catatan SOAP"
+                data-no_rawat="{?=isset_or($value.no_rawat)?}"
+                data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}"
+                data-jam_rawat="{?=isset_or($value.jam_rawat)?}"
+                {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip}disabled{/if}
+                ><span class="fa fa-trash-o"></span><span class="hidden-xs"> Hapus</span></button>
+            </div>
+          </div>
+
+          <div class="rsgm-cppt-body">
+            <div class="rsgm-cppt-split {if: $admin_mode == 'simple'}is-simple{/if}">
+              {if: $admin_mode == 'complex'}
+              <div class="rsgm-cppt-vitals-col">
+                <div class="rsgm-cppt-vgrid">
+                  <div class="rsgm-cppt-vitem">
+                    <span>Tensi</span>
+                    <strong>{?=isset_or($value.tensi, '-')?} <small>mmHg</small></strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem">
+                    <span>Suhu</span>
+                    <strong>{?=isset_or($value.suhu_tubuh, '-')?} <small>&deg;C</small></strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem">
+                    <span>Nadi</span>
+                    <strong>{?=isset_or($value.nadi, '-')?} <small>/mnt</small></strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem">
+                    <span>Respirasi</span>
+                    <strong>{?=isset_or($value.respirasi, '-')?} <small>/mnt</small></strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem">
+                    <span>SpO2</span>
+                    <strong>{?=isset_or($value.spo2, '-')?} <small>%</small></strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem">
+                    <span>GCS</span>
+                    <strong>{?=isset_or($value.gcs, '-')?}</strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem">
+                    <span>TB / BB</span>
+                    <strong>{?=isset_or($value.tinggi, '-')?}/{?=isset_or($value.berat, '-')?} <small>cm/kg</small></strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem">
+                    <span>L. Perut</span>
+                    <strong>{?=isset_or($value.lingkar_perut, '-')?}</strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem is-wide">
+                    <span>Kesadaran</span>
+                    <strong>{?=isset_or($value.kesadaran, '-')?}</strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem is-wide {if: !empty($value.alergi) && $value.alergi != '-'}is-alert{/if}">
+                    <span><i class="fa fa-exclamation-circle"></i> Alergi</span>
+                    <strong>{?=isset_or($value.alergi, '-')?}</strong>
+                  </div>
+                </div>
+
+                <div class="rsgm-cppt-signbox">
                   {if: isset($value.is_signed) && $value.is_signed}
-                    <a href="{?=url(['esignature', 'verify', $value.signature_hash])?}" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">
-                      <div class="qrcodePetugasValidSimple{?=isset_or($value.nomor)?}" style="margin-top:5px; width:40px;"></div>
-                    </a>
-                    <small>{?=isset_or($value.nama_petugas)?}</small>
-                    <script>
-                      jQuery('.qrcodePetugasValidSimple{?=isset_or($value.nomor)?}').qrcode({
-                        width: 100,
-                        height: 100,
-                        text: "{?=isset_or($value.signature_hash)?}"
-                      });
-                    </script>
-                  {else}
-                    <div id="sign_container_{?=isset_or($value.sign_ref_id)?}">
-                      {if: $current_user == $value.nip}
-                        <button type="button" class="btn btn-primary btn-xs btn-tte"
-                           data-ref_type="soap_ralan"
-                           data-ref_id="{?=isset_or($value.sign_ref_id)?}"
-                           data-signer_name="{?=isset_or($value.nama_petugas)?}">
-                           <i class="fa fa-pencil"></i> Tanda Tangani
-                        </button>
-                      {/if}
+                  <a href="{?=url(['esignature', 'verify', $value.signature_hash])?}" target="_blank" class="rsgm-cppt-qr-card">
+                    <div class="qrcodePetugasValid{?=isset_or($value.nomor)?} rsgm-cppt-qr"></div>
+                    <div class="rsgm-cppt-qr-meta">
+                      <span class="rsgm-cppt-qr-ok"><i class="fa fa-check-circle"></i> Terverifikasi TTE</span>
+                      <span class="rsgm-cppt-qr-sub">Klik QR untuk cek validitas</span>
                     </div>
+                  </a>
+                  <script>
+                    jQuery('.qrcodePetugasValid{?=isset_or($value.nomor)?}').qrcode({
+                      width: 76,
+                      height: 76,
+                      text: "{?=isset_or($value.signature_hash)?}"
+                    });
+                  </script>
+                  {else}
+                  <div id="sign_container_{?=isset_or($value.sign_ref_id)?}">
+                    {if: $current_user == $value.nip}
+                    <button type="button" class="btn btn-primary btn-xs btn-tte"
+                       data-ref_type="soap_ralan"
+                       data-ref_id="{?=isset_or($value.sign_ref_id)?}"
+                       data-signer_name="{?=isset_or($value.nama_petugas)?}">
+                       <i class="fa fa-pencil"></i> Tanda Tangani (TTE)
+                    </button>
+                    {else}
+                    <div class="rsgm-cppt-unsigned">
+                      <span><i class="fa fa-clock-o"></i> Belum TTE</span>
+                      <span>Kunjungan: {?=isset_or($value.stts_daftar, '-')?} &bull; Kasus: {?=isset_or($value.kasus_poli, $value.status_poli)?}</span>
+                    </div>
+                    {/if}
+                  </div>
                   {/if}
+                </div>
+              </div>
+              {/if}
+
+              <div class="rsgm-cppt-soapie-col">
+                <div class="rsgm-cppt-sgrid">
+                  <div class="rsgm-cppt-cell is-s">
+                    <span class="rsgm-soap-tag rsgm-soap-tag-s">S</span>
+                    <div class="rsgm-cppt-cell-main">
+                      <div class="rsgm-cppt-cell-lbl">Subyektif (Keluhan)</div>
+                      <div class="rsgm-cppt-cell-txt">{?=isset_or($value.keluhan, '-')?}</div>
+                    </div>
+                  </div>
+                  <div class="rsgm-cppt-cell is-o">
+                    <span class="rsgm-soap-tag rsgm-soap-tag-o">O</span>
+                    <div class="rsgm-cppt-cell-main">
+                      <div class="rsgm-cppt-cell-lbl">Obyektif (Pemeriksaan)</div>
+                      <div class="rsgm-cppt-cell-txt">{?=isset_or($value.pemeriksaan, '-')?}</div>
+                    </div>
+                  </div>
+                  <div class="rsgm-cppt-cell is-a">
+                    <span class="rsgm-soap-tag rsgm-soap-tag-a">A</span>
+                    <div class="rsgm-cppt-cell-main">
+                      <div class="rsgm-cppt-cell-lbl">Assesment (Diagnosa)</div>
+                      <div class="rsgm-cppt-cell-txt">{?=isset_or($value.penilaian, '-')?}</div>
+                    </div>
+                  </div>
+                  <div class="rsgm-cppt-cell is-p">
+                    <span class="rsgm-soap-tag rsgm-soap-tag-p">P</span>
+                    <div class="rsgm-cppt-cell-main">
+                      <div class="rsgm-cppt-cell-lbl">Plan (Rencana / RTL)</div>
+                      <div class="rsgm-cppt-cell-txt">{?=isset_or($value.rtl, '-')?}</div>
+                    </div>
+                  </div>
+                  {if: $admin_mode == 'complex'}
+                  {if: (!empty($value.instruksi) && $value.instruksi != '-') || (!empty($value.evaluasi) && $value.evaluasi != '-')}
+                  <div class="rsgm-cppt-cell is-i">
+                    <span class="rsgm-soap-tag rsgm-soap-tag-i">I</span>
+                    <div class="rsgm-cppt-cell-main">
+                      <div class="rsgm-cppt-cell-lbl">Instruksi</div>
+                      <div class="rsgm-cppt-cell-txt">{?=isset_or($value.instruksi, '-')?}</div>
+                    </div>
+                  </div>
+                  <div class="rsgm-cppt-cell is-e">
+                    <span class="rsgm-soap-tag rsgm-soap-tag-e">E</span>
+                    <div class="rsgm-cppt-cell-main">
+                      <div class="rsgm-cppt-cell-lbl">Evaluasi</div>
+                      <div class="rsgm-cppt-cell-txt">{?=isset_or($value.evaluasi, '-')?}</div>
+                    </div>
+                  </div>
+                  {/if}
+                  {/if}
+                </div>
+
+                {if: $admin_mode == 'complex'}
+                {if: (empty($value.instruksi) || $value.instruksi == '-') && (empty($value.evaluasi) || $value.evaluasi == '-')}
+                <div class="rsgm-cppt-ie-slim">
+                  <div class="rsgm-cppt-ie-slim-left">
+                    <span><span class="rsgm-soap-tag rsgm-soap-tag-i">I</span> Instruksi: <strong>-</strong></span>
+                    <span><span class="rsgm-soap-tag rsgm-soap-tag-e">E</span> Evaluasi: <strong>-</strong></span>
+                  </div>
+                  <span>Kunjungan: <strong>{?=isset_or($value.stts_daftar, '-')?}</strong> &bull; Kasus: <strong>{?=isset_or($value.kasus_poli, $value.status_poli)?}</strong></span>
+                </div>
+                {/if}
+                {else}
+                <div class="rsgm-cppt-signbox" style="margin-top: 8px; max-width: 280px;">
+                  {if: isset($value.is_signed) && $value.is_signed}
+                  <a href="{?=url(['esignature', 'verify', $value.signature_hash])?}" target="_blank" class="rsgm-cppt-qr-card">
+                    <div class="qrcodePetugasValidSimpleDR{?=isset_or($value.nomor)?} rsgm-cppt-qr"></div>
+                    <div class="rsgm-cppt-qr-meta">
+                      <span class="rsgm-cppt-qr-ok"><i class="fa fa-check-circle"></i> Terverifikasi TTE</span>
+                      <span class="rsgm-cppt-qr-sub">Klik QR untuk cek validitas</span>
+                    </div>
+                  </a>
+                  <script>
+                    jQuery('.qrcodePetugasValidSimpleDR{?=isset_or($value.nomor)?}').qrcode({
+                      width: 76,
+                      height: 76,
+                      text: "{?=isset_or($value.signature_hash)?}"
+                    });
+                  </script>
+                  {else}
+                  <div id="sign_container_{?=isset_or($value.sign_ref_id)?}">
+                    {if: $current_user == $value.nip}
+                    <button type="button" class="btn btn-primary btn-xs btn-tte"
+                       data-ref_type="soap_ralan"
+                       data-ref_id="{?=isset_or($value.sign_ref_id)?}"
+                       data-signer_name="{?=isset_or($value.nama_petugas)?}">
+                       <i class="fa fa-pencil"></i> Tanda Tangani (TTE)
+                    </button>
+                    {/if}
+                  </div>
+                  {/if}
+                </div>
                 {/if}
               </div>
-            </td>
-            <th colspan="2" style="background-color: #f8fafc;"><span class="rsgm-soap-tag rsgm-soap-tag-p">P</span> Plan</th>
-            <td colspan="7">{?=isset_or($value.rtl)?}</td>
-          </tr>
-          {/loop}
-          {/if}
-          {if: $admin_mode == 'complex'}
-          {if: $pemeriksaan_ranap}
-          {loop: $pemeriksaan_ranap as $data}
-          <tr>
-            <td rowspan="6" class="text-center" style="vertical-align:top; font-weight: 700;">{?=isset_or($data.nomor)?}</td>
-            <td rowspan="5" style="vertical-align:top;white-space: nowrap;">
-              <b>Rawat Inap</b><br>
-              {?=isset_or($data.tgl_perawatan)?} {?=isset_or($data.jam_rawat)?}<br>
-              {?=isset_or($data.departemen_petugas)?}
-            </td>
-            <td>{?=isset_or($data.suhu_tubuh)?}</td>
-            <td>{?=isset_or($data.tensi)?}</td>
-            <td>{?=isset_or($data.nadi)?}</td>
-            <td>{?=isset_or($data.respirasi)?}</td>
-            <td>{?=isset_or($data.tinggi)?}</td>
-            <td>{?=isset_or($data.berat)?}</td>
-            <td>{?=isset_or($data.gcs)?}</td>
-            <td>{?=isset_or($data.spo2)?}</td>
-            <td>{?=isset_or($data.alergi)?}</td>
-            <td rowspan="6" style="vertical-align:top;">
-              {?=isset_or($data.instruksi)?}<br><br>
+            </div>
+          </div>
+        </div>
+        {/loop}
+        {/if}
+
+        {if: $admin_mode == 'complex'}
+        {if: $pemeriksaan_ranap}
+        {loop: $pemeriksaan_ranap as $data}
+        <div class="rsgm-cppt-card is-ranap js-cppt-item {if: empty($pemeriksaan) && $data.nomor == count($pemeriksaan_ranap)}is-open{/if}">
+          <div class="rsgm-cppt-head">
+            <div class="rsgm-cppt-ident">
+              <span class="rsgm-cppt-chev"><i class="fa fa-chevron-down"></i></span>
+              <span class="rsgm-soap-entry-no">#{?=isset_or($data.nomor)?}</span>
+              <span class="rsgm-cppt-ppa">
+                <span class="rsgm-cppt-avatar"><i class="fa fa-bed"></i></span>
+                <span>{?=isset_or($data.nama_petugas, '-')?}</span>
+              </span>
+              <span class="rsgm-badge rsgm-badge-purple">Ranap</span>
+              {if: !empty($data.departemen_petugas) && $data.departemen_petugas != '-'}
+              <span class="rsgm-badge rsgm-badge-slate">{?=isset_or($data.departemen_petugas)?}</span>
+              {/if}
+              <span class="rsgm-cppt-time">
+                <i class="fa fa-clock-o text-muted"></i> {?=isset_or($data.tgl_perawatan)?} <b>{?=isset_or($data.jam_rawat)?}</b>
+              </span>
+            </div>
+
+            <div class="rsgm-cppt-digest">
+              <span class="rsgm-cppt-vmini">TD {?=isset_or($data.tensi, '-')?} &bull; S {?=isset_or($data.suhu_tubuh, '-')?}&deg; &bull; N {?=isset_or($data.nadi, '-')?}</span>
+              {if: !empty($data.alergi) && $data.alergi != '-'}
+              <span class="rsgm-cppt-alert-mini"><i class="fa fa-exclamation-triangle"></i> Alergi: {?=isset_or($data.alergi)?}</span>
+              {/if}
+              <span class="rsgm-cppt-smini">
+                <strong>A:</strong> {?=isset_or($data.penilaian, '-')?} &middot; <strong>S:</strong> {?=isset_or($data.keluhan, '-')?}
+              </span>
+            </div>
+
+            <div class="rsgm-soap-entry-actions">
               {if: isset($data.is_signed) && $data.is_signed}
-                <a href="{?=url(['esignature', 'verify', $data.signature_hash])?}" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">
-                  <div class="qrcodePetugasValid{?=isset_or($data.nomor)?}" style="margin-top:10px;width:40px;margin-right: 120px;"></div>
-                </a>
-                {?=isset_or($data.nama_petugas)?}
-                <script>
-                  jQuery('.qrcodePetugasValid{?=isset_or($data.nomor)?}').qrcode({
-                    width: 120,
-                    height: 120,
-                    text: "{?=isset_or($data.signature_hash)?}"
-                  });
-                </script>
+              <span class="rsgm-cppt-tte-pill is-valid"><i class="fa fa-check-circle"></i> <span class="hidden-xs">TTE</span></span>
               {else}
-                <div id="sign_container_{?=isset_or($data.sign_ref_id)?}">
+              <span class="rsgm-cppt-tte-pill is-pending hidden-xs"><i class="fa fa-clock-o"></i> Non-TTE</span>
+              {/if}
+              <button type="button" name="button" class="btn btn-primary btn-xs copy_soap"
+                title="Salin ke Form SOAP"
+                data-suhu_tubuh="{?=isset_or($data.suhu_tubuh)?}"
+                data-tensi="{?=isset_or($data.tensi)?}"
+                data-nadi="{?=isset_or($data.nadi)?}"
+                data-respirasi="{?=isset_or($data.respirasi)?}"
+                data-tinggi="{?=isset_or($data.tinggi)?}"
+                data-berat="{?=isset_or($data.berat)?}"
+                data-gcs="{?=isset_or($data.gcs)?}"
+                data-alergi="{?=isset_or($data.alergi)?}"
+                data-keluhan="{?=isset_or($data.keluhan)?}"
+                data-pemeriksaan="{?=isset_or($data.pemeriksaan)?}"
+                data-penilaian="{?=isset_or($data.penilaian)?}"
+                data-rtl="{?=isset_or($data.rtl)?}"
+                data-instruksi="{?=isset_or($data.instruksi)?}"
+                data-evaluasi="{?=isset_or($data.evaluasi)?}"
+                data-spo2="{?=isset_or($data.spo2)?}"
+                data-stts_daftar="{?=isset_or($data.stts_daftar)?}"
+                data-status_poli="{?=isset_or($data.status_poli)?}"
+                ><span class="fa fa-copy"></span><span class="hidden-xs"> Copy</span></button>
+              <button type="button" name="button" class="btn btn-success btn-xs edit_soap"
+                title="Edit Catatan SOAP"
+                data-no_rawat="{?=isset_or($data.no_rawat)?}"
+                data-tgl_perawatan="{?=isset_or($data.tgl_perawatan)?}"
+                data-jam_rawat="{?=isset_or($data.jam_rawat)?}"
+                data-suhu_tubuh="{?=isset_or($data.suhu_tubuh)?}"
+                data-tensi="{?=isset_or($data.tensi)?}"
+                data-nadi="{?=isset_or($data.nadi)?}"
+                data-respirasi="{?=isset_or($data.respirasi)?}"
+                data-tinggi="{?=isset_or($data.tinggi)?}"
+                data-berat="{?=isset_or($data.berat)?}"
+                data-gcs="{?=isset_or($data.gcs)?}"
+                data-alergi="{?=isset_or($data.alergi)?}"
+                data-keluhan="{?=isset_or($data.keluhan)?}"
+                data-pemeriksaan="{?=isset_or($data.pemeriksaan)?}"
+                data-penilaian="{?=isset_or($data.penilaian)?}"
+                data-rtl="{?=isset_or($data.rtl)?}"
+                data-instruksi="{?=isset_or($data.instruksi)?}"
+                data-evaluasi="{?=isset_or($data.evaluasi)?}"
+                data-spo2="{?=isset_or($data.spo2)?}"
+                data-stts_daftar="{?=isset_or($data.stts_daftar)?}"
+                data-status_poli="{?=isset_or($data.status_poli)?}"
+                {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $data.nip}disabled{/if}
+                ><span class="fa fa-edit"></span><span class="hidden-xs"> Edit</span></button>
+              <button type="button" name="button" class="btn btn-danger btn-xs hapus_soap"
+                title="Hapus Catatan SOAP"
+                data-no_rawat="{?=isset_or($data.no_rawat)?}"
+                data-tgl_perawatan="{?=isset_or($data.tgl_perawatan)?}"
+                data-jam_rawat="{?=isset_or($data.jam_rawat)?}"
+                {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $data.nip}disabled{/if}
+                ><span class="fa fa-trash-o"></span><span class="hidden-xs"> Hapus</span></button>
+            </div>
+          </div>
+
+          <div class="rsgm-cppt-body">
+            <div class="rsgm-cppt-split">
+              <div class="rsgm-cppt-vitals-col">
+                <div class="rsgm-cppt-vgrid">
+                  <div class="rsgm-cppt-vitem">
+                    <span>Tensi</span>
+                    <strong>{?=isset_or($data.tensi, '-')?} <small>mmHg</small></strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem">
+                    <span>Suhu</span>
+                    <strong>{?=isset_or($data.suhu_tubuh, '-')?} <small>&deg;C</small></strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem">
+                    <span>Nadi</span>
+                    <strong>{?=isset_or($data.nadi, '-')?} <small>/mnt</small></strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem">
+                    <span>Respirasi</span>
+                    <strong>{?=isset_or($data.respirasi, '-')?} <small>/mnt</small></strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem">
+                    <span>SpO2</span>
+                    <strong>{?=isset_or($data.spo2, '-')?} <small>%</small></strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem">
+                    <span>GCS</span>
+                    <strong>{?=isset_or($data.gcs, '-')?}</strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem is-wide">
+                    <span>TB / BB</span>
+                    <strong>{?=isset_or($data.tinggi, '-')?} cm / {?=isset_or($data.berat, '-')?} kg</strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem is-wide">
+                    <span>Kesadaran</span>
+                    <strong>{?=isset_or($data.kesadaran, '-')?}</strong>
+                  </div>
+                  <div class="rsgm-cppt-vitem is-wide {if: !empty($data.alergi) && $data.alergi != '-'}is-alert{/if}">
+                    <span><i class="fa fa-exclamation-circle"></i> Alergi</span>
+                    <strong>{?=isset_or($data.alergi, '-')?}</strong>
+                  </div>
+                </div>
+
+                <div class="rsgm-cppt-signbox">
+                  {if: isset($data.is_signed) && $data.is_signed}
+                  <a href="{?=url(['esignature', 'verify', $data.signature_hash])?}" target="_blank" class="rsgm-cppt-qr-card">
+                    <div class="qrcodePetugasValidRanapDR{?=isset_or($data.nomor)?} rsgm-cppt-qr"></div>
+                    <div class="rsgm-cppt-qr-meta">
+                      <span class="rsgm-cppt-qr-ok"><i class="fa fa-check-circle"></i> Terverifikasi TTE</span>
+                      <span class="rsgm-cppt-qr-sub">Klik QR untuk cek validitas</span>
+                    </div>
+                  </a>
+                  <script>
+                    jQuery('.qrcodePetugasValidRanapDR{?=isset_or($data.nomor)?}').qrcode({
+                      width: 76,
+                      height: 76,
+                      text: "{?=isset_or($data.signature_hash)?}"
+                    });
+                  </script>
+                  {else}
+                  <div id="sign_container_{?=isset_or($data.sign_ref_id)?}">
                     {if: $current_user == $data.nip}
                     <button type="button" class="btn btn-primary btn-xs btn-tte"
                        data-ref_type="soap_ranap"
                        data-ref_id="{?=isset_or($data.sign_ref_id)?}"
                        data-signer_name="{?=isset_or($data.nama_petugas)?}">
-                       <i class="fa fa-pencil"></i> Tanda Tangani
-                    </button><br><br>
+                       <i class="fa fa-pencil"></i> Tanda Tangani (TTE)
+                    </button>
+                    {else}
+                    <div class="rsgm-cppt-unsigned">
+                      <span><i class="fa fa-clock-o"></i> Belum TTE (Rawat Inap)</span>
+                    </div>
                     {/if}
-                    {?=isset_or($data.nama_petugas)?}
+                  </div>
+                  {/if}
                 </div>
-              {/if}
-            </td>
-          </tr>
-          <tr>
-            <th colspan="2" style="background-color: #f8fafc;">Kesadaran</th>
-            <td colspan="7">{?=isset_or($data.kesadaran)?}</td>
-          </tr>
-          <tr>
-            <th colspan="2" style="background-color: #f8fafc;"><span class="rsgm-soap-tag rsgm-soap-tag-s">S</span> Subyektif</th>
-            <td colspan="7">{?=isset_or($data.keluhan)?}</td>
-          </tr>
-          <tr>
-            <th colspan="2" style="background-color: #f8fafc;"><span class="rsgm-soap-tag rsgm-soap-tag-o">O</span> Obyektif</th>
-            <td colspan="7">{?=isset_or($data.pemeriksaan)?}</td>
-          </tr>
-          <tr>
-            <th colspan="2" style="background-color: #f8fafc;"><span class="rsgm-soap-tag rsgm-soap-tag-a">A</span> Assesment</th>
-            <td colspan="7">{?=isset_or($data.penilaian)?}</td>
-          </tr>
-          <tr>
-            <td style="background-color: #f8fafc;">
-              <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-                <button type="button" name="button" class="btn btn-primary btn-xs copy_soap"
-                  data-suhu_tubuh="{?=isset_or($data.suhu_tubuh)?}"
-                  data-tensi="{?=isset_or($data.tensi)?}"
-                  data-nadi="{?=isset_or($data.nadi)?}"
-                  data-respirasi="{?=isset_or($data.respirasi)?}"
-                  data-tinggi="{?=isset_or($data.tinggi)?}"
-                  data-berat="{?=isset_or($data.berat)?}"
-                  data-gcs="{?=isset_or($data.gcs)?}"
-                  data-alergi="{?=isset_or($data.alergi)?}"
-                  data-keluhan="{?=isset_or($data.keluhan)?}"
-                  data-pemeriksaan="{?=isset_or($data.pemeriksaan)?}"
-                  data-penilaian="{?=isset_or($data.penilaian)?}"
-                  data-rtl="{?=isset_or($data.rtl)?}"
-                  data-instruksi="{?=isset_or($data.instruksi)?}"
-                  data-evaluasi="{?=isset_or($data.evaluasi)?}"
-                  data-spo2="{?=isset_or($data.spo2)?}"
-                  data-stts_daftar="{?=isset_or($data.stts_daftar)?}"
-                  data-status_poli="{?=isset_or($data.status_poli)?}"
-                  ><span class="fa fa-copy"></span><span class="hidden-xs"> Copy</span></button>
-                <button type="button" name="button" class="btn btn-success btn-xs edit_soap"
-                  data-no_rawat="{?=isset_or($data.no_rawat)?}"
-                  data-tgl_perawatan="{?=isset_or($data.tgl_perawatan)?}"
-                  data-jam_rawat="{?=isset_or($data.jam_rawat)?}"
-                  data-suhu_tubuh="{?=isset_or($data.suhu_tubuh)?}"
-                  data-tensi="{?=isset_or($data.tensi)?}"
-                  data-nadi="{?=isset_or($data.nadi)?}"
-                  data-respirasi="{?=isset_or($data.respirasi)?}"
-                  data-tinggi="{?=isset_or($data.tinggi)?}"
-                  data-berat="{?=isset_or($data.berat)?}"
-                  data-gcs="{?=isset_or($data.gcs)?}"
-                  data-alergi="{?=isset_or($data.alergi)?}"
-                  data-keluhan="{?=isset_or($data.keluhan)?}"
-                  data-pemeriksaan="{?=isset_or($data.pemeriksaan)?}"
-                  data-penilaian="{?=isset_or($data.penilaian)?}"
-                  data-rtl="{?=isset_or($data.rtl)?}"
-                  data-instruksi="{?=isset_or($data.instruksi)?}"
-                  data-evaluasi="{?=isset_or($data.evaluasi)?}"
-                  data-spo2="{?=isset_or($data.spo2)?}"
-                  data-stts_daftar="{?=isset_or($data.stts_daftar)?}"
-                  data-status_poli="{?=isset_or($data.status_poli)?}"
-                  {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip}disabled{/if}
-                  ><span class="fa fa-edit"></span><span class="hidden-xs"> Edit</span></button>
-                <button type="button" name="button" class="btn btn-danger btn-xs hapus_soap"
-                  data-no_rawat="{?=isset_or($data.no_rawat)?}"
-                  data-tgl_perawatan="{?=isset_or($data.tgl_perawatan)?}"
-                  data-jam_rawat="{?=isset_or($data.jam_rawat)?}"
-                  {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip}disabled{/if}
-                  ><span class="fa fa-trash-o"></span><span class="hidden-xs"> Hapus</span></button>
               </div>
-            </td>
-            <th colspan="2" style="background-color: #f8fafc;"><span class="rsgm-soap-tag rsgm-soap-tag-p">P</span> Plan</th>
-            <td colspan="7">{?=isset_or($data.rtl)?}</td>
-          </tr>
-          {/loop}
-          {/if}
-          {/if}
-        </tbody>
-      </table>
+
+              <div class="rsgm-cppt-soapie-col">
+                <div class="rsgm-cppt-sgrid">
+                  <div class="rsgm-cppt-cell is-s">
+                    <span class="rsgm-soap-tag rsgm-soap-tag-s">S</span>
+                    <div class="rsgm-cppt-cell-main">
+                      <div class="rsgm-cppt-cell-lbl">Subyektif (Keluhan)</div>
+                      <div class="rsgm-cppt-cell-txt">{?=isset_or($data.keluhan, '-')?}</div>
+                    </div>
+                  </div>
+                  <div class="rsgm-cppt-cell is-o">
+                    <span class="rsgm-soap-tag rsgm-soap-tag-o">O</span>
+                    <div class="rsgm-cppt-cell-main">
+                      <div class="rsgm-cppt-cell-lbl">Obyektif (Pemeriksaan)</div>
+                      <div class="rsgm-cppt-cell-txt">{?=isset_or($data.pemeriksaan, '-')?}</div>
+                    </div>
+                  </div>
+                  <div class="rsgm-cppt-cell is-a">
+                    <span class="rsgm-soap-tag rsgm-soap-tag-a">A</span>
+                    <div class="rsgm-cppt-cell-main">
+                      <div class="rsgm-cppt-cell-lbl">Assesment (Diagnosa)</div>
+                      <div class="rsgm-cppt-cell-txt">{?=isset_or($data.penilaian, '-')?}</div>
+                    </div>
+                  </div>
+                  <div class="rsgm-cppt-cell is-p">
+                    <span class="rsgm-soap-tag rsgm-soap-tag-p">P</span>
+                    <div class="rsgm-cppt-cell-main">
+                      <div class="rsgm-cppt-cell-lbl">Plan (Rencana / RTL)</div>
+                      <div class="rsgm-cppt-cell-txt">{?=isset_or($data.rtl, '-')?}</div>
+                    </div>
+                  </div>
+                  {if: (!empty($data.instruksi) && $data.instruksi != '-') || (!empty($data.evaluasi) && $data.evaluasi != '-')}
+                  <div class="rsgm-cppt-cell is-i">
+                    <span class="rsgm-soap-tag rsgm-soap-tag-i">I</span>
+                    <div class="rsgm-cppt-cell-main">
+                      <div class="rsgm-cppt-cell-lbl">Instruksi</div>
+                      <div class="rsgm-cppt-cell-txt">{?=isset_or($data.instruksi, '-')?}</div>
+                    </div>
+                  </div>
+                  <div class="rsgm-cppt-cell is-e">
+                    <span class="rsgm-soap-tag rsgm-soap-tag-e">E</span>
+                    <div class="rsgm-cppt-cell-main">
+                      <div class="rsgm-cppt-cell-lbl">Evaluasi</div>
+                      <div class="rsgm-cppt-cell-txt">{?=isset_or($data.evaluasi, '-')?}</div>
+                    </div>
+                  </div>
+                  {/if}
+                </div>
+
+                {if: (empty($data.instruksi) || $data.instruksi == '-') && (empty($data.evaluasi) || $data.evaluasi == '-')}
+                <div class="rsgm-cppt-ie-slim">
+                  <div class="rsgm-cppt-ie-slim-left">
+                    <span><span class="rsgm-soap-tag rsgm-soap-tag-i">I</span> Instruksi: <strong>-</strong></span>
+                    <span><span class="rsgm-soap-tag rsgm-soap-tag-e">E</span> Evaluasi: <strong>-</strong></span>
+                  </div>
+                  <span>Rawat Inap</span>
+                </div>
+                {/if}
+              </div>
+            </div>
+          </div>
+        </div>
+        {/loop}
+        {/if}
+        {/if}
+      </div>
+      <div class="rsgm-rincian-empty js-cppt-no-match" style="display: none; margin-top: 4px;">
+        <i class="fa fa-search"></i>
+        <span>Tidak ada riwayat pemeriksaan yang cocok dengan kata kunci pencarian.</span>
+      </div>
     </div>
     {else}
     <div class="rsgm-rincian-empty">
@@ -350,6 +573,62 @@
     {/if}
   </div>
 </div>
+
 <script type="text/javascript">
   $(".alert-dismissible").fadeTo(3000, 500).slideUp(500);
+  (function(jq) {
+    var cpptShell = jq('.rsgm-cppt-shell');
+    if (!cpptShell.length) return;
+
+    try {
+      var savedLayout = sessionStorage.getItem('rsgm_cppt_layout');
+      if (savedLayout === 'grid2') {
+        cpptShell.find('.js-cppt-layout').removeClass('active');
+        cpptShell.find('.js-cppt-layout[data-layout="grid2"]').addClass('active');
+        cpptShell.find('.js-cppt-list').addClass('is-grid2');
+        cpptShell.find('.js-cppt-item').addClass('is-open');
+      }
+    } catch (e) {}
+
+    cpptShell.off('click.cpptHead').on('click.cpptHead', '.rsgm-cppt-head', function(e) {
+      if (jq(e.target).closest('.rsgm-soap-entry-actions, button, a').length) {
+        return;
+      }
+      jq(this).closest('.js-cppt-item').toggleClass('is-open');
+    });
+
+    cpptShell.off('click.cpptExpand').on('click.cpptExpand', '.js-cppt-expand-all', function() {
+      cpptShell.find('.js-cppt-item:visible').addClass('is-open');
+    });
+
+    cpptShell.off('click.cpptCollapse').on('click.cpptCollapse', '.js-cppt-collapse-all', function() {
+      cpptShell.find('.js-cppt-item').removeClass('is-open');
+    });
+
+    cpptShell.off('click.cpptLayout').on('click.cpptLayout', '.js-cppt-layout', function() {
+      var mode = jq(this).attr('data-layout');
+      cpptShell.find('.js-cppt-layout').removeClass('active');
+      jq(this).addClass('active');
+      var cpptList = cpptShell.find('.js-cppt-list');
+      if (mode === 'grid2') {
+        cpptList.addClass('is-grid2');
+        cpptShell.find('.js-cppt-item:visible').addClass('is-open');
+      } else {
+        cpptList.removeClass('is-grid2');
+      }
+      try { sessionStorage.setItem('rsgm_cppt_layout', mode); } catch (e) {}
+    });
+
+    cpptShell.off('input.cpptFilter').on('input.cpptFilter', '.js-cppt-filter', function() {
+      var q = jq.trim(jq(this).val()).toLowerCase();
+      var visibleCount = 0;
+      cpptShell.find('.js-cppt-item').each(function() {
+        var txt = jq(this).text().toLowerCase();
+        var match = !q || txt.indexOf(q) !== -1;
+        jq(this).toggle(match);
+        if (match) visibleCount++;
+      });
+      cpptShell.find('.js-cppt-no-match').toggle(visibleCount === 0);
+    });
+  })(jQuery);
 </script>
