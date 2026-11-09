@@ -891,17 +891,31 @@ class Admin extends AdminModule
     $jam_reg = $this->core->getRegPeriksaInfo('jam_reg', $no_rawat);
     $endTime = date("H:i:s", strtotime('+10 minutes', strtotime($jam_reg)));
 
+    $igd = $this->settings->get('settings.igd') ?: 'UGD';
     $code = 'AMB';
     $display = 'ambulatory';
-    if ($status_lanjut == 'Ranap') {
-      $kd_poli = $this->core->getKamarInapInfo('kd_kamar', $no_rawat);
-      $kd_bangsal = $this->core->getKamarInfo('kd_bangsal', $kd_poli);
-      $nm_poli = $this->core->getBangsalInfo('nm_bangsal', $kd_bangsal);
+    if ($kd_poli == $igd) {
+      $code = 'EMER';
+      $display = 'emergency';
+    } elseif ($status_lanjut == 'Ranap') {
+      $kd_kamar = $this->core->getKamarInapInfo('kd_kamar', $no_rawat);
+      $kd_bangsal = $this->core->getKamarInfo('kd_bangsal', $kd_kamar);
+      $nm_bangsal = $this->core->getBangsalInfo('nm_bangsal', $kd_bangsal);
+      $kd_poli = !empty($kd_kamar) ? $kd_kamar : $kd_poli;
+      $nm_poli = !empty($nm_bangsal) ? $nm_bangsal : $nm_poli;
       $code = 'IMP';
       $display = 'inpatient encounter';
     }
 
     $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $kd_poli)->oneArray();
+    if (!$mlite_satu_sehat_lokasi && $status_lanjut == 'Ranap') {
+      if (!empty($kd_bangsal)) {
+        $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $kd_bangsal)->oneArray();
+      }
+      if (!$mlite_satu_sehat_lokasi) {
+        $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', 'RANAP')->oneArray();
+      }
+    }
     $praktisi_id = isset($no_ktp_dokter['practitioner_id']) ? $no_ktp_dokter['practitioner_id'] : '';
     $lokasi_id = isset($mlite_satu_sehat_lokasi['id_lokasi_satusehat']) ? $mlite_satu_sehat_lokasi['id_lokasi_satusehat'] : '';
 
@@ -951,7 +965,7 @@ class Admin extends AdminModule
         [
           "location" => [
             "reference" => "Location/" . $lokasi_id,
-            "display" => $kd_poli . ' ' . $nm_poli
+            "display" => ($status_lanjut == 'Ranap' && !empty($mlite_satu_sehat_lokasi['lokasi'])) ? $mlite_satu_sehat_lokasi['lokasi'] : ($kd_poli . ' ' . $nm_poli)
           ]
         ]
       ],
@@ -994,10 +1008,17 @@ class Admin extends AdminModule
     $id_encounter = (is_object($decoded) && isset($decoded->id)) ? $decoded->id : null;
     $pesan = 'Gagal mengirim encounter platform Satu Sehat!!';
     if ($id_encounter) {
-      $this->db('mlite_satu_sehat_response')->save([
-        'no_rawat' => $no_rawat,
-        'id_encounter' => $id_encounter
-      ]);
+      $existing = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
+      if ($existing) {
+        $this->db('mlite_satu_sehat_response')
+          ->where('no_rawat', $no_rawat)
+          ->save(['id_encounter' => $id_encounter]);
+      } else {
+        $this->db('mlite_satu_sehat_response')->save([
+          'no_rawat' => $no_rawat,
+          'id_encounter' => $id_encounter
+        ]);
+      }
       $pesan = 'Sukses mengirim encounter platform Satu Sehat!!';
     }
 
@@ -1058,13 +1079,25 @@ class Admin extends AdminModule
     $tgl_registrasi = $this->core->getRegPeriksaInfo('tgl_registrasi', $no_rawat);
     $jam_reg = $this->core->getRegPeriksaInfo('jam_reg', $no_rawat);
     $inProg = $this->db('pemeriksaan_ralan')->select(['tgl' => 'tgl_perawatan', 'jam' => 'jam_rawat', 'respirasi' => 'respirasi', 'suhu' => 'suhu_tubuh', 'tensi' => 'tensi', 'nadi' => 'nadi', 'penilaian' => 'penilaian', 'keluhan' => 'keluhan'])->where('no_rawat', $no_rawat)->oneArray();
+    if (!$inProg && $status_lanjut == 'Ranap') {
+      $inProg = $this->db('pemeriksaan_ranap')->select(['tgl' => 'tgl_perawatan', 'jam' => 'jam_rawat', 'respirasi' => 'respirasi', 'suhu' => 'suhu_tubuh', 'tensi' => 'tensi', 'nadi' => 'nadi', 'penilaian' => 'penilaian', 'keluhan' => 'keluhan'])->where('no_rawat', $no_rawat)->oneArray();
+    }
     $diagnosa_pasien = $this->db('diagnosa_pasien')
       ->join('penyakit', 'penyakit.kd_penyakit=diagnosa_pasien.kd_penyakit')
       ->where('no_rawat', $no_rawat)
       ->where('diagnosa_pasien.status', $status_lanjut)
       ->where('prioritas', '1')
       ->oneArray();
-    $_prosedure_pasien = $this->db('prosedur_pasien')->select(['deskripsi_pendek' => 'icd9.deskripsi_pendek', 'kode' => 'icd9.kode'])->join('icd9', 'icd9.kode = prosedur_pasien.kode')->where('prosedur_pasien.no_rawat', $no_rawat)->where('prosedur_pasien.status', 'Ralan')->where('prosedur_pasien.prioritas', '1')->oneArray();
+    if (!$diagnosa_pasien) {
+      $diagnosa_pasien = $this->db('diagnosa_pasien')
+        ->join('penyakit', 'penyakit.kd_penyakit=diagnosa_pasien.kd_penyakit')
+        ->where('no_rawat', $no_rawat)
+        ->oneArray();
+    }
+    $_prosedure_pasien = $this->db('prosedur_pasien')->select(['deskripsi_pendek' => 'icd9.deskripsi_pendek', 'kode' => 'icd9.kode'])->join('icd9', 'icd9.kode = prosedur_pasien.kode')->where('prosedur_pasien.no_rawat', $no_rawat)->where('prosedur_pasien.status', $status_lanjut)->where('prosedur_pasien.prioritas', '1')->oneArray();
+    if (!$_prosedure_pasien) {
+      $_prosedure_pasien = $this->db('prosedur_pasien')->select(['deskripsi_pendek' => 'icd9.deskripsi_pendek', 'kode' => 'icd9.kode'])->join('icd9', 'icd9.kode = prosedur_pasien.kode')->where('prosedur_pasien.no_rawat', $no_rawat)->oneArray();
+    }
     $prosedure_pasien = $_prosedure_pasien['deskripsi_pendek'] ?? '';
     $kode_prosedure_pasien = $_prosedure_pasien['kode'] ?? '';
     // Harden: avoid deprecated calls with null and only mutate when safe
@@ -1079,17 +1112,31 @@ class Admin extends AdminModule
       $kunjungan = 'Perawatan';
     }
 
+    $igd = $this->settings->get('settings.igd') ?: 'UGD';
     $code = 'AMB';
     $display = 'ambulatory';
-    if ($status_lanjut == 'Ranap') {
-      $kd_poli = $this->core->getKamarInapInfo('kd_kamar', $no_rawat);
-      $kd_bangsal = $this->core->getKamarInfo('kd_bangsal', $kd_poli);
-      $nm_poli = $this->core->getBangsalInfo('nm_bangsal', $kd_bangsal);
+    if ($kd_poli == $igd) {
+      $code = 'EMER';
+      $display = 'emergency';
+    } elseif ($status_lanjut == 'Ranap') {
+      $kd_kamar = $this->core->getKamarInapInfo('kd_kamar', $no_rawat);
+      $kd_bangsal = $this->core->getKamarInfo('kd_bangsal', $kd_kamar);
+      $nm_bangsal = $this->core->getBangsalInfo('nm_bangsal', $kd_bangsal);
+      $kd_poli = !empty($kd_kamar) ? $kd_kamar : $kd_poli;
+      $nm_poli = !empty($nm_bangsal) ? $nm_bangsal : $nm_poli;
       $code = 'IMP';
       $display = 'inpatient encounter';
     }
 
     $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $kd_poli)->oneArray();
+    if (!$mlite_satu_sehat_lokasi && $status_lanjut == 'Ranap') {
+      if (!empty($kd_bangsal)) {
+        $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $kd_bangsal)->oneArray();
+      }
+      if (!$mlite_satu_sehat_lokasi) {
+        $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', 'RANAP')->oneArray();
+      }
+    }
 
     $respiratory = '';
     $suhu = '';
@@ -1646,6 +1693,20 @@ class Admin extends AdminModule
       $careplan_service_request_lab_json = $careplan->toJsonBundle();
     }
 
+    $tgl_selesai = $mlite_billing['tgl_billing'] ?? '';
+    $jam_selesai = $mlite_billing['jam_billing'] ?? '';
+    if (empty($tgl_selesai) && $status_lanjut == 'Ranap') {
+      $kamar_inap = $this->db('kamar_inap')->where('no_rawat', $no_rawat)->desc('tgl_keluar')->oneArray();
+      if ($kamar_inap && !empty($kamar_inap['tgl_keluar']) && $kamar_inap['tgl_keluar'] != '0000-00-00') {
+        $tgl_selesai = $kamar_inap['tgl_keluar'];
+        $jam_selesai = !empty($kamar_inap['jam_keluar']) ? $kamar_inap['jam_keluar'] : '12:00:00';
+      }
+    }
+    if (empty($tgl_selesai)) {
+      $tgl_selesai = $inProg['tgl'] ?? $tgl_registrasi;
+      $jam_selesai = $inProg['jam'] ?? $jam_reg;
+    }
+
     // Bundle dari sini ----------------------------------------------------------------------
     $entry = [];
     $entry[] = [
@@ -1683,13 +1744,13 @@ class Admin extends AdminModule
         ],
         "period" => [
           "start" => $this->convertTimeSatset($tgl_registrasi . ' ' . $jam_reg) . $zonawaktu,
-          "end" => $this->convertTimeSatset($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing']) . $zonawaktu
+          "end" => $this->convertTimeSatset($tgl_selesai . ' ' . $jam_selesai) . $zonawaktu
         ],
         "location" => [
           [
             "location" => [
-              "reference" => "Location/" . $mlite_satu_sehat_lokasi['id_lokasi_satusehat'],
-              "display" => $kd_poli . ' ' . $nm_poli
+              "reference" => "Location/" . ($mlite_satu_sehat_lokasi['id_lokasi_satusehat'] ?? ''),
+              "display" => ($status_lanjut == 'Ranap' && !empty($mlite_satu_sehat_lokasi['lokasi'])) ? $mlite_satu_sehat_lokasi['lokasi'] : ($kd_poli . ' ' . $nm_poli)
             ]
           ]
         ],
@@ -1716,21 +1777,21 @@ class Admin extends AdminModule
             "status" => "arrived",
             "period" => [
               "start" => $this->convertTimeSatset($tgl_registrasi . ' ' . $jam_reg) . $zonawaktu,
-              "end" => $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . $zonawaktu
+              "end" => $this->convertTimeSatset(($inProg['tgl'] ?? $tgl_registrasi) . ' ' . ($inProg['jam'] ?? $jam_reg)) . $zonawaktu
             ]
           ],
           [
             "status" => "in-progress",
             "period" => [
-              "start" => $this->convertTimeSatset($inProg['tgl'] . ' ' . $inProg['jam']) . $zonawaktu,
-              "end" => $this->convertTimeSatset($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing']) . $zonawaktu
+              "start" => $this->convertTimeSatset(($inProg['tgl'] ?? $tgl_registrasi) . ' ' . ($inProg['jam'] ?? $jam_reg)) . $zonawaktu,
+              "end" => $this->convertTimeSatset($tgl_selesai . ' ' . $jam_selesai) . $zonawaktu
             ]
           ],
           [
             "status" => "finished",
             "period" => [
-              "start" => $this->convertTimeSatset($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing']) . $zonawaktu,
-              "end" => $this->convertTimeSatset($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing']) . $zonawaktu
+              "start" => $this->convertTimeSatset($tgl_selesai . ' ' . $jam_selesai) . $zonawaktu,
+              "end" => $this->convertTimeSatset($tgl_selesai . ' ' . $jam_selesai) . $zonawaktu
             ]
           ]
         ],
@@ -1918,8 +1979,8 @@ class Admin extends AdminModule
 
     $pesan = 'Gagal mengirim pasien dengan No Rawat : ' . $no_rawat . ' ke platform Satu Sehat!!';
     if ($id_encounter) {
-      $this->db('mlite_satu_sehat_response')->save([
-        'no_rawat' => $no_rawat,
+      $existing_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
+      $bundleResponseData = [
         'id_encounter' => $id_encounter,
         'id_condition' => $id_condition,
         'id_observation_ttvrespirasi' => $id_observation_respiratory,
@@ -1935,7 +1996,15 @@ class Admin extends AdminModule
         'id_lab_pk_observation' => $id_observation_lab,
         'id_lab_pk_diagnostic' => $id_diagnostic_report_lab,
         'id_careplan' => $id_careplan,
-      ]);
+      ];
+      if ($existing_response) {
+        $this->db('mlite_satu_sehat_response')
+          ->where('no_rawat', $no_rawat)
+          ->save($bundleResponseData);
+      } else {
+        $bundleResponseData['no_rawat'] = $no_rawat;
+        $this->db('mlite_satu_sehat_response')->save($bundleResponseData);
+      }
 
       // Simpan ID resource lab per item pemeriksaan ke tabel detail
       if (!empty($lab_items_built)) {
@@ -2028,6 +2097,12 @@ class Admin extends AdminModule
       ->where('diagnosa_pasien.status', $status_lanjut)
       ->where('prioritas', '1')
       ->oneArray();
+    if (!$diagnosa_pasien) {
+      $diagnosa_pasien = $this->db('diagnosa_pasien')
+        ->join('penyakit', 'penyakit.kd_penyakit=diagnosa_pasien.kd_penyakit')
+        ->where('no_rawat', $no_rawat)
+        ->oneArray();
+    }
 
     $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
 
@@ -2205,12 +2280,15 @@ class Admin extends AdminModule
       ->desc('tgl_perawatan')
       ->oneArray();
 
-    if ($status_lanjut == 'Ranap') {
-      $pemeriksaan = $this->db('pemeriksaan_ranap')
+    if ($status_lanjut == 'Ranap' || empty($pemeriksaan)) {
+      $pemeriksaan_ranap = $this->db('pemeriksaan_ranap')
         ->where('no_rawat', $no_rawat)
         ->limit(1)
         ->desc('tgl_perawatan')
         ->oneArray();
+      if ($pemeriksaan_ranap) {
+        $pemeriksaan = $pemeriksaan_ranap;
+      }
     }
 
     $ttv_hl7_code = '';
@@ -3615,8 +3693,17 @@ class Admin extends AdminModule
       ->where('prosedur_pasien.status', $status_lanjut)
       ->where('prioritas', '1')
       ->oneArray();
+    if (!$prosedur_pasien) {
+      $prosedur_pasien = $this->db('prosedur_pasien')
+        ->join('icd9', 'icd9.kode=prosedur_pasien.kode')
+        ->where('no_rawat', $no_rawat)
+        ->oneArray();
+    }
 
     $pemeriksaan_ralan = $this->db('pemeriksaan_ralan')->where('no_rawat', $no_rawat)->oneArray();
+    if (!$pemeriksaan_ralan && $status_lanjut == 'Ranap') {
+      $pemeriksaan_ralan = $this->db('pemeriksaan_ranap')->where('no_rawat', $no_rawat)->oneArray();
+    }
 
     if (!is_array($prosedur_pasien) || !isset($prosedur_pasien['kode']) || !isset($prosedur_pasien['deskripsi_panjang'])) {
       $resp = json_encode(['error' => 'Data tidak lengkap untuk Procedure', 'missing' => ['prosedur_pasien.kode' => 'missing', 'prosedur_pasien.deskripsi_panjang' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -3649,8 +3736,15 @@ class Admin extends AdminModule
       exit();
     }
     $id_encounter = isset_or($mlite_satu_sehat_response['id_encounter'], '');
-    $tgl_pulang = isset_or($mlite_billing['tgl_billing'], $pemeriksaan_ralan['tgl_perawatan']);
-    $jam_pulang = isset_or($mlite_billing['jam_billing'], $pemeriksaan_ralan['jam_rawat']);
+    $tgl_pulang = isset_or($mlite_billing['tgl_billing'], isset_or($pemeriksaan_ralan['tgl_perawatan'], ''));
+    $jam_pulang = isset_or($mlite_billing['jam_billing'], isset_or($pemeriksaan_ralan['jam_rawat'], ''));
+    if ((empty($tgl_pulang) || $tgl_pulang == '0000-00-00') && $status_lanjut == 'Ranap') {
+      $kamar_inap = $this->db('kamar_inap')->where('no_rawat', $no_rawat)->desc('tgl_keluar')->oneArray();
+      if ($kamar_inap && !empty($kamar_inap['tgl_keluar']) && $kamar_inap['tgl_keluar'] != '0000-00-00') {
+        $tgl_pulang = $kamar_inap['tgl_keluar'];
+        $jam_pulang = !empty($kamar_inap['jam_keluar']) ? $kamar_inap['jam_keluar'] : '12:00:00';
+      }
+    }
 
     if (empty($tgl_pulang) || $tgl_pulang == '0000-00-00' || empty($jam_pulang)) {
       $resp = json_encode(['error' => 'Data tidak lengkap untuk Procedure', 'missing' => ['waktu_selesai' => 'Pasien belum selesai perawatan atau belum melakukan pembayaran (Billing).']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -4391,6 +4485,9 @@ class Admin extends AdminModule
         $obat['kode_brng'] = (isset($obat['kode_brng']) && $obat['kode_brng'] !== null) ? (string) $obat['kode_brng'] : '';
         $satu_sehat_mapping_obat = $this->db('mlite_satu_sehat_mapping_obat')->where('kode_brng', $obat['kode_brng'])->oneArray();
       $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $kd_poli)->oneArray();
+      if (!$mlite_satu_sehat_lokasi) {
+        $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', 'RANAP')->oneArray();
+      }
       $databarang = $this->db('databarang')->where('kode_brng', $obat['kode_brng'])->oneArray();
       $gudangbarang = $this->db('gudangbarang')->where('kode_brng', $obat['kode_brng'])->where('kd_bangsal', $this->core->getSettings('satu_sehat', 'farmasi'))->oneArray();
       // $batch['no_batch'] = '121212';
@@ -4535,6 +4632,9 @@ class Admin extends AdminModule
 
     $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
     $pemeriksaan_ralan = $this->db('pemeriksaan_ralan')->where('no_rawat', $no_rawat)->oneArray();
+    if (!$pemeriksaan_ralan) {
+      $pemeriksaan_ralan = $this->db('pemeriksaan_ranap')->where('no_rawat', $no_rawat)->oneArray();
+    }
 
     $keluhan = isset_or($pemeriksaan_ralan['keluhan'], '');
     $pemeriksaan = isset_or($pemeriksaan_ralan['pemeriksaan'], '');
@@ -4555,6 +4655,12 @@ class Admin extends AdminModule
       ->where('no_rawat', $no_rawat)
       ->where('prioritas', '1')
       ->oneArray();
+    if (!$diagnosa_pasien) {
+      $diagnosa_pasien = $this->db('diagnosa_pasien')
+        ->join('penyakit', 'penyakit.kd_penyakit=diagnosa_pasien.kd_penyakit')
+        ->where('no_rawat', $no_rawat)
+        ->oneArray();
+    }
 
     $kd_penyakit = isset_or($diagnosa_pasien['kd_penyakit'], '');
     $nm_penyakit = isset_or($diagnosa_pasien['nm_penyakit'], '');
@@ -8651,8 +8757,6 @@ class Admin extends AdminModule
         ->select('no_rawat')
         ->where('reg_periksa.tgl_registrasi', $periode)
         ->where('stts', '!=', 'Batal')
-        ->where('kd_poli', '!=', 'IGD01')
-        ->where('status_lanjut', 'Ralan')
         ->limit($limit)
         ->offset($offset)
         ->toArray();
@@ -9096,12 +9200,24 @@ class Admin extends AdminModule
     $itemFilter = $_GET['item_filter'] ?? $_POST['item_filter'] ?? '';
     $itemState = $_GET['item_state'] ?? $_POST['item_state'] ?? '';
 
-    $total = $this->db('reg_periksa')
+    // Filter layanan (all | ralan | igd | ranap)
+    $layananFilter = $_GET['layanan_filter'] ?? $_POST['layanan_filter'] ?? '';
+    $igd = $this->settings->get('settings.igd') ?: 'UGD';
+
+    $totalQuery = $this->db('reg_periksa')
       ->where('reg_periksa.tgl_registrasi', '>=', $start_date)
       ->where('reg_periksa.tgl_registrasi', '<=', $end_date)
-      ->where('stts', '!=', 'Batal')
-      ->where('status_lanjut', 'Ralan')
-      ->count();
+      ->where('stts', '!=', 'Batal');
+
+    if ($layananFilter === 'ralan') {
+      $totalQuery->where('status_lanjut', 'Ralan')->where('kd_poli', '!=', $igd);
+    } elseif ($layananFilter === 'igd') {
+      $totalQuery->where('kd_poli', $igd);
+    } elseif ($layananFilter === 'ranap') {
+      $totalQuery->where('status_lanjut', 'Ranap');
+    }
+
+    $total = $totalQuery->count();
 
     $query = $this->db('reg_periksa')
       ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
@@ -9109,8 +9225,15 @@ class Admin extends AdminModule
       ->leftJoin('pegawai', 'pegawai.nik = reg_periksa.kd_dokter')
       ->where('reg_periksa.tgl_registrasi', '>=', $start_date)
       ->where('reg_periksa.tgl_registrasi', '<=', $end_date)
-      ->where('stts', '!=', 'Batal')
-      ->where('status_lanjut', 'Ralan');
+      ->where('stts', '!=', 'Batal');
+
+    if ($layananFilter === 'ralan') {
+      $query->where('status_lanjut', 'Ralan')->where('kd_poli', '!=', $igd);
+    } elseif ($layananFilter === 'igd') {
+      $query->where('kd_poli', $igd);
+    } elseif ($layananFilter === 'ranap') {
+      $query->where('status_lanjut', 'Ranap');
+    }
 
     if ($searchTerm) {
       $query->where(function ($q) use ($searchTerm) {
@@ -9183,9 +9306,16 @@ class Admin extends AdminModule
         $row['kd_kamar'] = $this->core->getKamarInapInfo('kd_kamar', $row['no_rawat']);
         $row['kd_poli'] = $this->core->getKamarInfo('kd_bangsal', $row['kd_kamar']);
         $row['nm_poli'] = $this->core->getBangsalInfo('nm_bangsal', $row['kd_poli']);
+        $kamar_inap = $this->db('kamar_inap')->where('no_rawat', $row['no_rawat'])->desc('tgl_keluar')->oneArray();
+        if ($kamar_inap && !empty($kamar_inap['tgl_keluar']) && $kamar_inap['tgl_keluar'] != '0000-00-00') {
+          $row['tgl_pulang'] = $kamar_inap['tgl_keluar'];
+        }
       }
 
       $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $row['kd_poli'])->oneArray();
+      if (!$mlite_satu_sehat_lokasi && $row['status_lanjut'] == 'Ranap') {
+        $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', 'RANAP')->oneArray();
+      }
       $row['id_organisasi'] = isset_or($mlite_satu_sehat_lokasi['id_organisasi_satusehat'], '');
       $row['id_lokasi'] = isset_or($mlite_satu_sehat_lokasi['id_lokasi_satusehat'], '');
 
@@ -9195,12 +9325,18 @@ class Admin extends AdminModule
         ->desc('tgl_perawatan')
         ->oneArray();
 
-      if ($row['status_lanjut'] == 'Ranap') {
-        $row['pemeriksaan'] = $this->db('pemeriksaan_ranap')
+      if ($row['status_lanjut'] == 'Ranap' || empty($row['pemeriksaan'])) {
+        $pemeriksaan_ranap = $this->db('pemeriksaan_ranap')
           ->where('no_rawat', $row['no_rawat'])
           ->limit(1)
           ->desc('tgl_perawatan')
           ->oneArray();
+        if ($pemeriksaan_ranap) {
+          $row['pemeriksaan'] = $pemeriksaan_ranap;
+          if (empty($row['tgl_pulang'])) {
+            $row['tgl_pulang'] = $pemeriksaan_ranap['tgl_perawatan'];
+          }
+        }
       }
 
       $row['diagnosa_pasien'] = $this->db('diagnosa_pasien')
@@ -9210,12 +9346,26 @@ class Admin extends AdminModule
         ->where('prioritas', '1')
         ->oneArray();
 
+      if (!$row['diagnosa_pasien']) {
+        $row['diagnosa_pasien'] = $this->db('diagnosa_pasien')
+          ->join('penyakit', 'penyakit.kd_penyakit=diagnosa_pasien.kd_penyakit')
+          ->where('no_rawat', $row['no_rawat'])
+          ->oneArray();
+      }
+
       $row['prosedur_pasien'] = $this->db('prosedur_pasien')
         ->join('icd9', 'icd9.kode=prosedur_pasien.kode')
         ->where('no_rawat', $row['no_rawat'])
         ->where('prosedur_pasien.status', $row['status_lanjut'])
         ->where('prioritas', '1')
         ->oneArray();
+
+      if (!$row['prosedur_pasien']) {
+        $row['prosedur_pasien'] = $this->db('prosedur_pasien')
+          ->join('icd9', 'icd9.kode=prosedur_pasien.kode')
+          ->where('no_rawat', $row['no_rawat'])
+          ->oneArray();
+      }
 
       $row['adime_gizi'] = $this->db('catatan_adime_gizi')
         ->where('no_rawat', $row['no_rawat'])->oneArray();
@@ -9804,6 +9954,7 @@ class Admin extends AdminModule
     $filter_poli = isset($_GET['filter_poli']) && $_GET['filter_poli'] !== '' ? $_GET['filter_poli'] : '';
     $filter_ket = isset($_GET['filter_ket']) && $_GET['filter_ket'] !== '' ? $_GET['filter_ket'] : '';
     $filter_bayar = isset($_GET['filter_bayar']) && $_GET['filter_bayar'] !== '' ? $_GET['filter_bayar'] : '';
+    $filter_layanan = isset($_GET['filter_layanan']) && $_GET['filter_layanan'] !== '' ? $_GET['filter_layanan'] : '';
 
     // Status bayar default: Sudah Bayar (jika belum pernah dipilih)
     if ($filter_bayar === '') {
@@ -9841,6 +9992,7 @@ class Admin extends AdminModule
       'filter_poli' => $filter_poli,
       'filter_ket' => $filter_ket,
       'filter_bayar' => $filter_bayar,
+      'filter_layanan' => $filter_layanan,
     ]);
     extract($agg);
 
@@ -10066,12 +10218,15 @@ class Admin extends AdminModule
       $filter_bayar = 'Sudah Bayar';
     }
 
+    $filter_layanan = isset($filters['filter_layanan']) ? $filters['filter_layanan'] : '';
+    $igd = $this->settings->get('settings.igd') ?: 'UGD';
+
     // Cache hasil agregasi (TTL 5 menit). Dipakai bersama Rekap Excel & Statistik;
     // dipaksa fresh tiap ada upload baru lewat param force=1.
     $cache_file = null;
     try {
       if (!isset($_GET['force'])) {
-        $cache_key = md5(serialize([$start_date, $end_date, $filter_dokter, $filter_poli, $filter_ket, $filter_bayar]));
+        $cache_key = md5(serialize([$start_date, $end_date, $filter_dokter, $filter_poli, $filter_ket, $filter_bayar, $filter_layanan]));
         $cache_file = sys_get_temp_dir() . '/satu_sehat_rekap_v12_' . $cache_key . '.tmp';
         if (is_file($cache_file) && (time() - filemtime($cache_file)) < 300) {
           $cached = unserialize(file_get_contents($cache_file));
@@ -10117,8 +10272,15 @@ class Admin extends AdminModule
       ->leftJoin('pegawai', 'pegawai.nik = reg_periksa.kd_dokter')
       ->where('reg_periksa.tgl_registrasi', '>=', $start_date)
       ->where('reg_periksa.tgl_registrasi', '<=', $end_date)
-      ->where('stts', '!=', 'Batal')
-      ->where('status_lanjut', 'Ralan');
+      ->where('stts', '!=', 'Batal');
+
+    if ($filter_layanan === 'ralan') {
+      $query->where('status_lanjut', 'Ralan')->where('kd_poli', '!=', $igd);
+    } elseif ($filter_layanan === 'igd') {
+      $query->where('kd_poli', $igd);
+    } elseif ($filter_layanan === 'ranap') {
+      $query->where('status_lanjut', 'Ranap');
+    }
 
     if ($filter_dokter !== '') {
       $query->where('reg_periksa.kd_dokter', $filter_dokter);
@@ -10254,7 +10416,17 @@ class Admin extends AdminModule
           $perawatan_map[$r['no_rawat']] = $r['tgl_perawatan'];
         }
       }
-      foreach ($this->db('diagnosa_pasien')->where('status', 'Ralan')->where('prioritas', '1')->where('no_rawat', 'in', $chunk)->select(['no_rawat'])->toArray() as $r) {
+      foreach ($this->db('pemeriksaan_ranap')->where('no_rawat', 'in', $chunk)->toArray() as $r) {
+        if (!isset($perawatan_map[$r['no_rawat']])) {
+          $perawatan_map[$r['no_rawat']] = $r['tgl_perawatan'];
+        }
+      }
+      foreach ($this->db('kamar_inap')->where('no_rawat', 'in', $chunk)->toArray() as $r) {
+        if (!isset($perawatan_map[$r['no_rawat']]) && !empty($r['tgl_keluar']) && $r['tgl_keluar'] != '0000-00-00') {
+          $perawatan_map[$r['no_rawat']] = $r['tgl_keluar'];
+        }
+      }
+      foreach ($this->db('diagnosa_pasien')->where('prioritas', '1')->where('no_rawat', 'in', $chunk)->select(['no_rawat'])->toArray() as $r) {
         $diag_set[$r['no_rawat']] = true;
       }
       foreach ($this->db('resep_obat')->where('no_rawat', 'in', $chunk)->select(['no_rawat'])->toArray() as $r) {

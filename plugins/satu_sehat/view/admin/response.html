@@ -270,6 +270,14 @@
                     </div>
                 </div>
                 <div class="form-group" style="margin-left: 5px;">
+                    <select id="layanan_filter" name="layanan_filter" class="form-control input-sm" style="width: auto; font-weight: 600;">
+                        <option value="">Semua Layanan</option>
+                        <option value="ralan">Rawat Jalan</option>
+                        <option value="igd">IGD (Gawat Darurat)</option>
+                        <option value="ranap">Rawat Inap</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-left: 5px;">
                     <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
                     <button type="submit" class="btn btn-primary btn-sm" style="padding: 5px 14px;"><i class="fa fa-search"></i> Cari</button>
                 </div>
@@ -510,6 +518,15 @@
                     </select>
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
+                    <label style="font-size:12px;margin-bottom:2px;">Jenis Layanan</label>
+                    <select id="rekap_filter_layanan" class="form-control">
+                        <option value="">Semua Layanan</option>
+                        <option value="ralan">Rawat Jalan</option>
+                        <option value="igd">IGD (Gawat Darurat)</option>
+                        <option value="ranap">Rawat Inap</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
                     <label style="font-size:12px;margin-bottom:2px;">Status Bayar</label>
                     <select id="rekap_filter_bayar" class="form-control">
                         <option value="Sudah Bayar" selected>Sudah Bayar</option>
@@ -700,6 +717,10 @@
             table.ajax.url(buildApiUrl()).load();
         });
 
+        $('#layanan_filter').on('change', function () {
+            table.ajax.url(buildApiUrl()).load();
+        });
+
         $('#btn-rekap-download').on('click', function () {
             var tgl_awal = $('#rekap_tanggal_awal').val() || '';
             var tgl_akhir = $('#rekap_tanggal_akhir').val() || '';
@@ -707,6 +728,7 @@
             var poli = $('#rekap_filter_poli').val() || '';
             var ket = $('#rekap_filter_ket').val() || '';
             var bayar = $('#rekap_filter_bayar').val() || 'Sudah Bayar';
+            var layanan = $('#rekap_filter_layanan').val() || '';
             var params = ['t=' + encodeURIComponent(mlite.token)];
             if (tgl_awal) params.push('tanggal_awal=' + encodeURIComponent(tgl_awal));
             if (tgl_akhir) params.push('tanggal_akhir=' + encodeURIComponent(tgl_akhir));
@@ -714,13 +736,16 @@
             if (poli) params.push('filter_poli=' + encodeURIComponent(poli));
             if (ket) params.push('filter_ket=' + encodeURIComponent(ket));
             if (bayar && bayar !== 'Sudah Bayar') params.push('filter_bayar=' + encodeURIComponent(bayar));
+            if (layanan) params.push('filter_layanan=' + encodeURIComponent(layanan));
             window.open(baseURL + '/satu_sehat/rekap?' + params.join('&'), '_blank');
         });
         syncRekapDates();
         function buildApiUrl() {
             var tgl_awal = $('#tanggal_awal').val() || '';
             var tgl_akhir = $('#tanggal_akhir').val() || '';
+            var layanan = $('#layanan_filter').val() || '';
             var url = baseURL + '/satu_sehat/responseapi?t=' + mlite.token + '&tanggal_awal=' + encodeURIComponent(tgl_awal) + '&tanggal_akhir=' + encodeURIComponent(tgl_akhir);
+            if (layanan) url += '&layanan_filter=' + encodeURIComponent(layanan);
             if (statusFilter) url += '&status_filter=' + encodeURIComponent(statusFilter);
             if (itemFilter && itemState) url += '&item_filter=' + encodeURIComponent(itemFilter) + '&item_state=' + encodeURIComponent(itemState);
             return url;
