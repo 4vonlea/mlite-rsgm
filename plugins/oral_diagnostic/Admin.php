@@ -1513,6 +1513,301 @@ class Admin extends AdminModule
       exit();
     }
 
+    public function getOdontogram($no_rkm_medis)
+    {
+      $no_rawat = isset($_GET['no_rawat']) ? $_GET['no_rawat'] : '';
+      if (!empty($no_rawat) && strpos($no_rawat, '/') === false && strlen($no_rawat) == 14) {
+        $no_rawat = revertNorawat($no_rawat);
+      }
+      $peta_mukosa_gambar = '';
+      if (!empty($no_rawat)) {
+        $peta_mukosa = $this->db('mlite_peta_mukosa_rongga_mulut')->where('no_rawat', $no_rawat)->oneArray();
+        if ($peta_mukosa && !empty($peta_mukosa['gambar'])) {
+          $peta_mukosa_gambar = $peta_mukosa['gambar'];
+        }
+      }
+      if (empty($peta_mukosa_gambar)) {
+        $peta_mukosa_terakhir = $this->db('mlite_peta_mukosa_rongga_mulut')
+          ->join('reg_periksa', 'reg_periksa.no_rawat=mlite_peta_mukosa_rongga_mulut.no_rawat')
+          ->where('reg_periksa.no_rkm_medis', $no_rkm_medis)
+          ->where('mlite_peta_mukosa_rongga_mulut.gambar', '!=', '')
+          ->where('mlite_peta_mukosa_rongga_mulut.gambar', '!=', '{}')
+          ->desc('mlite_peta_mukosa_rongga_mulut.tanggal')
+          ->oneArray();
+        if ($peta_mukosa_terakhir && !empty($peta_mukosa_terakhir['gambar'])) {
+          $peta_mukosa_gambar = $peta_mukosa_terakhir['gambar'];
+        }
+      }
+      echo $this->draw('odontogram.html', [
+        'no_rkm_medis' => $no_rkm_medis,
+        'no_rawat' => $no_rawat,
+        'odontogram' => htmlspecialchars_array($this->db('mlite_odontogram')->where('no_rkm_medis', $no_rkm_medis)->asc('tgl_input')->toArray()), 
+        'ohis' => htmlspecialchars_array($this->db('mlite_ohis')->where('no_rkm_medis', $no_rkm_medis)->toArray()),
+        'peta_mukosa_gambar' => $peta_mukosa_gambar
+      ]);
+      exit();
+    }
+
+    public function getOdontogramTampil($no_rkm_medis)
+    {
+      echo $this->draw('odontogram.tampil.html', ['odontogram' => htmlspecialchars_array($this->db('mlite_odontogram')->where('no_rkm_medis', $no_rkm_medis)->toArray())]);
+      exit();
+    }
+
+    public function postOdontogramSave()
+    {
+      $_POST['id_user']	= $this->core->getUserInfo('id');
+      $_POST['tgl_input'] = date('Y-m-d');
+      $query = $this->db('mlite_odontogram')->save($_POST);
+      exit();
+    }
+
+    public function postOdontogramUpdateCatatan()
+    {
+      $data = ['catatan' => isset($_POST['catatan']) ? $_POST['catatan'] : ''];
+      if (!empty($_POST['kondisi_baru'])) {
+        $data['kondisi'] = $_POST['kondisi_baru'];
+      }
+      $query = $this->db('mlite_odontogram')
+      ->where('no_rkm_medis', $_POST['no_rkm_medis'])
+      ->where('pemeriksaan', $_POST['pemeriksaan'])
+      ->where('kondisi', $_POST['kondisi'])
+      ->where('tgl_input', $_POST['tgl_input'])
+      ->save($data);
+      exit();
+    }
+
+    public function postOdontogramDelete()
+    {
+      $query = $this->db('mlite_odontogram')->where('no_rkm_medis', $_POST['no_rkm_medis']);
+
+      if(!empty($_POST['id'])) {
+        $query = $query->where('id', $_POST['id']);
+      } else {
+        $_POST['id_user']	= $this->core->getUserInfo('id');
+        if(!empty($_POST['pemeriksaan'])) {
+          $query = $query->where('pemeriksaan', $_POST['pemeriksaan']);
+        }
+        if(!empty($_POST['kondisi'])) {
+          $query = $query->where('kondisi', $_POST['kondisi']);
+        }
+        if(!empty($_POST['catatan'])) {
+          $query = $query->where('catatan', $_POST['catatan']);
+        }
+        if(!empty($_POST['tgl_input'])) {
+          $query = $query->where('tgl_input', $_POST['tgl_input']);
+        }
+        $query = $query->where('id_user', $_POST['id_user']);
+      }
+      
+      $query->delete();
+      exit();
+    }
+
+    public function postPetaMukosaSave()
+    {
+      $username = $this->core->getUserInfo('username', null, true);
+      $no_rawat = htmlspecialchars($_POST['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      if (!empty($no_rawat) && strpos($no_rawat, '/') === false && strlen($no_rawat) == 14) {
+        $no_rawat = revertNorawat($no_rawat);
+      }
+
+      $nip = '';
+      $petugas = $this->db('petugas')->where('nip', $username)->oneArray();
+      if ($petugas && !empty($petugas['nip'])) {
+        $nip = $petugas['nip'];
+      } else {
+        $dokter = $this->db('dokter')->where('kd_dokter', $username)->oneArray();
+        if ($dokter && !empty($dokter['kd_dokter'])) {
+          $nip = $dokter['kd_dokter'];
+        } else {
+          $pegawai = $this->db('pegawai')->where('nik', $username)->oneArray();
+          if ($pegawai && !empty($pegawai['nik'])) {
+            $nip = $pegawai['nik'];
+          } else {
+            $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+            if ($reg && !empty($reg['kd_dokter'])) {
+              $nip = $reg['kd_dokter'];
+            } else {
+              $nip = $username ?: '-';
+            }
+          }
+        }
+      }
+
+      $regio_names = [];
+      if (!empty($_POST['gambar']) && $_POST['gambar'] !== '{}') {
+        $decoded = json_decode($_POST['gambar'], true);
+        if (is_array($decoded)) {
+          $mukosa_names = [
+            '1' => 'Sudut mulut dextra',
+            '2' => 'Mukosa bukal dextra',
+            '3' => 'Sudut mulut sinistra',
+            '4' => 'Mukosa bukal sinistra',
+            '5' => 'Bibir atas',
+            '6' => 'Bibir bawah',
+            '7' => 'Gingiva labial / bukal RA',
+            '8' => 'Gingiva labial / bukal RB',
+            '9' => 'Gingiva palatinal RA',
+            '10' => 'Gingiva lingual RB',
+            '11' => 'Palatum durum',
+            '12' => 'Palatum mole',
+            '13' => 'Dorsum lidah',
+            '14' => 'Dasar mulut',
+            '15' => 'Frenulum labii superior',
+            '16' => 'Frenulum labii inferior',
+            '17' => 'Frenulum linguae',
+            '18' => 'Trigonum retromolar dextra',
+            '19' => 'Trigonum retromolar sinistra',
+            '20' => 'Lateral lidah dextra',
+            '21' => 'Lateral lidah sinistra',
+            '22' => 'Ventral lidah',
+            '23' => 'Uvula',
+            '24' => 'Orofaring / Arkus faring'
+          ];
+          foreach (array_keys($decoded) as $regId) {
+            if (isset($mukosa_names[$regId])) {
+              $regio_names[] = $mukosa_names[$regId];
+            }
+          }
+        }
+      }
+      $regio_str = !empty($regio_names) ? implode(', ', $regio_names) : '';
+
+      $existing = $this->db('mlite_peta_mukosa_rongga_mulut')->where('no_rawat', $no_rawat)->oneArray();
+      $data = [
+        'no_rawat' => $no_rawat,
+        'tanggal' => date('Y-m-d H:i:s'),
+        'kelainan' => isset($_POST['kelainan']) ? $_POST['kelainan'] : '',
+        'gambar' => isset($_POST['gambar']) ? $_POST['gambar'] : '{}',
+        'regio' => $regio_str,
+        'nip' => $nip
+      ];
+      if (isset($_POST['catatan'])) {
+        $data['catatan'] = $_POST['catatan'];
+      } elseif ($existing && isset($existing['catatan'])) {
+        $data['catatan'] = $existing['catatan'];
+      }
+
+      try {
+        if ($existing && !empty($existing['no_rawat'])) {
+          $query = $this->db('mlite_peta_mukosa_rongga_mulut')->where('no_rawat', $no_rawat)->save($data);
+        } else {
+          $query = $this->db('mlite_peta_mukosa_rongga_mulut')->save($data);
+        }
+        echo json_encode(['status' => $query ? 'success' : 'error']);
+      } catch (\Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+      }
+      exit();
+    }
+
+    public function postPetaMukosaReset()
+    {
+      $no_rawat = isset($_POST['no_rawat']) ? $_POST['no_rawat'] : '';
+      if (!empty($no_rawat) && strpos($no_rawat, '/') === false && strlen($no_rawat) == 14) {
+        $no_rawat = revertNorawat($no_rawat);
+      }
+      $this->db('mlite_peta_mukosa_rongga_mulut')->where('no_rawat', $no_rawat)->delete();
+      echo json_encode(['status' => 'success']);
+      exit();
+    }
+
+    public function postPetaMukosaUpdateCatatan()
+    {
+      $no_rawat = isset($_POST['no_rawat']) ? $_POST['no_rawat'] : '';
+      if (!empty($no_rawat) && strpos($no_rawat, '/') === false && strlen($no_rawat) == 14) {
+        $no_rawat = revertNorawat($no_rawat);
+      }
+      $catatan = isset($_POST['catatan']) ? $_POST['catatan'] : '';
+      
+      $existing = $this->db('mlite_peta_mukosa_rongga_mulut')->where('no_rawat', $no_rawat)->oneArray();
+      if ($existing && !empty($existing['no_rawat'])) {
+        $query = $this->db('mlite_peta_mukosa_rongga_mulut')
+          ->where('no_rawat', $no_rawat)
+          ->save(['catatan' => $catatan]);
+      } else {
+        $username = $this->core->getUserInfo('username', null, true);
+        $nip = $username ?: '-';
+        $query = $this->db('mlite_peta_mukosa_rongga_mulut')->save([
+          'no_rawat' => $no_rawat,
+          'tanggal' => date('Y-m-d H:i:s'),
+          'kelainan' => 'Dalam Batas Normal (DBN)',
+          'catatan' => $catatan,
+          'gambar' => '{}',
+          'regio' => '',
+          'nip' => $nip
+        ]);
+      }
+      echo json_encode(['status' => $query ? 'success' : 'error']);
+      exit();
+    }
+
+    public function getPetaMukosaTampil($no_rkm_medis)
+    {
+      $riwayat = $this->db('mlite_peta_mukosa_rongga_mulut')
+        ->select([
+          'tgl_registrasi' => 'reg_periksa.tgl_registrasi',
+          'no_rawat' => 'mlite_peta_mukosa_rongga_mulut.no_rawat',
+          'tanggal' => 'mlite_peta_mukosa_rongga_mulut.tanggal',
+          'kelainan' => 'mlite_peta_mukosa_rongga_mulut.kelainan',
+          'catatan' => 'mlite_peta_mukosa_rongga_mulut.catatan',
+          'gambar' => 'mlite_peta_mukosa_rongga_mulut.gambar',
+          'regio' => 'mlite_peta_mukosa_rongga_mulut.regio',
+          'nip' => 'mlite_peta_mukosa_rongga_mulut.nip',
+          'nm_dokter' => 'dokter.nm_dokter'
+        ])
+        ->join('reg_periksa', 'reg_periksa.no_rawat=mlite_peta_mukosa_rongga_mulut.no_rawat')
+        ->leftJoin('dokter', 'dokter.kd_dokter=reg_periksa.kd_dokter')
+        ->where('reg_periksa.no_rkm_medis', $no_rkm_medis)
+        ->desc('mlite_peta_mukosa_rongga_mulut.tanggal')
+        ->toArray();
+
+      foreach ($riwayat as &$r) {
+        if (empty($r['nm_dokter']) && !empty($r['nip'])) {
+          $dok = $this->db('dokter')->where('kd_dokter', $r['nip'])->oneArray();
+          if ($dok) {
+            $r['nm_dokter'] = $dok['nm_dokter'];
+          } else {
+            $pet = $this->db('petugas')->where('nip', $r['nip'])->oneArray();
+            if ($pet) {
+              $r['nm_dokter'] = $pet['nama'];
+            }
+          }
+        }
+      }
+      unset($r);
+
+      echo $this->draw('petamukosa.tampil.html', ['riwayat' => htmlspecialchars_array($riwayat)]);
+      exit();
+    }
+
+    public function getOhisTampil($no_rkm_medis)
+    {
+      echo $this->draw('ohis.tampil.html', ['ohis' => htmlspecialchars_array($this->db('mlite_ohis')->where('no_rkm_medis', $no_rkm_medis)->toArray())]);
+      exit();
+    }
+
+    public function postOhisSave()
+    {
+      $_POST['id_user']	= $this->core->getUserInfo('id');
+      $_POST['tgl_input'] = date('Y-m-d');
+      $_POST['debris'] = ($_POST['d_16']+$_POST['d_11']+$_POST['d_26']+$_POST['d_36']+$_POST['d_31']+$_POST['d_46'])/6;
+      $_POST['debris'] = ceil($_POST['debris']*100)/100;
+      $_POST['calculus'] = ($_POST['c_16']+$_POST['c_11']+$_POST['c_26']+$_POST['c_36']+$_POST['c_31']+$_POST['c_46'])/6;
+      $_POST['calculus'] = ceil($_POST['calculus']*100)/100;
+      $_POST['nilai'] = $_POST['debris']+$_POST['calculus'];
+      if($_POST['nilai'] >= '0' && $_POST['nilai'] <= '1,2') {
+        $_POST['kriteria'] = 'Baik';
+      } elseif($_POST['nilai'] >= '1,3' && $_POST['nilai'] <= '3') {
+        $_POST['kriteria'] = 'Sedang';
+      } elseif($_POST['nilai'] > '3') {
+        $_POST['kriteria'] = 'Buruk';
+      }
+      $query = $this->db('mlite_ohis')->save($_POST);
+      exit();
+    }
+
     public function getPersetujuanUmum($no_rkm_medis)
     {
       $settings = $this->settings('settings');

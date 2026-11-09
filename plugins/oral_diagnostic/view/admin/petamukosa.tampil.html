@@ -1,0 +1,30 @@
+<h4>History Peta Mukosa</h4>
+<div class="table-responsive">
+<table class="table table-bordered table-striped table-hover display nowrap" width="100%">
+  <thead>
+    <tr>
+      <th style="white-space: nowrap;">Tanggal Kunjungan</th>
+      <th style="white-space: nowrap;">No.Rawat</th>
+      <th style="white-space: nowrap;">Tanggal Input</th>
+      <th>Kelainan</th>
+      <th>Catatan <small class="text-muted" style="font-weight: normal;">(Klik 2x)</small></th>
+      <th>Diperiksa Oleh</th>
+    </tr>
+  </thead>
+  <tbody>
+    {loop: $riwayat}
+      <tr>
+        <td style="white-space: nowrap;">{?=isset_or($value.tgl_registrasi)?}</td>
+        <td style="white-space: nowrap;">{?=isset_or($value.no_rawat)?}</td>
+        <td style="white-space: nowrap;">{?=isset_or($value.tanggal)?}</td>
+        <td>{if: empty($value.kelainan)}-{/if}{?=isset_or($value.kelainan)?}</td>
+        <td class="edit-catatan-mukosa" data-no_rawat="{?=isset_or($value.no_rawat)?}" style="cursor: pointer;" title="Klik 2 kali untuk membuat/mengubah catatan">
+          <span class="catatan-mukosa-text">{if: empty($value.catatan)}<span class="text-muted" style="font-style: italic;">(Klik 2x untuk catatan)</span>{else}{?=isset_or($value.catatan)?}{/if}</span>
+          <input type="text" class="form-control input-sm input-catatan-mukosa" value="{?=isset_or($value.catatan)?}" placeholder="Tulis catatan..." style="display:none; width: 100%; min-width: 140px;" />
+        </td>
+        <td>{?=isset_or($value.nm_dokter)?}</td>
+      </tr>
+    {/loop}
+  </tbody>
+</table>
+</div>

@@ -981,10 +981,13 @@ $(document).ready(function(){
       return parts.length > 0 ? parts.join('; ') : 'Dalam Batas Normal (DBN)';
   }
 
+  var currentNoRawat = {?=json_encode(!empty($no_rawat) ? $no_rawat : '')?} || $('input:text[name=no_rawat]').val();
+  var currentNoRkmMedis = {?=json_encode(!empty($no_rkm_medis) ? $no_rkm_medis : '')?} || $('input:text[name=no_rkm_medis]').val();
+
   function savePetaMukosa() {
       var baseURL = mlite.url + '/' + mlite.admin;
-      var no_rawat = $('input:text[name=no_rawat]').val();
-      var id_pasien = $('input:text[name=no_rkm_medis]').val();
+      var no_rawat = currentNoRawat || $('input:text[name=no_rawat]').val();
+      var id_pasien = currentNoRkmMedis || $('input:text[name=no_rkm_medis]').val();
       if (!no_rawat) {
           alert('No Rawat tidak ditemukan.');
           return;
@@ -998,7 +1001,15 @@ $(document).ready(function(){
           gambar: Object.keys(mukosaSelection).length > 0 ? JSON.stringify(mukosaSelection) : '{}',
           kelainan: buildKelainanSummary()
       }, function(data) {
-          $('.tampildata-mukosa').load(baseURL + '/rawat_jalan/petamukosatampil/' + id_pasien + '?t=' + mlite.token);
+          try {
+              var res = typeof data === 'object' ? data : JSON.parse(data);
+              if (res && res.status === 'error') {
+                  alert('Gagal menyimpan peta mukosa: ' + (res.message || 'Terjadi kesalahan sistem'));
+              }
+          } catch(e) {}
+          if (id_pasien) {
+              $('.tampildata-mukosa').load(baseURL + '/rawat_jalan/petamukosatampil/' + id_pasien + '?t=' + mlite.token);
+          }
       });
   }
 
@@ -1027,9 +1038,7 @@ $(document).ready(function(){
 
   $("#btn-reset-mukosa").click(function(e){
       e.preventDefault();
-      var baseURL = mlite.url + '/' + mlite.admin;
-      var no_rawat = $('input:text[name=no_rawat]').val();
-      var id_pasien = $('input:text[name=no_rkm_medis]').val();
+      var no_rawat = currentNoRawat || $('input:text[name=no_rawat]').val();
       if (!no_rawat) {
           alert('Pilih pasien terlebih dahulu.');
           return;
@@ -1043,10 +1052,85 @@ $(document).ready(function(){
 
   (function(){
       var baseURL = mlite.url + '/' + mlite.admin;
-      var id_pasien = $('input:text[name=no_rkm_medis]').val();
+      var id_pasien = currentNoRkmMedis || $('input:text[name=no_rkm_medis]').val();
       if (id_pasien) {
           $('.tampildata-mukosa').load(baseURL + '/rawat_jalan/petamukosatampil/' + id_pasien + '?t=' + mlite.token);
       }
   })();
+
+  // Edit Catatan Peta Mukosa (Double Click)
+  $("#tabs-odontogram").on("dblclick", ".edit-catatan-mukosa", function() {
+      var $td = $(this);
+      $td.find(".catatan-mukosa-text").hide();
+      var $input = $td.find(".input-catatan-mukosa");
+      $input.data("prev-val", $input.val());
+      $input.show().focus().select();
+  });
+
+  $("#tabs-odontogram").on("blur", ".input-catatan-mukosa", function() {
+      var $input = $(this);
+      var $td = $input.closest("td");
+      var newCatatan = $.trim($input.val());
+      var no_rawat = $td.attr("data-no_rawat");
+      var $textSpan = $td.find(".catatan-mukosa-text");
+      var prevVal = $input.data("prev-val");
+      if (typeof prevVal === "undefined") {
+          prevVal = "";
+      }
+
+      if (newCatatan !== prevVal) {
+          var baseURL = mlite.url + '/' + mlite.admin;
+          var url = baseURL + '/rawat_jalan/petamukosaupdatecatatan/?t=' + mlite.token;
+          
+          $.post(url, {
+              no_rawat: no_rawat,
+              catatan: newCatatan
+          }, function(data) {
+              try {
+                  var res = typeof data === 'object' ? data : JSON.parse(data);
+                  if (res && res.status === 'error') {
+                      alert('Gagal memperbarui catatan: ' + (res.message || 'Terjadi kesalahan sistem'));
+                      $input.val(prevVal);
+                      $textSpan.show();
+                      $input.hide();
+                      return;
+                  }
+              } catch(e) {}
+              $input.data("prev-val", newCatatan);
+              $input.val(newCatatan);
+              if (newCatatan.length > 0) {
+                  $textSpan.text(newCatatan);
+              } else {
+                  $textSpan.html('<span class="text-muted" style="font-style: italic;">(Klik 2x untuk catatan)</span>');
+              }
+              $textSpan.show();
+              $input.hide();
+          }).fail(function(){
+              alert('Gagal menghubungi server saat menyimpan catatan.');
+              $input.val(prevVal);
+              $textSpan.show();
+              $input.hide();
+          });
+      } else {
+          $textSpan.show();
+          $input.hide();
+      }
+  });
+
+  $("#tabs-odontogram").on("keydown", ".input-catatan-mukosa", function(e) {
+      if (e.which == 13) {
+          e.preventDefault();
+          $(this).blur();
+      } else if (e.which == 27) {
+          e.preventDefault();
+          var $td = $(this).closest("td");
+          var prevVal = $(this).data("prev-val");
+          if (typeof prevVal !== "undefined") {
+              $(this).val(prevVal);
+          }
+          $(this).hide();
+          $td.find(".catatan-mukosa-text").show();
+      }
+  });
 });
 </script>
