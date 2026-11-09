@@ -1607,9 +1607,13 @@ class Admin extends AdminModule
     public function postPetaMukosaSave()
     {
       $username = $this->core->getUserInfo('username', null, true);
-      $no_rawat = htmlspecialchars($_POST['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      $no_rawat = htmlspecialchars($_POST['no_rawat'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
       if (!empty($no_rawat) && strpos($no_rawat, '/') === false && strlen($no_rawat) == 14) {
         $no_rawat = revertNorawat($no_rawat);
+      }
+      if (empty($no_rawat)) {
+        echo json_encode(['status' => 'error', 'message' => 'No rawat tidak boleh kosong']);
+        exit();
       }
 
       $nip = '';
@@ -1708,6 +1712,10 @@ class Admin extends AdminModule
       if (!empty($no_rawat) && strpos($no_rawat, '/') === false && strlen($no_rawat) == 14) {
         $no_rawat = revertNorawat($no_rawat);
       }
+      if (empty($no_rawat)) {
+        echo json_encode(['status' => 'error', 'message' => 'No rawat tidak boleh kosong']);
+        exit();
+      }
       $this->db('mlite_peta_mukosa_rongga_mulut')->where('no_rawat', $no_rawat)->delete();
       echo json_encode(['status' => 'success']);
       exit();
@@ -1718,6 +1726,10 @@ class Admin extends AdminModule
       $no_rawat = isset($_POST['no_rawat']) ? $_POST['no_rawat'] : '';
       if (!empty($no_rawat) && strpos($no_rawat, '/') === false && strlen($no_rawat) == 14) {
         $no_rawat = revertNorawat($no_rawat);
+      }
+      if (empty($no_rawat)) {
+        echo json_encode(['status' => 'error', 'message' => 'No rawat tidak boleh kosong']);
+        exit();
       }
       $catatan = isset($_POST['catatan']) ? $_POST['catatan'] : '';
       
