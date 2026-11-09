@@ -463,7 +463,7 @@
     });
   });
 
-  $(document).on('click', 'a[href="#status_rawat"]', function(event){
+  $(document).off('click', 'a[href="#status_rawat"]').on('click', 'a[href="#status_rawat"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var url = baseURL + '/rawat_jalan/statusrawat?t=' + mlite.token;
@@ -473,7 +473,7 @@
     // tampilkan dialog konfirmasi
 
     bootbox.prompt({
-        title: "Status lanjut pasien.",
+        title: "Status Rawat Pasien",
         message: '',
         inputType: 'radio',
         value: stts,
@@ -516,18 +516,21 @@
         }
         ],
         callback: function (result) {
-            //console.log(result);
             // ketika ditekan tombol ok
             if (result){
-              // mengirimkan perintah penghapusan
+              // mengirimkan perintah update status rawat
               $.post(url, {
                 no_rawat: no_rawat,
                 stts: result
               } ,function(data) {
-                // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
-                $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+                // sembunyikan form, tampilkan data yang sudah di perbaharui dengan filter aktif, tampilkan notif
+                if ($('#submit_periode_rawat_jalan').length) {
+                  $('#submit_periode_rawat_jalan').trigger('click');
+                } else {
+                  $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+                }
                 $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-                "Status lanjut pasien telah disimpan!"+
+                "Status rawat pasien telah disimpan!"+
                 "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
                 "</div>").show();
               });
@@ -536,7 +539,7 @@
     });
   });
 
-  $(document).on('click', 'a[href="#status_lanjut"]', function(event){
+  $(document).off('click', 'a[href="#status_lanjut"]').on('click', 'a[href="#status_lanjut"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var url = baseURL + '/rawat_jalan/statuslanjut?t=' + mlite.token;
@@ -553,22 +556,6 @@
         + '</div>'
         + '';
 
-    // bootbox.confirm("Apakah pasien dimasukkan dalam kamar inap?", function(result){
-    //   // ketika ditekan tombol ok
-    //   if (result){
-    //     // mengirimkan perintah penghapusan
-    //     $.post(url, {
-    //       no_rawat: no_rawat
-    //     } ,function(data) {
-    //       // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
-    //       $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
-    //       $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-    //       "Status periksa pasien telah disimpan!"+
-    //       "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
-    //       "</div>").show();
-    //     });
-    //   }
-    // });
     bootbox.dialog({
       message: set_status_lanjut,
       title: 'Set Status Lanjut Pasien',
@@ -595,7 +582,11 @@
                 window.location.href = baseURL + '/rawat_inap/manage?t=' + mlite.token + '&no_rawat=' + no_rawat;
               } else {
                 // reload display Rawat Jalan untuk status lainnya
-                $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+                if ($('#submit_periode_rawat_jalan').length) {
+                  $('#submit_periode_rawat_jalan').trigger('click');
+                } else {
+                  $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+                }
               }
             });
           }
@@ -607,7 +598,7 @@
     return false;
   });
 
-  $(document).on('click', 'a[href="#obat_kronis"]', function(event){
+  $(document).off('click', 'a[href="#obat_kronis"]').on('click', 'a[href="#obat_kronis"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var url = baseURL + '/rawat_jalan/obatkronis?t=' + mlite.token;
@@ -621,7 +612,11 @@
           no_rawat: no_rawat
         } ,function(data) {
           // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
-          $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+          if ($('#submit_periode_rawat_jalan').length) {
+            $('#submit_periode_rawat_jalan').trigger('click');
+          } else {
+            $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+          }
           $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
           "Status periksa pasien telah disimpan!"+
           "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
@@ -630,7 +625,7 @@
       }
     });
   });
-  $(document).on('click', 'a[href="#kps"]', function(event){
+  $(document).off('click', 'a[href="#kps"]').on('click', 'a[href="#kps"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var url = baseURL + '/rawat_jalan/kps?t=' + mlite.token;
@@ -646,7 +641,11 @@
           kd_dokter: kd_dokter
         } ,function(data) {
           // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
-          $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+          if ($('#submit_periode_rawat_jalan').length) {
+            $('#submit_periode_rawat_jalan').trigger('click');
+          } else {
+            $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+          }
           $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
           "Status periksa pasien telah disimpan!"+
           "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
