@@ -1614,7 +1614,14 @@ class Admin extends AdminModule
         ->asc('template_laboratorium.urut')
         ->toArray();
 
+      $filtered_details = [];
       foreach ($details as &$det) {
+        // Hanya sertakan pemeriksaan yang ada isian hasilnya
+        $raw_val = trim((string)($det['nilai'] ?? ''));
+        if ($raw_val === '') {
+          continue;
+        }
+
         if ($is_male) {
           $rujukan = $is_adult ? $det['nilai_rujukan_ld'] : $det['nilai_rujukan_la'];
         } else {
@@ -1626,7 +1633,6 @@ class Admin extends AdminModule
         $det['rujukan_aktif'] = $rujukan;
 
         // Evaluasi apakah hasil berada di luar rentang rujukan (tampilkan panah merah)
-        $raw_val = trim((string)$det['nilai']);
         $clean_val = str_replace(',', '.', $raw_val);
         $det['is_abnormal'] = false;
         $det['hasil_formatted'] = $raw_val;
@@ -1657,11 +1663,15 @@ class Admin extends AdminModule
             }
           }
         }
+        $filtered_details[] = $det;
       }
       unset($det);
 
-      $row['detail_periksa_lab'] = $details;
-      $periksa_lab[] = $row;
+      // Hanya masukkan ke lembar cetak jika memiliki pemeriksaan yang terisi
+      if (!empty($filtered_details)) {
+        $row['detail_periksa_lab'] = $filtered_details;
+        $periksa_lab[] = $row;
+      }
     }
 
     /* ===============================

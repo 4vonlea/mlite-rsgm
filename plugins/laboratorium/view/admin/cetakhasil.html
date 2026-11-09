@@ -232,6 +232,7 @@
         </tr>
         {else}
         {loop: $periksa_lab}
+        {if: !empty($value.detail_periksa_lab)}
         <!-- Baris Kategori / Paket Pemeriksaan -->
         <tr style="background-color: #f0f6fa;">
           <td colspan="5" style="border: 1px solid #000; padding: 3px 6px; font-weight: bold; color: #b91c1c; font-size: 10px; text-transform: uppercase;">
@@ -239,20 +240,23 @@
           </td>
         </tr>
         {loop: $value.detail_periksa_lab as $data2}
+        {if: isset($data2.nilai) && trim($data2.nilai) !== ''}
         <tr>
           <td style="padding: 2.5px 6px; font-size: 9.5px;">{?=isset_or($data2.Pemeriksaan)?}</td>
           <td style="padding: 2.5px 6px; text-align: center; font-size: 9.5px;">
             {if: $data2.is_abnormal}
               <span style="color: #dc2626; font-weight: bold;">{?=$data2.hasil_formatted?}</span>
             {else}
-              <span>{?=isset_or($data2.nilai, '-')?}</span>
+              <span>{?=$data2.nilai?}</span>
             {/if}
           </td>
           <td style="padding: 2.5px 6px; text-align: center; font-size: 9.5px;">{?=$data2.rujukan_aktif?}</td>
           <td style="padding: 2.5px 6px; text-align: center; font-size: 9.5px;">{?=isset_or($data2.satuan, '-')?}</td>
           <td style="padding: 2.5px 6px; text-align: center; font-size: 9.5px;">{?=isset_or($data2.keterangan)?}</td>
         </tr>
+        {/if}
         {/loop}
+        {/if}
         {/loop}
         {/if}
       </tbody>

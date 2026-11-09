@@ -2,7 +2,7 @@
   <div class="col-md-12">
     <div class="panel panel-default">
       <div class="panel-heading rsgm-panel-head">
-        <h3 class="panel-title">Kelola Pasien</h3>
+        <h3 class="panel-title"><i class="fa fa-flask text-primary"></i> Kelola Laboratorium</h3>
         <div class="rsgm-filter-bar">
           <input type="hidden" name="status" value="{?=isset_or($type)?}">
           <div class="rsgm-date-range">
@@ -13,12 +13,12 @@
           </div>
           <div class="rsgm-filter-pills">
             {if: $type == 'ranap'}
-            <button type="button" id="submit_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-all">Semua</button>
+            <button type="button" id="submit_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-all active">Semua</button>
             <button type="button" id="belum_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-pending">Dirawat</button>
             <button type="button" id="selesai_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-done">Tanggal Masuk</button>
             <button type="button" id="lunas_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-paid">Tanggal Pulang</button>
             {else}
-            <button type="button" id="submit_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-all">Semua</button>
+            <button type="button" id="submit_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-all active">Semua</button>
             <button type="button" id="belum_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-pending">Belum Diperiksa</button>
             <button type="button" id="selesai_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-done">Selesai Diperiksa</button>
             <button type="button" id="lunas_periode_rawat_jalan" class="btn btn-sm rsgm-fpill rsgm-fpill-paid">Sudah Bayar</button>
@@ -150,6 +150,11 @@ $('#pdfModal').on('hidden.bs.modal', function () {
        
        $('#periode_rawat_jalan').on('dp.change', function(e) {
            $('#periode_rawat_jalan_akhir').data('DateTimePicker').date(e.date);
+       });
+
+       $('#manage').on('click', '.rsgm-filter-pills .rsgm-fpill', function() {
+           $(this).closest('.rsgm-filter-pills').find('.rsgm-fpill').removeClass('active');
+           $(this).addClass('active');
        });
    });
 </script>

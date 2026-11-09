@@ -290,6 +290,10 @@
                   </div>
                   <span>Kunjungan: <strong>{?=isset_or($value.stts_daftar, '-')?}</strong> &bull; Kasus: <strong>{?=isset_or($value.kasus_poli, $value.status_poli)?}</strong></span>
                 </div>
+                {else}
+                <div class="rsgm-cppt-ie-slim" style="justify-content: flex-end;">
+                  <span style="margin-left: auto;">Kunjungan: <strong>{?=isset_or($value.stts_daftar, '-')?}</strong> &bull; Kasus: <strong>{?=isset_or($value.kasus_poli, $value.status_poli)?}</strong></span>
+                </div>
                 {/if}
                 {else}
                 <div class="rsgm-cppt-signbox" style="margin-top: 8px; max-width: 280px;">
@@ -320,6 +324,9 @@
                     {/if}
                   </div>
                   {/if}
+                </div>
+                <div class="rsgm-cppt-ie-slim" style="justify-content: flex-end; margin-top: 8px;">
+                  <span style="margin-left: auto;">Kunjungan: <strong>{?=isset_or($value.stts_daftar, '-')?}</strong> &bull; Kasus: <strong>{?=isset_or($value.kasus_poli, $value.status_poli)?}</strong></span>
                 </div>
                 {/if}
               </div>
@@ -552,6 +559,10 @@
                     <span><span class="rsgm-soap-tag rsgm-soap-tag-e">E</span> Evaluasi: <strong>-</strong></span>
                   </div>
                   <span>Rawat Inap</span>
+                </div>
+                {else}
+                <div class="rsgm-cppt-ie-slim" style="justify-content: flex-end;">
+                  <span style="margin-left: auto;">Rawat Inap</span>
                 </div>
                 {/if}
               </div>

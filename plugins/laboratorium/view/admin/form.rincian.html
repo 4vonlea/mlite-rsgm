@@ -1,115 +1,201 @@
-<div id="form_rincian">
-  <div class="col-md-6">
-    <div class="panel panel-default">
-      <div class="panel-body">
-        <div class="form-horizontal">
-          <div class="form-group">
-            <label for="tgl_perawatan" class="col-sm-3 control-label">Tanggal</label>
-            <div class="col-sm-4">
-              <input type="text" id="tgl_perawatan" name="tgl_perawatan" class="form-control tanggal"
-                value="{?=date('Y-m-d')?}">
+<div id="form_rincian" class="rsgm-reg-form clearfix" style="margin-bottom: 20px;">
+  <div class="rsgm-soap-flex-row clearfix">
+    <!-- ========================================================
+         KOLOM KIRI: SIDEBAR IDENTITAS PASIEN (PERSIS FORM SOAP)
+         ======================================================== -->
+    <div class="col-md-3">
+      <div class="rsgm-reg-shell rsgm-patient-side-shell">
+        <div class="rsgm-reg-header">
+          <h4 class="rsgm-reg-title">
+            <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+            <span>Data Pasien</span>
+          </h4>
+          <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
+        </div>
+        <div class="rsgm-reg-body">
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label for="tgl_perawatan" class="rsgm-compact-label">Tanggal Pelayanan</label>
+            <div class="rsgm-input-icon">
+              <i class="fa fa-calendar rsgm-field-icon"></i>
+              <input type="text" id="tgl_perawatan" name="tgl_perawatan" class="form-control tanggal" value="{?=date('Y-m-d')?}">
             </div>
-            <label for="pnd" class="col-sm-1 control-label">Jam</label>
-            <div class="col-sm-4">
+          </div>
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label for="jam_reg" class="rsgm-compact-label">Jam Pelayanan</label>
+            <div class="rsgm-input-icon">
+              <i class="fa fa-clock-o rsgm-field-icon"></i>
               <input type="text" id="jam_reg" name="jam_reg" class="form-control jam" value="{?=date('H:i:s')?}">
             </div>
           </div>
-          <div class="form-group">
-            <label for="taid_pendaftarannggal" class="col-sm-3 control-label">Id Rawat </label>
-            <div class="col-sm-9">
-              <input type="text" name="no_rawat" placeholder="ID Rawat Jalan" class="form-control" value="" readonly>
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="rsgm-compact-label">Id Rawat</label>
+            <div class="rsgm-input-icon">
+              <i class="fa fa-hashtag rsgm-field-icon"></i>
+              <input type="text" name="no_rawat" placeholder="Nomor Rawat" class="form-control" value="" readonly>
             </div>
           </div>
-          <div class="form-group">
-            <label for="name" class="col-sm-3 control-label">Tindakan</label>
-            <div class="col-sm-9">
-              <input type="text" name="layanan" class="form-control" placeholder="Input tindakan/layanan" value="">
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="rsgm-compact-label">Nomor RM</label>
+            <div class="rsgm-input-icon">
+              <i class="fa fa-address-card-o rsgm-field-icon"></i>
+              <input type="text" name="no_rkm_medis" class="form-control" placeholder="Nomor Rekam Medis" value="" readonly>
             </div>
           </div>
-          <div class="form-group">
-            <label for="name" class="col-sm-3 control-label">Status</label>
-            <div class="col-sm-9">
-              <input type="text" name="status" class="form-control" placeholder=""
-                value="{if: $type == 'ranap'}Ranap{else}Ralan{/if}">
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="rsgm-compact-label">Nama Pasien</label>
+            <div class="rsgm-input-icon">
+              <i class="fa fa-user-o rsgm-field-icon"></i>
+              <input type="text" name="nm_pasien" class="form-control" placeholder="Nama Pasien" value="" readonly>
             </div>
+          </div>
+          <div class="row" style="margin: 0 -5px;">
+            <div class="col-xs-6" style="padding: 0 5px;">
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label class="rsgm-compact-label">Status</label>
+                <input type="text" name="status" class="form-control text-center" value="{if: $type == 'ranap'}Ranap{else}Ralan{/if}" readonly style="font-weight: 600;">
+              </div>
+            </div>
+            <div class="col-xs-6" style="padding: 0 5px;">
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label class="rsgm-compact-label">Ruang / Poli</label>
+                <div class="form-control text-center" style="background:#f1f5f9; cursor:default; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:6px 6px; font-size:11.5px; font-weight:600; color:#334155;" id="teks_nm_poli">-</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ringkasan Tambahan Pasien -->
+          <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; font-size: 11.5px; color: #475569; line-height: 1.5;">
+            <div style="margin-bottom: 4px;">
+              <span class="text-muted">TTL / Umur:</span> <strong id="teks_tgl_lahir_umur" style="color: #0f172a;">-</strong>
+              (<strong id="teks_jk" style="color: #0f172a;">-</strong>)
+            </div>
+            <div style="margin-bottom: 4px;">
+              <span class="text-muted">Telepon:</span> <span id="teks_no_tlp" style="font-weight: 600; color: #1e293b;">-</span>
+            </div>
+            <div>
+              <span class="text-muted">Alamat:</span> <span id="teks_alamat" style="color: #334155; word-break: break-word;">-</span>
+            </div>
+            <!-- Hidden spans untuk kompatibilitas data binding -->
+            <span id="teks_no_rkm_medis" style="display:none;">-</span>
+            <span id="teks_nm_pasien" style="display:none;">-</span>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  <div class="col-md-6">
-    <div id="layanan"></div>
-    <div class="panel panel-default">
-      <div class="panel-body">
-        <div class="form-horizontal">
-          <table class="table table-striped table-bordered" style="margin-bottom: 15px;">
-            <tbody>
-              <tr>
-                <td width="30%"><strong>Nomor RM</strong></td>
-                <td width="70%"><span id="teks_no_rkm_medis">-</span><input type="hidden" name="no_rkm_medis"></td>
-              </tr>
-              <tr>
-                <td><strong>Nama Pasien</strong></td>
-                <td><span id="teks_nm_pasien">-</span><input type="hidden" name="nm_pasien"></td>
-              </tr>
-              <tr>
-                <td><strong>Tgl.Lahir/Umur</strong></td>
-                <td><span id="teks_tgl_lahir_umur">-</span> (<strong>JK:</strong> <span id="teks_jk">-</span>)</td>
-              </tr>
-              <tr>
-                <td><strong>Telepon</strong></td>
-                <td><span id="teks_no_tlp">-</span></td>
-              </tr>
-              <tr>
-                <td><strong>Ruang/Poli</strong></td>
-                <td><span id="teks_nm_poli">-</span></td>
-              </tr>
-              <tr>
-                <td><strong>Alamat</strong></td>
-                <td><span id="teks_alamat">-</span></td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="form-group">
-            <label for="tgl_perawatan" class="col-sm-3 control-label">Jenis</label>
-            <div class="col-sm-4">
-              <input type="hidden" name="kd_jenis_prw" class="form-control" value="">
-              <input type="text" name="nm_perawatan" class="form-control" placeholder="Nama tindakan/layanan/obat/BHP"
-                value="" readonly>
-              <input type="hidden" name="kat" class="form-control" value="">
+
+    <!-- ========================================================
+         KOLOM KANAN: INPUT TINDAKAN & DOKTER PJ (SHELL SOAP)
+         ======================================================== -->
+    <div class="col-md-9">
+      <div class="rsgm-reg-shell">
+        <div class="rsgm-reg-header">
+          <h4 class="rsgm-reg-title">
+            <span class="rsgm-reg-icon"><i class="fa fa-flask"></i></span>
+            <span>Input Layanan &amp; Pemeriksaan Laboratorium</span>
+          </h4>
+          <span class="rsgm-reg-badge-hint hidden-xs">Pelayanan Penunjang</span>
+        </div>
+        <div class="rsgm-reg-body">
+          <!-- Section 1: Cari & Pilih Pemeriksaan -->
+          <div class="rsgm-soap-section">
+            <div class="rsgm-soap-sec-title">
+              <i class="fa fa-search text-primary"></i> <span>Pencarian Tindakan &amp; Pemeriksaan Laboratorium</span>
             </div>
-            <label for="pnd" class="col-sm-1 control-label">Biaya</label>
-            <div class="col-sm-4">
-              <div class="input-group">
-                <input type="text" id="biaya" name="biaya" class="form-control text-right" placeholder="Biaya" readonly>
-                <span class="input-group-addon">x</span>
-                <input type="number" id="jml_tindakan" name="jml_tindakan" class="form-control text-center" value="1"
-                  min="1">
+            <div class="row">
+              <div class="col-sm-12 form-group" style="margin-bottom: 10px;">
+                <label class="rsgm-compact-label">Ketik Nama Pemeriksaan / Tindakan</label>
+                <div class="rsgm-input-icon">
+                  <i class="fa fa-search rsgm-field-icon"></i>
+                  <input type="text" name="layanan" class="form-control" placeholder="Ketik nama pemeriksaan (misal: Darah Lengkap, Glukosa, Urin, SGOT, SGPT, Kolesterol, dll)..." autocomplete="off">
+                </div>
+              </div>
+            </div>
+
+            <!-- Drawer Container Pop-up Hasil Pencarian -->
+            <div id="layanan" class="rsgm-pasien-drawer"></div>
+
+            <div class="row" style="margin-top: 6px;">
+              <div class="col-sm-6 form-group" style="margin-bottom: 0;">
+                <label class="rsgm-compact-label">Pemeriksaan Terpilih</label>
+                <input type="hidden" name="kd_jenis_prw" class="form-control" value="">
+                <input type="text" name="nm_perawatan" class="form-control" placeholder="Pilih dari hasil pencarian di atas..." value="" readonly style="background-color: #eff6ff !important; border-color: #bfdbfe !important; color: #1e40af !important; font-weight: 700;">
+                <input type="hidden" name="kat" class="form-control" value="">
+              </div>
+              <div class="col-sm-3 form-group" style="margin-bottom: 0;">
+                <label class="rsgm-compact-label">Tarif Pemeriksaan</label>
+                <div class="input-group">
+                  <span class="input-group-addon" style="background: #f8fafc; font-size: 11px; font-weight: 600; color: #64748b;">Rp</span>
+                  <input type="text" id="biaya" name="biaya" class="form-control text-right" placeholder="0" readonly style="font-weight: 700; color: #0f172a; font-variant-numeric: tabular-nums;">
+                </div>
+              </div>
+              <div class="col-sm-3 form-group" style="margin-bottom: 0;">
+                <label class="rsgm-compact-label">Jumlah</label>
+                <input type="number" id="jml_tindakan" name="jml_tindakan" class="form-control text-center" value="1" min="1" style="font-weight: 700;">
               </div>
             </div>
           </div>
-          <div class="form-group" id="rawat_jl_dr">
-            <label for="" class="col-sm-3 control-label">Nama Dokter</label>
-            <div class="col-sm-6">
-              <input type="text" name="nama_provider" id="nama_provider" class="form-control" value="">
-              <ul class="list-group" id="kode_providerList" style="z-index:1000;position:absolute;width:100%;"></ul>
+
+          <!-- Section 2: Dokter Penanggung Jawab -->
+          <div class="rsgm-soap-section" style="margin-bottom: 0;">
+            <div class="rsgm-soap-sec-title">
+              <i class="fa fa-user-md text-primary"></i> <span>Dokter Penanggung Jawab Pelayanan (PJ Lab)</span>
             </div>
-            <label for="" class="col-sm-1 control-label">Kode</label>
-            <div class="col-sm-2">
-              <input type="text" name="kode_provider" id="kode_provider" class="form-control" value="">
+            <div class="row" id="rawat_jl_dr">
+              <div class="col-sm-8 form-group" style="margin-bottom: 0; position: relative;">
+                <label class="rsgm-compact-label">Nama Dokter Penanggung Jawab</label>
+                <div class="rsgm-input-icon">
+                  <i class="fa fa-user-md rsgm-field-icon"></i>
+                  <input type="text" name="nama_provider" id="nama_provider" class="form-control" placeholder="Ketik nama dokter penanggung jawab..." autocomplete="off">
+                </div>
+                <ul class="list-group rsgm-autocomplete-list" id="kode_providerList" style="z-index: 1050; position: absolute; width: 100%; display: none; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 20px rgba(15,23,42,0.12);"></ul>
+              </div>
+              <div class="col-sm-4 form-group" style="margin-bottom: 0;">
+                <label class="rsgm-compact-label">Kode Dokter</label>
+                <input type="text" name="kode_provider" id="kode_provider" class="form-control text-center" placeholder="Kode" readonly style="font-weight: 600;">
+              </div>
             </div>
           </div>
-          <div class="m-t-xl">
-            <button type="button" name="button" class="btn btn-primary" id="simpan_rincian" {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_create', 'laboratorium') == false}disabled{/if}><i class="fa fa-save"></i><span class="hidden-xs"> Masukkan Rincian</span></button>
-            <button type="button" name="button" class="btn btn-success" id="selesai"><i class="fa fa-check"></i><span
-                class="hidden-xs"> Selesai</span></button>
+        </div>
+
+        <!-- Footer Tombol Aksi -->
+        <div class="rsgm-reg-footer">
+          <div class="rsgm-reg-actions" style="margin-left: 0;">
+            <button type="button" name="button" class="btn btn-primary" id="simpan_rincian" {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_create', 'laboratorium') == false}disabled{/if}>
+              <i class="fa fa-save"></i><span class="hidden-xs"> Masukkan Rincian</span>
+            </button>
+            <button type="button" name="button" class="btn btn-success" id="selesai">
+              <i class="fa fa-check"></i><span class="hidden-xs"> Selesai</span>
+            </button>
           </div>
+          <span class="rsgm-footer-hint hidden-xs" style="margin-left: auto;">
+            <i class="fa fa-info-circle text-primary"></i> Cari &amp; pilih pemeriksaan di atas lalu klik <strong>Masukkan Rincian</strong>
+          </span>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<style>
+#kode_providerList li {
+  cursor: pointer;
+  padding: 8px 12px;
+  border-left: 3px solid transparent;
+  font-size: 12.5px;
+}
+#kode_providerList li:hover {
+  background-color: #eff6ff;
+  border-left: 3px solid #2563eb;
+  color: #1e40af;
+}
+</style>
+
 <script>
+  $(document).on("click", "#form_rincian .rsgm-pasien-close", function(e) {
+    e.preventDefault();
+    $('#layanan').hide();
+  });
+
   $('input:text[name=nama_provider]').on('input', function (e) {
     var baseURL = mlite.url + '/' + mlite.admin;
     var url = baseURL + '/laboratorium/providerlist?t=' + mlite.token;
@@ -124,14 +210,20 @@
           $('#kode_providerList').html(data);
         }
       });
+    } else {
+      $('#kode_providerList').fadeOut();
     }
-    $('#kode_providerList').fadeIn();
   });
 
   $('#kode_providerList').on('click', 'li', function () {
     $('#nama_provider').val($(this).text().split(': ')[1]);
     $('#kode_provider').val($(this).text().split(': ')[0]);
-    var kode_provider = $('#kode_provider').val();
     $('#kode_providerList').fadeOut();
+  });
+
+  $(document).click(function(e) {
+    if (!$(e.target).closest('#rawat_jl_dr').length) {
+      $('#kode_providerList').fadeOut();
+    }
   });
 </script>

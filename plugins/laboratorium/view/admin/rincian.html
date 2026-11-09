@@ -1,333 +1,499 @@
-<div class="row">
+<style>
+/* =========================================================
+ * RSGM LUXURY LABORATORIUM PK DESIGN SYSTEM
+ * (Aligned with Clinical SOAP & CPPT standards)
+ * ========================================================= */
+.rsgm-lab-order-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ec;
+  border-radius: 8px !important;
+  margin-bottom: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: all 0.15s ease;
+}
+.rsgm-lab-order-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+.rsgm-lab-order-head {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 8px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.rsgm-lab-order-body {
+  padding: 10px;
+}
+.rsgm-lab-order-no {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  color: #1d4ed8;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 1px 6px;
+  border-radius: 4px !important;
+}
+
+/* Compact Styling for Input Controls & Indikator Mutu */
+.rsgm-lab-compact-grid .form-group {
+  margin-bottom: 8px !important;
+}
+.rsgm-lab-compact-grid .rsgm-compact-label {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  margin-bottom: 3px !important;
+}
+.rsgm-lab-compact-grid .form-control {
+  height: 29px !important;
+  padding: 3px 8px !important;
+  font-size: 11.5px !important;
+  border-radius: 5px !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: none !important;
+}
+.rsgm-lab-compact-grid .form-control:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+}
+.rsgm-lab-compact-grid .rsgm-radio-group {
+  padding: 2px !important;
+  gap: 3px !important;
+  border-radius: 5px !important;
+  height: 29px !important;
+  align-items: center !important;
+}
+.rsgm-lab-compact-grid .rsgm-radio-pill > .rsgm-pill-text {
+  height: 23px !important;
+  padding: 0 8px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+}
+
+/* Compact Table & Live-Editable Cell */
+.rsgm-lab-table-compact {
+  margin-bottom: 0 !important;
+}
+.rsgm-lab-table-compact > thead > tr > th {
+  padding: 6px 10px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+  vertical-align: middle !important;
+}
+.rsgm-lab-table-compact > tbody > tr > td {
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+  color: #334155;
+  border-color: #e2e8f0 !important;
+  vertical-align: middle !important;
+}
+.rsgm-lab-table-compact > tbody > tr.rsgm-lab-cat-row > td {
+  background-color: #f1f5f9 !important;
+  padding: 6px 10px !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+}
+
+.rsgm-lab-editable-cell {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px !important;
+  padding: 2px 7px !important;
+  min-height: 24px !important;
+  height: 24px !important;
+  line-height: 20px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  font-variant-numeric: tabular-nums;
+  display: inline-block;
+  width: 100%;
+  max-width: 130px;
+  vertical-align: middle;
+  transition: all 0.15s ease;
+}
+.rsgm-lab-editable-cell:hover {
+  border-color: #94a3b8;
+  background-color: #f8fafc;
+}
+.rsgm-lab-editable-cell:focus {
+  background-color: #ffffff;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18) !important;
+  outline: none;
+}
+
+/* Kesan & Saran Compact Box */
+.rsgm-lab-textarea-box {
+  min-height: 38px !important;
+  height: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px !important;
+  padding: 5px 8px !important;
+  background-color: #ffffff;
+  font-size: 12px !important;
+  line-height: 1.4;
+  color: #0f172a;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+  transition: all 0.15s ease;
+}
+.rsgm-lab-textarea-box:hover {
+  border-color: #94a3b8;
+}
+.rsgm-lab-textarea-box:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18) !important;
+  outline: none;
+}
+.rsgm-lab-tag-k {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+.rsgm-lab-tag-s {
+  background-color: #ede9fe;
+  color: #6d28d9;
+}
+</style>
+
+<div class="row" style="margin-top: 10px;">
+  <!-- ========================================================
+       KOLOM KIRI: PERMINTAAN E-LABORATORIUM (ORDER DOKTER)
+       ======================================================== -->
   <div class="col-md-4">
-    <h4 style="margin-bottom: 20px;">e-Laboratorium</h4>
-{if: empty($laboratorium)}
-  <div class="alert alert-info">Belum ada permintaan laboratorium.</div>
-{else}
-  <input type="hidden" id="hidden_kd_dokter_perujuk" value="{?=isset_or($laboratorium[0]['dokter_perujuk'])?}">
-  <input type="hidden" id="hidden_nm_dokter_perujuk" value="{?=isset_or($laboratorium[0]['nm_dokter'])?}">
-  {loop: $laboratorium}
-  <div class="panel panel-info" style="margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-    <div class="panel-heading" style="padding: 10px 15px;">
-      <div class="row">
-        <div class="col-md-8" style="text-transform: none;">
-          <i class="fa fa-file-text-o"></i> <strong>Order:</strong> {?=isset_or($value.noorder)?} &nbsp;&nbsp;|&nbsp;&nbsp;
-          <i class="fa fa-calendar"></i> {?=isset_or($value.tgl_permintaan)?} {?=isset_or($value.jam_permintaan)?} &nbsp;&nbsp;|&nbsp;&nbsp;
-          <i class="fa fa-user-md"></i> {?=str_replace(['DRG. ','DR. ','DRG ','DR '], ['drg. ','dr. ','drg. ','dr. '], isset_or($value.nm_dokter))?}
-        </div>
-        <div class="col-md-4 text-right">
-          {if: in_array($this->core->getUserInfo('role'), ['admin', 'laboratorium'])}
-          <button type="button" class="btn btn-success btn-xs {if: $value.tgl_sampel !== '0000-00-00' || $value.jam_sampel !== '00:00:00'}disabled{else}validasi_permintaan_lab{/if}" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_permintaan="{?=isset_or($value.tgl_permintaan)?}" data-jam_permintaan="{?=isset_or($value.jam_permintaan)?}" data-noorder="{?=isset_or($value.noorder)?}" data-status="{?=isset_or($value.status)?}"><i class="fa fa-check"></i><span class="hidden-xs"> Validasi</span></button>
-          {/if}
-          <button type="button" name="button" class="btn btn-primary btn-xs cetak_permintaan" data-noorder="{?=isset_or($value.noorder)?}"><i class="fa fa-print"></i><span class="hidden-xs"> Cetak Permintaan</span></button>
-        </div>
-      </div>
-    </div>
-    <div class="panel-body" style="padding: 15px;">
-      {if: $value.diagnosa_klinis != '' || $value.informasi_tambahan != ''}
-      <div class="well well-sm" style="background-color: #f9f9f9; border: 1px dashed #ddd; margin-bottom: 15px;">
-        {if: $value.diagnosa_klinis != ''}
-        <div style="margin-bottom: 5px;"><strong>Diagnosa Klinis:</strong> {?=isset_or($value.diagnosa_klinis)?}</div>
-        {/if}
-        {if: $value.informasi_tambahan != ''}
-        <div><strong>Informasi Tambahan:</strong> {?=isset_or($value.informasi_tambahan)?}</div>
-        {/if}
-      </div>
-      {/if}
-      
-      <table class="table table-bordered table-striped table-condensed" style="margin-bottom: 0;">
-        <thead>
-          <tr style="background-color: #f5f5f5;">
-            <th width="30%">Parameter Pemeriksaan</th>
-            
-          </tr>
-        </thead>
-        <tbody>
-          {loop: $value.permintaan_pemeriksaan_lab as $data}
-          <tr>
-            <td>
-              <strong>{?=isset_or($data.nm_perawatan)?}</strong>
-              {if: !empty($data.permintaan_detail_permintaan_lab)}
-              <ul style="margin: 5px 0 0 15px; padding-left: 0; font-size: 13px; color: #555;">
-                {loop: $data.permintaan_detail_permintaan_lab as $data2}
-                <li style="margin-bottom: 3px;">
-                  {?=isset_or($data2.template_laboratorium.Pemeriksaan)?}
-                </li>
-                {/loop}
-              </ul>
-              {/if}
-            </td>
-            
-          </tr>
-          {/loop}
-        </tbody>
-      </table>
-    </div>
-  </div>
-  {/loop}
-{/if}
-  </div>
-  <div class="col-md-8">
-    <h4>Rincian Pemeriksaan</h4>
-
-<div class="panel panel-success" style="margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-  <div class="panel-heading" style="padding: 10px 15px;"><h3 class="panel-title"><i class="fa fa-money"></i> Rincian Biaya Laboratorium</h3></div>
-  <div class="panel-body" style="padding: 0;">
-    <table class="table table-striped table-bordered no-margin">
-      <thead>
-        <tr>
-          <th width="20px;">No.</th>
-          <th>Nama Pemeriksaan</th>
-          <th width="150" class="text-right">Biaya</th>
-        </tr>
-      </thead>
-      <tbody>
-        {loop: $order_lab}
-          <tr style="background-color: #f8fafc;">
-            <td colspan="3" style="font-size: 13px; color: #475569;">
-              <i class="fa fa-calendar"></i> {?=isset_or($value.tgl_periksa)?} {?=isset_or($value.jam)?} &nbsp;&nbsp;|&nbsp;&nbsp;
-              <i class="fa fa-user-md"></i> {?=isset_or($value['tests'][0]['nm_dokter'])?}
-            </td>
-          </tr>
-          {loop: $value.tests as $test}
-            <tr>
-              <td style="vertical-align: middle; text-align: center;">{?=isset_or($test.nomor)?}</td>
-              <td><div style="font-weight: bold; font-size: 14px; color: #1e293b;">{?=isset_or($test.nm_perawatan)?}</div></td>
-              <td class="text-right" style="vertical-align: middle;">
-                Rp. {?= number_format($test.biaya,2,',','.')?} &nbsp;
-                <button type="button" class="btn btn-default btn-xs {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_delete', 'laboratorium') == false || ($reg_periksa.status_bayar == 'Sudah Bayar' && $this->core->getUserInfo('role') != 'admin')}disabled{else}hapus_laboratorium{/if}" data-no_rawat="{?=isset_or($test.no_rawat)?}" data-tgl_periksa="{?=isset_or($test.tgl_periksa)?}" data-jam_periksa="{?=isset_or($test.jam)?}" data-kd_jenis_prw="{?=isset_or($test.kd_jenis_prw)?}" title="Hapus"><i class="fa fa-trash text-danger"></i></button>
-              </td>
-            </tr>
-          {/loop}
-        {/loop}
-        <tr style="font-weight: bold; background-color: #f1f5f9;">
-          <td colspan="2" class="text-right">Total Keseluruhan</td>
-          <td class="text-right" style="font-size: 14px; color: #0f172a;">Rp. {?= number_format($grand_total_biaya,2,',','.')?}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<h4 style="margin-top: 25px;">Hasil Pemeriksaan Laboratorium</h4>
-<div style="background-color: #f8fafc; padding: 20px; border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 20px;">
-  <div class="row" style="margin-bottom: 15px; font-size: 13px; color: #334155;">
-    <div class="col-md-6">
-      <table style="width: 100%;">
-        <tr><td width="130"><strong>NO.RM / NIK</strong></td><td width="10">:</td><td>{?=isset_or($pasien.no_rkm_medis)?}</td></tr>
-        <tr><td><strong>NAMA</strong></td><td>:</td><td>{?=isset_or($pasien.nm_pasien)?}</td></tr>
-        <tr><td><strong>TTL / UMUR</strong></td><td>:</td><td>{?=isset_or($pasien.tgl_lahir)?} / {?=isset_or($reg_periksa.umurdaftar)?} {?=isset_or($reg_periksa.sttsumur)?}</td></tr>
-        <tr><td><strong>JENIS KELAMIN</strong></td><td>:</td><td>{if: isset($pasien.jk) && $pasien.jk == 'L'}Laki-laki{elseif: isset($pasien.jk) && $pasien.jk == 'P'}Perempuan{else}-{/if}</td></tr>
-        <tr><td><strong>ALAMAT</strong></td><td>:</td><td>{?=isset_or($pasien.alamat)?}</td></tr>
-      </table>
-    </div>
-    <div class="col-md-6">
-      <table style="width: 100%;">
-        <tr><td width="170"><strong>DOKTER PENGIRIM</strong></td><td width="10">:</td><td>{?=isset_or($laboratorium[0]['nm_dokter'])?}</td></tr>
-        <tr><td><strong>DOKTER P. JAWAB</strong></td><td>:</td><td>dr. Burhanuddin Said, Sp.PK</td></tr>
-        <tr><td><strong>KET. KLINIS</strong></td><td>:</td><td>{?=isset_or($laboratorium[0]['diagnosa_klinis'])?}</td></tr>
-      </table>
-    </div>
-  </div>
-
-  <hr style="border-top: 1px dashed #cbd5e1; margin: 15px 0;">
-
-  <div class="row">
-    <div class="col-md-12">
-      <table style="width: 100%;">
-        <tr>
-          <!-- Baris 1 Kiri: No. Lab -->
-          <td style="width: 140px; vertical-align: middle; color: #475569;"><strong>No. Lab</strong></td>
-          <td style="width: 15px; vertical-align: middle;">:</td>
-          <td style="padding-bottom: 8px; padding-right: 35px;">
-            <input type="text" value="{?=isset_or($sk_no_lab)?}" class="form-control" style="width: 100%; height: 30px; padding: 5px 10px;" data-old_value="{?=isset_or($sk_no_lab)?}" onBlur="saveSaranKesan(this, 'no_lab', '{?=isset_or($no_rawat)?}')" onChange="saveSaranKesan(this, 'no_lab', '{?=isset_or($no_rawat)?}')">
-          </td>
-          <!-- Baris 1 Kanan: Jenis Layanan -->
-          <td style="width: 140px; vertical-align: middle; color: #475569;"><strong>Jenis Layanan</strong></td>
-          <td style="width: 15px; vertical-align: middle;">:</td>
-          <td style="padding-bottom: 8px;">
-            <div style="padding-top: 5px;">
-              <label style="margin-right: 15px; font-weight: normal; cursor: pointer; margin-bottom: 0;">
-                <input type="radio" name="sk_jenis_layanan" value="REGULAR" {if: isset_or($sk_jenis_layanan) == 'REGULAR' || isset_or($sk_jenis_layanan) == 'REGULER' || isset_or($sk_jenis_layanan) == ''}checked{/if} onChange="saveSaranKesan(this, 'jenis_layanan', '{?=isset_or($no_rawat)?}')" style="margin-right: 5px;"> REGULAR
-              </label>
-              <label style="font-weight: normal; cursor: pointer; margin-bottom: 0;">
-                <input type="radio" name="sk_jenis_layanan" value="CITO" {if: isset_or($sk_jenis_layanan) == 'CITO'}checked{/if} onChange="saveSaranKesan(this, 'jenis_layanan', '{?=isset_or($no_rawat)?}')" style="margin-right: 5px;"> CITO
-              </label>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <!-- Baris 2 Kiri: 1. Registrasi -->
-          <td style="vertical-align: middle; color: #475569;"><strong>Tgl/Jam Registrasi</strong></td>
-          <td style="vertical-align: middle;">:</td>
-          <td style="padding-bottom: 8px; padding-right: 35px;">
-            <input type="text" id="sk_tgl_registrasi_display" value="{?=isset_or($sk_tgl_registrasi)?}" class="form-control" style="width: 100%; height: 30px; padding: 5px 10px; background-color: #f1f5f9; cursor: not-allowed; font-weight: bold; color: #1e293b;" readonly title="Waktu sampel diambil saat validasi permintaan lab">
-          </td>
-          <!-- Baris 2 Kanan: 2. Periksa -->
-          <td style="vertical-align: middle; color: #475569;"><strong>Tgl/Jam Periksa</strong></td>
-          <td style="vertical-align: middle;">:</td>
-          <td style="padding-bottom: 8px;">
-            <input type="datetime-local" id="sk_tgl_periksa" value="{?=isset_or($sk_tgl_periksa_input)?}" class="form-control" style="width: 100%; height: 30px; padding: 5px 10px;" data-old_value="{?=isset_or($sk_tgl_periksa_input)?}" onBlur="saveSaranKesan(this, 'tgl_periksa', '{?=isset_or($no_rawat)?}')" onChange="saveSaranKesan(this, 'tgl_periksa', '{?=isset_or($no_rawat)?}')">
-          </td>
-        </tr>
-        <tr>
-          <!-- Baris 3 Kiri: 3. Selesai -->
-          <td style="vertical-align: middle; color: #475569;"><strong>Tgl/Jam Selesai</strong></td>
-          <td style="vertical-align: middle;">:</td>
-          <td style="padding-bottom: 8px; padding-right: 35px;">
-            <input type="datetime-local" value="{?=isset_or($sk_tgl_selesai_input)?}" class="form-control" style="width: 100%; height: 30px; padding: 5px 10px;" data-old_value="{?=isset_or($sk_tgl_selesai_input)?}" onBlur="saveSaranKesan(this, 'tgl_selesai', '{?=isset_or($no_rawat)?}')" onChange="saveSaranKesan(this, 'tgl_selesai', '{?=isset_or($no_rawat)?}')">
-          </td>
-          <!-- Baris 3 Kanan: 4. Validasi -->
-          <td style="vertical-align: middle; color: #475569;"><strong>Tgl/Jam Validasi</strong></td>
-          <td style="vertical-align: middle;">:</td>
-          <td style="padding-bottom: 8px;">
-            <input type="datetime-local" id="sk_tgl_validasi" value="{?=isset_or($sk_tgl_validasi_input)?}" class="form-control" style="width: 100%; height: 30px; padding: 5px 10px;" data-old_value="{?=isset_or($sk_tgl_validasi_input)?}" onInput="calculateResponsTime();" onBlur="saveSaranKesan(this, 'tgl_validasi', '{?=isset_or($no_rawat)?}'); calculateResponsTime();" onChange="saveSaranKesan(this, 'tgl_validasi', '{?=isset_or($no_rawat)?}'); calculateResponsTime();">
-          </td>
-        </tr>
-        <tr>
-          <!-- Baris 4 Kiri: Petugas Pelaksana -->
-          <td style="vertical-align: middle; color: #475569;"><strong>Petugas Pelaksana</strong></td>
-          <td style="vertical-align: middle;">:</td>
-          <td style="padding-bottom: 8px; padding-right: 35px;">
-            <input type="text" list="petugas_pelaksana_list" value="{?=isset_or($sk_petugas_pelaksana)?}" class="form-control" style="width: 100%; height: 30px; padding: 5px 10px;" placeholder="Nama Petugas Lab" data-old_value="{?=isset_or($sk_petugas_pelaksana)?}" onBlur="saveSaranKesan(this, 'petugas_pelaksana', '{?=isset_or($no_rawat)?}')" onChange="saveSaranKesan(this, 'petugas_pelaksana', '{?=isset_or($no_rawat)?}')">
-            <datalist id="petugas_pelaksana_list">
-              {loop: $petugas_list}
-              <option value="{$value.nama}">{$value.nama}{if: !empty($value.no_sip)} (SIP: {$value.no_sip}){/if}</option>
-              {/loop}
-            </datalist>
-          </td>
-          <!-- Baris 4 Kanan: Respons Time -->
-          <td style="vertical-align: middle; color: #475569;"><strong>Respons Time</strong></td>
-          <td style="vertical-align: middle;">:</td>
-          <td style="padding-bottom: 8px;">
-            <input type="text" id="sk_respons_time" value="{?=isset_or($sk_respons_time)?}" class="form-control" style="width: 100%; height: 30px; padding: 5px 10px; background-color: #f1f5f9; cursor: not-allowed; font-weight: bold; color: #1e293b;" placeholder="0:00:00" readonly title="Dihitung otomatis: Tgl/Jam Validasi - Tgl/Jam Registrasi" data-old_value="{?=isset_or($sk_respons_time)?}">
-          </td>
-        </tr>
-      </table>
-      
-      <script>
-      function parseDateTime(str) {
-          if (!str || typeof str !== 'string' || str.trim() === '') return null;
-          var s = str.trim().replace('T', ' ').replace(/-/g, '/');
-          var parts = s.split(' ');
-          var datePart = parts[0];
-          var timePart = parts[1] || '00:00:00';
-          var timeArr = timePart.split(':');
-          if (timeArr.length === 2) {
-              timePart += ':00';
-          }
-          var cleanStr = datePart + ' ' + timePart;
-          var d = new Date(cleanStr);
-          if (isNaN(d.getTime())) {
-              d = new Date(str);
-          }
-          return isNaN(d.getTime()) ? null : d;
-      }
-
-      function calculateResponsTime() {
-          var regTimeStr = "{?=isset_or($sk_tgl_registrasi)?}";
-          var validasiStr = $('#sk_tgl_validasi').val();
-          if (regTimeStr && validasiStr) {
-              var regTime = parseDateTime(regTimeStr);
-              var validasiTime = parseDateTime(validasiStr);
-              if (regTime && validasiTime) {
-                  var diffMs = Math.abs(validasiTime.getTime() - regTime.getTime());
-                  var diffHrs = Math.floor(diffMs / 3600000);
-                  var diffMins = Math.floor((diffMs % 3600000) / 60000);
-                  var diffSecs = Math.floor((diffMs % 60000) / 1000);
-                  var formatted = diffHrs + ':' + (diffMins < 10 ? '0' : '') + diffMins + ':' + (diffSecs < 10 ? '0' : '') + diffSecs;
-                  
-                  var resInput = $('#sk_respons_time');
-                  if (resInput.val() !== formatted) {
-                      resInput.val(formatted);
-                      // Trigger save function manually
-                      saveSaranKesan(resInput[0], 'respons_time', '{?=isset_or($no_rawat)?}');
-                  }
-              }
-          }
-      }
-
-      $(document).off('input change blur', '#sk_tgl_validasi').on('input change blur', '#sk_tgl_validasi', function() {
-          calculateResponsTime();
-      });
-
-      // Auto-trigger on load
-      calculateResponsTime();
-      </script>
-    </div>
-  </div>
-</div>
-<div class="table-responsive no-margin">
-  <table class="table table-striped table-bordered no-padding" width="100%">
-    <thead>
-      <tr>
-        <th width="20px;">No.</th>
-        <th width="30%">Parameter Pemeriksaan</th>
-        <th>Nilai</th>
-        <th>Nilai Rujukan</th>
-        <th>Satuan</th>
-        
-      </tr>
-    </thead>
-    <tbody>
-      {loop: $order_lab}
-        {loop: $value.tests as $test}
-        <tr style="background-color: #f8fafc;">
-          <td style="vertical-align: middle; text-align: center; border-bottom: 2px solid #e2e8f0;"><strong>{?=isset_or($test.nomor)?}</strong></td>
-          <td colspan="4" style="vertical-align: middle; border-bottom: 2px solid #e2e8f0;">
-            <div style="font-weight: bold; font-size: 14px; color: #1e293b;">
-              {?=isset_or($test.nm_perawatan)?}
-            </div>
-          </td>
-        </tr>
-        {loop: $test.detail_periksa_lab as $data2}
-        <tr>
-          <td></td>
-          <td><span style="color: #334155;">{?=isset_or($data2.Pemeriksaan)?}</span></td>
-          <td with="200" contenteditable="true" data-old_value="{?=isset_or($data2.nilai)?}" onBlur="saveNilai(this,'nilai','{?=isset_or($data2.no_rawat)?}','{?=isset_or($data2.tgl_periksa)?}','{?=isset_or($data2.jam)?}','{?=isset_or($data2.id_template)?}')" onClick="highlightEdit(this);" style="font-weight: 500;">{?=isset_or($data2.nilai)?}</td>
-          <td style="color: #64748b;">
-            {if: $pasien.jk == 'L' && $reg_periksa.umurdaftar < '16'}{?=isset_or($data2.nilai_rujukan_la)?}{/if}
-            {if: $pasien.jk == 'L' && $reg_periksa.umurdaftar >= '16'}{?=isset_or($data2.nilai_rujukan_ld)?}{/if}
-            {if: $pasien.jk == 'P' && $reg_periksa.umurdaftar < '16'}{?=isset_or($data2.nilai_rujukan_pa)?}{/if}
-            {if: $pasien.jk == 'P' && $reg_periksa.umurdaftar >= '16'}{?=isset_or($data2.nilai_rujukan_pd)?}{/if}
-          </td>
-          <td style="color: #64748b;">{?=isset_or($data2.satuan)?}</td>
-          
-        </tr>
-        {/loop}
-
-        {/loop}
-        
-
-
-      {/loop}
-      <tr>
-        <td colspan="5" style="padding: 20px;">
-          
-
-          <table style="width: 100%;">
-            <tr>
-              <td style="width: 130px; vertical-align: top; color: #475569;"><strong>Kesan</strong></td>
-              <td style="width: 15px; vertical-align: top;">:</td>
-              <td><div contenteditable="true" data-old_value="{?=isset_or($sk_kesan)?}" onBlur="saveSaranKesan(this, 'kesan', '{?=isset_or($no_rawat)?}')" onClick="highlightEdit(this);" style="min-height: 30px; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 10px; margin-bottom: 8px; background-color: #fff; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;">{?=isset_or($sk_kesan)?}</div></td>
-            </tr>
-            <tr>
-              <td style="width: 130px; vertical-align: top; color: #475569;"><strong>Saran</strong></td>
-              <td style="vertical-align: top;">:</td>
-              <td><div contenteditable="true" data-old_value="{?=isset_or($sk_saran)?}" onBlur="saveSaranKesan(this, 'saran', '{?=isset_or($no_rawat)?}')" onClick="highlightEdit(this);" style="min-height: 30px; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 10px; background-color: #fff; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;">{?=isset_or($sk_saran)?}</div></td>
-            </tr>
-          </table>
-          
-          <div style="margin-top: 25px; text-align: right;">
-            <button type="button" class="btn btn-primary btn-lg" id="cetak_hasil"><i class="fa fa-print"></i> Cetak Hasil Laboratorium</button>
+    <div class="rsgm-rincian-card" style="margin-bottom: 20px;">
+      <div class="rsgm-rincian-card-head">
+        <div class="rsgm-rincian-card-title">
+          <span class="rsgm-rincian-icon rsgm-rincian-icon-sky"><i class="fa fa-file-text-o"></i></span>
+          <div>
+            <h5 style="margin: 0; font-weight: 800; color: #0f172a; font-size: 13.5px;">e-Laboratorium</h5>
+            <small class="text-muted" style="font-size: 11px;">Permintaan pemeriksaan dari dokter perujuk</small>
           </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+        </div>
+        {if: !empty($laboratorium)}
+        <span class="rsgm-rincian-total" style="font-size: 11px; padding: 2px 8px;">Total: <strong>{?=count($laboratorium)?}</strong></span>
+        {/if}
+      </div>
+
+      <div class="rsgm-rincian-card-body" style="padding: 10px;">
+        {if: empty($laboratorium)}
+          <div class="rsgm-rincian-empty">
+            <i class="fa fa-info-circle"></i> <span>Belum ada permintaan laboratorium untuk pasien ini.</span>
+          </div>
+        {else}
+          <input type="hidden" id="hidden_kd_dokter_perujuk" value="{?=isset_or($laboratorium[0]['dokter_perujuk'])?}">
+          <input type="hidden" id="hidden_nm_dokter_perujuk" value="{?=isset_or($laboratorium[0]['nm_dokter'])?}">
+
+          {loop: $laboratorium}
+          <div class="rsgm-lab-order-card">
+            <div class="rsgm-lab-order-head">
+              <div>
+                <span class="rsgm-lab-order-no"><i class="fa fa-hashtag"></i> {?=isset_or($value.noorder)?}</span>
+                <div style="font-size: 11px; color: #475569; margin-top: 3px;">
+                  <i class="fa fa-clock-o text-muted"></i> {?=isset_or($value.tgl_permintaan)?} <b>{?=isset_or($value.jam_permintaan)?}</b>
+                </div>
+                <div style="font-size: 11px; color: #0369a1; font-weight: 600; margin-top: 2px;">
+                  <i class="fa fa-user-md"></i> {?=str_replace(['DRG. ','DR. ','DRG ','DR '], ['drg. ','dr. ','drg. ','dr. '], isset_or($value.nm_dokter))?}
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                {if: in_array($this->core->getUserInfo('role'), ['admin', 'laboratorium'])}
+                <button type="button" class="btn btn-xs {if: $value.tgl_sampel !== '0000-00-00' || $value.jam_sampel !== '00:00:00'}btn-default disabled{else}btn-success validasi_permintaan_lab{/if}" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_permintaan="{?=isset_or($value.tgl_permintaan)?}" data-jam_permintaan="{?=isset_or($value.jam_permintaan)?}" data-noorder="{?=isset_or($value.noorder)?}" data-status="{?=isset_or($value.status)?}" style="border-radius: 5px; font-weight: 600; padding: 2px 7px; font-size: 10.5px;">
+                  <i class="fa fa-check"></i> {if: $value.tgl_sampel !== '0000-00-00' || $value.jam_sampel !== '00:00:00'}Tervalidasi{else}Validasi{/if}
+                </button>
+                {/if}
+                <button type="button" name="button" class="btn btn-primary btn-xs cetak_permintaan" data-noorder="{?=isset_or($value.noorder)?}" style="border-radius: 5px; font-weight: 600; padding: 2px 7px; font-size: 10.5px;">
+                  <i class="fa fa-print"></i> Cetak Order
+                </button>
+              </div>
+            </div>
+
+            <div class="rsgm-lab-order-body">
+              {if: $value.diagnosa_klinis != '' || $value.informasi_tambahan != ''}
+              <div class="rsgm-soap-section" style="padding: 6px 8px; margin-bottom: 8px; background-color: #f8fafc; border: 1px dashed #cbd5e1;">
+                {if: $value.diagnosa_klinis != ''}
+                <div style="margin-bottom: 3px; font-size: 11.5px;">
+                  <span class="rsgm-soap-tag rsgm-soap-tag-a">D</span> <strong class="text-muted">Klinis:</strong> <span style="font-weight: 600; color: #0f172a;">{?=isset_or($value.diagnosa_klinis)?}</span>
+                </div>
+                {/if}
+                {if: $value.informasi_tambahan != ''}
+                <div style="font-size: 11.5px;">
+                  <span class="rsgm-soap-tag rsgm-soap-tag-i">C</span> <strong class="text-muted">Catatan:</strong> <span style="color: #334155;">{?=isset_or($value.informasi_tambahan)?}</span>
+                </div>
+                {/if}
+              </div>
+              {/if}
+
+              <div class="table-responsive no-margin" style="border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
+                <table class="table rsgm-lab-table-compact" style="margin-bottom: 0;">
+                  <thead>
+                    <tr>
+                      <th>Parameter Pemeriksaan</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loop: $value.permintaan_pemeriksaan_lab as $data}
+                    <tr>
+                      <td style="padding: 6px 8px;">
+                        <strong style="color: #0f172a; font-size: 12px;">{?=isset_or($data.nm_perawatan)?}</strong>
+                        {if: !empty($data.permintaan_detail_permintaan_lab)}
+                        <ul class="rsgm-resep-list" style="margin-top: 3px; font-size: 11px; color: #475569;">
+                          {loop: $data.permintaan_detail_permintaan_lab as $data2}
+                          <li>{?=isset_or($data2.template_laboratorium.Pemeriksaan)?}</li>
+                          {/loop}
+                        </ul>
+                        {/if}
+                      </td>
+                    </tr>
+                    {/loop}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          {/loop}
+        {/if}
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       KOLOM KANAN: BIAYA TINDAKAN & HASIL UJI LABORATORIUM
+       ======================================================== -->
+  <div class="col-md-8">
+    <!-- Card 1: Rincian Biaya Tindakan -->
+    <div class="rsgm-rincian-card" style="margin-bottom: 16px;">
+      <div class="rsgm-rincian-card-head">
+        <div class="rsgm-rincian-card-title">
+          <span class="rsgm-rincian-icon rsgm-rincian-icon-emerald"><i class="fa fa-money"></i></span>
+          <div>
+            <h5 style="margin: 0; font-weight: 800; color: #0f172a; font-size: 13.5px;">Rincian Biaya Tindakan Laboratorium</h5>
+            <small class="text-muted" style="font-size: 11px;">Tindakan dan pemeriksaan yang telah masuk ke billing</small>
+          </div>
+        </div>
+        <span class="rsgm-rincian-total" style="font-size: 11.5px; padding: 2px 8px;">Grand Total: <strong>Rp {?= number_format($grand_total_biaya,2,',','.')?}</strong></span>
+      </div>
+
+      <div class="rsgm-rincian-card-body" style="padding: 0;">
+        <div class="table-responsive no-margin">
+          <table class="table table-striped table-bordered rsgm-lab-table-compact" style="margin-bottom: 0;">
+            <thead>
+              <tr>
+                <th width="35" class="text-center">No.</th>
+                <th>Nama Pemeriksaan</th>
+                <th width="160" class="text-right">Biaya</th>
+              </tr>
+            </thead>
+            <tbody>
+              {if: empty($order_lab)}
+                <tr>
+                  <td colspan="3" class="text-center text-muted" style="padding: 16px;">Belum ada rincian tindakan laboratorium yang dimasukkan.</td>
+                </tr>
+              {else}
+                {loop: $order_lab}
+                  <tr class="rsgm-resep-group-row">
+                    <td colspan="3" style="font-size: 11.5px; color: #475569; font-weight: 600; padding: 5px 8px !important;">
+                      <i class="fa fa-calendar-check-o text-muted"></i> {?=isset_or($value.tgl_periksa)?} <b>{?=isset_or($value.jam)?}</b>
+                      &nbsp;&bull;&nbsp;
+                      <i class="fa fa-user-md text-primary"></i> <span style="color: #0369a1;">{?=isset_or($value['tests'][0]['nm_dokter'])?}</span>
+                    </td>
+                  </tr>
+                  {loop: $value.tests as $test}
+                    <tr>
+                      <td class="text-center text-muted" style="font-weight: 600;">{?=isset_or($test.nomor)?}</td>
+                      <td><strong style="color: #0f172a; font-size: 12px;">{?=isset_or($test.nm_perawatan)?}</strong></td>
+                      <td class="text-right" style="font-variant-numeric: tabular-nums;">
+                        <span style="font-weight: 600; color: #0f172a;">Rp {?= number_format($test.biaya,2,',','.')?}</span> &nbsp;
+                        <button type="button" class="btn btn-default btn-xs {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_delete', 'laboratorium') == false || ($reg_periksa.status_bayar == 'Sudah Bayar' && $this->core->getUserInfo('role') != 'admin')}disabled{else}hapus_laboratorium{/if}" data-no_rawat="{?=isset_or($test.no_rawat)?}" data-tgl_periksa="{?=isset_or($test.tgl_periksa)?}" data-jam_periksa="{?=isset_or($test.jam)?}" data-kd_jenis_prw="{?=isset_or($test.kd_jenis_prw)?}" title="Hapus Tindakan" style="color: #dc2626; padding: 1px 6px; font-size: 10px;"><i class="fa fa-trash"></i></button>
+                      </td>
+                    </tr>
+                  {/loop}
+                {/loop}
+                <tr class="rsgm-rincian-tfoot">
+                  <th colspan="2" class="text-right" style="text-transform: uppercase; font-size: 11.5px; padding: 6px 10px !important;">Total Keseluruhan</th>
+                  <th class="text-right" style="font-size: 13px; color: #059669; font-weight: 800; padding: 6px 10px !important;">Rp {?= number_format($grand_total_biaya,2,',','.')?}</th>
+                </tr>
+              {/if}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Lembar Pengisian & Hasil Pemeriksaan Laboratorium -->
+    <div class="rsgm-rincian-card" style="margin-bottom: 25px;">
+      <div class="rsgm-rincian-card-head">
+        <div class="rsgm-rincian-card-title">
+          <span class="rsgm-rincian-icon rsgm-rincian-icon-blue"><i class="fa fa-flask"></i></span>
+          <div>
+            <h5 style="margin: 0; font-weight: 800; color: #0f172a; font-size: 13.5px;">Hasil Pemeriksaan &amp; Pengujian Laboratorium</h5>
+            <small class="text-muted" style="font-size: 11px;">Input parameter uji, nilai rujukan, serta catatan kesan &amp; saran</small>
+          </div>
+        </div>
+        <div class="rsgm-rincian-total" style="font-size: 11.5px; padding: 2px 8px;">
+          <i class="fa fa-user-md text-primary"></i> <strong>dr. Burhanuddin Said, Sp.PK</strong>
+        </div>
+      </div>
+
+      <div class="rsgm-rincian-card-body" style="padding: 12px;">
+        <!-- Section Alur Mutu & Waktu Pelayanan (Compact Grid) -->
+        <div class="rsgm-soap-section rsgm-lab-compact-grid" style="margin-bottom: 12px; padding: 10px 12px;">
+          <div class="rsgm-soap-sec-title" style="margin-bottom: 8px; padding-bottom: 4px;">
+            <i class="fa fa-tachometer text-primary"></i> <span style="font-size: 12px;">Alur Pelayanan &amp; Indikator Mutu Waktu (Respons Time)</span>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-3 form-group">
+              <label class="rsgm-compact-label">No. Laboratorium</label>
+              <input type="text" value="{?=isset_or($sk_no_lab)?}" class="form-control" placeholder="Contoh: LAB-..." data-old_value="{?=isset_or($sk_no_lab)?}" onBlur="saveSaranKesan(this, 'no_lab', '{?=isset_or($no_rawat)?}')" onChange="saveSaranKesan(this, 'no_lab', '{?=isset_or($no_rawat)?}')" style="font-weight: 600;">
+            </div>
+
+            <div class="col-sm-3 form-group">
+              <label class="rsgm-compact-label">Jenis Layanan</label>
+              <div class="rsgm-radio-group">
+                <label class="rsgm-radio-pill" for="sk_jenis_layanan_reg">
+                  <input type="radio" name="sk_jenis_layanan" id="sk_jenis_layanan_reg" value="REGULAR" {if: isset_or($sk_jenis_layanan) == 'REGULAR' || isset_or($sk_jenis_layanan) == 'REGULER' || isset_or($sk_jenis_layanan) == ''}checked{/if} onChange="saveSaranKesan(this, 'jenis_layanan', '{?=isset_or($no_rawat)?}')">
+                  <span class="rsgm-pill-text">Regular</span>
+                </label>
+                <label class="rsgm-radio-pill" for="sk_jenis_layanan_cito">
+                  <input type="radio" name="sk_jenis_layanan" id="sk_jenis_layanan_cito" value="CITO" {if: isset_or($sk_jenis_layanan) == 'CITO'}checked{/if} onChange="saveSaranKesan(this, 'jenis_layanan', '{?=isset_or($no_rawat)?}')">
+                  <span class="rsgm-pill-text" style="color: #dc2626;">CITO</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="col-sm-3 form-group">
+              <label class="rsgm-compact-label">Tgl/Jam Registrasi (Sampel)</label>
+              <input type="text" id="sk_tgl_registrasi_display" value="{?=isset_or($sk_tgl_registrasi)?}" class="form-control" style="background-color: #f1f5f9; cursor: not-allowed; font-weight: 700; color: #1e293b;" readonly title="Waktu sampel diambil saat validasi permintaan lab">
+            </div>
+
+            <div class="col-sm-3 form-group">
+              <label class="rsgm-compact-label">Tgl/Jam Periksa</label>
+              <input type="datetime-local" id="sk_tgl_periksa" value="{?=isset_or($sk_tgl_periksa_input)?}" class="form-control" data-old_value="{?=isset_or($sk_tgl_periksa_input)?}" onBlur="saveSaranKesan(this, 'tgl_periksa', '{?=isset_or($no_rawat)?}')" onChange="saveSaranKesan(this, 'tgl_periksa', '{?=isset_or($no_rawat)?}')">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-3 form-group">
+              <label class="rsgm-compact-label">Tgl/Jam Selesai</label>
+              <input type="datetime-local" value="{?=isset_or($sk_tgl_selesai_input)?}" class="form-control" data-old_value="{?=isset_or($sk_tgl_selesai_input)?}" onBlur="saveSaranKesan(this, 'tgl_selesai', '{?=isset_or($no_rawat)?}')" onChange="saveSaranKesan(this, 'tgl_selesai', '{?=isset_or($no_rawat)?}')">
+            </div>
+
+            <div class="col-sm-3 form-group">
+              <label class="rsgm-compact-label">Tgl/Jam Validasi</label>
+              <input type="datetime-local" id="sk_tgl_validasi" value="{?=isset_or($sk_tgl_validasi_input)?}" class="form-control" data-old_value="{?=isset_or($sk_tgl_validasi_input)?}" onInput="calculateResponsTime();" onBlur="saveSaranKesan(this, 'tgl_validasi', '{?=isset_or($no_rawat)?}'); calculateResponsTime();" onChange="saveSaranKesan(this, 'tgl_validasi', '{?=isset_or($no_rawat)?}'); calculateResponsTime();">
+            </div>
+
+            <div class="col-sm-3 form-group">
+              <label class="rsgm-compact-label">Petugas Pelaksana</label>
+              <input type="text" list="petugas_pelaksana_list" value="{?=isset_or($sk_petugas_pelaksana)?}" class="form-control" placeholder="Nama Petugas Lab" data-old_value="{?=isset_or($sk_petugas_pelaksana)?}" onBlur="saveSaranKesan(this, 'petugas_pelaksana', '{?=isset_or($no_rawat)?}')" onChange="saveSaranKesan(this, 'petugas_pelaksana', '{?=isset_or($no_rawat)?}')">
+              <datalist id="petugas_pelaksana_list">
+                {loop: $petugas_list}
+                <option value="{$value.nama}">{$value.nama}{if: !empty($value.no_sip)} (SIP: {$value.no_sip}){/if}</option>
+                {/loop}
+              </datalist>
+            </div>
+
+            <div class="col-sm-3 form-group">
+              <label class="rsgm-compact-label">Respons Time</label>
+              <input type="text" id="sk_respons_time" value="{?=isset_or($sk_respons_time)?}" class="form-control" style="background-color: #eff6ff; border-color: #bfdbfe; cursor: not-allowed; font-weight: 800; color: #1d4ed8;" placeholder="0:00:00" readonly title="Dihitung otomatis: Tgl/Jam Validasi - Tgl/Jam Registrasi" data-old_value="{?=isset_or($sk_respons_time)?}">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabel Hasil Pengujian Parameter Laboratorium (Compact) -->
+        <div class="table-responsive no-margin" style="border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; margin-bottom: 12px;">
+          <table class="table table-bordered rsgm-lab-table-compact" style="margin-bottom: 0;">
+            <thead>
+              <tr>
+                <th width="35" class="text-center">No.</th>
+                <th width="36%">Parameter Pemeriksaan</th>
+                <th width="150" class="text-center">Nilai Hasil</th>
+                <th width="24%">Nilai Rujukan</th>
+                <th width="14%">Satuan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {if: empty($order_lab)}
+                <tr>
+                  <td colspan="5" class="text-center text-muted" style="padding: 16px;">Belum ada pemeriksaan yang dapat diinputkan hasilnya.</td>
+                </tr>
+              {else}
+                {loop: $order_lab}
+                  {loop: $value.tests as $test}
+                  <tr class="rsgm-lab-cat-row">
+                    <td class="text-center" style="border-bottom: 2px solid #cbd5e1;"><strong>{?=isset_or($test.nomor)?}</strong></td>
+                    <td colspan="4" style="border-bottom: 2px solid #cbd5e1;">
+                      <strong style="color: #0f172a; font-size: 12.5px;"><i class="fa fa-check-circle-o text-primary"></i> {?=isset_or($test.nm_perawatan)?}</strong>
+                    </td>
+                  </tr>
+                  {loop: $test.detail_periksa_lab as $data2}
+                  <tr>
+                    <td></td>
+                    <td><span style="color: #334155; font-weight: 600; font-size: 12px;">{?=isset_or($data2.Pemeriksaan)?}</span></td>
+                    <td class="text-center">
+                      <div contenteditable="true" class="rsgm-lab-editable-cell" data-old_value="{?=isset_or($data2.nilai)?}" onBlur="saveNilai(this,'nilai','{?=isset_or($data2.no_rawat)?}','{?=isset_or($data2.tgl_periksa)?}','{?=isset_or($data2.jam)?}','{?=isset_or($data2.id_template)?}')" onClick="highlightEdit(this);">{?=isset_or($data2.nilai)?}</div>
+                    </td>
+                    <td style="color: #64748b; font-size: 11.5px; font-variant-numeric: tabular-nums;">
+                      {if: $pasien.jk == 'L' && $reg_periksa.umurdaftar < '16'}{?=isset_or($data2.nilai_rujukan_la)?}{/if}
+                      {if: $pasien.jk == 'L' && $reg_periksa.umurdaftar >= '16'}{?=isset_or($data2.nilai_rujukan_ld)?}{/if}
+                      {if: $pasien.jk == 'P' && $reg_periksa.umurdaftar < '16'}{?=isset_or($data2.nilai_rujukan_pa)?}{/if}
+                      {if: $pasien.jk == 'P' && $reg_periksa.umurdaftar >= '16'}{?=isset_or($data2.nilai_rujukan_pd)?}{/if}
+                    </td>
+                    <td style="color: #64748b; font-size: 11.5px;">{?=isset_or($data2.satuan)?}</td>
+                  </tr>
+                  {/loop}
+                  {/loop}
+                {/loop}
+              {/if}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Section Kesan & Saran (Compact SOAPIE style) -->
+        <div class="rsgm-soap-section" style="margin-bottom: 0; padding: 10px 12px;">
+          <div class="rsgm-soap-sec-title" style="margin-bottom: 8px; padding-bottom: 4px;">
+            <i class="fa fa-file-text-o text-primary"></i> <span style="font-size: 12px;">Catatan Kesan &amp; Saran Hasil Pemeriksaan</span>
+          </div>
+          <div class="row">
+            <div class="col-sm-6 form-group" style="margin-bottom: 0;">
+              <label class="rsgm-compact-label" style="font-size: 11px;"><span class="rsgm-soap-tag rsgm-lab-tag-k" style="width: 17px; height: 17px; font-size: 10px;">K</span> Kesan</label>
+              <div contenteditable="true" class="rsgm-lab-textarea-box" data-old_value="{?=isset_or($sk_kesan)?}" onBlur="saveSaranKesan(this, 'kesan', '{?=isset_or($no_rawat)?}')" onClick="highlightEdit(this);">{?=isset_or($sk_kesan)?}</div>
+            </div>
+            <div class="col-sm-6 form-group" style="margin-bottom: 0;">
+              <label class="rsgm-compact-label" style="font-size: 11px;"><span class="rsgm-soap-tag rsgm-lab-tag-s" style="width: 17px; height: 17px; font-size: 10px;">S</span> Saran</label>
+              <div contenteditable="true" class="rsgm-lab-textarea-box" data-old_value="{?=isset_or($sk_saran)?}" onBlur="saveSaranKesan(this, 'saran', '{?=isset_or($no_rawat)?}')" onClick="highlightEdit(this);">{?=isset_or($sk_saran)?}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Cetak Hasil -->
+      <div class="rsgm-reg-footer">
+        <span class="rsgm-footer-hint hidden-xs" style="font-size: 11.5px;">
+          <i class="fa fa-info-circle text-primary"></i> Nilai hasil pemeriksaan dan catatan kesan/saran tersimpan otomatis saat Anda berpindah kolom
+        </span>
+        <div class="rsgm-reg-actions">
+          <button type="button" class="btn btn-primary btn-sm" id="cetak_hasil" style="font-weight: 700; border-radius: 6px; padding: 6px 16px;">
+            <i class="fa fa-print"></i> Cetak Hasil Laboratorium
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
+
 <!-- Modal -->
 <div class="modal fade" id="detailModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
@@ -336,19 +502,64 @@
         </div>
     </div>
 </div>
+
 <script type="text/javascript">
   $(".alert-dismissible").fadeTo(3000, 500).slideUp(500);
-</script>
-<script>
+
+  function parseDateTime(str) {
+      if (!str || typeof str !== 'string' || str.trim() === '') return null;
+      var s = str.trim().replace('T', ' ').replace(/-/g, '/');
+      var parts = s.split(' ');
+      var datePart = parts[0];
+      var timePart = parts[1] || '00:00:00';
+      var timeArr = timePart.split(':');
+      if (timeArr.length === 2) {
+          timePart += ':00';
+      }
+      var cleanStr = datePart + ' ' + timePart;
+      var d = new Date(cleanStr);
+      if (isNaN(d.getTime())) {
+          d = new Date(str);
+      }
+      return isNaN(d.getTime()) ? null : d;
+  }
+
+  function calculateResponsTime() {
+      var regTimeStr = "{?=isset_or($sk_tgl_registrasi)?}";
+      var validasiStr = $('#sk_tgl_validasi').val();
+      if (regTimeStr && validasiStr) {
+          var regTime = parseDateTime(regTimeStr);
+          var validasiTime = parseDateTime(validasiStr);
+          if (regTime && validasiTime) {
+              var diffMs = Math.abs(validasiTime.getTime() - regTime.getTime());
+              var diffHrs = Math.floor(diffMs / 3600000);
+              var diffMins = Math.floor((diffMs % 3600000) / 60000);
+              var diffSecs = Math.floor((diffMs % 60000) / 1000);
+              var formatted = diffHrs + ':' + (diffMins < 10 ? '0' : '') + diffMins + ':' + (diffSecs < 10 ? '0' : '') + diffSecs;
+              
+              var resInput = $('#sk_respons_time');
+              if (resInput.val() !== formatted) {
+                  resInput.val(formatted);
+                  saveSaranKesan(resInput[0], 'respons_time', '{?=isset_or($no_rawat)?}');
+              }
+          }
+      }
+  }
+
+  $(document).off('input change blur', '#sk_tgl_validasi').on('input change blur', '#sk_tgl_validasi', function() {
+      calculateResponsTime();
+  });
+
+  calculateResponsTime();
+
   function highlightEdit(editableObj) {
   	$(editableObj).css("background","#FFF");
   }
+
   function saveNilai(editableObj,column,no_rawat,tgl_periksa,jam,id_template) {
   	var val = $.trim(editableObj.innerText);
-  	// no change change made then return false
   	if($.trim($(editableObj).attr('data-old_value') || '') === val)
   	return false;
-  	// send ajax to update value
   	$(editableObj).css("background","#FFF url({?=url()?}/assets/img/loader.gif) no-repeat right");
   	$.ajax({
   		url: "{?=url([ADMIN,'laboratorium','savenilai'])?}",
@@ -356,7 +567,6 @@
   		cache: false,
   		data: {column: column, value: val, no_rawat: no_rawat, tgl_periksa: tgl_periksa, jam: jam, id_template: id_template},
   		success: function(response)  {
-  			// set updated value as old value
   			$(editableObj).attr('data-old_value',val);
   			$(editableObj).css("background","#FDFDFD");
   		},
@@ -365,12 +575,11 @@
   		}
      });
   }
+
   function saveKeterangan(editableObj,column,no_rawat,tgl_periksa,jam,id_template) {
   	var val = $.trim(editableObj.innerText);
-  	// no change change made then return false
   	if($.trim($(editableObj).attr('data-old_value') || '') === val)
   	return false;
-  	// send ajax to update value
   	$(editableObj).css("background","#FFF url({?=url()?}/assets/img/loader.gif) no-repeat right");
   	$.ajax({
   		url: "{?=url([ADMIN,'laboratorium','saveketerangan'])?}",
@@ -378,7 +587,6 @@
   		cache: false,
   		data: {column: column, value: val, no_rawat: no_rawat, tgl_periksa: tgl_periksa, jam: jam, id_template: id_template},
   		success: function(response)  {
-  			// set updated value as old value
   			$(editableObj).attr('data-old_value',val);
   			$(editableObj).css("background","#FDFDFD");
   		},
@@ -387,6 +595,7 @@
   		}
      });
   }
+
   function saveSaranKesan(editableObj, column, no_rawat) {
     var val = '';
     if ($(editableObj).is(':checkbox, :radio')) {
@@ -444,8 +653,7 @@
     var noorder = $(this).attr("data-noorder");
     var status  = $(this).attr("data-status") || $('input:text[name=status]').val() || $('input[name=status]').val() || 'ralan';
 
-    // tampilkan dialog konfirmasi
-    bootbox.confirm("Apakah Anda yakin ingin menvalidasi data ini?", function(result){
+    bootbox.confirm("Apakah Anda yakin ingin memvalidasi data permintaan laboratorium ini?", function(result){
       if (result){
         $.post(url, {
           no_rawat: no_rawat,
@@ -488,21 +696,16 @@
     var noorder = $(this).attr("data-noorder");
     var kd_jenis_prw = $(this).attr("data-kd_jenis_prw");
     var id_template = $(this).attr("data-id_template");
-    //console.log(noorder + ' - ' + kd_jenis_prw + ' - ' + id_template);
     $.post(url, {
       noorder: noorder,
       kd_jenis_prw: kd_jenis_prw,
       id_template: id_template
-    } ,function(data) {
+    }, function(data) {
       var no_rawat = $('input:text[name=no_rawat]').val();
       var url = baseURL + '/laboratorium/rincian?t=' + mlite.token;
-      $.post(url, {no_rawat : no_rawat,
-      }, function(data) {
-        // tampilkan data
+      $.post(url, {no_rawat : no_rawat}, function(data) {
         $("#rincian").html(data).show();
       });
     });
-    //$('#detailModal').modal('hidden');
-    //$('body').removeClass('modal-open')
   });
 </script>
