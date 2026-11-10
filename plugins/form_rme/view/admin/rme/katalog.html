@@ -72,7 +72,7 @@
                     <div class="col-md-4 col-sm-6 katalog-card-item" data-search="{?=strtolower($value.nama_form)?} {?=strtolower($value.kode_form)?} {?=strtolower($value.kategori)?}" style="margin-bottom: 20px;">
                         <div class="thumbnail" style="border-radius: 8px; border: 1px solid #e3e8ee; box-shadow: 0 2px 6px rgba(0,0,0,0.04); transition: transform 0.2s, box-shadow 0.2s; padding: 0; overflow: hidden; height: 100%; display: flex; flex-direction: column;">
                             <div style="background: #f8fafc; padding: 12px 15px; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center;">
-                                <span class="label {if: $value.kategori == 'Bedah'}label-danger{elseif: $value.kategori == 'Ranap'}label-info{elseif: $value.kategori == 'Rajal'}label-success{else}label-default{/if}" style="font-size: 11px;">
+                                <span class="label {if: $value.kategori == 'Bedah'}label-danger{elseif: $value.kategori == 'Ranap'}label-info{elseif: $value.kategori == 'Rajal'}label-success{elseif: $value.kategori == 'UGD' || $value.kategori == 'IGD'}label-warning{else}label-default{/if}" style="font-size: 11px;">
                                     {$value.kategori}
                                 </span>
                                 <span class="label label-default" style="font-size: 11px; font-family: monospace;">{$value.kode_form}</span>

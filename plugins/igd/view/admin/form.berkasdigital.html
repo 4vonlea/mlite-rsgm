@@ -81,7 +81,7 @@
       form_data.append("no_rawat",$('#no_rawat').val());
       form_data.append("kode",$('#kode').val());
       $.ajax({
-        url:'{?=url([ADMIN,'rawat_inap','saveberkasdigital'])?}',
+        url:'{?=url([ADMIN,'igd','saveberkasdigital'])?}',
         method:'POST',
         data:form_data,
         contentType:false,

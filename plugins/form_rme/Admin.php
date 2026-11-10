@@ -7721,6 +7721,11 @@ if (ob_get_length()) {
         return $this->getForm();
     }
 
+    public function anyForm()
+    {
+        return $this->getForm();
+    }
+
     public function anyAkgmumanage()
     {
         return $this->anyManage();
@@ -7764,6 +7769,14 @@ if (ob_get_length()) {
 
     public function anyManage()
     {
+        if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['no_rawat'])) {
+            $no_rawat = $_GET['no_rawat'];
+            try { $this->db('rm_asesmen_keperawatan_gigi_ugd')->where('no_rawat', $no_rawat)->delete(); } catch (\Exception $e) {}
+            try { $this->db('asesmen_keperawatan_gigi_ugd')->where('no_rawat', $no_rawat)->delete(); } catch (\Exception $e) {}
+            $this->notify('success', 'Data berhasil dihapus');
+            redirect(url([ADMIN, 'form_rme', 'akgmumanage']));
+        }
+
         $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
         $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
         $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
@@ -7772,6 +7785,7 @@ if (ob_get_length()) {
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_asesmen_keperawatan_gigi_ugd.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->select('rm_asesmen_keperawatan_gigi_ugd.*, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, reg_periksa.no_rkm_medis')
+            ->desc('rm_asesmen_keperawatan_gigi_ugd.tanggal')
             ->toArray();
 
         return $this->draw('akgmu/manage.html', ['asesmen' => $asesmen]);
@@ -16959,6 +16973,20 @@ if (ob_get_length()) {
         }
         unset($f);
 
+        if (!in_array('UGD', $kategori_list, true)) {
+            $kategori_list[] = 'UGD';
+        }
+
+        $preferredOrder = ['UGD', 'Rajal', 'Ranap', 'Bedah'];
+        usort($kategori_list, function($a, $b) use ($preferredOrder) {
+            $posA = array_search($a, $preferredOrder);
+            $posB = array_search($b, $preferredOrder);
+            if ($posA !== false && $posB !== false) return $posA - $posB;
+            if ($posA !== false) return -1;
+            if ($posB !== false) return 1;
+            return strcmp($a, $b);
+        });
+
         // Ambil semua unit langsung dari master data poliklinik SIMRS
         $units = $this->db('poliklinik')
             ->where('status', '1')
@@ -19380,6 +19408,109 @@ if (ob_get_length()) {
 
         echo $this->draw('bm5/cetak.html', $viewParams);
         exit();
+    }
+
+    private function _getTriaseCriteriaLists($ats_checked = [], $sdcep_checked = [])
+    {
+        $ats1_items = [
+            'Henti Jantung',
+            'Henti Nafas Respirasi <10x/mnt',
+            'TD systole < 80 mmHg (dewasa) atau shock berat pada anak',
+            'Tidak respon atau respon nyeri saja (GCS<9)',
+            'Saat kejang atau prolog kejang',
+            'IV overdose dan tidak respon atau hipoventilasi',
+            'Gangguan jalan nafas berat (stridor)'
+        ];
+        $ats2_items = [
+            'Resiko jalan nafas distress pernafasan berat',
+            'Nyeri dada karena jantung',
+            'Nyeri berat apapun sebabnya',
+            'Penurunan kesadaran apapun sebabnya (GCS < 13)',
+            'Akut hemiparese / disfasia',
+            'Demam dengan letargi',
+            'Terkena cairan asam atau basa ke mata',
+            'Mayor trauma fraktur/amputasi',
+            'Akral dingin, hipotensi, HR<50 atau >150 (dewasa)'
+        ];
+        $ats3_items = [
+            'Krisis hipertensi',
+            'Kehilangan darah berat, semua penyebab',
+            'Sesak nafas berat',
+            'Saturasi O2 90-95%',
+            'Seizure (Peringatan/Aura)',
+            'Demam karena immunosupresi (pasien kanker)',
+            'Muntah terus menerus',
+            'Dehidrasi',
+            'Cedera kepala dengan kehilangan kesadaran',
+            'Nyeri sedang (perlu analgetik)',
+            'Nyeri dada non cardiac',
+            'Nyeri abdomen tanpa faktor resiko tinggi atau usia > 65 tahun'
+        ];
+        $ats4_items = [
+            'Perdarahan ringan',
+            'Aspirasi benda asing, tanpa distres pernafasan',
+            'Trauma dada (tanpa nyeri tulang dan distres)',
+            'Sulit menelan (tanpa distres)',
+            'CKR, tanpa kehilangan kesadaran',
+            'Nyeri sedang',
+            'Muntah atau diare (tanpa dehidrasi)',
+            'Mata merah karena benda asing (visus normal)',
+            'Trauma tungkai ringan (terkilir, susp.fraktur, VL ringan), TTV normal'
+        ];
+        $ats5_items = [
+            'Nyeri ringan tanpa resiko',
+            'Luka ringan (luka lecet)',
+            'Kontrol luka',
+            'Gejala ringan'
+        ];
+
+        $sdcep1_items = [
+            'Trauma melibatkan laserasi fasial/ oral',
+            'Trauma melibatkan luka dentoalveolar',
+            'Pembengkakan orofasial yang sangat terlihat dan bertambah parah',
+            'Perdarahan post ekstraksi yang tidak terkontrol',
+            'Keadaan yang menghasilkan keadaan sistemik akut atau peningkatan temperatur tubuh sebagai akibat dari infeksi gigi',
+            'Trismus yang parah',
+            'Keadaan orodental yang menyebabkan kondisi eksaserbasi sistemik'
+        ];
+        $sdcep2_items = [
+            'Infeksi gigi dan jaringan lunak tanpa efek sistemik',
+            'Rasa sakit yang parah pada gigi dan fasial yang tidak dapat diatasi sendiri oleh pasien',
+            'Fraktur gigi satu atau lebih dengan terbukanya pulpa'
+        ];
+        $sdcep3_items = [
+            'Rasa sakit ringan sampai sedang yang tidak berhubungan dengan kondisi mendesak',
+            'Trauma dental minor',
+            'Perdarahan post ekstraksi yang dapat dikontrol sendiri oleh pasien',
+            'Kehilangan mahkota tiruan, bridges atau veneer',
+            'Patah atau kehilangan gigi tiruan',
+            'Patah posts',
+            'Patah atau lepasnya tambalan',
+            'Perawatan rutin',
+            'Gusi Berdarah'
+        ];
+
+        $mapList = function ($items, $checked) {
+            $out = [];
+            foreach ($items as $lbl) {
+                $out[] = [
+                    'label' => $lbl,
+                    'checked' => in_array($lbl, $checked)
+                ];
+            }
+            return $out;
+        };
+
+        return [
+            'ats1_list' => $mapList($ats1_items, $ats_checked),
+            'ats2_list' => $mapList($ats2_items, $ats_checked),
+            'ats3_list' => $mapList($ats3_items, $ats_checked),
+            'ats4_list' => $mapList($ats4_items, $ats_checked),
+            'ats5_list' => $mapList($ats5_items, $ats_checked),
+            'sdcep1_list' => $mapList($sdcep1_items, $sdcep_checked),
+            'sdcep2_list' => $mapList($sdcep2_items, $sdcep_checked),
+            'sdcep3_list' => $mapList($sdcep3_items, $sdcep_checked),
+        ];
     }
 
     public function anyRmgd3manage()

@@ -32,8 +32,9 @@ class Admin extends AdminModule
           $status_periksa = $_POST['status_periksa'];
         }
         $cek_vclaim = $this->db('mlite_modules')->where('dir', 'vclaim')->oneArray();
+        $master_berkas_digital = $this->db('master_berkas_digital')->toArray();
         $this->_Display($tgl_kunjungan, $tgl_kunjungan_akhir, $status_periksa);
-        return $this->draw('manage.html', ['rawat_jalan' => htmlspecialchars_array($this->assign), 'cek_vclaim' => htmlspecialchars_array($cek_vclaim), 'admin_mode' => $this->settings->get('settings.admin_mode')]);
+        return $this->draw('manage.html', ['rawat_jalan' => htmlspecialchars_array($this->assign), 'cek_vclaim' => htmlspecialchars_array($cek_vclaim), 'master_berkas_digital' => htmlspecialchars_array($master_berkas_digital), 'admin_mode' => $this->settings->get('settings.admin_mode')]);
     }
 
     public function anyDisplay()
@@ -2628,6 +2629,109 @@ class Admin extends AdminModule
 
     // ===== TRIASE IGD METHODS =====
     
+    private function _getTriaseCriteriaLists($ats_checked = [], $sdcep_checked = [])
+    {
+        $ats1_items = [
+            'Henti Jantung',
+            'Henti Nafas Respirasi <10x/mnt',
+            'TD systole < 80 mmHg (dewasa) atau shock berat pada anak',
+            'Tidak respon atau respon nyeri saja (GCS<9)',
+            'Saat kejang atau prolog kejang',
+            'IV overdose dan tidak respon atau hipoventilasi',
+            'Gangguan jalan nafas berat (stridor)'
+        ];
+        $ats2_items = [
+            'Resiko jalan nafas distress pernafasan berat',
+            'Nyeri dada karena jantung',
+            'Nyeri berat apapun sebabnya',
+            'Penurunan kesadaran apapun sebabnya (GCS < 13)',
+            'Akut hemiparese / disfasia',
+            'Demam dengan letargi',
+            'Terkena cairan asam atau basa ke mata',
+            'Mayor trauma fraktur/amputasi',
+            'Akral dingin, hipotensi, HR<50 atau >150 (dewasa)'
+        ];
+        $ats3_items = [
+            'Krisis hipertensi',
+            'Kehilangan darah berat, semua penyebab',
+            'Sesak nafas berat',
+            'Saturasi O2 90-95%',
+            'Seizure (Peringatan/Aura)',
+            'Demam karena immunosupresi (pasien kanker)',
+            'Muntah terus menerus',
+            'Dehidrasi',
+            'Cedera kepala dengan kehilangan kesadaran',
+            'Nyeri sedang (perlu analgetik)',
+            'Nyeri dada non cardiac',
+            'Nyeri abdomen tanpa faktor resiko tinggi atau usia > 65 tahun'
+        ];
+        $ats4_items = [
+            'Perdarahan ringan',
+            'Aspirasi benda asing, tanpa distres pernafasan',
+            'Trauma dada (tanpa nyeri tulang dan distres)',
+            'Sulit menelan (tanpa distres)',
+            'CKR, tanpa kehilangan kesadaran',
+            'Nyeri sedang',
+            'Muntah atau diare (tanpa dehidrasi)',
+            'Mata merah karena benda asing (visus normal)',
+            'Trauma tungkai ringan (terkilir, susp.fraktur, VL ringan), TTV normal'
+        ];
+        $ats5_items = [
+            'Nyeri ringan tanpa resiko',
+            'Luka ringan (luka lecet)',
+            'Kontrol luka',
+            'Gejala ringan'
+        ];
+
+        $sdcep1_items = [
+            'Trauma melibatkan laserasi fasial/ oral',
+            'Trauma melibatkan luka dentoalveolar',
+            'Pembengkakan orofasial yang sangat terlihat dan bertambah parah',
+            'Perdarahan post ekstraksi yang tidak terkontrol',
+            'Keadaan yang menghasilkan keadaan sistemik akut atau peningkatan temperatur tubuh sebagai akibat dari infeksi gigi',
+            'Trismus yang parah',
+            'Keadaan orodental yang menyebabkan kondisi eksaserbasi sistemik'
+        ];
+        $sdcep2_items = [
+            'Infeksi gigi dan jaringan lunak tanpa efek sistemik',
+            'Rasa sakit yang parah pada gigi dan fasial yang tidak dapat diatasi sendiri oleh pasien',
+            'Fraktur gigi satu atau lebih dengan terbukanya pulpa'
+        ];
+        $sdcep3_items = [
+            'Rasa sakit ringan sampai sedang yang tidak berhubungan dengan kondisi mendesak',
+            'Trauma dental minor',
+            'Perdarahan post ekstraksi yang dapat dikontrol sendiri oleh pasien',
+            'Kehilangan mahkota tiruan, bridges atau veneer',
+            'Patah atau kehilangan gigi tiruan',
+            'Patah posts',
+            'Patah atau lepasnya tambalan',
+            'Perawatan rutin',
+            'Gusi Berdarah'
+        ];
+
+        $mapList = function ($items, $checked) {
+            $out = [];
+            foreach ($items as $lbl) {
+                $out[] = [
+                    'label' => $lbl,
+                    'checked' => in_array($lbl, $checked)
+                ];
+            }
+            return $out;
+        };
+
+        return [
+            'ats1_list' => $mapList($ats1_items, $ats_checked),
+            'ats2_list' => $mapList($ats2_items, $ats_checked),
+            'ats3_list' => $mapList($ats3_items, $ats_checked),
+            'ats4_list' => $mapList($ats4_items, $ats_checked),
+            'ats5_list' => $mapList($ats5_items, $ats_checked),
+            'sdcep1_list' => $mapList($sdcep1_items, $sdcep_checked),
+            'sdcep2_list' => $mapList($sdcep2_items, $sdcep_checked),
+            'sdcep3_list' => $mapList($sdcep3_items, $sdcep_checked),
+        ];
+    }
+
     public function anyTriaseIgd()
     {
         if(isset($_POST['no_rawat'])) {
@@ -2639,6 +2743,7 @@ class Admin extends AdminModule
             // Cek apakah sudah ada data triase
             $triase_igd = $this->db('mlite_triase_igd')
                 ->where('no_rawat', $no_rawat)
+                ->desc('id_triase')
                 ->oneArray();
             
             // Jika belum ada, buat data default
@@ -2650,40 +2755,63 @@ class Admin extends AdminModule
                     'nm_pasien' => $nm_pasien,
                     'tgl_registrasi' => $tgl_registrasi,
                     'tgl_triase' => date('Y-m-d\TH:i'),
+                    'jam_selesai_triase' => date('H:i'),
                     'petugas_id' => $this->core->getUserInfo('username', null, true),
-                    'kesadaran' => '',
-                    'airway' => '',
-                    'breathing' => '',
-                    'circulation' => '',
+                    'kesadaran' => 'Compos Mentis',
+                    'airway' => 'Bebas',
+                    'breathing' => 'Spontan',
+                    'circulation' => 'Baik',
                     'tekanan_darah' => '',
                     'nadi' => '',
                     'respirasi' => '',
                     'suhu' => '',
                     'spo2' => '',
-                    'gcs_e' => '',
-                    'gcs_v' => '',
-                    'gcs_m' => '',
-                    'kategori' => '',
-                    'skala_triase' => '',
+                    'gcs_e' => '4',
+                    'gcs_v' => '5',
+                    'gcs_m' => '6',
+                    'kategori' => 'Hijau',
+                    'skala_triase' => '4',
                     'keluhan_utama' => '',
-                    'diagnosa_awal' => ''
+                    'diagnosa_awal' => '',
+                    'ats_skala' => '',
+                    'ats_items' => '[]',
+                    'sdcep_skala' => '',
+                    'sdcep_items' => '[]',
+                    'doa_status' => 0,
+                    'doa_items' => '[]',
+                    'jam_doa' => ''
                 ];
             } else {
                 $triase_igd['nm_pasien'] = $nm_pasien;
                 $triase_igd['tgl_registrasi'] = $tgl_registrasi;
-                // Format datetime untuk input datetime-local
                 if($triase_igd['tgl_triase']) {
                     $triase_igd['tgl_triase'] = date('Y-m-d\TH:i', strtotime($triase_igd['tgl_triase']));
                 }
+                if(empty($triase_igd['jam_selesai_triase'])) {
+                    $triase_igd['jam_selesai_triase'] = date('H:i');
+                }
             }
+
+            $ats_checked = !empty($triase_igd['ats_items']) ? (json_decode($triase_igd['ats_items'], true) ?: []) : [];
+            $sdcep_checked = !empty($triase_igd['sdcep_items']) ? (json_decode($triase_igd['sdcep_items'], true) ?: []) : [];
+            $doa_checked = !empty($triase_igd['doa_items']) ? (json_decode($triase_igd['doa_items'], true) ?: []) : [];
+
+            $lists = $this->_getTriaseCriteriaLists($ats_checked, $sdcep_checked);
+            $doa_map = [
+                'tanda_kehidupan' => in_array('Tanda Kehidupan (-)', $doa_checked),
+                'pupil' => in_array('Pupil RCL/RCTL (-/-)', $doa_checked),
+                'denyut_nadi' => in_array('Denyut Nadi (-)', $doa_checked),
+                'ekg_flat' => in_array('EKG flat', $doa_checked),
+            ];
             
             // Ambil data petugas untuk dropdown
             $petugas = $this->db('petugas')->where('status', '1')->toArray();
             
-            echo $this->draw('triase_igd.html', [
+            echo $this->draw('triase_igd.html', array_merge([
                 'triase_igd' => htmlspecialchars_array($triase_igd),
-                'petugas' => $petugas
-            ]);
+                'petugas' => $petugas,
+                'doa_map' => $doa_map
+            ], $lists));
         }
         exit();
     }
@@ -2692,58 +2820,79 @@ class Admin extends AdminModule
     {
         try {
             // Validasi input required
-            $required_fields = ['no_rawat', 'no_rkm_medis', 'tgl_triase', 'petugas_id', 'kesadaran_triase', 'airway', 'breathing', 'circulation', 'kategori'];
+            $required_fields = ['no_rawat', 'no_rkm_medis', 'tgl_triase', 'petugas_id'];
             foreach($required_fields as $field) {
                 if(empty($_POST[$field])) {
                     throw new \Exception("Field {$field} harus diisi");
                 }
             }
             
-            // Prepare clean data array
-            $data_to_save = [];
-            
-            // Copy only allowed fields
-            $allowed_fields = ['no_rawat', 'no_rkm_medis', 'tgl_triase', 'petugas_id', 'kesadaran', 'airway', 'breathing', 'circulation', 'tekanan_darah', 'nadi', 'respirasi', 'suhu', 'spo2', 'gcs_e', 'gcs_v', 'gcs_m', 'kategori', 'skala_triase', 'keluhan_utama', 'diagnosa_awal'];
-            
-            foreach($allowed_fields as $field) {
-                if(isset($_POST[$field]) && $_POST[$field] !== '') {
-                    $data_to_save[$field] = $_POST[$field];
-                }
+            $tgl_triase = !empty($_POST['tgl_triase']) ? date('Y-m-d H:i:s', strtotime($_POST['tgl_triase'])) : date('Y-m-d H:i:s');
+            $jam_selesai = trim($_POST['jam_selesai_triase'] ?? date('H:i'));
+            $tgl_selesai = date('Y-m-d', strtotime($tgl_triase)) . ' ' . (strlen($jam_selesai) == 5 ? $jam_selesai . ':00' : $jam_selesai);
+
+            $ats_items = isset($_POST['ats_items']) && is_array($_POST['ats_items']) ? array_values($_POST['ats_items']) : [];
+            $sdcep_items = isset($_POST['sdcep_items']) && is_array($_POST['sdcep_items']) ? array_values($_POST['sdcep_items']) : [];
+            $doa_items = isset($_POST['doa_items']) && is_array($_POST['doa_items']) ? array_values($_POST['doa_items']) : [];
+            $jam_doa = trim($_POST['jam_doa'] ?? '');
+            $doa_status = (!empty($doa_items) || !empty($jam_doa)) ? 1 : 0;
+
+            $ats_skala = trim($_POST['ats_skala'] ?? '');
+            $skala_triase = trim($_POST['skala_triase'] ?? '');
+            if (empty($ats_skala) && !empty($skala_triase)) {
+                $ats_skala = 'ATS ' . $skala_triase;
+            } elseif (!empty($ats_skala) && empty($skala_triase)) {
+                $skala_triase = preg_replace('/[^1-5]/', '', $ats_skala);
             }
+
+            $kesadaran = !empty($_POST['kesadaran_triase']) ? $_POST['kesadaran_triase'] : (!empty($_POST['kesadaran']) ? $_POST['kesadaran'] : 'Compos Mentis');
+
+            $data_to_save = [
+                'no_rawat' => $_POST['no_rawat'],
+                'no_rkm_medis' => $_POST['no_rkm_medis'],
+                'tgl_triase' => $tgl_triase,
+                'jam_selesai_triase' => $jam_selesai,
+                'tgl_selesai_triase' => $tgl_selesai,
+                'petugas_id' => $_POST['petugas_id'],
+                'kesadaran' => $kesadaran,
+                'airway' => !empty($_POST['airway']) ? $_POST['airway'] : 'Bebas',
+                'breathing' => !empty($_POST['breathing']) ? $_POST['breathing'] : 'Spontan',
+                'circulation' => !empty($_POST['circulation']) ? $_POST['circulation'] : 'Baik',
+                'tekanan_darah' => isset($_POST['tekanan_darah']) && $_POST['tekanan_darah'] !== '' ? $_POST['tekanan_darah'] : null,
+                'nadi' => isset($_POST['nadi']) && $_POST['nadi'] !== '' ? (int)$_POST['nadi'] : null,
+                'respirasi' => isset($_POST['respirasi']) && $_POST['respirasi'] !== '' ? (int)$_POST['respirasi'] : null,
+                'suhu' => isset($_POST['suhu']) && $_POST['suhu'] !== '' ? $_POST['suhu'] : null,
+                'spo2' => isset($_POST['spo2']) && $_POST['spo2'] !== '' ? (int)$_POST['spo2'] : null,
+                'gcs_e' => isset($_POST['gcs_e']) && $_POST['gcs_e'] !== '' ? (int)$_POST['gcs_e'] : null,
+                'gcs_v' => isset($_POST['gcs_v']) && $_POST['gcs_v'] !== '' ? (int)$_POST['gcs_v'] : null,
+                'gcs_m' => isset($_POST['gcs_m']) && $_POST['gcs_m'] !== '' ? (int)$_POST['gcs_m'] : null,
+                'kategori' => !empty($_POST['kategori']) ? $_POST['kategori'] : 'Hijau',
+                'skala_triase' => in_array($skala_triase, ['1','2','3','4','5']) ? $skala_triase : null,
+                'keluhan_utama' => $_POST['keluhan_utama'] ?? '',
+                'diagnosa_awal' => $_POST['diagnosa_awal'] ?? '',
+                'ats_skala' => $ats_skala,
+                'ats_items' => json_encode($ats_items, JSON_UNESCAPED_UNICODE),
+                'sdcep_skala' => trim($_POST['sdcep_skala'] ?? ''),
+                'sdcep_items' => json_encode($sdcep_items, JSON_UNESCAPED_UNICODE),
+                'doa_status' => $doa_status,
+                'doa_items' => json_encode($doa_items, JSON_UNESCAPED_UNICODE),
+                'jam_doa' => $jam_doa,
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
             
-            // Handle kesadaran_triase mapping
-            if(isset($_POST['kesadaran_triase'])) {
-                $data_to_save['kesadaran'] = $_POST['kesadaran_triase'];
-            }
-            
-            // Format datetime
-            if(isset($data_to_save['tgl_triase'])) {
-                $data_to_save['tgl_triase'] = date('Y-m-d H:i:s', strtotime($data_to_save['tgl_triase']));
-            }
-            
-            // Remove null timestamp fields and let MySQL handle them
-            unset($data_to_save['created_at']);
-            // unset($data_to_save['updated_at']);
-            $data_to_save['updated_at'] = date('Y-m-d H:i:s');
-            
-            // Use direct SQL approach to bypass framework timestamp behavior
             if(!empty($_POST['id_triase'])) {
-                // Update data yang sudah ada
                 $fields = array_keys($data_to_save);
                 $set_clause = [];
                 foreach($fields as $field) {
                     $set_clause[] = "`{$field}` = :{$field}";
                 }
                 $sql = "UPDATE mlite_triase_igd SET " . implode(', ', $set_clause) . " WHERE id_triase = :id_triase";
-                
-                // Add id_triase to data for WHERE clause
                 $data_to_save['id_triase'] = $_POST['id_triase'];
                 
                 $stmt = $this->db()->pdo()->prepare($sql);
                 $query = $stmt->execute($data_to_save);
                 $message = 'Data triase berhasil diupdate';
             } else {
-                // Insert data baru
                 $fields = array_keys($data_to_save);
                 $placeholders = ':' . implode(', :', $fields);
                 $escaped_fields = [];
@@ -2806,22 +2955,27 @@ class Admin extends AdminModule
     {
         if(isset($_POST['no_rawat'])) {
             $triase_igd = $this->db('mlite_triase_igd')
-                ->join('petugas', 'petugas.nip=mlite_triase_igd.petugas_id')
-                ->join('pasien', 'pasien.no_rkm_medis=mlite_triase_igd.no_rkm_medis')
+                ->leftJoin('petugas', 'petugas.nip=mlite_triase_igd.petugas_id')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis=mlite_triase_igd.no_rkm_medis')
                 ->where('mlite_triase_igd.no_rawat', $_POST['no_rawat'])
+                ->select('mlite_triase_igd.*, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, petugas.nama as nama_petugas')
+                ->desc('mlite_triase_igd.id_triase')
                 ->oneArray();
             
             if($triase_igd) {
-                $triase_igd['nama_petugas'] = $triase_igd['nama'];
-                // Pastikan nm_pasien tersedia, jika tidak ada berikan fallback
+                if(empty($triase_igd['nama_petugas'])) {
+                    $triase_igd['nama_petugas'] = $triase_igd['petugas_id'] ?? '-';
+                }
                 if(empty($triase_igd['nm_pasien'])) {
                     $triase_igd['nm_pasien'] = 'Nama Pasien Tidak Ditemukan';
                 }
-                // Hitung total GCS
                 $total_gcs = ($triase_igd['gcs_e'] ?? 0) + ($triase_igd['gcs_v'] ?? 0) + ($triase_igd['gcs_m'] ?? 0);
                 $triase_igd['total_gcs'] = $total_gcs > 0 ? $total_gcs : '-';
+                $triase_igd['ats_items_arr'] = !empty($triase_igd['ats_items']) ? (json_decode($triase_igd['ats_items'], true) ?: []) : [];
+                $triase_igd['sdcep_items_arr'] = !empty($triase_igd['sdcep_items']) ? (json_decode($triase_igd['sdcep_items'], true) ?: []) : [];
+                $triase_igd['doa_items_arr'] = !empty($triase_igd['doa_items']) ? (json_decode($triase_igd['doa_items'], true) ?: []) : [];
                 
-                echo $this->draw('triase_igd_view.html', ['triase_igd' => htmlspecialchars_array($triase_igd)]);
+                echo $this->draw('triase_igd_view.html', ['triase_igd' => $triase_igd]);
             } else {
                 echo '<div class="alert alert-warning">Data triase tidak ditemukan</div>';
             }
@@ -2860,6 +3014,8 @@ class Admin extends AdminModule
 
     private function _addHeaderFiles()
     {
+        $this->core->addCSS(url('assets/jscripts/lightbox/lightbox.min.css'));
+        $this->core->addJS(url('assets/jscripts/lightbox/lightbox.min.js'));
         $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
         $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
         $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
@@ -2868,6 +3024,58 @@ class Admin extends AdminModule
         $this->core->addJS(url('assets/jscripts/bootstrap-datetimepicker.js'));
         $this->core->addCSS(url([ADMIN, 'dokter_igd', 'css']));
         $this->core->addJS(url([ADMIN, 'dokter_igd', 'javascript']), 'footer');
+    }
+
+    public function anyBerkasDigital()
+    {
+      $berkas_digital = $this->db('berkas_digital_perawatan')->where('no_rawat', $_POST['no_rawat'])->toArray();
+      echo $this->draw('berkasdigital.html', ['berkas_digital' => htmlspecialchars_array($berkas_digital)]);
+      exit();
+    }
+
+    public function postSaveBerkasDigital()
+    {
+      if(MULTI_APP) {
+        $curl = curl_init();
+        $filePath = $_FILES['file']['tmp_name'];
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => substr(rtrim(WEBAPPS_URL, '/'), 0, strrpos(rtrim(WEBAPPS_URL, '/'), '/')).'/api/berkasdigital',
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 0,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('file'=> new \CURLFILE($filePath),'token' => $this->settings->get('api.berkasdigital_key'), 'no_rawat' => $_POST['no_rawat'], 'kode' => $_POST['kode']),
+          CURLOPT_HTTPHEADER => array(),
+        ));
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $json = json_decode($response, true);
+        if($json['status'] == 'Success') {
+          echo '<br><img src="'.WEBAPPS_URL.'/berkasrawat/'.$json['msg'].'" width="150" />';
+        } else {
+          echo 'Gagal menambahkan gambar';
+        }
+      } else {
+        $dir    = $this->_uploads;
+        $cntr   = 0;
+        $image = $_FILES['file']['tmp_name'];
+        $img = new \Systems\Lib\Image();
+        $id = convertNorawat($_POST['no_rawat']);
+        if ($img->load($image)) {
+            $imgName = time().$cntr++;
+            $imgPath = $dir.'/'.$id.'_'.$imgName.'.'.$img->getInfos('type');
+            $lokasi_file = 'pages/upload/'.$id.'_'.$imgName.'.'.$img->getInfos('type');
+            $img->save($imgPath);
+            $query = $this->db('berkas_digital_perawatan')->save(['no_rawat' => $_POST['no_rawat'], 'kode' => $_POST['kode'], 'lokasi_file' => $lokasi_file]);
+            if($query) {
+              echo '<br><img src="'.WEBAPPS_URL.'/berkasrawat/'.$lokasi_file.'" width="150" />';
+            }
+        }
+      }
+      exit();
     }
 
 

@@ -693,24 +693,12 @@ $("#form_soap").on("click","#odontogram", function(event){
   return false;
 });
 
-// Handler untuk tombol assessment - menggunakan modal seperti rawat_jalan
+// Handler untuk tombol assessment - langsung membuka form RM.GD 4 Asesmen Keperawatan UGD
 $("#form_soap").on("click",".assesment", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
   var no_rawat = $('input:text[name=no_rawat]').val();
-
-  var modal = $('#assesmentModal');
-  var modalContent = $('#assesmentModal .modal-content');
-
-  modal.off('show.bs.modal');
-  modal.on('show.bs.modal', function () {
-      // Load form assessment dengan data pasien
-      var set_no_rawat = no_rawat.replace(/\//g, '');
-      modalContent.load(baseURL + '/igd/assessment/' + set_no_rawat + '?t=' + mlite.token, function() {
-        // Load data assessment yang sudah ada
-        $('.tampildata_assessment').load(baseURL + '/igd/assessmenttampil/' + set_no_rawat + '?t=' + mlite.token);
-      });
-  }).modal();
+  window.open(baseURL + '/form_rme/akgmuform?no_rawat=' + encodeURIComponent(no_rawat) + '&t=' + mlite.token, '_blank');
   return false;
 });
 
@@ -719,19 +707,7 @@ $("#display").on("click",".assesment", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
   var no_rawat = $(this).attr("data-no_rawat");
-
-  var modal = $('#assesmentModal');
-  var modalContent = $('#assesmentModal .modal-content');
-
-  modal.off('show.bs.modal');
-  modal.on('show.bs.modal', function () {
-      // Load form assessment dengan data pasien
-      var set_no_rawat = no_rawat.replace(/\//g, '');
-      modalContent.load(baseURL + '/igd/assessment/' + set_no_rawat + '?t=' + mlite.token, function() {
-        // Load data assessment yang sudah ada
-        $('.tampildata_assessment').load(baseURL + '/igd/assessmenttampil/' + set_no_rawat + '?t=' + mlite.token);
-      });
-  }).modal();
+  window.open(baseURL + '/form_rme/akgmuform?no_rawat=' + encodeURIComponent(no_rawat) + '&t=' + mlite.token, '_blank');
   return false;
 });
 

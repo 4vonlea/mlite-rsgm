@@ -1,377 +1,467 @@
-<div class="row">
-    <div class="col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
-                <h3 class="panel-title" style="font-weight: bold; font-size: 16px;">
-                    <i class="fa fa-stethoscope text-primary"></i> {if: !empty($data.id)}Edit{else}Tambah{/if} BMI3 - Asesmen Bedah Minor (Gigi dan Mulut)
-                </h3>
-                <div>
-                    <a href="{?=url([ADMIN, 'form_rme', 'bmi3manage'])?}" class="btn btn-default btn-sm">
-                        <i class="fa fa-arrow-left"></i> Kembali ke Data
-                    </a>
+<style>
+.rsgm-sub-section {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.rsgm-sub-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #e2e8f0;
+}
+.rsgm-sub-section-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.rsgm-sub-section-title i {
+    color: #2563eb;
+}
+.chk-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 6px 12px;
+}
+.chk-item-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 12px;
+    cursor: pointer;
+    margin: 0;
+    font-weight: normal;
+    transition: all 0.15s ease;
+}
+.chk-item-card:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+.chk-item-card input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+}
+</style>
+
+<div id="form_soap" class="rsgm-reg-form clearfix" style="margin-bottom: 25px;">
+  <form method="POST" action="{?=url([ADMIN, 'form_rme', 'bmi3save'])?}" id="form-asesmen-bedah-minor">
+    <input type="hidden" name="id" value="{$data.id}">
+
+    <div class="rsgm-soap-flex-row clearfix">
+
+      <!-- ============================================================
+           KOLOM KIRI (3): SIDEBAR IDENTITAS & WAKTU & DOKTER GIGI
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Data Pasien</span>
+            </h4>
+            <span class="badge" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #bfdbfe;">BMI 3</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <!-- No. Rawat with Search button -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required placeholder="2026/10/25/000001" autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default" id="btn-modal-pasien" data-toggle="modal" data-target="#modalPasien" title="Cari Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                    <i class="fa fa-search text-primary"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <!-- No. RM Readonly -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+              <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly style="background-color: #f8fafc; font-weight: 700;">
+            </div>
+
+            <!-- Nama Pasien -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien</label>
+              <input type="text" id="nm_pasien" class="form-control" value="{$data.nm_pasien}" readonly style="background-color: #f8fafc; font-weight: 600;">
+            </div>
+
+            <!-- Gender & Umur Pasien -->
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-5" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="jk" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> L/P</label>
+                  <input type="text" id="jk" class="form-control" value="{$data.jk}" readonly style="background-color: #f8fafc; text-align: center;">
                 </div>
+              </div>
+              <div class="col-xs-7" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="umur" class="rsgm-compact-label"><i class="fa fa-birthday-cake text-muted"></i> Umur</label>
+                  <input type="text" id="umur" class="form-control" value="{$data.umur}" readonly style="background-color: #f8fafc;">
+                </div>
+              </div>
             </div>
-            <div class="panel-body">
 
-                <form method="POST" action="{?=url([ADMIN, 'form_rme', 'bmi3save'])?}" id="form-asesmen-bedah-minor">
-                    <input type="hidden" name="id" value="{$data.id}">
-
-                    <!-- IDENTITAS PASIEN & JADWAL OPERASI -->
-                    <div class="panel panel-info">
-                        <div class="panel-heading" style="font-weight: bold; font-size: 13px;">
-                            <i class="fa fa-user"></i> Identitas Pasien & Waktu Bedah Minor
-                        </div>
-                        <div class="panel-body" style="background: #fafafa;">
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label>No. Rawat <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required placeholder="2026/10/25/000001">
-                                            <span class="input-group-btn">
-                                                <button type="button" class="btn btn-info" id="btn-modal-pasien" data-toggle="modal" data-target="#modalPasien" title="Cari Pasien">
-                                                    <i class="fa fa-search"></i>
-                                                </button>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label>No. Rekam Medis</label>
-                                        <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly style="background: #eef1f4;">
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label>Nama Pasien</label>
-                                        <input type="text" id="nm_pasien" class="form-control" value="{$data.nm_pasien}" readonly style="background: #eef1f4;">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label>L / P | Umur</label>
-                                        <div class="form-inline">
-                                            <input type="text" id="jk" class="form-control" value="{$data.jk}" readonly style="background: #eef1f4; width: 45px;">
-                                            <input type="text" id="umur" class="form-control" value="{$data.umur}" readonly style="background: #eef1f4; width: calc(100% - 50px);">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label>Tanggal Lahir</label>
-                                        <input type="text" id="tgl_lahir" class="form-control" value="{$data.tgl_lahir}" readonly style="background: #eef1f4;">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row" style="margin-top: 5px;">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label>Tanggal Operasi <span class="text-danger">*</span></label>
-                                        <input type="date" name="tanggal_operasi" id="tanggal_operasi" class="form-control" value="{$data.tanggal_operasi}" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label>Pukul / Jam Operasi <span class="text-danger">*</span></label>
-                                        <input type="time" name="jam_operasi" id="jam_operasi" class="form-control" value="{$data.jam_operasi}" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-7">
-                                    <div class="form-group">
-                                        <label>Dokter Gigi Operator <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="text" name="nm_dokter" id="nm_dokter" class="form-control" value="{$data.nm_dokter}" placeholder="Pilih atau cari nama dokter gigi..." required>
-                                            <input type="hidden" name="kd_dokter" id="kd_dokter" value="{$data.kd_dokter}">
-                                            <div class="input-group-btn">
-                                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
-                                                <ul class="dropdown-menu dropdown-menu-right" style="max-height: 220px; overflow-y: auto;">
-                                                    {loop: $dokter}
-                                                    <li><a href="#" class="pilih-dr-gigi" data-kd="{$value.kd_dokter}" data-nama="{$value.nm_dokter}">{$value.nm_dokter}</a></li>
-                                                    {/loop}
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 1. ANAMNESIS & KELUHAN UTAMA -->
-                    <div class="panel panel-default">
-                        <div class="panel-heading" style="font-weight: bold; background: #eaeded;">
-                            <i class="fa fa-comments-o"></i> 1. Anamnesis & Keluhan Utama
-                        </div>
-                        <div class="panel-body">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label>Jenis Anamnesis:</label>
-                                        <div>
-                                            <label class="radio-inline">
-                                                <input type="radio" name="jenis_anamnesis" value="Autoanamnesis" {if: $data.jenis_anamnesis == 'Autoanamnesis'}checked{/if}>
-                                                <strong>Autoanamnesis</strong> (Pasien langsung)
-                                            </label>
-                                            <label class="radio-inline">
-                                                <input type="radio" name="jenis_anamnesis" value="Alloanamnesis" {if: $data.jenis_anamnesis == 'Alloanamnesis'}checked{/if}>
-                                                <strong>Alloanamnesis</strong> (Keluarga / Pengantar)
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Uraian Anamnesis:</label>
-                                        <textarea name="anamnesis" rows="3" class="form-control" placeholder="Tuliskan hasil anamnesis riwayat penyakit sekarang...">{$data.anamnesis}</textarea>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Keluhan Utama:</label>
-                                        <textarea name="keluhan_utama" rows="3" class="form-control" placeholder="Tuliskan keluhan utama pasien...">{$data.keluhan_utama}</textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 2. RIWAYAT PENYAKIT PASIEN -->
-                    <div class="panel panel-default">
-                        <div class="panel-heading" style="font-weight: bold; background: #eaeded;">
-                            <i class="fa fa-heartbeat"></i> 2. Riwayat Penyakit Pasien
-                        </div>
-                        <div class="panel-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="checkbox"><label><input type="checkbox" name="rp_hipertensi" value="1" {if: $data.rp_hipertensi == '1'}checked{/if}> Hipertensi</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rp_diabetes" value="1" {if: $data.rp_diabetes == '1'}checked{/if}> Diabetes Melitus</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rp_gastritis" value="1" {if: $data.rp_gastritis == '1'}checked{/if}> Gastritis / Dispepsia / Masalah lambung</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rp_darah" value="1" {if: $data.rp_darah == '1'}checked{/if}> Gangguan Darah</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rp_jantung" value="1" {if: $data.rp_jantung == '1'}checked{/if}> Gangguan Jantung</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rp_hati" value="1" {if: $data.rp_hati == '1'}checked{/if}> Gangguan Hati</label></div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="checkbox"><label><input type="checkbox" name="rp_ginjal" value="1" {if: $data.rp_ginjal == '1'}checked{/if}> Gangguan Ginjal</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rp_pengobatan_panjang" value="1" {if: $data.rp_pengobatan_panjang == '1'}checked{/if}> Pengobatan Jangka Panjang</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rp_operasi" value="1" {if: $data.rp_operasi == '1'}checked{/if}> Riwayat Operasi</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rp_alergi_obat" value="1" {if: $data.rp_alergi_obat == '1'}checked{/if}> Alergi Obat-obatan</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rp_alergi_makanan" value="1" {if: $data.rp_alergi_makanan == '1'}checked{/if}> Alergi Makanan</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rp_sistemik_lain" value="1" {if: $data.rp_sistemik_lain == '1'}checked{/if}> Penyakit / gangguan sistemik lainnya</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rp_tidak_ada" value="1" {if: $data.rp_tidak_ada == '1'}checked{/if}> <strong>Tidak ada</strong></label></div>
-                                </div>
-                            </div>
-                            <div class="row" style="margin-top: 5px;">
-                                <div class="col-md-12">
-                                    <div class="form-group" style="margin-bottom: 0;">
-                                        <label style="font-size: 11px;">Catatan Tambahan Riwayat Penyakit (jika ada):</label>
-                                        <input type="text" name="rp_keterangan" class="form-control input-sm" placeholder="Contoh: Hipertensi terkontrol rutin minum amlodipine 5mg..." value="{$data.rp_keterangan}">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 3. RIWAYAT ALERGI & RIWAYAT PENGOBATAN -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="panel panel-default">
-                                <div class="panel-heading" style="font-weight: bold; background: #eaeded;">
-                                    <i class="fa fa-ban text-danger"></i> 3. Riwayat Alergi
-                                </div>
-                                <div class="panel-body">
-                                    <div class="form-group" style="margin-bottom: 0;">
-                                        <label>Riwayat Alergi Obat / Makanan / Lainnya:</label>
-                                        <textarea name="riwayat_alergi" rows="4" class="form-control" placeholder="Tuliskan jenis obat/makanan penyebab alergi atau 'Tidak Ada'...">{$data.riwayat_alergi}</textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="panel panel-default">
-                                <div class="panel-heading" style="font-weight: bold; background: #eaeded;">
-                                    <i class="fa fa-medkit text-warning"></i> 4. Riwayat Pengobatan
-                                </div>
-                                <div class="panel-body">
-                                    <div class="checkbox"><label><input type="checkbox" name="pengobatan_pengencer_darah" value="1" {if: $data.pengobatan_pengencer_darah == '1'}checked{/if}> Pengencer darah (Aspirin, Clopidogrel, Warfarin, dll)</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="pengobatan_osteoporosis_kanker" value="1" {if: $data.pengobatan_osteoporosis_kanker == '1'}checked{/if}> Obat-obatan osteoporosis / kanker (Bisfosfonat, Denosumab)</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="pengobatan_antibiotik" value="1" {if: $data.pengobatan_antibiotik == '1'}checked{/if}> Antibiotik</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="pengobatan_analgetik" value="1" {if: $data.pengobatan_analgetik == '1'}checked{/if}> Analgetik / Anti-inflamasi</label></div>
-                                    <div class="form-group" style="margin-top: 6px; margin-bottom: 0;">
-                                        <input type="text" name="pengobatan_keterangan" class="form-control input-sm" placeholder="Nama obat / dosis yang sedang dikonsumsi..." value="{$data.pengobatan_keterangan}">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 5. RIWAYAT PENYAKIT DALAM KELUARGA -->
-                    <div class="panel panel-default">
-                        <div class="panel-heading" style="font-weight: bold; background: #eaeded;">
-                            <i class="fa fa-users"></i> 5. Riwayat Penyakit dalam Keluarga
-                        </div>
-                        <div class="panel-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="checkbox"><label><input type="checkbox" name="rpk_hipertensi" value="1" {if: $data.rpk_hipertensi == '1'}checked{/if}> Hipertensi</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rpk_diabetes" value="1" {if: $data.rpk_diabetes == '1'}checked{/if}> Diabetes Melitus</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rpk_gastritis" value="1" {if: $data.rpk_gastritis == '1'}checked{/if}> Gastritis / Dispepsia / Masalah lambung</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rpk_darah" value="1" {if: $data.rpk_darah == '1'}checked{/if}> Gangguan Darah</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rpk_jantung" value="1" {if: $data.rpk_jantung == '1'}checked{/if}> Gangguan Jantung</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rpk_hati" value="1" {if: $data.rpk_hati == '1'}checked{/if}> Gangguan Hati</label></div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="checkbox"><label><input type="checkbox" name="rpk_ginjal" value="1" {if: $data.rpk_ginjal == '1'}checked{/if}> Gangguan Ginjal</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rpk_pengobatan_panjang" value="1" {if: $data.rpk_pengobatan_panjang == '1'}checked{/if}> Pengobatan Jangka Panjang</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rpk_operasi" value="1" {if: $data.rpk_operasi == '1'}checked{/if}> Riwayat Operasi</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rpk_alergi_obat" value="1" {if: $data.rpk_alergi_obat == '1'}checked{/if}> Alergi Obat-obatan</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rpk_alergi_makanan" value="1" {if: $data.rpk_alergi_makanan == '1'}checked{/if}> Alergi Makanan</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rpk_sistemik_lain" value="1" {if: $data.rpk_sistemik_lain == '1'}checked{/if}> Penyakit / gangguan sistemik lainnya</label></div>
-                                    <div class="checkbox"><label><input type="checkbox" name="rpk_tidak_ada" value="1" {if: $data.rpk_tidak_ada == '1'}checked{/if}> <strong>Tidak ada</strong></label></div>
-                                </div>
-                            </div>
-                            <div class="row" style="margin-top: 5px;">
-                                <div class="col-md-12">
-                                    <div class="form-group" style="margin-bottom: 0;">
-                                        <label style="font-size: 11px;">Catatan Riwayat Penyakit Keluarga (jika ada):</label>
-                                        <input type="text" name="rpk_keterangan" class="form-control input-sm" placeholder="Contoh: Ibu riwayat Diabetes Melitus..." value="{$data.rpk_keterangan}">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 6. PEMERIKSAAN FISIK -->
-                    <div class="panel panel-default">
-                        <div class="panel-heading" style="font-weight: bold; background: #eaeded;">
-                            <i class="fa fa-eye"></i> 6. Pemeriksaan Fisik
-                        </div>
-                        <div class="panel-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <div class="checkbox" style="margin-top: 0;">
-                                            <label style="font-weight: bold;">
-                                                <input type="checkbox" name="fisik_ekstraoral_check" value="1" {if: $data.fisik_ekstraoral_check == '1'}checked{/if}>
-                                                Ekstraoral
-                                            </label>
-                                        </div>
-                                        <textarea name="fisik_ekstraoral" rows="3" class="form-control" placeholder="Tuliskan temuan pemeriksaan ekstraoral (simetri wajah, pembengkakan, KGB, TMJ, dll)...">{$data.fisik_ekstraoral}</textarea>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <div class="checkbox" style="margin-top: 0;">
-                                            <label style="font-weight: bold;">
-                                                <input type="checkbox" name="fisik_intraoral_check" value="1" {if: $data.fisik_intraoral_check == '1'}checked{/if}>
-                                                Intraoral
-                                            </label>
-                                        </div>
-                                        <textarea name="fisik_intraoral" rows="3" class="form-control" placeholder="Tuliskan temuan pemeriksaan intraoral (kondisi gigi, mukosa, lidah, gingiva, dll)...">{$data.fisik_intraoral}</textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 7. PEMERIKSAAN PENUNJANG, DIAGNOSIS & RENCANA TINDAKAN -->
-                    <div class="panel panel-default">
-                        <div class="panel-heading" style="font-weight: bold; background: #eaeded;">
-                            <i class="fa fa-file-text-o"></i> 7. Pemeriksaan Penunjang, Diagnosis & Rencana Tindakan
-                        </div>
-                        <div class="panel-body">
-                            <div class="form-group">
-                                <label>Pemeriksaan Penunjang (Rontgen / Laboratorium):</label>
-                                <textarea name="pemeriksaan_penunjang" rows="2" class="form-control" placeholder="Contoh: Foto Panoramik / Periapikal: Impaksi gigi 48 klas II posisi B mesioangular...">{$data.pemeriksaan_penunjang}</textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Diagnosis: <span class="text-danger">*</span></label>
-                                <textarea name="diagnosis" rows="2" class="form-control" placeholder="Contoh: Impaksi Gigi 48 Klas II Posisi B Mesioangular..." required>{$data.diagnosis}</textarea>
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label>Rencana Tindakan: <span class="text-danger">*</span></label>
-                                <textarea name="rencana_tindakan" rows="2" class="form-control" placeholder="Contoh: Odontektomi Gigi 48 dengan Anestesi Lokal..." required>{$data.rencana_tindakan}</textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TOMBOL SIMPAN -->
-                    <div class="text-right" style="margin-top: 15px; margin-bottom: 25px;">
-                        <a href="{?=url([ADMIN, 'form_rme', 'bmi3manage'])?}" class="btn btn-default">
-                            <i class="fa fa-times"></i> Batal
-                        </a>
-                        <button type="submit" class="btn btn-success" style="min-width: 130px;">
-                            <i class="fa fa-save"></i> Simpan Data
-                        </button>
-                    </div>
-
-                </form>
-
+            <!-- Tanggal Lahir -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tanggal Lahir</label>
+              <input type="text" id="tgl_lahir" class="form-control" value="{$data.tgl_lahir}" readonly style="background-color: #f8fafc;">
             </div>
+
+            <hr style="margin: 12px 0; border-top: 1px solid #e2e8f0;">
+
+            <!-- Tanggal Operasi & Jam -->
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-7" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="tanggal_operasi" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tgl Operasi <span class="text-danger">*</span></label>
+                  <input type="date" name="tanggal_operasi" id="tanggal_operasi" class="form-control" value="{$data.tanggal_operasi}" required>
+                </div>
+              </div>
+              <div class="col-xs-5" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="jam_operasi" class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Jam <span class="text-danger">*</span></label>
+                  <input type="time" name="jam_operasi" id="jam_operasi" class="form-control" value="{$data.jam_operasi}" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dokter Gigi Operator -->
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="nm_dokter" class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Dokter Gigi Operator <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="nm_dokter" id="nm_dokter" class="form-control" value="{$data.nm_dokter}" placeholder="Pilih Dokter Gigi..." required style="font-size: 12px;">
+                <input type="hidden" name="kd_dokter" id="kd_dokter" value="{$data.kd_dokter}">
+                <div class="input-group-btn">
+                  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                    <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-right" style="max-height: 220px; overflow-y: auto;">
+                    {loop: $dokter}
+                    <li><a href="#" class="pilih-dr-gigi" data-kd="{$value.kd_dokter}" data-nama="{$value.nm_dokter}">{$value.nm_dokter}</a></li>
+                    {/loop}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <hr style="margin: 12px 0; border-top: 1px solid #e2e8f0;">
+
+            <!-- Jenis Anamnesis -->
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="rsgm-compact-label"><i class="fa fa-comments text-muted"></i> Jenis Anamnesis</label>
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px;">
+                <label class="radio-inline" style="font-weight: 600; font-size: 12px; margin-right: 12px;">
+                  <input type="radio" name="jenis_anamnesis" value="Autoanamnesis" {if: $data.jenis_anamnesis == 'Autoanamnesis'}checked{/if}> Autoanamnesis
+                </label>
+                <label class="radio-inline" style="font-weight: 600; font-size: 12px; margin-left: 0;">
+                  <input type="radio" name="jenis_anamnesis" value="Alloanamnesis" {if: $data.jenis_anamnesis == 'Alloanamnesis'}checked{/if}> Alloanamnesis
+                </label>
+              </div>
+            </div>
+
+            <div class="alert alert-info" style="font-size: 11px; padding: 10px; margin-bottom: 0; border-radius: 6px; line-height: 1.4;">
+              <i class="fa fa-info-circle"></i> Formulir Asesmen Bedah Minor Gigi &amp; Mulut (BMI 3) untuk tindakan odontektomi, operkulektomi, eksisi mucocele, frenektomi, dll.
+            </div>
+
+          </div>
         </div>
-    </div>
+      </div>
+
+      <!-- ============================================================
+           KOLOM KANAN (9): WORKSTATION ASESMEN BEDAH MINOR
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-stethoscope text-primary"></i></span>
+              <span>Asesmen Bedah Minor (Gigi dan Mulut)</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">FORM BMI 3</span>
+              <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-medkit"></i> Bedah Minor</span>
+            </div>
+          </div>
+
+          <div class="rsgm-reg-body">
+
+            <!-- 1. ANAMNESIS & KELUHAN UTAMA -->
+            <div class="rsgm-sub-section">
+              <div class="rsgm-sub-section-header">
+                <h5 class="rsgm-sub-section-title">
+                  <i class="fa fa-comments-o"></i> 1. Anamnesis &amp; Keluhan Utama
+                </h5>
+                <span class="badge" style="background: #e2e8f0; color: #475569; font-size: 11px;">Riwayat Keluhan</span>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="rsgm-compact-label">Uraian Anamnesis</label>
+                    <textarea name="anamnesis" rows="3" class="form-control" placeholder="Tuliskan hasil anamnesis riwayat penyakit sekarang...">{$data.anamnesis}</textarea>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="rsgm-compact-label">Keluhan Utama</label>
+                    <textarea name="keluhan_utama" rows="3" class="form-control" placeholder="Tuliskan keluhan utama pasien...">{$data.keluhan_utama}</textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. RIWAYAT PENYAKIT PASIEN -->
+            <div class="rsgm-sub-section">
+              <div class="rsgm-sub-section-header">
+                <h5 class="rsgm-sub-section-title">
+                  <i class="fa fa-heartbeat text-danger"></i> 2. Riwayat Penyakit Pasien
+                </h5>
+                <span class="badge" style="background: #fee2e2; color: #991b1b; font-size: 11px;">Skrining Sistemik</span>
+              </div>
+              <div class="chk-grid">
+                <label class="chk-item-card"><input type="checkbox" name="rp_hipertensi" value="1" {if: $data.rp_hipertensi == '1'}checked{/if}> Hipertensi</label>
+                <label class="chk-item-card"><input type="checkbox" name="rp_diabetes" value="1" {if: $data.rp_diabetes == '1'}checked{/if}> Diabetes Melitus</label>
+                <label class="chk-item-card"><input type="checkbox" name="rp_gastritis" value="1" {if: $data.rp_gastritis == '1'}checked{/if}> Gastritis / Dispepsia</label>
+                <label class="chk-item-card"><input type="checkbox" name="rp_darah" value="1" {if: $data.rp_darah == '1'}checked{/if}> Gangguan Darah</label>
+                <label class="chk-item-card"><input type="checkbox" name="rp_jantung" value="1" {if: $data.rp_jantung == '1'}checked{/if}> Gangguan Jantung</label>
+                <label class="chk-item-card"><input type="checkbox" name="rp_hati" value="1" {if: $data.rp_hati == '1'}checked{/if}> Gangguan Hati</label>
+                <label class="chk-item-card"><input type="checkbox" name="rp_ginjal" value="1" {if: $data.rp_ginjal == '1'}checked{/if}> Gangguan Ginjal</label>
+                <label class="chk-item-card"><input type="checkbox" name="rp_pengobatan_panjang" value="1" {if: $data.rp_pengobatan_panjang == '1'}checked{/if}> Pengobatan Jangka Panjang</label>
+                <label class="chk-item-card"><input type="checkbox" name="rp_operasi" value="1" {if: $data.rp_operasi == '1'}checked{/if}> Riwayat Operasi</label>
+                <label class="chk-item-card"><input type="checkbox" name="rp_alergi_obat" value="1" {if: $data.rp_alergi_obat == '1'}checked{/if}> Alergi Obat-obatan</label>
+                <label class="chk-item-card"><input type="checkbox" name="rp_alergi_makanan" value="1" {if: $data.rp_alergi_makanan == '1'}checked{/if}> Alergi Makanan</label>
+                <label class="chk-item-card"><input type="checkbox" name="rp_sistemik_lain" value="1" {if: $data.rp_sistemik_lain == '1'}checked{/if}> Penyakit / Gangguan Lain</label>
+                <label class="chk-item-card" style="background: #f0fdf4; border-color: #bbf7d0;"><input type="checkbox" name="rp_tidak_ada" value="1" {if: $data.rp_tidak_ada == '1'}checked{/if}> <strong class="text-success">Tidak Ada Penyakit</strong></label>
+              </div>
+              <div class="row" style="margin-top: 10px;">
+                <div class="col-md-12">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="rsgm-compact-label">Catatan Tambahan Riwayat Penyakit (jika ada)</label>
+                    <input type="text" name="rp_keterangan" class="form-control input-sm" placeholder="Contoh: Hipertensi terkontrol rutin minum amlodipine 5mg..." value="{$data.rp_keterangan}">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. RIWAYAT ALERGI & RIWAYAT PENGOBATAN -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="rsgm-sub-section">
+                  <div class="rsgm-sub-section-header">
+                    <h5 class="rsgm-sub-section-title">
+                      <i class="fa fa-ban text-danger"></i> 3. Riwayat Alergi
+                    </h5>
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="rsgm-compact-label">Riwayat Alergi Obat / Makanan / Lainnya</label>
+                    <textarea name="riwayat_alergi" rows="4" class="form-control" placeholder="Tuliskan jenis obat/makanan penyebab alergi atau 'Tidak Ada'...">{$data.riwayat_alergi}</textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="rsgm-sub-section">
+                  <div class="rsgm-sub-section-header">
+                    <h5 class="rsgm-sub-section-title">
+                      <i class="fa fa-medkit text-warning"></i> 4. Riwayat Pengobatan
+                    </h5>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label class="chk-item-card"><input type="checkbox" name="pengobatan_pengencer_darah" value="1" {if: $data.pengobatan_pengencer_darah == '1'}checked{/if}> Pengencer darah (Aspirin, Clopidogrel, Warfarin)</label>
+                    <label class="chk-item-card"><input type="checkbox" name="pengobatan_osteoporosis_kanker" value="1" {if: $data.pengobatan_osteoporosis_kanker == '1'}checked{/if}> Obat osteoporosis / kanker (Bisfosfonat, Denosumab)</label>
+                    <label class="chk-item-card"><input type="checkbox" name="pengobatan_antibiotik" value="1" {if: $data.pengobatan_antibiotik == '1'}checked{/if}> Antibiotik</label>
+                    <label class="chk-item-card"><input type="checkbox" name="pengobatan_analgetik" value="1" {if: $data.pengobatan_analgetik == '1'}checked{/if}> Analgetik / Anti-inflamasi</label>
+                  </div>
+                  <div class="form-group" style="margin-top: 8px; margin-bottom: 0;">
+                    <input type="text" name="pengobatan_keterangan" class="form-control input-sm" placeholder="Nama obat / dosis yang sedang dikonsumsi..." value="{$data.pengobatan_keterangan}">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. RIWAYAT PENYAKIT DALAM KELUARGA -->
+            <div class="rsgm-sub-section">
+              <div class="rsgm-sub-section-header">
+                <h5 class="rsgm-sub-section-title">
+                  <i class="fa fa-users text-primary"></i> 5. Riwayat Penyakit dalam Keluarga
+                </h5>
+                <span class="badge" style="background: #e2e8f0; color: #475569; font-size: 11px;">Herediter</span>
+              </div>
+              <div class="chk-grid">
+                <label class="chk-item-card"><input type="checkbox" name="rpk_hipertensi" value="1" {if: $data.rpk_hipertensi == '1'}checked{/if}> Hipertensi</label>
+                <label class="chk-item-card"><input type="checkbox" name="rpk_diabetes" value="1" {if: $data.rpk_diabetes == '1'}checked{/if}> Diabetes Melitus</label>
+                <label class="chk-item-card"><input type="checkbox" name="rpk_gastritis" value="1" {if: $data.rpk_gastritis == '1'}checked{/if}> Gastritis / Dispepsia</label>
+                <label class="chk-item-card"><input type="checkbox" name="rpk_darah" value="1" {if: $data.rpk_darah == '1'}checked{/if}> Gangguan Darah</label>
+                <label class="chk-item-card"><input type="checkbox" name="rpk_jantung" value="1" {if: $data.rpk_jantung == '1'}checked{/if}> Gangguan Jantung</label>
+                <label class="chk-item-card"><input type="checkbox" name="rpk_hati" value="1" {if: $data.rpk_hati == '1'}checked{/if}> Gangguan Hati</label>
+                <label class="chk-item-card"><input type="checkbox" name="rpk_ginjal" value="1" {if: $data.rpk_ginjal == '1'}checked{/if}> Gangguan Ginjal</label>
+                <label class="chk-item-card"><input type="checkbox" name="rpk_pengobatan_panjang" value="1" {if: $data.rpk_pengobatan_panjang == '1'}checked{/if}> Pengobatan Jangka Panjang</label>
+                <label class="chk-item-card"><input type="checkbox" name="rpk_operasi" value="1" {if: $data.rpk_operasi == '1'}checked{/if}> Riwayat Operasi</label>
+                <label class="chk-item-card"><input type="checkbox" name="rpk_alergi_obat" value="1" {if: $data.rpk_alergi_obat == '1'}checked{/if}> Alergi Obat-obatan</label>
+                <label class="chk-item-card"><input type="checkbox" name="rpk_alergi_makanan" value="1" {if: $data.rpk_alergi_makanan == '1'}checked{/if}> Alergi Makanan</label>
+                <label class="chk-item-card"><input type="checkbox" name="rpk_sistemik_lain" value="1" {if: $data.rpk_sistemik_lain == '1'}checked{/if}> Penyakit / Gangguan Lain</label>
+                <label class="chk-item-card" style="background: #f0fdf4; border-color: #bbf7d0;"><input type="checkbox" name="rpk_tidak_ada" value="1" {if: $data.rpk_tidak_ada == '1'}checked{/if}> <strong class="text-success">Tidak Ada Penyakit</strong></label>
+              </div>
+              <div class="row" style="margin-top: 10px;">
+                <div class="col-md-12">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="rsgm-compact-label">Catatan Riwayat Penyakit Keluarga (jika ada)</label>
+                    <input type="text" name="rpk_keterangan" class="form-control input-sm" placeholder="Contoh: Ibu riwayat Diabetes Melitus..." value="{$data.rpk_keterangan}">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 6. PEMERIKSAAN FISIK -->
+            <div class="rsgm-sub-section">
+              <div class="rsgm-sub-section-header">
+                <h5 class="rsgm-sub-section-title">
+                  <i class="fa fa-eye text-primary"></i> 6. Pemeriksaan Fisik
+                </h5>
+                <span class="badge" style="background: #e2e8f0; color: #475569; font-size: 11px;">Ekstraoral &amp; Intraoral</span>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-weight: 700; font-size: 12px; margin-bottom: 6px; display: inline-flex; align-items: center; gap: 6px;">
+                      <input type="checkbox" name="fisik_ekstraoral_check" value="1" {if: $data.fisik_ekstraoral_check == '1'}checked{/if}>
+                      Ekstraoral
+                    </label>
+                    <textarea name="fisik_ekstraoral" rows="3" class="form-control" placeholder="Tuliskan temuan pemeriksaan ekstraoral (simetri wajah, pembengkakan, KGB, TMJ, dll)...">{$data.fisik_ekstraoral}</textarea>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-weight: 700; font-size: 12px; margin-bottom: 6px; display: inline-flex; align-items: center; gap: 6px;">
+                      <input type="checkbox" name="fisik_intraoral_check" value="1" {if: $data.fisik_intraoral_check == '1'}checked{/if}>
+                      Intraoral
+                    </label>
+                    <textarea name="fisik_intraoral" rows="3" class="form-control" placeholder="Tuliskan temuan pemeriksaan intraoral (kondisi gigi, mukosa, lidah, gingiva, dll)...">{$data.fisik_intraoral}</textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 7. PEMERIKSAAN PENUNJANG, DIAGNOSIS & RENCANA TINDAKAN -->
+            <div class="rsgm-sub-section" style="margin-bottom: 0;">
+              <div class="rsgm-sub-section-header">
+                <h5 class="rsgm-sub-section-title">
+                  <i class="fa fa-file-text-o text-primary"></i> 7. Pemeriksaan Penunjang, Diagnosis &amp; Rencana Tindakan
+                </h5>
+                <span class="badge" style="background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 700;">Kesimpulan</span>
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label class="rsgm-compact-label">Pemeriksaan Penunjang (Rontgen / Laboratorium)</label>
+                <textarea name="pemeriksaan_penunjang" rows="2" class="form-control" placeholder="Contoh: Foto Panoramik / Periapikal: Impaksi gigi 48 klas II posisi B mesioangular...">{$data.pemeriksaan_penunjang}</textarea>
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label class="rsgm-compact-label">Diagnosis <span class="text-danger">*</span></label>
+                <textarea name="diagnosis" rows="2" class="form-control" placeholder="Contoh: Impaksi Gigi 48 Klas II Posisi B Mesioangular..." required>{$data.diagnosis}</textarea>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="rsgm-compact-label">Rencana Tindakan <span class="text-danger">*</span></label>
+                <textarea name="rencana_tindakan" rows="2" class="form-control" placeholder="Contoh: Odontektomi Gigi 48 dengan Anestesi Lokal..." required>{$data.rencana_tindakan}</textarea>
+              </div>
+            </div>
+
+          </div> <!-- /.rsgm-reg-body -->
+
+          <!-- FOOTER ACTIONS INTEGRATED -->
+          <div class="rsgm-reg-footer">
+            <div>
+              <a href="{?=url([ADMIN, 'form_rme', 'bmi3manage'])?}" class="btn btn-default" style="border-radius: 6px; font-weight: 600; padding: 7px 18px;">
+                <i class="fa fa-arrow-left"></i> Batal &amp; Kembali
+              </a>
+            </div>
+            <div class="rsgm-reg-actions">
+              {if: !empty($data.id)}
+              <a href="{?=url([ADMIN, 'form_rme', 'bmi3cetak'])?}&id={$data.id}" target="_blank" class="btn btn-info" style="border-radius: 6px; font-weight: 600; padding: 7px 16px;">
+                <i class="fa fa-print"></i> Cetak Asesmen Bedah Minor
+              </a>
+              {/if}
+              <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 700; padding: 7px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <i class="fa fa-save"></i> Simpan Data Asesmen
+              </button>
+            </div>
+          </div>
+
+        </div> <!-- /.rsgm-reg-shell -->
+      </div> <!-- /.col-md-9 -->
+
+    </div> <!-- /.rsgm-soap-flex-row -->
+  </form>
 </div>
 
 <!-- MODAL CARI PASIEN -->
 <div class="modal fade" id="modalPasien" tabindex="-1" role="dialog" aria-labelledby="modalPasienLabel">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-primary">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="modalPasienLabel"><i class="fa fa-search"></i> Pilih Pasien Registrasi</h4>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <input type="text" id="cari-pasien-input" class="form-control" placeholder="Ketik No. Rawat, No. RM, atau Nama Pasien untuk memfilter...">
-                </div>
-                <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
-                    <table class="table table-bordered table-hover table-striped" id="tabel-pasien-modal">
-                        <thead>
-                            <tr class="info">
-                                <th>No. Rawat</th>
-                                <th>No. RM</th>
-                                <th>Nama Pasien</th>
-                                <th>JK</th>
-                                <th>Umur</th>
-                                <th>Tgl Registrasi</th>
-                                <th style="width: 70px; text-align: center;">Pilih</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loop: $pasien_list}
-                            <tr>
-                                <td><span class="label label-info">{$value.no_rawat}</span></td>
-                                <td>{$value.no_rkm_medis}</td>
-                                <td><strong>{$value.nm_pasien}</strong></td>
-                                <td>{$value.jk}</td>
-                                <td>{$value.umur}</td>
-                                <td>{$value.tgl_registrasi}</td>
-                                <td style="text-align: center;">
-                                    <button type="button" class="btn btn-xs btn-success pilih-pasien"
-                                        data-norawat="{$value.no_rawat}"
-                                        data-norm="{$value.no_rkm_medis}"
-                                        data-nama="{$value.nm_pasien}"
-                                        data-jk="{$value.jk}"
-                                        data-umur="{$value.umur}"
-                                        data-tgl_lahir="{$value.tgl_lahir}">
-                                        <i class="fa fa-check"></i> Pilih
-                                    </button>
-                                </td>
-                            </tr>
-                            {/loop}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
-            </div>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content" style="border-radius: 8px; overflow: hidden;">
+      <div class="modal-header bg-primary" style="padding: 12px 18px;">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #fff; opacity: 0.9;"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="modalPasienLabel" style="color: #fff; font-weight: 700; font-size: 15px;"><i class="fa fa-search"></i> Pilih Pasien Registrasi</h4>
+      </div>
+      <div class="modal-body" style="padding: 16px 18px;">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <input type="text" id="cari-pasien-input" class="form-control" placeholder="Ketik No. Rawat, No. RM, atau Nama Pasien untuk memfilter...">
         </div>
+        <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+          <table class="table table-bordered table-hover table-striped" id="tabel-pasien-modal" style="margin-bottom: 0;">
+            <thead>
+              <tr class="info">
+                <th>No. Rawat</th>
+                <th>No. RM</th>
+                <th>Nama Pasien</th>
+                <th>JK</th>
+                <th>Umur</th>
+                <th>Tgl Registrasi</th>
+                <th style="width: 80px; text-align: center;">Pilih</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loop: $pasien_list}
+              <tr>
+                <td><span class="label label-info">{$value.no_rawat}</span></td>
+                <td>{$value.no_rkm_medis}</td>
+                <td><strong>{$value.nm_pasien}</strong></td>
+                <td>{$value.jk}</td>
+                <td>{$value.umur}</td>
+                <td>{$value.tgl_registrasi}</td>
+                <td style="text-align: center;">
+                  <button type="button" class="btn btn-xs btn-success pilih-pasien" style="border-radius: 6px;"
+                    data-norawat="{$value.no_rawat}"
+                    data-norm="{$value.no_rkm_medis}"
+                    data-nama="{$value.nm_pasien}"
+                    data-jk="{$value.jk}"
+                    data-umur="{$value.umur}"
+                    data-tgl_lahir="{$value.tgl_lahir}">
+                    <i class="fa fa-check"></i> Pilih
+                  </button>
+                </td>
+              </tr>
+              {/loop}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: 10px 18px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
+        <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 6px; font-weight: 600;">Tutup</button>
+      </div>
     </div>
+  </div>
 </div>
 
 <script>
@@ -413,7 +503,7 @@ $(document).ready(function() {
                 data: { ajax_patient: 1, no_rawat: noRawat },
                 dataType: 'json',
                 success: function(res) {
-                    if (res.success) {
+                    if (res && res.success) {
                         $('#no_rkm_medis').val(res.no_rkm_medis);
                         $('#nm_pasien').val(res.nm_pasien);
                         $('#jk').val(res.jk);

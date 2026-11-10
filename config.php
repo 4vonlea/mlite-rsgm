@@ -52,7 +52,7 @@ if (DBDRIVER == 'sqlite') {
 } else {
     $db_host = env('MYSQLHOST') ?: '127.0.0.1';
     $db_user = env('MYSQLUSER') ?: 'root';
-    $db_pass = env('MYSQLPASSWORD') ?: '';
+    $db_pass = env('MYSQLPASSWORD') ?: (is_dir('/Applications/MAMP') ? 'root' : '');
     $db_name = env('MYSQLDATABASE') ?: 'mlitersgm';
     $db_port = env('MYSQLPORT') ?: '3306';
 }
@@ -68,6 +68,7 @@ $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "
 $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
 $dir = dirname($_SERVER['SCRIPT_NAME']);
 $dir = $dir === '\\' || $dir === '/' ? '' : $dir;
+$dir = preg_replace('#/admin$#', '', $dir);
 define('WEBAPPS_URL', $protocol . '://' . $host . $dir . '/uploads');
 define('WEBAPPS_PATH', BASE_DIR . '/uploads');
 

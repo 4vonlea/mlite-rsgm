@@ -737,3 +737,9 @@ CREATE TABLE IF NOT EXISTS `asesmen_medis_umum_ugd` (
   KEY `no_rawat` (`no_rawat`),
   KEY `no_rkm_medis` (`no_rkm_medis`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
+
+-- ----------------------------------------------------------------------------
+-- UPDATE KATEGORI FORMULIR UGD PADA TABEL `mlite_rme_form` & `poliklinik`
+-- ----------------------------------------------------------------------------
+UPDATE `mlite_rme_form` SET `kategori` = 'UGD' WHERE `kode_form` IN ('AKGMU', 'RM.GD 3', 'RM.GD 5', 'RM.GD 6') OR `id` IN (28, 65, 66, 67);
+UPDATE `poliklinik` SET `kategori_rme` = 'UGD' WHERE `kd_poli` = 'UGD';

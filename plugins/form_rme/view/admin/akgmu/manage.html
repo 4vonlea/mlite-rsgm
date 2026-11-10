@@ -34,6 +34,7 @@
               <a href="{?=url([ADMIN, 'form_rme', 'form'])?}&no_rawat={$value.no_rawat}" class="btn btn-xs btn-warning"><i class="fa fa-edit"></i> Edit</a>
               <a href="{?=url([ADMIN, 'form_rme', 'cetak'])?}&no_rawat={$value.no_rawat}" class="btn btn-xs btn-info" target="_blank"><i class="fa fa-print"></i> Cetak</a>
               <a href="{?=url([ADMIN, 'form_rme', 'cetak'])?}&no_rawat={$value.no_rawat}&pdf=1" class="btn btn-xs btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
+              <a href="{?=url([ADMIN, 'form_rme', 'akgmumanage'])?}&action=delete&no_rawat={$value.no_rawat}" class="btn btn-xs btn-default" onclick="return confirm('Yakin ingin menghapus data asesmen ini?')"><i class="fa fa-trash"></i> Hapus</a>
             </td>
           </tr>
           {/loop}

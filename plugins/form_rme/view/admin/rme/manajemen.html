@@ -107,7 +107,7 @@
                       {/if}
                     </td>
                     <td style="vertical-align: middle; white-space: nowrap;">
-                      <span class="rsgm-badge {if: $value.kategori == 'Bedah'}rsgm-badge-rose{elseif: $value.kategori == 'Ranap'}rsgm-badge-emerald{elseif: $value.kategori == 'Rajal'}rsgm-badge-sky{elseif: $value.kategori == 'IGD'}rsgm-badge-amber{else}rsgm-badge-purple{/if}">
+                      <span class="rsgm-badge {if: $value.kategori == 'Bedah'}rsgm-badge-rose{elseif: $value.kategori == 'Ranap'}rsgm-badge-emerald{elseif: $value.kategori == 'Rajal'}rsgm-badge-sky{elseif: $value.kategori == 'UGD' || $value.kategori == 'IGD'}rsgm-badge-amber{else}rsgm-badge-purple{/if}">
                         {$value.kategori}
                       </span>
                     </td>
@@ -346,7 +346,7 @@
                           {/if}
                         </td>
                         <td style="vertical-align: middle; white-space: nowrap;">
-                          <span class="rsgm-badge {if: $value.kategori == 'Bedah'}rsgm-badge-rose{elseif: $value.kategori == 'Ranap'}rsgm-badge-emerald{elseif: $value.kategori == 'Rajal'}rsgm-badge-sky{elseif: $value.kategori == 'IGD'}rsgm-badge-amber{else}rsgm-badge-purple{/if}">
+                          <span class="rsgm-badge {if: $value.kategori == 'Bedah'}rsgm-badge-rose{elseif: $value.kategori == 'Ranap'}rsgm-badge-emerald{elseif: $value.kategori == 'Rajal'}rsgm-badge-sky{elseif: $value.kategori == 'UGD' || $value.kategori == 'IGD'}rsgm-badge-amber{else}rsgm-badge-purple{/if}">
                             {$value.kategori}
                           </span>
                         </td>
@@ -494,10 +494,10 @@
                     <label class="col-sm-3 control-label" style="font-size: 12.5px; font-weight: 600;">Kategori Unit <span class="text-danger">*</span></label>
                     <div class="col-sm-5">
                       <select name="kategori" class="form-control input-sm" style="border-radius: 6px;">
-                        <option value="Ranap">Ranap (Rawat Inap)</option>
+                        <option value="UGD">UGD (Gawat Darurat)</option>
                         <option value="Rajal">Rajal (Rawat Jalan)</option>
+                        <option value="Ranap">Ranap (Rawat Inap)</option>
                         <option value="Bedah">Bedah (Bedah Mulut / Kamar Operasi)</option>
-                        <option value="IGD">IGD (Gawat Darurat)</option>
                         <option value="Penunjang">Penunjang</option>
                       </select>
                     </div>
@@ -574,10 +574,10 @@
                   <div class="form-group">
                     <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Kategori Unit</label>
                     <select name="kategori" id="edit_kategori" class="form-control input-sm" style="border-radius: 6px;">
-                      <option value="Ranap">Ranap (Rawat Inap)</option>
+                      <option value="UGD">UGD (Gawat Darurat)</option>
                       <option value="Rajal">Rajal (Rawat Jalan)</option>
+                      <option value="Ranap">Ranap (Rawat Inap)</option>
                       <option value="Bedah">Bedah (Bedah Mulut / Kamar Operasi)</option>
-                      <option value="IGD">IGD (Gawat Darurat)</option>
                       <option value="Penunjang">Penunjang</option>
                     </select>
                   </div>

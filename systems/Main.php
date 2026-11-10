@@ -135,6 +135,12 @@ abstract class Main
             ini_set('session.use_only_cookies', 1);
             session_name('mlite');
             session_set_cookie_params(0, (mlite_dir() === '/' ? '/' : mlite_dir().'/'));
+            if (isset($_COOKIE['mlite'])) {
+                $sessFile = rtrim(session_save_path(), '/') . '/sess_' . basename($_COOKIE['mlite']);
+                if (file_exists($sessFile) && (!is_readable($sessFile) || !is_writable($sessFile))) {
+                    session_id( session_create_id() );
+                }
+            }
             session_start();
         }
     }    
