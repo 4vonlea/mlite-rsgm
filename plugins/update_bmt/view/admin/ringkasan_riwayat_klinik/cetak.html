@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>RINGKASAN RIWAYAT KLINIK - {$data.no_rawat}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 8mm 10mm 8mm 10mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 9.5pt;
+            color: #000;
+            margin: 0;
+            padding: 0;
+            line-height: 1.3;
+        }
+        {if: empty($is_mpdf)}
+        @media screen {
+            body {
+                background-color: #f4f6f9 !important;
+                padding: 15px 0 !important;
+            }
+            .page {
+                background: #fff !important;
+                width: 195mm;
+                min-height: 278mm;
+                margin: 0 auto 20px auto !important;
+                padding: 6mm 8mm !important;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important;
+                position: relative;
+            }
+        }
+        {/if}
+
+        .no-print-toolbar {
+            width: 100%;
+            max-width: 195mm;
+            margin: 0 auto 12px auto;
+            padding: 8px 14px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-toolbar {
+            padding: 5px 12px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; }
+        .btn-close { background: #7f8c8d; color: #fff; }
+
+        .outer-frame {
+            border: 1.5px solid #000;
+            width: 100%;
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1.5px solid #000;
+        }
+        .header-table td {
+            padding: 4px 6px;
+            vertical-align: middle;
+        }
+        .rmbox {
+            display: inline-block;
+            width: 17px;
+            height: 19px;
+            border: 1.2px solid #000;
+            text-align: center;
+            line-height: 18px;
+            font-size: 10pt;
+            font-weight: bold;
+            vertical-align: middle;
+        }
+        .rm-sep {
+            display: inline-block;
+            width: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .perhatian-box {
+            font-size: 7.5pt;
+            padding: 3px 8px;
+            border-bottom: 1px solid #000;
+            line-height: 1.25;
+        }
+
+        .title-bar {
+            text-align: center;
+            font-weight: bold;
+            font-size: 11pt;
+            padding: 5px 0;
+            border-bottom: 1.5px solid #000;
+            letter-spacing: 0.4px;
+        }
+
+        .alergi-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1.5px solid #000;
+            font-size: 9pt;
+        }
+        .alergi-table td {
+            padding: 4px 8px;
+            vertical-align: top;
+        }
+
+        .klinik-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8.8pt;
+        }
+        .klinik-table th {
+            border: 1px solid #000;
+            border-top: none;
+            padding: 6px 4px;
+            text-align: center;
+            vertical-align: middle;
+            font-weight: bold;
+            font-size: 8.5pt;
+        }
+        .klinik-table td {
+            border: 1px solid #000;
+            padding: 6px 5px;
+            vertical-align: top;
+        }
+        .klinik-table th:first-child, .klinik-table td:first-child {
+            border-left: none;
+        }
+        .klinik-table th:last-child, .klinik-table td:last-child {
+            border-right: none;
+        }
+
+        .pre-line {
+            white-space: pre-line;
+            line-height: 1.35;
+        }
+
+        .circle-sex {
+            display: inline-block;
+            border: 1.5px solid #000;
+            border-radius: 50%;
+            padding: 0 4px;
+            font-weight: bold;
+        }
+
+        @media print {
+            .no-print-toolbar { display: none !important; }
+            body { background: transparent !important; padding: 0 !important; }
+            .page { width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    {if: empty($is_mpdf)}
+    <div class="no-print-toolbar">
+        <button onclick="window.print()" class="btn-toolbar btn-print"><i class="fa fa-print"></i> Cetak Dokumen</button>
+        <a href="{?=url([ADMIN, 'update_bmt', 'ringkasanriwayatklinikcetak', 'id=' . $data.id . '&pdf=1'])?}" target="_blank" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Download PDF</a>
+        <button onclick="window.close()" class="btn-toolbar btn-close"><i class="fa fa-times"></i> Tutup</button>
+    </div>
+    {/if}
+
+    <div class="page">
+        <div class="outer-frame">
+            <!-- HEADER KOP & IDENTITAS -->
+            <table class="header-table">
+                <tr>
+                    <td style="width: 57%; border-right: 1.5px solid #000;">
+                        <img src="{if: !empty($kop_img)}{$kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop RSGM" style="width: 100%; max-height: 70px; object-fit: contain; display: block;">
+                    </td>
+                    <td style="width: 43%; padding: 4px 8px;">
+                        <table style="width: 100%; border: none; font-size: 8.5pt;">
+                            <tr>
+                                <td style="width: 28%; padding: 2px 0; font-weight: bold;">No RM</td>
+                                <td style="width: 4%; padding: 2px 0;">:</td>
+                                <td style="padding: 2px 0;">
+                                    <span class="rmbox">{$p.rm0}</span><span class="rmbox">{$p.rm1}</span><span class="rm-sep">-</span><span class="rmbox">{$p.rm2}</span><span class="rmbox">{$p.rm3}</span><span class="rm-sep">-</span><span class="rmbox">{$p.rm4}</span><span class="rmbox">{$p.rm5}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0; font-weight: bold;">Nama Pasien</td>
+                                <td style="padding: 2px 0;">:</td>
+                                <td style="padding: 2px 0; border-bottom: 1px dotted #000;">
+                                    <strong>{$p.nm_pasien}</strong>
+                                    <span style="float: right;">
+                                        {if: $p.jk == 'L'}<span class="circle-sex">L</span>/P{elseif: $p.jk == 'P'}L/<span class="circle-sex">P</span>{else}L/P{/if}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0; font-weight: bold;">Tanggal Lahir</td>
+                                <td style="padding: 2px 0;">:</td>
+                                <td style="padding: 2px 0; border-bottom: 1px dotted #000;">{$p.tgl_lahir_fmt}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- PERHATIAN & JUDUL -->
+            <div class="perhatian-box">
+                Perhatian :<br>
+                *Harap semua penulisan dilakukan dengan keterbacaan yang jelas, benar dan lengkap.<br>
+                *Harap penulisan dilakukan dengan menggunakan terminologi medis yang standar<br>
+                *Harap penulisan dilakukan dengan selengkap-lengkapnya.
+                <div style="text-align: center; font-weight: bold; font-size: 10.5pt; margin-top: 3px; letter-spacing: 0.5px;">
+                    RINGKASAN RIWAYAT KLINIK
+                </div>
+            </div>
+
+            <!-- ALERGI OBAT -->
+            <table class="alergi-table">
+                <tr>
+                    <td style="width: 50%; border-right: 1px solid #000; height: 52px;">
+                        <strong>ALERGI OBAT :</strong>
+                        <div style="margin-top: 6px; padding-left: 25px; font-weight: bold; font-size: 10pt;">
+                            {$data.alergi_obat}
+                        </div>
+                    </td>
+                    <td style="width: 50%; padding: 3px 8px; font-size: 8.5pt; line-height: 1.45;">
+                        <div>1. {$data.alergi_1}</div>
+                        <div>2. {$data.alergi_2}</div>
+                        <div>3. {$data.alergi_3}</div>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- TABEL RIWAYAT KLINIK -->
+            <table class="klinik-table">
+                <thead>
+                    <tr>
+                        <th style="width: 11%;">Hari/Tgl<br>/Jam</th>
+                        <th style="width: 9%;">Instalasi/<br>Unit</th>
+                        <th style="width: 26%;">Pemeriksaan &amp; Diagnosis</th>
+                        <th style="width: 16%;">Rencana<br>Perawatan</th>
+                        <th style="width: 15%;">Pengobatan</th>
+                        <th style="width: 8%;">Kode<br>Penyakit</th>
+                        <th style="width: 15%;">Paraf DPJP (Dokter<br>Penanggung Jawab<br>Pelayanan)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {loop: $rows}
+                    <tr>
+                        <td style="text-align: center; min-height: 550px; height: 540px;" class="pre-line">{$value.hari_tgl_jam}</td>
+                        <td style="text-align: center; font-weight: bold;">{$value.instalasi_unit}</td>
+                        <td class="pre-line">{$value.pemeriksaan_diagnosis}</td>
+                        <td class="pre-line">{$value.rencana_perawatan}</td>
+                        <td class="pre-line">{$value.pengobatan}</td>
+                        <td style="text-align: center; font-weight: bold;">{$value.kode_penyakit}</td>
+                        <td style="text-align: center; vertical-align: middle; padding-top: 40px;">
+                            {if: !empty($value.ttd_dpjp)}
+                                {if: strpos($value.ttd_dpjp, 'data:image') === 0 || strpos($value.ttd_dpjp, 'http') === 0}
+                                    <img src="{$value.ttd_dpjp}" style="max-height: 75px; max-width: 110px; object-fit: contain; display: block; margin: 0 auto 4px auto;">
+                                {else}
+                                    <div style="margin-bottom: 4px;">{?= $value['ttd_dpjp'] ?}</div>
+                                {/if}
+                            {else}
+                                <div style="height: 60px;"></div>
+                            {/if}
+                            <div style="font-weight: bold; font-size: 8.5pt; text-decoration: underline; color: #1a237e;">{$value.nama_dpjp}</div>
+                            {if: !empty($value.sip_dpjp)}
+                            <div style="font-size: 6.8pt; color: #1a237e; border: 1px solid #1a237e; border-radius: 2px; padding: 1px 3px; display: inline-block; margin-top: 2px; font-weight: bold;">{$value.sip_dpjp}</div>
+                            {/if}
+                        </td>
+                    </tr>
+                    {/loop}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px; font-size: 8pt;">
+            <div style="font-weight: bold; color: #333;">
+                {if: !empty($data.catatan_fktp)}* {$data.catatan_fktp}{/if}
+            </div>
+            <div style="font-style: italic; font-weight: bold;">
+                Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas
+            </div>
+        </div>
+        <div style="font-size: 7.5pt; font-weight: bold; text-align: right; margin-top: 2px;">
+            RSGM/Ed-Rev/01/2020
+        </div>
+    </div>
+
+</body>
+</html>

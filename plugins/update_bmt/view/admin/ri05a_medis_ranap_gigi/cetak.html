@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>RM.RI 05A - Asesmen Medis Rawat Inap Gigi - {$pasien.no_rawat}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 5mm 7mm 5mm 7mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8pt;
+            line-height: 1.15;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
+            background-color: #f5f5f5;
+            padding: 10px 0;
+        }
+        .page {
+            background: #fff;
+            width: 200mm;
+            min-height: 285mm;
+            margin: 0 auto 15px auto;
+            padding: 5mm 7mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        {/if}
+
+        .no-print-toolbar {
+            width: 200mm;
+            margin: 0 auto 10px auto;
+            padding: 8px 12px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+        }
+        .btn-toolbar {
+            display: inline-block;
+            padding: 5px 12px;
+            font-size: 9pt;
+            font-weight: bold;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-right: 5px;
+        }
+        .btn-print { background-color: #27ae60; }
+        .btn-pdf { background-color: #c0392b; }
+        .btn-close { background-color: #7f8c8d; }
+
+        @media print {
+            .no-print-toolbar { display: none !important; }
+            body { background: transparent !important; padding: 0 !important; }
+            .page { width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
+            .page-break { page-break-before: always; }
+        }
+
+        .border-all {
+            border: 1.5px solid #000;
+        }
+        .table-header {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1.5px solid #000;
+        }
+        .table-header td {
+            vertical-align: middle;
+            padding: 2px 4px;
+        }
+        .rm-box {
+            display: inline-block;
+            border: 1.2px solid #000;
+            width: 15px;
+            height: 17px;
+            line-height: 17px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 9pt;
+            margin-right: 1px;
+        }
+        .title-doc {
+            text-align: center;
+            font-weight: bold;
+            font-size: 10.5pt;
+            padding: 4px 2px 2px 2px;
+            letter-spacing: 0.5px;
+            border-bottom: 1.5px solid #000;
+        }
+        .table-content {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-content td, .table-content th {
+            border: 1px solid #000;
+            padding: 2px 4px;
+            vertical-align: top;
+        }
+        .sec-title {
+            background-color: #e6e6e6;
+            font-weight: bold;
+            font-size: 8pt;
+            padding: 2px 4px;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+        }
+        .cb {
+            font-family: DejaVu Sans, Arial, sans-serif;
+            font-size: 8.5pt;
+        }
+        .footer-note {
+            font-size: 7.5pt;
+            margin-top: 3px;
+            display: table;
+            width: 100%;
+        }
+        .scale-box-num {
+            border: 1px solid #000;
+            text-align: center;
+            font-weight: bold;
+            padding: 1px 2px;
+            font-size: 7.5pt;
+        }
+        .scale-active {
+            background-color: #000;
+            color: #fff;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+
+{if: empty($is_mpdf)}
+<div class="no-print-toolbar">
+    <button onclick="window.print()" class="btn-toolbar btn-print"><i class="fa fa-print"></i> Cetak Dokumen</button>
+    <a href="{?=url([ADMIN, 'update_bmt', 'rimedisgigicetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
+    <button onclick="window.close()" class="btn-toolbar btn-close"><i class="fa fa-times"></i> Tutup</button>
+</div>
+{/if}
+
+<!-- ==================== HALAMAN 1 (RM.RI 05A Hal 1 - 2) ==================== -->
+<div class="page">
+    <div class="border-all">
+        <!-- HEADER KOP & IDENTITAS -->
+        <table class="table-header">
+            <tr>
+                <td style="width: 58%; border-right: 1.5px solid #000; text-align: center; padding: 2px;">
+                    <img src="{if: !empty($kop_img)}{$kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="KOP RSGM" style="width: 100%; max-height: 65px; object-fit: contain;">
+                </td>
+                <td style="width: 42%; padding: 2px 6px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
+                        <tr>
+                            <td style="width: 28%; font-weight: bold; padding: 1px 0;">No RM</td>
+                            <td style="width: 4%;">:</td>
+                            <td style="width: 68%;">
+                                <span class="rm-box">{$pasien.rm0}</span><span class="rm-box">{$pasien.rm1}</span><span class="rm-box">{$pasien.rm2}</span><span class="rm-box">{$pasien.rm3}</span><span class="rm-box">{$pasien.rm4}</span><span class="rm-box">{$pasien.rm5}</span>
+                                <span style="float: right; font-weight: bold; font-size: 9.5pt; border: 1.5px solid #000; padding: 0 4px;">RM RI 05A</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold; padding: 1px 0;">Nama Pasien</td>
+                            <td>:</td>
+                            <td><strong>{$pasien.nm_pasien}</strong> &nbsp; ({if: $pasien.jk == 'L'}<u>L</u> / P{elseif: $pasien.jk == 'P'}L / <u>P</u>{else}L / P{/if})</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold; padding: 1px 0;">Tanggal Lahir</td>
+                            <td>:</td>
+                            <td>{$pasien.tgl_lahir_indo}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <div style="font-size: 6.5pt; font-style: italic; padding: 2px 4px; border-bottom: 1px solid #000;">
+            Perhatian : * Harap semua penulisan dilakukan dengan keterbacaan yang jelas, benar dan lengkap. * Berilah tanda centang (v) pada kotak pilihan yang telah disediakan.
+        </div>
+
+        <div class="title-doc">ASESMEN MEDIS RAWAT INAP GIGI</div>
+
+        <!-- ANAMNESIS -->
+        <table class="table-content">
+            <tr>
+                <td colspan="2" class="sec-title">I. ANAMNESIS</td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <strong>Sumber Anamnesis:</strong> <span class="cb">{if: $data.anamnesis_sumber == 'Autoanamnesis'}&#9745;{else}&#9744;{/if}</span> Autoanamnesis &nbsp;&nbsp; <span class="cb">{if: $data.anamnesis_sumber == 'Alloanamnesis'}&#9745;{else}&#9744;{/if}</span> Alloanamnesis<br>
+                    <strong>Keluhan Utama:</strong><br>
+                    <div style="min-height: 22px; padding-left: 5px;">{$data.keluhan_utama}</div>
+                    <strong>Riwayat Perjalanan Penyakit Sekarang:</strong><br>
+                    <div style="min-height: 25px; padding-left: 5px;">{$data.riwayat_penyakit_sekarang}</div>
+                    <strong>Riwayat Penyakit Dahulu:</strong><br>
+                    <div style="min-height: 20px; padding-left: 5px;">{$data.riwayat_penyakit_dahulu}</div>
+                    <strong>Riwayat Pengobatan &amp; Alergi:</strong><br>
+                    <div style="min-height: 20px; padding-left: 5px;">Pengobatan: {$data.riwayat_pengobatan} | Alergi: {$data.riwayat_alergi}</div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- PEMERIKSAAN FISIK UMUM & TANDA VITAL -->
+        <table class="table-content">
+            <tr>
+                <td colspan="4" class="sec-title">II. PEMERIKSAAN FISIK UMUM &amp; TANDA VITAL</td>
+            </tr>
+            <tr>
+                <td style="width: 25%;"><strong>TD:</strong> {$vital.tensi} mmHg</td>
+                <td style="width: 25%;"><strong>Nadi:</strong> {$vital.nadi} x/menit</td>
+                <td style="width: 25%;"><strong>Respirasi:</strong> {$vital.respirasi} x/menit</td>
+                <td style="width: 25%;"><strong>Suhu:</strong> {$vital.suhu} &deg;C</td>
+            </tr>
+            <tr>
+                <td colspan="4">
+                    <strong>Keadaan Umum &amp; Fisik Umum:</strong> {$data.pemeriksaan_fisik_umum}
+                </td>
+            </tr>
+        </table>
+
+        <!-- PEMERIKSAAN EKSTRAORAL -->
+        <table class="table-content">
+            <tr>
+                <td colspan="2" class="sec-title">III. STATUS LOKALIS / PEMERIKSAAN EKSTRAORAL</td>
+            </tr>
+            <tr>
+                <td style="width: 60%;">
+                    <strong>Wajah &amp; Pipi:</strong> {$ekstraoral.pipi}<br>
+                    <strong>Bibir:</strong> {$ekstraoral.bibir}<br>
+                    <strong>Kelenjar Limfe Submandibula:</strong> {$ekstraoral.submandibula}<br>
+                    <strong>Kelenjar Limfe Servikal:</strong> {$ekstraoral.servikal}<br>
+                    <strong>Sendi Rahang (TMJ):</strong> {$ekstraoral.tmj}<br>
+                    <strong>Keterangan Ekstraoral:</strong> {$ekstraoral.keterangan}
+                </td>
+                <td style="width: 40%; text-align: center; vertical-align: middle;">
+                    <div style="border: 1px dashed #666; padding: 6px; font-size: 7.5pt; background: #fafafa;">
+                        <strong>Diagram Regio Kepala &amp; Leher</strong><br>
+                        <div style="font-size: 9pt; padding: 8px 0; color: #555;">[ Visual Area Regio Maksilofasial ]</div>
+                        Regio: <strong>{$ekstraoral.regio_terkena}</strong>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- PEMERIKSAAN INTRAORAL -->
+        <table class="table-content">
+            <tr>
+                <td colspan="2" class="sec-title">IV. STATUS LOKALIS / PEMERIKSAAN INTRAORAL</td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 4px;">
+                        <tr>
+                            <td style="width: 25%; border: none;"><strong>Mukosa Bukal:</strong> {$intraoral.mukosa_bukal}</td>
+                            <td style="width: 25%; border: none;"><strong>Palatum:</strong> {$intraoral.palatum}</td>
+                            <td style="width: 25%; border: none;"><strong>Lidah:</strong> {$intraoral.lidah}</td>
+                            <td style="width: 25%; border: none;"><strong>Dasar Mulut:</strong> {$intraoral.dasar_mulut}</td>
+                        </tr>
+                        <tr>
+                            <td style="border: none;"><strong>Gingiva:</strong> {$intraoral.gingiva}</td>
+                            <td style="border: none;"><strong>Orofaring / Tonsil:</strong> {$intraoral.orofaring}</td>
+                            <td style="border: none;" colspan="2"><strong>Kebersihan Mulut (OHI-S):</strong> {$intraoral.ohis}</td>
+                        </tr>
+                    </table>
+                    <div style="border-top: 1px dashed #999; padding-top: 3px;">
+                        <strong>Pemeriksaan Elemen Gigi &amp; Periradikular:</strong><br>
+                        <div style="font-family: monospace; font-size: 8.5pt; padding: 2px 6px; background: #fdfdfd; border: 1px solid #ddd; margin-top: 2px;">
+                            <strong>Elemen:</strong> {$intraoral.elemen_gigi} &nbsp;|&nbsp;
+                            <strong>Inspeksi / Karies:</strong> {$intraoral.karies} &nbsp;|&nbsp;
+                            <strong>Sondasi:</strong> {$intraoral.sondasi} &nbsp;|&nbsp;
+                            <strong>Perkusi:</strong> {$intraoral.perkusi} &nbsp;|&nbsp;
+                            <strong>Palpasi:</strong> {$intraoral.palpasi} &nbsp;|&nbsp;
+                            <strong>Tes Termal:</strong> {$intraoral.tes_termal} &nbsp;|&nbsp;
+                            <strong>Vitalitas:</strong> {$intraoral.vitalitas}
+                        </div>
+                        <div style="margin-top: 3px;"><strong>Deskripsi Status Lokalis Gigi:</strong> {$data.status_lokalis_gigi}</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer-note">
+        <div style="float: left; font-size: 7pt;">RSGM/Ed-Rev/01/2020</div>
+        <div style="float: right; font-size: 7pt; font-style: italic;">Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas &nbsp; <b>RM.RI 05A Hal 1 - 2</b></div>
+    </div>
+</div>
+
+<!-- ==================== HALAMAN 2 (RM.RI 05A Hal 2 - 2) ==================== -->
+<div class="page page-break">
+    <div class="border-all">
+        <!-- HEADER IDENTITAS HALAMAN 2 -->
+        <table class="table-header" style="border-bottom: 1.5px solid #000;">
+            <tr>
+                <td style="width: 45%;"><strong>Nama Pasien :</strong> {$pasien.nm_pasien} ({if: $pasien.jk == 'L'}<u>L</u> / P{elseif: $pasien.jk == 'P'}L / <u>P</u>{else}L / P{/if})</td>
+                <td style="width: 30%;"><strong>Tanggal Lahir :</strong> {$pasien.tgl_lahir_indo}</td>
+                <td style="width: 25%; text-align: right;">
+                    <strong>No. RM :</strong>
+                    <span class="rm-box">{$pasien.rm0}</span><span class="rm-box">{$pasien.rm1}</span><span class="rm-box">{$pasien.rm2}</span><span class="rm-box">{$pasien.rm3}</span><span class="rm-box">{$pasien.rm4}</span><span class="rm-box">{$pasien.rm5}</span>
+                </td>
+            </tr>
+        </table>
+
+        <!-- PSIKOSOSIAL SPIRITUAL & ASESMEN NYERI -->
+        <table class="table-content">
+            <tr>
+                <td style="width: 50%;" class="sec-title">V. PSIKOSOSIAL &amp; SPIRITUAL</td>
+                <td style="width: 50%;" class="sec-title">VI. ASESMEN NYERI</td>
+            </tr>
+            <tr>
+                <td style="height: 50px;">
+                    <div>{$data.psikososial_spiritual}</div>
+                </td>
+                <td>
+                    Skor Nyeri: <strong>{$nyeri.skor}</strong> &nbsp; ({if: $nyeri.skor == 0}Tidak Ada Nyeri{elseif: $nyeri.skor <= 3}Nyeri Ringan{elseif: $nyeri.skor <= 6}Nyeri Sedang{else}Nyeri Berat{/if})<br>
+                    Lokasi: <strong>{$nyeri.lokasi}</strong> &nbsp;|&nbsp; Karakteristik: <strong>{$nyeri.karakteristik}</strong>
+                </td>
+            </tr>
+        </table>
+
+        <!-- PEMERIKSAAN PENUNJANG -->
+        <table class="table-content">
+            <tr>
+                <td colspan="2" class="sec-title">VII. PEMERIKSAAN PENUNJANG (RADIOLOGI / LABORATORIUM / HISTOPATOLOGI)</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="min-height: 45px;">
+                    <div style="white-space: pre-line;">{$data.pemeriksaan_penunjang}</div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- DIAGNOSIS & PROGNOSIS -->
+        <table class="table-content">
+            <tr>
+                <td colspan="2" class="sec-title">VIII. DIAGNOSIS DAN PROGNOSIS</td>
+            </tr>
+            <tr>
+                <td style="width: 70%;">
+                    <strong>Diagnosis Utama:</strong><br>
+                    <div style="font-size: 9pt; font-weight: bold; padding: 2px 0 4px 4px;">{$data.diagnosis_utama}</div>
+                    <strong>Diagnosis Sekunder / Komorbid:</strong><br>
+                    <div style="padding-left: 4px;">{$data.diagnosis_sekunder}</div>
+                </td>
+                <td style="width: 30%;">
+                    <strong>Prognosis:</strong><br>
+                    <div style="font-size: 9.5pt; font-weight: bold; padding-top: 5px;">{$data.prognosis}</div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- RENCANA TATA LAKSANA & EDUKASI -->
+        <table class="table-content">
+            <tr>
+                <td style="width: 50%;" class="sec-title">IX. RENCANA TATA LAKSANA / TINDAKAN / TERAPI</td>
+                <td style="width: 50%;" class="sec-title">X. RENCANA EDUKASI &amp; DISCHARGE PLANNING</td>
+            </tr>
+            <tr>
+                <td style="height: 75px;">
+                    <div style="white-space: pre-line;">{$data.rencana_tata_laksana}</div>
+                </td>
+                <td>
+                    <div style="white-space: pre-line;"><strong>Edukasi:</strong><br>{$data.rencana_edukasi}<br><br><strong>Discharge Planning:</strong><br>{$data.discharge_planning}</div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- TANDA TANGAN DPJP GIGI -->
+        <table class="table-content" style="border-top: none;">
+            <tr>
+                <td style="text-align: right; border-bottom: none; padding-right: 35px;">
+                    Banjarmasin, {$data.tgl_asesmen_indo} &nbsp;&nbsp; Pukul : {$data.jam_asesmen} WITA
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right; border-top: none; padding-right: 50px;">
+                    <strong>Dokter Penanggung Jawab Pelayanan (DPJP) Gigi</strong><br><br>
+                    {if: !empty($data.ttd_dokter)}
+                    <img src="{$data.ttd_dokter}" style="max-height: 55px;"><br>
+                    {else}
+                    <div style="height: 50px;"></div>
+                    {/if}
+                    ( <strong>{$data.nama_dokter}</strong> )<br>
+                    <span style="font-size: 7.5pt;">Tanda Tangan &amp; Nama Lengkap / SIP / Cap</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer-note">
+        <div style="float: left; font-size: 7pt;">RSGM/Ed-Rev/01/2020</div>
+        <div style="float: right; font-size: 7pt; font-style: italic;">Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas &nbsp; <b>RM.RI 05A Hal 2 - 2</b></div>
+    </div>
+</div>
+
+</body>
+</html>

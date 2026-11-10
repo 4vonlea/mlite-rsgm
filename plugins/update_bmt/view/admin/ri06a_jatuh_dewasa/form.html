@@ -1,0 +1,228 @@
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-male"></i> Form RM.RI 06A - Asesmen Risiko Jatuh Dewasa dan Geriatri Rawat Inap</h3>
+    </div>
+    <div class="panel-body">
+        <form action="{?=url([ADMIN, 'update_bmt', 'jatuhdewasasave'])?}" method="POST" id="formJatuhDewasa">
+            <input type="hidden" name="id" value="{$data.id}">
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>No. Rawat <span class="text-danger">*</span></label>
+                        <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required placeholder="Contoh: 2022/11/14/000001">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>No. RM &amp; Nama Pasien</label>
+                        <input type="text" id="info_pasien" class="form-control" value="{$data.no_rkm_medis} - {$data.nm_pasien}" readonly>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label>Tanggal</label>
+                        <input type="date" name="tanggal" class="form-control" value="{$data.tanggal}">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label>Jam</label>
+                        <input type="time" name="jam" class="form-control" value="{$data.jam}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Instalasi / Unit / Ruangan</label>
+                        <input type="text" name="instalasi_unit" class="form-control" value="{$data.instalasi_unit}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Petugas Pengkaji</label>
+                        <input type="text" name="petugas_nama" class="form-control" value="{$data.petugas_nama}" placeholder="Nama perawat / petugas...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- MORSE FALL SCALE (18-65 TAHUN) -->
+            <div class="panel panel-primary">
+                <div class="panel-heading"><h4 class="panel-title">Morse Fall Scale (18-65 Tahun)</h4></div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>1. Riwayat Jatuh</label>
+                                <select name="morse[riwayat_jatuh]" class="form-control calc-morse">
+                                    <option value="0" {if: $morse.riwayat_jatuh == 0}selected{/if}>Tidak (0)</option>
+                                    <option value="25" {if: $morse.riwayat_jatuh == 25}selected{/if}>Ya (25)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>2. Diagnosis Sekunder (&ge;2 diagnosis)</label>
+                                <select name="morse[diagnosis_sekunder]" class="form-control calc-morse">
+                                    <option value="0" {if: $morse.diagnosis_sekunder == 0}selected{/if}>Tidak (0)</option>
+                                    <option value="15" {if: $morse.diagnosis_sekunder == 15}selected{/if}>Ya (15)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>3. Alat Bantu</label>
+                                <select name="morse[alat_bantu]" class="form-control calc-morse">
+                                    <option value="0" {if: $morse.alat_bantu == 0}selected{/if}>Tidak ada/kursi roda/tirah baring (0)</option>
+                                    <option value="15" {if: $morse.alat_bantu == 15}selected{/if}>Tongkat / walker (15)</option>
+                                    <option value="30" {if: $morse.alat_bantu == 30}selected{/if}>Berpegangan pada perabot (30)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>4. Terpasang Infuse</label>
+                                <select name="morse[terpasang_infuse]" class="form-control calc-morse">
+                                    <option value="0" {if: $morse.terpasang_infuse == 0}selected{/if}>Tidak (0)</option>
+                                    <option value="20" {if: $morse.terpasang_infuse == 20}selected{/if}>Ya (20)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>5. Gaya Berjalan</label>
+                                <select name="morse[gaya_berjalan]" class="form-control calc-morse">
+                                    <option value="0" {if: $morse.gaya_berjalan == 0}selected{/if}>Normal / imobilisasi (0)</option>
+                                    <option value="10" {if: $morse.gaya_berjalan == 10}selected{/if}>Lemah (10)</option>
+                                    <option value="20" {if: $morse.gaya_berjalan == 20}selected{/if}>Terganggu (20)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>6. Status Mental</label>
+                                <select name="morse[status_mental]" class="form-control calc-morse">
+                                    <option value="0" {if: $morse.status_mental == 0}selected{/if}>Sadar kemampuan diri (0)</option>
+                                    <option value="15" {if: $morse.status_mental == 15}selected{/if}>Sering lupa keterbatasan (15)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="well well-sm">
+                        <strong>Total Skor Morse:</strong> <span id="morse_total_display" class="badge">{$data.morse_total}</span>
+                        <input type="hidden" name="morse_total" id="morse_total" value="{$data.morse_total}">
+                        <input type="hidden" name="morse_kategori" id="morse_kategori" value="{$data.morse_kategori}">
+                        <div id="morse_kategori_display" style="margin-top: 5px; font-weight: bold;">{$data.morse_kategori}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ONTARIO MODIFIED STRATIFY - SYDNEY SCORING (>= 65 TAHUN) -->
+            <div class="panel panel-info">
+                <div class="panel-heading"><h4 class="panel-title">Ontario Modified Stratify - Sydney Scoring (&ge;65 Tahun)</h4></div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Riwayat Jatuh (Ada/Ya = 6)</label>
+                                <select name="sydney[riwayat_jatuh]" class="form-control calc-sydney">
+                                    <option value="Tidak" {if: $sydney.riwayat_jatuh == 'Tidak'}selected{/if}>Tidak (0)</option>
+                                    <option value="Ya" {if: $sydney.riwayat_jatuh == 'Ya'}selected{/if}>Ya (6)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Status Mental (Delirium/Agitasi = 14)</label>
+                                <select name="sydney[status_mental]" class="form-control calc-sydney">
+                                    <option value="Tidak" {if: $sydney.status_mental == 'Tidak'}selected{/if}>Tidak (0)</option>
+                                    <option value="Ya" {if: $sydney.status_mental == 'Ya'}selected{/if}>Ya (14)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Penglihatan (Kacamata/Buram = 1)</label>
+                                <select name="sydney[penglihatan]" class="form-control calc-sydney">
+                                    <option value="Tidak" {if: $sydney.penglihatan == 'Tidak'}selected{/if}>Tidak (0)</option>
+                                    <option value="Ya" {if: $sydney.penglihatan == 'Ya'}selected{/if}>Ya (1)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Kebiasaan Berkemih (Ada gangguan = 2)</label>
+                                <select name="sydney[kebiasaan_berkemih]" class="form-control calc-sydney">
+                                    <option value="Tidak" {if: $sydney.kebiasaan_berkemih == 'Tidak'}selected{/if}>Tidak (0)</option>
+                                    <option value="Ya" {if: $sydney.kebiasaan_berkemih == 'Ya'}selected{/if}>Ya (2)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Transfer &amp; Mobilitas (Nilai gabungan 4-6 skor = 7)</label>
+                                <select name="sydney[transfer_mobilitas]" class="form-control calc-sydney">
+                                    <option value="0" {if: $sydney.transfer_mobilitas == 0}selected{/if}>Mandiri / Sedikit bantuan (Skor 0)</option>
+                                    <option value="7" {if: $sydney.transfer_mobilitas == 7}selected{/if}>Bantuan 2 orang / Kursi roda / Imobilisasi (Skor 7)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="well well-sm">
+                        <strong>Total Skor Sydney:</strong> <span id="sydney_total_display" class="badge">{$data.sydney_total}</span>
+                        <input type="hidden" name="sydney_total" id="sydney_total" value="{$data.sydney_total}">
+                        <input type="hidden" name="sydney_kategori" id="sydney_kategori" value="{$data.sydney_kategori}">
+                        <div id="sydney_kategori_display" style="margin-top: 5px; font-weight: bold;">{$data.sydney_kategori}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group text-right">
+                <a href="{?=url([ADMIN, 'update_bmt', 'jatuhdewasamanage'])?}" class="btn btn-default"><i class="fa fa-arrow-left"></i> Kembali</a>
+                <button type="submit" class="btn btn-success"><i class="fa fa-save"></i> Simpan Asesmen Risiko Jatuh</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    function hitungMorse() {
+        var tot = 0;
+        $('.calc-morse').each(function() {
+            tot += parseInt($(this).val()) || 0;
+        });
+        $('#morse_total_display').text(tot);
+        $('#morse_total').val(tot);
+        var kat = 'Risiko Rendah (RR)';
+        if (tot >= 45) kat = 'Risiko Tinggi (RT)';
+        else if (tot >= 25) kat = 'Risiko Sedang (RS)';
+        $('#morse_kategori').val(kat);
+        $('#morse_kategori_display').html('<span class="label ' + (tot >= 45 ? 'label-danger' : (tot >= 25 ? 'label-warning' : 'label-success')) + '">' + kat + '</span>');
+    }
+
+    function hitungSydney() {
+        var tot = 0;
+        if ($('select[name="sydney[riwayat_jatuh]"]').val() == 'Ya') tot += 6;
+        if ($('select[name="sydney[status_mental]"]').val() == 'Ya') tot += 14;
+        if ($('select[name="sydney[penglihatan]"]').val() == 'Ya') tot += 1;
+        if ($('select[name="sydney[kebiasaan_berkemih]"]').val() == 'Ya') tot += 2;
+        tot += parseInt($('select[name="sydney[transfer_mobilitas]"]').val()) || 0;
+
+        $('#sydney_total_display').text(tot);
+        $('#sydney_total').val(tot);
+        var kat = (tot >= 9) ? 'Berisiko Jatuh (Skor >= 9)' : 'Tidak Berisiko';
+        $('#sydney_kategori').val(kat);
+        $('#sydney_kategori_display').html('<span class="label ' + (tot >= 9 ? 'label-danger' : 'label-default') + '">' + kat + '</span>');
+    }
+
+    $('.calc-morse').change(hitungMorse);
+    $('.calc-sydney').change(hitungSydney);
+});
+</script>

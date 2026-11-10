@@ -92,10 +92,98 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label>Tgl Surat</label>
                                 <input type="date" name="tgl_surat" class="form-control" value="{$data.tgl_surat}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Pembuat Pernyataan</label>
+                                <input type="text" name="pembuat_pernyataan" class="form-control" value="{if: !empty($data.pembuat_pernyataan)}{$data.pembuat_pernyataan}{else}{$data.nama_pihak}{/if}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Saksi Rumah Sakit (Petugas RS)</label>
+                                <input type="text" name="saksi_rs" class="form-control f-saksi-rs" value="{$data.saksi_rs}" placeholder="Nama saksi dari pihak RS">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Saksi Pasien / Keluarga</label>
+                                <input type="text" name="saksi_pasien" class="form-control" value="{$data.saksi_pasien}" placeholder="Nama saksi dari pihak keluarga/pasien">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h4>Tanda Tangan Digital & Materai:</h4>
+                    <p class="text-muted"><i class="fa fa-info-circle"></i> Tanda tangan Pembuat Pernyataan dilengkapi stempel Materai 10.000 digital saat pencetakan formulir.</p>
+
+                    <input type="hidden" name="ttd_pembuat" id="input_ttd_pembuat" value="{$data.ttd_pembuat}">
+                    <input type="hidden" name="ttd_saksi_rs" id="input_ttd_saksi_rs" value="{$data.ttd_saksi_rs}">
+                    <input type="hidden" name="ttd_saksi_pasien" id="input_ttd_saksi_pasien" value="{$data.ttd_saksi_pasien}">
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="panel panel-info">
+                                <div class="panel-heading" style="padding: 6px 10px;">
+                                    <strong>TTD Pembuat Pernyataan (Materai 10.000)</strong>
+                                </div>
+                                <div class="panel-body text-center" style="padding: 10px;">
+                                    <div style="border: 1px dashed #3498db; background: #fafafa; border-radius: 4px; display: inline-block;">
+                                        <canvas id="pad_pembuat" width="280" height="130" style="touch-action: none; cursor: crosshair;"></canvas>
+                                    </div>
+                                    <div style="margin-top: 5px;">
+                                        <button type="button" class="btn btn-default btn-xs" id="clear_pembuat"><i class="fa fa-eraser"></i> Hapus Goresan</button>
+                                        <span id="st_pembuat" class="small text-muted" style="margin-left: 5px;">
+                                            {if: !empty($data.ttd_pembuat)}<i class="fa fa-check text-success"></i> Tersimpan{else}Belum ada{/if}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="panel panel-default">
+                                <div class="panel-heading" style="padding: 6px 10px;">
+                                    <strong>TTD Saksi Rumah Sakit</strong>
+                                </div>
+                                <div class="panel-body text-center" style="padding: 10px;">
+                                    <div style="border: 1px dashed #bdc3c7; background: #fafafa; border-radius: 4px; display: inline-block;">
+                                        <canvas id="pad_saksi_rs" width="280" height="130" style="touch-action: none; cursor: crosshair;"></canvas>
+                                    </div>
+                                    <div style="margin-top: 5px;">
+                                        <button type="button" class="btn btn-default btn-xs" id="clear_saksi_rs"><i class="fa fa-eraser"></i> Hapus Goresan</button>
+                                        <span id="st_saksi_rs" class="small text-muted" style="margin-left: 5px;">
+                                            {if: !empty($data.ttd_saksi_rs)}<i class="fa fa-check text-success"></i> Tersimpan{else}Belum ada{/if}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="panel panel-default">
+                                <div class="panel-heading" style="padding: 6px 10px;">
+                                    <strong>TTD Saksi Pasien</strong>
+                                </div>
+                                <div class="panel-body text-center" style="padding: 10px;">
+                                    <div style="border: 1px dashed #bdc3c7; background: #fafafa; border-radius: 4px; display: inline-block;">
+                                        <canvas id="pad_saksi_pasien" width="280" height="130" style="touch-action: none; cursor: crosshair;"></canvas>
+                                    </div>
+                                    <div style="margin-top: 5px;">
+                                        <button type="button" class="btn btn-default btn-xs" id="clear_saksi_pasien"><i class="fa fa-eraser"></i> Hapus Goresan</button>
+                                        <span id="st_saksi_pasien" class="small text-muted" style="margin-left: 5px;">
+                                            {if: !empty($data.ttd_saksi_pasien)}<i class="fa fa-check text-success"></i> Tersimpan{else}Belum ada{/if}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -166,5 +254,68 @@ $('#selaku_pihak').change(function() {
         }
     }
 });
+
+// Helper canvas signature pad
+function initSigPad(canvasId, inputId, clearBtnId, statusId, existingData) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var drawing = false;
+    var prevX = 0, prevY = 0;
+
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+
+    if (existingData && existingData.indexOf('data:image') === 0) {
+        var img = new Image();
+        img.onload = function() {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+        img.src = existingData;
+    }
+
+    function getPos(c, e) {
+        var rect = c.getBoundingClientRect();
+        var clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        var clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        return {
+            x: (clientX - rect.left) * (c.width / rect.width),
+            y: (clientY - rect.top) * (c.height / rect.height)
+        };
+    }
+
+    function start(x, y) { drawing = true; prevX = x; prevY = y; }
+    function draw(x, y) {
+        if (!drawing) return;
+        ctx.beginPath();
+        ctx.moveTo(prevX, prevY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        prevX = x; prevY = y;
+        $('#' + inputId).val(canvas.toDataURL('image/png'));
+        $('#' + statusId).html('<i class="fa fa-pencil text-primary"></i> Goresan aktif');
+    }
+    function stop() { drawing = false; }
+
+    $(canvas).on('mousedown', function(e) { var p = getPos(canvas, e.originalEvent); start(p.x, p.y); });
+    $(canvas).on('mousemove', function(e) { var p = getPos(canvas, e.originalEvent); draw(p.x, p.y); });
+    $(window).on('mouseup', stop);
+
+    canvas.addEventListener('touchstart', function(e) { e.preventDefault(); var p = getPos(canvas, e); start(p.x, p.y); }, { passive: false });
+    canvas.addEventListener('touchmove', function(e) { e.preventDefault(); var p = getPos(canvas, e); draw(p.x, p.y); }, { passive: false });
+    canvas.addEventListener('touchend', stop);
+
+    $('#' + clearBtnId).click(function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        $('#' + inputId).val('');
+        $('#' + statusId).html('<span class="text-danger">Dihapus</span>');
+    });
+}
+
+initSigPad('pad_pembuat', 'input_ttd_pembuat', 'clear_pembuat', 'st_pembuat', '{$data.ttd_pembuat}');
+initSigPad('pad_saksi_rs', 'input_ttd_saksi_rs', 'clear_saksi_rs', 'st_saksi_rs', '{$data.ttd_saksi_rs}');
+initSigPad('pad_saksi_pasien', 'input_ttd_saksi_pasien', 'clear_saksi_pasien', 'st_saksi_pasien', '{$data.ttd_saksi_pasien}');
 
 </script>

@@ -255,16 +255,28 @@
   <tr><td colspan="2" class="sec">Serah Terima Pasien</td></tr>
   <tr><td colspan="2">Waktu serah terima<br>Tanggal : {?=$p['waktu_serah_tgl']?} &nbsp;&nbsp; Jam : {?=$p['waktu_serah_jam']?} WITA</td></tr>
   <tr>
-    <td>
+    <td style="text-align:center;">
       Petugas yang menyerahkan
-      <div style="text-align:center; margin-top:14px;">Petugas Medis</div>
-      <div style="height:48px;"></div>
+      <div style="text-align:center; margin-top:8px;">Petugas Medis</div>
+      <div style="height:60px; display:flex; align-items:center; justify-content:center;">
+        {if: !empty($p['ttd_menyerahkan'])}
+          <img src="{?=$p['ttd_menyerahkan']?}" style="max-height:55px; max-width:130px; object-fit:contain;">
+        {else}
+          <div style="height:50px;"></div>
+        {/if}
+      </div>
       <div style="text-align:center;">( {?=$p['petugas_menyerahkan'] ?? '..............................'?} )<br><span style="font-size:9px;">Tanda tangan &amp; nama terang</span></div>
     </td>
-    <td>
+    <td style="text-align:center;">
       Petugas yang menerima
-      <div style="text-align:center; margin-top:14px;">Petugas medis</div>
-      <div style="height:48px;"></div>
+      <div style="text-align:center; margin-top:8px;">Petugas medis</div>
+      <div style="height:60px; display:flex; align-items:center; justify-content:center;">
+        {if: !empty($p['ttd_menerima'])}
+          <img src="{?=$p['ttd_menerima']?}" style="max-height:55px; max-width:130px; object-fit:contain;">
+        {else}
+          <div style="height:50px;"></div>
+        {/if}
+      </div>
       <div style="text-align:center;">( {?=$p['petugas_menerima'] ?? '..............................'?} )<br><span style="font-size:9px;">Tanda tangan &amp; nama terang</span></div>
     </td>
   </tr>

@@ -1,0 +1,130 @@
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-heartbeat"></i> Form RM.RI 07 - Observasi Pasien Rawat Inap</h3>
+    </div>
+    <div class="panel-body">
+        <form action="{?=url([ADMIN, 'update_bmt', 'riobservasisave'])?}" method="POST" id="formObservasi">
+            <input type="hidden" name="id" value="{$data.id}">
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>No. Rawat <span class="text-danger">*</span></label>
+                        <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required placeholder="Contoh: 2022/11/14/000001">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>No. RM &amp; Nama Pasien</label>
+                        <input type="text" id="info_pasien" class="form-control" value="{$data.no_rkm_medis} - {$data.nm_pasien}" readonly>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label>Tgl Masuk</label>
+                        <input type="date" name="tgl_masuk" class="form-control" value="{$data.tgl_masuk}">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label>Jam Masuk</label>
+                        <input type="time" name="jam_masuk" class="form-control" value="{$data.jam_masuk}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Perawat Jaga (Penanggung Jawab)</label>
+                        <input type="text" name="perawat_jaga" class="form-control" value="{$data.perawat_jaga}" placeholder="Nama perawat jaga...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABEL DETAIL OBSERVASI -->
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h4 class="panel-title">Tabel Pemantauan / Observasi Pasien</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="tblObs">
+                            <thead>
+                                <tr class="active">
+                                    <th width="120">Tanggal</th>
+                                    <th width="80">Jam</th>
+                                    <th width="90">KU</th>
+                                    <th width="90">Kesadaran</th>
+                                    <th width="90">Tensi</th>
+                                    <th width="70">Nadi</th>
+                                    <th width="70">Nafas</th>
+                                    <th width="70">Suhu</th>
+                                    <th width="70">SaO2</th>
+                                    <th>Masalah</th>
+                                    <th>Intervensi</th>
+                                    <th width="100">Petugas</th>
+                                    <th width="40"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loop: $obs_list}
+                                <tr>
+                                    <td><input type="date" name="obs[{$key}][tgl]" class="form-control input-sm" value="{$value.tgl}"></td>
+                                    <td><input type="text" name="obs[{$key}][jam]" class="form-control input-sm" value="{$value.jam}"></td>
+                                    <td><input type="text" name="obs[{$key}][ku]" class="form-control input-sm" value="{$value.ku}"></td>
+                                    <td><input type="text" name="obs[{$key}][kesadaran]" class="form-control input-sm" value="{$value.kesadaran}"></td>
+                                    <td><input type="text" name="obs[{$key}][tensi]" class="form-control input-sm" value="{$value.tensi}"></td>
+                                    <td><input type="text" name="obs[{$key}][nadi]" class="form-control input-sm" value="{$value.nadi}"></td>
+                                    <td><input type="text" name="obs[{$key}][nafas]" class="form-control input-sm" value="{$value.nafas}"></td>
+                                    <td><input type="text" name="obs[{$key}][suhu]" class="form-control input-sm" value="{$value.suhu}"></td>
+                                    <td><input type="text" name="obs[{$key}][sao2]" class="form-control input-sm" value="{$value.sao2}"></td>
+                                    <td><input type="text" name="obs[{$key}][masalah]" class="form-control input-sm" value="{$value.masalah}"></td>
+                                    <td><input type="text" name="obs[{$key}][intervensi]" class="form-control input-sm" value="{$value.intervensi}"></td>
+                                    <td><input type="text" name="obs[{$key}][petugas]" class="form-control input-sm" value="{$value.petugas}"></td>
+                                    <td><button type="button" class="btn btn-xs btn-danger btn-del"><i class="fa fa-trash"></i></button></td>
+                                </tr>
+                                {/loop}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-info" id="btnAddRow"><i class="fa fa-plus"></i> Tambah Baris Observasi</button>
+                </div>
+            </div>
+
+            <div class="form-group text-right">
+                <a href="{?=url([ADMIN, 'update_bmt', 'riobservasimanage'])?}" class="btn btn-default"><i class="fa fa-arrow-left"></i> Kembali</a>
+                <button type="submit" class="btn btn-success"><i class="fa fa-save"></i> Simpan Lembar Observasi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    var rowCount = $('#tblObs tbody tr').length;
+    $('#btnAddRow').click(function() {
+        var tr = '<tr>' +
+            '<td><input type="date" name="obs[' + rowCount + '][tgl]" class="form-control input-sm" value="' + new Date().toISOString().slice(0, 10) + '"></td>' +
+            '<td><input type="text" name="obs[' + rowCount + '][jam]" class="form-control input-sm" value="' + new Date().toTimeString().slice(0, 5) + '"></td>' +
+            '<td><input type="text" name="obs[' + rowCount + '][ku]" class="form-control input-sm" value="Baik"></td>' +
+            '<td><input type="text" name="obs[' + rowCount + '][kesadaran]" class="form-control input-sm" value="CM"></td>' +
+            '<td><input type="text" name="obs[' + rowCount + '][tensi]" class="form-control input-sm" value="120/80"></td>' +
+            '<td><input type="text" name="obs[' + rowCount + '][nadi]" class="form-control input-sm" value="80"></td>' +
+            '<td><input type="text" name="obs[' + rowCount + '][nafas]" class="form-control input-sm" value="18"></td>' +
+            '<td><input type="text" name="obs[' + rowCount + '][suhu]" class="form-control input-sm" value="36.5"></td>' +
+            '<td><input type="text" name="obs[' + rowCount + '][sao2]" class="form-control input-sm" value="-"></td>' +
+            '<td><input type="text" name="obs[' + rowCount + '][masalah]" class="form-control input-sm" value="-"></td>' +
+            '<td><input type="text" name="obs[' + rowCount + '][intervensi]" class="form-control input-sm" value="-"></td>' +
+            '<td><input type="text" name="obs[' + rowCount + '][petugas]" class="form-control input-sm"></td>' +
+            '<td><button type="button" class="btn btn-xs btn-danger btn-del"><i class="fa fa-trash"></i></button></td>' +
+            '</tr>';
+        $('#tblObs tbody').append(tr);
+        rowCount++;
+    });
+
+    $(document).on('click', '.btn-del', function() {
+        $(this).closest('tr').remove();
+    });
+});
+</script>

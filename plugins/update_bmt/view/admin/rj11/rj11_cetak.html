@@ -290,8 +290,13 @@
                 Dengan ini menyatakan bahwa saya telah menerangkan hal-hal di atas secara benar dan jujur dan memberikan kesempatan untuk bertanya dan/atau berdiskusi
             </td>
             <td style="border-right:none; text-align:center; vertical-align:top;">
-                Tandatangan pemberi informasi<br><br><br>
-                {$d.form_data.ttd_pemberi}
+                Tandatangan pemberi informasi<br>
+                {if: !empty($d.form_data.ttd_pemberi)}
+                    <img src="{$d.form_data.ttd_pemberi}" style="max-height:50px; max-width:110px; object-fit:contain; display:block; margin:2px auto;">
+                {else}
+                    <br><br>
+                {/if}
+                <div style="font-size:10px;">{if: !empty($d.form_data.pemberi_info)}{$d.form_data.pemberi_info}{/if}</div>
             </td>
         </tr>
         <tr>
@@ -299,8 +304,13 @@
                 Dengan ini menyatakan bahwa saya telah menerima informasi sebagaimana di atas yang saya beri tanda/paraf di kolom kanannya, dan telah memahaminya
             </td>
             <td style="border-right:none; text-align:center; vertical-align:top;">
-                Tandatangan penerima informasi<br><br><br>
-                {$d.form_data.ttd_penerima}
+                Tandatangan penerima informasi<br>
+                {if: !empty($d.form_data.ttd_penerima)}
+                    <img src="{$d.form_data.ttd_penerima}" style="max-height:50px; max-width:110px; object-fit:contain; display:block; margin:2px auto;">
+                {else}
+                    <br><br>
+                {/if}
+                <div style="font-size:10px;">{if: !empty($d.form_data.penerima_info)}{$d.form_data.penerima_info}{/if}</div>
             </td>
         </tr>
         <tr>
@@ -322,20 +332,74 @@
         Saya bertanggung jawab penuh atas segala akibat yang mungkin timbul sebagai akibat tidak dilakukannya pengobatan tersebut.
         
         <br><br>
-        Yang menyatakan <br>
-        Banjarmasin, ........................................... <span style="display:inline-block; border-bottom:1px dotted #000; min-width:100px; text-align:center;">{if: ($d.form_data.tolak_tgl)}{?=date('d-m-Y', strtotime($d.form_data.tolak_tgl))?}{/if}</span> ........................................... 
-
-        <div class="ttd-section">
-            <div class="ttd-box">
-                <br><br><br><br>
-                ( .................... {$d.form_data.tolak_menyatakan} .................... )<br>
-                <div style="font-size:8px; text-align:left; margin-top:5px;">(*coret yang tidak perlu)</div>
-            </div>
-            <div class="ttd-box">
-                Saksi:<br><br><br><br>
-                ( ........... {$d.form_data.tolak_saksi1} ........... ) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ( ........... {$d.form_data.tolak_saksi2} ........... )
-            </div>
+        <div style="text-align: right; padding-right: 30px;">
+            Banjarmasin, ........................................... <span style="display:inline-block; border-bottom:1px dotted #000; min-width:100px; text-align:center;">{if: ($d.form_data.tolak_tgl)}{?=date('d-m-Y', strtotime($d.form_data.tolak_tgl))?}{/if}</span> ........................................... 
         </div>
+
+        <table style="width:100%; border-collapse:collapse; margin-top:15px; text-align:center;">
+            <tr>
+                <td style="width:50%; vertical-align:top; border:none;">
+                    Yang menyatakan
+                </td>
+                <td style="width:50%; vertical-align:top; border:none;">
+                    Saksi :
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align:middle; height:85px; border:none;">
+                    <div style="position: relative; display: inline-block; min-width: 120px; min-height: 70px;">
+                        <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); border: 1.5px dashed #c0392b; background: rgba(231,76,60,0.06); padding: 3px 6px; border-radius: 4px; color: #c0392b; font-size: 8px; font-weight: bold; text-align: center; line-height: 1.1; z-index: 1;">
+                            <span style="font-size: 6px; display: block; color: #7f8c8d;">BEA METERAI</span>
+                            METERAI TEMPEL<br>
+                            <span style="font-size: 10px; font-weight: 900; color: #c0392b;">10000</span>
+                        </div>
+                        {if: !empty($d.form_data.ttd_tolak_menyatakan)}
+                            <img src="{$d.form_data.ttd_tolak_menyatakan}" style="position: relative; z-index: 2; max-height: 75px; max-width: 130px; object-fit: contain;">
+                        {else}
+                            <div style="height: 65px;"></div>
+                        {/if}
+                    </div>
+                </td>
+                <td style="vertical-align:middle; height:85px; border:none;">
+                    <table style="width:100%; border:none;">
+                        <tr>
+                            <td style="width:50%; text-align:center; border:none; padding:0;">
+                                {if: !empty($d.form_data.ttd_tolak_saksi1)}
+                                    <img src="{$d.form_data.ttd_tolak_saksi1}" style="max-height: 65px; max-width: 110px; object-fit: contain;">
+                                {else}
+                                    <div style="height: 55px;"></div>
+                                {/if}
+                            </td>
+                            <td style="width:50%; text-align:center; border:none; padding:0;">
+                                {if: !empty($d.form_data.ttd_tolak_saksi2)}
+                                    <img src="{$d.form_data.ttd_tolak_saksi2}" style="max-height: 65px; max-width: 110px; object-fit: contain;">
+                                {else}
+                                    <div style="height: 55px;"></div>
+                                {/if}
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td style="border:none; padding-top:2px;">
+                    ( .................... {if: !empty($d.form_data.tolak_menyatakan)}{$d.form_data.tolak_menyatakan}{else}....................{/if} .................... )<br>
+                    <div style="font-size:8px; text-align:center; margin-top:2px;">(*coret yang tidak perlu)</div>
+                </td>
+                <td style="border:none; padding-top:2px;">
+                    <table style="width:100%; border:none;">
+                        <tr>
+                            <td style="width:50%; text-align:center; border:none; padding:0;">
+                                ( {if: !empty($d.form_data.tolak_saksi1)}{$d.form_data.tolak_saksi1}{else}....................{/if} )
+                            </td>
+                            <td style="width:50%; text-align:center; border:none; padding:0;">
+                                ( {if: !empty($d.form_data.tolak_saksi2)}{$d.form_data.tolak_saksi2}{else}....................{/if} )
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
     </div>
   </div>
   <div class="footer-bottom">

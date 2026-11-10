@@ -1,0 +1,72 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Kelola Formulir Rujukan Komunikasi Antar RS (AKP 5.4 - 5.6)</h3>
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'formulirrujukanmanage'])?}">Kelola Data</a></li>
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'formulirrujukanform'])?}">Tambah Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <div class="row" style="margin-bottom: 15px;">
+                    <div class="col-md-6">
+                        <a href="{?=url([ADMIN, 'update_bmt', 'formulirrujukanform'])?}" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Formulir Rujukan RS</a>
+                    </div>
+                    <div class="col-md-6">
+                        <form method="GET" action="{?=url([ADMIN, 'update_bmt', 'formulirrujukanmanage'])?}" class="form-inline pull-right">
+                            <input type="hidden" name="t" value="{?=$_GET['t'] ?? ''?}">
+                            <div class="input-group">
+                                <input type="text" name="cari" class="form-control" placeholder="Cari No. Rawat / RM / Nama / RS..." value="{$cari}">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="submit"><i class="fa fa-search"></i></button>
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th width="4%">No</th>
+                                <th width="14%">No. Rawat</th>
+                                <th width="9%">No. RM</th>
+                                <th width="18%">Nama Pasien</th>
+                                <th width="18%">RS / Tujuan Rujukan</th>
+                                <th width="18%">Diagnosis</th>
+                                <th width="9%">Petugas Terima</th>
+                                <th width="10%">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {if: !empty($data)}
+                            {loop: $data}
+                            <tr>
+                                <td>{$value.nomor}</td>
+                                <td>{$value.no_rawat}</td>
+                                <td>{$value.no_rkm_medis}</td>
+                                <td><strong>{$value.nm_pasien}</strong></td>
+                                <td>{$value.kepada_yth}<br><small class="text-muted">{$value.rs_instansi}</small></td>
+                                <td>{$value.diagnosis}</td>
+                                <td>{$value.petugas_penerima}</td>
+                                <td>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'formulirrujukancetak', 'id=' . $value.id])?}" target="_blank" class="btn btn-xs btn-info" title="Cetak"><i class="fa fa-print"></i> Cetak</a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'formulirrujukanform', 'id=' . $value.id])?}" class="btn btn-xs btn-warning" title="Edit"><i class="fa fa-edit"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'formulirrujukanhapus', 'id=' . $value.id])?}" class="btn btn-xs btn-danger" onclick="return confirm('Yakin ingin menghapus data rujukan ini?');" title="Hapus"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {/loop}
+                            {else}
+                            <tr>
+                                <td colspan="8" class="text-center">Belum ada data Formulir Rujukan Komunikasi Antar RS.</td>
+                            </tr>
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</article>

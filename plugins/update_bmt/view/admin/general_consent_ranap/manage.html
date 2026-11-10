@@ -1,0 +1,75 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="btn-group pull-right" style="margin-top:-5px;">
+                    <a href="{?=url([ADMIN, 'update_bmt', 'generalconsentform'])?}" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Tambah General Consent</a>
+                </div>
+                <h3 class="panel-title"><i class="fa fa-file-text-o"></i> <strong>GENERAL CONSENT / PERSETUJUAN UMUM RAWAT INAP & PENJELASAN PERKIRAAN BIAYA (AKP 2 EP C)</strong></h3>
+            </div>
+            <div class="panel-body">
+                <form method="GET" action="{?=url([ADMIN, 'update_bmt', 'generalconsentmanage'])?}" class="form-inline m-b-md">
+                    <div class="form-group">
+                        <input type="text" name="cari" class="form-control input-sm" placeholder="No. Rawat / No. RM / Nama" value="{$cari}">
+                    </div>
+                    <button type="submit" class="btn btn-default btn-sm"><i class="fa fa-search"></i> Cari</button>
+                    {if: !empty($cari)}
+                    <a href="{?=url([ADMIN, 'update_bmt', 'generalconsentmanage'])?}" class="btn btn-link btn-sm">Reset</a>
+                    {/if}
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover">
+                        <thead>
+                            <tr class="info">
+                                <th width="4%" class="text-center">No</th>
+                                <th width="14%">No. Rawat</th>
+                                <th width="10%">No. RM</th>
+                                <th width="16%">Nama Pasien</th>
+                                <th width="12%">Penjaminan</th>
+                                <th width="12%">Pilihan Kelas</th>
+                                <th width="12%">Perkiraan Biaya</th>
+                                <th width="8%" class="text-center">TTD Digital</th>
+                                <th width="12%" class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {if: !empty($data)}
+                            {loop: $data}
+                            <tr>
+                                <td class="text-center">{$key + 1}</td>
+                                <td><strong>{$value.no_rawat}</strong></td>
+                                <td>{$value.no_rkm_medis}</td>
+                                <td>{$value.nama_pasien}</td>
+                                <td><span class="label label-info">{$value.jenis_penjaminan}</span></td>
+                                <td><strong>{$value.pilihan_kelas_kamar}</strong></td>
+                                <td>Rp {?=number_format($value.total_perkiraan_biaya, 0, ',', '.')?}</td>
+                                <td class="text-center">
+                                    {if: !empty($value.ttd_pasien)}
+                                    <span class="label label-success" title="TTD Digital Tersimpan"><i class="fa fa-check"></i> Ada</span>
+                                    {else}
+                                    <span class="label label-default">Belum</span>
+                                    {/if}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-xs">
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'generalconsentcetak'])?}?id={$value.id}" target="_blank" class="btn btn-default" title="Cetak HTML"><i class="fa fa-print"></i></a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'generalconsentcetak'])?}?id={$value.id}&pdf=1" target="_blank" class="btn btn-danger" title="Download PDF"><i class="fa fa-file-pdf-o"></i></a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'generalconsentform'])?}?id={$value.id}" class="btn btn-warning" title="Edit Data"><i class="fa fa-edit"></i></a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'generalconsenthapus'])?}?id={$value.id}" onclick="return confirm('Hapus dokumen General Consent ini?')" class="btn btn-danger" title="Hapus Data"><i class="fa fa-trash"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {/loop}
+                            {else}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted">Belum ada data General Consent Rawat Inap.</td>
+                            </tr>
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

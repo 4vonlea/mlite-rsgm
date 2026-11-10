@@ -9,7 +9,17 @@
 <div id="display_icd">
   {include: ../plugins/dokter_igd/view/admin/display.icd.html}
 </div>
-<h4>Rincian Riwayat</h4>
+<div class="row m-b-sm">
+  <div class="col-xs-6">
+    <h4 style="margin: 5px 0;"><strong>Catatan Perkembangan Pasien Terintegrasi (CPPT)</strong></h4>
+  </div>
+  <div class="col-xs-6 text-right">
+    {if: !empty($pemeriksaan[0]['no_rawat'])}
+    <a href="{?=url([ADMIN, 'update_bmt', 'cpptcetak', '?no_rawat='.$pemeriksaan[0]['no_rawat']])?}" target="_blank" class="btn btn-sm btn-success"><i class="fa fa-print"></i> Cetak Lembar CPPT</a>
+    <a href="{?=url([ADMIN, 'update_bmt', 'cpptcetak', '?no_rawat='.$pemeriksaan[0]['no_rawat'].'&pdf=1'])?}" target="_blank" class="btn btn-sm btn-danger"><i class="fa fa-file-pdf-o"></i> Unduh PDF CPPT</a>
+    {/if}
+  </div>
+</div>
 <div class="table-responsive no-margin">
   <table class="table table-bordered no-padding" width="100%">
     <thead>

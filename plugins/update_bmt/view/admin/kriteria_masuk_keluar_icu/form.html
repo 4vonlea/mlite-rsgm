@@ -1,0 +1,498 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="btn-group pull-right" style="margin-top:-5px;">
+                    <a href="{?=url([ADMIN, 'update_bmt', 'kriteriaicumanage'])?}" class="btn btn-default btn-sm"><i class="fa fa-arrow-left"></i> Kembali ke Daftar</a>
+                </div>
+                <h3 class="panel-title"><i class="fa fa-pencil-square-o"></i> <strong>FORMULIR KRITERIA MASUK DAN KELUAR RUANG RAWAT INTENSIF (ICU) - AKP 1.2 EP C</strong></h3>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'update_bmt', 'kriteriaicusave'])?}" method="POST" class="form-horizontal">
+                    <input type="hidden" name="id" value="{$data.id}">
+
+                    <!-- IDENTITAS PASIEN -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading"><strong>IDENTITAS PASIEN & ADMISI ICU</strong></div>
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">No. Rawat</label>
+                                <div class="col-sm-4">
+                                    <div class="input-group">
+                                        <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required placeholder="202X/XX/XX/XXXXXX">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default" type="button" id="btn_cari_pasien"><i class="fa fa-search"></i> Cari</button>
+                                        </span>
+                                    </div>
+                                </div>
+                                <label class="col-sm-2 control-label">No. RM</label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Nama Pasien</label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="nama_pasien" id="nama_pasien" class="form-control" value="{$data.nama_pasien}" readonly>
+                                </div>
+                                <label class="col-sm-2 control-label">Jenis Kelamin / Tgl Lahir</label>
+                                <div class="col-sm-2">
+                                    <input type="text" name="jk" id="jk" class="form-control" value="{$data.jk}" readonly>
+                                </div>
+                                <div class="col-sm-2">
+                                    <input type="text" name="tgl_lahir" id="tgl_lahir" class="form-control" value="{$data.tgl_lahir}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TABS: MASUK ICU vs KELUAR ICU -->
+                    <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 20px;">
+                        <li role="presentation" class="active"><a href="#tab_masuk_icu" aria-controls="tab_masuk_icu" role="tab" data-toggle="tab"><i class="fa fa-sign-in text-danger"></i> <strong>BAGIAN 1: KRITERIA MASUK ICU (AKP 1.2 EP C)</strong></a></li>
+                        <li role="presentation"><a href="#tab_keluar_icu" aria-controls="tab_keluar_icu" role="tab" data-toggle="tab"><i class="fa fa-sign-out text-success"></i> <strong>BAGIAN 2: KRITERIA KELUAR ICU / TRANSFER RANAP</strong></a></li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <!-- TAB 1: MASUK ICU -->
+                        <div role="tabpanel" class="tab-pane active" id="tab_masuk_icu">
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>DATA PENILAIAN MASUK ICU</strong></div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Tanggal / Jam Penilaian</label>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="tgl_penilaian_masuk" class="form-control" value="{$data.tgl_penilaian_masuk}" placeholder="HH:MM WITA / DD-MM-YYYY">
+                                        </div>
+                                        <label class="col-sm-2 control-label">Asal Unit</label>
+                                        <div class="col-sm-4">
+                                            <label class="radio-inline"><input type="radio" name="asal_unit_masuk" value="UGD" {if: $data.asal_unit_masuk == 'UGD'}checked{/if}> UGD</label>
+                                            <label class="radio-inline"><input type="radio" name="asal_unit_masuk" value="Rawat Inap" {if: $data.asal_unit_masuk == 'Rawat Inap'}checked{/if}> Rawat Inap</label>
+                                            <label class="radio-inline"><input type="radio" name="asal_unit_masuk" value="Kamar Operasi" {if: $data.asal_unit_masuk == 'Kamar Operasi'}checked{/if}> Kamar Operasi</label>
+                                            <label class="radio-inline"><input type="radio" name="asal_unit_masuk" value="Lainnya" {if: $data.asal_unit_masuk == 'Lainnya'}checked{/if}> Lainnya</label>
+                                            <input type="text" name="asal_unit_lainnya" class="form-control input-sm m-t-xs" placeholder="Jika lainnya, sebutkan..." value="{$data.asal_unit_lainnya}">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">DPJP</label>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="dpjp_masuk" class="form-control" value="{$data.dpjp_masuk}" placeholder="Nama DPJP">
+                                        </div>
+                                        <label class="col-sm-2 control-label">Dokter Penilai ICU</label>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="dokter_penilai_icu" class="form-control" value="{$data.dokter_penilai_icu}" placeholder="Nama Dokter Penilai ICU">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Diagnosis Utama / Indikasi</label>
+                                        <div class="col-sm-10">
+                                            <textarea name="diagnosis_indikasi_masuk" class="form-control" rows="2" placeholder="Diagnosis atau indikasi masuk ICU...">{$data.diagnosis_indikasi_masuk}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- A. PENILAIAN KLINIS AWAL -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>A. PENILAIAN KLINIS AWAL / KONDISI PASIEN</strong></div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">GCS (E / V / M)</label>
+                                        <div class="col-sm-1">
+                                            <input type="text" name="gcs_e" class="form-control" placeholder="E" value="{$data.gcs_e}">
+                                        </div>
+                                        <div class="col-sm-1">
+                                            <input type="text" name="gcs_v" class="form-control" placeholder="V" value="{$data.gcs_v}">
+                                        </div>
+                                        <div class="col-sm-2">
+                                            <input type="text" name="gcs_m" class="form-control" placeholder="M" value="{$data.gcs_m}">
+                                        </div>
+                                        <label class="col-sm-2 control-label">Tekanan Darah & MAP</label>
+                                        <div class="col-sm-2">
+                                            <div class="input-group">
+                                                <input type="text" name="td_sistolik_masuk" class="form-control" placeholder="Sis" value="{$data.td_sistolik_masuk}">
+                                                <span class="input-group-addon">/</span>
+                                                <input type="text" name="td_diastolik_masuk" class="form-control" placeholder="Dia" value="{$data.td_diastolik_masuk}">
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-2">
+                                            <input type="text" name="map_masuk" class="form-control" placeholder="MAP (mmHg)" value="{$data.map_masuk}">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Frekuensi Napas (RR)</label>
+                                        <div class="col-sm-4">
+                                            <div class="input-group">
+                                                <input type="text" name="rr_masuk" class="form-control" value="{$data.rr_masuk}">
+                                                <span class="input-group-addon">x/menit</span>
+                                            </div>
+                                        </div>
+                                        <label class="col-sm-2 control-label">Nadi (HR)</label>
+                                        <div class="col-sm-4">
+                                            <div class="input-group">
+                                                <input type="text" name="hr_masuk" class="form-control" value="{$data.hr_masuk}">
+                                                <span class="input-group-addon">x/menit</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">SpO<sub>2</sub> & Oksigen</label>
+                                        <div class="col-sm-2">
+                                            <div class="input-group">
+                                                <input type="text" name="spo2_masuk" class="form-control" placeholder="SpO2" value="{$data.spo2_masuk}">
+                                                <span class="input-group-addon">%</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-2">
+                                            <div class="input-group">
+                                                <input type="text" name="o2_masuk" class="form-control" placeholder="O2" value="{$data.o2_masuk}">
+                                                <span class="input-group-addon">L/m</span>
+                                            </div>
+                                        </div>
+                                        <label class="col-sm-2 control-label">Suhu</label>
+                                        <div class="col-sm-4">
+                                            <div class="input-group">
+                                                <input type="text" name="suhu_masuk" class="form-control" value="{$data.suhu_masuk}">
+                                                <span class="input-group-addon">°C</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Jalan Napas</label>
+                                        <div class="col-sm-4">
+                                            <label class="radio-inline"><input type="radio" name="jalan_napas_masuk" value="Paten" {if: $data.jalan_napas_masuk == 'Paten'}checked{/if}> Paten</label>
+                                            <label class="radio-inline"><input type="radio" name="jalan_napas_masuk" value="Terancam" {if: $data.jalan_napas_masuk == 'Terancam'}checked{/if}> Terancam</label>
+                                            <label class="radio-inline"><input type="radio" name="jalan_napas_masuk" value="ETT" {if: $data.jalan_napas_masuk == 'ETT'}checked{/if}> ETT</label>
+                                        </div>
+                                        <label class="col-sm-2 control-label">Sirkulasi</label>
+                                        <div class="col-sm-4">
+                                            <label class="radio-inline"><input type="radio" name="sirkulasi_masuk" value="Stabil" {if: $data.sirkulasi_masuk == 'Stabil'}checked{/if}> Stabil</label>
+                                            <label class="radio-inline"><input type="radio" name="sirkulasi_masuk" value="Syok" {if: $data.sirkulasi_masuk == 'Syok'}checked{/if}> Syok</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Ventilasi</label>
+                                        <div class="col-sm-4">
+                                            <label class="radio-inline"><input type="radio" name="ventilasi_masuk" value="Spontan" {if: $data.ventilasi_masuk == 'Spontan'}checked{/if}> Spontan</label>
+                                            <label class="radio-inline"><input type="radio" name="ventilasi_masuk" value="NIV" {if: $data.ventilasi_masuk == 'NIV'}checked{/if}> NIV</label>
+                                            <label class="radio-inline"><input type="radio" name="ventilasi_masuk" value="Ventilator" {if: $data.ventilasi_masuk == 'Ventilator'}checked{/if}> Ventilator</label>
+                                        </div>
+                                        <label class="col-sm-2 control-label">Vasopresor / Inotropik</label>
+                                        <div class="col-sm-4">
+                                            <label class="radio-inline"><input type="radio" name="vasopresor_masuk" value="Tidak" {if: $data.vasopresor_masuk == 'Tidak'}checked{/if}> Tidak</label>
+                                            <label class="radio-inline"><input type="radio" name="vasopresor_masuk" value="Ya" {if: $data.vasopresor_masuk == 'Ya'}checked{/if}> Ya</label>
+                                            <input type="text" name="vasopresor_ket" class="form-control input-sm m-t-xs" placeholder="Jika Ya, sebutkan..." value="{$data.vasopresor_ket}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- B. SKRINING KEBUTUHAN ICU -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>B. SKRINING KEBUTUHAN ICU (centang yang sesuai)</strong></div>
+                                <div class="panel-body">
+                                    <div class="checkbox"><label><input type="checkbox" name="skrining_gagal_napas" value="1" {if: $data.skrining_gagal_napas}checked{/if}> Gagal napas akut / kebutuhan ventilasi invasif atau dukungan pernapasan intensif.</label></div>
+                                    <div class="checkbox"><label><input type="checkbox" name="skrining_ancaman_obstruksi" value="1" {if: $data.skrining_ancaman_obstruksi}checked{/if}> Ancaman obstruksi jalan napas (mis. angina Ludwig, edema orofaring/laring, infeksi odontogenik luas).</label></div>
+                                    <div class="checkbox"><label><input type="checkbox" name="skrining_syok_hemodinamik" value="1" {if: $data.skrining_syok_hemodinamik}checked{/if}> Syok / instabilitas hemodinamik yang memerlukan resusitasi berkelanjutan atau vasopresor.</label></div>
+                                    <div class="checkbox"><label><input type="checkbox" name="skrining_penurunan_kesadaran" value="1" {if: $data.skrining_penurunan_kesadaran}checked{/if}> Penurunan kesadaran akut, kejang berulang/status epileptikus, atau gangguan neurologis berat.</label></div>
+                                    <div class="checkbox"><label><input type="checkbox" name="skrining_perdarahan_aktif" value="1" {if: $data.skrining_perdarahan_aktif}checked{/if}> Perdarahan aktif/massif, termasuk pascaoperasi mulut-rahang, dengan risiko gangguan jalan napas/sirkulasi.</label></div>
+                                    <div class="checkbox"><label><input type="checkbox" name="skrining_pascaoperasi_kompleks" value="1" {if: $data.skrining_pascaoperasi_kompleks}checked{/if}> Pascaoperasi kompleks dengan kebutuhan pemantauan atau intervensi organ intensif.</label></div>
+                                    <div class="form-group m-t-sm">
+                                        <label class="col-sm-4 control-label" style="text-align:left;">Gangguan organ akut lain / kebutuhan pemantauan ketat:</label>
+                                        <div class="col-sm-8">
+                                            <input type="text" name="skrining_gangguan_organ_lain" class="form-control" value="{$data.skrining_gangguan_organ_lain}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- C. PENILAIAN NEWS2 DAN RED FLAG -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>C. PENILAIAN NEWS2 DAN TANDA BAHAYA</strong></div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label class="col-sm-6 control-label">Total NEWS2</label>
+                                                <div class="col-sm-6">
+                                                    <input type="text" name="news2_total" class="form-control" value="{$data.news2_total}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <div class="form-group">
+                                                <label class="col-sm-6 control-label">Skor 3 Tunggal?</label>
+                                                <div class="col-sm-6">
+                                                    <label class="radio-inline"><input type="radio" name="news2_skor3_tunggal" value="Ada" {if: $data.news2_skor3_tunggal == 'Ada'}checked{/if}> Ada</label>
+                                                    <label class="radio-inline"><input type="radio" name="news2_skor3_tunggal" value="Tidak" {if: $data.news2_skor3_tunggal == 'Tidak'}checked{/if}> Tidak</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label class="col-sm-5 control-label">Red Flag Klinis?</label>
+                                                <div class="col-sm-7">
+                                                    <label class="radio-inline"><input type="radio" name="red_flag_klinis" value="Ada" {if: $data.red_flag_klinis == 'Ada'}checked{/if}> Ada</label>
+                                                    <label class="radio-inline"><input type="radio" name="red_flag_klinis" value="Tidak" {if: $data.red_flag_klinis == 'Tidak'}checked{/if}> Tidak</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <h5 class="text-danger"><strong>RED FLAG KEBUTUHAN DUKUNGAN ORGAN (Pilih Ya/Tidak per baris)</strong></h5>
+                                    <table class="table table-bordered table-condensed">
+                                        <tr class="active"><th>Kriteria Red Flag</th><th width="10%" class="text-center">Ya</th><th width="10%" class="text-center">Tidak</th></tr>
+                                        <tr><td>Ancaman jalan napas, tidak mampu mempertahankan jalan napas, atau perlu intubasi.</td><td class="text-center"><input type="radio" name="rf_ancaman_jalan_napas" value="Ya" {if: $data.rf_ancaman_jalan_napas == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="rf_ancaman_jalan_napas" value="Tidak" {if: $data.rf_ancaman_jalan_napas == 'Tidak'}checked{/if}></td></tr>
+                                        <tr><td>Hipoksemia menetap/memburuk meskipun sudah diberi oksigen; memerlukan HFNC/NIV atau ventilasi invasif.</td><td class="text-center"><input type="radio" name="rf_hipoksemia" value="Ya" {if: $data.rf_hipoksemia == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="rf_hipoksemia" value="Tidak" {if: $data.rf_hipoksemia == 'Tidak'}checked{/if}></td></tr>
+                                        <tr><td>Syok/hipoperfusi: MAP &lt;65 mmHg, TD sistolik &le;90 mmHg, CRT memanjang, mottling atau laktat meningkat.</td><td class="text-center"><input type="radio" name="rf_syok_hipoperfusi" value="Ya" {if: $data.rf_syok_hipoperfusi == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="rf_syok_hipoperfusi" value="Tidak" {if: $data.rf_syok_hipoperfusi == 'Tidak'}checked{/if}></td></tr>
+                                        <tr><td>Memerlukan vasopresor atau inotropik kontinu.</td><td class="text-center"><input type="radio" name="rf_vasopresor" value="Ya" {if: $data.rf_vasopresor == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="rf_vasopresor" value="Tidak" {if: $data.rf_vasopresor == 'Tidak'}checked{/if}></td></tr>
+                                        <tr><td>Penurunan kesadaran progresif, GCS &le;8 atau tidak mampu melindungi jalan napas.</td><td class="text-center"><input type="radio" name="rf_kesadaran_progresif" value="Ya" {if: $data.rf_kesadaran_progresif == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="rf_kesadaran_progresif" value="Tidak" {if: $data.rf_kesadaran_progresif == 'Tidak'}checked{/if}></td></tr>
+                                        <tr><td>Status epileptikus atau kejang berulang tanpa pemulihan kesadaran.</td><td class="text-center"><input type="radio" name="rf_status_epileptikus" value="Ya" {if: $data.rf_status_epileptikus == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="rf_status_epileptikus" value="Tidak" {if: $data.rf_status_epileptikus == 'Tidak'}checked{/if}></td></tr>
+                                        <tr><td>Cedera ginjal akut progresif/oliguria berat, hiperkalemia dengan perubahan EKG, atau asidosis berat.</td><td class="text-center"><input type="radio" name="rf_cedera_ginjal" value="Ya" {if: $data.rf_cedera_ginjal == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="rf_cedera_ginjal" value="Tidak" {if: $data.rf_cedera_ginjal == 'Tidak'}checked{/if}></td></tr>
+                                        <tr><td>Perdarahan masif atau instabilitas akibat perdarahan, termasuk perdarahan pascaoperasi mulut-rahang.</td><td class="text-center"><input type="radio" name="rf_perdarahan_masif" value="Ya" {if: $data.rf_perdarahan_masif == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="rf_perdarahan_masif" value="Tidak" {if: $data.rf_perdarahan_masif == 'Tidak'}checked{/if}></td></tr>
+                                        <tr><td>Memerlukan ventilasi mekanik, CRRT, monitoring invasif atau terapi penunjang organ lain.</td><td class="text-center"><input type="radio" name="rf_ventilasi_mekanik" value="Ya" {if: $data.rf_ventilasi_mekanik == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="rf_ventilasi_mekanik" value="Tidak" {if: $data.rf_ventilasi_mekanik == 'Tidak'}checked{/if}></td></tr>
+                                        <tr><td>Perburukan cepat/kebutuhan monitoring dan intervensi melampaui kemampuan ruang rawat biasa.</td><td class="text-center"><input type="radio" name="rf_perburukan_cepat" value="Ya" {if: $data.rf_perburukan_cepat == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="rf_perburukan_cepat" value="Tidak" {if: $data.rf_perburukan_cepat == 'Tidak'}checked{/if}></td></tr>
+                                    </table>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Jumlah Red Flag Positif</label>
+                                        <div class="col-sm-3">
+                                            <input type="text" name="jumlah_red_flag_positif" class="form-control" value="{$data.jumlah_red_flag_positif}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- D. PRIORITAS MASUK & KEPUTUSAN -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>D. PRIORITAS MASUK ICU DAN KEPUTUSAN</strong></div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Prioritas Masuk</label>
+                                        <div class="col-sm-10">
+                                            <div class="radio"><label><input type="radio" name="prioritas_masuk" value="Prioritas 1" {if: $data.prioritas_masuk == 'Prioritas 1'}checked{/if}> <strong>Prioritas 1:</strong> Memerlukan terapi penunjang organ / intervensi intensif segera.</label></div>
+                                            <div class="radio"><label><input type="radio" name="prioritas_masuk" value="Prioritas 2" {if: $data.prioritas_masuk == 'Prioritas 2'}checked{/if}> <strong>Prioritas 2:</strong> Risiko tinggi memburuk dan memerlukan pemantauan intensif.</label></div>
+                                            <div class="radio"><label><input type="radio" name="prioritas_masuk" value="Prioritas 3" {if: $data.prioritas_masuk == 'Prioritas 3'}checked{/if}> <strong>Prioritas 3:</strong> Penyakit berat/komorbid signifikan, manfaat ICU perlu pertimbangan individual.</label></div>
+                                            <div class="radio"><label><input type="radio" name="prioritas_masuk" value="Prioritas 4" {if: $data.prioritas_masuk == 'Prioritas 4'}checked{/if}> <strong>Prioritas 4:</strong> ICU tidak diindikasikan / manfaat tidak sebanding; pertimbangkan tujuan perawatan dan paliatif.</label></div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Keputusan Masuk</label>
+                                        <div class="col-sm-10">
+                                            <label class="radio-inline"><input type="radio" name="keputusan_masuk" value="DITERIMA ICU" {if: $data.keputusan_masuk == 'DITERIMA ICU'}checked{/if}> <strong>DITERIMA ICU</strong></label>
+                                            <label class="radio-inline"><input type="radio" name="keputusan_masuk" value="Belum memenuhi indikasi" {if: $data.keputusan_masuk == 'Belum memenuhi indikasi'}checked{/if}> Belum memenuhi indikasi</label>
+                                            <label class="radio-inline"><input type="radio" name="keputusan_masuk" value="Dirujuk karena kapasitas/kemampuan" {if: $data.keputusan_masuk == 'Dirujuk karena kapasitas/kemampuan'}checked{/if}> Dirujuk karena kapasitas/kemampuan</label>
+                                            <label class="radio-inline"><input type="radio" name="keputusan_masuk" value="Lainnya" {if: $data.keputusan_masuk == 'Lainnya'}checked{/if}> Lainnya</label>
+                                            <input type="text" name="keputusan_masuk_lainnya" class="form-control input-sm m-t-xs" placeholder="Jika lainnya..." value="{$data.keputusan_masuk_lainnya}">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Alasan / Rencana Asuhan</label>
+                                        <div class="col-sm-10">
+                                            <textarea name="alasan_rencana_asuhan_masuk" class="form-control" rows="2">{$data.alasan_rencana_asuhan_masuk}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Tanggal/Jam Masuk</label>
+                                        <div class="col-sm-3">
+                                            <input type="text" name="tgl_jam_masuk" class="form-control" value="{$data.tgl_jam_masuk}">
+                                        </div>
+                                        <label class="col-sm-2 control-label">Ketersediaan Tempat</label>
+                                        <div class="col-sm-2">
+                                            <label class="radio-inline"><input type="radio" name="ketersediaan_tempat_masuk" value="Ada" {if: $data.ketersediaan_tempat_masuk == 'Ada'}checked{/if}> Ada</label>
+                                            <label class="radio-inline"><input type="radio" name="ketersediaan_tempat_masuk" value="Tidak" {if: $data.ketersediaan_tempat_masuk == 'Tidak'}checked{/if}> Tidak</label>
+                                        </div>
+                                        <label class="col-sm-1 control-label">Persetujuan DPJP</label>
+                                        <div class="col-sm-2">
+                                            <label class="radio-inline"><input type="radio" name="persetujuan_dpjp_masuk" value="Ya" {if: $data.persetujuan_dpjp_masuk == 'Ya'}checked{/if}> Ya</label>
+                                            <label class="radio-inline"><input type="radio" name="persetujuan_dpjp_masuk" value="Tidak" {if: $data.persetujuan_dpjp_masuk == 'Tidak'}checked{/if}> Tidak</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- E. VERIFIKASI MASUK -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>E. VERIFIKASI DAN DOKUMENTASI MASUK</strong></div>
+                                <div class="panel-body">
+                                    <div class="checkbox"><label><input type="checkbox" name="dok_hasil_asemen_masuk" value="1" {if: $data.dok_hasil_asemen_masuk}checked{/if}> Hasil asesmen, keputusan, instruksi, dan komunikasi antarunit dicatat dalam RME/SIMRS serta CPPT.</label></div>
+                                    <div class="checkbox"><label><input type="checkbox" name="dok_dpjp_autentikasi_masuk" value="1" {if: $data.dok_dpjp_autentikasi_masuk}checked{/if}> DPJP melakukan autentikasi pada akun RME.</label></div>
+                                    <div class="checkbox"><label><input type="checkbox" name="dok_serah_terima_masuk" value="1" {if: $data.dok_serah_terima_masuk}checked{/if}> Serah terima pasien dilakukan sesuai SOP transfer.</label></div>
+                                    <div class="row m-t-md">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="col-sm-4 control-label">Dokter Penilai / Jaga</label>
+                                                <div class="col-sm-8"><input type="text" name="dokter_penilai_nama" class="form-control" value="{$data.dokter_penilai_nama}"></div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-4 control-label">Tgl / Jam</label>
+                                                <div class="col-sm-8"><input type="text" name="dokter_penilai_tgljam" class="form-control" value="{$data.dokter_penilai_tgljam}"></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="col-sm-4 control-label">DPJP / Penanggung Jawab ICU</label>
+                                                <div class="col-sm-8"><input type="text" name="dpjp_icu_nama" class="form-control" value="{$data.dpjp_icu_nama}"></div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-4 control-label">Tgl / Jam</label>
+                                                <div class="col-sm-8"><input type="text" name="dpjp_icu_tgljam" class="form-control" value="{$data.dpjp_icu_tgljam}"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: KELUAR ICU -->
+                        <div role="tabpanel" class="tab-pane" id="tab_keluar_icu">
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>DATA EVALUASI KELUAR ICU / TRANSFER RAWAT INAP</strong></div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Tgl / Jam Evaluasi</label>
+                                        <div class="col-sm-4"><input type="text" name="tgl_evaluasi_keluar" class="form-control" value="{$data.tgl_evaluasi_keluar}"></div>
+                                        <label class="col-sm-2 control-label">Lama Perawatan ICU</label>
+                                        <div class="col-sm-4"><input type="text" name="lama_perawatan_icu" class="form-control" value="{$data.lama_perawatan_icu}" placeholder="Contoh: 3 hari"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Tujuan Transfer</label>
+                                        <div class="col-sm-4"><input type="text" name="tujuan_transfer_keluar" class="form-control" value="{$data.tujuan_transfer_keluar}" placeholder="Ruang Perawatan Rawat Inap / Lainnya"></div>
+                                        <label class="col-sm-2 control-label">Diagnosis / Masalah Aktif</label>
+                                        <div class="col-sm-4"><input type="text" name="diagnosis_masalah_aktif_keluar" class="form-control" value="{$data.diagnosis_masalah_aktif_keluar}"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- F. KRITERIA KELUAR ICU -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>F. KRITERIA KELUAR ICU (Nilai setiap komponen)</strong></div>
+                                <div class="panel-body">
+                                    <table class="table table-bordered table-condensed">
+                                        <tr class="active"><th width="45%">Kriteria Klinis</th><th width="8%" class="text-center">Ya</th><th width="8%" class="text-center">Tidak</th><th>Catatan / Hasil Objektif</th></tr>
+                                        <tr><td>Kondisi penyebab masuk ICU membaik / teratasi</td><td class="text-center"><input type="radio" name="keluar_penyebab_membaik" value="Ya" {if: $data.keluar_penyebab_membaik == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="keluar_penyebab_membaik" value="Tidak" {if: $data.keluar_penyebab_membaik == 'Tidak'}checked{/if}></td><td><input type="text" name="keluar_penyebab_membaik_ket" class="form-control input-sm" value="{$data.keluar_penyebab_membaik_ket}"></td></tr>
+                                        <tr><td>Hemodinamik stabil; tidak memerlukan titrasi vasopresor</td><td class="text-center"><input type="radio" name="keluar_hemodinamik_stabil" value="Ya" {if: $data.keluar_hemodinamik_stabil == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="keluar_hemodinamik_stabil" value="Tidak" {if: $data.keluar_hemodinamik_stabil == 'Tidak'}checked{/if}></td><td><input type="text" name="keluar_hemodinamik_stabil_ket" class="form-control input-sm" value="{$data.keluar_hemodinamik_stabil_ket}" placeholder="TD, MAP, HR"></td></tr>
+                                        <tr><td>Jalan napas aman, tidak ada ancaman obstruksi akut</td><td class="text-center"><input type="radio" name="keluar_jalan_napas_aman" value="Ya" {if: $data.keluar_jalan_napas_aman == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="keluar_jalan_napas_aman" value="Tidak" {if: $data.keluar_jalan_napas_aman == 'Tidak'}checked{/if}></td><td><input type="text" name="keluar_jalan_napas_aman_ket" class="form-control input-sm" value="{$data.keluar_jalan_napas_aman_ket}"></td></tr>
+                                        <tr><td>Tidak memerlukan ventilasi mekanik invasif</td><td class="text-center"><input type="radio" name="keluar_tidak_perlu_ventilasi" value="Ya" {if: $data.keluar_tidak_perlu_ventilasi == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="keluar_tidak_perlu_ventilasi" value="Tidak" {if: $data.keluar_tidak_perlu_ventilasi == 'Tidak'}checked{/if}></td><td><input type="text" name="keluar_tidak_perlu_ventilasi_ket" class="form-control input-sm" value="{$data.keluar_tidak_perlu_ventilasi_ket}" placeholder="O2, RR, SpO2"></td></tr>
+                                        <tr><td>Kesadaran / status neurologis stabil atau sesuai kondisi dasar</td><td class="text-center"><input type="radio" name="keluar_kesadaran_stabil" value="Ya" {if: $data.keluar_kesadaran_stabil == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="keluar_kesadaran_stabil" value="Tidak" {if: $data.keluar_kesadaran_stabil == 'Tidak'}checked{/if}></td><td><input type="text" name="keluar_kesadaran_stabil_ket" class="form-control input-sm" value="{$data.keluar_kesadaran_stabil_ket}" placeholder="GCS"></td></tr>
+                                        <tr><td>Perdarahan terkendali; tidak ada risiko segera</td><td class="text-center"><input type="radio" name="keluar_perdarahan_terkendali" value="Ya" {if: $data.keluar_perdarahan_terkendali == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="keluar_perdarahan_terkendali" value="Tidak" {if: $data.keluar_perdarahan_terkendali == 'Tidak'}checked{/if}></td><td><input type="text" name="keluar_perdarahan_terkendali_ket" class="form-control input-sm" value="{$data.keluar_perdarahan_terkendali_ket}"></td></tr>
+                                        <tr><td>Nyeri dan kebutuhan terapi dapat dikelola di ruang biasa</td><td class="text-center"><input type="radio" name="keluar_nyeri_terkelola" value="Ya" {if: $data.keluar_nyeri_terkelola == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="keluar_nyeri_terkelola" value="Tidak" {if: $data.keluar_nyeri_terkelola == 'Tidak'}checked{/if}></td><td><input type="text" name="keluar_nyeri_terkelola_ket" class="form-control input-sm" value="{$data.keluar_nyeri_terkelola_ket}"></td></tr>
+                                        <tr><td>Parameter vital dan tren NEWS2/MEWS dinilai aman</td><td class="text-center"><input type="radio" name="keluar_tanda_vital_aman" value="Ya" {if: $data.keluar_tanda_vital_aman == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="keluar_tanda_vital_aman" value="Tidak" {if: $data.keluar_tanda_vital_aman == 'Tidak'}checked{/if}></td><td><input type="text" name="keluar_tanda_vital_aman_ket" class="form-control input-sm" value="{$data.keluar_tanda_vital_aman_ket}"></td></tr>
+                                        <tr><td>Rencana pengobatan, monitoring, eskalasi sudah ditetapkan</td><td class="text-center"><input type="radio" name="keluar_rencana_pengobatan_tetap" value="Ya" {if: $data.keluar_rencana_pengobatan_tetap == 'Ya'}checked{/if}></td><td class="text-center"><input type="radio" name="keluar_rencana_pengobatan_tetap" value="Tidak" {if: $data.keluar_rencana_pengobatan_tetap == 'Tidak'}checked{/if}></td><td><input type="text" name="keluar_rencana_pengobatan_tetap_ket" class="form-control input-sm" value="{$data.keluar_rencana_pengobatan_tetap_ket}"></td></tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- G. PERTIMBANGAN KHUSUS & KEPUTUSAN KELUAR -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>G. PERTIMBANGAN KHUSUS DAN KEPUTUSAN KELUAR</strong></div>
+                                <div class="panel-body">
+                                    <div class="checkbox"><label><input type="checkbox" name="pertimbangan_transfer_ranap" value="1" {if: $data.pertimbangan_transfer_ranap}checked{/if}> Transfer ke rawat inap karena kebutuhan terapi dan pemantauan intensif sudah tidak ada.</label></div>
+                                    <div class="checkbox"><label><input type="checkbox" name="pertimbangan_transfer_faskes" value="1" {if: $data.pertimbangan_transfer_faskes}checked{/if}> Transfer ke fasilitas dengan tingkat layanan lebih sesuai.</label></div>
+                                    <div class="checkbox"><label><input type="checkbox" name="pertimbangan_penyesuaian_tujuan" value="1" {if: $data.pertimbangan_penyesuaian_tujuan}checked{/if}> Penyesuaian tujuan perawatan berdasarkan keputusan klinis bersama pasien/keluarga.</label></div>
+                                    <div class="form-group m-t-xs">
+                                        <label class="col-sm-2 control-label">Lainnya</label>
+                                        <div class="col-sm-10"><input type="text" name="pertimbangan_lainnya" class="form-control" value="{$data.pertimbangan_lainnya}"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Keputusan Keluar</label>
+                                        <div class="col-sm-10">
+                                            <label class="radio-inline"><input type="radio" name="keputusan_keluar" value="LAYAK KELUAR ICU" {if: $data.keputusan_keluar == 'LAYAK KELUAR ICU'}checked{/if}> <strong>LAYAK KELUAR ICU</strong></label>
+                                            <label class="radio-inline"><input type="radio" name="keputusan_keluar" value="TETAP DI ICU" {if: $data.keputusan_keluar == 'TETAP DI ICU'}checked{/if}> TETAP DI ICU</label>
+                                            <label class="radio-inline"><input type="radio" name="keputusan_keluar" value="RUJUK / TRANSFER LAINNYA" {if: $data.keputusan_keluar == 'RUJUK / TRANSFER LAINNYA'}checked{/if}> RUJUK / TRANSFER LAINNYA</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Alasan / Masalah yang Perlu Dipantau</label>
+                                        <div class="col-sm-10"><input type="text" name="alasan_masalah_dipantau_keluar" class="form-control" value="{$data.alasan_masalah_dipantau_keluar}"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Instruksi Monitoring Ruangan</label>
+                                        <div class="col-sm-10"><input type="text" name="instruksi_monitoring_ruang_tujuan" class="form-control" value="{$data.instruksi_monitoring_ruang_tujuan}" placeholder="Tanda vital setiap ... jam; NEWS2 setiap ... jam; target SpO2..."></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Tanda Bahaya Eskalasi</label>
+                                        <div class="col-sm-10"><input type="text" name="tanda_bahaya_eskalasi_keluar" class="form-control" value="{$data.tanda_bahaya_eskalasi_keluar}"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Rencana Terapi / Tindakan</label>
+                                        <div class="col-sm-10"><input type="text" name="rencana_terapi_keluar" class="form-control" value="{$data.rencana_terapi_keluar}"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- H. DOKUMENTASI KELUAR -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>H. SERAH TERIMA DAN DOKUMENTASI KELUAR</strong></div>
+                                <div class="panel-body">
+                                    <div class="checkbox"><label><input type="checkbox" name="dok_ringkasan_keluar" value="1" {if: $data.dok_ringkasan_keluar}checked{/if}> Ringkasan kondisi, terapi, alat terpasang, hasil pemeriksaan dan risiko disampaikan kepada unit penerima.</label></div>
+                                    <div class="checkbox"><label><input type="checkbox" name="dok_keputusan_keluar" value="1" {if: $data.dok_keputusan_keluar}checked{/if}> Keputusan keluar, asesmen terakhir, dan instruksi dicatat dalam RME/SIMRS/CPPT.</label></div>
+                                    <div class="checkbox"><label><input type="checkbox" name="dok_dpjp_autentikasi_keluar" value="1" {if: $data.dok_dpjp_autentikasi_keluar}checked{/if}> Autentikasi DPJP dilakukan pada akun RME.</label></div>
+                                    <div class="row m-t-md">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="col-sm-4 control-label">Dokter ICU / DPJP</label>
+                                                <div class="col-sm-8"><input type="text" name="dokter_keluar_nama" class="form-control" value="{$data.dokter_keluar_nama}"></div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-4 control-label">Tgl / Jam</label>
+                                                <div class="col-sm-8"><input type="text" name="dokter_keluar_tgljam" class="form-control" value="{$data.dokter_keluar_tgljam}"></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="col-sm-4 control-label">Petugas Unit Penerima</label>
+                                                <div class="col-sm-8"><input type="text" name="petugas_penerima_nama" class="form-control" value="{$data.petugas_penerima_nama}"></div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-4 control-label">Tgl / Jam</label>
+                                                <div class="col-sm-8"><input type="text" name="petugas_penerima_tgljam" class="form-control" value="{$data.petugas_penerima_tgljam}"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group m-t-md">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan Penilaian ICU</button>
+                            <a href="{?=url([ADMIN, 'update_bmt', 'kriteriaicumanage'])?}" class="btn btn-default">Batal</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#btn_cari_pasien').on('click', function() {
+        var no_rawat = $('#no_rawat').val();
+        if(!no_rawat) {
+            alert('Masukkan No. Rawat terlebih dahulu');
+            return;
+        }
+        $.ajax({
+            url: '{?=url([ADMIN, "update_bmt", "kriteriaicugetpasien"])?}',
+            type: 'POST',
+            data: { no_rawat: no_rawat },
+            dataType: 'json',
+            success: function(res) {
+                if(res.status == 'success') {
+                    $('#no_rkm_medis').val(res.data.no_rkm_medis);
+                    $('#nama_pasien').val(res.data.nm_pasien);
+                    $('#jk').val(res.data.jk == 'L' ? 'Laki-laki' : 'Perempuan');
+                    $('#tgl_lahir').val(res.data.tgl_lahir);
+                } else {
+                    alert(res.message || 'Pasien tidak ditemukan');
+                }
+            },
+            error: function() {
+                alert('Gagal mengambil data pasien.');
+            }
+        });
+    });
+});
+</script>
+

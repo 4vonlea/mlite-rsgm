@@ -253,7 +253,14 @@
                     <td style="width: 110px;">Nama Perawat</td>
                     <td style="width: 12px;">:</td>
                     <td>
-                        <span class="dotted-line-wide">{$data.nama_perawat}</span>
+                        <div style="position: relative; display: inline-block;">
+                            {if: !empty($data.ttd_perawat)}
+                            <div style="position: absolute; bottom: 8px; left: 10px; z-index: 2;">
+                                {?= $data['ttd_perawat'] ?}
+                            </div>
+                            {/if}
+                            <span class="dotted-line-wide">{$data.nama_perawat}</span>
+                        </div>
                     </td>
                 </tr>
                 <tr>
@@ -266,6 +273,11 @@
                     <td>:</td>
                     <td>
                         <span class="dotted-line-wide">{$data.nama_dokter}</span>
+                        {if: !empty($data.sip_dokter)}
+                        <div style="font-size: 7.5pt; color: #1e3799; font-weight: bold; border: 1px dashed #1e3799; padding: 1px 4px; display: inline-block; margin-top: 3px; border-radius: 2px;">
+                            {$data.sip_dokter}
+                        </div>
+                        {/if}
                     </td>
                 </tr>
                 <tr>

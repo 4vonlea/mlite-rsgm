@@ -319,14 +319,14 @@
                 {loop: $data.padded_diagnosa}
                 <tr>
                     <td>{$value.diagnosa}</td>
-                    <td><small>{$value.dpjp_nama}</small></td>
+                    <td><small>{?= nl2br($value['dpjp_nama']) ?}</small></td>
                     <td style="text-align: center;"><small>{$value.dpjp_tgl_mulai}</small></td>
                     <td style="text-align: center;"><small>{$value.dpjp_tgl_akhir}</small></td>
-                    <td style="text-align: center;"><small>{$value.dpjp_ttd}</small></td>
-                    <td><small>{$value.dpjp_utama_nama}</small></td>
+                    <td style="text-align: center;">{?= $value['dpjp_ttd'] ?}</td>
+                    <td><small>{?= nl2br($value['dpjp_utama_nama']) ?}</small></td>
                     <td style="text-align: center;"><small>{$value.dpjp_utama_tgl_mulai}</small></td>
                     <td style="text-align: center;"><small>{$value.dpjp_utama_tgl_akhir}</small></td>
-                    <td style="text-align: center;"><small>{$value.dpjp_utama_ttd}</small></td>
+                    <td style="text-align: center;">{?= $value['dpjp_utama_ttd'] ?}</td>
                     <td><small>{$value.keterangan}</small></td>
                 </tr>
                 {/loop}
@@ -363,37 +363,43 @@
     <!-- ======================================================== -->
     <!-- HALAMAN 2 : DIAGNOSA RANAP, TINDAKAN, OBAT-OBATAN        -->
     <!-- ======================================================== -->
-    <div class="page">
+    <div class="page" style="padding-top: 15px;">
 
-        <!-- HEADER KECIL HALAMAN 2 -->
-        <div class="hal2-header">
-            <div>
-                Nama Pasien: <strong>{$data.nm_pasien}</strong> &nbsp;({$data.jk})
-            </div>
-            <div>
-                Tanggal Lahir: {$data.tgl_lahir_indo}
-            </div>
-            <div>
-                <span>No.RM :</span>
-                <div class="rm-box-group">
-                    {loop: $data.rm_digits}
-                    <span class="rm-digit-box">{$value}</span>
-                    {/loop}
-                </div>
-            </div>
-        </div>
+        <!-- HEADER HALAMAN 2 SESUAI DOKUMEN ASLI (IMAGE 8 OF 16) -->
+        <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 8px;">
+            <tr>
+                <td style="width: 44%; vertical-align: middle;">
+                    Pasien : <span style="display: inline-block; border-bottom: 1px dotted #000; min-width: 155px; font-weight: bold; padding: 0 4px;">{$data.nm_pasien}</span>
+                    &nbsp;&nbsp;
+                    <span style="display: inline-block; font-size: 8.5pt;">
+                        {if: $data.jk == 'L'}<span style="border: 1.5px solid #000; border-radius: 50%; padding: 0 4px; font-weight: bold;">L</span> / P{elseif: $data.jk == 'P'}L / <span style="border: 1.5px solid #000; border-radius: 50%; padding: 0 4px; font-weight: bold;">P</span>{else}L / P{/if}
+                    </span>
+                </td>
+                <td style="width: 32%; vertical-align: middle;">
+                    Tanggal Lahir : <span style="display: inline-block; border-bottom: 1px dotted #000; min-width: 110px; font-weight: bold; padding: 0 4px; text-align: center;">{$data.tgl_lahir_indo}</span>
+                </td>
+                <td style="width: 24%; text-align: right; vertical-align: middle;">
+                    <span style="font-weight: bold; margin-right: 3px;">No.RM :</span>
+                    <div class="rm-box-group" style="display: inline-flex; vertical-align: middle;">
+                        {loop: $data.rm_digits}
+                        <span class="rm-digit-box" style="width: 15px; height: 17px; line-height: 17px; border: 1px solid #000; text-align: center; font-weight: bold; font-size: 9pt; margin-left: 1px;">{$value}</span>
+                        {/loop}
+                    </div>
+                </td>
+            </tr>
+        </table>
 
-        <!-- 1. TABEL DIAGNOSA RAWAT INAP (JIKA ADA) -->
-        <table class="sub-table" style="margin-bottom: 6px;">
+        <!-- 1. TABEL DIAGNOSA RAWAT INAP (JIKA ADA) - 8 BARIS -->
+        <table class="sub-table" style="margin-bottom: 10px;">
             <thead>
                 <tr>
-                    <th style="width: 25%;">TANGGAL</th>
-                    <th style="width: 75%;">DIAGNOSA RAWAT INAP (JIKA ADA)</th>
+                    <th style="width: 22%;">TANGGAL</th>
+                    <th style="width: 78%;">DIAGNOSA RAWAT INAP (JIKA ADA)</th>
                 </tr>
             </thead>
             <tbody>
                 {loop: $data.padded_ranap}
-                <tr>
+                <tr style="height: 20px;">
                     <td style="text-align: center;">{$value.tanggal}</td>
                     <td style="padding-left: 8px;">{$value.diagnosa}</td>
                 </tr>
@@ -401,17 +407,17 @@
             </tbody>
         </table>
 
-        <!-- 2. TABEL OPERASI / TINDAKAN -->
-        <table class="sub-table" style="margin-bottom: 6px;">
+        <!-- 2. TABEL OPERASI / TINDAKAN - 10 BARIS -->
+        <table class="sub-table" style="margin-bottom: 10px;">
             <thead>
                 <tr>
-                    <th style="width: 25%;">TANGGAL</th>
-                    <th style="width: 75%;">OPERASI / TINDAKAN</th>
+                    <th style="width: 22%;">TANGGAL</th>
+                    <th style="width: 78%;">OPERASI / TINDAKAN</th>
                 </tr>
             </thead>
             <tbody>
                 {loop: $data.padded_operasi}
-                <tr>
+                <tr style="height: 20px;">
                     <td style="text-align: center;">{$value.tanggal}</td>
                     <td style="padding-left: 8px;">{$value.operasi_tindakan}</td>
                 </tr>
@@ -419,15 +425,15 @@
             </tbody>
         </table>
 
-        <!-- 3. TABEL OBAT-OBATAN -->
+        <!-- 3. TABEL OBAT-OBATAN - 16 BARIS -->
         <table class="sub-table">
             <thead>
                 <tr>
-                    <th colspan="5" style="font-size: 8.5pt;">OBAT-OBATAN</th>
+                    <th colspan="5" style="font-size: 8.5pt; padding: 4px 0;">OBAT-OBATAN</th>
                 </tr>
                 <tr>
-                    <th style="width: 17%;">TANGGAL MULAI</th>
-                    <th style="width: 35%;">NAMA OBAT</th>
+                    <th style="width: 18%;">TANGGAL MULAI</th>
+                    <th style="width: 34%;">NAMA OBAT</th>
                     <th style="width: 16%;">DOSIS</th>
                     <th style="width: 16%;">FREKUENSI</th>
                     <th style="width: 16%;">TANGGAL SELESAI</th>
@@ -435,7 +441,7 @@
             </thead>
             <tbody>
                 {loop: $data.padded_obat}
-                <tr>
+                <tr style="height: 20px;">
                     <td style="text-align: center;"><small>{$value.tanggal_mulai}</small></td>
                     <td style="padding-left: 6px;"><small>{$value.nama_obat}</small></td>
                     <td style="text-align: center;"><small>{$value.dosis}</small></td>
@@ -445,16 +451,6 @@
                 {/loop}
             </tbody>
         </table>
-
-        <!-- CATATAN KAKI & METADATA HALAMAN 2 -->
-        <div class="footer-note-wrap">
-            <em>Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</em>
-        </div>
-
-        <div class="page-footer-meta">
-            <div>RSGM/Ed-Rev/02/2023</div>
-            <div>RM.RI Lampiran Hal 2-2</div>
-        </div>
 
     </div>
 

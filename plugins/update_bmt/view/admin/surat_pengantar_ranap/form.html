@@ -1,0 +1,258 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="btn-group pull-right" style="margin-top:-5px;">
+                    {if: !empty($data.id)}
+                    <a href="{?=url([ADMIN, 'update_bmt', 'pengantarranapcetak', '?id='.$data.id])?}" target="_blank" class="btn btn-success btn-sm"><i class="fa fa-print"></i> Cetak</a>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'pengantarranapcetak', '?id='.$data.id.'&pdf=1'])?}" target="_blank" class="btn btn-danger btn-sm"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
+                    {/if}
+                    <a href="{?=url([ADMIN, 'update_bmt', 'pengantarranapmanage'])?}" class="btn btn-default btn-sm"><i class="fa fa-arrow-left"></i> Kembali</a>
+                </div>
+                <h3 class="panel-title"><i class="fa fa-edit"></i> <strong>SURAT PENGANTAR RAWAT INAP (AKP 1.2 EP A)</strong></h3>
+            </div>
+            <div class="panel-body">
+                <form method="POST" action="{?=url([ADMIN, 'update_bmt', 'pengantarranapsave'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+
+                    <div class="alert alert-info">
+                        <strong>Standar Akreditasi AKP 1.2 EP A:</strong> Rumah Sakit menetapkan kriteria masuk rawat inap untuk menentukan jenis pelayanan promotif, preventif, kuratif, rehabilitatif, paliatif, pelayanan khusus/spesialistik atau pelayanan intensif.
+                    </div>
+
+                    <!-- Identitas Pendaftaran -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>No. Rawat / No. RM <span class="text-danger">*</span></label>
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2025/11/14/000001" required>
+                                <small class="help-block text-muted">Tekan Tab / Enter untuk memuat data pasien otomatis.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>No. Rekam Medis</label>
+                                <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Nama Pasien</label>
+                                <input type="text" name="nama_pasien" id="nama_pasien" class="form-control" value="{$data.nama_pasien}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Jenis Kelamin</label>
+                                <select name="jk" id="jk" class="form-control">
+                                    <option value="L" {if: $data.jk == 'L'}selected{/if}>Laki-laki</option>
+                                    <option value="P" {if: $data.jk == 'P'}selected{/if}>Perempuan</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Tanggal Lahir</label>
+                                <input type="date" name="tgl_lahir" id="tgl_lahir" class="form-control" value="{$data.tgl_lahir}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Alamat Pasien</label>
+                                <input type="text" name="alamat" id="alamat" class="form-control" value="{$data.alamat}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Pengiriman Unit & Waktu -->
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Pasien dikirim dari Unit</label>
+                                <input type="text" name="unit_asal" class="form-control" value="{if: !empty($data.unit_asal)}{$data.unit_asal}{else}UGD{/if}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Ke Unit</label>
+                                <input type="text" name="unit_tujuan" class="form-control" value="{if: !empty($data.unit_tujuan)}{$data.unit_tujuan}{else}IRNA{/if}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Hari / Tanggal / Jam</label>
+                                <input type="text" name="hari_tgl_jam" class="form-control" value="{$data.hari_tgl_jam}" placeholder="Contoh: Senin / 14-11-2022 / 17:15">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Ruang / Kelas</label>
+                                <input type="text" name="ruang_kelas" class="form-control" value="{$data.ruang_kelas}" placeholder="Contoh: 1 / VIP / Melati">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Riwayat Penyakit (Komorbid)</label>
+                        <input type="text" name="riwayat_penyakit" class="form-control" value="{$data.riwayat_penyakit}" placeholder="Contoh: HT (-), DM (-), Asma (-)">
+                    </div>
+
+                    <!-- Tanda-Tanda Vital -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading"><strong>Tanda - Tanda Vital &amp; Antropometri</strong></div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Tensi (mmHg)</label>
+                                        <input type="text" name="tensi" class="form-control input-sm" value="{$data.tensi}" placeholder="120/80">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Nadi (X/mnt)</label>
+                                        <input type="text" name="nadi" class="form-control input-sm" value="{$data.nadi}" placeholder="82">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>RR (X/mnt)</label>
+                                        <input type="text" name="rr" class="form-control input-sm" value="{$data.rr}" placeholder="20">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Suhu (&deg;C)</label>
+                                        <input type="text" name="suhu" class="form-control input-sm" value="{$data.suhu}" placeholder="36.7">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Berat Badan (Kg)</label>
+                                        <input type="text" name="berat_badan" class="form-control input-sm" value="{$data.berat_badan}" placeholder="61">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Diagnosa & Tindakan -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Diagnosa Sementara</label>
+                                <textarea name="diagnosa_sementara" class="form-control" rows="2" placeholder="Contoh: 48 Impaksi Gigi / Abses Submandibula">{$data.diagnosa_sementara}</textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tindakan yang Diberikan</label>
+                                <textarea name="tindakan_diberikan" class="form-control" rows="2" placeholder="Contoh: Odontektomi / Pasang Infus / Terapi Injeksi">{$data.tindakan_diberikan}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PENETAPAN PELAYANAN (AKP 1.2 EP A) -->
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <strong><i class="fa fa-check-square-o"></i> Penetapan Kategori Pelayanan Masuk Rawat Inap (AKP 1.2 EP A)</strong>
+                        </div>
+                        <div class="panel-body">
+                            <p class="text-muted"><small>Pilih salah satu atau lebih jenis pelayanan yang dibutuhkan pasien selama perawatan rawat inap:</small></p>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="checkbox-inline" style="font-weight:bold; font-size:11pt;">
+                                        <input type="checkbox" name="layanan_promotif" value="Ya" {if: $data.layanan_promotif == 'Ya'}checked{/if}> Promotif
+                                    </label>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="checkbox-inline" style="font-weight:bold; font-size:11pt;">
+                                        <input type="checkbox" name="layanan_preventif" value="Ya" {if: $data.layanan_preventif == 'Ya'}checked{/if}> Preventif
+                                    </label>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="checkbox-inline" style="font-weight:bold; font-size:11pt; color:#2980b9;">
+                                        <input type="checkbox" name="layanan_kuratif" value="Ya" {if: $data.layanan_kuratif == 'Ya'}checked{/if}> Kuratif
+                                    </label>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="checkbox-inline" style="font-weight:bold; font-size:11pt;">
+                                        <input type="checkbox" name="layanan_rehabilitatif" value="Ya" {if: $data.layanan_rehabilitatif == 'Ya'}checked{/if}> Rehabilitatif
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="row m-t-sm" style="margin-top:10px;">
+                                <div class="col-md-3">
+                                    <label class="checkbox-inline" style="font-weight:bold;">
+                                        <input type="checkbox" name="layanan_paliatif" value="Ya" {if: $data.layanan_paliatif == 'Ya'}checked{/if}> Paliatif
+                                    </label>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="checkbox-inline" style="font-weight:bold;">
+                                        <input type="checkbox" name="layanan_intensif" value="Ya" {if: $data.layanan_intensif == 'Ya'}checked{/if}> Pelayanan Intensif
+                                    </label>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="checkbox-inline" style="font-weight:bold;">
+                                        <input type="checkbox" name="layanan_khusus" value="Ya" {if: $data.layanan_khusus == 'Ya'}checked{/if}> Pelayanan Khusus / Spesialistik
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PPA & Penanggung Jawab -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Nama DPJP (Dokter Penanggung Jawab Pelayanan)</label>
+                                <input type="text" name="nama_dpjp" class="form-control" value="{$data.nama_dpjp}" placeholder="Contoh: drg. Tri Nurrahman, Sp.BM">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Dokter Yang Mengirim (PPA Pengirim)</label>
+                                <input type="text" name="dokter_pengirim_nama" class="form-control" value="{$data.dokter_pengirim_nama}" placeholder="Contoh: drg. Fransisca Viesta Nanda Heta">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Menyetujui Penanggung Jawab Pasien</label>
+                                <input type="text" name="penanggung_jawab_nama" class="form-control" value="{$data.penanggung_jawab_nama}" placeholder="Nama keluarga/penanggung jawab">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan Surat Pengantar</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'pengantarranapmanage'])?}" class="btn btn-default">Batal</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#no_rawat').on('change', function() {
+        var nr = $(this).val();
+        if(!nr) return;
+        $.get('{?=url([ADMIN, "update_bmt", "pengantarranapform"])?}&ajax_patient=1&no_rawat=' + encodeURIComponent(nr), function(res) {
+            try {
+                var d = JSON.parse(res);
+                if(d.success) {
+                    $('#no_rkm_medis').val(d.no_rkm_medis);
+                    $('#nama_pasien').val(d.nm_pasien);
+                    $('#jk').val(d.jk);
+                    $('#tgl_lahir').val(d.tgl_lahir);
+                    $('#alamat').val(d.alamat);
+                }
+            } catch(e) {}
+        });
+    });
+});
+</script>
+

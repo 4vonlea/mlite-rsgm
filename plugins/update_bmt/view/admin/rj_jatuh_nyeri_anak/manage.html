@@ -1,0 +1,63 @@
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-child"></i> FORM ASESMEN RISIKO JATUH DAN NYERI PASIEN ANAK</h3>
+    </div>
+    <div class="panel-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th width="40">No</th>
+                        <th>No. Rawat</th>
+                        <th>No. RM</th>
+                        <th>Nama Pasien</th>
+                        <th>Tgl/Jam</th>
+                        <th>Skor Humpty Dumpty</th>
+                        <th>Kategori Jatuh</th>
+                        <th>Skor FLACC</th>
+                        <th>Kategori Nyeri</th>
+                        <th>Petugas</th>
+                        <th width="240" class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {if: !empty($data)}
+                    {loop: $data}
+                    <tr>
+                        <td>{?= $key + 1 ?}</td>
+                        <td><strong>{$value.no_rawat}</strong></td>
+                        <td>{$value.no_rkm_medis}</td>
+                        <td><strong>{$value.nm_pasien}</strong></td>
+                        <td>{$value.tanggal} {$value.jam}</td>
+                        <td><span class="badge">{$value.humpty_dumpty_total}</span></td>
+                        <td>
+                            {if: $value.humpty_dumpty_kategori == 'Risiko Tinggi (RT)'}
+                            <span class="label label-danger">{$value.humpty_dumpty_kategori}</span>
+                            {else}
+                            <span class="label label-success">{$value.humpty_dumpty_kategori}</span>
+                            {/if}
+                        </td>
+                        <td><span class="badge">{$value.flacc_total}</span></td>
+                        <td><span class="label label-info">{$value.flacc_kategori}</span></td>
+                        <td>{$value.petugas_nama}</td>
+                        <td class="text-center">
+                            <a href="{?=url([ADMIN, 'update_bmt', 'jatuhanakcetak'])?}&id={$value.id}" class="btn btn-xs btn-success" target="_blank"><i class="fa fa-print"></i> Cetak</a>
+                            <a href="{?=url([ADMIN, 'update_bmt', 'jatuhanakcetak'])?}&id={$value.id}&pdf=1" class="btn btn-xs btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i> PDF</a>
+                            <a href="{?=url([ADMIN, 'update_bmt', 'jatuhanakform'])?}&id={$value.id}" class="btn btn-xs btn-info"><i class="fa fa-edit"></i> Edit</a>
+                            <a href="{?=url([ADMIN, 'update_bmt', 'jatuhanakhapus'])?}&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Hapus data ini?');"><i class="fa fa-trash"></i> Hapus</a>
+                        </td>
+                    </tr>
+                    {/loop}
+                    {else}
+                    <tr>
+                        <td colspan="11" class="text-center text-muted">Belum ada data asesmen risiko jatuh dan nyeri anak.</td>
+                    </tr>
+                    {/if}
+                </tbody>
+            </table>
+        </div>
+        <div class="pull-left">
+            <a href="{?=url([ADMIN, 'update_bmt', 'jatuhanakform'])?}" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Asesmen Anak Baru</a>
+        </div>
+    </div>
+</div>

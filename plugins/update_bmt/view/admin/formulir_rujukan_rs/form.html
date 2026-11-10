@@ -1,0 +1,420 @@
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Form Rujukan Komunikasi Antar RS (AKP 5.4 - 5.6)</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'update_bmt', 'formulirrujukanmanage'])?}">Kelola Data</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'formulirrujukanform'])?}">Tambah / Edit Data</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form id="frmRujukanRs" method="POST" action="{?=url([ADMIN, 'update_bmt', 'formulirrujukansave'])?}">
+                    <input type="hidden" name="id" value="{$data.id}">
+                    <input type="hidden" name="obat_diberikan" id="obat_diberikan_json" value="">
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>No. Rawat / No. RM (Enter untuk Cari Pasien)</label>
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2023/02/28/000001 atau 032742" required>
+                                <div id="patient_info" style="margin-top:5px; font-weight:bold; color:#2980b9;">
+                                    {if: !empty($pasien.nm_pasien)}{$pasien.nm_pasien} (No. RM: {$pasien.no_rkm_medis} | Tgl Lahir: {$pasien.tgl_lahir}){/if}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Kepada Yth. Teman Sejawat / Dokter Ahli</label>
+                                <input type="text" name="kepada_yth" class="form-control" value="{$data.kepada_yth}" placeholder="dr. Jaga IGD RSUD Ulin">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>RS / Instansi Tujuan</label>
+                                <input type="text" name="rs_instansi" class="form-control" value="{$data.rs_instansi}" placeholder="RSUD Ulin Banjarmasin">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h4>1. Hasil Pemeriksaan yang Telah Dilakukan</h4>
+                    <div class="form-group">
+                        <label>Anamnesis & Riwayat Penyakit</label>
+                        <textarea name="anamnesis" class="form-control" rows="2" placeholder="Pasien datang dengan keluhan...">{$data.anamnesis}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label>Keadaan Umum</label>
+                            <input type="text" name="ku_awal" class="form-control input-sm" value="{$data.ku_awal}" placeholder="Tampak sakit sedang">
+                        </div>
+                        <div class="col-md-1">
+                            <label>Kesadaran</label>
+                            <input type="text" name="kesadaran_awal" class="form-control input-sm" value="{$data.kesadaran_awal}" placeholder="CM">
+                        </div>
+                        <div class="col-md-2">
+                            <label>TD (mmHg)</label>
+                            <input type="text" name="td_awal" class="form-control input-sm" value="{$data.td_awal}" placeholder="190/110">
+                        </div>
+                        <div class="col-md-1">
+                            <label>Nadi</label>
+                            <input type="text" name="nadi_awal" class="form-control input-sm" value="{$data.nadi_awal}" placeholder="98 x/m">
+                        </div>
+                        <div class="col-md-1">
+                            <label>RR</label>
+                            <input type="text" name="rr_awal" class="form-control input-sm" value="{$data.rr_awal}" placeholder="20 x/m">
+                        </div>
+                        <div class="col-md-1">
+                            <label>Suhu</label>
+                            <input type="text" name="suhu_awal" class="form-control input-sm" value="{$data.suhu_awal}" placeholder="36,7">
+                        </div>
+                        <div class="col-md-2">
+                            <label>Skala Nyeri</label>
+                            <input type="text" name="nyeri_awal" class="form-control input-sm" value="{$data.nyeri_awal}" placeholder="4-5 nyeri sedang">
+                        </div>
+                        <div class="col-md-1">
+                            <label>SpO2</label>
+                            <input type="text" name="spo2_awal" class="form-control input-sm" value="{$data.spo2_awal}" placeholder="99%">
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top: 10px;">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Pemeriksaan Intraoral</label>
+                                <input type="text" name="intraoral" class="form-control" value="{$data.intraoral}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Pemeriksaan Ekstraoral</label>
+                                <input type="text" name="ekstraoral" class="form-control" value="{$data.ekstraoral}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label>Pemeriksaan Penunjang</label>
+                                <input type="text" name="pemeriksaan_penunjang" class="form-control" value="{$data.pemeriksaan_penunjang}" placeholder="GDS : 350">
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="form-group">
+                                <label>Diagnosis</label>
+                                <input type="text" name="diagnosis" class="form-control" value="{$data.diagnosis}" placeholder="Gingival Bleeding + HT Urgency + DM Tipe II">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label>Terapi / Tindakan yang Telah Dilakukan</label>
+                                <textarea name="terapi_tindakan" class="form-control" rows="4" placeholder="- Lakukan irigasi dengan aquades steril&#10;- Deep dengan tampon steril...">{$data.terapi_tindakan}</textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <label>Obat-Obatan yang Telah Diberikan <button type="button" class="btn btn-xs btn-success" id="btnAddObat"><i class="fa fa-plus"></i> Tambah Obat</button></label>
+                            <table class="table table-bordered table-condensed" id="tblObat">
+                                <thead>
+                                    <tr class="bg-info">
+                                        <th>Nama Obat</th>
+                                        <th width="20%">Jumlah</th>
+                                        <th width="22%">Dosis</th>
+                                        <th width="18%">Frekuensi</th>
+                                        <th width="5%">#</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {if: !empty($obat_rows)}
+                                    {loop: $obat_rows}
+                                    <tr class="obat-row">
+                                        <td><input type="text" class="form-control input-sm o-nama" value="{$value.nama_obat}"></td>
+                                        <td><input type="text" class="form-control input-sm o-jumlah" value="{$value.jumlah}"></td>
+                                        <td><input type="text" class="form-control input-sm o-dosis" value="{$value.dosis}"></td>
+                                        <td><input type="text" class="form-control input-sm o-frek" value="{$value.frekuensi}"></td>
+                                        <td><button type="button" class="btn btn-xs btn-danger btnDelObat"><i class="fa fa-trash"></i></button></td>
+                                    </tr>
+                                    {/loop}
+                                    {else}
+                                    <tr class="obat-row">
+                                        <td><input type="text" class="form-control input-sm o-nama" placeholder="Metamizole"></td>
+                                        <td><input type="text" class="form-control input-sm o-jumlah" placeholder="1 tablet"></td>
+                                        <td><input type="text" class="form-control input-sm o-dosis" placeholder="500mg"></td>
+                                        <td><input type="text" class="form-control input-sm o-frek" placeholder="3x1"></td>
+                                        <td><button type="button" class="btn btn-xs btn-danger btnDelObat"><i class="fa fa-trash"></i></button></td>
+                                    </tr>
+                                    {/if}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label>Alasan Rujuk</label>
+                                <textarea name="alasan_rujuk" class="form-control" rows="2" placeholder="Tidak ada Sp.PD (Pasien direncanakan u/ konsultasi ke Sp.PD)">{$data.alasan_rujuk}</textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>Persetujuan Rujuk</label>
+                                <select name="persetujuan_rujuk" class="form-control">
+                                    <option value="Ya" {if: $data.persetujuan_rujuk == 'Ya'}selected{/if}>Ya</option>
+                                    <option value="Tidak" {if: $data.persetujuan_rujuk == 'Tidak'}selected{/if}>Tidak</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Nama Keluarga Pemberi Persetujuan</label>
+                                <input type="text" name="nama_keluarga_setuju" class="form-control" value="{$data.nama_keluarga_setuju}" placeholder="Ny. Siti Khadijah">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>Hubungan</label>
+                                <input type="text" name="hubungan_keluarga" class="form-control" value="{$data.hubungan_keluarga}" placeholder="Istri">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h4>2. Kondisi Pasien Saat Rujuk & Komunikasi Antar RS</h4>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label>Keadaan Umum</label>
+                            <input type="text" name="ku_rujuk" class="form-control input-sm" value="{$data.ku_rujuk}" placeholder="Tampak sakit sedang">
+                        </div>
+                        <div class="col-md-1">
+                            <label>Kesadaran</label>
+                            <input type="text" name="kesadaran_rujuk" class="form-control input-sm" value="{$data.kesadaran_rujuk}" placeholder="CM">
+                        </div>
+                        <div class="col-md-2">
+                            <label>TD (mmHg)</label>
+                            <input type="text" name="td_rujuk" class="form-control input-sm" value="{$data.td_rujuk}" placeholder="180/100 mmHg">
+                        </div>
+                        <div class="col-md-1">
+                            <label>Nadi</label>
+                            <input type="text" name="nadi_rujuk" class="form-control input-sm" value="{$data.nadi_rujuk}" placeholder="90 x/m">
+                        </div>
+                        <div class="col-md-1">
+                            <label>RR</label>
+                            <input type="text" name="rr_rujuk" class="form-control input-sm" value="{$data.rr_rujuk}" placeholder="22 x/m">
+                        </div>
+                        <div class="col-md-1">
+                            <label>Suhu</label>
+                            <input type="text" name="suhu_rujuk" class="form-control input-sm" value="{$data.suhu_rujuk}" placeholder="36,6">
+                        </div>
+                        <div class="col-md-2">
+                            <label>Skala Nyeri</label>
+                            <input type="text" name="nyeri_rujuk" class="form-control input-sm" value="{$data.nyeri_rujuk}" placeholder="4-5">
+                        </div>
+                        <div class="col-md-1">
+                            <label>SpO2</label>
+                            <input type="text" name="spo2_rujuk" class="form-control input-sm" value="{$data.spo2_rujuk}" placeholder="99%">
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top: 10px;">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Status Fungsional Pasien</label>
+                                <select name="status_fungsional" class="form-control">
+                                    <option value="Mandiri" {if: $data.status_fungsional == 'Mandiri'}selected{/if}>Mandiri</option>
+                                    <option value="Ketergantungan penuh" {if: $data.status_fungsional == 'Ketergantungan penuh'}selected{/if}>Ketergantungan penuh</option>
+                                    <option value="Ketergantungan sebagian" {if: $data.status_fungsional == 'Ketergantungan sebagian'}selected{/if}>Ketergantungan sebagian</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Catatan Komunikasi Rujukan (ACC via Telpon)</label>
+                                <input type="text" name="catatan_komunikasi" class="form-control" value="{$data.catatan_komunikasi}" placeholder="ACC Rujuk via telpon oleh dr. Puspa Dewi (+) Jam 10.30">
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <label>Peralatan yang Menyertai Pasien Saat Rujuk</label>
+                            <div class="well well-sm">
+                                <label class="checkbox-inline"><input type="checkbox" name="peralatan[]" value="Nasal canule" {if: in_array('Nasal canule', $peralatan_list)}checked{/if}> Nasal canule</label>
+                                <label class="checkbox-inline"><input type="checkbox" name="peralatan[]" value="Oksigen portable" {if: in_array('Oksigen portable', $peralatan_list)}checked{/if}> Oksigen portable</label>
+                                <label class="checkbox-inline"><input type="checkbox" name="peralatan[]" value="Suction" {if: in_array('Suction', $peralatan_list)}checked{/if}> Suction</label>
+                                <label class="checkbox-inline"><input type="checkbox" name="peralatan[]" value="Bagging" {if: in_array('Bagging', $peralatan_list)}checked{/if}> Bagging</label>
+                                <label class="checkbox-inline"><input type="checkbox" name="peralatan[]" value="NGT" {if: in_array('NGT', $peralatan_list)}checked{/if}> NGT</label>
+                                <label class="checkbox-inline"><input type="checkbox" name="peralatan[]" value="Infuse pump" {if: in_array('Infuse pump', $peralatan_list)}checked{/if}> Infuse pump</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h4>3. Serah Terima di Tempat Rujukan & Tanda Tangan</h4>
+                    <div class="row">
+                        <div class="col-md-2">
+                            <label>Tiba di RS Tujuan Pukul</label>
+                            <input type="text" name="tiba_pukul" class="form-control" value="{$data.tiba_pukul}" placeholder="10.50">
+                        </div>
+                        <div class="col-md-2">
+                            <label>Tensi Saat Tiba</label>
+                            <input type="text" name="tiba_tensi" class="form-control" value="{$data.tiba_tensi}" placeholder="170/100">
+                        </div>
+                        <div class="col-md-2">
+                            <label>Suhu Saat Tiba</label>
+                            <input type="text" name="tiba_suhu" class="form-control" value="{$data.tiba_suhu}" placeholder="36,6">
+                        </div>
+                        <div class="col-md-2">
+                            <label>Pernafasan Saat Tiba</label>
+                            <input type="text" name="tiba_rr" class="form-control" value="{$data.tiba_rr}" placeholder="22 x/m">
+                        </div>
+                        <div class="col-md-2">
+                            <label>Nadi Saat Tiba</label>
+                            <input type="text" name="tiba_nadi" class="form-control" value="{$data.tiba_nadi}" placeholder="90 x/m">
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top: 15px;">
+                        <div class="col-md-6">
+                            <div class="panel panel-info">
+                                <div class="panel-heading" style="padding:6px 10px;"><strong>Petugas yang Mengirim (RSGM)</strong></div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label>Nama Petugas / Dokter Pengirim</label>
+                                        <input type="text" name="petugas_pengirim" class="form-control" value="{$data.petugas_pengirim}" placeholder="dr. Nur Syaimaa S">
+                                    </div>
+                                    <div class="text-center">
+                                        <canvas id="pad_pengirim" width="300" height="120" style="border:1px dashed #3498db; background:#fafafa; touch-action:none;"></canvas>
+                                        <input type="hidden" name="ttd_pengirim" id="input_ttd_pengirim" value="{$data.ttd_pengirim}">
+                                        <div style="margin-top:4px;">
+                                            <button type="button" class="btn btn-default btn-xs" id="clear_pengirim"><i class="fa fa-eraser"></i> Hapus</button>
+                                            <span id="st_pengirim" class="small text-muted">{if: !empty($data.ttd_pengirim)}<i class="fa fa-check text-success"></i> Tersimpan{else}Belum ada{/if}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="panel panel-success">
+                                <div class="panel-heading" style="padding:6px 10px;"><strong>Petugas yang Menerima (RS Tujuan Rujukan)</strong></div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label>Nama Petugas RS Penerima Rujukan</label>
+                                        <input type="text" name="petugas_penerima" class="form-control" value="{$data.petugas_penerima}" placeholder="Azmi, S.Kep., Ns">
+                                    </div>
+                                    <div class="text-center">
+                                        <canvas id="pad_penerima" width="300" height="120" style="border:1px dashed #27ae60; background:#fafafa; touch-action:none;"></canvas>
+                                        <input type="hidden" name="ttd_penerima" id="input_ttd_penerima" value="{$data.ttd_penerima}">
+                                        <div style="margin-top:4px;">
+                                            <button type="button" class="btn btn-default btn-xs" id="clear_penerima"><i class="fa fa-eraser"></i> Hapus</button>
+                                            <span id="st_penerima" class="small text-muted">{if: !empty($data.ttd_penerima)}<i class="fa fa-check text-success"></i> Tersimpan{else}Belum ada{/if}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan Formulir Rujukan</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'formulirrujukanmanage'])?}" class="btn btn-default">Kembali</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$('#no_rawat').on('keypress', function(e) {
+    if (e.which === 13) {
+        e.preventDefault();
+        $.get("{?=url([ADMIN, 'update_bmt', 'formulirrujukanform'])?}&ajax_patient=1&no_rawat=" + encodeURIComponent($(this).val()), function(res) {
+            var d = typeof res === 'string' ? JSON.parse(res) : res;
+            if (d.success) {
+                $('#no_rawat').val(d.no_rawat);
+                $('#patient_info').html(d.nm_pasien + ' (No. RM: ' + d.no_rkm_medis + ' | Tgl Lahir: ' + d.tgl_lahir + ')');
+            } else {
+                $('#patient_info').html('<span class="text-danger">Pasien tidak ditemukan</span>');
+            }
+        });
+    }
+});
+
+$('#btnAddObat').click(function() {
+    var tr = '<tr class="obat-row">' +
+        '<td><input type="text" class="form-control input-sm o-nama"></td>' +
+        '<td><input type="text" class="form-control input-sm o-jumlah"></td>' +
+        '<td><input type="text" class="form-control input-sm o-dosis"></td>' +
+        '<td><input type="text" class="form-control input-sm o-frek"></td>' +
+        '<td><button type="button" class="btn btn-xs btn-danger btnDelObat"><i class="fa fa-trash"></i></button></td>' +
+    '</tr>';
+    $('#tblObat tbody').append(tr);
+});
+
+$('body').on('click', '.btnDelObat', function() {
+    if ($('.obat-row').length > 1) {
+        $(this).closest('tr').remove();
+    } else {
+        $(this).closest('tr').find('input').val('');
+    }
+});
+
+function setupRujukCanvas(canvasId, inputId, clearId, statusId) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var drawing = false, prevX = 0, prevY = 0;
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+
+    var existing = $('#' + inputId).val();
+    if (existing && existing.indexOf('data:image') === 0) {
+        var img = new Image();
+        img.onload = function() { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); };
+        img.src = existing;
+    }
+
+    function getPos(c, e) {
+        var rect = c.getBoundingClientRect();
+        var cx = e.clientX || (e.touches && e.touches[0].clientX);
+        var cy = e.clientY || (e.touches && e.touches[0].clientY);
+        return { x: (cx - rect.left) * (c.width / rect.width), y: (cy - rect.top) * (c.height / rect.height) };
+    }
+    $(canvas).on('mousedown', function(e) { var p = getPos(canvas, e.originalEvent); drawing = true; prevX = p.x; prevY = p.y; });
+    $(canvas).on('mousemove', function(e) {
+        if (!drawing) return;
+        var p = getPos(canvas, e.originalEvent);
+        ctx.beginPath(); ctx.moveTo(prevX, prevY); ctx.lineTo(p.x, p.y); ctx.stroke();
+        prevX = p.x; prevY = p.y;
+        $('#' + inputId).val(canvas.toDataURL('image/png'));
+        $('#' + statusId).html('<i class="fa fa-pencil text-primary"></i> Aktif');
+    });
+    $(window).on('mouseup', function() { drawing = false; });
+
+    $('#' + clearId).click(function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        $('#' + inputId).val('');
+        $('#' + statusId).html('<span class="text-danger">Dihapus</span>');
+    });
+}
+
+setupRujukCanvas('pad_pengirim', 'input_ttd_pengirim', 'clear_pengirim', 'st_pengirim');
+setupRujukCanvas('pad_penerima', 'input_ttd_penerima', 'clear_penerima', 'st_penerima');
+
+$('#frmRujukanRs').submit(function() {
+    var obats = [];
+    $('.obat-row').each(function() {
+        var nm = $(this).find('.o-nama').val();
+        if (nm) {
+            obats.push({
+                nama_obat: nm,
+                jumlah: $(this).find('.o-jumlah').val(),
+                dosis: $(this).find('.o-dosis').val(),
+                frekuensi: $(this).find('.o-frek').val()
+            });
+        }
+    });
+    $('#obat_diberikan_json').val(JSON.stringify(obats));
+});
+</script>

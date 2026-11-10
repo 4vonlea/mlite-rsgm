@@ -1,0 +1,53 @@
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-user-md"></i> RM.RI 05A - ASESMEN MEDIS RAWAT INAP GIGI</h3>
+    </div>
+    <div class="panel-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th width="40">No</th>
+                        <th>No. Rawat</th>
+                        <th>No. RM</th>
+                        <th>Nama Pasien</th>
+                        <th>Tgl/Jam Asesmen</th>
+                        <th>Ruangan/Kelas</th>
+                        <th>Diagnosis Utama</th>
+                        <th>Dokter DPJP</th>
+                        <th width="240" class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {if: !empty($data)}
+                    {loop: $data}
+                    <tr>
+                        <td>{?= $key + 1 ?}</td>
+                        <td><strong>{$value.no_rawat}</strong></td>
+                        <td>{$value.no_rkm_medis}</td>
+                        <td><strong>{$value.nm_pasien}</strong></td>
+                        <td>{$value.tgl_asesmen} {$value.jam_asesmen}</td>
+                        <td>{$value.ruangan} / Kelas {$value.kelas}</td>
+                        <td><span class="label label-primary">{$value.diagnosis_utama}</span></td>
+                        <td>{$value.nama_dokter}</td>
+                        <td class="text-center">
+                            <a href="{?=url([ADMIN, 'update_bmt', 'rimedisgigicetak'])?}&id={$value.id}" class="btn btn-xs btn-success" target="_blank"><i class="fa fa-print"></i> Cetak</a>
+                            <a href="{?=url([ADMIN, 'update_bmt', 'rimedisgigicetak'])?}&id={$value.id}&pdf=1" class="btn btn-xs btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i> PDF</a>
+                            <a href="{?=url([ADMIN, 'update_bmt', 'rimedisgigiform'])?}&id={$value.id}" class="btn btn-xs btn-info"><i class="fa fa-edit"></i> Edit</a>
+                            <a href="{?=url([ADMIN, 'update_bmt', 'rimedisgigihapus'])?}&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?');"><i class="fa fa-trash"></i> Hapus</a>
+                        </td>
+                    </tr>
+                    {/loop}
+                    {else}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted">Belum ada data asesmen medis rawat inap gigi.</td>
+                    </tr>
+                    {/if}
+                </tbody>
+            </table>
+        </div>
+        <div class="pull-left">
+            <a href="{?=url([ADMIN, 'update_bmt', 'rimedisgigiform'])?}" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Asesmen Medis Gigi Baru</a>
+        </div>
+    </div>
+</div>

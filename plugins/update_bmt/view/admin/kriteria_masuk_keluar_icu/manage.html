@@ -1,0 +1,82 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="btn-group pull-right" style="margin-top:-5px;">
+                    <a href="{?=url([ADMIN, 'update_bmt', 'kriteriaicuform'])?}" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Tambah Penilaian ICU</a>
+                </div>
+                <h3 class="panel-title"><i class="fa fa-heartbeat"></i> <strong>KRITERIA MASUK DAN KELUAR RUANG RAWAT INTENSIF (ICU) - AKP 1.2 EP C</strong></h3>
+            </div>
+            <div class="panel-body">
+                <form method="GET" action="{?=url([ADMIN, 'update_bmt', 'kriteriaicumanage'])?}" class="form-inline m-b-md">
+                    <div class="form-group">
+                        <input type="text" name="cari" class="form-control input-sm" placeholder="No. Rawat / No. RM / Nama" value="{$cari}">
+                    </div>
+                    <button type="submit" class="btn btn-default btn-sm"><i class="fa fa-search"></i> Cari</button>
+                    {if: !empty($cari)}
+                    <a href="{?=url([ADMIN, 'update_bmt', 'kriteriaicumanage'])?}" class="btn btn-link btn-sm">Reset</a>
+                    {/if}
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover">
+                        <thead>
+                            <tr class="info">
+                                <th width="4%" class="text-center">No</th>
+                                <th width="14%">No. Rawat</th>
+                                <th width="9%">No. RM</th>
+                                <th width="15%">Nama Pasien</th>
+                                <th width="12%">Asal Unit</th>
+                                <th width="10%">Prioritas</th>
+                                <th width="12%">Keputusan Masuk</th>
+                                <th width="12%">Keputusan Keluar</th>
+                                <th width="12%" class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {if: !empty($data)}
+                            {loop: $data}
+                            <tr>
+                                <td class="text-center">{$key + 1}</td>
+                                <td><strong>{$value.no_rawat}</strong></td>
+                                <td>{$value.no_rkm_medis}</td>
+                                <td>{$value.nama_pasien}</td>
+                                <td>{$value.asal_unit_masuk} {if: !empty($value.asal_unit_lainnya)}({$value.asal_unit_lainnya}){/if}</td>
+                                <td><span class="label label-info">{$value.prioritas_masuk}</span></td>
+                                <td>
+                                    {if: $value.keputusan_masuk == 'DITERIMA ICU'}
+                                    <span class="label label-success">{$value.keputusan_masuk}</span>
+                                    {else}
+                                    <span class="label label-warning">{$value.keputusan_masuk}</span>
+                                    {/if}
+                                </td>
+                                <td>
+                                    {if: !empty($value.keputusan_keluar)}
+                                    <span class="label label-primary">{$value.keputusan_keluar}</span>
+                                    {else}
+                                    <span class="text-muted"><small><em>Belum dinilai</em></small></span>
+                                    {/if}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-xs">
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'kriteriaicucetak'])?}?id={$value.id}" target="_blank" class="btn btn-default" title="Cetak HTML"><i class="fa fa-print"></i></a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'kriteriaicucetak'])?}?id={$value.id}&pdf=1" target="_blank" class="btn btn-info" title="Download PDF"><i class="fa fa-file-pdf-o"></i></a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'kriteriaicuform'])?}?id={$value.id}" class="btn btn-warning" title="Edit Data"><i class="fa fa-edit"></i></a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'kriteriaicuhapus'])?}?id={$value.id}" onclick="return confirm('Apakah Anda yakin ingin menghapus data penilaian ICU ini?')" class="btn btn-danger" title="Hapus Data"><i class="fa fa-trash"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {/loop}
+                            {else}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted">Belum ada data penilaian kriteria masuk dan keluar ICU.</td>
+                            </tr>
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,83 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="btn-group pull-right" style="margin-top:-5px;">
+                    <a href="{?=url([ADMIN, 'update_bmt', 'jaminanbiayaform'])?}" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Tambah Surat Jaminan</a>
+                </div>
+                <h3 class="panel-title"><i class="fa fa-shield"></i> <strong>SURAT PERNYATAAN JAMINAN PEMBIAYAAN (PENDAFTARAN / ADMISI)</strong></h3>
+            </div>
+            <div class="panel-body">
+                <form method="GET" action="{?=url([ADMIN, 'update_bmt', 'jaminanbiayamanage'])?}" class="form-inline m-b-md">
+                    <div class="form-group">
+                        <input type="text" name="cari" class="form-control input-sm" placeholder="No. Rawat / No. RM / Nama" value="{$cari}">
+                    </div>
+                    <button type="submit" class="btn btn-default btn-sm"><i class="fa fa-search"></i> Cari</button>
+                    {if: !empty($cari)}
+                    <a href="{?=url([ADMIN, 'update_bmt', 'jaminanbiayamanage'])?}" class="btn btn-link btn-sm">Reset</a>
+                    {/if}
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover">
+                        <thead>
+                            <tr class="info">
+                                <th width="4%" class="text-center">No</th>
+                                <th width="14%">No. Rawat</th>
+                                <th width="10%">No. RM</th>
+                                <th width="16%">Nama Pasien</th>
+                                <th width="18%">Penanggung Jawab / Wali</th>
+                                <th width="12%">Jenis Jaminan</th>
+                                <th width="10%">Tanggal Surat</th>
+                                <th width="8%" class="text-center">TTD Digital</th>
+                                <th width="12%" class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {if: !empty($data)}
+                            {loop: $data}
+                            <tr>
+                                <td class="text-center">{$key + 1}</td>
+                                <td><strong>{$value.no_rawat}</strong></td>
+                                <td>{$value.no_rkm_medis}</td>
+                                <td>{$value.nama_pasien}</td>
+                                <td>{$value.nama_penanggung_jawab} <small class="text-muted">({$value.hubungan_dengan_pasien})</small></td>
+                                <td>
+                                    {if: $value.jenis_jaminan == 'Umum'}
+                                    <span class="label label-primary">Umum</span>
+                                    {elseif: $value.jenis_jaminan == 'BPJS Kesehatan'}
+                                    <span class="label label-success">BPJS</span>
+                                    {else}
+                                    <span class="label label-info">{$value.jenis_jaminan}</span>
+                                    {/if}
+                                </td>
+                                <td>{$value.tanggal_surat}</td>
+                                <td class="text-center">
+                                    {if: !empty($value.ttd_pembuat_pernyataan)}
+                                    <span class="label label-success"><i class="fa fa-check"></i> Ada</span>
+                                    {else}
+                                    <span class="label label-default">Belum</span>
+                                    {/if}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-xs">
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'jaminanbiayacetak'])?}?id={$value.id}" target="_blank" class="btn btn-default" title="Cetak HTML"><i class="fa fa-print"></i></a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'jaminanbiayacetak'])?}?id={$value.id}&pdf=1" target="_blank" class="btn btn-danger" title="Download PDF"><i class="fa fa-file-pdf-o"></i></a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'jaminanbiayaform'])?}?id={$value.id}" class="btn btn-warning" title="Edit Data"><i class="fa fa-edit"></i></a>
+                                        <a href="{?=url([ADMIN, 'update_bmt', 'jaminanbiayahapus'])?}?id={$value.id}" onclick="return confirm('Hapus Surat Pernyataan Jaminan Pembiayaan ini?')" class="btn btn-danger" title="Hapus Data"><i class="fa fa-trash"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {/loop}
+                            {else}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted">Belum ada data Surat Pernyataan Jaminan Pembiayaan.</td>
+                            </tr>
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

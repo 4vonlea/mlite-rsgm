@@ -137,12 +137,19 @@
           <button type="button" name="button" class="btn btn-danger" id="buka_icd10dan9"><i class="fa fa-download"></i><span class="hidden-xs"> ICD 10 & 9</span></button>
           <button type="button" name="button" class="btn btn-info" id="eresep"><i class="fa fa-medkit"></i><span class="hidden-xs"> E-Resep</span></button>
           <button type="button" name="button" class="btn btn-info" id="buka_riwayat"><i class="fa fa-file-o"></i><span class="hidden-xs"> Riwayat</span></button>
+          <button type="button" name="button" class="btn btn-success" id="buka_cetak_cppt"><i class="fa fa-print"></i><span class="hidden-xs"> Cetak CPPT</span></button>
           <button type="button" name="button" class="btn btn-success" id="selesai_soap"><i class="fa fa-check"></i><span class="hidden-xs"> Selesai</span></button>
           <span class="pull-right">
             <a href="#" class="btn btn-warning resume"><i class="fa fa-file-text"></i><span class="hidden-xs"> Resume</span></a>
             <a href="#" class="btn btn-info" id="odontogram"><i class="fa fa-bell"></i><span class="hidden-xs"> Odontogram</span></a>
+            <a href="#" class="btn btn-danger" id="buka_asesmen_ulang_nyeri"><i class="fa fa-heartbeat"></i><span class="hidden-xs"> Asesmen Ulang Nyeri</span></a>
             <a href="#" class="btn btn-warning assesment" id="buka_assessment"><i class="fa fa-file-text"></i><span class="hidden-xs"> Asesmen Medis Gigi</span></a>
             <a href="#" class="btn btn-primary" id="buka_assessment_umum"><i class="fa fa-stethoscope"></i><span class="hidden-xs"> Asesmen Medis Umum</span></a>
+            <a href="#" class="btn btn-default" id="buka_pengantar_ranap" style="background:#e0f2fe;color:#0369a1;border-color:#bae6fd;"><i class="fa fa-bed"></i><span class="hidden-xs"> Pengantar Ranap (AKP 1.2)</span></a>
+            <a href="#" class="btn btn-default" id="buka_kriteria_icu" style="background:#fee2e2;color:#991b1b;border-color:#fecaca;"><i class="fa fa-heartbeat"></i><span class="hidden-xs"> Kriteria ICU (AKP 1.2 C)</span></a>
+            <a href="#" class="btn btn-default" id="buka_penundaan_layanan" style="background:#fef3c7;color:#92400e;border-color:#fde68a;"><i class="fa fa-clock-o"></i><span class="hidden-xs"> Penundaan Layanan (AKP 1.3)</span></a>
+            <a href="#" class="btn btn-default" id="buka_general_consent" style="background:#ecfdf5;color:#065f46;border-color:#a7f3d0;"><i class="fa fa-file-text-o"></i><span class="hidden-xs"> General Consent & Biaya (AKP 2 C)</span></a>
+            <a href="#" class="btn btn-default" id="buka_jaminan_biaya" style="background:#f3e8ff;color:#6b21a8;border-color:#d8b4fe;"><i class="fa fa-shield"></i><span class="hidden-xs"> Jaminan Biaya</span></a>
           </span>
         </div>
       </div>
@@ -314,6 +321,97 @@
     event.preventDefault();
     var no_rawat = $('input:text[name=no_rawat]').val();
     window.open(baseURL + '/update_bmt/rmgd6form?no_rawat=' + encodeURIComponent(no_rawat) + '&t=' + mlite.token, '_blank');
+    return false;
+  });
+
+  // Handler untuk tombol Cetak CPPT
+  $("#form_soap").on("click","#buka_cetak_cppt", function(event){
+    var baseURL = mlite.url + '/' + mlite.admin;
+    event.preventDefault();
+    var no_rawat = $('input:text[name=no_rawat]').val();
+    if(!no_rawat) {
+      alert('Pilih pasien terlebih dahulu.');
+      return false;
+    }
+    window.open(baseURL + '/update_bmt/cpptcetak?no_rawat=' + encodeURIComponent(no_rawat) + '&t=' + mlite.token, '_blank');
+    return false;
+  });
+
+  // Handler untuk tombol Asesmen Ulang Nyeri
+  $("#form_soap").on("click","#buka_asesmen_ulang_nyeri", function(event){
+    var baseURL = mlite.url + '/' + mlite.admin;
+    event.preventDefault();
+    var no_rawat = $('input:text[name=no_rawat]').val();
+    if(!no_rawat) {
+      alert('Pilih pasien terlebih dahulu.');
+      return false;
+    }
+    window.open(baseURL + '/update_bmt/rj07form?no_rawat=' + encodeURIComponent(no_rawat) + '&t=' + mlite.token, '_blank');
+    return false;
+  });
+
+  // Handler untuk tombol Surat Pengantar Rawat Inap (AKP 1.2 EP A)
+  $("#form_soap").on("click","#buka_pengantar_ranap", function(event){
+    var baseURL = mlite.url + '/' + mlite.admin;
+    event.preventDefault();
+    var no_rawat = $('input:text[name=no_rawat]').val();
+    if(!no_rawat) {
+      alert('Pilih pasien terlebih dahulu.');
+      return false;
+    }
+    window.open(baseURL + '/update_bmt/pengantarranapform?no_rawat=' + encodeURIComponent(no_rawat) + '&t=' + mlite.token, '_blank');
+    return false;
+  });
+
+  // Handler untuk tombol Kriteria Masuk dan Keluar ICU (AKP 1.2 EP C)
+  $("#form_soap").on("click","#buka_kriteria_icu", function(event){
+    var baseURL = mlite.url + '/' + mlite.admin;
+    event.preventDefault();
+    var no_rawat = $('input:text[name=no_rawat]').val();
+    if(!no_rawat) {
+      alert('Pilih pasien terlebih dahulu.');
+      return false;
+    }
+    window.open(baseURL + '/update_bmt/kriteriaicuform?no_rawat=' + encodeURIComponent(no_rawat) + '&t=' + mlite.token, '_blank');
+    return false;
+  });
+
+  // Handler untuk tombol Penundaan dan Kelambatan Pelayanan (AKP 1.3 EP a & b)
+  $("#form_soap").on("click","#buka_penundaan_layanan", function(event){
+    var baseURL = mlite.url + '/' + mlite.admin;
+    event.preventDefault();
+    var no_rawat = $('input:text[name=no_rawat]').val();
+    if(!no_rawat) {
+      alert('Pilih pasien terlebih dahulu.');
+      return false;
+    }
+    window.open(baseURL + '/update_bmt/penundaankelambatanform?no_rawat=' + encodeURIComponent(no_rawat) + '&t=' + mlite.token, '_blank');
+    return false;
+  });
+
+  // Handler untuk tombol General Consent & Biaya Ranap (AKP 2 EP C)
+  $("#form_soap").on("click","#buka_general_consent", function(event){
+    var baseURL = mlite.url + '/' + mlite.admin;
+    event.preventDefault();
+    var no_rawat = $('input:text[name=no_rawat]').val();
+    if(!no_rawat) {
+      alert('Pilih pasien terlebih dahulu.');
+      return false;
+    }
+    window.open(baseURL + '/update_bmt/generalconsentform?no_rawat=' + encodeURIComponent(no_rawat) + '&t=' + mlite.token, '_blank');
+    return false;
+  });
+
+  // Handler untuk tombol Surat Pernyataan Jaminan Pembiayaan
+  $("#form_soap").on("click","#buka_jaminan_biaya", function(event){
+    var baseURL = mlite.url + '/' + mlite.admin;
+    event.preventDefault();
+    var no_rawat = $('input:text[name=no_rawat]').val();
+    if(!no_rawat) {
+      alert('Pilih pasien terlebih dahulu.');
+      return false;
+    }
+    window.open(baseURL + '/update_bmt/jaminanbiayaform?no_rawat=' + encodeURIComponent(no_rawat) + '&t=' + mlite.token, '_blank');
     return false;
   });
 </script>
