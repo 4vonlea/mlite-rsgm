@@ -1,0 +1,403 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+  <form method="POST" action="{?=url([ADMIN, 'form_rme', 'ans2save'])?}" id="ans2_main_form">
+    <input type="hidden" name="id" value="{?=isset_or($data['id'])?}">
+    <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{?=isset_or($data['no_rkm_medis'])?}">
+
+    <div class="rsgm-soap-flex-row clearfix">
+      
+      <!-- ============================================================
+           KOLOM KIRI (3): SIDEBAR IDENTITAS & REGISTRASI PASIEN
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Data Pasien</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="tanggal_jam" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tanggal &amp; Waktu</label>
+              <input type="datetime-local" name="tanggal_jam" id="tanggal_jam" class="form-control" value="{if: !empty($data['tanggal_jam'])}{?=date('Y-m-d\TH:i', strtotime($data['tanggal_jam']))?}{else}{?=date('Y-m-d\TH:i')?}{/if}">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default" id="btn_cari_pasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                    <i class="fa fa-search text-primary"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="display_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+              <input type="text" id="display_no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="nama_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+              <input type="text" name="nama_pasien" id="nama_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{if: !empty($data['nama_pasien'])}{$data['nama_pasien']}{elseif: !empty($data['nm_pasien'])}{$data['nm_pasien']}{/if}" required>
+            </div>
+
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="jenis_kelamin" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                  <select name="jenis_kelamin" id="jenis_kelamin" class="form-control">
+                    <option value="L" {if: (isset($data['jenis_kelamin']) && $data['jenis_kelamin'] == 'L') || (isset($data['jk']) && $data['jk'] == 'L')}selected{/if}>Laki-laki</option>
+                    <option value="P" {if: (isset($data['jenis_kelamin']) && $data['jenis_kelamin'] == 'P') || (isset($data['jk']) && $data['jk'] == 'P')}selected{/if}>Perempuan</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="tanggal_lahir" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir</label>
+                  <input type="date" name="tanggal_lahir" id="tanggal_lahir" class="form-control" value="{if: !empty($data['tanggal_lahir'])}{$data['tanggal_lahir']}{elseif: !empty($data['tgl_lahir'])}{$data['tgl_lahir']}{/if}">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="asuransi" class="rsgm-compact-label"><i class="fa fa-shield text-muted"></i> Asuransi / Penjamin</label>
+              <select name="asuransi" id="asuransi" class="form-control">
+                <option value="BPJS" {if: isset($data['asuransi']) && $data['asuransi'] == 'BPJS'}selected{/if}>BPJS Kesehatan</option>
+                <option value="Umum" {if: isset($data['asuransi']) && $data['asuransi'] == 'Umum'}selected{/if}>Umum / Mandiri</option>
+                <option value="Asuransi" {if: isset($data['asuransi']) && $data['asuransi'] == 'Asuransi'}selected{/if}>Asuransi Swasta / Lainnya</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="alamat_kontak" class="rsgm-compact-label"><i class="fa fa-map-marker text-muted"></i> Alamat / Domisili</label>
+              <input type="text" name="alamat_kontak" id="alamat_kontak" class="form-control" maxlength="150" value="{if: !empty($data['alamat_kontak'])}{$data['alamat_kontak']}{elseif: !empty($data['alamat'])}{$data['alamat']}{/if}" placeholder="Alamat tinggal pasien">
+            </div>
+
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="pihak_rs_nama" class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Dokter / Saksi RS</label>
+                <input type="text" name="pihak_rs_nama" id="pihak_rs_nama" class="form-control" value="{?=isset_or($data['pihak_rs_nama'])?}" placeholder="Nama Petugas / Dokter RS">
+              </div>
+
+              <button type="button" id="btn_demo" class="btn btn-warning btn-sm btn-block" style="border-radius: 6px; font-weight: 600;" title="Isi form dengan contoh data lengkap untuk uji coba klinis">
+                <i class="fa fa-magic"></i> Isi Contoh Data
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           KOLOM KANAN (9): WORKSTATION PERSETUJUAN / PENOLAKAN
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell">
+          
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-handshake-o"></i></span>
+              <span>Persetujuan / Penolakan Tindakan Pembiusan (Anestesi)</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">RM.ANS 2</span>
+              <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-pencil-square-o"></i> Surat Pernyataan</span>
+            </div>
+          </div>
+
+          <div class="rsgm-reg-body">
+            
+            <!-- SECTION 1: PILIHAN JENIS PERNYATAAN & WAKTU -->
+            <div class="rsgm-soap-section" style="background-color: #f8fafc; border-color: #cbd5e1;">
+              <div class="rsgm-soap-sec-title">
+                <i class="fa fa-check-circle text-primary"></i>
+                <span>Jenis Pernyataan &amp; Waktu Persetujuan</span>
+              </div>
+              <div class="row">
+                <div class="col-md-8 form-group" style="margin-bottom: 10px;">
+                  <label for="jenis_pernyataan" class="rsgm-compact-label">Keputusan Tindakan Anestesi <span class="text-danger">*</span></label>
+                  <select name="jenis_pernyataan" id="jenis_pernyataan" class="form-control" style="font-weight: 700; font-size: 14px;" required>
+                    <option value="PERSETUJUAN" style="color: #047857; font-weight: 700;" {if: !isset($data['jenis_pernyataan']) || $data['jenis_pernyataan'] == 'PERSETUJUAN'}selected{/if}>
+                      ✅ PERSETUJUAN TINDAKAN PEMBIUSAN (ANESTESI)
+                    </option>
+                    <option value="PENOLAKAN" style="color: #b91c1c; font-weight: 700;" {if: isset($data['jenis_pernyataan']) && $data['jenis_pernyataan'] == 'PENOLAKAN'}selected{/if}>
+                      ❌ PENOLAKAN TINDAKAN PEMBIUSAN (ANESTESI)
+                    </option>
+                  </select>
+                </div>
+                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">Status Form</label>
+                  <div id="badge_status_pernyataan" style="padding: 7px 12px; border-radius: 6px; font-weight: 700; text-align: center; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;">
+                    <i class="fa fa-check-circle"></i> PERSETUJUAN
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 2: PIHAK YANG MENYATAKAN (YANG BERTANDATANGAN) -->
+            <div class="rsgm-soap-section">
+              <div class="rsgm-soap-sec-title">
+                <i class="fa fa-user text-primary"></i>
+                <span>Identitas Pihak yang Menyatakan (Yang Bertanda Tangan)</span>
+                <button type="button" id="btn_salin_pasien" class="btn btn-default btn-xs pull-right" style="border-radius: 4px; font-weight: 600;" title="Salin otomatis jika pasien sendiri yang bertanda tangan">
+                  <i class="fa fa-clone text-info"></i> Salin dari Data Pasien
+                </button>
+              </div>
+
+              <div class="row">
+                <div class="col-md-5 form-group" style="margin-bottom: 10px;">
+                  <label for="pihak_nama" class="rsgm-compact-label">Nama Lengkap Yang Menyatakan <span class="text-danger">*</span></label>
+                  <input type="text" name="pihak_nama" id="pihak_nama" class="form-control" value="{?=isset_or($data['pihak_nama'])?}" placeholder="Nama lengkap pemberi persetujuan / penolakan" required>
+                </div>
+                <div class="col-md-2 form-group" style="margin-bottom: 10px;">
+                  <label for="pihak_umur" class="rsgm-compact-label">Umur (Thn)</label>
+                  <input type="text" name="pihak_umur" id="pihak_umur" class="form-control" value="{?=isset_or($data['pihak_umur'])?}" placeholder="Contoh: 35">
+                </div>
+                <div class="col-md-2 form-group" style="margin-bottom: 10px;">
+                  <label for="pihak_jk" class="rsgm-compact-label">Gender</label>
+                  <select name="pihak_jk" id="pihak_jk" class="form-control">
+                    <option value="L" {if: isset($data['pihak_jk']) && $data['pihak_jk'] == 'L'}selected{/if}>Laki-laki</option>
+                    <option value="P" {if: isset($data['pihak_jk']) && $data['pihak_jk'] == 'P'}selected{/if}>Perempuan</option>
+                  </select>
+                </div>
+                <div class="col-md-3 form-group" style="margin-bottom: 10px;">
+                  <label for="pihak_sebagai" class="rsgm-compact-label">Hubungan dengan Pasien <span class="text-danger">*</span></label>
+                  <select name="pihak_sebagai" id="pihak_sebagai" class="form-control" required>
+                    <option value="Pasien" {if: isset($data['pihak_sebagai']) && $data['pihak_sebagai'] == 'Pasien'}selected{/if}>Pasien Sendiri</option>
+                    <option value="Suami" {if: isset($data['pihak_sebagai']) && $data['pihak_sebagai'] == 'Suami'}selected{/if}>Suami</option>
+                    <option value="Istri" {if: isset($data['pihak_sebagai']) && $data['pihak_sebagai'] == 'Istri'}selected{/if}>Istri</option>
+                    <option value="Ayah" {if: isset($data['pihak_sebagai']) && $data['pihak_sebagai'] == 'Ayah'}selected{/if}>Ayah</option>
+                    <option value="Ibu" {if: isset($data['pihak_sebagai']) && $data['pihak_sebagai'] == 'Ibu'}selected{/if}>Ibu</option>
+                    <option value="Anak" {if: isset($data['pihak_sebagai']) && $data['pihak_sebagai'] == 'Anak'}selected{/if}>Anak</option>
+                    <option value="Keluarga" {if: isset($data['pihak_sebagai']) && $data['pihak_sebagai'] == 'Keluarga'}selected{/if}>Keluarga Lainnya / Wali</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 5px;">
+                <label for="pihak_alamat" class="rsgm-compact-label">Alamat Lengkap Yang Menyatakan</label>
+                <input type="text" name="pihak_alamat" id="pihak_alamat" class="form-control" value="{?=isset_or($data['pihak_alamat'])?}" placeholder="Alamat tinggal / domisili pihak yang menyatakan">
+              </div>
+            </div>
+
+            <!-- SECTION 3: TERHADAP PASIEN (SASARAN TINDAKAN) -->
+            <div class="rsgm-soap-section">
+              <div class="rsgm-soap-sec-title">
+                <i class="fa fa-bed text-primary"></i>
+                <span>Terhadap Pasien (Sasaran Tindakan Anestesi)</span>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                  <label for="pasien_nama_isian" class="rsgm-compact-label">Nama Pasien <span class="text-danger">*</span></label>
+                  <input type="text" name="pasien_nama_isian" id="pasien_nama_isian" class="form-control" value="{if: !empty($data['pasien_nama_isian'])}{$data['pasien_nama_isian']}{elseif: !empty($data['nama_pasien'])}{$data['nama_pasien']}{elseif: !empty($data['nm_pasien'])}{$data['nm_pasien']}{/if}" placeholder="Nama lengkap pasien yang akan dibius" required>
+                </div>
+                <div class="col-md-3 form-group" style="margin-bottom: 10px;">
+                  <label for="pasien_umur_isian" class="rsgm-compact-label">Umur Pasien</label>
+                  <input type="text" name="pasien_umur_isian" id="pasien_umur_isian" class="form-control" value="{?=isset_or($data['pasien_umur_isian'])?}" placeholder="Contoh: 35 Thn">
+                </div>
+                <div class="col-md-3 form-group" style="margin-bottom: 10px;">
+                  <label for="pasien_jk_isian" class="rsgm-compact-label">Gender Pasien</label>
+                  <select name="pasien_jk_isian" id="pasien_jk_isian" class="form-control">
+                    <option value="L" {if: isset($data['pasien_jk_isian']) && $data['pasien_jk_isian'] == 'L'}selected{/if}>Laki-laki</option>
+                    <option value="P" {if: isset($data['pasien_jk_isian']) && $data['pasien_jk_isian'] == 'P'}selected{/if}>Perempuan</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 5px;">
+                <label for="pasien_alamat_isian" class="rsgm-compact-label">Alamat Pasien</label>
+                <input type="text" name="pasien_alamat_isian" id="pasien_alamat_isian" class="form-control" value="{if: !empty($data['pasien_alamat_isian'])}{$data['pasien_alamat_isian']}{elseif: !empty($data['alamat'])}{$data['alamat']}{/if}" placeholder="Alamat tinggal pasien">
+              </div>
+            </div>
+
+            <!-- SECTION 4: ALASAN PENOLAKAN (HANYA DITAMPILKAN JIKA MEMILIH PENOLAKAN) -->
+            <div class="rsgm-soap-section" id="container_alasan" style="background-color: #fef2f2; border-color: #fca5a5; display: none;">
+              <div class="rsgm-soap-sec-title" style="color: #991b1b; border-color: #fecaca;">
+                <i class="fa fa-exclamation-triangle text-danger"></i>
+                <span>Alasan Penolakan Tindakan Pembiusan</span>
+              </div>
+              <div class="form-group" style="margin-bottom: 5px;">
+                <label for="alasan_penolakan" class="rsgm-compact-label" style="color: #991b1b;">Tuliskan alasan penolakan secara jelas:</label>
+                <textarea name="alasan_penolakan" id="alasan_penolakan" class="form-control" rows="3" placeholder="Contoh: Pasien / keluarga memilih menunda prosedur operasi, mempertimbangkan opsi non-bedah, atau alasan medis/pribadi lainnya.">{?=isset_or($data['alasan_penolakan'])?}</textarea>
+              </div>
+            </div>
+
+            <!-- SECTION 5: PENANGGUNG JAWAB & SAKSI-SAKSI -->
+            <div class="rsgm-soap-section" style="margin-bottom: 0;">
+              <div class="rsgm-soap-sec-title">
+                <i class="fa fa-pencil text-primary"></i>
+                <span>Saksi-Saksi Penandatanganan Dokumen</span>
+              </div>
+              <div class="row">
+                <div class="col-md-6 form-group" style="margin-bottom: 5px;">
+                  <label for="saksi_nama" class="rsgm-compact-label">Saksi Pihak Pasien / Keluarga</label>
+                  <input type="text" name="saksi_nama" id="saksi_nama" class="form-control" value="{?=isset_or($data['saksi_nama'])?}" placeholder="Nama saksi keluarga">
+                </div>
+                <div class="col-md-6 form-group" style="margin-bottom: 5px;">
+                  <label for="pihak_rs_nama_sync" class="rsgm-compact-label">Dokter / Saksi Pihak Rumah Sakit</label>
+                  <input type="text" id="pihak_rs_nama_sync" class="form-control" value="{?=isset_or($data['pihak_rs_nama'])?}" placeholder="Nama dokter / perawat saksi RS">
+                </div>
+              </div>
+            </div>
+
+          </div> <!-- /.rsgm-reg-body -->
+
+          <!-- FOOTER ACTIONS -->
+          <div class="rsgm-reg-footer">
+            <div>
+              <a href="{?=url([ADMIN, 'form_rme', 'ans2manage'])?}" class="btn btn-default" style="border-radius: 6px;">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+            <div class="rsgm-reg-actions">
+              <button type="button" class="btn btn-info btn-trigger-rme-preview" style="font-weight: 600; border-radius: 6px;" title="Lihat pratinjau form hasil cetak / PDF">
+                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+              </button>
+              <button type="submit" class="btn btn-primary" id="btn_simpan_ans2" style="font-weight: 700; border-radius: 6px;">
+                <i class="fa fa-save"></i> Simpan Surat Pernyataan
+              </button>
+            </div>
+          </div>
+
+        </div> <!-- /.rsgm-reg-shell -->
+      </div> <!-- /.col-md-9 -->
+
+    </div> <!-- /.rsgm-soap-flex-row -->
+  </form>
+</div>
+
+<script>
+$(document).ready(function() {
+  'use strict';
+
+  // 1. DYNAMIC TOGGLE ALASAN PENOLAKAN
+  function handleJenisPernyataanChange() {
+    var val = $('#jenis_pernyataan').val();
+    if (val === 'PENOLAKAN') {
+      $('#container_alasan').slideDown(200);
+      $('#badge_status_pernyataan')
+        .html('<i class="fa fa-times-circle"></i> PENOLAKAN')
+        .css({ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca' });
+    } else {
+      $('#container_alasan').slideUp(200);
+      $('#badge_status_pernyataan')
+        .html('<i class="fa fa-check-circle"></i> PERSETUJUAN')
+        .css({ background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0' });
+    }
+  }
+
+  $('#jenis_pernyataan').on('change', handleJenisPernyataanChange);
+  handleJenisPernyataanChange();
+
+  // Sinkronisasi Dokter / Saksi RS antara sidebar dan panel
+  $('#pihak_rs_nama_sync').on('input change', function() {
+    $('#pihak_rs_nama').val($(this).val());
+  });
+  $('#pihak_rs_nama').on('input change', function() {
+    $('#pihak_rs_nama_sync').val($(this).val());
+  });
+
+  // 2. TOMBOL SALIN DARI DATA PASIEN
+  $('#btn_salin_pasien').on('click', function(e) {
+    e.preventDefault();
+    var nm = $('#nama_pasien').val() || $('#pasien_nama_isian').val();
+    var jk = $('#jenis_kelamin').val() || $('#pasien_jk_isian').val();
+    var alm = $('#alamat_kontak').val() || $('#pasien_alamat_isian').val();
+    var tglLahir = $('#tanggal_lahir').val();
+
+    if (nm) $('#pihak_nama').val(nm);
+    if (jk) $('#pihak_jk').val(jk).trigger('change');
+    if (alm) $('#pihak_alamat').val(alm);
+    $('#pihak_sebagai').val('Pasien').trigger('change');
+
+    if (tglLahir) {
+      var birth = new Date(tglLahir);
+      var now = new Date();
+      var age = now.getFullYear() - birth.getFullYear();
+      if (age > 0) $('#pihak_umur').val(age);
+    }
+  });
+
+  // 3. ISI CONTOH DATA (DEMO)
+  function fillDemoData() {
+    if (!$('#no_rawat').val()) $('#no_rawat').val('2026/10/16/000001');
+    $('#no_rkm_medis').val('000001');
+    $('#display_no_rkm_medis').val('000001');
+    $('#nama_pasien').val('Farida Ariyani');
+    $('#jenis_kelamin').val('P').trigger('change');
+    $('#tanggal_lahir').val('1990-05-14');
+    $('#asuransi').val('BPJS').trigger('change');
+    $('input[name="alamat_kontak"]').val('Jl. Ahmad Yani Km. 4.5 No. 12, Banjarmasin');
+
+    $('#pihak_rs_nama').val('dr. Hendra Sp.An, KIC');
+    $('#pihak_rs_nama_sync').val('dr. Hendra Sp.An, KIC');
+
+    // Data pihak menyatakan (Suami)
+    $('#pihak_nama').val('H. Rahmat');
+    $('#pihak_umur').val('38');
+    $('#pihak_jk').val('L').trigger('change');
+    $('#pihak_sebagai').val('Suami').trigger('change');
+    $('#pihak_alamat').val('Jl. Ahmad Yani Km. 4.5 No. 12, Banjarmasin');
+
+    // Terhadap pasien
+    $('#pasien_nama_isian').val('Farida Ariyani');
+    $('#pasien_umur_isian').val('36');
+    $('#pasien_jk_isian').val('P').trigger('change');
+    $('#pasien_alamat_isian').val('Jl. Ahmad Yani Km. 4.5 No. 12, Banjarmasin');
+
+    $('#saksi_nama').val('Siti Rahmah (Adik Pasien)');
+    $('#jenis_pernyataan').val('PERSETUJUAN').trigger('change');
+  }
+
+  $('#btn_demo').on('click', function(e) {
+    e.preventDefault();
+    fillDemoData();
+  });
+
+  // 4. AUTO-FILL DATA PASIEN SAAT NO. RAWAT DIISI
+  function fetchPatientByNoRawat() {
+    var noRawat = $('#no_rawat').val().trim();
+    if (!noRawat) return;
+    $.ajax({
+      url: '{?=url([ADMIN, "form_rme", "universalpatientinfo"])?}',
+      data: { no_rawat: noRawat },
+      dataType: 'json',
+      success: function(res) {
+        if (res && res.success) {
+          var nama = res.nama_pasien || res.nm_pasien || '';
+          var jk = res.jenis_kelamin || res.jk || '';
+          var tglLahir = res.tanggal_lahir || res.tgl_lahir || '';
+          var noRm = res.no_rkm_medis || '';
+          var alamat = res.alamat || '';
+          var umur = res.umur || '';
+
+          if (!$('#nama_pasien').val()) $('#nama_pasien').val(nama);
+          if (!$('#tanggal_lahir').val()) $('#tanggal_lahir').val(tglLahir);
+          if (jk) $('#jenis_kelamin').val(jk).trigger('change');
+          if (noRm) {
+            $('#no_rkm_medis').val(noRm);
+            $('#display_no_rkm_medis').val(noRm);
+          }
+          if (alamat && !$('#alamat_kontak').val()) {
+            $('#alamat_kontak').val(alamat);
+          }
+
+          // Sinkron ke isian sasaran pasien
+          if (!$('#pasien_nama_isian').val()) $('#pasien_nama_isian').val(nama);
+          if (jk && !$('#pasien_jk_isian').val()) $('#pasien_jk_isian').val(jk).trigger('change');
+          if (alamat && !$('#pasien_alamat_isian').val()) $('#pasien_alamat_isian').val(alamat);
+          if (umur && !$('#pasien_umur_isian').val()) $('#pasien_umur_isian').val(umur);
+        }
+      }
+    });
+  }
+
+  $('#no_rawat').on('blur change', fetchPatientByNoRawat);
+  $('#btn_cari_pasien').on('click', fetchPatientByNoRawat);
+});
+</script>

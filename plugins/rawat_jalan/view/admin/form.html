@@ -149,7 +149,7 @@
         <div class="rsgm-reg-actions">
           <button type="button" name="button" class="btn btn-primary" id="simpan" {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_create', 'rawat_jalan') == false}disabled{/if}><i class="fa fa-save"></i><span class="hidden-xs"> Simpan</span></button>
           {if: !empty($rawat_jalan.reg_periksa.no_rawat)}
-          <a href="{?=url([ADMIN, 'update_bmt', 'form'])?}&no_rawat={?=isset_or($rawat_jalan.reg_periksa.no_rawat)?}" class="btn btn-info"><i class="fa fa-stethoscope"></i><span class="hidden-xs"> Asesmen Gigi UGD</span></a>
+          <a href="{?=url([ADMIN, 'form_rme', 'form'])?}&no_rawat={?=isset_or($rawat_jalan.reg_periksa.no_rawat)?}" class="btn btn-info"><i class="fa fa-stethoscope"></i><span class="hidden-xs"> Asesmen Gigi UGD</span></a>
           {/if}
           <button type="button" name="button" class="btn btn-danger" id="hapus" {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_delete', 'rawat_jalan') == false}disabled{/if}><i class="fa fa-trash-o"></i><span class="hidden-xs"> Hapus</span></button>
           <button type="button" name="button" class="btn btn-default" id="batal"><i class="fa fa-times"></i><span class="hidden-xs"> Batal</span></button>

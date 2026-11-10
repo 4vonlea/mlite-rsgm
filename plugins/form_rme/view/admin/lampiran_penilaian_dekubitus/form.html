@@ -1,0 +1,696 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+    <form action="{?=url([ADMIN, 'form_rme', 'penilaiandekubitussave'])?}" method="post" id="form-penilaian-dekubitus">
+        <input type="hidden" name="id" value="{$data.id}">
+        <input type="hidden" name="detail_penilaian" id="detail_penilaian_json" value='{$data.detail_penilaian_raw}'>
+
+        <div class="rsgm-soap-flex-row clearfix">
+
+            <!-- ============================================================
+                 KOLOM KIRI (3): SIDEBAR IDENTITAS, RUANG & PANDUAN NORTON
+                 ============================================================ -->
+            <div class="col-md-3">
+                <div class="rsgm-reg-shell rsgm-patient-side-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+                            <span>Data Pasien</span>
+                        </h4>
+                        <span class="badge" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #bfdbfe;">Skala Norton</span>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+                        <!-- No. Rawat Pasien with Cari -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat / RM <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2025/08/13/000040" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button" id="btn-cari-pasien" title="Cari Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                                        <i class="fa fa-search text-primary"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- No. Rekam Medis -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor RM</label>
+                            <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{$data.no_rkm_medis}" readonly style="background-color: #f8fafc; font-weight: 700;">
+                        </div>
+
+                        <!-- Nama Pasien -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien</label>
+                            <input type="text" id="nm_pasien" class="form-control" placeholder="Nama Pasien" value="{$data.nm_pasien}" readonly style="background-color: #f8fafc; font-weight: 600;">
+                        </div>
+
+                        <!-- Gender & Umur Pasien -->
+                        <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="info_jk_umur" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender/Umur</label>
+                                    <input type="text" id="info_jk_umur" class="form-control" value="{$data.jk} / {$data.umur}" readonly style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir</label>
+                                    <input type="text" id="tgl_lahir" class="form-control" value="{$data.tgl_lahir}" readonly style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tanggal Mulai Penilaian -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="tanggal_penilaian" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tgl Mulai Penilaian <span class="text-danger">*</span></label>
+                            <input type="date" name="tanggal_penilaian" id="tanggal_penilaian" class="form-control" value="{$data.tanggal_penilaian}" required>
+                        </div>
+
+                        <!-- Ruangan / Kamar Inap -->
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="kamar_inap" class="rsgm-compact-label"><i class="fa fa-bed text-muted"></i> Ruangan / Bed Inap <span class="text-danger">*</span></label>
+                            <input type="text" name="kamar_inap" id="kamar_inap" class="form-control" value="{$data.kamar_inap}" placeholder="Contoh: Ruang Melati / Bed 02" required>
+                        </div>
+
+                        <!-- PANDUAN RESMI SKALA NORTON -->
+                        <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px 12px; margin-top: 10px;">
+                            <label class="rsgm-compact-label" style="color: #1e40af; margin-bottom: 4px; font-weight: 700;">
+                                <i class="fa fa-info-circle"></i> Interpretasi Skor Norton:
+                            </label>
+                            <ul style="margin: 0; padding-left: 16px; font-size: 11px; line-height: 1.5; color: #1e3a8a;">
+                                <li>Skor total 5 parameter berkisar <strong>5 s/d 20</strong>.</li>
+                                <li><strong>Skor &le; 14</strong>: <span class="text-danger" style="font-weight: 700;">Risiko Tinggi Dekubitus</span>. Wajib protokol alih baring tiap 2 jam &amp; kasur anti-dekubitus.</li>
+                                <li><strong>Skor &gt; 14</strong>: <span class="text-success" style="font-weight: 700;">Risiko Rendah</span>.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- /.col-md-3 -->
+
+            <!-- ============================================================
+                 KOLOM KANAN (9): WORKSTATION PENILAIAN SKALA NORTON (9 HARI)
+                 ============================================================ -->
+            <div class="col-md-9">
+                <div class="rsgm-reg-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-bed"></i></span>
+                            <span>Formulir Penilaian Dekubitus (Decubitus Risk Assessment)</span>
+                        </h4>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <a href="{?=url([ADMIN, 'form_rme', 'penilaiandekubitusmanage'])?}" class="btn btn-default btn-xs" style="font-weight: 600; border-radius: 6px;">
+                                <i class="fa fa-list"></i> Kelola Data
+                            </a>
+                            <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-weight: 700;">9 Hari Rawat</span>
+                        </div>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+
+                        <!-- TAB NAVIGATION HARI 1 S/D 9 & MATRIX -->
+                        <ul class="nav nav-pills" id="tab-hari-penilaian" style="margin-bottom: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px; display: flex; flex-wrap: wrap; gap: 4px;">
+                            {loop: $days_range}
+                            <li class="{if: $value == 1}active{/if}" style="margin: 0;">
+                                <a href="#hari-{$value}" data-toggle="tab" style="padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 12px;">
+                                    Hari {$value} <span class="badge badge-h{$value}" style="font-size: 10px; margin-left: 4px;">--</span>
+                                </a>
+                            </li>
+                            {/loop}
+                            <li style="margin: 0; margin-left: auto;">
+                                <a href="#tab-ringkasan-semua" data-toggle="tab" style="padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 12px; background-color: #0284c7; color: #fff;">
+                                    <i class="fa fa-table"></i> Matrix 9 Hari
+                                </a>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <!-- TAB PANE HARI 1..9 -->
+                            {loop: $days_range}
+                            <div class="tab-pane fade {if: $value == 1}in active{/if}" id="hari-{$value}">
+                                
+                                <!-- TOOLBAR HARI INI -->
+                                <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #0284c7; border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                    <div style="font-weight: 700; font-size: 13px; color: #1e293b;">
+                                        <i class="fa fa-calendar text-primary"></i> Penilaian Hari Perawatan Ke-{$value}
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <div style="display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 11px; font-weight: 600; color: #475569;">Tanggal:</span>
+                                            <input type="date" class="form-control input-sm day-tgl" data-day="{$value}" id="tgl_hari_{$value}" style="width: 140px; height: 30px; border-radius: 6px;">
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 11px; font-weight: 600; color: #475569;">Perawat:</span>
+                                            <input type="text" class="form-control input-sm day-perawat" data-day="{$value}" id="perawat_hari_{$value}" list="list_perawat" placeholder="Pilih perawat..." style="width: 170px; height: 30px; border-radius: 6px;">
+                                        </div>
+                                        <button type="button" class="btn btn-default btn-xs btn-clear-day" data-day="{$value}" title="Kosongkan nilai hari ini" style="border-radius: 6px; font-weight: 600; padding: 5px 10px;">
+                                            <i class="fa fa-eraser text-danger"></i> Reset Hari
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 5 KOMPONEN SKALA NORTON -->
+                                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;">
+                                    <!-- 1. Kondisi Fisik Umum -->
+                                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px;">
+                                        <label class="rsgm-compact-label" style="font-weight: 700; color: #0f172a; margin-bottom: 6px;">1. Kondisi Fisik Umum:</label>
+                                        <div class="row">
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp1_h{$value}" class="norton-radio" data-day="{$value}" data-komp="kondisi_fisik" value="4">
+                                                    <span class="badge" style="background-color: #dcfce7; color: #166534; font-size: 10px;">4</span> Baik
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp1_h{$value}" class="norton-radio" data-day="{$value}" data-komp="kondisi_fisik" value="3">
+                                                    <span class="badge" style="background-color: #e0f2fe; color: #0369a1; font-size: 10px;">3</span> Lumayan
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp1_h{$value}" class="norton-radio" data-day="{$value}" data-komp="kondisi_fisik" value="2">
+                                                    <span class="badge" style="background-color: #fef3c7; color: #92400e; font-size: 10px;">2</span> Buruk
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp1_h{$value}" class="norton-radio" data-day="{$value}" data-komp="kondisi_fisik" value="1">
+                                                    <span class="badge" style="background-color: #fee2e2; color: #991b1b; font-size: 10px;">1</span> Sangat Buruk
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 2. Kesadaran -->
+                                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px;">
+                                        <label class="rsgm-compact-label" style="font-weight: 700; color: #0f172a; margin-bottom: 6px;">2. Kesadaran Pasien:</label>
+                                        <div class="row">
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp2_h{$value}" class="norton-radio" data-day="{$value}" data-komp="kesadaran" value="4">
+                                                    <span class="badge" style="background-color: #dcfce7; color: #166534; font-size: 10px;">4</span> Komposmentis
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp2_h{$value}" class="norton-radio" data-day="{$value}" data-komp="kesadaran" value="3">
+                                                    <span class="badge" style="background-color: #e0f2fe; color: #0369a1; font-size: 10px;">3</span> Apatis
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp2_h{$value}" class="norton-radio" data-day="{$value}" data-komp="kesadaran" value="2">
+                                                    <span class="badge" style="background-color: #fef3c7; color: #92400e; font-size: 10px;">2</span> Konfus / Sopor
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp2_h{$value}" class="norton-radio" data-day="{$value}" data-komp="kesadaran" value="1">
+                                                    <span class="badge" style="background-color: #fee2e2; color: #991b1b; font-size: 10px;">1</span> Stupor / Koma
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 3. Aktivitas -->
+                                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px;">
+                                        <label class="rsgm-compact-label" style="font-weight: 700; color: #0f172a; margin-bottom: 6px;">3. Aktivitas:</label>
+                                        <div class="row">
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp3_h{$value}" class="norton-radio" data-day="{$value}" data-komp="aktivitas" value="4">
+                                                    <span class="badge" style="background-color: #dcfce7; color: #166534; font-size: 10px;">4</span> Ambulan (Mandiri)
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp3_h{$value}" class="norton-radio" data-day="{$value}" data-komp="aktivitas" value="3">
+                                                    <span class="badge" style="background-color: #e0f2fe; color: #0369a1; font-size: 10px;">3</span> dg Bantuan
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp3_h{$value}" class="norton-radio" data-day="{$value}" data-komp="aktivitas" value="2">
+                                                    <span class="badge" style="background-color: #fef3c7; color: #92400e; font-size: 10px;">2</span> Hanya Duduk
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp3_h{$value}" class="norton-radio" data-day="{$value}" data-komp="aktivitas" value="1">
+                                                    <span class="badge" style="background-color: #fee2e2; color: #991b1b; font-size: 10px;">1</span> Tiduran (Bed Rest)
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 4. Mobilitas -->
+                                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px;">
+                                        <label class="rsgm-compact-label" style="font-weight: 700; color: #0f172a; margin-bottom: 6px;">4. Mobilitas Gerak:</label>
+                                        <div class="row">
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp4_h{$value}" class="norton-radio" data-day="{$value}" data-komp="mobilitas" value="4">
+                                                    <span class="badge" style="background-color: #dcfce7; color: #166534; font-size: 10px;">4</span> Bergerak Bebas
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp4_h{$value}" class="norton-radio" data-day="{$value}" data-komp="mobilitas" value="3">
+                                                    <span class="badge" style="background-color: #e0f2fe; color: #0369a1; font-size: 10px;">3</span> Sedikit Terbatas
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp4_h{$value}" class="norton-radio" data-day="{$value}" data-komp="mobilitas" value="2">
+                                                    <span class="badge" style="background-color: #fef3c7; color: #92400e; font-size: 10px;">2</span> Sangat Terbatas
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp4_h{$value}" class="norton-radio" data-day="{$value}" data-komp="mobilitas" value="1">
+                                                    <span class="badge" style="background-color: #fee2e2; color: #991b1b; font-size: 10px;">1</span> Tdk Bisa Bergerak
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 5. Inkontinensia -->
+                                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px;">
+                                        <label class="rsgm-compact-label" style="font-weight: 700; color: #0f172a; margin-bottom: 6px;">5. Inkontinensia:</label>
+                                        <div class="row">
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp5_h{$value}" class="norton-radio" data-day="{$value}" data-komp="inkontinensia" value="4">
+                                                    <span class="badge" style="background-color: #dcfce7; color: #166534; font-size: 10px;">4</span> Tidak (Kontinen)
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp5_h{$value}" class="norton-radio" data-day="{$value}" data-komp="inkontinensia" value="3">
+                                                    <span class="badge" style="background-color: #e0f2fe; color: #0369a1; font-size: 10px;">3</span> Kadang-kadang
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp5_h{$value}" class="norton-radio" data-day="{$value}" data-komp="inkontinensia" value="2">
+                                                    <span class="badge" style="background-color: #fef3c7; color: #92400e; font-size: 10px;">2</span> Sering Inkon. Urine
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-3 col-xs-6" style="margin-bottom: 4px;">
+                                                <label class="radio-inline" style="font-weight: 500; cursor: pointer; font-size: 12px;">
+                                                    <input type="radio" name="komp5_h{$value}" class="norton-radio" data-day="{$value}" data-komp="inkontinensia" value="1">
+                                                    <span class="badge" style="background-color: #fee2e2; color: #991b1b; font-size: 10px;">1</span> Sering Alvi &amp; Urine
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TOTAL SCORE & STATUS RISIKO BAR HARI {$value} -->
+                                <div style="background-color: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-weight: 700; font-size: 13px; color: #334155;">TOTAL SKOR HARI KE-{$value}:</span>
+                                        <span class="day-total-badge" id="lbl_total_h{$value}" style="font-size: 20px; font-weight: 800; color: #0f172a;">--</span>
+                                        <span style="font-size: 12px; color: #64748b; font-weight: 600;">/ 20</span>
+                                    </div>
+                                    <div id="status_resiko_h{$value}">
+                                        <span class="text-muted" style="font-size: 12px;"><em>Pilih 5 komponen di atas untuk melihat status risiko</em></span>
+                                    </div>
+                                </div>
+
+                            </div>
+                            {/loop}
+
+                            <!-- TAB RINGKASAN SEMUA HARI (MATRIX 9 HARI) -->
+                            <div class="tab-pane fade" id="tab-ringkasan-semua">
+                                <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                                    <h4 style="font-weight: 700; margin: 0; font-size: 14px; color: #1e293b;">
+                                        <i class="fa fa-th text-primary"></i> Matrix Penilaian Dekubitus (Norton Scale) Hari Ke-1 s/d Ke-9
+                                    </h4>
+                                    <span class="badge" style="background-color: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; font-size: 11px;">Otomatis Tersinkron</span>
+                                </div>
+                                <div class="table-responsive" style="border: 1px solid #cbd5e1; border-radius: 6px;">
+                                    <table class="table table-bordered table-striped" id="matrix-preview-table" style="font-size: 11.5px; text-align: center; margin-bottom: 0;">
+                                        <thead>
+                                            <tr style="background-color: #1e293b; color: #ffffff;">
+                                                <th style="width: 36px; text-align: center; vertical-align: middle;" rowspan="2">No</th>
+                                                <th style="text-align: left; vertical-align: middle; min-width: 200px;" rowspan="2">Komponen Penilaian</th>
+                                                <th style="width: 65px; text-align: center; vertical-align: middle;" rowspan="2">Skor Acuan</th>
+                                                <th colspan="9" style="text-align: center; padding: 4px;">Skor Hari Perawatan Ke</th>
+                                            </tr>
+                                            <tr style="background-color: #334155; color: #ffffff;">
+                                                {loop: $days_range}
+                                                <th style="text-align: center; width: 6.5%; padding: 4px 2px;">
+                                                    <strong>{$value}</strong><br>
+                                                    <small id="th_tgl_h{$value}" style="color: #cbd5e1; font-size: 9.5px;">Tgl --</small>
+                                                </th>
+                                                {/loop}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td style="font-weight: bold;">1</td>
+                                                <td style="text-align: left;">
+                                                    <strong>Kondisi fisik umum:</strong><br>
+                                                    <small class="text-muted">Baik (4), Lumayan (3), Buruk (2), Sangat buruk (1)</small>
+                                                </td>
+                                                <td>4 - 1</td>
+                                                {loop: $days_range}
+                                                <td id="m_k1_h{$value}" style="font-weight: bold; font-size: 13px;">-</td>
+                                                {/loop}
+                                            </tr>
+                                            <tr>
+                                                <td style="font-weight: bold;">2</td>
+                                                <td style="text-align: left;">
+                                                    <strong>Kesadaran:</strong><br>
+                                                    <small class="text-muted">Komposmentis (4), Apatis (3), Konfus/sopor (2), Stupor/koma (1)</small>
+                                                </td>
+                                                <td>4 - 1</td>
+                                                {loop: $days_range}
+                                                <td id="m_k2_h{$value}" style="font-weight: bold; font-size: 13px;">-</td>
+                                                {/loop}
+                                            </tr>
+                                            <tr>
+                                                <td style="font-weight: bold;">3</td>
+                                                <td style="text-align: left;">
+                                                    <strong>Aktivitas:</strong><br>
+                                                    <small class="text-muted">Ambulan (4), dg Bantuan (3), Hanya duduk (2), Tiduran (1)</small>
+                                                </td>
+                                                <td>4 - 1</td>
+                                                {loop: $days_range}
+                                                <td id="m_k3_h{$value}" style="font-weight: bold; font-size: 13px;">-</td>
+                                                {/loop}
+                                            </tr>
+                                            <tr>
+                                                <td style="font-weight: bold;">4</td>
+                                                <td style="text-align: left;">
+                                                    <strong>Mobilitas:</strong><br>
+                                                    <small class="text-muted">Bebas (4), Sedikit terbatas (3), Sangat terbatas (2), Tdk bisa bergerak (1)</small>
+                                                </td>
+                                                <td>4 - 1</td>
+                                                {loop: $days_range}
+                                                <td id="m_k4_h{$value}" style="font-weight: bold; font-size: 13px;">-</td>
+                                                {/loop}
+                                            </tr>
+                                            <tr>
+                                                <td style="font-weight: bold;">5</td>
+                                                <td style="text-align: left;">
+                                                    <strong>Inkontinensia:</strong><br>
+                                                    <small class="text-muted">Tidak (4), Kadang-kadang (3), Sering urine (2), Sering alvi &amp; urine (1)</small>
+                                                </td>
+                                                <td>4 - 1</td>
+                                                {loop: $days_range}
+                                                <td id="m_k5_h{$value}" style="font-weight: bold; font-size: 13px;">-</td>
+                                                {/loop}
+                                            </tr>
+                                            <tr style="background-color: #f1f5f9; font-weight: bold;">
+                                                <td colspan="3" style="text-align: left; font-size: 12px; color: #1e293b;">TOTAL SKOR NORTON</td>
+                                                {loop: $days_range}
+                                                <td id="m_total_h{$value}" style="font-size: 13px;">-</td>
+                                                {/loop}
+                                            </tr>
+                                            <tr>
+                                                <td colspan="3" style="text-align: left; font-weight: 600; color: #475569;">Nama &amp; Paraf Perawat Penilai</td>
+                                                {loop: $days_range}
+                                                <td id="m_perawat_h{$value}" style="font-size: 10px; padding: 2px;">-</td>
+                                                {/loop}
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CATATAN & RENCANA INTERVENSI PENCEGAHAN DEKUBITUS -->
+                        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 16px; margin-top: 14px;">
+                            <div class="rsgm-soap-sec-title" style="margin-bottom: 6px;">
+                                <i class="fa fa-pencil text-primary"></i>
+                                <span>Catatan Klinis &amp; Rencana Intervensi Pencegahan Dekubitus</span>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <textarea name="catatan" id="catatan" class="form-control" rows="3" placeholder="Contoh: Alih baring miring kanan/kiri setiap 2 jam, pasang kasur anti-dekubitus, berikan pelembab kulit barrier cream, edukasi kebersihan linen...">{$data.catatan}</textarea>
+                            </div>
+                        </div>
+
+                    </div> <!-- /.rsgm-reg-body -->
+
+                    <!-- FOOTER ACTIONS DENGAN BORDER RADIUS KONSISTEN (AKGMUFORM STYLE) -->
+                    <div class="rsgm-reg-footer">
+                        <div>
+                            <a href="{?=url([ADMIN, 'form_rme', 'penilaiandekubitusmanage'])?}" class="btn btn-default" style="border-radius: 6px; font-weight: 600; padding: 8px 18px;">
+                                <i class="fa fa-arrow-left"></i> Batal / Kembali
+                            </a>
+                        </div>
+                        <div class="rsgm-reg-actions">
+                            <button type="submit" class="btn btn-success" style="font-weight: 700; border-radius: 6px; padding: 8px 24px; box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);">
+                                <i class="fa fa-save"></i> Simpan Penilaian Dekubitus
+                            </button>
+                        </div>
+                    </div>
+
+                </div> <!-- /.rsgm-reg-shell -->
+            </div> <!-- /.col-md-9 -->
+
+        </div> <!-- /.rsgm-soap-flex-row -->
+    </form>
+</div>
+
+<!-- DATALIST PERAWAT -->
+<datalist id="list_perawat">
+    {loop: $petugas}
+    <option value="{$value.nama}">
+    {/loop}
+</datalist>
+
+<script>
+$(document).ready(function() {
+
+    // Struktur data 9 hari
+    var dayData = {};
+    for (var i = 1; i <= 9; i++) {
+        dayData[i] = {
+            tgl: '',
+            kondisi_fisik: null,
+            kesadaran: null,
+            aktivitas: null,
+            mobilitas: null,
+            inkontinensia: null,
+            total_skor: null,
+            perawat: ''
+        };
+    }
+
+    // Load data jika sedang edit
+    var rawJson = $('#detail_penilaian_json').val();
+    if (rawJson && rawJson.trim() !== '') {
+        try {
+            var parsed = JSON.parse(rawJson);
+            for (var d = 1; d <= 9; d++) {
+                if (parsed[d]) {
+                    dayData[d] = parsed[d];
+                }
+            }
+        } catch(e) {
+            console.error("Gagal parse detail_penilaian:", e);
+        }
+    }
+
+    // Populate data ke form controls
+    function populateForm() {
+        for (var d = 1; d <= 9; d++) {
+            var item = dayData[d];
+            if (item) {
+                if (item.tgl) {
+                    $('#tgl_hari_' + d).val(item.tgl);
+                }
+                if (item.perawat) {
+                    $('#perawat_hari_' + d).val(item.perawat);
+                }
+                if (item.kondisi_fisik) {
+                    $('input[name="komp1_h' + d + '"][value="' + item.kondisi_fisik + '"]').prop('checked', true);
+                }
+                if (item.kesadaran) {
+                    $('input[name="komp2_h' + d + '"][value="' + item.kesadaran + '"]').prop('checked', true);
+                }
+                if (item.aktivitas) {
+                    $('input[name="komp3_h' + d + '"][value="' + item.aktivitas + '"]').prop('checked', true);
+                }
+                if (item.mobilitas) {
+                    $('input[name="komp4_h' + d + '"][value="' + item.mobilitas + '"]').prop('checked', true);
+                }
+                if (item.inkontinensia) {
+                    $('input[name="komp5_h' + d + '"][value="' + item.inkontinensia + '"]').prop('checked', true);
+                }
+            }
+            updateDayCalculation(d, false);
+        }
+        updateMatrixPreview();
+    }
+
+    // Update perhitungan satu hari
+    function updateDayCalculation(d, syncMatrix) {
+        var k1 = parseInt($('input[name="komp1_h' + d + '"]:checked').val()) || null;
+        var k2 = parseInt($('input[name="komp2_h' + d + '"]:checked').val()) || null;
+        var k3 = parseInt($('input[name="komp3_h' + d + '"]:checked').val()) || null;
+        var k4 = parseInt($('input[name="komp4_h' + d + '"]:checked').val()) || null;
+        var k5 = parseInt($('input[name="komp5_h' + d + '"]:checked').val()) || null;
+
+        var tgl = $('#tgl_hari_' + d).val();
+        var perawat = $('#perawat_hari_' + d).val();
+
+        dayData[d].kondisi_fisik = k1;
+        dayData[d].kesadaran = k2;
+        dayData[d].aktivitas = k3;
+        dayData[d].mobilitas = k4;
+        dayData[d].inkontinensia = k5;
+        dayData[d].tgl = tgl;
+        dayData[d].perawat = perawat;
+
+        var allFilled = (k1 !== null && k2 !== null && k3 !== null && k4 !== null && k5 !== null);
+
+        if (allFilled) {
+            var total = k1 + k2 + k3 + k4 + k5;
+            dayData[d].total_skor = total;
+            $('#lbl_total_h' + d).text(total);
+
+            $('.badge-h' + d).text(total);
+            if (total <= 14) {
+                $('.badge-h' + d).removeClass('badge-success').addClass('badge-danger').css('background-color', '#dc2626');
+                $('#status_resiko_h' + d).html('<span class="label label-danger" style="font-size: 12px; padding: 6px 12px; border-radius: 4px; font-weight: 700;"><i class="fa fa-warning"></i> RESIKO TINGGI DEKUBITUS (Skor &le; 14)</span>');
+            } else {
+                $('.badge-h' + d).removeClass('badge-danger').addClass('badge-success').css('background-color', '#16a34a');
+                $('#status_resiko_h' + d).html('<span class="label label-success" style="font-size: 12px; padding: 6px 12px; border-radius: 4px; font-weight: 700;"><i class="fa fa-check-circle"></i> TIDAK BERISIKO (Skor &gt; 14)</span>');
+            }
+        } else {
+            dayData[d].total_skor = null;
+            $('#lbl_total_h' + d).text('--');
+            $('.badge-h' + d).text('--').css('background-color', '#64748b');
+            $('#status_resiko_h' + d).html('<span class="text-muted" style="font-size: 12px;"><em>Pilih 5 komponen di atas untuk melihat status risiko</em></span>');
+        }
+
+        if (syncMatrix !== false) {
+            updateMatrixPreview();
+        }
+    }
+
+    // Update Matrix Tab Preview
+    function updateMatrixPreview() {
+        for (var d = 1; d <= 9; d++) {
+            var item = dayData[d];
+            var tglLabel = 'Tgl --';
+            if (item.tgl) {
+                var p = item.tgl.split('-');
+                if (p.length === 3) {
+                    tglLabel = p[2] + '/' + p[1];
+                } else {
+                    tglLabel = item.tgl;
+                }
+            }
+            $('#th_tgl_h' + d).text(tglLabel);
+
+            $('#m_k1_h' + d).text(item.kondisi_fisik !== null ? item.kondisi_fisik : '-');
+            $('#m_k2_h' + d).text(item.kesadaran !== null ? item.kesadaran : '-');
+            $('#m_k3_h' + d).text(item.aktivitas !== null ? item.aktivitas : '-');
+            $('#m_k4_h' + d).text(item.mobilitas !== null ? item.mobilitas : '-');
+            $('#m_k5_h' + d).text(item.inkontinensia !== null ? item.inkontinensia : '-');
+
+            if (item.total_skor !== null) {
+                if (item.total_skor <= 14) {
+                    $('#m_total_h' + d).html('<span class="text-danger" style="font-weight:bold;">' + item.total_skor + ' <i class="fa fa-warning"></i></span>');
+                } else {
+                    $('#m_total_h' + d).html('<span class="text-success" style="font-weight:bold;">' + item.total_skor + '</span>');
+                }
+            } else {
+                $('#m_total_h' + d).text('-');
+            }
+
+            $('#m_perawat_h' + d).text(item.perawat ? item.perawat : '-');
+        }
+    }
+
+    // Event listener radio button perubahan skor
+    $('.norton-radio').on('change', function() {
+        var day = $(this).data('day');
+        updateDayCalculation(day, true);
+    });
+
+    // Event listener tanggal dan perawat
+    $('.day-tgl, .day-perawat').on('input change', function() {
+        var day = $(this).data('day');
+        updateDayCalculation(day, true);
+    });
+
+    // Reset Hari Ini
+    $('.btn-clear-day').on('click', function() {
+        var day = $(this).data('day');
+        if (confirm('Kosongkan penilaian untuk Hari Ke-' + day + '?')) {
+            $('input[name="komp1_h' + day + '"]').prop('checked', false);
+            $('input[name="komp2_h' + day + '"]').prop('checked', false);
+            $('input[name="komp3_h' + day + '"]').prop('checked', false);
+            $('input[name="komp4_h' + day + '"]').prop('checked', false);
+            $('input[name="komp5_h' + day + '"]').prop('checked', false);
+            $('#tgl_hari_' + day).val('');
+            $('#perawat_hari_' + day).val('');
+            updateDayCalculation(day, true);
+        }
+    });
+
+    // AJAX Pencarian Pasien
+    $('#btn-cari-pasien').on('click', function() {
+        var no_rawat = $('#no_rawat').val().trim();
+        if (!no_rawat) {
+            alert('Silakan masukkan Nomor Rawat terlebih dahulu!');
+            return;
+        }
+
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url: "{?=url([ADMIN, 'form_rme', 'ajaxpasien'])?}",
+            type: 'GET',
+            data: { no_rawat: no_rawat },
+            dataType: 'json',
+            success: function(res) {
+                btn.prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+                if (res && res.status === 'success') {
+                    $('#no_rkm_medis').val(res.data.no_rkm_medis);
+                    $('#nm_pasien').val(res.data.nm_pasien);
+                    $('#info_jk_umur').val((res.data.jk || '-') + ' / ' + (res.data.umur || '-'));
+                    $('#tgl_lahir').val(res.data.tgl_lahir || '-');
+                    if (res.data.kamar_inap && !$('#kamar_inap').val()) {
+                        $('#kamar_inap').val(res.data.kamar_inap);
+                    }
+                } else {
+                    alert('Data pasien tidak ditemukan untuk Nomor Rawat: ' + no_rawat);
+                }
+            },
+            error: function() {
+                btn.prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+                alert('Terjadi kesalahan koneksi saat mencari data pasien.');
+            }
+        });
+    });
+
+    // Tekan Enter pada input no_rawat langsung trigger cari
+    $('#no_rawat').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $('#btn-cari-pasien').click();
+        }
+    });
+
+    // Sebelum submit form, simpan serialized JSON
+    $('#form-penilaian-dekubitus').on('submit', function() {
+        for (var d = 1; d <= 9; d++) {
+            updateDayCalculation(d, false);
+        }
+        $('#detail_penilaian_json').val(JSON.stringify(dayData));
+        return true;
+    });
+
+    // Inisialisasi awal
+    populateForm();
+
+});
+</script>

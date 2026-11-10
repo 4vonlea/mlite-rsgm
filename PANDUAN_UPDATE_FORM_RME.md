@@ -49,9 +49,9 @@ Pada branch `timpa-rsgm`, seluruh formulir rekam medis dikelola terpusat melalui
 
 ### Penyesuaian yang Dilakukan:
 1. **URL Routing Dinamis:**
-   - Template view (`manage.html`, `form.html`, `cetak.html`) diubah dari tautan modul lama `update_bmt` menjadi helper `url([ADMIN, 'form_rme', 'ewsform', ...])`.
+   - Template view (`manage.html`, `form.html`, `cetak.html`) diubah dari tautan modul lama `form_rme` menjadi helper `url([ADMIN, 'form_rme', 'ewsform', ...])`.
    - Menggunakan modal live-preview standar branch untuk menampilkan pratinjau cetak tanpa meninggalkan lembar kerja.
-2. **Controller Backend ([plugins/update_bmt/Admin.php](file:///d:/htdocs/mlite-rsgm/plugins/update_bmt/Admin.php)):**
+2. **Controller Backend ([plugins/form_rme/Admin.php](file:///d:/htdocs/mlite-rsgm/plugins/form_rme/Admin.php)):**
    - Menambahkan method: `anyEwsmanage()`, `anyEwsform()`, `getEwshapus()`, dan `getEwscetak()`.
    - Mendaftarkan entri `ewscetak` pada fungsi katalog cetak `getRmeFormMap()`.
    - Menambahkan bridge akses langsung `anyEwscetak()`.
@@ -109,13 +109,13 @@ ON DUPLICATE KEY UPDATE `is_active` = 1;
 
 | Berkas | Jenis Perubahan | Deskripsi |
 |---|:---:|---|
-| `plugins/update_bmt/Admin.php` | Modifikasi | Controller CRUD EWS, context auto-fill, `getRmeFormMap`, dan quick-print bridge. |
-| `plugins/update_bmt/view/admin/lampiran_ews/manage.html` | Baru/Modifikasi | Antarmuka riwayat input EWS pasien & DataTables. |
-| `plugins/update_bmt/view/admin/lampiran_ews/form.html` | Baru/Modifikasi | Antarmuka form isian 2 halaman observasi EWS. |
-| `plugins/update_bmt/view/admin/lampiran_ews/cetak.html` | Baru/Modifikasi | Template cetak 2 halaman kop resmi & ekspor mPDF. |
+| `plugins/form_rme/Admin.php` | Modifikasi | Controller CRUD EWS, context auto-fill, `getRmeFormMap`, dan quick-print bridge. |
+| `plugins/form_rme/view/admin/lampiran_ews/manage.html` | Baru/Modifikasi | Antarmuka riwayat input EWS pasien & DataTables. |
+| `plugins/form_rme/view/admin/lampiran_ews/form.html` | Baru/Modifikasi | Antarmuka form isian 2 halaman observasi EWS. |
+| `plugins/form_rme/view/admin/lampiran_ews/cetak.html` | Baru/Modifikasi | Template cetak 2 halaman kop resmi & ekspor mPDF. |
 | `update_db_rme.sql` | Baru | Master skrip SQL terpadu (59 form, 189 unit-mapping, 61 tabel). |
 | `manajemen_rme.sql` | Modifikasi | Penambahan Form 59 dan mapping unit RANAP. |
-| `plugins/update_bmt/migration.sql` | Modifikasi | Penambahan DDL skema `lampiran_ews`. |
+| `plugins/form_rme/migration.sql` | Modifikasi | Penambahan DDL skema `lampiran_ews`. |
 | `migration_tabel_pendukung_bmt.sql` | Modifikasi | Penambahan DDL skema `lampiran_ews`. |
 | `CHECKLIST_FITUR.md` | Modifikasi | Pembaruan status ketersediaan EWS Ranap menjadi Lengkap (✅). |
 | `DB_CHANGELOG.md` | Modifikasi | Catatan rilis v1.4 migrasi database EWS. |

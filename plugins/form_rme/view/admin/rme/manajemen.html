@@ -1,0 +1,898 @@
+<div class="row" id="manage" style="margin-bottom: 80px;">
+  <div class="col-md-12">
+
+{if: $action == 'permission' && $selected_unit}
+    <!-- ======================================================== -->
+    <!-- WORKBENCH HAK AKSES FORM RME PER POLIKLINIK / UNIT       -->
+    <!-- ======================================================== -->
+    <div class="panel panel-default">
+      <div class="panel-heading rsgm-panel-head">
+        <h3 class="panel-title">
+          <i class="fa fa-hospital-o text-primary"></i> Hak Akses: {$selected_unit.nama_unit}
+          <span class="rsgm-code-chip" style="margin-left: 6px;">{$selected_unit.kode_unit}</span>
+        </h3>
+        <div class="rsgm-filter-bar">
+          <a href="{?=url([ADMIN, 'form_rme', 'manajemenrme'])?}&tab=akses" class="btn btn-sm btn-default">
+            <i class="fa fa-arrow-left"></i> Kembali ke Daftar Unit
+          </a>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div id="display" class="display">
+          <form action="{?=url([ADMIN, 'form_rme', 'simpanaksesrme'])?}" method="POST" id="formPermissionWorkbench">
+            <input type="hidden" name="kd_poli" value="{$selected_unit.kd_poli}">
+            <input type="hidden" name="unit_id" value="{$selected_unit.id}">
+            <input type="hidden" name="t" value="{$token}">
+
+            <!-- Opsi Salin Pengaturan Akses dari Poliklinik Lain -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <div>
+                  <strong style="font-size: 13px; color: #0f172a;"><i class="fa fa-clone text-primary"></i> Salin Pengaturan Akses dari Poliklinik Lain</strong>
+                  <div class="rsgm-cell-sub">Duplikasi formulir yang diizinkan di unit lain secara instan untuk efisiensi konfigurasi.</div>
+                </div>
+                <button type="button" id="btnToggleCopyAccess" class="btn btn-sm btn-default">
+                  <i class="fa fa-sliders"></i> Opsi Salin Akses
+                </button>
+              </div>
+
+              <div id="copyAccessForm" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #cbd5e1;">
+                <div class="input-group">
+                  <select id="copyAccessFromUnit" class="form-control input-sm" style="height: 32px; border-radius: 6px 0 0 6px;">
+                    <option value="">-- Pilih Poliklinik Rujukan untuk Disalin Pengaturannya --</option>
+                    {loop: $units}
+                    {if: $value.id != $selected_unit.id}
+                    <option value="{$value.id}" data-access="{?=implode(',', $value.form_ids)?}">
+                      {$value.nama_unit} ({$value.kode_unit}) &bull; [{$value.total_form} Formulir Terdaftar]
+                    </option>
+                    {/if}
+                    {/loop}
+                  </select>
+                  <span class="input-group-btn">
+                    <button type="button" id="btnCopyAccess" class="btn btn-sm btn-primary" disabled style="height: 32px;">
+                      <i class="fa fa-copy"></i> Terapkan Salinan ke Formulir
+                    </button>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Toolbar Pencarian & Centang Cepat -->
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
+              <div class="datatable-search" style="margin: 0; min-width: 280px; flex: 1; max-width: 450px;">
+                <div class="dataTables_filter" style="margin: 0; text-align: left;">
+                  <label style="width: 100%;">
+                    <input type="text" id="filterFormInput" class="form-control input-sm" placeholder="Cari nama formulir, kode, atau kategori..." style="width: 100% !important;">
+                  </label>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-sm btn-default" id="btnCheckAll">
+                  <i class="fa fa-check-square-o text-success"></i> Centang Semua
+                </button>
+                <button type="button" class="btn btn-sm btn-default" id="btnUncheckAll">
+                  <i class="fa fa-square-o text-danger"></i> Kosongkan Pilihan
+                </button>
+              </div>
+            </div>
+
+            <!-- Tabel Pemilihan Formulir Hak Akses -->
+            <div class="table-responsive no-margin">
+              <table class="table table-striped no-padding" id="table-permission" width="100%">
+                <thead>
+                  <tr>
+                    <th width="50" class="text-center" style="white-space: nowrap;">Akses</th>
+                    <th width="110" style="white-space: nowrap;">Kode Form</th>
+                    <th>Nama Formulir Rekam Medis</th>
+                    <th width="120" style="white-space: nowrap;">Kategori</th>
+                    <th width="130" class="text-center" style="white-space: nowrap;">Status Master</th>
+                    <th width="90" class="text-center" style="white-space: nowrap;">Pratinjau</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loop: $all_forms}
+                  <tr class="form-row" data-search="{?=strtolower($value.kode_form)?} {?=strtolower($value.nama_form)?} {?=strtolower($value.kategori)?}">
+                    <td class="text-center" style="vertical-align: middle;">
+                      <input type="checkbox" name="form_ids[]" value="{$value.id}" class="form-check-item" {if: in_array($value.id, $assigned_form_ids)}checked{/if} style="width: 17px; height: 17px; cursor: pointer; accent-color: #2563eb;">
+                    </td>
+                    <td style="vertical-align: middle; white-space: nowrap;">
+                      <span class="rsgm-code-chip">{$value.kode_form}</span>
+                    </td>
+                    <td style="vertical-align: middle;">
+                      <strong class="rsgm-patient-name" style="font-size: 13px;">{$value.nama_form}</strong>
+                      {if: $value.status == '0'}
+                      <div class="rsgm-cell-sub-alert" style="margin-top: 3px;">
+                        <i class="fa fa-exclamation-triangle"></i> Form nonaktif di master (disembunyikan dari petugas)
+                      </div>
+                      {/if}
+                    </td>
+                    <td style="vertical-align: middle; white-space: nowrap;">
+                      <span class="rsgm-badge {if: $value.kategori == 'Bedah'}rsgm-badge-rose{elseif: $value.kategori == 'Ranap'}rsgm-badge-emerald{elseif: $value.kategori == 'Rajal'}rsgm-badge-sky{elseif: $value.kategori == 'IGD'}rsgm-badge-amber{else}rsgm-badge-purple{/if}">
+                        {$value.kategori}
+                      </span>
+                    </td>
+                    <td class="text-center" style="vertical-align: middle; white-space: nowrap;">
+                      {if: $value.status == '1'}
+                        <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check-circle"></i> Aktif</span>
+                      {else}
+                        <span class="rsgm-badge rsgm-badge-rose"><i class="fa fa-wrench"></i> Nonaktif</span>
+                      {/if}
+                    </td>
+                    <td class="text-center" style="vertical-align: middle; white-space: nowrap;">
+                      <a href="{?=url([ADMIN, 'form_rme', $value.route_manage])?}" target="_blank" class="btn btn-xs btn-default" title="Pratinjau Lembar Kerja">
+                        <i class="fa fa-external-link text-primary"></i> Buka
+                      </a>
+                    </td>
+                  </tr>
+                  {/loop}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Footer Simpan Hak Akses -->
+            <div style="margin-top: 18px; padding: 12px 18px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <strong style="color: #0f172a; font-size: 13px;">Simpan Konfigurasi Hak Akses</strong>
+                <div class="rsgm-cell-sub">Perubahan akan langsung berlaku pada menu tindakan pasien di {$selected_unit.nama_unit}.</div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <a href="{?=url([ADMIN, 'form_rme', 'manajemenrme'])?}&tab=akses" class="btn btn-sm btn-default">
+                  Batal
+                </a>
+                <button type="submit" class="btn btn-sm btn-primary">
+                  <i class="fa fa-check"></i> Simpan Hak Akses Unit
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      $(document).ready(function() {
+        $('#btnToggleCopyAccess').on('click', function() {
+          $('#copyAccessForm').slideToggle();
+        });
+
+        $('#copyAccessFromUnit').on('change', function() {
+          $('#btnCopyAccess').prop('disabled', !$(this).val());
+        });
+
+        $('#btnCopyAccess').on('click', function() {
+          var selectedOption = $('#copyAccessFromUnit option:selected');
+          var accessStr = selectedOption.data('access');
+          $('.form-check-item').prop('checked', false);
+
+          if (accessStr) {
+            var ids = String(accessStr).split(',');
+            $.each(ids, function(idx, val) {
+              $('.form-check-item[value="' + $.trim(val) + '"]').prop('checked', true);
+            });
+          }
+          if (typeof bootbox !== 'undefined') {
+            bootbox.alert('Akses formulir berhasil disalin dari: <strong>' + selectedOption.text() + '</strong>. Klik tombol "Simpan Hak Akses Unit" untuk menyimpan permanen.');
+          } else {
+            alert('Akses berhasil disalin dari: ' + selectedOption.text());
+          }
+        });
+
+        $('#btnCheckAll').on('click', function() {
+          $('.form-check-item:visible').prop('checked', true);
+        });
+
+        $('#btnUncheckAll').on('click', function() {
+          $('.form-check-item:visible').prop('checked', false);
+        });
+
+        $('#filterFormInput').on('keyup', function() {
+          var val = $(this).val().toLowerCase().trim();
+          if (val === '') {
+            $('.form-row').show();
+          } else {
+            $('.form-row').each(function() {
+              var s = $(this).data('search');
+              if (s.indexOf(val) !== -1) {
+                $(this).show();
+              } else {
+                $(this).hide();
+              }
+            });
+          }
+        });
+      });
+    </script>
+
+{else}
+    <!-- ======================================================== -->
+    <!-- DASHBOARD UTAMA MANAJEMEN FORMULIR RME                  -->
+    <!-- ======================================================== -->
+    <div class="panel panel-default">
+      <div class="panel-heading rsgm-panel-head">
+        <h3 class="panel-title">
+          <i class="fa fa-sliders text-primary"></i> Manajemen Form RME
+        </h3>
+        <div class="rsgm-filter-bar">
+          <span class="rsgm-badge rsgm-badge-emerald" title="Formulir Aktif"><i class="fa fa-check-circle"></i> <span id="kpi-active-forms">{$count_active}</span> Aktif</span>
+          {if: $count_inactive > 0}
+          <span class="rsgm-badge rsgm-badge-rose" title="Formulir Nonaktif"><i class="fa fa-wrench"></i> <span id="kpi-inactive-forms">{$count_inactive}</span> Nonaktif</span>
+          {/if}
+          <span class="rsgm-badge rsgm-badge-sky" title="Total Form RME"><i class="fa fa-folder-open"></i> <span id="kpi-total-forms">{$count_total}</span> Form</span>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <div id="display" class="display">
+          <div id="ajax-notif-container" style="display: none;"></div>
+
+          <!-- Segmented Navigation Tabs -->
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="{if: $tab == 'status' || empty($tab)}active{/if}">
+              <a href="#tab-status" aria-controls="tab-status" role="tab" data-toggle="tab">
+                <i class="fa fa-toggle-on text-primary"></i> Status Publikasi Formulir
+                <span class="badge">{$count_total}</span>
+              </a>
+            </li>
+            <li role="presentation" class="{if: $tab == 'akses'}active{/if}">
+              <a href="#tab-akses" aria-controls="tab-akses" role="tab" data-toggle="tab">
+                <i class="fa fa-hospital-o text-success"></i> Hak Akses per Unit
+                <span class="badge">{?=count($units)?} Unit</span>
+              </a>
+            </li>
+            <li role="presentation" class="{if: $tab == 'tambah'}active{/if}">
+              <a href="#tab-tambah" aria-controls="tab-tambah" role="tab" data-toggle="tab">
+                <i class="fa fa-plus-circle text-info"></i> Daftarkan Formulir Baru
+              </a>
+            </li>
+          </ul>
+
+          <div class="tab-content" style="margin-top: 14px;">
+            <!-- ======================================================== -->
+            <!-- TAB 1: KELOLA STATUS PUBLIKASI FORMULIR RME             -->
+            <!-- ======================================================== -->
+            <div role="tabpanel" class="tab-pane fade {if: $tab == 'status' || empty($tab)}in active{/if}" id="tab-status">
+              <!-- Toolbar Filter & Search -->
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                <!-- Filter Status & Kategori -->
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <div class="rsgm-filter-pills" id="btnGroupStatusFilter">
+                    <button type="button" class="btn btn-sm rsgm-fpill rsgm-fpill-all active" data-filter-status="all">Semua ({$count_total})</button>
+                    <button type="button" class="btn btn-sm rsgm-fpill rsgm-fpill-done" data-filter-status="1"><i class="fa fa-check"></i> Aktif ({$count_active})</button>
+                    <button type="button" class="btn btn-sm rsgm-fpill rsgm-fpill-pending" data-filter-status="0"><i class="fa fa-wrench"></i> Nonaktif ({$count_inactive})</button>
+                  </div>
+                  <select id="selectCategoryFilter" class="form-control input-sm" style="width: auto; display: inline-block; height: 30px; border-radius: 6px; font-size: 12px;">
+                    <option value="all">-- Semua Kategori --</option>
+                    {loop: $kategori_list}
+                    <option value="{$value}">{$value}</option>
+                    {/loop}
+                  </select>
+                </div>
+
+                <!-- Search Spotlight & Batch Actions -->
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <div class="datatable-search" style="margin: 0;">
+                    <div class="dataTables_filter" style="margin: 0;">
+                      <label>
+                        <input type="text" id="inputSearchMasterForm" class="form-control input-sm" placeholder="Cari formulir RME...">
+                      </label>
+                    </div>
+                  </div>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <i class="fa fa-check-square-o text-muted"></i> Batch <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                      <li><a href="#" id="btnSelectAllRows"><i class="fa fa-check-square-o text-primary" style="width: 16px;"></i> Pilih Semua</a></li>
+                      <li><a href="#" id="btnDeselectAllRows"><i class="fa fa-square-o text-muted" style="width: 16px;"></i> Batal Pilih</a></li>
+                      <li class="divider"></li>
+                      <li><a href="#" class="btn-submit-batch" data-action="1"><i class="fa fa-play text-success" style="width: 16px;"></i> Aktifkan Terpilih</a></li>
+                      <li><a href="#" class="btn-submit-batch" data-action="0"><i class="fa fa-pause text-warning" style="width: 16px;"></i> Nonaktifkan Terpilih</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Form Batch Wrapper -->
+              <form id="formBatchStatus" action="{?=url([ADMIN, 'form_rme', 'batchstatusform'])?}" method="POST">
+                <input type="hidden" name="t" value="{$token}">
+                <input type="hidden" name="batch_status" id="batch_status_input" value="1">
+
+                <div class="table-responsive no-margin">
+                  <table class="table table-striped no-padding" id="table-master-forms" width="100%">
+                    <thead>
+                      <tr>
+                        <th width="35" class="text-center" style="white-space: nowrap;">
+                          <input type="checkbox" id="chk-head-all" style="cursor: pointer; width: 16px; height: 16px; accent-color: #2563eb;">
+                        </th>
+                        <th width="45" class="text-center" style="white-space: nowrap;">No</th>
+                        <th width="100" style="white-space: nowrap;">Kode</th>
+                        <th>Nama Formulir & Keterangan</th>
+                        <th width="110" style="white-space: nowrap;">Kategori</th>
+                        <th width="110" class="text-center" style="white-space: nowrap;">Status</th>
+                        <th width="90" class="text-center" style="white-space: nowrap;">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loop: $all_forms}
+                      <tr class="master-form-row" id="form-row-{$value.id}" 
+                          data-id="{$value.id}" 
+                          data-status-filter="{$value.status}" 
+                          data-kategori-filter="{$value.kategori}" 
+                          data-search="{$value.search_text}">
+                        <td class="text-center" style="vertical-align: middle;">
+                          <input type="checkbox" name="selected_ids[]" value="{$value.id}" class="chk-row-item" style="cursor: pointer; width: 16px; height: 16px; accent-color: #2563eb;">
+                        </td>
+                        <td class="text-center" style="vertical-align: middle; white-space: nowrap;">
+                          <span class="rsgm-visit-id">{$value.urutan}</span>
+                        </td>
+                        <td style="vertical-align: middle; white-space: nowrap;">
+                          <span class="rsgm-code-chip">{$value.kode_form}</span>
+                        </td>
+                        <td style="vertical-align: middle;">
+                          <div class="rsgm-patient-name" style="font-size: 13px;">{$value.nama_form}</div>
+                          <div class="rsgm-cell-sub">
+                            <span><i class="fa fa-database text-muted"></i> {$value.nama_tabel}</span>
+                            <span style="margin: 0 4px; color: #cbd5e1;">&bull;</span>
+                            <span><i class="fa fa-code-fork text-muted"></i> {$value.route_form}</span>
+                          </div>
+                          {if: !empty($value.catatan)}
+                          <div class="rsgm-cell-sub-alert" style="margin-top: 3px;">
+                            <i class="fa fa-info-circle"></i> Catatan: {$value.catatan}
+                          </div>
+                          {elseif: !empty($value.deskripsi)}
+                          <div class="rsgm-cell-sub" style="margin-top: 2px;">
+                            <i class="fa fa-info-circle text-muted"></i> {$value.deskripsi}
+                          </div>
+                          {/if}
+                        </td>
+                        <td style="vertical-align: middle; white-space: nowrap;">
+                          <span class="rsgm-badge {if: $value.kategori == 'Bedah'}rsgm-badge-rose{elseif: $value.kategori == 'Ranap'}rsgm-badge-emerald{elseif: $value.kategori == 'Rajal'}rsgm-badge-sky{elseif: $value.kategori == 'IGD'}rsgm-badge-amber{else}rsgm-badge-purple{/if}">
+                            {$value.kategori}
+                          </span>
+                        </td>
+                        <td class="text-center status-badge-container" style="vertical-align: middle; white-space: nowrap;">
+                          {if: $value.status == '1'}
+                            <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check-circle"></i> Aktif</span>
+                          {else}
+                            <span class="rsgm-badge rsgm-badge-rose"><i class="fa fa-wrench"></i> Nonaktif</span>
+                          {/if}
+                        </td>
+                        <td class="text-center" style="vertical-align: middle; white-space: nowrap;">
+                          <div class="dropdown">
+                            <button type="button" class="btn btn-sm btn-default dropdown-toggle rsgm-action-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                              <i class="fa fa-ellipsis-h text-muted"></i> Aksi <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-right rsgm-menu-action" role="menu">
+                              <li>
+                                <a href="{?=url([ADMIN, 'form_rme', $value.route_form])?}" target="_blank">
+                                  <i class="fa fa-external-link text-primary" style="width: 16px;"></i> Buka Lembar Form
+                                </a>
+                              </li>
+                              <li>
+                                <a href="{?=url([ADMIN, 'form_rme', $value.route_manage])?}" target="_blank">
+                                  <i class="fa fa-table text-success" style="width: 16px;"></i> Buka Riwayat / Data
+                                </a>
+                              </li>
+                              {if: !empty($value.route_cetak)}
+                              <li>
+                                <a href="{?=url([ADMIN, 'form_rme', $value.route_cetak])?}" target="_blank">
+                                  <i class="fa fa-print text-danger" style="width: 16px;"></i> Pratinjau Format Cetak
+                                </a>
+                              </li>
+                              {/if}
+                              <li class="divider"></li>
+                              <li>
+                                <a href="#" class="btn-edit-form"
+                                  data-id="{$value.id}"
+                                  data-kode="{$value.kode_form}"
+                                  data-nama="{$value.nama_form}"
+                                  data-kategori="{$value.kategori}"
+                                  data-urutan="{$value.urutan}"
+                                  data-status="{$value.status}"
+                                  data-catatan="{$value.catatan}">
+                                  <i class="fa fa-pencil text-warning" style="width: 16px;"></i> Edit Formulir
+                                </a>
+                              </li>
+                              <li>
+                                <a href="#" class="btn-toggle-status"
+                                  data-id="{$value.id}"
+                                  data-status="{if: $value.status == '1'}0{else}1{/if}"
+                                  data-nama="{$value.nama_form}">
+                                  {if: $value.status == '1'}
+                                    <i class="fa fa-pause text-danger" style="width: 16px;"></i> Nonaktifkan Form
+                                  {else}
+                                    <i class="fa fa-play text-success" style="width: 16px;"></i> Aktifkan Form
+                                  {/if}
+                                </a>
+                              </li>
+                            </ul>
+                          </div>
+                        </td>
+                      </tr>
+                      {/loop}
+                    </tbody>
+                  </table>
+                </div>
+              </form>
+            </div>
+
+            <!-- ======================================================== -->
+            <!-- TAB 2: HAK AKSES PER POLIKLINIK / UNIT SIMRS            -->
+            <!-- ======================================================== -->
+            <div role="tabpanel" class="tab-pane fade {if: $tab == 'akses'}in active{/if}" id="tab-akses">
+              <div class="table-responsive no-margin">
+                <table class="table table-striped no-padding dataTables" id="table-unit-simrs" width="100%">
+                  <thead>
+                    <tr>
+                      <th width="80" style="white-space: nowrap;">Kode</th>
+                      <th width="240">Nama Poliklinik / Unit</th>
+                      <th width="90" style="white-space: nowrap;">Kategori</th>
+                      <th>Hak Akses Form RME yang Diizinkan</th>
+                      <th width="130" class="text-center" style="white-space: nowrap;">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loop: $units}
+                    <tr>
+                      <td style="vertical-align: middle; white-space: nowrap;">
+                        <span class="rsgm-code-chip">{$value.kode_unit}</span>
+                      </td>
+                      <td style="vertical-align: middle;">
+                        <strong class="rsgm-patient-name" style="font-size: 13px;">{$value.nama_unit}</strong>
+                      </td>
+                      <td style="vertical-align: middle; white-space: nowrap;">
+                        <span class="rsgm-badge rsgm-badge-sky">{$value.kategori}</span>
+                      </td>
+                      <td style="vertical-align: middle;">
+                        {if: !empty($value.form_codes)}
+                          <span class="rsgm-badge rsgm-badge-emerald" style="margin-right: 6px;">
+                            <i class="fa fa-check"></i> {$value.total_form} Form
+                          </span>
+                          <span class="rsgm-cell-sub" style="display: inline;">{$value.access_summary}</span>
+                        {else}
+                          <span class="rsgm-cell-sub-alert">
+                            <i class="fa fa-exclamation-circle"></i> Belum ada formulir diizinkan
+                          </span>
+                        {/if}
+                      </td>
+                      <td class="text-center" style="vertical-align: middle; white-space: nowrap;">
+                        <a href="{?=url([ADMIN, 'form_rme', 'manajemenrme'])?}&action=permission&kd_poli={$value.kd_poli}&unit_id={$value.kd_poli}" class="btn btn-sm btn-primary">
+                          <i class="fa fa-sliders"></i> Atur Hak Akses
+                        </a>
+                      </td>
+                    </tr>
+                    {/loop}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- ======================================================== -->
+            <!-- TAB 3: DAFTARKAN FORMULIR RME BARU                      -->
+            <!-- ======================================================== -->
+            <div role="tabpanel" class="tab-pane fade {if: $tab == 'tambah'}in active{/if}" id="tab-tambah">
+              <div style="max-width: 780px; padding: 14px 0;">
+                <form action="{?=url([ADMIN, 'form_rme', 'tambahformrme'])?}" method="POST" class="form-horizontal">
+                  <input type="hidden" name="t" value="{$token}">
+
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label" style="font-size: 12.5px; font-weight: 600;">Kode Formulir <span class="text-danger">*</span></label>
+                    <div class="col-sm-5">
+                      <input type="text" name="kode_form" class="form-control input-sm" placeholder="Contoh: L_EWS, ANS5, RI21" required style="text-transform: uppercase; font-weight: 600; border-radius: 6px;">
+                      <span class="help-block text-muted" style="font-size: 11px; margin-top: 3px;">Identifier kode unik tanpa spasi.</span>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label" style="font-size: 12.5px; font-weight: 600;">Nama Formulir RME <span class="text-danger">*</span></label>
+                    <div class="col-sm-8">
+                      <input type="text" name="nama_form" class="form-control input-sm" placeholder="Contoh: Lampiran - Early Warning System (EWS) Dewasa & Anak" required style="border-radius: 6px;">
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label" style="font-size: 12.5px; font-weight: 600;">Kategori Unit <span class="text-danger">*</span></label>
+                    <div class="col-sm-5">
+                      <select name="kategori" class="form-control input-sm" style="border-radius: 6px;">
+                        <option value="Ranap">Ranap (Rawat Inap)</option>
+                        <option value="Rajal">Rajal (Rawat Jalan)</option>
+                        <option value="Bedah">Bedah (Bedah Mulut / Kamar Operasi)</option>
+                        <option value="IGD">IGD (Gawat Darurat)</option>
+                        <option value="Penunjang">Penunjang</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label" style="font-size: 12.5px; font-weight: 600;">Tabel Database</label>
+                    <div class="col-sm-6">
+                      <input type="text" name="nama_tabel" class="form-control input-sm" placeholder="Contoh: rm_lampiran_ews, rm_ans1_tindakan_pembiusan" style="border-radius: 6px;">
+                      <span class="help-block text-muted" style="font-size: 11px; margin-top: 3px;">Tabel database penyimpanan form ini di SIMRS.</span>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label" style="font-size: 12.5px; font-weight: 600;">Rute Kelola (Manage) <span class="text-danger">*</span></label>
+                    <div class="col-sm-6">
+                      <input type="text" name="route_manage" class="form-control input-sm" placeholder="Contoh: ewsmanage" required style="border-radius: 6px;">
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label" style="font-size: 12.5px; font-weight: 600;">Rute Pengisian (Form) <span class="text-danger">*</span></label>
+                    <div class="col-sm-6">
+                      <input type="text" name="route_form" class="form-control input-sm" placeholder="Contoh: ewsform" required style="border-radius: 6px;">
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label" style="font-size: 12.5px; font-weight: 600;">Rute Format Cetak</label>
+                    <div class="col-sm-6">
+                      <input type="text" name="route_cetak" class="form-control input-sm" placeholder="Contoh: ewscetak" style="border-radius: 6px;">
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-top: 20px;">
+                    <div class="col-sm-offset-3 col-sm-8">
+                      <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="fa fa-save"></i> Daftarkan Formulir ke Master Katalog
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MODAL EDIT PENGATURAN FORMULIR RME                      -->
+    <!-- ======================================================== -->
+    <div class="modal fade" id="modalEditForm" tabindex="-1" role="dialog" aria-labelledby="modalEditFormLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content" style="border-radius: 8px; overflow: hidden; box-shadow: 0 16px 36px rgba(15, 23, 42, 0.2); border: 0;">
+          <form action="{?=url([ADMIN, 'form_rme', 'editformrme'])?}" method="POST">
+            <input type="hidden" name="t" value="{$token}">
+            <input type="hidden" name="id" id="edit_form_id">
+
+            <div class="modal-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 14px 18px;">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size: 20px;">&times;</button>
+              <h4 class="modal-title" id="modalEditFormLabel" style="font-weight: 700; font-size: 15px; color: #0f172a;">
+                <i class="fa fa-pencil text-primary"></i> Edit Pengaturan: <span id="edit_modal_kode_title" class="rsgm-code-chip"></span>
+              </h4>
+            </div>
+            <div class="modal-body" style="padding: 18px;">
+              <div class="form-group">
+                <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Nama Formulir RME <span class="text-danger">*</span></label>
+                <input type="text" name="nama_form" id="edit_nama_form" class="form-control input-sm" required style="border-radius: 6px;">
+              </div>
+
+              <div class="row">
+                <div class="col-sm-6">
+                  <div class="form-group">
+                    <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Kategori Unit</label>
+                    <select name="kategori" id="edit_kategori" class="form-control input-sm" style="border-radius: 6px;">
+                      <option value="Ranap">Ranap (Rawat Inap)</option>
+                      <option value="Rajal">Rajal (Rawat Jalan)</option>
+                      <option value="Bedah">Bedah (Bedah Mulut / Kamar Operasi)</option>
+                      <option value="IGD">IGD (Gawat Darurat)</option>
+                      <option value="Penunjang">Penunjang</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="form-group">
+                    <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Nomor Urutan</label>
+                    <input type="number" name="urutan" id="edit_urutan" class="form-control input-sm" min="0" style="border-radius: 6px;">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Status Publikasi</label>
+                <select name="status" id="edit_status" class="form-control input-sm" style="border-radius: 6px;">
+                  <option value="1">Aktif (Dipublikasikan ke Petugas & Menu)</option>
+                  <option value="0">Nonaktif (Disembunyikan / Sedang Dalam Perbaikan)</option>
+                </select>
+                <span class="help-block text-muted" style="font-size: 11px; margin-top: 3px;">
+                  Formulir nonaktif otomatis tidak muncul di dropdown navigasi & tindakan pasien.
+                </span>
+              </div>
+
+              <div class="form-group">
+                <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Catatan Perbaikan / Alasan Penonaktifan</label>
+                <textarea name="catatan" id="edit_catatan" class="form-control input-sm" rows="3" placeholder="Contoh: Sedang dalam penambahan parameter isian atau revisi format cetak." style="border-radius: 6px;"></textarea>
+              </div>
+            </div>
+            <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 12px 18px;">
+              <button type="button" class="btn btn-sm btn-default" data-dismiss="modal">Batal</button>
+              <button type="submit" class="btn btn-sm btn-primary">
+                <i class="fa fa-save"></i> Simpan Perubahan
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      $(document).ready(function() {
+        if ($.fn.DataTable) {
+          var tableUnit = $('#table-unit-simrs').DataTable({
+            "order": [[ 1, "asc" ]],
+            "columnDefs": [
+              { "orderable": false, "targets": [4] }
+            ],
+            "pagingType": "full",
+            "language": {
+              "paginate": {
+                "first": "&laquo;",
+                "last": "&raquo;",
+                "previous": "‹",
+                "next": "›"
+              },
+              "search": "",
+              "searchPlaceholder": "Cari unit poliklinik...",
+              "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ unit",
+              "infoEmpty": "Tidak ada unit",
+              "infoFiltered": "(disaring dari _MAX_ total unit)",
+              "zeroRecords": "Tidak ada unit yang cocok dengan pencarian"
+            },
+            "lengthChange": false,
+            "scrollX": false,
+            "autoWidth": false,
+            "pageLength": 15,
+            dom: "<<'data-table-title'><'datatable-search'f>><'row'<'col-sm-12'tr>><<'pmd-datatable-pagination' l i p>>"
+          });
+
+          var syncUrl = "{?=url([ADMIN, 'form_rme', 'syncunitsimrs'])?}";
+          var syncToken = "{$token}";
+
+          $('#tab-akses .data-table-title').html(
+            '<div style="display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">' +
+            '<span class="rsgm-total-pill"><i class="fa fa-hospital-o text-primary"></i> Total: ' + tableUnit.rows().count() + ' Unit</span>' +
+            '<form action="' + syncUrl + '" method="POST" style="display:inline-block; margin: 0;">' +
+            '<input type="hidden" name="t" value="' + syncToken + '">' +
+            '<input type="hidden" name="sync_poli" value="1">' +
+            '<input type="hidden" name="sync_bangsal" value="1">' +
+            '<button type="submit" class="btn btn-sm btn-default" style="border-radius: 6px; font-weight: 600;" onclick="return confirm(\'Sinkronisasikan data poliklinik dan bangsal dari master SIMRS?\')">' +
+            '<i class="fa fa-refresh text-primary"></i> Sinkronisasi Unit' +
+            '</button>' +
+            '</form>' +
+            '</div>'
+          );
+
+          $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+            if ($(e.target).attr('href') === '#tab-akses') {
+              tableUnit.columns.adjust().draw();
+            }
+          });
+        }
+
+        // ==========================================
+        // 1. FILTERING STATUS, KATEGORI & PENCARIAN
+        // ==========================================
+        var currentStatusFilter = 'all';
+        var currentCategoryFilter = 'all';
+        var currentSearchKeyword = '';
+
+        function applyFilters() {
+          var visibleCount = 0;
+          $('.master-form-row').each(function() {
+            var row = $(this);
+            var rowStatus = String(row.attr('data-status-filter') || '1');
+            var rowCategory = String(row.attr('data-kategori-filter') || '');
+            var rowSearch = String(row.attr('data-search') || '').toLowerCase();
+
+            var matchStatus = (currentStatusFilter === 'all') || (rowStatus === currentStatusFilter);
+            var matchCategory = (currentCategoryFilter === 'all') || (rowCategory === currentCategoryFilter);
+            var matchSearch = (currentSearchKeyword === '') || (rowSearch.indexOf(currentSearchKeyword) !== -1);
+
+            if (matchStatus && matchCategory && matchSearch) {
+              row.show();
+              visibleCount++;
+            } else {
+              row.hide();
+            }
+          });
+        }
+
+        $('#btnGroupStatusFilter button').on('click', function() {
+          $('#btnGroupStatusFilter button').removeClass('active');
+          $(this).addClass('active');
+          currentStatusFilter = $(this).data('filter-status');
+          applyFilters();
+        });
+
+        $('#selectCategoryFilter').on('change', function() {
+          currentCategoryFilter = $(this).val();
+          applyFilters();
+        });
+
+        $('#inputSearchMasterForm').on('keyup', function() {
+          currentSearchKeyword = $(this).val().toLowerCase().trim();
+          applyFilters();
+        });
+
+        // ==========================================
+        // 2. CHECKBOX & BATCH ACTIONS
+        // ==========================================
+        function updateBatchButtons() {
+          var checkedCount = $('.chk-row-item:checked').length;
+          $('.btn-submit-batch').toggleClass('disabled', checkedCount === 0);
+        }
+
+        $('#chk-head-all').on('change', function() {
+          var isChecked = $(this).is(':checked');
+          $('.master-form-row:visible .chk-row-item').prop('checked', isChecked);
+          updateBatchButtons();
+        });
+
+        $(document).on('change', '.chk-row-item', function() {
+          updateBatchButtons();
+        });
+
+        $('#btnSelectAllRows').on('click', function(e) {
+          e.preventDefault();
+          $('.master-form-row:visible .chk-row-item').prop('checked', true);
+          $('#chk-head-all').prop('checked', true);
+          updateBatchButtons();
+        });
+
+        $('#btnDeselectAllRows').on('click', function(e) {
+          e.preventDefault();
+          $('.chk-row-item').prop('checked', false);
+          $('#chk-head-all').prop('checked', false);
+          updateBatchButtons();
+        });
+
+        $('.btn-submit-batch').on('click', function(e) {
+          e.preventDefault();
+          var checkedCount = $('.chk-row-item:checked').length;
+          if (checkedCount === 0) {
+            alert('Pilih minimal satu formulir terlebih dahulu.');
+            return;
+          }
+
+          var actionType = $(this).data('action');
+          var actionName = actionType == '1' ? 'MENGAKTIFKAN' : 'MENONAKTIFKAN';
+
+          function doSubmit() {
+            $('#batch_status_input').val(actionType);
+            $('#formBatchStatus').submit();
+          }
+
+          if (typeof bootbox !== 'undefined') {
+            bootbox.confirm("Apakah Anda yakin ingin " + actionName + " <strong>" + checkedCount + "</strong> formulir yang dipilih?", function(yes) {
+              if (yes) doSubmit();
+            });
+          } else if (confirm("Apakah Anda yakin ingin " + actionName + " " + checkedCount + " formulir yang dipilih?")) {
+            doSubmit();
+          }
+        });
+
+        // ==========================================
+        // 3. AJAX TOGGLE STATUS (AKTIF / NONAKTIF)
+        // ==========================================
+        $(document).on('click', '.btn-toggle-status', function(e) {
+          e.preventDefault();
+          var btn = $(this);
+          var id = btn.data('id');
+          var targetStatus = String(btn.data('status'));
+          var formName = btn.data('nama');
+          var actionText = (targetStatus === '1') 
+            ? 'mengaktifkan & mempublikasikan' 
+            : 'menonaktifkan (menyembunyikan untuk perbaikan)';
+
+          function doToggle() {
+            var url = "{?=url([ADMIN, 'form_rme', 'togglestatusform'])?}";
+
+            $.ajax({
+              url: url,
+              type: 'POST',
+              data: {
+                id: id,
+                status: targetStatus,
+                t: "{$token}"
+              },
+              dataType: 'json',
+              success: function(res) {
+                if (res && res.status === 'success') {
+                  var row = $('#form-row-' + id);
+                  if (targetStatus === '1') {
+                    // Jadi Aktif
+                    row.find('.status-badge-container').html('<span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check-circle"></i> Aktif</span>');
+                    btn.data('status', '0')
+                       .html('<i class="fa fa-pause text-danger" style="width: 16px;"></i> Nonaktifkan Form');
+                    row.attr('data-status-filter', '1');
+                  } else {
+                    // Jadi Nonaktif
+                    row.find('.status-badge-container').html('<span class="rsgm-badge rsgm-badge-rose"><i class="fa fa-wrench"></i> Nonaktif</span>');
+                    btn.data('status', '1')
+                       .html('<i class="fa fa-play text-success" style="width: 16px;"></i> Aktifkan Form');
+                    row.attr('data-status-filter', '0');
+                  }
+
+                  recalculateKpis();
+
+                  $('#ajax-notif-container').html(
+                    '<div class="alert alert-success alert-dismissible fade in" role="alert" style="border-radius: 6px; margin-bottom: 14px;">' +
+                    '<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>' +
+                    '<i class="fa fa-check-circle"></i> ' + res.message +
+                    '</div>'
+                  ).slideDown();
+                } else {
+                  if (typeof bootbox !== 'undefined') {
+                    bootbox.alert(res.message || 'Gagal mengubah status formulir.');
+                  } else {
+                    alert(res.message || 'Gagal mengubah status formulir.');
+                  }
+                }
+              },
+              error: function(xhr, status, error) {
+                alert('Gagal memproses ke server: ' + error);
+              }
+            });
+          }
+
+          if (typeof bootbox !== 'undefined') {
+            bootbox.confirm({
+              title: "Konfirmasi Status Formulir RME",
+              message: "Apakah Anda yakin ingin <strong>" + actionText + "</strong> formulir:<br><strong class='text-primary'>" + formName + "</strong>?",
+              buttons: {
+                confirm: {
+                  label: (targetStatus === '1') ? '<i class="fa fa-play"></i> Ya, Aktifkan' : '<i class="fa fa-pause"></i> Ya, Nonaktifkan',
+                  className: (targetStatus === '1') ? 'btn-success' : 'btn-warning'
+                },
+                cancel: {
+                  label: 'Batal',
+                  className: 'btn-default'
+                }
+              },
+              callback: function(result) {
+                if (result) doToggle();
+              }
+            });
+          } else if (confirm("Apakah Anda yakin ingin " + actionText + " formulir: " + formName + "?")) {
+            doToggle();
+          }
+        });
+
+        function recalculateKpis() {
+          var total = $('.master-form-row').length;
+          var active = $('.master-form-row[data-status-filter="1"]').length;
+          var inactive = total - active;
+
+          $('#kpi-total-forms').text(total);
+          $('#kpi-active-forms').text(active);
+          $('#kpi-inactive-forms').text(inactive);
+
+          $('#btnGroupStatusFilter button[data-filter-status="all"]').text('Semua (' + total + ')');
+          $('#btnGroupStatusFilter button[data-filter-status="1"]').html('<i class="fa fa-check"></i> Aktif (' + active + ')');
+          $('#btnGroupStatusFilter button[data-filter-status="0"]').html('<i class="fa fa-wrench"></i> Nonaktif (' + inactive + ')');
+        }
+
+        // ==========================================
+        // 4. MODAL EDIT FORMULIR
+        // ==========================================
+        $(document).on('click', '.btn-edit-form', function(e) {
+          e.preventDefault();
+          var btn = $(this);
+          $('#edit_form_id').val(btn.data('id'));
+          $('#edit_modal_kode_title').text(btn.data('kode'));
+          $('#edit_nama_form').val(btn.data('nama'));
+          $('#edit_kategori').val(btn.data('kategori'));
+          $('#edit_urutan').val(btn.data('urutan'));
+          $('#edit_status').val(String(btn.data('status')));
+          $('#edit_catatan').val(btn.data('catatan'));
+
+          $('#modalEditForm').modal('show');
+        });
+      });
+    </script>
+{/if}
+
+  </div>
+</div>

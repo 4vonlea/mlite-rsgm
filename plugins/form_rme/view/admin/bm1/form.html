@@ -1,0 +1,475 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+  <form method="POST" action="{?=url([ADMIN, 'form_rme', 'bm1save'])?}" id="bm1_main_form">
+    <input type="hidden" name="id" value="{?=isset($data['id']) ? $data['id'] : ''?}">
+    <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{?=isset_or($data['no_rkm_medis'])?}">
+
+    <div class="rsgm-soap-flex-row clearfix">
+      
+      <!-- ============================================================
+           KOLOM KIRI (3): SIDEBAR IDENTITAS PASIEN & DOKUMEN
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Identitas Pasien</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">BM 1</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="tgl_dokumen" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tanggal Dokumen</label>
+              <input type="date" name="tgl_dokumen" id="tgl_dokumen" class="form-control" value="{if: !empty($data.tgl_dokumen)}{$data.tgl_dokumen}{else}{?=date('Y-m-d')?}{/if}">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="waktu_dokumen" class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Jam Dokumen (WITA)</label>
+              <input type="time" name="waktu_dokumen" id="waktu_dokumen" class="form-control" value="{if: !empty($data.waktu_dokumen)}{$data.waktu_dokumen}{else}{?=date('H:i')?}{/if}">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default" id="btn_cari_pasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                    <i class="fa fa-search text-primary"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="display_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+              <input type="text" id="display_no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+              <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{elseif: !empty($data.nama_pasien)}{$data.nama_pasien}{/if}">
+            </div>
+
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="jenis_kelamin" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                  <select name="jk" id="jenis_kelamin" class="form-control">
+                    <option value="L" {if: isset($data['jk']) && $data['jk'] == 'L'}selected{/if}>Laki-laki</option>
+                    <option value="P" {if: isset($data['jk']) && $data['jk'] == 'P'}selected{/if}>Perempuan</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir / Umur</label>
+                  <input type="text" id="tgl_lahir" class="form-control" placeholder="Tgl Lahir" value="{if: !empty($data.tgl_lahir)}{$data.tgl_lahir}{elseif: !empty($data.umur)}{$data.umur}{/if}" readonly>
+                </div>
+              </div>
+            </div>
+
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="pemberi_informasi" class="rsgm-compact-label"><i class="fa fa-user-md text-primary"></i> Dokter Pemberi Informasi</label>
+                <input type="text" name="pemberi_informasi" id="pemberi_informasi" class="form-control" value="{?=isset_or($data['pemberi_informasi'])?}" placeholder="Nama & Gelar Dokter Spesialis BM">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="penerima_informasi" class="rsgm-compact-label"><i class="fa fa-user text-muted"></i> Penerima Informasi / Persetujuan</label>
+                <input type="text" name="penerima_informasi" id="penerima_informasi" class="form-control" value="{?=isset_or($data['penerima_informasi'])?}" placeholder="Nama Pasien / Wali">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 8px;">
+                <label for="nama_1" class="rsgm-compact-label"><i class="fa fa-users text-muted"></i> 1. Saksi Pasien / Keluarga</label>
+                <input type="text" name="nama_1" id="nama_1" class="form-control" value="{?=isset_or($data['nama_1'])?}" placeholder="Nama Saksi Keluarga">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="nama_2" class="rsgm-compact-label"><i class="fa fa-stethoscope text-muted"></i> 2. Saksi Pihak RSGM</label>
+                <input type="text" name="nama_2" id="nama_2" class="form-control" value="{?=isset_or($data['nama_2'])?}" placeholder="Nama Perawat / Saksi RS">
+              </div>
+
+              <button type="button" id="btn_demo" class="btn btn-warning btn-sm btn-block" style="border-radius: 6px; font-weight: 600;" title="Isi form dengan contoh data tindakan bedah mulut lengkap">
+                <i class="fa fa-magic"></i> Isi Contoh Data
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           KOLOM KANAN (9): WORKSTATION FORM INFORMASI TINDAKAN BEDAH (BM1)
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell">
+          
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-file-text-o"></i></span>
+              <span>Informasi Tindakan Medik / Pembedahan (Informed Consent)</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">FORM BM 1</span>
+              <button type="button" id="btn_check_all" class="btn btn-xs btn-default" style="border-radius: 4px; font-weight: 600;" title="Tandai semua informasi telah diberikan dan dipahami">
+                <i class="fa fa-check-square-o text-success"></i> Tandai Semua (√)
+              </button>
+            </div>
+          </div>
+
+          <div class="rsgm-reg-body" style="padding: 16px 20px;">
+
+            <div class="alert alert-info" style="font-size: 12px; margin-bottom: 16px; border-left: 4px solid #0284c7; padding: 10px 14px; border-radius: 6px; background-color: #f0f9ff; color: #0369a1;">
+              <i class="fa fa-info-circle"></i> Dokter memberikan penjelasan lengkap kepada pasien/wali mengenai 12 butir informasi tindakan medis/pembedahan. Berikan tanda centang (√) pada kolom konfirmasi untuk menandakan materi telah diterangkan secara jelas dan dipahami.
+            </div>
+
+            <!-- TABEL 12 BUTIR INFORMASI TINDAKAN -->
+            <div class="table-responsive" style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #fff;">
+              <table class="table table-bordered table-hover" style="margin-bottom: 0; font-size: 12.5px;">
+                <thead>
+                  <tr style="background-color: #f8fafc; color: #334155;">
+                    <th style="width: 50px; text-align: center; vertical-align: middle;">No</th>
+                    <th style="width: 250px; vertical-align: middle;">Jenis Informasi Tindakan</th>
+                    <th style="vertical-align: middle;">Uraian &amp; Isi Informasi Edukasi</th>
+                    <th style="width: 110px; text-align: center; vertical-align: middle;">Paham (√)</th>
+                  </tr>
+                </thead>
+                <tbody>
+
+                  <!-- 1. Diagnosis -->
+                  <tr>
+                    <td class="text-center" style="font-weight: 700; vertical-align: middle;">1</td>
+                    <td style="vertical-align: top;">
+                      <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;"><i class="fa fa-stethoscope text-primary"></i> Diagnosis / Diagnosis Banding</div>
+                      <small class="text-muted">Penyakit atau kondisi yang mendasari perlunya pembedahan</small>
+                    </td>
+                    <td>
+                      <textarea name="info_1_isi" id="info_1_isi" class="form-control" rows="2" placeholder="Contoh: Impaksi Gigi Molar Tiga Rahang Bawah (Gigi 48) Kelas II Posisi B disertai perikoronitis">{?=isset($data['info_1_isi']) ? $data['info_1_isi'] : ''?}</textarea>
+                    </td>
+                    <td class="text-center" style="vertical-align: middle; background-color: #fcfdfe;">
+                      <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0;">
+                        <input type="checkbox" name="info_1_tanda" id="info_1_tanda" value="Y" class="bm1-check" style="width: 18px; height: 18px; cursor: pointer;" {if: isset($data['info_1_tanda']) && $data['info_1_tanda'] == 'Y'}checked{/if}>
+                        <span style="font-size: 11px; font-weight: 600; color: #475569;">Paham</span>
+                      </label>
+                    </td>
+                  </tr>
+
+                  <!-- 2. Dasar Diagnosis -->
+                  <tr>
+                    <td class="text-center" style="font-weight: 700; vertical-align: middle;">2</td>
+                    <td style="vertical-align: top;">
+                      <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;"><i class="fa fa-search text-info"></i> Dasar Diagnosis</div>
+                      <small class="text-muted">Hasil anamnesis, pemeriksaan fisik, atau rontgen/laboratorium</small>
+                    </td>
+                    <td>
+                      <textarea name="info_2_isi" id="info_2_isi" class="form-control" rows="2" placeholder="Contoh: Nyeri berdenyut regio retromolar, operkulum bengkak, rontgen panoramik impaksi mesioangular">{?=isset($data['info_2_isi']) ? $data['info_2_isi'] : ''?}</textarea>
+                    </td>
+                    <td class="text-center" style="vertical-align: middle; background-color: #fcfdfe;">
+                      <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0;">
+                        <input type="checkbox" name="info_2_tanda" id="info_2_tanda" value="Y" class="bm1-check" style="width: 18px; height: 18px; cursor: pointer;" {if: isset($data['info_2_tanda']) && $data['info_2_tanda'] == 'Y'}checked{/if}>
+                        <span style="font-size: 11px; font-weight: 600; color: #475569;">Paham</span>
+                      </label>
+                    </td>
+                  </tr>
+
+                  <!-- 3. Tindakan Kedokteran -->
+                  <tr>
+                    <td class="text-center" style="font-weight: 700; vertical-align: middle;">3</td>
+                    <td style="vertical-align: top;">
+                      <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;"><i class="fa fa-medkit text-danger"></i> Tindakan Kedokteran</div>
+                      <small class="text-muted">Nama prosedur operatif / pembedahan yang akan dilakukan</small>
+                    </td>
+                    <td>
+                      <textarea name="info_3_isi" id="info_3_isi" class="form-control" rows="2" placeholder="Contoh: Odontektomi Gigi Impaksi M3 / Ekstraksi Kompleks / Bedah Minor">{?=isset($data['info_3_isi']) ? $data['info_3_isi'] : ''?}</textarea>
+                    </td>
+                    <td class="text-center" style="vertical-align: middle; background-color: #fcfdfe;">
+                      <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0;">
+                        <input type="checkbox" name="info_3_tanda" id="info_3_tanda" value="Y" class="bm1-check" style="width: 18px; height: 18px; cursor: pointer;" {if: isset($data['info_3_tanda']) && $data['info_3_tanda'] == 'Y'}checked{/if}>
+                        <span style="font-size: 11px; font-weight: 600; color: #475569;">Paham</span>
+                      </label>
+                    </td>
+                  </tr>
+
+                  <!-- 4. Indikasi Tindakan -->
+                  <tr>
+                    <td class="text-center" style="font-weight: 700; vertical-align: middle;">4</td>
+                    <td style="vertical-align: top;">
+                      <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;"><i class="fa fa-list-ul text-warning"></i> Indikasi Tindakan</div>
+                      <small class="text-muted">Alasan medis perlunya tindakan dilakukan saat ini</small>
+                    </td>
+                    <td>
+                      <textarea name="info_4_isi" id="info_4_isi" class="form-control" rows="2" placeholder="Contoh: Mencegah kambuhnya infeksi perikoronitis, karies pada gigi 47, dan risiko kista">{?=isset($data['info_4_isi']) ? $data['info_4_isi'] : ''?}</textarea>
+                    </td>
+                    <td class="text-center" style="vertical-align: middle; background-color: #fcfdfe;">
+                      <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0;">
+                        <input type="checkbox" name="info_4_tanda" id="info_4_tanda" value="Y" class="bm1-check" style="width: 18px; height: 18px; cursor: pointer;" {if: isset($data['info_4_tanda']) && $data['info_4_tanda'] == 'Y'}checked{/if}>
+                        <span style="font-size: 11px; font-weight: 600; color: #475569;">Paham</span>
+                      </label>
+                    </td>
+                  </tr>
+
+                  <!-- 5. Tata Cara -->
+                  <tr>
+                    <td class="text-center" style="font-weight: 700; vertical-align: middle;">5</td>
+                    <td style="vertical-align: top;">
+                      <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;"><i class="fa fa-cogs text-primary"></i> Tata Cara Tindakan</div>
+                      <small class="text-muted">Tahapan operasi: anestesi, insisi, pemotongan gigi, penjahitan</small>
+                    </td>
+                    <td>
+                      <textarea name="info_5_isi" id="info_5_isi" class="form-control" rows="2" placeholder="Contoh: Anestesi lokal blok/infiltrasi, pembuatan flap mukoperiosteal, ostektomi tulang, separasi gigi, kuretase soket, penjahitan">{?=isset($data['info_5_isi']) ? $data['info_5_isi'] : ''?}</textarea>
+                    </td>
+                    <td class="text-center" style="vertical-align: middle; background-color: #fcfdfe;">
+                      <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0;">
+                        <input type="checkbox" name="info_5_tanda" id="info_5_tanda" value="Y" class="bm1-check" style="width: 18px; height: 18px; cursor: pointer;" {if: isset($data['info_5_tanda']) && $data['info_5_tanda'] == 'Y'}checked{/if}>
+                        <span style="font-size: 11px; font-weight: 600; color: #475569;">Paham</span>
+                      </label>
+                    </td>
+                  </tr>
+
+                  <!-- 6. Tujuan -->
+                  <tr>
+                    <td class="text-center" style="font-weight: 700; vertical-align: middle;">6</td>
+                    <td style="vertical-align: top;">
+                      <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;"><i class="fa fa-bullseye text-success"></i> Tujuan Tindakan</div>
+                      <small class="text-muted">Hasil yang diharapkan pasca pembedahan</small>
+                    </td>
+                    <td>
+                      <textarea name="info_6_isi" id="info_6_isi" class="form-control" rows="2" placeholder="Contoh: Menghilangkan sumber infeksi dan rasa sakit, mencegah kerusakan gigi tetangga">{?=isset($data['info_6_isi']) ? $data['info_6_isi'] : ''?}</textarea>
+                    </td>
+                    <td class="text-center" style="vertical-align: middle; background-color: #fcfdfe;">
+                      <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0;">
+                        <input type="checkbox" name="info_6_tanda" id="info_6_tanda" value="Y" class="bm1-check" style="width: 18px; height: 18px; cursor: pointer;" {if: isset($data['info_6_tanda']) && $data['info_6_tanda'] == 'Y'}checked{/if}>
+                        <span style="font-size: 11px; font-weight: 600; color: #475569;">Paham</span>
+                      </label>
+                    </td>
+                  </tr>
+
+                  <!-- 7. Risiko -->
+                  <tr>
+                    <td class="text-center" style="font-weight: 700; vertical-align: middle;">7</td>
+                    <td style="vertical-align: top;">
+                      <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;"><i class="fa fa-exclamation-triangle text-danger"></i> Risiko Tindakan</div>
+                      <small class="text-muted">Dampak samping umum pasca pembedahan</small>
+                    </td>
+                    <td>
+                      <textarea name="info_7_isi" id="info_7_isi" class="form-control" rows="2" placeholder="Contoh: Rasa sakit, perdarahan, pembengkakan pada pipi, sulit membuka mulut (trismus) sementara">{?=isset($data['info_7_isi']) ? $data['info_7_isi'] : ''?}</textarea>
+                    </td>
+                    <td class="text-center" style="vertical-align: middle; background-color: #fcfdfe;">
+                      <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0;">
+                        <input type="checkbox" name="info_7_tanda" id="info_7_tanda" value="Y" class="bm1-check" style="width: 18px; height: 18px; cursor: pointer;" {if: isset($data['info_7_tanda']) && $data['info_7_tanda'] == 'Y'}checked{/if}>
+                        <span style="font-size: 11px; font-weight: 600; color: #475569;">Paham</span>
+                      </label>
+                    </td>
+                  </tr>
+
+                  <!-- 8. Komplikasi -->
+                  <tr>
+                    <td class="text-center" style="font-weight: 700; vertical-align: middle;">8</td>
+                    <td style="vertical-align: top;">
+                      <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;"><i class="fa fa-ambulance text-danger"></i> Komplikasi</div>
+                      <small class="text-muted">Kemungkinan penyulit atau kejadian tidak diinginkan</small>
+                    </td>
+                    <td>
+                      <textarea name="info_8_isi" id="info_8_isi" class="form-control" rows="2" placeholder="Contoh: Infeksi sekunder, dry socket (alveolar osteitis), parestesia saraf alveolaris/lingualis sementara">{?=isset($data['info_8_isi']) ? $data['info_8_isi'] : ''?}</textarea>
+                    </td>
+                    <td class="text-center" style="vertical-align: middle; background-color: #fcfdfe;">
+                      <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0;">
+                        <input type="checkbox" name="info_8_tanda" id="info_8_tanda" value="Y" class="bm1-check" style="width: 18px; height: 18px; cursor: pointer;" {if: isset($data['info_8_tanda']) && $data['info_8_tanda'] == 'Y'}checked{/if}>
+                        <span style="font-size: 11px; font-weight: 600; color: #475569;">Paham</span>
+                      </label>
+                    </td>
+                  </tr>
+
+                  <!-- 9. Prognosis -->
+                  <tr>
+                    <td class="text-center" style="font-weight: 700; vertical-align: middle;">9</td>
+                    <td style="vertical-align: top;">
+                      <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;"><i class="fa fa-line-chart text-info"></i> Prognosis</div>
+                      <small class="text-muted">Prakiraan hasil pemulihan pasca tindakan</small>
+                    </td>
+                    <td>
+                      <textarea name="info_9_isi" id="info_9_isi" class="form-control" rows="2" placeholder="Contoh: Dubia ad Bonam (penyembuhan soket baik dengan perawatan pasca bedah teratur)">{?=isset($data['info_9_isi']) ? $data['info_9_isi'] : ''?}</textarea>
+                    </td>
+                    <td class="text-center" style="vertical-align: middle; background-color: #fcfdfe;">
+                      <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0;">
+                        <input type="checkbox" name="info_9_tanda" id="info_9_tanda" value="Y" class="bm1-check" style="width: 18px; height: 18px; cursor: pointer;" {if: isset($data['info_9_tanda']) && $data['info_9_tanda'] == 'Y'}checked{/if}>
+                        <span style="font-size: 11px; font-weight: 600; color: #475569;">Paham</span>
+                      </label>
+                    </td>
+                  </tr>
+
+                  <!-- 10. Alternatif & Risiko -->
+                  <tr>
+                    <td class="text-center" style="font-weight: 700; vertical-align: middle;">10</td>
+                    <td style="vertical-align: top;">
+                      <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;"><i class="fa fa-random text-primary"></i> Alternatif dan Resiko</div>
+                      <small class="text-muted">Pilihan terapi lain bila tindakan tidak dilakukan</small>
+                    </td>
+                    <td>
+                      <textarea name="info_10_isi" id="info_10_isi" class="form-control" rows="2" placeholder="Contoh: Terapi medikamentosa antibiotik/analgetik sementara atau operkulektomi (risiko infeksi berulang)">{?=isset($data['info_10_isi']) ? $data['info_10_isi'] : ''?}</textarea>
+                    </td>
+                    <td class="text-center" style="vertical-align: middle; background-color: #fcfdfe;">
+                      <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0;">
+                        <input type="checkbox" name="info_10_tanda" id="info_10_tanda" value="Y" class="bm1-check" style="width: 18px; height: 18px; cursor: pointer;" {if: isset($data['info_10_tanda']) && $data['info_10_tanda'] == 'Y'}checked{/if}>
+                        <span style="font-size: 11px; font-weight: 600; color: #475569;">Paham</span>
+                      </label>
+                    </td>
+                  </tr>
+
+                  <!-- 11. Kebutuhan Darah -->
+                  <tr>
+                    <td class="text-center" style="font-weight: 700; vertical-align: middle;">11</td>
+                    <td style="vertical-align: top;">
+                      <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;"><i class="fa fa-tint text-danger"></i> Kebutuhan Darah / Produk Darah</div>
+                      <small class="text-muted">Kebutuhan transfusi darah dan risiko terkait</small>
+                    </td>
+                    <td>
+                      <textarea name="info_11_isi" id="info_11_isi" class="form-control" rows="2" placeholder="Contoh: Tidak membutuhkan transfusi darah (tindakan bedah minor)">{?=isset($data['info_11_isi']) ? $data['info_11_isi'] : ''?}</textarea>
+                    </td>
+                    <td class="text-center" style="vertical-align: middle; background-color: #fcfdfe;">
+                      <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0;">
+                        <input type="checkbox" name="info_11_tanda" id="info_11_tanda" value="Y" class="bm1-check" style="width: 18px; height: 18px; cursor: pointer;" {if: isset($data['info_11_tanda']) && $data['info_11_tanda'] == 'Y'}checked{/if}>
+                        <span style="font-size: 11px; font-weight: 600; color: #475569;">Paham</span>
+                      </label>
+                    </td>
+                  </tr>
+
+                  <!-- 12. Lain-lain -->
+                  <tr>
+                    <td class="text-center" style="font-weight: 700; vertical-align: middle;">12</td>
+                    <td style="vertical-align: top;">
+                      <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;"><i class="fa fa-sticky-note-o text-muted"></i> Lain-lain</div>
+                      <small class="text-muted">Instruksi pasca operasi, minum obat, dan kontrol luka</small>
+                    </td>
+                    <td>
+                      <textarea name="info_12_isi" id="info_12_isi" class="form-control" rows="2" placeholder="Contoh: Gigit tampon 1-2 jam, kompres es hari ke-1, minum antibiotik & analgetik, kontrol jahitan hari ke-7">{?=isset($data['info_12_isi']) ? $data['info_12_isi'] : ''?}</textarea>
+                    </td>
+                    <td class="text-center" style="vertical-align: middle; background-color: #fcfdfe;">
+                      <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0;">
+                        <input type="checkbox" name="info_12_tanda" id="info_12_tanda" value="Y" class="bm1-check" style="width: 18px; height: 18px; cursor: pointer;" {if: isset($data['info_12_tanda']) && $data['info_12_tanda'] == 'Y'}checked{/if}>
+                        <span style="font-size: 11px; font-weight: 600; color: #475569;">Paham</span>
+                      </label>
+                    </td>
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
+
+            <!-- PERNYATAAN VERIFIKASI DOKTER & PASIEN -->
+            <div style="margin-top: 16px; background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 12px 16px;">
+              <div style="font-size: 11.5px; color: #334155; line-height: 1.6;">
+                <p style="margin-bottom: 6px;">
+                  <i class="fa fa-quote-left text-muted"></i> <i>Dengan ini menyatakan bahwa saya (Dokter) telah menerangkan hal-hal di atas secara benar dan jelas, serta memberikan kesempatan seluas-luasnya untuk bertanya dan berdiskusi.</i>
+                </p>
+                <p style="margin-bottom: 0;">
+                  <i class="fa fa-quote-left text-muted"></i> <i>Dengan ini menyatakan bahwa saya (Pasien/Keluarga) telah menerima informasi sebagaimana di atas yang saya berikan tanda (√) pada kolom konfirmasi dan telah memahaminya secara penuh.</i>
+                </p>
+              </div>
+            </div>
+
+          </div> <!-- /.rsgm-reg-body -->
+
+          <!-- FOOTER ACTIONS DENGAN DESAIN INTEGRATED REG-FOOTER -->
+          <div class="rsgm-reg-footer">
+            <div>
+              <a href="{?=url([ADMIN, 'form_rme', 'bm1manage'])?}" class="btn btn-default" style="border-radius: 6px;">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+            <div class="rsgm-reg-actions">
+              <button type="button" class="btn btn-info btn-trigger-rme-preview" style="font-weight: 600; border-radius: 6px;" title="Lihat pratinjau form hasil cetak / PDF">
+                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+              </button>
+              <button type="submit" class="btn btn-primary" id="btn_simpan_bm1" style="font-weight: 700; border-radius: 6px;">
+                <i class="fa fa-save"></i> Simpan Informasi Tindakan
+              </button>
+            </div>
+          </div>
+
+        </div> <!-- /.rsgm-reg-shell -->
+      </div> <!-- /.col-md-9 -->
+
+    </div> <!-- /.rsgm-soap-flex-row -->
+  </form>
+</div>
+
+<script>
+$(document).ready(function() {
+  'use strict';
+
+  // 1. TANDAI SEMUA CHECKBOX
+  $('#btn_check_all').on('click', function(e) {
+    e.preventDefault();
+    var allChecked = $('.bm1-check:checked').length === $('.bm1-check').length;
+    $('.bm1-check').prop('checked', !allChecked);
+  });
+
+  // 2. ISI CONTOH DATA (DEMO)
+  function fillDemoData() {
+    if (!$('#no_rawat').val()) $('#no_rawat').val('2026/10/16/000001');
+    $('#no_rkm_medis').val('000001');
+    $('#display_no_rkm_medis').val('000001');
+    $('#nm_pasien').val('Farida Ariyani');
+    $('#jenis_kelamin').val('P').trigger('change');
+    $('#tgl_lahir').val('1990-05-14 (36 th)');
+    $('#tgl_dokumen').val('{?=date("Y-m-d")?}');
+    $('#waktu_dokumen').val('09:30');
+
+    $('#pemberi_informasi').val('drg. Hendra Pratama, Sp.BM');
+    $('#penerima_informasi').val('Farida Ariyani (Pasien)');
+    $('#nama_1').val('H. Rahmat (Suami)');
+    $('#nama_2').val('Ns. Siti Nurhaliza, S.Kep');
+
+    $('#info_1_isi').val('Impaksi Gigi Molar Ketiga Mandibula Kanan (Gigi 48 - Pell & Gregory Kelas II Posisi B, Mesioangular) disertai Perikoronitis Berulang.');
+    $('#info_2_isi').val('Pemeriksaan klinis terdapat pembengkakan mukosa regio retromolar 48, trismus ringan, dan foto rontgen panoramik memperlihatkan impaksi mesioangular mahkota gigi 48 menekan akar distal gigi 47.');
+    $('#info_3_isi').val('Odontektomi / Pembedahan Pengambilan Gigi Impaksi 48 dengan Anestesi Lokal / Sedasi.');
+    $('#info_4_isi').val('Pencegahan perikoronitis rekuren, kerusakan karies/resorpsi akar gigi 47 tetangga, dan pembentukan kista dentigerous.');
+    $('#info_5_isi').val('Asepsis intra & ekstra oral, anestesi infiltrasi & blok mandibular, insisi mukoperiosteal flap, pembukaan tulang secara konservatif dengan irigasi saline steril, separasi mahkota dan akar gigi, pengeluaran fragmen, debridement soket, penghalusan tepi tulang, dan penjahitan luka operasi.');
+    $('#info_6_isi').val('Mengeluarkan gigi impaksi yang bermasalah secara utuh, menghilangkan fokal infeksi dan mencegah komplikasi lebih lanjut.');
+    $('#info_7_isi').val('Perdarahan pasca operasi, edema / pembengkakan pada pipi, trismus sementara (sulit buka mulut), rasa ngilu/nyeri terkontrol.');
+    $('#info_8_isi').val('Dry socket (alveolar osteitis), infeksi sekunder pasca bedah, fraktur fragmen akar gigi, parestesia n. alveolaris inferior atau n. lingualis sementara.');
+    $('#info_9_isi').val('Dubia ad Bonam (prognosis penyembuhan luka baik dengan kepatuhan medikasi dan instruksi pasca bedah).');
+    $('#info_10_isi').val('Operkulektomi (pemotongan gusi penutup) atau observasi berkala dengan risiko infeksi berulang dan resorpsi gigi tetangga.');
+    $('#info_11_isi').val('Tidak memerlukan transfusi darah. Tindakan pembedahan minor dengan hemostatik lokal teratasi.');
+    $('#info_12_isi').val('Instruksi gigit tampon selama 1-2 jam, kompres dingin pada pipi hari ke-1, tidak berkumur keras atau merokok selama 24 jam pertama, minum antibiotik & analgetik teratur, serta kontrol jahitan hari ke-7.');
+
+    $('.bm1-check').prop('checked', true);
+  }
+
+  $('#btn_demo').on('click', function(e) {
+    e.preventDefault();
+    fillDemoData();
+  });
+
+  // 3. AUTO-FILL DATA PASIEN SAAT NO. RAWAT DIISI
+  function fetchPatientByNoRawat() {
+    var noRawat = $('#no_rawat').val().trim();
+    if (!noRawat) return;
+    $.ajax({
+      url: '{?=url([ADMIN, "form_rme", "bm1form"])?}',
+      data: { ajax_patient: 1, no_rawat: noRawat },
+      dataType: 'json',
+      success: function(res) {
+        if (res && res.success) {
+          if (!$('#nm_pasien').val()) $('#nm_pasien').val(res.nama_pasien);
+          if (res.jenis_kelamin || res.jk) $('#jenis_kelamin').val(res.jenis_kelamin || res.jk).trigger('change');
+          if (res.no_rkm_medis) {
+            $('#no_rkm_medis').val(res.no_rkm_medis);
+            $('#display_no_rkm_medis').val(res.no_rkm_medis);
+          }
+          if (res.tanggal_lahir || res.umur) {
+            $('#tgl_lahir').val((res.tanggal_lahir || '') + (res.umur ? ' (' + res.umur + ')' : ''));
+          }
+          if (!$('#penerima_informasi').val()) {
+            $('#penerima_informasi').val(res.nama_pasien + ' (Pasien)');
+          }
+        }
+      }
+    });
+  }
+
+  $('#no_rawat').on('blur change', fetchPatientByNoRawat);
+  $('#btn_cari_pasien').on('click', fetchPatientByNoRawat);
+});
+</script>

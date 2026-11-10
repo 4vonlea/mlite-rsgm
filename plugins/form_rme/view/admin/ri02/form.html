@@ -1,0 +1,669 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+  <form method="POST" action="{?=url([ADMIN, 'form_rme', 'ri02save'])?}" id="frm_ri02">
+    <input type="hidden" name="id" value="{?=isset($data['id']) ? $data['id'] : ''?}">
+    <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{?=isset_or($data['no_rkm_medis'])?}">
+
+    <div class="rsgm-soap-flex-row clearfix">
+      
+      <!-- ============================================================
+           KOLOM KIRI (3): SIDEBAR IDENTITAS PASIEN & DEMOGRAFI
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Identitas Pasien</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">RM.RI 02</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default" id="btn_cari_pasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                    <i class="fa fa-search text-primary"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="display_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+              <input type="text" id="display_no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+              <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{elseif: !empty($data.nama_pasien)}{$data.nama_pasien}{/if}" readonly>
+            </div>
+
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="display_jk" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                  <input type="text" id="display_jk" class="form-control" value="{if: (isset($data['jk']) && $data['jk']=='L') || (isset($data['jenis_kelamin']) && $data['jenis_kelamin']=='L')}Laki-laki{elseif: (isset($data['jk']) && $data['jk']=='P') || (isset($data['jenis_kelamin']) && $data['jenis_kelamin']=='P')}Perempuan{else}-{/if}" readonly>
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="display_tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir</label>
+                  <input type="text" id="display_tgl_lahir" class="form-control" value="{if: !empty($data.tgl_lahir)}{$data.tgl_lahir}{elseif: !empty($data.tanggal_lahir)}{$data.tanggal_lahir}{/if}{if: !empty($data.umur)} ({$data.umur}){/if}" readonly>
+                </div>
+              </div>
+            </div>
+
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="agama" class="rsgm-compact-label"><i class="fa fa-bookmark-o text-muted"></i> Agama</label>
+                  <input type="text" name="agama" id="agama" class="form-control" value="{?=isset_or($data['agama'])?}">
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="pendidikan" class="rsgm-compact-label"><i class="fa fa-graduation-cap text-muted"></i> Pendidikan</label>
+                  <input type="text" name="pendidikan" id="pendidikan" class="form-control" value="{?=isset_or($data['pendidikan'])?}">
+                </div>
+              </div>
+            </div>
+
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="pekerjaan" class="rsgm-compact-label"><i class="fa fa-briefcase text-muted"></i> Pekerjaan</label>
+                  <input type="text" name="pekerjaan" id="pekerjaan" class="form-control" value="{?=isset_or($data['pekerjaan'])?}">
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="stts_nikah" class="rsgm-compact-label"><i class="fa fa-heart-o text-muted"></i> Pernikahan</label>
+                  <input type="text" name="status_perkawinan" id="stts_nikah" class="form-control" value="{if: !empty($data.status_perkawinan)}{$data.status_perkawinan}{elseif: !empty($data.stts_nikah)}{$data.stts_nikah}{/if}">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="display_alamat" class="rsgm-compact-label"><i class="fa fa-map-marker text-muted"></i> Alamat Pasien</label>
+              <input type="text" id="display_alamat" class="form-control" value="{?=isset_or($data['alamat'])?}" placeholder="Alamat tinggal pasien" readonly>
+            </div>
+
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+              <button type="button" id="btn_demo" class="btn btn-warning btn-sm btn-block" style="border-radius: 6px; font-weight: 600;" title="Isi form dengan contoh data lengkap untuk uji coba klinis">
+                <i class="fa fa-magic"></i> Isi Contoh Data
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           KOLOM KANAN (9): WORKSTATION RINGKASAN MASUK & KELUAR
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-hospital-o text-primary"></i></span>
+              <span>RINGKASAN MASUK DAN KELUAR RUMAH SAKIT</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">RM.RI 02</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            
+            <!-- SECTION 1: PENERIMAAN & PENANGGUNG JAWAB -->
+            <div class="rsgm-soap-section" style="margin-bottom: 18px;">
+              <div class="rsgm-soap-section-header">
+                <h5 style="margin: 0; font-weight: 700; color: #1e293b;">
+                  <i class="fa fa-sign-in text-success"></i> 1. Penerimaan & Penanggung Jawab Pasien
+                </h5>
+              </div>
+
+              <div class="row" style="margin-top: 12px;">
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="dirawat_ke" class="rsgm-compact-label"><i class="fa fa-sort-numeric-asc text-muted"></i> Dirawat Ke-</label>
+                    <input type="text" name="dirawat_ke" id="dirawat_ke" class="form-control" value="{?=isset_or($data['dirawat_ke'])?}" placeholder="Contoh: 1">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="dikirim_oleh" class="rsgm-compact-label"><i class="fa fa-ambulance text-muted"></i> Dikirim Oleh</label>
+                    <input type="text" name="dikirim_oleh" id="dikirim_oleh" class="form-control" value="{?=isset_or($data['dikirim_oleh'])?}" placeholder="Dokter / Puskesmas / Sendiri">
+                  </div>
+                </div>
+                <div class="col-md-5">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="cara_penerimaan" class="rsgm-compact-label"><i class="fa fa-exchange text-muted"></i> Cara Penerimaan Melalui</label>
+                    <select name="cara_penerimaan" id="cara_penerimaan" class="form-control">
+                      <option value="">-- Pilih Jalur --</option>
+                      <option value="1. RJ" {if: (isset($data['cara_penerimaan']) && $data['cara_penerimaan']=='1. RJ')}selected{/if}>1. Rawat Jalan (Poli Gigi / Spesialis)</option>
+                      <option value="2. UGD" {if: (isset($data['cara_penerimaan']) && $data['cara_penerimaan']=='2. UGD')}selected{/if}>2. UGD / Gawat Darurat</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="nama_wali" class="rsgm-compact-label"><i class="fa fa-users text-muted"></i> Nama & Alamat Penanggung Jawab / Wali</label>
+                    <textarea name="nama_wali" id="nama_wali" class="form-control" rows="2" placeholder="Nama wali & alamat lengkap...">{$data.nama_wali}</textarea>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="wali_adalah" class="rsgm-compact-label"><i class="fa fa-sitemap text-muted"></i> Hubungan Wali</label>
+                    <input type="text" name="wali_adalah" id="wali_adalah" class="form-control" value="{?=isset_or($data['wali_adalah'])?}" placeholder="Suami / Istri / Ayah / dll">
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="saksi" class="rsgm-compact-label"><i class="fa fa-user-secret text-muted"></i> Saksi (Jika Pulang Paksa)</label>
+                    <input type="text" name="saksi" id="saksi" class="form-control" value="{?=isset_or($data['saksi'])?}" placeholder="Nama saksi keluarga">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 2: DATA PERAWATAN & MUTASI RUANG -->
+            <div class="rsgm-soap-section" style="margin-bottom: 18px;">
+              <div class="rsgm-soap-section-header">
+                <h5 style="margin: 0; font-weight: 700; color: #1e293b;">
+                  <i class="fa fa-bed text-info"></i> 2. Ruang Rawat & Periode Perawatan
+                </h5>
+              </div>
+
+              <div class="row" style="margin-top: 12px;">
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="ruang_rawat" class="rsgm-compact-label"><i class="fa fa-building-o text-muted"></i> Ruang Rawat</label>
+                    <input type="text" name="ruang_rawat" id="ruang_rawat" class="form-control" value="{?=isset_or($data['ruang_rawat'])?}" placeholder="Nama Bangsal/Kamar">
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="kelas" class="rsgm-compact-label"><i class="fa fa-tags text-muted"></i> Kelas</label>
+                    <input type="text" name="kelas" id="kelas" class="form-control" value="{?=isset_or($data['kelas'])?}" placeholder="VIP / Kelas 1 / 2 / 3">
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="mutasi_ruang" class="rsgm-compact-label"><i class="fa fa-random text-muted"></i> Mutasi di Ruang</label>
+                    <input type="text" name="mutasi_ruang" id="mutasi_ruang" class="form-control" value="{?=isset_or($data['mutasi_ruang'])?}" placeholder="Ruang mutasi jika ada">
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="mutasi_kelas" class="rsgm-compact-label"><i class="fa fa-tag text-muted"></i> Kelas Mutasi</label>
+                    <input type="text" name="mutasi_kelas" id="mutasi_kelas" class="form-control" value="{?=isset_or($data['mutasi_kelas'])?}">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="peserta_phb" class="rsgm-compact-label"><i class="fa fa-id-badge text-muted"></i> Peserta PHB / No. PHN</label>
+                    <select name="peserta_phb" id="peserta_phb" class="form-control">
+                      <option value="">- Pilih -</option>
+                      <option value="1. Ya" {if: (isset($data['peserta_phb']) && $data['peserta_phb']=='1. Ya')}selected{/if}>1. Ya</option>
+                      <option value="2. Tidak" {if: (isset($data['peserta_phb']) && $data['peserta_phb']=='2. Tidak')}selected{/if}>2. Tidak</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="bagian" class="rsgm-compact-label"><i class="fa fa-stethoscope text-muted"></i> Bagian Pelayanan</label>
+                    <select name="bagian" id="bagian" class="form-control">
+                      <option value="">- Pilih -</option>
+                      <option value="1. Bedah Minor" {if: (isset($data['bagian']) && $data['bagian']=='1. Bedah Minor')}selected{/if}>1. Bedah Minor</option>
+                      <option value="2. Bedah Mayor" {if: (isset($data['bagian']) && $data['bagian']=='2. Bedah Mayor')}selected{/if}>2. Bedah Mayor</option>
+                      <option value="3. Lain-lain" {if: (isset($data['bagian']) && $data['bagian']=='3. Lain-lain')}selected{/if}>3. Lain-lain</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="sebab_dirawat" class="rsgm-compact-label"><i class="fa fa-medkit text-muted"></i> Sebab Dirawat</label>
+                    <input type="text" name="sebab_dirawat" id="sebab_dirawat" class="form-control" value="{?=isset_or($data['sebab_dirawat'])?}" placeholder="Indikasi rawat inap">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 4px 0 4px; margin: 0 0 12px 0;">
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="tgl_masuk" class="rsgm-compact-label"><i class="fa fa-calendar-plus-o text-muted"></i> Tgl Masuk</label>
+                    <input type="date" name="tgl_masuk" id="tgl_masuk" class="form-control calc-durasi" value="{?=isset_or($data['tgl_masuk'])?}">
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="jam_masuk" class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Jam Masuk</label>
+                    <input type="time" name="jam_masuk" id="jam_masuk" class="form-control" value="{?=isset_or($data['jam_masuk'])?}">
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="tgl_keluar" class="rsgm-compact-label"><i class="fa fa-calendar-minus-o text-muted"></i> Tgl Keluar</label>
+                    <input type="date" name="tgl_keluar" id="tgl_keluar" class="form-control calc-durasi" value="{?=isset_or($data['tgl_keluar'])?}">
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="jam_keluar" class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Jam Keluar</label>
+                    <input type="time" name="jam_keluar" id="jam_keluar" class="form-control" value="{?=isset_or($data['jam_keluar'])?}">
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="lama_dirawat" class="rsgm-compact-label"><i class="fa fa-hourglass-half text-muted"></i> Lama Dirawat</label>
+                    <input type="text" name="lama_dirawat" id="lama_dirawat" class="form-control" value="{?=isset_or($data['lama_dirawat'])?}" placeholder="... Hari">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 3: DIAGNOSIS & TINDAKAN OPERASI -->
+            <div class="rsgm-soap-section" style="margin-bottom: 18px;">
+              <div class="rsgm-soap-section-header">
+                <h5 style="margin: 0; font-weight: 700; color: #1e293b;">
+                  <i class="fa fa-stethoscope text-primary"></i> 3. Diagnosis & Prosedur Tindakan / Operasi
+                </h5>
+              </div>
+
+              <div class="row" style="margin-top: 12px;">
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="diagnosis_masuk" class="rsgm-compact-label"><i class="fa fa-stethoscope text-muted"></i> Diagnosis Masuk</label>
+                    <input type="text" name="diagnosis_masuk" id="diagnosis_masuk" class="form-control" value="{?=isset_or($data['diagnosis_masuk'])?}" placeholder="Diagnosis saat pasien pertama masuk">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="diagnosis_akhir" class="rsgm-compact-label"><i class="fa fa-check-square text-muted"></i> Diagnosis Akhir (Utama)</label>
+                    <input type="text" name="diagnosis_akhir" id="diagnosis_akhir" class="form-control" value="{?=isset_or($data['diagnosis_akhir'])?}" placeholder="Diagnosis utama saat pulang">
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="kode_akhir" class="rsgm-compact-label"><i class="fa fa-code text-muted"></i> ICD-10 Utama</label>
+                    <input type="text" name="kode_akhir" id="kode_akhir" class="form-control" value="{?=isset_or($data['kode_akhir'])?}" placeholder="K04.0">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="diagnosis_tambahan_1" class="rsgm-compact-label"><i class="fa fa-plus-square-o text-muted"></i> Diagnosis Tambahan 1</label>
+                    <input type="text" name="diagnosis_tambahan_1" id="diagnosis_tambahan_1" class="form-control" value="{?=isset_or($data['diagnosis_tambahan_1'])?}">
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="kode_tambahan_1" class="rsgm-compact-label"><i class="fa fa-code text-muted"></i> Kode ICD-10</label>
+                    <input type="text" name="kode_tambahan_1" id="kode_tambahan_1" class="form-control" value="{?=isset_or($data['kode_tambahan_1'])?}">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="diagnosis_tambahan_2" class="rsgm-compact-label"><i class="fa fa-plus-square-o text-muted"></i> Diagnosis Tambahan 2</label>
+                    <input type="text" name="diagnosis_tambahan_2" id="diagnosis_tambahan_2" class="form-control" value="{?=isset_or($data['diagnosis_tambahan_2'])?}">
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="kode_tambahan_2" class="rsgm-compact-label"><i class="fa fa-code text-muted"></i> Kode ICD-10</label>
+                    <input type="text" name="kode_tambahan_2" id="kode_tambahan_2" class="form-control" value="{?=isset_or($data['kode_tambahan_2'])?}">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="komplikasi" class="rsgm-compact-label"><i class="fa fa-warning text-muted"></i> Komplikasi</label>
+                    <input type="text" name="komplikasi" id="komplikasi" class="form-control" value="{?=isset_or($data['komplikasi'])?}" placeholder="Komplikasi klinis jika ada">
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="kode_komplikasi" class="rsgm-compact-label"><i class="fa fa-code text-muted"></i> Kode ICD-10</label>
+                    <input type="text" name="kode_komplikasi" id="kode_komplikasi" class="form-control" value="{?=isset_or($data['kode_komplikasi'])?}">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="penyebab_luar" class="rsgm-compact-label"><i class="fa fa-external-link text-muted"></i> Penyebab Luar Cedera / Morfologi Neoplasma</label>
+                    <input type="text" name="penyebab_luar" id="penyebab_luar" class="form-control" value="{?=isset_or($data['penyebab_luar'])?}">
+                  </div>
+                </div>
+              </div>
+
+              <div style="border-top: 1px dashed #e2e8f0; padding-top: 10px; margin-top: 6px;">
+                <div style="font-weight: 600; font-size: 13px; color: #334155; margin-bottom: 8px;"><i class="fa fa-scissors text-danger"></i> Prosedur Operasi / Tindakan Bedah:</div>
+                <div class="row">
+                  <div class="col-md-3">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                      <label for="nama_operasi" class="rsgm-compact-label">Nama Operasi / Tindakan</label>
+                      <input type="text" name="nama_operasi" id="nama_operasi" class="form-control" value="{?=isset_or($data['nama_operasi'])?}" placeholder="Odontektomi / Ekstraksi / dll">
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                      <label for="gol_operasi" class="rsgm-compact-label">Gol. Operasi</label>
+                      <input type="text" name="gol_operasi" id="gol_operasi" class="form-control" value="{?=isset_or($data['gol_operasi'])?}" placeholder="Khusus / Besar / Sedang / Kecil">
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                      <label for="jenis_anestesi" class="rsgm-compact-label">Jenis Anestesi</label>
+                      <input type="text" name="jenis_anestesi" id="jenis_anestesi" class="form-control" value="{?=isset_or($data['jenis_anestesi'])?}" placeholder="Lokal / Umum / Sedasi">
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                      <label for="tgl_operasi" class="rsgm-compact-label">Tgl Operasi</label>
+                      <input type="date" name="tgl_operasi" id="tgl_operasi" class="form-control" value="{?=isset_or($data['tgl_operasi'])?}">
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                      <label for="kode_operasi" class="rsgm-compact-label">Kode ICD-9-CM</label>
+                      <input type="text" name="kode_operasi" id="kode_operasi" class="form-control" value="{?=isset_or($data['kode_operasi'])?}" placeholder="23.19">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 4: TRANSFUSI, IMUNISASI, & INFEKSI NOSOKOMIAL -->
+            <div class="rsgm-soap-section" style="margin-bottom: 18px;">
+              <div class="rsgm-soap-section-header">
+                <h5 style="margin: 0; font-weight: 700; color: #1e293b;">
+                  <i class="fa fa-tint text-danger"></i> 4. Transfusi Darah, Imunisasi & Infeksi
+                </h5>
+              </div>
+
+              <div class="row" style="margin-top: 12px;">
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="transfusi_darah" class="rsgm-compact-label"><i class="fa fa-tint text-danger"></i> Transfusi Darah</label>
+                    <select name="transfusi_darah" id="transfusi_darah" class="form-control">
+                      <option value="">- Pilih -</option>
+                      <option value="Ya" {if: (isset($data['transfusi_darah']) && $data['transfusi_darah']=='Ya')}selected{/if}>Ya</option>
+                      <option value="Tidak" {if: (isset($data['transfusi_darah']) && $data['transfusi_darah']=='Tidak')}selected{/if}>Tidak</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="transfusi_1" class="rsgm-compact-label">Transfusi 1 (cc)</label>
+                    <input type="text" name="transfusi_1" id="transfusi_1" class="form-control" value="{?=isset_or($data['transfusi_1'])?}">
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="transfusi_2" class="rsgm-compact-label">Transfusi 2 (cc)</label>
+                    <input type="text" name="transfusi_2" id="transfusi_2" class="form-control" value="{?=isset_or($data['transfusi_2'])?}">
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="transfusi_3" class="rsgm-compact-label">Transfusi 3 (cc)</label>
+                    <input type="text" name="transfusi_3" id="transfusi_3" class="form-control" value="{?=isset_or($data['transfusi_3'])?}">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="imunisasi_didapat" class="rsgm-compact-label"><i class="fa fa-shield text-muted"></i> Imunisasi yang Pernah Didapat</label>
+                    <input type="text" name="imunisasi_didapat" id="imunisasi_didapat" class="form-control" value="{?=isset_or($data['imunisasi_didapat'])?}" placeholder="BCG, DPT, Polio, Campak, Hep B, dll">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="imunisasi_selama_dirawat" class="rsgm-compact-label"><i class="fa fa-medkit text-muted"></i> Imunisasi Selama Dirawat</label>
+                    <input type="text" name="imunisasi_selama_dirawat" id="imunisasi_selama_dirawat" class="form-control" value="{?=isset_or($data['imunisasi_selama_dirawat'])?}">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="infeksi_nosokomial" class="rsgm-compact-label"><i class="fa fa-bug text-muted"></i> Infeksi Nosokomial</label>
+                    <input type="text" name="infeksi_nosokomial" id="infeksi_nosokomial" class="form-control" value="{?=isset_or($data['infeksi_nosokomial'])?}">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="penyebab_infeksi" class="rsgm-compact-label"><i class="fa fa-flask text-muted"></i> Penyebab Infeksi</label>
+                    <input type="text" name="penyebab_infeksi" id="penyebab_infeksi" class="form-control" value="{?=isset_or($data['penyebab_infeksi'])?}">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 5: STATUS KELUAR & PENGESAHAN DOKTER -->
+            <div class="rsgm-soap-section" style="margin-bottom: 18px;">
+              <div class="rsgm-soap-section-header">
+                <h5 style="margin: 0; font-weight: 700; color: #1e293b;">
+                  <i class="fa fa-sign-out text-warning"></i> 5. Keadaan Keluar & Pengesahan Petugas
+                </h5>
+              </div>
+
+              <div class="row" style="margin-top: 12px;">
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="keadaan_keluar" class="rsgm-compact-label"><i class="fa fa-heartbeat text-muted"></i> Keadaan Keluar</label>
+                    <select name="keadaan_keluar" id="keadaan_keluar" class="form-control">
+                      <option value="">- Pilih Status -</option>
+                      <option value="1. Sembuh" {if: (isset($data['keadaan_keluar']) && $data['keadaan_keluar']=='1. Sembuh')}selected{/if}>1. Sembuh</option>
+                      <option value="2. Membaik/mulai sembuh" {if: (isset($data['keadaan_keluar']) && $data['keadaan_keluar']=='2. Membaik/mulai sembuh')}selected{/if}>2. Membaik / Mulai Sembuh</option>
+                      <option value="3. Mati < 48 Jam" {if: (isset($data['keadaan_keluar']) && $data['keadaan_keluar']=='3. Mati < 48 Jam')}selected{/if}>3. Meninggal &lt; 48 Jam</option>
+                      <option value="4. Mati > 48 Jam" {if: (isset($data['keadaan_keluar']) && $data['keadaan_keluar']=='4. Mati > 48 Jam')}selected{/if}>4. Meninggal &gt; 48 Jam</option>
+                      <option value="5. Belum sembuh" {if: (isset($data['keadaan_keluar']) && $data['keadaan_keluar']=='5. Belum sembuh')}selected{/if}>5. Belum Sembuh</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="cara_keluar" class="rsgm-compact-label"><i class="fa fa-sign-out text-muted"></i> Cara Keluar</label>
+                    <select name="cara_keluar" id="cara_keluar" class="form-control">
+                      <option value="">- Pilih Cara Keluar -</option>
+                      <option value="1. Diijinkan pulang" {if: (isset($data['cara_keluar']) && $data['cara_keluar']=='1. Diijinkan pulang')}selected{/if}>1. Diijinkan Pulang</option>
+                      <option value="2. Pulang paksa" {if: (isset($data['cara_keluar']) && $data['cara_keluar']=='2. Pulang paksa')}selected{/if}>2. Pulang Paksa (APS)</option>
+                      <option value="3. Dirujuk ke" {if: (isset($data['cara_keluar']) && strpos($data['cara_keluar'], '3. Dirujuk') !== false)}selected{/if}>3. Dirujuk ke RS Lain</option>
+                      <option value="4. Pindah RS lain" {if: (isset($data['cara_keluar']) && $data['cara_keluar']=='4. Pindah RS lain')}selected{/if}>4. Pindah Rumah Sakit</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="sebab_kematian" class="rsgm-compact-label"><i class="fa fa-frown-o text-muted"></i> Sebab Kematian (Jika Meninggal)</label>
+                    <input type="text" name="sebab_kematian" id="sebab_kematian" class="form-control" value="{?=isset_or($data['sebab_kematian'])?}">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="dokter_ruang" class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Dokter Ruangan / Yang Merawat</label>
+                    <input type="text" name="dokter_ruang" id="dokter_ruang" class="form-control" value="{?=isset_or($data['dokter_ruang'])?}" placeholder="NIP / Nama Dokter DPJP Ruangan">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="petugas_admissi" class="rsgm-compact-label"><i class="fa fa-user text-muted"></i> Petugas Admissi Rawat Inap</label>
+                    <input type="text" name="petugas_admissi" id="petugas_admissi" class="form-control" value="{?=isset_or($data['petugas_admissi'])?}" placeholder="Nama Petugas Pendaftaran / Admissi">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- FOOTER AKSI -->
+          <div class="rsgm-reg-footer">
+            <div class="rsgm-reg-footer-left">
+              <a href="{?=url([ADMIN, 'form_rme', 'ri02manage'])?}" class="btn btn-default btn-sm">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+            <div class="rsgm-reg-footer-right">
+              <button type="button" class="btn btn-info btn-sm btn-trigger-rme-preview" data-preview-url="{?=url([ADMIN, 'form_rme', 'ri02cetak'])?}">
+                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+              </button>
+              <button type="submit" class="btn btn-success btn-sm">
+                <i class="fa fa-save"></i> Simpan Ringkasan (RI 02)
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+<script>
+$(document).ready(function() {
+  'use strict';
+
+  // 1. AUTO CALCULATE LAMA DIRAWAT
+  function hitungLamaRawat() {
+    var tglMasuk = $('#tgl_masuk').val();
+    var tglKeluar = $('#tgl_keluar').val();
+    if (tglMasuk && tglKeluar) {
+      var d1 = new Date(tglMasuk);
+      var d2 = new Date(tglKeluar);
+      var diffTime = d2.getTime() - d1.getTime();
+      var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays < 1) diffDays = 1;
+      $('#lama_dirawat').val(diffDays + ' Hari');
+    }
+  }
+
+  $('.calc-durasi').on('change', hitungLamaRawat);
+
+  // 2. ISI CONTOH DATA (DEMO)
+  function fillDemoData() {
+    if (!$('#no_rawat').val()) $('#no_rawat').val('2026/10/16/000001');
+    $('#no_rkm_medis').val('000001');
+    $('#display_no_rkm_medis').val('000001');
+    $('#nm_pasien').val('Farida Ariyani');
+    $('#display_jk').val('Perempuan');
+    $('#display_tgl_lahir').val('1988-06-15 (38 Th)');
+    $('#display_alamat').val('Jl. Veteran No. 45 RT 02 RW 01, Banjarmasin');
+    $('#agama').val('Islam');
+    $('#pendidikan').val('S1');
+    $('#pekerjaan').val('Pegawai Swasta');
+    $('#stts_nikah').val('Menikah');
+
+    $('#dirawat_ke').val('1');
+    $('#dikirim_oleh').val('Poli Gigi dan Mulut RSGM');
+    $('#cara_penerimaan').val('1. RJ');
+    $('#nama_wali').val('Bambang Sutrisno, SE - Jl. Veteran No. 45 Banjarmasin');
+    $('#wali_adalah').val('Suami');
+    $('#saksi').val('-');
+
+    $('#ruang_rawat').val('Kamar Rawat Inap Melati 03');
+    $('#kelas').val('Kelas 1');
+    $('#mutasi_ruang').val('-');
+    $('#mutasi_kelas').val('-');
+    $('#peserta_phb').val('2. Tidak');
+    $('#bagian').val('1. Bedah Minor');
+    $('#sebab_dirawat').val('Abses Submandibula Dextra ec Gangren Radix Gigi 46');
+
+    var today = '{?=date("Y-m-d")?}';
+    var next3 = '{?=date("Y-m-d", strtotime("+3 days"))?}';
+    $('#tgl_masuk').val(today);
+    $('#jam_masuk').val('09:30');
+    $('#tgl_keluar').val(next3);
+    $('#jam_keluar').val('11:00');
+    $('#lama_dirawat').val('3 Hari');
+
+    $('#diagnosis_masuk').val('Abses Submandibula Dextra');
+    $('#diagnosis_akhir').val('Abses Submandibula Dextra ec Impaksi Gigi 48 & Gangren Radix 46');
+    $('#kode_akhir').val('K12.2');
+    $('#diagnosis_tambahan_1').val('Impaksi Gigi Molar Tiga Rahang Bawah');
+    $('#kode_tambahan_1').val('K01.1');
+    $('#komplikasi').val('Trismus Ringan');
+    $('#kode_komplikasi').val('R25.2');
+    $('#penyebab_luar').val('-');
+
+    $('#nama_operasi').val('Insisi Drainase Abses Ekstraoral + Odontektomi Gigi 48');
+    $('#gol_operasi').val('Sedang');
+    $('#jenis_anestesi').val('Umum');
+    $('#tgl_operasi').val(today);
+    $('#kode_operasi').val('27.0');
+
+    $('#transfusi_darah').val('Tidak');
+    $('#imunisasi_didapat').val('Lengkap (BCG, Polio, DPT, Campak)');
+    $('#imunisasi_selama_dirawat').val('-');
+    $('#infeksi_nosokomial').val('Tidak Ada');
+    $('#penyebab_infeksi').val('-');
+
+    $('#keadaan_keluar').val('2. Membaik/mulai sembuh');
+    $('#cara_keluar').val('1. Diijinkan pulang');
+    $('#sebab_kematian').val('-');
+    $('#dokter_ruang').val('drg. Hendra Pratama, Sp.BM');
+    $('#petugas_admissi').val('Ahmad Fauzi, A.Md.RMIK');
+  }
+
+  $('#btn_demo').on('click', function(e) {
+    e.preventDefault();
+    fillDemoData();
+  });
+
+  // 3. AUTO-FILL DATA PASIEN SAAT NO. RAWAT DIISI
+  function fetchPatientByNoRawat() {
+    var noRawat = $('#no_rawat').val().trim();
+    if (!noRawat) return;
+    $.ajax({
+      url: '{?=url([ADMIN, "form_rme", "ri02form"])?}',
+      data: { ajax_patient: 1, no_rawat: noRawat },
+      dataType: 'json',
+      success: function(res) {
+        if (res && res.success) {
+          if (!$('#nm_pasien').val()) $('#nm_pasien').val(res.nama_pasien || res.nm_pasien);
+          if (res.no_rkm_medis) {
+            $('#no_rkm_medis').val(res.no_rkm_medis);
+            $('#display_no_rkm_medis').val(res.no_rkm_medis);
+          }
+          var jkVal = res.jk || res.jenis_kelamin;
+          if (jkVal) {
+            $('#display_jk').val(jkVal === 'L' ? 'Laki-laki' : (jkVal === 'P' ? 'Perempuan' : '-'));
+          }
+          var tglLahir = res.tgl_lahir || res.tanggal_lahir;
+          var umur = res.umur || '';
+          if (tglLahir) {
+            $('#display_tgl_lahir').val(tglLahir + (umur ? ' (' + umur + ')' : ''));
+          }
+          if (res.alamat) $('#display_alamat').val(res.alamat);
+          if (res.agama && !$('#agama').val()) $('#agama').val(res.agama);
+          if (res.pnd && !$('#pendidikan').val()) $('#pendidikan').val(res.pnd);
+          if (res.pekerjaan && !$('#pekerjaan').val()) $('#pekerjaan').val(res.pekerjaan);
+          if (res.stts_nikah && !$('#stts_nikah').val()) $('#stts_nikah').val(res.stts_nikah);
+          if (res.nm_bangsal && !$('#ruang_rawat').val()) $('#ruang_rawat').val(res.nm_bangsal + (res.kd_kamar ? ' / ' + res.kd_kamar : ''));
+          if (res.kelas && !$('#kelas').val()) $('#kelas').val(res.kelas);
+        }
+      }
+    });
+  }
+
+  $('#no_rawat').on('blur change', fetchPatientByNoRawat);
+  $('#btn_cari_pasien').on('click', fetchPatientByNoRawat);
+});
+</script>

@@ -1,0 +1,695 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+  <form method="POST" action="{?=url([ADMIN, 'form_rme', 'ans4save'])?}" id="ans4_main_form">
+    <input type="hidden" name="id" value="{?=isset_or($data['id'])?}">
+    <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{?=isset_or($data['no_rkm_medis'])?}">
+    <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+
+    <div class="rsgm-soap-flex-row clearfix">
+      
+      <!-- ============================================================
+           KOLOM KIRI (3): SIDEBAR IDENTITAS & REGISTRASI PASIEN
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Data Pasien</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="tanggal" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tanggal Layan <span class="text-danger">*</span></label>
+              <input type="date" name="tanggal" id="tanggal" class="form-control" value="{if: !empty($data['tanggal'])}{$data['tanggal']}{else}{?=date('Y-m-d')?}{/if}" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="jam" class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Jam <span class="text-danger">*</span></label>
+              <input type="time" name="jam" id="jam" class="form-control" value="{if: !empty($data['jam'])}{$data['jam']}{else}{?=date('H:i')?}{/if}" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default" id="btn_cari_pasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                    <i class="fa fa-search text-primary"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="display_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+              <input type="text" id="display_no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="nama_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+              <input type="text" name="nama_pasien" id="nama_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{if: !empty($data['nama_pasien'])}{$data['nama_pasien']}{elseif: !empty($data['nm_pasien'])}{$data['nm_pasien']}{/if}" required>
+            </div>
+
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="jenis_kelamin" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                  <select name="jenis_kelamin" id="jenis_kelamin" class="form-control">
+                    <option value="L" {if: (isset($data['jenis_kelamin']) && $data['jenis_kelamin'] == 'L') || (isset($data['jk_pasien']) && $data['jk_pasien'] == 'L') || (isset($data['jk']) && $data['jk'] == 'L')}selected{/if}>Laki-laki</option>
+                    <option value="P" {if: (isset($data['jenis_kelamin']) && $data['jenis_kelamin'] == 'P') || (isset($data['jk_pasien']) && $data['jk_pasien'] == 'P') || (isset($data['jk']) && $data['jk'] == 'P')}selected{/if}>Perempuan</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="umur_pasien" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Umur</label>
+                  <input type="text" name="umur_pasien" id="umur_pasien" class="form-control" value="{if: !empty($data['umur_pasien'])}{$data['umur_pasien']}{elseif: !empty($data['umur'])}{$data['umur']}{/if}" placeholder="cth: 35 Th">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="tanggal_lahir" class="rsgm-compact-label"><i class="fa fa-calendar-o text-muted"></i> Tanggal Lahir</label>
+              <input type="date" name="tanggal_lahir" id="tanggal_lahir" class="form-control" value="{if: !empty($data['tanggal_lahir'])}{$data['tanggal_lahir']}{elseif: !empty($data['tgl_lahir'])}{$data['tgl_lahir']}{/if}">
+            </div>
+
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="dokter_nama" class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Dokter Anestesi</label>
+                <input type="text" name="dokter_nama" id="dokter_nama" class="form-control" value="{?=isset_or($data['dokter_nama'])?}" placeholder="Nama Dokter Spesialis Anestesi">
+              </div>
+
+              <button type="button" id="btn_demo" class="btn btn-warning btn-sm btn-block" style="border-radius: 6px; font-weight: 600;" title="Isi form dengan contoh data lengkap untuk uji coba klinis">
+                <i class="fa fa-magic"></i> Isi Contoh Data
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           KOLOM KANAN (9): WORKSTATION RENCANA ANESTESI
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell">
+          
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-clipboard"></i></span>
+              <span>Form ANS4 - Rencana Anestesi (Pra-Anestesi)</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">FORM ANS 4</span>
+              <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-medkit"></i> Perencanaan Bedah</span>
+            </div>
+          </div>
+
+          <div class="rsgm-reg-body">
+
+            <!-- 1. RENCANA ANESTESI -->
+            <div class="rsgm-soap-section" style="background-color: #f8fafc; border-color: #cbd5e1;">
+              <div class="rsgm-soap-sec-title">
+                <i class="fa fa-medkit text-primary"></i>
+                <span>1. Rencana Anestesi &amp; Teknik Maintenance</span>
+              </div>
+
+              <div class="row">
+                <!-- Kolom Kiri: Premed, GA, Analgetik, Pelumpuh Otot -->
+                <div class="col-md-6" style="border-right: 1px dashed #cbd5e1;">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-weight: 700; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                      <input type="checkbox" name="premedikasi" value="Y" {if: isset($data['premedikasi']) && $data['premedikasi'] == 'Y'}checked{/if}> Premedikasi
+                    </label>
+                    <input type="text" name="premedikasi_ket" class="form-control input-sm" placeholder="Rincian premedikasi jika ada..." value="{?=isset_or($data['premedikasi_ket'])?}">
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 12px; background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                    <label class="rsgm-compact-label" style="color: #1e3a8a;">General Anestesi (GA)</label>
+                    <div style="display: flex; gap: 15px; margin-top: 4px;">
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                        <input type="checkbox" name="ga_masker" value="Y" {if: isset($data['ga_masker']) && $data['ga_masker'] == 'Y'}checked{/if}> Masker
+                      </label>
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                        <input type="checkbox" name="ga_intubasi" value="Y" {if: isset($data['ga_intubasi']) && $data['ga_intubasi'] == 'Y'}checked{/if}> Intubasi
+                      </label>
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                        <input type="checkbox" name="ga_lma" value="Y" {if: isset($data['ga_lma']) && $data['ga_lma'] == 'Y'}checked{/if}> TIVA / LMA
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-weight: 700; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                      <input type="checkbox" name="analgetik" value="Y" {if: isset($data['analgetik']) && $data['analgetik'] == 'Y'}checked{/if}> Analgetik
+                    </label>
+                    <input type="text" name="analgetik_ket" class="form-control input-sm" placeholder="Jenis &amp; dosis analgetik..." value="{?=isset_or($data['analgetik_ket'])?}">
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-weight: 700; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                      <input type="checkbox" name="pelumpuh_otot" value="Y" {if: isset($data['pelumpuh_otot']) && $data['pelumpuh_otot'] == 'Y'}checked{/if}> Pelumpuh Otot
+                    </label>
+                    <input type="text" name="pelumpuh_otot_ket" class="form-control input-sm" placeholder="Jenis pelumpuh otot..." value="{?=isset_or($data['pelumpuh_otot_ket'])?}">
+                  </div>
+                </div>
+
+                <!-- Kolom Kanan: Maintenance & Teknik Anestesi -->
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                      <label style="font-weight: 700; color: #1e3a8a; margin: 0;">Maintenance</label>
+                      <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 11px; color: #64748b;">Catatan:</span>
+                        <input type="text" name="maintenance_catatan" class="form-control input-sm" style="width: 140px; height: 26px; padding: 2px 6px;" placeholder="Catatan..." value="{?=isset_or($data['maintenance_catatan'])?}">
+                      </div>
+                    </div>
+
+                    <div style="background: #fff; padding: 8px 10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 8px;">
+                      <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; margin-bottom: 4px;">
+                        <input type="checkbox" name="maintenance_inhalasi" value="Y" {if: isset($data['maintenance_inhalasi']) && $data['maintenance_inhalasi'] == 'Y'}checked{/if}> Inhalasi :
+                      </label>
+                      <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-left: 15px;">
+                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="inhalasi_o2" value="Y" {if: isset($data['inhalasi_o2']) && $data['inhalasi_o2'] == 'Y'}checked{/if}> O2</label>
+                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="inhalasi_isofluran" value="Y" {if: isset($data['inhalasi_isofluran']) && $data['inhalasi_isofluran'] == 'Y'}checked{/if}> Isofluran</label>
+                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="inhalasi_halotan" value="Y" {if: isset($data['inhalasi_halotan']) && $data['inhalasi_halotan'] == 'Y'}checked{/if}> Halotan / Sevofluran</label>
+                        <input type="hidden" name="inhalasi_sevofluran" value="">
+                      </div>
+                    </div>
+
+                    <div style="background: #fff; padding: 8px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                      <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; margin-bottom: 4px;">
+                        <input type="checkbox" name="maintenance_intravena" value="Y" {if: isset($data['maintenance_intravena']) && $data['maintenance_intravena'] == 'Y'}checked{/if}> Intravena :
+                      </label>
+                      <div class="row" style="margin-left: -3px; margin-right: -3px; margin-top: 2px;">
+                        <div class="col-xs-4" style="padding: 0 3px;"><input type="text" name="intravena_1" class="form-control input-sm" placeholder="Obat 1" value="{?=isset_or($data['intravena_1'])?}"></div>
+                        <div class="col-xs-4" style="padding: 0 3px;"><input type="text" name="intravena_2" class="form-control input-sm" placeholder="Obat 2" value="{?=isset_or($data['intravena_2'])?}"></div>
+                        <div class="col-xs-4" style="padding: 0 3px;"><input type="text" name="intravena_3" class="form-control input-sm" placeholder="Obat 3" value="{?=isset_or($data['intravena_3'])?}"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="rsgm-compact-label" style="color: #1e3a8a;">Teknik Anestesi</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 6px;">
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="teknik_regional" value="Y" {if: isset($data['teknik_regional']) && $data['teknik_regional'] == 'Y'}checked{/if}> Regional</label>
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="teknik_epidural" value="Y" {if: isset($data['teknik_epidural']) && $data['teknik_epidural'] == 'Y'}checked{/if}> Epidural</label>
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="teknik_sab" value="Y" {if: isset($data['teknik_sab']) && $data['teknik_sab'] == 'Y'}checked{/if}> SAB</label>
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="teknik_pnb" value="Y" {if: isset($data['teknik_pnb']) && $data['teknik_pnb'] == 'Y'}checked{/if}> PNB</label>
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="teknik_lokal" value="Y" {if: isset($data['teknik_lokal']) && $data['teknik_lokal'] == 'Y'}checked{/if}> Lokal</label>
+                    </div>
+                    <div class="row" style="margin-left: -3px; margin-right: -3px;">
+                      <div class="col-xs-6" style="padding: 0 3px;"><input type="text" name="teknik_lokal_ket1" class="form-control input-sm" placeholder="Keterangan lokal 1" value="{?=isset_or($data['teknik_lokal_ket1'])?}"></div>
+                      <div class="col-xs-6" style="padding: 0 3px;"><input type="text" name="teknik_lokal_ket2" class="form-control input-sm" placeholder="Keterangan lokal 2" value="{?=isset_or($data['teknik_lokal_ket2'])?}"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. EVALUASI PRA INDUKSI & PREMEDIKASI DETAIL -->
+            <div class="rsgm-soap-section">
+              <div class="rsgm-soap-sec-title">
+                <i class="fa fa-stethoscope text-primary"></i>
+                <span>2. Evaluasi Pra-Induksi &amp; Pemberian Premedikasi</span>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6" style="border-right: 1px dashed #cbd5e1;">
+                  <div class="row">
+                    <div class="col-xs-6 form-group" style="margin-bottom: 10px;">
+                      <label class="rsgm-compact-label">Makanan Terakhir (Jam)</label>
+                      <input type="text" name="makan_terakhir" class="form-control input-sm" placeholder="Cth: 24:00 WITA" value="{?=isset_or($data['makan_terakhir'])?}">
+                    </div>
+                    <div class="col-xs-6 form-group" style="margin-bottom: 10px;">
+                      <label class="rsgm-compact-label">Minum Terakhir (Jam)</label>
+                      <input type="text" name="minum_terakhir" class="form-control input-sm" placeholder="Cth: 05:00 WITA" value="{?=isset_or($data['minum_terakhir'])?}">
+                    </div>
+                  </div>
+
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px;">
+                    <label class="rsgm-compact-label" style="margin-bottom: 4px;">Vital Signs Pra-Induksi :</label>
+                    <div class="row" style="margin-left: -3px; margin-right: -3px;">
+                      <div class="col-xs-4" style="padding: 0 3px; margin-bottom: 4px;">
+                        <span style="font-size: 10px;">TD (mmHg)</span>
+                        <input type="text" name="eval_td" class="form-control input-sm" placeholder="120/80" value="{?=isset_or($data['eval_td'])?}">
+                      </div>
+                      <div class="col-xs-4" style="padding: 0 3px; margin-bottom: 4px;">
+                        <span style="font-size: 10px;">HR (x/mnt)</span>
+                        <input type="text" name="eval_hr" class="form-control input-sm" placeholder="80" value="{?=isset_or($data['eval_hr'])?}">
+                      </div>
+                      <div class="col-xs-4" style="padding: 0 3px; margin-bottom: 4px;">
+                        <span style="font-size: 10px;">RR (x/mnt)</span>
+                        <input type="text" name="eval_rr" class="form-control input-sm" placeholder="18" value="{?=isset_or($data['eval_rr'])?}">
+                      </div>
+                      <div class="col-xs-6" style="padding: 0 3px;">
+                        <span style="font-size: 10px;">Suhu (°C)</span>
+                        <input type="text" name="eval_sb" class="form-control input-sm" placeholder="36.6" value="{?=isset_or($data['eval_sb'])?}">
+                      </div>
+                      <div class="col-xs-6" style="padding: 0 3px;">
+                        <span style="font-size: 10px;">SpO2 (%)</span>
+                        <input type="text" name="eval_spo2" class="form-control input-sm" placeholder="99" value="{?=isset_or($data['eval_spo2'])?}">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                      <label class="rsgm-compact-label" style="margin: 0;">Masalah Saat Induksi</label>
+                      <div style="display: flex; gap: 10px;">
+                        <label style="font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;"><input type="radio" name="masalah_induksi" value="Tidak Ada" {if: !isset($data['masalah_induksi']) || $data['masalah_induksi'] == 'Tidak Ada'}checked{/if}> Tidak Ada</label>
+                        <label style="font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; color: #b91c1c;"><input type="radio" name="masalah_induksi" value="Ada" {if: isset($data['masalah_induksi']) && $data['masalah_induksi'] == 'Ada'}checked{/if}> Ada</label>
+                      </div>
+                    </div>
+                    <input type="text" name="masalah_induksi_ket" class="form-control input-sm" placeholder="Keterangan jika ada masalah..." value="{?=isset_or($data['masalah_induksi_ket'])?}">
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                      <label class="rsgm-compact-label" style="margin: 0;">Perubahan Rencana Anestesi</label>
+                      <div style="display: flex; gap: 10px;">
+                        <label style="font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;"><input type="radio" name="perubahan_rencana" value="Tidak Ada" {if: !isset($data['perubahan_rencana']) || $data['perubahan_rencana'] == 'Tidak Ada'}checked{/if}> Tidak Ada</label>
+                        <label style="font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; color: #b91c1c;"><input type="radio" name="perubahan_rencana" value="Ada" {if: isset($data['perubahan_rencana']) && $data['perubahan_rencana'] == 'Ada'}checked{/if}> Ada</label>
+                      </div>
+                    </div>
+                    <input type="text" name="perubahan_rencana_ket" class="form-control input-sm" placeholder="Keterangan jika ada perubahan..." value="{?=isset_or($data['perubahan_rencana_ket'])?}">
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                      <label class="rsgm-compact-label" style="margin: 0;">Persiapan Darah</label>
+                      <div style="display: flex; gap: 10px;">
+                        <label style="font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;"><input type="radio" name="persiapan_darah" value="Tidak Ada" {if: !isset($data['persiapan_darah']) || $data['persiapan_darah'] == 'Tidak Ada'}checked{/if}> Tidak Ada</label>
+                        <label style="font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;"><input type="radio" name="persiapan_darah" value="Ada" {if: isset($data['persiapan_darah']) && $data['persiapan_darah'] == 'Ada'}checked{/if}> Ada</label>
+                      </div>
+                    </div>
+                    <input type="text" name="persiapan_darah_ket" class="form-control input-sm" placeholder="Rincian kantong / kolf darah..." value="{?=isset_or($data['persiapan_darah_ket'])?}">
+                  </div>
+                </div>
+
+                <!-- Kolom Kanan: Detail Tabel Premedikasi -->
+                <div class="col-md-6">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label class="rsgm-compact-label" style="color: #1e3a8a; margin: 0;"><i class="fa fa-list"></i> Pemberian Obat Premedikasi</label>
+                    <button type="button" class="btn btn-xs btn-primary" onclick="addDetail()" style="border-radius: 4px;">
+                      <i class="fa fa-plus"></i> Tambah Baris
+                    </button>
+                  </div>
+
+                  <div class="table-responsive">
+                    <table class="table table-bordered table-striped" style="background: #fff; margin-bottom: 0;">
+                      <thead>
+                        <tr style="background: #f1f5f9; font-size: 11px;">
+                          <th>Obat Premedikasi</th>
+                          <th style="width: 22%;">Dosis</th>
+                          <th style="width: 22%;">Jam</th>
+                          <th style="width: 25%;">Pelaksana</th>
+                          <th style="width: 35px; text-align: center;">#</th>
+                        </tr>
+                      </thead>
+                      <tbody id="detail_table">
+                        {if: !empty($detail)}
+                          {loop: $detail}
+                          <tr>
+                            <td><input type="text" name="detail_obat[]" class="form-control input-sm" value="{$value.obat_premedikasi}"></td>
+                            <td><input type="text" name="detail_dosis[]" class="form-control input-sm" value="{$value.dosis}"></td>
+                            <td><input type="time" name="detail_jam[]" class="form-control input-sm" value="{$value.jam}"></td>
+                            <td><input type="text" name="detail_pelaksana[]" class="form-control input-sm" value="{$value.pelaksana}"></td>
+                            <td class="text-center" style="vertical-align: middle;"><button type="button" class="btn btn-xs btn-danger" onclick="$(this).closest('tr').remove()"><i class="fa fa-trash"></i></button></td>
+                          </tr>
+                          {/loop}
+                        {else}
+                          <tr>
+                            <td><input type="text" name="detail_obat[]" class="form-control input-sm" placeholder="Nama obat"></td>
+                            <td><input type="text" name="detail_dosis[]" class="form-control input-sm" placeholder="Dosis"></td>
+                            <td><input type="time" name="detail_jam[]" class="form-control input-sm"></td>
+                            <td><input type="text" name="detail_pelaksana[]" class="form-control input-sm" placeholder="Nama petugas"></td>
+                            <td class="text-center" style="vertical-align: middle;"><button type="button" class="btn btn-xs btn-danger" onclick="$(this).closest('tr').remove()"><i class="fa fa-trash"></i></button></td>
+                          </tr>
+                        {/if}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. DAFTAR TILIK KESELAMATAN PASIEN -->
+            <div class="rsgm-soap-section">
+              <div class="rsgm-soap-sec-title">
+                <i class="fa fa-check-square-o text-primary"></i>
+                <span>3. Daftar Tilik Keselamatan Pasien (Anesthesia Safety Checklist)</span>
+              </div>
+
+              <div class="row">
+                <div class="col-md-4">
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; height: 100%;">
+                    <strong style="color: #1e3a8a; font-size: 11px; display: block; margin-bottom: 6px;">Tahap Verifikasi Awal</strong>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;"><input type="checkbox" name="tilik_identifikasi" value="Y" {if: isset($data['tilik_identifikasi']) && $data['tilik_identifikasi'] == 'Y'}checked{/if}> Identifikasi Pasien Lengkap</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;"><input type="checkbox" name="tilik_persetujuan" value="Y" {if: isset($data['tilik_persetujuan']) && $data['tilik_persetujuan'] == 'Y'}checked{/if}> Surat Persetujuan Pembiusan</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;"><input type="checkbox" name="tilik_puasa" value="Y" {if: isset($data['tilik_puasa']) && $data['tilik_puasa'] == 'Y'}checked{/if}> Puasa Dijalankan dg Baik</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;"><input type="checkbox" name="tilik_mesin" value="Y" {if: isset($data['tilik_mesin']) && $data['tilik_mesin'] == 'Y'}checked{/if}> Mesin Anestesi Siap</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;"><input type="checkbox" name="tilik_suction" value="Y" {if: isset($data['tilik_suction']) && $data['tilik_suction'] == 'Y'}checked{/if}> Suction Berfungsi Baik</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;"><input type="checkbox" name="tilik_obat" value="Y" {if: isset($data['tilik_obat']) && $data['tilik_obat'] == 'Y'}checked{/if}> Obat-obatan Emergency Siap</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;"><input type="checkbox" name="tilik_antibiotik" value="Y" {if: isset($data['tilik_antibiotik']) && $data['tilik_antibiotik'] == 'Y'}checked{/if}> Antibiotik Profilaksis</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 0;"><input type="checkbox" name="tilik_pulse_oxy" value="Y" {if: isset($data['tilik_pulse_oxy']) && $data['tilik_pulse_oxy'] == 'Y'}checked{/if}> Pulse Oxymeter Terpasang</label>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; height: 100%;">
+                    <strong style="color: #1e3a8a; font-size: 11px; display: block; margin-bottom: 6px;">Monitoring &amp; Proteksi</strong>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;"><input type="checkbox" name="tilik_ekg" value="Y" {if: isset($data['tilik_ekg']) && $data['tilik_ekg'] == 'Y'}checked{/if}> Monitoring EKG</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;"><input type="checkbox" name="tilik_sabuk" value="Y" {if: isset($data['tilik_sabuk']) && $data['tilik_sabuk'] == 'Y'}checked{/if}> Sabuk Pengaman Meja OP</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;"><input type="checkbox" name="tilik_stetoskop" value="Y" {if: isset($data['tilik_stetoskop']) && $data['tilik_stetoskop'] == 'Y'}checked{/if}> Stetoskop Precordial</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;"><input type="checkbox" name="tilik_nibp" value="Y" {if: isset($data['tilik_nibp']) && $data['tilik_nibp'] == 'Y'}checked{/if}> NIBP Terpasang</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;"><input type="checkbox" name="tilik_termometer" value="Y" {if: isset($data['tilik_termometer']) && $data['tilik_termometer'] == 'Y'}checked{/if}> Termometer Suhu</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;"><input type="checkbox" name="tilik_selimut" value="Y" {if: isset($data['tilik_selimut']) && $data['tilik_selimut'] == 'Y'}checked{/if}> Selimut Penghangat</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;"><input type="checkbox" name="tilik_urine" value="Y" {if: isset($data['tilik_urine']) && $data['tilik_urine'] == 'Y'}checked{/if}> Kateter Urine</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 0;"><input type="checkbox" name="tilik_penghangat" value="Y" {if: isset($data['tilik_penghangat']) && $data['tilik_penghangat'] == 'Y'}checked{/if}> Penghangat Cairan Infus</label>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; height: 100%;">
+                    <strong style="color: #1e3a8a; font-size: 11px; display: block; margin-bottom: 6px;">Pasca Induksi &amp; Posisi</strong>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 8px;"><input type="checkbox" name="tilik_pasca_induksi" value="Y" {if: isset($data['tilik_pasca_induksi']) && $data['tilik_pasca_induksi'] == 'Y'}checked{/if}> Evaluasi Pasca Induksi</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 8px;"><input type="checkbox" name="tilik_tekanan_bantalan" value="Y" {if: isset($data['tilik_tekanan_bantalan']) && $data['tilik_tekanan_bantalan'] == 'Y'}checked{/if}> Titik Tekan Diberi Bantalan</label>
+                    <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 0;"><input type="checkbox" name="tilik_mata" value="Y" {if: isset($data['tilik_mata']) && $data['tilik_mata'] == 'Y'}checked{/if}> Mata Terlindungi (Eye Pad)</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. INDUKSI, JALAN NAPAS & POSISI PASIEN -->
+            <div class="rsgm-soap-section">
+              <div class="rsgm-soap-sec-title">
+                <i class="fa fa-user-md text-primary"></i>
+                <span>4. Induksi, Tata Laksana Jalan Napas &amp; Posisi Pasien</span>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6" style="border-right: 1px dashed #cbd5e1;">
+                  <label class="rsgm-compact-label" style="color: #1e3a8a;">Keadaan Saat Tiba di Kamar Operasi</label>
+                  <div style="display: flex; gap: 15px; margin-bottom: 6px;">
+                    <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                      <input type="radio" name="induksi_tiba" value="Tidur sadar" {if: isset($data['induksi_tiba']) && $data['induksi_tiba'] == 'Tidur sadar'}checked{/if}> Tidur Sadar
+                    </label>
+                    <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                      <input type="radio" name="induksi_tiba" value="Menangis Tidak Sadar" {if: isset($data['induksi_tiba']) && $data['induksi_tiba'] == 'Menangis Tidak Sadar'}checked{/if}> Menangis / Tidak Sadar
+                    </label>
+                  </div>
+
+                  <div class="row" style="margin-left: -3px; margin-right: -3px; margin-bottom: 12px;">
+                    <div class="col-xs-3" style="padding: 0 3px;">
+                      <span style="font-size: 10px;">TD (mmHg)</span>
+                      <input type="text" name="induksi_td" class="form-control input-sm" placeholder="120/80" value="{?=isset_or($data['induksi_td'])?}">
+                    </div>
+                    <div class="col-xs-3" style="padding: 0 3px;">
+                      <span style="font-size: 10px;">HR (x/mnt)</span>
+                      <input type="text" name="induksi_hr" class="form-control input-sm" placeholder="82" value="{?=isset_or($data['induksi_hr'])?}">
+                    </div>
+                    <div class="col-xs-3" style="padding: 0 3px;">
+                      <span style="font-size: 10px;">RR (x/mnt)</span>
+                      <input type="text" name="induksi_rr" class="form-control input-sm" placeholder="18" value="{?=isset_or($data['induksi_rr'])?}">
+                    </div>
+                    <div class="col-xs-3" style="padding: 0 3px;">
+                      <span style="font-size: 10px;">Suhu (°C)</span>
+                      <input type="text" name="induksi_sb" class="form-control input-sm" placeholder="36.5" value="{?=isset_or($data['induksi_sb'])?}">
+                    </div>
+                  </div>
+
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px;">
+                    <label class="rsgm-compact-label" style="color: #1e3a8a; margin-bottom: 4px;">Metode Intubasi</label>
+                    <div style="display: flex; gap: 20px; margin-bottom: 8px;">
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="radio" name="jalan_napas" value="Awake" {if: isset($data['jalan_napas']) && $data['jalan_napas'] == 'Awake'}checked{/if}> Awake</label>
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="radio" name="jalan_napas" value="Non Apnea" {if: isset($data['jalan_napas']) && $data['jalan_napas'] == 'Non Apnea'}checked{/if}> Non Apnea</label>
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="radio" name="jalan_napas" value="Apnea" {if: isset($data['jalan_napas']) && $data['jalan_napas'] == 'Apnea'}checked{/if}> Apnea</label>
+                    </div>
+
+                    <label class="rsgm-compact-label" style="color: #1e3a8a; margin-bottom: 4px;">Peralatan Jalan Napas Terpasang</label>
+                    <!-- LMA -->
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                      <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin: 0; min-width: 60px;">
+                        <input type="checkbox" name="jn_lma" value="Y" {if: isset($data['jn_lma']) && $data['jn_lma'] == 'Y'}checked{/if}> LMA
+                      </label>
+                      <input type="text" name="jn_lma_no" class="form-control input-sm" style="width: 70px;" placeholder="No" value="{?=isset_or($data['jn_lma_no'])?}">
+                      <input type="text" name="jn_lma_cuff" class="form-control input-sm" style="width: 100px;" placeholder="Cuff cmH2O" value="{?=isset_or($data['jn_lma_cuff'])?}">
+                    </div>
+
+                    <!-- ETT -->
+                    <div style="margin-bottom: 6px; padding: 6px; background: #fff; border-radius: 4px; border: 1px solid #e2e8f0;">
+                      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 4px;">
+                        <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin: 0;"><input type="checkbox" name="jn_ett_kink" value="Y" {if: isset($data['jn_ett_kink']) && $data['jn_ett_kink'] == 'Y'}checked{/if}> ETT Kink</label>
+                        <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin: 0;"><input type="checkbox" name="jn_ett_nonkink" value="Y" {if: isset($data['jn_ett_nonkink']) && $data['jn_ett_nonkink'] == 'Y'}checked{/if}> Non-Kink</label>
+                        <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin: 0;"><input type="radio" name="jn_ett_oral_nasal" value="Oral" {if: isset($data['jn_ett_oral_nasal']) && $data['jn_ett_oral_nasal'] == 'Oral'}checked{/if}> Oral</label>
+                        <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin: 0;"><input type="radio" name="jn_ett_oral_nasal" value="Nasal" {if: isset($data['jn_ett_oral_nasal']) && $data['jn_ett_oral_nasal'] == 'Nasal'}checked{/if}> Nasal</label>
+                      </div>
+                      <div style="display: flex; gap: 8px;">
+                        <input type="text" name="jn_ett_no" class="form-control input-sm" placeholder="No ETT" value="{?=isset_or($data['jn_ett_no'])?}">
+                        <input type="text" name="jn_ett_cuff" class="form-control input-sm" placeholder="Cuff cmH2O" value="{?=isset_or($data['jn_ett_cuff'])?}">
+                        <input type="text" name="jn_ett_batas" class="form-control input-sm" placeholder="Batas cm" value="{?=isset_or($data['jn_ett_batas'])?}">
+                      </div>
+                    </div>
+
+                    <!-- Endobronkial -->
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                      <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin: 0; min-width: 120px;">
+                        <input type="checkbox" name="jn_endotrakial" value="Y" {if: isset($data['jn_endotrakial']) && $data['jn_endotrakial'] == 'Y'}checked{/if}> Endobronkial
+                      </label>
+                      <label style="font-size: 11px; margin: 0;"><input type="radio" name="jn_endo_kanan_kiri" value="Kanan" {if: isset($data['jn_endo_kanan_kiri']) && $data['jn_endo_kanan_kiri'] == 'Kanan'}checked{/if}> Kanan</label>
+                      <label style="font-size: 11px; margin: 0;"><input type="radio" name="jn_endo_kanan_kiri" value="Kiri" {if: isset($data['jn_endo_kanan_kiri']) && $data['jn_endo_kanan_kiri'] == 'Kiri'}checked{/if}> Kiri</label>
+                      <input type="text" name="jn_endo_no" class="form-control input-sm" style="width: 70px;" placeholder="No" value="{?=isset_or($data['jn_endo_no'])?}">
+                    </div>
+
+                    <!-- Masker, NGT, Tampon -->
+                    <div style="display: flex; gap: 15px; margin-top: 6px;">
+                      <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin: 0;"><input type="checkbox" name="jn_masker" value="Y" {if: isset($data['jn_masker']) && $data['jn_masker'] == 'Y'}checked{/if}> Masker</label>
+                      <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin: 0;"><input type="checkbox" name="jn_ngt" value="Y" {if: isset($data['jn_ngt']) && $data['jn_ngt'] == 'Y'}checked{/if}> NGT</label>
+                      <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin: 0;"><input type="checkbox" name="jn_tampon" value="Y" {if: isset($data['jn_tampon']) && $data['jn_tampon'] == 'Y'}checked{/if}> Tampon</label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Kolom Kanan: Posisi, Anestesi Regional & Vaskular -->
+                <div class="col-md-6">
+                  <!-- Posisi Pasien -->
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label class="rsgm-compact-label" style="color: #1e3a8a;">Posisi Pasien Saat Operasi</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 6px;">
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="posisi_supine" value="Y" {if: isset($data['posisi_supine']) && $data['posisi_supine'] == 'Y'}checked{/if}> Supine</label>
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="posisi_prone" value="Y" {if: isset($data['posisi_prone']) && $data['posisi_prone'] == 'Y'}checked{/if}> Prone</label>
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="posisi_trendelenberg" value="Y" {if: isset($data['posisi_trendelenberg']) && $data['posisi_trendelenberg'] == 'Y'}checked{/if}> Trendelenberg</label>
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="posisi_lithotomi" value="Y" {if: isset($data['posisi_lithotomi']) && $data['posisi_lithotomi'] == 'Y'}checked{/if}> Lithotomi</label>
+                      <label style="font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="posisi_lateral" value="Y" {if: isset($data['posisi_lateral']) && $data['posisi_lateral'] == 'Y'}checked{/if}> Lateral</label>
+                    </div>
+                    <input type="text" name="posisi_lainnya" class="form-control input-sm" placeholder="Posisi khusus lainnya..." value="{?=isset_or($data['posisi_lainnya'])?}">
+                  </div>
+
+                  <!-- Anestesi Regional Detail -->
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 12px;">
+                    <label class="rsgm-compact-label" style="color: #1e3a8a;">Anestesi Regional (Bila Dikerjakan)</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
+                      <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="reg_sab" value="Y" {if: isset($data['reg_sab']) && $data['reg_sab'] == 'Y'}checked{/if}> SAB</label>
+                      <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="reg_cse" value="Y" {if: isset($data['reg_cse']) && $data['reg_cse'] == 'Y'}checked{/if}> CSE</label>
+                      <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="reg_epidural" value="Y" {if: isset($data['reg_epidural']) && $data['reg_epidural'] == 'Y'}checked{/if}> Epidural</label>
+                      <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="reg_caudal" value="Y" {if: isset($data['reg_caudal']) && $data['reg_caudal'] == 'Y'}checked{/if}> Caudal</label>
+                      <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="reg_pnb" value="Y" {if: isset($data['reg_pnb']) && $data['reg_pnb'] == 'Y'}checked{/if}> PNB</label>
+                      <label style="font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><input type="checkbox" name="reg_ivr" value="Y" {if: isset($data['reg_ivr']) && $data['reg_ivr'] == 'Y'}checked{/if}> IVR</label>
+                    </div>
+
+                    <div class="row" style="margin-left: -3px; margin-right: -3px; margin-bottom: 6px;">
+                      <div class="col-xs-6" style="padding: 0 3px;">
+                        <span style="font-size: 10px;">Jenis Jarum (#)</span>
+                        <input type="text" name="reg_jenis_jarum" class="form-control input-sm" placeholder="Spinocan 27G" value="{?=isset_or($data['reg_jenis_jarum'])?}">
+                      </div>
+                      <div class="col-xs-6" style="padding: 0 3px;">
+                        <span style="font-size: 10px;">Blok V. Th</span>
+                        <input type="text" name="reg_blok_vth" class="form-control input-sm" placeholder="L3 - L4" value="{?=isset_or($data['reg_blok_vth'])?}">
+                      </div>
+                    </div>
+
+                    <div class="row" style="margin-left: -3px; margin-right: -3px; margin-bottom: 6px;">
+                      <div class="col-xs-4" style="padding: 0 3px;">
+                        <span style="font-size: 10px;">Obat (%)</span>
+                        <input type="text" name="reg_obat" class="form-control input-sm" placeholder="Bupivacaine 0.5%" value="{?=isset_or($data['reg_obat'])?}">
+                      </div>
+                      <div class="col-xs-4" style="padding: 0 3px;">
+                        <span style="font-size: 10px;">Dosis (mg)</span>
+                        <input type="text" name="reg_dosis" class="form-control input-sm" placeholder="15 mg" value="{?=isset_or($data['reg_dosis'])?}">
+                      </div>
+                      <div class="col-xs-4" style="padding: 0 3px;">
+                        <span style="font-size: 10px;">Volume (cc)</span>
+                        <input type="text" name="reg_vol" class="form-control input-sm" placeholder="3 cc" value="{?=isset_or($data['reg_vol'])?}">
+                      </div>
+                    </div>
+
+                    <input type="text" name="reg_obat_ket" class="form-control input-sm" style="margin-bottom: 4px;" placeholder="Keterangan obat regional tambahan..." value="{?=isset_or($data['reg_obat_ket'])?}">
+                    <input type="text" name="reg_epidural_ket" class="form-control input-sm" placeholder="Keterangan pemasangan epidural kateter..." value="{?=isset_or($data['reg_epidural_ket'])?}">
+                  </div>
+
+                  <!-- Kateter Intravena -->
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px;">
+                    <label class="rsgm-compact-label" style="color: #1e3a8a; margin-bottom: 4px;">Akses Vaskular / Kateter Intravena</label>
+                    <div class="row" style="margin-left: -3px; margin-right: -3px;">
+                      <div class="col-xs-4" style="padding: 0 3px;">
+                        <span style="font-size: 10px;">Perifer 1 (#)</span>
+                        <input type="text" name="kateter_perifer1" class="form-control input-sm" placeholder="18G Tangan Kanan" value="{?=isset_or($data['kateter_perifer1'])?}">
+                      </div>
+                      <div class="col-xs-4" style="padding: 0 3px;">
+                        <span style="font-size: 10px;">Perifer 2 (#)</span>
+                        <input type="text" name="kateter_perifer2" class="form-control input-sm" placeholder="20G Tangan Kiri" value="{?=isset_or($data['kateter_perifer2'])?}">
+                      </div>
+                      <div class="col-xs-4" style="padding: 0 3px;">
+                        <span style="font-size: 10px;">CVC (#)</span>
+                        <input type="text" name="kateter_cvc" class="form-control input-sm" placeholder="Subclavia / Jugularis" value="{?=isset_or($data['kateter_cvc'])?}">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div> <!-- /.rsgm-reg-body -->
+
+          <!-- FOOTER ACTIONS DENGAN DESAIN INTEGRATED REG-FOOTER -->
+          <div class="rsgm-reg-footer">
+            <div>
+              <a href="{?=url([ADMIN, 'form_rme', 'ans4manage'])?}" class="btn btn-default" style="border-radius: 6px;">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+            <div class="rsgm-reg-actions">
+              <button type="button" class="btn btn-info btn-trigger-rme-preview" style="font-weight: 600; border-radius: 6px;" title="Lihat pratinjau form hasil cetak / PDF">
+                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+              </button>
+              <button type="submit" class="btn btn-primary" id="btn_simpan_ans4" style="font-weight: 700; border-radius: 6px;">
+                <i class="fa fa-save"></i> Simpan Rencana Anestesi
+              </button>
+            </div>
+          </div>
+
+        </div> <!-- /.rsgm-reg-shell -->
+      </div> <!-- /.col-md-9 -->
+
+    </div> <!-- /.rsgm-soap-flex-row -->
+  </form>
+</div>
+
+<script>
+function addDetail() {
+  var html = '<tr>' +
+    '<td><input type="text" name="detail_obat[]" class="form-control input-sm" placeholder="Nama obat"></td>' +
+    '<td><input type="text" name="detail_dosis[]" class="form-control input-sm" placeholder="Dosis"></td>' +
+    '<td><input type="time" name="detail_jam[]" class="form-control input-sm"></td>' +
+    '<td><input type="text" name="detail_pelaksana[]" class="form-control input-sm" placeholder="Nama petugas"></td>' +
+    '<td class="text-center" style="vertical-align: middle;"><button type="button" class="btn btn-xs btn-danger" onclick="$(this).closest(\'tr\').remove()"><i class="fa fa-trash"></i></button></td>' +
+    '</tr>';
+  $('#detail_table').append(html);
+}
+
+$(document).ready(function() {
+  'use strict';
+
+  // 1. AUTO-FILL DATA PASIEN SAAT NO. RAWAT DIISI
+  function fetchPatientByNoRawat() {
+    var noRawat = $('#no_rawat').val().trim();
+    if (!noRawat) return;
+    $.ajax({
+      url: '{?=url([ADMIN, "form_rme", "ans4form"])?}?ajax_patient=1&t={?=$_SESSION["token"]?}',
+      data: { no_rawat: noRawat },
+      dataType: 'json',
+      success: function(res) {
+        if (res.success) {
+          if (!$('#nama_pasien').val()) $('#nama_pasien').val(res.nama_pasien);
+          if (!$('#tanggal_lahir').val()) $('#tanggal_lahir').val(res.tanggal_lahir);
+          if (res.jenis_kelamin) $('#jenis_kelamin').val(res.jenis_kelamin).trigger('change');
+          if (res.umur) $('#umur_pasien').val(res.umur);
+          if (res.no_rkm_medis) {
+            $('#no_rkm_medis').val(res.no_rkm_medis);
+            $('#display_no_rkm_medis').val(res.no_rkm_medis);
+          }
+        }
+      }
+    });
+  }
+
+  $('#no_rawat').on('blur change', fetchPatientByNoRawat);
+  $('#btn_cari_pasien').on('click', fetchPatientByNoRawat);
+
+  // 2. ISI CONTOH DATA (DEMO)
+  function fillDemoData() {
+    if (!$('#no_rawat').val()) {
+      $('#no_rawat').val('{?=date("Y/m/d")?}/000001');
+    }
+    if (!$('#nama_pasien').val()) {
+      $('#nama_pasien').val('Ny. Siti Nurhaliza');
+    }
+    if (!$('#display_no_rkm_medis').val()) {
+      $('#display_no_rkm_medis').val('012345');
+      $('#no_rkm_medis').val('012345');
+    }
+    $('#umur_pasien').val('38 Th');
+    $('#jenis_kelamin').val('P');
+    if (!$('#tanggal_lahir').val()) {
+      $('#tanggal_lahir').val('1988-05-14');
+    }
+    $('#dokter_nama').val('dr. Hendra Setiawan, Sp.An-TI');
+
+    $('input[name="premedikasi"]').prop('checked', true);
+    $('input[name="premedikasi_ket"]').val('Midazolam 2mg IV, Ondansetron 4mg IV');
+    $('input[name="ga_intubasi"]').prop('checked', true);
+    $('input[name="analgetik"]').prop('checked', true);
+    $('input[name="analgetik_ket"]').val('Fentanyl 100 mcg IV titrasi');
+    $('input[name="pelumpuh_otot"]').prop('checked', true);
+    $('input[name="pelumpuh_otot_ket"]').val('Rocuronium 30 mg IV');
+
+    $('input[name="maintenance_inhalasi"]').prop('checked', true);
+    $('input[name="inhalasi_o2"]').prop('checked', true);
+    $('input[name="inhalasi_halotan"]').prop('checked', true);
+    $('input[name="maintenance_catatan"]').val('Sevoflurane 2 vol% dalam O2:Air 50:50');
+
+    $('input[name="makan_terakhir"]').val('24:00 WITA');
+    $('input[name="minum_terakhir"]').val('05:00 WITA');
+    $('input[name="eval_td"]').val('118/76');
+    $('input[name="eval_hr"]').val('78');
+    $('input[name="eval_rr"]').val('18');
+    $('input[name="eval_sb"]').val('36.6');
+    $('input[name="eval_spo2"]').val('99');
+
+    $('input[name="tilik_identifikasi"]').prop('checked', true);
+    $('input[name="tilik_persetujuan"]').prop('checked', true);
+    $('input[name="tilik_puasa"]').prop('checked', true);
+    $('input[name="tilik_mesin"]').prop('checked', true);
+    $('input[name="tilik_suction"]').prop('checked', true);
+    $('input[name="tilik_obat"]').prop('checked', true);
+    $('input[name="tilik_pulse_oxy"]').prop('checked', true);
+    $('input[name="tilik_ekg"]').prop('checked', true);
+    $('input[name="tilik_sabuk"]').prop('checked', true);
+    $('input[name="tilik_nibp"]').prop('checked', true);
+    $('input[name="tilik_mata"]').prop('checked', true);
+
+    $('input[name="induksi_tiba"][value="Tidur sadar"]').prop('checked', true);
+    $('input[name="induksi_td"]').val('120/80');
+    $('input[name="induksi_hr"]').val('80');
+    $('input[name="induksi_rr"]').val('18');
+    $('input[name="induksi_sb"]').val('36.5');
+
+    $('input[name="jalan_napas"][value="Apnea"]').prop('checked', true);
+    $('input[name="jn_ett_nonkink"]').prop('checked', true);
+    $('input[name="jn_ett_oral_nasal"][value="Oral"]').prop('checked', true);
+    $('input[name="jn_ett_no"]').val('7.0');
+    $('input[name="jn_ett_cuff"]').val('20');
+    $('input[name="jn_ett_batas"]').val('21');
+
+    $('input[name="posisi_supine"]').prop('checked', true);
+    $('input[name="kateter_perifer1"]').val('18G Tangan Kiri');
+  }
+
+  $('#btn_demo').on('click', function(e) {
+    e.preventDefault();
+    fillDemoData();
+  });
+});
+</script>

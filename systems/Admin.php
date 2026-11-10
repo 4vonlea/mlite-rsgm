@@ -84,7 +84,7 @@ class Admin extends Main
         $this->assign['is_admin'] = ($access == 'all') || ($this->getUserInfo('role', $id) == 'admin') || ($id == 1);
         $this->assign['rme_categories'] = [];
         try {
-            if ($this->db('mlite_modules')->where('dir', 'update_bmt')->oneArray()) {
+            if ($this->db('mlite_modules')->where('dir', 'form_rme')->oneArray() || $this->db('mlite_modules')->where('dir', 'update_bmt')->oneArray()) {
                 if ($this->assign['is_admin']) {
                     $forms = $this->db('mlite_rme_form')->where('status', '1')->asc('kategori')->asc('urutan')->toArray();
                 } else {
@@ -143,8 +143,8 @@ class Admin extends Main
             }
         }
 
-        if ($name === 'form_rme') {
-            $name = 'update_bmt';
+        if ($name === 'update_bmt') {
+            $name = 'form_rme';
         }
         $row = $this->module->{$name};
 
@@ -153,12 +153,13 @@ class Admin extends Main
             $isRadiologiLaporanPacs = ($name === 'laporan' && in_array(strtolower($method), ['laporanradiologipacs', 'hapusradiologipacs']) && in_array($this->getUserInfo('role'), ['radiologi', 'admin']));
             $userAccess = explode(',', (string)$this->getUserInfo('access'));
             $isPasienRiwayat = ($name === 'pasien' && in_array(strtolower($method), ['riwayatperawatan', 'pdfriwayatperawatan']) && !empty($_SESSION['mlite_user']));
-            if (($this->getUserInfo('access') == 'all') || in_array($name, $userAccess) || ($name === 'update_bmt' && in_array('form_rme', $userAccess)) || $isSaveSignature || $isRadiologiLaporanPacs || $isPasienRiwayat) {
+            $isProfil = ($name === 'profil' && !empty($_SESSION['mlite_user']));
+            if (($this->getUserInfo('access') == 'all') || in_array($name, $userAccess) || ($name === 'form_rme' && in_array('update_bmt', $userAccess)) || ($name === 'update_bmt' && in_array('form_rme', $userAccess)) || $isSaveSignature || $isRadiologiLaporanPacs || $isPasienRiwayat || $isProfil) {
                 if ($name === 'laporan' && strtolower($method) === 'manage' && $this->getUserInfo('role') === 'radiologi' && !in_array('laporan', explode(',', $this->getUserInfo('access')))) {
                     redirect(url([ADMIN, 'laporan', 'laporanradiologipacs']));
                     exit;
                 }
-                if ($name === 'update_bmt') {
+                if ($name === 'form_rme' || $name === 'update_bmt') {
                     $this->checkRmeFormAccess($method);
                 }
                 $anyMethod = 'any'.ucfirst($method);
@@ -205,6 +206,11 @@ class Admin extends Main
         }
 
         $methodLower = strtolower($method);
+
+        // Halaman umum / lembar kerja RME pasien yang dapat diakses oleh semua user medis
+        if (in_array($methodLower, ['pasien', 'cetakberkas', 'katalogrme', 'css', 'js', 'universalpatientinfo'])) {
+            return true;
+        }
 
         // Menu manajemen unit form RME hanya untuk admin
         $mgmtMethods = [
@@ -305,8 +311,8 @@ class Admin extends Main
             return;
         }
 
-        if ($activeModule === 'form_rme') {
-            $activeModule = 'update_bmt';
+        if ($activeModule === 'update_bmt') {
+            $activeModule = 'form_rme';
         }
         $nav = [];
         $modules = $this->module->getArray();

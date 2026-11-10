@@ -1,0 +1,545 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+  <form method="POST" action="{?=url([ADMIN, 'form_rme', 'ri20save'])?}" id="ri20Form">
+    <input type="hidden" name="id" value="{?=isset($data['id']) ? $data['id'] : ''?}">
+    <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{?=isset_or($data['no_rkm_medis'])?}">
+    <input type="hidden" name="json_form_data" id="json_form_data" value="">
+
+    <div class="rsgm-soap-flex-row clearfix">
+      
+      <!-- ============================================================
+           KOLOM KIRI (3): SIDEBAR IDENTITAS PASIEN
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Identitas Pasien</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">RM.RI 20</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default" id="btn_cari_pasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                    <i class="fa fa-search text-primary"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="display_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+              <input type="text" id="display_no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+              <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}{?=isset_or($data['nama_pasien'])?}{/if}" required>
+            </div>
+
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="display_jk" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                  <input type="text" id="display_jk" class="form-control" value="{if: isset($data['jk']) && ($data['jk'] == 'L' || $data['jk'] == 'Laki-Laki')}Laki-Laki{elseif: isset($data['jk']) && ($data['jk'] == 'P' || $data['jk'] == 'Perempuan')}Perempuan{else}-{/if}" readonly>
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="display_tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir</label>
+                  <input type="text" id="display_tgl_lahir" class="form-control" value="{?=isset_or($data['tgl_lahir'])?}" readonly>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="display_alamat" class="rsgm-compact-label"><i class="fa fa-map-marker text-muted"></i> Alamat Pasien</label>
+              <textarea id="display_alamat" class="form-control" rows="2" readonly style="resize: vertical; font-size: 12px;">{?=isset_or($data['alamat'])?}</textarea>
+            </div>
+
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label class="rsgm-compact-label"><i class="fa fa-bed text-muted"></i> Ruang Rawat Inap</label>
+                <input type="text" class="form-control input-sm f-ruang_rawat" value="{?=isset_or($data['form_data']['ruang_rawat'])?}" placeholder="Bangsal / Kamar">
+              </div>
+
+              <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label"><i class="fa fa-sign-in text-muted"></i> Tgl Masuk</label>
+                    <input type="date" class="form-control input-sm f-tgl_masuk" value="{if: !empty($data.form_data.tgl_masuk)}{$data.form_data.tgl_masuk}{else}{?=date('Y-m-d')?}{/if}">
+                  </div>
+                </div>
+                <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label"><i class="fa fa-sign-out text-muted"></i> Tgl Keluar</label>
+                    <input type="date" class="form-control input-sm f-tgl_keluar" value="{if: !empty($data.form_data.tgl_keluar)}{$data.form_data.tgl_keluar}{else}{?=date('Y-m-d')?}{/if}">
+                  </div>
+                </div>
+              </div>
+
+              <button type="button" id="btn_demo" class="btn btn-warning btn-sm btn-block" style="border-radius: 6px; font-weight: 600;" title="Isi resume pulang dengan contoh data lengkap">
+                <i class="fa fa-magic"></i> Isi Contoh Data
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           KOLOM KANAN (9): WORKSTATION RESUME PASIEN PULANG
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-file-text-o"></i></span>
+              <span>Resume Pasien Pulang (Ringkasan Keluar Rawat Inap)</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">RM.RI 20</span>
+              <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-user-md"></i> DPJP Sign-Off</span>
+            </div>
+          </div>
+
+          <div class="rsgm-reg-body" style="padding: 16px 18px;">
+            
+            <!-- SECTION 1: ANAMNESIS & PEMERIKSAAN FISIK -->
+            <div class="rsgm-soap-section" style="margin-bottom: 18px;">
+              <div class="rsgm-soap-section-header">
+                <h5><i class="fa fa-stethoscope text-primary"></i> 1. Ringkasan Klinis Masuk &amp; Penemuan Penunjang</h5>
+              </div>
+
+              <div class="row" style="margin-top: 10px;">
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Anamnesis (Keluhan Utama &amp; Riwayat Penyakit Sekarang)</label>
+                    <textarea class="form-control f-anamnesis" rows="3" placeholder="Keluhan utama saat pasien masuk...">{?=isset_or($data['form_data']['anamnesis'])?}</textarea>
+                  </div>
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Riwayat Perjalanan Penyakit Selama Dirawat</label>
+                    <textarea class="form-control f-riwayat_penyakit" rows="3" placeholder="Perkembangan klinis selama masa perawatan...">{?=isset_or($data['form_data']['riwayat_penyakit'])?}</textarea>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Pemeriksaan Fisik Penting (Head to Toe / Status Lokalis)</label>
+                    <textarea class="form-control f-pemeriksaan_fisik" rows="3" placeholder="Hasil pemeriksaan fisik relevan...">{?=isset_or($data['form_data']['pemeriksaan_fisik'])?}</textarea>
+                  </div>
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Penemuan Klinik &amp; Penunjang (Laboratorium, Rontgen, EKG, dll.)</label>
+                    <textarea class="form-control f-penemuan_klinik" rows="3" placeholder="Hasil pemeriksaan diagnostik bermakna...">{?=isset_or($data['form_data']['penemuan_klinik'])?}</textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 2: DIAGNOSIS & PROSEDUR TERAPI -->
+            <div class="rsgm-soap-section" style="margin-bottom: 18px;">
+              <div class="rsgm-soap-section-header">
+                <h5><i class="fa fa-heartbeat text-danger"></i> 2. Diagnosis Akhir &amp; Tindakan / Prosedur Medis</h5>
+              </div>
+
+              <div class="row" style="margin-top: 10px;">
+                <div class="col-md-8">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Diagnosa Utama (Primary Diagnosis)</label>
+                    <input type="text" class="form-control f-diagnosa_utama" value="{?=isset_or($data['form_data']['diagnosa_utama'])?}" placeholder="Diagnosis utama penyebab dirawat">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Kode ICD-10 Utama</label>
+                    <input type="text" class="form-control f-icd_10_utama" value="{?=isset_or($data['form_data']['icd_10_utama'])?}" placeholder="Contoh: K29.1">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-8">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Diagnosa Sekunder / Komorbid / Komplikasi</label>
+                    <input type="text" class="form-control f-diagnosa_sekunder" value="{?=isset_or($data['form_data']['diagnosa_sekunder'])?}" placeholder="Diagnosis penyerta / tambahan">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Kode ICD-10 Sekunder</label>
+                    <input type="text" class="form-control f-icd_10_sekunder" value="{?=isset_or($data['form_data']['icd_10_sekunder'])?}" placeholder="Contoh: I10">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-8">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Tindakan / Prosedur / Operasi yang Dilakukan</label>
+                    <input type="text" class="form-control f-tindakan_selama_rs" value="{?=isset_or($data['form_data']['tindakan_selama_rs'])?}" placeholder="Nama tindakan bedah / non-bedah">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Kode ICD-9-CM</label>
+                    <input type="text" class="form-control f-icd_9_tindakan" value="{?=isset_or($data['form_data']['icd_9_tindakan'])?}" placeholder="Contoh: 45.13">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="rsgm-compact-label">Obat-Obatan Selama Perawatan di Rumah Sakit</label>
+                <textarea class="form-control f-obat_selama_rs" rows="2" placeholder="Daftar terapi medikasi injeksi/infus yang diberikan...">{?=isset_or($data['form_data']['obat_selama_rs'])?}</textarea>
+              </div>
+            </div>
+
+            <!-- SECTION 3: TERAPI OBAT PULANG -->
+            <div class="rsgm-soap-section" style="margin-bottom: 18px;">
+              <div class="rsgm-soap-section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5><i class="fa fa-pills text-success"></i> 3. Terapi Obat yang Dibawa Pulang</h5>
+                <button type="button" class="btn btn-xs btn-success" id="btnAdd"><i class="fa fa-plus"></i> Tambah Terapi Pulang</button>
+              </div>
+
+              <div class="table-responsive" style="margin-top: 10px;">
+                <table class="table table-bordered table-hover" id="tblTerapi" style="font-size: 11.5px;">
+                  <thead style="background: #f8fafc;">
+                    <tr>
+                      <th style="min-width: 150px;">Nama Obat</th>
+                      <th style="width: 70px;">Jumlah</th>
+                      <th style="width: 80px;">Dosis</th>
+                      <th style="width: 80px;">Frekuensi</th>
+                      <th style="width: 75px;">Rute</th>
+                      <th style="width: 55px;">Jam 1</th>
+                      <th style="width: 55px;">Jam 2</th>
+                      <th style="width: 55px;">Jam 3</th>
+                      <th style="width: 55px;">Jam 4</th>
+                      <th style="min-width: 140px;">Petunjuk Khusus</th>
+                      <th style="width: 35px; text-align: center;">#</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {if: !empty($data.form_data.terapi)}
+                      {loop: $data.form_data.terapi}
+                      <tr class="terapi-row">
+                        <td><input type="text" class="form-control input-sm _nama" value="{$value.nama}" placeholder="Nama obat"></td>
+                        <td><input type="text" class="form-control input-sm _jumlah" value="{$value.jumlah}" placeholder="Qty"></td>
+                        <td><input type="text" class="form-control input-sm _dosis" value="{$value.dosis}" placeholder="Dosis"></td>
+                        <td><input type="text" class="form-control input-sm _frekuensi" value="{$value.frekuensi}" placeholder="Frek"></td>
+                        <td><input type="text" class="form-control input-sm _cara" value="{$value.cara}" placeholder="Oral/Topikal"></td>
+                        <td><input type="text" class="form-control input-sm _jam1" value="{$value.jam1}" placeholder="07:00"></td>
+                        <td><input type="text" class="form-control input-sm _jam2" value="{$value.jam2}" placeholder="13:00"></td>
+                        <td><input type="text" class="form-control input-sm _jam3" value="{$value.jam3}" placeholder="19:00"></td>
+                        <td><input type="text" class="form-control input-sm _jam4" value="{$value.jam4}" placeholder="-"></td>
+                        <td><input type="text" class="form-control input-sm _petunjuk" value="{$value.petunjuk}" placeholder="Sebelum/sesudah makan"></td>
+                        <td class="text-center"><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-times"></i></button></td>
+                      </tr>
+                      {/loop}
+                    {else}
+                      <tr class="terapi-row">
+                        <td><input type="text" class="form-control input-sm _nama" placeholder="Contoh: Cefixime 200mg"></td>
+                        <td><input type="text" class="form-control input-sm _jumlah" placeholder="10 tab"></td>
+                        <td><input type="text" class="form-control input-sm _dosis" placeholder="200 mg"></td>
+                        <td><input type="text" class="form-control input-sm _frekuensi" placeholder="2 x 1"></td>
+                        <td><input type="text" class="form-control input-sm _cara" placeholder="Oral"></td>
+                        <td><input type="text" class="form-control input-sm _jam1" placeholder="08:00"></td>
+                        <td><input type="text" class="form-control input-sm _jam2" placeholder="20:00"></td>
+                        <td><input type="text" class="form-control input-sm _jam3" placeholder="-"></td>
+                        <td><input type="text" class="form-control input-sm _jam4" placeholder="-"></td>
+                        <td><input type="text" class="form-control input-sm _petunjuk" placeholder="Sesudah makan, habiskan"></td>
+                        <td class="text-center"><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-times"></i></button></td>
+                      </tr>
+                    {/if}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- SECTION 4: KONDISI KELUAR & RENCANA TINDAK LANJUT -->
+            <div class="rsgm-soap-section">
+              <div class="rsgm-soap-section-header">
+                <h5><i class="fa fa-sign-out text-info"></i> 4. Kondisi Keluar, Anjuran Kontrol &amp; Pengesahan DPJP</h5>
+              </div>
+
+              <div class="row" style="margin-top: 10px;">
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Keadaan Saat Pulang</label>
+                    <select class="form-control input-sm f-kondisi_pulang">
+                      <option value="Sembuh" {if: (isset($data.form_data.kondisi_pulang) && $data.form_data.kondisi_pulang=='Sembuh')}selected{/if}>Sembuh</option>
+                      <option value="Perbaikan" {if: (!isset($data.form_data.kondisi_pulang) || $data.form_data.kondisi_pulang=='Perbaikan')}selected{/if}>Membaik / Perbaikan</option>
+                      <option value="Belum Sembuh" {if: (isset($data.form_data.kondisi_pulang) && $data.form_data.kondisi_pulang=='Belum Sembuh')}selected{/if}>Belum Sembuh</option>
+                      <option value="Meninggal" {if: (isset($data.form_data.kondisi_pulang) && $data.form_data.kondisi_pulang=='Meninggal')}selected{/if}>Meninggal Dunia</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Cara Pulang</label>
+                    <div style="font-size: 11.5px; padding-top: 5px;">
+                      <label style="margin-right: 10px; font-weight: 500;"><input type="radio" name="alasan_pulang" value="Ijin Dokter" {if: (!isset($data.form_data.alasan_pulang) || $data.form_data.alasan_pulang=='Ijin Dokter')}checked{/if}> Izin Dokter</label>
+                      <label style="margin-right: 10px; font-weight: 500;"><input type="radio" name="alasan_pulang" value="Permintaan Sendiri" {if: (isset($data.form_data.alasan_pulang) && $data.form_data.alasan_pulang=='Permintaan Sendiri')}checked{/if}> APS</label>
+                      <label style="font-weight: 500;"><input type="radio" name="alasan_pulang" value="Rujuk" {if: (isset($data.form_data.alasan_pulang) && $data.form_data.alasan_pulang=='Rujuk')}checked{/if}> Rujuk</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Keterangan Pulang / Alasan APS</label>
+                    <input type="text" class="form-control input-sm f-pulang_permintaan_text" value="{?=isset_or($data['form_data']['pulang_permintaan_text'])?}" placeholder="Alasan bila pulang atas permintaan sendiri">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label class="rsgm-compact-label">Anjuran / Instruksi Perawatan Lanjutan &amp; Jadwal Kontrol</label>
+                <textarea class="form-control f-anjuran_kontrol" rows="2" placeholder="Jadwal kontrol ke poli, pantangan makanan, perawatan luka...">{?=isset_or($data['form_data']['anjuran_kontrol'])?}</textarea>
+              </div>
+
+              <div class="row" style="margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="rsgm-compact-label">Dokter DPJP yang Merawat</label>
+                    <input type="text" class="form-control input-sm f-nama_dokter" value="{?=isset_or($data['form_data']['nama_dokter'])?}" placeholder="Nama lengkap DPJP">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="rsgm-compact-label">Nama Pasien / Keluarga Penerima</label>
+                    <input type="text" class="form-control input-sm f-nama_pasien_keluarga" value="{?=isset_or($data['form_data']['nama_pasien_keluarga'])?}" placeholder="Nama penerima resume">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="rsgm-compact-label">Tanggal TTD Resume</label>
+                    <input type="date" class="form-control input-sm f-tgl_ttd" value="{if: !empty($data.form_data.tgl_ttd)}{$data.form_data.tgl_ttd}{else}{?=date('Y-m-d')?}{/if}">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div> <!-- /.rsgm-reg-body -->
+
+          <!-- FOOTER AKSI -->
+          <div class="rsgm-reg-footer">
+            <div>
+              <a href="{?=url([ADMIN, 'form_rme', 'ri20manage'])?}" class="btn btn-default btn-sm" style="font-weight: 600;">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-info btn-sm btn-trigger-rme-preview" style="font-weight: 600;">
+                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+              </button>
+              <button type="submit" class="btn btn-primary btn-sm" style="font-weight: 700; padding-left: 20px; padding-right: 20px;">
+                <i class="fa fa-save"></i> Simpan Data
+              </button>
+            </div>
+          </div>
+
+        </div> <!-- /.rsgm-reg-shell -->
+      </div> <!-- /.col-md-9 -->
+
+    </div> <!-- /.rsgm-soap-flex-row -->
+  </form>
+</div>
+
+<script>
+$(document).ready(function() {
+  'use strict';
+
+  // 1. CARI / MUAT DATA PASIEN DARI NO RAWAT
+  function fetchPatientByNoRawat() {
+    var noRawat = $('#no_rawat').val().trim();
+    if (!noRawat) return;
+
+    $.ajax({
+      url: '{?=url([ADMIN, "form_rme", "ri20form"])?}&ajax_patient=1&no_rawat=' + encodeURIComponent(noRawat),
+      type: 'GET',
+      dataType: 'json',
+      success: function(res) {
+        if (res && res.success) {
+          $('#no_rawat').val(res.no_rawat);
+          $('#display_no_rkm_medis').val(res.no_rkm_medis || '');
+          $('#no_rkm_medis').val(res.no_rkm_medis || '');
+          $('#nm_pasien').val(res.nm_pasien || '');
+          if (res.jk) {
+            var jkText = (res.jk === 'L' || res.jk === 'Laki-Laki') ? 'Laki-Laki' : 'Perempuan';
+            $('#display_jk').val(jkText);
+          }
+          if (res.tgl_lahir) $('#display_tgl_lahir').val(res.tgl_lahir);
+          if (res.alamat) $('#display_alamat').val(res.alamat);
+          if (res.nm_bangsal && !$('.f-ruang_rawat').val()) {
+            $('.f-ruang_rawat').val(res.nm_bangsal + (res.kd_kamar ? ' - ' + res.kd_kamar : ''));
+          }
+          if (res.tgl_masuk && !$('.f-tgl_masuk').val()) {
+            $('.f-tgl_masuk').val(res.tgl_masuk.substring(0, 10));
+          }
+          if (res.tgl_keluar && res.tgl_keluar !== '0000-00-00' && !$('.f-tgl_keluar').val()) {
+            $('.f-tgl_keluar').val(res.tgl_keluar.substring(0, 10));
+          }
+          if (res.dokter && !$('.f-nama_dokter').val()) {
+            $('.f-nama_dokter').val(res.dokter);
+          }
+          if (res.nm_pasien && !$('.f-nama_pasien_keluarga').val()) {
+            $('.f-nama_pasien_keluarga').val(res.nm_pasien + ' (Pasien)');
+          }
+        }
+      }
+    });
+  }
+
+  $('#no_rawat').on('blur change', fetchPatientByNoRawat);
+  $('#btn_cari_pasien').on('click', fetchPatientByNoRawat);
+
+  // 2. TAMBAH / HAPUS TERAPI PULANG
+  $('#btnAdd').on('click', function() {
+    var tr = [
+      '<tr class="terapi-row">',
+      '  <td><input type="text" class="form-control input-sm _nama" placeholder="Nama obat"></td>',
+      '  <td><input type="text" class="form-control input-sm _jumlah" placeholder="Qty"></td>',
+      '  <td><input type="text" class="form-control input-sm _dosis" placeholder="Dosis"></td>',
+      '  <td><input type="text" class="form-control input-sm _frekuensi" placeholder="Frek"></td>',
+      '  <td><input type="text" class="form-control input-sm _cara" placeholder="Oral/Topikal"></td>',
+      '  <td><input type="text" class="form-control input-sm _jam1" placeholder="Jam 1"></td>',
+      '  <td><input type="text" class="form-control input-sm _jam2" placeholder="Jam 2"></td>',
+      '  <td><input type="text" class="form-control input-sm _jam3" placeholder="Jam 3"></td>',
+      '  <td><input type="text" class="form-control input-sm _jam4" placeholder="Jam 4"></td>',
+      '  <td><input type="text" class="form-control input-sm _petunjuk" placeholder="Petunjuk khusus"></td>',
+      '  <td class="text-center"><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-times"></i></button></td>',
+      '</tr>'
+    ].join('');
+    $('#tblTerapi tbody').append(tr);
+  });
+
+  $(document).on('click', '.btnDel', function() {
+    if ($('.terapi-row').length > 1) {
+      $(this).closest('tr').remove();
+    } else {
+      alert('Minimal 1 baris terapi obat pulang.');
+    }
+  });
+
+  // 3. ISI CONTOH DATA (DEMO)
+  $('#btn_demo').on('click', function(e) {
+    e.preventDefault();
+    if (!$('#no_rawat').val()) $('#no_rawat').val('2026/10/16/000001');
+    $('#display_no_rkm_medis').val('000001');
+    $('#no_rkm_medis').val('000001');
+    $('#nm_pasien').val('Farida Ariyani');
+    $('#display_jk').val('Perempuan');
+    $('#display_tgl_lahir').val('1990-05-14');
+    $('#display_alamat').val('Jl. Veteran No. 12B, Banjarmasin');
+
+    $('.f-ruang_rawat').val('Bangsal Melati - Kamar 302');
+    $('.f-tgl_masuk').val('{?=date("Y-m-d", strtotime("-3 days"))?}');
+    $('.f-tgl_keluar').val('{?=date("Y-m-d")?}');
+
+    $('.f-anamnesis').val('Nyeri ulu hati seperti terbakar memberat 2 hari SMRS, mual muntah 3 kali berisi makanan, lemas.');
+    $('.f-riwayat_penyakit').val('Pasien dirawat selama 3 hari dengan terapi cairan parenteral dan PPI injeksi. Nyeri epigastrium berangsur mereda pada hari ke-2 perawatan, mual dan muntah berhenti. Toleransi makanan lunak baik.');
+    $('.f-pemeriksaan_fisik').val('KU: Baik, CM. TD: 118/75 mmHg, HR: 80x/m, RR: 18x/m, Suhu: 36.6C. Abdomen: Supel, bising usus (+) normal 8x/m, nyeri tekan epigastrium minimal, hepar/lien tidak teraba.');
+    $('.f-penemuan_klinik').val('Hb: 12.8 g/dL, Leukosit: 7.200 /uL, Trombosit: 285.000 /uL, GDS: 104 mg/dL. USG Abdomen: Hepar dan vesika fellea dalam batas normal, tidak tampak kolelitiasis.');
+
+    $('.f-diagnosa_utama').val('Gastritis Erosif Akut');
+    $('.f-icd_10_utama').val('K29.1');
+
+    $('.f-diagnosa_sekunder').val('Dispepsia Fungsional');
+    $('.f-icd_10_sekunder').val('K30');
+
+    $('.f-tindakan_selama_rs').val('Infus Terapi Cairan & Injeksi Omeprazole IV');
+    $('.f-icd_9_tindakan').val('99.29');
+
+    $('.f-obat_selama_rs').val('IVFD RL 20 tpm, Inj. Omeprazole 40mg/12 jam IV, Inj. Ondansetron 4mg/8 jam IV (k/p), Sucralfate Syr 3x1 Cth.');
+
+    $('#tblTerapi tbody').html([
+      '<tr class="terapi-row">',
+      '  <td><input type="text" class="form-control input-sm _nama" value="Omeprazole Kapsul 20mg"></td>',
+      '  <td><input type="text" class="form-control input-sm _jumlah" value="14 kap"></td>',
+      '  <td><input type="text" class="form-control input-sm _dosis" value="20 mg"></td>',
+      '  <td><input type="text" class="form-control input-sm _frekuensi" value="2 x 1"></td>',
+      '  <td><input type="text" class="form-control input-sm _cara" value="Oral"></td>',
+      '  <td><input type="text" class="form-control input-sm _jam1" value="06:00"></td>',
+      '  <td><input type="text" class="form-control input-sm _jam2" value="18:00"></td>',
+      '  <td><input type="text" class="form-control input-sm _jam3" value="-"></td>',
+      '  <td><input type="text" class="form-control input-sm _jam4" value="-"></td>',
+      '  <td><input type="text" class="form-control input-sm _petunjuk" value="30 menit sebelum makan (perut kosong)"></td>',
+      '  <td class="text-center"><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-times"></i></button></td>',
+      '</tr>',
+      '<tr class="terapi-row">',
+      '  <td><input type="text" class="form-control input-sm _nama" value="Sucralfate Suspensi 100ml"></td>',
+      '  <td><input type="text" class="form-control input-sm _jumlah" value="1 btl"></td>',
+      '  <td><input type="text" class="form-control input-sm _dosis" value="500 mg"></td>',
+      '  <td><input type="text" class="form-control input-sm _frekuensi" value="3 x 1 Cth"></td>',
+      '  <td><input type="text" class="form-control input-sm _cara" value="Oral"></td>',
+      '  <td><input type="text" class="form-control input-sm _jam1" value="06:30"></td>',
+      '  <td><input type="text" class="form-control input-sm _jam2" value="12:30"></td>',
+      '  <td><input type="text" class="form-control input-sm _jam3" value="18:30"></td>',
+      '  <td><input type="text" class="form-control input-sm _jam4" value="-"></td>',
+      '  <td><input type="text" class="form-control input-sm _petunjuk" value="Kocok dahulu sebelum diminum"></td>',
+      '  <td class="text-center"><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-times"></i></button></td>',
+      '</tr>'
+    ].join(''));
+
+    $('.f-kondisi_pulang').val('Perbaikan');
+    $('input[name="alasan_pulang"][value="Ijin Dokter"]').prop('checked', true);
+    $('.f-pulang_permintaan_text').val('-');
+    $('.f-anjuran_kontrol').val('Kontrol kembali ke Poli Spesialis Penyakit Dalam hari Senin depan jam 09:00 WITA dengan membawa resume ini. Hindari konsumsi obat anti-nyeri NSAID tanpa resep dokter.');
+    $('.f-nama_dokter').val('dr. Hendra Pratama, Sp.PD');
+    $('.f-nama_pasien_keluarga').val('Farida Ariyani (Pasien)');
+    $('.f-tgl_ttd').val('{?=date("Y-m-d")?}');
+  });
+
+  // 4. SERIALISASI JSON SAAT SUBMIT
+  $('#ri20Form').on('submit', function() {
+    var fd = {
+      ruang_rawat: $('.f-ruang_rawat').val() || '',
+      tgl_masuk: $('.f-tgl_masuk').val() || '',
+      tgl_keluar: $('.f-tgl_keluar').val() || '',
+      anamnesis: $('.f-anamnesis').val() || '',
+      riwayat_penyakit: $('.f-riwayat_penyakit').val() || '',
+      pemeriksaan_fisik: $('.f-pemeriksaan_fisik').val() || '',
+      penemuan_klinik: $('.f-penemuan_klinik').val() || '',
+      diagnosa_utama: $('.f-diagnosa_utama').val() || '',
+      icd_10_utama: $('.f-icd_10_utama').val() || '',
+      diagnosa_sekunder: $('.f-diagnosa_sekunder').val() || '',
+      icd_10_sekunder: $('.f-icd_10_sekunder').val() || '',
+      obat_selama_rs: $('.f-obat_selama_rs').val() || '',
+      tindakan_selama_rs: $('.f-tindakan_selama_rs').val() || '',
+      icd_9_tindakan: $('.f-icd_9_tindakan').val() || '',
+      kondisi_pulang: $('.f-kondisi_pulang').val() || '',
+      anjuran_kontrol: $('.f-anjuran_kontrol').val() || '',
+      alasan_pulang: $('input[name="alasan_pulang"]:checked').val() || 'Ijin Dokter',
+      pulang_permintaan_text: $('.f-pulang_permintaan_text').val() || '',
+      nama_dokter: $('.f-nama_dokter').val() || '',
+      nama_pasien_keluarga: $('.f-nama_pasien_keluarga').val() || '',
+      tgl_ttd: $('.f-tgl_ttd').val() || '',
+      terapi: []
+    };
+
+    $('.terapi-row').each(function() {
+      var nama = $(this).find('._nama').val();
+      if (nama) {
+        fd.terapi.push({
+          nama: nama,
+          jumlah: $(this).find('._jumlah').val() || '',
+          dosis: $(this).find('._dosis').val() || '',
+          frekuensi: $(this).find('._frekuensi').val() || '',
+          cara: $(this).find('._cara').val() || '',
+          jam1: $(this).find('._jam1').val() || '',
+          jam2: $(this).find('._jam2').val() || '',
+          jam3: $(this).find('._jam3').val() || '',
+          jam4: $(this).find('._jam4').val() || '',
+          petunjuk: $(this).find('._petunjuk').val() || ''
+        });
+      }
+    });
+
+    $('#json_form_data').val(JSON.stringify(fd));
+  });
+});
+</script>

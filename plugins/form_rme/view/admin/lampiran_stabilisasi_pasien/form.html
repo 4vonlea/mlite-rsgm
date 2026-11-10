@@ -1,0 +1,428 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+    <form id="formStabilisasiPasien" method="POST" action="{?=url([ADMIN, 'form_rme', 'stabilisasipasiensave'])?}">
+        <input type="hidden" name="id" value="{$data.id}">
+        <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{$data.no_rkm_medis}">
+
+        <div class="rsgm-soap-flex-row clearfix">
+
+            <!-- ============================================================
+                 KOLOM KIRI (3): SIDEBAR IDENTITAS PASIEN & DOKTER / PERAWAT
+                 ============================================================ -->
+            <div class="col-md-3">
+                <div class="rsgm-reg-shell rsgm-patient-side-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+                            <span>Data Pasien</span>
+                        </h4>
+                        <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+                        <!-- No. Rawat Pasien -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat / RM <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="No. Rawat / RM" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button" id="btnCariPasien" title="Cari Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                                        <i class="fa fa-search text-primary"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- No. Rekam Medis -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="info_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+                            <input type="text" id="info_no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{if: !empty($data.no_rkm_medis)}{$data.no_rkm_medis}{/if}" readonly style="background-color: #f8fafc; font-weight: 700;">
+                        </div>
+
+                        <!-- Nama Pasien -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="info_nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+                            <input type="text" id="info_nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{/if}" readonly style="background-color: #f8fafc; font-weight: 600;">
+                        </div>
+
+                        <!-- Gender & Tanggal Lahir -->
+                        <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="info_jk" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                                    <input type="text" id="info_jk" class="form-control" value="{if: !empty($data.jk)}{?= $data['jk'] == 'L' ? 'Laki-Laki' : 'Perempuan' ?}{/if}" readonly style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="info_tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir</label>
+                                    <input type="text" id="info_tgl_lahir" class="form-control" value="{if: !empty($data.tgl_lahir)}{$data.tgl_lahir}{/if}" readonly style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Umur Pasien -->
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="info_umur" class="rsgm-compact-label"><i class="fa fa-birthday-cake text-muted"></i> Umur Pasien</label>
+                            <input type="text" id="info_umur" class="form-control" value="{if: !empty($data.umur)}{$data.umur}{/if}" readonly placeholder="Umur Pasien" style="background-color: #f8fafc;">
+                        </div>
+
+                        <!-- Waktu & Petugas Stabilisasi -->
+                        <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-top: 10px;">
+                            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                                <div class="col-xs-7" style="padding-left: 4px; padding-right: 4px;">
+                                    <div class="form-group" style="margin-bottom: 10px;">
+                                        <label for="tanggal_stabilisasi" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tgl Stabilisasi <span class="text-danger">*</span></label>
+                                        <input type="date" name="tanggal_stabilisasi" id="tanggal_stabilisasi" class="form-control" value="{if: !empty($data.tanggal_stabilisasi)}{$data.tanggal_stabilisasi}{else}{?=date('Y-m-d')?}{/if}" required>
+                                    </div>
+                                </div>
+                                <div class="col-xs-5" style="padding-left: 4px; padding-right: 4px;">
+                                    <div class="form-group" style="margin-bottom: 10px;">
+                                        <label for="jam_stabilisasi" class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Jam</label>
+                                        <input type="time" name="jam_stabilisasi" id="jam_stabilisasi" class="form-control" value="{if: !empty($data.jam_stabilisasi)}{$data.jam_stabilisasi}{else}{?=date('H:i')?}{/if}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Nama Perawat -->
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label for="nama_perawat" class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Perawat Pelaksana <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" name="nama_perawat" id="nama_perawat" class="form-control" value="{$data.nama_perawat}" placeholder="Nama Perawat" required>
+                                    <div class="input-group-btn">
+                                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="border: 1px solid #cbd5e1; border-left: 0; height: 34px;">
+                                            <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-right" style="max-height: 250px; overflow-y: auto;">
+                                            <li class="dropdown-header">Daftar Petugas:</li>
+                                            {loop: $petugas_list}
+                                            <li><a href="#" class="opt-perawat" data-nama="{$value.nama}" data-nip="{$value.nip}">{$value.nama}</a></li>
+                                            {/loop}
+                                        </ul>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="nip_perawat" id="nip_perawat" value="{$data.nip_perawat}">
+                            </div>
+
+                            <!-- Nama Dokter -->
+                            <div class="form-group" style="margin-bottom: 5px;">
+                                <label for="nama_dokter" class="rsgm-compact-label"><i class="fa fa-stethoscope text-muted"></i> Dokter Penanggung Jawab <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" name="nama_dokter" id="nama_dokter" class="form-control" value="{$data.nama_dokter}" placeholder="Nama Dokter" required>
+                                    <div class="input-group-btn">
+                                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="border: 1px solid #cbd5e1; border-left: 0; height: 34px;">
+                                            <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-right" style="max-height: 250px; overflow-y: auto;">
+                                            <li class="dropdown-header">Daftar Dokter:</li>
+                                            {loop: $dokter_list}
+                                            <li><a href="#" class="opt-dokter" data-nama="{$value.nm_dokter}" data-nip="{$value.kd_dokter}">{$value.nm_dokter}</a></li>
+                                            {/loop}
+                                        </ul>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="nip_dokter" id="nip_dokter" value="{$data.nip_dokter}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- /.col-md-3 -->
+
+            <!-- ============================================================
+                 KOLOM KANAN (9): WORKSTATION STABILISASI PASIEN
+                 ============================================================ -->
+            <div class="col-md-9">
+                <div class="rsgm-reg-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-ambulance"></i></span>
+                            <span>Formulir Stabilisasi Pasien Sebelum Transfer</span>
+                        </h4>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <a href="{?=url([ADMIN, 'form_rme', 'stabilisasipasienmanage'])?}" class="btn btn-default btn-xs" style="font-weight: 600;">
+                                <i class="fa fa-list"></i> Kelola Data
+                            </a>
+                            <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">Stabilisasi Transfer</span>
+                        </div>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+
+                        <!-- I. DIAGNOSA MEDIS -->
+                        <div class="rsgm-soap-section" style="background-color: #f8fafc; border-color: #cbd5e1; margin-bottom: 16px;">
+                            <div class="rsgm-soap-sec-title">
+                                <i class="fa fa-medkit text-primary"></i>
+                                <span>I. Diagnosa Medis Pasien</span>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 5px;">
+                                <label for="diagnosa" class="rsgm-compact-label">Diagnosa Pasien Sebelum Transfer <span class="text-danger">*</span></label>
+                                <textarea name="diagnosa" id="diagnosa" class="form-control" rows="2" placeholder="Diagnosa pasien sebelum ditransfer antar ruangan atau faskes..." required>{$data.diagnosa}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- II. KONDISI KLINIS & KESADARAN -->
+                        <div class="rsgm-soap-section" style="background-color: #ffffff; border-color: #cbd5e1; margin-bottom: 16px;">
+                            <div class="rsgm-soap-sec-title">
+                                <i class="fa fa-heartbeat text-primary"></i>
+                                <span>II. Kondisi Klinis &amp; Status Kesadaran</span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">Keadaan Umum Pasien:</label>
+                                    <div style="margin-top: 6px;">
+                                        <label class="radio-inline" style="font-weight: 600; cursor: pointer;"><input type="radio" name="keadaan_umum" value="Ringan" {if: $data.keadaan_umum == 'Ringan'}checked{/if}> Sakit Ringan</label>
+                                        <label class="radio-inline" style="font-weight: 600; cursor: pointer;"><input type="radio" name="keadaan_umum" value="Sedang" {if: $data.keadaan_umum == 'Sedang' || empty($data.keadaan_umum)}checked{/if}> Sedang</label>
+                                        <label class="radio-inline" style="font-weight: 600; cursor: pointer;"><input type="radio" name="keadaan_umum" value="Berat" {if: $data.keadaan_umum == 'Berat'}checked{/if}> Berat</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">Kesadaran Kuantitatif (GCS):</label>
+                                    <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                                        <div class="col-xs-4" style="padding-left: 4px; padding-right: 4px;">
+                                            <div class="input-group">
+                                                <span class="input-group-addon" style="padding: 6px 8px; font-weight: bold;">E</span>
+                                                <input type="text" name="gcs_e" class="form-control text-center" value="{$data.gcs_e}" placeholder="4">
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-4" style="padding-left: 4px; padding-right: 4px;">
+                                            <div class="input-group">
+                                                <span class="input-group-addon" style="padding: 6px 8px; font-weight: bold;">V</span>
+                                                <input type="text" name="gcs_v" class="form-control text-center" value="{$data.gcs_v}" placeholder="5">
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-4" style="padding-left: 4px; padding-right: 4px;">
+                                            <div class="input-group">
+                                                <span class="input-group-addon" style="padding: 6px 8px; font-weight: bold;">M</span>
+                                                <input type="text" name="gcs_m" class="form-control text-center" value="{$data.gcs_m}" placeholder="6">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                                    <label for="kesadaran_kualitatif" class="rsgm-compact-label">Kesadaran Kualitatif:</label>
+                                    <select name="kesadaran_kualitatif" id="kesadaran_kualitatif" class="form-control">
+                                        <option value="Compos Mentis" {if: $data.kesadaran_kualitatif == 'Compos Mentis'}selected{/if}>Compos Mentis</option>
+                                        <option value="Apatis" {if: $data.kesadaran_kualitatif == 'Apatis'}selected{/if}>Apatis</option>
+                                        <option value="Delirium" {if: $data.kesadaran_kualitatif == 'Delirium'}selected{/if}>Delirium</option>
+                                        <option value="Somnolen" {if: $data.kesadaran_kualitatif == 'Somnolen'}selected{/if}>Somnolen</option>
+                                        <option value="Stupor" {if: $data.kesadaran_kualitatif == 'Stupor'}selected{/if}>Stupor</option>
+                                        <option value="Koma" {if: $data.kesadaran_kualitatif == 'Koma'}selected{/if}>Koma</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <hr style="margin: 8px 0 12px 0;">
+
+                            <div class="row">
+                                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">Status Pernafasan:</label>
+                                    <div style="margin-bottom: 6px;">
+                                        <label class="radio-inline" style="font-weight: 600;"><input type="radio" name="pernafasan" value="Spontan" {if: $data.pernafasan == 'Spontan' || empty($data.pernafasan)}checked{/if}> Spontan</label>
+                                        <label class="radio-inline" style="font-weight: 600;"><input type="radio" name="pernafasan" value="Dengan bantuan O2" {if: $data.pernafasan == 'Dengan bantuan O2'}checked{/if}> Bantuan O2</label>
+                                        <label class="radio-inline" style="font-weight: 600;"><input type="radio" name="pernafasan" value="ETT" {if: $data.pernafasan == 'ETT'}checked{/if}> ETT</label>
+                                        <label class="radio-inline" style="font-weight: 600;"><input type="radio" name="pernafasan" value="Ambu bag" {if: $data.pernafasan == 'Ambu bag'}checked{/if}> Ambu bag</label>
+                                    </div>
+                                    <div class="input-group" style="max-width: 250px;">
+                                        <span class="input-group-addon" style="font-size: 11px;">Bantuan O2:</span>
+                                        <input type="text" name="pernafasan_o2" class="form-control input-sm" value="{$data.pernafasan_o2}" placeholder="Contoh: 3">
+                                        <span class="input-group-addon" style="font-size: 11px;">L/mnt</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">Pasien Menggunakan Alat Tambahan:</label>
+                                    <div class="row">
+                                        <div class="col-xs-6">
+                                            <div class="checkbox" style="margin-top: 2px; margin-bottom: 6px;">
+                                                <label style="font-weight: 600;"><input type="checkbox" name="alat_iv_line" value="1" {if: !empty($data.alat_iv_line)}checked{/if}> IV Line</label>
+                                                <input type="text" name="alat_iv_line_jalur" class="form-control input-xs" style="display: inline-block; width: 65px; height: 22px; margin-left: 4px; padding: 0 4px;" value="{$data.alat_iv_line_jalur}" placeholder=".. jalur">
+                                            </div>
+                                            <div class="checkbox" style="margin-top: 2px; margin-bottom: 6px;">
+                                                <label style="font-weight: 600;"><input type="checkbox" name="alat_ngt" value="1" {if: !empty($data.alat_ngt)}checked{/if}> NGT</label>
+                                            </div>
+                                            <div class="checkbox" style="margin-top: 2px; margin-bottom: 6px;">
+                                                <label style="font-weight: 600;"><input type="checkbox" name="alat_drain" value="1" {if: !empty($data.alat_drain)}checked{/if}> Drain</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <div class="checkbox" style="margin-top: 2px; margin-bottom: 6px;">
+                                                <label style="font-weight: 600;"><input type="checkbox" name="alat_kateter" value="1" {if: !empty($data.alat_kateter)}checked{/if}> Kateter</label>
+                                            </div>
+                                            <div style="margin-top: 4px;">
+                                                <label class="rsgm-compact-label" style="font-size: 11px;">Alat Lainnya:</label>
+                                                <input type="text" name="alat_lain_lain" class="form-control input-sm" value="{$data.alat_lain_lain}" placeholder="Sebutkan alat lainnya...">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- III. MONITORING TANDA VITAL TABEL -->
+                        <div class="rsgm-soap-section" style="background-color: #ffffff; border-color: #cbd5e1; margin-bottom: 16px;">
+                            <div class="rsgm-soap-sec-title" style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <i class="fa fa-table text-primary"></i>
+                                    <span>III. Monitoring Tanda-Tanda Vital Berkala</span>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-xs" id="btnTambahBaris" style="border-radius: 4px; font-weight: 600;">
+                                    <i class="fa fa-plus"></i> Tambah Baris
+                                </button>
+                            </div>
+
+                            <div class="table-responsive" style="margin-top: 10px;">
+                                <table class="table table-bordered table-striped" id="tblMonitoring" style="margin-bottom: 0; font-size: 12px;">
+                                    <thead>
+                                        <tr style="background-color: #1e40af; color: #fff;">
+                                            <th width="12%">Jam</th>
+                                            <th width="15%">TD (mmHg)</th>
+                                            <th width="14%">HR (x/mnt)</th>
+                                            <th width="14%">RR (x/mnt)</th>
+                                            <th width="12%">T (°C)</th>
+                                            <th width="28%">Keterangan (Tindakan / Obat)</th>
+                                            <th width="5%" class="text-center">#</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {if: !empty($data.monitoring_list)}
+                                        {loop: $data.monitoring_list}
+                                        <tr>
+                                            <td><input type="text" name="vital_jam[]" class="form-control input-sm text-center" value="{$value.jam}" placeholder="08:00"></td>
+                                            <td><input type="text" name="vital_td[]" class="form-control input-sm text-center" value="{$value.td}" placeholder="120/80"></td>
+                                            <td><input type="text" name="vital_hr[]" class="form-control input-sm text-center" value="{$value.hr}" placeholder="80"></td>
+                                            <td><input type="text" name="vital_rr[]" class="form-control input-sm text-center" value="{$value.rr}" placeholder="20"></td>
+                                            <td><input type="text" name="vital_t[]" class="form-control input-sm text-center" value="{$value.t}" placeholder="36.5"></td>
+                                            <td><input type="text" name="vital_ket[]" class="form-control input-sm" value="{$value.ket}" placeholder="Tindakan atau terapi obat..."></td>
+                                            <td class="text-center"><button type="button" class="btn btn-danger btn-xs btnHapusBaris"><i class="fa fa-trash"></i></button></td>
+                                        </tr>
+                                        {/loop}
+                                        {else}
+                                        <tr>
+                                            <td><input type="text" name="vital_jam[]" class="form-control input-sm text-center" value="08:00" placeholder="Jam"></td>
+                                            <td><input type="text" name="vital_td[]" class="form-control input-sm text-center" value="120/80" placeholder="120/80"></td>
+                                            <td><input type="text" name="vital_hr[]" class="form-control input-sm text-center" value="82" placeholder="HR"></td>
+                                            <td><input type="text" name="vital_rr[]" class="form-control input-sm text-center" value="20" placeholder="RR"></td>
+                                            <td><input type="text" name="vital_t[]" class="form-control input-sm text-center" value="36.5" placeholder="T"></td>
+                                            <td><input type="text" name="vital_ket[]" class="form-control input-sm" placeholder="Tindakan atau pemberian obat..."></td>
+                                            <td class="text-center"><button type="button" class="btn btn-danger btn-xs btnHapusBaris"><i class="fa fa-trash"></i></button></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="text" name="vital_jam[]" class="form-control input-sm text-center" value="08:30" placeholder="Jam"></td>
+                                            <td><input type="text" name="vital_td[]" class="form-control input-sm text-center" value="120/80" placeholder="120/80"></td>
+                                            <td><input type="text" name="vital_hr[]" class="form-control input-sm text-center" value="80" placeholder="HR"></td>
+                                            <td><input type="text" name="vital_rr[]" class="form-control input-sm text-center" value="20" placeholder="RR"></td>
+                                            <td><input type="text" name="vital_t[]" class="form-control input-sm text-center" value="36.6" placeholder="T"></td>
+                                            <td><input type="text" name="vital_ket[]" class="form-control input-sm" placeholder="Tindakan atau pemberian obat..."></td>
+                                            <td class="text-center"><button type="button" class="btn btn-danger btn-xs btnHapusBaris"><i class="fa fa-trash"></i></button></td>
+                                        </tr>
+                                        {/if}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- TOMBOL AKSI -->
+                        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 20px;">
+                            <a href="{?=url([ADMIN, 'form_rme', 'stabilisasipasienmanage'])?}" class="btn btn-default" style="border-radius: 6px; font-weight: 600; padding: 8px 18px;">
+                                <i class="fa fa-arrow-left"></i> Batal / Kembali
+                            </a>
+                            <button type="submit" class="btn btn-success" style="border-radius: 6px; font-weight: 700; padding: 8px 24px; box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);">
+                                <i class="fa fa-save"></i> Simpan Formulir Stabilisasi
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div> <!-- /.col-md-9 -->
+
+        </div> <!-- /.rsgm-soap-flex-row -->
+    </form>
+</div>
+
+<script>
+$(document).ready(function() {
+    function cariDataPasien() {
+        var no_rawat = $('#no_rawat').val().trim();
+        if (!no_rawat) {
+            alert('Silakan masukkan No. Rawat atau No. RM terlebih dahulu!');
+            return;
+        }
+
+        $.ajax({
+            url: '{?=url([ADMIN, "form_rme", "stabilisasipasienform"])?}&ajax_patient=1&no_rawat=' + encodeURIComponent(no_rawat),
+            type: 'GET',
+            dataType: 'json',
+            beforeSend: function() {
+                $('#btnCariPasien').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+            },
+            success: function(res) {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+                if (res && res.success) {
+                    $('#no_rawat').val(res.no_rawat);
+                    $('#no_rkm_medis').val(res.no_rkm_medis);
+                    $('#info_no_rkm_medis').val(res.no_rkm_medis || '');
+                    $('#info_nm_pasien').val(res.nm_pasien || '');
+                    $('#info_jk').val(res.jk === 'L' ? 'Laki-Laki' : (res.jk === 'P' ? 'Perempuan' : ''));
+                    $('#info_umur').val(res.umur ? res.umur : '');
+                    $('#info_tgl_lahir').val(res.tgl_lahir || '');
+                    if (res.nm_dokter && !$('#nama_dokter').val()) {
+                        $('#nama_dokter').val(res.nm_dokter);
+                        $('#nip_dokter').val(res.kd_dokter || '');
+                    }
+                } else {
+                    alert('Data pasien dengan No. Rawat / No. RM tersebut tidak ditemukan!');
+                }
+            },
+            error: function() {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+                alert('Terjadi kesalahan saat memuat data pasien.');
+            }
+        });
+    }
+
+    $('#btnCariPasien').on('click', function(e) {
+        e.preventDefault();
+        cariDataPasien();
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            cariDataPasien();
+        }
+    });
+
+    // Pilihan Dropdown Perawat / Dokter
+    $(document).on('click', '.opt-perawat', function(e) {
+        e.preventDefault();
+        $('#nama_perawat').val($(this).data('nama'));
+        $('#nip_perawat').val($(this).data('nip'));
+    });
+    $(document).on('click', '.opt-dokter', function(e) {
+        e.preventDefault();
+        $('#nama_dokter').val($(this).data('nama'));
+        $('#nip_dokter').val($(this).data('nip'));
+    });
+
+    // Tambah & Hapus Baris Monitoring
+    $('#btnTambahBaris').on('click', function() {
+        var row = '<tr>' +
+            '<td><input type="text" name="vital_jam[]" class="form-control input-sm text-center" placeholder="Jam"></td>' +
+            '<td><input type="text" name="vital_td[]" class="form-control input-sm text-center" placeholder="TD"></td>' +
+            '<td><input type="text" name="vital_hr[]" class="form-control input-sm text-center" placeholder="HR"></td>' +
+            '<td><input type="text" name="vital_rr[]" class="form-control input-sm text-center" placeholder="RR"></td>' +
+            '<td><input type="text" name="vital_t[]" class="form-control input-sm text-center" placeholder="T"></td>' +
+            '<td><input type="text" name="vital_ket[]" class="form-control input-sm" placeholder="Tindakan / obat..."></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-danger btn-xs btnHapusBaris"><i class="fa fa-trash"></i></button></td>' +
+            '</tr>';
+        $('#tblMonitoring tbody').append(row);
+    });
+
+    $(document).on('click', '.btnHapusBaris', function() {
+        if ($('#tblMonitoring tbody tr').length > 1) {
+            $(this).closest('tr').remove();
+        } else {
+            $(this).closest('tr').find('input').val('');
+        }
+    });
+});
+</script>

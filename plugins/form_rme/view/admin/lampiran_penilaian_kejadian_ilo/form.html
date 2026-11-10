@@ -1,0 +1,628 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+    <form method="POST" action="{?=url([ADMIN, 'form_rme', 'penilaianilosave'])?}" id="form-penilaian-ilo">
+        <input type="hidden" name="id" value="{$data.id}">
+        <input type="hidden" name="detail_penilaian" id="detail_penilaian" value="{$data.detail_penilaian_raw}">
+
+        <div class="rsgm-soap-flex-row clearfix">
+
+            <!-- ============================================================
+                 KOLOM KIRI (3): SIDEBAR IDENTITAS, RUANG & PANDUAN ILO
+                 ============================================================ -->
+            <div class="col-md-3">
+                <div class="rsgm-reg-shell rsgm-patient-side-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+                            <span>Data Pasien</span>
+                        </h4>
+                        <span class="badge" style="background-color: #fef2f2; color: #dc2626; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #fecaca;">Surveilans ILO</span>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+                        <!-- No. Rawat Pasien with Cari -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat / RM <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2026/10/18/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button" id="btn-cari-pasien" title="Cari Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                                        <i class="fa fa-search text-primary"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- No. Rekam Medis -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor RM</label>
+                            <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{$data.no_rkm_medis}" readonly style="background-color: #f8fafc; font-weight: 700;">
+                        </div>
+
+                        <!-- Nama Pasien -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien</label>
+                            <input type="text" id="nm_pasien" class="form-control" placeholder="Nama Pasien" value="{$data.nm_pasien}" readonly style="background-color: #f8fafc; font-weight: 600;">
+                        </div>
+
+                        <!-- Gender & Umur Pasien -->
+                        <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="jk" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                                    <input type="text" id="jk" class="form-control" value="{$data.jk}" readonly style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="umur" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Umur</label>
+                                    <input type="text" id="umur" class="form-control" value="{$data.umur}" readonly style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tanggal Mulai Penilaian -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="tanggal_penilaian" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tgl Mulai Penilaian <span class="text-danger">*</span></label>
+                            <input type="date" name="tanggal_penilaian" id="tanggal_penilaian" class="form-control" value="{$data.tanggal_penilaian}" required>
+                        </div>
+
+                        <!-- Ruangan / Kamar Inap -->
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="kamar_inap" class="rsgm-compact-label"><i class="fa fa-bed text-muted"></i> Kamar / Ruang Inap</label>
+                            <input type="text" name="kamar_inap" id="kamar_inap" class="form-control" value="{$data.kamar_inap}" placeholder="Contoh: VIP Intan / 01">
+                        </div>
+
+                        <!-- PANDUAN RESMI PENILAIAN ILO -->
+                        <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 10px 12px; margin-top: 10px;">
+                            <label class="rsgm-compact-label" style="color: #991b1b; margin-bottom: 4px; font-weight: 700;">
+                                <i class="fa fa-info-circle"></i> Interpretasi Skor Kejadian ILO:
+                            </label>
+                            <ul style="margin: 0; padding-left: 16px; font-size: 11px; line-height: 1.5; color: #7f1d1d;">
+                                <li><strong>Skor 0:</strong> Normal (Penyembuhan normal).</li>
+                                <li><strong>Skor 1:</strong> Normal dg kemerahan sedang.</li>
+                                <li><strong>Skor 2:</strong> <em>Erythema</em> dg tanda inflamasi.</li>
+                                <li><strong>Skor 3:</strong> Luka bersih / cairan <em>haemoserosis</em>.</li>
+                                <li><strong>Skor 4:</strong> Adanya cairan Pus / Nanah.</li>
+                                <li><strong>Skor 5:</strong> Infeksi dalam / <em>hematoma requiring</em>.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- /.col-md-3 -->
+
+            <!-- ============================================================
+                 KOLOM KANAN (9): WORKSTATION PENILAIAN KEJADIAN ILO (10 HARI)
+                 ============================================================ -->
+            <div class="col-md-9">
+                <div class="rsgm-reg-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-stethoscope"></i></span>
+                            <span>Formulir Penilaian Infeksi Luka Operasi (ILO) Harian</span>
+                        </h4>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <a href="{?=url([ADMIN, 'form_rme', 'penilaianilomanage'])?}" class="btn btn-default btn-xs" style="font-weight: 600; border-radius: 6px; padding: 5px 12px;">
+                                <i class="fa fa-list"></i> Kelola Data
+                            </a>
+                            <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-weight: 700;">10 Hari Rawat</span>
+                        </div>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+
+                        <!-- TAB NAVIGATION HARI 1 S/D 10 & MATRIX -->
+                        <ul class="nav nav-pills" id="tabHari" style="margin-bottom: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px; display: flex; flex-wrap: wrap; gap: 4px;">
+                            {loop: $days_range}
+                            <li class="{if: $value == 1}active{/if}" style="margin: 0;">
+                                <a href="#tab-hari-{$value}" data-toggle="tab" style="padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 12px;">
+                                    Hari {$value} <span class="badge" id="badge-tab-{$value}" style="font-size: 10px; margin-left: 4px; background-color: #64748b;">-</span>
+                                </a>
+                            </li>
+                            {/loop}
+                            <li style="margin: 0; margin-left: auto;">
+                                <a href="#tab-ringkasan-matrix" data-toggle="tab" style="padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 12px; background-color: #0284c7; color: #fff;">
+                                    <i class="fa fa-table"></i> Matrix 10 Hari
+                                </a>
+                            </li>
+                        </ul>
+
+                        <!-- TAB CONTENT -->
+                        <div class="tab-content">
+                            {loop: $days_range}
+                            <div class="tab-pane fade {if: $value == 1}in active{/if}" id="tab-hari-{$value}">
+                                
+                                <!-- TOOLBAR HARI INI -->
+                                <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #0284c7; border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                    <div style="font-weight: 700; font-size: 13px; color: #1e293b;">
+                                        <i class="fa fa-calendar text-primary"></i> Penilaian Hari Ke-{$value}
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <div style="display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 11px; font-weight: 600; color: #475569;">Tanggal:</span>
+                                            <input type="date" class="form-control input-sm day-tgl" data-day="{$value}" id="tgl-{$value}" style="width: 140px; height: 32px; border-radius: 6px;">
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 11px; font-weight: 600; color: #475569;">Petugas:</span>
+                                            <div class="input-group" style="width: 210px;">
+                                                <input type="text" class="form-control input-sm day-petugas" data-day="{$value}" id="petugas-{$value}" placeholder="Nama perawat penilai" style="height: 32px; border-radius: 6px 0 0 6px;">
+                                                <span class="input-group-btn">
+                                                    <button type="button" class="btn btn-default btn-sm btn-quick-petugas" data-day="{$value}" style="height: 32px; border-radius: 0 6px 6px 0; font-weight: 600; border-left: 0;">Pilih</button>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-default btn-xs btn-clear-day" data-day="{$value}" title="Kosongkan penilaian hari ini" style="border-radius: 6px; font-weight: 600; padding: 6px 10px;">
+                                            <i class="fa fa-eraser text-danger"></i> Reset Hari
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- LIVE SCORE BANNER -->
+                                <div style="display: flex; align-items: center; justify-content: space-between; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 14px; margin-bottom: 12px;">
+                                    <span style="font-size: 12px; font-weight: 600; color: #64748b;">Status Penilaian Hari Ke-{$value}:</span>
+                                    <span class="label label-default day-badge-score" id="score-badge-{$value}" style="font-size: 13px; padding: 5px 12px; border-radius: 6px;">
+                                        Belum Dinilai
+                                    </span>
+                                </div>
+
+                                <!-- 6 PARAMETER ILO -->
+                                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;">
+                                    
+                                    <!-- Parameter 1 (Skor 0) -->
+                                    <div class="ilo-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                                        <label for="radio_{$value}_0" style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%;">
+                                            <input type="radio" name="param_hari_{$value}" class="ilo-radio" data-day="{$value}" value="0" id="radio_{$value}_0" style="margin: 0;">
+                                            <span style="font-size: 13px; font-weight: 600; color: #1e293b;">1. Proses penyembuhan normal</span>
+                                        </label>
+                                        <span class="badge" style="background-color: #dcfce7; color: #166534; font-size: 11px; padding: 4px 8px; border-radius: 6px; margin-left: 10px;">Skor 0</span>
+                                    </div>
+
+                                    <!-- Parameter 2 (Skor 1) -->
+                                    <div class="ilo-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; display: flex; align-items: flex-start; justify-content: space-between; cursor: pointer;">
+                                        <label for="radio_{$value}_1" style="margin: 0; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; width: 100%;">
+                                            <input type="radio" name="param_hari_{$value}" class="ilo-radio" data-day="{$value}" value="1" id="radio_{$value}_1" style="margin-top: 3px;">
+                                            <div>
+                                                <div style="font-size: 13px; font-weight: 600; color: #1e293b;">2. Proses penyembuhan normal dengan kemerahan sedang:</div>
+                                                <ul style="margin: 4px 0 0 0; padding-left: 18px; font-size: 12px; color: #475569;">
+                                                    <li>a. Ditemukan beberapa kemerahan</li>
+                                                    <li>b. Kemerahan</li>
+                                                    <li>c. <em>Erythema</em> sedang</li>
+                                                </ul>
+                                            </div>
+                                        </label>
+                                        <span class="badge" style="background-color: #e0f2fe; color: #0369a1; font-size: 11px; padding: 4px 8px; border-radius: 6px; margin-left: 10px;">Skor 1</span>
+                                    </div>
+
+                                    <!-- Parameter 3 (Skor 2) -->
+                                    <div class="ilo-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; display: flex; align-items: flex-start; justify-content: space-between; cursor: pointer;">
+                                        <label for="radio_{$value}_2" style="margin: 0; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; width: 100%;">
+                                            <input type="radio" name="param_hari_{$value}" class="ilo-radio" data-day="{$value}" value="2" id="radio_{$value}_2" style="margin-top: 3px;">
+                                            <div>
+                                                <div style="font-size: 13px; font-weight: 600; color: #1e293b;">3. <em>Erythema</em> dengan tanda inflamasi:</div>
+                                                <ul style="margin: 4px 0 0 0; padding-left: 18px; font-size: 12px; color: #475569;">
+                                                    <li>a. Pada satu tempat</li>
+                                                    <li>b. Di sekitar luka jahitan</li>
+                                                    <li>c. Sepanjang luka</li>
+                                                    <li>d. Di sekeliling luka</li>
+                                                </ul>
+                                            </div>
+                                        </label>
+                                        <span class="badge" style="background-color: #e0f2fe; color: #0369a1; font-size: 11px; padding: 4px 8px; border-radius: 6px; margin-left: 10px;">Skor 2</span>
+                                    </div>
+
+                                    <!-- Parameter 4 (Skor 3) -->
+                                    <div class="ilo-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; display: flex; align-items: flex-start; justify-content: space-between; cursor: pointer;">
+                                        <label for="radio_{$value}_3" style="margin: 0; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; width: 100%;">
+                                            <input type="radio" name="param_hari_{$value}" class="ilo-radio" data-day="{$value}" value="3" id="radio_{$value}_3" style="margin-top: 3px;">
+                                            <div>
+                                                <div style="font-size: 13px; font-weight: 600; color: #1e293b;">4. Luka bersih atau ditemukan cairan <em>haemoserosis</em>:</div>
+                                                <ul style="margin: 4px 0 0 0; padding-left: 18px; font-size: 12px; color: #475569;">
+                                                    <li>a. Hanya pada satu tempat (&lt; 2 cm)</li>
+                                                    <li>b. Di sepanjang luka (&gt; 2 cm)</li>
+                                                    <li>c. Ditemukan banyak <em>haemoseus</em></li>
+                                                    <li>d. <em>Prolonged</em> (&gt; 3 hari)</li>
+                                                </ul>
+                                            </div>
+                                        </label>
+                                        <span class="badge" style="background-color: #fef3c7; color: #b45309; font-size: 11px; padding: 4px 8px; border-radius: 6px; margin-left: 10px;">Skor 3</span>
+                                    </div>
+
+                                    <!-- Parameter 5 (Skor 4) -->
+                                    <div class="ilo-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; display: flex; align-items: flex-start; justify-content: space-between; cursor: pointer;">
+                                        <label for="radio_{$value}_4" style="margin: 0; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; width: 100%;">
+                                            <input type="radio" name="param_hari_{$value}" class="ilo-radio" data-day="{$value}" value="4" id="radio_{$value}_4" style="margin-top: 3px;">
+                                            <div>
+                                                <div style="font-size: 13px; font-weight: 600; color: #1e293b;">5. Pus (Nanah):</div>
+                                                <ul style="margin: 4px 0 0 0; padding-left: 18px; font-size: 12px; color: #475569;">
+                                                    <li>a. Hanya pada suatu tempat (&lt; 2 cm)</li>
+                                                    <li>b. Di sepanjang luka (&gt; 2 cm)</li>
+                                                </ul>
+                                            </div>
+                                        </label>
+                                        <span class="badge" style="background-color: #fed7aa; color: #c2410c; font-size: 11px; padding: 4px 8px; border-radius: 6px; margin-left: 10px;">Skor 4</span>
+                                    </div>
+
+                                    <!-- Parameter 6 (Skor 5) -->
+                                    <div class="ilo-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                                        <label for="radio_{$value}_5" style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%;">
+                                            <input type="radio" name="param_hari_{$value}" class="ilo-radio" data-day="{$value}" value="5" id="radio_{$value}_5" style="margin: 0;">
+                                            <span style="font-size: 13px; font-weight: 600; color: #b91c1c;">6. Adanya infeksi yang dalam dengan atau tanpa kerusakan jaringan, <em>hematoma requiring</em></span>
+                                        </label>
+                                        <span class="badge" style="background-color: #fee2e2; color: #b91c1c; font-size: 11px; padding: 4px 8px; border-radius: 6px; margin-left: 10px;">Skor 5</span>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                            {/loop}
+
+                            <!-- TAB PANE: MATRIX 10 HARI -->
+                            <div class="tab-pane fade" id="tab-ringkasan-matrix">
+                                <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 14px;">
+                                    <div style="font-weight: 700; font-size: 13px; color: #1e293b; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                                        <span><i class="fa fa-table text-primary"></i> Matriks Pemantauan 10 Hari (Sesuai Formulir Rekam Medis)</span>
+                                        <span class="text-muted" style="font-size: 11px; font-weight: normal;">Otomatis tersinkronisasi dari isian harian</span>
+                                    </div>
+
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-condensed text-center" style="font-size: 11px; margin-bottom: 0;">
+                                            <thead>
+                                                <tr style="background-color: #f1f5f9;">
+                                                    <th rowspan="2" style="vertical-align: middle; width: 35px; text-align: center;">No.</th>
+                                                    <th rowspan="2" style="vertical-align: middle; text-align: left;">Parameter Klinis</th>
+                                                    <th rowspan="2" style="vertical-align: middle; width: 45px; text-align: center;">Skor</th>
+                                                    <th colspan="10" style="text-align: center;">Skor Hari Perawatan Ke -</th>
+                                                </tr>
+                                                <tr style="background-color: #f8fafc; font-size: 10px;">
+                                                    {loop: $days_range}
+                                                    <th style="width: 55px; text-align: center;">
+                                                        <strong>{$value}</strong><br>
+                                                        <span id="matrix-tgl-label-{$value}" style="color: #64748b; font-weight: normal;">Tgl .....</span>
+                                                    </th>
+                                                    {/loop}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>1</td>
+                                                    <td style="text-align: left;">Proses penyembuhan normal</td>
+                                                    <td style="font-weight: bold;">0</td>
+                                                    {loop: $days_range}
+                                                    <td id="matrix-cell-{$value}-0" style="vertical-align: middle;">-</td>
+                                                    {/loop}
+                                                </tr>
+                                                <tr>
+                                                    <td>2</td>
+                                                    <td style="text-align: left;">Normal dg kemerahan sedang</td>
+                                                    <td style="font-weight: bold;">1</td>
+                                                    {loop: $days_range}
+                                                    <td id="matrix-cell-{$value}-1" style="vertical-align: middle;">-</td>
+                                                    {/loop}
+                                                </tr>
+                                                <tr>
+                                                    <td>3</td>
+                                                    <td style="text-align: left;">Erythema dg tanda inflamasi</td>
+                                                    <td style="font-weight: bold;">2</td>
+                                                    {loop: $days_range}
+                                                    <td id="matrix-cell-{$value}-2" style="vertical-align: middle;">-</td>
+                                                    {/loop}
+                                                </tr>
+                                                <tr>
+                                                    <td>4</td>
+                                                    <td style="text-align: left;">Luka bersih / haemoserosis</td>
+                                                    <td style="font-weight: bold;">3</td>
+                                                    {loop: $days_range}
+                                                    <td id="matrix-cell-{$value}-3" style="vertical-align: middle;">-</td>
+                                                    {/loop}
+                                                </tr>
+                                                <tr>
+                                                    <td>5</td>
+                                                    <td style="text-align: left;">Pus (Nanah)</td>
+                                                    <td style="font-weight: bold;">4</td>
+                                                    {loop: $days_range}
+                                                    <td id="matrix-cell-{$value}-4" style="vertical-align: middle;">-</td>
+                                                    {/loop}
+                                                </tr>
+                                                <tr>
+                                                    <td>6</td>
+                                                    <td style="text-align: left;">Infeksi dalam / hematoma</td>
+                                                    <td style="font-weight: bold;">5</td>
+                                                    {loop: $days_range}
+                                                    <td id="matrix-cell-{$value}-5" style="vertical-align: middle;">-</td>
+                                                    {/loop}
+                                                </tr>
+                                                <tr style="background-color: #f1f5f9; font-weight: 700;">
+                                                    <td colspan="2" style="text-align: left;">TOTAL SKOR HARIAN</td>
+                                                    <td></td>
+                                                    {loop: $days_range}
+                                                    <td id="matrix-total-{$value}" style="font-size: 12px; color: #1e293b;">-</td>
+                                                    {/loop}
+                                                </tr>
+                                                <tr style="font-size: 10px; color: #64748b; background-color: #fafafa;">
+                                                    <td colspan="2" style="text-align: left;">Petugas / Perawat Penilai</td>
+                                                    <td></td>
+                                                    {loop: $days_range}
+                                                    <td id="matrix-petugas-{$value}" style="word-break: break-word;">-</td>
+                                                    {/loop}
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CATATAN TAMBAHAN -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px; margin-bottom: 16px;">
+                            <label class="rsgm-compact-label" style="font-weight: 700; color: #1e293b; margin-bottom: 6px;">
+                                <i class="fa fa-commenting-o text-primary"></i> Catatan Klinis / Evaluasi Tambahan:
+                            </label>
+                            <textarea name="catatan" class="form-control" rows="3" placeholder="Tuliskan catatan kondisi luka post operasi, jenis tindakan operasi, antibiotik/medikasi, atau instruksi DPJP...">{$data.catatan}</textarea>
+                        </div>
+
+                    </div> <!-- /.rsgm-reg-body -->
+
+                    <!-- FOOTER ACTIONS DENGAN DESAIN INTEGRATED REG-FOOTER (AKGMUFORM STYLE) -->
+                    <div class="rsgm-reg-footer">
+                        <div>
+                            <a href="{?=url([ADMIN, 'form_rme', 'penilaianilomanage'])?}" class="btn btn-default" style="border-radius: 6px; font-weight: 600; padding: 7px 18px;">
+                                <i class="fa fa-arrow-left"></i> Batal &amp; Kembali
+                            </a>
+                        </div>
+                        <div class="rsgm-reg-actions">
+                            <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 700; padding: 7px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <i class="fa fa-save"></i> Simpan Penilaian ILO
+                            </button>
+                        </div>
+                    </div>
+                </div> <!-- /.rsgm-reg-shell -->
+            </div> <!-- /.col-md-9 -->
+
+        </div> <!-- /.rsgm-soap-flex-row -->
+    </form>
+</div>
+
+<!-- MODAL QUICK SELECT PETUGAS -->
+<div class="modal fade" id="modalPetugas" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="border-radius: 8px; overflow: hidden;">
+            <div class="modal-header" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title" style="font-weight: 700; font-size: 14px; color: #1e293b;"><i class="fa fa-user-md text-primary"></i> Pilih Petugas / Perawat Penilai</h4>
+            </div>
+            <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <input type="text" id="filter-petugas" class="form-control" placeholder="Ketik nama petugas..." style="border-radius: 6px 0 0 6px;">
+                    <span class="input-group-addon" style="border-radius: 0 6px 6px 0;"><i class="fa fa-search"></i></span>
+                </div>
+                <div class="list-group" id="list-petugas">
+                    {loop: $petugas}
+                    <a href="#" class="list-group-item item-petugas" data-nama="{$value.nama}" style="border-radius: 4px; margin-bottom: 4px;">
+                        <strong>{$value.nama}</strong> <small class="text-muted">(NIP: {$value.nip})</small>
+                    </a>
+                    {/loop}
+                </div>
+            </div>
+            <div class="modal-footer" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 6px; font-weight: 600;">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    var rawJson = $('#detail_penilaian').val();
+    var detailData = {};
+    try {
+        if (rawJson && rawJson.trim() !== '') {
+            detailData = JSON.parse(rawJson);
+        }
+    } catch (e) {
+        detailData = {};
+    }
+
+    var activeDayForPetugas = 1;
+
+    // Load initial data into inputs and matrix
+    for (var d = 1; d <= 10; d++) {
+        if (detailData[d]) {
+            var item = detailData[d];
+            if (item.tgl) {
+                $('#tgl-' + d).val(item.tgl);
+            }
+            if (item.petugas) {
+                $('#petugas-' + d).val(item.petugas);
+            }
+            if (item.parameter !== undefined && item.parameter !== null && item.parameter !== '') {
+                var pVal = parseInt(item.parameter);
+                $('input[name="param_hari_' + d + '"][value="' + pVal + '"]').prop('checked', true);
+            }
+        }
+        updateDayDisplay(d);
+    }
+
+    // Radio change
+    $('.ilo-radio').on('change', function() {
+        var day = $(this).data('day');
+        updateDayDisplay(day);
+        syncJson();
+    });
+
+    // Date change
+    $('.day-tgl').on('change', function() {
+        var day = $(this).data('day');
+        updateDayDisplay(day);
+        syncJson();
+    });
+
+    // Petugas change
+    $('.day-petugas').on('input change', function() {
+        var day = $(this).data('day');
+        updateDayDisplay(day);
+        syncJson();
+    });
+
+    // Clear day button
+    $('.btn-clear-day').on('click', function() {
+        var day = $(this).data('day');
+        if (confirm('Kosongkan penilaian untuk Hari Ke-' + day + '?')) {
+            $('input[name="param_hari_' + day + '"]').prop('checked', false);
+            $('#tgl-' + day).val('');
+            $('#petugas-' + day).val('');
+            updateDayDisplay(day);
+            syncJson();
+        }
+    });
+
+    // Modal select petugas
+    $('.btn-quick-petugas').on('click', function() {
+        activeDayForPetugas = $(this).data('day');
+        $('#modalPetugas').modal('show');
+    });
+
+    $('.item-petugas').on('click', function(e) {
+        e.preventDefault();
+        var nama = $(this).data('nama');
+        $('#petugas-' + activeDayForPetugas).val(nama).trigger('change');
+        $('#modalPetugas').modal('hide');
+    });
+
+    $('#filter-petugas').on('keyup', function() {
+        var q = $(this).val().toLowerCase();
+        $('.item-petugas').each(function() {
+            var text = $(this).text().toLowerCase();
+            $(this).toggle(text.indexOf(q) > -1);
+        });
+    });
+
+    function updateDayDisplay(day) {
+        var selected = $('input[name="param_hari_' + day + '"]:checked');
+        var tgl = $('#tgl-' + day).val();
+        var petugas = $('#petugas-' + day).val();
+
+        // Reset matrix cells for this day
+        for (var p = 0; p <= 5; p++) {
+            $('#matrix-cell-' + day + '-' + p).html('-');
+        }
+
+        if (tgl) {
+            var parts = tgl.split('-');
+            if (parts.length === 3) {
+                $('#matrix-tgl-label-' + day).text(parts[2] + '/' + parts[1]);
+            } else {
+                $('#matrix-tgl-label-' + day).text(tgl);
+            }
+        } else {
+            $('#matrix-tgl-label-' + day).text('Tgl .....');
+        }
+
+        if (petugas) {
+            $('#matrix-petugas-' + day).text(petugas);
+        } else {
+            $('#matrix-petugas-' + day).text('-');
+        }
+
+        if (selected.length > 0) {
+            var score = parseInt(selected.val());
+            var badgeText = '';
+            var badgeClass = '';
+
+            if (score === 0) {
+                badgeText = 'Skor 0 : Normal';
+                badgeClass = 'label-success';
+            } else if (score <= 2) {
+                badgeText = 'Skor ' + score + ' : Tahap Awal Infeksi';
+                badgeClass = 'label-info';
+            } else if (score <= 4) {
+                badgeText = 'Skor ' + score + ' : Awal Infeksi';
+                badgeClass = 'label-warning';
+            } else {
+                badgeText = 'Skor 5 : Stadium Lanjut Infeksi';
+                badgeClass = 'label-danger';
+            }
+
+            $('#score-badge-' + day).removeClass('label-default label-success label-info label-warning label-danger')
+                .addClass(badgeClass)
+                .text(badgeText);
+
+            $('#badge-tab-' + day).removeClass('label-default label-success label-info label-warning label-danger')
+                .addClass(badgeClass)
+                .text('Skor ' + score);
+
+            // Matrix checkmark
+            $('#matrix-cell-' + day + '-' + score).html('<i class="fa fa-check text-success" style="font-size: 13px;"></i>');
+            $('#matrix-total-' + day).text(score);
+        } else {
+            $('#score-badge-' + day).removeClass('label-success label-info label-warning label-danger')
+                .addClass('label-default')
+                .text('Belum Dinilai');
+
+            $('#badge-tab-' + day).text('-');
+            $('#matrix-total-' + day).text('-');
+        }
+    }
+
+    function syncJson() {
+        var obj = {};
+        for (var d = 1; d <= 10; d++) {
+            var selected = $('input[name="param_hari_' + d + '"]:checked');
+            var tgl = $('#tgl-' + d).val();
+            var petugas = $('#petugas-' + d).val();
+
+            if (selected.length > 0 || tgl || petugas) {
+                var score = selected.length > 0 ? parseInt(selected.val()) : null;
+                obj[d] = {
+                    tgl: tgl,
+                    parameter: score,
+                    total_skor: score,
+                    petugas: petugas
+                };
+            }
+        }
+        $('#detail_penilaian').val(JSON.stringify(obj));
+    }
+
+    // Ajax search pasien
+    $('#btn-cari-pasien').on('click', function() {
+        var no_rawat = $('#no_rawat').val().trim();
+        if (!no_rawat) {
+            alert('Silakan masukkan No. Rawat terlebih dahulu!');
+            return;
+        }
+
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+        $.getJSON('{?=url([ADMIN, "form_rme", "amuform"])?}', { ajax_patient: 1, no_rawat: no_rawat }, function(res) {
+            btn.prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+            if (res.success) {
+                $('#no_rawat').val(res.no_rawat);
+                $('#no_rkm_medis').val(res.no_rkm_medis);
+                $('#nm_pasien').val(res.nm_pasien);
+                $('#jk').val(res.jk);
+                $('#umur').val(res.umur);
+                if (res.kamar_inap) {
+                    $('#kamar_inap').val(res.kamar_inap);
+                }
+            } else {
+                alert('Pasien dengan No. Rawat / RM "' + no_rawat + '" tidak ditemukan!');
+            }
+        }).fail(function() {
+            btn.prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+            alert('Terjadi kesalahan koneksi saat mencari data pasien.');
+        });
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $('#btn-cari-pasien').click();
+        }
+    });
+
+    // Form submit check
+    $('#form-penilaian-ilo').on('submit', function() {
+        syncJson();
+    });
+});
+</script>

@@ -1,0 +1,1164 @@
+<div class="row" id="manage" style="margin-bottom: 80px;">
+  <div class="col-md-12">
+
+    <!-- ======================================================== -->
+    <!-- KONSOL UTAMA REKAM MEDIS ELEKTRONIK (RME)               -->
+    <!-- ======================================================== -->
+    <div class="panel panel-default rsgm-ehr-console" style="border-radius: 10px; border: 1px solid #cbd5e1; box-shadow: 0 4px 16px rgba(15,23,42,0.06); margin-bottom: 25px; overflow: hidden; background: #ffffff;">
+
+      <!-- 1. PANEL HEADER UTAMA DENGAN TOOLBAR RSGM -->
+      <div class="panel-heading rsgm-panel-head" style="background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 12px 20px;">
+        <h3 class="panel-title" style="font-size: 15px; font-weight: 700; color: #0f172a;">
+          <i class="fa fa-folder-open text-primary" style="font-size: 17px; margin-right: 4px;"></i>
+          <span>Lembar Kerja Rekam Medis Elektronik (RME)</span>
+          <span class="rsgm-code-chip" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-family: monospace; font-size: 11px; padding: 2px 7px; border-radius: 4px; margin-left: 6px;">
+            {$patient.no_rawat}
+          </span>
+        </h3>
+
+        <div class="rsgm-filter-bar" style="display: flex; align-items: center; gap: 8px;">
+          <a href="javascript:history.back()" class="btn btn-sm btn-default" style="font-weight: 600; border-radius: 6px;">
+            <i class="fa fa-arrow-left"></i> Kembali
+          </a>
+          <a href="{?=url([ADMIN, 'form_rme', 'cetakberkas'])?}&no_rawat={$patient.no_rawat}" target="_blank" class="btn btn-sm rsgm-fpill rsgm-fpill-pdf" style="font-weight: 700; border-radius: 6px; box-shadow: 0 1px 3px rgba(190,18,60,0.15);">
+            <i class="fa fa-print"></i> Cetak Berkas Rekam Medis (PDF)
+          </a>
+          <a href="" class="btn btn-sm btn-default" style="font-weight: 600; border-radius: 6px;" title="Segarkan status pengisian">
+            <i class="fa fa-refresh"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- 2. LUXURY PATIENT IDENTITY BANNER (STRIP REKAM MEDIS) -->
+      <div class="panel-body" style="padding: 16px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+        <div class="row" style="display: flex; flex-wrap: wrap; align-items: center; margin: 0;">
+
+          <!-- Kiri: Identitas Pasien -->
+          <div class="col-md-5 col-sm-12" style="padding: 0 15px 0 0; border-right: 1px dashed #cbd5e1;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(2,132,199,0.3);">
+                <i class="fa fa-user"></i>
+              </div>
+              <div>
+                <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+                  <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; letter-spacing: -0.2px;">
+                    {$patient.nm_pasien}
+                  </h3>
+                  <span class="label label-primary" style="font-size: 11px; padding: 2px 6px; font-family: monospace; border-radius: 4px;">
+                    RM: {$patient.no_rkm_medis}
+                  </span>
+                </div>
+                <div style="margin-top: 4px; font-size: 12px; color: #475569; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                  <span><i class="fa fa-venus-mars text-primary"></i> {$patient.jk_text} ({$patient.umur})</span>
+                  <span>&bull;</span>
+                  <span><i class="fa fa-calendar-o text-muted"></i> Lahir: {$patient.tgl_lahir}</span>
+                  <span>&bull;</span>
+                  <span class="rsgm-badge {if: $patient.png_jawab == 'BPJS'}rsgm-badge-indigo{else}rsgm-badge-slate{/if}" style="font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 4px;">
+                    {$patient.png_jawab}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tengah: Konteks Pelayanan & Dokter DPJP -->
+          <div class="col-md-4 col-sm-12" style="padding: 0 15px; border-right: 1px dashed #cbd5e1;">
+            <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12.5px;">
+              <div>
+                <span class="text-muted" style="font-size: 11px; text-transform: uppercase; font-weight: 600;">Unit / Poliklinik:</span>
+                <strong style="color: #0f172a; margin-left: 4px;">{$patient.ruangan}</strong>
+              </div>
+              <div>
+                <span class="text-muted" style="font-size: 11px; text-transform: uppercase; font-weight: 600;">Dokter DPJP:</span>
+                <strong style="color: #0369a1; margin-left: 4px;"><i class="fa fa-user-md"></i> {$patient.dokter}</strong>
+              </div>
+              <div style="font-size: 11.5px; color: #64748b;">
+                <i class="fa fa-clock-o text-muted"></i> Reg: {$patient.tgl_registrasi} {$patient.jam_reg}
+                {if: !empty($patient.diagnosa)}
+                &bull; <span style="color: #b91c1c; font-weight: 600;"><i class="fa fa-stethoscope"></i> {$patient.diagnosa}</span>
+                {/if}
+              </div>
+            </div>
+          </div>
+
+          <!-- Kanan: Progress Kelengkapan Formulir RME Unit -->
+          <div class="col-md-3 col-sm-12" style="padding: 0 0 0 15px;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px;">
+                <span style="font-size: 11.5px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.3px;">Kelengkapan RME</span>
+                <span style="font-size: 16px; font-weight: 800; color: {if: $completion_pct == 100}#059669{elseif: $completion_pct >= 50}#0284c7{else}#d97706{/if};">
+                  {$completion_pct}%
+                </span>
+              </div>
+              <div class="progress" style="height: 9px; margin-bottom: 6px; border-radius: 5px; background: #e2e8f0; box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);">
+                <div class="progress-bar {if: $completion_pct == 100}progress-bar-success{elseif: $completion_pct >= 50}progress-bar-info{else}progress-bar-warning{/if}" 
+                     role="progressbar" 
+                     aria-valuenow="{$completion_pct}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="100" 
+                     style="width: {$completion_pct}%; border-radius: 5px;">
+                </div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: #64748b;">
+                <span style="color: #059669;"><i class="fa fa-check-circle"></i> {$total_filled} Terisi</span>
+                <span style="color: #d97706;"><i class="fa fa-circle-o"></i> {$total_unfilled} Belum Diisi</span>
+                <span style="color: #0284c7;">Total: {$total_forms} Form</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 3. DUA TAB UTAMA: ALUR REKAM MEDIS & LEMBAR KERJA RME (SEGMENTED CONTROL RSGM) -->
+      <div class="rsgm-tabs-container" style="padding: 14px 20px 12px; background: #ffffff; border-bottom: 1px solid #e2e8f0;">
+        <ul class="nav nav-tabs rsgm-segmented-tabs" role="tablist">
+          <li role="presentation" class="active">
+            <a href="#tab-timeline" aria-controls="tab-timeline" role="tab" data-toggle="tab">
+              <i class="fa fa-history text-info" style="font-size: 14px;"></i>
+              <span>Alur Rekam Medis (Datang s/d Pulang)</span>
+            </a>
+          </li>
+          <li role="presentation">
+            <a href="#tab-forms" aria-controls="tab-forms" role="tab" data-toggle="tab">
+              <i class="fa fa-th-large text-primary" style="font-size: 14px;"></i>
+              <span>Lembar Kerja Formulir RME Unit</span>
+              <span class="badge">{$total_filled}/{$total_forms}</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 4. TAB CONTENTS CONTAINER -->
+      <div class="panel-body" style="padding: 20px; background: #ffffff;">
+        <div class="tab-content">
+
+          <!-- ======================================================== -->
+          <!-- TAB 1: ALUR REKAM MEDIS (TIMELINE DATANG S/D PULANG)     -->
+          <!-- ======================================================== -->
+          <div role="tabpanel" class="tab-pane active" id="tab-timeline">
+
+            <!-- 4-ETAPE PIPELINE HEADER -->
+            <div class="row" style="margin-bottom: 25px;">
+              <div class="col-md-3 col-sm-6" style="margin-bottom: 10px;">
+                <div style="background: #ffffff; border: 1px solid #bfdbfe; border-left: 4px solid #2563eb; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(15,23,42,0.04);">
+                  <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #2563eb;">1. Admisi & Kedatangan</div>
+                  <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 4px;">{$patient.tgl_registrasi}</div>
+                  <div style="font-size: 11px; color: #64748b; margin-top: 2px;">{$patient.ruangan} &bull; {$patient.png_jawab}</div>
+                </div>
+              </div>
+              <div class="col-md-3 col-sm-6" style="margin-bottom: 10px;">
+                <div style="background: #ffffff; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(15,23,42,0.04);">
+                  <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #16a34a;">2. Asesmen & CPPT</div>
+                  <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 4px;">{$timeline.total_soap} Catatan SOAPIE</div>
+                  <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Vital Signs & Pemeriksaan Terintegrasi</div>
+                </div>
+              </div>
+              <div class="col-md-3 col-sm-6" style="margin-bottom: 10px;">
+                <div style="background: #ffffff; border: 1px solid #fed7aa; border-left: 4px solid #ea580c; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(15,23,42,0.04);">
+                  <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #ea580c;">3. Prosedur & Terapi</div>
+                  <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 4px;">{$timeline.total_tindakan} Tindakan &bull; {$timeline.total_resep} Resep</div>
+                  <div style="font-size: 11px; color: #64748b; margin-top: 2px;">{$timeline.total_diagnosa} ICD-10 &bull; {$timeline.total_prosedur} ICD-9</div>
+                </div>
+              </div>
+              <div class="col-md-3 col-sm-6" style="margin-bottom: 10px;">
+                <div style="background: #ffffff; border: 1px solid #e9d5ff; border-left: 4px solid #9333ea; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(15,23,42,0.04);">
+                  <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #9333ea;">4. RME & Kepulangan</div>
+                  <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 4px;">{$total_filled} Form RME Terisi</div>
+                  <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Status: {if: !empty($timeline.reg.stts)}{$timeline.reg.stts}{else}Sudah Selesai{/if}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CHRONOLOGICAL TIMELINE FEED -->
+            <div class="rme-timeline-container" style="position: relative; padding-left: 40px; margin-top: 15px;">
+              <div style="position: absolute; left: 16px; top: 10px; bottom: 10px; width: 3px; background: #e2e8f0; border-radius: 2px;"></div>
+
+              <!-- NODE 1: ADMISI -->
+              <div class="rme-timeline-node" style="position: relative; margin-bottom: 25px;">
+                <div style="position: absolute; left: -34px; top: 0; width: 22px; height: 22px; border-radius: 50%; background: #2563eb; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 11px; box-shadow: 0 0 0 4px #dbeafe;">
+                  <i class="fa fa-sign-in"></i>
+                </div>
+                <div class="panel panel-default" style="border-radius: 8px; border: 1px solid #bfdbfe; margin-bottom: 0;">
+                  <div class="panel-heading" style="background: #eff6ff; border-bottom: 1px solid #dbeafe; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 800; font-size: 13px; color: #1e40af;">
+                      <i class="fa fa-calendar-check-o text-primary"></i> 1. KEDATANGAN & ADMISI PASIEN
+                    </span>
+                    <span class="label label-primary" style="font-size: 11px;">
+                      {$patient.tgl_registrasi} {if: !empty($timeline.reg.jam_reg)}{$timeline.reg.jam_reg}{/if}
+                    </span>
+                  </div>
+                  <div class="panel-body" style="padding: 14px 16px;">
+                    <div class="row">
+                      <div class="col-md-3 col-sm-6">
+                        <span class="text-muted" style="font-size: 11px;">Poliklinik / Ruangan:</span>
+                        <div style="font-weight: 700; color: #0f172a; font-size: 13px;">{$patient.ruangan}</div>
+                      </div>
+                      <div class="col-md-3 col-sm-6">
+                        <span class="text-muted" style="font-size: 11px;">DPJP / Dokter Pemeriksa:</span>
+                        <div style="font-weight: 700; color: #0f172a; font-size: 13px;">{$patient.dokter}</div>
+                      </div>
+                      <div class="col-md-3 col-sm-6">
+                        <span class="text-muted" style="font-size: 11px;">Penjamin:</span>
+                        <div style="font-weight: 700; color: #0f172a; font-size: 13px;">{$patient.png_jawab}</div>
+                      </div>
+                      <div class="col-md-3 col-sm-6">
+                        <span class="text-muted" style="font-size: 11px;">Status Pelayanan:</span>
+                        <div style="font-weight: 700; color: #0f172a; font-size: 13px;">
+                          {if: !empty($timeline.reg.stts_daftar)}{$timeline.reg.stts_daftar}{else}Lama{/if} &bull; {if: !empty($timeline.reg.status_lanjut)}{$timeline.reg.status_lanjut}{else}Ralan{/if}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- NODE 2: CPPT / SOAPIE & TTV -->
+              <div class="rme-timeline-node" style="position: relative; margin-bottom: 25px;">
+                <div style="position: absolute; left: -34px; top: 0; width: 22px; height: 22px; border-radius: 50%; background: #16a34a; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 11px; box-shadow: 0 0 0 4px #dcfce7;">
+                  <i class="fa fa-stethoscope"></i>
+                </div>
+                <div class="panel panel-default" style="border-radius: 8px; border: 1px solid #bbf7d0; margin-bottom: 0;">
+                  <div class="panel-heading" style="background: #f0fdf4; border-bottom: 1px solid #dcfce7; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 800; font-size: 13px; color: #166534;">
+                      <i class="fa fa-pencil-square-o text-success"></i> 2. CATATAN PERKEMBANGAN PASIEN TERINTEGRASI (CPPT / SOAPIE)
+                    </span>
+                    <span class="label label-success" style="font-size: 11px;">{$timeline.total_soap} Catatan</span>
+                  </div>
+                  <div class="panel-body" style="padding: 14px 16px;">
+                    {if: empty($timeline.soap)}
+                      <p class="text-muted" style="margin: 0; font-style: italic;">Belum ada entri catatan SOAPIE untuk kunjungan ini.</p>
+                    {else}
+                      {loop: $timeline.soap as $s}
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 7px; padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+                          <div>
+                            <span class="label label-info" style="font-size: 10px;">{$s.unit_layanan}</span>
+                            <strong style="color: #0f172a; font-size: 12.5px; margin-left: 6px;">🕒 {$s.tgl_perawatan} {$s.jam_rawat}</strong>
+                          </div>
+                          <div style="font-size: 11.5px; color: #0284c7; font-weight: 700;">
+                            <i class="fa fa-user-circle-o"></i> Pemeriksa: {if: !empty($s.petugas)}{$s.petugas}{else}{$s.nip}{/if}
+                          </div>
+                        </div>
+
+                        <!-- Vital Signs Strip -->
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; background: #f8fafc; border: 1px solid #edf2f7; border-radius: 5px; padding: 6px 10px; margin-bottom: 10px; font-size: 11px;">
+                          <span>TD: <strong style="color: #0284c7;">{$s.tensi} mmHg</strong></span>
+                          <span style="color: #cbd5e1;">|</span>
+                          <span>Nadi: <strong style="color: #0284c7;">{$s.nadi} x/m</strong></span>
+                          <span style="color: #cbd5e1;">|</span>
+                          <span>Suhu: <strong style="color: #0284c7;">{$s.suhu_tubuh} °C</strong></span>
+                          <span style="color: #cbd5e1;">|</span>
+                          <span>RR: <strong style="color: #0284c7;">{$s.respirasi} x/m</strong></span>
+                          {if: !empty($s.spo2)}
+                          <span style="color: #cbd5e1;">|</span>
+                          <span>SpO2: <strong style="color: #059669;">{$s.spo2}%</strong></span>
+                          {/if}
+                          {if: !empty($s.berat)}
+                          <span style="color: #cbd5e1;">|</span>
+                          <span>BB/TB: <strong>{$s.berat} kg / {$s.tinggi} cm</strong></span>
+                          {/if}
+                        </div>
+
+                        <!-- SOAP Details -->
+                        <div style="font-size: 12px; display: flex; flex-direction: column; gap: 4px;">
+                          {if: !empty($s.keluhan)}
+                          <div><span class="label label-primary" style="width: 24px; display: inline-block; text-align: center;">S</span> <strong>Subjektif:</strong> {$s.keluhan}</div>
+                          {/if}
+                          {if: !empty($s.pemeriksaan)}
+                          <div><span class="label label-info" style="width: 24px; display: inline-block; text-align: center;">O</span> <strong>Objektif:</strong> {$s.pemeriksaan}</div>
+                          {/if}
+                          {if: !empty($s.penilaian)}
+                          <div><span class="label label-warning" style="width: 24px; display: inline-block; text-align: center;">A</span> <strong>Asesmen:</strong> {$s.penilaian}</div>
+                          {/if}
+                          {if: !empty($s.rtl)}
+                          <div><span class="label label-success" style="width: 24px; display: inline-block; text-align: center;">P</span> <strong>Planning:</strong> {$s.rtl}</div>
+                          {/if}
+                          {if: !empty($s.instruksi)}
+                          <div style="color: #be123c;"><strong>Instruksi:</strong> {$s.instruksi}</div>
+                          {/if}
+                          {if: !empty($s.evaluasi)}
+                          <div style="color: #15803d;"><strong>Evaluasi:</strong> {$s.evaluasi}</div>
+                          {/if}
+                        </div>
+                      </div>
+                      {/loop}
+                    {/if}
+                  </div>
+                </div>
+              </div>
+
+              <!-- NODE 3: DOKUMEN FORMULIR RME TERISI (CLINICAL DOSSIER CARDS GRID 3-KOLOM) -->
+              {if: !empty($filled_forms)}
+              <div class="rme-timeline-node" style="position: relative; margin-bottom: 25px;">
+                <div style="position: absolute; left: -34px; top: 0; width: 22px; height: 22px; border-radius: 50%; background: #0284c7; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 11px; box-shadow: 0 0 0 4px #e0f2fe;">
+                  <i class="fa fa-file-text-o"></i>
+                </div>
+                <div class="panel panel-default" style="border-radius: 8px; border: 1px solid #bae6fd; margin-bottom: 0; background: #ffffff;">
+                  <div class="panel-heading" style="background: #f0f9ff; border-bottom: 1px solid #e0f2fe; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div>
+                      <span style="font-weight: 800; font-size: 13px; color: #0369a1;">
+                        <i class="fa fa-folder-open text-primary"></i> 3. FORMULIR REKAM MEDIS ELEKTRONIK TERISI ({?=count($filled_forms)?} DOKUMEN)
+                      </span>
+                      <span class="label label-info" style="font-size: 10.5px; margin-left: 6px; font-weight: 700; border-radius: 4px;">Tervalidasi & Siap Cetak</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <a href="{?=url([ADMIN, 'form_rme', 'cetakberkas'])?}&no_rawat={$patient.no_rawat}" target="_blank" class="btn btn-xs btn-success" style="font-weight: 700; border-radius: 5px; box-shadow: 0 1px 3px rgba(16,185,129,0.2);">
+                        <i class="fa fa-print"></i> Cetak Berkas Lengkap
+                      </a>
+                      <a href="#tab-forms" data-toggle="tab" class="btn btn-xs btn-primary" style="font-weight: 700; border-radius: 5px;">
+                        <i class="fa fa-th-large"></i> Meja Kerja RME ({$total_filled}/{$total_forms})
+                      </a>
+                    </div>
+                  </div>
+
+                  <div class="panel-body" style="padding: 16px; background: #f8fafc;">
+                    <div class="row" style="margin: -6px;">
+                      {loop: $filled_forms as $ff}
+                      <div class="col-md-4 col-sm-6" style="padding: 6px;">
+                        <div class="rsgm-dossier-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 3.5px solid #0284c7; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(15,23,42,0.04); display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-height: 118px; transition: all 0.15s ease;">
+                          
+                          <!-- Card Top Row: Chip Kode & Badge Status -->
+                          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-family: monospace; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
+                              {$ff.kode_form}
+                            </span>
+                            <span class="rsgm-badge rsgm-badge-emerald" style="font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 4px;">
+                              <i class="fa fa-check"></i> Terisi {if: $ff.fill_count > 1}({$ff.fill_count}x){/if}
+                            </span>
+                          </div>
+
+                          <!-- Card Title: Nama Formulir Bersih Tanpa Redundansi Kode -->
+                          <div style="flex-grow: 1; margin-bottom: 10px;">
+                            <h5 style="margin: 0; font-size: 12.5px; font-weight: 700; color: #0f172a; line-height: 1.38;" title="{$ff.nama_form}">
+                              {?=str_replace($ff.kode_form . ' - ', '', $ff.nama_form)?}
+                            </h5>
+                            {if: !empty($ff.last_entry)}
+                            <div style="font-size: 10.5px; color: #64748b; margin-top: 5px;">
+                              <i class="fa fa-clock-o text-muted"></i> {?=isset_or($ff.last_entry.tanggal, isset_or($ff.last_entry.tanggal_jam, isset_or($ff.last_entry.tgl_surat, isset_or($ff.last_entry.waktu_mulai, 'Tercatat'))))?}
+                              {if: !empty($ff.last_entry.dokter_nama) || !empty($ff.last_entry.operator) || !empty($ff.last_entry.pemberi_informasi)}
+                              &bull; <i class="fa fa-user-md text-info"></i> {?=isset_or($ff.last_entry.dokter_nama, isset_or($ff.last_entry.operator, isset_or($ff.last_entry.pemberi_informasi, '')))?}
+                              {/if}
+                            </div>
+                            {/if}
+                          </div>
+
+                          <!-- Card Action Toolbar: Soft Pill Buttons Elegan -->
+                          <div style="display: flex; align-items: center; justify-content: flex-end; gap: 5px; padding-top: 8px; border-top: 1px solid #f1f5f9;">
+                            <button type="button" class="btn btn-xs rsgm-btn-soft-info" onclick="openDocModal('{$ff.url_cetak}', '{$ff.kode_form} - {$ff.nama_form}')" title="Pratinjau Dokumen">
+                              <i class="fa fa-eye"></i> Pratinjau
+                            </button>
+                            <a href="{$ff.url_form}" target="_blank" class="btn btn-xs rsgm-btn-soft-primary" title="Buka / Edit Dokumen Ini">
+                              <i class="fa fa-pencil"></i> Edit
+                            </a>
+                            <a href="{$ff.url_cetak}" target="_blank" class="btn btn-xs rsgm-btn-soft-success" title="Cetak Formulir PDF">
+                              <i class="fa fa-print"></i> Cetak
+                            </a>
+                          </div>
+
+                        </div>
+                      </div>
+                      {/loop}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/if}
+
+              <!-- NODE 4: TINDAKAN & PERAWATAN (JIKA ADA) -->
+              {if: !empty($timeline.tindakan)}
+              <div class="rme-timeline-node" style="position: relative; margin-bottom: 25px;">
+                <div style="position: absolute; left: -34px; top: 0; width: 22px; height: 22px; border-radius: 50%; background: #d97706; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 11px; box-shadow: 0 0 0 4px #fef3c7;">
+                  <i class="fa fa-hand-holding-medical"></i>
+                </div>
+                <div class="panel panel-default" style="border-radius: 8px; border: 1px solid #fde68a; margin-bottom: 0;">
+                  <div class="panel-heading" style="background: #fffbeb; border-bottom: 1px solid #fef3c7; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 800; font-size: 13px; color: #b45309;">
+                      <i class="fa fa-hand-holding-medical text-warning"></i> 4. TINDAKAN & PERAWATAN KLINIS ({$timeline.total_tindakan})
+                    </span>
+                  </div>
+                  <div class="panel-body" style="padding: 10px 16px;">
+                    <table class="table table-condensed table-striped" style="margin: 0; font-size: 12px;">
+                      <thead>
+                        <tr style="background: #f8fafc;">
+                          <th>Waktu</th>
+                          <th>Nama Tindakan / Prosedur</th>
+                          <th>Pelaksana</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {loop: $timeline.tindakan as $t}
+                        <tr>
+                          <td>{$t.tgl_perawatan} {$t.jam_rawat}</td>
+                          <td><strong>{$t.nm_perawatan}</strong></td>
+                          <td>{$t.pelaksana} ({$t.peran})</td>
+                        </tr>
+                        {/loop}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              {/if}
+
+              <!-- NODE 5: PEMERIKSAAN PENUNJANG (LAB & RAD) JIKA ADA -->
+              {if: !empty($timeline.lab) || !empty($timeline.radiologi)}
+              <div class="rme-timeline-node" style="position: relative; margin-bottom: 25px;">
+                <div style="position: absolute; left: -34px; top: 0; width: 22px; height: 22px; border-radius: 50%; background: #059669; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 11px; box-shadow: 0 0 0 4px #a7f3d0;">
+                  <i class="fa fa-flask"></i>
+                </div>
+                <div class="panel panel-default" style="border-radius: 8px; border: 1px solid #a7f3d0; margin-bottom: 0;">
+                  <div class="panel-heading" style="background: #ecfdf5; border-bottom: 1px solid #d1fae5; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 800; font-size: 13px; color: #047857;">
+                      <i class="fa fa-flask text-success"></i> 5. HASIL PEMERIKSAAN PENUNJANG (LAB & RADIOLOGI)
+                    </span>
+                  </div>
+                  <div class="panel-body" style="padding: 14px 16px;">
+                    {loop: $timeline.lab as $l}
+                    <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 8px;">
+                      <strong>{$l.nm_perawatan}</strong> <span class="text-muted">({$l.tgl_periksa} {$l.jam})</span>
+                      {if: !empty($l.details)}
+                      <table class="table table-condensed table-bordered" style="margin-top: 4px; font-size: 11px;">
+                        {loop: $l.details as $ld}
+                        <tr>
+                          <td>{$ld.Pemeriksaan}</td>
+                          <td style="font-weight: 700; color: #0284c7;">{$ld.nilai} {$ld.satuan}</td>
+                          <td>{$ld.nilai_rujukan}</td>
+                        </tr>
+                        {/loop}
+                      </table>
+                      {/if}
+                    </div>
+                    {/loop}
+                    {loop: $timeline.radiologi as $r}
+                    <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 8px;">
+                      <strong>{$r.nm_perawatan}</strong> <span class="text-muted">({$r.tgl_periksa} {$r.jam})</span>
+                      <div style="background: #f8fafc; padding: 6px 8px; margin-top: 4px; font-size: 11.5px; border-radius: 4px;">
+                        <strong>Ekspertise:</strong> {if: !empty($r.hasil_ekspertise)}{?=nl2br($r.hasil_ekspertise)?}{else}<i>Belum ada hasil tertulis.</i>{/if}
+                      </div>
+                    </div>
+                    {/loop}
+                  </div>
+                </div>
+              </div>
+              {/if}
+
+              <!-- NODE 6: RESEP OBAT (JIKA ADA) -->
+              {if: !empty($timeline.resep)}
+              <div class="rme-timeline-node" style="position: relative; margin-bottom: 25px;">
+                <div style="position: absolute; left: -34px; top: 0; width: 22px; height: 22px; border-radius: 50%; background: #be185d; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 11px; box-shadow: 0 0 0 4px #fce7f3;">
+                  <i class="fa fa-pills"></i>
+                </div>
+                <div class="panel panel-default" style="border-radius: 8px; border: 1px solid #fbcfe8; margin-bottom: 0;">
+                  <div class="panel-heading" style="background: #fdf2f8; border-bottom: 1px solid #fce7f3; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 800; font-size: 13px; color: #9d174d;">
+                      <i class="fa fa-medkit text-danger"></i> 6. TERAPI & RESEP OBAT (FARMASI) ({$timeline.total_resep})
+                    </span>
+                  </div>
+                  <div class="panel-body" style="padding: 14px 16px;">
+                    {loop: $timeline.resep as $ro}
+                    <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 8px;">
+                      <div style="display: flex; justify-content: space-between; font-size: 11.5px; margin-bottom: 4px;">
+                        <span>No. Resep: <strong>{$ro.no_resep}</strong> ({$ro.tgl_peresepan})</span>
+                        <span class="text-muted"><i class="fa fa-user-md"></i> {$ro.nm_dokter}</span>
+                      </div>
+                      {if: !empty($ro.items)}
+                      <table class="table table-condensed table-bordered" style="margin: 0; font-size: 11.5px;">
+                        <tr style="background: #f8fafc;">
+                          <th>Nama Obat</th>
+                          <th style="width: 70px; text-align: center;">Jumlah</th>
+                          <th>Aturan Pakai</th>
+                        </tr>
+                        {loop: $ro.items as $it}
+                        <tr>
+                          <td><strong>{$it.nama_brng}</strong></td>
+                          <td style="text-align: center;">{$it.jml} {$it.kode_sat}</td>
+                          <td style="color: #0369a1; font-weight: 600;">{$it.aturan_pakai}</td>
+                        </tr>
+                        {/loop}
+                      </table>
+                      {/if}
+                    </div>
+                    {/loop}
+                  </div>
+                </div>
+              </div>
+              {/if}
+
+              <!-- NODE 7 / KESIMPULAN: DIAGNOSA, PROSEDUR & KEPULANGAN PASIEN (SIDE-BY-SIDE 2-KOLOM EFISIEN & MEWAH) -->
+              <div class="rme-timeline-node" style="position: relative; margin-bottom: 15px;">
+                <div style="position: absolute; left: -34px; top: 0; width: 22px; height: 22px; border-radius: 50%; background: #0891b2; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 11px; box-shadow: 0 0 0 4px #cffafe;">
+                  <i class="fa fa-check-square-o"></i>
+                </div>
+
+                <div class="row" style="display: flex; flex-wrap: wrap; margin: 0 -6px;">
+                  
+                  <!-- SISI KIRI (7/12): DIAGNOSA (ICD-10) & PROSEDUR MEDIS (ICD-9 CM) -->
+                  <div class="col-md-7 col-sm-12" style="padding: 0 6px; margin-bottom: 12px; display: flex; flex-direction: column;">
+                    <div class="panel panel-default" style="border-radius: 8px; border: 1px solid #bae6fd; flex-grow: 1; margin-bottom: 0; background: #ffffff; box-shadow: 0 1px 3px rgba(15,23,42,0.04); display: flex; flex-direction: column;">
+                      <div class="panel-heading" style="background: #f0f9ff; border-bottom: 1px solid #e0f2fe; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 800; font-size: 12.5px; color: #0369a1;">
+                          <i class="fa fa-stethoscope text-primary"></i> Diagnosa (ICD-10) & Prosedur (ICD-9 CM)
+                        </span>
+                        <span class="label label-info" style="font-size: 10.5px; font-weight: 700; border-radius: 4px;">
+                          {$timeline.total_diagnosa} Diagnosa &bull; {$timeline.total_prosedur} Prosedur
+                        </span>
+                      </div>
+                      
+                      <div class="panel-body" style="padding: 12px 14px; flex-grow: 1;">
+                        
+                        <!-- Diagnosa ICD-10 -->
+                        <div style="margin-bottom: 12px;">
+                          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.3px; margin-bottom: 5px;">
+                            <i class="fa fa-heartbeat text-danger"></i> Diagnosa Penyakit (ICD-10):
+                          </div>
+                          {if: empty($timeline.diagnosa)}
+                            <div style="font-size: 11.5px; color: #94a3b8; font-style: italic; background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px dashed #e2e8f0;">
+                              Belum ada diagnosa ICD-10 tercatat.
+                            </div>
+                          {else}
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                              {loop: $timeline.diagnosa as $d}
+                              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                                  <span class="label {if: $d.prioritas == 1}label-danger{else}label-default{/if}" style="font-family: monospace; font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 3px;">
+                                    {$d.kd_penyakit}
+                                  </span>
+                                  <span style="font-weight: 700; font-size: 12px; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    {$d.nm_penyakit}
+                                  </span>
+                                </div>
+                                <span class="badge" style="background: {if: $d.prioritas == 1}#fee2e2; color: #991b1b{else}#f1f5f9; color: #475569{/if}; font-size: 10px; font-weight: 700; padding: 2px 6px; flex-shrink: 0;">
+                                  {if: $d.prioritas == 1}Primer{else}Sekunder ({$d.prioritas}){/if}
+                                </span>
+                              </div>
+                              {/loop}
+                            </div>
+                          {/if}
+                        </div>
+
+                        <!-- Prosedur ICD-9 CM -->
+                        <div>
+                          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.3px; margin-bottom: 5px;">
+                            <i class="fa fa-medkit text-info"></i> Prosedur Medis (ICD-9 CM):
+                          </div>
+                          {if: empty($timeline.prosedur)}
+                            <div style="font-size: 11.5px; color: #94a3b8; font-style: italic; background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px dashed #e2e8f0;">
+                              Belum ada prosedur ICD-9 CM tercatat.
+                            </div>
+                          {else}
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                              {loop: $timeline.prosedur as $p}
+                              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; display: flex; align-items: center; gap: 8px;">
+                                <span class="label label-primary" style="font-family: monospace; font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 3px; background-color: #0369a1;">
+                                  {$p.kode}
+                                </span>
+                                <span style="font-weight: 700; font-size: 12px; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                  {$p.deskripsi_panjang}
+                                </span>
+                              </div>
+                              {/loop}
+                            </div>
+                          {/if}
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- SISI KANAN (5/12): STATUS AKHIR & KEPULANGAN -->
+                  <div class="col-md-5 col-sm-12" style="padding: 0 6px; margin-bottom: 12px; display: flex; flex-direction: column;">
+                    <div class="panel panel-default" style="border-radius: 8px; border: 1px solid #e9d5ff; flex-grow: 1; margin-bottom: 0; background: #ffffff; box-shadow: 0 1px 3px rgba(15,23,42,0.04); display: flex; flex-direction: column; justify-content: space-between;">
+                      <div class="panel-heading" style="background: #faf5ff; border-bottom: 1px solid #f3e8ff; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 800; font-size: 12.5px; color: #7e22ce;">
+                          <i class="fa fa-flag-checkered text-purple"></i> Status Kepulangan & Kasir
+                        </span>
+                        <span class="label" style="background: #9333ea; color: #ffffff; font-size: 10.5px; font-weight: 700; border-radius: 4px;">
+                          Episode Kunjungan
+                        </span>
+                      </div>
+                      
+                      <div class="panel-body" style="padding: 14px; flex-grow: 1;">
+                        <div style="display: flex; flex-direction: column; gap: 9px;">
+                          
+                          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #f1f5f9; padding: 8px 12px; border-radius: 6px;">
+                            <span style="font-size: 11.5px; color: #64748b; font-weight: 600;">Status Pelayanan:</span>
+                            <span class="label {if: $timeline.reg.stts == 'Sudah'}label-success{else}label-warning{/if}" style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px;">
+                              {if: !empty($timeline.reg.stts)}{$timeline.reg.stts}{else}Belum{/if}
+                            </span>
+                          </div>
+
+                          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #f1f5f9; padding: 8px 12px; border-radius: 6px;">
+                            <span style="font-size: 11.5px; color: #64748b; font-weight: 600;">Status Kasir / Billing:</span>
+                            <span class="label {if: $timeline.reg.status_bayar == 'Sudah Bayar'}label-success{else}label-danger{/if}" style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px;">
+                              {if: !empty($timeline.reg.status_bayar)}{$timeline.reg.status_bayar}{else}Belum Bayar{/if}
+                            </span>
+                          </div>
+
+                          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #f1f5f9; padding: 8px 12px; border-radius: 6px;">
+                            <span style="font-size: 11.5px; color: #64748b; font-weight: 600;">Penjamin Pasien:</span>
+                            <span class="rsgm-badge {if: $patient.png_jawab == 'BPJS'}rsgm-badge-indigo{else}rsgm-badge-slate{/if}" style="font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 4px;">
+                              {$patient.png_jawab}
+                            </span>
+                          </div>
+
+                        </div>
+                      </div>
+
+                      <div style="padding: 10px 14px; background: #faf5ff; border-top: 1px solid #f3e8ff; border-radius: 0 0 8px 8px;">
+                        <a href="{?=url([ADMIN, 'form_rme', 'cetakberkas'])?}&no_rawat={$patient.no_rawat}" target="_blank" class="btn btn-sm btn-block btn-success" style="font-weight: 700; border-radius: 6px; box-shadow: 0 1px 3px rgba(16,185,129,0.2);">
+                          <i class="fa fa-print"></i> Cetak Berkas Rekam Medis (PDF)
+                        </a>
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- ======================================================== -->
+          <!-- TAB 2: LEMBAR KERJA FORMULIR RME UNIT                    -->
+          <!-- ======================================================== -->
+          <div role="tabpanel" class="tab-pane" id="tab-forms">
+
+            <!-- FILTER, SEARCH & TOOLBAR COMPACT -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+              
+              <!-- Filter Pills Status -->
+              <div class="rsgm-filter-pills" id="btnGroupStatusFilter" style="display: flex; align-items: center; gap: 4px;">
+                <button type="button" class="btn btn-sm rsgm-fpill rsgm-fpill-all active" data-filter-status="all">
+                  Semua ({$total_forms})
+                </button>
+                <button type="button" class="btn btn-sm rsgm-fpill rsgm-fpill-done" data-filter-status="filled">
+                  <i class="fa fa-check-circle"></i> Terisi ({$total_filled})
+                </button>
+                <button type="button" class="btn btn-sm rsgm-fpill rsgm-fpill-pending" data-filter-status="unfilled">
+                  <i class="fa fa-circle-o"></i> Belum Diisi ({$total_unfilled})
+                </button>
+              </div>
+
+              <!-- Quick Search Input -->
+              <div style="min-width: 240px; max-width: 360px; flex-grow: 1;">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-addon" style="background: #ffffff; border-color: #cbd5e1; color: #94a3b8;"><i class="fa fa-search"></i></span>
+                  <input type="text" id="inputFilterRme" class="form-control" placeholder="Cari kode atau nama formulir..." style="height: 30px; border-color: #cbd5e1; font-size: 12px;">
+                  <span class="input-group-btn">
+                    <button class="btn btn-default" type="button" id="btnClearSearch" title="Reset pencarian" style="height: 30px; border-color: #cbd5e1;"><i class="fa fa-times text-muted"></i></button>
+                  </span>
+                </div>
+              </div>
+
+              <!-- View Switcher -->
+              <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-default active" id="btnViewTable" title="Tampilan Tabel Standar RSGM">
+                  <i class="fa fa-list"></i> Tabel
+                </button>
+                <button type="button" class="btn btn-default" id="btnViewCards" title="Tampilan Kartu Elegan">
+                  <i class="fa fa-th"></i> Kartu
+                </button>
+              </div>
+
+            </div>
+
+            <!-- CONTAINER TAMPILAN TABEL STANDAR RSGM -->
+            <div id="viewContainerTable" class="table-responsive" style="margin-bottom: 25px;">
+              <table class="table table-hover table-bordered rsgm-table-workbench" style="background: #ffffff; border-radius: 8px; overflow: hidden; margin-bottom: 0;">
+                <thead>
+                  <tr style="background: #f1f5f9; color: #1e293b; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">
+                    <th style="width: 40px; text-align: center;">No</th>
+                    <th style="width: 80px; text-align: center;">Kode</th>
+                    <th>Nama Formulir Rekam Medis</th>
+                    <th style="width: 130px; text-align: center;">Kategori</th>
+                    <th style="width: 125px; text-align: center;">Status</th>
+                    <th style="width: 160px;">Entri Terakhir</th>
+                    <th style="width: 110px; text-align: center;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loop: $forms as $idx => $f}
+                  <tr class="rme-row-item {if: $f.is_filled}rsgm-row-filled{else}rsgm-row-empty{/if}" 
+                      data-status="{if: $f.is_filled}filled{else}unfilled{/if}" 
+                      data-search="{?=strtolower($f.kode_form)?} {?=strtolower($f.nama_form)?} {?=strtolower($f.kategori)?}">
+                    
+                    <td style="text-align: center; color: #64748b; font-weight: 600; font-size: 11px;">
+                      {?=$idx + 1?}
+                    </td>
+
+                    <td style="text-align: center;">
+                      <span class="rsgm-code-chip" style="font-family: monospace; font-weight: 800; font-size: 10.5px; padding: 2px 6px; border-radius: 4px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
+                        {$f.kode_form}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div style="font-weight: 700; font-size: 12.5px; color: #0f172a;">
+                        {$f.nama_form}
+                      </div>
+                      {if: !empty($f.catatan)}
+                      <div style="font-size: 10.5px; color: #64748b; margin-top: 1px;">
+                        {$f.catatan}
+                      </div>
+                      {/if}
+                    </td>
+
+                    <td style="text-align: center;">
+                      <span class="badge" style="background: #e2e8f0; color: #334155; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px;">
+                        {$f.kategori}
+                      </span>
+                    </td>
+
+                    <td style="text-align: center;">
+                      {if: $f.is_filled}
+                      <span class="rsgm-badge rsgm-badge-emerald" style="font-size: 10.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
+                        <i class="fa fa-check"></i> Terisi {if: $f.fill_count > 1}({$f.fill_count}x){/if}
+                      </span>
+                      {else}
+                      <span class="rsgm-badge rsgm-badge-amber" style="font-size: 10.5px; font-weight: 600; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
+                        <i class="fa fa-circle-o"></i> Belum
+                      </span>
+                      {/if}
+                    </td>
+
+                    <td style="font-size: 11px; color: #475569;">
+                      {if: $f.is_filled && !empty($f.last_entry)}
+                      <div><i class="fa fa-clock-o text-success"></i> <strong>{?=isset_or($f.last_entry.tanggal, isset_or($f.last_entry.tanggal_jam, isset_or($f.last_entry.tgl_surat, isset_or($f.last_entry.waktu_mulai, 'Tercatat'))))?}</strong></div>
+                      {if: !empty($f.last_entry.dokter_nama) || !empty($f.last_entry.operator) || !empty($f.last_entry.pemberi_informasi)}
+                      <div class="rsgm-cell-sub" style="color: #64748b; font-size: 10.5px;">
+                        <i class="fa fa-user-md"></i> {?=isset_or($f.last_entry.dokter_nama, isset_or($f.last_entry.operator, isset_or($f.last_entry.pemberi_informasi, '')))?}
+                      </div>
+                      {/if}
+                      {else}
+                      <span class="text-muted" style="font-style: italic;">Belum ada entri</span>
+                      {/if}
+                    </td>
+
+                    <!-- AKSI MEDIS ULTRA-RINGKAS (TIDAK MAKAN TEMPAT) -->
+                    <td style="text-align: center; white-space: nowrap;">
+                      {if: $f.is_filled}
+                      <div class="btn-group btn-group-xs" role="group">
+                        <button type="button" class="btn btn-info" onclick="openDocModal('{$f.url_cetak}', '{$f.kode_form} - {$f.nama_form}')" title="Pratinjau Dokumen">
+                          <i class="fa fa-eye"></i>
+                        </button>
+                        <a href="{$f.url_form}" target="_blank" class="btn btn-primary" title="Buka / Edit Formulir Pasien Ini">
+                          <i class="fa fa-pencil"></i>
+                        </a>
+                        <a href="{$f.url_cetak}" target="_blank" class="btn btn-success" title="Cetak Dokumen">
+                          <i class="fa fa-print"></i>
+                        </a>
+                      </div>
+                      {else}
+                      <a href="{$f.url_form}" target="_blank" class="btn btn-xs btn-success" style="font-weight: 600; padding: 2px 7px;">
+                        <i class="fa fa-plus"></i> Isi
+                      </a>
+                      {/if}
+                    </td>
+
+                  </tr>
+                  {/loop}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- CONTAINER TAMPILAN KARTU (CARD VIEW ALTERNATIF) -->
+            <div id="viewContainerCards" style="display: none; margin-bottom: 25px;">
+              <div class="row">
+                {loop: $forms as $f}
+                <div class="col-md-4 col-sm-6 rme-card-item" 
+                     data-status="{if: $f.is_filled}filled{else}unfilled{/if}" 
+                     data-search="{?=strtolower($f.kode_form)?} {?=strtolower($f.nama_form)?} {?=strtolower($f.kategori)?}" 
+                     style="margin-bottom: 14px;">
+                  
+                  <div style="background: #ffffff; border: 1px solid {if: $f.is_filled}#86efac{else}#e2e8f0{/if}; border-left: 4px solid {if: $f.is_filled}#16a34a{else}#cbd5e1{/if}; border-radius: 8px; box-shadow: 0 1px 4px rgba(15,23,42,0.04); display: flex; flex-direction: column; justify-content: space-between; height: 100%; overflow: hidden;">
+                    
+                    <!-- Card Top Header -->
+                    <div style="padding: 8px 12px; background: {if: $f.is_filled}#f0fdf4{else}#f8fafc{/if}; border-bottom: 1px solid {if: $f.is_filled}#dcfce7{else}#f1f5f9{/if}; display: flex; justify-content: space-between; align-items: center;">
+                      <span class="rsgm-code-chip" style="font-family: monospace; font-weight: 800; font-size: 10.5px; padding: 1px 6px; border-radius: 3px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
+                        {$f.kode_form}
+                      </span>
+                      {if: $f.is_filled}
+                      <span class="rsgm-badge rsgm-badge-emerald" style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px;">
+                        <i class="fa fa-check"></i> Terisi
+                      </span>
+                      {else}
+                      <span class="rsgm-badge rsgm-badge-amber" style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 3px;">
+                        <i class="fa fa-circle-o"></i> Belum
+                      </span>
+                      {/if}
+                    </div>
+
+                    <!-- Card Body -->
+                    <div style="padding: 10px 12px; flex-grow: 1;">
+                      <span class="badge" style="background: #e2e8f0; color: #475569; font-size: 9.5px; font-weight: 600; padding: 1px 5px; margin-bottom: 4px;">
+                        {$f.kategori}
+                      </span>
+                      <h4 style="margin: 2px 0 6px; font-size: 12.5px; font-weight: 800; color: #0f172a; line-height: 1.35; min-height: 34px;">
+                        {$f.nama_form}
+                      </h4>
+                      {if: $f.is_filled && !empty($f.last_entry)}
+                      <div style="font-size: 10.5px; color: #059669;">
+                        <i class="fa fa-clock-o"></i> {?=isset_or($f.last_entry.tanggal, isset_or($f.last_entry.tanggal_jam, isset_or($f.last_entry.tgl_surat, 'Tercatat')))?}
+                      </div>
+                      {/if}
+                    </div>
+
+                    <!-- Card Footer Actions Compact -->
+                    <div style="padding: 8px 12px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 4px;">
+                      {if: $f.is_filled}
+                      <div class="btn-group btn-group-xs" role="group">
+                        <button type="button" class="btn btn-info" onclick="openDocModal('{$f.url_cetak}', '{$f.kode_form} - {$f.nama_form}')" title="Pratinjau Dokumen">
+                          <i class="fa fa-eye"></i> Pratinjau
+                        </button>
+                        <a href="{$f.url_form}" target="_blank" class="btn btn-primary" title="Edit Form">
+                          <i class="fa fa-pencil"></i> Edit
+                        </a>
+                        <a href="{$f.url_cetak}" target="_blank" class="btn btn-success" title="Cetak PDF">
+                          <i class="fa fa-print"></i> Cetak
+                        </a>
+                      </div>
+                      {else}
+                      <a href="{$f.url_form}" target="_blank" class="btn btn-xs btn-success btn-block" style="font-weight: 600;">
+                        <i class="fa fa-plus"></i> Isi Formulir
+                      </a>
+                      {/if}
+                    </div>
+
+                  </div>
+
+                </div>
+                {/loop}
+              </div>
+            </div>
+
+            <!-- Empty Search Results Notification -->
+            <div id="noSearchMatchAlert" class="alert alert-info" style="display: none; border-radius: 8px; text-align: center; padding: 20px; background: #f0f9ff; border: 1px solid #bae6fd;">
+              <i class="fa fa-search fa-2x text-primary" style="margin-bottom: 6px;"></i>
+              <h4 style="font-weight: 800; color: #0369a1; margin: 0 0 4px;">Tidak ada formulir yang cocok</h4>
+              <p class="text-muted" style="margin: 0; font-size: 12px;">Coba gunakan kata kunci kode atau nama lain, atau klik tombol reset pencarian.</p>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL HIGH-RES PRATINJAU DOKUMEN RME (MODAL-XL)          -->
+<!-- ======================================================== -->
+<div class="modal fade" id="modalDocPreview" tabindex="-1" role="dialog" aria-labelledby="modalDocPreviewTitle">
+  <div class="modal-dialog modal-xl" role="document" style="width: 94%; max-width: 1200px; margin: 25px auto;">
+    <div class="modal-content" style="border-radius: 10px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.25); border: none;">
+      
+      <div class="modal-header" style="background: #0f172a; color: #ffffff; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;">
+        <h4 class="modal-title" id="modalDocPreviewTitle" style="font-size: 14px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i class="fa fa-file-text-o text-primary"></i>
+          <span id="modalDocTitleText">Pratinjau Dokumen Formulir RME</span>
+        </h4>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <a href="#" id="modalDocPrintBtn" target="_blank" class="btn btn-sm btn-success" style="font-weight: 700;">
+            <i class="fa fa-print"></i> Cetak Dokumen Ini
+          </a>
+          <a href="#" id="modalDocExternalBtn" target="_blank" class="btn btn-sm btn-default" style="font-weight: 600;">
+            <i class="fa fa-external-link"></i> Tab Baru
+          </a>
+          <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal" aria-label="Close" style="font-weight: 700;">
+            <i class="fa fa-times"></i> Tutup
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="padding: 0; background: #e2e8f0; height: 78vh;">
+        <iframe id="modalDocIframe" src="" style="width: 100%; height: 100%; border: none; display: block; background: #ffffff;"></iframe>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- STYLING CSS TERINTEGRASI UNTUK KONSOL MEDIS RME RSGM    -->
+<!-- ======================================================== -->
+<style>
+/* ======================================================== */
+/* MODERN RSGM SEGMENTED PILL TAB CONTROL                  */
+/* ======================================================== */
+.rsgm-segmented-tabs,
+ul.rsgm-segmented-tabs {
+  display: inline-flex !important;
+  flex-wrap: wrap !important;
+  gap: 4px !important;
+  background-color: #f1f5f9 !important;
+  padding: 4px !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  margin-bottom: 0 !important;
+}
+
+.rsgm-segmented-tabs::before,
+.rsgm-segmented-tabs::after,
+ul.rsgm-segmented-tabs::before,
+ul.rsgm-segmented-tabs::after {
+  display: none !important;
+  content: none !important;
+}
+
+.rsgm-segmented-tabs > li,
+ul.rsgm-segmented-tabs > li {
+  float: none !important;
+  margin-bottom: 0 !important;
+  display: inline-block !important;
+}
+
+.rsgm-segmented-tabs > li > a,
+ul.rsgm-segmented-tabs > li > a {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  padding: 8px 18px !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  letter-spacing: 0.1px !important;
+  color: #64748b !important;
+  background-color: transparent !important;
+  transition: all 0.15s ease !important;
+  text-decoration: none !important;
+}
+
+.rsgm-segmented-tabs > li > a:hover,
+ul.rsgm-segmented-tabs > li > a:hover {
+  color: #0f172a !important;
+  background-color: rgba(255, 255, 255, 0.7) !important;
+  border: 0 !important;
+}
+
+.rsgm-segmented-tabs > li.active > a,
+.rsgm-segmented-tabs > li.active > a:hover,
+.rsgm-segmented-tabs > li.active > a:focus,
+ul.rsgm-segmented-tabs > li.active > a,
+ul.rsgm-segmented-tabs > li.active > a:hover,
+ul.rsgm-segmented-tabs > li.active > a:focus {
+  background-color: #ffffff !important;
+  color: #1d4ed8 !important;
+  font-weight: 700 !important;
+  border: 0 !important;
+  border-top: 0 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1), 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+}
+
+.rsgm-segmented-tabs > li > a > .badge,
+ul.rsgm-segmented-tabs > li > a > .badge {
+  border-radius: 999px !important;
+  padding: 2px 7px !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  background-color: #e2e8f0 !important;
+  color: #475569 !important;
+  line-height: 1.2 !important;
+  margin-left: 4px !important;
+}
+
+.rsgm-segmented-tabs > li.active > a > .badge,
+ul.rsgm-segmented-tabs > li.active > a > .badge {
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+}
+
+.rsgm-table-workbench th {
+  padding: 9px 10px !important;
+  vertical-align: middle !important;
+}
+.rsgm-table-workbench td {
+  padding: 8px 10px !important;
+  vertical-align: middle !important;
+}
+.rsgm-row-filled {
+  background-color: #ffffff;
+}
+.rsgm-row-empty {
+  background-color: #fbfcfe;
+}
+.rsgm-table-workbench tr:hover td {
+  background-color: #f0f9ff !important;
+}
+
+/* ======================================================== */
+/* CLINICAL DOSSIER CARDS (GRID BERKAS RME TERISI)         */
+/* ======================================================== */
+.rsgm-dossier-card {
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.rsgm-dossier-card:hover {
+  border-color: #93c5fd !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+  transform: translateY(-2px);
+}
+
+/* Soft Tint Medical Action Buttons */
+.rsgm-btn-soft-info {
+  background: #f0f9ff !important;
+  color: #0369a1 !important;
+  border: 1px solid #bae6fd !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  border-radius: 5px !important;
+  padding: 3px 8px !important;
+  transition: all 0.15s ease !important;
+}
+.rsgm-btn-soft-info:hover {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+}
+
+.rsgm-btn-soft-primary {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  border-radius: 5px !important;
+  padding: 3px 8px !important;
+  transition: all 0.15s ease !important;
+}
+.rsgm-btn-soft-primary:hover {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+}
+
+.rsgm-btn-soft-success {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  border-radius: 5px !important;
+  padding: 3px 8px !important;
+  transition: all 0.15s ease !important;
+}
+.rsgm-btn-soft-success:hover {
+  background: #059669 !important;
+  color: #ffffff !important;
+  border-color: #059669 !important;
+}
+</style>
+
+<!-- ======================================================== -->
+<!-- JAVASCRIPT LOGIC WORKBENCH (SEARCH, VIEW SWITCH, PREVIEWS) -->
+<!-- ======================================================== -->
+<script>
+// Buka modal pratinjau dokumen RME layar penuh
+function openDocModal(url, title) {
+  var iframe = document.getElementById('modalDocIframe');
+  var titleEl = document.getElementById('modalDocTitleText');
+  var printBtn = document.getElementById('modalDocPrintBtn');
+  var extBtn = document.getElementById('modalDocExternalBtn');
+  
+  if (titleEl) titleEl.innerText = title;
+  if (printBtn) printBtn.setAttribute('href', url);
+  if (extBtn) extBtn.setAttribute('href', url);
+  if (iframe) iframe.setAttribute('src', url);
+  
+  if (typeof jQuery !== 'undefined') {
+    jQuery('#modalDocPreview').modal('show');
+  }
+}
+
+// Event handlers dan filtering saat DOM siap
+jQuery(document).ready(function() {
+  var activeStatus = 'all';
+
+  function applyFilters() {
+    var search = jQuery.trim(jQuery('#inputFilterRme').val()).toLowerCase();
+    var visibleCount = 0;
+
+    // Filter baris tabel
+    jQuery('.rme-row-item').each(function() {
+      var row = jQuery(this);
+      var rowStatus = row.attr('data-status');
+      var rowSearch = row.attr('data-search') || '';
+
+      var statusMatch = (activeStatus === 'all') || (rowStatus === activeStatus);
+      var searchMatch = !search || (rowSearch.indexOf(search) !== -1);
+
+      if (statusMatch && searchMatch) {
+        row.show();
+        visibleCount++;
+      } else {
+        row.hide();
+      }
+    });
+
+    // Filter kartu tampilan alternatif
+    jQuery('.rme-card-item').each(function() {
+      var card = jQuery(this);
+      var cardStatus = card.attr('data-status');
+      var cardSearch = card.attr('data-search') || '';
+
+      var statusMatch = (activeStatus === 'all') || (cardStatus === activeStatus);
+      var searchMatch = !search || (cardSearch.indexOf(search) !== -1);
+
+      if (statusMatch && searchMatch) {
+        card.show();
+      } else {
+        card.hide();
+      }
+    });
+
+    if (visibleCount === 0) {
+      jQuery('#noSearchMatchAlert').fadeIn();
+    } else {
+      jQuery('#noSearchMatchAlert').hide();
+    }
+  }
+
+  // Filter tombol status: Semua / Terisi / Belum
+  jQuery('#btnGroupStatusFilter button').on('click', function(e) {
+    e.preventDefault();
+    jQuery('#btnGroupStatusFilter button').removeClass('active');
+    jQuery(this).addClass('active');
+    activeStatus = jQuery(this).attr('data-filter-status');
+    applyFilters();
+  });
+
+  // Pencarian instan
+  jQuery('#inputFilterRme').on('keyup input', function() {
+    applyFilters();
+  });
+
+  // Reset pencarian
+  jQuery('#btnClearSearch').on('click', function() {
+    jQuery('#inputFilterRme').val('');
+    applyFilters();
+  });
+
+  // Ganti tampilan ke mode Tabel
+  jQuery('#btnViewTable').on('click', function() {
+    jQuery('#btnViewCards').removeClass('active');
+    jQuery(this).addClass('active');
+    jQuery('#viewContainerCards').hide();
+    jQuery('#viewContainerTable').fadeIn(150);
+  });
+
+  // Ganti tampilan ke mode Kartu
+  jQuery('#btnViewCards').on('click', function() {
+    jQuery('#btnViewTable').removeClass('active');
+    jQuery(this).addClass('active');
+    jQuery('#viewContainerTable').hide();
+    jQuery('#viewContainerCards').fadeIn(150);
+  });
+});
+</script>

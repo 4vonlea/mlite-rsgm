@@ -1,0 +1,397 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+    <form method="POST" action="{?=url([ADMIN, 'form_rme', 'persetujuantestinghivsave'])?}" id="form-testing-hiv">
+        <input type="hidden" name="id" value="{$data.id}">
+
+        <div class="rsgm-soap-flex-row clearfix">
+
+            <!-- ============================================================
+                 KOLOM KIRI (3): SIDEBAR IDENTITAS, KODE KLIEN & TANGGAL
+                 ============================================================ -->
+            <div class="col-md-3">
+                <div class="rsgm-reg-shell rsgm-patient-side-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+                            <span>Data Pasien</span>
+                        </h4>
+                        <span class="badge" style="background-color: #fef2f2; color: #dc2626; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #fecaca;">VCT HIV</span>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+                        <!-- No. Rawat Pasien with Cari -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat / RM <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2025/08/13/000040" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button" id="btn-cari-pasien" title="Cari Pasien (Ranap / Ralan)" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                                        <i class="fa fa-search text-primary"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- No. Rekam Medis -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor RM</label>
+                            <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{$data.no_rkm_medis}" readonly style="background-color: #f8fafc; font-weight: 700;">
+                        </div>
+
+                        <!-- Nama Pasien -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="nama_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+                            <input type="text" name="nama_pasien" id="nama_pasien" class="form-control" placeholder="Nama Pasien" value="{$data.nama_pasien}" required style="font-weight: 600;">
+                        </div>
+
+                        <!-- Gender & Tanggal Lahir -->
+                        <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="jk_pasien" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                                    <input type="text" id="jk_pasien" class="form-control" value="{$data.jk_pasien}" readonly style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="tgl_lahir_pasien" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir</label>
+                                    <input type="text" id="tgl_lahir_pasien" class="form-control" value="{$data.tgl_lahir_pasien}" readonly style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Alamat Pasien -->
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="alamat_pasien" class="rsgm-compact-label"><i class="fa fa-map-marker text-muted"></i> Alamat Domisili Pasien</label>
+                            <textarea id="alamat_pasien" class="form-control" rows="2" readonly style="background-color: #f8fafc;">{$data.alamat_pasien}</textarea>
+                        </div>
+
+                        <!-- PEMISAH: KODE KLIEN & TANGGAL TESTING -->
+                        <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label for="kode_klien" class="rsgm-compact-label"><i class="fa fa-shield text-muted"></i> Kode Klien (VCT) <span class="text-danger">*</span></label>
+                                <input type="text" name="kode_klien" id="kode_klien" class="form-control" value="{$data.kode_klien}" placeholder="Contoh: VCT/2026/10/012" required style="font-weight: 700; color: #dc2626;">
+                                <span class="help-block" style="font-size: 11px; margin-bottom: 0; color: #64748b;">Kode unik kerahasiaan konseling VCT</span>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label for="tanggal" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tgl Konseling <span class="text-danger">*</span></label>
+                                <input type="date" name="tanggal" id="tanggal" class="form-control" value="{$data.tanggal}" required>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label for="tanggal_pelaksanaan" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Pelaksanaan Tes <span class="text-danger">*</span></label>
+                                <input type="date" name="tanggal_pelaksanaan" id="tanggal_pelaksanaan" class="form-control" value="{$data.tanggal_pelaksanaan}" required>
+                            </div>
+                        </div>
+
+                        <!-- INFO KERAHASIAAN VCT -->
+                        <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 10px 12px; margin-top: 10px;">
+                            <label class="rsgm-compact-label" style="color: #991b1b; margin-bottom: 4px; font-weight: 700;">
+                                <i class="fa fa-info-circle"></i> Kerahasiaan Terjamin:
+                            </label>
+                            <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #7f1d1d;">
+                                Hasil pengujian HIV bersifat rahasia medis murni (strictly confidential) dan hanya disampaikan secara tertutup kepada pasien bersama konselor VCT.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- /.col-md-3 -->
+
+            <!-- ============================================================
+                 KOLOM KANAN (9): WORKSTATION INFORMED CONSENT TESTING HIV
+                 ============================================================ -->
+            <div class="col-md-9">
+                <div class="rsgm-reg-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-shield"></i></span>
+                            <span>Persetujuan Untuk Testing HIV (Informed Consent VCT)</span>
+                        </h4>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <a href="{?=url([ADMIN, 'form_rme', 'persetujuantestinghivmanage'])?}" class="btn btn-default btn-xs" style="font-weight: 600; border-radius: 6px; padding: 5px 12px;">
+                                <i class="fa fa-list"></i> Kelola Data
+                            </a>
+                            <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-weight: 700;">Informed Consent</span>
+                        </div>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+
+                        <!-- SEKSI 1: HAK PASIEN & KLAUSUL INFORMASI KONSELING -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+                            <div style="font-weight: 700; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 12px;">
+                                <i class="fa fa-book text-primary"></i> 1. Materi Informasi &amp; Hak Peserta Konseling Pra-Tes HIV
+                            </div>
+
+                            <div style="background-color: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; border-radius: 6px; padding: 12px 14px; margin-bottom: 14px; font-size: 12px; line-height: 1.6; color: #78350f;">
+                                <strong>Sebelum menandatangani formulir persetujuan ini, harap mengetahui bahwa:</strong><br>
+                                Anda mempunyai hak untuk berpartisipasi di dalam pemeriksaan dengan dasar kerahasiaan. Anda mempunyai hak untuk menarik persetujuan dari testing sebelum pemeriksaan tersebut dilangsungkan.
+                            </div>
+
+                            <p style="font-size: 12.5px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">
+                                Saya menyatakan telah menerima informasi dan konseling menyangkut hal-hal berikut ini:
+                            </p>
+                            <ol type="a" style="font-size: 12px; line-height: 1.7; padding-left: 20px; color: #334155; margin-bottom: 14px;">
+                                <li>Keberadaan dan kegunaan dari testing HIV.</li>
+                                <li>Tujuan dan kegunaan dari testing HIV.</li>
+                                <li>Apa yang dapat dan tidak dapat diberitahukan dari testing HIV.</li>
+                                <li>Keuntungan serta resiko dari testing HIV dan dari mengetahui hasil testing saya.</li>
+                                <li>Pemahaman dari positif, negatif, <em>false negative</em>, <em>false positive</em>, dan hasil tes intermediate serta dampak dari masa jendela (<em>window period</em>).</li>
+                                <li>Pengukuran untuk pencegahan dari pemaparan dan penularan akan HIV.</li>
+                            </ol>
+
+                            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px; font-size: 12px; line-height: 1.6; color: #475569;">
+                                <p style="margin-bottom: 6px;">
+                                    Saya dengan sukarela menyetujui untuk menjalani testing pemeriksaan HIV dengan ketentuan bahwa hasil tes tersebut akan tetap rahasia dan terbuka hanya kepada saya seorang. Saya menyetujui untuk menerima pelayanan konseling setelah menjalani testing pemeriksaan untuk mendiskusikan hasil-hasil testing HIV saya dan cara-cara untuk mengurangi risiko terkena HIV atau menyebarluaskan HIV kepada orang lain untuk waktu ke depannya.
+                                </p>
+                                <p style="margin-bottom: 6px;">
+                                    Saya mengerti bahwa pelayanan kesehatan saya pada rumah sakit ini tidak akan mempengaruhi keputusan saya secara negatif terhadap testing atau tidak menjalani testing atau hasil dari testing HIV saya.
+                                </p>
+                                <p style="margin-bottom: 0;">
+                                    Saya telah diberikan kesempatan untuk bertanya dan pertanyaan saya telah diberikan jawaban yang memuaskan saya.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- SEKSI 2: KEPUTUSAN PASIEN -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+                            <div style="font-weight: 700; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 12px;">
+                                <i class="fa fa-check-square-o text-primary"></i> 2. Keputusan Pasien / Klien <span class="text-danger">*</span>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-6" style="margin-bottom: 8px;">
+                                    <div style="background: #f0fdf4; border: 2px solid #86efac; border-radius: 8px; padding: 12px 16px; cursor: pointer; transition: all 0.2s ease;">
+                                        <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: #166534;">
+                                            <input type="radio" name="status_persetujuan" value="Setuju" {if: $data.status_persetujuan == 'Setuju'}checked{/if} style="transform: scale(1.3); margin: 0;">
+                                            <i class="fa fa-check-circle" style="font-size: 16px;"></i>
+                                            <span>SETUJU Menjalani Testing HIV</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6" style="margin-bottom: 8px;">
+                                    <div style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 8px; padding: 12px 16px; cursor: pointer; transition: all 0.2s ease;">
+                                        <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: #991b1b;">
+                                            <input type="radio" name="status_persetujuan" value="Menolak" {if: $data.status_persetujuan == 'Menolak'}checked{/if} style="transform: scale(1.3); margin: 0;">
+                                            <i class="fa fa-times-circle" style="font-size: 16px;"></i>
+                                            <span>MENOLAK Testing HIV</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SEKSI 3: KONSELOR & CATATAN -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+                            <div style="font-weight: 700; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 12px;">
+                                <i class="fa fa-user-md text-primary"></i> 3. Konselor HIV &amp; Catatan Konseling
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">Konselor HIV / Petugas Konseling <span class="text-danger">*</span></label>
+                                        <select name="kd_konselor" id="kd_konselor" class="form-control" required style="font-weight: 600;">
+                                            <option value="">-- Pilih Konselor HIV --</option>
+                                            <optgroup label="Dokter Konselor">
+                                                {loop: $dokter}
+                                                <option value="{$value.kd_dokter}" {if: $data.kd_konselor == $value.kd_dokter}selected{/if}>{$value.nm_dokter}</option>
+                                                {/loop}
+                                            </optgroup>
+                                            <optgroup label="Perawat / Petugas Konseling Terlatih">
+                                                {loop: $petugas}
+                                                <option value="{$value.nip}" {if: $data.kd_konselor == $value.nip}selected{/if}>{$value.nama}</option>
+                                                {/loop}
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label class="rsgm-compact-label">Catatan Pre-Test Konseling (Opsional)</label>
+                                        <textarea name="catatan" id="catatan" class="form-control" rows="2" placeholder="Catatan hasil pre-test konseling / faktor risiko yang teridentifikasi...">{$data.catatan}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div> <!-- /.rsgm-reg-body -->
+
+                    <!-- FOOTER ACTIONS DENGAN DESAIN INTEGRATED REG-FOOTER (AKGMUFORM STYLE) -->
+                    <div class="rsgm-reg-footer">
+                        <div>
+                            <a href="{?=url([ADMIN, 'form_rme', 'persetujuantestinghivmanage'])?}" class="btn btn-default" style="border-radius: 6px; font-weight: 600; padding: 7px 18px;">
+                                <i class="fa fa-arrow-left"></i> Batal &amp; Kembali
+                            </a>
+                        </div>
+                        <div class="rsgm-reg-actions">
+                            <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 700; padding: 7px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <i class="fa fa-save"></i> Simpan Formulir Persetujuan
+                            </button>
+                        </div>
+                    </div>
+                </div> <!-- /.rsgm-reg-shell -->
+            </div> <!-- /.col-md-9 -->
+
+        </div> <!-- /.rsgm-soap-flex-row -->
+    </form>
+</div>
+
+<!-- Modal Pencarian Pasien -->
+<div class="modal fade" id="modalPasien" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content" style="border-radius: 8px; overflow: hidden;">
+            <div class="modal-header" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title" style="font-weight: 700; font-size: 14px; color: #1e293b;"><i class="fa fa-users text-primary"></i> Cari Registrasi Pasien (Ranap / Ralan)</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <div class="input-group">
+                        <input type="text" id="cari_keyword" class="form-control" placeholder="Ketik Nama Pasien, No. RM, atau No. Rawat..." style="border-radius: 6px 0 0 6px;">
+                        <span class="input-group-btn">
+                            <button class="btn btn-primary" type="button" id="btn-do-cari" style="border-radius: 0 6px 6px 0; font-weight: 600;">
+                                <i class="fa fa-search"></i> Cari
+                            </button>
+                        </span>
+                    </div>
+                </div>
+                <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                    <table class="table table-bordered table-hover" id="tabel-hasil-pasien">
+                        <thead>
+                            <tr style="background-color: #f1f5f9; font-size: 12px;">
+                                <th>No. Rawat</th>
+                                <th>No. RM</th>
+                                <th>Nama Pasien</th>
+                                <th>Tgl Lahir / JK</th>
+                                <th>Dokter DPJP</th>
+                                <th style="width: 80px; text-align: center;">Pilih</th>
+                            </tr>
+                        </thead>
+                        <tbody id="body-hasil-pasien" style="font-size: 12px;">
+                            <tr><td colspan="6" class="text-center text-muted">Ketik kata kunci untuk mencari pasien</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 6px; font-weight: 600;">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+
+    // Buka Modal Cari Pasien
+    $('#btn-cari-pasien').on('click', function() {
+        $('#modalPasien').modal('show');
+        $('#cari_keyword').focus();
+    });
+
+    $('#btn-do-cari').on('click', function() {
+        doSearchPatient();
+    });
+
+    // Pencarian Pasien via AJAX
+    var timer;
+    $('#cari_keyword').on('keyup', function(e) {
+        if (e.which === 13) {
+            clearTimeout(timer);
+            doSearchPatient();
+            return;
+        }
+        clearTimeout(timer);
+        var q = $(this).val();
+        if (q.length < 2) return;
+
+        timer = setTimeout(function() {
+            doSearchPatient();
+        }, 350);
+    });
+
+    function doSearchPatient() {
+        var q = $('#cari_keyword').val();
+        $('#body-hasil-pasien').html('<tr><td colspan="6" class="text-center"><i class="fa fa-spinner fa-spin"></i> Mencari pasien...</td></tr>');
+
+        $.ajax({
+            url: '{?=url([ADMIN, "form_rme", "caripasienajax"])?}',
+            type: 'GET',
+            data: { query: q },
+            dataType: 'json',
+            success: function(res) {
+                var html = '';
+                if (res && res.length > 0) {
+                    $.each(res, function(i, row) {
+                        html += '<tr>' +
+                            '<td><strong>' + row.no_rawat + '</strong></td>' +
+                            '<td>' + row.no_rkm_medis + '</td>' +
+                            '<td><strong>' + row.nm_pasien + '</strong></td>' +
+                            '<td>' + (row.tgl_lahir || '-') + ' (' + row.jk + ')</td>' +
+                            '<td>' + (row.nm_dokter || '-') + '</td>' +
+                            '<td style="text-align: center;">' +
+                                '<button type="button" class="btn btn-xs btn-success btn-pilih-pasien" style="border-radius: 6px; font-weight: 600;" ' +
+                                'data-norawat="' + row.no_rawat + '" ' +
+                                'data-norm="' + row.no_rkm_medis + '" ' +
+                                'data-nama="' + row.nm_pasien + '" ' +
+                                'data-jk="' + (row.jk === 'L' ? 'Laki-laki' : 'Perempuan') + '" ' +
+                                'data-tgllahir="' + (row.tgl_lahir || '') + '" ' +
+                                'data-alamat="' + (row.alamat || '') + '" ' +
+                                'data-kddokter="' + (row.kd_dokter || '') + '" ' +
+                                'data-nmdokter="' + (row.nm_dokter || '') + '">' +
+                                '<i class="fa fa-check"></i> Pilih' +
+                                '</button>' +
+                            '</td>' +
+                        '</tr>';
+                    });
+                } else {
+                    html = '<tr><td colspan="6" class="text-center text-muted">Pasien tidak ditemukan</td></tr>';
+                }
+                $('#body-hasil-pasien').html(html);
+            },
+            error: function() {
+                $('#body-hasil-pasien').html('<tr><td colspan="6" class="text-center text-danger">Gagal menghubungi server</td></tr>');
+            }
+        });
+    }
+
+    // Pasien Dipilih dari Modal
+    $(document).on('click', '.btn-pilih-pasien', function() {
+        var d = $(this).data();
+        $('#no_rawat').val(d.norawat);
+        $('#no_rkm_medis').val(d.norm);
+        $('#nama_pasien').val(d.nama);
+        $('#jk_pasien').val(d.jk);
+        $('#tgl_lahir_pasien').val(d.tgllahir);
+        $('#alamat_pasien').val(d.alamat);
+
+        if (d.kddokter) {
+            $('#kd_konselor').val(d.kddokter);
+        }
+
+        $('#modalPasien').modal('hide');
+    });
+
+    // Validasi sebelum submit
+    $('#form-testing-hiv').on('submit', function(e) {
+        if (!$('#no_rawat').val()) {
+            alert('Nomor Rawat wajib diisi!');
+            $('#no_rawat').focus();
+            e.preventDefault();
+            return false;
+        }
+        if (!$('#kode_klien').val()) {
+            alert('Kode Klien VCT wajib diisi!');
+            $('#kode_klien').focus();
+            e.preventDefault();
+            return false;
+        }
+        if (!$('#kd_konselor').val()) {
+            alert('Konselor HIV wajib dipilih!');
+            $('#kd_konselor').focus();
+            e.preventDefault();
+            return false;
+        }
+    });
+
+});
+</script>

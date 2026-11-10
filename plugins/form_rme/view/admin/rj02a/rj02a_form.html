@@ -1,0 +1,320 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+  <form id="rj02aForm" method="POST" action="{?=url([ADMIN, 'form_rme', 'rj02asave'])?}">
+    <input type="hidden" name="id" value="{?=isset_or($data['id'])?}">
+    <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{?=isset_or($data['no_rkm_medis'])?}">
+    <input type="hidden" name="json_form_data" id="json_form_data" value="">
+
+    <div class="rsgm-soap-flex-row clearfix">
+      
+      <!-- ============================================================
+           KOLOM KIRI (3): SIDEBAR IDENTITAS PASIEN
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell" style="border: 1px solid #dbe3ec; border-radius: 8px; background: #ffffff;">
+          <div class="rsgm-reg-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 12px 16px;">
+            <h4 class="rsgm-reg-title" style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a;">
+              <span class="rsgm-reg-icon" style="color: #0284c7;"><i class="fa fa-id-card-o"></i></span>
+              <span>Identitas Pasien</span>
+            </h4>
+            <span class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 11px;">RM.RJ 02A</span>
+          </div>
+
+          <div class="rsgm-reg-body" style="padding: 14px 16px;">
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="no_rawat" class="rsgm-compact-label" style="font-weight: 600; font-size: 12px; margin-bottom: 4px; display: block;">
+                <i class="fa fa-hashtag text-primary"></i> No. Rawat <span class="text-danger">*</span>
+              </label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8; height: 34px; border-radius: 6px 0 0 6px;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-primary btn-sm" id="btn_cari_pasien" title="Cari Pasien" style="border-radius: 0 6px 6px 0; height: 34px; padding: 0 12px;">
+                    <i class="fa fa-search"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="display_no_rkm_medis" class="rsgm-compact-label" style="font-weight: 600; font-size: 12px; margin-bottom: 4px; display: block;">
+                <i class="fa fa-address-card-o text-muted"></i> No. Rekam Medis
+              </label>
+              <input type="text" id="display_no_rkm_medis" class="form-control input-sm" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly style="background: #f8fafc; font-weight: 700; height: 34px; border-radius: 6px;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="nm_pasien" class="rsgm-compact-label" style="font-weight: 600; font-size: 12px; margin-bottom: 4px; display: block;">
+                <i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span>
+              </label>
+              <input type="text" name="nm_pasien" id="nm_pasien" class="form-control input-sm" placeholder="Nama lengkap pasien" value="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}{?=isset_or($data['nama_pasien'])?}{/if}" required style="font-weight: 600; height: 34px; border-radius: 6px;">
+            </div>
+
+            <div class="row" style="margin-left: -5px; margin-right: -5px; margin-bottom: 12px;">
+              <div class="col-xs-6" style="padding-left: 5px; padding-right: 5px;">
+                <label for="display_jk" class="rsgm-compact-label" style="font-weight: 600; font-size: 12px; margin-bottom: 4px; display: block;">
+                  <i class="fa fa-venus-mars text-muted"></i> Gender
+                </label>
+                <input type="text" id="display_jk" class="form-control input-sm" value="{if: isset($data['jk']) && ($data['jk'] == 'L' || $data['jk'] == 'Laki-Laki')}Laki-Laki{elseif: isset($data['jk']) && ($data['jk'] == 'P' || $data['jk'] == 'Perempuan')}Perempuan{else}-{/if}" readonly style="background: #f8fafc; height: 34px; border-radius: 6px; font-size: 12px;">
+              </div>
+              <div class="col-xs-6" style="padding-left: 5px; padding-right: 5px;">
+                <label for="display_tgl_lahir" class="rsgm-compact-label" style="font-weight: 600; font-size: 12px; margin-bottom: 4px; display: block;">
+                  <i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir
+                </label>
+                <input type="text" id="display_tgl_lahir" class="form-control input-sm" value="{?=isset_or($data['tgl_lahir'])?}" readonly style="background: #f8fafc; height: 34px; border-radius: 6px; font-size: 12px;">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label for="display_alamat" class="rsgm-compact-label" style="font-weight: 600; font-size: 12px; margin-bottom: 4px; display: block;">
+                <i class="fa fa-map-marker text-muted"></i> Alamat Domisili
+              </label>
+              <textarea id="display_alamat" class="form-control" rows="2" readonly style="background: #f8fafc; resize: vertical; font-size: 12px; border-radius: 6px;">{?=isset_or($data['alamat'])?}</textarea>
+            </div>
+
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 12px;">
+              <button type="button" id="btn_demo" class="btn btn-warning btn-sm btn-block" style="border-radius: 6px; font-weight: 600;" title="Isi form dengan contoh data simulasi">
+                <i class="fa fa-magic"></i> Isi Contoh Data
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           KOLOM KANAN (9): WORKSTATION HAK DAN KEWAJIBAN PASIEN
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell" style="border: 1px solid #dbe3ec; border-radius: 8px; background: #ffffff;">
+          <div class="rsgm-reg-header" style="background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span class="rsgm-reg-icon" style="background: #e0f2fe; color: #0284c7; width: 36px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 17px;">
+                <i class="fa fa-balance-scale"></i>
+              </span>
+              <div>
+                <h4 class="rsgm-reg-title" style="margin: 0; font-size: 15px; font-weight: 700; color: #0f172a;">
+                  Formulir Penjelasan Hak dan Kewajiban Pasien
+                </h4>
+                <span style="font-size: 12px; color: #64748b;">Standar Pelayanan RSGM Gusti Hasan Aman &bull; UU RI No. 17 Tahun 2023 &amp; Permenkes</span>
+              </div>
+            </div>
+            <div>
+              <span class="badge" style="background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 12px; padding: 6px 12px; font-weight: 700;">RM.RJ 02A</span>
+            </div>
+          </div>
+
+          <div class="rsgm-reg-body" style="padding: 18px 20px;">
+            
+            <!-- SECTION 1: BUTIR HAK DAN KEWAJIBAN PASIEN -->
+            <div class="rsgm-soap-section" style="margin-bottom: 20px;">
+              <div class="rsgm-soap-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h5 style="margin: 0; font-size: 13.5px; font-weight: 700; color: #1e293b;">
+                  <i class="fa fa-book text-primary"></i> Ringkasan Materi Hak &amp; Kewajiban Pasien
+                </h5>
+                <span style="font-size: 11.5px; color: #64748b;">Wajib disampaikan oleh petugas edukasi</span>
+              </div>
+
+              <div class="row">
+                <!-- Kolom Kiri: Hak Pasien (18 Butir) -->
+                <div class="col-md-6" style="margin-bottom: 14px;">
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; height: 100%;">
+                    <div style="font-weight: 700; font-size: 13px; color: #0369a1; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                      <i class="fa fa-check-circle text-info"></i> Hak-Hak Pasien (18 Butir)
+                    </div>
+                    <ol style="font-size: 11.5px; line-height: 1.6; color: #334155; padding-left: 18px; margin-bottom: 0;">
+                      <li>Memperoleh informasi mengenai tata tertib dan peraturan yang berlaku di RSGM.</li>
+                      <li>Memperoleh informasi tentang hak dan kewajiban pasien.</li>
+                      <li>Memperoleh pelayanan yang manusiawi, adil, jujur, dan tanpa diskriminasi.</li>
+                      <li>Memperoleh pelayanan kesehatan bermutu sesuai standar profesi dan SOP.</li>
+                      <li>Memperoleh pelayanan efektif dan efisien guna mencegah kerugian fisik &amp; materi.</li>
+                      <li>Mengajukan pengaduan atas mutu pelayanan yang didapatkan.</li>
+                      <li>Memilih dokter dan kelas perawatan sesuai regulasi yang berlaku di RSGM.</li>
+                      <li>Meminta konsultasi medis (second opinion) kepada dokter ber-SIP lainnya.</li>
+                      <li>Mendapatkan privasi dan kerahasiaan penyakit serta data rekam medis.</li>
+                      <li>Mendapat informasi diagnosis, tata cara tindakan, risiko, alternatif, &amp; prognosis.</li>
+                      <li>Memberikan persetujuan atau menolak tindakan medis setelah teredukasi.</li>
+                      <li>Didampingi keluarga pada keadaan kritis.</li>
+                      <li>Menjalankan ibadah sesuai agama selama tidak mengganggu pasien lain.</li>
+                      <li>Memperoleh keamanan dan keselamatan selama dalam perawatan.</li>
+                      <li>Mengajukan usul, saran, dan perbaikan pelayanan.</li>
+                      <li>Menolak bimbingan rohani yang tidak sejalan dengan keyakinannya.</li>
+                      <li>Menggugat / menuntut apabila pelayanan diduga tidak sesuai standar.</li>
+                      <li>Mengeluhkan pelayanan melalui saluran pengaduan resmi dan media publik.</li>
+                    </ol>
+                  </div>
+                </div>
+
+                <!-- Kolom Kanan: Kewajiban Pasien (8 Butir) -->
+                <div class="col-md-6" style="margin-bottom: 14px;">
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; height: 100%;">
+                    <div style="font-weight: 700; font-size: 13px; color: #b45309; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                      <i class="fa fa-exclamation-circle text-warning"></i> Kewajiban Pasien (8 Butir)
+                    </div>
+                    <ol style="font-size: 11.5px; line-height: 1.6; color: #334155; padding-left: 18px; margin-bottom: 0;">
+                      <li>Mentaati peraturan dan tata tertib yang berlaku di RSGM Gusti Hasan Aman.</li>
+                      <li>Menggunakan fasilitas rumah sakit secara bertanggung jawab.</li>
+                      <li>Menghormati hak pasien lain, pengunjung, dan tenaga kesehatan/petugas rumah sakit.</li>
+                      <li>Memberikan informasi yang jujur, lengkap, dan akurat mengenai riwayat kesehatan.</li>
+                      <li>Mematuhi rencana terapi yang direkomendasikan dan telah disetujui.</li>
+                      <li>Menerima konsekuensi atas keputusan menolak rencana terapi medis.</li>
+                      <li>Memberikan informasi mengenai jaminan kesehatan atau kemampuan pembiayaan.</li>
+                      <li>Memenuhi kewajiban finansial/imbalan jasa atas pelayanan yang diterima.</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 2: BUKTI PEMBERIAN EDUKASI & TANDA TANGAN -->
+            <div class="rsgm-soap-section">
+              <div class="rsgm-soap-section-header" style="margin-bottom: 14px;">
+                <h5 style="margin: 0; font-size: 13.5px; font-weight: 700; color: #1e293b;">
+                  <i class="fa fa-pencil-square-o text-primary"></i> Bukti Edukasi &amp; Tanda Tangan Persetujuan
+                </h5>
+              </div>
+
+              <div class="row">
+                <!-- Nama Pasien / Penanggung Jawab -->
+                <div class="col-md-4 col-sm-6" style="margin-bottom: 12px;">
+                  <label for="nama_pasien_pj" class="rsgm-compact-label" style="font-weight: 600; font-size: 12px; margin-bottom: 5px; display: block;">
+                    <i class="fa fa-user text-muted"></i> Pasien / Penanggung Jawab <span class="text-danger">*</span>
+                  </label>
+                  <input type="text" class="form-control input-sm f-nama_pasien_pj" id="nama_pasien_pj" value="{?=isset_or($data['form_data']['nama_pasien_pj'])?}" placeholder="Nama lengkap penerima edukasi" required style="height: 34px; border-radius: 6px; font-weight: 600;">
+                </div>
+
+                <!-- Hubungan dengan Pasien -->
+                <div class="col-md-3 col-sm-6" style="margin-bottom: 12px;">
+                  <label for="hubungan_pj" class="rsgm-compact-label" style="font-weight: 600; font-size: 12px; margin-bottom: 5px; display: block;">
+                    <i class="fa fa-users text-muted"></i> Hubungan dg Pasien
+                  </label>
+                  <select class="form-control input-sm f-hubungan_pj" id="hubungan_pj" style="height: 34px; border-radius: 6px; font-size: 12px;">
+                    <option value="Diri Sendiri" {if: isset_or($data.form_data.hubungan_pj) == 'Diri Sendiri'}selected{/if}>Diri Sendiri</option>
+                    <option value="Suami" {if: isset_or($data.form_data.hubungan_pj) == 'Suami'}selected{/if}>Suami</option>
+                    <option value="Istri" {if: isset_or($data.form_data.hubungan_pj) == 'Istri'}selected{/if}>Istri</option>
+                    <option value="Orang Tua" {if: isset_or($data.form_data.hubungan_pj) == 'Orang Tua'}selected{/if}>Orang Tua</option>
+                    <option value="Anak" {if: isset_or($data.form_data.hubungan_pj) == 'Anak'}selected{/if}>Anak</option>
+                    <option value="Saudara Kandung" {if: isset_or($data.form_data.hubungan_pj) == 'Saudara Kandung'}selected{/if}>Saudara Kandung</option>
+                    <option value="Keluarga Lainnya" {if: isset_or($data.form_data.hubungan_pj) == 'Keluarga Lainnya'}selected{/if}>Keluarga Lainnya</option>
+                  </select>
+                </div>
+
+                <!-- Petugas Pemberi Edukasi -->
+                <div class="col-md-3 col-sm-6" style="margin-bottom: 12px;">
+                  <label for="pemberi_edukasi" class="rsgm-compact-label" style="font-weight: 600; font-size: 12px; margin-bottom: 5px; display: block;">
+                    <i class="fa fa-user-md text-muted"></i> Petugas Pemberi Edukasi <span class="text-danger">*</span>
+                  </label>
+                  <input type="text" class="form-control input-sm f-pemberi_edukasi" id="pemberi_edukasi" list="list_pegawai_rj02a" value="{?=isset_or($data['form_data']['pemberi_edukasi'])?}" placeholder="Nama petugas/perawat" required style="height: 34px; border-radius: 6px;">
+                  <datalist id="list_pegawai_rj02a">
+                    <option value="Petugas Pendaftaran">
+                    <option value="Perawat Poliklinik">
+                    <option value="drg. Pengkaji">
+                  </datalist>
+                </div>
+
+                <!-- Tanggal Tanda Tangan -->
+                <div class="col-md-2 col-sm-6" style="margin-bottom: 12px;">
+                  <label for="tgl_ttd" class="rsgm-compact-label" style="font-weight: 600; font-size: 12px; margin-bottom: 5px; display: block;">
+                    <i class="fa fa-calendar text-muted"></i> Tgl Tanda Tangan
+                  </label>
+                  <input type="date" class="form-control input-sm f-tgl_ttd" id="tgl_ttd" value="{if: !empty($data.form_data.tgl_ttd)}{$data.form_data.tgl_ttd}{else}{?=date('Y-m-d')?}{/if}" required style="height: 34px; border-radius: 6px;">
+                </div>
+              </div>
+
+              <!-- Catatan / Keterangan Tambahan -->
+              <div class="row">
+                <div class="col-md-12">
+                  <label for="catatan" class="rsgm-compact-label" style="font-weight: 600; font-size: 12px; margin-bottom: 5px; display: block;">
+                    <i class="fa fa-commenting-o text-muted"></i> Catatan Tambahan (Opsional)
+                  </label>
+                  <input type="text" class="form-control input-sm f-catatan" id="catatan" value="{?=isset_or($data['form_data']['catatan'])?}" placeholder="Catatan khusus penjelasan bila ada (misal: Pasien telah memahami seluruh butir hak dan kewajiban)" style="height: 34px; border-radius: 6px;">
+                </div>
+              </div>
+            </div>
+
+          </div> <!-- /.rsgm-reg-body -->
+
+          <!-- FOOTER AKSI -->
+          <div class="rsgm-reg-footer" style="padding: 14px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-radius: 0 0 8px 8px;">
+            <div>
+              <a href="{?=url([ADMIN, 'form_rme', 'rj02amanage'])?}" class="btn btn-default btn-sm" style="font-weight: 600; border-radius: 6px;">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button type="button" class="btn btn-info btn-sm btn-trigger-rme-preview" data-preview-url="{?=url([ADMIN, 'form_rme', 'rj02acetak'])?}" style="font-weight: 600; border-radius: 6px;">
+                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+              </button>
+              <button type="submit" class="btn btn-primary btn-sm" style="font-weight: 700; padding-left: 24px; padding-right: 24px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <i class="fa fa-save"></i> Simpan Data
+              </button>
+            </div>
+          </div>
+
+        </div> <!-- /.rsgm-reg-shell -->
+      </div> <!-- /.col-md-9 -->
+
+    </div> <!-- /.rsgm-soap-flex-row -->
+  </form>
+</div>
+
+<script>
+$(document).ready(function() {
+  'use strict';
+
+  // 1. CARI / MUAT DATA PASIEN
+  function fetchPatient() {
+    var noRawat = $('#no_rawat').val().trim();
+    if (!noRawat) return;
+
+    $.ajax({
+      url: '{?=url([ADMIN, "form_rme", "rj02aform"])?}&ajax_patient=1&no_rawat=' + encodeURIComponent(noRawat),
+      type: 'GET',
+      dataType: 'json',
+      success: function(res) {
+        if (res && res.success) {
+          $('#no_rawat').val(res.no_rawat);
+          $('#display_no_rkm_medis').val(res.no_rkm_medis || '');
+          $('#no_rkm_medis').val(res.no_rkm_medis || '');
+          $('#nm_pasien').val(res.nm_pasien || '');
+          if (res.jk) {
+            var jkText = (res.jk === 'L' || res.jk === 'Laki-Laki') ? 'Laki-Laki' : 'Perempuan';
+            $('#display_jk').val(jkText);
+          }
+          if (res.tgl_lahir) $('#display_tgl_lahir').val(res.tgl_lahir);
+          if (res.alamat) $('#display_alamat').val(res.alamat);
+          if (!$('#nama_pasien_pj').val()) $('#nama_pasien_pj').val(res.nm_pasien || '');
+        }
+      }
+    });
+  }
+
+  $('#no_rawat').on('blur change', fetchPatient);
+  $('#btn_cari_pasien').on('click', fetchPatient);
+
+  // 2. CONTOH DATA (DEMO)
+  $('#btn_demo').on('click', function(e) {
+    e.preventDefault();
+    if (!$('#no_rawat').val()) $('#no_rawat').val('2026/10/16/000001');
+    $('#display_no_rkm_medis').val('000001');
+    $('#no_rkm_medis').val('000001');
+    $('#nm_pasien').val('Farida Ariyani');
+    $('#display_jk').val('Perempuan');
+    $('#display_tgl_lahir').val('1990-05-14');
+    $('#display_alamat').val('Jl. Veteran No. 12B, Banjarmasin');
+    $('#nama_pasien_pj').val('Farida Ariyani');
+    $('#hubungan_pj').val('Diri Sendiri');
+    $('#pemberi_edukasi').val('Siti Rahmah, S.Kep., Ners');
+    $('#catatan').val('Pasien telah menerima penjelasan dan memahami seluruh butir hak dan kewajiban pasien');
+  });
+
+  // 3. SERIALISASI SAAT SUBMIT
+  $('#rj02aForm').on('submit', function() {
+    var fd = {
+      nama_pasien_pj: $('#nama_pasien_pj').val() || '',
+      hubungan_pj: $('#hubungan_pj').val() || 'Diri Sendiri',
+      pemberi_edukasi: $('#pemberi_edukasi').val() || '',
+      tgl_ttd: $('#tgl_ttd').val() || '{?=date("Y-m-d")?}',
+      catatan: $('#catatan').val() || ''
+    };
+    $('#json_form_data').val(JSON.stringify(fd));
+  });
+});
+</script>

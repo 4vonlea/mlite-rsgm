@@ -1,0 +1,430 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+  <form method="POST" action="{?=url([ADMIN, 'form_rme', 'ri11bsave'])?}" id="frm_ri11b">
+    <input type="hidden" name="id" value="{?=isset($data['id']) ? $data['id'] : ''?}">
+    <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{?=isset_or($data['no_rkm_medis'])?}">
+    <input type="hidden" name="json_bentuk_makanan" id="json_bentuk_makanan" value="">
+    <input type="hidden" name="json_diet" id="json_diet" value="">
+    <input type="hidden" name="json_detail_pemberian" id="json_detail_pemberian" value="">
+
+    <div class="rsgm-soap-flex-row clearfix">
+      
+      <!-- ============================================================
+           KOLOM KIRI (3): SIDEBAR IDENTITAS PASIEN
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Identitas Pasien</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">RM.RI 11B</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="tanggal_rawat" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tanggal Rawat</label>
+              <input type="date" name="tanggal_rawat" id="tanggal_rawat" class="form-control" value="{if: !empty($data.tanggal_rawat)}{$data.tanggal_rawat}{else}{?=date('Y-m-d')?}{/if}">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default" id="btn_cari_pasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                    <i class="fa fa-search text-primary"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="display_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+              <input type="text" id="display_no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+              <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{elseif: !empty($data.nama_pasien)}{$data.nama_pasien}{/if}" readonly>
+            </div>
+
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="display_jk" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                  <input type="text" id="display_jk" class="form-control" value="{if: (isset($data['jk']) && $data['jk']=='L') || (isset($data['jenis_kelamin']) && $data['jenis_kelamin']=='L')}Laki-laki{elseif: (isset($data['jk']) && $data['jk']=='P') || (isset($data['jenis_kelamin']) && $data['jenis_kelamin']=='P')}Perempuan{else}-{/if}" readonly>
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="display_tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir</label>
+                  <input type="text" id="display_tgl_lahir" class="form-control" value="{if: !empty($data.tgl_lahir)}{$data.tgl_lahir}{elseif: !empty($data.tanggal_lahir)}{$data.tanggal_lahir}{/if}{if: !empty($data.umur)} ({$data.umur}){/if}" readonly>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="kamar_kelas" class="rsgm-compact-label"><i class="fa fa-bed text-muted"></i> Kamar / Kelas</label>
+              <input type="text" name="kamar_kelas" id="kamar_kelas" class="form-control" value="{?=isset_or($data['kamar_kelas'])?}" placeholder="Bangsal / Kamar / Kelas">
+            </div>
+
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+              <button type="button" id="btn_demo" class="btn btn-warning btn-sm btn-block" style="border-radius: 6px; font-weight: 600;" title="Isi form dengan contoh data lengkap untuk uji coba klinis">
+                <i class="fa fa-magic"></i> Isi Contoh Data
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           KOLOM KANAN (9): WORKSTATION PEMBERIAN MAKAN PASIEN
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-cutlery text-primary"></i></span>
+              <span>FORMULIR PEMBERIAN MAKAN PASIEN RAWAT INAP</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">RM.RI 11B</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            
+            <!-- SECTION 1: KLINIS & TIM NUTRISI -->
+            <div class="rsgm-soap-section" style="margin-bottom: 18px;">
+              <div class="rsgm-soap-section-header">
+                <h5 style="margin: 0; font-weight: 700; color: #1e293b;">
+                  <i class="fa fa-stethoscope text-primary"></i> 1. Tim Asuhan Nutrisi & Diagnosis Medis
+                </h5>
+              </div>
+
+              <div class="row" style="margin-top: 12px;">
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="dpjp_utama" class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> DPJP Utama <span class="text-danger">*</span></label>
+                    <input type="text" name="dpjp_utama" id="dpjp_utama" class="form-control" value="{?=isset_or($data['dpjp_utama'])?}" placeholder="Nama Dokter DPJP" required>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="nutrisionis" class="rsgm-compact-label"><i class="fa fa-apple text-muted"></i> Nutrisionis / Dietisien <span class="text-danger">*</span></label>
+                    <input type="text" name="nutrisionis" id="nutrisionis" class="form-control" value="{?=isset_or($data['nutrisionis'])?}" placeholder="Nama Ahli Gizi" required>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="diagnosa" class="rsgm-compact-label"><i class="fa fa-heartbeat text-muted"></i> Diagnosa Medis</label>
+                    <input type="text" name="diagnosa" id="diagnosa" class="form-control" value="{?=isset_or($data['diagnosa'])?}" placeholder="Diagnosis medis saat dirawat">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 2: BENTUK MAKANAN & DIET -->
+            <div class="rsgm-soap-section" style="margin-bottom: 18px;">
+              <div class="rsgm-soap-section-header">
+                <h5 style="margin: 0; font-weight: 700; color: #1e293b;">
+                  <i class="fa fa-coffee text-success"></i> 2. Preskripsi Bentuk Makanan & Jenis Diet
+                </h5>
+              </div>
+
+              <div class="row" style="margin-top: 12px;">
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label class="rsgm-compact-label"><i class="fa fa-circle-o text-muted"></i> Bentuk Makanan:</label><br>
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px;">
+                      <label class="checkbox-inline" style="margin-left: 0; margin-right: 14px; font-weight: 600;"><input type="checkbox" class="cb-bentuk" value="Nasi Biasa" {if: in_array('Nasi Biasa', $data.bentuk_makanan??[])}checked{/if}> Nasi Biasa</label>
+                      <label class="checkbox-inline" style="margin-left: 0; margin-right: 14px; font-weight: 600;"><input type="checkbox" class="cb-bentuk" value="Lunak" {if: in_array('Lunak', $data.bentuk_makanan??[])}checked{/if}> Makanan Lunak</label>
+                      <label class="checkbox-inline" style="margin-left: 0; margin-right: 14px; font-weight: 600;"><input type="checkbox" class="cb-bentuk" value="Saring" {if: in_array('Saring', $data.bentuk_makanan??[])}checked{/if}> Saring</label>
+                      <label class="checkbox-inline" style="margin-left: 0; margin-right: 14px; font-weight: 600;"><input type="checkbox" class="cb-bentuk" value="Sumsum" {if: in_array('Sumsum', $data.bentuk_makanan??[])}checked{/if}> Bubur Sumsum</label>
+                      <label class="checkbox-inline" style="margin-left: 0; margin-right: 14px; font-weight: 600;"><input type="checkbox" class="cb-bentuk" value="Cair" {if: in_array('Cair', $data.bentuk_makanan??[])}checked{/if}> Makanan Cair</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label class="rsgm-compact-label"><i class="fa fa-tag text-muted"></i> Jenis Diet Khusus:</label><br>
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px;">
+                      <label class="checkbox-inline" style="margin-left: 0; margin-right: 14px; font-weight: 600;"><input type="checkbox" class="cb-diet" value="Bebas/Biasa" {if: in_array('Bebas/Biasa', $data.diet??[])}checked{/if}> Bebas / Biasa</label>
+                      <label class="checkbox-inline" style="margin-left: 0; margin-right: 14px; font-weight: 600;"><input type="checkbox" class="cb-diet" value="TKTP" {if: in_array('TKTP', $data.diet??[])}checked{/if}> TKTP</label>
+                      <label class="checkbox-inline" style="margin-left: 0; margin-right: 14px; font-weight: 600;"><input type="checkbox" class="cb-diet" value="DM" {if: in_array('DM', $data.diet??[])}checked{/if}> Diet DM</label>
+                      <label class="checkbox-inline" style="margin-left: 0; margin-right: 14px; font-weight: 600;"><input type="checkbox" class="cb-diet" value="RG" {if: in_array('RG', $data.diet??[])}checked{/if}> Rendah Garam (RG)</label>
+                      <input type="text" name="diet_lainnya" id="diet_lainnya" class="form-control input-sm" value="{?=isset_or($data['diet_lainnya'])?}" placeholder="Diet lainnya jika ada (misal: Rendah Purin / Pasca Bedah Mulut)..." style="margin-top: 8px;">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 3: JADWAL PEMBERIAN MAKAN HARIAN -->
+            <div class="rsgm-soap-section" style="margin-bottom: 18px;">
+              <div class="rsgm-soap-section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 style="margin: 0; font-weight: 700; color: #1e293b;">
+                  <i class="fa fa-calendar-check-o text-info"></i> 3. Jadwal Harian & Evaluasi Distribusi Makanan
+                </h5>
+                <button type="button" class="btn btn-success btn-xs" id="btn_tambah_hari" style="font-weight: 600; padding: 2px 8px;">
+                  <i class="fa fa-plus"></i> Tambah Hari / Tanggal
+                </button>
+              </div>
+
+              <div class="table-responsive" style="margin-top: 12px;">
+                <table class="table table-bordered table-condensed" id="tbl_jadwal_makan" style="margin-bottom: 10px; font-size: 12.5px;">
+                  <thead>
+                    <tr style="background-color: #f1f5f9; text-align: center;">
+                      <th rowspan="2" width="130" style="vertical-align: middle; text-align: center;">Hari / Tanggal</th>
+                      <th colspan="3" style="text-align: center; background-color: #fef3c7; color: #92400e;">PAGI (Sarapan)</th>
+                      <th colspan="3" style="text-align: center; background-color: #dbeafe; color: #1e40af;">SIANG (Makan Siang)</th>
+                      <th colspan="3" style="text-align: center; background-color: #fce7f3; color: #9d174d;">SORE / MALAM</th>
+                      <th rowspan="2" width="40" style="vertical-align: middle; text-align: center;">#</th>
+                    </tr>
+                    <tr style="background-color: #f8fafc; text-align: center; font-size: 11px;">
+                      <th>Asal</th><th>Habis</th><th>Tanda</th>
+                      <th>Asal</th><th>Habis</th><th>Tanda</th>
+                      <th>Asal</th><th>Habis</th><th>Tanda</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {if: !empty($data.detail_pemberian) && is_array($data.detail_pemberian)}
+                      {loop: $data.detail_pemberian}
+                      <tr class="row-jadwal">
+                        <td><input type="date" class="form-control input-sm j-tgl" value="{$value.tgl}"></td>
+                        <td><input type="text" class="form-control input-sm j-p_a" value="{$value.p_a}" placeholder="Bentuk"></td>
+                        <td><input type="text" class="form-control input-sm j-p_h" value="{$value.p_h}" placeholder="Porsi"></td>
+                        <td><input type="text" class="form-control input-sm j-p_t" value="{$value.p_t}" placeholder="√"></td>
+                        <td><input type="text" class="form-control input-sm j-s_a" value="{$value.s_a}" placeholder="Bentuk"></td>
+                        <td><input type="text" class="form-control input-sm j-s_h" value="{$value.s_h}" placeholder="Porsi"></td>
+                        <td><input type="text" class="form-control input-sm j-s_t" value="{$value.s_t}" placeholder="√"></td>
+                        <td><input type="text" class="form-control input-sm j-m_a" value="{$value.m_a}" placeholder="Bentuk"></td>
+                        <td><input type="text" class="form-control input-sm j-m_h" value="{$value.m_h}" placeholder="Porsi"></td>
+                        <td><input type="text" class="form-control input-sm j-m_t" value="{$value.m_t}" placeholder="√"></td>
+                        <td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-del-jadwal"><i class="fa fa-times"></i></button></td>
+                      </tr>
+                      {/loop}
+                    {else}
+                      <tr class="row-jadwal">
+                        <td><input type="date" class="form-control input-sm j-tgl" value="{?=date('Y-m-d')?}"></td>
+                        <td><input type="text" class="form-control input-sm j-p_a" placeholder="Lunak"></td>
+                        <td><input type="text" class="form-control input-sm j-p_h" placeholder="1 Porsi"></td>
+                        <td><input type="text" class="form-control input-sm j-p_t" placeholder="√"></td>
+                        <td><input type="text" class="form-control input-sm j-s_a" placeholder="Lunak"></td>
+                        <td><input type="text" class="form-control input-sm j-s_h" placeholder="1 Porsi"></td>
+                        <td><input type="text" class="form-control input-sm j-s_t" placeholder="√"></td>
+                        <td><input type="text" class="form-control input-sm j-m_a" placeholder="Lunak"></td>
+                        <td><input type="text" class="form-control input-sm j-m_h" placeholder="1 Porsi"></td>
+                        <td><input type="text" class="form-control input-sm j-m_t" placeholder="√"></td>
+                        <td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-del-jadwal"><i class="fa fa-times"></i></button></td>
+                      </tr>
+                    {/if}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- SECTION 4: TANDA TANGAN PENGESAHAN -->
+            <div class="rsgm-soap-section" style="margin-bottom: 18px;">
+              <div class="rsgm-soap-section-header">
+                <h5 style="margin: 0; font-weight: 700; color: #1e293b;">
+                  <i class="fa fa-pencil text-primary"></i> 4. Pengesahan Petugas Gizi & Perawat
+                </h5>
+              </div>
+
+              <div class="row" style="margin-top: 12px;">
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="ttd_nutrisionis" class="rsgm-compact-label"><i class="fa fa-apple text-muted"></i> Nutrisionis / Petugas Gizi</label>
+                    <input type="text" name="ttd_nutrisionis" id="ttd_nutrisionis" class="form-control" value="{?=isset_or($data['ttd_nutrisionis'])?}" placeholder="Nama Nutrisionis Pengkaji">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="ttd_perawat" class="rsgm-compact-label"><i class="fa fa-stethoscope text-muted"></i> Perawat Ruangan</label>
+                    <input type="text" name="ttd_perawat" id="ttd_perawat" class="form-control" value="{?=isset_or($data['ttd_perawat'])?}" placeholder="Nama Perawat Pelaksana Ruangan">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- FOOTER AKSI -->
+          <div class="rsgm-reg-footer">
+            <div class="rsgm-reg-footer-left">
+              <a href="{?=url([ADMIN, 'form_rme', 'ri11bmanage'])?}" class="btn btn-default btn-sm">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+            <div class="rsgm-reg-footer-right">
+              <button type="button" class="btn btn-info btn-sm btn-trigger-rme-preview" data-preview-url="{?=url([ADMIN, 'form_rme', 'ri11bcetak'])?}">
+                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+              </button>
+              <button type="submit" class="btn btn-success btn-sm">
+                <i class="fa fa-save"></i> Simpan Pemberian Makan (RI 11B)
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+<script>
+$(document).ready(function() {
+  'use strict';
+
+  // 1. ADD / DELETE JADWAL ROW
+  function getJadwalRow(tgl) {
+    return '<tr class="row-jadwal">' +
+      '<td><input type="date" class="form-control input-sm j-tgl" value="' + (tgl || '') + '"></td>' +
+      '<td><input type="text" class="form-control input-sm j-p_a" placeholder="Bentuk"></td>' +
+      '<td><input type="text" class="form-control input-sm j-p_h" placeholder="Porsi"></td>' +
+      '<td><input type="text" class="form-control input-sm j-p_t" placeholder="√"></td>' +
+      '<td><input type="text" class="form-control input-sm j-s_a" placeholder="Bentuk"></td>' +
+      '<td><input type="text" class="form-control input-sm j-s_h" placeholder="Porsi"></td>' +
+      '<td><input type="text" class="form-control input-sm j-s_t" placeholder="√"></td>' +
+      '<td><input type="text" class="form-control input-sm j-m_a" placeholder="Bentuk"></td>' +
+      '<td><input type="text" class="form-control input-sm j-m_h" placeholder="Porsi"></td>' +
+      '<td><input type="text" class="form-control input-sm j-m_t" placeholder="√"></td>' +
+      '<td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-del-jadwal"><i class="fa fa-times"></i></button></td>' +
+      '</tr>';
+  }
+
+  $('#btn_tambah_hari').on('click', function(e) {
+    e.preventDefault();
+    $('#tbl_jadwal_makan tbody').append(getJadwalRow(''));
+  });
+
+  $(document).on('click', '.btn-del-jadwal', function() {
+    if ($('#tbl_jadwal_makan tbody tr.row-jadwal').length > 1) {
+      $(this).closest('tr').remove();
+    } else {
+      $(this).closest('tr').find('input').val('');
+    }
+  });
+
+  // SERIALIZE FORM DATA TO JSON BEFORE SUBMIT
+  function serializeRi11b() {
+    var bentuk = [];
+    $('.cb-bentuk:checked').each(function() { bentuk.push($(this).val()); });
+    $('#json_bentuk_makanan').val(JSON.stringify(bentuk));
+
+    var diet = [];
+    $('.cb-diet:checked').each(function() { diet.push($(this).val()); });
+    $('#json_diet').val(JSON.stringify(diet));
+
+    var jadwal = [];
+    $('#tbl_jadwal_makan tbody tr.row-jadwal').each(function() {
+      var tgl = $(this).find('.j-tgl').val();
+      if (tgl) {
+        jadwal.push({
+          tgl: tgl,
+          p_a: $(this).find('.j-p_a').val(),
+          p_h: $(this).find('.j-p_h').val(),
+          p_t: $(this).find('.j-p_t').val(),
+          s_a: $(this).find('.j-s_a').val(),
+          s_h: $(this).find('.j-s_h').val(),
+          s_t: $(this).find('.j-s_t').val(),
+          m_a: $(this).find('.j-m_a').val(),
+          m_h: $(this).find('.j-m_h').val(),
+          m_t: $(this).find('.j-m_t').val()
+        });
+      }
+    });
+    $('#json_detail_pemberian').val(JSON.stringify(jadwal));
+  }
+
+  $('#frm_ri11b').on('submit', function() {
+    serializeRi11b();
+  });
+
+  // 2. ISI CONTOH DATA (DEMO)
+  function fillDemoData() {
+    if (!$('#no_rawat').val()) $('#no_rawat').val('2026/10/16/000001');
+    $('#no_rkm_medis').val('000001');
+    $('#display_no_rkm_medis').val('000001');
+    $('#nm_pasien').val('Farida Ariyani');
+    $('#display_jk').val('Perempuan');
+    $('#display_tgl_lahir').val('1988-06-15 (38 Th)');
+    $('#kamar_kelas').val('Rawat Inap Melati 03 / Kelas 1');
+
+    var today = '{?=date("Y-m-d")?}';
+    $('#tanggal_rawat').val(today);
+    $('#dpjp_utama').val('drg. Hendra Pratama, Sp.BM');
+    $('#nutrisionis').val('Tri Wahyuni, S.Gz');
+    $('#diagnosa').val('Post Odontektomi Gigi 48 H+1');
+
+    $('.cb-bentuk').prop('checked', false);
+    $('.cb-bentuk[value="Lunak"]').prop('checked', true);
+
+    $('.cb-diet').prop('checked', false);
+    $('.cb-diet[value="TKTP"]').prop('checked', true);
+    $('#diet_lainnya').val('Makanan dingin/sejuk pada 24 jam pertama pasca bedah mulut, tekstur lembut tanpa cabai.');
+
+    $('#tbl_jadwal_makan tbody').empty();
+    $('#tbl_jadwal_makan tbody').append(
+      '<tr class="row-jadwal">' +
+      '<td><input type="date" class="form-control input-sm j-tgl" value="' + today + '"></td>' +
+      '<td><input type="text" class="form-control input-sm j-p_a" value="Bubur Halus"></td>' +
+      '<td><input type="text" class="form-control input-sm j-p_h" value="1 Porsi"></td>' +
+      '<td><input type="text" class="form-control input-sm j-p_t" value="√"></td>' +
+      '<td><input type="text" class="form-control input-sm j-s_a" value="Nasi Tim Lunak"></td>' +
+      '<td><input type="text" class="form-control input-sm j-s_h" value="3/4 Porsi"></td>' +
+      '<td><input type="text" class="form-control input-sm j-s_t" value="√"></td>' +
+      '<td><input type="text" class="form-control input-sm j-m_a" value="Nasi Tim Lunak"></td>' +
+      '<td><input type="text" class="form-control input-sm j-m_h" value="1 Porsi"></td>' +
+      '<td><input type="text" class="form-control input-sm j-m_t" value="√"></td>' +
+      '<td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-del-jadwal"><i class="fa fa-times"></i></button></td>' +
+      '</tr>'
+    );
+
+    $('#ttd_nutrisionis').val('Tri Wahyuni, S.Gz');
+    $('#ttd_perawat').val('Siti Rahmah, A.Md.Kes');
+  }
+
+  $('#btn_demo').on('click', function(e) {
+    e.preventDefault();
+    fillDemoData();
+  });
+
+  // 3. AUTO-FILL DATA PASIEN SAAT NO. RAWAT DIISI
+  function fetchPatientByNoRawat() {
+    var noRawat = $('#no_rawat').val().trim();
+    if (!noRawat) return;
+    $.ajax({
+      url: '{?=url([ADMIN, "form_rme", "ri11bform"])?}',
+      data: { ajax_patient: 1, no_rawat: noRawat },
+      dataType: 'json',
+      success: function(res) {
+        if (res && res.success) {
+          if (!$('#nm_pasien').val()) $('#nm_pasien').val(res.nama_pasien || res.nm_pasien);
+          if (res.no_rkm_medis) {
+            $('#no_rkm_medis').val(res.no_rkm_medis);
+            $('#display_no_rkm_medis').val(res.no_rkm_medis);
+          }
+          var jkVal = res.jk || res.jenis_kelamin;
+          if (jkVal) {
+            $('#display_jk').val(jkVal === 'L' ? 'Laki-laki' : (jkVal === 'P' ? 'Perempuan' : '-'));
+          }
+          var tglLahir = res.tgl_lahir || res.tanggal_lahir;
+          var umur = res.umur || '';
+          if (tglLahir) {
+            $('#display_tgl_lahir').val(tglLahir + (umur ? ' (' + umur + ')' : ''));
+          }
+          if (res.nm_bangsal && !$('#kamar_kelas').val()) {
+            $('#kamar_kelas').val(res.nm_bangsal + (res.kd_kamar ? ' / ' + res.kd_kamar : '') + (res.kelas ? ' (' + res.kelas + ')' : ''));
+          }
+        }
+      }
+    });
+  }
+
+  $('#no_rawat').on('blur change', fetchPatientByNoRawat);
+  $('#btn_cari_pasien').on('click', fetchPatientByNoRawat);
+});
+</script>

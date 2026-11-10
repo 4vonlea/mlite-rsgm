@@ -1,0 +1,500 @@
+<style>
+.triase-table-form {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 12px;
+}
+.triase-table-form th, .triase-table-form td {
+    border: 1px solid #333;
+    padding: 6px 8px;
+    vertical-align: top;
+    font-size: 12px;
+}
+.triase-table-form th {
+    text-align: center;
+    font-weight: bold;
+    color: #000;
+}
+.bg-ats1-hdr { background-color: #e74c3c !important; color: #fff !important; }
+.bg-ats2-hdr { background-color: #f39c12 !important; color: #000 !important; }
+.bg-ats3-hdr { background-color: #f1c40f !important; color: #000 !important; }
+.bg-ats4-hdr { background-color: #27ae60 !important; color: #fff !important; }
+.bg-ats5-hdr { background-color: #2ecc71 !important; color: #000 !important; }
+.triase-chk-label {
+    display: block;
+    font-weight: normal;
+    margin-bottom: 5px;
+    cursor: pointer;
+    line-height: 1.3;
+}
+.triase-chk-label input[type="checkbox"] {
+    margin-right: 5px;
+}
+.doa-inline-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #f9f9f9;
+    border: 1px solid #ccc;
+    padding: 10px 14px;
+    border-radius: 4px;
+}
+.doa-inline-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    font-weight: normal;
+    cursor: pointer;
+}
+</style>
+
+<article class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-ambulance"></i> Form RM.GD 3 - Lembar Triase UGD (ATS &amp; Dental SDcep)</h3>
+                <ul class="nav nav-tabs">
+                    <li><a href="{?=url([ADMIN, 'form_rme', 'rmgd3manage'])?}"><i class="fa fa-list"></i> Kelola Data Triase</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'form_rme', 'rmgd3form'])?}"><i class="fa fa-plus"></i> Form Input Triase</a></li>
+                </ul>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'form_rme', 'rmgd3save'])?}" method="post">
+                    <input type="hidden" name="id_triase" value="{$data.id_triase}">
+
+                    <!-- I. IDENTITAS PASIEN & WAKTU TRIASE -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading"><strong>I. IDENTITAS PASIEN &amp; WAKTU TRIASE</strong></div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-4 form-group">
+                                    <label>Pilih Kunjungan Pasien (Terbaru)</label>
+                                    <select id="select_pasien_cepat" class="form-control">
+                                        <option value="">-- Pilih Cepat Kunjungan --</option>
+                                        {loop: $pasien_list}
+                                        <option value="{$value.no_rawat}" {if: $data.no_rawat == $value.no_rawat}selected{/if}>{$value.no_rawat} - {$value.no_rkm_medis} - {$value.nm_pasien}</option>
+                                        {/loop}
+                                    </select>
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label>No. Rawat / No. RM <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Ketik No. Rawat atau No. RM..." required>
+                                        <span class="input-group-btn">
+                                            <button type="button" id="btn_cari_pasien" class="btn btn-info"><i class="fa fa-search"></i> Cari</button>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label>No. RM</label>
+                                    <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 form-group">
+                                    <label>Nama Pasien</label>
+                                    <input type="text" id="nm_pasien" class="form-control" value="{$data.nm_pasien}" readonly>
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label>Tanggal &amp; Jam Mulai Triase <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" name="tgl_triase" class="form-control" value="{$data.tgl_triase_input}" required>
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label>Jam Selesai Triase (WITA) <span class="text-danger">*</span></label>
+                                    <input type="time" name="jam_selesai_triase" class="form-control" value="{$data.jam_selesai_triase}" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 form-group">
+                                    <label>Keluhan Utama <span class="text-danger">*</span></label>
+                                    <textarea name="keluhan_utama" class="form-control" rows="2" placeholder="Masukkan keluhan pasien...">{$data.keluhan_utama}</textarea>
+                                </div>
+                                <div class="col-md-6 form-group">
+                                    <label>Diagnosa Awal</label>
+                                    <textarea name="diagnosa_awal" class="form-control" rows="2" placeholder="Masukkan diagnosa awal...">{$data.diagnosa_awal}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- II. PASIEN UMUM MENGGUNAKAN AUSTRALASIAN TRIAGE SCALE (ATS) -->
+                    <div class="panel panel-danger">
+                        <div class="panel-heading">
+                            <strong>II. PASIEN UMUM MENGGUNAKAN <em>AUSTRALASIAN TRIAGE SCALE (ATS)</em></strong>
+                        </div>
+                        <div class="panel-body" style="padding: 10px;">
+                            <div class="table-responsive">
+                                <table class="triase-table-form">
+                                    <thead>
+                                        <tr>
+                                            <th width="20%" class="bg-ats1-hdr">
+                                                <label style="cursor:pointer;margin:0;color:#fff;">
+                                                    <input type="radio" name="ats_skala" value="ATS 1" {if: $data.ats_skala == 'ATS 1' || $data.skala_triase == '1'}checked{/if}>
+                                                    RESUSITASI<br>(ATS 1)
+                                                </label>
+                                                <div style="font-size:11px;font-weight:normal;margin-top:3px;">Ditangani segera</div>
+                                            </th>
+                                            <th width="20%" class="bg-ats2-hdr">
+                                                <label style="cursor:pointer;margin:0;">
+                                                    <input type="radio" name="ats_skala" value="ATS 2" {if: $data.ats_skala == 'ATS 2' || $data.skala_triase == '2'}checked{/if}>
+                                                    EMERGENSI<br>(ATS 2)
+                                                </label>
+                                                <div style="font-size:11px;font-weight:normal;margin-top:3px;">Ditangani dalam 10 menit</div>
+                                            </th>
+                                            <th width="20%" class="bg-ats3-hdr">
+                                                <label style="cursor:pointer;margin:0;">
+                                                    <input type="radio" name="ats_skala" value="ATS 3" {if: $data.ats_skala == 'ATS 3' || $data.skala_triase == '3'}checked{/if}>
+                                                    URGENSI<br>(ATS 3)
+                                                </label>
+                                                <div style="font-size:11px;font-weight:normal;margin-top:3px;">Ditangani dalam 30 menit</div>
+                                            </th>
+                                            <th width="20%" class="bg-ats4-hdr">
+                                                <label style="cursor:pointer;margin:0;color:#fff;">
+                                                    <input type="radio" name="ats_skala" value="ATS 4" {if: $data.ats_skala == 'ATS 4' || $data.skala_triase == '4'}checked{/if}>
+                                                    SEMI-URGENSI<br>(ATS 4)
+                                                </label>
+                                                <div style="font-size:11px;font-weight:normal;margin-top:3px;">Ditangani dalam 60 menit</div>
+                                            </th>
+                                            <th width="20%" class="bg-ats5-hdr">
+                                                <label style="cursor:pointer;margin:0;">
+                                                    <input type="radio" name="ats_skala" value="ATS 5" {if: $data.ats_skala == 'ATS 5' || $data.skala_triase == '5'}checked{/if}>
+                                                    LESS URGENSI<br>(ATS 5)
+                                                </label>
+                                                <div style="font-size:11px;font-weight:normal;margin-top:3px;">Ditangani dalam 120 menit</div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <!-- ATS 1 -->
+                                            <td>
+                                                {loop: $ats1_list}
+                                                <label class="triase-chk-label">
+                                                    <input type="checkbox" name="ats_items[]" class="chk-ats" data-ats="ATS 1" data-skala="1" data-kat="Merah" value="{$value.label}" {if: $value.checked}checked{/if}>
+                                                    {$value.label}
+                                                </label>
+                                                {/loop}
+                                            </td>
+                                            <!-- ATS 2 -->
+                                            <td>
+                                                {loop: $ats2_list}
+                                                <label class="triase-chk-label">
+                                                    <input type="checkbox" name="ats_items[]" class="chk-ats" data-ats="ATS 2" data-skala="2" data-kat="Merah" value="{$value.label}" {if: $value.checked}checked{/if}>
+                                                    {$value.label}
+                                                </label>
+                                                {/loop}
+                                            </td>
+                                            <!-- ATS 3 -->
+                                            <td>
+                                                {loop: $ats3_list}
+                                                <label class="triase-chk-label">
+                                                    <input type="checkbox" name="ats_items[]" class="chk-ats" data-ats="ATS 3" data-skala="3" data-kat="Kuning" value="{$value.label}" {if: $value.checked}checked{/if}>
+                                                    {$value.label}
+                                                </label>
+                                                {/loop}
+                                            </td>
+                                            <!-- ATS 4 -->
+                                            <td>
+                                                {loop: $ats4_list}
+                                                <label class="triase-chk-label">
+                                                    <input type="checkbox" name="ats_items[]" class="chk-ats" data-ats="ATS 4" data-skala="4" data-kat="Hijau" value="{$value.label}" {if: $value.checked}checked{/if}>
+                                                    {$value.label}
+                                                </label>
+                                                {/loop}
+                                            </td>
+                                            <!-- ATS 5 -->
+                                            <td>
+                                                {loop: $ats5_list}
+                                                <label class="triase-chk-label">
+                                                    <input type="checkbox" name="ats_items[]" class="chk-ats" data-ats="ATS 5" data-skala="5" data-kat="Hijau" value="{$value.label}" {if: $value.checked}checked{/if}>
+                                                    {$value.label}
+                                                </label>
+                                                {/loop}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- III. PASIEN GIGI DAN MULUT MENGGUNAKAN SDcep -->
+                    <div class="panel panel-warning">
+                        <div class="panel-heading">
+                            <strong>III. PASIEN GIGI DAN MULUT MENGGUNAKAN <em>SCOTTISH DENTAL CLINICAL EFFECTIVENESS PROGRAMME (SDcep)</em></strong>
+                        </div>
+                        <div class="panel-body" style="padding: 10px;">
+                            <div class="table-responsive">
+                                <table class="triase-table-form">
+                                    <thead>
+                                        <tr>
+                                            <th width="33.33%" class="bg-ats1-hdr">
+                                                <label style="cursor:pointer;margin:0;color:#fff;">
+                                                    <input type="radio" name="sdcep_skala" value="EMERGENCY CARE" {if: $data.sdcep_skala == 'EMERGENCY CARE'}checked{/if}>
+                                                    EMERGENCY CARE
+                                                </label>
+                                                <div style="font-size:11px;font-weight:normal;margin-top:3px;">Ditangani segera</div>
+                                            </th>
+                                            <th width="33.33%" class="bg-ats3-hdr">
+                                                <label style="cursor:pointer;margin:0;">
+                                                    <input type="radio" name="sdcep_skala" value="URGENT CARE" {if: $data.sdcep_skala == 'URGENT CARE'}checked{/if}>
+                                                    URGENT CARE
+                                                </label>
+                                                <div style="font-size:11px;font-weight:normal;margin-top:3px;">Ditangani dalam 30 menit</div>
+                                            </th>
+                                            <th width="33.34%" class="bg-ats4-hdr">
+                                                <label style="cursor:pointer;margin:0;color:#fff;">
+                                                    <input type="radio" name="sdcep_skala" value="ADVICE SELF HELP AND ROUTING CARE" {if: $data.sdcep_skala == 'ADVICE SELF HELP AND ROUTING CARE'}checked{/if}>
+                                                    ADVICE SELF HELP AND ROUTING CARE
+                                                </label>
+                                                <div style="font-size:11px;font-weight:normal;margin-top:3px;">Ditangani dalam 120 menit</div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <!-- EMERGENCY CARE -->
+                                            <td>
+                                                {loop: $sdcep1_list}
+                                                <label class="triase-chk-label">
+                                                    <input type="checkbox" name="sdcep_items[]" class="chk-sdcep" data-sdcep="EMERGENCY CARE" data-kat="Merah" data-skala="1" value="{$value.label}" {if: $value.checked}checked{/if}>
+                                                    {$value.label}
+                                                </label>
+                                                {/loop}
+                                            </td>
+                                            <!-- URGENT CARE -->
+                                            <td>
+                                                {loop: $sdcep2_list}
+                                                <label class="triase-chk-label">
+                                                    <input type="checkbox" name="sdcep_items[]" class="chk-sdcep" data-sdcep="URGENT CARE" data-kat="Kuning" data-skala="3" value="{$value.label}" {if: $value.checked}checked{/if}>
+                                                    {$value.label}
+                                                </label>
+                                                {/loop}
+                                            </td>
+                                            <!-- ADVICE SELF HELP AND ROUTING CARE -->
+                                            <td>
+                                                {loop: $sdcep3_list}
+                                                <label class="triase-chk-label">
+                                                    <input type="checkbox" name="sdcep_items[]" class="chk-sdcep" data-sdcep="ADVICE SELF HELP AND ROUTING CARE" data-kat="Hijau" data-skala="5" value="{$value.label}" {if: $value.checked}checked{/if}>
+                                                    {$value.label}
+                                                </label>
+                                                {/loop}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- IV. DOA / DEATH ON ARRIVAL (SEJAJAR DALAM 1 BARIS) -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading"><strong>IV. DOA / <em>DEATH ON ARRIVAL</em> (Sejajar dalam 1 Baris)</strong></div>
+                        <div class="panel-body">
+                            <div class="doa-inline-bar">
+                                <label class="doa-inline-item">
+                                    <input type="checkbox" name="doa_items[]" class="chk-doa" value="Tanda Kehidupan (-)" {if: $doa_map.tanda_kehidupan}checked{/if}>
+                                    <strong>Tanda Kehidupan (-)</strong>
+                                </label>
+                                <label class="doa-inline-item">
+                                    <input type="checkbox" name="doa_items[]" class="chk-doa" value="Pupil RCL/RCTL (-/-)" {if: $doa_map.pupil}checked{/if}>
+                                    <strong>Pupil RCL/RCTL (-/-)</strong>
+                                </label>
+                                <label class="doa-inline-item">
+                                    <input type="checkbox" name="doa_items[]" class="chk-doa" value="Denyut Nadi (-)" {if: $doa_map.denyut_nadi}checked{/if}>
+                                    <strong>Denyut Nadi (-)</strong>
+                                </label>
+                                <label class="doa-inline-item">
+                                    <input type="checkbox" name="doa_items[]" class="chk-doa" value="EKG flat" {if: $doa_map.ekg_flat}checked{/if}>
+                                    <strong>EKG flat</strong>
+                                </label>
+                                <div class="doa-inline-item">
+                                    <strong>Jam DOA :</strong>
+                                    <input type="time" name="jam_doa" id="jam_doa" class="form-control input-sm" style="width: 110px; display: inline-block;" value="{$data.jam_doa}">
+                                    <strong>WITA</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- V. PEMERIKSAAN TANDA VITAL, KATEGORI & PETUGAS TRIASE -->
+                    <div class="panel panel-success">
+                        <div class="panel-heading"><strong>V. KONDISI UMUM, TANDA VITAL &amp; PETUGAS TRIASE</strong></div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-3 form-group">
+                                    <label>Kesadaran</label>
+                                    <select name="kesadaran" class="form-control">
+                                        <option value="Compos Mentis" {if: $data.kesadaran == 'Compos Mentis'}selected{/if}>Compos Mentis</option>
+                                        <option value="Apatis" {if: $data.kesadaran == 'Apatis'}selected{/if}>Apatis</option>
+                                        <option value="Somnolen" {if: $data.kesadaran == 'Somnolen'}selected{/if}>Somnolen</option>
+                                        <option value="Sopor" {if: $data.kesadaran == 'Sopor'}selected{/if}>Sopor</option>
+                                        <option value="Koma" {if: $data.kesadaran == 'Koma'}selected{/if}>Koma</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 form-group">
+                                    <label>Airway</label>
+                                    <select name="airway" class="form-control">
+                                        <option value="Bebas" {if: $data.airway == 'Bebas'}selected{/if}>Bebas</option>
+                                        <option value="Sumbatan Parsial" {if: $data.airway == 'Sumbatan Parsial'}selected{/if}>Sumbatan Parsial</option>
+                                        <option value="Sumbatan Total" {if: $data.airway == 'Sumbatan Total'}selected{/if}>Sumbatan Total</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 form-group">
+                                    <label>Breathing</label>
+                                    <select name="breathing" class="form-control">
+                                        <option value="Spontan" {if: $data.breathing == 'Spontan'}selected{/if}>Spontan</option>
+                                        <option value="Tak Spontan" {if: $data.breathing == 'Tak Spontan'}selected{/if}>Tak Spontan</option>
+                                        <option value="Distres Nafas" {if: $data.breathing == 'Distres Nafas'}selected{/if}>Distres Nafas</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 form-group">
+                                    <label>Circulation</label>
+                                    <select name="circulation" class="form-control">
+                                        <option value="Baik" {if: $data.circulation == 'Baik'}selected{/if}>Baik</option>
+                                        <option value="Syok" {if: $data.circulation == 'Syok'}selected{/if}>Syok</option>
+                                        <option value="Perdarahan" {if: $data.circulation == 'Perdarahan'}selected{/if}>Perdarahan</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-2 form-group">
+                                    <label>TD (mmHg)</label>
+                                    <input type="text" name="tekanan_darah" class="form-control" value="{$data.tekanan_darah}" placeholder="120/80">
+                                </div>
+                                <div class="col-md-2 form-group">
+                                    <label>Nadi (x/mnt)</label>
+                                    <input type="number" name="nadi" class="form-control" value="{$data.nadi}">
+                                </div>
+                                <div class="col-md-2 form-group">
+                                    <label>Respirasi (x/mnt)</label>
+                                    <input type="number" name="respirasi" class="form-control" value="{$data.respirasi}">
+                                </div>
+                                <div class="col-md-2 form-group">
+                                    <label>Suhu (&deg;C)</label>
+                                    <input type="number" step="0.1" name="suhu" class="form-control" value="{$data.suhu}">
+                                </div>
+                                <div class="col-md-2 form-group">
+                                    <label>SpO2 (%)</label>
+                                    <input type="number" name="spo2" class="form-control" value="{$data.spo2}">
+                                </div>
+                                <div class="col-md-2 form-group">
+                                    <label>GCS (E / V / M)</label>
+                                    <div style="display:flex;gap:3px;">
+                                        <input type="number" name="gcs_e" class="form-control input-sm" placeholder="E" value="{$data.gcs_e}" min="1" max="4">
+                                        <input type="number" name="gcs_v" class="form-control input-sm" placeholder="V" value="{$data.gcs_v}" min="1" max="5">
+                                        <input type="number" name="gcs_m" class="form-control input-sm" placeholder="M" value="{$data.gcs_m}" min="1" max="6">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 form-group">
+                                    <label>Kategori Warna Triase <span class="text-danger">*</span></label>
+                                    <select name="kategori" id="kategori_triase" class="form-control" required>
+                                        <option value="Merah" {if: $data.kategori == 'Merah'}selected{/if}>Merah - Resusitasi / Emergensi</option>
+                                        <option value="Kuning" {if: $data.kategori == 'Kuning'}selected{/if}>Kuning - Urgent</option>
+                                        <option value="Hijau" {if: $data.kategori == 'Hijau'}selected{/if}>Hijau - Semi / Less Urgent</option>
+                                        <option value="Hitam" {if: $data.kategori == 'Hitam'}selected{/if}>Hitam - DOA / Non Urgent</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label>Skala Triase (1-5)</label>
+                                    <select name="skala_triase" id="skala_triase" class="form-control">
+                                        <option value="">-- Pilih Skala --</option>
+                                        <option value="1" {if: $data.skala_triase == '1'}selected{/if}>1 - Resusitasi (ATS 1)</option>
+                                        <option value="2" {if: $data.skala_triase == '2'}selected{/if}>2 - Emergensi (ATS 2)</option>
+                                        <option value="3" {if: $data.skala_triase == '3'}selected{/if}>3 - Urgensi (ATS 3)</option>
+                                        <option value="4" {if: $data.skala_triase == '4'}selected{/if}>4 - Semi-Urgensi (ATS 4)</option>
+                                        <option value="5" {if: $data.skala_triase == '5'}selected{/if}>5 - Less Urgensi (ATS 5)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label>Petugas Triase <span class="text-danger">*</span></label>
+                                    <select name="petugas_id" class="form-control" required>
+                                        <option value="">-- Pilih Petugas Triase --</option>
+                                        {loop: $petugas}
+                                        <option value="{$value.nip}" {if: $data.petugas_id == $value.nip}selected{/if}>{$value.nama} ({$value.nip})</option>
+                                        {/loop}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-right">
+                        <a href="{?=url([ADMIN, 'form_rme', 'rmgd3manage'])?}" class="btn btn-default"><i class="fa fa-arrow-left"></i> Kembali</a>
+                        {if: !empty($data.id_triase)}
+                        <a href="{?=url([ADMIN, 'form_rme', 'rmgd3cetak'])?}&id={$data.id_triase}" target="_blank" class="btn btn-info"><i class="fa fa-print"></i> Cetak Lembar Triase</a>
+                        <a href="{?=url([ADMIN, 'form_rme', 'rmgd3cetak'])?}&id={$data.id_triase}&pdf=1" target="_blank" class="btn btn-danger"><i class="fa fa-file-pdf-o"></i> Download PDF</a>
+                        {/if}
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan Data Triase</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>
+
+<script>
+$(document).ready(function() {
+    function fetchPasien(val) {
+        if (!val) return;
+        $.getJSON("{?=url([ADMIN, 'form_rme', 'rmgd3form'])?}&ajax_patient=1&no_rawat=" + encodeURIComponent(val), function(res) {
+            if (res && res.success) {
+                $('#no_rawat').val(res.no_rawat);
+                $('#no_rkm_medis').val(res.no_rkm_medis);
+                $('#nm_pasien').val(res.nama_pasien);
+            }
+        });
+    }
+
+    $('#select_pasien_cepat').on('change', function() {
+        var nr = $(this).val();
+        if (nr) {
+            $('#no_rawat').val(nr);
+            fetchPasien(nr);
+        }
+    });
+
+    $('#btn_cari_pasien').on('click', function() {
+        fetchPasien($('#no_rawat').val());
+    });
+
+    // Auto-select ATS radio, skala, kategori saat checkbox ATS dicentang
+    $('.chk-ats').on('change', function() {
+        if ($(this).is(':checked')) {
+            var ats = $(this).data('ats');
+            var skala = $(this).data('skala');
+            var kat = $(this).data('kat');
+            $('input[name="ats_skala"][value="' + ats + '"]').prop('checked', true);
+            $('#skala_triase').val(skala);
+            $('#kategori_triase').val(kat);
+        }
+    });
+
+    // Auto-select SDcep radio & kategori saat checkbox Dental SDcep dicentang
+    $('.chk-sdcep').on('change', function() {
+        if ($(this).is(':checked')) {
+            var sdcep = $(this).data('sdcep');
+            var kat = $(this).data('kat');
+            var skala = $(this).data('skala');
+            $('input[name="sdcep_skala"][value="' + sdcep + '"]').prop('checked', true);
+            if (!$('.chk-ats:checked').length) {
+                $('#kategori_triase').val(kat);
+                $('#skala_triase').val(skala);
+            }
+        }
+    });
+
+    // Jika DOA dicentang, otomatis set kategori Hitam
+    $('.chk-doa').on('change', function() {
+        if ($('.chk-doa:checked').length > 0) {
+            $('#kategori_triase').val('Hitam');
+        }
+    });
+});
+</script>
+

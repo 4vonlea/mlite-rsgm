@@ -1,0 +1,460 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+  <form id="formAMpp" method="POST" action="{?=url([ADMIN, 'form_rme', 'formamppsave'])?}">
+    <input type="hidden" name="id" value="{?=isset_or($data['id'])?}">
+
+    <div class="rsgm-soap-flex-row clearfix">
+
+      <!-- ============================================================
+           KOLOM KIRI (3): SIDEBAR IDENTITAS & DATA PASIEN
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Data Pasien</span>
+            </h4>
+            <span class="badge" style="background-color: #eff6ff; color: #1e40af; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #bfdbfe;">Form A MPP</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <!-- No Rawat with Search -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default" id="btnCariPasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                    <i class="fa fa-search text-primary"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <!-- No Rekam Medis -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+              <input type="text" id="info_no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly style="background-color: #f8fafc; font-weight: 700;">
+            </div>
+
+            <!-- Nama Pasien -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+              <input type="text" id="info_nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{?=isset_or($data['nm_pasien'])?}" readonly style="background-color: #f8fafc; font-weight: 600;">
+            </div>
+
+            <!-- Gender & Tanggal Lahir -->
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="info_jk" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                  <input type="text" id="info_jk" class="form-control" value="{?= !empty($data['jk']) ? ($data['jk'] == 'L' ? 'Laki-Laki' : 'Perempuan') : '' ?}" readonly style="background-color: #f8fafc;">
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="info_tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tgl Lahir</label>
+                  <input type="text" id="info_tgl_lahir" class="form-control" value="{?=isset_or($data['tgl_lahir'])?}" readonly style="background-color: #f8fafc;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Umur Pasien -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_umur" class="rsgm-compact-label"><i class="fa fa-birthday-cake text-muted"></i> Umur Pasien</label>
+              <input type="text" id="info_umur" class="form-control" value="{?=isset_or($data['umur'])?}" readonly placeholder="Umur" style="background-color: #f8fafc;">
+            </div>
+
+            <!-- Alamat Domisili -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_alamat" class="rsgm-compact-label"><i class="fa fa-map-marker text-muted"></i> Alamat Domisili</label>
+              <textarea id="info_alamat" class="form-control" rows="2" readonly placeholder="Alamat pasien" style="background-color: #f8fafc; resize: none;">{?=isset_or($data['alamat'])?}</textarea>
+            </div>
+
+            <!-- Tgl/Hari Pelaksanaan -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="tgl_hari" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tgl / Hari Pelaksanaan <span class="text-danger">*</span></label>
+              <input type="text" name="tgl_hari" id="tgl_hari" class="form-control" value="{if: !empty($data.tgl_hari)}{$data.tgl_hari}{else}{?=date('d-m-Y')?}{/if}" placeholder="Contoh: Senin, 12-10-2026" required>
+            </div>
+
+            <!-- Petugas MPP -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="nama_mpp" class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Petugas MPP <span class="text-danger">*</span></label>
+              <input type="text" name="nama_mpp" id="nama_mpp" list="list_mpp" class="form-control" value="{?=isset_or($data['nama_mpp'])?}" placeholder="Nama Petugas MPP..." required>
+              <datalist id="list_mpp">
+                {loop: $petugas_list}
+                <option value="{$value.nama}">{$value.nip} - {$value.nama}</option>
+                {/loop}
+              </datalist>
+            </div>
+
+            <!-- NIP MPP -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="nip_mpp" class="rsgm-compact-label"><i class="fa fa-id-badge text-muted"></i> NIP / NIK Petugas MPP</label>
+              <input type="text" name="nip_mpp" id="nip_mpp" class="form-control" value="{?=isset_or($data['nip_mpp'])?}" placeholder="NIP / NIK...">
+            </div>
+
+            <!-- Kota & Tgl TTD -->
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label class="rsgm-compact-label">Kota TTD</label>
+                  <input type="text" name="kota" class="form-control" value="{if: !empty($data.kota)}{$data.kota}{else}Banjarmasin{/if}">
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label class="rsgm-compact-label">Tanggal TTD</label>
+                  <input type="date" name="tanggal_ttd" class="form-control" value="{if: !empty($data.tanggal_ttd)}{$data.tanggal_ttd}{else}{?=date('Y-m-d')?}{/if}">
+                </div>
+              </div>
+            </div>
+
+            <!-- Tombol Demo Data -->
+            <div style="border-top: 1px dashed #e2e8f0; padding-top: 10px; margin-top: 10px;">
+              <button type="button" id="btn_demo" class="btn btn-warning btn-block btn-sm" style="font-weight: 700; border-radius: 6px;" title="Isi form dengan contoh data skrining & evaluasi MPP">
+                <i class="fa fa-magic"></i> Isi Contoh Data Demo
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div> <!-- /.col-md-3 -->
+
+      <!-- ============================================================
+           KOLOM KANAN (9): WORKSTATION EVALUASI AWAL FORM A MPP
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-user-md"></i></span>
+              <span>Form A - Evaluasi Awal Manajer Pelayanan Pasien (MPP)</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1e40af; font-weight: 700;">Case Management RSGM</span>
+            </div>
+          </div>
+
+          <div class="rsgm-reg-body">
+
+            <!-- BAGIAN I: IDENTIFIKASI / SKRINING PASIEN -->
+            <div class="rsgm-soap-section">
+              <div class="rsgm-soap-sec-title">
+                <i class="fa fa-check-square-o text-primary"></i>
+                <span>I. Identifikasi / Skrining Pasien</span>
+              </div>
+
+              <div class="alert alert-warning" style="padding: 8px 12px; margin-bottom: 10px; font-size: 11.5px; border-radius: 6px;">
+                <i class="fa fa-info-circle"></i> Beri tanda ceklis (&check;) pada kriteria yang sesuai. <em>*Bila hasil skrining &gt; 2 kriteria, pasien dipertimbangkan untuk asesmen MPP.</em>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="checkbox" style="margin: 4px 0;"><label style="font-size: 12px;"><input type="checkbox" name="skrining_risiko_tinggi" value="Ya" {if: !empty($data.skrining_risiko_tinggi) && $data.skrining_risiko_tinggi == 'Ya'}checked{/if}> 1. Pasien dengan risiko tinggi</label></div>
+                  <div class="checkbox" style="margin: 4px 0;"><label style="font-size: 12px;"><input type="checkbox" name="skrining_potensi_komplain" value="Ya" {if: !empty($data.skrining_potensi_komplain) && $data.skrining_potensi_komplain == 'Ya'}checked{/if}> 2. Potensi komplain tinggi (pejabat/pendidikan tinggi/tidak kooperatif)</label></div>
+                  <div class="checkbox" style="margin: 4px 0;"><label style="font-size: 12px;"><input type="checkbox" name="skrining_kognitif_rendah" value="Ya" {if: !empty($data.skrining_kognitif_rendah) && $data.skrining_kognitif_rendah == 'Ya'}checked{/if}> 3. Pasien dengan fungsi kognitif rendah</label></div>
+                  <div class="checkbox" style="margin: 4px 0;"><label style="font-size: 12px;"><input type="checkbox" name="skrining_penyakit_kronis" value="Ya" {if: !empty($data.skrining_penyakit_kronis) && $data.skrining_penyakit_kronis == 'Ya'}checked{/if}> 4. Kasus penyakit kronis / terminal &gt; 2 spesialis / katastropik</label></div>
+                  <div class="checkbox" style="margin: 4px 0;"><label style="font-size: 12px;"><input type="checkbox" name="skrining_gangguan_mental" value="Ya" {if: !empty($data.skrining_gangguan_mental) && $data.skrining_gangguan_mental == 'Ya'}checked{/if}> 5. Riwayat gangguan mental, upaya bunuh diri, krisis keluarga, isu sosial</label></div>
+                  <div class="checkbox" style="margin: 4px 0;"><label style="font-size: 12px;"><input type="checkbox" name="skrining_biaya_tinggi" value="Ya" {if: !empty($data.skrining_biaya_tinggi) && $data.skrining_biaya_tinggi == 'Ya'}checked{/if}> 6. Perkiraan asuhan biaya tinggi / high cost</label></div>
+                </div>
+                <div class="col-md-6">
+                  <div class="checkbox" style="margin: 4px 0;"><label style="font-size: 12px;"><input type="checkbox" name="skrining_sistem_pembiayaan" value="Ya" {if: !empty($data.skrining_sistem_pembiayaan) && $data.skrining_sistem_pembiayaan == 'Ya'}checked{/if}> 7. Kemungkinan sistem pembiayaan kompleks (2 asuransi)</label></div>
+                  <div class="checkbox" style="margin: 4px 0;"><label style="font-size: 12px;"><input type="checkbox" name="skrining_los_memanjang" value="Ya" {if: !empty($data.skrining_los_memanjang) && $data.skrining_los_memanjang == 'Ya'}checked{/if}> 8. Kasus yang melebihi rata-rata lama rawat (LOS memanjang)</label></div>
+                  <div class="checkbox" style="margin: 4px 0;"><label style="font-size: 12px;"><input type="checkbox" name="skrining_rencana_pemulangan" value="Ya" {if: !empty($data.skrining_rencana_pemulangan) && $data.skrining_rencana_pemulangan == 'Ya'}checked{/if}> 9. Rencana pemulangan penting/berisiko / kontinuitas pelayanan</label></div>
+                  <div class="checkbox" style="margin: 4px 0;"><label style="font-size: 12px;"><input type="checkbox" name="skrining_multiple_diagnosis" value="Ya" {if: !empty($data.skrining_multiple_diagnosis) && $data.skrining_multiple_diagnosis == 'Ya'}checked{/if}> 10. Multiple diagnosis membutuhkan penanganan khusus</label></div>
+                  <div class="checkbox" style="margin: 4px 0;"><label style="font-size: 12px;"><input type="checkbox" name="skrining_kasus_kompleks" value="Ya" {if: !empty($data.skrining_kasus_kompleks) && $data.skrining_kasus_kompleks == 'Ya'}checked{/if}> 11. Pasien dengan kasus kompleks / rumit</label></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- BAGIAN II: ASESMEN MPP -->
+            <div class="rsgm-soap-section">
+              <div class="rsgm-soap-sec-title">
+                <i class="fa fa-stethoscope text-info"></i>
+                <span>II. Asesmen Manajer Pelayanan Pasien</span>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">1. Fisik Fungsional</label>
+                  <select name="fisik_fungsional" class="form-control">
+                    <option value="">- Pilih -</option>
+                    <option value="Partial care" {if: !empty($data.fisik_fungsional) && $data.fisik_fungsional == 'Partial care'}selected{/if}>Partial care</option>
+                    <option value="Total care" {if: !empty($data.fisik_fungsional) && $data.fisik_fungsional == 'Total care'}selected{/if}>Total care</option>
+                    <option value="Mandiri" {if: !empty($data.fisik_fungsional) && $data.fisik_fungsional == 'Mandiri'}selected{/if}>Mandiri</option>
+                  </select>
+                </div>
+                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">2. Kognitif</label>
+                  <select name="kognitif" class="form-control">
+                    <option value="">- Pilih -</option>
+                    <option value="Kooperatif" {if: !empty($data.kognitif) && $data.kognitif == 'Kooperatif'}selected{/if}>Kooperatif</option>
+                    <option value="Tidak kooperatif" {if: !empty($data.kognitif) && $data.kognitif == 'Tidak kooperatif'}selected{/if}>Tidak kooperatif</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">3. Pemahaman Tentang Kesehatan</label>
+                  <select name="pemahaman_kesehatan" class="form-control">
+                    <option value="">- Pilih -</option>
+                    <option value="Kurang" {if: !empty($data.pemahaman_kesehatan) && $data.pemahaman_kesehatan == 'Kurang'}selected{/if}>Kurang</option>
+                    <option value="Cukup" {if: !empty($data.pemahaman_kesehatan) && $data.pemahaman_kesehatan == 'Cukup'}selected{/if}>Cukup</option>
+                    <option value="Baik" {if: !empty($data.pemahaman_kesehatan) && $data.pemahaman_kesehatan == 'Baik'}selected{/if}>Baik</option>
+                  </select>
+                </div>
+                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">4. Kemampuan Menerima Perubahan</label>
+                  <select name="kemampuan_menerima_perubahan" class="form-control">
+                    <option value="">- Pilih -</option>
+                    <option value="Mampu" {if: !empty($data.kemampuan_menerima_perubahan) && $data.kemampuan_menerima_perubahan == 'Mampu'}selected{/if}>Mampu</option>
+                    <option value="Tidak mampu" {if: !empty($data.kemampuan_menerima_perubahan) && $data.kemampuan_menerima_perubahan == 'Tidak mampu'}selected{/if}>Tidak mampu</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">5. Dukungan Keluarga</label>
+                  <select name="dukungan_keluarga" class="form-control">
+                    <option value="">- Pilih -</option>
+                    <option value="Ada" {if: !empty($data.dukungan_keluarga) && $data.dukungan_keluarga == 'Ada'}selected{/if}>Ada</option>
+                    <option value="Tidak" {if: !empty($data.dukungan_keluarga) && $data.dukungan_keluarga == 'Tidak'}selected{/if}>Tidak</option>
+                  </select>
+                </div>
+                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">6. Kepatuhan Pasien</label>
+                  <select name="kepatuhan_pasien" class="form-control">
+                    <option value="">- Pilih -</option>
+                    <option value="Ya" {if: !empty($data.kepatuhan_pasien) && $data.kepatuhan_pasien == 'Ya'}selected{/if}>Ya</option>
+                    <option value="Tidak" {if: !empty($data.kepatuhan_pasien) && $data.kepatuhan_pasien == 'Tidak'}selected{/if}>Tidak</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">7. Perencanaan Lanjutan (Rujukan Komunitas)</label>
+                  <input type="text" name="perencanaan_lanjutan" class="form-control" value="{?=isset_or($data['perencanaan_lanjutan'])?}" placeholder="Keterangan rujukan komunitas...">
+                </div>
+                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">8. Finansial / Status Asuransi</label>
+                  <input type="text" name="finansial_status" list="list_asuransi" class="form-control" value="{?=isset_or($data['finansial_status'])?}" placeholder="PBI / NPBI / KSO / UMUM / BPJS">
+                  <datalist id="list_asuransi">
+                    <option value="BPJS Kesehatan PBI">
+                    <option value="BPJS Kesehatan Non PBI">
+                    <option value="Umum / Mandiri">
+                    <option value="Asuransi Swasta / KSO">
+                    <option value="Jasa Raharja">
+                    <option value="Biakes Maskin">
+                  </datalist>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="rsgm-compact-label">9. Asesmen Tambahan / Catatan Khusus</label>
+                <textarea name="asesmen_lain_lain" class="form-control" rows="2" placeholder="Catatan asesmen lainnya...">{?=isset_or($data['asesmen_lain_lain'])?}</textarea>
+              </div>
+            </div>
+
+            <!-- BAGIAN III: IDENTIFIKASI MASALAH PASIEN -->
+            <div class="rsgm-soap-section">
+              <div class="rsgm-soap-sec-title">
+                <i class="fa fa-exclamation-circle text-warning"></i>
+                <span>III. Identifikasi Masalah Pasien</span>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">1. Masalah Biaya / Penjaminan</label>
+                  <input type="text" name="masalah_biaya" class="form-control" value="{?=isset_or($data['masalah_biaya'])?}" placeholder="Keterangan masalah biaya...">
+                </div>
+                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">2. Masalah Dukungan Keluarga</label>
+                  <input type="text" name="masalah_keluarga" class="form-control" value="{?=isset_or($data['masalah_keluarga'])?}" placeholder="Keterangan dukungan keluarga...">
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">3. Masalah Pemulangan / Rujukan</label>
+                  <input type="text" name="masalah_pemulangan" class="form-control" value="{?=isset_or($data['masalah_pemulangan'])?}" placeholder="Keterangan rencana pulang...">
+                </div>
+                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">4. Masalah Pemahaman</label>
+                  <input type="text" name="masalah_pemahaman" class="form-control" value="{?=isset_or($data['masalah_pemahaman'])?}" placeholder="Keterangan pemahaman...">
+                </div>
+                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">5. Masalah Ketidakpatuhan</label>
+                  <input type="text" name="masalah_ketidakpatuhan" class="form-control" value="{?=isset_or($data['masalah_ketidakpatuhan'])?}" placeholder="Keterangan kepatuhan...">
+                </div>
+              </div>
+            </div>
+
+            <!-- BAGIAN IV: PERENCANAAN MPP -->
+            <div class="rsgm-soap-section">
+              <div class="rsgm-soap-sec-title">
+                <i class="fa fa-tasks text-success"></i>
+                <span>IV. Perencanaan Tindak Lanjut MPP</span>
+              </div>
+
+              <div class="checkbox" style="margin: 4px 0;">
+                <label style="font-size: 12px; font-weight: 500;">
+                  <input type="checkbox" name="rencana_edukasi_ppa" value="Ya" {if: !empty($data.rencana_edukasi_ppa) && $data.rencana_edukasi_ppa == 'Ya'}checked{/if}>
+                  <strong>1.</strong> Koordinasi dengan PPA memberikan edukasi penyakit dan rencana pemulangan (Discharge Planning)
+                </label>
+              </div>
+              <div class="checkbox" style="margin: 4px 0;">
+                <label style="font-size: 12px; font-weight: 500;">
+                  <input type="checkbox" name="rencana_koordinasi_bpjs" value="Ya" {if: !empty($data.rencana_koordinasi_bpjs) && $data.rencana_koordinasi_bpjs == 'Ya'}checked{/if}>
+                  <strong>2.</strong> Komunikasi dan koordinasi dengan BPJS / Penjamin terkait pembiayaan perawatan
+                </label>
+              </div>
+              <div class="checkbox" style="margin: 4px 0;">
+                <label style="font-size: 12px; font-weight: 500;">
+                  <input type="checkbox" name="rencana_koordinasi_dpjp" value="Ya" {if: !empty($data.rencana_koordinasi_dpjp) && $data.rencana_koordinasi_dpjp == 'Ya'}checked{/if}>
+                  <strong>3.</strong> Komunikasi dan koordinasi dengan DPJP terkait penjaminan berdasarkan INA-CBG's
+                </label>
+              </div>
+
+              <div class="row" style="margin-top: 8px;">
+                <div class="col-md-6 form-group" style="margin-bottom: 5px;">
+                  <label class="rsgm-compact-label">4. Rencana Tindakan Lainnya (1)</label>
+                  <input type="text" name="rencana_lain_4" class="form-control" value="{?=isset_or($data['rencana_lain_4'])?}" placeholder="Rencana tindakan tambahan...">
+                </div>
+                <div class="col-md-6 form-group" style="margin-bottom: 5px;">
+                  <label class="rsgm-compact-label">5. Rencana Tindakan Lainnya (2)</label>
+                  <input type="text" name="rencana_lain_5" class="form-control" value="{?=isset_or($data['rencana_lain_5'])?}" placeholder="Rencana tindakan tambahan...">
+                </div>
+              </div>
+            </div>
+
+          </div> <!-- /.rsgm-reg-body -->
+
+          <!-- ============================================================
+               FOOTER ACTIONS (STANDAR STYLE AKGMUFORM)
+               ============================================================ -->
+          <div class="rsgm-reg-footer">
+            <div>
+              <a href="{?=url([ADMIN, 'form_rme', 'formamppmanage'])?}" class="btn btn-default" style="border-radius: 6px;">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+            <div class="rsgm-reg-actions">
+              <button type="button" class="btn btn-info btn-trigger-rme-preview" data-preview-url="{?=url([ADMIN, 'form_rme', 'formamppcetak'])?}" style="font-weight: 600; border-radius: 6px;" title="Lihat pratinjau form hasil cetak / PDF">
+                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+              </button>
+              <button type="submit" class="btn btn-primary" id="btnSimpan" style="font-weight: 700; border-radius: 6px;">
+                <i class="fa fa-save"></i> Simpan Form A MPP
+              </button>
+            </div>
+          </div>
+
+        </div> <!-- /.rsgm-reg-shell -->
+      </div> <!-- /.col-md-9 -->
+
+    </div> <!-- /.rsgm-soap-flex-row -->
+  </form>
+</div>
+
+<script>
+$(document).ready(function() {
+    function cariPasien() {
+        var no_rawat = $.trim($('#no_rawat').val());
+        if (!no_rawat) {
+            alert('Silakan masukkan No. Rawat atau No. RM');
+            return;
+        }
+
+        $('#btnCariPasien').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url: '{?=url([ADMIN, "form_rme", "formamppform"])?}',
+            type: 'GET',
+            data: { ajax_patient: 1, no_rawat: no_rawat },
+            dataType: 'json',
+            success: function(res) {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+                if (res && res.success) {
+                    $('#no_rawat').val(res.no_rawat);
+                    $('#info_nm_pasien').val(res.nm_pasien || '');
+                    $('#info_no_rkm_medis').val(res.no_rkm_medis || '');
+                    $('#info_jk').val(res.jk === 'L' ? 'Laki-Laki' : (res.jk === 'P' ? 'Perempuan' : '-'));
+                    $('#info_tgl_lahir').val(res.tgl_lahir || '');
+                    $('#info_umur').val(res.umur || '');
+                    $('#info_alamat').val(res.alamat || '');
+
+                    if (res.png_jawab && !$('input[name="finansial_status"]').val()) {
+                        $('input[name="finansial_status"]').val(res.png_jawab);
+                    }
+                } else {
+                    alert('Data pasien dengan No. Rawat / RM "' + no_rawat + '" tidak ditemukan.');
+                }
+            },
+            error: function() {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+                alert('Gagal menghubungi server untuk pencarian pasien.');
+            }
+        });
+    }
+
+    $('#btnCariPasien').click(function() {
+        cariPasien();
+    });
+
+    $('#no_rawat').keypress(function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            cariPasien();
+        }
+    });
+
+    var initRawat = $('#no_rawat').val().trim();
+    if (initRawat && !$('#info_nm_pasien').val()) {
+        cariPasien();
+    }
+
+    // Demo Data
+    $('#btn_demo').on('click', function(e) {
+        e.preventDefault();
+        $('#nama_mpp').val('Hj. Nurul Fitriah, S.Kep., Ns');
+        $('#nip_mpp').val('198403152008042003');
+
+        // Skrining
+        $('input[name="skrining_risiko_tinggi"]').prop('checked', true);
+        $('input[name="skrining_penyakit_kronis"]').prop('checked', true);
+        $('input[name="skrining_rencana_pemulangan"]').prop('checked', true);
+
+        // Asesmen
+        $('select[name="fisik_fungsional"]').val('Partial care');
+        $('select[name="kognitif"]').val('Kooperatif');
+        $('select[name="pemahaman_kesehatan"]').val('Cukup');
+        $('select[name="kemampuan_menerima_perubahan"]').val('Mampu');
+        $('select[name="dukungan_keluarga"]').val('Ada');
+        $('select[name="kepatuhan_pasien"]').val('Ya');
+        $('input[name="perencanaan_lanjutan"]').val('Kontrol rutin Poli Bedah Mulut & Puskesmas domisili');
+        $('input[name="finansial_status"]').val('BPJS Kesehatan PBI');
+        $('textarea[name="asesmen_lain_lain"]').val('Keluarga kooperatif dan siap mendampingi masa pemulihan di rumah.');
+
+        // Masalah
+        $('input[name="masalah_biaya"]').val('Menunggu verifikasi rujukan lanjutan BPJS');
+        $('input[name="masalah_keluarga"]').val('Keluarga memerlukan edukasi perawatan luka operasi di rumah');
+        $('input[name="masalah_pemulangan"]').val('Perlu koordinasi alat bantu jalan saat kepulangan');
+        $('input[name="masalah_pemahaman"]').val('Pasien butuh penjelasan ulang mengenai jadwal minum obat');
+        $('input[name="masalah_ketidakpatuhan"]').val('Tidak ada masalah ketidakpatuhan');
+
+        // Rencana
+        $('input[name="rencana_edukasi_ppa"]').prop('checked', true);
+        $('input[name="rencana_koordinasi_bpjs"]').prop('checked', true);
+        $('input[name="rencana_koordinasi_dpjp"]').prop('checked', true);
+        $('input[name="rencana_lain_4"]').val('Fasilitasi rujukan balik (PRB) ke faskes tingkat pertama');
+        $('input[name="rencana_lain_5"]').val('Monitoring kepatuhan minum obat melalui kontak telepon keluarga');
+
+        if (typeof alert !== 'undefined') {
+            alert('Contoh data Form A MPP berhasil dimuat.');
+        }
+    });
+});
+</script>

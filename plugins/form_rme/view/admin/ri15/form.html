@@ -1,0 +1,208 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+  <form method="POST" action="{?=url([ADMIN, 'form_rme', 'ri15save'])?}" id="ri15Form">
+    <input type="hidden" name="id" value="{?=isset($data['id']) ? $data['id'] : ''?}">
+    <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{?=isset_or($data['no_rkm_medis'])?}">
+
+    <div class="rsgm-soap-flex-row clearfix">
+      
+      <!-- ============================================================
+           KOLOM KIRI (3): SIDEBAR IDENTITAS PASIEN
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Identitas Pasien</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">RM.RI 15</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default" id="btn_cari_pasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                    <i class="fa fa-search text-primary"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="display_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+              <input type="text" id="display_no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+              <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}{?=isset_or($data['nama_pasien'])?}{/if}" required>
+            </div>
+
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="display_jk" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                  <input type="text" id="display_jk" class="form-control" value="{if: isset($data['jk']) && ($data['jk'] == 'L' || $data['jk'] == 'Laki-Laki')}Laki-Laki{elseif: isset($data['jk']) && ($data['jk'] == 'P' || $data['jk'] == 'Perempuan')}Perempuan{else}-{/if}" readonly>
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="display_tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir</label>
+                  <input type="text" id="display_tgl_lahir" class="form-control" value="{?=isset_or($data['tgl_lahir'])?}" readonly>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="display_alamat" class="rsgm-compact-label"><i class="fa fa-map-marker text-muted"></i> Alamat Pasien</label>
+              <textarea id="display_alamat" class="form-control" rows="2" readonly style="resize: vertical; font-size: 12px;">{?=isset_or($data['alamat'])?}</textarea>
+            </div>
+
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+              <button type="button" id="btn_demo" class="btn btn-warning btn-sm btn-block" style="border-radius: 6px; font-weight: 600;" title="Isi form dengan contoh data">
+                <i class="fa fa-magic"></i> Isi Contoh Data
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           KOLOM KANAN (9): WORKSTATION FORMULIR INSTRUKSI MEDIS
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-stethoscope"></i></span>
+              <span>Formulir Instruksi Medis</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">RM.RI 15</span>
+              <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-shield"></i> Patient Safety</span>
+            </div>
+          </div>
+
+          <div class="rsgm-reg-body" style="padding: 18px 20px;">
+            
+            <div class="rsgm-soap-section">
+              <div class="rsgm-soap-section-header">
+                <h5><i class="fa fa-exclamation-triangle text-danger"></i> Skrining Alergi Pasien (Instruksi Medis)</h5>
+              </div>
+
+              <div class="row" style="margin-top: 15px;">
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="riwayat_alergi" class="rsgm-compact-label">
+                      <i class="fa fa-question-circle text-muted"></i> Ada Riwayat Alergi Obat / Makanan?
+                    </label>
+                    <select name="riwayat_alergi" id="riwayat_alergi" class="form-control">
+                      <option value="">- Pilih Status Alergi -</option>
+                      <option value="Tidak" {if: ($data.riwayat_alergi == 'Tidak')}selected{/if}>Tidak Ada Alergi</option>
+                      <option value="Ya" {if: ($data.riwayat_alergi == 'Ya')}selected{/if}>Ya, Ada Riwayat Alergi</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="col-md-8" id="box_alergi_terhadap">
+                  <div class="form-group">
+                    <label for="alergi_terhadap" class="rsgm-compact-label">
+                      <i class="fa fa-shield text-danger"></i> Alergi Terhadap (Nama Obat, Reaksi, Tingkat Keparahan)
+                    </label>
+                    <input type="text" name="alergi_terhadap" id="alergi_terhadap" class="form-control" value="{$data.alergi_terhadap}" placeholder="Sebutkan obat atau zat pemicu alergi (misal: Ampisilin - Urtikaria berat)">
+                  </div>
+                </div>
+              </div>
+
+              <div class="alert alert-info" style="border-radius: 8px; font-size: 12.5px; margin-top: 15px; margin-bottom: 5px;">
+                <i class="fa fa-info-circle"></i> <b>Catatan Keselamatan Pasien:</b> Riwayat alergi yang dicatat pada lembar instruksi medis ini menjadi rujukan utama bagi dokter penanggung jawab (DPJP), perawat bangsal, dan farmasi klinis dalam verifikasi resep serta pelaksanaan pemberian obat (RM.RI 15A &amp; RM.RI 15B).
+              </div>
+            </div>
+
+          </div> <!-- /.rsgm-reg-body -->
+
+          <!-- FOOTER AKSI -->
+          <div class="rsgm-reg-footer">
+            <div>
+              <a href="{?=url([ADMIN, 'form_rme', 'ri15manage'])?}" class="btn btn-default btn-sm" style="font-weight: 600;">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-info btn-sm btn-trigger-rme-preview" style="font-weight: 600;">
+                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+              </button>
+              <button type="submit" class="btn btn-primary btn-sm" style="font-weight: 700; padding-left: 20px; padding-right: 20px;">
+                <i class="fa fa-save"></i> Simpan Data
+              </button>
+            </div>
+          </div>
+
+        </div> <!-- /.rsgm-reg-shell -->
+      </div> <!-- /.col-md-9 -->
+
+    </div> <!-- /.rsgm-soap-flex-row -->
+  </form>
+</div>
+
+<script>
+$(document).ready(function() {
+  'use strict';
+
+  // 1. CARI / MUAT DATA PASIEN DARI NO RAWAT
+  function fetchPatientByNoRawat() {
+    var noRawat = $('#no_rawat').val().trim();
+    if (!noRawat) return;
+
+    $.ajax({
+      url: '{?=url([ADMIN, "form_rme", "ri15form"])?}&ajax_patient=1&no_rawat=' + encodeURIComponent(noRawat),
+      type: 'GET',
+      dataType: 'json',
+      success: function(res) {
+        if (res && res.success) {
+          $('#no_rawat').val(res.no_rawat);
+          $('#display_no_rkm_medis').val(res.no_rkm_medis || '');
+          $('#no_rkm_medis').val(res.no_rkm_medis || '');
+          $('#nm_pasien').val(res.nm_pasien || '');
+          if (res.jk) {
+            var jkText = (res.jk === 'L' || res.jk === 'Laki-Laki') ? 'Laki-Laki' : 'Perempuan';
+            $('#display_jk').val(jkText);
+          }
+          if (res.tgl_lahir) $('#display_tgl_lahir').val(res.tgl_lahir);
+          if (res.alamat) $('#display_alamat').val(res.alamat);
+        }
+      }
+    });
+  }
+
+  $('#no_rawat').on('blur change', fetchPatientByNoRawat);
+  $('#btn_cari_pasien').on('click', fetchPatientByNoRawat);
+
+  // 2. TOGGLE TAMPILAN FIELD ALERGI
+  function toggleAlergiField() {
+    if ($('#riwayat_alergi').val() === 'Ya') {
+      $('#box_alergi_terhadap').show();
+    } else {
+      $('#box_alergi_terhadap').show(); // tetap terlihat untuk kejelasan
+    }
+  }
+  $('#riwayat_alergi').on('change', toggleAlergiField);
+
+  // 3. ISI CONTOH DATA (DEMO)
+  $('#btn_demo').on('click', function(e) {
+    e.preventDefault();
+    if (!$('#no_rawat').val()) $('#no_rawat').val('2026/10/16/000001');
+    $('#display_no_rkm_medis').val('000001');
+    $('#no_rkm_medis').val('000001');
+    $('#nm_pasien').val('Farida Ariyani');
+    $('#display_jk').val('Perempuan');
+    $('#display_tgl_lahir').val('1990-05-14');
+    $('#display_alamat').val('Jl. Veteran No. 12B, Banjarmasin');
+    $('#riwayat_alergi').val('Ya').trigger('change');
+    $('#alergi_terhadap').val('Penisilin (Syok Anafilaktik derajat ringan, Urtikaria generalisata)');
+  });
+});
+</script>

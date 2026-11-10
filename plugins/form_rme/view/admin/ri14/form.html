@@ -1,0 +1,609 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+  <form method="POST" action="{?=url([ADMIN, 'form_rme', 'ri14save'])?}" id="ri14Form">
+    <input type="hidden" name="id" value="{?=isset($data['id']) ? $data['id'] : ''?}">
+    <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{?=isset_or($data['no_rkm_medis'])?}">
+    <input type="hidden" name="json_admisi_detail" id="json_admisi_detail" value="">
+    <input type="hidden" name="json_transfer_detail" id="json_transfer_detail" value="">
+    <input type="hidden" name="json_pulang_detail" id="json_pulang_detail" value="">
+
+    <div class="rsgm-soap-flex-row clearfix">
+      
+      <!-- ============================================================
+           KOLOM KIRI (3): SIDEBAR IDENTITAS PASIEN
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Identitas Pasien</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">RM.RI 14</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="tanggal_mrs" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tanggal MRS</label>
+              <input type="date" name="tanggal_mrs" id="tanggal_mrs" class="form-control" value="{if: !empty($data.tanggal_mrs)}{$data.tanggal_mrs}{else}{?=date('Y-m-d')?}{/if}">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default" id="btn_cari_pasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                    <i class="fa fa-search text-primary"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="display_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+              <input type="text" id="display_no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+              <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}{?=isset_or($data['nama_pasien'])?}{/if}" required>
+            </div>
+
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="display_jk" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                  <input type="text" id="display_jk" class="form-control" value="{if: isset($data['jk']) && ($data['jk'] == 'L' || $data['jk'] == 'Laki-Laki')}Laki-Laki{elseif: isset($data['jk']) && ($data['jk'] == 'P' || $data['jk'] == 'Perempuan')}Perempuan{else}-{/if}" readonly>
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="display_tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir</label>
+                  <input type="text" id="display_tgl_lahir" class="form-control" value="{?=isset_or($data['tgl_lahir'])?}" readonly>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="display_alamat" class="rsgm-compact-label"><i class="fa fa-map-marker text-muted"></i> Alamat Pasien</label>
+              <textarea id="display_alamat" class="form-control" rows="2" readonly style="resize: vertical; font-size: 12px;">{?=isset_or($data['alamat'])?}</textarea>
+            </div>
+
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="dpjp" class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Dokter DPJP</label>
+                <input type="text" name="dpjp" id="dpjp" class="form-control" value="{?=isset_or($data['dpjp'])?}" placeholder="Nama dokter DPJP">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="riwayat_alergi" class="rsgm-compact-label"><i class="fa fa-exclamation-triangle text-danger"></i> Riwayat Alergi Pasien</label>
+                <input type="text" name="riwayat_alergi" id="riwayat_alergi" class="form-control" value="{?=isset_or($data['riwayat_alergi'])?}" placeholder="Tidak ada / Sebutkan nama obat">
+              </div>
+
+              <button type="button" id="btn_demo" class="btn btn-warning btn-sm btn-block" style="border-radius: 6px; font-weight: 600;" title="Isi formulir dengan contoh data rekonsiliasi obat">
+                <i class="fa fa-magic"></i> Isi Contoh Data
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           KOLOM KANAN (9): WORKSTATION REKONSILIASI OBAT
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-medkit"></i></span>
+              <span>Rekonsiliasi Obat Pasien Rawat Inap</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #f0fdf4; color: #166534; font-weight: 700;">RM.RI 14</span>
+              <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-check-circle"></i> Farmasi Klinis</span>
+            </div>
+          </div>
+
+          <div class="rsgm-reg-body" style="padding: 16px 18px;">
+            
+            <!-- SECTION 1: REKONSILIASI SAAT ADMISI -->
+            <div class="rsgm-soap-section" style="margin-bottom: 20px;">
+              <div class="rsgm-soap-section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5><i class="fa fa-sign-in text-primary"></i> 1. Rekonsiliasi Saat Admisi (Masuk Rumah Sakit)</h5>
+                <button type="button" class="btn btn-xs btn-primary" id="btnAddAdmisi"><i class="fa fa-plus"></i> Tambah Obat Admisi</button>
+              </div>
+
+              <div class="table-responsive" style="margin-top: 10px;">
+                <table class="table table-bordered table-hover" id="tblAdmisi" style="font-size: 12px;">
+                  <thead style="background: #f8fafc;">
+                    <tr>
+                      <th style="min-width: 200px;">Nama Obat dan Dosis</th>
+                      <th style="width: 120px;">Rute</th>
+                      <th style="width: 140px;">Aturan Pakai</th>
+                      <th style="width: 130px;">Status MRS</th>
+                      <th style="width: 130px;">Dibawa MRS?</th>
+                      <th style="width: 40px; text-align: center;">#</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {if: !empty($data.admisi_detail)}
+                      {loop: $data.admisi_detail}
+                      <tr class="admisi-row">
+                        <td><input type="text" class="form-control input-sm f-nama" value="{$value.nama}" placeholder="Contoh: Amlodipine 10mg"></td>
+                        <td><input type="text" class="form-control input-sm f-rute" value="{$value.rute}" placeholder="Oral / IV / SC"></td>
+                        <td><input type="text" class="form-control input-sm f-aturan" value="{$value.aturan}" placeholder="1 x 1 tablet"></td>
+                        <td>
+                          <select class="form-control input-sm f-stat1">
+                            <option value="">- Pilih -</option>
+                            <option value="L" {if: ($value.stat1 == 'L')}selected{/if}>Lanjut (L)</option>
+                            <option value="H" {if: ($value.stat1 == 'H')}selected{/if}>Henti (H)</option>
+                          </select>
+                        </td>
+                        <td>
+                          <select class="form-control input-sm f-stat2">
+                            <option value="">- Pilih -</option>
+                            <option value="Ya" {if: ($value.stat2 == 'Ya')}selected{/if}>Ya (Fisik Ada)</option>
+                            <option value="Tidak" {if: ($value.stat2 == 'Tidak')}selected{/if}>Tidak</option>
+                          </select>
+                        </td>
+                        <td class="text-center">
+                          <button type="button" class="btn btn-xs btn-danger btn-rm-admisi" title="Hapus"><i class="fa fa-times"></i></button>
+                        </td>
+                      </tr>
+                      {/loop}
+                    {else}
+                      <tr class="admisi-row">
+                        <td><input type="text" class="form-control input-sm f-nama" placeholder="Contoh: Amlodipine 10mg"></td>
+                        <td><input type="text" class="form-control input-sm f-rute" placeholder="Oral / IV"></td>
+                        <td><input type="text" class="form-control input-sm f-aturan" placeholder="1 x 1 tablet"></td>
+                        <td>
+                          <select class="form-control input-sm f-stat1">
+                            <option value="">- Pilih -</option>
+                            <option value="L">Lanjut (L)</option>
+                            <option value="H">Henti (H)</option>
+                          </select>
+                        </td>
+                        <td>
+                          <select class="form-control input-sm f-stat2">
+                            <option value="">- Pilih -</option>
+                            <option value="Ya">Ya (Fisik Ada)</option>
+                            <option value="Tidak">Tidak</option>
+                          </select>
+                        </td>
+                        <td class="text-center">
+                          <button type="button" class="btn btn-xs btn-danger btn-rm-admisi" title="Hapus"><i class="fa fa-times"></i></button>
+                        </td>
+                      </tr>
+                    {/if}
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="row" style="margin-top: 8px;">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="admisi_apoteker" class="rsgm-compact-label"><i class="fa fa-user-circle text-muted"></i> Apoteker / Farmasis Admisi</label>
+                    <input type="text" name="admisi_apoteker" id="admisi_apoteker" class="form-control input-sm" value="{?=isset_or($data['admisi_apoteker'])?}" placeholder="Nama Apoteker yang melakukan rekonsiliasi">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 2: REKONSILIASI SAAT TRANSFER -->
+            <div class="rsgm-soap-section" style="margin-bottom: 20px;">
+              <div class="rsgm-soap-section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5><i class="fa fa-exchange text-info"></i> 2. Rekonsiliasi Saat Transfer Antar Ruangan</h5>
+                <button type="button" class="btn btn-xs btn-info" id="btnAddTransfer"><i class="fa fa-plus"></i> Tambah Obat Transfer</button>
+              </div>
+
+              <div class="row" style="margin-top: 10px; margin-bottom: 10px; background: #f8fafc; padding: 10px 6px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="transfer_ruang_asal" class="rsgm-compact-label">Ruang Asal</label>
+                    <input type="text" name="transfer_ruang_asal" id="transfer_ruang_asal" class="form-control input-sm" value="{?=isset_or($data['transfer_ruang_asal'])?}" placeholder="Contoh: UGD / ICU">
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="transfer_ruang_tujuan" class="rsgm-compact-label">Ruang Tujuan</label>
+                    <input type="text" name="transfer_ruang_tujuan" id="transfer_ruang_tujuan" class="form-control input-sm" value="{?=isset_or($data['transfer_ruang_tujuan'])?}" placeholder="Contoh: Bangsal Mawar">
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="transfer_tanggal" class="rsgm-compact-label">Tanggal Transfer</label>
+                    <input type="date" name="transfer_tanggal" id="transfer_tanggal" class="form-control input-sm" value="{?=isset_or($data['transfer_tanggal'])?}">
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="transfer_apoteker" class="rsgm-compact-label">Apoteker Transfer</label>
+                    <input type="text" name="transfer_apoteker" id="transfer_apoteker" class="form-control input-sm" value="{?=isset_or($data['transfer_apoteker'])?}" placeholder="Nama Apoteker">
+                  </div>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="tblTransfer" style="font-size: 12px;">
+                  <thead style="background: #f8fafc;">
+                    <tr>
+                      <th style="min-width: 170px;">Nama Obat</th>
+                      <th style="width: 100px;">Dosis</th>
+                      <th style="width: 100px;">Rute</th>
+                      <th style="width: 120px;">Aturan Pakai</th>
+                      <th style="width: 110px;">Lanjut/Henti</th>
+                      <th style="min-width: 130px;">Perubahan Aturan</th>
+                      <th style="min-width: 130px;">Keterangan / RTL</th>
+                      <th style="width: 40px; text-align: center;">#</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {if: !empty($data.transfer_detail)}
+                      {loop: $data.transfer_detail}
+                      <tr class="transfer-row">
+                        <td><input type="text" class="form-control input-sm f-nama" value="{$value.nama}" placeholder="Nama obat"></td>
+                        <td><input type="text" class="form-control input-sm f-dosis" value="{$value.dosis}" placeholder="Dosis"></td>
+                        <td><input type="text" class="form-control input-sm f-rute" value="{$value.rute}" placeholder="Rute"></td>
+                        <td><input type="text" class="form-control input-sm f-aturan" value="{$value.aturan}" placeholder="Aturan"></td>
+                        <td>
+                          <select class="form-control input-sm f-stat1">
+                            <option value="">-</option>
+                            <option value="L" {if: ($value.stat1 == 'L')}selected{/if}>Lanjut (L)</option>
+                            <option value="H" {if: ($value.stat1 == 'H')}selected{/if}>Henti (H)</option>
+                          </select>
+                        </td>
+                        <td><input type="text" class="form-control input-sm f-ubah" value="{$value.ubah}" placeholder="Perubahan aturan"></td>
+                        <td><input type="text" class="form-control input-sm f-ket" value="{$value.ket}" placeholder="Keterangan"></td>
+                        <td class="text-center">
+                          <button type="button" class="btn btn-xs btn-danger btn-rm-transfer" title="Hapus"><i class="fa fa-times"></i></button>
+                        </td>
+                      </tr>
+                      {/loop}
+                    {else}
+                      <tr class="transfer-row">
+                        <td><input type="text" class="form-control input-sm f-nama" placeholder="Nama obat"></td>
+                        <td><input type="text" class="form-control input-sm f-dosis" placeholder="Dosis"></td>
+                        <td><input type="text" class="form-control input-sm f-rute" placeholder="Rute"></td>
+                        <td><input type="text" class="form-control input-sm f-aturan" placeholder="Aturan"></td>
+                        <td>
+                          <select class="form-control input-sm f-stat1">
+                            <option value="">-</option>
+                            <option value="L">Lanjut (L)</option>
+                            <option value="H">Henti (H)</option>
+                          </select>
+                        </td>
+                        <td><input type="text" class="form-control input-sm f-ubah" placeholder="Perubahan aturan"></td>
+                        <td><input type="text" class="form-control input-sm f-ket" placeholder="Keterangan"></td>
+                        <td class="text-center">
+                          <button type="button" class="btn btn-xs btn-danger btn-rm-transfer" title="Hapus"><i class="fa fa-times"></i></button>
+                        </td>
+                      </tr>
+                    {/if}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- SECTION 3: REKONSILIASI SAAT DISCHARGE (PULANG) -->
+            <div class="rsgm-soap-section" style="margin-bottom: 20px;">
+              <div class="rsgm-soap-section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5><i class="fa fa-sign-out text-success"></i> 3. Rekonsiliasi Saat Pasien Pulang (KRS)</h5>
+                <button type="button" class="btn btn-xs btn-success" id="btnAddPulang"><i class="fa fa-plus"></i> Tambah Obat Pulang</button>
+              </div>
+
+              <div class="row" style="margin-top: 10px; margin-bottom: 10px; background: #f8fafc; padding: 10px 6px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="tanggal_krs" class="rsgm-compact-label">Tanggal KRS</label>
+                    <input type="date" name="tanggal_krs" id="tanggal_krs" class="form-control input-sm" value="{?=isset_or($data['tanggal_krs'])?}">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="status_krs" class="rsgm-compact-label">Status Pasien KRS</label>
+                    <select name="status_krs" id="status_krs" class="form-control input-sm">
+                      <option value="Pulang Sembuh" {if: isset($data['status_krs']) && $data['status_krs'] == 'Pulang Sembuh'}selected{/if}>Pulang Sembuh / Perbaikan</option>
+                      <option value="Rujuk" {if: isset($data['status_krs']) && $data['status_krs'] == 'Rujuk'}selected{/if}>Dirujuk ke RS Lain</option>
+                      <option value="APS" {if: isset($data['status_krs']) && $data['status_krs'] == 'APS'}selected{/if}>Atas Permintaan Sendiri (APS)</option>
+                      <option value="Meninggal" {if: isset($data['status_krs']) && $data['status_krs'] == 'Meninggal'}selected{/if}>Meninggal Dunia</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="pulang_apoteker" class="rsgm-compact-label">Apoteker Pulang</label>
+                    <input type="text" name="pulang_apoteker" id="pulang_apoteker" class="form-control input-sm" value="{?=isset_or($data['pulang_apoteker'])?}" placeholder="Nama Apoteker">
+                  </div>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="tblPulang" style="font-size: 12px;">
+                  <thead style="background: #f8fafc;">
+                    <tr>
+                      <th style="min-width: 180px;">Nama Obat Pulang</th>
+                      <th style="width: 100px;">Dosis</th>
+                      <th style="width: 100px;">Rute</th>
+                      <th style="width: 130px;">Aturan Pakai</th>
+                      <th style="min-width: 140px;">Perubahan Aturan</th>
+                      <th style="min-width: 140px;">Keterangan / Edukasi</th>
+                      <th style="width: 40px; text-align: center;">#</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {if: !empty($data.pulang_detail)}
+                      {loop: $data.pulang_detail}
+                      <tr class="pulang-row">
+                        <td><input type="text" class="form-control input-sm f-nama" value="{$value.nama}" placeholder="Nama obat"></td>
+                        <td><input type="text" class="form-control input-sm f-dosis" value="{$value.dosis}" placeholder="Dosis"></td>
+                        <td><input type="text" class="form-control input-sm f-rute" value="{$value.rute}" placeholder="Rute"></td>
+                        <td><input type="text" class="form-control input-sm f-aturan" value="{$value.aturan}" placeholder="Aturan"></td>
+                        <td><input type="text" class="form-control input-sm f-ubah" value="{$value.ubah}" placeholder="Perubahan aturan"></td>
+                        <td><input type="text" class="form-control input-sm f-ket" value="{$value.ket}" placeholder="Keterangan"></td>
+                        <td class="text-center">
+                          <button type="button" class="btn btn-xs btn-danger btn-rm-pulang" title="Hapus"><i class="fa fa-times"></i></button>
+                        </td>
+                      </tr>
+                      {/loop}
+                    {else}
+                      <tr class="pulang-row">
+                        <td><input type="text" class="form-control input-sm f-nama" placeholder="Nama obat"></td>
+                        <td><input type="text" class="form-control input-sm f-dosis" placeholder="Dosis"></td>
+                        <td><input type="text" class="form-control input-sm f-rute" placeholder="Rute"></td>
+                        <td><input type="text" class="form-control input-sm f-aturan" placeholder="Aturan"></td>
+                        <td><input type="text" class="form-control input-sm f-ubah" placeholder="Perubahan aturan"></td>
+                        <td><input type="text" class="form-control input-sm f-ket" placeholder="Keterangan"></td>
+                        <td class="text-center">
+                          <button type="button" class="btn btn-xs btn-danger btn-rm-pulang" title="Hapus"><i class="fa fa-times"></i></button>
+                        </td>
+                      </tr>
+                    {/if}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div> <!-- /.rsgm-reg-body -->
+
+          <!-- FOOTER AKSI -->
+          <div class="rsgm-reg-footer">
+            <div>
+              <a href="{?=url([ADMIN, 'form_rme', 'ri14manage'])?}" class="btn btn-default btn-sm" style="font-weight: 600;">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-info btn-sm btn-trigger-rme-preview" style="font-weight: 600;">
+                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+              </button>
+              <button type="submit" class="btn btn-primary btn-sm" style="font-weight: 700; padding-left: 20px; padding-right: 20px;">
+                <i class="fa fa-save"></i> Simpan Data
+              </button>
+            </div>
+          </div>
+
+        </div> <!-- /.rsgm-reg-shell -->
+      </div> <!-- /.col-md-9 -->
+
+    </div> <!-- /.rsgm-soap-flex-row -->
+  </form>
+</div>
+
+<script>
+$(document).ready(function() {
+  'use strict';
+
+  // 1. CARI / MUAT DATA PASIEN DARI NO RAWAT
+  function fetchPatientByNoRawat() {
+    var noRawat = $('#no_rawat').val().trim();
+    if (!noRawat) return;
+
+    $.ajax({
+      url: '{?=url([ADMIN, "form_rme", "ri14form"])?}&ajax_patient=1&no_rawat=' + encodeURIComponent(noRawat),
+      type: 'GET',
+      dataType: 'json',
+      success: function(res) {
+        if (res && res.success) {
+          $('#no_rawat').val(res.no_rawat);
+          $('#display_no_rkm_medis').val(res.no_rkm_medis || '');
+          $('#no_rkm_medis').val(res.no_rkm_medis || '');
+          $('#nm_pasien').val(res.nm_pasien || '');
+          if (res.jk) {
+            var jkText = (res.jk === 'L' || res.jk === 'Laki-Laki') ? 'Laki-Laki' : 'Perempuan';
+            $('#display_jk').val(jkText);
+          }
+          if (res.tgl_lahir) $('#display_tgl_lahir').val(res.tgl_lahir);
+          if (res.alamat) $('#display_alamat').val(res.alamat);
+          if (res.dokter && !$('#dpjp').val()) $('#dpjp').val(res.dokter);
+          if (res.tgl_masuk && !$('#tanggal_mrs').val()) {
+            $('#tanggal_mrs').val(res.tgl_masuk.substring(0, 10));
+          }
+        }
+      }
+    });
+  }
+
+  $('#no_rawat').on('blur change', fetchPatientByNoRawat);
+  $('#btn_cari_pasien').on('click', fetchPatientByNoRawat);
+
+  // 2. ISI CONTOH DATA (DEMO)
+  $('#btn_demo').on('click', function(e) {
+    e.preventDefault();
+    if (!$('#no_rawat').val()) $('#no_rawat').val('2026/10/16/000001');
+    $('#display_no_rkm_medis').val('000001');
+    $('#no_rkm_medis').val('000001');
+    $('#nm_pasien').val('Farida Ariyani');
+    $('#display_jk').val('Perempuan');
+    $('#display_tgl_lahir').val('1990-05-14');
+    $('#display_alamat').val('Jl. Veteran No. 12B, Banjarmasin');
+    $('#tanggal_mrs').val('{?=date("Y-m-d")?}');
+    $('#dpjp').val('dr. Hendra Pratama, Sp.PD');
+    $('#riwayat_alergi').val('Penisilin (Gatal kemerahan), Seafood');
+
+    // Admisi demo row
+    $('#tblAdmisi tbody').html([
+      '<tr class="admisi-row">',
+      '  <td><input type="text" class="form-control input-sm f-nama" value="Amlodipine 10mg"></td>',
+      '  <td><input type="text" class="form-control input-sm f-rute" value="Oral"></td>',
+      '  <td><input type="text" class="form-control input-sm f-aturan" value="1 x 1 tab (malam)"></td>',
+      '  <td><select class="form-control input-sm f-stat1"><option value="L" selected>Lanjut (L)</option><option value="H">Henti (H)</option></select></td>',
+      '  <td><select class="form-control input-sm f-stat2"><option value="Ya" selected>Ya (Fisik Ada)</option><option value="Tidak">Tidak</option></select></td>',
+      '  <td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-rm-admisi"><i class="fa fa-times"></i></button></td>',
+      '</tr>',
+      '<tr class="admisi-row">',
+      '  <td><input type="text" class="form-control input-sm f-nama" value="Metformin 500mg"></td>',
+      '  <td><input type="text" class="form-control input-sm f-rute" value="Oral"></td>',
+      '  <td><input type="text" class="form-control input-sm f-aturan" value="3 x 1 tab (dc)"></td>',
+      '  <td><select class="form-control input-sm f-stat1"><option value="L" selected>Lanjut (L)</option><option value="H">Henti (H)</option></select></td>',
+      '  <td><select class="form-control input-sm f-stat2"><option value="Ya" selected>Ya (Fisik Ada)</option><option value="Tidak">Tidak</option></select></td>',
+      '  <td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-rm-admisi"><i class="fa fa-times"></i></button></td>',
+      '</tr>'
+    ].join(''));
+    $('#admisi_apoteker').val('apt. Rina Agustina, S.Farm');
+
+    // Transfer demo
+    $('#transfer_ruang_asal').val('IGD / Triage');
+    $('#transfer_ruang_tujuan').val('Ruang Rawat Inap Melati');
+    $('#transfer_tanggal').val('{?=date("Y-m-d")?}');
+    $('#transfer_apoteker').val('apt. Rina Agustina, S.Farm');
+    $('#tblTransfer tbody').html([
+      '<tr class="transfer-row">',
+      '  <td><input type="text" class="form-control input-sm f-nama" value="Ceftriaxone Inj 1g"></td>',
+      '  <td><input type="text" class="form-control input-sm f-dosis" value="1 gram"></td>',
+      '  <td><input type="text" class="form-control input-sm f-rute" value="IV"></td>',
+      '  <td><input type="text" class="form-control input-sm f-aturan" value="1 x 1 vial"></td>',
+      '  <td><select class="form-control input-sm f-stat1"><option value="L" selected>Lanjut (L)</option><option value="H">Henti (H)</option></select></td>',
+      '  <td><input type="text" class="form-control input-sm f-ubah" value="-"></td>',
+      '  <td><input type="text" class="form-control input-sm f-ket" value="Skin test negatif"></td>',
+      '  <td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-rm-transfer"><i class="fa fa-times"></i></button></td>',
+      '</tr>'
+    ].join(''));
+
+    // Pulang demo
+    $('#tanggal_krs').val('{?=date("Y-m-d", strtotime("+3 days"))?}');
+    $('#status_krs').val('Pulang Sembuh');
+    $('#pulang_apoteker').val('apt. Rina Agustina, S.Farm');
+    $('#tblPulang tbody').html([
+      '<tr class="pulang-row">',
+      '  <td><input type="text" class="form-control input-sm f-nama" value="Cefixime 200mg"></td>',
+      '  <td><input type="text" class="form-control input-sm f-dosis" value="200 mg"></td>',
+      '  <td><input type="text" class="form-control input-sm f-rute" value="Oral"></td>',
+      '  <td><input type="text" class="form-control input-sm f-aturan" value="2 x 1 kapsul"></td>',
+      '  <td><input type="text" class="form-control input-sm f-ubah" value="Pengganti Ceftriaxone IV"></td>',
+      '  <td><input type="text" class="form-control input-sm f-ket" value="Habiskan selama 5 hari"></td>',
+      '  <td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-rm-pulang"><i class="fa fa-times"></i></button></td>',
+      '</tr>'
+    ].join(''));
+  });
+
+  // 3. SERIALISASI JSON SAAT SUBMIT
+  $('#ri14Form').on('submit', function() {
+    var ad = [];
+    $('.admisi-row').each(function() {
+      var nama = $(this).find('.f-nama').val();
+      if (nama) {
+        ad.push({
+          nama: nama,
+          rute: $(this).find('.f-rute').val() || '',
+          aturan: $(this).find('.f-aturan').val() || '',
+          stat1: $(this).find('.f-stat1').val() || '',
+          stat2: $(this).find('.f-stat2').val() || ''
+        });
+      }
+    });
+    $('#json_admisi_detail').val(JSON.stringify(ad));
+
+    var tr = [];
+    $('.transfer-row').each(function() {
+      var nama = $(this).find('.f-nama').val();
+      if (nama) {
+        tr.push({
+          nama: nama,
+          dosis: $(this).find('.f-dosis').val() || '',
+          rute: $(this).find('.f-rute').val() || '',
+          aturan: $(this).find('.f-aturan').val() || '',
+          stat1: $(this).find('.f-stat1').val() || '',
+          ubah: $(this).find('.f-ubah').val() || '',
+          ket: $(this).find('.f-ket').val() || ''
+        });
+      }
+    });
+    $('#json_transfer_detail').val(JSON.stringify(tr));
+
+    var pu = [];
+    $('.pulang-row').each(function() {
+      var nama = $(this).find('.f-nama').val();
+      if (nama) {
+        pu.push({
+          nama: nama,
+          dosis: $(this).find('.f-dosis').val() || '',
+          rute: $(this).find('.f-rute').val() || '',
+          aturan: $(this).find('.f-aturan').val() || '',
+          ubah: $(this).find('.f-ubah').val() || '',
+          ket: $(this).find('.f-ket').val() || ''
+        });
+      }
+    });
+    $('#json_pulang_detail').val(JSON.stringify(pu));
+  });
+
+  // 4. ADD / REMOVE ROW
+  $('#btnAddAdmisi').on('click', function() {
+    var html = [
+      '<tr class="admisi-row">',
+      '  <td><input type="text" class="form-control input-sm f-nama" placeholder="Contoh: Amlodipine 10mg"></td>',
+      '  <td><input type="text" class="form-control input-sm f-rute" placeholder="Oral / IV"></td>',
+      '  <td><input type="text" class="form-control input-sm f-aturan" placeholder="1 x 1 tablet"></td>',
+      '  <td><select class="form-control input-sm f-stat1"><option value="">- Pilih -</option><option value="L">Lanjut (L)</option><option value="H">Henti (H)</option></select></td>',
+      '  <td><select class="form-control input-sm f-stat2"><option value="">- Pilih -</option><option value="Ya">Ya (Fisik Ada)</option><option value="Tidak">Tidak</option></select></td>',
+      '  <td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-rm-admisi"><i class="fa fa-times"></i></button></td>',
+      '</tr>'
+    ].join('');
+    $('#tblAdmisi tbody').append(html);
+  });
+
+  $('#btnAddTransfer').on('click', function() {
+    var html = [
+      '<tr class="transfer-row">',
+      '  <td><input type="text" class="form-control input-sm f-nama" placeholder="Nama obat"></td>',
+      '  <td><input type="text" class="form-control input-sm f-dosis" placeholder="Dosis"></td>',
+      '  <td><input type="text" class="form-control input-sm f-rute" placeholder="Rute"></td>',
+      '  <td><input type="text" class="form-control input-sm f-aturan" placeholder="Aturan"></td>',
+      '  <td><select class="form-control input-sm f-stat1"><option value="">-</option><option value="L">Lanjut (L)</option><option value="H">Henti (H)</option></select></td>',
+      '  <td><input type="text" class="form-control input-sm f-ubah" placeholder="Perubahan aturan"></td>',
+      '  <td><input type="text" class="form-control input-sm f-ket" placeholder="Keterangan"></td>',
+      '  <td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-rm-transfer"><i class="fa fa-times"></i></button></td>',
+      '</tr>'
+    ].join('');
+    $('#tblTransfer tbody').append(html);
+  });
+
+  $('#btnAddPulang').on('click', function() {
+    var html = [
+      '<tr class="pulang-row">',
+      '  <td><input type="text" class="form-control input-sm f-nama" placeholder="Nama obat"></td>',
+      '  <td><input type="text" class="form-control input-sm f-dosis" placeholder="Dosis"></td>',
+      '  <td><input type="text" class="form-control input-sm f-rute" placeholder="Rute"></td>',
+      '  <td><input type="text" class="form-control input-sm f-aturan" placeholder="Aturan"></td>',
+      '  <td><input type="text" class="form-control input-sm f-ubah" placeholder="Perubahan aturan"></td>',
+      '  <td><input type="text" class="form-control input-sm f-ket" placeholder="Keterangan"></td>',
+      '  <td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-rm-pulang"><i class="fa fa-times"></i></button></td>',
+      '</tr>'
+    ].join('');
+    $('#tblPulang tbody').append(html);
+  });
+
+  $(document).on('click', '.btn-rm-admisi', function() {
+    if ($('.admisi-row').length > 1) { $(this).closest('tr').remove(); }
+    else { alert('Minimal satu baris obat admisi.'); }
+  });
+  $(document).on('click', '.btn-rm-transfer', function() {
+    if ($('.transfer-row').length > 1) { $(this).closest('tr').remove(); }
+    else { alert('Minimal satu baris obat transfer.'); }
+  });
+  $(document).on('click', '.btn-rm-pulang', function() {
+    if ($('.pulang-row').length > 1) { $(this).closest('tr').remove(); }
+    else { alert('Minimal satu baris obat pulang.'); }
+  });
+});
+</script>

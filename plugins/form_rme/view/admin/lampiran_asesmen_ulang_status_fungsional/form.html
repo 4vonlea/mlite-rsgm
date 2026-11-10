@@ -1,0 +1,504 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+  <form id="formStatusFungsional" method="POST" action="{?=url([ADMIN, 'form_rme', 'statusfungsionalulangsave'])?}">
+    <input type="hidden" name="id" value="{?=isset_or($data['id'])?}">
+
+    <div class="rsgm-soap-flex-row clearfix">
+
+      <!-- ============================================================
+           KOLOM KIRI (3): SIDEBAR IDENTITAS & DATA PASIEN
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Data Pasien</span>
+            </h4>
+            <span class="badge" style="background-color: #eff6ff; color: #1e40af; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #bfdbfe;">Barthel Index</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <!-- No Rawat with Search -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default" id="btnCariPasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                    <i class="fa fa-search text-primary"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <!-- No Rekam Medis -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+              <input type="text" id="info_no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly style="background-color: #f8fafc; font-weight: 700;">
+            </div>
+
+            <!-- Nama Pasien -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+              <input type="text" id="info_nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{?=isset_or($data['nm_pasien'])?}" readonly style="background-color: #f8fafc; font-weight: 600;">
+            </div>
+
+            <!-- Gender & Tanggal Lahir -->
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="info_jk" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                  <input type="text" id="info_jk" class="form-control" value="{?= !empty($data['jk']) ? ($data['jk'] == 'L' ? 'Laki-Laki' : 'Perempuan') : '' ?}" readonly style="background-color: #f8fafc;">
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="info_tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tgl Lahir</label>
+                  <input type="text" id="info_tgl_lahir" class="form-control" value="{?=isset_or($data['tgl_lahir'])?}" readonly style="background-color: #f8fafc;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Umur Pasien -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_umur" class="rsgm-compact-label"><i class="fa fa-birthday-cake text-muted"></i> Umur Pasien</label>
+              <input type="text" id="info_umur" class="form-control" value="{?=isset_or($data['umur'])?}" readonly placeholder="Umur" style="background-color: #f8fafc;">
+            </div>
+
+            <!-- Alamat Domisili -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_alamat" class="rsgm-compact-label"><i class="fa fa-map-marker text-muted"></i> Alamat Domisili</label>
+              <textarea id="info_alamat" class="form-control" rows="2" readonly placeholder="Alamat pasien" style="background-color: #f8fafc; resize: none;">{?=isset_or($data['alamat'])?}</textarea>
+            </div>
+
+            <!-- Ruangan / Bangsal -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="ruangan" class="rsgm-compact-label"><i class="fa fa-bed text-muted"></i> Ruangan / Bangsal <span class="text-danger">*</span></label>
+              <input type="text" name="ruangan" id="ruangan" class="form-control" value="{?=isset_or($data['ruangan'])?}" placeholder="Contoh: Bangsal Teratai / Kamar 102" required>
+            </div>
+
+            <!-- Tanggal & Jam -->
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="tanggal" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tanggal</label>
+                  <input type="date" name="tanggal" id="tanggal" class="form-control" value="{if: !empty($data.tanggal)}{$data.tanggal}{else}{?=date('Y-m-d')?}{/if}" required>
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="jam" class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Jam</label>
+                  <input type="time" name="jam" id="jam" class="form-control" value="{if: !empty($data.jam)}{$data.jam}{else}{?=date('H:i')?}{/if}" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Petugas Pemeriksa -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="petugas" class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Petugas Pemeriksa <span class="text-danger">*</span></label>
+              <input type="text" name="petugas" id="petugas" list="list_petugas" class="form-control" value="{?=isset_or($data['petugas'])?}" placeholder="Pilih nama petugas..." required>
+              <datalist id="list_petugas">
+                {loop: $petugas_list}
+                <option value="{$value.nama}">{$value.nip} - {$value.nama}</option>
+                {/loop}
+              </datalist>
+            </div>
+
+            <!-- NIP Petugas -->
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="nip_petugas" class="rsgm-compact-label"><i class="fa fa-id-badge text-muted"></i> NIP / NIK Petugas</label>
+              <input type="text" name="nip_petugas" id="nip_petugas" class="form-control" value="{?=isset_or($data['nip_petugas'])?}" placeholder="NIP / NIK Petugas...">
+            </div>
+
+            <!-- SKOR & KATEGORI RESULT BOX -->
+            <div style="background-color: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px; margin-bottom: 12px; text-align: center;">
+              <span style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; letter-spacing: 0.5px; display: block;">Total Skor Barthel Index</span>
+              <div style="font-size: 32px; font-weight: 800; color: #1e40af; line-height: 1.1; margin: 4px 0;" id="display_skor_text">{?=isset_or($data['total_skor'], '0')?}</div>
+              <input type="hidden" name="total_skor" id="total_skor" value="{?=isset_or($data['total_skor'], '0')?}">
+              <div style="margin-top: 4px;">
+                <span id="kategori_badge" class="badge" style="font-size: 12px; padding: 6px 10px; font-weight: 700; background-color: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe;">
+                  {?=isset_or($data['kategori'], 'Ketergantungan Total')?}
+                </span>
+                <input type="hidden" name="kategori" id="kategori" value="{?=isset_or($data['kategori'], 'Ketergantungan Total')?}">
+              </div>
+            </div>
+
+            <!-- Tombol Demo Data -->
+            <div>
+              <button type="button" id="btn_demo" class="btn btn-warning btn-block btn-sm" style="font-weight: 700; border-radius: 6px;" title="Isi form dengan contoh penilaian Barthel Index">
+                <i class="fa fa-magic"></i> Isi Contoh Data Demo
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div> <!-- /.col-md-3 -->
+
+      <!-- ============================================================
+           KOLOM KANAN (9): WORKSTATION TABEL BARTHEL INDEX
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-wheelchair"></i></span>
+              <span>Form Asesmen Ulang Status Fungsional (Barthel Index)</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1e40af; font-weight: 700;">Pengkajian Kemandirian RSGM</span>
+            </div>
+          </div>
+
+          <div class="rsgm-reg-body">
+
+            <!-- Pedoman Skor Bar -->
+            <div style="background-color: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 14px; margin-bottom: 12px; font-size: 11.5px; color: #334155; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px;">
+              <span><strong>Pedoman Kategori:</strong></span>
+              <span><span class="badge" style="background:#166534; font-size: 10.5px;">20</span> Mandiri</span>
+              <span><span class="badge" style="background:#2563eb; font-size: 10.5px;">12 - 19</span> Ketergantungan Ringan</span>
+              <span><span class="badge" style="background:#d97706; font-size: 10.5px;">9 - 11</span> Ketergantungan Sedang</span>
+              <span><span class="badge" style="background:#ea580c; font-size: 10.5px;">5 - 8</span> Ketergantungan Berat</span>
+              <span><span class="badge" style="background:#dc2626; font-size: 10.5px;">0 - 4</span> Ketergantungan Total</span>
+            </div>
+
+            <!-- Tabel Barthel Index -->
+            <div class="table-responsive" style="border: 1px solid #e2e8f0; border-radius: 8px;">
+              <table class="table table-bordered table-hover" style="margin-bottom: 0; font-size: 12.5px; width: 100%;">
+                <thead>
+                  <tr style="background-color: #f8fafc; color: #334155; font-weight: 700;">
+                    <th style="width: 35px; text-align: center; vertical-align: middle;">No</th>
+                    <th style="width: 170px; vertical-align: middle;">Item Penilaian</th>
+                    <th style="min-width: 280px; vertical-align: middle;">Kriteria / Skala Fungsional</th>
+                    <th style="width: 60px; text-align: center; vertical-align: middle;">Skor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- 1. Makan -->
+                  <tr>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle; font-weight: 700;">1</td>
+                    <td rowspan="3" style="vertical-align: middle; font-weight: 700;">Makan <i>(Feeding)</i></td>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s1" value="0" {if: isset_or($data['s1']) === 0 || isset_or($data['s1']) === '0'}checked{/if}> Tidak mampu</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">0</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s1" value="1" {if: isset_or($data['s1']) == 1}checked{/if}> Butuh bantuan memotong, mengoles, dll</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">1</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s1" value="2" {if: isset_or($data['s1']) == 2}checked{/if}> Mandiri</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">2</td>
+                  </tr>
+
+                  <!-- 2. Mandi -->
+                  <tr style="border-top: 2px solid #e2e8f0;">
+                    <td rowspan="2" style="text-align: center; vertical-align: middle; font-weight: 700;">2</td>
+                    <td rowspan="2" style="vertical-align: middle; font-weight: 700;">Mandi <i>(Bathing)</i></td>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s2" value="0" {if: isset_or($data['s2']) === 0 || isset_or($data['s2']) === '0'}checked{/if}> Tergantung orang lain</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">0</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s2" value="1" {if: isset_or($data['s2']) == 1}checked{/if}> Mandiri</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">1</td>
+                  </tr>
+
+                  <!-- 3. Perawatan Diri -->
+                  <tr style="border-top: 2px solid #e2e8f0;">
+                    <td rowspan="2" style="text-align: center; vertical-align: middle; font-weight: 700;">3</td>
+                    <td rowspan="2" style="vertical-align: middle; font-weight: 700;">Perawatan Diri <i>(Grooming)</i></td>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s3" value="0" {if: isset_or($data['s3']) === 0 || isset_or($data['s3']) === '0'}checked{/if}> Membutuhkan bantuan orang lain</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">0</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s3" value="1" {if: isset_or($data['s3']) == 1}checked{/if}> Mandiri (muka, rambut, gigi, bercukur)</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">1</td>
+                  </tr>
+
+                  <!-- 4. Berpakaian -->
+                  <tr style="border-top: 2px solid #e2e8f0;">
+                    <td rowspan="3" style="text-align: center; vertical-align: middle; font-weight: 700;">4</td>
+                    <td rowspan="3" style="vertical-align: middle; font-weight: 700;">Berpakaian <i>(Dressing)</i></td>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s4" value="0" {if: isset_or($data['s4']) === 0 || isset_or($data['s4']) === '0'}checked{/if}> Tergantung orang lain</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">0</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s4" value="1" {if: isset_or($data['s4']) == 1}checked{/if}> Sebagian dibantu (misal mengancing baju)</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">1</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s4" value="2" {if: isset_or($data['s4']) == 2}checked{/if}> Mandiri</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">2</td>
+                  </tr>
+
+                  <!-- 5. Buang Air Kecil -->
+                  <tr style="border-top: 2px solid #e2e8f0;">
+                    <td rowspan="3" style="text-align: center; vertical-align: middle; font-weight: 700;">5</td>
+                    <td rowspan="3" style="vertical-align: middle; font-weight: 700;">Buang Air Kecil <i>(Bladder)</i></td>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s5" value="0" {if: isset_or($data['s5']) === 0 || isset_or($data['s5']) === '0'}checked{/if}> Inkontinensia / kateter &amp; tak terkontrol</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">0</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s5" value="1" {if: isset_or($data['s5']) == 1}checked{/if}> Kadang inkontinensia (maks 1x dlm 24 jam)</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">1</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s5" value="2" {if: isset_or($data['s5']) == 2}checked{/if}> Kontinensia (teratur &gt; 7 hari)</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">2</td>
+                  </tr>
+
+                  <!-- 6. Buang Air Besar -->
+                  <tr style="border-top: 2px solid #e2e8f0;">
+                    <td rowspan="3" style="text-align: center; vertical-align: middle; font-weight: 700;">6</td>
+                    <td rowspan="3" style="vertical-align: middle; font-weight: 700;">Buang Air Besar <i>(Bowels)</i></td>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s6" value="0" {if: isset_or($data['s6']) === 0 || isset_or($data['s6']) === '0'}checked{/if}> Inkontinensia (tidak teratur/perlu enema)</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">0</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s6" value="1" {if: isset_or($data['s6']) == 1}checked{/if}> Kadang inkontinensia (sekali seminggu)</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">1</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s6" value="2" {if: isset_or($data['s6']) == 2}checked{/if}> Kontinensia (teratur)</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">2</td>
+                  </tr>
+
+                  <!-- 7. Penggunaan Toilet -->
+                  <tr style="border-top: 2px solid #e2e8f0;">
+                    <td rowspan="3" style="text-align: center; vertical-align: middle; font-weight: 700;">7</td>
+                    <td rowspan="3" style="vertical-align: middle; font-weight: 700;">Penggunaan Toilet <i>(Toilet)</i></td>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s7" value="0" {if: isset_or($data['s7']) === 0 || isset_or($data['s7']) === '0'}checked{/if}> Tergantung bantuan orang lain</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">0</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s7" value="1" {if: isset_or($data['s7']) == 1}checked{/if}> Membutuhkan bantuan, tapi dapat mandiri bbrp hal</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">1</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s7" value="2" {if: isset_or($data['s7']) == 2}checked{/if}> Mandiri</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">2</td>
+                  </tr>
+
+                  <!-- 8. Transfer -->
+                  <tr style="border-top: 2px solid #e2e8f0;">
+                    <td rowspan="4" style="text-align: center; vertical-align: middle; font-weight: 700;">8</td>
+                    <td rowspan="4" style="vertical-align: middle; font-weight: 700;">Transfer <i>(Bed &ndash; Chair)</i></td>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s8" value="0" {if: isset_or($data['s8']) === 0 || isset_or($data['s8']) === '0'}checked{/if}> Tidak mampu (tidak seimbang saat duduk)</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">0</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s8" value="1" {if: isset_or($data['s8']) == 1}checked{/if}> Butuh bantuan untuk duduk (2 orang)</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">1</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s8" value="2" {if: isset_or($data['s8']) == 2}checked{/if}> Bantuan kecil (1 orang)</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">2</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s8" value="3" {if: isset_or($data['s8']) == 3}checked{/if}> Mandiri</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">3</td>
+                  </tr>
+
+                  <!-- 9. Mobilitas -->
+                  <tr style="border-top: 2px solid #e2e8f0;">
+                    <td rowspan="4" style="text-align: center; vertical-align: middle; font-weight: 700;">9</td>
+                    <td rowspan="4" style="vertical-align: middle; font-weight: 700;">Mobilitas <i>(Mobility)</i></td>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s9" value="0" {if: isset_or($data['s9']) === 0 || isset_or($data['s9']) === '0'}checked{/if}> Immobile (tidak mampu bergerak)</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">0</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s9" value="1" {if: isset_or($data['s9']) == 1}checked{/if}> Menggunakan kursi roda mandiri</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">1</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s9" value="2" {if: isset_or($data['s9']) == 2}checked{/if}> Berjalan dengan bantuan satu orang</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">2</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s9" value="3" {if: isset_or($data['s9']) == 3}checked{/if}> Mandiri (bisa dengan alat bantu tongkat)</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">3</td>
+                  </tr>
+
+                  <!-- 10. Naik Turun Tangga -->
+                  <tr style="border-top: 2px solid #e2e8f0;">
+                    <td rowspan="3" style="text-align: center; vertical-align: middle; font-weight: 700;">10</td>
+                    <td rowspan="3" style="vertical-align: middle; font-weight: 700;">Naik Tangga <i>(Stairs)</i></td>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s10" value="0" {if: isset_or($data['s10']) === 0 || isset_or($data['s10']) === '0'}checked{/if}> Tidak mampu</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">0</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s10" value="1" {if: isset_or($data['s10']) == 1}checked{/if}> Membutuhkan bantuan (pegangan / orang)</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">1</td>
+                  </tr>
+                  <tr>
+                    <td><label style="font-weight: normal; margin: 0; cursor: pointer; display: block;"><input type="radio" class="barthel-skor" name="s10" value="2" {if: isset_or($data['s10']) == 2}checked{/if}> Mandiri</label></td>
+                    <td style="text-align: center; vertical-align: middle; font-weight: 600;">2</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div> <!-- /.rsgm-reg-body -->
+
+          <!-- ============================================================
+               FOOTER ACTIONS (STANDAR STYLE AKGMUFORM)
+               ============================================================ -->
+          <div class="rsgm-reg-footer">
+            <div>
+              <a href="{?=url([ADMIN, 'form_rme', 'statusfungsionalulangmanage'])?}" class="btn btn-default" style="border-radius: 6px;">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+            <div class="rsgm-reg-actions">
+              <button type="button" class="btn btn-info btn-trigger-rme-preview" data-preview-url="{?=url([ADMIN, 'form_rme', 'statusfungsionalulangcetak'])?}" style="font-weight: 600; border-radius: 6px;" title="Lihat pratinjau form hasil cetak / PDF">
+                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+              </button>
+              <button type="submit" class="btn btn-primary" id="btnSimpan" style="font-weight: 700; border-radius: 6px;">
+                <i class="fa fa-save"></i> Simpan Status Fungsional
+              </button>
+            </div>
+          </div>
+
+        </div> <!-- /.rsgm-reg-shell -->
+      </div> <!-- /.col-md-9 -->
+
+    </div> <!-- /.rsgm-soap-flex-row -->
+  </form>
+</div>
+
+<script>
+$(document).ready(function() {
+    function hitungSkor() {
+        var total = 0;
+        var adaYangDipilih = false;
+
+        for (var i = 1; i <= 10; i++) {
+            var val = $('input[name="s' + i + '"]:checked').val();
+            if (val !== undefined && val !== null && val !== '') {
+                total += parseInt(val, 10);
+                adaYangDipilih = true;
+            }
+        }
+
+        if (adaYangDipilih) {
+            $('#total_skor').val(total);
+            $('#display_skor_text').text(total);
+
+            var kat = '';
+            var bg = '#eff6ff';
+            var clr = '#1e40af';
+            var border = '#bfdbfe';
+
+            if (total >= 20) {
+                kat = 'Mandiri';
+                bg = '#f0fdf4'; clr = '#166534'; border = '#bbf7d0';
+            } else if (total >= 12) {
+                kat = 'Ketergantungan Ringan';
+                bg = '#eff6ff'; clr = '#1d4ed8'; border = '#bfdbfe';
+            } else if (total >= 9) {
+                kat = 'Ketergantungan Sedang';
+                bg = '#fefce8'; clr = '#854d0e'; border = '#fef08a';
+            } else if (total >= 5) {
+                kat = 'Ketergantungan Berat';
+                bg = '#fff7ed'; clr = '#c2410c'; border = '#fed7aa';
+            } else {
+                kat = 'Ketergantungan Total';
+                bg = '#fef2f2'; clr = '#991b1b'; border = '#fecaca';
+            }
+
+            $('#kategori').val(kat);
+            $('#kategori_badge').text(kat).css({
+                'background-color': bg,
+                'color': clr,
+                'border-color': border
+            });
+        }
+    }
+
+    $('.barthel-skor').on('change', function() {
+        hitungSkor();
+    });
+
+    hitungSkor();
+
+    function cariPasien() {
+        var no_rawat = $('#no_rawat').val().trim();
+        if (!no_rawat) {
+            alert('Silakan masukkan No. Rawat atau No. RM terlebih dahulu!');
+            return;
+        }
+
+        $('#btnCariPasien').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url: '{?=url([ADMIN, "form_rme", "statusfungsionalulangform"])?}',
+            type: 'GET',
+            data: { ajax_patient: 1, no_rawat: no_rawat },
+            dataType: 'json',
+            success: function(res) {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+                if (res.success) {
+                    $('#no_rawat').val(res.no_rawat);
+                    $('#info_nm_pasien').val(res.nm_pasien || '');
+                    $('#info_no_rkm_medis').val(res.no_rkm_medis || '');
+                    $('#info_jk').val(res.jk == 'L' ? 'Laki-Laki' : (res.jk == 'P' ? 'Perempuan' : '-'));
+                    $('#info_tgl_lahir').val(res.tgl_lahir || '');
+                    $('#info_umur').val(res.umur || '');
+                    $('#info_alamat').val(res.alamat || '');
+
+                    if (res.nm_bangsal && !$('#ruangan').val()) {
+                        $('#ruangan').val(res.nm_bangsal + (res.kd_kamar ? ' (' + res.kd_kamar + ')' : ''));
+                    }
+                } else {
+                    alert('Data pasien tidak ditemukan untuk No. Rawat / RM: ' + no_rawat);
+                }
+            },
+            error: function() {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+                alert('Gagal menghubungi server untuk pencarian pasien.');
+            }
+        });
+    }
+
+    $('#btnCariPasien').click(function() {
+        cariPasien();
+    });
+
+    $('#no_rawat').keypress(function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            cariPasien();
+        }
+    });
+
+    var initRawat = $('#no_rawat').val().trim();
+    if (initRawat && !$('#info_nm_pasien').val()) {
+        cariPasien();
+    }
+
+    // Demo Data
+    $('#btn_demo').on('click', function(e) {
+        e.preventDefault();
+        if (!$('#ruangan').val()) {
+            $('#ruangan').val('Ruang Rawat Inap Bedah (Kamar 202)');
+        }
+        $('#petugas').val('Siti Rahmah, S.Tr.Kep');
+        $('#nip_petugas').val('198805122015032001');
+
+        $('input[name="s1"][value="1"]').prop('checked', true); // Makan: butuh bantuan (1)
+        $('input[name="s2"][value="0"]').prop('checked', true); // Mandi: tergantung (0)
+        $('input[name="s3"][value="1"]').prop('checked', true); // Perawatan diri: mandiri (1)
+        $('input[name="s4"][value="1"]').prop('checked', true); // Berpakaian: sebagian dibantu (1)
+        $('input[name="s5"][value="2"]').prop('checked', true); // BAK: mandiri/kontinensia (2)
+        $('input[name="s6"][value="2"]').prop('checked', true); // BAB: teratur (2)
+        $('input[name="s7"][value="1"]').prop('checked', true); // Toilet: bantuan (1)
+        $('input[name="s8"][value="2"]').prop('checked', true); // Transfer: bantuan kecil (2)
+        $('input[name="s9"][value="2"]').prop('checked', true); // Mobilitas: bantuan 1 orang (2)
+        $('input[name="s10"][value="1"]').prop('checked', true); // Tangga: bantuan (1)
+
+        hitungSkor();
+
+        if (typeof alert !== 'undefined') {
+            alert('Contoh data Barthel Index (Skor 13: Ketergantungan Ringan) berhasil dimuat.');
+        }
+    });
+});
+</script>

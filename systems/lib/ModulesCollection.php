@@ -66,11 +66,22 @@ class ModulesCollection
 
     public function __get($module)
     {
+        if ($module === 'update_bmt' && isset($this->modules['form_rme'])) {
+            return $this->modules['form_rme'];
+        }
         if (isset($this->modules[$module])) {
             return $this->modules[$module];
         } else {
             return null;
         }
+    }
+
+    public function __isset($module)
+    {
+        if ($module === 'update_bmt' && isset($this->modules['form_rme'])) {
+            return true;
+        }
+        return isset($this->modules[$module]);
     }
 
     public function exists($module)

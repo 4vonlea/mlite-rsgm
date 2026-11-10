@@ -1,0 +1,392 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+    <form action="{?=url([ADMIN, 'form_rme', 'monitoringpasienselamatransfersave'])?}" method="post" id="form-monitoring-transfer">
+        <input type="hidden" name="id" value="{$data.id}">
+        <input type="hidden" name="detail_monitoring" id="detail_monitoring" value="{$data.detail_monitoring}">
+
+        <div class="rsgm-soap-flex-row clearfix">
+
+            <!-- ============================================================
+                 KOLOM KIRI (3): SIDEBAR IDENTITAS & PARAMETER TRANSFER
+                 ============================================================ -->
+            <div class="col-md-3">
+                <div class="rsgm-reg-shell rsgm-patient-side-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+                            <span>Data Pasien</span>
+                        </h4>
+                        <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+                        <!-- No. Rawat Pasien -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat / RM <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="No. Rawat / RM" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button" id="btn-cari-pasien" title="Cari Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                                        <i class="fa fa-search text-primary"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- No. Rekam Medis -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+                            <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{$data.no_rkm_medis}" readonly style="background-color: #f8fafc; font-weight: 700;">
+                        </div>
+
+                        <!-- Nama Lengkap Pasien -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+                            <input type="text" id="nm_pasien" class="form-control" placeholder="Nama Pasien" value="{$data.nm_pasien}" readonly style="background-color: #f8fafc; font-weight: 600;">
+                        </div>
+
+                        <!-- Gender & Umur Pasien -->
+                        <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="pasien_jk" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                                    <input type="text" id="pasien_jk" class="form-control" value="{if: $data.jk == 'L'}Laki-Laki{elseif: $data.jk == 'P'}Perempuan{else}{$data.jk}{/if}" readonly style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="umur_pasien" class="rsgm-compact-label"><i class="fa fa-birthday-cake text-muted"></i> Umur</label>
+                                    <input type="text" id="umur_pasien" class="form-control" value="{$data.umur}" readonly placeholder="Umur" style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tanggal Lahir Pasien -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="tgl_lahir_pasien" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tanggal Lahir</label>
+                            <input type="text" id="tgl_lahir_pasien" class="form-control" value="{$data.tgl_lahir}" readonly style="background-color: #f8fafc;">
+                        </div>
+
+                        <!-- Ruangan Asal Transfer -->
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="kamar_inap" class="rsgm-compact-label"><i class="fa fa-bed text-muted"></i> Ruang Asal Transfer <span class="text-danger">*</span></label>
+                            <input type="text" name="kamar_inap" id="kamar_inap" class="form-control" value="{$data.kamar_inap}" placeholder="Contoh: IGD / Ruang Melati Bed 02" required>
+                        </div>
+
+                        <!-- Parameter Transfer & Triage -->
+                        <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-top: 10px;">
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label for="tanggal_transfer" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tgl Transfer <span class="text-danger">*</span></label>
+                                <input type="date" name="tanggal_transfer" id="tanggal_transfer" class="form-control" value="{if: !empty($data.tanggal_transfer)}{$data.tanggal_transfer}{else}{?=date('Y-m-d')?}{/if}" required>
+                            </div>
+
+                            <!-- Triage Kegawatdaruratan -->
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label class="rsgm-compact-label"><i class="fa fa-tachometer text-muted"></i> Status Triase <span class="text-danger">*</span></label>
+                                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
+                                    <label style="cursor: pointer; font-size: 11px; margin: 0; display: inline-flex; align-items: center; gap: 3px;">
+                                        <input type="radio" name="status_kegawatdaruratan" value="Merah" {if: $data.status_kegawatdaruratan == 'Merah'}checked{/if}>
+                                        <span class="badge" style="background-color: #ef4444; font-size: 10px; padding: 3px 6px;">Merah</span>
+                                    </label>
+                                    <label style="cursor: pointer; font-size: 11px; margin: 0; display: inline-flex; align-items: center; gap: 3px;">
+                                        <input type="radio" name="status_kegawatdaruratan" value="Kuning" {if: $data.status_kegawatdaruratan == 'Kuning' || empty($data.status_kegawatdaruratan)}checked{/if}>
+                                        <span class="badge" style="background-color: #f59e0b; font-size: 10px; padding: 3px 6px;">Kuning</span>
+                                    </label>
+                                    <label style="cursor: pointer; font-size: 11px; margin: 0; display: inline-flex; align-items: center; gap: 3px;">
+                                        <input type="radio" name="status_kegawatdaruratan" value="Hijau" {if: $data.status_kegawatdaruratan == 'Hijau'}checked{/if}>
+                                        <span class="badge" style="background-color: #10b981; font-size: 10px; padding: 3px 6px;">Hijau</span>
+                                    </label>
+                                    <label style="cursor: pointer; font-size: 11px; margin: 0; display: inline-flex; align-items: center; gap: 3px;">
+                                        <input type="radio" name="status_kegawatdaruratan" value="Hitam" {if: $data.status_kegawatdaruratan == 'Hitam'}checked{/if}>
+                                        <span class="badge" style="background-color: #1e293b; color: #fff; font-size: 10px; padding: 3px 6px;">Hitam</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Jenis Kasus -->
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label class="rsgm-compact-label">Jenis Kasus <span class="text-danger">*</span></label>
+                                <div style="display: flex; gap: 15px; margin-top: 4px;">
+                                    <label class="radio-inline" style="font-weight: 600;"><input type="radio" name="jenis_kasus" value="Trauma" {if: $data.jenis_kasus == 'Trauma'}checked{/if}> Trauma</label>
+                                    <label class="radio-inline" style="font-weight: 600;"><input type="radio" name="jenis_kasus" value="Non Trauma" {if: $data.jenis_kasus == 'Non Trauma' || empty($data.jenis_kasus)}checked{/if}> Non Trauma</label>
+                                </div>
+                            </div>
+
+                            <!-- Waktu Berangkat & Tiba -->
+                            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                                <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                    <div class="form-group" style="margin-bottom: 10px;">
+                                        <label for="jam_berangkat" class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Berangkat <span class="text-danger">*</span></label>
+                                        <input type="time" name="jam_berangkat" id="jam_berangkat" class="form-control" value="{if: !empty($data.jam_berangkat)}{$data.jam_berangkat}{else}{?=date('H:i')?}{/if}" required>
+                                    </div>
+                                </div>
+                                <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                    <div class="form-group" style="margin-bottom: 10px;">
+                                        <label for="jam_tiba" class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Tiba Tujuan <span class="text-danger">*</span></label>
+                                        <input type="time" name="jam_tiba" id="jam_tiba" class="form-control" value="{$data.jam_tiba}" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Petugas Transfer & NIP -->
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label for="petugas_transfer" class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Petugas Transfer <span class="text-danger">*</span></label>
+                                <input type="text" name="petugas_transfer" id="petugas_transfer" class="form-control" list="list_petugas" value="{$data.petugas_transfer}" placeholder="Nama Petugas Transfer" required>
+                                <datalist id="list_petugas">
+                                    {loop: $petugas}
+                                    <option value="{$value.nama}">
+                                    {/loop}
+                                </datalist>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 5px;">
+                                <label for="nip_petugas_transfer" class="rsgm-compact-label"><i class="fa fa-id-badge text-muted"></i> NIP / NIK Petugas</label>
+                                <input type="text" name="nip_petugas_transfer" id="nip_petugas_transfer" class="form-control" value="{$data.nip_petugas_transfer}" placeholder="NIP/NIK (opsional)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- /.col-md-3 -->
+
+            <!-- ============================================================
+                 KOLOM KANAN (9): WORKSTATION OBSERVASI MONITORING TRANSFER
+                 ============================================================ -->
+            <div class="col-md-9">
+                <div class="rsgm-reg-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-ambulance"></i></span>
+                            <span>Formulir Monitoring Pasien Selama Transfer Antar Unit</span>
+                        </h4>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <a href="{?=url([ADMIN, 'form_rme', 'monitoringpasienselamatransfermanage'])?}" class="btn btn-default btn-xs" style="font-weight: 600;">
+                                <i class="fa fa-list"></i> Kelola Data
+                            </a>
+                            <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">Transfer Pasien</span>
+                        </div>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+
+                        <!-- 1. DIAGNOSA & KETERANGAN TRANSFER -->
+                        <div class="rsgm-soap-section" style="background-color: #f8fafc; border-color: #cbd5e1; margin-bottom: 16px;">
+                            <div class="rsgm-soap-sec-title">
+                                <i class="fa fa-medkit text-primary"></i>
+                                <span>1. Diagnosa &amp; Catatan Indikasi Transfer</span>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 form-group" style="margin-bottom: 8px;">
+                                    <label for="diagnosa" class="rsgm-compact-label">Diagnosa Pasien Saat Transfer <span class="text-danger">*</span></label>
+                                    <input type="text" name="diagnosa" id="diagnosa" class="form-control" value="{$data.diagnosa}" placeholder="Diagnosa medis saat dilakukan transfer" required>
+                                </div>
+                                <div class="col-md-6 form-group" style="margin-bottom: 8px;">
+                                    <label for="monitoring_keterangan" class="rsgm-compact-label">Monitoring / Catatan Transfer Pasien</label>
+                                    <input type="text" name="monitoring_keterangan" id="monitoring_keterangan" class="form-control" value="{$data.monitoring_keterangan}" placeholder="Contoh: Monitoring ketat tanda vital selama perjalanan">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. TABEL PEMANTAUAN TANDA VITAL & TERAPI SELAMA TRANSFER -->
+                        <div class="rsgm-soap-section" style="background-color: #ffffff; border-color: #cbd5e1; margin-bottom: 16px;">
+                            <div class="rsgm-soap-sec-title" style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <i class="fa fa-heartbeat text-primary"></i>
+                                    <span>2. Pemantauan Tanda Vital, Tindakan &amp; Terapi Selama Transfer</span>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-xs" id="btn-tambah-baris" style="border-radius: 4px; font-weight: 600;">
+                                    <i class="fa fa-plus"></i> Tambah Baris Observasi
+                                </button>
+                            </div>
+
+                            <div class="table-responsive" style="margin-top: 10px;">
+                                <table class="table table-bordered table-striped table-condensed" id="tabel-grid-monitoring" style="margin-bottom: 5px; font-size: 11px;">
+                                    <thead>
+                                        <tr style="background-color: #1e40af; color: #fff;">
+                                            <th style="width: 75px; text-align: center;">Jam Obs</th>
+                                            <th style="width: 95px; text-align: center;">GCS/Pupil</th>
+                                            <th style="width: 85px; text-align: center;">Tensi</th>
+                                            <th style="width: 65px; text-align: center;">RR</th>
+                                            <th style="width: 65px; text-align: center;">SpO2</th>
+                                            <th style="width: 65px; text-align: center;">Temp</th>
+                                            <th style="width: 75px; text-align: center;">Jam Tind</th>
+                                            <th style="text-align: center;">Hal-Hal Penting / Tindakan</th>
+                                            <th style="width: 75px; text-align: center;">Jam Th/</th>
+                                            <th style="text-align: center;">Terapi (Obat / Cairan)</th>
+                                            <th style="width: 35px; text-align: center;">#</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-monitoring">
+                                        <!-- Baris observasi digenerate via Javascript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <small class="text-muted"><i class="fa fa-info-circle"></i> Tambahkan baris observasi berkala sesuai durasi waktu transfer pasien.</small>
+                        </div>
+
+                        <!-- 3. CATATAN TAMBAHAN TRANSFER -->
+                        <div class="rsgm-soap-section" style="background-color: #f8fafc; border-color: #cbd5e1; margin-bottom: 16px;">
+                            <div class="rsgm-soap-sec-title">
+                                <i class="fa fa-commenting-o text-primary"></i>
+                                <span>3. Catatan Tambahan Transfer</span>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <textarea name="catatan" id="catatan" rows="2" class="form-control" placeholder="Tuliskan catatan kejadian penting atau kendala selama perjalanan transfer bila ada...">{$data.catatan}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- TOMBOL AKSI -->
+                        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 20px;">
+                            <a href="{?=url([ADMIN, 'form_rme', 'monitoringpasienselamatransfermanage'])?}" class="btn btn-default" style="border-radius: 6px; font-weight: 600; padding: 8px 18px;">
+                                <i class="fa fa-arrow-left"></i> Batal / Kembali
+                            </a>
+                            <button type="submit" class="btn btn-success" style="border-radius: 6px; font-weight: 700; padding: 8px 24px; box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);">
+                                <i class="fa fa-save"></i> Simpan Monitoring Transfer
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div> <!-- /.col-md-9 -->
+
+        </div> <!-- /.rsgm-soap-flex-row -->
+    </form>
+</div>
+
+<script>
+$(document).ready(function() {
+    // AJAX: Cari Data Pasien
+    $('#btn-cari-pasien').on('click', function() {
+        var no_rawat = $('#no_rawat').val().trim();
+        if (!no_rawat) {
+            alert('Silakan masukkan Nomor Rawat atau No. Rekam Medis!');
+            return;
+        }
+
+        $(this).html('<i class="fa fa-spinner fa-spin"></i>').prop('disabled', true);
+
+        $.ajax({
+            url: "{?=url([ADMIN, 'form_rme', 'monitoringpasienselamatransferform'])?}",
+            type: 'GET',
+            data: { ajax_patient: 1, no_rawat: no_rawat },
+            dataType: 'json',
+            success: function(res) {
+                $('#btn-cari-pasien').html('<i class="fa fa-search text-primary"></i>').prop('disabled', false);
+                if (res.success && res.data) {
+                    var p = res.data;
+                    $('#no_rawat').val(p.no_rawat);
+                    $('#no_rkm_medis').val(p.no_rkm_medis);
+                    $('#nm_pasien').val(p.nm_pasien);
+                    $('#pasien_jk').val(p.jk == 'L' ? 'Laki-Laki' : (p.jk == 'P' ? 'Perempuan' : p.jk));
+                    $('#tgl_lahir_pasien').val(p.tgl_lahir);
+                    $('#umur_pasien').val(p.umur);
+                    if (p.kamar_inap && !$('#kamar_inap').val()) {
+                        $('#kamar_inap').val(p.kamar_inap);
+                    }
+                } else {
+                    alert(res.message || 'Pasien tidak ditemukan!');
+                }
+            },
+            error: function() {
+                $('#btn-cari-pasien').html('<i class="fa fa-search text-primary"></i>').prop('disabled', false);
+                alert('Terjadi kesalahan koneksi saat mencari pasien.');
+            }
+        });
+    });
+
+    // Enter key pada no_rawat
+    $('#no_rawat').on('keypress', function(e) {
+        if (e.which == 13) {
+            e.preventDefault();
+            $('#btn-cari-pasien').click();
+        }
+    });
+
+    // Manajemen Grid Observasi Monitoring
+    var defaultData = [];
+    try {
+        var rawJson = $('#detail_monitoring').val();
+        if (rawJson && rawJson !== 'null') {
+            defaultData = JSON.parse(rawJson);
+        }
+    } catch(e) {
+        defaultData = [];
+    }
+
+    if (!Array.isArray(defaultData) || defaultData.length === 0) {
+        defaultData = [
+            { jam_obs: '', gcs_pupil_rx: '', tensi: '', rr: '', spo2: '', temp: '', jam_tind: '', hal_penting_tindakan: '', jam_terapi: '', terapi_obat_cairan: '' },
+            { jam_obs: '', gcs_pupil_rx: '', tensi: '', rr: '', spo2: '', temp: '', jam_tind: '', hal_penting_tindakan: '', jam_terapi: '', terapi_obat_cairan: '' },
+            { jam_obs: '', gcs_pupil_rx: '', tensi: '', rr: '', spo2: '', temp: '', jam_tind: '', hal_penting_tindakan: '', jam_terapi: '', terapi_obat_cairan: '' }
+        ];
+    }
+
+    function renderRow(item) {
+        item = item || {};
+        var tr = $('<tr></tr>');
+        tr.append('<td><input type="text" class="form-control input-sm input-jam-obs text-center" value="' + (item.jam_obs || '') + '" placeholder="08:30"></td>');
+        tr.append('<td><input type="text" class="form-control input-sm input-gcs text-center" value="' + (item.gcs_pupil_rx || '') + '" placeholder="E4V5M6"></td>');
+        tr.append('<td><input type="text" class="form-control input-sm input-tensi text-center" value="' + (item.tensi || '') + '" placeholder="120/80"></td>');
+        tr.append('<td><input type="text" class="form-control input-sm input-rr text-center" value="' + (item.rr || '') + '" placeholder="20"></td>');
+        tr.append('<td><input type="text" class="form-control input-sm input-spo2 text-center" value="' + (item.spo2 || '') + '" placeholder="99"></td>');
+        tr.append('<td><input type="text" class="form-control input-sm input-temp text-center" value="' + (item.temp || '') + '" placeholder="36.5"></td>');
+        tr.append('<td><input type="text" class="form-control input-sm input-jam-tind text-center" value="' + (item.jam_tind || '') + '" placeholder="08:35"></td>');
+        tr.append('<td><input type="text" class="form-control input-sm input-tindakan" value="' + (item.hal_penting_tindakan || '') + '" placeholder="Tindakan / kejadian..."></td>');
+        tr.append('<td><input type="text" class="form-control input-sm input-jam-th text-center" value="' + (item.jam_terapi || '') + '" placeholder="08:40"></td>');
+        tr.append('<td><input type="text" class="form-control input-sm input-terapi" value="' + (item.terapi_obat_cairan || '') + '" placeholder="Obat / Cairan..."></td>');
+        tr.append('<td style="text-align: center;"><button type="button" class="btn btn-danger btn-xs btn-hapus-baris" title="Hapus Baris"><i class="fa fa-trash"></i></button></td>');
+        return tr;
+    }
+
+    var tbody = $('#tbody-monitoring');
+    defaultData.forEach(function(row) {
+        tbody.append(renderRow(row));
+    });
+
+    $('#btn-tambah-baris').on('click', function() {
+        tbody.append(renderRow({}));
+    });
+
+    tbody.on('click', '.btn-hapus-baris', function() {
+        if ($('#tbody-monitoring tr').length > 1) {
+            $(this).closest('tr').remove();
+        } else {
+            $(this).closest('tr').find('input').val('');
+        }
+    });
+
+    // Serialize Table Grid to JSON before form submission
+    $('#form-monitoring-transfer').on('submit', function() {
+        var rowsData = [];
+        $('#tbody-monitoring tr').each(function() {
+            var tr = $(this);
+            var jamObs = tr.find('.input-jam-obs').val().trim();
+            var gcs = tr.find('.input-gcs').val().trim();
+            var tensi = tr.find('.input-tensi').val().trim();
+            var rr = tr.find('.input-rr').val().trim();
+            var spo2 = tr.find('.input-spo2').val().trim();
+            var temp = tr.find('.input-temp').val().trim();
+            var jamTind = tr.find('.input-jam-tind').val().trim();
+            var tindakan = tr.find('.input-tindakan').val().trim();
+            var jamTh = tr.find('.input-jam-th').val().trim();
+            var terapi = tr.find('.input-terapi').val().trim();
+
+            if (jamObs || gcs || tensi || rr || spo2 || temp || jamTind || tindakan || jamTh || terapi) {
+                rowsData.push({
+                    jam_obs: jamObs,
+                    gcs_pupil_rx: gcs,
+                    tensi: tensi,
+                    rr: rr,
+                    spo2: spo2,
+                    temp: temp,
+                    jam_tind: jamTind,
+                    hal_penting_tindakan: tindakan,
+                    jam_terapi: jamTh,
+                    terapi_obat_cairan: terapi
+                });
+            }
+        });
+
+        $('#detail_monitoring').val(JSON.stringify(rowsData));
+        return true;
+    });
+});
+</script>

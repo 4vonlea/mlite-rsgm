@@ -1,0 +1,549 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+  <form method="POST" action="{?=url([ADMIN, 'form_rme', 'ri18save'])?}" id="ri18Form">
+    <input type="hidden" name="id" value="{?=isset($data['id']) ? $data['id'] : ''?}">
+    <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{?=isset_or($data['no_rkm_medis'])?}">
+    <input type="hidden" name="json_pengkajian" id="json_pengkajian" value="">
+    <input type="hidden" name="json_pelaksanaan" id="json_pelaksanaan" value="">
+
+    <div class="rsgm-soap-flex-row clearfix">
+      
+      <!-- ============================================================
+           KOLOM KIRI (3): SIDEBAR IDENTITAS PASIEN
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Identitas Pasien</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">RM.RI 18</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default" id="btn_cari_pasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                    <i class="fa fa-search text-primary"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="display_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+              <input type="text" id="display_no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+              <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}{?=isset_or($data['nama_pasien'])?}{/if}" required>
+            </div>
+
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="display_jk" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                  <input type="text" id="display_jk" class="form-control" value="{if: isset($data['jk']) && ($data['jk'] == 'L' || $data['jk'] == 'Laki-Laki')}Laki-Laki{elseif: isset($data['jk']) && ($data['jk'] == 'P' || $data['jk'] == 'Perempuan')}Perempuan{else}-{/if}" readonly>
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="display_tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir</label>
+                  <input type="text" id="display_tgl_lahir" class="form-control" value="{?=isset_or($data['tgl_lahir'])?}" readonly>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="display_alamat" class="rsgm-compact-label"><i class="fa fa-map-marker text-muted"></i> Alamat Pasien</label>
+              <textarea id="display_alamat" class="form-control" rows="2" readonly style="resize: vertical; font-size: 12px;">{?=isset_or($data['alamat'])?}</textarea>
+            </div>
+
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+              <button type="button" id="btn_demo" class="btn btn-warning btn-sm btn-block" style="border-radius: 6px; font-weight: 600;" title="Isi edukasi dengan contoh data lengkap">
+                <i class="fa fa-magic"></i> Isi Contoh Data
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           KOLOM KANAN (9): WORKSTATION LEMBAR EDUKASI TERINTEGRASI
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-graduation-cap"></i></span>
+              <span>Lembar Edukasi Pasien &amp; Keluarga Terintegrasi</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">RM.RI 18</span>
+              <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-users"></i> Multi-Profesi (PPA)</span>
+            </div>
+          </div>
+
+          <div class="rsgm-reg-body" style="padding: 16px 18px;">
+            
+            <!-- BAGIAN A: PENGKAJIAN KEBUTUHAN EDUKASI -->
+            <div class="rsgm-soap-section" style="margin-bottom: 20px;">
+              <div class="rsgm-soap-section-header">
+                <h5><i class="fa fa-clipboard text-primary"></i> A. Pengkajian Kebutuhan Edukasi Pasien &amp; Keluarga</h5>
+              </div>
+
+              <div class="row" style="margin-top: 12px;">
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Ketersediaan Menerima Edukasi</label>
+                    <select class="form-control input-sm p-ketersediaan">
+                      <option value="1" {if: (isset($data.pengkajian.ketersediaan) && $data.pengkajian.ketersediaan=='1')}selected{/if}>1. Ya, Bersedia</option>
+                      <option value="2" {if: (isset($data.pengkajian.ketersediaan) && $data.pengkajian.ketersediaan=='2')}selected{/if}>2. Tidak Bersedia</option>
+                    </select>
+                  </div>
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Pendidikan Terakhir</label>
+                    <input type="text" class="form-control input-sm p-pendidikan" value="{?=isset_or($data['pengkajian']['pendidikan'])?}" placeholder="SD / SMP / SMA / S1">
+                  </div>
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Bahasa Utama yang Digunakan</label>
+                    <select class="form-control input-sm p-bahasa">
+                      <option value="1" {if: (!isset($data.pengkajian.bahasa) || $data.pengkajian.bahasa=='1')}selected{/if}>1. Bahasa Indonesia</option>
+                      <option value="2" {if: (isset($data.pengkajian.bahasa) && $data.pengkajian.bahasa=='2')}selected{/if}>2. Bahasa Daerah / Lainnya</option>
+                    </select>
+                    <input type="text" class="form-control input-sm p-bahasa_lainnya" placeholder="Sebutkan bahasa..." value="{?=isset_or($data['pengkajian']['bahasa_lainnya'])?}" style="margin-top: 5px;">
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Hambatan Edukasi</label>
+                    <div style="background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 12px;">
+                      <label style="font-weight: 500; display: block; margin-bottom: 4px;"><input type="checkbox" class="p-hambatan" value="1" {if: (isset($data.pengkajian.hambatan) && in_array('1', $data.pengkajian.hambatan))}checked{/if}> Emosional / Marah / Cemas</label>
+                      <label style="font-weight: 500; display: block; margin-bottom: 4px;"><input type="checkbox" class="p-hambatan" value="2" {if: (isset($data.pengkajian.hambatan) && in_array('2', $data.pengkajian.hambatan))}checked{/if}> Motivasi Kurang</label>
+                      <label style="font-weight: 500; display: block; margin-bottom: 0;"><input type="checkbox" class="p-hambatan" value="3" {if: (isset($data.pengkajian.hambatan) && in_array('3', $data.pengkajian.hambatan))}checked{/if}> Tidak Ada Hambatan</label>
+                    </div>
+                  </div>
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Keterbatasan Fisik / Kognitif</label>
+                    <div style="background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 12px;">
+                      <label style="font-weight: 500; display: block; margin-bottom: 4px;"><input type="checkbox" class="p-keterbatasan" value="1" {if: (isset($data.pengkajian.keterbatasan) && in_array('1', $data.pengkajian.keterbatasan))}checked{/if}> Fisik (Pendengaran / Penglihatan)</label>
+                      <label style="font-weight: 500; display: block; margin-bottom: 4px;"><input type="checkbox" class="p-keterbatasan" value="2" {if: (isset($data.pengkajian.keterbatasan) && in_array('2', $data.pengkajian.keterbatasan))}checked{/if}> Kognitif / Daya Ingat</label>
+                      <label style="font-weight: 500; display: block; margin-bottom: 0;"><input type="checkbox" class="p-keterbatasan" value="3" {if: (isset($data.pengkajian.keterbatasan) && in_array('3', $data.pengkajian.keterbatasan))}checked{/if}> Tidak Ada Keterbatasan</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Kebutuhan Penerjemah</label>
+                    <select class="form-control input-sm p-penerjemah">
+                      <option value="1" {if: (!isset($data.pengkajian.penerjemah) || $data.pengkajian.penerjemah=='1')}selected{/if}>1. Tidak Perlu Penerjemah</option>
+                      <option value="2" {if: (isset($data.pengkajian.penerjemah) && $data.pengkajian.penerjemah=='2')}selected{/if}>2. Ya, Perlu Penerjemah</option>
+                    </select>
+                    <input type="text" class="form-control input-sm p-penerjemah_bahasa" placeholder="Bahasa isyarat / daerah..." value="{?=isset_or($data['pengkajian']['penerjemah_bahasa'])?}" style="margin-top: 5px;">
+                  </div>
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="rsgm-compact-label">Kemampuan Membaca</label>
+                    <select class="form-control input-sm p-kemampuan_membaca">
+                      <option value="1" {if: (!isset($data.pengkajian.kemampuan_membaca) || $data.pengkajian.kemampuan_membaca=='1')}selected{/if}>1. Baik (Bisa Membaca)</option>
+                      <option value="2" {if: (isset($data.pengkajian.kemampuan_membaca) && $data.pengkajian.kemampuan_membaca=='2')}selected{/if}>2. Kurang (Buta Aksara / Perlu Bantuan)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TOPIK KEBUTUHAN EDUKASI -->
+              <div style="margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+                <label class="rsgm-compact-label" style="margin-bottom: 6px;">Topik Kebutuhan Edukasi yang Diperlukan:</label>
+                <div class="row" style="font-size: 12px;">
+                  <div class="col-md-4">
+                    <label style="font-weight: 500; display: block;"><input type="checkbox" class="p-kebutuhan" value="1" {if: (isset($data.pengkajian.kebutuhan) && in_array('1', $data.pengkajian.kebutuhan))}checked{/if}> 1. Hak &amp; Kewajiban Pasien</label>
+                    <label style="font-weight: 500; display: block;"><input type="checkbox" class="p-kebutuhan" value="2" {if: (isset($data.pengkajian.kebutuhan) && in_array('2', $data.pengkajian.kebutuhan))}checked{/if}> 2. Kondisi Medis &amp; Diagnosis Penyakit</label>
+                    <label style="font-weight: 500; display: block;"><input type="checkbox" class="p-kebutuhan" value="3" {if: (isset($data.pengkajian.kebutuhan) && in_array('3', $data.pengkajian.kebutuhan))}checked{/if}> 3. Rencana Terapi &amp; Penggunaan Obat</label>
+                  </div>
+                  <div class="col-md-4">
+                    <label style="font-weight: 500; display: block;"><input type="checkbox" class="p-kebutuhan" value="4" {if: (isset($data.pengkajian.kebutuhan) && in_array('4', $data.pengkajian.kebutuhan))}checked{/if}> 4. Nutrisi &amp; Diet Selama Rawat/Pulang</label>
+                    <label style="font-weight: 500; display: block;"><input type="checkbox" class="p-kebutuhan" value="5" {if: (isset($data.pengkajian.kebutuhan) && in_array('5', $data.pengkajian.kebutuhan))}checked{/if}> 5. Manajemen / Manajemen Nyeri</label>
+                    <label style="font-weight: 500; display: block;"><input type="checkbox" class="p-kebutuhan" value="6" {if: (isset($data.pengkajian.kebutuhan) && in_array('6', $data.pengkajian.kebutuhan))}checked{/if}> 6. Teknik Rehabilitasi Medik / Gerak</label>
+                  </div>
+                  <div class="col-md-4">
+                    <label style="font-weight: 500; display: block;"><input type="checkbox" class="p-kebutuhan" value="7" {if: (isset($data.pengkajian.kebutuhan) && in_array('7', $data.pengkajian.kebutuhan))}checked{/if}> 7. Penggunaan Alat Medis / Kateter</label>
+                    <label style="font-weight: 500; display: block;"><input type="checkbox" class="p-kebutuhan" value="8" {if: (isset($data.pengkajian.kebutuhan) && in_array('8', $data.pengkajian.kebutuhan))}checked{/if}> 8. Cuci Tangan &amp; Pencegahan Infeksi</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PENGKAJI -->
+              <div class="row" style="margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="rsgm-compact-label">Perawat yang Mengkaji</label>
+                    <input type="text" class="form-control input-sm p-nama_perawat" value="{?=isset_or($data['pengkajian']['nama_perawat'])?}" placeholder="Nama perawat pengkaji">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="rsgm-compact-label">Tanggal &amp; Jam Pengkajian</label>
+                    <input type="text" class="form-control input-sm p-tgl_jam_kaji" value="{if: !empty($data.pengkajian.tgl_jam_kaji)}{$data.pengkajian.tgl_jam_kaji}{else}{?=date('Y-m-d H:i')?}{/if}">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- BAGIAN B: PELAKSANAAN EDUKASI TERINTEGRASI -->
+            <div class="rsgm-soap-section">
+              <div class="rsgm-soap-section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5><i class="fa fa-graduation-cap text-success"></i> B. Pelaksanaan Edukasi Pasien &amp; Keluarga Terintegrasi (PPA)</h5>
+                <button type="button" class="btn btn-xs btn-success" id="btnAdd"><i class="fa fa-plus"></i> Tambah Pelaksanaan Edukasi</button>
+              </div>
+
+              <div class="table-responsive" style="margin-top: 10px;">
+                <table class="table table-bordered table-hover" id="tblPem" style="font-size: 11.5px;">
+                  <thead style="background: #f8fafc;">
+                    <tr>
+                      <th style="min-width: 130px;">Tgl &amp; Jam</th>
+                      <th style="min-width: 170px;">Materi / Topik Edukasi</th>
+                      <th style="width: 110px;">Pra-Edukasi</th>
+                      <th style="width: 115px;">Penerima</th>
+                      <th style="width: 110px;">Metode</th>
+                      <th style="width: 125px;">Evaluasi</th>
+                      <th style="min-width: 130px;">Edukator (Profesi &amp; Nama)</th>
+                      <th style="min-width: 120px;">Nama Penerima</th>
+                      <th style="width: 35px; text-align: center;">#</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {if: !empty($data.pelaksanaan)}
+                      {loop: $data.pelaksanaan}
+                      <tr class="pem-row">
+                        <td><input type="text" class="form-control input-sm _tgl_jam" value="{$value.tgl_jam}" placeholder="YYYY-MM-DD HH:MM"></td>
+                        <td><textarea class="form-control input-sm _isi" rows="2" placeholder="Uraian edukasi">{$value.isi}</textarea></td>
+                        <td>
+                          <select class="form-control input-sm _pra">
+                            <option value="">-</option>
+                            <option value="1" {if: ($value.pra_edukasi == '1')}selected{/if}>1. Sangat Tahu</option>
+                            <option value="2" {if: ($value.pra_edukasi == '2')}selected{/if}>2. Perlu Diulang</option>
+                            <option value="3" {if: ($value.pra_edukasi == '3')}selected{/if}>3. Belum Tahu</option>
+                          </select>
+                        </td>
+                        <td>
+                          <select class="form-control input-sm _penerima">
+                            <option value="">-</option>
+                            <option value="1" {if: ($value.penerima == '1')}selected{/if}>1. Pasien</option>
+                            <option value="2" {if: ($value.penerima == '2')}selected{/if}>2. Keluarga</option>
+                            <option value="3" {if: ($value.penerima == '3')}selected{/if}>3. Pasien &amp; Kel</option>
+                            <option value="4" {if: ($value.penerima == '4')}selected{/if}>4. Lainnya</option>
+                          </select>
+                        </td>
+                        <td>
+                          <select class="form-control input-sm _metode">
+                            <option value="">-</option>
+                            <option value="1" {if: ($value.metode == '1')}selected{/if}>1. Leaflet/Brosur</option>
+                            <option value="2" {if: ($value.metode == '2')}selected{/if}>2. Demonstrasi</option>
+                            <option value="3" {if: ($value.metode == '3')}selected{/if}>3. Ceramah</option>
+                            <option value="4" {if: ($value.metode == '4')}selected{/if}>4. Diskusi/Tanya Jawab</option>
+                            <option value="5" {if: ($value.metode == '5')}selected{/if}>5. Audio Visual</option>
+                          </select>
+                        </td>
+                        <td>
+                          <select class="form-control input-sm _evaluasi">
+                            <option value="">-</option>
+                            <option value="1" {if: ($value.evaluasi == '1')}selected{/if}>1. Mengerti</option>
+                            <option value="2" {if: ($value.evaluasi == '2')}selected{/if}>2. Mampu Mengulang</option>
+                            <option value="3" {if: ($value.evaluasi == '3')}selected{/if}>3. Mampu Mendemonstrasikan</option>
+                            <option value="4" {if: ($value.evaluasi == '4')}selected{/if}>4. Butuh Re-edukasi</option>
+                          </select>
+                        </td>
+                        <td>
+                          <input type="text" class="form-control input-sm _profesi" value="{$value.profesi}" placeholder="Dokter/Perawat/Gizi/Farmasi" style="margin-bottom: 4px;">
+                          <input type="text" class="form-control input-sm _nama_pemberi" value="{$value.nama_pemberi}" placeholder="Nama Edukator">
+                        </td>
+                        <td><input type="text" class="form-control input-sm _nama_penerima" value="{$value.nama_penerima}" placeholder="Nama Pasien / Kel"></td>
+                        <td class="text-center"><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-times"></i></button></td>
+                      </tr>
+                      {/loop}
+                    {else}
+                      <tr class="pem-row">
+                        <td><input type="text" class="form-control input-sm _tgl_jam" value="{?=date('Y-m-d H:i')?}" placeholder="YYYY-MM-DD HH:MM"></td>
+                        <td><textarea class="form-control input-sm _isi" rows="2" placeholder="Uraian edukasi"></textarea></td>
+                        <td>
+                          <select class="form-control input-sm _pra">
+                            <option value="">-</option>
+                            <option value="1">1. Sangat Tahu</option>
+                            <option value="2" selected>2. Perlu Diulang</option>
+                            <option value="3">3. Belum Tahu</option>
+                          </select>
+                        </td>
+                        <td>
+                          <select class="form-control input-sm _penerima">
+                            <option value="">-</option>
+                            <option value="1">1. Pasien</option>
+                            <option value="2">2. Keluarga</option>
+                            <option value="3" selected>3. Pasien &amp; Kel</option>
+                            <option value="4">4. Lainnya</option>
+                          </select>
+                        </td>
+                        <td>
+                          <select class="form-control input-sm _metode">
+                            <option value="">-</option>
+                            <option value="1">1. Leaflet/Brosur</option>
+                            <option value="2">2. Demonstrasi</option>
+                            <option value="3">3. Ceramah</option>
+                            <option value="4" selected>4. Diskusi/Tanya Jawab</option>
+                            <option value="5">5. Audio Visual</option>
+                          </select>
+                        </td>
+                        <td>
+                          <select class="form-control input-sm _evaluasi">
+                            <option value="">-</option>
+                            <option value="1">1. Mengerti</option>
+                            <option value="2" selected>2. Mampu Mengulang</option>
+                            <option value="3">3. Mampu Mendemonstrasikan</option>
+                            <option value="4">4. Butuh Re-edukasi</option>
+                          </select>
+                        </td>
+                        <td>
+                          <input type="text" class="form-control input-sm _profesi" placeholder="Dokter/Perawat/Gizi/Farmasi" style="margin-bottom: 4px;">
+                          <input type="text" class="form-control input-sm _nama_pemberi" placeholder="Nama Edukator">
+                        </td>
+                        <td><input type="text" class="form-control input-sm _nama_penerima" placeholder="Nama Pasien / Kel"></td>
+                        <td class="text-center"><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-times"></i></button></td>
+                      </tr>
+                    {/if}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div> <!-- /.rsgm-reg-body -->
+
+          <!-- FOOTER AKSI -->
+          <div class="rsgm-reg-footer">
+            <div>
+              <a href="{?=url([ADMIN, 'form_rme', 'ri18manage'])?}" class="btn btn-default btn-sm" style="font-weight: 600;">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-info btn-sm btn-trigger-rme-preview" style="font-weight: 600;">
+                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+              </button>
+              <button type="submit" class="btn btn-primary btn-sm" style="font-weight: 700; padding-left: 20px; padding-right: 20px;">
+                <i class="fa fa-save"></i> Simpan Data
+              </button>
+            </div>
+          </div>
+
+        </div> <!-- /.rsgm-reg-shell -->
+      </div> <!-- /.col-md-9 -->
+
+    </div> <!-- /.rsgm-soap-flex-row -->
+  </form>
+</div>
+
+<script>
+$(document).ready(function() {
+  'use strict';
+
+  // 1. CARI / MUAT DATA PASIEN DARI NO RAWAT
+  function fetchPatientByNoRawat() {
+    var noRawat = $('#no_rawat').val().trim();
+    if (!noRawat) return;
+
+    $.ajax({
+      url: '{?=url([ADMIN, "form_rme", "ri18form"])?}&ajax_patient=1&no_rawat=' + encodeURIComponent(noRawat),
+      type: 'GET',
+      dataType: 'json',
+      success: function(res) {
+        if (res && res.success) {
+          $('#no_rawat').val(res.no_rawat);
+          $('#display_no_rkm_medis').val(res.no_rkm_medis || '');
+          $('#no_rkm_medis').val(res.no_rkm_medis || '');
+          $('#nm_pasien').val(res.nm_pasien || '');
+          if (res.jk) {
+            var jkText = (res.jk === 'L' || res.jk === 'Laki-Laki') ? 'Laki-Laki' : 'Perempuan';
+            $('#display_jk').val(jkText);
+          }
+          if (res.tgl_lahir) $('#display_tgl_lahir').val(res.tgl_lahir);
+          if (res.alamat) $('#display_alamat').val(res.alamat);
+          if (res.pnd && !$('.p-pendidikan').val()) $('.p-pendidikan').val(res.pnd);
+        }
+      }
+    });
+  }
+
+  $('#no_rawat').on('blur change', fetchPatientByNoRawat);
+  $('#btn_cari_pasien').on('click', fetchPatientByNoRawat);
+
+  // 2. TAMBAH / HAPUS BARIS EDUKASI
+  $('#btnAdd').on('click', function() {
+    var tr = [
+      '<tr class="pem-row">',
+      '  <td><input type="text" class="form-control input-sm _tgl_jam" value="{?=date("Y-m-d H:i")?}" placeholder="YYYY-MM-DD HH:MM"></td>',
+      '  <td><textarea class="form-control input-sm _isi" rows="2" placeholder="Uraian edukasi"></textarea></td>',
+      '  <td>',
+      '    <select class="form-control input-sm _pra">',
+      '      <option value="">-</option>',
+      '      <option value="1">1. Sangat Tahu</option>',
+      '      <option value="2" selected>2. Perlu Diulang</option>',
+      '      <option value="3">3. Belum Tahu</option>',
+      '    </select>',
+      '  </td>',
+      '  <td>',
+      '    <select class="form-control input-sm _penerima">',
+      '      <option value="">-</option>',
+      '      <option value="1">1. Pasien</option>',
+      '      <option value="2">2. Keluarga</option>',
+      '      <option value="3" selected>3. Pasien &amp; Kel</option>',
+      '      <option value="4">4. Lainnya</option>',
+      '    </select>',
+      '  </td>',
+      '  <td>',
+      '    <select class="form-control input-sm _metode">',
+      '      <option value="">-</option>',
+      '      <option value="1">1. Leaflet/Brosur</option>',
+      '      <option value="2">2. Demonstrasi</option>',
+      '      <option value="3">3. Ceramah</option>',
+      '      <option value="4" selected>4. Diskusi/Tanya Jawab</option>',
+      '      <option value="5">5. Audio Visual</option>',
+      '    </select>',
+      '  </td>',
+      '  <td>',
+      '    <select class="form-control input-sm _evaluasi">',
+      '      <option value="">-</option>',
+      '      <option value="1">1. Mengerti</option>',
+      '      <option value="2" selected>2. Mampu Mengulang</option>',
+      '      <option value="3">3. Mampu Mendemonstrasikan</option>',
+      '      <option value="4">4. Butuh Re-edukasi</option>',
+      '    </select>',
+      '  </td>',
+      '  <td>',
+      '    <input type="text" class="form-control input-sm _profesi" placeholder="Dokter/Perawat/Gizi/Farmasi" style="margin-bottom: 4px;">',
+      '    <input type="text" class="form-control input-sm _nama_pemberi" placeholder="Nama Edukator">',
+      '  </td>',
+      '  <td><input type="text" class="form-control input-sm _nama_penerima" placeholder="Nama Pasien / Kel"></td>',
+      '  <td class="text-center"><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-times"></i></button></td>',
+      '</tr>'
+    ].join('');
+    $('#tblPem tbody').append(tr);
+  });
+
+  $(document).on('click', '.btnDel', function() {
+    if ($('.pem-row').length > 1) {
+      $(this).closest('tr').remove();
+    } else {
+      alert('Minimal 1 baris pelaksanaan edukasi.');
+    }
+  });
+
+  // 3. ISI CONTOH DATA (DEMO)
+  $('#btn_demo').on('click', function(e) {
+    e.preventDefault();
+    if (!$('#no_rawat').val()) $('#no_rawat').val('2026/10/16/000001');
+    $('#display_no_rkm_medis').val('000001');
+    $('#no_rkm_medis').val('000001');
+    $('#nm_pasien').val('Farida Ariyani');
+    $('#display_jk').val('Perempuan');
+    $('#display_tgl_lahir').val('1990-05-14');
+    $('#display_alamat').val('Jl. Veteran No. 12B, Banjarmasin');
+
+    $('.p-ketersediaan').val('1');
+    $('.p-pendidikan').val('S1 Ekonomi');
+    $('.p-bahasa').val('1');
+    $('.p-bahasa_lainnya').val('Bahasa Banjar');
+
+    $('.p-hambatan').prop('checked', false);
+    $('.p-hambatan[value="3"]').prop('checked', true);
+
+    $('.p-keterbatasan').prop('checked', false);
+    $('.p-keterbatasan[value="3"]').prop('checked', true);
+
+    $('.p-penerjemah').val('1');
+    $('.p-penerjemah_bahasa').val('-');
+    $('.p-kemampuan_membaca').val('1');
+
+    $('.p-kebutuhan').prop('checked', false);
+    $('.p-kebutuhan[value="1"], .p-kebutuhan[value="2"], .p-kebutuhan[value="3"], .p-kebutuhan[value="4"], .p-kebutuhan[value="8"]').prop('checked', true);
+
+    $('.p-nama_perawat').val('Ns. Dewi Anggraini, S.Kep');
+    $('.p-tgl_jam_kaji').val('{?=date("Y-m-d 08:30")?}');
+
+    $('#tblPem tbody').html([
+      '<tr class="pem-row">',
+      '  <td><input type="text" class="form-control input-sm _tgl_jam" value="{?=date("Y-m-d 09:00")?}"></td>',
+      '  <td><textarea class="form-control input-sm _isi" rows="2">Penjelasan diagnosis Gastritis Erosif, rencana perawatan rawat inap 3 hari, dan tanda bahaya perdarahan saluran cerna.</textarea></td>',
+      '  <td><select class="form-control input-sm _pra"><option value="2" selected>2. Perlu Diulang</option></select></td>',
+      '  <td><select class="form-control input-sm _penerima"><option value="3" selected>3. Pasien &amp; Kel</option></select></td>',
+      '  <td><select class="form-control input-sm _metode"><option value="4" selected>4. Diskusi/Tanya Jawab</option></select></td>',
+      '  <td><select class="form-control input-sm _evaluasi"><option value="2" selected>2. Mampu Mengulang</option></select></td>',
+      '  <td><input type="text" class="form-control input-sm _profesi" value="Dokter DPJP" style="margin-bottom:4px;"><input type="text" class="form-control input-sm _nama_pemberi" value="dr. Hendra Pratama, Sp.PD"></td>',
+      '  <td><input type="text" class="form-control input-sm _nama_penerima" value="Farida Ariyani (Pasien)"></td>',
+      '  <td class="text-center"><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-times"></i></button></td>',
+      '</tr>',
+      '<tr class="pem-row">',
+      '  <td><input type="text" class="form-control input-sm _tgl_jam" value="{?=date("Y-m-d 10:15")?}"></td>',
+      '  <td><textarea class="form-control input-sm _isi" rows="2">Edukasi diet lambung lunak rendah serat, jadwal makan porsi kecil sering, dan pantangan makanan pedas/asam.</textarea></td>',
+      '  <td><select class="form-control input-sm _pra"><option value="3" selected>3. Belum Tahu</option></select></td>',
+      '  <td><select class="form-control input-sm _penerima"><option value="2" selected>2. Keluarga</option></select></td>',
+      '  <td><select class="form-control input-sm _metode"><option value="1" selected>1. Leaflet/Brosur</option></select></td>',
+      '  <td><select class="form-control input-sm _evaluasi"><option value="1" selected>1. Mengerti</option></select></td>',
+      '  <td><input type="text" class="form-control input-sm _profesi" value="Nutrisionis / Gizi" style="margin-bottom:4px;"><input type="text" class="form-control input-sm _nama_pemberi" value="Siti Rahmah, S.Gz"></td>',
+      '  <td><input type="text" class="form-control input-sm _nama_penerima" value="Budi Santoso (Suami)"></td>',
+      '  <td class="text-center"><button type="button" class="btn btn-xs btn-danger btnDel"><i class="fa fa-times"></i></button></td>',
+      '</tr>'
+    ].join(''));
+  });
+
+  // 4. SERIALISASI JSON SAAT SUBMIT
+  $('#ri18Form').on('submit', function() {
+    var hambatan = [];
+    $('.p-hambatan:checked').each(function() { hambatan.push($(this).val()); });
+
+    var keterbatasan = [];
+    $('.p-keterbatasan:checked').each(function() { keterbatasan.push($(this).val()); });
+
+    var kebutuhan = [];
+    $('.p-kebutuhan:checked').each(function() { kebutuhan.push($(this).val()); });
+
+    var pengkajian = {
+      ketersediaan: $('.p-ketersediaan').val() || '',
+      pendidikan: $('.p-pendidikan').val() || '',
+      bahasa: $('.p-bahasa').val() || '',
+      bahasa_lainnya: $('.p-bahasa_lainnya').val() || '',
+      hambatan: hambatan,
+      keterbatasan: keterbatasan,
+      penerjemah: $('.p-penerjemah').val() || '',
+      penerjemah_bahasa: $('.p-penerjemah_bahasa').val() || '',
+      kemampuan_membaca: $('.p-kemampuan_membaca').val() || '',
+      kebutuhan: kebutuhan,
+      nama_perawat: $('.p-nama_perawat').val() || '',
+      tgl_jam_kaji: $('.p-tgl_jam_kaji').val() || ''
+    };
+    $('#json_pengkajian').val(JSON.stringify(pengkajian));
+
+    var pelaksanaan = [];
+    $('.pem-row').each(function() {
+      var isi = $(this).find('._isi').val();
+      if (isi) {
+        pelaksanaan.push({
+          tgl_jam: $(this).find('._tgl_jam').val() || '',
+          isi: isi,
+          pra_edukasi: $(this).find('._pra').val() || '',
+          penerima: $(this).find('._penerima').val() || '',
+          metode: $(this).find('._metode').val() || '',
+          evaluasi: $(this).find('._evaluasi').val() || '',
+          profesi: $(this).find('._profesi').val() || '',
+          nama_pemberi: $(this).find('._nama_pemberi').val() || '',
+          nama_penerima: $(this).find('._nama_penerima').val() || ''
+        });
+      }
+    });
+    $('#json_pelaksanaan').val(JSON.stringify(pelaksanaan));
+  });
+});
+</script>

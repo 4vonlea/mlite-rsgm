@@ -753,7 +753,7 @@
                   </li>
                   <li role="separator" class="divider"></li>
                   {loop: $mlite.nav}
-                  {if: $value.category == 'rekammedik' && $value.dir != 'update_bmt'}
+                  {if: $value.category == 'rekammedik' && $value.dir != 'update_bmt' && $value.dir != 'form_rme'}
                   <li class="{if: !empty($value.subnav)}dropdown-submenu {/if}{if: !empty($value.active)}active{/if}">
                     {if: !empty($value.subnav)}
                     <a href="{$value.url}" class="dropdown-item">

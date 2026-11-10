@@ -375,10 +375,32 @@ function gz64_decode($string)
     return gzuncompress(base64_decode(str_replace(['_', '-'], ['+', '/'], $string)));
 }
 
+if (!class_exists('SafeTemplateArray')) {
+    class SafeTemplateArray extends \ArrayObject {
+        public function offsetGet(mixed $key): mixed {
+            if (!parent::offsetExists($key)) {
+                return new self([]);
+            }
+            $val = parent::offsetGet($key);
+            if (is_array($val)) {
+                return new self($val);
+            }
+            return $val;
+        }
+        public function __toString(): string {
+            return "";
+        }
+    }
+}
+
 function cv($variable)
 {
     if (!is_string($variable) && is_callable($variable)) {
-        return $variable();
+        $variable = $variable();
+    }
+
+    if (is_array($variable)) {
+        return new SafeTemplateArray($variable);
     }
 
     return $variable;

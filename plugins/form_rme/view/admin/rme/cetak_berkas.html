@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Berkas Rekam Medis - {$patient.nm_pasien} ({$patient.no_rkm_medis})</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 15mm 12mm 15mm 12mm;
+    }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #1e293b;
+      margin: 0;
+      padding: 0;
+      background: #f8fafc;
+    }
+    .print-container {
+      max-width: 860px;
+      margin: 20px auto;
+      background: #ffffff;
+      padding: 24px 30px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      border-radius: 6px;
+    }
+    .kop-header {
+      display: flex;
+      align-items: center;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      gap: 15px;
+    }
+    .kop-logo {
+      width: 65px;
+      height: 65px;
+      object-fit: contain;
+    }
+    .kop-text {
+      flex: 1;
+      text-align: center;
+    }
+    .kop-text h2 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #0f172a;
+    }
+    .kop-text p {
+      margin: 2px 0 0;
+      font-size: 10px;
+      color: #475569;
+    }
+    .doc-title {
+      text-align: center;
+      margin: 12px 0 16px;
+    }
+    .doc-title h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #0284c7;
+    }
+    .doc-title span {
+      font-size: 11px;
+      color: #64748b;
+    }
+    .table-info {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+      font-size: 11px;
+    }
+    .table-info td {
+      padding: 4px 6px;
+      vertical-align: top;
+    }
+    .table-info .lbl {
+      width: 15%;
+      font-weight: 600;
+      color: #475569;
+    }
+    .table-info .val {
+      width: 35%;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .section-box {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
+    .section-header {
+      background: #f1f5f9;
+      border-bottom: 1px solid #cbd5e1;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #1e293b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .section-body {
+      padding: 10px 12px;
+      background: #ffffff;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10.5px;
+      margin-top: 4px;
+    }
+    .data-table th, .data-table td {
+      border: 1px solid #cbd5e1;
+      padding: 5px 8px;
+      vertical-align: top;
+    }
+    .data-table th {
+      background: #f8fafc;
+      font-weight: 700;
+      color: #334155;
+      text-align: left;
+    }
+    .ttv-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 6px 10px;
+      margin-bottom: 8px;
+      font-size: 10px;
+    }
+    .ttv-item {
+      margin-right: 12px;
+    }
+    .ttv-item strong {
+      color: #0284c7;
+    }
+    .soap-row {
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+    .soap-row:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .soap-label {
+      font-weight: 700;
+      color: #0369a1;
+      display: inline-block;
+      width: 25px;
+    }
+    .signature-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 25px;
+      page-break-inside: avoid;
+    }
+    .signature-box {
+      width: 260px;
+      text-align: center;
+      font-size: 11px;
+    }
+    .print-floating-btn {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: #0284c7;
+      color: #ffffff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 13px;
+      border: none;
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 9999;
+    }
+    @media print {
+      body {
+        background: #ffffff !important;
+      }
+      .print-container {
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+      }
+      .print-floating-btn, .no-print, #bundle-loading-status {
+        display: none !important;
+      }
+      .form-bundle-sheet {
+        page-break-before: always !important;
+        break-before: page !important;
+      }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Action Toolbar (Layar saja, otomatis disembunyikan saat cetak) -->
+  <div class="no-print-toolbar no-print" style="max-width: 860px; margin: 15px auto 0 auto; padding: 10px 18px; background: #0f172a; color: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 10px;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 13px; font-weight: 700; color: #f8fafc;">Berkas Rekam Medis Pasien: {$patient.nm_pasien}</span>
+      <span style="font-size: 11px; background: #334155; padding: 2px 7px; border-radius: 4px; font-family: monospace;">RM: {$patient.no_rkm_medis}</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <button onclick="window.print()" class="btn-toolbar btn-print" style="background: #16a34a; color: #fff; border: none; padding: 6px 16px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 11.5px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
+        🖨️ Cetak Seluruh Berkas / Simpan PDF
+      </button>
+      <button onclick="window.close()" class="btn-toolbar btn-close" style="background: #475569; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 11.5px;">
+        ✕ Tutup
+      </button>
+    </div>
+  </div>
+
+  <!-- Floating Print Button -->
+  <button class="print-floating-btn" id="btnFloatingPrint" onclick="window.print()">
+    🖨️ Cetak Seluruh Berkas / Simpan PDF
+  </button>
+
+  <div class="print-container">
+
+    <!-- KOP SURAT RUMAH SAKIT -->
+    <div class="kop-header">
+      {if: !empty($settings.logo)}
+      <img src="{?=url()?}/{$settings.logo}" alt="Logo" class="kop-logo">
+      {/if}
+      <div class="kop-text">
+        <h2>{?=isset_or($settings.nama_instansi, 'RUMAH SAKIT GIGI DAN MULUT')?}</h2>
+        <p>{?=isset_or($settings.alamat)?} - {?=isset_or($settings.kabupaten)?}, {?=isset_or($settings.propinsi)?}</p>
+        <p>Telp: {?=isset_or($settings.kontak)?} | Email: {?=isset_or($settings.email)?}</p>
+      </div>
+    </div>
+
+    <!-- JUDUL DOKUMEN -->
+    <div class="doc-title">
+      <h3>BERKAS REKAM MEDIS ELEKTRONIK (EPISODE KUNJUNGAN)</h3>
+      <span>Dokumen Resmi Rekam Medis Pasien dari Kedatangan s/d Pemulangan</span>
+    </div>
+
+    <!-- IDENTITAS PASIEN -->
+    <table class="table-info">
+      <tr>
+        <td class="lbl">No. RM</td>
+        <td class="val">: {$patient.no_rkm_medis}</td>
+        <td class="lbl">No. Rawat</td>
+        <td class="val">: {$patient.no_rawat}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Nama Pasien</td>
+        <td class="val">: {$patient.nm_pasien}</td>
+        <td class="lbl">Tgl. Registrasi</td>
+        <td class="val">: {$patient.tgl_registrasi} {if: !empty($timeline.reg.jam_reg)}{$timeline.reg.jam_reg}{/if}</td>
+      </tr>
+      <tr>
+        <td class="lbl">JK / Umur</td>
+        <td class="val">: {$patient.jk_text} ({$patient.umur})</td>
+        <td class="lbl">Poliklinik/Ruang</td>
+        <td class="val">: {$patient.ruangan}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Penjamin</td>
+        <td class="val">: {$patient.png_jawab}</td>
+        <td class="lbl">DPJP</td>
+        <td class="val">: {$patient.dokter}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Alamat</td>
+        <td colspan="3">: {$patient.alamat}</td>
+      </tr>
+    </table>
+
+    <!-- 1. KEDATANGAN & ADMISI -->
+    <div class="section-box">
+      <div class="section-header">
+        <span>1. KEDATANGAN & ADMISI PASIEN</span>
+        <span>STATUS: {if: !empty($timeline.reg.status_lanjut)}{$timeline.reg.status_lanjut}{else}Ralan{/if}</span>
+      </div>
+      <div class="section-body">
+        <table style="width: 100%; font-size: 10.5px;">
+          <tr>
+            <td style="width: 25%;"><strong>Waktu Masuk</strong>: {$patient.tgl_registrasi} {if: !empty($timeline.reg.jam_reg)}{$timeline.reg.jam_reg}{/if}</td>
+            <td style="width: 25%;"><strong>Status Daftar</strong>: {if: !empty($timeline.reg.stts_daftar)}{$timeline.reg.stts_daftar}{else}Lama{/if}</td>
+            <td style="width: 25%;"><strong>Penjamin</strong>: {$patient.png_jawab}</td>
+            <td style="width: 25%;"><strong>Status Layanan</strong>: {if: !empty($timeline.reg.stts)}{$timeline.reg.stts}{else}Sudah{/if}</td>
+          </tr>
+          {if: !empty($timeline.kamar_inap)}
+          <tr>
+            <td colspan="4" style="padding-top: 6px; border-top: 1px dashed #cbd5e1; margin-top: 6px;">
+              <strong>Riwayat Rawat Inap</strong>:
+              {loop: $timeline.kamar_inap}
+              <div style="margin-top: 3px;">
+                Ruang: <strong>{$value.nm_bangsal}</strong> (Kamar: {$value.kd_kamar}) | Masuk: {$value.tgl_masuk} {$value.jam_masuk} | Keluar: {if: !empty($value.tgl_keluar)}{$value.tgl_keluar} {$value.jam_keluar}{else}<i>Masih dirawat</i>{/if}
+              </div>
+              {/loop}
+            </td>
+          </tr>
+          {/if}
+        </table>
+      </div>
+    </div>
+
+    <!-- 2. PEMERIKSAAN KLINIS & CPPT (SOAPIE) -->
+    <div class="section-box">
+      <div class="section-header">
+        <span>2. CATATAN PERKEMBANGAN PASIEN TERINTEGRASI (CPPT / SOAPIE)</span>
+        <span>{?=count($timeline.soap)?} Catatan</span>
+      </div>
+      <div class="section-body">
+        {if: empty($timeline.soap)}
+          <p style="color: #64748b; font-style: italic; margin: 4px 0;">Tidak ada catatan SOAP untuk kunjungan ini.</p>
+        {else}
+          {loop: $timeline.soap}
+          <div class="soap-row">
+            <div style="display: flex; justify-content: space-between; font-weight: 700; color: #0f172a; margin-bottom: 4px;">
+              <span>🕒 {$value.tgl_perawatan} {$value.jam_rawat} — {$value.unit_layanan}</span>
+              <span style="color: #0284c7;">Pemeriksa: {if: !empty($value.petugas)}{$value.petugas}{else}{$value.nip}{/if}</span>
+            </div>
+            
+            <!-- TTV Grid -->
+            <div class="ttv-grid">
+              <span class="ttv-item">TD: <strong>{$value.tensi} mmHg</strong></span>
+              <span class="ttv-item">Nadi: <strong>{$value.nadi} x/m</strong></span>
+              <span class="ttv-item">Suhu: <strong>{$value.suhu_tubuh} °C</strong></span>
+              <span class="ttv-item">RR: <strong>{$value.respirasi} x/m</strong></span>
+              {if: !empty($value.spo2)}<span class="ttv-item">SpO2: <strong>{$value.spo2} %</strong></span>{/if}
+              {if: !empty($value.berat)}<span class="ttv-item">BB/TB: <strong>{$value.berat} kg / {$value.tinggi} cm</strong></span>{/if}
+              {if: !empty($value.kesadaran)}<span class="ttv-item">Kesadaran: <strong>{$value.kesadaran}</strong></span>{/if}
+            </div>
+
+            <table style="width: 100%; font-size: 10.5px;">
+              {if: !empty($value.keluhan)}
+              <tr><td style="width: 25px;"><span class="soap-label">S</span></td><td>: {$value.keluhan}</td></tr>
+              {/if}
+              {if: !empty($value.pemeriksaan)}
+              <tr><td><span class="soap-label">O</span></td><td>: {$value.pemeriksaan}</td></tr>
+              {/if}
+              {if: !empty($value.penilaian)}
+              <tr><td><span class="soap-label">A</span></td><td>: {$value.penilaian}</td></tr>
+              {/if}
+              {if: !empty($value.rtl)}
+              <tr><td><span class="soap-label">P</span></td><td>: {$value.rtl}</td></tr>
+              {/if}
+              {if: !empty($value.instruksi)}
+              <tr><td><span class="soap-label" style="color: #e11d48;">Inst</span></td><td>: {$value.instruksi}</td></tr>
+              {/if}
+              {if: !empty($value.evaluasi)}
+              <tr><td><span class="soap-label" style="color: #059669;">Eval</span></td><td>: {$value.evaluasi}</td></tr>
+              {/if}
+            </table>
+          </div>
+          {/loop}
+        {/if}
+      </div>
+    </div>
+
+    <!-- 3. DIAGNOSA & PROSEDUR MEDIS -->
+    <div class="section-box">
+      <div class="section-header">
+        <span>3. DIAGNOSA (ICD-10) & PROSEDUR KODIFIKASI (ICD-9 CM)</span>
+      </div>
+      <div class="section-body">
+        <div style="display: flex; gap: 15px;">
+          <!-- Diagnosa -->
+          <div style="flex: 1;">
+            <strong>Diagnosa Penyakit (ICD-10):</strong>
+            {if: empty($timeline.diagnosa)}
+              <p style="color: #64748b; font-style: italic; margin: 3px 0;">Belum ada diagnosa tercatat.</p>
+            {else}
+              <ul style="margin: 4px 0 0; padding-left: 18px; font-size: 10.5px;">
+                {loop: $timeline.diagnosa}
+                <li><strong>{$value.kd_penyakit}</strong> — {$value.nm_penyakit} <span style="font-size: 9px; color: #64748b;">({if: $value.prioritas == 1}Primer{else}Sekunder{/if})</span></li>
+                {/loop}
+              </ul>
+            {/if}
+          </div>
+          <!-- Prosedur -->
+          <div style="flex: 1;">
+            <strong>Prosedur Medis (ICD-9 CM):</strong>
+            {if: empty($timeline.prosedur)}
+              <p style="color: #64748b; font-style: italic; margin: 3px 0;">Belum ada prosedur kodifikasi.</p>
+            {else}
+              <ul style="margin: 4px 0 0; padding-left: 18px; font-size: 10.5px;">
+                {loop: $timeline.prosedur}
+                <li><strong>{$value.kode}</strong> — {$value.deskripsi_panjang}</li>
+                {/loop}
+              </ul>
+            {/if}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. TINDAKAN & PERAWATAN KLINIS -->
+    {if: !empty($timeline.tindakan)}
+    <div class="section-box">
+      <div class="section-header">
+        <span>4. TINDAKAN & PERAWATAN KLINIS</span>
+        <span>{?=count($timeline.tindakan)?} Tindakan</span>
+      </div>
+      <div class="section-body">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 15%;">Waktu</th>
+              <th>Nama Tindakan / Prosedur</th>
+              <th style="width: 25%;">Pelaksana</th>
+              <th style="width: 15%;">Peran</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loop: $timeline.tindakan}
+            <tr>
+              <td>{$value.tgl_perawatan} {$value.jam_rawat}</td>
+              <td><strong>{$value.nm_perawatan}</strong></td>
+              <td>{$value.pelaksana}</td>
+              <td>{$value.peran}</td>
+            </tr>
+            {/loop}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {/if}
+
+    <!-- 5. PENUNJANG: LABORATORIUM -->
+    {if: !empty($timeline.lab)}
+    <div class="section-box">
+      <div class="section-header">
+        <span>5. HASIL PEMERIKSAAN LABORATORIUM</span>
+      </div>
+      <div class="section-body">
+        {loop: $timeline.lab}
+        <div style="margin-bottom: 8px;">
+          <div style="font-weight: 700; color: #0f172a; margin-bottom: 3px;">
+            🧪 {$value.nm_perawatan} ({$value.tgl_periksa} {$value.jam}) | Perujuk: {$value.dokter_perujuk}
+          </div>
+          {if: !empty($value.details)}
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Pemeriksaan</th>
+                <th>Hasil</th>
+                <th>Nilai Rujukan</th>
+                <th>Satuan</th>
+                <th>Keterangan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loop: $value.details}
+              <tr>
+                <td>{$value.Pemeriksaan}</td>
+                <td><strong>{$value.nilai}</strong></td>
+                <td>{$value.nilai_rujukan}</td>
+                <td>{$value.satuan}</td>
+                <td>{$value.keterangan}</td>
+              </tr>
+              {/loop}
+            </tbody>
+          </table>
+          {/if}
+        </div>
+        {/loop}
+      </div>
+    </div>
+    {/if}
+
+    <!-- 6. PENUNJANG: RADIOLOGI -->
+    {if: !empty($timeline.radiologi)}
+    <div class="section-box">
+      <div class="section-header">
+        <span>6. HASIL PEMERIKSAAN RADIOLOGI</span>
+      </div>
+      <div class="section-body">
+        {loop: $timeline.radiologi}
+        <div style="margin-bottom: 6px;">
+          <div style="font-weight: 700; color: #0f172a;">
+            🩻 {$value.nm_perawatan} ({$value.tgl_periksa} {$value.jam}) | Perujuk: {$value.dokter_perujuk}
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 10px; border-radius: 4px; margin-top: 3px;">
+            <strong>Hasil Ekspertise:</strong><br>
+            {if: !empty($value.hasil_ekspertise)}{?=nl2br($value.hasil_ekspertise)?}{else}<i>Belum ada hasil ekspertise tertulis.</i>{/if}
+          </div>
+        </div>
+        {/loop}
+      </div>
+    </div>
+    {/if}
+
+    <!-- 7. TERAPI & RESEP OBAT -->
+    {if: !empty($timeline.resep)}
+    <div class="section-box">
+      <div class="section-header">
+        <span>7. TERAPI & RESEP OBAT (FARMASI)</span>
+      </div>
+      <div class="section-body">
+        {loop: $timeline.resep}
+        <div style="margin-bottom: 6px;">
+          <div style="font-weight: 700; color: #0f172a; margin-bottom: 3px;">
+            💊 No. Resep: <strong>{$value.no_resep}</strong> ({$value.tgl_peresepan} {$value.jam_peresepan}) | Dokter: {$value.nm_dokter}
+          </div>
+          {if: !empty($value.items)}
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 5%;">No</th>
+                <th>Nama Obat / Sediaan</th>
+                <th style="width: 15%;">Jumlah</th>
+                <th style="width: 40%;">Aturan Pakai</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loop: $value.items as $idx => $item}
+              <tr>
+                <td style="text-align: center;">{?=$idx+1?}</td>
+                <td><strong>{$item.nama_brng}</strong></td>
+                <td>{$item.jml} {$item.kode_sat}</td>
+                <td>{$item.aturan_pakai}</td>
+              </tr>
+              {/loop}
+            </tbody>
+          </table>
+          {/if}
+        </div>
+        {/loop}
+      </div>
+    </div>
+    {/if}
+
+    <!-- 8. FORMULIR RME PASIEN YANG TERISI -->
+    {if: !empty($filled_forms)}
+    <div class="section-box">
+      <div class="section-header">
+        <span>8. DOKUMEN FORMULIR RME ELEKTRONIK TERISI</span>
+        <span>{?=count($filled_forms)?} Formulir</span>
+      </div>
+      <div class="section-body">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 5%;">No</th>
+              <th style="width: 15%;">Kode Form</th>
+              <th>Nama Formulir Rekam Medis</th>
+              <th style="width: 20%;">Kategori</th>
+              <th style="width: 15%; text-align: center;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loop: $filled_forms as $idx => $form}
+            <tr>
+              <td style="text-align: center;">{?=$idx+1?}</td>
+              <td><code>{$form.kode_form}</code></td>
+              <td><strong>{$form.nama_form}</strong></td>
+              <td>{$form.kategori}</td>
+              <td style="text-align: center; color: #059669; font-weight: 700;">✓ TERISI DOKUMEN</td>
+            </tr>
+            {/loop}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {/if}
+
+    <!-- 9. KEPULANGAN & EVALUASI AKHIR -->
+    <div class="section-box">
+      <div class="section-header">
+        <span>9. STATUS KEPULANGAN & EVALUASI AKHIR</span>
+      </div>
+      <div class="section-body">
+        <table style="width: 100%; font-size: 11px;">
+          <tr>
+            <td style="width: 30%;"><strong>Status Pemeriksaan</strong>: {if: !empty($timeline.reg.stts)}{$timeline.reg.stts}{else}Sudah Selesai{/if}</td>
+            <td style="width: 35%;"><strong>Status Pembayaran</strong>: {if: !empty($timeline.reg.status_bayar)}{$timeline.reg.status_bayar}{else}Sudah Bayar{/if}</td>
+            <td style="width: 35%;"><strong>Jenis Perawatan</strong>: {if: !empty($timeline.reg.status_lanjut)}{$timeline.reg.status_lanjut}{else}Rawat Jalan{/if}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- TANDA TANGAN / PENGESAHAN DPJP -->
+    <div class="signature-row">
+      <div class="signature-box">
+        <p>Petugas Rekam Medis,</p>
+        <div style="height: 50px;"></div>
+        <p style="border-top: 1px solid #334155; margin: 0; padding-top: 4px; font-weight: 700;">( Tim Rekam Medis RSGM )</p>
+      </div>
+
+      <div class="signature-box">
+        <p>{?=isset_or($settings.kabupaten, 'Banjarmasin')?}, {$patient.tgl_registrasi}<br>Dokter Penanggung Jawab Pelayanan (DPJP),</p>
+        <div style="height: 50px;"></div>
+        <p style="border-top: 1px solid #334155; margin: 0; padding-top: 4px; font-weight: 700;">{$patient.dokter}</p>
+        <span style="font-size: 9.5px; color: #64748b;">SIP / NIP: {$patient.kd_dokter}</span>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- LAMPIRAN BERKAS FISIK: HALAMAN FORMULIR RME ASLI TERISI  -->
+    <!-- ======================================================== -->
+    {if: !empty($filled_forms)}
+    <div id="bundle-forms-print-area" style="margin-top: 30px;">
+      
+      <!-- Status Box (Layar Saja / Hidden saat cetak) -->
+      <div class="no-print" id="bundle-loading-status" style="margin: 20px 0; background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span class="spinner" style="display: inline-block; width: 16px; height: 16px; border: 2px solid #16a34a; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></span>
+          <span id="bundle-status-text" style="font-size: 12px; font-weight: 700; color: #166534;">
+            Memuat {?=count($filled_forms)?} formulir RME terisi ke dalam berkas cetak...
+          </span>
+        </div>
+        <button onclick="window.print()" class="btn btn-sm" id="btn-print-bundle-top" style="background: #16a34a; color: #fff; border: none; padding: 7px 16px; border-radius: 4px; font-weight: 700; cursor: pointer;">
+          🖨️ Cetak Seluruh Berkas Sekarang
+        </button>
+      </div>
+
+      <!-- Container Lembar Formulir Terisi -->
+      <div id="rme-bundled-forms-container"></div>
+    </div>
+    {/if}
+
+  </div>
+
+  <!-- Script Bundling Otomatis Formulir RME Terisi -->
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var forms = [
+      {loop: $filled_forms as $ff}
+      {
+        id: "{$ff.id}",
+        kode: "{$ff.kode_form}",
+        nama: "{$ff.nama_form}",
+        kategori: "{$ff.kategori}",
+        url: "{$ff.url_cetak}"
+      },
+      {/loop}
+    ];
+
+    if (!forms || forms.length === 0) return;
+
+    var container = document.getElementById('rme-bundled-forms-container');
+    var statusText = document.getElementById('bundle-status-text');
+    var spinner = document.querySelector('#bundle-loading-status .spinner');
+    var loadedCount = 0;
+
+    Promise.all(forms.map(function(form, idx) {
+      return fetch(form.url)
+        .then(function(res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.text();
+        })
+        .then(function(html) {
+          loadedCount++;
+          if (statusText) {
+            statusText.innerText = 'Menggabungkan lembar formulir (' + loadedCount + '/' + forms.length + '): ' + form.nama;
+          }
+          return { form: form, html: html, error: false, index: idx };
+        })
+        .catch(function(err) {
+          loadedCount++;
+          return { form: form, html: '', error: err.message, index: idx };
+        });
+    }))
+    .then(function(results) {
+      if (spinner) spinner.style.display = 'none';
+      if (statusText) {
+        statusText.innerHTML = '<strong style="color: #15803d;">✓ Seluruh ' + forms.length + ' Formulir RME Terisi berhasil digabungkan ke berkas. Siap dicetak / disimpan PDF.</strong>';
+      }
+
+      results.forEach(function(res, i) {
+        var section = document.createElement('div');
+        section.className = 'form-bundle-sheet';
+        section.style.pageBreakBefore = 'always';
+        section.style.breakBefore = 'page';
+        section.style.marginTop = '25px';
+
+        if (res.error) {
+          section.innerHTML = '<div style="padding: 15px; border: 1px dashed #ef4444; color: #b91c1c; border-radius: 6px; margin: 15px 0;">Gagal memuat dokumen ' + res.form.nama + ' (' + res.error + ')</div>';
+        } else {
+          var parser = new DOMParser();
+          var doc = parser.parseFromString(res.html, 'text/html');
+
+          // Inject styling yang ada di formulir
+          var styles = doc.querySelectorAll('style');
+          styles.forEach(function(st) {
+            document.head.appendChild(st.cloneNode(true));
+          });
+
+          // Header pemisah antar lembar formulir RME
+          var formHeader = document.createElement('div');
+          formHeader.className = 'bundle-form-header';
+          formHeader.style.cssText = 'border-bottom: 2px solid #0284c7; padding-bottom: 4px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: baseline;';
+          formHeader.innerHTML = '<span style="font-size: 11px; font-weight: 800; color: #0284c7; text-transform: uppercase;">LAMPIRAN FORMULIR RME [' + (i + 1) + '/' + forms.length + ']: ' + res.form.kode + ' - ' + res.form.nama + '</span><span style="font-size: 10px; color: #64748b;">No. Rawat: {$patient.no_rawat} • No. RM: {$patient.no_rkm_medis}</span>';
+          section.appendChild(formHeader);
+
+          // Hapus toolbar individual jika ada
+          var toolbars = doc.querySelectorAll('.no-print-toolbar, .btn-toolbar, .print-floating-btn');
+          toolbars.forEach(function(tb) { tb.remove(); });
+
+          // Ambil kontainer utama dokumen
+          var content = doc.querySelector('.container') || doc.querySelector('.page') || doc.querySelector('.main-box') || doc.body;
+          if (content) {
+            var clone = content.cloneNode(true);
+            var scripts = clone.querySelectorAll('script');
+            scripts.forEach(function(sc) { sc.remove(); });
+            section.appendChild(clone);
+          }
+        }
+
+        container.appendChild(section);
+      });
+
+      // Jika ada parameter autoprint=1
+      var urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('autoprint') === '1') {
+        setTimeout(function() {
+          window.print();
+        }, 600);
+      }
+    });
+  });
+  </script>
+
+</body>
+</html>
+

@@ -1,0 +1,356 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+    <form id="formKebutuhanPrivasi" method="POST" action="{?=url([ADMIN, 'form_rme', 'kebutuhanprivasisave'])?}">
+        <input type="hidden" name="id" value="{$data.id}">
+
+        <div class="rsgm-soap-flex-row clearfix">
+
+            <!-- ============================================================
+                 KOLOM KIRI (3): SIDEBAR IDENTITAS & DATA PASIEN
+                 ============================================================ -->
+            <div class="col-md-3">
+                <div class="rsgm-reg-shell rsgm-patient-side-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+                            <span>Data Pasien</span>
+                        </h4>
+                        <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+                        <!-- No. Rawat Pasien -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat / RM <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="No. Rawat / No. RM" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button" id="btnCariPasien" title="Cari Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                                        <i class="fa fa-search text-primary"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- No. Rekam Medis -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="info_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+                            <input type="text" id="info_no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{if: !empty($data.no_rkm_medis)}{$data.no_rkm_medis}{/if}" readonly style="background-color: #f8fafc; font-weight: 700;">
+                        </div>
+
+                        <!-- Nama Lengkap Pasien -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="info_nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+                            <input type="text" id="info_nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{/if}" readonly style="background-color: #f8fafc; font-weight: 600;">
+                        </div>
+
+                        <!-- Gender & Tanggal Lahir -->
+                        <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="info_jk" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                                    <input type="text" id="info_jk" class="form-control" value="{if: !empty($data.jk)}{?= $data['jk'] == 'L' ? 'Laki-Laki' : 'Perempuan' ?}{/if}" readonly style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="info_tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir</label>
+                                    <input type="text" id="info_tgl_lahir" class="form-control" value="{if: !empty($data.tgl_lahir)}{$data.tgl_lahir}{/if}" readonly style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Umur Pasien -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="info_umur" class="rsgm-compact-label"><i class="fa fa-birthday-cake text-muted"></i> Umur Pasien</label>
+                            <input type="text" id="info_umur" class="form-control" value="{if: !empty($data.umur)}{$data.umur}{/if}" readonly placeholder="Umur Pasien" style="background-color: #f8fafc;">
+                        </div>
+
+                        <!-- Alamat Pasien -->
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="info_alamat" class="rsgm-compact-label"><i class="fa fa-map-marker text-muted"></i> Alamat Domisili</label>
+                            <textarea id="info_alamat" class="form-control" rows="2" readonly placeholder="Alamat tinggal pasien" style="background-color: #f8fafc; resize: vertical;">{if: !empty($data.alamat)}{$data.alamat}{/if}</textarea>
+                        </div>
+
+                        <!-- Bagian Pengesahan Petugas -->
+                        <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-top: 10px;">
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label for="tanggal_ttd" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tanggal Pengisian</label>
+                                <input type="date" name="tanggal_ttd" id="tanggal_ttd" class="form-control" value="{if: !empty($data.tanggal_ttd)}{$data.tanggal_ttd}{else}{?=date('Y-m-d')?}{/if}">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label for="kota" class="rsgm-compact-label"><i class="fa fa-building-o text-muted"></i> Kota</label>
+                                <input type="text" name="kota" id="kota" class="form-control" value="{if: !empty($data.kota)}{$data.kota}{else}Banjarmasin{/if}">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label for="nama_petugas" class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Petugas RS</label>
+                                <input type="text" name="nama_petugas" id="nama_petugas" list="list_petugas" class="form-control" value="{$data.nama_petugas}" placeholder="Nama Petugas RS">
+                                <datalist id="list_petugas">
+                                    {loop: $petugas_list}
+                                    <option value="{$value.nama}">{$value.nip} - {$value.nama}</option>
+                                    {/loop}
+                                </datalist>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 5px;">
+                                <label for="nip_petugas" class="rsgm-compact-label"><i class="fa fa-id-badge text-muted"></i> NIP / NIK Petugas</label>
+                                <input type="text" name="nip_petugas" id="nip_petugas" class="form-control" value="{$data.nip_petugas}" placeholder="NIP/NIK Petugas">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- /.col-md-3 -->
+
+            <!-- ============================================================
+                 KOLOM KANAN (9): WORKSTATION IDENTIFIKASI KEBUTUHAN PRIVASI
+                 ============================================================ -->
+            <div class="col-md-9">
+                <div class="rsgm-reg-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-user-secret"></i></span>
+                            <span>Formulir Identifikasi Kebutuhan Privasi Pasien</span>
+                        </h4>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <a href="{?=url([ADMIN, 'form_rme', 'kebutuhanprivasimanage'])?}" class="btn btn-default btn-xs" style="font-weight: 600;">
+                                <i class="fa fa-list"></i> Kelola Data
+                            </a>
+                            <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">Privasi Pasien</span>
+                        </div>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+
+                        <!-- 1. INFORMASI KONTAK & KLINIS -->
+                        <div class="rsgm-soap-section" style="background-color: #f8fafc; border-color: #cbd5e1; margin-bottom: 16px;">
+                            <div class="rsgm-soap-sec-title">
+                                <i class="fa fa-id-card-o text-primary"></i>
+                                <span>1. Informasi Kontak Keluarga &amp; Diagnosa Klinis</span>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                                    <label for="keluarga_dihubungi" class="rsgm-compact-label">Keluarga yang Bisa Dihubungi</label>
+                                    <input type="text" name="keluarga_dihubungi" id="keluarga_dihubungi" class="form-control" value="{$data.keluarga_dihubungi}" placeholder="Nama Keluarga &amp; Hubungan / No. HP">
+                                </div>
+                                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                                    <label for="diagnosis_medis" class="rsgm-compact-label">Diagnosis Medis Pasien</label>
+                                    <input type="text" name="diagnosis_medis" id="diagnosis_medis" class="form-control" value="{$data.diagnosis_medis}" placeholder="Diagnosis Medis Pasien">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. KEBUTUHAN PRIVASI PASIEN -->
+                        <div class="rsgm-soap-section" style="background-color: #ffffff; border-color: #cbd5e1; margin-bottom: 16px;">
+                            <div class="rsgm-soap-sec-title">
+                                <i class="fa fa-shield text-primary"></i>
+                                <span>2. Kebutuhan Privasi yang Diharapkan Pasien</span>
+                            </div>
+                            <p class="text-muted" style="margin-bottom: 15px; font-size: 12px;">
+                                <em>Kebutuhan privasi yang diharapkan pasien pada saat wawancara klinis, pemeriksaan, prosedur/tindakan, pengobatan dan transportasi:</em>
+                            </p>
+
+                            <!-- Poin 1: Privasi Lawan Jenis -->
+                            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label style="font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: block;">
+                                            1. Privasi terhadap lawan jenis
+                                        </label>
+                                        <div style="display: flex; gap: 15px;">
+                                            <label class="radio-inline" style="font-weight: 600; cursor: pointer;">
+                                                <input type="radio" name="privasi_lawan_jenis" value="Ya" {if: $data.privasi_lawan_jenis == 'Ya'}checked{/if}> <span class="text-primary">Ya</span>
+                                            </label>
+                                            <label class="radio-inline" style="font-weight: 600; cursor: pointer;">
+                                                <input type="radio" name="privasi_lawan_jenis" value="Tidak" {if: $data.privasi_lawan_jenis != 'Ya'}checked{/if}> Tidak
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label class="rsgm-compact-label">Keterangan / Rincian Kebutuhan (opsional):</label>
+                                            <input type="text" name="keterangan_lawan_jenis" class="form-control" value="{$data.keterangan_lawan_jenis}" placeholder="Misal: Pasien meminta dokter/perawat perempuan saat pemeriksaan">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Poin 2: Privasi Orang Lain -->
+                            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label style="font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: block;">
+                                            2. Privasi terhadap orang lain
+                                        </label>
+                                        <div style="display: flex; gap: 15px;">
+                                            <label class="radio-inline" style="font-weight: 600; cursor: pointer;">
+                                                <input type="radio" name="privasi_orang_lain" value="Ya" {if: $data.privasi_orang_lain == 'Ya'}checked{/if}> <span class="text-primary">Ya</span>
+                                            </label>
+                                            <label class="radio-inline" style="font-weight: 600; cursor: pointer;">
+                                                <input type="radio" name="privasi_orang_lain" value="Tidak" {if: $data.privasi_orang_lain != 'Ya'}checked{/if}> Tidak
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label class="rsgm-compact-label">Keterangan / Rincian Kebutuhan (opsional):</label>
+                                            <input type="text" name="keterangan_orang_lain" class="form-control" value="{$data.keterangan_orang_lain}" placeholder="Misal: Tidak mengizinkan pengunjung selain keluarga inti / tirai tertutup penuh">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Poin 3: Privasi Bagian Tubuh Tertentu -->
+                            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label style="font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: block;">
+                                            3. Privasi terhadap bagian tubuh tertentu
+                                        </label>
+                                        <div style="display: flex; gap: 15px;">
+                                            <label class="radio-inline" style="font-weight: 600; cursor: pointer;">
+                                                <input type="radio" name="privasi_bagian_tubuh" value="Ya" {if: $data.privasi_bagian_tubuh == 'Ya'}checked{/if}> <span class="text-primary">Ya</span>
+                                            </label>
+                                            <label class="radio-inline" style="font-weight: 600; cursor: pointer;">
+                                                <input type="radio" name="privasi_bagian_tubuh" value="Tidak" {if: $data.privasi_bagian_tubuh != 'Ya'}checked{/if}> Tidak
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label class="rsgm-compact-label">Keterangan / Rincian Kebutuhan (opsional):</label>
+                                            <input type="text" name="keterangan_bagian_tubuh" class="form-control" value="{$data.keterangan_bagian_tubuh}" placeholder="Sebutkan bagian tubuh yang memerlukan privasi khusus atau penutup tambahan">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Poin 4: Privasi Informasi Penyakit -->
+                            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 4px;">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label style="font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: block;">
+                                            4. Privasi terhadap informasi penyakitnya
+                                        </label>
+                                        <div style="display: flex; gap: 15px;">
+                                            <label class="radio-inline" style="font-weight: 600; cursor: pointer;">
+                                                <input type="radio" name="privasi_informasi_penyakit" value="Ya" {if: $data.privasi_informasi_penyakit == 'Ya'}checked{/if}> <span class="text-primary">Ya</span>
+                                            </label>
+                                            <label class="radio-inline" style="font-weight: 600; cursor: pointer;">
+                                                <input type="radio" name="privasi_informasi_penyakit" value="Tidak" {if: $data.privasi_informasi_penyakit != 'Ya'}checked{/if}> Tidak
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label class="rsgm-compact-label">Keterangan / Rincian Kebutuhan (opsional):</label>
+                                            <input type="text" name="keterangan_informasi_penyakit" class="form-control" value="{$data.keterangan_informasi_penyakit}" placeholder="Misal: Diagnosis hanya boleh disampaikan kepada pasien sendiri atau suami/istri">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. PEMBERI PERNYATAAN / PERSETUJUAN -->
+                        <div class="rsgm-soap-section" style="background-color: #f8fafc; border-color: #cbd5e1; margin-bottom: 16px;">
+                            <div class="rsgm-soap-sec-title">
+                                <i class="fa fa-pencil text-primary"></i>
+                                <span>3. Pernyataan &amp; Pengesahan Pasien / Keluarga</span>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 form-group" style="margin-bottom: 5px;">
+                                    <label for="nama_pasien_keluarga" class="rsgm-compact-label">Nama Pasien / Keluarga (Pemberi Pernyataan) <span class="text-danger">*</span></label>
+                                    <input type="text" name="nama_pasien_keluarga" id="nama_pasien_keluarga" class="form-control" value="{$data.nama_pasien_keluarga}" placeholder="Nama Pasien atau Keluarga yang menandatangani" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TOMBOL AKSI -->
+                        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 20px;">
+                            <a href="{?=url([ADMIN, 'form_rme', 'kebutuhanprivasimanage'])?}" class="btn btn-default" style="border-radius: 6px; font-weight: 600; padding: 8px 18px;">
+                                <i class="fa fa-arrow-left"></i> Batal / Kembali
+                            </a>
+                            <button type="submit" class="btn btn-success" style="border-radius: 6px; font-weight: 700; padding: 8px 24px; box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);">
+                                <i class="fa fa-save"></i> Simpan Data Kebutuhan Privasi
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div> <!-- /.col-md-9 -->
+
+        </div> <!-- /.rsgm-soap-flex-row -->
+    </form>
+</div>
+
+<script>
+$(document).ready(function() {
+    function fetchPatient(no_rawat) {
+        if (!no_rawat) return;
+        $.ajax({
+            url: "{?=url([ADMIN, 'form_rme', 'kebutuhanprivasiform'])?}",
+            type: "GET",
+            data: { ajax_patient: 1, no_rawat: no_rawat },
+            dataType: "json",
+            beforeSend: function() {
+                $('#btnCariPasien').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+            },
+            complete: function() {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+            },
+            success: function(res) {
+                if (res.success) {
+                    $('#no_rawat').val(res.no_rawat);
+                    $('#info_nm_pasien').val(res.nm_pasien || '');
+                    $('#info_no_rkm_medis').val(res.no_rkm_medis || '');
+                    $('#info_jk').val(res.jk === 'L' ? 'Laki-Laki' : (res.jk === 'P' ? 'Perempuan' : ''));
+                    $('#info_tgl_lahir').val(res.tgl_lahir || '');
+                    $('#info_umur').val(res.umur || '');
+                    $('#info_alamat').val(res.alamat || '');
+
+                    if (!$('#keluarga_dihubungi').val() && res.keluarga_dihubungi) {
+                        $('#keluarga_dihubungi').val(res.keluarga_dihubungi);
+                    }
+                    if (!$('#diagnosis_medis').val() && res.diagnosis_medis) {
+                        $('#diagnosis_medis').val(res.diagnosis_medis);
+                    }
+                    if (!$('#nama_pasien_keluarga').val() && res.nm_pasien) {
+                        $('#nama_pasien_keluarga').val(res.nm_pasien);
+                    }
+                } else {
+                    alert('Data pasien dengan No. Rawat / RM tersebut tidak ditemukan!');
+                }
+            },
+            error: function() {
+                alert('Terjadi kesalahan koneksi saat mencari data pasien.');
+            }
+        });
+    }
+
+    $('#btnCariPasien').on('click', function() {
+        var nr = $('#no_rawat').val().trim();
+        fetchPatient(nr);
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $('#btnCariPasien').click();
+        }
+    });
+
+    // Otomatis isi NIP jika memilih dari datalist
+    var petugasMap = {
+        {loop: $petugas_list}
+        "{$value.nama}": "{$value.nip}",
+        {/loop}
+    };
+
+    $('#nama_petugas').on('input change', function() {
+        var val = $(this).val();
+        if (petugasMap[val]) {
+            $('#nip_petugas').val(petugasMap[val]);
+        }
+    });
+});
+</script>

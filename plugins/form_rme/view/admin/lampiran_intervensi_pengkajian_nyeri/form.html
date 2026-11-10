@@ -1,0 +1,1028 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+  <form id="formIntervensiNyeri" method="POST" action="{?=url([ADMIN, 'form_rme', 'intervensinyerisave'])?}">
+    <input type="hidden" name="id" value="{?=isset_or($data['id'])?}">
+
+    <div class="rsgm-soap-flex-row clearfix">
+
+      <!-- ============================================================
+           KOLOM KIRI (3): SIDEBAR IDENTITAS & DATA PASIEN
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Data Pasien</span>
+            </h4>
+            <span class="badge" style="background-color: #fef2f2; color: #b91c1c; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #fecaca;">Intervensi Nyeri</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <!-- No Rawat with Search -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default" id="btnCariPasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                    <i class="fa fa-search text-primary"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <!-- No Rekam Medis -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+              <input type="text" id="info_no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly style="background-color: #f8fafc; font-weight: 700;">
+            </div>
+
+            <!-- Nama Pasien -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+              <input type="text" id="info_nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{?=isset_or($data['nm_pasien'])?}" readonly style="background-color: #f8fafc; font-weight: 600;">
+            </div>
+
+            <!-- Gender & Tanggal Lahir -->
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="info_jk" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                  <input type="text" id="info_jk" class="form-control" value="{?= !empty($data['jk']) ? ($data['jk'] == 'L' ? 'Laki-Laki' : 'Perempuan') : '' ?}" readonly style="background-color: #f8fafc;">
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="info_tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tgl Lahir</label>
+                  <input type="text" id="info_tgl_lahir" class="form-control" value="{?=isset_or($data['tgl_lahir'])?}" readonly style="background-color: #f8fafc;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Umur Pasien -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_umur" class="rsgm-compact-label"><i class="fa fa-birthday-cake text-muted"></i> Umur Pasien</label>
+              <input type="text" id="info_umur" class="form-control" value="{?=isset_or($data['umur'])?}" readonly placeholder="Umur" style="background-color: #f8fafc;">
+            </div>
+
+            <!-- Alamat Domisili -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_alamat" class="rsgm-compact-label"><i class="fa fa-map-marker text-muted"></i> Alamat Domisili</label>
+              <textarea id="info_alamat" class="form-control" rows="2" readonly placeholder="Alamat pasien" style="background-color: #f8fafc; resize: none;">{?=isset_or($data['alamat'])?}</textarea>
+            </div>
+
+            <!-- Ruangan / Unit / Bangsal -->
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="instalasi_unit" class="rsgm-compact-label"><i class="fa fa-hospital-o text-muted"></i> Instalasi / Unit / Ruangan <span class="text-danger">*</span></label>
+              <input type="text" name="instalasi_unit" id="instalasi_unit" class="form-control" value="{?=isset_or($data['instalasi_unit'], 'Rawat Inap')?}" placeholder="Contoh: Rawat Inap Melati / Kamar 203" required style="font-weight: 600;">
+            </div>
+
+            <!-- Perawat Penanggung Jawab Default -->
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="default_petugas" class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Petugas / Perawat Default</label>
+              <input type="text" id="default_petugas" list="list_petugas" class="form-control" placeholder="Pilih / ketik nama perawat..." value="">
+              <datalist id="list_petugas">
+                {loop: $petugas_list}
+                <option value="{$value.nama}">{$value.nip} - {$value.nama}</option>
+                {/loop}
+              </datalist>
+            </div>
+
+            <!-- RINGKASAN OBSERVASI SIDEBAR -->
+            <div style="background-color: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px; margin-bottom: 12px; text-align: center;">
+              <span style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; letter-spacing: 0.5px; display: block;">Status Pemantauan Nyeri</span>
+              <div style="margin: 6px 0;">
+                <span id="side_total_obs" class="badge" style="font-size: 12px; padding: 5px 9px; font-weight: 700; background-color: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe;">
+                  0 Catatan Observasi
+                </span>
+              </div>
+              <div style="margin-top: 6px;">
+                <span style="font-size: 11px; color: #64748b; display: block; margin-bottom: 3px;">Skor Nyeri Terakhir:</span>
+                <span id="side_last_score_badge" class="badge" style="font-size: 13px; padding: 6px 12px; font-weight: 700; background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;">
+                  Belum Ada Data
+                </span>
+              </div>
+            </div>
+
+            <!-- Tombol Demo Data -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <button type="button" class="btn btn-default btn-block" id="btn_demo" style="border: 1px dashed #3b82f6; color: #1d4ed8; background: #eff6ff; font-weight: 600; border-radius: 6px; padding: 7px 12px;" title="Isi otomatis data contoh klinis realistis untuk simulasi intervensi nyeri">
+                <i class="fa fa-magic"></i> Muat Data Contoh (Demo)
+              </button>
+            </div>
+
+            <!-- Tombol Navigasi Cepat -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <a href="{?=url([ADMIN, 'form_rme', 'intervensinyerimanage'])?}" class="btn btn-default btn-block" style="border-radius: 6px; font-weight: 500;">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+
+          </div> <!-- /.rsgm-reg-body -->
+        </div> <!-- /.rsgm-reg-shell -->
+      </div> <!-- /.col-md-3 -->
+
+
+      <!-- ============================================================
+           KOLOM KANAN (9): WORKSTATION FORMULIR INTERVENSI NYERI
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell">
+
+          <!-- Header Shell -->
+          <div class="rsgm-reg-header" style="justify-content: space-between; align-items: center;">
+            <div>
+              <h4 class="rsgm-reg-title">
+                <span class="rsgm-reg-icon"><i class="fa fa-heartbeat text-danger"></i></span>
+                <span>Formulir Intervensi dan Pengkajian Ulang Nyeri</span>
+              </h4>
+              <small style="color: #64748b; font-size: 11.5px; display: block; margin-top: 2px;">
+                Pemantauan Skor Nyeri Klinis, Tanda Vital, Intervensi Farmakologi / Non-Farmakologi, &amp; Re-evaluasi Berkala
+              </small>
+            </div>
+            <div>
+              <button type="button" class="btn btn-info btn-sm btn-trigger-rme-preview" data-preview-url="{?=url([ADMIN, 'form_rme', 'intervensinyericetak'])?}" style="font-weight: 600; border-radius: 6px;" title="Lihat pratinjau form hasil cetak / PDF">
+                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+              </button>
+            </div>
+          </div>
+
+          <div class="rsgm-reg-body" style="padding: 16px;">
+
+            <!-- ------------------------------------------------------------
+                 SECTION 1: PEDOMAN KLINIS SKALA NYERI & PENGKAJIAN ULANG
+                 ------------------------------------------------------------ -->
+            <div class="rsgm-soap-section" style="margin-bottom: 18px;">
+              <div class="rsgm-soap-sec-title">
+                <i class="fa fa-book text-primary"></i>
+                <span>Pedoman Klinis Skala Nyeri &amp; Waktu Pengkajian Ulang</span>
+              </div>
+
+              <div class="row" style="margin-top: 10px;">
+                <!-- Kolom A: Asesmen Skala Nyeri -->
+                <div class="col-md-5" style="border-right: 1px solid #e2e8f0;">
+                  <span style="font-weight: 700; font-size: 12px; color: #1e40af; display: block; margin-bottom: 6px;">
+                    <i class="fa fa-smile-o"></i> Skala Nyeri Wong-Baker &amp; NRS
+                  </span>
+                  <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px;">
+                    <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 10px; margin-bottom: 4px; text-align: center;">
+                      <span style="color: #166534; width: 22%;">Tidak Nyeri<br><b>(0)</b></span>
+                      <span style="color: #1d4ed8; width: 26%;">Nyeri Ringan<br><b>(1 - 3)</b></span>
+                      <span style="color: #854d0e; width: 26%;">Nyeri Sedang<br><b>(4 - 6)</b></span>
+                      <span style="color: #991b1b; width: 26%;">Nyeri Berat<br><b>(7 - 10)</b></span>
+                    </div>
+                    <!-- Face visual icons -->
+                    <div style="display: flex; justify-content: space-around; text-align: center; margin: 4px 0 2px 0; font-size: 18px; line-height: 1.2;">
+                      <div title="Tidak Nyeri (0)">&#128522;<br><span style="font-size: 9.5px; font-weight: 700; color: #166534;">0</span></div>
+                      <div title="Sedikit Nyeri (2)">&#128578;<br><span style="font-size: 9.5px; font-weight: 700; color: #1d4ed8;">2</span></div>
+                      <div title="Sedikit Lebih Nyeri (4)">&#128528;<br><span style="font-size: 9.5px; font-weight: 700; color: #854d0e;">4</span></div>
+                      <div title="Lebih Nyeri Lagi (6)">&#128577;<br><span style="font-size: 9.5px; font-weight: 700; color: #c2410c;">6</span></div>
+                      <div title="Sangat Nyeri (8)">&#128546;<br><span style="font-size: 9.5px; font-weight: 700; color: #b91c1c;">8</span></div>
+                      <div title="Nyeri Sangat Hebat (10)">&#128557;<br><span style="font-size: 9.5px; font-weight: 700; color: #7f1d1d;">10</span></div>
+                    </div>
+                  </div>
+                  <small class="text-muted" style="display: block; font-size: 10.5px; font-style: italic; margin-top: 4px;">
+                    *Untuk pasien anak &lt; 6 tahun dapat menggunakan skala penilaian <strong>FLACC</strong>.
+                  </small>
+                </div>
+
+                <!-- Kolom B: 7 Intervensi Non-Farmakologi -->
+                <div class="col-md-4" style="border-right: 1px solid #e2e8f0;">
+                  <span style="font-weight: 700; font-size: 12px; color: #1e40af; display: block; margin-bottom: 6px;">
+                    <i class="fa fa-hand-holding-heart"></i> Intervensi Non-Farmakologi
+                  </span>
+                  <ol style="margin-bottom: 0; padding-left: 18px; font-size: 11.5px; line-height: 1.6; color: #334155;">
+                    <li><strong>Dingin</strong> (Kompres es / cold pack)</li>
+                    <li><strong>Panas</strong> (Kompres hangat)</li>
+                    <li><strong>Posisi</strong> (Semifowler / posisi nyaman)</li>
+                    <li><strong>Pijat</strong> (Massage terapi lembut)</li>
+                    <li><strong>Musik</strong> (Terapi audio / relaksasi)</li>
+                    <li><strong>TENS</strong> (Stimulasi saraf listrik)</li>
+                    <li><strong>Relaksasi &amp; Nafas Dalam</strong></li>
+                  </ol>
+                </div>
+
+                <!-- Kolom C: Waktu Pengkajian Ulang -->
+                <div class="col-md-3">
+                  <span style="font-weight: 700; font-size: 12px; color: #1e40af; display: block; margin-bottom: 6px;">
+                    <i class="fa fa-clock-o"></i> Waktu Kaji Ulang
+                  </span>
+                  <ul style="margin-bottom: 0; padding-left: 16px; font-size: 11.5px; line-height: 1.6; color: #334155;">
+                    <li><strong>15 menit</strong> pasca obat injeksi</li>
+                    <li><strong>1 jam</strong> pasca obat oral</li>
+                    <li><strong>1x / shift</strong> jika skor nyeri 1 - 3</li>
+                    <li><strong>Setiap 3 jam</strong> jika skor nyeri 4 - 6</li>
+                    <li><strong>Setiap 1 jam</strong> jika skor nyeri 7 - 10</li>
+                    <li><strong>Dihentikan</strong> jika skor nyeri 0</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- ------------------------------------------------------------
+                 SECTION 2: TABEL OBSERVASI & PENGKAJIAN ULANG NYERI (MODAL INPUT)
+                 ------------------------------------------------------------ -->
+            <div class="rsgm-soap-section" style="margin-bottom: 18px;">
+              <div class="rsgm-soap-sec-title" style="justify-content: space-between; align-items: center;">
+                <div>
+                  <i class="fa fa-table text-primary"></i>
+                  <span>Lembar Observasi Intervensi dan Pengkajian Ulang Nyeri</span>
+                </div>
+                <button type="button" class="btn btn-success btn-sm" id="btn-open-modal-nyeri" style="border-radius: 6px; font-weight: 600;">
+                  <i class="fa fa-plus-circle"></i> Tambah Baris Observasi
+                </button>
+              </div>
+
+              <div class="table-responsive" style="margin-top: 10px;">
+                <table class="table table-bordered table-hover" id="table-record-nyeri" style="margin-bottom: 0; font-size: 12px; width: 100%;">
+                  <thead>
+                    <tr style="background-color: #f8fafc; color: #1e293b; font-weight: 700;">
+                      <th style="width: 35px; text-align: center; vertical-align: middle;">#</th>
+                      <th style="width: 130px; text-align: center; vertical-align: middle;">Waktu (Tgl/Jam)</th>
+                      <th style="width: 120px; text-align: center; vertical-align: middle;">Skor Nyeri</th>
+                      <th style="width: 170px; text-align: center; vertical-align: middle;">Tanda Vital</th>
+                      <th style="text-align: center; vertical-align: middle;">Intervensi Farmakologi (Obat)</th>
+                      <th style="width: 160px; text-align: center; vertical-align: middle;">Non-Farmakologi</th>
+                      <th style="width: 130px; text-align: center; vertical-align: middle;">Petugas &amp; Paraf</th>
+                      <th style="width: 110px; text-align: center; vertical-align: middle;">Kaji Ulang</th>
+                      <th style="width: 80px; text-align: center; vertical-align: middle;">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-record-nyeri">
+                    {loop: $data.items}
+                    <tr class="row-item-nyeri">
+                      <td style="text-align: center; vertical-align: middle;" class="row-num">{$value.idx + 1}</td>
+                      <td style="vertical-align: middle;" class="td-tgl">
+                        <span class="view-tgl" style="font-weight: 600; color: #0f172a;">{$value.tgl_jam}</span>
+                        <input type="hidden" name="record[{$value.idx}][tgl_jam]" class="in-tgl_jam" value="{$value.tgl_jam}">
+                      </td>
+                      <td style="text-align: center; vertical-align: middle;" class="td-skor">
+                        {if: !empty($value.skor_nyeri) && $value.skor_nyeri >= 7}
+                          <span class="badge view-skor" style="background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; font-size: 11.5px; font-weight: 700; padding: 4px 8px;">Skor {$value.skor_nyeri} - Berat</span>
+                        {elseif: !empty($value.skor_nyeri) && $value.skor_nyeri >= 4}
+                          <span class="badge view-skor" style="background-color: #fefce8; color: #854d0e; border: 1px solid #fef08a; font-size: 11.5px; font-weight: 700; padding: 4px 8px;">Skor {$value.skor_nyeri} - Sedang</span>
+                        {elseif: !empty($value.skor_nyeri) && $value.skor_nyeri >= 1}
+                          <span class="badge view-skor" style="background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 11.5px; font-weight: 700; padding: 4px 8px;">Skor {$value.skor_nyeri} - Ringan</span>
+                        {else}
+                          <span class="badge view-skor" style="background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 11.5px; font-weight: 700; padding: 4px 8px;">Skor {$value.skor_nyeri} - Bebas</span>
+                        {/if}
+                        <input type="hidden" name="record[{$value.idx}][skor_nyeri]" class="in-skor_nyeri" value="{$value.skor_nyeri}">
+                      </td>
+                      <td style="vertical-align: middle;" class="td-vitals">
+                        <div class="view-vitals" style="font-size: 11.5px; line-height: 1.4;">
+                          <span><b>TD:</b> {if: !empty($value.td)}{$value.td}{else}-{/if}</span> &bull; 
+                          <span><b>N:</b> {if: !empty($value.nadi)}{$value.nadi}{else}-{/if}</span><br>
+                          <span><b>RR:</b> {if: !empty($value.napas)}{$value.napas}{else}-{/if}</span> &bull; 
+                          <span><b>S:</b> {if: !empty($value.suhu)}{$value.suhu}°C{else}-{/if}</span>
+                        </div>
+                        <input type="hidden" name="record[{$value.idx}][td]" class="in-td" value="{$value.td}">
+                        <input type="hidden" name="record[{$value.idx}][nadi]" class="in-nadi" value="{$value.nadi}">
+                        <input type="hidden" name="record[{$value.idx}][napas]" class="in-napas" value="{$value.napas}">
+                        <input type="hidden" name="record[{$value.idx}][suhu]" class="in-suhu" value="{$value.suhu}">
+                      </td>
+                      <td style="vertical-align: middle;" class="td-obat">
+                        <div class="view-obat" style="font-size: 12px; line-height: 1.3;">
+                          {if: !empty($value.obat_nama)}
+                            <div style="font-weight: 700; color: #1e3a8a;">{$value.obat_nama}</div>
+                            <small class="text-muted">{if: !empty($value.obat_dosis)}{$value.obat_dosis}{else}-{/if} ({if: !empty($value.obat_rute)}{$value.obat_rute}{else}-{/if})</small>
+                          {else}
+                            <span class="text-muted">-</span>
+                          {/if}
+                        </div>
+                        <input type="hidden" name="record[{$value.idx}][obat_nama]" class="in-obat_nama" value="{$value.obat_nama}">
+                        <input type="hidden" name="record[{$value.idx}][obat_dosis]" class="in-obat_dosis" value="{$value.obat_dosis}">
+                        <input type="hidden" name="record[{$value.idx}][obat_rute]" class="in-obat_rute" value="{$value.obat_rute}">
+                      </td>
+                      <td style="vertical-align: middle;" class="td-nonfar">
+                        <span class="view-nonfar" style="font-size: 11.5px; color: #334155;">{if: !empty($value.non_farmakologi)}{$value.non_farmakologi}{else}-{/if}</span>
+                        <input type="hidden" name="record[{$value.idx}][non_farmakologi]" class="in-non_farmakologi" value="{$value.non_farmakologi}">
+                      </td>
+                      <td style="vertical-align: middle;" class="td-petugas">
+                        <div class="view-petugas" style="font-size: 11.5px; line-height: 1.3;">
+                          <div style="font-weight: 600;">{if: !empty($value.petugas_nama)}{$value.petugas_nama}{else}-{/if}</div>
+                          <small class="text-muted">Paraf: {if: !empty($value.petugas_paraf)}{$value.petugas_paraf}{else}-{/if}</small>
+                        </div>
+                        <input type="hidden" name="record[{$value.idx}][petugas_nama]" class="in-petugas_nama" value="{$value.petugas_nama}">
+                        <input type="hidden" name="record[{$value.idx}][petugas_paraf]" class="in-petugas_paraf" value="{$value.petugas_paraf}">
+                      </td>
+                      <td style="text-align: center; vertical-align: middle;" class="td-kajiulang">
+                        <span class="view-kajiulang badge" style="background-color: #f1f5f9; color: #334155; font-size: 11px; border: 1px solid #cbd5e1;">{if: !empty($value.waktu_kaji_ulang)}{$value.waktu_kaji_ulang}{else}-{/if}</span>
+                        <input type="hidden" name="record[{$value.idx}][waktu_kaji_ulang]" class="in-waktu_kaji_ulang" value="{$value.waktu_kaji_ulang}">
+                      </td>
+                      <td style="text-align: center; vertical-align: middle;">
+                        <button type="button" class="btn btn-xs btn-default btn-edit-row" title="Edit Baris" style="border-radius: 4px; padding: 3px 6px; margin-right: 2px;">
+                          <i class="fa fa-pencil text-primary"></i>
+                        </button>
+                        <button type="button" class="btn btn-xs btn-danger btn-hapus-row" title="Hapus Baris" style="border-radius: 4px; padding: 3px 6px;">
+                          <i class="fa fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    {/loop}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- ------------------------------------------------------------
+                 SECTION 3: CATATAN TAMBAHAN / EVALUASI KHUSUS
+                 ------------------------------------------------------------ -->
+            <div class="rsgm-soap-section" style="margin-bottom: 18px;">
+              <div class="rsgm-soap-sec-title">
+                <i class="fa fa-commenting-o text-primary"></i>
+                <span>Catatan Tambahan / Evaluasi Khusus (Opsional)</span>
+              </div>
+              <div style="margin-top: 8px;">
+                <textarea name="catatan_tambahan" class="form-control" rows="2" placeholder="Catatan respon pasien, efek samping terapi obat, instruksi DPJP lainnya..." style="resize: vertical; font-size: 13px;">{?=isset_or($data['catatan_tambahan'])?}</textarea>
+              </div>
+            </div>
+
+          </div> <!-- /.rsgm-reg-body -->
+
+          <!-- Footer Action Bar Shell -->
+          <div class="rsgm-reg-footer clearfix" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+            <div>
+              <a href="{?=url([ADMIN, 'form_rme', 'intervensinyerimanage'])?}" class="btn btn-default" style="border-radius: 6px; font-weight: 500;">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+            <div class="rsgm-reg-actions" style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-info btn-trigger-rme-preview" data-preview-url="{?=url([ADMIN, 'form_rme', 'intervensinyericetak'])?}" style="font-weight: 600; border-radius: 6px;" title="Lihat pratinjau form hasil cetak / PDF">
+                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+              </button>
+              <button type="submit" class="btn btn-primary" id="btnSimpan" style="font-weight: 700; border-radius: 6px;">
+                <i class="fa fa-save"></i> Simpan Pengkajian Nyeri
+              </button>
+            </div>
+          </div>
+
+        </div> <!-- /.rsgm-reg-shell -->
+      </div> <!-- /.col-md-9 -->
+
+    </div> <!-- /.rsgm-soap-flex-row -->
+  </form>
+</div>
+
+<!-- ============================================================
+     MODAL DIALOG: INPUT BARIS OBSERVASI & PENGKAJIAN ULANG NYERI
+     ============================================================ -->
+<div class="modal fade rsgm-modal" id="modalObservasiNyeri" tabindex="-1" role="dialog" aria-labelledby="modalNyeriLabel">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="modalNyeriLabel">
+          <i class="fa fa-heartbeat text-danger"></i>
+          <span id="modalNyeriTitle">Tambah Baris Observasi Nyeri</span>
+        </h4>
+      </div>
+      <div class="modal-body">
+        <form id="formModalNyeri">
+          <input type="hidden" id="modal_row_index" value="-1">
+
+          <!-- Baris 1: Waktu & Skor Nyeri -->
+          <div class="row">
+            <div class="col-md-5 form-group" style="margin-bottom: 12px;">
+              <label class="rsgm-compact-label" for="m_tgl_jam"><i class="fa fa-calendar text-muted"></i> Tanggal &amp; Waktu Observasi <span class="text-danger">*</span></label>
+              <input type="text" id="m_tgl_jam" class="form-control" placeholder="YYYY-MM-DD HH:mm" required style="font-weight: 600;">
+            </div>
+            <div class="col-md-7 form-group" style="margin-bottom: 12px;">
+              <label class="rsgm-compact-label" for="m_skor_nyeri"><i class="fa fa-tachometer text-muted"></i> Skor Nyeri (NRS 0 - 10) <span class="text-danger">*</span></label>
+              <select id="m_skor_nyeri" class="form-control" style="font-weight: 700;">
+                <option value="0">0 - Tidak Nyeri (Bebas Nyeri) &#128522;</option>
+                <option value="1">1 - Nyeri Sangat Ringan &#128578;</option>
+                <option value="2">2 - Nyeri Ringan (Sedikit Nyeri) &#128578;</option>
+                <option value="3">3 - Nyeri Ringan (Bisa Diabaikan) &#128578;</option>
+                <option value="4">4 - Nyeri Sedang (Sedikit Mengganggu) &#128528;</option>
+                <option value="5">5 - Nyeri Sedang (Mengganggu Konsentrasi) &#128528;</option>
+                <option value="6">6 - Nyeri Sedang (Sangat Mengganggu Aktivitas) &#128577;</option>
+                <option value="7">7 - Nyeri Berat (Sulit Diajak Bicara) &#128546;</option>
+                <option value="8">8 - Nyeri Berat (Aktivitas Terhambat Total) &#128546;</option>
+                <option value="9">9 - Nyeri Berat Sangat Hebat &#128557;</option>
+                <option value="10">10 - Nyeri Berat Maksimal (Tak Tertahankan) &#128557;</option>
+              </select>
+              <div style="margin-top: 5px;">
+                <span id="modal_skor_badge" class="badge" style="font-size: 11px; padding: 4px 8px; font-weight: 700; background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;">
+                  Bebas Nyeri (0)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Baris 2: Tanda Vital (TD, HR, RR, Suhu) -->
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px;">
+            <label class="rsgm-compact-label" style="margin-bottom: 6px;"><i class="fa fa-stethoscope text-primary"></i> Tanda-Tanda Vital</label>
+            <div class="row">
+              <div class="col-xs-6 col-sm-3 form-group" style="margin-bottom: 4px;">
+                <label class="rsgm-compact-label" for="m_td" style="font-size: 11px;">TD (mmHg)</label>
+                <input type="text" id="m_td" class="form-control" placeholder="120/80">
+              </div>
+              <div class="col-xs-6 col-sm-3 form-group" style="margin-bottom: 4px;">
+                <label class="rsgm-compact-label" for="m_nadi" style="font-size: 11px;">Nadi (x/m)</label>
+                <input type="text" id="m_nadi" class="form-control" placeholder="80">
+              </div>
+              <div class="col-xs-6 col-sm-3 form-group" style="margin-bottom: 4px;">
+                <label class="rsgm-compact-label" for="m_napas" style="font-size: 11px;">Napas (x/m)</label>
+                <input type="text" id="m_napas" class="form-control" placeholder="20">
+              </div>
+              <div class="col-xs-6 col-sm-3 form-group" style="margin-bottom: 4px;">
+                <label class="rsgm-compact-label" for="m_suhu" style="font-size: 11px;">Suhu (°C)</label>
+                <input type="text" id="m_suhu" class="form-control" placeholder="36.5">
+              </div>
+            </div>
+          </div>
+
+          <!-- Baris 3: Intervensi Farmakologi (Obat) -->
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px;">
+            <label class="rsgm-compact-label" style="margin-bottom: 6px;"><i class="fa fa-medkit text-info"></i> Intervensi Farmakologi (Terapi Obat Analgetik)</label>
+            <div class="row">
+              <div class="col-md-5 form-group" style="margin-bottom: 4px;">
+                <label class="rsgm-compact-label" for="m_obat_nama" style="font-size: 11px;">Nama Obat</label>
+                <input type="text" id="m_obat_nama" class="form-control" placeholder="Contoh: Ketorolac / Paracetamol Infus">
+              </div>
+              <div class="col-md-4 form-group" style="margin-bottom: 4px;">
+                <label class="rsgm-compact-label" for="m_obat_dosis" style="font-size: 11px;">Dosis &amp; Frekuensi</label>
+                <input type="text" id="m_obat_dosis" class="form-control" placeholder="Contoh: 30 mg / 1 gr drip">
+              </div>
+              <div class="col-md-3 form-group" style="margin-bottom: 4px;">
+                <label class="rsgm-compact-label" for="m_obat_rute" style="font-size: 11px;">Rute Pemberian</label>
+                <select id="m_obat_rute" class="form-control">
+                  <option value="">- Rute -</option>
+                  <option value="IV" selected>IV (Intravena)</option>
+                  <option value="Oral">Oral (Minum)</option>
+                  <option value="IM">IM (Intramuskular)</option>
+                  <option value="SC">SC (Subkutan)</option>
+                  <option value="Topikal">Topikal</option>
+                  <option value="Rektal">Rektal / Supp</option>
+                  <option value="Lainnya">Lainnya</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Baris 4: Intervensi Non-Farmakologi -->
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="rsgm-compact-label" for="m_non_farmakologi"><i class="fa fa-hand-holding-heart text-success"></i> Intervensi Non-Farmakologi</label>
+            <div style="margin-bottom: 6px; display: flex; flex-wrap: wrap; gap: 4px;">
+              <button type="button" class="btn btn-default btn-xs btn-tag-nonfar" data-val="1. Dingin (Kompres es)">1. Dingin</button>
+              <button type="button" class="btn btn-default btn-xs btn-tag-nonfar" data-val="2. Panas (Kompres hangat)">2. Panas</button>
+              <button type="button" class="btn btn-default btn-xs btn-tag-nonfar" data-val="3. Posisi semifowler / nyaman">3. Posisi</button>
+              <button type="button" class="btn btn-default btn-xs btn-tag-nonfar" data-val="4. Pijat / Massage terapi">4. Pijat</button>
+              <button type="button" class="btn btn-default btn-xs btn-tag-nonfar" data-val="5. Musik relaksasi">5. Musik</button>
+              <button type="button" class="btn btn-default btn-xs btn-tag-nonfar" data-val="6. TENS">6. TENS</button>
+              <button type="button" class="btn btn-default btn-xs btn-tag-nonfar" data-val="7. Relaksasi nafas dalam">7. Relaksasi</button>
+            </div>
+            <input type="text" id="m_non_farmakologi" class="form-control" placeholder="Contoh: 3. Posisi semifowler & 7. Relaksasi nafas dalam">
+          </div>
+
+          <!-- Baris 5: Petugas, Paraf, dan Waktu Kaji Ulang -->
+          <div class="row">
+            <div class="col-md-5 form-group" style="margin-bottom: 6px;">
+              <label class="rsgm-compact-label" for="m_petugas_nama"><i class="fa fa-user-md text-muted"></i> Petugas / Perawat</label>
+              <input type="text" id="m_petugas_nama" list="list_petugas" class="form-control" placeholder="Nama perawat...">
+            </div>
+            <div class="col-md-3 form-group" style="margin-bottom: 6px;">
+              <label class="rsgm-compact-label" for="m_petugas_paraf"><i class="fa fa-check text-muted"></i> Validasi / Paraf</label>
+              <select id="m_petugas_paraf" class="form-control">
+                <option value="Ya" selected>Ya (Tervalidasi)</option>
+                <option value="-">-</option>
+              </select>
+            </div>
+            <div class="col-md-4 form-group" style="margin-bottom: 6px;">
+              <label class="rsgm-compact-label" for="m_waktu_kaji_ulang"><i class="fa fa-clock-o text-muted"></i> Waktu Kaji Ulang</label>
+              <select id="m_waktu_kaji_ulang" class="form-control">
+                <option value="15 menit">15 menit (Pasca Injeksi)</option>
+                <option value="1 jam">1 jam (Pasca Oral)</option>
+                <option value="1x / shift">1x / Shift (Skor 1-3)</option>
+                <option value="Setiap 3 jam">Setiap 3 Jam (Skor 4-6)</option>
+                <option value="Setiap 1 jam">Setiap 1 Jam (Skor 7-10)</option>
+                <option value="Dihentikan">Dihentikan (Skor 0)</option>
+                <option value="Sebelum pulang">Sebelum Pulang (Ralan)</option>
+              </select>
+            </div>
+          </div>
+
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">
+          <i class="fa fa-times"></i> Batal
+        </button>
+        <button type="button" class="btn btn-primary" id="btn-save-modal-row" style="font-weight: 700;">
+          <i class="fa fa-check"></i> Simpan ke Tabel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+
+    // Helper formatting function for dates
+    function getNowString() {
+        var now = new Date();
+        var yyyy = now.getFullYear();
+        var mm = String(now.getMonth() + 1).padStart(2, '0');
+        var dd = String(now.getDate()).padStart(2, '0');
+        var hh = String(now.getHours()).padStart(2, '0');
+        var ii = String(now.getMinutes()).padStart(2, '0');
+        return yyyy + '-' + mm + '-' + dd + ' ' + hh + ':' + ii;
+    }
+
+    // Helper badge pain score
+    function getPainBadge(score) {
+        var s = parseInt(score, 10);
+        if (isNaN(s)) s = 0;
+        if (s >= 7) {
+            return '<span class="badge view-skor" style="background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; font-size: 11.5px; font-weight: 700; padding: 4px 8px;">Skor ' + s + ' - Berat</span>';
+        } else if (s >= 4) {
+            return '<span class="badge view-skor" style="background-color: #fefce8; color: #854d0e; border: 1px solid #fef08a; font-size: 11.5px; font-weight: 700; padding: 4px 8px;">Skor ' + s + ' - Sedang</span>';
+        } else if (s >= 1) {
+            return '<span class="badge view-skor" style="background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 11.5px; font-weight: 700; padding: 4px 8px;">Skor ' + s + ' - Ringan</span>';
+        } else {
+            return '<span class="badge view-skor" style="background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 11.5px; font-weight: 700; padding: 4px 8px;">Skor ' + s + ' - Bebas</span>';
+        }
+    }
+
+    // Helper modal badge update
+    function updateModalScoreBadge(val) {
+        var s = parseInt(val, 10);
+        if (isNaN(s)) s = 0;
+        var txt = 'Bebas Nyeri (0)';
+        var bg = '#f0fdf4', clr = '#166534', bdr = '#bbf7d0';
+        if (s >= 7) {
+            txt = 'Nyeri Berat (' + s + ')';
+            bg = '#fef2f2'; clr = '#991b1b'; bdr = '#fecaca';
+        } else if (s >= 4) {
+            txt = 'Nyeri Sedang (' + s + ')';
+            bg = '#fefce8'; clr = '#854d0e'; bdr = '#fef08a';
+        } else if (s >= 1) {
+            txt = 'Nyeri Ringan (' + s + ')';
+            bg = '#eff6ff'; clr = '#1d4ed8'; bdr = '#bfdbfe';
+        }
+        $('#modal_skor_badge').text(txt).css({
+            'background-color': bg,
+            'color': clr,
+            'border-color': bdr
+        });
+    }
+
+    $('#m_skor_nyeri').on('change', function() {
+        updateModalScoreBadge($(this).val());
+    });
+
+    // Tag click helper for non-farmakologi
+    $('.btn-tag-nonfar').on('click', function(e) {
+        e.preventDefault();
+        var tag = $(this).attr('data-val');
+        var cur = $('#m_non_farmakologi').val().trim();
+        if (!cur) {
+            $('#m_non_farmakologi').val(tag);
+        } else if (cur.indexOf(tag) === -1) {
+            $('#m_non_farmakologi').val(cur + ', ' + tag);
+        }
+    });
+
+    // Renumber rows & sync hidden indices & update sidebar stats
+    function renumberRows() {
+        var total = 0;
+        var lastScore = null;
+
+        $('#tbody-record-nyeri tr.row-item-nyeri').each(function(idx) {
+            total++;
+            $(this).find('.row-num').text(idx + 1);
+
+            // Update indices on hidden inputs: record[idx][key]
+            $(this).find('input[type="hidden"]').each(function() {
+                var name = $(this).attr('name');
+                if (name) {
+                    var newName = name.replace(/^record\[\d+\]/, 'record[' + idx + ']');
+                    $(this).attr('name', newName);
+                }
+            });
+
+            // Capture last row score
+            var curScore = $(this).find('.in-skor_nyeri').val();
+            if (curScore !== undefined && curScore !== '') {
+                lastScore = curScore;
+            }
+        });
+
+        $('#side_total_obs').text(total + ' Catatan Observasi');
+
+        if (lastScore !== null) {
+            var s = parseInt(lastScore, 10);
+            if (isNaN(s)) s = 0;
+            var txt = 'Skor ' + s;
+            var bg = '#f0fdf4', clr = '#166534', bdr = '#bbf7d0';
+            if (s >= 7) {
+                txt += ' (Berat)';
+                bg = '#fef2f2'; clr = '#991b1b'; bdr = '#fecaca';
+            } else if (s >= 4) {
+                txt += ' (Sedang)';
+                bg = '#fefce8'; clr = '#854d0e'; bdr = '#fef08a';
+            } else if (s >= 1) {
+                txt += ' (Ringan)';
+                bg = '#eff6ff'; clr = '#1d4ed8'; bdr = '#bfdbfe';
+            } else {
+                txt += ' (Bebas)';
+            }
+            $('#side_last_score_badge').text(txt).css({
+                'background-color': bg,
+                'color': clr,
+                'border-color': bdr
+            });
+        } else {
+            $('#side_last_score_badge').text('Belum Ada Data').css({
+                'background-color': '#f1f5f9',
+                'color': '#475569',
+                'border-color': '#cbd5e1'
+            });
+        }
+
+        if (total === 0) {
+            if ($('#tbody-record-nyeri .empty-tr').length === 0) {
+                $('#tbody-record-nyeri').append('<tr class="empty-tr"><td colspan="9" style="text-align: center; color: #94a3b8; padding: 22px;"><em>Belum ada data observasi intervensi nyeri. Klik tombol "+ Tambah Baris Observasi" untuk mencatat.</em></td></tr>');
+            }
+        } else {
+            $('#tbody-record-nyeri .empty-tr').remove();
+        }
+    }
+
+    renumberRows();
+
+    // Buka Modal: Tambah Baris Baru
+    $('#btn-open-modal-nyeri').on('click', function(e) {
+        e.preventDefault();
+        $('#modal_row_index').val('-1');
+        $('#modalNyeriTitle').text('Tambah Baris Observasi Nyeri');
+
+        $('#m_tgl_jam').val(getNowString());
+        $('#m_skor_nyeri').val('0');
+        updateModalScoreBadge('0');
+
+        $('#m_td').val('');
+        $('#m_nadi').val('');
+        $('#m_napas').val('');
+        $('#m_suhu').val('');
+
+        $('#m_obat_nama').val('');
+        $('#m_obat_dosis').val('');
+        $('#m_obat_rute').val('IV');
+
+        $('#m_non_farmakologi').val('');
+        var defPetugas = $('#default_petugas').val().trim();
+        $('#m_petugas_nama').val(defPetugas);
+        $('#m_petugas_paraf').val('Ya');
+        $('#m_waktu_kaji_ulang').val('15 menit');
+
+        $('#modalObservasiNyeri').modal('show');
+    });
+
+    // Buka Modal: Edit Baris yang Ada
+    $(document).on('click', '.btn-edit-row', function(e) {
+        e.preventDefault();
+        var row = $(this).closest('tr.row-item-nyeri');
+        var rowIdx = $('#tbody-record-nyeri tr.row-item-nyeri').index(row);
+
+        $('#modal_row_index').val(rowIdx);
+        $('#modalNyeriTitle').text('Edit Baris Observasi Nyeri (Baris #' + (rowIdx + 1) + ')');
+
+        $('#m_tgl_jam').val(row.find('.in-tgl_jam').val() || '');
+        var skor = row.find('.in-skor_nyeri').val() || '0';
+        $('#m_skor_nyeri').val(skor);
+        updateModalScoreBadge(skor);
+
+        $('#m_td').val(row.find('.in-td').val() || '');
+        $('#m_nadi').val(row.find('.in-nadi').val() || '');
+        $('#m_napas').val(row.find('.in-napas').val() || '');
+        $('#m_suhu').val(row.find('.in-suhu').val() || '');
+
+        $('#m_obat_nama').val(row.find('.in-obat_nama').val() || '');
+        $('#m_obat_dosis').val(row.find('.in-obat_dosis').val() || '');
+        $('#m_obat_rute').val(row.find('.in-obat_rute').val() || 'IV');
+
+        $('#m_non_farmakologi').val(row.find('.in-non_farmakologi').val() || '');
+        $('#m_petugas_nama').val(row.find('.in-petugas_nama').val() || '');
+        $('#m_petugas_paraf').val(row.find('.in-petugas_paraf').val() || 'Ya');
+        $('#m_waktu_kaji_ulang').val(row.find('.in-waktu_kaji_ulang').val() || '15 menit');
+
+        $('#modalObservasiNyeri').modal('show');
+    });
+
+    // Simpan dari Modal ke Tabel
+    $('#btn-save-modal-row').on('click', function(e) {
+        e.preventDefault();
+
+        var tglJam = $('#m_tgl_jam').val().trim();
+        if (!tglJam) {
+            alert('Tanggal & Waktu Observasi wajib diisi!');
+            $('#m_tgl_jam').focus();
+            return;
+        }
+
+        var skorNyeri = $('#m_skor_nyeri').val();
+        var td = $('#m_td').val().trim();
+        var nadi = $('#m_nadi').val().trim();
+        var napas = $('#m_napas').val().trim();
+        var suhu = $('#m_suhu').val().trim();
+        var obatNama = $('#m_obat_nama').val().trim();
+        var obatDosis = $('#m_obat_dosis').val().trim();
+        var obatRute = $('#m_obat_rute').val().trim();
+        var nonFar = $('#m_non_farmakologi').val().trim();
+        var petugas = $('#m_petugas_nama').val().trim();
+        var paraf = $('#m_petugas_paraf').val().trim();
+        var kajiUlang = $('#m_waktu_kaji_ulang').val().trim();
+
+        var vitalsHtml = '<span><b>TD:</b> ' + (td || '-') + '</span> &bull; <span><b>N:</b> ' + (nadi || '-') + '</span><br>' +
+                         '<span><b>RR:</b> ' + (napas || '-') + '</span> &bull; <span><b>S:</b> ' + (suhu ? (suhu + '°C') : '-') + '</span>';
+
+        var obatHtml = '<span class="text-muted">-</span>';
+        if (obatNama) {
+            obatHtml = '<div style="font-weight: 700; color: #1e3a8a;">' + $('<div>').text(obatNama).html() + '</div>' +
+                       '<small class="text-muted">' + $('<div>').text(obatDosis || '-').html() + ' (' + $('<div>').text(obatRute || '-').html() + ')</small>';
+        }
+
+        var petugasHtml = '<div style="font-weight: 600;">' + $('<div>').text(petugas || '-').html() + '</div>' +
+                          '<small class="text-muted">Paraf: ' + $('<div>').text(paraf || '-').html() + '</small>';
+
+        var rowIdx = parseInt($('#modal_row_index').val(), 10);
+
+        if (rowIdx >= 0) {
+            // Update existing row
+            var targetRow = $('#tbody-record-nyeri tr.row-item-nyeri').eq(rowIdx);
+            targetRow.find('.view-tgl').text(tglJam);
+            targetRow.find('.in-tgl_jam').val(tglJam);
+
+            targetRow.find('.td-skor').html(getPainBadge(skorNyeri) + '<input type="hidden" name="record[' + rowIdx + '][skor_nyeri]" class="in-skor_nyeri" value="' + skorNyeri + '">');
+
+            targetRow.find('.view-vitals').html(vitalsHtml);
+            targetRow.find('.in-td').val(td);
+            targetRow.find('.in-nadi').val(nadi);
+            targetRow.find('.in-napas').val(napas);
+            targetRow.find('.in-suhu').val(suhu);
+
+            targetRow.find('.view-obat').html(obatHtml);
+            targetRow.find('.in-obat_nama').val(obatNama);
+            targetRow.find('.in-obat_dosis').val(obatDosis);
+            targetRow.find('.in-obat_rute').val(obatRute);
+
+            targetRow.find('.view-nonfar').text(nonFar || '-');
+            targetRow.find('.in-non_farmakologi').val(nonFar);
+
+            targetRow.find('.view-petugas').html(petugasHtml);
+            targetRow.find('.in-petugas_nama').val(petugas);
+            targetRow.find('.in-petugas_paraf').val(paraf);
+
+            targetRow.find('.view-kajiulang').text(kajiUlang || '-');
+            targetRow.find('.in-waktu_kaji_ulang').val(kajiUlang);
+
+        } else {
+            // Append new row
+            var newIdx = $('#tbody-record-nyeri tr.row-item-nyeri').length;
+            var newTr = '<tr class="row-item-nyeri">' +
+                '<td style="text-align: center; vertical-align: middle;" class="row-num">' + (newIdx + 1) + '</td>' +
+                '<td style="vertical-align: middle;" class="td-tgl">' +
+                    '<span class="view-tgl" style="font-weight: 600; color: #0f172a;">' + $('<div>').text(tglJam).html() + '</span>' +
+                    '<input type="hidden" name="record[' + newIdx + '][tgl_jam]" class="in-tgl_jam" value="' + $('<div>').text(tglJam).html() + '">' +
+                '</td>' +
+                '<td style="text-align: center; vertical-align: middle;" class="td-skor">' +
+                    getPainBadge(skorNyeri) +
+                    '<input type="hidden" name="record[' + newIdx + '][skor_nyeri]" class="in-skor_nyeri" value="' + skorNyeri + '">' +
+                '</td>' +
+                '<td style="vertical-align: middle;" class="td-vitals">' +
+                    '<div class="view-vitals" style="font-size: 11.5px; line-height: 1.4;">' + vitalsHtml + '</div>' +
+                    '<input type="hidden" name="record[' + newIdx + '][td]" class="in-td" value="' + $('<div>').text(td).html() + '">' +
+                    '<input type="hidden" name="record[' + newIdx + '][nadi]" class="in-nadi" value="' + $('<div>').text(nadi).html() + '">' +
+                    '<input type="hidden" name="record[' + newIdx + '][napas]" class="in-napas" value="' + $('<div>').text(napas).html() + '">' +
+                    '<input type="hidden" name="record[' + newIdx + '][suhu]" class="in-suhu" value="' + $('<div>').text(suhu).html() + '">' +
+                '</td>' +
+                '<td style="vertical-align: middle;" class="td-obat">' +
+                    '<div class="view-obat" style="font-size: 12px; line-height: 1.3;">' + obatHtml + '</div>' +
+                    '<input type="hidden" name="record[' + newIdx + '][obat_nama]" class="in-obat_nama" value="' + $('<div>').text(obatNama).html() + '">' +
+                    '<input type="hidden" name="record[' + newIdx + '][obat_dosis]" class="in-obat_dosis" value="' + $('<div>').text(obatDosis).html() + '">' +
+                    '<input type="hidden" name="record[' + newIdx + '][obat_rute]" class="in-obat_rute" value="' + $('<div>').text(obatRute).html() + '">' +
+                '</td>' +
+                '<td style="vertical-align: middle;" class="td-nonfar">' +
+                    '<span class="view-nonfar" style="font-size: 11.5px; color: #334155;">' + $('<div>').text(nonFar || '-').html() + '</span>' +
+                    '<input type="hidden" name="record[' + newIdx + '][non_farmakologi]" class="in-non_farmakologi" value="' + $('<div>').text(nonFar).html() + '">' +
+                '</td>' +
+                '<td style="vertical-align: middle;" class="td-petugas">' +
+                    '<div class="view-petugas" style="font-size: 11.5px; line-height: 1.3;">' + petugasHtml + '</div>' +
+                    '<input type="hidden" name="record[' + newIdx + '][petugas_nama]" class="in-petugas_nama" value="' + $('<div>').text(petugas).html() + '">' +
+                    '<input type="hidden" name="record[' + newIdx + '][petugas_paraf]" class="in-petugas_paraf" value="' + $('<div>').text(paraf).html() + '">' +
+                '</td>' +
+                '<td style="text-align: center; vertical-align: middle;" class="td-kajiulang">' +
+                    '<span class="view-kajiulang badge" style="background-color: #f1f5f9; color: #334155; font-size: 11px; border: 1px solid #cbd5e1;">' + $('<div>').text(kajiUlang || '-').html() + '</span>' +
+                    '<input type="hidden" name="record[' + newIdx + '][waktu_kaji_ulang]" class="in-waktu_kaji_ulang" value="' + $('<div>').text(kajiUlang).html() + '">' +
+                '</td>' +
+                '<td style="text-align: center; vertical-align: middle;">' +
+                    '<button type="button" class="btn btn-xs btn-default btn-edit-row" title="Edit Baris" style="border-radius: 4px; padding: 3px 6px; margin-right: 2px;">' +
+                        '<i class="fa fa-pencil text-primary"></i>' +
+                    '</button>' +
+                    '<button type="button" class="btn btn-xs btn-danger btn-hapus-row" title="Hapus Baris" style="border-radius: 4px; padding: 3px 6px;">' +
+                        '<i class="fa fa-trash"></i>' +
+                    '</button>' +
+                '</td>' +
+            '</tr>';
+
+            $('#tbody-record-nyeri').append(newTr);
+        }
+
+        renumberRows();
+        $('#modalObservasiNyeri').modal('hide');
+    });
+
+    // Hapus Baris
+    $(document).on('click', '.btn-hapus-row', function(e) {
+        e.preventDefault();
+        if (confirm('Apakah Anda yakin ingin menghapus baris observasi ini?')) {
+            $(this).closest('tr.row-item-nyeri').remove();
+            renumberRows();
+        }
+    });
+
+    // Auto search pasien AJAX
+    function cariPasien() {
+        var noRawat = $('#no_rawat').val().trim();
+        if (!noRawat) {
+            alert('Silakan masukkan No. Rawat atau No. RM terlebih dahulu!');
+            return;
+        }
+
+        $('#btnCariPasien').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url: '{?=url([ADMIN, "form_rme", "intervensinyeriform"])?}',
+            type: 'GET',
+            data: { ajax_patient: 1, no_rawat: noRawat },
+            dataType: 'json',
+            success: function(res) {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+                if (res && res.success) {
+                    $('#no_rawat').val(res.no_rawat);
+                    $('#info_nm_pasien').val(res.nm_pasien || '');
+                    $('#info_no_rkm_medis').val(res.no_rkm_medis || '');
+                    $('#info_jk').val(res.jk == 'L' ? 'Laki-Laki' : (res.jk == 'P' ? 'Perempuan' : '-'));
+                    $('#info_tgl_lahir').val(res.tgl_lahir || '');
+                    $('#info_umur').val(res.umur || '');
+                    $('#info_alamat').val(res.alamat || '');
+
+                    if (res.nm_bangsal && (!$('#instalasi_unit').val() || $('#instalasi_unit').val() === 'Rawat Inap')) {
+                        $('#instalasi_unit').val(res.nm_bangsal + (res.kd_kamar ? ' / ' + res.kd_kamar : ''));
+                    } else if (res.ruang_perawatan && (!$('#instalasi_unit').val() || $('#instalasi_unit').val() === 'Rawat Inap')) {
+                        $('#instalasi_unit').val(res.ruang_perawatan);
+                    }
+                } else {
+                    alert('Data pasien tidak ditemukan untuk No. Rawat / RM: ' + noRawat);
+                }
+            },
+            error: function() {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+                alert('Gagal menghubungi server untuk pencarian pasien.');
+            }
+        });
+    }
+
+    $('#btnCariPasien').click(function() {
+        cariPasien();
+    });
+
+    $('#no_rawat').keypress(function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            cariPasien();
+        }
+    });
+
+    var initRawat = $('#no_rawat').val().trim();
+    if (initRawat && !$('#info_nm_pasien').val()) {
+        cariPasien();
+    }
+
+    // Demo Data
+    $('#btn_demo').on('click', function(e) {
+        e.preventDefault();
+        if (!$('#instalasi_unit').val() || $('#instalasi_unit').val() === 'Rawat Inap') {
+            $('#instalasi_unit').val('Ruang Rawat Inap Melati (Kamar 203)');
+        }
+        $('#default_petugas').val('Siti Rahmah, S.Tr.Kep');
+
+        // Tambahkan baris observasi demo jika tabel kosong atau tawarkan penggantian
+        var now = new Date();
+        var yyyy = now.getFullYear();
+        var mm = String(now.getMonth() + 1).padStart(2, '0');
+        var dd = String(now.getDate()).padStart(2, '0');
+        var jam1 = '08:00';
+        var jam2 = '08:30';
+
+        var tgl1 = yyyy + '-' + mm + '-' + dd + ' ' + jam1;
+        var tgl2 = yyyy + '-' + mm + '-' + dd + ' ' + jam2;
+
+        $('#tbody-record-nyeri tr.row-item-nyeri').remove();
+
+        var demoRows = [
+            {
+                tgl: tgl1,
+                skor: '7',
+                td: '135/85',
+                nadi: '88',
+                napas: '22',
+                suhu: '36.8',
+                obat: 'Ketorolac Tromethamine',
+                dosis: '30 mg ampul',
+                rute: 'IV',
+                nonfar: '3. Posisi semifowler, 7. Relaksasi nafas dalam',
+                petugas: 'Siti Rahmah, S.Tr.Kep',
+                paraf: 'Ya',
+                kajiulang: '15 menit'
+            },
+            {
+                tgl: tgl2,
+                skor: '2',
+                td: '120/80',
+                nadi: '78',
+                napas: '18',
+                suhu: '36.5',
+                obat: '',
+                dosis: '',
+                rute: '',
+                nonfar: '2. Panas (kompres hangat), 5. Terapi musik',
+                petugas: 'Siti Rahmah, S.Tr.Kep',
+                paraf: 'Ya',
+                kajiulang: '1x / shift'
+            }
+        ];
+
+        $.each(demoRows, function(i, d) {
+            var vitalsHtml = '<span><b>TD:</b> ' + (d.td || '-') + '</span> &bull; <span><b>N:</b> ' + (d.nadi || '-') + '</span><br>' +
+                             '<span><b>RR:</b> ' + (d.napas || '-') + '</span> &bull; <span><b>S:</b> ' + (d.suhu ? (d.suhu + '°C') : '-') + '</span>';
+
+            var obatHtml = '<span class="text-muted">-</span>';
+            if (d.obat) {
+                obatHtml = '<div style="font-weight: 700; color: #1e3a8a;">' + $('<div>').text(d.obat).html() + '</div>' +
+                           '<small class="text-muted">' + $('<div>').text(d.dosis || '-').html() + ' (' + $('<div>').text(d.rute || '-').html() + ')</small>';
+            }
+
+            var petugasHtml = '<div style="font-weight: 600;">' + $('<div>').text(d.petugas || '-').html() + '</div>' +
+                              '<small class="text-muted">Paraf: ' + $('<div>').text(d.paraf || '-').html() + '</small>';
+
+            var tr = '<tr class="row-item-nyeri">' +
+                '<td style="text-align: center; vertical-align: middle;" class="row-num">' + (i + 1) + '</td>' +
+                '<td style="vertical-align: middle;" class="td-tgl">' +
+                    '<span class="view-tgl" style="font-weight: 600; color: #0f172a;">' + d.tgl + '</span>' +
+                    '<input type="hidden" name="record[' + i + '][tgl_jam]" class="in-tgl_jam" value="' + d.tgl + '">' +
+                '</td>' +
+                '<td style="text-align: center; vertical-align: middle;" class="td-skor">' +
+                    getPainBadge(d.skor) +
+                    '<input type="hidden" name="record[' + i + '][skor_nyeri]" class="in-skor_nyeri" value="' + d.skor + '">' +
+                '</td>' +
+                '<td style="vertical-align: middle;" class="td-vitals">' +
+                    '<div class="view-vitals" style="font-size: 11.5px; line-height: 1.4;">' + vitalsHtml + '</div>' +
+                    '<input type="hidden" name="record[' + i + '][td]" class="in-td" value="' + d.td + '">' +
+                    '<input type="hidden" name="record[' + i + '][nadi]" class="in-nadi" value="' + d.nadi + '">' +
+                    '<input type="hidden" name="record[' + i + '][napas]" class="in-napas" value="' + d.napas + '">' +
+                    '<input type="hidden" name="record[' + i + '][suhu]" class="in-suhu" value="' + d.suhu + '">' +
+                '</td>' +
+                '<td style="vertical-align: middle;" class="td-obat">' +
+                    '<div class="view-obat" style="font-size: 12px; line-height: 1.3;">' + obatHtml + '</div>' +
+                    '<input type="hidden" name="record[' + i + '][obat_nama]" class="in-obat_nama" value="' + d.obat + '">' +
+                    '<input type="hidden" name="record[' + i + '][obat_dosis]" class="in-obat_dosis" value="' + d.dosis + '">' +
+                    '<input type="hidden" name="record[' + i + '][obat_rute]" class="in-obat_rute" value="' + d.rute + '">' +
+                '</td>' +
+                '<td style="vertical-align: middle;" class="td-nonfar">' +
+                    '<span class="view-nonfar" style="font-size: 11.5px; color: #334155;">' + d.nonfar + '</span>' +
+                    '<input type="hidden" name="record[' + i + '][non_farmakologi]" class="in-non_farmakologi" value="' + d.nonfar + '">' +
+                '</td>' +
+                '<td style="vertical-align: middle;" class="td-petugas">' +
+                    '<div class="view-petugas" style="font-size: 11.5px; line-height: 1.3;">' + petugasHtml + '</div>' +
+                    '<input type="hidden" name="record[' + i + '][petugas_nama]" class="in-petugas_nama" value="' + d.petugas + '">' +
+                    '<input type="hidden" name="record[' + i + '][petugas_paraf]" class="in-petugas_paraf" value="' + d.paraf + '">' +
+                '</td>' +
+                '<td style="text-align: center; vertical-align: middle;" class="td-kajiulang">' +
+                    '<span class="view-kajiulang badge" style="background-color: #f1f5f9; color: #334155; font-size: 11px; border: 1px solid #cbd5e1;">' + d.kajiulang + '</span>' +
+                    '<input type="hidden" name="record[' + i + '][waktu_kaji_ulang]" class="in-waktu_kaji_ulang" value="' + d.kajiulang + '">' +
+                '</td>' +
+                '<td style="text-align: center; vertical-align: middle;">' +
+                    '<button type="button" class="btn btn-xs btn-default btn-edit-row" title="Edit Baris" style="border-radius: 4px; padding: 3px 6px; margin-right: 2px;">' +
+                        '<i class="fa fa-pencil text-primary"></i>' +
+                    '</button>' +
+                    '<button type="button" class="btn btn-xs btn-danger btn-hapus-row" title="Hapus Baris" style="border-radius: 4px; padding: 3px 6px;">' +
+                        '<i class="fa fa-trash"></i>' +
+                    '</button>' +
+                '</td>' +
+            '</tr>';
+
+            $('#tbody-record-nyeri').append(tr);
+        });
+
+        renumberRows();
+
+        if (typeof alert !== 'undefined') {
+            alert('Data contoh simulasi observasi nyeri (2 baris observasi realistis) berhasil dimuat!');
+        }
+    });
+
+});
+</script>

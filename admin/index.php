@@ -96,7 +96,7 @@ $core->router->set('api/(:str)/(:str)(:any)', function ($module, $method, $param
         exit;
     }
     $core->loadModules();
-    $targetModule = ($module === 'form_rme') ? 'update_bmt' : $module;
+    $targetModule = ($module === 'update_bmt') ? 'form_rme' : $module;
     $moduleObj = $core->module->{$targetModule};
     if (!$moduleObj) {
         header('Content-Type: application/json');
@@ -113,7 +113,7 @@ $core->router->set('api/(:str)/(:str)(:any)', function ($module, $method, $param
         $access = $urow['access'] ?? '';
     }
     $userAccess = explode(',', (string)$access);
-    if (!($access == 'all' || in_array($targetModule, $userAccess) || ($targetModule === 'update_bmt' && in_array('form_rme', $userAccess)))) {
+    if (!($access == 'all' || in_array($targetModule, $userAccess) || ($targetModule === 'form_rme' && in_array('update_bmt', $userAccess)))) {
         header('Content-Type: application/json');
         http_response_code(403);
         echo json_encode(['error' => 'Forbidden']);
@@ -203,7 +203,7 @@ if ($core->loginCheck()) {
             redirect(url(array_merge([ADMIN, 'form_rme', $method], $paramParts)) . $queryString);
             exit;
         }
-        $realModule = ($module === 'form_rme') ? 'update_bmt' : $module;
+        $realModule = ($module === 'update_bmt') ? 'form_rme' : $module;
         $core->createNav($realModule, $method);
         if ($params) {
             $core->loadModule($realModule, $method, explode('/', trim($params, '/')));
@@ -217,7 +217,7 @@ if ($core->loginCheck()) {
             redirect(url([ADMIN, 'form_rme', 'manajemenrme']));
             exit;
         }
-        $realModule = ($module === 'form_rme') ? 'update_bmt' : $module;
+        $realModule = ($module === 'update_bmt') ? 'form_rme' : $module;
         $core->createNav($realModule, 'index');
         $core->loadModule($realModule, 'index');
     });

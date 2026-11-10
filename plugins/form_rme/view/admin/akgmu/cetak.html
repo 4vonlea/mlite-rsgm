@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>RM.GD 4 - Asesmen Keperawatan Unit Gawat Darurat</title>
+<style>
+    @page { size: A4; margin: 8mm; }
+    body { font-family: Arial, sans-serif; font-size: 9.5px; line-height: 1.25; margin: 0; padding: 0; color: #000; }
+    .container { width: 100%; max-width: 194mm; margin: 0 auto; border: 1.5px solid #000; box-sizing: border-box; }
+    .container-noborder { width: 100%; max-width: 194mm; margin: 0 auto; box-sizing: border-box; }
+
+    /* Header Table */
+    .table-header { width: 100%; border-collapse: collapse; }
+    .table-header td { border: 1px solid #000; padding: 4px 6px; vertical-align: top; }
+
+    /* Input Boxes (RM) */
+    .box-rm { display: inline-block; width: 14px; height: 15px; border: 1px solid #000; margin-left: 1px; text-align: center; font-weight: bold; line-height: 15px; font-size: 10px; }
+
+    /* Form Sections */
+    .section-title { font-weight: bold; font-size: 11.5px; text-align: center; background-color: #fff; padding: 4px; border-top: 1px solid #000; border-bottom: 1px solid #000; }
+    .sub-title { font-size: 9px; text-align: center; font-weight: normal; margin-top: 1px; }
+
+    .table-body { width: 100%; border-collapse: collapse; }
+    .table-body td { border: 1px solid #000; padding: 3px 5px; vertical-align: top; }
+
+    /* Checkbox */
+    .cb { display: inline-block; width: 9px; height: 9px; border: 1px solid #000; vertical-align: middle; margin-right: 2px; font-size: 8.5px; line-height: 9px; text-align: center; font-weight: bold; }
+
+    /* Circled choice */
+    .circled { border: 1.2px solid #000; border-radius: 10px; padding: 0 4px; font-weight: bold; display: inline-block; }
+
+    .table-no-border { width: 100%; border-collapse: collapse; }
+    .table-no-border td { border: none !important; padding: 1px 2px; vertical-align: top; }
+
+    .triase-box { display: inline-block; width: 10px; height: 10px; border: 1px solid #000; vertical-align: middle; margin: 0 2px; text-align: center; line-height: 10px; font-size: 8px; font-weight: bold; }
+    .triase-merah { background-color: #e74c3c; color: #fff; }
+    .triase-kuning { background-color: #f1c40f; color: #000; }
+    .triase-hijau { background-color: #2ecc71; color: #fff; }
+    .triase-hitam { background-color: #222; color: #fff; }
+
+    .pain-scale-table { width: 100%; border-collapse: collapse; text-align: center; margin-top: 3px; }
+    .pain-scale-table td { border: 1px solid #000; padding: 1px 2px; font-size: 8.5px; }
+    .pain-active { background-color: #ddd; font-weight: bold; border: 1.5px solid #000 !important; }
+
+    .flacc-mini-table { width: 100%; border-collapse: collapse; margin-top: 3px; }
+    .flacc-mini-table th, .flacc-mini-table td { border: 1px solid #000; padding: 1px 3px; font-size: 8px; }
+
+    .page-break { page-break-after: always; }
+
+{if: empty($is_mpdf)}
+@media screen {
+    body { background-color: #f4f6f9 !important; padding: 15px 0 !important; }
+    .page-sheet { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; width: 210mm; margin: 0 auto 20px auto !important; padding: 8mm 8mm !important; box-sizing: border-box; }
+}
+{/if}
+.no-print-toolbar { width: 100%; max-width: 210mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
+.btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-decoration: none; display: inline-block; }
+.btn-print { background: #27ae60; color: #fff; }
+.btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+.btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+@media print {
+    .no-print-toolbar { display: none !important; }
+    body { background: transparent !important; padding: 0 !important; }
+    .page-sheet { box-shadow: none !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+}
+</style>
+</head>
+<body>
+
+{if: empty($is_mpdf)}
+<div class="no-print-toolbar">
+    <button onclick="window.print()" class="btn-toolbar btn-print">Cetak Dokumen</button>
+    <a href="#" onclick="window.open(window.location.href + (window.location.href.indexOf('?') !== -1 ? (window.location.href.indexOf('pdf=1') !== -1 ? '' : '&pdf=1') : '?pdf=1'), '_blank'); return false;" class="btn-toolbar btn-pdf">Download PDF</a>
+    <button onclick="window.close()" class="btn-toolbar btn-close">Tutup</button>
+</div>
+{/if}
+
+<!-- ==================== HALAMAN 1 (RM.GD - 03 Hal 2 - 3) ==================== -->
+<div class="page-sheet">
+<div class="container">
+    <!-- HEADER -->
+    <table class="table-header">
+        <tr>
+            <td width="63%" style="text-align:center; vertical-align:middle; padding: 2px;">
+                <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop Surat" style="width: 100%; height: auto; max-height: 70px; object-fit: contain;">
+            </td>
+            <td width="37%">
+                <table class="table-no-border" style="font-size: 9.5px;">
+                    <tr>
+                        <td width="32%">No RM</td>
+                        <td width="4%">:</td>
+                        <td>
+                            <span class="box-rm">{?=isset_or($data['rm0'])?}</span><span class="box-rm">{?=isset_or($data['rm1'])?}</span><span class="box-rm">{?=isset_or($data['rm2'])?}</span><span class="box-rm">{?=isset_or($data['rm3'])?}</span><span class="box-rm">{?=isset_or($data['rm4'])?}</span><span class="box-rm">{?=isset_or($data['rm5'])?}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Nama Pasien</td>
+                        <td>:</td>
+                        <td><b>{?=isset_or($data['nama_pasien'])?}</b> &nbsp; ({?=isset_or($data['jenis_kelamin'])?})</td>
+                    </tr>
+                    <tr>
+                        <td>Tanggal Lahir</td>
+                        <td>:</td>
+                        <td>{?=isset_or($data['tanggal_lahir_indo'])?}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <div style="padding: 2px 5px; font-size: 8.5px; border-bottom: 1px solid #000;">
+        Perhatian :<br>
+        * Harap semua penulisan dilakukan dengan keterbacaan yang jelas, benar dan lengkap.<br>
+        * Berilah tanda centang (&#10003;) pada kotak pilihan yang telah disediakan.<br>
+        * Berilah tanda lingkar pada pilihan yang telah disediakan.
+    </div>
+
+    <div class="section-title">
+        ASESMEN KEPERAWATAN UNIT GAWAT DARURAT
+        <div class="sub-title">(dilengkapi dalam waktu 2 jam pertama pasien datang)</div>
+    </div>
+
+    <!-- CARA DATANG, JENIS KASUS, RUJUKAN, SUMBER DATA -->
+    <table class="table-body">
+        <tr>
+            <td width="50%">
+                <b>Cara Datang</b><br>
+                <table class="table-no-border">
+                    <tr>
+                        <td width="42%"><span class="cb">{if: isset($data['cara_datang']) && $data['cara_datang'] == 'Sendiri'}&#10003;{else}&nbsp;{/if}</span> Sendiri</td>
+                        <td><span class="cb">{if: isset($data['cara_datang']) && $data['cara_datang'] == 'Ambulans'}&#10003;{else}&nbsp;{/if}</span> Ambulans</td>
+                    </tr>
+                    <tr>
+                        <td><span class="cb">{if: isset($data['cara_datang']) && $data['cara_datang'] == 'Diantar Keluarga'}&#10003;{else}&nbsp;{/if}</span> Diantar Keluarga</td>
+                        <td><span class="cb">{if: isset($data['cara_datang']) && $data['cara_datang'] == 'Diantar Polisi'}&#10003;{else}&nbsp;{/if}</span> Diantar Polisi (No. ID: {?=isset_or($data['diantar_oleh'], '...............')?})</td>
+                    </tr>
+                </table>
+            </td>
+            <td width="50%">
+                <b>Jenis Kasus</b><br>
+                <table class="table-no-border">
+                    <tr>
+                        <td width="55%"><span class="cb">{if: isset($data['jenis_kasus']) && $data['jenis_kasus'] == 'Kasus Gigi dan Mulut'}&#10003;{else}&nbsp;{/if}</span> Kasus Gigi dan Mulut</td>
+                        <td><span class="cb">{if: (isset($data['jenis_kasus_trauma']) && $data['jenis_kasus_trauma'] == 'Trauma') || (isset($data['jenis_kasus']) && $data['jenis_kasus'] == 'Trauma')}&#10003;{else}&nbsp;{/if}</span> Trauma</td>
+                    </tr>
+                    <tr>
+                        <td><span class="cb">{if: isset($data['jenis_kasus']) && $data['jenis_kasus'] == 'Kasus Umum'}&#10003;{else}&nbsp;{/if}</span> Kasus Umum</td>
+                        <td><span class="cb">{if: (isset($data['jenis_kasus_trauma']) && $data['jenis_kasus_trauma'] == 'Non Trauma') || (isset($data['jenis_kasus']) && $data['jenis_kasus'] == 'Non Trauma')}&#10003;{else}&nbsp;{/if}</span> Non Trauma</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <table class="table-no-border">
+                    <tr>
+                        <td width="12%"><b>Rujukan</b></td>
+                        <td width="22%">
+                            <span class="cb">{if: !isset($data['rujukan']) || $data['rujukan'] == 'Tidak'}&#10003;{else}&nbsp;{/if}</span> Tidak &nbsp;&nbsp;
+                            <span class="cb">{if: isset($data['rujukan']) && $data['rujukan'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Ya
+                        </td>
+                        <td width="24%">
+                            <span class="cb">{if: !empty($data['rujukan_rs'])}&#10003;{else}&nbsp;{/if}</span> RS : {?=isset_or($data['rujukan_rs'], '....................')?}<br>
+                            <span class="cb">{if: !empty($data['rujukan_klinik'])}&#10003;{else}&nbsp;{/if}</span> Klinik : {?=isset_or($data['rujukan_klinik'], '.................')?}
+                        </td>
+                        <td width="24%">
+                            <span class="cb">{if: !empty($data['rujukan_puskesmas']) || (isset($data['kiriman_dari']) && $data['kiriman_dari'] == 'Puskesmas')}&#10003;{else}&nbsp;{/if}</span> Puskesmas : {?= !empty($data['rujukan_puskesmas']) ? $data['rujukan_puskesmas'] : isset_or($data['kiriman_dari_ket'], '............') ?}<br>
+                            <span class="cb">{if: !empty($data['rujukan_dokter']) || (isset($data['kiriman_dari']) && $data['kiriman_dari'] == 'Dokter')}&#10003;{else}&nbsp;{/if}</span> Dokter : {?= !empty($data['rujukan_dokter']) ? $data['rujukan_dokter'] : '.................' ?}
+                        </td>
+                        <td width="18%" style="border-left: 1px solid #000 !important; padding-left: 5px;">
+                            <span class="cb">{if: isset($data['asuransi']) && $data['asuransi'] == 'Asuransi'}&#10003;{else}&nbsp;{/if}</span> Asuransi<br>
+                            <span class="cb">{if: !isset($data['asuransi']) || $data['asuransi'] == 'Umum'}&#10003;{else}&nbsp;{/if}</span> Umum<br>
+                            <span class="cb">{if: isset($data['asuransi']) && $data['asuransi'] == 'BPJS'}&#10003;{else}&nbsp;{/if}</span> BPJS
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"></td>
+                        <td colspan="2">Diagnosis Rujukan : <b>{?=isset_or($data['diagnosis_rujukan'], '......................................................')?}</b></td>
+                        <td style="border-left: 1px solid #000 !important;"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td width="50%">
+                <table class="table-no-border">
+                    <tr><td width="38%">Alamat Kontak</td><td width="3%">:</td><td>{?=isset_or($data['alamat_kontak'])?}</td></tr>
+                    <tr><td>Nama Pengantar</td><td>:</td><td>{?=isset_or($data['nama_pengantar'])?}</td></tr>
+                    <tr><td>Hubungan dengan Pasien</td><td>:</td><td>{?=isset_or($data['hub_dengan_pasien'])?}</td></tr>
+                </table>
+            </td>
+            <td width="50%">
+                <table class="table-no-border">
+                    <tr>
+                        <td width="45%">
+                            <b>Sumber Data</b><br>
+                            <span class="cb">{if: !isset($data['sumber_data']) || $data['sumber_data'] == 'Auto Anamnesis'}&#10003;{else}&nbsp;{/if}</span> Auto Anamnesis<br>
+                            <span class="cb">{if: isset($data['sumber_data']) && $data['sumber_data'] == 'Allo Anamnesis'}&#10003;{else}&nbsp;{/if}</span> Allo Anamnesis
+                        </td>
+                        <td width="55%" style="border-left: 1px solid #000 !important; padding-left: 5px;">
+                            <span class="cb">{if: isset($data['kategori_pasien']) && ($data['kategori_pasien'] == 'Pasien Anak (0-11 tahun)' || $data['kategori_pasien'] == 'Pasien Anak (0- <18 tahun)')}&#10003;{else}&nbsp;{/if}</span> Pasien Anak (0-11 tahun)<br>
+                            <span class="cb">{if: !isset($data['kategori_pasien']) || $data['kategori_pasien'] == 'Pasien Dewasa (12-65 tahun)' || $data['kategori_pasien'] == 'Pasien Dewasa (18-65 tahun)'}&#10003;{else}&nbsp;{/if}</span> Pasien Dewasa (12-65 tahun)<br>
+                            <span class="cb">{if: isset($data['kategori_pasien']) && $data['kategori_pasien'] == 'Pasien Geriatri (>65 tahun)'}&#10003;{else}&nbsp;{/if}</span> Pasien Geriatri (&gt;65 tahun)
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td width="50%">Tanggal kunjungan : <b>{?=isset_or($data['tgl_kunj_indo'])?}</b></td>
+            <td width="50%">Pukul : <b>{?=isset_or($data['pukul_kunj_indo'], '..........')?}</b> WITA</td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <table class="table-no-border">
+                    <tr>
+                        <td width="63%">
+                            <b>TRIASE :</b>
+                            <span class="triase-box triase-merah">{if: isset($data['triase']) && $data['triase'] == 'Merah'}&#10003;{else}&nbsp;{/if}</span> Merah (ATS 1)
+                            <span class="triase-box triase-kuning">{if: isset($data['triase']) && $data['triase'] == 'Kuning'}&#10003;{else}&nbsp;{/if}</span> Kuning (ATS 2 / ATS 3)
+                            <span class="triase-box triase-hijau">{if: isset($data['triase']) && $data['triase'] == 'Hijau'}&#10003;{else}&nbsp;{/if}</span> Hijau (ATS 4 / ATS 5)
+                            <span class="triase-box triase-hitam">{if: isset($data['triase']) && $data['triase'] == 'Hitam'}&#10003;{else}&nbsp;{/if}</span> Hitam (DOA)<br>
+                            Jam Mulai Triase : <b>{?=isset_or($data['jam_mulai_triase'], '..........')?}</b> &nbsp;&nbsp;
+                            Jam Selesai Triase : <b>{?=isset_or($data['jam_selesai_triase'], '..........')?}</b> &nbsp;&nbsp;
+                            Petugas Triase : <b>{?=isset_or($data['petugas_triase'], '......................')?}</b>
+                        </td>
+                        <td width="37%" style="border-left: 1px solid #000 !important; padding-left: 5px;">
+                            <b>Cara Masuk :</b>
+                            <span class="cb">{if: isset($data['cara_masuk']) && $data['cara_masuk'] == 'Jalan Kaki'}&#10003;{else}&nbsp;{/if}</span> Jalan Kaki &nbsp;&nbsp;
+                            <span class="cb">{if: isset($data['cara_masuk']) && $data['cara_masuk'] == 'Kursi Roda'}&#10003;{else}&nbsp;{/if}</span> Kursi Roda<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="cb">{if: isset($data['cara_masuk']) && $data['cara_masuk'] == 'Brankar'}&#10003;{else}&nbsp;{/if}</span> Brankar &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="cb">{if: isset($data['cara_masuk']) && $data['cara_masuk'] == 'Digendong'}&#10003;{else}&nbsp;{/if}</span> Digendong
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <b>KELUHAN UTAMA :</b> {?=nl2br(isset_or($data['keluhan_utama']))?}<br><br>
+                <b>RIWAYAT PENYAKIT SEKARANG :</b> {?=nl2br(isset_or($data['riwayat_penyakit_sekarang']))?}<br><br>
+
+                <!-- 1. RIWAYAT PENYAKIT (CHECKLIST) -->
+                <b>RIWAYAT PENYAKIT :</b>
+                <table class="table-no-border" style="width: 100%; margin-top: 2px;">
+                    <tr>
+                        <td width="3%">1.</td>
+                        <td width="27%">Penyakit Jantung</td>
+                        <td width="70%">: <span class="cb">{if: !isset($data['penyakit_jantung']) || $data['penyakit_jantung'] == 'Tidak Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: !isset($data['penyakit_jantung']) || $data['penyakit_jantung'] == 'Tidak Ada'}circled{/if}">Tidak Ada</span> / <span class="cb">{if: isset($data['penyakit_jantung']) && $data['penyakit_jantung'] == 'Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: isset($data['penyakit_jantung']) && $data['penyakit_jantung'] == 'Ada'}circled{/if}">Ada</span></td>
+                    </tr>
+                    <tr>
+                        <td>2.</td>
+                        <td>Hipertensi</td>
+                        <td>: <span class="cb">{if: !isset($data['hipertensi']) || $data['hipertensi'] == 'Tidak Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: !isset($data['hipertensi']) || $data['hipertensi'] == 'Tidak Ada'}circled{/if}">Tidak Ada</span> / <span class="cb">{if: isset($data['hipertensi']) && $data['hipertensi'] == 'Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: isset($data['hipertensi']) && $data['hipertensi'] == 'Ada'}circled{/if}">Ada</span></td>
+                    </tr>
+                    <tr>
+                        <td>3.</td>
+                        <td>Diabetes</td>
+                        <td>: <span class="cb">{if: !isset($data['diabetes']) || $data['diabetes'] == 'Tidak Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: !isset($data['diabetes']) || $data['diabetes'] == 'Tidak Ada'}circled{/if}">Tidak Ada</span> / <span class="cb">{if: isset($data['diabetes']) && $data['diabetes'] == 'Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: isset($data['diabetes']) && $data['diabetes'] == 'Ada'}circled{/if}">Ada</span></td>
+                    </tr>
+                    <tr>
+                        <td>4.</td>
+                        <td>Hepatitis</td>
+                        <td>: <span class="cb">{if: !isset($data['hepatitis']) || $data['hepatitis'] == 'Tidak Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: !isset($data['hepatitis']) || $data['hepatitis'] == 'Tidak Ada'}circled{/if}">Tidak Ada</span> / <span class="cb">{if: isset($data['hepatitis']) && $data['hepatitis'] == 'Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: isset($data['hepatitis']) && $data['hepatitis'] == 'Ada'}circled{/if}">Ada</span></td>
+                    </tr>
+                    <tr>
+                        <td>5.</td>
+                        <td>Haemophilia</td>
+                        <td>: <span class="cb">{if: !isset($data['haemophilia']) || $data['haemophilia'] == 'Tidak Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: !isset($data['haemophilia']) || $data['haemophilia'] == 'Tidak Ada'}circled{/if}">Tidak Ada</span> / <span class="cb">{if: isset($data['haemophilia']) && $data['haemophilia'] == 'Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: isset($data['haemophilia']) && $data['haemophilia'] == 'Ada'}circled{/if}">Ada</span></td>
+                    </tr>
+                    <tr>
+                        <td>6.</td>
+                        <td>Penyakit Lainnya</td>
+                        <td>: <span class="cb">{if: !isset($data['penyakit_lainnya']) || $data['penyakit_lainnya'] == 'Tidak Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: !isset($data['penyakit_lainnya']) || $data['penyakit_lainnya'] == 'Tidak Ada'}circled{/if}">Tidak Ada</span> / <span class="cb">{if: isset($data['penyakit_lainnya']) && $data['penyakit_lainnya'] == 'Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: isset($data['penyakit_lainnya']) && $data['penyakit_lainnya'] == 'Ada'}circled{/if}">Ada</span> &nbsp;&nbsp;&nbsp;&nbsp; <span class="cb">{if: isset($data['penyakit_menular']) && $data['penyakit_menular'] == 'Menular'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: isset($data['penyakit_menular']) && $data['penyakit_menular'] == 'Menular'}circled{/if}">Menular</span> / <span class="cb">{if: !isset($data['penyakit_menular']) || $data['penyakit_menular'] == 'Tidak Menular'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: !isset($data['penyakit_menular']) || $data['penyakit_menular'] == 'Tidak Menular'}circled{/if}">Tidak Menular</span></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td colspan="2" style="padding-left:6px;">{if: !empty($data['penyakit_lainnya_ket'])}<b>{$data.penyakit_lainnya_ket}</b>{else}................................................................................................................................................................................{/if}</td>
+                    </tr>
+                    <tr>
+                        <td>7.</td>
+                        <td>Alergi terhadap Obat-obatan</td>
+                        <td>: <span class="cb">{if: !isset($data['alergi_obat']) || $data['alergi_obat'] == 'Tidak Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: !isset($data['alergi_obat']) || $data['alergi_obat'] == 'Tidak Ada'}circled{/if}">Tidak Ada</span> / <span class="cb">{if: isset($data['alergi_obat']) && $data['alergi_obat'] == 'Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: isset($data['alergi_obat']) && $data['alergi_obat'] == 'Ada'}circled{/if}">Ada</span> &nbsp;&nbsp; {if: !empty($data['alergi_obat_ket'])}<b>{$data.alergi_obat_ket}</b>{else}................................................................................................{/if}</td>
+                    </tr>
+                    <tr>
+                        <td>8.</td>
+                        <td>Alergi terhadap Makanan</td>
+                        <td>: <span class="cb">{if: !isset($data['alergi_makanan']) || $data['alergi_makanan'] == 'Tidak Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: !isset($data['alergi_makanan']) || $data['alergi_makanan'] == 'Tidak Ada'}circled{/if}">Tidak Ada</span> / <span class="cb">{if: isset($data['alergi_makanan']) && $data['alergi_makanan'] == 'Ada'}&#10003;{else}&nbsp;{/if}</span> <span class="{if: isset($data['alergi_makanan']) && $data['alergi_makanan'] == 'Ada'}circled{/if}">Ada</span> &nbsp;&nbsp; {if: !empty($data['alergi_makanan_ket'])}<b>{$data.alergi_makanan_ket}</b>{else}................................................................................................{/if}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- PEMERIKSAAN FISIK -->
+        <tr>
+            <td colspan="2">
+                <b>PEMERIKSAAN FISIK</b>
+                <table class="table-no-border">
+                    <tr>
+                        <td width="16%">Keadaan Umum</td><td width="18%">: <b>{?=isset_or($data['keadaan_umum'])?}</b></td>
+                        <td width="16%">Frekuensi Nadi</td><td width="18%">: <b>{?=isset_or($data['nadi'])?}</b> x/menit</td>
+                        <td width="15%">Berat Badan</td><td width="17%">: <b>{?=isset_or($data['bb'])?}</b> Kg</td>
+                    </tr>
+                    <tr>
+                        <td>Kesadaran</td><td>: <b>{?=isset_or($data['kesadaran'])?}</b></td>
+                        <td>Frekuensi Napas</td><td>: <b>{?=isset_or($data['rr'])?}</b> x/menit</td>
+                        <td>Tinggi Badan</td><td>: <b>{?=isset_or($data['tb'])?}</b> cm</td>
+                    </tr>
+                    <tr>
+                        <td>Tekanan Darah</td><td>: <b>{?=isset_or($data['td'])?}</b> mmHg</td>
+                        <td>Suhu</td><td>: <b>{?=isset_or($data['suhu'])?}</b> &deg;C</td>
+                        <td>Golongan Darah</td><td>: <b>{?=isset_or($data['gol_darah'])?}</b></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- 2 & 3. PSIKOSOSIAL-KULTURAL-SPIRITUAL-EKONOMI & STATUS FUNGSIONAL -->
+        <tr>
+            <td colspan="2">
+                <b>PSIKOSOSIAL-KULTURAL-SPIRITUAL-EKONOMI</b>
+                <table class="table-no-border">
+                    <tr>
+                        <td width="22%">Status Pernikahan</td>
+                        <td>
+                            <span class="cb">{if: isset($data['status_pernikahan']) && $data['status_pernikahan'] == 'Lajang'}&#10003;{else}&nbsp;{/if}</span> Lajang &nbsp;
+                            <span class="cb">{if: isset($data['status_pernikahan']) && $data['status_pernikahan'] == 'Menikah'}&#10003;{else}&nbsp;{/if}</span> Menikah &nbsp;
+                            <span class="cb">{if: isset($data['status_pernikahan']) && $data['status_pernikahan'] == 'Cerai'}&#10003;{else}&nbsp;{/if}</span> Cerai &nbsp;&nbsp;
+                            tinggal bersama keluarga: &nbsp;
+                            <span class="cb">{if: isset($data['tinggal_bersama']) && $data['tinggal_bersama'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> ya &nbsp;
+                            <span class="cb">{if: isset($data['tinggal_bersama']) && $data['tinggal_bersama'] == 'Tidak'}&#10003;{else}&nbsp;{/if}</span> tidak, jelaskan {?=isset_or($data['tinggal_bersama_ket'], '....................')?}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Riwayat Kebiasaan</td>
+                        <td>
+                            <span class="cb">{if: isset($data['riwayat_kebiasaan_merokok']) && $data['riwayat_kebiasaan_merokok'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Merokok &nbsp;
+                            <span class="cb">{if: isset($data['riwayat_kebiasaan_alkohol']) && $data['riwayat_kebiasaan_alkohol'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Alkohol &nbsp;
+                            <span class="cb">{if: isset($data['riwayat_kebiasaan_napza']) && $data['riwayat_kebiasaan_napza'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> NAPZA &nbsp;
+                            <span class="cb">{if: isset($data['riwayat_kebiasaan_lainnya']) && $data['riwayat_kebiasaan_lainnya'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Lainnya ............ &nbsp;&nbsp;
+                            Jenis dan Jumlah perhari : {?=isset_or($data['ket_riwayat_kebiasaan'], '....................')?}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Hambatan Fisik</td>
+                        <td>
+                            <span class="cb">{if: isset($data['hambatan_fisik_pendengaran']) && $data['hambatan_fisik_pendengaran'] == 'Ya'}&#10003;{else}-{/if}</span> Pendengaran &nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="cb">{if: isset($data['hambatan_fisik_bicara']) && $data['hambatan_fisik_bicara'] == 'Ya'}&#10003;{else}-{/if}</span> Bicara &nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="cb">{if: isset($data['hambatan_fisik_penglihatan']) && $data['hambatan_fisik_penglihatan'] == 'Ya'}&#10003;{else}-{/if}</span> Penglihatan
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Hambatan Kognitif</td>
+                        <td>: {?=isset_or($data['hambatan_kognitif'], '-')?}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            Keyakinan dan nilai-nilai pribadi pasien :
+                            <table class="table-no-border" style="width:100%;">
+                                <tr>
+                                    <td width="52%">a. Dirawat dan diasuh oleh PPA sesama gender</td>
+                                    <td width="28%"><span class="cb">{if: isset($data['dirawat_sesama_gender']) && $data['dirawat_sesama_gender'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Ya</td>
+                                    <td width="20%"><span class="cb">{if: !isset($data['dirawat_sesama_gender']) || $data['dirawat_sesama_gender'] == 'Tidak'}&#10003;{else}&nbsp;{/if}</span> Tidak</td>
+                                </tr>
+                                <tr>
+                                    <td>b. Ada pantangan makanan tertentu</td>
+                                    <td><span class="cb">{if: isset($data['pantangan_makanan']) && $data['pantangan_makanan'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Ya, yaitu {?=isset_or($data['pantangan_makanan_ket'], '.....................')?}</td>
+                                    <td><span class="cb">{if: !isset($data['pantangan_makanan']) || $data['pantangan_makanan'] == 'Tidak'}&#10003;{else}&nbsp;{/if}</span> Tidak</td>
+                                </tr>
+                                <tr>
+                                    <td>c. Ada hari yang dihindari atau diinginkan untuk tindakan</td>
+                                    <td><span class="cb">{if: isset($data['hari_tindakan']) && $data['hari_tindakan'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Ya, yaitu {?=isset_or($data['hari_tindakan_ket'], '.....................')?}</td>
+                                    <td><span class="cb">{if: !isset($data['hari_tindakan']) || $data['hari_tindakan'] == 'Tidak'}&#10003;{else}&nbsp;{/if}</span> Tidak</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Bahasa yang digunakan</td>
+                        <td>: <b>{?=isset_or($data['bahasa_digunakan'], 'Indonesia')?}</b></td>
+                    </tr>
+                    <tr>
+                        <td>Ekonomi :</td>
+                        <td>
+                            <span class="cb">{if: isset($data['ekonomi']) && $data['ekonomi'] == 'Sangat Tinggi'}&#10003;{else}&nbsp;{/if}</span> Sangat Tinggi &nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="cb">{if: isset($data['ekonomi']) && $data['ekonomi'] == 'Tinggi'}&#10003;{else}&nbsp;{/if}</span> Tinggi &nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="cb">{if: isset($data['ekonomi']) && $data['ekonomi'] == 'Sedang'}&#10003;{else}&nbsp;{/if}</span> Sedang &nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="cb">{if: isset($data['ekonomi']) && $data['ekonomi'] == 'Rendah'}&#10003;{else}&nbsp;{/if}</span> Rendah
+                        </td>
+                    </tr>
+                </table>
+
+                <div style="margin-top: 4px; border-top: 1px dashed #aaa; padding-top: 3px;">
+                    <b>STATUS FUNGSIONAL</b>
+                    <table class="table-no-border" style="width:100%;">
+                        <tr>
+                            <td width="30%"><span class="cb">{if: !isset($data['status_fungsional']) || $data['status_fungsional'] == 'Mandiri'}&#10003;{else}&nbsp;{/if}</span> Mandiri</td>
+                            <td width="32%"><span class="cb">{if: isset($data['status_fungsional']) && $data['status_fungsional'] == 'Ketergantungan Sedang'}&#10003;{else}&nbsp;{/if}</span> Ketergantungan Sedang</td>
+                            <td width="38%"><span class="cb">{if: isset($data['status_fungsional']) && $data['status_fungsional'] == 'Ketergantungan Total'}&#10003;{else}&nbsp;{/if}</span> Ketergantungan Total</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cb">{if: isset($data['status_fungsional']) && $data['status_fungsional'] == 'Ketergantungan Ringan'}&#10003;{else}&nbsp;{/if}</span> Ketergantungan Ringan</td>
+                            <td><span class="cb">{if: isset($data['status_fungsional']) && $data['status_fungsional'] == 'Ketergantungan Berat'}&#10003;{else}&nbsp;{/if}</span> Ketergantungan Berat</td>
+                            <td>Dilaporkan ke dokter pukul : <b>{?=isset_or($data['fungsional_lapor_pukul'], '...............')?}</b></td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+<table class="container-noborder" style="font-size: 8.5px; margin-top: 2px;">
+    <tr>
+        <td width="50%"><i>*penilaian menggunakan Barthel Index, dan dilampirkan di rekam medis</i><br><b>RSGM/Ed-Rev/01/2020</b></td>
+        <td width="50%" style="text-align:right;"><i>Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</i><br><b>RM.GD - 03 Hal 2 - 3</b></td>
+    </tr>
+</table>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ==================== HALAMAN 2 (RM.GD - 03 Hal 3 - 3) ==================== -->
+<div class="page-sheet">
+<table class="container-noborder" style="margin-bottom: 3px; font-size: 9.5px;">
+    <tr>
+        <td width="38%">Nama Pasien : <b>{?=isset_or($data['nama_pasien'])?}</b> ({?=isset_or($data['jenis_kelamin'])?})</td>
+        <td width="32%">Tanggal Lahir : <b>{?=isset_or($data['tanggal_lahir_indo'])?}</b></td>
+        <td width="30%" style="text-align:right;">
+            No RM :
+            <span class="box-rm">{?=isset_or($data['rm0'])?}</span><span class="box-rm">{?=isset_or($data['rm1'])?}</span><span class="box-rm">{?=isset_or($data['rm2'])?}</span><span class="box-rm">{?=isset_or($data['rm3'])?}</span><span class="box-rm">{?=isset_or($data['rm4'])?}</span><span class="box-rm">{?=isset_or($data['rm5'])?}</span>
+        </td>
+    </tr>
+</table>
+
+<div class="container">
+    <table class="table-body">
+        <!-- 4. SKRINING GIZI DEWASA & ANAK -->
+        <tr>
+            <td width="50%">
+                <b>SKRINING GIZI BERDASARKAN RESIKO NUTRISIONAL</b><br>
+                <b><u>Malnutrition Screening Tool (MST) untuk Dewasa</u></b><br>
+                <table class="table-no-border" style="width:100%;">
+                    <tr>
+                        <td colspan="2">1. Apakah pasien mengalami penurunan BB yang tidak diinginkan dalam 6 bulan terakhir?</td>
+                    </tr>
+                    <tr>
+                        <td width="88%" style="padding-left:8px;"><span class="{if: (!isset($data['mst_penurunan_opsi']) || $data['mst_penurunan_opsi'] === '0') && $data['mst_penurunan_bb'] == 0}circled{/if}">a.</span> Tidak ada penurunan berat badan</td>
+                        <td width="12%" style="text-align:right;">0</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:8px;"><span class="{if: isset($data['mst_penurunan_opsi']) && $data['mst_penurunan_opsi'] === '2b'}circled{/if}">b.</span> Tidak yakin / tidak tahu / terasa baju lebih longgar</td>
+                        <td style="text-align:right;">2</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="padding-left:8px;">c. Jika ya, berapa penurunan berat badan tersebut :</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:18px;">- <span class="{if: (isset($data['mst_penurunan_opsi']) && $data['mst_penurunan_opsi'] === '1') || (empty($data['mst_penurunan_opsi']) && $data['mst_penurunan_bb'] == 1)}circled{/if}">1-5 kg</span></td>
+                        <td style="text-align:right;">1</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:18px;">- <span class="{if: (isset($data['mst_penurunan_opsi']) && $data['mst_penurunan_opsi'] === '2') || (empty($data['mst_penurunan_opsi']) && $data['mst_penurunan_bb'] == 2)}circled{/if}">6-10 kg</span></td>
+                        <td style="text-align:right;">2</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:18px;">- <span class="{if: (isset($data['mst_penurunan_opsi']) && $data['mst_penurunan_opsi'] === '3') || (empty($data['mst_penurunan_opsi']) && $data['mst_penurunan_bb'] == 3)}circled{/if}">11-15 kg</span></td>
+                        <td style="text-align:right;">3</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:18px;">- <span class="{if: (isset($data['mst_penurunan_opsi']) && $data['mst_penurunan_opsi'] === '4') || (empty($data['mst_penurunan_opsi']) && $data['mst_penurunan_bb'] == 4)}circled{/if}">&gt;15 kg</span></td>
+                        <td style="text-align:right;">4</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">2. Apakah asupan makanan berkurang karena tidak nafsu makan?</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:8px;"><span class="{if: !isset($data['mst_asupan_makanan']) || $data['mst_asupan_makanan'] == '0'}circled{/if}">a.</span> Tidak</td>
+                        <td style="text-align:right;">0</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:8px;"><span class="{if: isset($data['mst_asupan_makanan']) && $data['mst_asupan_makanan'] == '1'}circled{/if}">b.</span> Ya</td>
+                        <td style="text-align:right;">1</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            3. Pasien dengan diagnosis khusus :
+                            <span class="cb">{if: isset($data['mst_diagnosis_khusus']) && $data['mst_diagnosis_khusus'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Ya &nbsp;
+                            <span class="cb">{if: !isset($data['mst_diagnosis_khusus']) || $data['mst_diagnosis_khusus'] == 'Tidak'}&#10003;{else}&nbsp;{/if}</span> Tidak
+                            {if: !empty($data['mst_diagnosis_khusus_ket'])}({$data.mst_diagnosis_khusus_ket}){/if}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="padding-top:3px;">
+                            <b>Total Skor : <u>&nbsp;&nbsp;{?=(int)isset_or($data['mst_penurunan_bb'], 0) + (int)isset_or($data['mst_asupan_makanan'], 0)?}&nbsp;&nbsp;</u></b>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td width="50%">
+                <br>
+                <b><u>Modifikasi <i>STRONG-kids</i> untuk Anak (0-11 tahun)</u></b><br>
+                <table class="table-no-border" style="width:100%;">
+                    <tr>
+                        <td colspan="2">1. Pasien tampak kurus</td>
+                    </tr>
+                    <tr>
+                        <td width="88%" style="padding-left:8px;"><span class="{if: isset($data['strong_kurus']) && $data['strong_kurus'] == '1'}circled{/if}">a. Ya</span></td>
+                        <td width="12%" style="text-align:right;">1</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:8px;"><span class="{if: !isset($data['strong_kurus']) || $data['strong_kurus'] == '0'}circled{/if}">b. Tidak</span></td>
+                        <td style="text-align:right;">0</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">2. Terdapat penurunan berat badan selama satu bulan terakhir <b>ATAU</b> pada bayi &lt;1 tahun, berat badan tidak naik 3 bulan terakhir</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:8px;"><span class="{if: isset($data['strong_penurunan_bb']) && $data['strong_penurunan_bb'] == '1'}circled{/if}">a. Ya</span></td>
+                        <td style="text-align:right;">1</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:8px;"><span class="{if: !isset($data['strong_penurunan_bb']) || $data['strong_penurunan_bb'] == '0'}circled{/if}">b. Tidak</span></td>
+                        <td style="text-align:right;">0</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">3. Terdapat <b>SALAH SATU</b> dari kondisi tersebut:<br>
+                            <span style="font-size:8.5px;">- Diare &ge;5 kali/hari dan/atau muntah &gt;3 kali/hari dalam seminggu terakhir<br>- Asupan makanan berkurang selama 1 minggu terakhir</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:8px;"><span class="{if: isset($data['strong_kondisi']) && $data['strong_kondisi'] == '1'}circled{/if}">a. Ya</span></td>
+                        <td style="text-align:right;">1</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:8px;"><span class="{if: !isset($data['strong_kondisi']) || $data['strong_kondisi'] == '0'}circled{/if}">b. Tidak</span></td>
+                        <td style="text-align:right;">0</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">4. Terdapat penyakit atau keadaan yang mengakibatkan pasien berisiko mengalami malnutrisi</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:8px;"><span class="{if: isset($data['strong_penyakit']) && $data['strong_penyakit'] == '2'}circled{/if}">a. Ya</span></td>
+                        <td style="text-align:right;">2</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:8px;"><span class="{if: !isset($data['strong_penyakit']) || $data['strong_penyakit'] == '0'}circled{/if}">b. Tidak</span></td>
+                        <td style="text-align:right;">0</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="padding-top:3px;">
+                            <b>Total Skor Anak : <u>&nbsp;&nbsp;{?=(int)isset_or($data['strong_kurus'], 0) + (int)isset_or($data['strong_penurunan_bb'], 0) + (int)isset_or($data['strong_kondisi'], 0) + (int)isset_or($data['strong_penyakit'], 0)?}&nbsp;&nbsp;</u></b>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="font-style: italic; font-size: 8.5px;">
+                *(Bila skor &ge;2 dan atau pasien dengan diagnosis khusus pada dewasa, atau skor &ge;1 pada anak berarti pasien berisiko malnutrisi, dilaporkan ke DPJP dan dikonsulkan ke Nutrisionis jika perlu)
+            </td>
+        </tr>
+
+        <!-- 5. ASESMEN NYERI (DENGAN FREKUENSI & SKALA FLACC) -->
+        <tr>
+            <td width="50%">
+                <b>ASESMEN NYERI</b><br>
+                <table class="table-no-border" style="width:100%;">
+                    <tr>
+                        <td width="36%">Pasien mengeluh nyeri</td>
+                        <td>:
+                            <span class="cb">{if: isset($data['nyeri_keluhan']) && $data['nyeri_keluhan'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Ya &nbsp;&nbsp;
+                            <span class="cb">{if: !isset($data['nyeri_keluhan']) || $data['nyeri_keluhan'] == 'Tidak'}&#10003;{else}&nbsp;{/if}</span> Tidak
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Lokasi</td>
+                        <td>: <b>{?=isset_or($data['nyeri_lokasi'])?}</b></td>
+                    </tr>
+                    <tr>
+                        <td>Durasi</td>
+                        <td>: <b>{?=isset_or($data['nyeri_durasi'])?}</b></td>
+                    </tr>
+                    <tr>
+                        <td>Frekuensi</td>
+                        <td>:
+                            <span class="cb">{if: isset($data['nyeri_frekuensi']) && $data['nyeri_frekuensi'] == 'Jarang'}&#10003;{else}&nbsp;{/if}</span> Jarang &nbsp;
+                            <span class="cb">{if: isset($data['nyeri_frekuensi']) && $data['nyeri_frekuensi'] == 'Hilang Timbul'}&#10003;{else}&nbsp;{/if}</span> Hilang Timbul &nbsp;
+                            <span class="cb">{if: isset($data['nyeri_frekuensi']) && $data['nyeri_frekuensi'] == 'Menetap'}&#10003;{else}&nbsp;{/if}</span> Menetap
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Karakteristik</td>
+                        <td>:
+                            <span class="cb">{if: isset($data['nyeri_karakteristik']) && $data['nyeri_karakteristik'] == 'Tajam'}&#10003;{else}&nbsp;{/if}</span> Tajam &nbsp;
+                            <span class="cb">{if: isset($data['nyeri_karakteristik']) && $data['nyeri_karakteristik'] == 'Tumpul'}&#10003;{else}&nbsp;{/if}</span> Tumpul &nbsp;
+                            <span class="cb">{if: isset($data['nyeri_karakteristik']) && $data['nyeri_karakteristik'] == 'Terbakar/panas'}&#10003;{else}&nbsp;{/if}</span> Terbakar/panas
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Menjalar</td>
+                        <td>:
+                            <span class="cb">{if: !isset($data['nyeri_menjalar']) || $data['nyeri_menjalar'] == 'Tidak'}&#10003;{else}&nbsp;{/if}</span> Tidak &nbsp;
+                            <span class="cb">{if: isset($data['nyeri_menjalar']) && $data['nyeri_menjalar'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Ya, ke <b>{?=isset_or($data['nyeri_menjalar_ket'], '.....................')?}</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Nyeri memberat jika</td>
+                        <td>: {?=isset_or($data['nyeri_memberat'])?}</td>
+                    </tr>
+                    <tr>
+                        <td>Nyeri hilang jika</td>
+                        <td>: {?=isset_or($data['nyeri_hilang'])?}</td>
+                    </tr>
+                    <tr>
+                        <td>Tindak lanjut</td>
+                        <td>:
+                            <span class="cb">{if: isset($data['nyeri_tl_edukasi']) && $data['nyeri_tl_edukasi'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Edukasi<br>
+                            &nbsp;&nbsp;<span class="cb">{if: isset($data['nyeri_tl_terapi']) && $data['nyeri_tl_terapi'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Terapi Medikamentosa / Non Medikamentosa<br>
+                            &nbsp;&nbsp;<span class="cb">{if: isset($data['nyeri_tl_konsul']) && $data['nyeri_tl_konsul'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Konsul ke {?=isset_or($data['nyeri_tl_konsul_ke'], '.....................')?}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td width="50%">
+                <b>Skala Nyeri</b>
+                <table class="pain-scale-table">
+                    <tr>
+                        <td>Tidak<br>Nyeri</td>
+                        <td colspan="3">Nyeri<br>Ringan</td>
+                        <td colspan="3">Nyeri<br>Sedang</td>
+                        <td colspan="4">Nyeri<br>Berat</td>
+                    </tr>
+                    <tr>
+                        <td class="{if: isset($data['skala_nyeri']) && $data['skala_nyeri'] === '0'}pain-active{/if}">0</td>
+                        <td class="{if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '1'}pain-active{/if}">1</td>
+                        <td class="{if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '2'}pain-active{/if}">2</td>
+                        <td class="{if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '3'}pain-active{/if}">3</td>
+                        <td class="{if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '4'}pain-active{/if}">4</td>
+                        <td class="{if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '5'}pain-active{/if}">5</td>
+                        <td class="{if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '6'}pain-active{/if}">6</td>
+                        <td class="{if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '7'}pain-active{/if}">7</td>
+                        <td class="{if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '8'}pain-active{/if}">8</td>
+                        <td class="{if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '9'}pain-active{/if}">9</td>
+                        <td class="{if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '10'}pain-active{/if}">10</td>
+                    </tr>
+                </table>
+
+                <div style="font-size: 8px; margin-top: 3px;">
+                    <i>*Untuk pasien anak &lt;6 tahun menggunakan skala FLACC</i>
+                    <table class="flacc-mini-table">
+                        <tr>
+                            <th>Kategori FLACC</th>
+                            <th>Skor 0</th>
+                            <th>Skor 1</th>
+                            <th>Skor 2</th>
+                            <th>Nilai</th>
+                        </tr>
+                        <tr>
+                            <td><b>F</b> (Wajah)</td>
+                            <td>Tersenyum/normal</td>
+                            <td>Meringis sesekali</td>
+                            <td>Dagu gemetar</td>
+                            <td style="text-align:center;">{?=isset_or($data['flacc_wajah'], 0)?}</td>
+                        </tr>
+                        <tr>
+                            <td><b>L</b> (Kaki)</td>
+                            <td>Normal/rileks</td>
+                            <td>Gelisah/tegang</td>
+                            <td>Menendang</td>
+                            <td style="text-align:center;">{?=isset_or($data['flacc_kaki'], 0)?}</td>
+                        </tr>
+                        <tr>
+                            <td><b>A</b> (Aktivitas)</td>
+                            <td>Berbaring tenang</td>
+                            <td>Menggeliat</td>
+                            <td>Kaku/melengkung</td>
+                            <td style="text-align:center;">{?=isset_or($data['flacc_aktivitas'], 0)?}</td>
+                        </tr>
+                        <tr>
+                            <td><b>C</b> (Menangis)</td>
+                            <td>Tidak menangis</td>
+                            <td>Merintih/merengek</td>
+                            <td>Menjerit/terus</td>
+                            <td style="text-align:center;">{?=isset_or($data['flacc_menangis'], 0)?}</td>
+                        </tr>
+                        <tr>
+                            <td><b>C</b> (Consolability)</td>
+                            <td>Tenang/santai</td>
+                            <td>Dapat ditenangkan</td>
+                            <td>Sulit ditenangkan</td>
+                            <td style="text-align:center;">{?=isset_or($data['flacc_consolability'], 0)?}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="text-align:right;"><b>Total Skor FLACC :</b></td>
+                            <td style="text-align:center;"><b>{?=isset_or($data['flacc_total'], 0)?}</b></td>
+                        </tr>
+                    </table>
+                    <div style="margin-top:2px;">
+                        <b>Keterangan :</b> 0 : Tidak Nyeri &nbsp;|&nbsp; 1-3 : Nyeri Ringan &nbsp;|&nbsp; 4-6 : Nyeri Sedang &nbsp;|&nbsp; 7-10 : Nyeri Berat
+                    </div>
+                </div>
+            </td>
+        </tr>
+
+        <!-- 6. ASESMEN RISIKO JATUH - GET UP AND GO TEST -->
+        <tr>
+            <td colspan="2">
+                <b>ASESMEN RISIKO JATUH</b><br>
+                <b>GET UP AND GO TEST (untuk usia &gt; 11 tahun)</b><br>
+                a. Perhatikan cara berjalan. Apakah pasien tampak tidak seimbang (sempoyongan/limbung) atau menggunakan alat bantu jalan?<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="cb">{if: isset($data['asesmen_jatuh_a']) && $data['asesmen_jatuh_a'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Ya &nbsp;&nbsp;&nbsp;&nbsp;
+                <span class="cb">{if: !isset($data['asesmen_jatuh_a']) || $data['asesmen_jatuh_a'] == 'Tidak'}&#10003;{else}&nbsp;{/if}</span> Tidak<br>
+                b. Apakah pasien memegang pinggiran kursi atau meja atau benda lain sebagai penopang saat akan duduk?<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="cb">{if: isset($data['asesmen_jatuh_b']) && $data['asesmen_jatuh_b'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Ya &nbsp;&nbsp;&nbsp;&nbsp;
+                <span class="cb">{if: !isset($data['asesmen_jatuh_b']) || $data['asesmen_jatuh_b'] == 'Tidak'}&#10003;{else}&nbsp;{/if}</span> Tidak<br>
+
+                <table class="table-no-border" style="width:100%; margin-top:3px;">
+                    <tr>
+                        <td width="55%">
+                            Hasil :
+                            <span class="cb">{if: isset($data['asesmen_jatuh_hasil']) && $data['asesmen_jatuh_hasil'] == 'Risiko Tinggi'}&#10003;{else}&nbsp;{/if}</span> Risiko Tinggi (a dan b ditemukan / skor Humpty Dumpty &ge;12)<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="cb">{if: isset($data['asesmen_jatuh_hasil']) && $data['asesmen_jatuh_hasil'] == 'Risiko Rendah'}&#10003;{else}&nbsp;{/if}</span> Risiko Rendah (ditemukan a atau b / skor Humpty Dumpty 7-11)<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="cb">{if: !isset($data['asesmen_jatuh_hasil']) || $data['asesmen_jatuh_hasil'] == 'Tidak Berisiko'}&#10003;{else}&nbsp;{/if}</span> Tidak Berisiko (tidak ditemukan a dan b)
+                            {if: !empty($data['humpty_dumpty_skor'])}<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <i>(Skor Humpty Dumpty: {$data.humpty_dumpty_skor})</i>{/if}
+                        </td>
+                        <td width="45%">
+                            <span class="cb">{if: (isset($data['asesmen_jatuh_tindakan_lapor']) && $data['asesmen_jatuh_tindakan_lapor'] == 'Ya') || !empty($data['asesmen_jatuh_lapor_pukul'])}&#10003;{else}&nbsp;{/if}</span> Diberitahukan ke DPJP, pukul : <b>{?=isset_or($data['asesmen_jatuh_lapor_pukul'], '...............')?}</b><br>
+                            <span class="cb">{if: isset($data['asesmen_jatuh_tindakan_edukasi']) && $data['asesmen_jatuh_tindakan_edukasi'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Edukasi<br>
+                            <span class="cb">{if: isset($data['asesmen_jatuh_tindakan_kalung']) && $data['asesmen_jatuh_tindakan_kalung'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Di pasangkan tanda resiko jatuh
+                        </td>
+                    </tr>
+                </table>
+                <div style="font-size: 8.5px; font-style: italic; margin-top: 2px;">
+                    *Untuk pasien anak (0-11 tahun) menggunakan penilaian Humpty Dumpty, lembar penilaian dilampirkan dalam rekam medis
+                </div>
+            </td>
+        </tr>
+
+        <!-- 7 & 8. PEMERIKSAAN PENUNJANG, MASALAH KEPERAWATAN, RENCANA/EDUKASI, EVALUASI (KOLOM BERDEKATAN SESUAI RM FISIK) -->
+        <tr>
+            <td width="50%" style="height: 55px;">
+                <b>PEMERIKSAAN PENUNJANG</b><br>
+                <span class="cb">{if: isset($data['penunjang_lab']) && $data['penunjang_lab'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Laboratorium<br>
+                <span class="cb">{if: isset($data['penunjang_rontgen']) && $data['penunjang_rontgen'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Rontgen<br>
+                <span class="cb">{if: isset($data['penunjang_lain']) && $data['penunjang_lain'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Lain-lain, yaitu {?=isset_or($data['penunjang_lain_ket'], '........................................')?}
+            </td>
+            <td width="50%" style="height: 55px;">
+                <b>MASALAH KEPERAWATAN</b><br>
+                {?=nl2br(isset_or($data['masalah_keperawatan']))?}
+            </td>
+        </tr>
+        <tr>
+            <td width="50%" style="height: 75px;">
+                <b>RENCANA DAN TINDAK LANJUT PERAWATAN, TERMASUK KEBUTUHAN EDUKASI</b><br>
+                {?=nl2br(isset_or($data['rencana_tindak_lanjut']))?}
+            </td>
+            <td width="50%" style="height: 75px;">
+                <b>EVALUASI</b><br>
+                <table class="table-no-border" style="width:100%; margin-top:3px;">
+                    <tr>
+                        <td width="30%"><span class="cb">{if: isset($data['evaluasi_kontrol']) && $data['evaluasi_kontrol'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Kontrol</td>
+                        <td width="22%">Tanggal</td>
+                        <td>: {?=isset_or($data['evaluasi_kontrol_tgl'], '........................................')?}</td>
+                    </tr>
+                    <tr>
+                        <td><span class="cb">{if: isset($data['evaluasi_rujuk']) && $data['evaluasi_rujuk'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Rujuk</td>
+                        <td>ke RS</td>
+                        <td>: {?= !empty($data['evaluasi_rujuk_ke']) ? $data['evaluasi_rujuk_ke'] : isset_or($data['evaluasi_rujuk_rs'], '........................................') ?}</td>
+                    </tr>
+                    <tr>
+                        <td><span class="cb">{if: isset($data['evaluasi_rawat_inap']) && $data['evaluasi_rawat_inap'] == 'Ya'}&#10003;{else}&nbsp;{/if}</span> Rawat Inap</td>
+                        <td>Ruangan</td>
+                        <td>: {?= !empty($data['evaluasi_rawat_inap_ruangan']) ? $data['evaluasi_rawat_inap_ruangan'] : isset_or($data['evaluasi_ranap_ruang'], '........................................') ?}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- TANDA TANGAN DPJP & PERAWAT -->
+        <tr>
+            <td width="50%" style="text-align:center; padding-top:6px; padding-bottom:6px;">
+                <br>
+                <b>DPJP</b><br><br><br><br><br>
+                ( <b>{?= !empty($data['nm_dokter']) ? $data['nm_dokter'] : isset_or($data['nip_dpjp'], '....................................................') ?}</b> )<br>
+                Tanda Tangan &amp; Nama Jelas
+            </td>
+            <td width="50%" style="text-align:center; padding-top:6px; padding-bottom:6px;">
+                Banjarmasin, {?=isset_or($data['tgl_kunj_indo'], '.... / .... / 20....')?} Pukul {?=isset_or($data['pukul_ttd_indo'], '..........')?} WITA<br>
+                <b>Perawat/Perawat Gigi</b><br><br><br><br><br>
+                ( <b>{?= !empty($data['nm_perawat']) ? $data['nm_perawat'] : isset_or($data['nip'], '....................................................') ?}</b> )<br>
+                Tanda Tangan &amp; Nama Jelas
+            </td>
+        </tr>
+    </table>
+</div>
+<table class="container-noborder" style="font-size: 8.5px; margin-top: 2px;">
+    <tr>
+        <td width="50%"><b>RSGM/Ed-Rev/01/2020</b></td>
+        <td width="50%" style="text-align:right;"><i>Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</i><br><b>RM.GD - 03 Hal 3 - 3</b></td>
+    </tr>
+</table>
+</div>
+
+</body>
+</html>

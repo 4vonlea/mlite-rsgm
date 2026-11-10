@@ -2,7 +2,7 @@
 
 *Terakhir diperbarui: 13 Oktober 2026*
 
-Dokumen ini melacak status ketersediaan formulir Rekam Medis Elektronik (RME) di sistem **mLite RSGM**, mencakup modul pelayanan utama maupun formulir RME pendukung (`plugins/update_bmt`).
+Dokumen ini melacak status ketersediaan formulir Rekam Medis Elektronik (RME) di sistem **mLite RSGM**, mencakup modul pelayanan utama maupun formulir RME pendukung (`plugins/form_rme`).
 
 > **Keterangan Status:**
 > - ✅ **Tersedia**: Form sudah selesai diimplementasikan (Struktur Database, Form Input/Manajemen, Integrasi Menu, serta Output Cetak & PDF).
@@ -16,36 +16,36 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 
 | No | Formulir | Tabel Database | Route Admin / URL | Status |
 |:---:|---|---|---|:---:|
-| 1 | **Lampiran Cairan Infus** | `lampiran_cairan_infus` | `?module=update_bmt&page=cairaninfusmanage` | ✅ Lengkap |
-| 2 | **Form A - Manajer Pelayanan Pasien (MPP)** | `lampiran_form_a_mpp` | `?module=update_bmt&page=formamppmanage` | ✅ Lengkap |
-| 3 | **Form Asesmen Ulang Status Fungsional (Barthel Index)** | `lampiran_asesmen_ulang_status_fungsional` | `?module=update_bmt&page=statusfungsionalulangmanage` | ✅ Lengkap |
-| 4 | **Form B - Catatan Implementasi MPP** | `lampiran_form_b_mpp` | `?module=update_bmt&page=formbmppmanage` | ✅ Lengkap |
-| 5 | **Formulir Identifikasi Kebutuhan Privasi Pasien** | `lampiran_kebutuhan_privasi_pasien` | `?module=update_bmt&page=kebutuhanprivasimanage` | ✅ Lengkap |
-| 6 | **Formulir Meninggalkan RS Selama Periode Tertentu** | `lampiran_meninggalkan_rs_tertentu` | `?module=update_bmt&page=meninggalkanrsmanage` | ✅ Lengkap |
-| 7 | **Formulir Penghentian Pengobatan** | `lampiran_penghentian_pengobatan` | `?module=update_bmt&page=penghentianpengobatanmanage` | ✅ Lengkap |
-| 8 | **Formulir Profil Ringkas Medis Rawat Jalan (PRMRJ)** | `lampiran_profil_ringkas_medis_rajal` | `?module=update_bmt&page=prmrjmanage` | ✅ Lengkap |
-| 9 | **Formulir Skrining dari Luar Rumah Sakit** | `lampiran_skrining_luar_rs` | `?module=update_bmt&page=skriningluarrsmanage` | ✅ Lengkap |
-| 10 | **Formulir Stabilisasi Pasien Sebelum Transfer** | `lampiran_stabilisasi_pasien` | `?module=update_bmt&page=stabilisasipasienmanage` | ✅ Lengkap |
-| 11 | **Intervensi dan Pengkajian Ulang Nyeri** | `lampiran_intervensi_pengkajian_nyeri` | `?module=update_bmt&page=intervensinyerimanage` | ✅ Lengkap |
-| 12 | **Surat Permintaan Second Opinion** | `lampiran_permintaan_second_opinion` | `?module=update_bmt&page=secondopinionmanage` | ✅ Lengkap |
-| 13 | **Penilaian Kejadian Phlebitis (VIP)** | `lampiran_penilaian_kejadian_phlebitis` | `?module=update_bmt&page=penilaianphlebitismanage` | ✅ Lengkap |
-| 14 | **Permintaan Pelayanan Kerohanian** | `lampiran_permintaan_pelayanan_kerohanian` | `?module=update_bmt&page=pelayanankerohanianmanage` | ✅ Lengkap |
-| 15 | **Monitoring Pasien Kateter Urine** | `lampiran_monitoring_pasien_kateter_urin` | `?module=update_bmt&page=monitoringkateterurinmanage` | ✅ Lengkap |
-| 16 | **Konsultasi Internal** | `lampiran_konsultasi_internal` | `?module=update_bmt&page=konsultasiinternalmanage` | ✅ Lengkap |
-| 17 | **Monitoring Pasien Selama Transfer** | `lampiran_monitoring_pasien_selama_transfer` | `?module=update_bmt&page=monitoringpasienselamatransfermanage` | ✅ Lengkap |
-| 18 | **Penilaian Dekubitus** | `lampiran_penilaian_dekubitus` | `?module=update_bmt&page=penilaiandekubitusmanage` | ✅ Lengkap |
-| 19 | **Penilaian Kejadian Infeksi Luka OP (ILO)** | `lampiran_penilaian_kejadian_ilo` | `?module=update_bmt&page=penilaianilomanage` | ✅ Lengkap |
-| 20 | **Penilaian Kejadian ISK** | `lampiran_penilaian_kejadian_isk` | `?module=update_bmt&page=penilaianiskmanage` | ✅ Lengkap |
-| 21 | **Surat Pernyataan Bersedia Menunggu** | `lampiran_surat_pernyataan_bersedia_menunggu` | `?module=update_bmt&page=bersediamenunggumanage` | ✅ Lengkap |
-| 22 | **Informasi Penundaan & Kelambatan Pelayanan** | `lampiran_penundaan_kelambatan_pelayanan` | `?module=update_bmt&page=penundaanpelayananmanage` | ✅ Lengkap |
-| 23 | **Persetujuan Untuk Testing HIV** | `lampiran_persetujuan_testing_hiv` | `?module=update_bmt&page=testinghivmanage` | ✅ Lengkap |
-| 24 | **VCT Pra Testing HIV** | `lampiran_vct_pra_testing_hiv` | `?module=update_bmt&page=vctpratestinghivmanage` | ✅ Lengkap |
-| 25 | **Early Warning Scoring System (EWS)** | `lampiran_ews` | `?module=update_bmt&page=ewsmanage` | ✅ Lengkap |
+| 1 | **Lampiran Cairan Infus** | `lampiran_cairan_infus` | `?module=form_rme&page=cairaninfusmanage` | ✅ Lengkap |
+| 2 | **Form A - Manajer Pelayanan Pasien (MPP)** | `lampiran_form_a_mpp` | `?module=form_rme&page=formamppmanage` | ✅ Lengkap |
+| 3 | **Form Asesmen Ulang Status Fungsional (Barthel Index)** | `lampiran_asesmen_ulang_status_fungsional` | `?module=form_rme&page=statusfungsionalulangmanage` | ✅ Lengkap |
+| 4 | **Form B - Catatan Implementasi MPP** | `lampiran_form_b_mpp` | `?module=form_rme&page=formbmppmanage` | ✅ Lengkap |
+| 5 | **Formulir Identifikasi Kebutuhan Privasi Pasien** | `lampiran_kebutuhan_privasi_pasien` | `?module=form_rme&page=kebutuhanprivasimanage` | ✅ Lengkap |
+| 6 | **Formulir Meninggalkan RS Selama Periode Tertentu** | `lampiran_meninggalkan_rs_tertentu` | `?module=form_rme&page=meninggalkanrsmanage` | ✅ Lengkap |
+| 7 | **Formulir Penghentian Pengobatan** | `lampiran_penghentian_pengobatan` | `?module=form_rme&page=penghentianpengobatanmanage` | ✅ Lengkap |
+| 8 | **Formulir Profil Ringkas Medis Rawat Jalan (PRMRJ)** | `lampiran_profil_ringkas_medis_rajal` | `?module=form_rme&page=prmrjmanage` | ✅ Lengkap |
+| 9 | **Formulir Skrining dari Luar Rumah Sakit** | `lampiran_skrining_luar_rs` | `?module=form_rme&page=skriningluarrsmanage` | ✅ Lengkap |
+| 10 | **Formulir Stabilisasi Pasien Sebelum Transfer** | `lampiran_stabilisasi_pasien` | `?module=form_rme&page=stabilisasipasienmanage` | ✅ Lengkap |
+| 11 | **Intervensi dan Pengkajian Ulang Nyeri** | `lampiran_intervensi_pengkajian_nyeri` | `?module=form_rme&page=intervensinyerimanage` | ✅ Lengkap |
+| 12 | **Surat Permintaan Second Opinion** | `lampiran_permintaan_second_opinion` | `?module=form_rme&page=secondopinionmanage` | ✅ Lengkap |
+| 13 | **Penilaian Kejadian Phlebitis (VIP)** | `lampiran_penilaian_kejadian_phlebitis` | `?module=form_rme&page=penilaianphlebitismanage` | ✅ Lengkap |
+| 14 | **Permintaan Pelayanan Kerohanian** | `lampiran_permintaan_pelayanan_kerohanian` | `?module=form_rme&page=pelayanankerohanianmanage` | ✅ Lengkap |
+| 15 | **Monitoring Pasien Kateter Urine** | `lampiran_monitoring_pasien_kateter_urin` | `?module=form_rme&page=monitoringkateterurinmanage` | ✅ Lengkap |
+| 16 | **Konsultasi Internal** | `lampiran_konsultasi_internal` | `?module=form_rme&page=konsultasiinternalmanage` | ✅ Lengkap |
+| 17 | **Monitoring Pasien Selama Transfer** | `lampiran_monitoring_pasien_selama_transfer` | `?module=form_rme&page=monitoringpasienselamatransfermanage` | ✅ Lengkap |
+| 18 | **Penilaian Dekubitus** | `lampiran_penilaian_dekubitus` | `?module=form_rme&page=penilaiandekubitusmanage` | ✅ Lengkap |
+| 19 | **Penilaian Kejadian Infeksi Luka OP (ILO)** | `lampiran_penilaian_kejadian_ilo` | `?module=form_rme&page=penilaianilomanage` | ✅ Lengkap |
+| 20 | **Penilaian Kejadian ISK** | `lampiran_penilaian_kejadian_isk` | `?module=form_rme&page=penilaianiskmanage` | ✅ Lengkap |
+| 21 | **Surat Pernyataan Bersedia Menunggu** | `lampiran_surat_pernyataan_bersedia_menunggu` | `?module=form_rme&page=bersediamenunggumanage` | ✅ Lengkap |
+| 22 | **Informasi Penundaan & Kelambatan Pelayanan** | `lampiran_penundaan_kelambatan_pelayanan` | `?module=form_rme&page=penundaanpelayananmanage` | ✅ Lengkap |
+| 23 | **Persetujuan Untuk Testing HIV** | `lampiran_persetujuan_testing_hiv` | `?module=form_rme&page=testinghivmanage` | ✅ Lengkap |
+| 24 | **VCT Pra Testing HIV** | `lampiran_vct_pra_testing_hiv` | `?module=form_rme&page=vctpratestinghivmanage` | ✅ Lengkap |
+| 25 | **Early Warning Scoring System (EWS)** | `lampiran_ews` | `?module=form_rme&page=ewsmanage` | ✅ Lengkap |
 
 ---
 
 ## 1. UBS (Operasi & Bedah)
-*Modul Terkait: `plugins/update_bmt` & `plugins/operasi`*
+*Modul Terkait: `plugins/form_rme` & `plugins/operasi`*
 
 ### A. Formulir Wajib (17 Form)
 | No | Nama Formulir | Kode Form | Status | Tabel Database | Menu / Keterangan |
@@ -74,7 +74,7 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 ---
 
 ## 2. IGD (Instalasi Gawat Darurat)
-*Modul Terkait: `plugins/igd` & `plugins/update_bmt`*
+*Modul Terkait: `plugins/igd` & `plugins/form_rme`*
 
 ### A. Formulir Wajib (8 Form)
 | No | Nama Formulir | Kode Form | Status | Tabel Database | Menu / Keterangan |
@@ -96,7 +96,7 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 ---
 
 ## 3. RANAP (Rawat Inap)
-*Modul Terkait: `plugins/rawat_inap` & `plugins/update_bmt`*
+*Modul Terkait: `plugins/rawat_inap` & `plugins/form_rme`*
 
 ### A. Formulir Wajib (21 Form)
 | No | Nama Formulir | Kode Form | Status | Tabel Database | Menu / Keterangan |
@@ -168,7 +168,7 @@ Berikut adalah 8 formulir lampiran Rawat Inap & Rawat Jalan terbaru yang telah s
 ---
 
 ## 4. RAJAL (Rawat Jalan)
-*Modul Terkait: `plugins/rawat_jalan` & `plugins/update_bmt`*
+*Modul Terkait: `plugins/rawat_jalan` & `plugins/form_rme`*
 
 ### A. Formulir Wajib (12 Form)
 | No | Nama Formulir | Kode Form | Status | Tabel Database | Menu / Keterangan |

@@ -1,0 +1,420 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+  <form id="formCairanInfus" method="POST" action="{?=url([ADMIN, 'form_rme', 'cairaninfussave'])?}">
+    <input type="hidden" name="id" value="{?=isset_or($data['id'])?}">
+    <input type="hidden" name="detail_cairan" id="hidden_detail_cairan" value="">
+
+    <div class="rsgm-soap-flex-row clearfix">
+
+      <!-- ============================================================
+           KOLOM KIRI (3): SIDEBAR IDENTITAS & DATA PASIEN
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Data Pasien</span>
+            </h4>
+            <span class="badge" style="background-color: #eff6ff; color: #1e40af; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #bfdbfe;">Cairan Infus</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <!-- No Rawat with Search -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default" id="btnCariPasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                    <i class="fa fa-search text-primary"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <!-- No Rekam Medis -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+              <input type="text" id="info_no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly style="background-color: #f8fafc; font-weight: 700;">
+            </div>
+
+            <!-- Nama Pasien -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+              <input type="text" id="info_nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{?=isset_or($data['nm_pasien'])?}" readonly style="background-color: #f8fafc; font-weight: 600;">
+            </div>
+
+            <!-- Gender & Tanggal Lahir -->
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="info_jk" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                  <input type="text" id="info_jk" class="form-control" value="{?= !empty($data['jk']) ? ($data['jk'] == 'L' ? 'Laki-Laki' : 'Perempuan') : '' ?}" readonly style="background-color: #f8fafc;">
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="info_tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tgl Lahir</label>
+                  <input type="text" id="info_tgl_lahir" class="form-control" value="{?=isset_or($data['tgl_lahir'])?}" readonly style="background-color: #f8fafc;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Umur Pasien -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_umur" class="rsgm-compact-label"><i class="fa fa-birthday-cake text-muted"></i> Umur Pasien</label>
+              <input type="text" id="info_umur" class="form-control" value="{?=isset_or($data['umur'])?}" readonly placeholder="Umur" style="background-color: #f8fafc;">
+            </div>
+
+            <!-- Alamat Domisili -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="info_alamat" class="rsgm-compact-label"><i class="fa fa-map-marker text-muted"></i> Alamat Domisili</label>
+              <textarea id="info_alamat" class="form-control" rows="2" readonly placeholder="Alamat pasien" style="background-color: #f8fafc; resize: none;">{?=isset_or($data['alamat'])?}</textarea>
+            </div>
+
+            <!-- Ruangan / Bangsal / Kamar -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="input_ruangan" class="rsgm-compact-label"><i class="fa fa-bed text-muted"></i> Ruangan / Bangsal <span class="text-danger">*</span></label>
+              <input type="text" name="ruangan" id="input_ruangan" class="form-control" value="{?=isset_or($data['ruangan'])?}" placeholder="Contoh: Bangsal Mawar / Kamar 201" required>
+            </div>
+
+            <!-- Dokter DPJP -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="input_dokter" class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Dokter DPJP <span class="text-danger">*</span></label>
+              <input type="text" name="dokter" id="input_dokter" list="list_dokter" class="form-control" value="{?=isset_or($data['dokter'])?}" placeholder="Pilih nama dokter..." required>
+              <datalist id="list_dokter">
+                {loop: $dokter_list}
+                <option value="{$value.nm_dokter}">{$value.kd_dokter} - {$value.nm_dokter}</option>
+                {/loop}
+              </datalist>
+            </div>
+
+            <!-- Tanggal Lembar Form -->
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="input_tanggal" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tanggal Lembar Form</label>
+              <input type="date" name="tanggal" id="input_tanggal" class="form-control" value="{if: !empty($data.tanggal)}{$data.tanggal}{else}{?=date('Y-m-d')?}{/if}">
+            </div>
+
+            <!-- Tombol Demo Data -->
+            <div style="border-top: 1px dashed #e2e8f0; padding-top: 10px; margin-top: 10px;">
+              <button type="button" id="btn_demo" class="btn btn-warning btn-block btn-sm" style="font-weight: 700; border-radius: 6px;" title="Isi form dengan contoh data pemberian cairan infus">
+                <i class="fa fa-magic"></i> Isi Contoh Data Demo
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div> <!-- /.col-md-3 -->
+
+      <!-- ============================================================
+           KOLOM KANAN (9): WORKSTATION PEMANTAUAN CAIRAN INFUS
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-tint"></i></span>
+              <span>Pemantauan &amp; Rincian Pemberian Cairan Infus / Transfusi Darah</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1e40af; font-weight: 700;">Rawat Inap RSGM</span>
+            </div>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <!-- Tabel Dinamis Rincian Cairan Infus -->
+            <div class="rsgm-soap-section" style="margin-bottom: 0;">
+              <div class="rsgm-soap-sec-title" style="justify-content: space-between;">
+                <div>
+                  <i class="fa fa-list-alt text-info"></i>
+                  <span>Daftar Botol &amp; Cairan Infus Pasien</span>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <button type="button" class="btn btn-success btn-xs" id="btnAddRow" style="border-radius: 4px; font-weight: 600;">
+                    <i class="fa fa-plus"></i> Tambah 1 Baris
+                  </button>
+                  <button type="button" class="btn btn-default btn-xs" id="btnAdd5Rows" style="border-radius: 4px; font-weight: 600;">
+                    <i class="fa fa-plus-square"></i> Tambah 5 Baris
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-responsive" style="margin-top: 8px;">
+                <table class="table table-bordered table-hover" id="tableCairan" style="margin-bottom: 0; font-size: 12px; width: 100%;">
+                  <thead>
+                    <tr style="background-color: #f8fafc; color: #334155; font-weight: 700;">
+                      <th style="width: 35px; text-align: center; vertical-align: middle;">#</th>
+                      <th style="width: 120px; text-align: center; vertical-align: middle;">Tanggal</th>
+                      <th style="width: 60px; text-align: center; vertical-align: middle;">Botol</th>
+                      <th style="min-width: 170px; vertical-align: middle;">Cairan Infus / Transfusi Darah</th>
+                      <th style="width: 90px; text-align: center; vertical-align: middle;">Tetesan</th>
+                      <th style="width: 90px; text-align: center; vertical-align: middle;">Jam Mulai</th>
+                      <th style="width: 130px; text-align: center; vertical-align: middle;">Tgl/Jam Stop/Habis</th>
+                      <th style="min-width: 130px; vertical-align: middle;">Keterangan</th>
+                      <th style="width: 130px; vertical-align: middle;">Petugas</th>
+                      <th style="width: 45px; text-align: center; vertical-align: middle;">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cairan_tbody">
+                    <!-- Populated dynamically via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Datalist Preset Cairan & Petugas -->
+            <datalist id="list_cairan_preset">
+              <option value="RL (Ringer Lactate) 500 ml">
+              <option value="NaCl 0.9% 500 ml">
+              <option value="Dextrose 5% 500 ml">
+              <option value="Dextrose 10% 500 ml">
+              <option value="Asering 500 ml">
+              <option value="Tutofusin OPS 500 ml">
+              <option value="KaEN 3B 500 ml">
+              <option value="Gelafusal 500 ml">
+              <option value="Albumin 20% 100 ml">
+              <option value="PRC (Packed Red Cells)">
+              <option value="FFP (Fresh Frozen Plasma)">
+              <option value="TC (Thrombocyte Concentrate)">
+              <option value="Whole Blood (WB)">
+            </datalist>
+
+            <datalist id="list_petugas">
+              {loop: $petugas_list}
+              <option value="{$value.nama}">{$value.nip} - {$value.nama}</option>
+              {/loop}
+            </datalist>
+
+          </div> <!-- /.rsgm-reg-body -->
+
+          <!-- ============================================================
+               FOOTER ACTIONS (STANDAR STYLE AKGMUFORM)
+               ============================================================ -->
+          <div class="rsgm-reg-footer">
+            <div>
+              <a href="{?=url([ADMIN, 'form_rme', 'cairaninfusmanage'])?}" class="btn btn-default" style="border-radius: 6px;">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+            <div class="rsgm-reg-actions">
+              <button type="button" class="btn btn-info btn-trigger-rme-preview" data-preview-url="{?=url([ADMIN, 'form_rme', 'cairaninfuscetak'])?}" style="font-weight: 600; border-radius: 6px;" title="Lihat pratinjau form hasil cetak / PDF">
+                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+              </button>
+              <button type="submit" class="btn btn-primary" id="btnSimpan" style="font-weight: 700; border-radius: 6px;">
+                <i class="fa fa-save"></i> Simpan Data Cairan Infus
+              </button>
+            </div>
+          </div>
+
+        </div> <!-- /.rsgm-reg-shell -->
+      </div> <!-- /.col-md-9 -->
+
+    </div> <!-- /.rsgm-soap-flex-row -->
+  </form>
+</div>
+
+<script>
+var existingDetail = {?= !empty($data['detail_cairan_parsed']) ? json_encode($data['detail_cairan_parsed']) : '[]' ?};
+var defaultPetugas = {?= !empty($current_user_name) ? json_encode($current_user_name) : '""' ?};
+
+function createRowHtml(item, index) {
+    var tgl = item.tanggal || '{?=date("Y-m-d")?}';
+    var botol = item.botol || (index + 1);
+    var cairan = item.cairan_infus || '';
+    var tetesan = item.jumlah_tetesan || '20 tpm';
+    var jamMulai = item.jam_mulai || '';
+    var tglJamStop = item.tgl_jam_stop || '';
+    var ket = item.keterangan || '';
+    var nama = item.nama || defaultPetugas;
+
+    return '<tr class="row-cairan" data-index="' + index + '">' +
+        '<td class="text-center row-number" style="vertical-align: middle; font-weight: bold;">' + (index + 1) + '</td>' +
+        '<td><input type="date" class="form-control input-sm c-tanggal" value="' + escapeHtml(tgl) + '"></td>' +
+        '<td><input type="text" class="form-control input-sm text-center c-botol" value="' + escapeHtml(botol) + '" placeholder="' + (index + 1) + '"></td>' +
+        '<td><input type="text" list="list_cairan_preset" class="form-control input-sm c-cairan" value="' + escapeHtml(cairan) + '" placeholder="RL / NaCl 0.9% / PRC" required></td>' +
+        '<td><input type="text" class="form-control input-sm c-tetesan" value="' + escapeHtml(tetesan) + '" placeholder="20 tpm"></td>' +
+        '<td><input type="time" class="form-control input-sm c-jam-mulai" value="' + escapeHtml(jamMulai) + '"></td>' +
+        '<td><input type="text" class="form-control input-sm c-tgl-jam-stop" value="' + escapeHtml(tglJamStop) + '" placeholder="14:00 / tgl & jam"></td>' +
+        '<td><input type="text" class="form-control input-sm c-keterangan" value="' + escapeHtml(ket) + '" placeholder="Keterangan / obat tambahan"></td>' +
+        '<td><input type="text" list="list_petugas" class="form-control input-sm c-nama" value="' + escapeHtml(nama) + '" placeholder="Nama Petugas"></td>' +
+        '<td class="text-center" style="vertical-align: middle;">' +
+            '<button type="button" class="btn btn-xs btn-danger btnDelRow" title="Hapus baris ini" style="border-radius: 4px; padding: 3px 6px;"><i class="fa fa-trash"></i></button>' +
+        '</td>' +
+    '</tr>';
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function reindexRows() {
+    $('#cairan_tbody tr.row-cairan').each(function(idx) {
+        $(this).find('.row-number').text(idx + 1);
+        var botolInput = $(this).find('.c-botol');
+        if (!botolInput.val()) {
+            botolInput.val(idx + 1);
+        }
+    });
+}
+
+function addRow(item) {
+    var count = $('#cairan_tbody tr.row-cairan').length;
+    var html = createRowHtml(item || {}, count);
+    $('#cairan_tbody').append(html);
+    reindexRows();
+}
+
+$(document).ready(function() {
+    // Inisialisasi baris data
+    if (existingDetail && existingDetail.length > 0) {
+        $.each(existingDetail, function(i, row) {
+            addRow(row);
+        });
+    } else {
+        addRow({ botol: '1', cairan_infus: 'RL (Ringer Lactate) 500 ml', jumlah_tetesan: '20 tpm', jam_mulai: '08:00' });
+        addRow({ botol: '2', cairan_infus: 'NaCl 0.9% 500 ml', jumlah_tetesan: '20 tpm', jam_mulai: '16:00' });
+        addRow({ botol: '3' });
+    }
+
+    $('#btnAddRow').click(function() {
+        addRow({});
+    });
+
+    $('#btnAdd5Rows').click(function() {
+        for (var i = 0; i < 5; i++) {
+            addRow({});
+        }
+    });
+
+    $('body').on('click', '.btnDelRow', function() {
+        if ($('#cairan_tbody tr.row-cairan').length <= 1) {
+            alert('Minimal harus ada 1 baris cairan infus.');
+            return;
+        }
+        $(this).closest('tr').remove();
+        reindexRows();
+    });
+
+    function cariPasien() {
+        var no_rawat = $.trim($('#no_rawat').val());
+        if (!no_rawat) {
+            alert('Silakan masukkan No. Rawat atau No. RM');
+            return;
+        }
+
+        $('#btnCariPasien').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url: '{?=url([ADMIN, "form_rme", "cairaninfusform"])?}',
+            type: 'GET',
+            data: { ajax_patient: 1, no_rawat: no_rawat },
+            dataType: 'json',
+            success: function(res) {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+                if (res && res.success) {
+                    $('#no_rawat').val(res.no_rawat);
+                    $('#info_nm_pasien').val(res.nm_pasien || '');
+                    $('#info_no_rkm_medis').val(res.no_rkm_medis || '');
+                    $('#info_jk').val(res.jk === 'L' ? 'Laki-Laki' : (res.jk === 'P' ? 'Perempuan' : '-'));
+                    $('#info_tgl_lahir').val(res.tgl_lahir || '');
+                    $('#info_umur').val(res.umur || '');
+                    $('#info_alamat').val(res.alamat || '');
+
+                    if (res.nm_bangsal && !$('#input_ruangan').val()) {
+                        $('#input_ruangan').val(res.nm_bangsal + (res.kd_kamar ? ' (' + res.kd_kamar + ')' : ''));
+                    }
+                    if (res.nm_dokter && !$('#input_dokter').val()) {
+                        $('#input_dokter').val(res.nm_dokter);
+                    }
+                } else {
+                    alert('Data pasien dengan No. Rawat / RM "' + no_rawat + '" tidak ditemukan.');
+                }
+            },
+            error: function() {
+                $('#btnCariPasien').prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+                alert('Gagal menghubungi server untuk pencarian pasien.');
+            }
+        });
+    }
+
+    $('#btnCariPasien').click(function() {
+        cariPasien();
+    });
+
+    $('#no_rawat').keypress(function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            cariPasien();
+        }
+    });
+
+    var initRawat = $('#no_rawat').val().trim();
+    if (initRawat && !$('#info_nm_pasien').val()) {
+        cariPasien();
+    }
+
+    // Submit form: packing JSON detail_cairan
+    $('#formCairanInfus').submit(function(e) {
+        var items = [];
+        $('#cairan_tbody tr.row-cairan').each(function() {
+            var row = $(this);
+            var tgl = $.trim(row.find('.c-tanggal').val());
+            var botol = $.trim(row.find('.c-botol').val());
+            var cairan = $.trim(row.find('.c-cairan').val());
+            var tetesan = $.trim(row.find('.c-tetesan').val());
+            var jamMulai = $.trim(row.find('.c-jam-mulai').val());
+            var tglJamStop = $.trim(row.find('.c-tgl-jam-stop').val());
+            var ket = $.trim(row.find('.c-keterangan').val());
+            var nama = $.trim(row.find('.c-nama').val());
+
+            if (cairan || botol || jamMulai || ket) {
+                items.push({
+                    tanggal: tgl,
+                    botol: botol,
+                    cairan_infus: cairan,
+                    jumlah_tetesan: tetesan,
+                    jam_mulai: jamMulai,
+                    tgl_jam_stop: tglJamStop,
+                    keterangan: ket,
+                    nama: nama
+                });
+            }
+        });
+
+        if (items.length === 0) {
+            alert('Harap isi minimal satu cairan infus sebelum menyimpan.');
+            e.preventDefault();
+            return false;
+        }
+
+        $('#hidden_detail_cairan').val(JSON.stringify(items));
+    });
+
+    // Demo Data
+    $('#btn_demo').on('click', function(e) {
+        e.preventDefault();
+        if (!$('#input_ruangan').val()) {
+            $('#input_ruangan').val('Ruang Rawat Inap Bedah (Kamar 204)');
+        }
+        if (!$('#input_dokter').val()) {
+            $('#input_dokter').val('drg. Hendra Pratama, Sp.KG');
+        }
+
+        var today = new Date().toISOString().slice(0, 10);
+        $('#cairan_tbody').empty();
+        addRow({ tanggal: today, botol: '1', cairan_infus: 'RL (Ringer Lactate) 500 ml', jumlah_tetesan: '20 tpm', jam_mulai: '08:00', tgl_jam_stop: '14:00', keterangan: 'Kolf I lancar', nama: 'Siti Rahmah, S.Tr.Kep' });
+        addRow({ tanggal: today, botol: '2', cairan_infus: 'NaCl 0.9% 500 ml', jumlah_tetesan: '20 tpm', jam_mulai: '14:00', tgl_jam_stop: '20:00', keterangan: 'Kolf II lancar', nama: 'Siti Rahmah, S.Tr.Kep' });
+        addRow({ tanggal: today, botol: '3', cairan_infus: 'Dextrose 5% 500 ml', jumlah_tetesan: '20 tpm', jam_mulai: '20:00', tgl_jam_stop: '', keterangan: 'Kolf III sedang berlangsung', nama: 'Siti Rahmah, S.Tr.Kep' });
+
+        if (typeof alert !== 'undefined') {
+            alert('Contoh data cairan infus berhasil dimuat.');
+        }
+    });
+});
+</script>

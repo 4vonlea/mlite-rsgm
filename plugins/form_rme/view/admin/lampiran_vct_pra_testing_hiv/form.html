@@ -1,0 +1,826 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+    <form action="{?=url([ADMIN, 'form_rme', 'vctpratestinghivsave'])?}" method="POST" id="form-vct-pra-testing">
+        <input type="hidden" name="id" value="{$data.id}">
+
+        <div class="rsgm-soap-flex-row clearfix">
+
+            <!-- ============================================================
+                 KOLOM KIRI (3): SIDEBAR IDENTITAS PASIEN & SESI VCT
+                 ============================================================ -->
+            <div class="col-md-3">
+                <div class="rsgm-reg-shell rsgm-patient-side-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+                            <span>Data Pasien</span>
+                        </h4>
+                        <span class="badge" style="background-color: #fef2f2; color: #dc2626; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #fecaca;">VCT HIV</span>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+                        <!-- No. Rawat Pasien with Cari -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat / RM <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2026/10/18/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button" id="btn-cari-pasien" title="Cari Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                                        <i class="fa fa-search text-primary"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- No. Rekam Medis -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor RM</label>
+                            <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{$data.no_rkm_medis}" readonly style="background-color: #f8fafc; font-weight: 700;">
+                        </div>
+
+                        <!-- Nama Pasien -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien</label>
+                            <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" placeholder="Nama Pasien" value="{$data.nm_pasien}" readonly style="background-color: #f8fafc; font-weight: 600;">
+                        </div>
+
+                        <!-- Gender & Tanggal Lahir -->
+                        <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="jk_pasien" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                                    <input type="text" name="jk_pasien" id="jk_pasien" class="form-control" value="{$data.jk_pasien}" readonly style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="tgl_lahir_pasien" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir</label>
+                                    <input type="text" name="tgl_lahir_pasien" id="tgl_lahir_pasien" class="form-control" value="{$data.tgl_lahir_pasien}" readonly style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Alamat Pasien -->
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="alamat_pasien" class="rsgm-compact-label"><i class="fa fa-map-marker text-muted"></i> Alamat Domisili Pasien</label>
+                            <textarea name="alamat_pasien" id="alamat_pasien" class="form-control" rows="2" readonly style="background-color: #f8fafc;">{$data.alamat_pasien}</textarea>
+                        </div>
+
+                        <!-- PEMISAH: SESI VCT & KODE KLIEN -->
+                        <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label for="kode_klien" class="rsgm-compact-label"><i class="fa fa-shield text-muted"></i> Kode Klien (VCT) <span class="text-danger">*</span></label>
+                                <input type="text" name="kode_klien" id="kode_klien" class="form-control" value="{$data.kode_klien}" required style="font-weight: 700; color: #dc2626;">
+                                <span class="help-block" style="font-size: 11px; margin-bottom: 0; color: #64748b;">Kode unik identitas kerahasiaan konseling</span>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label for="tanggal" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tgl Konseling <span class="text-danger">*</span></label>
+                                <input type="date" name="tanggal" id="tanggal" class="form-control" value="{$data.tanggal}" required>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label for="tanggal_tes_klien" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Tes Klien</label>
+                                <input type="date" name="tanggal_tes_klien" id="tanggal_tes_klien" class="form-control" value="{$data.tanggal_tes_klien}">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label for="tempat_tes" class="rsgm-compact-label"><i class="fa fa-hospital-o text-muted"></i> Tempat Tes</label>
+                                <input type="text" name="tempat_tes" id="tempat_tes" class="form-control" value="{$data.tempat_tes}">
+                            </div>
+                        </div>
+
+                        <!-- INFO KERAHASIAAN VCT -->
+                        <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 10px 12px; margin-top: 5px;">
+                            <label class="rsgm-compact-label" style="color: #991b1b; margin-bottom: 4px; font-weight: 700;">
+                                <i class="fa fa-info-circle"></i> Prinsip VCT:
+                            </label>
+                            <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #7f1d1d;">
+                                Konseling dan testing HIV sukarela berasaskan kerahasiaan murni (confidentiality), persetujuan tindakan (informed consent), dan konseling komprehensif pra/pasca tes.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- /.col-md-3 -->
+
+            <!-- ============================================================
+                 KOLOM KANAN (9): WORKSTATION FORMULIR VCT PRA TESTING HIV
+                 ============================================================ -->
+            <div class="col-md-9">
+                <div class="rsgm-reg-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-pencil-square-o"></i></span>
+                            <span>Formulir Konseling VCT Pra Testing HIV</span>
+                        </h4>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <a href="{?=url([ADMIN, 'form_rme', 'vctpratestinghivmanage'])?}" class="btn btn-default btn-xs" style="font-weight: 600; border-radius: 6px; padding: 5px 12px;">
+                                <i class="fa fa-list"></i> Kelola Data
+                            </a>
+                            <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-weight: 700;">VCT Pra-Tes</span>
+                        </div>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+
+                        <!-- SEKSI 1: DATA DEMOGRAFI & RISIKO INDIVIDU -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+                            <div style="font-weight: 700; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 12px;">
+                                <i class="fa fa-list-alt text-primary"></i> 1. Data Demografi &amp; Pasangan Klien
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">a) Jenis Klien</label>
+                                        <select name="jenis_klien" id="jenis_klien" class="form-control" style="font-weight: 600;">
+                                            <option value="1" {if: $data.jenis_klien == '1'}selected{/if}>1 = Laki-laki</option>
+                                            <option value="2" {if: $data.jenis_klien == '2'}selected{/if}>2 = Perempuan</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">b) Status Hubungan</label>
+                                        <select name="status_hubungan" class="form-control">
+                                            <option value="1" {if: $data.status_hubungan == '1'}selected{/if}>1 = Tidak Pernah Kawin</option>
+                                            <option value="2" {if: $data.status_hubungan == '2'}selected{/if}>2 = Kawin</option>
+                                            <option value="3" {if: $data.status_hubungan == '3'}selected{/if}>3 = Cerai/Pisah</option>
+                                            <option value="4" {if: $data.status_hubungan == '4'}selected{/if}>4 = Janda</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">c) Jumlah Anak</label>
+                                        <select name="jumlah_anak" class="form-control">
+                                            <option value="8" {if: $data.jumlah_anak == '8'}selected{/if}>8 = 0 (Tidak ada)</option>
+                                            <option value="1" {if: $data.jumlah_anak == '1'}selected{/if}>1 = 1 anak</option>
+                                            <option value="2" {if: $data.jumlah_anak == '2'}selected{/if}>2 = 2 anak</option>
+                                            <option value="3" {if: $data.jumlah_anak == '3'}selected{/if}>3 = 3 anak</option>
+                                            <option value="4" {if: $data.jumlah_anak == '4'}selected{/if}>4 = 4 anak</option>
+                                            <option value="5" {if: $data.jumlah_anak == '5'}selected{/if}>5 = 5 anak</option>
+                                            <option value="6" {if: $data.jumlah_anak == '6'}selected{/if}>6 = 6 anak</option>
+                                            <option value="7" {if: $data.jumlah_anak == '7'}selected{/if}>7 = &gt; 6 anak</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">d) Kelompok Umur Klien</label>
+                                        <select name="umur_klien" class="form-control">
+                                            <option value="1" {if: $data.umur_klien == '1'}selected{/if}>1 = &lt; 15 tahun</option>
+                                            <option value="2" {if: $data.umur_klien == '2'}selected{/if}>2 = 15 - 24 tahun</option>
+                                            <option value="3" {if: $data.umur_klien == '3'}selected{/if}>3 = 25 - 34 tahun</option>
+                                            <option value="4" {if: $data.umur_klien == '4'}selected{/if}>4 = 35 - 44 tahun</option>
+                                            <option value="5" {if: $data.umur_klien == '5'}selected{/if}>5 = &gt; 45 tahun</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">e) Pendidikan Terakhir</label>
+                                        <select name="pendidikan" class="form-control">
+                                            <option value="1" {if: $data.pendidikan == '1'}selected{/if}>1 = Tidak Ada</option>
+                                            <option value="2" {if: $data.pendidikan == '2'}selected{/if}>2 = SD</option>
+                                            <option value="3" {if: $data.pendidikan == '3'}selected{/if}>3 = SLTP / Sederajat</option>
+                                            <option value="4" {if: $data.pendidikan == '4'}selected{/if}>4 = SLTA / Sederajat</option>
+                                            <option value="5" {if: $data.pendidikan == '5'}selected{/if}>5 = Akademi / PT</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">f) Pekerjaan</label>
+                                        <select name="pekerjaan" id="pekerjaan" class="form-control">
+                                            <option value="0" {if: $data.pekerjaan == '0'}selected{/if}>0 = Tidak Bekerja</option>
+                                            <option value="1" {if: $data.pekerjaan == '1'}selected{/if}>1 = Bekerja</option>
+                                            <option value="2" {if: $data.pekerjaan == '2'}selected{/if}>2 = Pelajar / Mahasiswa</option>
+                                            <option value="3" {if: $data.pekerjaan == '3'}selected{/if}>3 = Petani</option>
+                                            <option value="4" {if: $data.pekerjaan == '4'}selected{/if}>4 = Profesional</option>
+                                            <option value="5" {if: $data.pekerjaan == '5'}selected{/if}>5 = Polisi / TNI / Satpam</option>
+                                            <option value="6" {if: $data.pekerjaan == '6'}selected{/if}>6 = Pekerja Tambang</option>
+                                            <option value="7" {if: $data.pekerjaan == '7'}selected{/if}>7 = Transportasi</option>
+                                            <option value="8" {if: $data.pekerjaan == '8'}selected{/if}>8 = Lain-lain (sebutkan)</option>
+                                        </select>
+                                        <input type="text" name="pekerjaan_lain" id="pekerjaan_lain" class="form-control input-sm" style="margin-top: 6px; border-radius: 6px; display: {if: $data.pekerjaan == '8'}block{else}none{/if};" placeholder="Sebutkan pekerjaan lainnya..." value="{$data.pekerjaan_lain}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="border-top: 1px dashed #e2e8f0; padding-top: 10px; margin-top: 5px;">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="rsgm-compact-label">Klien Punya Pasangan Tetap?</label>
+                                            <select name="pasangan_tetap" class="form-control">
+                                                <option value="1" {if: $data.pasangan_tetap == '1'}selected{/if}>1 = Ya</option>
+                                                <option value="2" {if: $data.pasangan_tetap == '2'}selected{/if}>2 = Tidak</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="rsgm-compact-label">Status Pasangan Tetap</label>
+                                            <select name="status_pasangan" class="form-control">
+                                                <option value="1" {if: $data.status_pasangan == '1'}selected{/if}>1 = HIV ( + )</option>
+                                                <option value="2" {if: $data.status_pasangan == '2'}selected{/if}>2 = HIV ( - )</option>
+                                                <option value="3" {if: $data.status_pasangan == '3'}selected{/if}>3 = Tidak Diketahui</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="rsgm-compact-label">Tgl Tes Terakhir Pasangan / Klien</label>
+                                            <input type="date" name="tgl_tes_terakhir" class="form-control" value="{$data.tgl_tes_terakhir}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SEKSI 2: TABEL POTENSI PAJANAN PALING AKHIR & FAKTOR RISIKO -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+                            <div style="font-weight: 700; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 12px;">
+                                <i class="fa fa-shield text-primary"></i> 2. Potensi Pajanan Paling Akhir &amp; Faktor Risiko (1 = Ya, 2 = Tidak)
+                            </div>
+
+                            <div class="table-responsive" style="margin-bottom: 14px;">
+                                <table class="table table-bordered table-striped text-center" style="font-size: 12px; margin-bottom: 0;">
+                                    <thead>
+                                        <tr style="background-color: #f1f5f9;">
+                                            <th style="width: 32%; text-align: left;">Bentuk Pajanan</th>
+                                            <th style="width: 22%; text-align: center;">Pernah Mengalami</th>
+                                            <th style="width: 24%; text-align: center;">Tanggal Paling Berisiko</th>
+                                            <th style="width: 22%; text-align: center;">Masa Jendela (Window)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Okupasional -->
+                                        <tr>
+                                            <td style="text-align: left; font-weight: 600;">1. Pajanan Okupasional</td>
+                                            <td>
+                                                <select name="pajanan[okupasional][kode]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.okupasional.kode) || $data.detail_pajanan_arr.okupasional.kode == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.okupasional.kode) && $data.detail_pajanan_arr.okupasional.kode == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="date" name="pajanan[okupasional][tgl]" class="form-control input-sm" style="border-radius: 6px;" value="{$data.detail_pajanan_arr.okupasional.tgl}">
+                                            </td>
+                                            <td>
+                                                <select name="pajanan[okupasional][window]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.okupasional.window) || $data.detail_pajanan_arr.okupasional.window == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.okupasional.window) && $data.detail_pajanan_arr.okupasional.window == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Tatto, goresan -->
+                                        <tr>
+                                            <td style="text-align: left; font-weight: 600;">2. Tatto, goresan / tindik</td>
+                                            <td>
+                                                <select name="pajanan[tatto][kode]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.tatto.kode) || $data.detail_pajanan_arr.tatto.kode == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.tatto.kode) && $data.detail_pajanan_arr.tatto.kode == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="date" name="pajanan[tatto][tgl]" class="form-control input-sm" style="border-radius: 6px;" value="{$data.detail_pajanan_arr.tatto.tgl}">
+                                            </td>
+                                            <td>
+                                                <select name="pajanan[tatto][window]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.tatto.window) || $data.detail_pajanan_arr.tatto.window == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.tatto.window) && $data.detail_pajanan_arr.tatto.window == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Produk Darah -->
+                                        <tr>
+                                            <td style="text-align: left; font-weight: 600;">3. Transfusi / Produk Darah</td>
+                                            <td>
+                                                <select name="pajanan[produk_darah][kode]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.produk_darah.kode) || $data.detail_pajanan_arr.produk_darah.kode == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.produk_darah.kode) && $data.detail_pajanan_arr.produk_darah.kode == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="date" name="pajanan[produk_darah][tgl]" class="form-control input-sm" style="border-radius: 6px;" value="{$data.detail_pajanan_arr.produk_darah.tgl}">
+                                            </td>
+                                            <td>
+                                                <select name="pajanan[produk_darah][window]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.produk_darah.window) || $data.detail_pajanan_arr.produk_darah.window == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.produk_darah.window) && $data.detail_pajanan_arr.produk_darah.window == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Hubungan Seks Vaginal -->
+                                        <tr>
+                                            <td style="text-align: left; font-weight: 600;">4. Hubungan Seks Vaginal</td>
+                                            <td>
+                                                <select name="pajanan[seks_vaginal][kode]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.seks_vaginal.kode) || $data.detail_pajanan_arr.seks_vaginal.kode == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.seks_vaginal.kode) && $data.detail_pajanan_arr.seks_vaginal.kode == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="date" name="pajanan[seks_vaginal][tgl]" class="form-control input-sm" style="border-radius: 6px;" value="{$data.detail_pajanan_arr.seks_vaginal.tgl}">
+                                            </td>
+                                            <td>
+                                                <select name="pajanan[seks_vaginal][window]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.seks_vaginal.window) || $data.detail_pajanan_arr.seks_vaginal.window == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.seks_vaginal.window) && $data.detail_pajanan_arr.seks_vaginal.window == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Oral Seks -->
+                                        <tr>
+                                            <td style="text-align: left; font-weight: 600;">5. Oral Seks</td>
+                                            <td>
+                                                <select name="pajanan[oral_seks][kode]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.oral_seks.kode) || $data.detail_pajanan_arr.oral_seks.kode == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.oral_seks.kode) && $data.detail_pajanan_arr.oral_seks.kode == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="date" name="pajanan[oral_seks][tgl]" class="form-control input-sm" style="border-radius: 6px;" value="{$data.detail_pajanan_arr.oral_seks.tgl}">
+                                            </td>
+                                            <td>
+                                                <select name="pajanan[oral_seks][window]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.oral_seks.window) || $data.detail_pajanan_arr.oral_seks.window == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.oral_seks.window) && $data.detail_pajanan_arr.oral_seks.window == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Anal Seks -->
+                                        <tr>
+                                            <td style="text-align: left; font-weight: 600;">6. Anal Seks</td>
+                                            <td>
+                                                <select name="pajanan[anal_seks][kode]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.anal_seks.kode) || $data.detail_pajanan_arr.anal_seks.kode == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.anal_seks.kode) && $data.detail_pajanan_arr.anal_seks.kode == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="date" name="pajanan[anal_seks][tgl]" class="form-control input-sm" style="border-radius: 6px;" value="{$data.detail_pajanan_arr.anal_seks.tgl}">
+                                            </td>
+                                            <td>
+                                                <select name="pajanan[anal_seks][window]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.anal_seks.window) || $data.detail_pajanan_arr.anal_seks.window == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.anal_seks.window) && $data.detail_pajanan_arr.anal_seks.window == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Riwayat kekerasan Seksual -->
+                                        <tr>
+                                            <td style="text-align: left; font-weight: 600;">7. Riwayat Kekerasan Seksual</td>
+                                            <td>
+                                                <select name="pajanan[kekerasan_seksual][kode]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.kekerasan_seksual.kode) || $data.detail_pajanan_arr.kekerasan_seksual.kode == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.kekerasan_seksual.kode) && $data.detail_pajanan_arr.kekerasan_seksual.kode == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="date" name="pajanan[kekerasan_seksual][tgl]" class="form-control input-sm" style="border-radius: 6px;" value="{$data.detail_pajanan_arr.kekerasan_seksual.tgl}">
+                                            </td>
+                                            <td>
+                                                <select name="pajanan[kekerasan_seksual][window]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.kekerasan_seksual.window) || $data.detail_pajanan_arr.kekerasan_seksual.window == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.kekerasan_seksual.window) && $data.detail_pajanan_arr.kekerasan_seksual.window == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Bergantian peralatan suntik -->
+                                        <tr>
+                                            <td style="text-align: left; font-weight: 600;">8. Bergantian Peralatan Suntik</td>
+                                            <td>
+                                                <select name="pajanan[peralatan_suntik][kode]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.peralatan_suntik.kode) || $data.detail_pajanan_arr.peralatan_suntik.kode == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.peralatan_suntik.kode) && $data.detail_pajanan_arr.peralatan_suntik.kode == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="date" name="pajanan[peralatan_suntik][tgl]" class="form-control input-sm" style="border-radius: 6px;" value="{$data.detail_pajanan_arr.peralatan_suntik.tgl}">
+                                            </td>
+                                            <td>
+                                                <select name="pajanan[peralatan_suntik][window]" class="form-control input-sm" style="border-radius: 6px;">
+                                                    <option value="2" {if: empty($data.detail_pajanan_arr.peralatan_suntik.window) || $data.detail_pajanan_arr.peralatan_suntik.window == '2'}selected{/if}>2 = Tidak</option>
+                                                    <option value="1" {if: !empty($data.detail_pajanan_arr.peralatan_suntik.window) && $data.detail_pajanan_arr.peralatan_suntik.window == '1'}selected{/if}>1 = Ya</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Evaluasi Risiko Khusus -->
+                            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="rsgm-compact-label">Klien butuh tes ulang HIV karena masa jendela?</label>
+                                            <select name="tes_ulang_window" class="form-control">
+                                                <option value="TIDAK" {if: $data.tes_ulang_window == 'TIDAK'}selected{/if}>TIDAK</option>
+                                                <option value="YA" {if: $data.tes_ulang_window == 'YA'}selected{/if}>YA</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="rsgm-compact-label">Jika Ya, Rencana Tanggal Tes Ulang</label>
+                                            <input type="date" name="tgl_tes_ulang" class="form-control" value="{$data.tgl_tes_ulang}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="rsgm-compact-label">Berisiko dengan orang HIV (+) dikenal</label>
+                                            <select name="berisiko_orang_hiv" class="form-control">
+                                                <option value="2" {if: $data.berisiko_orang_hiv == '2'}selected{/if}>2 = Tidak</option>
+                                                <option value="1" {if: $data.berisiko_orang_hiv == '1'}selected{/if}>1 = Ya</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="rsgm-compact-label">Klien Hamil</label>
+                                            <select name="klien_hamil" class="form-control">
+                                                <option value="2" {if: $data.klien_hamil == '2'}selected{/if}>2 = Tidak</option>
+                                                <option value="1" {if: $data.klien_hamil == '1'}selected{/if}>1 = Ya</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="rsgm-compact-label">Jika Hamil, Trimester Kehamilan</label>
+                                            <select name="trimester_kehamilan" class="form-control">
+                                                <option value="" {if: empty($data.trimester_kehamilan)}selected{/if}>- Bukan Ibu Hamil -</option>
+                                                <option value="Trimester 1" {if: $data.trimester_kehamilan == 'Trimester 1'}selected{/if}>Trimester 1</option>
+                                                <option value="Trimester 2" {if: $data.trimester_kehamilan == 'Trimester 2'}selected{/if}>Trimester 2</option>
+                                                <option value="Trimester 3" {if: $data.trimester_kehamilan == 'Trimester 3'}selected{/if}>Trimester 3</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="rsgm-compact-label">Menggunakan KB secara teratur</label>
+                                            <select name="kb_teratur" class="form-control">
+                                                <option value="1" {if: $data.kb_teratur == '1'}selected{/if}>1 = Ya</option>
+                                                <option value="2" {if: $data.kb_teratur == '2'}selected{/if}>2 = Tidak</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="rsgm-compact-label">Riwayat infeksi menular seksual (IMS)</label>
+                                            <select name="riwayat_ims" class="form-control">
+                                                <option value="2" {if: $data.riwayat_ims == '2'}selected{/if}>2 = Tidak</option>
+                                                <option value="1" {if: $data.riwayat_ims == '1'}selected{/if}>1 = Ya (Perlu Rujukan)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="rsgm-compact-label">Klien melaporkan gejala TB</label>
+                                            <select name="gejala_tb" class="form-control">
+                                                <option value="2" {if: $data.gejala_tb == '2'}selected{/if}>2 = Tidak</option>
+                                                <option value="1" {if: $data.gejala_tb == '1'}selected{/if}>1 = Ya</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SEKSI 3: PENILAIAN PRIBADI ATAS STRATEGI PENYESUAIAN DIRI -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+                            <div style="font-weight: 700; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 12px;">
+                                <i class="fa fa-heartbeat text-danger"></i> 3. Penilaian Pribadi Atas Strategi Penyesuaian Diri (1 = YA, 2 = TIDAK)
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">Terindikasi bunuh diri jika hasil HIV (+)</label>
+                                        <select name="indikasi_bunuh_diri" class="form-control">
+                                            <option value="2" {if: $data.indikasi_bunuh_diri == '2'}selected{/if}>2 = TIDAK</option>
+                                            <option value="1" {if: $data.indikasi_bunuh_diri == '1'}selected{/if}>1 = YA</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">Riwayat melukai diri / usaha bunuh diri</label>
+                                        <select name="riwayat_melukai_diri" class="form-control">
+                                            <option value="2" {if: $data.riwayat_melukai_diri == '2'}selected{/if}>2 = TIDAK</option>
+                                            <option value="1" {if: $data.riwayat_melukai_diri == '1'}selected{/if}>1 = YA</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">Terindikasi mencederai orang lain jika HIV (+)</label>
+                                        <select name="mencederai_orang_lain" class="form-control">
+                                            <option value="2" {if: $data.mencederai_orang_lain == '2'}selected{/if}>2 = TIDAK</option>
+                                            <option value="1" {if: $data.mencederai_orang_lain == '1'}selected{/if}>1 = YA</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">Risiko kekerasan jika hasil diberitahu ke pasangan</label>
+                                        <select name="kekerasan_pasangan" class="form-control">
+                                            <option value="2" {if: $data.kekerasan_pasangan == '2'}selected{/if}>2 = TIDAK</option>
+                                            <option value="1" {if: $data.kekerasan_pasangan == '1'}selected{/if}>1 = YA</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">Mempunyai dukungan personal yang cukup</label>
+                                        <select name="dukungan_personal" class="form-control">
+                                            <option value="1" {if: $data.dukungan_personal == '1'}selected{/if}>1 = YA</option>
+                                            <option value="2" {if: $data.dukungan_personal == '2'}selected{/if}>2 = TIDAK</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">Catatan penilaian penyesuaian individu</label>
+                                        <textarea name="catatan_penyesuaian" class="form-control" rows="2" placeholder="Catatan observasi konseling...">{$data.catatan_penyesuaian}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SEKSI 4: INTERVENSI KONSELOR DALAM KUNJUNGAN KINI -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+                            <div style="font-weight: 700; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 12px;">
+                                <i class="fa fa-check-square-o text-primary"></i> 4. Intervensi Konselor Dalam Kunjungan Kini
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px; margin-bottom: 10px;">
+                                        <div style="font-weight: 700; font-size: 12px; color: #1e293b; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
+                                            Materi Edukasi Halaman 2 :
+                                        </div>
+                                        <div class="checkbox" style="margin-top: 4px;">
+                                            <label style="font-size: 12px;">
+                                                <input type="checkbox" name="intervensi[hal2_kerahasiaan]" value="1" {if: !empty($data.intervensi_konselor_arr.hal2_kerahasiaan)}checked{/if}>
+                                                Kerahasiaan dan pribadi yang ditawarkan pada klien
+                                            </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label style="font-size: 12px;">
+                                                <input type="checkbox" name="intervensi[hal2_dasar_hiv]" value="1" {if: !empty($data.intervensi_konselor_arr.hal2_dasar_hiv)}checked{/if}>
+                                                Informasi dasar tentang HIV dan penularannya
+                                            </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label style="font-size: 12px;">
+                                                <input type="checkbox" name="intervensi[hal2_potensi_keuntungan]" value="1" {if: !empty($data.intervensi_konselor_arr.hal2_potensi_keuntungan)}checked{/if}>
+                                                Dasar potensi keuntungan &amp; kesulitan tes (hukum dsb)
+                                            </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label style="font-size: 12px;">
+                                                <input type="checkbox" name="intervensi[hal2_penilaian_risiko]" value="1" {if: !empty($data.intervensi_konselor_arr.hal2_penilaian_risiko)}checked{/if}>
+                                                Penilaian risiko personal
+                                            </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label style="font-size: 12px;">
+                                                <input type="checkbox" name="intervensi[hal2_eksplorasi_hambatan]" value="1" {if: !empty($data.intervensi_konselor_arr.hal2_eksplorasi_hambatan)}checked{/if}>
+                                                Eksplorasi &amp; pemecahan masalah hambatan risiko
+                                            </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label style="font-size: 12px;">
+                                                <input type="checkbox" name="intervensi[hal2_kondom]" value="1" {if: !empty($data.intervensi_konselor_arr.hal2_kondom)}checked{/if}>
+                                                Penggunaan kondom &amp; demonstrasi penggunaan
+                                            </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label style="font-size: 12px;">
+                                                <input type="checkbox" name="intervensi[hal2_kesiapan_status]" value="1" {if: !empty($data.intervensi_konselor_arr.hal2_kesiapan_status)}checked{/if}>
+                                                Kesiapan klien mempelajari status HIV
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px; margin-bottom: 10px;">
+                                        <div style="font-weight: 700; font-size: 12px; color: #1e293b; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
+                                            Materi Edukasi Halaman 3 :
+                                        </div>
+                                        <div class="checkbox" style="margin-top: 4px;">
+                                            <label style="font-size: 12px;">
+                                                <input type="checkbox" name="intervensi[hal3_eksplorasi_positif]" value="1" {if: !empty($data.intervensi_konselor_arr.hal3_eksplorasi_positif)}checked{/if}>
+                                                Eksplorasi penyesuaian jika hasil tes HIV (+) &amp; pencegahan bunuh diri
+                                            </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label style="font-size: 12px;">
+                                                <input type="checkbox" name="intervensi[hal3_pemikiran_reproduksi]" value="1" {if: !empty($data.intervensi_konselor_arr.hal3_pemikiran_reproduksi)}checked{/if}>
+                                                Pemikiran klien akan reproduksi &amp; KB
+                                            </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label style="font-size: 12px;">
+                                                <input type="checkbox" name="intervensi[hal3_dukungan_keluarga]" value="1" {if: !empty($data.intervensi_konselor_arr.hal3_dukungan_keluarga)}checked{/if}>
+                                                Eksplorasi dukungan keluarga &amp; kawan
+                                            </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label style="font-size: 12px;">
+                                                <input type="checkbox" name="intervensi[hal3_penilaian_risiko2]" value="1" {if: !empty($data.intervensi_konselor_arr.hal3_penilaian_risiko2)}checked{/if}>
+                                                Penilaian risiko personal lanjutan
+                                            </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label style="font-size: 12px;">
+                                                <input type="checkbox" name="intervensi[hal3_isu_penting]" value="1" {if: !empty($data.intervensi_konselor_arr.hal3_isu_penting)}checked{/if}>
+                                                Isu penting lain yang dibutuhkan klien
+                                            </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label style="font-size: 12px;">
+                                                <input type="checkbox" name="intervensi[hal3_info_prosedur]" value="1" {if: !empty($data.intervensi_konselor_arr.hal3_info_prosedur)}checked{/if}>
+                                                Dasar tes &amp; prosedur pemeriksaan lab
+                                            </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label style="font-size: 12px;">
+                                                <input type="checkbox" name="intervensi[hal3_informed_consent]" value="1" {if: !empty($data.intervensi_konselor_arr.hal3_informed_consent)}checked{/if}>
+                                                Informed consent untuk pemeriksaan tes HIV
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="rsgm-compact-label">Catatan Tambahan Intervensi Konselor</label>
+                                <textarea name="catatan_lainnya" class="form-control" rows="2" placeholder="Tuliskan catatan intervensi atau kebutuhan khusus klien lainnya...">{$data.catatan_lainnya}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- SEKSI 5: HASIL PEMERIKSAAN & KONSELOR -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+                            <div style="font-weight: 700; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 12px;">
+                                <i class="fa fa-flask text-success"></i> 5. Hasil Pemeriksaan Laboratorium &amp; Konselor Penanggung Jawab
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">Hasil Pemeriksaan Laboratorium <span class="text-danger">*</span></label>
+                                        <select name="hasil_pemeriksaan" class="form-control" style="font-weight: 700;">
+                                            <option value="Antibody HIV negatif" {if: $data.hasil_pemeriksaan == 'Antibody HIV negatif'}selected{/if}>Antibody HIV negatif (-)</option>
+                                            <option value="Antibody HIV positif" {if: $data.hasil_pemeriksaan == 'Antibody HIV positif'}selected{/if}>Antibody HIV positif (+)</option>
+                                            <option value="Indeterminate" {if: $data.hasil_pemeriksaan == 'Indeterminate'}selected{/if}>Indeterminate</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">Tanggal Mengetahui Hasil</label>
+                                        <input type="date" name="tanggal_mengetahui" class="form-control" value="{$data.tanggal_mengetahui}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">Konselor Penanggung Jawab <span class="text-danger">*</span></label>
+                                        <select name="kd_konselor" id="kd_konselor" class="form-control" required style="font-weight: 600;">
+                                            <option value="">-- Pilih Konselor --</option>
+                                            <optgroup label="Dokter Konselor">
+                                                {loop: $dokter}
+                                                <option value="{$value.kd_dokter}" {if: $data.kd_konselor == $value.kd_dokter}selected{/if}>
+                                                    {$value.nm_dokter}
+                                                </option>
+                                                {/loop}
+                                            </optgroup>
+                                            <optgroup label="Petugas Konselor VCT">
+                                                {loop: $petugas}
+                                                <option value="{$value.nip}" {if: $data.kd_konselor == $value.nip}selected{/if}>
+                                                    {$value.nama}
+                                                </option>
+                                                {/loop}
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div> <!-- /.rsgm-reg-body -->
+
+                    <!-- FOOTER ACTIONS DENGAN DESAIN INTEGRATED REG-FOOTER (AKGMUFORM STYLE) -->
+                    <div class="rsgm-reg-footer">
+                        <div>
+                            <a href="{?=url([ADMIN, 'form_rme', 'vctpratestinghivmanage'])?}" class="btn btn-default" style="border-radius: 6px; font-weight: 600; padding: 7px 18px;">
+                                <i class="fa fa-arrow-left"></i> Batal &amp; Kembali
+                            </a>
+                        </div>
+                        <div class="rsgm-reg-actions">
+                            <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 700; padding: 7px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <i class="fa fa-save"></i> Simpan Formulir VCT Pra Testing HIV
+                            </button>
+                        </div>
+                    </div>
+                </div> <!-- /.rsgm-reg-shell -->
+            </div> <!-- /.col-md-9 -->
+
+        </div> <!-- /.rsgm-soap-flex-row -->
+    </form>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Tampilkan input teks jika pekerjaan lain-lain
+    $('#pekerjaan').on('change', function() {
+        if ($(this).val() === '8') {
+            $('#pekerjaan_lain').show().focus();
+        } else {
+            $('#pekerjaan_lain').hide();
+        }
+    });
+
+    // Auto-search pasien jika no_rawat diinput
+    $('#btn-cari-pasien').on('click', function() {
+        var no_rawat = $('#no_rawat').val().trim();
+        if (!no_rawat) {
+            alert('Silakan masukkan Nomor Rawat atau No. RM terlebih dahulu!');
+            return;
+        }
+
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+        $.getJSON('{?=url([ADMIN, "form_rme", "amuform"])?}', {
+            ajax_patient: 1,
+            no_rawat: no_rawat
+        }, function(res) {
+            btn.prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+            if (res.success) {
+                $('#no_rawat').val(res.no_rawat);
+                $('#no_rkm_medis').val(res.no_rkm_medis);
+                $('#nm_pasien').val(res.nm_pasien || res.nama_pasien);
+                $('#jk_pasien').val(res.jk || res.jenis_kelamin);
+                $('#tgl_lahir_pasien').val(res.tgl_lahir || res.tanggal_lahir);
+                $('#alamat_pasien').val(res.alamat);
+
+                // Auto set jenis klien
+                var jk = res.jk || res.jenis_kelamin || '';
+                if (jk === 'P' || jk.toLowerCase() === 'perempuan') {
+                    $('#jenis_klien').val('2');
+                } else {
+                    $('#jenis_klien').val('1');
+                }
+            } else {
+                alert('Data pasien dengan No. Rawat / RM "' + no_rawat + '" tidak ditemukan.');
+            }
+        }).fail(function() {
+            btn.prop('disabled', false).html('<i class="fa fa-search text-primary"></i>');
+            alert('Terjadi kesalahan saat mencari data pasien.');
+        });
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $('#btn-cari-pasien').click();
+        }
+    });
+
+    // Validasi submit form
+    $('#form-vct-pra-testing').on('submit', function(e) {
+        if (!$('#no_rawat').val()) {
+            alert('Nomor Rawat wajib diisi!');
+            $('#no_rawat').focus();
+            e.preventDefault();
+            return false;
+        }
+        if (!$('#kode_klien').val()) {
+            alert('Kode Klien VCT wajib diisi!');
+            $('#kode_klien').focus();
+            e.preventDefault();
+            return false;
+        }
+        if (!$('#kd_konselor').val()) {
+            alert('Konselor penanggung jawab wajib dipilih!');
+            $('#kd_konselor').focus();
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>

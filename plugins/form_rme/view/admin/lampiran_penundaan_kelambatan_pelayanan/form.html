@@ -1,0 +1,528 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+    <form method="POST" action="{?=url([ADMIN, 'form_rme', 'penundaankelambatansave'])?}" id="form-penundaan">
+        <input type="hidden" name="id" value="{$data.id}">
+
+        <div class="rsgm-soap-flex-row clearfix">
+
+            <!-- ============================================================
+                 KOLOM KIRI (3): SIDEBAR IDENTITAS & WAKTU PELAYANAN
+                 ============================================================ -->
+            <div class="col-md-3">
+                <div class="rsgm-reg-shell rsgm-patient-side-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+                            <span>Data Pasien</span>
+                        </h4>
+                        <span class="badge" style="background-color: #fef3c7; color: #92400e; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #fde68a;">Penundaan</span>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+                        <!-- No. Rawat Pasien with Cari -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat / RM <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2025/08/13/000040" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button" id="btn-cari-pasien" title="Cari Pasien (Ranap / Ralan)" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                                        <i class="fa fa-search text-primary"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- No. Rekam Medis -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor RM</label>
+                            <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{$data.no_rkm_medis}" readonly style="background-color: #f8fafc; font-weight: 700;">
+                        </div>
+
+                        <!-- Nama Pasien -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien</label>
+                            <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" placeholder="Nama Pasien" value="{$data.nm_pasien}" readonly style="background-color: #f8fafc; font-weight: 600;">
+                        </div>
+
+                        <!-- Gender & Tanggal Lahir -->
+                        <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="jk_pasien" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                                    <input type="text" id="jk_pasien" class="form-control" value="{$data.jk_pasien}" readonly style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="tgl_lahir_pasien" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir</label>
+                                    <input type="text" id="tgl_lahir_pasien" class="form-control" value="{$data.tgl_lahir_pasien}" readonly style="background-color: #f8fafc;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Alamat Pasien -->
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="alamat_pasien" class="rsgm-compact-label"><i class="fa fa-map-marker text-muted"></i> Alamat Domisili Pasien</label>
+                            <textarea id="alamat_pasien" class="form-control" rows="2" readonly style="background-color: #f8fafc;">{$data.alamat_pasien}</textarea>
+                        </div>
+
+                        <!-- PEMISAH: WAKTU & UNIT -->
+                        <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+                            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                                <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                    <div class="form-group" style="margin-bottom: 10px;">
+                                        <label for="tanggal" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tanggal <span class="text-danger">*</span></label>
+                                        <input type="date" name="tanggal" id="tanggal" class="form-control" value="{$data.tanggal}" required>
+                                    </div>
+                                </div>
+                                <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                    <div class="form-group" style="margin-bottom: 10px;">
+                                        <label for="jam" class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Jam <span class="text-danger">*</span></label>
+                                        <input type="time" name="jam" id="jam" class="form-control" value="{$data.jam}" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label for="instalasi_unit" class="rsgm-compact-label"><i class="fa fa-hospital-o text-muted"></i> Instalasi / Unit <span class="text-danger">*</span></label>
+                                <input type="text" name="instalasi_unit" id="instalasi_unit" class="form-control" value="{$data.instalasi_unit}" placeholder="Contoh: Instalasi Bedah Sentral" required>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label for="kd_dokter_pengirim" class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Dokter Pengirim</label>
+                                <select name="kd_dokter_pengirim" id="kd_dokter_pengirim" class="form-control">
+                                    <option value="">-- Pilih Dokter Pengirim --</option>
+                                    {loop: $dokter}
+                                    <option value="{$value.kd_dokter}" {if: $data.kd_dokter_pengirim == $value.kd_dokter}selected{/if}>{$value.nm_dokter}</option>
+                                    {/loop}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- INFO PENUNDAAN -->
+                        <div style="background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 12px; margin-top: 10px;">
+                            <label class="rsgm-compact-label" style="color: #92400e; margin-bottom: 4px; font-weight: 700;">
+                                <i class="fa fa-info-circle"></i> Regulasi Penundaan:
+                            </label>
+                            <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #78350f;">
+                                Pemberian informasi penundaan dan kelambatan pelayanan medis merupakan hak pasien untuk mengetahui alasan kendala dan alternatif solusi tindakan.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- /.col-md-3 -->
+
+            <!-- ============================================================
+                 KOLOM KANAN (9): WORKSTATION INFORMASI PENUNDAAN
+                 ============================================================ -->
+            <div class="col-md-9">
+                <div class="rsgm-reg-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-pencil-square-o"></i></span>
+                            <span>Informasi Penundaan dan Kelambatan Pelayanan</span>
+                        </h4>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <a href="{?=url([ADMIN, 'form_rme', 'penundaankelambatanmanage'])?}" class="btn btn-default btn-xs" style="font-weight: 600; border-radius: 6px; padding: 5px 12px;">
+                                <i class="fa fa-list"></i> Kelola Data
+                            </a>
+                            <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-weight: 700;">Formulir Informasi</span>
+                        </div>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+
+                        <!-- SEKSI 1: JENIS PELAYANAN YANG DITUNDA -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+                            <div style="font-weight: 700; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 12px;">
+                                <i class="fa fa-stethoscope text-primary"></i> 1. Jenis Pelayanan / Tindakan yang Ditunda
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="rsgm-compact-label">Uraian Pelayanan / Tindakan Medis <span class="text-danger">*</span></label>
+                                <input type="text" name="jenis_pelayanan" id="jenis_pelayanan" class="form-control" value="{$data.jenis_pelayanan}" placeholder="Contoh: Operasi Odontektomi Gigi Impaksi / Tindakan Bedah Mulut / Rawat Inap" required style="font-size: 13px; font-weight: 600; color: #1d4ed8;">
+                            </div>
+                        </div>
+
+                        <!-- SEKSI 2: IDENTITAS PENERIMA INFORMASI -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                                <div style="font-weight: 700; font-size: 13px; color: #1e293b;">
+                                    <i class="fa fa-id-card-o text-primary"></i> 2. Identitas Penerima Informasi (Yang Bertanda Tangan di Bawah Ini)
+                                </div>
+                                <button type="button" class="btn btn-default btn-xs" id="btn-salin-pasien" style="border-radius: 6px; font-weight: 600; padding: 5px 12px; border-color: #cbd5e1; color: #1e293b;">
+                                    <i class="fa fa-copy text-primary"></i> Salin dari Data Pasien (Pasien Sendiri)
+                                </button>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">Status Hubungan Penerima <span class="text-danger">*</span></label>
+                                        <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 12px;">
+                                            <label class="radio-inline" style="margin: 0; font-size: 12px; cursor: pointer; font-weight: 600;">
+                                                <input type="radio" name="status_penerima" value="Pasien Sendiri" {if: $data.status_penerima == 'Pasien Sendiri'}checked{/if}> Pasien Sendiri
+                                            </label>
+                                            <label class="radio-inline" style="margin: 0; font-size: 12px; cursor: pointer; font-weight: 600;">
+                                                <input type="radio" name="status_penerima" value="Keluarga" {if: $data.status_penerima == 'Keluarga'}checked{/if}> Keluarga
+                                            </label>
+                                            <label class="radio-inline" style="margin: 0; font-size: 12px; cursor: pointer; font-weight: 600;">
+                                                <input type="radio" name="status_penerima" value="Penanggung Jawab Pasien" {if: $data.status_penerima == 'Penanggung Jawab Pasien'}checked{/if}> P.J. Pasien
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">Nama Lengkap Penerima <span class="text-danger">*</span></label>
+                                        <input type="text" name="nama_penerima" id="nama_penerima" class="form-control" value="{$data.nama_penerima}" placeholder="Nama lengkap penerima informasi" required style="font-weight: 600;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">No. Identitas (KTP / SIM / Paspor)</label>
+                                        <input type="text" name="no_identitas_penerima" id="no_identitas_penerima" class="form-control" value="{$data.no_identitas_penerima}" placeholder="Contoh: 6371012345670001">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="rsgm-compact-label">Alamat Lengkap Penerima</label>
+                                <input type="text" name="alamat_penerima" id="alamat_penerima" class="form-control" value="{$data.alamat_penerima}" placeholder="Alamat tempat tinggal / domisili penerima saat ini">
+                            </div>
+                        </div>
+
+                        <!-- SEKSI 3: PENYEBAB PENUNDAAN & KELAMBATAN PELAYANAN -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+                            <div style="font-weight: 700; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 12px;">
+                                <i class="fa fa-clock-o text-warning"></i> 3. Penyebab Penundaan dan Kelambatan Pelayanan
+                            </div>
+                            <p style="font-size: 12px; color: #475569; margin-bottom: 12px;">
+                                <em>Dengan ini menyatakan telah menerima informasi penundaan/kelambatan pelayanan tersebut di atas dikarenakan:</em>
+                            </p>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;">
+                                        <label style="margin: 0; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1e293b;">
+                                            <input type="checkbox" name="sebab_kerusakan_alat" value="1" {if: !empty($data.sebab_kerusakan_alat)}checked{/if} style="margin: 0; transform: scale(1.15);">
+                                            <span>Kerusakan Alat Medis</span>
+                                        </label>
+                                    </div>
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;">
+                                        <label style="margin: 0; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1e293b;">
+                                            <input type="checkbox" name="sebab_kondisi_umum_pasien" value="1" {if: !empty($data.sebab_kondisi_umum_pasien)}checked{/if} style="margin: 0; transform: scale(1.15);">
+                                            <span>Kondisi Umum Pasien</span>
+                                        </label>
+                                    </div>
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;">
+                                        <label style="margin: 0; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1e293b;">
+                                            <input type="checkbox" name="sebab_penundaan_penjadwalan" value="1" {if: !empty($data.sebab_penundaan_penjadwalan)}checked{/if} style="margin: 0; transform: scale(1.15);">
+                                            <span>Penundaan Penjadwalan Kamar Operasi / Tindakan</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;">
+                                        <label style="margin: 0; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1e293b;">
+                                            <input type="checkbox" name="sebab_pemadaman_listrik" value="1" {if: !empty($data.sebab_pemadaman_listrik)}checked{/if} style="margin: 0; transform: scale(1.15);">
+                                            <span>Pemadaman Instalasi Listrik</span>
+                                        </label>
+                                    </div>
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;">
+                                        <label style="margin: 0; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1e293b;">
+                                            <input type="checkbox" name="sebab_tempat_tidur_penuh" value="1" {if: !empty($data.sebab_tempat_tidur_penuh)}checked{/if} style="margin: 0; transform: scale(1.15);">
+                                            <span>Tempat Tidur Tidak Tersedia / Penuh</span>
+                                        </label>
+                                    </div>
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;">
+                                        <label style="margin: 0; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1e293b;">
+                                            <input type="checkbox" name="sebab_faktor_penyulit" id="sebab_faktor_penyulit" value="1" {if: !empty($data.sebab_faktor_penyulit)}checked{/if} style="margin: 0; transform: scale(1.15);">
+                                            <span>Faktor Penyulit Lainnya:</span>
+                                        </label>
+                                        <input type="text" name="keterangan_faktor_penyulit" id="keterangan_faktor_penyulit" class="form-control input-sm" value="{$data.keterangan_faktor_penyulit}" placeholder="Rincian faktor penyulit..." style="margin-top: 6px; border-radius: 6px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SEKSI 4: PERSETUJUAN ALTERNATIF SOLUSI -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+                            <div style="font-weight: 700; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 12px;">
+                                <i class="fa fa-handshake-o text-success"></i> 4. Persetujuan Alternatif Solusi Penundaan
+                            </div>
+                            <p style="font-size: 12px; color: #475569; margin-bottom: 12px;">
+                                <em>Maka dengan ini saya <strong>SETUJU</strong> untuk dilakukannya penundaan pelayanan dengan alternatif yang diberikan:</em>
+                            </p>
+
+                            <!-- Solusi 1 -->
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px; margin-bottom: 10px;">
+                                <label style="margin: 0; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 700; color: #1e293b;">
+                                    <input type="checkbox" name="solusi_dijadwalkan_ulang" id="solusi_dijadwalkan_ulang" value="1" {if: !empty($data.solusi_dijadwalkan_ulang)}checked{/if} style="margin: 0; transform: scale(1.15);">
+                                    <span>Dijadwalkan ulang dan menjadi prioritas</span>
+                                </label>
+                                <div style="margin-top: 8px; padding-left: 22px;">
+                                    <label class="rsgm-compact-label" style="font-size: 11px; color: #64748b;">Jadwal yang akan datang:</label>
+                                    <input type="text" name="jadwal_akan_datang" id="jadwal_akan_datang" class="form-control input-sm" value="{$data.jadwal_akan_datang}" placeholder="Contoh: Senin, 20 Oktober 2026 pukul 08:30 WITA" style="border-radius: 6px;">
+                                </div>
+                            </div>
+
+                            <!-- Solusi 2 -->
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px; margin-bottom: 10px;">
+                                <label style="margin: 0; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 700; color: #1e293b;">
+                                    <input type="checkbox" name="solusi_dirujuk" id="solusi_dirujuk" value="1" {if: !empty($data.solusi_dirujuk)}checked{/if} style="margin: 0; transform: scale(1.15);">
+                                    <span>Dirujuk ke fasilitas / unit layanan kesehatan lain</span>
+                                </label>
+                                <div style="margin-top: 8px; padding-left: 22px;">
+                                    <label class="rsgm-compact-label" style="font-size: 11px; color: #64748b;">Rujukan ditujukan ke:</label>
+                                    <input type="text" name="tujuan_rujukan" id="tujuan_rujukan" class="form-control input-sm" value="{$data.tujuan_rujukan}" placeholder="Contoh: RSUD Ulin Banjarmasin / Rumah Sakit Mitra" style="border-radius: 6px;">
+                                </div>
+                            </div>
+
+                            <!-- Solusi 3 -->
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px; margin-bottom: 0;">
+                                <label style="margin: 0; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 700; color: #1e293b;">
+                                    <input type="checkbox" name="solusi_kembali_dokter_pengirim" value="1" {if: !empty($data.solusi_kembali_dokter_pengirim)}checked{/if} style="margin: 0; transform: scale(1.15);">
+                                    <span>Dikembalikan kepada dokter pengirim</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- SEKSI 5: PENGESAHAN & DOKTER DPJP -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+                            <div style="font-weight: 700; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 12px;">
+                                <i class="fa fa-user-md text-primary"></i> 5. Pengesahan &amp; Dokter Penanggung Jawab (DPJP)
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">Dokter DPJP <span class="text-danger">*</span></label>
+                                        <select name="kd_dokter_dpjp" id="kd_dokter_dpjp" class="form-control" required style="font-weight: 600;">
+                                            <option value="">-- Pilih Dokter DPJP --</option>
+                                            {loop: $dokter}
+                                            <option value="{$value.kd_dokter}" {if: $data.kd_dokter_dpjp == $value.kd_dokter}selected{/if}>{$value.nm_dokter}</option>
+                                            {/loop}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="rsgm-compact-label">Pemberi Informasi (Petugas / Dokter) <span class="text-danger">*</span></label>
+                                        <select name="kd_pemberi_informasi" id="kd_pemberi_informasi" class="form-control" required style="font-weight: 600;">
+                                            <option value="">-- Pilih Pemberi Informasi --</option>
+                                            <optgroup label="Dokter">
+                                                {loop: $dokter}
+                                                <option value="{$value.kd_dokter}" {if: $data.kd_pemberi_informasi == $value.kd_dokter}selected{/if}>{$value.nm_dokter}</option>
+                                                {/loop}
+                                            </optgroup>
+                                            <optgroup label="Perawat / Petugas Medis">
+                                                {loop: $petugas}
+                                                <option value="{$value.nip}" {if: $data.kd_pemberi_informasi == $value.nip}selected{/if}>{$value.nama}</option>
+                                                {/loop}
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="rsgm-compact-label">Catatan Tambahan (Opsional)</label>
+                                <textarea name="catatan" id="catatan" class="form-control" rows="2" placeholder="Catatan khusus kondisi pasien atau penjelasan tambahan...">{$data.catatan}</textarea>
+                            </div>
+                        </div>
+
+                    </div> <!-- /.rsgm-reg-body -->
+
+                    <!-- FOOTER ACTIONS DENGAN DESAIN INTEGRATED REG-FOOTER (AKGMUFORM STYLE) -->
+                    <div class="rsgm-reg-footer">
+                        <div>
+                            <a href="{?=url([ADMIN, 'form_rme', 'penundaankelambatanmanage'])?}" class="btn btn-default" style="border-radius: 6px; font-weight: 600; padding: 7px 18px;">
+                                <i class="fa fa-arrow-left"></i> Batal &amp; Kembali
+                            </a>
+                        </div>
+                        <div class="rsgm-reg-actions">
+                            <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 700; padding: 7px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <i class="fa fa-save"></i> Simpan Formulir Penundaan
+                            </button>
+                        </div>
+                    </div>
+                </div> <!-- /.rsgm-reg-shell -->
+            </div> <!-- /.col-md-9 -->
+
+        </div> <!-- /.rsgm-soap-flex-row -->
+    </form>
+</div>
+
+<!-- Modal Pencarian Pasien -->
+<div class="modal fade" id="modalPasien" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content" style="border-radius: 8px; overflow: hidden;">
+            <div class="modal-header" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title" style="font-weight: 700; font-size: 14px; color: #1e293b;"><i class="fa fa-users text-primary"></i> Cari Registrasi Pasien (Ranap / Ralan)</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <div class="input-group">
+                        <input type="text" id="cari_keyword" class="form-control" placeholder="Ketik Nama Pasien, No. RM, atau No. Rawat..." style="border-radius: 6px 0 0 6px;">
+                        <span class="input-group-btn">
+                            <button class="btn btn-primary" type="button" id="btn-do-cari" style="border-radius: 0 6px 6px 0; font-weight: 600;">
+                                <i class="fa fa-search"></i> Cari
+                            </button>
+                        </span>
+                    </div>
+                </div>
+                <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                    <table class="table table-bordered table-hover" id="tabel-hasil-pasien">
+                        <thead>
+                            <tr style="background-color: #f1f5f9; font-size: 12px;">
+                                <th>No. Rawat</th>
+                                <th>No. RM</th>
+                                <th>Nama Pasien</th>
+                                <th>Tgl Lahir / JK</th>
+                                <th>Dokter DPJP</th>
+                                <th style="width: 80px; text-align: center;">Pilih</th>
+                            </tr>
+                        </thead>
+                        <tbody id="body-hasil-pasien" style="font-size: 12px;">
+                            <tr><td colspan="6" class="text-center text-muted">Ketik kata kunci untuk mencari pasien</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 6px; font-weight: 600;">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+
+    // Tombol Salin dari Data Pasien
+    $('#btn-salin-pasien').on('click', function() {
+        var nm = $('#nm_pasien').val();
+        var almt = $('#alamat_pasien').val();
+        if (!nm) {
+            alert('Silakan pilih pasien terlebih dahulu!');
+            return;
+        }
+        $('#nama_penerima').val(nm);
+        $('#alamat_penerima').val(almt);
+        $('input[name="status_penerima"][value="Pasien Sendiri"]').prop('checked', true);
+    });
+
+    // Buka Modal Cari Pasien
+    $('#btn-cari-pasien').on('click', function() {
+        $('#modalPasien').modal('show');
+        $('#cari_keyword').focus();
+    });
+
+    $('#btn-do-cari').on('click', function() {
+        doSearchPatient();
+    });
+
+    // Pencarian Pasien via AJAX
+    var timer;
+    $('#cari_keyword').on('keyup', function(e) {
+        if (e.which === 13) {
+            clearTimeout(timer);
+            doSearchPatient();
+            return;
+        }
+        clearTimeout(timer);
+        var q = $(this).val();
+        if (q.length < 2) return;
+
+        timer = setTimeout(function() {
+            doSearchPatient();
+        }, 350);
+    });
+
+    function doSearchPatient() {
+        var q = $('#cari_keyword').val();
+        $('#body-hasil-pasien').html('<tr><td colspan="6" class="text-center"><i class="fa fa-spinner fa-spin"></i> Mencari pasien...</td></tr>');
+
+        $.ajax({
+            url: '{?=url([ADMIN, "form_rme", "caripasienajax"])?}',
+            type: 'GET',
+            data: { query: q },
+            dataType: 'json',
+            success: function(res) {
+                var html = '';
+                if (res && res.length > 0) {
+                    $.each(res, function(i, row) {
+                        html += '<tr>' +
+                            '<td><strong>' + row.no_rawat + '</strong></td>' +
+                            '<td>' + row.no_rkm_medis + '</td>' +
+                            '<td><strong>' + row.nm_pasien + '</strong></td>' +
+                            '<td>' + (row.tgl_lahir || '-') + ' (' + row.jk + ')</td>' +
+                            '<td>' + (row.nm_dokter || '-') + '</td>' +
+                            '<td style="text-align: center;">' +
+                                '<button type="button" class="btn btn-xs btn-success btn-pilih-pasien" style="border-radius: 6px; font-weight: 600;" ' +
+                                'data-norawat="' + row.no_rawat + '" ' +
+                                'data-norm="' + row.no_rkm_medis + '" ' +
+                                'data-nama="' + row.nm_pasien + '" ' +
+                                'data-jk="' + (row.jk === 'L' ? 'Laki-laki' : 'Perempuan') + '" ' +
+                                'data-tgllahir="' + (row.tgl_lahir || '') + '" ' +
+                                'data-alamat="' + (row.alamat || '') + '" ' +
+                                'data-kddokter="' + (row.kd_dokter || '') + '" ' +
+                                'data-nmdokter="' + (row.nm_dokter || '') + '" ' +
+                                'data-pj="' + (row.p_jawab || '') + '" ' +
+                                'data-almtpj="' + (row.almt_pj || '') + '" ' +
+                                'data-hubunganpj="' + (row.hubunganpj || '') + '">' +
+                                '<i class="fa fa-check"></i> Pilih' +
+                                '</button>' +
+                            '</td>' +
+                        '</tr>';
+                    });
+                } else {
+                    html = '<tr><td colspan="6" class="text-center text-muted">Pasien tidak ditemukan</td></tr>';
+                }
+                $('#body-hasil-pasien').html(html);
+            },
+            error: function() {
+                $('#body-hasil-pasien').html('<tr><td colspan="6" class="text-center text-danger">Gagal menghubungi server</td></tr>');
+            }
+        });
+    }
+
+    // Pasien Dipilih dari Modal
+    $(document).on('click', '.btn-pilih-pasien', function() {
+        var d = $(this).data();
+        $('#no_rawat').val(d.norawat);
+        $('#no_rkm_medis').val(d.norm);
+        $('#nm_pasien').val(d.nama);
+        $('#jk_pasien').val(d.jk);
+        $('#tgl_lahir_pasien').val(d.tgllahir);
+        $('#alamat_pasien').val(d.alamat);
+
+        if (d.kddokter) {
+            $('#kd_dokter_dpjp').val(d.kddokter);
+            $('#kd_dokter_pengirim').val(d.kddokter);
+        }
+
+        // Default penerima: Pasien Sendiri
+        $('#nama_penerima').val(d.nama);
+        $('#alamat_penerima').val(d.alamat);
+        $('input[name="status_penerima"][value="Pasien Sendiri"]').prop('checked', true);
+
+        $('#modalPasien').modal('hide');
+    });
+
+    // Validasi sebelum submit
+    $('#form-penundaan').on('submit', function(e) {
+        if (!$('#no_rawat').val()) {
+            alert('Nomor Rawat wajib diisi!');
+            $('#no_rawat').focus();
+            e.preventDefault();
+            return false;
+        }
+        if (!$('#jenis_pelayanan').val()) {
+            alert('Jenis Pelayanan / Tindakan yang Ditunda wajib diisi!');
+            $('#jenis_pelayanan').focus();
+            e.preventDefault();
+            return false;
+        }
+    });
+
+});
+</script>
