@@ -69,7 +69,7 @@
               {loop: $pendaftaran.jadwal}
               <tr>
                 <td class="text-center" style="color: #94a3b8; font-weight: 600; font-size: 11.5px;">
-                  {$key + 1}
+                  {?=$key + 1?}
                 </td>
                 <td>
                   <div class="rsgm-doc-cell">
@@ -87,10 +87,8 @@
                     <i class="fa fa-hospital-o"></i> {?=isset_or($value.nm_poli)?}
                   </span>
                 </td>
-                <td class="text-center">
-                  <span class="rsgm-day-badge rsgm-day-{?=isset_or($value.hari_kerja)?}">
-                    {?=isset_or($value.hari_kerja)?}
-                  </span>
+                <td class="text-center" data-search="{?=isset_or($value.hari_kerja)?}">
+                  <span class="rsgm-day-badge rsgm-day-{?=isset_or($value.hari_kerja)?}">{?=isset_or($value.hari_kerja)?}</span>
                 </td>
                 <td class="text-center">
                   <span class="rsgm-time-badge">
@@ -176,15 +174,17 @@ $(document).ready(function(){
   });
 
   // Filter hari cepat melalui pill tombol
-  $('.rsgm-day-pill').on('click', function(e) {
+  $(document).on('click', '.rsgm-day-pill', function(e) {
     e.preventDefault();
     $('.rsgm-day-pill').removeClass('active');
     $(this).addClass('active');
     var day = $(this).attr('data-day');
     if (day === 'ALL') {
       table.column(3).search('').draw();
+    } else if (day === 'AKHAD') {
+      table.column(3).search('AKHAD|MINGGU', true, false, true).draw();
     } else {
-      table.column(3).search('^' + day + '$', true, false).draw();
+      table.column(3).search(day).draw();
     }
   });
 

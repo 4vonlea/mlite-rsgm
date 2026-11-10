@@ -5969,10 +5969,10 @@ table.dataTable thead .sorting_desc:after {
 }
 
 /* ==========================================================================
-   SELECTATOR SEARCHABLE DROPDOWNS & FILTERING POLISH (.selectator_element)
-   Clean, modern, accessible searchable select dropdown with clear search input
+   SCHEDULE FORM SEARCHABLE DROPDOWNS & FILTERING (.rsgm-schedule-form-card)
+   Scoped exclusively to schedule form so it never impacts other modules/forms
    ========================================================================== */
-.selectator_element.single {
+.rsgm-schedule-form-card .selectator_element.single {
     min-height: 38px !important;
     height: 38px !important;
     border: 1px solid #cbd5e1 !important;
@@ -5985,30 +5985,30 @@ table.dataTable thead .sorting_desc:after {
     cursor: pointer;
 }
 
-.selectator_element.single.focused,
-.selectator_element.single.options-visible {
+.rsgm-schedule-form-card .selectator_element.single.focused,
+.rsgm-schedule-form-card .selectator_element.single.options-visible {
     border-color: #2563eb !important;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14) !important;
 }
 
-.selectator_element.single.options-visible {
+.rsgm-schedule-form-card .selectator_element.single.options-visible {
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
 }
 
-.selectator_element.single:after {
+.rsgm-schedule-form-card .selectator_element.single:after {
     right: 12px !important;
     color: #64748b !important;
     font-size: 10px !important;
     transition: transform 0.2s ease;
 }
 
-.selectator_element.single.options-visible:after {
+.rsgm-schedule-form-card .selectator_element.single.options-visible:after {
     transform: scaleY(-0.85) !important;
     color: #2563eb !important;
 }
 
-.selectator_element.single .selectator_selected_items {
+.rsgm-schedule-form-card .selectator_element.single .selectator_selected_items {
     height: 20px !important;
     line-height: 20px !important;
     display: flex !important;
@@ -6016,7 +6016,7 @@ table.dataTable thead .sorting_desc:after {
     padding: 0 !important;
 }
 
-.selectator_element.single .selectator_selected_items .selectator_selected_item .selectator_selected_item_title {
+.rsgm-schedule-form-card .selectator_element.single .selectator_selected_items .selectator_selected_item .selectator_selected_item_title {
     font-size: 13px !important;
     font-weight: 500 !important;
     color: #0f172a !important;
@@ -6026,8 +6026,8 @@ table.dataTable thead .sorting_desc:after {
     line-height: 20px !important;
 }
 
-/* Kotak Pencarian / Search Input Ketika Dropdown Terbuka */
-.selectator_element.single.options-visible:not(.disable_search) .selectator_input {
+/* Kotak Pencarian / Search Input Ketika Dropdown Terbuka di Form Jadwal */
+.rsgm-schedule-form-card .selectator_element.single.options-visible:not(.disable_search) .selectator_input {
     display: block !important;
     opacity: 1 !important;
     visibility: visible !important;
@@ -6058,19 +6058,19 @@ table.dataTable thead .sorting_desc:after {
     cursor: text !important;
 }
 
-.selectator_element.single.options-visible:not(.disable_search) .selectator_input:focus {
+.rsgm-schedule-form-card .selectator_element.single.options-visible:not(.disable_search) .selectator_input:focus {
     outline: none !important;
     border-color: #2563eb !important;
     background-color: #ffffff !important;
 }
 
-.selectator_element.single.options-visible:not(.disable_search) .selectator_input::placeholder {
+.rsgm-schedule-form-card .selectator_element.single.options-visible:not(.disable_search) .selectator_input::placeholder {
     color: #94a3b8 !important;
     font-size: 12.5px !important;
 }
 
-/* Panel Daftar Pilihan (Options Dropdown) */
-.selectator_element.single.options-visible:not(.disable_search) .selectator_options {
+/* Panel Daftar Pilihan (Options Dropdown) di Form Jadwal */
+.rsgm-schedule-form-card .selectator_element.single.options-visible:not(.disable_search) .selectator_options {
     border: 1px solid #cbd5e1 !important;
     border-top: none !important;
     border-radius: 0 0 8px 8px !important;
@@ -6083,7 +6083,7 @@ table.dataTable thead .sorting_desc:after {
     width: calc(100% + 2px) !important;
 }
 
-.selectator_element .selectator_options .selectator_option {
+.rsgm-schedule-form-card .selectator_element .selectator_options .selectator_option {
     padding: 9px 14px !important;
     font-size: 13px !important;
     color: #1e293b !important;
@@ -6092,19 +6092,19 @@ table.dataTable thead .sorting_desc:after {
     transition: background-color 0.12s ease, color 0.12s ease;
 }
 
-.selectator_element .selectator_options .selectator_option:last-child {
+.rsgm-schedule-form-card .selectator_element .selectator_options .selectator_option:last-child {
     border-bottom: none !important;
 }
 
-.selectator_element .selectator_options .selectator_option:hover,
-.selectator_element .selectator_options .selectator_option.active {
+.rsgm-schedule-form-card .selectator_element .selectator_options .selectator_option:hover,
+.rsgm-schedule-form-card .selectator_element .selectator_options .selectator_option.active {
     background-color: #eff6ff !important;
     color: #1d4ed8 !important;
     font-weight: 600 !important;
 }
 
-/* Dropdown tanpa search (disable_search) */
-.selectator_element.single.disable_search.options-visible .selectator_options {
+/* Dropdown tanpa search (disable_search) di Form Jadwal */
+.rsgm-schedule-form-card .selectator_element.single.disable_search.options-visible .selectator_options {
     border-top: 1px solid #cbd5e1 !important;
 }
 
