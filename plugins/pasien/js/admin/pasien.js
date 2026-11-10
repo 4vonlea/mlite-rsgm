@@ -59,6 +59,10 @@ $("#form").on("click", "#simpan", function(event){
   var nm_pasien = $('input:text[name=nm_pasien]').val();
   var nm_ibu = $('input:text[name=nm_ibu]').val();
   var tgl_lahir = $('#tgl_lahir').val();
+  var tgl_lahir_m = moment(tgl_lahir, 'DD-MM-YYYY', true);
+  if (tgl_lahir_m.isValid()) {
+    tgl_lahir = tgl_lahir_m.format('YYYY-MM-DD');
+  }
   var jk = $('select[name=jk]').val();
   var gol_darah = $('select[name=gol_darah]').val();
   var stts_nikah = $('select[name=stts_nikah]').val();

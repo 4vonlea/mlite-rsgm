@@ -47,7 +47,7 @@
                 </div>
                 <label for="tgl_lahir" class="col-sm-2 control-label rsgm-label-inline">Tgl. Lahir</label>
                 <div class="col-sm-3">
-                  <input type="text" id="tgl_lahir" name="tgl_lahir" class="form-control tgl_lahir" placeholder="YYYY-MM-DD" value="{$pasien.tgl_lahir}">
+                  <input type="text" id="tgl_lahir" name="tgl_lahir" class="form-control tgl_lahir" placeholder="DD-MM-YYYY" autocomplete="off" value="{$pasien.tgl_lahir}">
                 </div>
               </div>
               <div class="{if: $admin_mode == 'simple'}hidden{/if}">
@@ -292,7 +292,7 @@
 <script type="text/javascript">
    $(function () {
        $('.tgl_lahir').datetimepicker({
-         format: 'YYYY-MM-DD',
+         format: 'DD-MM-YYYY',
          locale: 'id'
        });
        $('.tgl_daftar').datetimepicker({
@@ -437,7 +437,7 @@
           $('.nama').val(data.response.nama);
           $('.noKartu').val(data.response.noKartu);
           $('.sex').val(data.response.sex);
-          $('.tgl_lahir').val(moment(data.response.tglLahir).format('YYYY-MM-DD'));
+          $('.tgl_lahir').val(moment(data.response.tglLahir, ['DD-MM-YYYY', 'YYYY-MM-DD']).format('DD-MM-YYYY'));
           $('.noTelepon').val(data.response.noHP);
           if(data.response.kdProviderPst.kdProvider !== '{$usernamePcare}' || data.response.kdProviderPst.kdProviderGigi !== '{$usernamePcare}'){
             alert('Pasien tidak terdaftar sebagai peserta.');
@@ -466,7 +466,7 @@
           $('.nama').val(data.response.peserta.nama);
           $('.noKartu').val(data.response.peserta.noKartu);
           $('.sex').val(data.response.peserta.sex);
-          $('.tgl_lahir').val(data.response.peserta.tglLahir);
+          $('.tgl_lahir').val(moment(data.response.peserta.tglLahir, ['YYYY-MM-DD', 'DD-MM-YYYY']).format('DD-MM-YYYY'));
           $('.noTelepon').val(data.response.peserta.mr.noTelepon);
         } else {
           alert(json_obj[0].metaData.message);
@@ -493,7 +493,7 @@
           $('.nama').val(data.response.nama);
           $('.no_ktp').val(data.response.noKTP);
           $('.sex').val(data.response.sex);
-          $('.tgl_lahir').val(moment(data.response.tglLahir, 'DD-MM-YYYY').format('YYYY-MM-DD'));
+          $('.tgl_lahir').val(moment(data.response.tglLahir, ['DD-MM-YYYY', 'YYYY-MM-DD']).format('DD-MM-YYYY'));
           $('.noTelepon').val(data.response.noHP);
           if(data.response.kdProviderPst.kdProvider == '{$usernamePcare}' || data.response.kdProviderPst.kdProviderGigi == '{$usernamePcare}'){
             alert('Pasien tidak terdaftar sebagai peserta.');
@@ -523,7 +523,7 @@
           $('.nama').val(data.response.peserta.nama);
           $('.no_ktp').val(data.response.peserta.nik);
           $('.sex').val(data.response.peserta.sex);
-          $('.tgl_lahir').val(data.response.peserta.tglLahir);
+          $('.tgl_lahir').val(moment(data.response.peserta.tglLahir, ['YYYY-MM-DD', 'DD-MM-YYYY']).format('DD-MM-YYYY'));
           $('.noTelepon').val(data.response.peserta.mr.noTelepon);
         } else {
           alert(json_obj[0].metaData.message);

@@ -76,6 +76,12 @@ class Admin extends AdminModule
     $propinsi = $this->db('propinsi')->where('kd_prop', '!=', 1)->asc('nm_prop')->toArray();
     if (isset($_POST['no_rkm_medis'])) {
       $pasien = $this->db('pasien')->where('no_rkm_medis', $_POST['no_rkm_medis'])->oneArray();
+      // Tampilkan tanggal lahir di form dengan format DD-MM-YYYY
+      if (!empty($pasien['tgl_lahir']) && $pasien['tgl_lahir'] != '0000-00-00') {
+        $pasien['tgl_lahir'] = date('d-m-Y', strtotime($pasien['tgl_lahir']));
+      } else {
+        $pasien['tgl_lahir'] = '';
+      }
       $pasien['propinsi'] = (!empty($pasien['kd_prop']) && $pasien['kd_prop'] != 1)
         ? ($this->db('propinsi')->where('kd_prop', $pasien['kd_prop'])->oneArray() ?: ['nm_prop' => '-'])
         : ['nm_prop' => '-'];
@@ -194,6 +200,13 @@ class Admin extends AdminModule
   {
     $mlite_crud_permissions = $this->core->loadCrudPermissions('pasien');
     $_POST['tgl_daftar'] = date('Y-m-d', strtotime($_POST['tgl_daftar']));
+    // Tanggal lahir dari form berformat DD-MM-YYYY, simpan ke DB sebagai YYYY-MM-DD
+    if (!empty($_POST['tgl_lahir'])) {
+      $tglLahirObj = \DateTime::createFromFormat('d-m-Y', trim($_POST['tgl_lahir']));
+      if ($tglLahirObj && $tglLahirObj->format('d-m-Y') === trim($_POST['tgl_lahir'])) {
+        $_POST['tgl_lahir'] = $tglLahirObj->format('Y-m-d');
+      }
+    }
     $pasien = $this->db('pasien')->where('no_rkm_medis', $_POST['no_rkm_medis'])->oneArray();
     $cek_prop = !empty($_POST['kd_prop']) ? $this->db('propinsi')->where('kd_prop', $_POST['kd_prop'])->oneArray() : null;
     if (!$cek_prop && !empty($_POST['kd_prop']) && !empty($_POST['nm_prop'])) {
