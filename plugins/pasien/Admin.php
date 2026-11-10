@@ -82,6 +82,7 @@ class Admin extends AdminModule
       } else {
         $pasien['tgl_lahir'] = '';
       }
+      $pasien['email'] = $pasien['email'] ?? '';
       $pasien['propinsi'] = (!empty($pasien['kd_prop']) && $pasien['kd_prop'] != 1)
         ? ($this->db('propinsi')->where('kd_prop', $pasien['kd_prop'])->oneArray() ?: ['nm_prop' => '-'])
         : ['nm_prop' => '-'];
@@ -121,46 +122,48 @@ class Admin extends AdminModule
         'urlUploadPhoto' => url([ADMIN, 'pasien', 'uploadphoto', htmlspecialchars($_POST['no_rkm_medis'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')]),
         'cek_pcare' => htmlspecialchars_array($cek_pcare ?: []),
         'usernamePcare' => htmlspecialchars($usernamePcare, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
-        'mlite_crud_permissions' => htmlspecialchars_array($this->core->loadCrudPermissions('pasien'))
+        'mlite_crud_permissions' => htmlspecialchars_array($this->core->loadCrudPermissions('pasien')),
+        'is_edit' => true
       ]);
     } else {
+      $no_rkm_medis_baru = $this->core->setNoRM();
       $pasien = [
-        'no_rkm_medis' => '',
+        'no_rkm_medis' => $no_rkm_medis_baru,
         'nm_pasien' => '',
         'no_ktp' => '',
-        'jk' => '',
+        'jk' => 'L',
         'tmp_lahir' => '',
         'tgl_lahir' => '',
         'nm_ibu' => '-',
         'alamat' => '',
         'gol_darah' => '-',
         'pekerjaan' => '-',
-        'stts_nikah' => '',
+        'stts_nikah' => 'BELUM MENIKAH',
         'agama' => 'ISLAM',
         'tgl_daftar' => date('Y-m-d'),
         'no_tlp' => '',
         'umur' => '',
         'pnd' => '-',
-        'keluarga' => '',
+        'keluarga' => 'AYAH',
         'namakeluarga' => '-',
-        'kd_pj' => '',
+        'kd_pj' => !empty($penjab[0]['kd_pj']) ? $penjab[0]['kd_pj'] : '',
         'no_peserta' => '',
         'kd_kel' => '1',
-        'kd_kec' => '1',
-        'kd_kab' => '1',
-        'pekerjaanpj' => '',
-        'alamatpj' => '',
-        'kelurahanpj' => '',
-        'kecamatanpj' => '',
-        'kabupatenpj' => '',
-        'perusahaan_pasien' => '',
-        'suku_bangsa' => '',
-        'bahasa_pasien' => '',
-        'cacat_fisik' => '',
+        'kd_kec' => 1,
+        'kd_kab' => 1,
+        'pekerjaanpj' => '-',
+        'alamatpj' => '-',
+        'kelurahanpj' => '-',
+        'kecamatanpj' => '-',
+        'kabupatenpj' => '-',
+        'perusahaan_pasien' => '-',
+        'suku_bangsa' => '1',
+        'bahasa_pasien' => '1',
+        'cacat_fisik' => '1',
         'email' => '-',
-        'nip' => '',
-        'kd_prop' => '1',
-        'propinsipj' => '',
+        'nip' => '-',
+        'kd_prop' => 1,
+        'propinsipj' => '-',
         'propinsi' => ['nm_prop' => '-'],
         'kabupaten' => ['nm_kab' => '-'],
         'kecamatan' => ['nm_kec' => '-'],
@@ -177,14 +180,15 @@ class Admin extends AdminModule
         'kabupaten_list' => [],
         'kecamatan_list' => [],
         'kelurahan_list' => [],
-        'no_rkm_medis_baru' => $this->core->setNoRM(),
+        'no_rkm_medis_baru' => $no_rkm_medis_baru,
         'waapitoken' => $this->settings->get('wagateway.token'),
         'waapiphonenumber' => $this->settings->get('wagateway.phonenumber'),
         'admin_mode' => $this->settings->get('settings.admin_mode'),
         'urlUploadPhoto' => '',
         'cek_pcare' => $cek_pcare,
         'usernamePcare' => $usernamePcare,
-        'mlite_crud_permissions' => $this->core->loadCrudPermissions('pasien')
+        'mlite_crud_permissions' => $this->core->loadCrudPermissions('pasien'),
+        'is_edit' => false
       ]);
     }
     exit();
@@ -199,32 +203,44 @@ class Admin extends AdminModule
   public function postSave()
   {
     $mlite_crud_permissions = $this->core->loadCrudPermissions('pasien');
-    $_POST['tgl_daftar'] = date('Y-m-d', strtotime($_POST['tgl_daftar']));
+    $_POST['tgl_daftar'] = !empty($_POST['tgl_daftar']) ? date('Y-m-d', strtotime($_POST['tgl_daftar'])) : date('Y-m-d');
     // Tanggal lahir dari form berformat DD-MM-YYYY, simpan ke DB sebagai YYYY-MM-DD
     if (!empty($_POST['tgl_lahir'])) {
-      $tglLahirObj = \DateTime::createFromFormat('d-m-Y', trim($_POST['tgl_lahir']));
-      if ($tglLahirObj && $tglLahirObj->format('d-m-Y') === trim($_POST['tgl_lahir'])) {
+      $rawTgl = trim(str_replace('/', '-', $_POST['tgl_lahir']));
+      $tglLahirObj = \DateTime::createFromFormat('d-m-Y', $rawTgl);
+      if ($tglLahirObj && $tglLahirObj->format('d-m-Y') === $rawTgl) {
         $_POST['tgl_lahir'] = $tglLahirObj->format('Y-m-d');
+      } else {
+        $tglLahirObj2 = \DateTime::createFromFormat('Y-m-d', $rawTgl);
+        if ($tglLahirObj2 && $tglLahirObj2->format('Y-m-d') === $rawTgl) {
+          $_POST['tgl_lahir'] = $tglLahirObj2->format('Y-m-d');
+        } else {
+          $ts = strtotime($_POST['tgl_lahir']);
+          if ($ts !== false) {
+            $_POST['tgl_lahir'] = date('Y-m-d', $ts);
+          }
+        }
       }
     }
-    $pasien = $this->db('pasien')->where('no_rkm_medis', $_POST['no_rkm_medis'])->oneArray();
+
+    $pasien = !empty($_POST['no_rkm_medis']) ? $this->db('pasien')->where('no_rkm_medis', $_POST['no_rkm_medis'])->oneArray() : null;
     $cek_prop = !empty($_POST['kd_prop']) ? $this->db('propinsi')->where('kd_prop', $_POST['kd_prop'])->oneArray() : null;
     if (!$cek_prop && !empty($_POST['kd_prop']) && !empty($_POST['nm_prop'])) {
       try {
         $this->db('propinsi')->save(['kd_prop' => $_POST['kd_prop'], 'nm_prop' => $_POST['nm_prop']]);
-      } catch (\Exception $e) {}
+      } catch (\Throwable $e) {}
     }
     $cek_kab = !empty($_POST['kd_kab']) ? $this->db('kabupaten')->where('kd_kab', $_POST['kd_kab'])->oneArray() : null;
     if (!$cek_kab && !empty($_POST['kd_kab']) && !empty($_POST['nm_kab'])) {
       try {
         $this->db('kabupaten')->save(['kd_kab' => $_POST['kd_kab'], 'nm_kab' => $_POST['nm_kab']]);
-      } catch (\Exception $e) {}
+      } catch (\Throwable $e) {}
     }
     $cek_kec = !empty($_POST['kd_kec']) ? $this->db('kecamatan')->where('kd_kec', $_POST['kd_kec'])->oneArray() : null;
     if (!$cek_kec && !empty($_POST['kd_kec']) && !empty($_POST['nm_kec'])) {
       try {
         $this->db('kecamatan')->save(['kd_kec' => $_POST['kd_kec'], 'nm_kec' => $_POST['nm_kec']]);
-      } catch (\Exception $e) {}
+      } catch (\Throwable $e) {}
     }
     if (!empty($_POST['nm_kel'])) {
       $cek_kel = $this->db('kelurahan')->where('nm_kel', $_POST['nm_kel'])->oneArray();
@@ -233,7 +249,7 @@ class Admin extends AdminModule
           $result = $this->db('kelurahan')->select('kd_kel')->desc('kd_kel')->limit(1)->oneArray();
           $_POST['kd_kel'] = ($result ? $result['kd_kel'] + 1 : 1);
           $this->db('kelurahan')->save(['kd_kel' => $_POST['kd_kel'], 'nm_kel' => $_POST['nm_kel']]);
-        } catch (\Exception $e) {}
+        } catch (\Throwable $e) {}
       } else {
         $_POST['kd_kel'] = $cek_kel['kd_kel'];
       }
@@ -256,7 +272,7 @@ class Admin extends AdminModule
       while ($retryCount < $maxRetries && !$success) {
         $this->db()->pdo()->beginTransaction();
         try {
-          if ($manual == '0') {
+          if ($manual == '0' || empty($_POST['no_rkm_medis'])) {
             $_POST['no_rkm_medis'] = $this->core->setNoRM();
           }
 
@@ -301,10 +317,13 @@ class Admin extends AdminModule
             $lastError = 'Gagal menyimpan data pasien.';
             break; // Bukan error duplikat, keluar dari loop
           }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
           $this->db()->pdo()->rollBack();
           if ($e->getCode() == '23000' && $manual == '0') {
             $retryCount++;
+            try {
+              $this->db()->pdo()->prepare("UPDATE set_no_rkm_medis SET no_rkm_medis=?")->execute([$_POST['no_rkm_medis']]);
+            } catch (\Throwable $te) {}
             usleep(100000); // Tunggu 100ms sebelum mencoba lagi
             continue;
           }
@@ -335,6 +354,16 @@ class Admin extends AdminModule
       unset($_POST['nm_kec']);
       unset($_POST['nm_kel']);
       $_POST['umur'] = $this->hitungUmur($_POST['tgl_lahir']);
+      $_POST['kd_prop'] = !empty($_POST['kd_prop']) ? $_POST['kd_prop'] : (!empty($pasien['kd_prop']) ? $pasien['kd_prop'] : 1);
+      $_POST['kd_kab'] = !empty($_POST['kd_kab']) ? $_POST['kd_kab'] : (!empty($pasien['kd_kab']) ? $pasien['kd_kab'] : 1);
+      $_POST['kd_kec'] = !empty($_POST['kd_kec']) ? $_POST['kd_kec'] : (!empty($pasien['kd_kec']) ? $pasien['kd_kec'] : 1);
+      $_POST['kd_kel'] = !empty($_POST['kd_kel']) ? $_POST['kd_kel'] : (!empty($pasien['kd_kel']) ? $pasien['kd_kel'] : '1');
+      if (empty($_POST['nm_ibu'])) $_POST['nm_ibu'] = !empty($pasien['nm_ibu']) ? $pasien['nm_ibu'] : '-';
+      if (empty($_POST['namakeluarga'])) $_POST['namakeluarga'] = !empty($pasien['namakeluarga']) ? $pasien['namakeluarga'] : '-';
+      if (empty($_POST['email'])) $_POST['email'] = !empty($pasien['email']) ? $pasien['email'] : '-';
+      if (empty($_POST['pnd'])) $_POST['pnd'] = !empty($pasien['pnd']) ? $pasien['pnd'] : '-';
+      if (empty($_POST['tmp_lahir'])) $_POST['tmp_lahir'] = !empty($pasien['tmp_lahir']) ? $pasien['tmp_lahir'] : '-';
+      if (empty($_POST['kd_pj'])) $_POST['kd_pj'] = !empty($pasien['kd_pj']) ? $pasien['kd_pj'] : '-';
       try {
         $query = $this->db('pasien')->where('no_rkm_medis', $_POST['no_rkm_medis'])->update($_POST);
         if ($query) {
@@ -391,9 +420,9 @@ class Admin extends AdminModule
       $img = new \Systems\Lib\Image;
       if ($img->load($photo)) {
         if ($img->getInfos('width') < $img->getInfos('height')) {
-          $img->crop(0, 0, (int)$img->getInfos('width'), (int)$img->getInfos('width'));
+          $img->crop(0, 0, (int) $img->getInfos('width'), (int) $img->getInfos('width'));
         } else {
-          $img->crop(0, 0, (int)$img->getInfos('height'), (int)$img->getInfos('height'));
+          $img->crop(0, 0, (int) $img->getInfos('height'), (int) $img->getInfos('height'));
         }
 
         if ($img->getInfos('width') > 512) {
@@ -411,9 +440,9 @@ class Admin extends AdminModule
       $img = new \Systems\Lib\Image;
       if ($img->load($photo)) {
         if ($img->getInfos('width') < $img->getInfos('height')) {
-          $img->crop(0, 0, (int)$img->getInfos('width'), (int)$img->getInfos('width'));
+          $img->crop(0, 0, (int) $img->getInfos('width'), (int) $img->getInfos('width'));
         } else {
-          $img->crop(0, 0, (int)$img->getInfos('height'), (int)$img->getInfos('height'));
+          $img->crop(0, 0, (int) $img->getInfos('height'), (int) $img->getInfos('height'));
         }
 
         if ($img->getInfos('width') > 512) {
@@ -1366,19 +1395,19 @@ class Admin extends AdminModule
       case "propinsi":
         return $this->db('propinsi')->where('kd_prop', '!=', 1)->asc('nm_prop')->toArray();
       case "kabupaten":
-        $kd_prop = isset($_GET['kd_prop']) ? trim((string)$_GET['kd_prop']) : '';
+        $kd_prop = isset($_GET['kd_prop']) ? trim((string) $_GET['kd_prop']) : '';
         if (empty($kd_prop) || $kd_prop === '1') {
           return [];
         }
         return $this->db('kabupaten')->like('kd_kab', $kd_prop . '%')->where('kd_kab', '!=', 1)->asc('nm_kab')->toArray();
       case "kecamatan":
-        $kd_kab = isset($_GET['kd_kab']) ? trim((string)$_GET['kd_kab']) : '';
+        $kd_kab = isset($_GET['kd_kab']) ? trim((string) $_GET['kd_kab']) : '';
         if (empty($kd_kab) || $kd_kab === '1') {
           return [];
         }
         return $this->db('kecamatan')->like('kd_kec', $kd_kab . '%')->where('kd_kec', '!=', 1)->asc('nm_kec')->toArray();
       case "kelurahan":
-        $kd_kec = isset($_GET['kd_kec']) ? trim((string)$_GET['kd_kec']) : '';
+        $kd_kec = isset($_GET['kd_kec']) ? trim((string) $_GET['kd_kec']) : '';
         if (empty($kd_kec) || $kd_kec === '1') {
           return [];
         }
@@ -1389,16 +1418,23 @@ class Admin extends AdminModule
 
   public function hitungUmur($tanggal_lahir)
   {
-    $birthDate = new \DateTime($tanggal_lahir);
-    $today = new \DateTime("today");
-    $umur = "0 Th 0 Bl 0 Hr";
-    if ($birthDate < $today) {
-      $y = $today->diff($birthDate)->y;
-      $m = $today->diff($birthDate)->m;
-      $d = $today->diff($birthDate)->d;
-      $umur = $y . " Th " . $m . " Bl " . $d . " Hr";
+    try {
+      if (empty($tanggal_lahir) || $tanggal_lahir == '0000-00-00') {
+        return "0 Th 0 Bl 0 Hr";
+      }
+      $birthDate = new \DateTime($tanggal_lahir);
+      $today = new \DateTime("today");
+      $umur = "0 Th 0 Bl 0 Hr";
+      if ($birthDate <= $today) {
+        $y = $today->diff($birthDate)->y;
+        $m = $today->diff($birthDate)->m;
+        $d = $today->diff($birthDate)->d;
+        $umur = $y . " Th " . $m . " Bl " . $d . " Hr";
+      }
+      return $umur;
+    } catch (\Throwable $e) {
+      return "0 Th 0 Bl 0 Hr";
     }
-    return $umur;
   }
 
   public function getExportPDF()
@@ -1479,8 +1515,8 @@ class Admin extends AdminModule
   public function getSettings()
   {
     if ($this->core->getUserInfo('role') != 'admin') {
-        $this->notify('failure', 'Anda tidak memiliki hak akses untuk halaman ini.');
-        redirect(url([ADMIN, 'pasien', 'uploadphoto']));
+      $this->notify('failure', 'Anda tidak memiliki hak akses untuk halaman ini.');
+      redirect(url([ADMIN, 'pasien', 'uploadphoto']));
     }
     $set_no_rkm_medis = $this->db('set_no_rkm_medis')->oneArray();
     return $this->draw('settings.html', ['set_no_rkm_medis' => $set_no_rkm_medis]);
@@ -1489,8 +1525,8 @@ class Admin extends AdminModule
   public function postSaveSettings()
   {
     if ($this->core->getUserInfo('role') != 'admin') {
-        $this->notify('failure', 'Anda tidak memiliki hak akses untuk halaman ini.');
-        redirect(url([ADMIN, 'pasien', 'uploadphoto']));
+      $this->notify('failure', 'Anda tidak memiliki hak akses untuk halaman ini.');
+      redirect(url([ADMIN, 'pasien', 'uploadphoto']));
     }
     $this->db()->pdo()->exec("DELETE FROM `set_no_rkm_medis`");
     $set_no_rkm_medis = $this->db('set_no_rkm_medis')->save(['no_rkm_medis' => $_POST['set_no_rkm_medis']]);

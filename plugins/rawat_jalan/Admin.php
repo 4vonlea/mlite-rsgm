@@ -1725,24 +1725,38 @@ class Admin extends AdminModule
         $this->core->addJS(url('assets/jscripts/jquery-ui.js'), 'footer');
         $this->core->addJS(url('assets/jscripts/jquery.timepicker.js'), 'footer');
         $this->_addHeaderFiles();
-        $rows = $this->db('jadwal')->join('dokter', 'dokter.kd_dokter = jadwal.kd_dokter')->join('poliklinik', 'poliklinik.kd_poli = jadwal.kd_poli')->toArray();
+        $rows = $this->db('jadwal')
+            ->join('dokter', 'dokter.kd_dokter = jadwal.kd_dokter')
+            ->join('poliklinik', 'poliklinik.kd_poli = jadwal.kd_poli')
+            ->asc('dokter.nm_dokter')
+            ->asc('jadwal.hari_kerja')
+            ->asc('jadwal.jam_mulai')
+            ->toArray();
         $this->assign['jadwal'] = [];
         foreach ($rows as $row) {
-            $row['delURL'] = url([ADMIN, 'rawat_jalan', 'jadwaldel', $row['kd_dokter'], $row['hari_kerja']]);
-            $row['editURL'] = url([ADMIN, 'rawat_jalan', 'jadwaledit', $row['kd_dokter'], $row['hari_kerja']]);
+            $row['delURL'] = url([ADMIN, 'rawat_jalan', 'jadwaldel', $row['kd_dokter'], $row['hari_kerja'], rawurlencode($row['jam_mulai'])]);
+            $row['editURL'] = url([ADMIN, 'rawat_jalan', 'jadwaledit', $row['kd_dokter'], $row['hari_kerja'], rawurlencode($row['jam_mulai'])]);
             $this->assign['jadwal'][] = $row;
         }
 
         return $this->draw('jadwal.html', ['pendaftaran' => htmlspecialchars_array($this->assign)]);
     }
 
-    public function getJadwalDel($kd_dokter, $hari_kerja)
+    public function getJadwalDel($kd_dokter, $hari_kerja, $jam_mulai = null)
     {
-        if ($pendaftaran = $this->db('jadwal')->where('kd_dokter', $kd_dokter)->where('hari_kerja', $hari_kerja)->oneArray()) {
-            if ($this->db('jadwal')->where('kd_dokter', $kd_dokter)->where('hari_kerja', $hari_kerja)->delete()) {
-                $this->notify('success', 'Hapus sukses');
+        $q = $this->db('jadwal')->where('kd_dokter', $kd_dokter)->where('hari_kerja', $hari_kerja);
+        if ($jam_mulai) {
+            $q->where('jam_mulai', urldecode($jam_mulai));
+        }
+        if ($pendaftaran = $q->oneArray()) {
+            $del = $this->db('jadwal')->where('kd_dokter', $kd_dokter)->where('hari_kerja', $hari_kerja);
+            if ($jam_mulai) {
+                $del->where('jam_mulai', urldecode($jam_mulai));
+            }
+            if ($del->delete()) {
+                $this->notify('success', 'Jadwal dokter berhasil dihapus');
             } else {
-                $this->notify('failure', 'Hapus gagal');
+                $this->notify('failure', 'Gagal menghapus jadwal dokter');
             }
         }
         redirect(url([ADMIN, 'rawat_jalan', 'jadwal']));
@@ -1762,22 +1776,22 @@ class Admin extends AdminModule
         } else {
             $this->assign['form'] = [
               'kd_dokter' => '',
-              'hari_kerja' => '',
-              'jam_mulai' => '',
-              'jam_selesai' => '',
+              'hari_kerja' => 'SENIN',
+              'jam_mulai' => '08:00:00',
+              'jam_selesai' => '12:00:00',
               'kd_poli' => '',
-              'kuota' => ''
+              'kuota' => '25'
             ];
         }
         $this->assign['title'] = 'Tambah Jadwal Dokter';
-        $this->assign['dokter'] = $this->db('dokter')->toArray();
-        $this->assign['poliklinik'] = $this->db('poliklinik')->toArray();
+        $this->assign['dokter'] = $this->db('dokter')->where('status', '1')->asc('nm_dokter')->toArray();
+        $this->assign['poliklinik'] = $this->db('poliklinik')->where('status', '1')->asc('nm_poli')->toArray();
         $this->assign['hari_kerja'] = $this->core->getEnum('jadwal', 'hari_kerja');
-        $this->assign['postUrl'] = url([ADMIN, 'rawat_jalan', 'jadwalsave', $this->assign['form']['kd_dokter'], $this->assign['form']['hari_kerja']]);
+        $this->assign['postUrl'] = url([ADMIN, 'rawat_jalan', 'jadwalsave']);
         return $this->draw('jadwal.form.html', ['pendaftaran' => htmlspecialchars_array($this->assign)]);
     }
 
-    public function getJadwalEdit($id, $hari_kerja)
+    public function getJadwalEdit($id, $hari_kerja, $jam_mulai = null)
     {
         $this->core->addCSS(url('assets/css/jquery-ui.css'));
         $this->core->addCSS(url('assets/css/jquery.timepicker.css'));
@@ -1786,55 +1800,57 @@ class Admin extends AdminModule
         $this->core->addJS(url('assets/jscripts/jquery-ui.js'), 'footer');
         $this->core->addJS(url('assets/jscripts/jquery.timepicker.js'), 'footer');
         $this->_addHeaderFiles();
-        $row = $this->db('jadwal')->where('kd_dokter', $id)->where('hari_kerja', $hari_kerja)->oneArray();
+        $q = $this->db('jadwal')->where('kd_dokter', $id)->where('hari_kerja', $hari_kerja);
+        if ($jam_mulai) {
+            $q->where('jam_mulai', urldecode($jam_mulai));
+        }
+        $row = $q->oneArray();
         if (!empty($row)) {
             $this->assign['form'] = $row;
-            $this->assign['title'] = 'Edit Jadwal';
+            $this->assign['title'] = 'Edit Jadwal Dokter';
             $this->assign['hari_kerja'] = $this->core->getEnum('jadwal', 'hari_kerja');
-            $this->assign['dokter'] = $this->db('dokter')->toArray();
-            $this->assign['poliklinik'] = $this->db('poliklinik')->toArray();
+            $this->assign['dokter'] = $this->db('dokter')->asc('nm_dokter')->toArray();
+            $this->assign['poliklinik'] = $this->db('poliklinik')->asc('nm_poli')->toArray();
 
-            $this->assign['postUrl'] = url([ADMIN, 'rawat_jalan', 'jadwalsave', $this->assign['form']['kd_dokter'], $this->assign['form']['hari_kerja']]);
+            $this->assign['postUrl'] = url([ADMIN, 'rawat_jalan', 'jadwalsave', $row['kd_dokter'], $row['hari_kerja'], rawurlencode($row['jam_mulai'])]);
             return $this->draw('jadwal.form.html', ['pendaftaran' => htmlspecialchars_array($this->assign)]);
         } else {
             redirect(url([ADMIN, 'rawat_jalan', 'jadwal']));
         }
     }
 
-    public function postJadwalSave($id = null, $hari_kerja = null)
+    public function postJadwalSave($id = null, $hari_kerja = null, $jam_mulai = null)
     {
-        $errors = 0;
-
-        if (!$id) {
-            $location = url([ADMIN, 'rawat_jalan', 'jadwal']);
-        } else {
-            $location = url([ADMIN, 'rawat_jalan', 'jadwaledit', $_POST['kd_dokter'], $_POST['hari_kerja']]);
-        }
+        $location = url([ADMIN, 'rawat_jalan', 'jadwal']);
 
         if (checkEmptyFields(['kd_dokter', 'hari_kerja', 'kd_poli'], $_POST)) {
-            $this->notify('failure', 'Isian kosong');
-            redirect($location, $_POST);
+            $this->notify('failure', 'Mohon lengkapi dokter, hari kerja, dan poliklinik!');
+            $redirectUrl = $id ? url([ADMIN, 'rawat_jalan', 'jadwaledit', $id, $hari_kerja]) : url([ADMIN, 'rawat_jalan', 'jadwaladd']);
+            redirect($redirectUrl, $_POST);
         }
 
-        if (!$errors) {
-            unset($_POST['save']);
-
-            if (!$id) {    // new
-                $query = $this->db('jadwal')->save($_POST);
-            } else {        // edit
-                $query = $this->db('jadwal')->where('kd_dokter', $id)->where('hari_kerja', $hari_kerja)->save($_POST);
-            }
-
-            if ($query) {
-                $this->notify('success', 'Simpan sukes');
-            } else {
-                $this->notify('failure', 'Simpan gagal');
-            }
-
-            redirect($location);
+        unset($_POST['save']);
+        if (empty($_POST['kuota'])) {
+            $_POST['kuota'] = 0;
         }
 
-        redirect($location, $_POST);
+        if (!$id) {    // new
+            $query = $this->db('jadwal')->save($_POST);
+        } else {        // edit
+            $q = $this->db('jadwal')->where('kd_dokter', $id)->where('hari_kerja', $hari_kerja);
+            if ($jam_mulai) {
+                $q->where('jam_mulai', urldecode($jam_mulai));
+            }
+            $query = $q->save($_POST);
+        }
+
+        if ($query) {
+            $this->notify('success', 'Jadwal dokter berhasil disimpan');
+        } else {
+            $this->notify('failure', 'Gagal menyimpan jadwal dokter');
+        }
+
+        redirect($location);
     }
 
     public function postStatusRawat()

@@ -1,78 +1,197 @@
 <div class="row">
-    <div class="col-md-12">
+  <div class="col-md-12">
+    <div class="panel panel-default rsgm-schedule-panel">
+      <div class="panel-heading rsgm-panel-head">
+        <div class="rsgm-panel-title-group">
+          <h3 class="panel-title">
+            <i class="fa fa-clock-o text-primary"></i>
+            <span>Kelola Jadwal Praktik Poliklinik</span>
+          </h3>
+          <span class="rsgm-total-pill hidden-xs">
+            <i class="fa fa-calendar-check-o text-primary"></i>
+            <span id="jadwal-total-badge">{?=count($pendaftaran.jadwal)?} Jadwal</span>
+          </span>
+        </div>
+        <div class="rsgm-panel-actions">
+          <a href="{?=url([ADMIN, 'rawat_jalan', 'manage'])?}" class="btn btn-default btn-sm rsgm-btn-back">
+            <i class="fa fa-arrow-left"></i> <span class="hidden-xs">Rawat Jalan</span>
+          </a>
+          <a href="{?=url([ADMIN, 'rawat_jalan', 'jadwaladd'])?}" class="btn btn-primary btn-sm rsgm-btn-add">
+            <i class="fa fa-plus-circle"></i> <span>Tambah Jadwal</span>
+          </a>
+        </div>
+      </div>
 
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Kelola Jadwal <a href="{?=url(ADMIN.'/rawat_jalan/jadwaladd/')?}" class="pull-right" role="tab">[ + ]</a></h3>
-            </div>
-            <div class="panel-body">
-    					<div class="table-responsive no-margin">
-    						<table class="table table-striped display no-margin" width="100%">
-    							<thead>
-    								<tr>
-    									<th>Nama Dokter</th>
-                      <th>Hari</th>
-                      <th>Jam</th>
-                      <th>Poli</th>
-                      <th>Kuota</th>
-    									<th class="text-right">Aksi</th>
-    								</tr>
-    							</thead>
-    							<tbody>
-            						{if: !empty($pendaftaran.jadwal)}
-    							{loop: $pendaftaran.jadwal}
-    							<tr>
-    								<td>{?=isset_or($value.nm_dokter)?}</td>
-    								<td>{?=isset_or($value.hari_kerja)?}</td>
-                      <td>{?=isset_or($value.jam_mulai)?} - {?=isset_or($value.jam_selesai)?}</td>
-                      <td>{?=isset_or($value.nm_poli)?}</td>
-                      <td>{?=isset_or($value.kuota)?}</td>
-    								<td class="text-right">
-    									<a href="{?=isset_or($value.editURL)?}" class="btn btn-success btn-xs">
-    										<i class="fa fa-pencil"></i> <span class="hidden-xs">Ganti</span>
-    									</a>
-    									<a href="{?=isset_or($value.delURL)?}" class="btn btn-danger btn-xs" data-confirm="Yakin ingin menghapus?">
-    										<i class="fa fa-trash-o"></i> <span class="hidden-xs">Hapus</span>
-    									</a>
-    								</td>
-    							</tr>
-    							{/loop}
-    							{else}
-    							<tr><td colspan="6" class="text-center">Data jadwal dokter tidak ditemukan</td></tr>
-    							{/if}
-    						</tbody>
-    					</table>
-    					</div>
-            </div>
+      <!-- Quick Day Filter Bar & Pilihan Jumlah Baris Dropdown -->
+      <div class="rsgm-schedule-filters">
+        <div class="rsgm-filter-item">
+          <span class="rsgm-filter-label"><i class="fa fa-filter text-primary"></i> Filter Hari:</span>
+          <div class="rsgm-day-pills">
+            <button type="button" class="btn btn-xs rsgm-day-pill active" data-day="ALL">Semua Hari</button>
+            <button type="button" class="btn btn-xs rsgm-day-pill" data-day="SENIN">Senin</button>
+            <button type="button" class="btn btn-xs rsgm-day-pill" data-day="SELASA">Selasa</button>
+            <button type="button" class="btn btn-xs rsgm-day-pill" data-day="RABU">Rabu</button>
+            <button type="button" class="btn btn-xs rsgm-day-pill" data-day="KAMIS">Kamis</button>
+            <button type="button" class="btn btn-xs rsgm-day-pill" data-day="JUMAT">Jumat</button>
+            <button type="button" class="btn btn-xs rsgm-day-pill" data-day="SABTU">Sabtu</button>
+            <button type="button" class="btn btn-xs rsgm-day-pill" data-day="AKHAD">Minggu / Akhad</button>
+          </div>
         </div>
 
+        <div class="rsgm-filter-item rsgm-filter-item-length">
+          <span class="rsgm-filter-label"><i class="fa fa-list-ol text-primary"></i> Jumlah Baris:</span>
+          <select id="pilihan_jumlah_baris" class="form-control input-sm rsgm-length-select" title="Pilih jumlah baris data yang ditampilkan">
+            <option value="10">10 Baris</option>
+            <option value="25" selected>25 Baris</option>
+            <option value="50">50 Baris</option>
+            <option value="100">100 Baris</option>
+            <option value="-1">Semua Baris</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="panel-body" style="padding: 16px;">
+        <div class="table-responsive no-margin">
+          <table class="table table-striped table-hover display no-margin" id="tabelJadwal" width="100%">
+            <thead>
+              <tr>
+                <th style="width: 45px;" class="text-center">No</th>
+                <th>Dokter</th>
+                <th>Poliklinik</th>
+                <th style="width: 110px;" class="text-center">Hari Kerja</th>
+                <th style="width: 160px;" class="text-center">Jam Praktik</th>
+                <th style="width: 110px;" class="text-center">Kuota Pasien</th>
+                <th style="width: 110px;" class="text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {if: !empty($pendaftaran.jadwal)}
+              {loop: $pendaftaran.jadwal}
+              <tr>
+                <td class="text-center" style="color: #94a3b8; font-weight: 600; font-size: 11.5px;">
+                  {$key + 1}
+                </td>
+                <td>
+                  <div class="rsgm-doc-cell">
+                    <div class="rsgm-doc-avatar">
+                      <i class="fa fa-user-md"></i>
+                    </div>
+                    <div class="rsgm-doc-info">
+                      <strong class="rsgm-doc-name">{?=isset_or($value.nm_dokter)?}</strong>
+                      <span class="rsgm-doc-meta"><i class="fa fa-id-badge"></i> Kode: {?=isset_or($value.kd_dokter)?}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="rsgm-poli-badge">
+                    <i class="fa fa-hospital-o"></i> {?=isset_or($value.nm_poli)?}
+                  </span>
+                </td>
+                <td class="text-center">
+                  <span class="rsgm-day-badge rsgm-day-{?=isset_or($value.hari_kerja)?}">
+                    {?=isset_or($value.hari_kerja)?}
+                  </span>
+                </td>
+                <td class="text-center">
+                  <span class="rsgm-time-badge">
+                    <i class="fa fa-clock-o text-primary"></i> {?=isset_or($value.jam_mulai)?} - {?=isset_or($value.jam_selesai)?}
+                  </span>
+                </td>
+                <td class="text-center">
+                  <span class="rsgm-kuota-badge" title="Kuota pendaftaran pasien">
+                    <i class="fa fa-users text-info"></i> {?=empty($value.kuota) ? '0' : $value.kuota?} Pasien
+                  </span>
+                </td>
+                <td class="text-right">
+                  <div class="btn-group btn-group-xs rsgm-row-actions">
+                    <a href="{?=isset_or($value.editURL)?}" class="btn btn-default btn-xs rsgm-action-btn rsgm-edit-btn" title="Edit Jadwal">
+                      <i class="fa fa-pencil text-primary"></i> <span class="hidden-xs">Edit</span>
+                    </a>
+                    <a href="{?=isset_or($value.delURL)?}" class="btn btn-default btn-xs rsgm-action-btn rsgm-del-btn" title="Hapus Jadwal" data-confirm="Apakah Anda yakin ingin menghapus jadwal praktik dokter {?=isset_or($value.nm_dokter)?} pada hari {?=isset_or($value.hari_kerja)?}?">
+                      <i class="fa fa-trash text-danger"></i> <span class="hidden-xs">Hapus</span>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {/loop}
+              {/if}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 
 <script type="text/javascript">
-  $(document).ready(function(){
-    // Inisialisasi DataTables hanya jika ada data
-    {if: !empty($pendaftaran.jadwal)}
-    $('.display').DataTable({
-      "language": { "search": "", "searchPlaceholder": "Search..." },
-      "lengthChange": false,
-      "scrollX": true,
-      dom: "<<'data-table-title'><'datatable-search'f>><'row'<'col-sm-12'tr>><<'pmd-datatable-pagination' l i p>>"
-    });
-    var t = $(".display").DataTable().rows().count();
-    $(".data-table-title").html('<h3 style="display:inline;float:left;margin-top:0;" class="hidden-xs">Total: ' + t + '</h3>');
-    {/if}
-  });
-  $( function() {
-    $( ".datepicker" ).datepicker({
-      dateFormat: "yy-mm-dd",
-      changeMonth: true,
-      changeYear: true,
-      yearRange: "-100:+0",
-    });
-  } );
+(function() {
+  // Rapikan Master Page Header & Breadcrumb pada Admin Shell
+  var $pageHeader = $('.rsgm-page-header').first();
+  if ($pageHeader.length) {
+    $pageHeader.find('.rsgm-page-title').html('<i class="fa fa-calendar-check-o text-primary" style="margin-right: 6px;"></i> Jadwal Praktik Dokter');
+    var $bcList = $pageHeader.find('.rsgm-breadcrumb-list');
+    if ($bcList.length) {
+      $bcList.find('.rsgm-bc-curr-item').replaceWith(
+        '<li><a href="{?=url([ADMIN, "rawat_jalan", "manage"])?}">Rawat Jalan</a></li>' +
+        '<li class="rsgm-bc-sep"><i class="fa fa-angle-right"></i></li>' +
+        '<li class="rsgm-bc-curr-item"><span class="rsgm-bc-curr">Jadwal Praktik Dokter</span></li>'
+      );
+    }
+  }
+})();
 
-  $( function() {
-    $('.timepicker').timepicker();
-  } );
+$(document).ready(function(){
+  var table = $('#tabelJadwal').DataTable({
+    "language": {
+      "search": "",
+      "searchPlaceholder": "Cari dokter, poli, hari...",
+      "lengthMenu": "Tampilkan _MENU_ baris",
+      "info": "Menampilkan _START_ s/d _END_ dari _TOTAL_ jadwal",
+      "infoEmpty": "Menampilkan 0 jadwal",
+      "infoFiltered": "(disaring dari _MAX_ total)",
+      "emptyTable": "Belum ada jadwal dokter yang terdaftar pada sistem",
+      "zeroRecords": "Tidak ditemukan jadwal dokter yang cocok dengan pencarian",
+      "paginate": {
+        "first": "&laquo;",
+        "last": "&raquo;",
+        "previous": "‹",
+        "next": "›"
+      }
+    },
+    "lengthChange": true,
+    "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
+    "pageLength": 25,
+    "scrollX": true,
+    "autoWidth": false,
+    "order": [[ 1, "asc" ]],
+    dom: "<<'rsgm-dt-header'<'data-table-title'><'datatable-search'f>><'row'<'col-sm-12'tr>><<'pmd-datatable-pagination' i p>>"
+  });
+
+  // Hubungkan dropdown pilihan jumlah baris di filter bar dengan DataTables
+  $('#pilihan_jumlah_baris').on('change', function() {
+    var val = parseInt($(this).val(), 10);
+    if (!isNaN(val)) {
+      table.page.len(val).draw();
+    }
+  });
+
+  // Filter hari cepat melalui pill tombol
+  $('.rsgm-day-pill').on('click', function(e) {
+    e.preventDefault();
+    $('.rsgm-day-pill').removeClass('active');
+    $(this).addClass('active');
+    var day = $(this).attr('data-day');
+    if (day === 'ALL') {
+      table.column(3).search('').draw();
+    } else {
+      table.column(3).search('^' + day + '$', true, false).draw();
+    }
+  });
+
+  // Update total badge secara dinamis saat cari / filter
+  table.on('draw', function() {
+    var info = table.page.info();
+    $('#jadwal-total-badge').text(info.recordsDisplay + ' Jadwal');
+  });
+});
 </script>

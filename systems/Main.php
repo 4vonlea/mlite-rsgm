@@ -405,8 +405,17 @@ abstract class Main
     public function setNoRM()
     {
         $last_no_rm = $this->db('set_no_rkm_medis')->oneArray();
-        $last_no_rm = substr($last_no_rm['no_rkm_medis'], 0, 6);
-        $next_no_rm = sprintf('%06s', ($last_no_rm + 1));
+        $last_no_rm_val = !empty($last_no_rm['no_rkm_medis']) ? intval(substr($last_no_rm['no_rkm_medis'], 0, 6)) : 0;
+
+        $current_max = $last_no_rm_val;
+        $next_no_rm = sprintf('%06s', ($current_max + 1));
+
+        // Pastikan tidak duplikat dengan pasien yang sudah ada
+        while ($this->db('pasien')->where('no_rkm_medis', $next_no_rm)->count() > 0) {
+            $current_max++;
+            $next_no_rm = sprintf('%06s', ($current_max + 1));
+        }
+
         return $next_no_rm;
     }
 
