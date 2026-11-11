@@ -17,18 +17,21 @@ class Admin extends AdminModule
 
     protected function draw($file, array $variables = [])
     {
-        // Auto pre-fill no_rawat dan konteks pasien untuk setiap form RME
-        $reqNoRawat = trim($_GET['no_rawat'] ?? ($_POST['no_rawat'] ?? ''));
-        if (empty($reqNoRawat) && !empty($variables['data']['no_rawat'])) {
-            $reqNoRawat = trim($variables['data']['no_rawat']);
-        }
-        if (!empty($reqNoRawat)) {
-            if (isset($variables['data']) && is_array($variables['data'])) {
-                if (empty($variables['data']['no_rawat'])) {
-                    $variables['data']['no_rawat'] = $reqNoRawat;
-                }
-                $patient = $this->getPatientContext($reqNoRawat);
-                if (!empty($patient)) {
+        $isFormOrCetak = (strpos($file, 'form.html') !== false || strpos($file, '_form.html') !== false || strpos($file, 'cetak.html') !== false);
+
+        // Auto pre-fill no_rawat dan konteks pasien untuk form RME (bukan daftar manage / tabel)
+        if ($isFormOrCetak) {
+            $reqNoRawat = trim($_GET['no_rawat'] ?? ($_POST['no_rawat'] ?? ''));
+            if (empty($reqNoRawat) && !empty($variables['data']['no_rawat'])) {
+                $reqNoRawat = trim($variables['data']['no_rawat']);
+            }
+            if (!empty($reqNoRawat)) {
+                if (isset($variables['data']) && is_array($variables['data']) && !isset($variables['data'][0])) {
+                    if (empty($variables['data']['no_rawat'])) {
+                        $variables['data']['no_rawat'] = $reqNoRawat;
+                    }
+                    $patient = $this->getPatientContext($reqNoRawat);
+                    if (!empty($patient)) {
                     $pMap = [
                         'no_rkm_medis' => $patient['no_rkm_medis'] ?? '',
                         'nm_pasien' => $patient['nm_pasien'] ?? '',
@@ -106,6 +109,7 @@ class Admin extends AdminModule
             if (isset($variables['no_rawat']) && empty($variables['no_rawat'])) {
                 $variables['no_rawat'] = $reqNoRawat;
             }
+        }
         }
 
         // Cek Hak Akses Pengisian Berdasarkan Aktor (Dokter / Perawat / Kolaboratif / Pasien)
@@ -8604,6 +8608,11 @@ if (ob_get_length()) {
         return $this->draw('ans1/manage.html', ['data' => $data]);
     }
 
+    public function anyAns1form()
+    {
+        return $this->getAns1form();
+    }
+
     public function getAns1form()
     {
         // AJAX: ambil info pasien untuk bypass blokir hak akses aksi baru
@@ -12788,6 +12797,11 @@ if (ob_get_length()) {
         return $this->draw('rj02a/rj02a_manage.html', ['data' => $data]);
     }
 
+    public function anyRj02aform()
+    {
+        return $this->getRj02aform();
+    }
+
     public function getRj02aform() {
         if (isset($_GET['ajax_pegawai'])) {
             $q = $_GET['q'] ?? '';
@@ -13218,6 +13232,11 @@ if (ob_get_length()) {
         return $this->draw('rj11/rj11_manage.html', ['data' => $data]);
     }
 
+    public function anyRj11form()
+    {
+        return $this->getRj11form();
+    }
+
     public function getRj11form() {
         if (isset($_GET['ajax_pegawai'])) {
             $q = $_GET['q'] ?? '';
@@ -13386,6 +13405,11 @@ if (ob_get_length()) {
             ->toArray();
 
         return $this->draw('pulangaps/manage.html', ['data' => $data]);
+    }
+
+    public function anyPulangapsform()
+    {
+        return $this->getPulangapsform();
     }
 
     public function getPulangapsform()
@@ -13608,7 +13632,7 @@ if (ob_get_length()) {
             exit();
         }
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $post = $_POST;
             $saveData = [
                 'no_rawat'                        => trim($post['no_rawat'] ?? ''),
@@ -14022,7 +14046,7 @@ if (ob_get_length()) {
         }
 
         // POST Simpan
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $saveData = [
                 'no_rawat' => trim($_POST['no_rawat'] ?? ''),
                 'no_rkm_medis' => trim($_POST['no_rkm_medis'] ?? ''),
@@ -23636,13 +23660,16 @@ if (ob_get_length()) {
             }
         }
 
-        $riwayat = !empty($data["riwayat_penyakit"]) ? json_decode($data["riwayat_penyakit"], true) : [];
-        $fisik = !empty($data["pemeriksaan_fisik"]) ? json_decode($data["pemeriksaan_fisik"], true) : [];
-        $psikososial = !empty($data["psikososial"]) ? json_decode($data["psikososial"], true) : [];
-        $fungsional = !empty($data["status_fungsional"]) ? json_decode($data["status_fungsional"], true) : [];
-        $gizi = !empty($data["skrining_gizi"]) ? json_decode($data["skrining_gizi"], true) : [];
-        $nyeri = !empty($data["asesmen_nyeri"]) ? json_decode($data["asesmen_nyeri"], true) : [];
-        $jatuh = !empty($data["risiko_jatuh"]) ? json_decode($data["risiko_jatuh"], true) : [];
+        $riwayat = !empty($data["riwayat_penyakit"]) ? (json_decode($data["riwayat_penyakit"], true) ?: []) : [];
+        $fisik = !empty($data["pemeriksaan_fisik"]) ? (json_decode($data["pemeriksaan_fisik"], true) ?: []) : [];
+        $psikososial = !empty($data["psikososial"]) ? (json_decode($data["psikososial"], true) ?: []) : [];
+        $fungsionalDefaults = ['status' => 'Mandiri'];
+        $fungsional = array_merge($fungsionalDefaults, !empty($data["status_fungsional"]) ? (json_decode($data["status_fungsional"], true) ?: []) : []);
+        $gizi = !empty($data["skrining_gizi"]) ? (json_decode($data["skrining_gizi"], true) ?: []) : [];
+        $nyeriDefaults = ['mengeluh' => 'Tidak'];
+        $nyeri = array_merge($nyeriDefaults, !empty($data["asesmen_nyeri"]) ? (json_decode($data["asesmen_nyeri"], true) ?: []) : []);
+        $jatuhDefaults = ['tingkat' => 'Tidak Berisiko'];
+        $jatuh = array_merge($jatuhDefaults, !empty($data["risiko_jatuh"]) ? (json_decode($data["risiko_jatuh"], true) ?: []) : []);
 
         return $this->draw("ri04_keperawatan_ranap/form.html", [
             "data" => $data,
@@ -23743,13 +23770,16 @@ if (ob_get_length()) {
         $data["tgl_masuk_indo"] = !empty($data["tgl_masuk"]) ? date("d-m-Y", strtotime($data["tgl_masuk"])) : "-";
         $data["tgl_asesmen_indo"] = !empty($data["tgl_asesmen"]) ? date("d-m-Y", strtotime($data["tgl_asesmen"])) : "-";
 
-        $riwayat = !empty($data["riwayat_penyakit"]) ? json_decode($data["riwayat_penyakit"], true) : [];
-        $fisik = !empty($data["pemeriksaan_fisik"]) ? json_decode($data["pemeriksaan_fisik"], true) : [];
-        $psikososial = !empty($data["psikososial"]) ? json_decode($data["psikososial"], true) : [];
-        $fungsional = !empty($data["status_fungsional"]) ? json_decode($data["status_fungsional"], true) : [];
-        $gizi = !empty($data["skrining_gizi"]) ? json_decode($data["skrining_gizi"], true) : [];
-        $nyeri = !empty($data["asesmen_nyeri"]) ? json_decode($data["asesmen_nyeri"], true) : [];
-        $jatuh = !empty($data["risiko_jatuh"]) ? json_decode($data["risiko_jatuh"], true) : [];
+        $riwayat = !empty($data["riwayat_penyakit"]) ? (json_decode($data["riwayat_penyakit"], true) ?: []) : [];
+        $fisik = !empty($data["pemeriksaan_fisik"]) ? (json_decode($data["pemeriksaan_fisik"], true) ?: []) : [];
+        $psikososial = !empty($data["psikososial"]) ? (json_decode($data["psikososial"], true) ?: []) : [];
+        $fungsionalDefaults = ['status' => 'Mandiri'];
+        $fungsional = array_merge($fungsionalDefaults, !empty($data["status_fungsional"]) ? (json_decode($data["status_fungsional"], true) ?: []) : []);
+        $gizi = !empty($data["skrining_gizi"]) ? (json_decode($data["skrining_gizi"], true) ?: []) : [];
+        $nyeriDefaults = ['mengeluh' => 'Tidak'];
+        $nyeri = array_merge($nyeriDefaults, !empty($data["asesmen_nyeri"]) ? (json_decode($data["asesmen_nyeri"], true) ?: []) : []);
+        $jatuhDefaults = ['tingkat' => 'Tidak Berisiko'];
+        $jatuh = array_merge($jatuhDefaults, !empty($data["risiko_jatuh"]) ? (json_decode($data["risiko_jatuh"], true) ?: []) : []);
         $penunjang = !empty($data["pemeriksaan_penunjang"]) ? json_decode($data["pemeriksaan_penunjang"], true) : [];
 
         $is_mpdf = isset($_GET["pdf"]) && $_GET["pdf"] == 1;
@@ -24055,8 +24085,25 @@ if (ob_get_length()) {
             }
         }
 
-        $hd = !empty($data["humpty_dumpty"]) ? json_decode($data["humpty_dumpty"], true) : [];
-        $flacc = !empty($data["flacc"]) ? json_decode($data["flacc"], true) : [];
+        $hdDefaults = [
+            'umur' => '1',
+            'jenis_kelamin' => '1',
+            'diagnosa' => '1',
+            'kognitif' => '1',
+            'lingkungan' => '1',
+            'respon_bedah' => '1',
+            'obat' => '1'
+        ];
+        $hd = array_merge($hdDefaults, !empty($data["humpty_dumpty"]) ? (json_decode($data["humpty_dumpty"], true) ?: []) : []);
+
+        $flaccDefaults = [
+            'face' => '0',
+            'leg' => '0',
+            'activity' => '0',
+            'cry' => '0',
+            'consolability' => '0'
+        ];
+        $flacc = array_merge($flaccDefaults, !empty($data["flacc"]) ? (json_decode($data["flacc"], true) ?: []) : []);
 
         return $this->draw("rj_jatuh_nyeri_anak/form.html", [
             "data" => $data,
@@ -24135,8 +24182,25 @@ if (ob_get_length()) {
 
         $data["tanggal_indo"] = !empty($data["tanggal"]) ? date("d-m-Y", strtotime($data["tanggal"])) : "-";
 
-        $hd = !empty($data["humpty_dumpty"]) ? json_decode($data["humpty_dumpty"], true) : [];
-        $flacc = !empty($data["flacc"]) ? json_decode($data["flacc"], true) : [];
+        $hdDefaults = [
+            'umur' => '1',
+            'jenis_kelamin' => '1',
+            'diagnosa' => '1',
+            'kognitif' => '1',
+            'lingkungan' => '1',
+            'respon_bedah' => '1',
+            'obat' => '1'
+        ];
+        $hd = array_merge($hdDefaults, !empty($data["humpty_dumpty"]) ? (json_decode($data["humpty_dumpty"], true) ?: []) : []);
+
+        $flaccDefaults = [
+            'face' => '0',
+            'leg' => '0',
+            'activity' => '0',
+            'cry' => '0',
+            'consolability' => '0'
+        ];
+        $flacc = array_merge($flaccDefaults, !empty($data["flacc"]) ? (json_decode($data["flacc"], true) ?: []) : []);
 
         $is_mpdf = isset($_GET["pdf"]) && $_GET["pdf"] == 1;
         $kop_img = url("assets/img/KOP-SURAT.png");
@@ -24233,8 +24297,24 @@ if (ob_get_length()) {
             }
         }
 
-        $morse = !empty($data["morse_skala"]) ? json_decode($data["morse_skala"], true) : [];
-        $sydney = !empty($data["sydney_skala"]) ? json_decode($data["sydney_skala"], true) : [];
+        $morseDefaults = [
+            'riwayat_jatuh' => '0',
+            'diagnosis_sekunder' => '0',
+            'alat_bantu' => '0',
+            'terpasang_infuse' => '0',
+            'gaya_berjalan' => '0',
+            'status_mental' => '0'
+        ];
+        $morse = array_merge($morseDefaults, !empty($data["morse_skala"]) ? (json_decode($data["morse_skala"], true) ?: []) : []);
+
+        $sydneyDefaults = [
+            'riwayat_jatuh' => '0',
+            'status_mental' => '0',
+            'penglihatan' => '0',
+            'kebiasaan_berkemih' => '0',
+            'transfer_mobilitas' => '0'
+        ];
+        $sydney = array_merge($sydneyDefaults, !empty($data["sydney_skala"]) ? (json_decode($data["sydney_skala"], true) ?: []) : []);
 
         return $this->draw("ri06a_jatuh_dewasa/form.html", [
             "data" => $data,
@@ -24313,8 +24393,24 @@ if (ob_get_length()) {
 
         $data["tanggal_indo"] = !empty($data["tanggal"]) ? date("d-m-Y", strtotime($data["tanggal"])) : "-";
 
-        $morse = !empty($data["morse_skala"]) ? json_decode($data["morse_skala"], true) : [];
-        $sydney = !empty($data["sydney_skala"]) ? json_decode($data["sydney_skala"], true) : [];
+        $morseDefaults = [
+            'riwayat_jatuh' => '0',
+            'diagnosis_sekunder' => '0',
+            'alat_bantu' => '0',
+            'terpasang_infuse' => '0',
+            'gaya_berjalan' => '0',
+            'status_mental' => '0'
+        ];
+        $morse = array_merge($morseDefaults, !empty($data["morse_skala"]) ? (json_decode($data["morse_skala"], true) ?: []) : []);
+
+        $sydneyDefaults = [
+            'riwayat_jatuh' => '0',
+            'status_mental' => '0',
+            'penglihatan' => '0',
+            'kebiasaan_berkemih' => '0',
+            'transfer_mobilitas' => '0'
+        ];
+        $sydney = array_merge($sydneyDefaults, !empty($data["sydney_skala"]) ? (json_decode($data["sydney_skala"], true) ?: []) : []);
 
         $is_mpdf = isset($_GET["pdf"]) && $_GET["pdf"] == 1;
         $kop_img = url("assets/img/KOP-SURAT.png");
