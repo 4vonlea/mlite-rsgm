@@ -31,7 +31,10 @@
 
             <div class="form-group" style="margin-bottom: 10px;">
               <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
-              <div class="input-group">
+              {if: !empty($data.no_rawat)}
+              <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" readonly style="background-color: #f8fafc; font-weight: 700; color: #1d4ed8; border-radius: 6px; height: 34px;">
+              {else}
+<div class="input-group">
                 <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
                 <span class="input-group-btn">
                   <button type="button" class="btn btn-default" id="btn_cari_pasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
@@ -39,6 +42,7 @@
                   </button>
                 </span>
               </div>
+              {/if}
             </div>
 
             <div class="form-group" style="margin-bottom: 10px;">
@@ -48,23 +52,21 @@
 
             <div class="form-group" style="margin-bottom: 10px;">
               <label for="nama_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
-              <input type="text" name="nama_pasien" id="nama_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{?=isset_or($data['nama_pasien'])?}" required>
+              <input type="text" name="nama_pasien" id="nama_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{?=isset_or($data['nama_pasien'])?}" required readonly style="background-color: #f8fafc; font-weight: 700;">
             </div>
 
             <div class="row" style="margin-left: -4px; margin-right: -4px;">
               <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
                 <div class="form-group" style="margin-bottom: 10px;">
                   <label for="jenis_kelamin" class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
-                  <select name="jenis_kelamin" id="jenis_kelamin" class="form-control">
-                    <option value="L" {if: isset($data['jenis_kelamin']) && $data['jenis_kelamin'] == 'L'}selected{/if}>Laki-laki</option>
-                    <option value="P" {if: isset($data['jenis_kelamin']) && $data['jenis_kelamin'] == 'P'}selected{/if}>Perempuan</option>
-                  </select>
+                  <input type="text" id="display_jk" class="form-control" value="{if: isset($data['jenis_kelamin']) && ($data['jenis_kelamin'] == 'L' || $data['jenis_kelamin'] == 'Laki-Laki' || $data['jenis_kelamin'] == 'Laki-laki')}Laki-Laki{elseif: isset($data['jenis_kelamin']) && ($data['jenis_kelamin'] == 'P' || $data['jenis_kelamin'] == 'Perempuan')}Perempuan{else}-{/if}" readonly style="background-color: #f8fafc; font-weight: 600;">
+                  <input type="hidden" name="jenis_kelamin" id="jenis_kelamin" value="{?=isset_or($data['jenis_kelamin'])?}">
                 </div>
               </div>
               <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
                 <div class="form-group" style="margin-bottom: 10px;">
                   <label for="tanggal_lahir" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl Lahir</label>
-                  <input type="date" name="tanggal_lahir" id="tanggal_lahir" class="form-control" value="{?=isset_or($data['tanggal_lahir'])?}">
+                  <input type="text" name="tanggal_lahir" id="tanggal_lahir" class="form-control" value="{?=isset_or($data['tanggal_lahir'])?}" readonly style="background-color: #f8fafc; font-weight: 600;">
                 </div>
               </div>
             </div>
@@ -447,7 +449,7 @@
                 </div>
                 <div class="col-sm-3 form-group" style="margin-bottom: 10px;">
                   <label class="rsgm-compact-label">Golongan Darah</label>
-                  <input type="text" name="gol_darah" class="form-control" value="{?=isset_or($data['gol_darah'])?}" placeholder="A / B / AB / O">
+                  <input type="text" name="gol_darah" class="form-control" value="{?=isset_or($data['gol_darah'])?}" placeholder="A/B/AB/O" readonly style="background-color: #f8fafc; font-weight: 600;">
                 </div>
               </div>
 

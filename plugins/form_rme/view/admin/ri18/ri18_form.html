@@ -23,7 +23,10 @@
           <div class="rsgm-reg-body">
             <div class="form-group" style="margin-bottom: 10px;">
               <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
-              <div class="input-group">
+              {if: !empty($data.no_rawat)}
+              <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" readonly style="background-color: #f8fafc; font-weight: 700; color: #1d4ed8; border-radius: 6px; height: 34px;">
+              {else}
+<div class="input-group">
                 <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
                 <span class="input-group-btn">
                   <button type="button" class="btn btn-default" id="btn_cari_pasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
@@ -31,6 +34,7 @@
                   </button>
                 </span>
               </div>
+              {/if}
             </div>
 
             <div class="form-group" style="margin-bottom: 10px;">
@@ -40,7 +44,7 @@
 
             <div class="form-group" style="margin-bottom: 10px;">
               <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
-              <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}{?=isset_or($data['nama_pasien'])?}{/if}" required>
+              <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}{?=isset_or($data['nama_pasien'])?}{/if}" required readonly style="background-color: #f8fafc; font-weight: 700;">
             </div>
 
             <div class="row" style="margin-left: -4px; margin-right: -4px;">
@@ -107,7 +111,7 @@
                   </div>
                   <div class="form-group" style="margin-bottom: 10px;">
                     <label class="rsgm-compact-label">Pendidikan Terakhir</label>
-                    <input type="text" class="form-control input-sm p-pendidikan" value="{?=isset_or($data['pengkajian']['pendidikan'])?}" placeholder="SD / SMP / SMA / S1">
+                    <input type="text" class="form-control input-sm p-pendidikan" value="{if: !empty($data.pengkajian.pendidikan) && $data.pengkajian.pendidikan != '-'}{$data.pengkajian.pendidikan}{elseif: !empty($data.pnd) && $data.pnd != '-'}{$data.pnd}{elseif: !empty($data.pendidikan_terakhir) && $data.pendidikan_terakhir != '-'}{$data.pendidikan_terakhir}{else}-{/if}" readonly style="background-color: #f8fafc; font-weight: 600;">
                   </div>
                   <div class="form-group" style="margin-bottom: 10px;">
                     <label class="rsgm-compact-label">Bahasa Utama yang Digunakan</label>

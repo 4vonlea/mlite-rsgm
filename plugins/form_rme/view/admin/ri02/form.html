@@ -21,7 +21,10 @@
           <div class="rsgm-reg-body">
             <div class="form-group" style="margin-bottom: 10px;">
               <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
-              <div class="input-group">
+              {if: !empty($data.no_rawat)}
+              <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" readonly style="background-color: #f8fafc; font-weight: 700; color: #1d4ed8; border-radius: 6px; height: 34px;">
+              {else}
+<div class="input-group">
                 <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
                 <span class="input-group-btn">
                   <button type="button" class="btn btn-default" id="btn_cari_pasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
@@ -29,6 +32,7 @@
                   </button>
                 </span>
               </div>
+              {/if}
             </div>
 
             <div class="form-group" style="margin-bottom: 10px;">
@@ -60,13 +64,13 @@
               <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
                 <div class="form-group" style="margin-bottom: 10px;">
                   <label for="agama" class="rsgm-compact-label"><i class="fa fa-bookmark-o text-muted"></i> Agama</label>
-                  <input type="text" name="agama" id="agama" class="form-control" value="{?=isset_or($data['agama'])?}">
+                  <input type="text" name="agama" id="agama" class="form-control" value="{?=isset_or($data['agama'])?}" readonly style="background-color: #f8fafc; font-weight: 600;">
                 </div>
               </div>
               <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
                 <div class="form-group" style="margin-bottom: 10px;">
                   <label for="pendidikan" class="rsgm-compact-label"><i class="fa fa-graduation-cap text-muted"></i> Pendidikan</label>
-                  <input type="text" name="pendidikan" id="pendidikan" class="form-control" value="{?=isset_or($data['pendidikan'])?}">
+                  <input type="text" name="pendidikan" id="pendidikan" class="form-control" value="{if: !empty($data.pendidikan) && $data.pendidikan != '-'}{$data.pendidikan}{elseif: !empty($data.pnd) && $data.pnd != '-'}{$data.pnd}{else}-{/if}" readonly style="background-color: #f8fafc; font-weight: 600;">
                 </div>
               </div>
             </div>
@@ -75,13 +79,13 @@
               <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
                 <div class="form-group" style="margin-bottom: 10px;">
                   <label for="pekerjaan" class="rsgm-compact-label"><i class="fa fa-briefcase text-muted"></i> Pekerjaan</label>
-                  <input type="text" name="pekerjaan" id="pekerjaan" class="form-control" value="{?=isset_or($data['pekerjaan'])?}">
+                  <input type="text" name="pekerjaan" id="pekerjaan" class="form-control" value="{?=isset_or($data['pekerjaan'])?}" readonly style="background-color: #f8fafc; font-weight: 600;">
                 </div>
               </div>
               <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
                 <div class="form-group" style="margin-bottom: 10px;">
                   <label for="stts_nikah" class="rsgm-compact-label"><i class="fa fa-heart-o text-muted"></i> Pernikahan</label>
-                  <input type="text" name="status_perkawinan" id="stts_nikah" class="form-control" value="{if: !empty($data.status_perkawinan)}{$data.status_perkawinan}{elseif: !empty($data.stts_nikah)}{$data.stts_nikah}{/if}">
+                  <input type="text" name="status_perkawinan" id="stts_nikah" class="form-control" value="{if: !empty($data.status_perkawinan)}{$data.status_perkawinan}{elseif: !empty($data.stts_nikah)}{$data.stts_nikah}{/if}" readonly style="background-color: #f8fafc; font-weight: 600;">
                 </div>
               </div>
             </div>

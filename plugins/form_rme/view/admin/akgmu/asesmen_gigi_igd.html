@@ -270,7 +270,7 @@
             <div class="form-group"><label>Suhu (°C)</label><input type="text" name="suhu" class="form-control"></div>
           </div>
           <div class="col-md-3">
-            <div class="form-group"><label>Golongan Darah</label><input type="text" name="gol_darah" class="form-control"></div>
+            <div class="form-group"><label>Golongan Darah</label><input type="text" name="gol_darah" class="form-control" value="{if: !empty($penilaian_igd.gol_darah)}{$penilaian_igd.gol_darah}{elseif: !empty($data.gol_darah)}{$data.gol_darah}{/if}" readonly style="background-color: #f8fafc; font-weight: 600;"></div>
           </div>
           <div class="col-md-2">
             <div class="form-group"><label>Saturasi Oksigen (%)</label><input type="text" name="saturasi" class="form-control"></div>

@@ -260,6 +260,14 @@
                     <button type="button" class="btn btn-sm rsgm-fpill rsgm-fpill-done" data-filter-status="1"><i class="fa fa-check"></i> Aktif ({$count_active})</button>
                     <button type="button" class="btn btn-sm rsgm-fpill rsgm-fpill-pending" data-filter-status="0"><i class="fa fa-wrench"></i> Nonaktif ({$count_inactive})</button>
                   </div>
+                  <div class="rsgm-filter-pills" id="btnGroupAktorFilter">
+                    <button type="button" class="btn btn-sm rsgm-fpill active" data-filter-aktor="all">Semua Role ({$count_total})</button>
+                    {loop: $available_roles}
+                    <button type="button" class="btn btn-sm rsgm-fpill" data-filter-aktor="{$value.role}" data-role-name="{$value.name}">
+                      <i class="{$value.icon}"></i> {$value.name} ({?=isset_or($role_counts[$value['role']], 0)?})
+                    </button>
+                    {/loop}
+                  </div>
                   <select id="selectCategoryFilter" class="form-control input-sm" style="width: auto; display: inline-block; height: 30px; border-radius: 6px; font-size: 12px;">
                     <option value="all">-- Semua Kategori --</option>
                     {loop: $kategori_list}
@@ -307,51 +315,92 @@
                         <th width="45" class="text-center" style="white-space: nowrap;">No</th>
                         <th width="100" style="white-space: nowrap;">Kode</th>
                         <th>Nama Formulir & Keterangan</th>
-                        <th width="110" style="white-space: nowrap;">Kategori</th>
-                        <th width="110" class="text-center" style="white-space: nowrap;">Status</th>
+                        <th width="100" style="white-space: nowrap;">Kategori</th>
+                        <th width="220" style="white-space: nowrap;">Hak Akses Pengisian</th>
+                        <th width="100" class="text-center" style="white-space: nowrap;">Status</th>
                         <th width="90" class="text-center" style="white-space: nowrap;">Aksi</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {loop: $all_forms}
-                      <tr class="master-form-row" id="form-row-{$value.id}" 
-                          data-id="{$value.id}" 
-                          data-status-filter="{$value.status}" 
-                          data-kategori-filter="{$value.kategori}" 
-                          data-search="{$value.search_text}">
+                      {loop: $all_forms as $f}
+                      <tr class="master-form-row" id="form-row-{$f.id}" 
+                          data-id="{$f.id}" 
+                          data-status-filter="{$f.status}" 
+                          data-kategori-filter="{$f.kategori}" 
+                          data-aktor-filter="{$f.target_aktor}"
+                          data-search="{$f.search_text}">
                         <td class="text-center" style="vertical-align: middle;">
-                          <input type="checkbox" name="selected_ids[]" value="{$value.id}" class="chk-row-item" style="cursor: pointer; width: 16px; height: 16px; accent-color: #2563eb;">
+                          <input type="checkbox" name="selected_ids[]" value="{$f.id}" class="chk-row-item" style="cursor: pointer; width: 16px; height: 16px; accent-color: #2563eb;">
                         </td>
                         <td class="text-center" style="vertical-align: middle; white-space: nowrap;">
-                          <span class="rsgm-visit-id">{$value.urutan}</span>
+                          <span class="rsgm-visit-id">{$f.urutan}</span>
                         </td>
                         <td style="vertical-align: middle; white-space: nowrap;">
-                          <span class="rsgm-code-chip">{$value.kode_form}</span>
+                          <span class="rsgm-code-chip">{$f.kode_form}</span>
                         </td>
                         <td style="vertical-align: middle;">
-                          <div class="rsgm-patient-name" style="font-size: 13px;">{$value.nama_form}</div>
+                          <div class="rsgm-patient-name" style="font-size: 13px;">{$f.nama_form}</div>
                           <div class="rsgm-cell-sub">
-                            <span><i class="fa fa-database text-muted"></i> {$value.nama_tabel}</span>
+                            <span><i class="fa fa-database text-muted"></i> {$f.nama_tabel}</span>
                             <span style="margin: 0 4px; color: #cbd5e1;">&bull;</span>
-                            <span><i class="fa fa-code-fork text-muted"></i> {$value.route_form}</span>
+                            <span><i class="fa fa-code-fork text-muted"></i> {$f.route_form}</span>
                           </div>
-                          {if: !empty($value.catatan)}
+                          {if: !empty($f.catatan)}
                           <div class="rsgm-cell-sub-alert" style="margin-top: 3px;">
-                            <i class="fa fa-info-circle"></i> Catatan: {$value.catatan}
+                            <i class="fa fa-info-circle"></i> Catatan: {$f.catatan}
                           </div>
-                          {elseif: !empty($value.deskripsi)}
+                          {elseif: !empty($f.deskripsi)}
                           <div class="rsgm-cell-sub" style="margin-top: 2px;">
-                            <i class="fa fa-info-circle text-muted"></i> {$value.deskripsi}
+                            <i class="fa fa-info-circle text-muted"></i> {$f.deskripsi}
                           </div>
                           {/if}
                         </td>
                         <td style="vertical-align: middle; white-space: nowrap;">
-                          <span class="rsgm-badge {if: $value.kategori == 'Bedah'}rsgm-badge-rose{elseif: $value.kategori == 'Ranap'}rsgm-badge-emerald{elseif: $value.kategori == 'Rajal'}rsgm-badge-sky{elseif: $value.kategori == 'UGD' || $value.kategori == 'IGD'}rsgm-badge-amber{else}rsgm-badge-purple{/if}">
-                            {$value.kategori}
+                          <span class="rsgm-badge {if: $f.kategori == 'Bedah'}rsgm-badge-rose{elseif: $f.kategori == 'Ranap'}rsgm-badge-emerald{elseif: $f.kategori == 'Rajal'}rsgm-badge-sky{elseif: $f.kategori == 'UGD' || $f.kategori == 'IGD'}rsgm-badge-amber{else}rsgm-badge-purple{/if}">
+                            {$f.kategori}
                           </span>
                         </td>
+                        <td style="vertical-align: middle;">
+                          <div class="rsgm-role-wrapper" id="role-wrapper-{$f.id}" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 170px;">
+                            <div class="rsgm-role-badges" id="role-badges-{$f.id}" style="display: flex; flex-wrap: wrap; gap: 3px;">
+                              {loop: $f.assigned_roles_meta as $role}
+                              <span class="badge" style="background: {$role.bg}; color: {$role.color}; border: 1px solid {$role.border}; font-size: 10px; font-weight: 700; padding: 2px 6px;">
+                                <i class="{$role.icon}"></i> {$role.name}
+                              </span>
+                              {/loop}
+                            </div>
+
+                            <!-- Tombol Dropdown Checklist Role -->
+                            <div class="dropdown rsgm-role-dropdown" style="display: inline-block;">
+                              <button type="button" class="btn btn-xs btn-default dropdown-toggle btn-kelola-role" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Atur Hak Akses Role" style="border-radius: 4px; padding: 2px 7px; color: #475569; font-weight: 600; border: 1px solid #cbd5e1; background: #ffffff;">
+                                <i class="fa fa-pencil text-primary"></i> <span class="caret"></span>
+                              </button>
+                              <div class="dropdown-menu dropdown-menu-right rsgm-role-popover" style="padding: 10px 14px; min-width: 250px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border-radius: 8px; border: 1px solid #cbd5e1; z-index: 1050; text-align: left;">
+                                <div style="font-size: 11.5px; font-weight: 700; color: #0f172a; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+                                  <span><i class="fa fa-check-square-o text-primary"></i> Hak Akses Pengisian</span>
+                                  <span class="rsgm-code-chip" style="font-size: 10px;">{$f.kode_form}</span>
+                                </div>
+                                <div class="role-checkbox-container" data-form-id="{$f.id}">
+                                  {loop: $f.roles_with_check as $role}
+                                  <div style="margin-bottom: 6px;">
+                                    <label style="font-weight: 500; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; gap: 7px; margin: 0; user-select: none;">
+                                      <input type="checkbox" class="chk-role-quick" data-form-id="{$f.id}" value="{$role.role}" {if: $role.checked}checked{/if} style="width: 15px; height: 15px; margin: 0; accent-color: #2563eb; cursor: pointer;">
+                                      <span class="badge" style="background: {$role.bg}; color: {$role.color}; border: 1px solid {$role.border}; font-size: 10.5px; font-weight: 600;">
+                                        <i class="{$role.icon}"></i> {$role.name}
+                                      </span>
+                                    </label>
+                                  </div>
+                                  {/loop}
+                                </div>
+                                <div style="font-size: 10px; color: #64748b; margin-top: 6px; border-top: 1px solid #e2e8f0; padding-top: 4px;">
+                                  <i class="fa fa-info-circle text-info"></i> Otomatis tersimpan saat dicentang
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
                         <td class="text-center status-badge-container" style="vertical-align: middle; white-space: nowrap;">
-                          {if: $value.status == '1'}
+                          {if: $f.status == '1'}
                             <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check-circle"></i> Aktif</span>
                           {else}
                             <span class="rsgm-badge rsgm-badge-rose"><i class="fa fa-wrench"></i> Nonaktif</span>
@@ -364,18 +413,18 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-right rsgm-menu-action" role="menu">
                               <li>
-                                <a href="{?=url([ADMIN, 'form_rme', $value.route_form])?}" target="_blank">
+                                <a href="{?=url([ADMIN, 'form_rme', $f.route_form])?}" target="_blank">
                                   <i class="fa fa-external-link text-primary" style="width: 16px;"></i> Buka Lembar Form
                                 </a>
                               </li>
                               <li>
-                                <a href="{?=url([ADMIN, 'form_rme', $value.route_manage])?}" target="_blank">
+                                <a href="{?=url([ADMIN, 'form_rme', $f.route_manage])?}" target="_blank">
                                   <i class="fa fa-table text-success" style="width: 16px;"></i> Buka Riwayat / Data
                                 </a>
                               </li>
-                              {if: !empty($value.route_cetak)}
+                              {if: !empty($f.route_cetak)}
                               <li>
-                                <a href="{?=url([ADMIN, 'form_rme', $value.route_cetak])?}" target="_blank">
+                                <a href="{?=url([ADMIN, 'form_rme', $f.route_cetak])?}" target="_blank">
                                   <i class="fa fa-print text-danger" style="width: 16px;"></i> Pratinjau Format Cetak
                                 </a>
                               </li>
@@ -383,22 +432,23 @@
                               <li class="divider"></li>
                               <li>
                                 <a href="#" class="btn-edit-form"
-                                  data-id="{$value.id}"
-                                  data-kode="{$value.kode_form}"
-                                  data-nama="{$value.nama_form}"
-                                  data-kategori="{$value.kategori}"
-                                  data-urutan="{$value.urutan}"
-                                  data-status="{$value.status}"
-                                  data-catatan="{$value.catatan}">
+                                  data-id="{$f.id}"
+                                  data-kode="{$f.kode_form}"
+                                  data-nama="{$f.nama_form}"
+                                  data-kategori="{$f.kategori}"
+                                  data-aktor="{$f.target_aktor}"
+                                  data-urutan="{$f.urutan}"
+                                  data-status="{$f.status}"
+                                  data-catatan="{$f.catatan}">
                                   <i class="fa fa-pencil text-warning" style="width: 16px;"></i> Edit Formulir
                                 </a>
                               </li>
                               <li>
                                 <a href="#" class="btn-toggle-status"
-                                  data-id="{$value.id}"
-                                  data-status="{if: $value.status == '1'}0{else}1{/if}"
-                                  data-nama="{$value.nama_form}">
-                                  {if: $value.status == '1'}
+                                  data-id="{$f.id}"
+                                  data-status="{if: $f.status == '1'}0{else}1{/if}"
+                                  data-nama="{$f.nama_form}">
+                                  {if: $f.status == '1'}
                                     <i class="fa fa-pause text-danger" style="width: 16px;"></i> Nonaktifkan Form
                                   {else}
                                     <i class="fa fa-play text-success" style="width: 16px;"></i> Aktifkan Form
@@ -504,6 +554,25 @@
                   </div>
 
                   <div class="form-group">
+                    <label class="col-sm-3 control-label" style="font-size: 12.5px; font-weight: 600;">Hak Akses Pengisian <span class="text-danger">*</span></label>
+                    <div class="col-sm-8">
+                      <div class="row" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 8px; margin: 0;">
+                        {loop: $available_roles}
+                        <div class="col-xs-6 col-sm-6" style="margin-bottom: 6px;">
+                          <label style="font-weight: 500; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; margin: 0; user-select: none;">
+                            <input type="checkbox" name="target_aktor[]" value="{$value.role}" {if: $value.role == 'medis' || $value.role == 'paramedis'}checked{/if} style="width: 15px; height: 15px; margin: 0; accent-color: #2563eb; cursor: pointer;">
+                            <span class="badge" style="background: {$value.bg}; color: {$value.color}; border: 1px solid {$value.border}; font-size: 10.5px; font-weight: 600;">
+                              <i class="{$value.icon}"></i> {$value.name}
+                            </span>
+                          </label>
+                        </div>
+                        {/loop}
+                      </div>
+                      <span class="help-block text-muted" style="font-size: 11px; margin-top: 4px;">Centang satu atau lebih role user (termasuk Radiologi, Lab, Farmasi, dan Pasien).</span>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
                     <label class="col-sm-3 control-label" style="font-size: 12.5px; font-weight: 600;">Tabel Database</label>
                     <div class="col-sm-6">
                       <input type="text" name="nama_tabel" class="form-control input-sm" placeholder="Contoh: rm_lampiran_ews, rm_ans1_tindakan_pembiusan" style="border-radius: 6px;">
@@ -584,21 +653,41 @@
                 </div>
                 <div class="col-sm-6">
                   <div class="form-group">
-                    <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Nomor Urutan</label>
-                    <input type="number" name="urutan" id="edit_urutan" class="form-control input-sm" min="0" style="border-radius: 6px;">
+                    <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Status Publikasi</label>
+                    <select name="status" id="edit_status" class="form-control input-sm" style="border-radius: 6px;">
+                      <option value="1">Aktif (Dipublikasikan ke Petugas & Menu)</option>
+                      <option value="0">Nonaktif (Disembunyikan / Sedang Dalam Perbaikan)</option>
+                    </select>
                   </div>
                 </div>
               </div>
 
               <div class="form-group">
-                <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Status Publikasi</label>
-                <select name="status" id="edit_status" class="form-control input-sm" style="border-radius: 6px;">
-                  <option value="1">Aktif (Dipublikasikan ke Petugas & Menu)</option>
-                  <option value="0">Nonaktif (Disembunyikan / Sedang Dalam Perbaikan)</option>
-                </select>
-                <span class="help-block text-muted" style="font-size: 11px; margin-top: 3px;">
-                  Formulir nonaktif otomatis tidak muncul di dropdown navigasi & tindakan pasien.
-                </span>
+                <label style="font-size: 12.5px; font-weight: 600; color: #334155;">
+                  <i class="fa fa-users text-primary"></i> Hak Akses Pengisian (Role User & Pasien) <span class="text-danger">*</span>
+                </label>
+                <div class="row" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 8px; margin: 0;">
+                  {loop: $available_roles}
+                  <div class="col-xs-6 col-sm-6" style="margin-bottom: 6px;">
+                    <label style="font-weight: 500; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; margin: 0; user-select: none;">
+                      <input type="checkbox" name="target_aktor[]" value="{$value.role}" class="edit-chk-role" id="edit_role_{$value.role}" style="width: 15px; height: 15px; margin: 0; accent-color: #2563eb; cursor: pointer;">
+                      <span class="badge" style="background: {$value.bg}; color: {$value.color}; border: 1px solid {$value.border}; font-size: 10.5px; font-weight: 600;">
+                        <i class="{$value.icon}"></i> {$value.name}
+                      </span>
+                    </label>
+                  </div>
+                  {/loop}
+                </div>
+                <span class="help-block text-muted" style="font-size: 11px; margin-top: 4px;">Centang seluruh role yang berwenang mengisi dokumen ini.</span>
+              </div>
+
+              <div class="row">
+                <div class="col-sm-6">
+                  <div class="form-group">
+                    <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Nomor Urutan</label>
+                    <input type="number" name="urutan" id="edit_urutan" class="form-control input-sm" min="0" style="border-radius: 6px;">
+                  </div>
+                </div>
               </div>
 
               <div class="form-group">
@@ -676,6 +765,7 @@
         // ==========================================
         var currentStatusFilter = 'all';
         var currentCategoryFilter = 'all';
+        var currentAktorFilter = 'all';
         var currentSearchKeyword = '';
 
         function applyFilters() {
@@ -684,13 +774,15 @@
             var row = $(this);
             var rowStatus = String(row.attr('data-status-filter') || '1');
             var rowCategory = String(row.attr('data-kategori-filter') || '');
+            var rowAktor = String(row.attr('data-aktor-filter') || 'kolaboratif');
             var rowSearch = String(row.attr('data-search') || '').toLowerCase();
 
             var matchStatus = (currentStatusFilter === 'all') || (rowStatus === currentStatusFilter);
             var matchCategory = (currentCategoryFilter === 'all') || (rowCategory === currentCategoryFilter);
+            var matchAktor = (currentAktorFilter === 'all') || (rowAktor && rowAktor.split(',').indexOf(currentAktorFilter) !== -1);
             var matchSearch = (currentSearchKeyword === '') || (rowSearch.indexOf(currentSearchKeyword) !== -1);
 
-            if (matchStatus && matchCategory && matchSearch) {
+            if (matchStatus && matchCategory && matchAktor && matchSearch) {
               row.show();
               visibleCount++;
             } else {
@@ -703,6 +795,13 @@
           $('#btnGroupStatusFilter button').removeClass('active');
           $(this).addClass('active');
           currentStatusFilter = $(this).data('filter-status');
+          applyFilters();
+        });
+
+        $('#btnGroupAktorFilter button').on('click', function() {
+          $('#btnGroupAktorFilter button').removeClass('active');
+          $(this).addClass('active');
+          currentAktorFilter = $(this).data('filter-aktor');
           applyFilters();
         });
 
@@ -875,6 +974,86 @@
         }
 
         // ==========================================
+        // 3B. UPDATE TARGET AKTOR ON-THE-FLY (CHECKBOX)
+        // ==========================================
+        function recalculateAktorKpis() {
+          $('#btnGroupAktorFilter button[data-filter-aktor]').each(function() {
+            var btn = $(this);
+            var role = btn.data('filter-aktor');
+            if (role === 'all') {
+              var total = $('.master-form-row').length;
+              btn.text('Semua Role (' + total + ')');
+            } else {
+              var count = $('.master-form-row').filter(function() {
+                var a = $(this).attr('data-aktor-filter') || '';
+                return a.split(',').indexOf(role) !== -1;
+              }).length;
+              var icon = btn.find('i').attr('class') || '';
+              var name = btn.data('role-name') || role;
+              btn.html((icon ? '<i class="' + icon + '"></i> ' : '') + name + ' (' + count + ')');
+            }
+          });
+        }
+
+        // Jangan tutup dropdown checklist saat klik di dalam panelnya
+        $(document).on('click', '.rsgm-role-popover', function(e) {
+          e.stopPropagation();
+        });
+
+        // Trigger update saat checkbox role dicentang / di-uncheck
+        $(document).on('change', '.chk-role-quick', function() {
+          var chk = $(this);
+          var formId = chk.data('form-id');
+          var container = chk.closest('.role-checkbox-container');
+          var selectedRoles = [];
+
+          container.find('.chk-role-quick:checked').each(function() {
+            selectedRoles.push($(this).val());
+          });
+
+          if (selectedRoles.length === 0) {
+            alert('Minimal harus memilih 1 role pengisi!');
+            chk.prop('checked', true);
+            return;
+          }
+
+          var targetAktorStr = selectedRoles.join(',');
+
+          $.ajax({
+            url: '{?=url([ADMIN, "form_rme", "updatetargetaktor"])?}',
+            type: 'POST',
+            dataType: 'json',
+            data: { id: formId, target_aktor: targetAktorStr, t: "{$token}" },
+            success: function(res) {
+              if (res && (res.status === 'success' || res.status === 'ok')) {
+                var row = $('#form-row-' + formId);
+                row.attr('data-target-aktor', res.target_aktor);
+                row.attr('data-aktor-filter', res.target_aktor);
+                row.find('.btn-edit-form').data('aktor', res.target_aktor).attr('data-aktor', res.target_aktor);
+                $('#role-badges-' + formId).html(res.badges_html);
+                
+                recalculateAktorKpis();
+
+                $('#ajax-notif-container').html(
+                  '<div class="alert alert-success alert-dismissible fade in" role="alert" style="border-radius: 6px; margin-bottom: 14px;">' +
+                  '<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>' +
+                  '<i class="fa fa-check-circle"></i> ' + (res.message || 'Hak akses berhasil diperbarui!') +
+                  '</div>'
+                ).slideDown();
+                setTimeout(function() {
+                  $('#ajax-notif-container .alert').slideUp(500, function() { $(this).remove(); });
+                }, 4000);
+              } else {
+                alert('Gagal memperbarui hak akses: ' + (res.message || 'Error'));
+              }
+            },
+            error: function() {
+              alert('Terjadi kesalahan koneksi saat memperbarui hak akses.');
+            }
+          });
+        });
+
+        // ==========================================
         // 4. MODAL EDIT FORMULIR
         // ==========================================
         $(document).on('click', '.btn-edit-form', function(e) {
@@ -884,6 +1063,14 @@
           $('#edit_modal_kode_title').text(btn.data('kode'));
           $('#edit_nama_form').val(btn.data('nama'));
           $('#edit_kategori').val(btn.data('kategori'));
+          
+          var aktorStr = String(btn.data('aktor') || 'medis,paramedis');
+          var aktorArr = aktorStr.split(',').map(function(s){ return s.trim(); });
+          $('.edit-chk-role').each(function() {
+            var val = $(this).val();
+            $(this).prop('checked', aktorArr.indexOf(val) !== -1);
+          });
+
           $('#edit_urutan').val(btn.data('urutan'));
           $('#edit_status').val(String(btn.data('status')));
           $('#edit_catatan').val(btn.data('catatan'));

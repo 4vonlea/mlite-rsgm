@@ -19,31 +19,87 @@ class Admin extends AdminModule
     {
         // Auto pre-fill no_rawat dan konteks pasien untuk setiap form RME
         $reqNoRawat = trim($_GET['no_rawat'] ?? ($_POST['no_rawat'] ?? ''));
+        if (empty($reqNoRawat) && !empty($variables['data']['no_rawat'])) {
+            $reqNoRawat = trim($variables['data']['no_rawat']);
+        }
         if (!empty($reqNoRawat)) {
             if (isset($variables['data']) && is_array($variables['data'])) {
                 if (empty($variables['data']['no_rawat'])) {
                     $variables['data']['no_rawat'] = $reqNoRawat;
                 }
-                if (empty($variables['data']['nm_pasien']) && empty($variables['data']['nama_pasien'])) {
-                    $patient = $this->getPatientContext($reqNoRawat);
-                    if (!empty($patient)) {
-                        $variables['data']['no_rkm_medis'] = $patient['no_rkm_medis'] ?? '';
-                        $variables['data']['nm_pasien'] = $patient['nm_pasien'] ?? '';
-                        $variables['data']['nama_pasien'] = $patient['nm_pasien'] ?? '';
-                        $variables['data']['jk'] = $patient['jk'] ?? '';
-                        $variables['data']['jenis_kelamin'] = $patient['jk'] ?? '';
-                        $variables['data']['tgl_lahir'] = $patient['tgl_lahir'] ?? '';
-                        $variables['data']['tanggal_lahir'] = $patient['tgl_lahir'] ?? '';
-                        $variables['data']['umur'] = $patient['umur'] ?? '';
-                        $variables['data']['alamat'] = $patient['alamat'] ?? '';
-                        $variables['data']['ruangan'] = $patient['ruangan'] ?? '';
-                        $variables['data']['nm_bangsal'] = $patient['nm_bangsal'] ?? '';
-                        $variables['data']['nm_poli'] = $patient['nm_poli'] ?? '';
-                        $variables['data']['dokter'] = $patient['dokter'] ?? '';
-                        $variables['data']['nm_dokter'] = $patient['dokter'] ?? '';
-                        $variables['data']['nama_dokter'] = $patient['dokter'] ?? '';
-                        $variables['data']['kd_dokter'] = $patient['kd_dokter'] ?? '';
-                        $variables['data']['nip_dpjp'] = $patient['kd_dokter'] ?? '';
+                $patient = $this->getPatientContext($reqNoRawat);
+                if (!empty($patient)) {
+                    $pMap = [
+                        'no_rkm_medis' => $patient['no_rkm_medis'] ?? '',
+                        'nm_pasien' => $patient['nm_pasien'] ?? '',
+                        'nama_pasien' => $patient['nm_pasien'] ?? '',
+                        'jk' => $patient['jk'] ?? '',
+                        'jenis_kelamin' => $patient['jk'] ?? '',
+                        'tmp_lahir' => $patient['tmp_lahir'] ?? '',
+                        'tgl_lahir' => $patient['tgl_lahir'] ?? '',
+                        'tanggal_lahir' => $patient['tgl_lahir'] ?? '',
+                        'tgl_lahir_pasien' => $patient['tgl_lahir'] ?? '',
+                        'umur' => $patient['umur'] ?? '',
+                        'umur_pasien' => $patient['umur'] ?? '',
+                        'alamat' => $patient['alamat'] ?? '',
+                        'alamat_pasien' => $patient['alamat'] ?? '',
+                        'gol_darah' => $patient['gol_darah'] ?? '',
+                        'agama' => $patient['agama'] ?? '',
+                        'agama_pasien' => $patient['agama'] ?? '',
+                        'pnd' => $patient['pnd'] ?? '',
+                        'pendidikan' => $patient['pnd'] ?? '',
+                        'pendidikan_terakhir' => $patient['pnd'] ?? '',
+                        'pekerjaan' => $patient['pekerjaan'] ?? '',
+                        'pekerjaan_pasien' => $patient['pekerjaan'] ?? '',
+                        'stts_nikah' => $patient['stts_nikah'] ?? '',
+                        'status_perkawinan' => $patient['stts_nikah'] ?? '',
+                        'status_pernikahan' => $patient['stts_nikah'] ?? '',
+                        'no_ktp' => $patient['no_ktp'] ?? '',
+                        'nik' => $patient['no_ktp'] ?? '',
+                        'no_tlp' => $patient['no_tlp'] ?? '',
+                        'no_hp' => $patient['no_tlp'] ?? '',
+                        'ruangan' => $patient['ruangan'] ?? '',
+                        'nm_bangsal' => $patient['nm_bangsal'] ?? '',
+                        'nm_poli' => $patient['nm_poli'] ?? '',
+                        'dokter' => $patient['dokter'] ?? '',
+                        'nm_dokter' => $patient['dokter'] ?? '',
+                        'nama_dokter' => $patient['dokter'] ?? '',
+                        'kd_dokter' => $patient['kd_dokter'] ?? '',
+                        'nip_dpjp' => $patient['kd_dokter'] ?? '',
+                        'nama_pasien_form' => $patient['nm_pasien'] ?? '',
+                        'pasien_nama_isian' => $patient['nm_pasien'] ?? '',
+                        'nama_pasien_terhadap' => $patient['nm_pasien'] ?? '',
+                        'nama_pasien_pj' => $patient['nm_pasien'] ?? '',
+                        'umur_pasien_form' => $patient['umur'] ?? '',
+                        'pasien_umur_isian' => $patient['umur'] ?? '',
+                        'usia_pasien_terhadap' => $patient['umur'] ?? '',
+                        'jk_pasien_form' => ($patient['jk'] === 'L' ? 'Laki-laki' : ($patient['jk'] === 'P' ? 'Perempuan' : $patient['jk'])),
+                        'pasien_jk_isian' => $patient['jk'] ?? '',
+                        'jk_pasien_terhadap' => $patient['jk'] ?? '',
+                        'alamat_pasien_form' => $patient['alamat'] ?? '',
+                        'pasien_alamat_isian' => $patient['alamat'] ?? '',
+                        'alamat_pasien_terhadap' => $patient['alamat'] ?? '',
+                        'tmp_lahir_pasien_terhadap' => $patient['tmp_lahir'] ?? '',
+                        'tgl_lahir_pasien_terhadap' => $patient['tgl_lahir'] ?? '',
+                        'agama_kepercayaan' => $patient['agama'] ?? '',
+                        'f_pendidikan' => (!empty($patient['pnd']) && $patient['pnd'] !== '-') ? $patient['pnd'] : '-'
+                    ];
+
+                    foreach ($pMap as $k => $v) {
+                        if ($v !== '' && (empty($variables['data'][$k]) || $variables['data'][$k] === '-')) {
+                            $variables['data'][$k] = $v;
+                        }
+                    }
+
+                    if (isset($variables['data']['form_data']) && is_array($variables['data']['form_data'])) {
+                        if (empty($variables['data']['form_data']['pendidikan_terakhir']) || $variables['data']['form_data']['pendidikan_terakhir'] === '-') {
+                            $variables['data']['form_data']['pendidikan_terakhir'] = (!empty($patient['pnd']) && $patient['pnd'] !== '-') ? $patient['pnd'] : '-';
+                        }
+                    }
+                    if (isset($variables['penilaian_igd']) && is_array($variables['penilaian_igd'])) {
+                        if (empty($variables['penilaian_igd']['gol_darah'])) {
+                            $variables['penilaian_igd']['gol_darah'] = $patient['gol_darah'] ?? '';
+                        }
                     }
                 }
             }
@@ -51,7 +107,291 @@ class Admin extends AdminModule
                 $variables['no_rawat'] = $reqNoRawat;
             }
         }
-        return parent::draw($file, $variables);
+
+        // Cek Hak Akses Pengisian Berdasarkan Aktor (Dokter / Perawat / Kolaboratif / Pasien)
+        if (strpos($file, 'form.html') !== false || strpos($file, '_form.html') !== false) {
+            $dir = explode('/', $file)[0];
+            $targetAktor = $this->getFormTargetAktor($dir);
+            $perm = $this->checkFormActorPermission($targetAktor);
+            $variables['target_aktor'] = $targetAktor;
+            $variables['user_role'] = $perm['user_role'];
+            $variables['is_readonly_actor'] = !$perm['can_edit'];
+            $variables['actor_permission_message'] = $perm['message'];
+        }
+
+        $rendered = parent::draw($file, $variables);
+
+        if (!empty($variables['is_readonly_actor']) && !empty($variables['actor_permission_message'])) {
+            $banner = '<div class="alert alert-warning rsgm-actor-lock-banner" style="margin: 15px; border-radius: 8px; border-left: 5px solid #f59e0b; background: #fffbeb; color: #92400e; font-size: 13px;">'
+                . '<div style="display: flex; align-items: center; gap: 10px;">'
+                . '<i class="fa fa-lock fa-2x text-warning"></i>'
+                . '<div>'
+                . '<strong>Mode Pratinjau (Read-Only Aktor)</strong><br>'
+                . htmlspecialchars($variables['actor_permission_message'])
+                . '</div>'
+                . '</div>'
+                . '</div>'
+                . '<script>'
+                . 'jQuery(document).ready(function($){'
+                . '  $("form button[type=submit], form input[type=submit], form .btn-save, form .btn-simpan, form #btn_simpan").prop("disabled", true).addClass("disabled").attr("title", "Akses simpan dikunci untuk peran Anda");'
+                . '  $("form input, form textarea, form select").not("[type=hidden]").prop("disabled", true);'
+                . '});'
+                . '</script>';
+            $rendered = $banner . $rendered;
+        }
+
+        return $rendered;
+    }
+
+    public function getAvailableClinicalRoles()
+    {
+        return [
+            'medis' => [
+                'role' => 'medis',
+                'name' => 'Dokter (Medis)',
+                'icon' => 'fa fa-user-md',
+                'color' => '#1d4ed8',
+                'bg' => '#eff6ff',
+                'border' => '#bfdbfe'
+            ],
+            'paramedis' => [
+                'role' => 'paramedis',
+                'name' => 'Perawat / Bidan',
+                'icon' => 'fa fa-stethoscope',
+                'color' => '#047857',
+                'bg' => '#ecfdf5',
+                'border' => '#a7f3d0'
+            ],
+            'radiologi' => [
+                'role' => 'radiologi',
+                'name' => 'Radiologi',
+                'icon' => 'fa fa-film',
+                'color' => '#0891b2',
+                'bg' => '#ecfeff',
+                'border' => '#a5f3fc'
+            ],
+            'laboratorium' => [
+                'role' => 'laboratorium',
+                'name' => 'Laboratorium',
+                'icon' => 'fa fa-flask',
+                'color' => '#d97706',
+                'bg' => '#fffbeb',
+                'border' => '#fde68a'
+            ],
+            'apoteker' => [
+                'role' => 'apoteker',
+                'name' => 'Farmasi / Apoteker',
+                'icon' => 'fa fa-medkit',
+                'color' => '#dc2626',
+                'bg' => '#fef2f2',
+                'border' => '#fecaca'
+            ],
+            'rekammedis' => [
+                'role' => 'rekammedis',
+                'name' => 'Rekam Medis',
+                'icon' => 'fa fa-folder-open',
+                'color' => '#475569',
+                'bg' => '#f1f5f9',
+                'border' => '#cbd5e1'
+            ],
+            'koas' => [
+                'role' => 'koas',
+                'name' => 'Dokter Muda / Koas',
+                'icon' => 'fa fa-graduation-cap',
+                'color' => '#4f46e5',
+                'bg' => '#eef2ff',
+                'border' => '#c7d2fe'
+            ],
+            'pasien' => [
+                'role' => 'pasien',
+                'name' => 'Pasien / Keluarga',
+                'icon' => 'fa fa-pencil-square-o',
+                'color' => '#7c3aed',
+                'bg' => '#f5f3ff',
+                'border' => '#ddd6fe'
+            ]
+        ];
+    }
+
+    public function getCurrentUserClinicalRole()
+    {
+        $userId = $_SESSION['mlite_user'] ?? 1;
+        $access = $this->core->getUserInfo('access', $userId);
+        $role   = $this->core->getUserInfo('role', $userId);
+
+        if ($userId == 1 || $role === 'admin' || $access === 'all') {
+            return 'admin';
+        }
+
+        return !empty($role) ? strtolower(trim($role)) : 'pengguna';
+    }
+
+    public function getFormActorMap()
+    {
+        static $cachedActorMap = null;
+        if ($cachedActorMap !== null) {
+            return $cachedActorMap;
+        }
+
+        $staticMap = [
+            'akgmu' => 'paramedis',
+            'ans1' => 'pasien,medis',
+            'ans2' => 'pasien,medis',
+            'ans3' => 'medis,paramedis',
+            'ans4' => 'medis',
+            'ans5' => 'medis',
+            'ans6' => 'medis',
+            'ans7' => 'paramedis',
+            'asesmen_medis_umum_irna' => 'medis',
+            'bm1' => 'pasien,medis',
+            'bm2' => 'pasien,medis',
+            'bm3' => 'medis',
+            'bm4' => 'medis',
+            'bm5' => 'medis,paramedis',
+            'bmi1' => 'pasien,medis',
+            'bmi3' => 'medis',
+            'bmi4' => 'medis',
+            'bmi5' => 'medis',
+            'edukasipasienter' => 'medis,paramedis,apoteker,laboratorium,radiologi,pasien',
+            'lampiran_asesmen_ulang_status_fungsional' => 'paramedis',
+            'lampiran_cairan_infus' => 'paramedis',
+            'lampiran_ews' => 'paramedis',
+            'lampiran_form_a_mpp' => 'paramedis',
+            'lampiran_form_b_mpp' => 'paramedis',
+            'lampiran_intervensi_pengkajian_nyeri' => 'paramedis',
+            'lampiran_kebutuhan_privasi_pasien' => 'pasien,medis',
+            'lampiran_konsultasi_internal' => 'medis',
+            'lampiran_meninggalkan_rs_tertentu' => 'pasien,medis',
+            'lampiran_monitoring_pasien_kateter_urin' => 'paramedis',
+            'lampiran_monitoring_pasien_selama_transfer' => 'paramedis',
+            'lampiran_penghentian_pengobatan' => 'pasien,medis',
+            'lampiran_penilaian_dekubitus' => 'paramedis',
+            'lampiran_penilaian_kejadian_ilo' => 'paramedis',
+            'lampiran_penilaian_kejadian_isk' => 'paramedis',
+            'lampiran_penilaian_kejadian_phlebitis' => 'paramedis',
+            'lampiran_penundaan_kelambatan_pelayanan' => 'pasien,medis',
+            'lampiran_permintaan_pelayanan_kerohanian' => 'pasien,medis',
+            'lampiran_permintaan_second_opinion' => 'pasien,medis',
+            'lampiran_persetujuan_testing_hiv' => 'laboratorium,medis,paramedis,pasien',
+            'lampiran_persetujuan_tindakan_radiologi' => 'radiologi,medis,pasien',
+            'lampiran_prmrj' => 'medis',
+            'lampiran_skrining_luar_rs' => 'paramedis',
+            'lampiran_stabilisasi_pasien' => 'paramedis',
+            'lampiran_surat_pernyataan_bersedia_menunggu' => 'pasien,medis',
+            'lampiran_vct_pra_testing_hiv' => 'laboratorium,medis,paramedis,pasien',
+            'penandaan_lokasi_bedah_mulut' => 'medis',
+            'pulangaps' => 'pasien,medis',
+            'ri01b' => 'pasien,medis',
+            'ri02' => 'medis,paramedis',
+            'ri03' => 'paramedis',
+            'ri04' => 'paramedis',
+            'ri09' => 'paramedis',
+            'ri11b' => 'paramedis',
+            'ri14' => 'apoteker,paramedis,medis',
+            'ri15' => 'medis',
+            'ri15a' => 'medis,apoteker,paramedis',
+            'ri15b' => 'paramedis,apoteker',
+            'ri18' => 'medis,paramedis,apoteker,pasien',
+            'ri19' => 'paramedis',
+            'ri20' => 'medis',
+            'rj02a' => 'pasien,medis',
+            'rj07' => 'paramedis',
+            'rj10' => 'medis,paramedis,apoteker,pasien',
+            'rj11' => 'medis,paramedis',
+            'rmgd3_triase' => 'paramedis',
+            'rmgd5_medis_gigi' => 'medis',
+            'rmgd6_medis_umum' => 'medis'
+        ];
+
+        try {
+            $dbForms = $this->db('mlite_rme_form')->select('route_form, target_aktor')->toArray();
+            foreach ($dbForms as $dbf) {
+                $rf = strtolower(str_replace(['form', '_form'], '', $dbf['route_form']));
+                if (!empty($dbf['target_aktor'])) {
+                    $staticMap[$rf] = $dbf['target_aktor'];
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        $cachedActorMap = $staticMap;
+        return $cachedActorMap;
+    }
+
+    public function getFormTargetAktor($dirOrFile)
+    {
+        $dir = strtolower(explode('/', $dirOrFile)[0]);
+        $cleanDir = str_replace(['_', '-'], '', $dir);
+        $map = $this->getFormActorMap();
+
+        if (isset($map[$dir])) {
+            return $map[$dir];
+        }
+        if (isset($map[$cleanDir])) {
+            return $map[$cleanDir];
+        }
+
+        foreach ($map as $k => $v) {
+            $ck = str_replace(['_', '-'], '', $k);
+            if ($ck === $cleanDir || strpos($cleanDir, $ck) !== false || strpos($ck, $cleanDir) !== false) {
+                return $v;
+            }
+        }
+
+        return 'medis,paramedis';
+    }
+
+    public function checkFormActorPermission($targetAktor)
+    {
+        $userRole = $this->getCurrentUserClinicalRole();
+
+        // 1. Admin selalu punya akses penuh untuk review & supervisi
+        if ($userRole === 'admin') {
+            return [
+                'can_edit' => true,
+                'user_role' => 'admin',
+                'target_aktor' => $targetAktor,
+                'message' => ''
+            ];
+        }
+
+        $allowedRoles = array_filter(array_map('trim', explode(',', (string)$targetAktor)));
+        if (empty($allowedRoles)) {
+            $allowedRoles = ['medis', 'paramedis'];
+        }
+
+        // Koas diperbolehkan mengisi form jika peran medis diizinkan atau koas eksplisit
+        if ($userRole === 'koas' && (in_array('medis', $allowedRoles, true) || in_array('koas', $allowedRoles, true))) {
+            return [
+                'can_edit' => true,
+                'user_role' => 'koas',
+                'target_aktor' => $targetAktor,
+                'message' => ''
+            ];
+        }
+
+        if (in_array($userRole, $allowedRoles, true)) {
+            return [
+                'can_edit' => true,
+                'user_role' => $userRole,
+                'target_aktor' => $targetAktor,
+                'message' => ''
+            ];
+        }
+
+        $allRoles = $this->getAvailableClinicalRoles();
+        $allowedLabels = [];
+        foreach ($allowedRoles as $r) {
+            $allowedLabels[] = $allRoles[$r]['name'] ?? ucfirst($r);
+        }
+        $allowedStr = implode(', ', $allowedLabels);
+        $myRoleLabel = $allRoles[$userRole]['name'] ?? ucfirst($userRole);
+
+        return [
+            'can_edit' => false,
+            'user_role' => $userRole,
+            'target_aktor' => $targetAktor,
+            'message' => "Formulir ini dikhususkan untuk hak akses: {$allowedStr}. Anda login sebagai {$myRoleLabel}, sehingga formulir dibuka dalam mode Pratinjau / Hanya Lihat."
+        ];
     }
 
     public function getCss()
@@ -772,6 +1112,47 @@ form[action*="form_rme"] .table-bordered tbody tr:hover {
 .rme-toast.error {
     border-left: 4px solid #ef4444;
 }
+
+/* Readonly No. Rawat & Patient Context Display */
+input[name="no_rawat"][readonly],
+input#no_rawat[readonly],
+input#no_rawat_input[readonly] {
+    background-color: #f8fafc !important;
+    font-weight: 700 !important;
+    color: #1d4ed8 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    cursor: default !important;
+}
+
+input[name="nama_pasien"][readonly],
+input[name="nm_pasien"][readonly],
+input#nama_pasien[readonly],
+input#nm_pasien[readonly],
+input#top_nama_pasien[readonly],
+input[name="tanggal_lahir"][readonly],
+input[name="tgl_lahir"][readonly],
+input[name="tgl_lahir_pasien"][readonly],
+input[name="jenis_kelamin"][readonly],
+input[name="jk"][readonly],
+input#display_jk[readonly],
+input[name="umur_pasien"][readonly],
+input[name="umur"][readonly],
+input[name="gol_darah"][readonly],
+input#gol_darah[readonly],
+input[name="agama"][readonly],
+input[name="pendidikan"][readonly],
+input[name="pekerjaan"][readonly],
+input[name="status_perkawinan"][readonly],
+input[name="alamat_pasien"][readonly],
+textarea[name="alamat_pasien"][readonly] {
+    background-color: #f8fafc !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    cursor: default !important;
+}
 CSS;
         exit();
     }
@@ -820,11 +1201,15 @@ public function getJs()
         $patientInfoUrl = json_encode(url([ADMIN, 'form_rme', 'universalpatientinfo']));
 
         $token = json_encode($_SESSION['token'] ?? '');
+        $userRole = json_encode($this->getCurrentUserClinicalRole());
+        $actorMap = json_encode($this->getFormActorMap());
 
         echo "window._RME_ROUTES = {$jsonMap};\n";
         echo "window._RME_CETAK_BASE = {$cetakBaseUrl};\n";
         echo "window._RME_PATIENT_URL = {$patientInfoUrl};\n";
         echo "window._RME_TOKEN = {$token};\n";
+        echo "window._RME_USER_ROLE = {$userRole};\n";
+        echo "window._RME_ACTOR_MAP = {$actorMap};\n";
 
         echo <<<'JS'
 (function($) {
@@ -868,6 +1253,68 @@ public function getJs()
         // Jika tidak ada form pengisian di halaman ini, abaikan
         if (!$form.length) return;
 
+        // 1a. Deteksi Hak Akses Pengisian Berdasarkan Aktor (Dokter / Perawat / Kolaboratif / Pasien)
+        var userRole = window._RME_USER_ROLE || 'admin';
+        var actorMap = window._RME_ACTOR_MAP || {};
+        var currentFormActor = 'kolaboratif';
+        var formAction = ($form.attr('action') || '').toLowerCase();
+
+        for (var actKey in actorMap) {
+            if (locHref.indexOf(actKey) !== -1 || formAction.indexOf(actKey) !== -1) {
+                currentFormActor = actorMap[actKey];
+                break;
+            }
+        }
+
+        var isActorReadonly = false;
+        var actorNoticeText = '';
+
+        if (userRole === 'dokter' && currentFormActor === 'perawat') {
+            isActorReadonly = true;
+            actorNoticeText = 'Formulir ini merupakan lembar asuhan <strong>Keperawatan</strong>. Sebagai Dokter/DPJP, Anda dapat meninjau data ini dalam mode <strong>Hanya Lihat (Read-Only)</strong>.';
+        } else if (userRole === 'perawat' && currentFormActor === 'dokter') {
+            isActorReadonly = true;
+            actorNoticeText = 'Formulir ini merupakan asesmen/instruksi <strong>Medis (Dokter)</strong>. Sebagai Perawat, Anda dapat meninjau data ini dalam mode <strong>Hanya Lihat (Read-Only)</strong>.';
+        }
+
+        if (isActorReadonly) {
+            if (!$('#rsgm-actor-readonly-banner').length) {
+                var bannerHtml = '<div id="rsgm-actor-readonly-banner" style="background: #fffbeb; border: 1px solid #fde68a; border-left: 5px solid #d97706; border-radius: 8px; padding: 12px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">' +
+                    '<div style="display: flex; align-items: center; gap: 12px;">' +
+                    '  <span style="font-size: 24px; color: #d97706;"><i class="fa fa-lock"></i></span>' +
+                    '  <div>' +
+                    '    <div style="font-weight: 800; font-size: 13.5px; color: #92400e; text-transform: uppercase; letter-spacing: 0.3px;">Mode Pratinjau &bull; Hanya Lihat (Read-Only)</div>' +
+                    '    <div style="font-size: 12px; color: #b45309; margin-top: 3px;">' + actorNoticeText + '</div>' +
+                    '  </div>' +
+                    '</div>' +
+                    '<span class="badge" style="background: #d97706; color: #ffffff; padding: 6px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0;"><i class="fa fa-eye"></i> Hanya Lihat</span>' +
+                    '</div>';
+                $form.prepend(bannerHtml);
+            }
+
+            $form.find('input:not([type="hidden"]), select, textarea').each(function() {
+                var $elem = $(this);
+                $elem.prop('disabled', true).attr('readonly', 'readonly');
+                $elem.css({
+                    'background-color': '#f8fafc',
+                    'cursor': 'default',
+                    'pointer-events': 'none',
+                    'opacity': '0.9'
+                });
+            });
+
+            $form.find('button[type="submit"], input[type="submit"]').each(function() {
+                var $btn = $(this);
+                $btn.prop('disabled', true).addClass('disabled').html('<i class="fa fa-lock"></i> Mode Hanya Lihat (Khusus ' + (currentFormActor === 'dokter' ? 'Dokter' : 'Perawat') + ')').css({
+                    'cursor': 'not-allowed',
+                    'background-color': '#94a3b8',
+                    'border-color': '#64748b',
+                    'color': '#ffffff',
+                    'opacity': '0.85'
+                });
+            });
+        }
+
         // 1b. Inisialisasi Selectator modern pada seluruh select (termasuk baris tabel dinamis yang baru ditambahkan)
         function initRmeSelects() {
             $form.find('select').each(function() {
@@ -891,16 +1338,117 @@ public function getJs()
             setTimeout(initRmeSelects, 250);
         });
 
-        // 2. Pre-fill no_rawat dari URL jika input masih kosong
-        var $noRawatInput = $form.find('input[name="no_rawat"], input#no_rawat, input[name="no_rkm_medis"]').first();
+        // 2. Pre-fill & Enforce Readonly no_rawat jika pengisian dari lembar kerja / sudah ada nomor rawat
+        var $noRawatInputs = $form.find('input[name="no_rawat"], input#no_rawat, input#no_rawat_input');
         var urlNoRawat = '';
         var matchNoRawat = window.location.href.match(/[?&]no_rawat=([^&#]+)/i);
         if (matchNoRawat && matchNoRawat[1]) {
-            urlNoRawat = decodeURIComponent(matchNoRawat[1]);
+            urlNoRawat = decodeURIComponent(matchNoRawat[1]).trim();
         }
-        if ($noRawatInput.length && !$noRawatInput.val() && urlNoRawat) {
-            $noRawatInput.val(urlNoRawat);
+
+        function enforcePatientFieldsReadonly() {
+            // 1. No Rawat
+            $noRawatInputs.each(function() {
+                var $inp = $(this);
+                if (!$inp.val() && urlNoRawat) {
+                    $inp.val(urlNoRawat);
+                }
+                var val = ($inp.val() || urlNoRawat || '').trim();
+                if (val) {
+                    $inp.prop('readonly', true).attr('readonly', 'readonly');
+                    $inp.css({
+                        'background-color': '#f8fafc',
+                        'font-weight': '700',
+                        'color': '#1d4ed8',
+                        'border-radius': '6px',
+                        'cursor': 'default'
+                    });
+                    var $grp = $inp.closest('.input-group');
+                    if ($grp.length) {
+                        $grp.find('.input-group-btn, #btn_cari_pasien, #btn-modal-pasien, button:has(.fa-search)').hide();
+                        $inp.css('border-radius', '6px');
+                        $grp.removeClass('input-group');
+                    }
+                }
+            });
+
+            // 2. Nama Pasien (selalu readonly jika terisi atau ada no_rawat)
+            $form.find('input[name="nama_pasien"], input[name="nm_pasien"], input#nama_pasien, input#nm_pasien, input#top_nama_pasien').each(function() {
+                var $inp = $(this);
+                $inp.prop('readonly', true).attr('readonly', 'readonly');
+                $inp.css({
+                    'background-color': '#f8fafc',
+                    'font-weight': '700',
+                    'border': '1px solid #cbd5e1',
+                    'border-radius': '6px',
+                    'cursor': 'default'
+                });
+            });
+
+            // 3. Tanggal Lahir & Umur
+            $form.find('input[name="tanggal_lahir"], input[name="tgl_lahir"], input[name="tgl_lahir_pasien"], input#tanggal_lahir, input#top_tgl_lahir, input#tgl_lahir_pasien, input[name="umur_pasien"], input[name="umur"]').each(function() {
+                var $inp = $(this);
+                if ($inp.val()) {
+                    $inp.prop('readonly', true).attr('readonly', 'readonly');
+                    $inp.css({
+                        'background-color': '#f8fafc',
+                        'font-weight': '600',
+                        'border': '1px solid #cbd5e1',
+                        'border-radius': '6px',
+                        'cursor': 'default'
+                    });
+                }
+            });
+
+            // 4. Golongan Darah & Alamat
+            $form.find('input[name="gol_darah"], input#gol_darah, input[name="alamat_pasien"], textarea[name="alamat_pasien"]').each(function() {
+                var $inp = $(this);
+                if ($inp.val()) {
+                    $inp.prop('readonly', true).attr('readonly', 'readonly');
+                    $inp.css({
+                        'background-color': '#f8fafc',
+                        'font-weight': '600',
+                        'border': '1px solid #cbd5e1',
+                        'border-radius': '6px',
+                        'cursor': 'default'
+                    });
+                }
+            });
+
+            // 5. Gender / Jenis Kelamin
+            $form.find('input[name="jenis_kelamin"], input[name="jk"], input#display_jk, input#display_top_jk, input#display_jk_pasien').each(function() {
+                var $inp = $(this);
+                $inp.prop('readonly', true).attr('readonly', 'readonly');
+                $inp.css({
+                    'background-color': '#f8fafc',
+                    'font-weight': '600',
+                    'border': '1px solid #cbd5e1',
+                    'border-radius': '6px',
+                    'cursor': 'default'
+                });
+            });
+
+            // 6. Pendidikan, Agama, Pekerjaan, Status Perkawinan
+            $form.find('input[name="pendidikan_terakhir"], input#pendidikan_terakhir, input[name="pendidikan"], input#pendidikan, input[name="agama"], input#agama, input[name="pekerjaan"], input#pekerjaan, input[name="status_perkawinan"], input#stts_nikah').each(function() {
+                var $inp = $(this);
+                if ($inp.val()) {
+                    $inp.prop('readonly', true).attr('readonly', 'readonly');
+                    $inp.css({
+                        'background-color': '#f8fafc',
+                        'font-weight': '600',
+                        'border': '1px solid #cbd5e1',
+                        'border-radius': '6px',
+                        'cursor': 'default'
+                    });
+                }
+            });
         }
+        enforcePatientFieldsReadonly();
+        $(document).ajaxSuccess(function(event, xhr, settings) {
+            if (settings && settings.url && (settings.url.indexOf('patient') !== -1 || settings.url.indexOf('pasien') !== -1)) {
+                setTimeout(enforcePatientFieldsReadonly, 100);
+            }
+        });
 
         var isDirty = false;
         var isSaving = false;
@@ -1349,7 +1897,7 @@ public function getPatientContext($no_rawat)
             ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
             ->desc('reg_periksa.tgl_registrasi')
             ->desc('reg_periksa.jam_reg')
-            ->select('reg_periksa.*, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, pasien.no_ktp, pasien.no_tlp, poliklinik.nm_poli, dokter.nm_dokter as dokter_reg, penjab.png_jawab')
+            ->select('reg_periksa.*, pasien.nm_pasien, pasien.jk, pasien.tmp_lahir, pasien.tgl_lahir, pasien.umur, pasien.alamat, pasien.no_ktp, pasien.no_tlp, pasien.gol_darah, pasien.agama, pasien.pnd, pasien.pekerjaan, pasien.stts_nikah, pasien.suku_bangsa, pasien.bahasa_pasien, poliklinik.nm_poli, dokter.nm_dokter as dokter_reg, penjab.png_jawab')
             ->oneArray();
 
         if (!$reg) {
@@ -1405,6 +1953,19 @@ public function getPatientContext($no_rawat)
             'alamat' => $reg['alamat'],
             'no_ktp' => $reg['no_ktp'],
             'no_tlp' => $reg['no_tlp'],
+            'gol_darah' => $reg['gol_darah'] ?? '',
+            'agama' => $reg['agama'] ?? '',
+            'agama_pasien' => $reg['agama'] ?? '',
+            'pnd' => $reg['pnd'] ?? '',
+            'pendidikan' => $reg['pnd'] ?? '',
+            'pendidikan_terakhir' => $reg['pnd'] ?? '',
+            'pekerjaan' => $reg['pekerjaan'] ?? '',
+            'pekerjaan_pasien' => $reg['pekerjaan'] ?? '',
+            'stts_nikah' => $reg['stts_nikah'] ?? '',
+            'status_perkawinan' => $reg['stts_nikah'] ?? '',
+            'status_pernikahan' => $reg['stts_nikah'] ?? '',
+            'suku_bangsa' => $reg['suku_bangsa'] ?? '',
+            'bahasa_pasien' => $reg['bahasa_pasien'] ?? '',
             'kd_poli' => $reg['kd_poli'],
             'nm_poli' => $reg['nm_poli'],
             'tgl_registrasi' => $reg['tgl_registrasi'] ?? '',
@@ -1430,8 +1991,6 @@ public function getPatientContext($no_rawat)
     // ============================================================
     // UNIVERSAL RME PATIENT INFO & LIVE CETAK ENGINE
     // ============================================================
-    // UNIVERSAL RME PATIENT INFO & LIVE CETAK ENGINE
-    // ============================================================
 
     public function anyUniversalpatientinfo()
     {
@@ -1443,6 +2002,7 @@ public function getPatientContext($no_rawat)
             $patient['nama_pasien'] = $patient['nm_pasien'];
             $patient['jenis_kelamin'] = $patient['jk'];
             $patient['tanggal_lahir'] = $patient['tgl_lahir'];
+            $patient['tgl_lahir'] = $patient['tgl_lahir'];
         } else {
             $patient = ['success' => false];
         }
@@ -3084,6 +3644,28 @@ public function getPatientContext($no_rawat)
         $totalUnfilled = $totalForms - $totalFilled;
         $completionPct = $totalForms > 0 ? round(($totalFilled / $totalForms) * 100) : 0;
 
+        $rolesMeta = $this->getAvailableClinicalRoles();
+        $roleCounts = [];
+        foreach (array_keys($rolesMeta) as $rk) {
+            $roleCounts[$rk] = 0;
+        }
+
+        foreach ($processedForms as &$pf) {
+            $pf['target_aktor'] = !empty($pf['target_aktor']) ? $pf['target_aktor'] : 'medis,paramedis';
+            $pf['roles_list'] = array_filter(array_map('trim', explode(',', $pf['target_aktor'])));
+            $assigned = [];
+            foreach ($rolesMeta as $rk => $rm) {
+                if (in_array($rk, $pf['roles_list'], true)) {
+                    $assigned[] = $rm;
+                    if (isset($roleCounts[$rk])) {
+                        $roleCounts[$rk]++;
+                    }
+                }
+            }
+            $pf['assigned_roles_meta'] = $assigned;
+        }
+        unset($pf);
+
         // Kelompokkan form berdasarkan kategori
         $categories = [];
         foreach ($processedForms as $pf) {
@@ -3119,6 +3701,9 @@ public function getPatientContext($no_rawat)
             'total_filled' => $totalFilled,
             'total_unfilled' => $totalUnfilled,
             'completion_pct' => $completionPct,
+            'available_roles' => $rolesMeta,
+            'role_counts' => $roleCounts,
+            'user_role' => $this->getCurrentUserClinicalRole(),
             'is_admin' => $isAdmin,
             'is_ranap' => $isRanap,
             'token' => $_SESSION['token'] ?? ''
@@ -7110,7 +7695,9 @@ if (ob_get_length()) {
                                 'pasien.tgl_lahir',
                                 'pasien.jk',
                                 'pasien.alamat',
-                                'pasien.no_ktp'
+                                'pasien.no_ktp',
+                                'pasien.pnd',
+                                'pasien.pekerjaan'
                             ])
                             ->oneArray();
 
@@ -7124,6 +7711,12 @@ if (ob_get_length()) {
                     $data['kd_konselor'] = $reg['kd_dokter'];
                     $data['nama_konselor'] = $reg['nm_dokter'];
                     $data['jenis_klien'] = ($reg['jk'] == 'P' || $reg['jk'] == 'Perempuan') ? '2' : '1';
+                    if (!empty($reg['pnd'])) {
+                        $pndMap = ['TS' => '1', 'SD' => '2', 'SMP' => '3', 'SMA' => '4', 'SLTA/SEDERAJAT' => '4', 'D1' => '5', 'D2' => '5', 'D3' => '5', 'D4' => '5', 'S1' => '5', 'S2' => '5', 'S3' => '5'];
+                        if (isset($pndMap[$reg['pnd']])) {
+                            $data['pendidikan'] = $pndMap[$reg['pnd']];
+                        }
+                    }
                 }
             }
         }
@@ -8356,12 +8949,28 @@ if (ob_get_length()) {
                 $reg = $this->db('reg_periksa')
                     ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                     ->where('reg_periksa.no_rawat', $data['no_rawat'])
-                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir')
+                    ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
                     ->oneArray();
 
                 if ($reg) {
                     $data['nm_pasien'] = $reg['nm_pasien'];
+                    $data['nama_pasien'] = $reg['nm_pasien'];
+                    $data['jk'] = $reg['jk'];
+                    $data['tgl_lahir'] = $reg['tgl_lahir'];
+                    $data['umur'] = $reg['umur'];
+                    $data['alamat'] = $reg['alamat'];
                 }
+            }
+        } elseif (!empty($_GET['no_rawat'])) {
+            $no_rawat = $_GET['no_rawat'];
+            $data['no_rawat'] = $no_rawat;
+            $reg = $this->db('reg_periksa')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $no_rawat)
+                ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur, pasien.alamat')
+                ->oneArray();
+            if ($reg) {
+                $data = array_merge($data, $reg);
             }
         }
 
@@ -9471,8 +10080,22 @@ if (ob_get_length()) {
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_bm2_persetujuan_tindakan.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('rm_bm2_persetujuan_tindakan.id', $id)
-                ->select('rm_bm2_persetujuan_tindakan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur')
+                ->select('rm_bm2_persetujuan_tindakan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur, pasien.alamat')
                 ->oneArray();
+        } elseif (!empty($_GET['no_rawat'])) {
+            $no_rawat = $_GET['no_rawat'];
+            $reg = $this->db('reg_periksa')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $no_rawat)
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur, pasien.alamat')
+                ->oneArray();
+            if ($reg) {
+                $data = $reg;
+                $data['nama_pasien_form'] = $reg['nm_pasien'];
+                $data['umur_pasien_form'] = $reg['umur'];
+                $data['jk_pasien_form'] = ($reg['jk'] === 'L' ? 'Laki-laki' : ($reg['jk'] === 'P' ? 'Perempuan' : $reg['jk']));
+                $data['alamat_pasien_form'] = $reg['alamat'];
+            }
         }
 
         return $this->draw('bm2/form.html', ['data' => $data]);
@@ -9737,8 +10360,22 @@ if (ob_get_length()) {
                 ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_bmi1_persetujuan_anestesi_lokal.no_rawat')
                 ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('rm_bmi1_persetujuan_anestesi_lokal.id', $id)
-                ->select('rm_bmi1_persetujuan_anestesi_lokal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk as jk_db, pasien.umur as umur_db')
+                ->select('rm_bmi1_persetujuan_anestesi_lokal.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk as jk_db, pasien.umur as umur_db, pasien.alamat')
                 ->oneArray();
+        } elseif (!empty($_GET['no_rawat'])) {
+            $no_rawat = $_GET['no_rawat'];
+            $reg = $this->db('reg_periksa')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $no_rawat)
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur, pasien.alamat')
+                ->oneArray();
+            if ($reg) {
+                $data = $reg;
+                $data['nama_pasien_form'] = $reg['nm_pasien'];
+                $data['umur_pasien_form'] = $reg['umur'];
+                $data['jk_pasien_form'] = ($reg['jk'] === 'L' ? 'Laki-laki' : ($reg['jk'] === 'P' ? 'Perempuan' : $reg['jk']));
+                $data['alamat_pasien_form'] = $reg['alamat'];
+            }
         }
 
         return $this->draw('bmi1/form.html', ['data' => $data]);
@@ -11702,15 +12339,21 @@ if (ob_get_length()) {
             if ($row) {
                 $data = array_merge($data, $row);
                 $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')->oneArray();
+                    ->where('reg_periksa.no_rawat', $data['no_rawat'])->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat, pasien.pnd, pasien.umur')->oneArray();
                 if ($reg) { $data = array_merge($data, $reg); }
             }
+        } elseif ($no_rawat = $_GET['no_rawat'] ?? '') {
+            $data['no_rawat'] = $no_rawat;
+            $reg = $this->db('reg_periksa')->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $no_rawat)
+                ->select('reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.alamat, pasien.pnd, pasien.umur')->oneArray();
+            if ($reg) { $data = array_merge($data, $reg); }
         }
         
         $data['pengkajian'] = !empty($data['pengkajian']) && is_string($data['pengkajian']) ? json_decode($data['pengkajian'], true) : [];
         if (!is_array($data['pengkajian'])) { $data['pengkajian'] = []; }
         $default_pengkajian = [
-            'ketersediaan' => '', 'pendidikan' => '', 'bahasa' => '', 'bahasa_lainnya' => '',
+            'ketersediaan' => '', 'pendidikan' => (!empty($data['pnd']) && $data['pnd'] !== '-') ? $data['pnd'] : '-', 'bahasa' => '', 'bahasa_lainnya' => '',
             'hambatan' => [], 'keterbatasan' => [], 'penerjemah' => '', 'penerjemah_bahasa' => '',
             'pantangan_hari' => '', 'pantangan_makan' => '', 'pantangan_dokter' => '',
             'kemampuan_membaca' => '', 'nama_perawat' => '', 'tgl_jam_kaji' => '', 'kebutuhan' => []
@@ -12464,7 +13107,7 @@ if (ob_get_length()) {
             'hambatan_emosi' => false, 'hambatan_motivasi' => false, 'hambatan_tidak_ada' => false,
             'keyakinan_hari' => '', 'keyakinan_makan' => '', 'keyakinan_lawan_jenis' => false,
             'keterbatasan_fisik' => false, 'keterbatasan_kognitif' => false, 'keterbatasan_tidak_ada' => false,
-            'kemampuan_membaca' => '', 'ketersediaan_edukasi' => '', 'pendidikan_terakhir' => !empty($data['pnd']) ? $data['pnd'] : '',
+            'kemampuan_membaca' => '', 'ketersediaan_edukasi' => '', 'pendidikan_terakhir' => !empty($data['pnd']) && $data['pnd'] !== '-' ? $data['pnd'] : '-',
             'cara_belajar_mendengar' => false, 'cara_belajar_melihat' => false, 'cara_belajar_diskusi' => false, 'cara_belajar_simulasi' => false,
             'bahasa' => '', 'bahasa_lainnya' => '', 'penerjemah' => '', 'penerjemah_bahasa' => '',
             'kebutuhan_edukasi' => [], 'nama_perawat' => '', 'tgl_kaji' => date('Y-m-d\TH:i'),
@@ -16952,20 +17595,46 @@ if (ob_get_length()) {
         $count_total = count($all_forms);
         $count_active = 0;
         $count_inactive = 0;
+        $roles_meta = $this->getAvailableClinicalRoles();
+        $role_counts = [];
+        foreach (array_keys($roles_meta) as $rk) {
+            $role_counts[$rk] = 0;
+        }
         $kategori_list = [];
 
         foreach ($all_forms as &$f) {
             $f['status'] = (string)($f['status'] ?? '1');
+            $f['target_aktor'] = (string)($f['target_aktor'] ?? 'medis,paramedis');
+            $f['roles_list'] = array_filter(array_map('trim', explode(',', $f['target_aktor'])));
             $f['catatan'] = (string)($f['catatan'] ?? '');
             $f['deskripsi'] = (string)($f['deskripsi'] ?? '');
             $f['nama_tabel'] = (string)($f['nama_tabel'] ?? '');
-            $f['search_text'] = strtolower(($f['kode_form'] ?? '') . ' ' . ($f['nama_form'] ?? '') . ' ' . ($f['kategori'] ?? '') . ' ' . $f['nama_tabel'] . ' ' . $f['catatan'] . ' ' . $f['deskripsi']);
+            $f['search_text'] = strtolower(($f['kode_form'] ?? '') . ' ' . ($f['nama_form'] ?? '') . ' ' . ($f['kategori'] ?? '') . ' ' . $f['target_aktor'] . ' ' . $f['nama_tabel'] . ' ' . $f['catatan'] . ' ' . $f['deskripsi']);
 
             if ($f['status'] === '1') {
                 $count_active++;
             } else {
                 $count_inactive++;
             }
+
+            foreach ($f['roles_list'] as $rl) {
+                if (isset($role_counts[$rl])) {
+                    $role_counts[$rl]++;
+                }
+            }
+
+            $assigned = [];
+            $rolesWithCheck = [];
+            foreach ($roles_meta as $rk => $rm) {
+                $isChecked = in_array($rk, $f['roles_list'], true);
+                if ($isChecked) {
+                    $assigned[] = $rm;
+                }
+                $rolesWithCheck[] = array_merge($rm, ['checked' => $isChecked]);
+            }
+            $f['assigned_roles_meta'] = $assigned;
+            $f['roles_with_check'] = $rolesWithCheck;
+
             $kat = !empty($f['kategori']) ? $f['kategori'] : 'Umum';
             if (!in_array($kat, $kategori_list, true)) {
                 $kategori_list[] = $kat;
@@ -17036,6 +17705,8 @@ if (ob_get_length()) {
             'count_total'       => $count_total,
             'count_active'      => $count_active,
             'count_inactive'    => $count_inactive,
+            'available_roles'   => $roles_meta,
+            'role_counts'       => $role_counts,
             'kategori_list'     => $kategori_list,
             'token'             => $_SESSION['token'] ?? ''
         ]);
@@ -17123,23 +17794,93 @@ if (ob_get_length()) {
         redirect(url([ADMIN, 'form_rme', 'manajemenrme']).'&tab=status');
     }
 
+    public function postUpdatetargetaktor()
+    {
+        $id = (int)($_POST['id'] ?? 0);
+        $rawTarget = $_POST['target_aktor'] ?? '';
+        if (is_array($rawTarget)) {
+            $targetList = $rawTarget;
+        } else {
+            $targetList = explode(',', (string)$rawTarget);
+        }
+
+        $allRoles = array_keys($this->getAvailableClinicalRoles());
+        $cleanRoles = [];
+        foreach ($targetList as $r) {
+            $r = trim(strtolower($r));
+            if (in_array($r, $allRoles, true) && !in_array($r, $cleanRoles, true)) {
+                $cleanRoles[] = $r;
+            }
+        }
+
+        if (empty($cleanRoles)) {
+            $cleanRoles = ['medis'];
+        }
+
+        $targetAktorStr = implode(',', $cleanRoles);
+
+        if ($id <= 0) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => 'ID formulir tidak valid.']);
+            exit();
+        }
+
+        $form = $this->db('mlite_rme_form')->where('id', $id)->oneArray();
+        if (!$form) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => 'Formulir tidak ditemukan.']);
+            exit();
+        }
+
+        $this->db('mlite_rme_form')->where('id', $id)->save(['target_aktor' => $targetAktorStr]);
+
+        $rolesMeta = $this->getAvailableClinicalRoles();
+        $labelList = [];
+        $badgesHtml = '';
+        foreach ($cleanRoles as $r) {
+            $meta = $rolesMeta[$r] ?? ['name' => ucfirst($r), 'icon' => 'fa fa-user', 'color' => '#1e293b', 'bg' => '#f1f5f9', 'border' => '#cbd5e1'];
+            $labelList[] = $meta['name'];
+            $badgesHtml .= '<span class="badge" style="background: ' . $meta['bg'] . '; color: ' . $meta['color'] . '; border: 1px solid ' . $meta['border'] . '; font-size: 10px; font-weight: 700; padding: 2px 6px; margin-right: 3px; margin-bottom: 2px;"><i class="' . $meta['icon'] . '"></i> ' . $meta['name'] . '</span> ';
+        }
+
+        $msg = "Hak akses pengisian {$form['kode_form']} berhasil diubah ke: " . implode(', ', $labelList) . "!";
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status' => 'success',
+            'ok' => true,
+            'message' => $msg,
+            'id' => $id,
+            'target_aktor' => $targetAktorStr,
+            'roles' => $cleanRoles,
+            'badges_html' => $badgesHtml
+        ]);
+        exit();
+    }
+
     public function postEditformrme()
     {
-        $id       = (int)($_POST['id'] ?? 0);
-        $nama     = trim($_POST['nama_form'] ?? '');
-        $kategori = trim($_POST['kategori'] ?? 'Bedah');
-        $status   = ($_POST['status'] ?? '1') === '1' ? '1' : '0';
-        $urutan   = (int)($_POST['urutan'] ?? 0);
-        $catatan  = trim($_POST['catatan'] ?? '');
+        $id          = (int)($_POST['id'] ?? 0);
+        $nama        = trim($_POST['nama_form'] ?? '');
+        $kategori    = trim($_POST['kategori'] ?? 'Bedah');
+        $rawTarget   = $_POST['target_aktor'] ?? [];
+        $targetAktor = is_array($rawTarget) ? implode(',', $rawTarget) : trim($rawTarget);
+        if (empty($targetAktor)) {
+            $targetAktor = 'medis,paramedis';
+        }
+        $status      = ($_POST['status'] ?? '1') === '1' ? '1' : '0';
+        $urutan      = (int)($_POST['urutan'] ?? 0);
+        $catatan     = trim($_POST['catatan'] ?? '');
 
         if ($id > 0 && !empty($nama)) {
             $this->db('mlite_rme_form')->where('id', $id)->save([
-                'nama_form'  => $nama,
-                'kategori'   => $kategori,
-                'status'     => $status,
-                'urutan'     => $urutan,
-                'catatan'    => $catatan,
-                'deskripsi'  => $catatan
+                'nama_form'    => $nama,
+                'kategori'     => $kategori,
+                'target_aktor' => $targetAktor,
+                'status'       => $status,
+                'urutan'       => $urutan,
+                'catatan'      => $catatan,
+                'deskripsi'    => $catatan
             ]);
             $this->notify('success', 'Pengaturan formulir berhasil diperbarui!');
         } else {
@@ -17202,6 +17943,11 @@ if (ob_get_length()) {
         $kode        = strtoupper(trim($_POST['kode_form'] ?? ''));
         $nama        = trim($_POST['nama_form'] ?? '');
         $kategori    = trim($_POST['kategori'] ?? 'Bedah');
+        $rawTarget   = $_POST['target_aktor'] ?? [];
+        $targetAktor = is_array($rawTarget) ? implode(',', $rawTarget) : trim($rawTarget);
+        if (empty($targetAktor)) {
+            $targetAktor = 'medis,paramedis';
+        }
         $routeManage = trim($_POST['route_manage'] ?? '');
         $routeForm   = trim($_POST['route_form'] ?? '');
         $routeCetak  = trim($_POST['route_cetak'] ?? '');
@@ -17213,6 +17959,7 @@ if (ob_get_length()) {
                 $this->db('mlite_rme_form')->where('kode_form', $kode)->save([
                     'nama_form'    => $nama,
                     'kategori'     => $kategori,
+                    'target_aktor' => $targetAktor,
                     'route_manage' => $routeManage,
                     'route_form'   => $routeForm,
                     'route_cetak'  => $routeCetak,
@@ -17224,6 +17971,7 @@ if (ob_get_length()) {
                     'kode_form'    => $kode,
                     'nama_form'    => $nama,
                     'kategori'     => $kategori,
+                    'target_aktor' => $targetAktor,
                     'route_manage' => $routeManage,
                     'route_form'   => $routeForm,
                     'route_cetak'  => $routeCetak,

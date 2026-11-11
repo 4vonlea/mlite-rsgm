@@ -642,6 +642,18 @@
                 </button>
               </div>
 
+              <!-- Filter Pills Role Pengisi -->
+              <div class="rsgm-filter-pills" id="btnGroupAktorFilter" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-sm rsgm-fpill active" data-filter-aktor="all" style="font-size: 11px;">
+                  Semua ({$total_forms})
+                </button>
+                {loop: $available_roles}
+                <button type="button" class="btn btn-sm rsgm-fpill" data-filter-aktor="{$value.role}" style="font-size: 11px;">
+                  <i class="{$value.icon}"></i> {$value.name} ({?=isset_or($role_counts[$value['role']], 0)?})
+                </button>
+                {/loop}
+              </div>
+
               <!-- Quick Search Input -->
               <div style="min-width: 240px; max-width: 360px; flex-grow: 1;">
                 <div class="input-group input-group-sm">
@@ -673,7 +685,8 @@
                     <th style="width: 40px; text-align: center;">No</th>
                     <th style="width: 80px; text-align: center;">Kode</th>
                     <th>Nama Formulir Rekam Medis</th>
-                    <th style="width: 130px; text-align: center;">Kategori</th>
+                    <th style="width: 120px; text-align: center;">Kategori</th>
+                    <th style="width: 100px; text-align: center;">Aktor</th>
                     <th style="width: 125px; text-align: center;">Status</th>
                     <th style="width: 160px;">Entri Terakhir</th>
                     <th style="width: 110px; text-align: center;">Aksi</th>
@@ -683,7 +696,8 @@
                   {loop: $forms as $idx => $f}
                   <tr class="rme-row-item {if: $f.is_filled}rsgm-row-filled{else}rsgm-row-empty{/if}" 
                       data-status="{if: $f.is_filled}filled{else}unfilled{/if}" 
-                      data-search="{?=strtolower($f.kode_form)?} {?=strtolower($f.nama_form)?} {?=strtolower($f.kategori)?}">
+                      data-target-aktor="{$f.target_aktor}"
+                      data-search="{?=strtolower($f.kode_form)?} {?=strtolower($f.nama_form)?} {?=strtolower($f.kategori)?} {$f.target_aktor}">
                     
                     <td style="text-align: center; color: #64748b; font-weight: 600; font-size: 11px;">
                       {?=$idx + 1?}
@@ -710,6 +724,16 @@
                       <span class="badge" style="background: #e2e8f0; color: #334155; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px;">
                         {$f.kategori}
                       </span>
+                    </td>
+
+                    <td style="text-align: center;">
+                      <div style="display: flex; flex-wrap: wrap; gap: 2px; justify-content: center;">
+                        {loop: $f.assigned_roles_meta}
+                        <span class="badge" style="background: {$value.bg}; color: {$value.color}; border: 1px solid {$value.border}; font-size: 9.5px; font-weight: 700; padding: 2px 5px;">
+                          <i class="{$value.icon}"></i> {$value.name}
+                        </span>
+                        {/loop}
+                      </div>
                     </td>
 
                     <td style="text-align: center;">
@@ -770,16 +794,24 @@
                 {loop: $forms as $f}
                 <div class="col-md-4 col-sm-6 rme-card-item" 
                      data-status="{if: $f.is_filled}filled{else}unfilled{/if}" 
-                     data-search="{?=strtolower($f.kode_form)?} {?=strtolower($f.nama_form)?} {?=strtolower($f.kategori)?}" 
+                     data-target-aktor="{$f.target_aktor}"
+                     data-search="{?=strtolower($f.kode_form)?} {?=strtolower($f.nama_form)?} {?=strtolower($f.kategori)?} {$f.target_aktor}" 
                      style="margin-bottom: 14px;">
                   
                   <div style="background: #ffffff; border: 1px solid {if: $f.is_filled}#86efac{else}#e2e8f0{/if}; border-left: 4px solid {if: $f.is_filled}#16a34a{else}#cbd5e1{/if}; border-radius: 8px; box-shadow: 0 1px 4px rgba(15,23,42,0.04); display: flex; flex-direction: column; justify-content: space-between; height: 100%; overflow: hidden;">
                     
                     <!-- Card Top Header -->
                     <div style="padding: 8px 12px; background: {if: $f.is_filled}#f0fdf4{else}#f8fafc{/if}; border-bottom: 1px solid {if: $f.is_filled}#dcfce7{else}#f1f5f9{/if}; display: flex; justify-content: space-between; align-items: center;">
-                      <span class="rsgm-code-chip" style="font-family: monospace; font-weight: 800; font-size: 10.5px; padding: 1px 6px; border-radius: 3px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
-                        {$f.kode_form}
-                      </span>
+                      <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+                        <span class="rsgm-code-chip" style="font-family: monospace; font-weight: 800; font-size: 10.5px; padding: 1px 6px; border-radius: 3px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
+                          {$f.kode_form}
+                        </span>
+                        {loop: $f.assigned_roles_meta}
+                        <span class="badge" style="background: {$value.bg}; color: {$value.color}; border: 1px solid {$value.border}; font-size: 9.5px; font-weight: 700; padding: 1px 5px;">
+                          <i class="{$value.icon}"></i> {$value.name}
+                        </span>
+                        {/loop}
+                      </div>
                       {if: $f.is_filled}
                       <span class="rsgm-badge rsgm-badge-emerald" style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px;">
                         <i class="fa fa-check"></i> Terisi
@@ -1080,6 +1112,7 @@ function openDocModal(url, title) {
 // Event handlers dan filtering saat DOM siap
 jQuery(document).ready(function() {
   var activeStatus = 'all';
+  var activeAktor = 'all';
 
   function applyFilters() {
     var search = jQuery.trim(jQuery('#inputFilterRme').val()).toLowerCase();
@@ -1089,12 +1122,14 @@ jQuery(document).ready(function() {
     jQuery('.rme-row-item').each(function() {
       var row = jQuery(this);
       var rowStatus = row.attr('data-status');
+      var rowAktor = row.attr('data-target-aktor') || 'medis,paramedis';
       var rowSearch = row.attr('data-search') || '';
 
       var statusMatch = (activeStatus === 'all') || (rowStatus === activeStatus);
+      var aktorMatch = (activeAktor === 'all') || (rowAktor && rowAktor.split(',').indexOf(activeAktor) !== -1);
       var searchMatch = !search || (rowSearch.indexOf(search) !== -1);
 
-      if (statusMatch && searchMatch) {
+      if (statusMatch && aktorMatch && searchMatch) {
         row.show();
         visibleCount++;
       } else {
@@ -1106,12 +1141,14 @@ jQuery(document).ready(function() {
     jQuery('.rme-card-item').each(function() {
       var card = jQuery(this);
       var cardStatus = card.attr('data-status');
+      var cardAktor = card.attr('data-target-aktor') || 'medis,paramedis';
       var cardSearch = card.attr('data-search') || '';
 
       var statusMatch = (activeStatus === 'all') || (cardStatus === activeStatus);
+      var aktorMatch = (activeAktor === 'all') || (cardAktor && cardAktor.split(',').indexOf(activeAktor) !== -1);
       var searchMatch = !search || (cardSearch.indexOf(search) !== -1);
 
-      if (statusMatch && searchMatch) {
+      if (statusMatch && aktorMatch && searchMatch) {
         card.show();
       } else {
         card.hide();
@@ -1131,6 +1168,15 @@ jQuery(document).ready(function() {
     jQuery('#btnGroupStatusFilter button').removeClass('active');
     jQuery(this).addClass('active');
     activeStatus = jQuery(this).attr('data-filter-status');
+    applyFilters();
+  });
+
+  // Filter tombol aktor: Semua / Dokter / Perawat / Kolaboratif / Pasien
+  jQuery('#btnGroupAktorFilter button').on('click', function(e) {
+    e.preventDefault();
+    jQuery('#btnGroupAktorFilter button').removeClass('active');
+    jQuery(this).addClass('active');
+    activeAktor = jQuery(this).attr('data-filter-aktor');
     applyFilters();
   });
 
