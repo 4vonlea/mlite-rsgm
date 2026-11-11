@@ -441,7 +441,7 @@
 
             <!-- PERSETUJUAN ALTERNATIF SOLUSI -->
             <div style="margin-top: 6px; text-align: justify; line-height: 1.45;">
-                Maka dengan ini saya <strong>SETUJU</strong> untuk dilakukan nya Penundaan dan Kelambatan Pelayanan tersebut di atas dengan alternatif yang diberikan sebagai berikut :
+                Maka dengan ini saya <span style="display:inline-block; border: 1.5px solid #000; border-radius: 12px; padding: 0 8px; font-weight: bold;">{if: !empty($data.status_setuju)}{$data.status_setuju}{else}SETUJU{/if}</span> untuk dilakukannya Penundaan dan Kelambatan Pelayanan tersebut di atas dengan alternatif yang diberikan sebagai berikut :
             </div>
 
             <div style="margin-top: 6px; padding-left: 2px;">
@@ -479,21 +479,51 @@
                     <td style="width: 31%;">
                         Menyetujui,<br>
                         Pasien / Keluarga Pasien
-                        <div style="height: 55px;"></div>
+                        <div style="height: 60px; display: flex; align-items: center; justify-content: center; text-align: center;">
+                            {if: !empty($data.ttd_keluarga)}
+                                {if: strpos($data.ttd_keluarga, 'data:image') === 0}
+                                    <img src="{$data.ttd_keluarga}" style="max-height: 55px; max-width: 140px; vertical-align: middle;">
+                                {else}
+                                    {?= $data['ttd_keluarga'] ?}
+                                {/if}
+                            {else}
+                            <span style="color:#aaa; font-style:italic; font-size:7.5pt;">(Belum TTD Digital)</span>
+                            {/if}
+                        </div>
                         <div class="dot-line">..................................................</div>
                         <div style="font-weight: bold; margin-top: 4px;">( {$data.nama_penerima} )</div>
                     </td>
                     <td style="width: 38%;">
                         <br>
                         Mengetahui DPJP
-                        <div style="height: 55px;"></div>
+                        <div style="height: 60px; display: flex; align-items: center; justify-content: center; text-align: center;">
+                            {if: !empty($data.ttd_dpjp)}
+                                {if: strpos($data.ttd_dpjp, 'data:image') === 0}
+                                    <img src="{$data.ttd_dpjp}" style="max-height: 55px; max-width: 140px; vertical-align: middle;">
+                                {else}
+                                    {?= $data['ttd_dpjp'] ?}
+                                {/if}
+                            {else}
+                            <span style="color:#aaa; font-style:italic; font-size:7.5pt;">[Terverifikasi DPJP]</span>
+                            {/if}
+                        </div>
                         <div class="dot-line">..................................................</div>
                         <div style="font-weight: bold; margin-top: 4px; font-size: 8pt;">( {if: !empty($data.nama_dokter_dpjp)}{$data.nama_dokter_dpjp}{else}..................................................{/if} )</div>
                     </td>
                     <td style="width: 31%;">
                         <br>
                         Pemberi Informasi
-                        <div style="height: 55px;"></div>
+                        <div style="height: 60px; display: flex; align-items: center; justify-content: center; text-align: center;">
+                            {if: !empty($data.ttd_petugas)}
+                                {if: strpos($data.ttd_petugas, 'data:image') === 0}
+                                    <img src="{$data.ttd_petugas}" style="max-height: 55px; max-width: 140px; vertical-align: middle;">
+                                {else}
+                                    {?= $data['ttd_petugas'] ?}
+                                {/if}
+                            {else}
+                            <span style="color:#aaa; font-style:italic; font-size:7.5pt;">[Terverifikasi Petugas]</span>
+                            {/if}
+                        </div>
                         <div class="dot-line">..................................................</div>
                         <div style="font-weight: bold; margin-top: 4px; font-size: 8pt;">( {if: !empty($data.nama_pemberi_informasi)}{$data.nama_pemberi_informasi}{else}..................................................{/if} )</div>
                     </td>

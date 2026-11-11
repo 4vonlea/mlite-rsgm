@@ -244,3 +244,19 @@ INSERT INTO `mlite_rme_unit_form` (`id`, `kd_poli`, `form_id`, `status`) VALUES
 ('188', 'UGD', '33', '1'),
 ('189', 'RANAP', '59', '1');
 
+
+-- Penambahan 13 formulir terbaru dari branch form-rme
+INSERT INTO `mlite_rme_form` (`kode_form`, `nama_form`, `kategori`, `route_manage`, `route_form`, `route_cetak`, `nama_tabel`, `status`, `target_aktor`) VALUES
+('CPPT', 'RM.GD 07 / RM.RI 05 - Catatan Perkembangan Pasien Terintegrasi (CPPT)', 'Ranap', 'cpptmanage', 'cpptform', 'cpptcetak', 'pemeriksaan_ranap', '1', 'medis,paramedis'),
+('RUJUKAN', 'Lampiran - Formulir Rujukan Komunikasi Antar RS', 'Ranap', 'formulirrujukanmanage', 'formulirrujukanform', 'formulirrujukancetak', 'formulir_rujukan_rs', '1', 'medis,paramedis'),
+('GC_RANAP', 'RM.RJ 02 - General Consent & Rincian Biaya Rawat Inap', 'Ranap', 'generalconsentmanage', 'generalconsentform', 'generalconsentcetak', 'general_consent_ranap', '1', 'pasien,medis,paramedis'),
+('KRITERIA_ICU', 'Lampiran - Kriteria Masuk & Keluar Ruang Rawat Intensif (ICU)', 'Ranap', 'kriteriaicumanage', 'kriteriaicuform', 'kriteriaicucetak', 'kriteria_masuk_keluar_icu', '1', 'medis'),
+('RI04_KEP', 'RM.RI 04 - Asesmen Keperawatan Rawat Inap', 'Ranap', 'rikeperawatanmanage', 'rikeperawatanform', 'rikeperawatancetak', 'ri04_asesmen_keperawatan_ranap', '1', 'paramedis'),
+('RI05A', 'RM.RI 05A - Asesmen Awal Medis Rawat Inap Gigi & Mulut', 'Ranap', 'rimedisgigimanage', 'rimedisgigiform', 'rimedisgigicetak', 'ri05a_asesmen_medis_ranap_gigi', '1', 'medis'),
+('RI05C', 'RM.RI 05C - Lembar Form Konsul / Alih Rawat DPJP', 'Ranap', 'ri05cmanage', 'ri05cform', 'ri05ccetak', 'ri05c_dokter_penanggung_jawab', '1', 'medis'),
+('RI06A', 'RM.RI 06A - Asesmen Risiko Jatuh Pasien Dewasa & Geriatri', 'Ranap', 'jatuhdewasamanage', 'jatuhdewasaform', 'jatuhdewasacetak', 'ri06a_asesmen_jatuh_dewasa_geriatri', '1', 'paramedis'),
+('RI07_OBS', 'RM.RI 07 - Lembar Observasi Pasien Rawat Inap', 'Ranap', 'riobservasimanage', 'riobservasiform', 'riobservasicetak', 'ri07_observasi_pasien', '1', 'paramedis'),
+('RINGKASAN_KLINIK', 'Lampiran - Ringkasan Riwayat Klinik (Evaluasi APS / FKTP)', 'Rajal', 'ringkasanriwayatklinikmanage', 'ringkasanriwayatklinikform', 'ringkasanriwayatklinikcetak', 'ringkasan_riwayat_klinik', '1', 'medis'),
+('RJ_JATUH_ANAK', 'Lampiran - Asesmen Risiko Jatuh & Nyeri Anak', 'Rajal', 'jatuhanakmanage', 'jatuhanakform', 'jatuhanakcetak', 'rj_asesmen_jatuh_nyeri_anak', '1', 'paramedis'),
+('PENGANTAR_RANAP', 'Lampiran - Surat Pengantar Rawat Inap (Admisi)', 'Ranap', 'pengantarranapmanage', 'pengantarranapform', 'pengantarranapcetak', 'surat_pengantar_ranap', '1', 'medis'),
+('JAMINAN_BIAYA', 'Lampiran - Surat Pernyataan Jaminan Pembiayaan', 'Ranap', 'jaminanbiayamanage', 'jaminanbiayaform', 'jaminanbiayacetak', 'surat_pernyataan_jaminan_biaya', '1', 'pasien,medis');

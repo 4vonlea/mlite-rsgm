@@ -140,13 +140,36 @@
         <table class="ttd-table">
             <tr>
                 <td style="width:50%;">
+                <td style="width:50%;">
                     <div>Pasien / Penanggung Jawab Pasien{if: !empty($d.form_data.hubungan_pj) && $d.form_data.hubungan_pj != 'Diri Sendiri'} ({$d.form_data.hubungan_pj}){/if},</div>
-                    <div style="margin-top:60px;">( {if: !empty($d.form_data.nama_pasien_pj)}{$d.form_data.nama_pasien_pj}{else}................................................{/if} )</div>
+                    <div style="height:55px; line-height:55px; margin:5px 0;">
+                        {if: !empty($d.form_data.ttd_pasien)}
+                            {if: strpos($d.form_data.ttd_pasien, 'data:image') === 0 || strpos($d.form_data.ttd_pasien, 'http') === 0}
+                            <img src="{$d.form_data.ttd_pasien}" style="max-height:50px; max-width:140px; vertical-align:middle;">
+                            {else}
+                            <div style="margin: 0 auto; display: inline-block;">{?= $d['form_data']['ttd_pasien'] ?}</div>
+                            {/if}
+                        {else}
+                        <span style="color:#aaa; font-style:italic; font-size:8px;">(Belum TTD Digital)</span>
+                        {/if}
+                    </div>
+                    <div>( {if: !empty($d.form_data.nama_pasien_pj)}{$d.form_data.nama_pasien_pj}{else}................................................{/if} )</div>
                     <div>tanda tangan dan nama jelas</div>
                 </td>
                 <td style="width:50%;">
                     <div>Petugas Pemberi Edukasi,</div>
-                    <div style="margin-top:60px;">( {if: !empty($d.form_data.pemberi_edukasi)}{$d.form_data.pemberi_edukasi}{else}................................................{/if} )</div>
+                    <div style="height:55px; line-height:55px; margin:5px 0;">
+                        {if: !empty($d.form_data.ttd_edukasi)}
+                            {if: strpos($d.form_data.ttd_edukasi, 'data:image') === 0 || strpos($d.form_data.ttd_edukasi, 'http') === 0}
+                            <img src="{$d.form_data.ttd_edukasi}" style="max-height:50px; max-width:140px; vertical-align:middle;">
+                            {else}
+                            <div style="margin: 0 auto; display: inline-block;">{?= $d['form_data']['ttd_edukasi'] ?}</div>
+                            {/if}
+                        {else}
+                        <span style="color:#aaa; font-style:italic; font-size:8px;">[Pemberi Edukasi]</span>
+                        {/if}
+                    </div>
+                    <div>( {if: !empty($d.form_data.pemberi_edukasi)}{$d.form_data.pemberi_edukasi}{else}................................................{/if} )</div>
                     <div>tanda tangan dan nama jelas</div>
                 </td>
             </tr>

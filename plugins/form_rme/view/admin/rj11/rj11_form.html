@@ -478,6 +478,53 @@
                       <input type="text" class="form-control t-saksi2" placeholder="Nama saksi 2..." value="{?=isset_or($data['form_data']['tolak_saksi2'])?}" list="list_petugas">
                     </div>
                   </div>
+
+                  <hr style="margin: 12px 0;">
+                  <h5 style="font-weight: 700; color: #1e293b; margin-bottom: 4px;">Tanda Tangan Digital Penolakan Tindakan</h5>
+                  <p class="text-muted small"><i class="fa fa-info-circle"></i> Tanda tangan pihak yang menyatakan dilengkapi stempel Materai 10.000 digital saat pencetakan.</p>
+
+                  <input type="hidden" id="input_ttd_tolak_menyatakan" value="{$data.form_data.ttd_tolak_menyatakan}">
+                  <input type="hidden" id="input_ttd_tolak_saksi1" value="{$data.form_data.ttd_tolak_saksi1}">
+                  <input type="hidden" id="input_ttd_tolak_saksi2" value="{$data.form_data.ttd_tolak_saksi2}">
+
+                  <div class="row">
+                    <div class="col-md-4">
+                      <div class="panel panel-info" style="margin-bottom: 10px;">
+                        <div class="panel-heading" style="padding: 5px 10px; font-size: 11.5px; font-weight: bold;">TTD Yang Menyatakan</div>
+                        <div class="panel-body text-center" style="padding: 8px;">
+                          <canvas id="pad_tolak_menyatakan" width="240" height="110" style="border:1px dashed #3498db; background:#fafafa; touch-action:none; cursor:crosshair;"></canvas>
+                          <div style="margin-top: 4px;">
+                            <button type="button" class="btn btn-default btn-xs" id="clear_tolak_menyatakan"><i class="fa fa-eraser"></i> Hapus</button>
+                            <span id="st_tolak_menyatakan" class="small text-muted">{if: !empty($data.form_data.ttd_tolak_menyatakan)}<i class="fa fa-check text-success"></i> Ada{else}Belum ada{/if}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="panel panel-default" style="margin-bottom: 10px;">
+                        <div class="panel-heading" style="padding: 5px 10px; font-size: 11.5px; font-weight: bold;">TTD Saksi 1</div>
+                        <div class="panel-body text-center" style="padding: 8px;">
+                          <canvas id="pad_tolak_saksi1" width="240" height="110" style="border:1px dashed #bdc3c7; background:#fafafa; touch-action:none; cursor:crosshair;"></canvas>
+                          <div style="margin-top: 4px;">
+                            <button type="button" class="btn btn-default btn-xs" id="clear_tolak_saksi1"><i class="fa fa-eraser"></i> Hapus</button>
+                            <span id="st_tolak_saksi1" class="small text-muted">{if: !empty($data.form_data.ttd_tolak_saksi1)}<i class="fa fa-check text-success"></i> Ada{else}Belum ada{/if}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="panel panel-default" style="margin-bottom: 10px;">
+                        <div class="panel-heading" style="padding: 5px 10px; font-size: 11.5px; font-weight: bold;">TTD Saksi 2</div>
+                        <div class="panel-body text-center" style="padding: 8px;">
+                          <canvas id="pad_tolak_saksi2" width="240" height="110" style="border:1px dashed #bdc3c7; background:#fafafa; touch-action:none; cursor:crosshair;"></canvas>
+                          <div style="margin-top: 4px;">
+                            <button type="button" class="btn btn-default btn-xs" id="clear_tolak_saksi2"><i class="fa fa-eraser"></i> Hapus</button>
+                            <span id="st_tolak_saksi2" class="small text-muted">{if: !empty($data.form_data.ttd_tolak_saksi2)}<i class="fa fa-check text-success"></i> Ada{else}Belum ada{/if}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div> <!-- /#tab_penolakan -->
               </div> <!-- /.tab-content -->
             </div>
@@ -666,10 +713,73 @@ $(document).ready(function() {
             tolak_tgl: $('.t-tgl').val() || '',
             tolak_menyatakan: $('.t-menyatakan').val() || '',
             tolak_saksi1: $('.t-saksi1').val() || '',
-            tolak_saksi2: $('.t-saksi2').val() || ''
+            tolak_saksi2: $('.t-saksi2').val() || '',
+            ttd_tolak_menyatakan: $('#input_ttd_tolak_menyatakan').val() || '',
+            ttd_tolak_saksi1: $('#input_ttd_tolak_saksi1').val() || '',
+            ttd_tolak_saksi2: $('#input_ttd_tolak_saksi2').val() || ''
         };
         return fd;
     }
+
+    function initRj11Sig(canvasId, inputId, clearBtnId, statusId, existingData) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var drawing = false;
+        var prevX = 0, prevY = 0;
+
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+
+        if (existingData && existingData.indexOf('data:image') === 0) {
+            var img = new Image();
+            img.onload = function() { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); };
+            img.src = existingData;
+        }
+
+        function getPos(c, e) {
+            var rect = c.getBoundingClientRect();
+            var clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            var clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            return {
+                x: (clientX - rect.left) * (c.width / rect.width),
+                y: (clientY - rect.top) * (c.height / rect.height)
+            };
+        }
+
+        function start(x, y) { drawing = true; prevX = x; prevY = y; }
+        function draw(x, y) {
+            if (!drawing) return;
+            ctx.beginPath();
+            ctx.moveTo(prevX, prevY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            prevX = x; prevY = y;
+            $('#' + inputId).val(canvas.toDataURL('image/png'));
+            $('#' + statusId).html('<i class="fa fa-pencil text-primary"></i> Aktif');
+        }
+        function stop() { drawing = false; }
+
+        $(canvas).on('mousedown', function(e) { var p = getPos(canvas, e.originalEvent); start(p.x, p.y); });
+        $(canvas).on('mousemove', function(e) { var p = getPos(canvas, e.originalEvent); draw(p.x, p.y); });
+        $(window).on('mouseup', stop);
+
+        canvas.addEventListener('touchstart', function(e) { e.preventDefault(); var p = getPos(canvas, e); start(p.x, p.y); }, { passive: false });
+        canvas.addEventListener('touchmove', function(e) { e.preventDefault(); var p = getPos(canvas, e); draw(p.x, p.y); }, { passive: false });
+        canvas.addEventListener('touchend', stop);
+
+        $('#' + clearBtnId).click(function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            $('#' + inputId).val('');
+            $('#' + statusId).html('<span class="text-danger">Dihapus</span>');
+        });
+    }
+
+    initRj11Sig('pad_tolak_menyatakan', 'input_ttd_tolak_menyatakan', 'clear_tolak_menyatakan', 'st_tolak_menyatakan', '{$data.form_data.ttd_tolak_menyatakan}');
+    initRj11Sig('pad_tolak_saksi1', 'input_ttd_tolak_saksi1', 'clear_tolak_saksi1', 'st_tolak_saksi1', '{$data.form_data.ttd_tolak_saksi1}');
+    initRj11Sig('pad_tolak_saksi2', 'input_ttd_tolak_saksi2', 'clear_tolak_saksi2', 'st_tolak_saksi2', '{$data.form_data.ttd_tolak_saksi2}');
 
     $('#rj11Form').on('submit', function() {
         var fd = packFormData();

@@ -1,0 +1,51 @@
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-heartbeat"></i> RM.RI 07 - OBSERVASI PASIEN RAWAT INAP</h3>
+    </div>
+    <div class="panel-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th width="40">No</th>
+                        <th>No. Rawat</th>
+                        <th>No. RM</th>
+                        <th>Nama Pasien</th>
+                        <th>Tgl/Jam Masuk</th>
+                        <th>Jml Catatan Observasi</th>
+                        <th>Perawat Jaga</th>
+                        <th width="240" class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {if: !empty($data)}
+                    {loop: $data}
+                    <tr>
+                        <td>{?= $key + 1 ?}</td>
+                        <td><strong>{$value.no_rawat}</strong></td>
+                        <td>{$value.no_rkm_medis}</td>
+                        <td><strong>{$value.nm_pasien}</strong></td>
+                        <td>{$value.tgl_masuk} {$value.jam_masuk}</td>
+                        <td><span class="badge">{$value.jml_obs} baris</span></td>
+                        <td>{$value.perawat_jaga}</td>
+                        <td class="text-center">
+                            <a href="{?=url([ADMIN, 'form_rme', 'riobservasicetak'])?}&id={$value.id}" class="btn btn-xs btn-success" target="_blank"><i class="fa fa-print"></i> Cetak</a>
+                            <a href="{?=url([ADMIN, 'form_rme', 'riobservasicetak'])?}&id={$value.id}&pdf=1" class="btn btn-xs btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i> PDF</a>
+                            <a href="{?=url([ADMIN, 'form_rme', 'riobservasiform'])?}&id={$value.id}" class="btn btn-xs btn-info"><i class="fa fa-edit"></i> Edit</a>
+                            <a href="{?=url([ADMIN, 'form_rme', 'riobservasihapus'])?}&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Hapus lembar observasi ini?');"><i class="fa fa-trash"></i> Hapus</a>
+                        </td>
+                    </tr>
+                    {/loop}
+                    {else}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">Belum ada lembar observasi pasien rawat inap.</td>
+                    </tr>
+                    {/if}
+                </tbody>
+            </table>
+        </div>
+        <div class="pull-left">
+            <a href="{?=url([ADMIN, 'form_rme', 'riobservasiform'])?}" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Observasi Baru</a>
+        </div>
+    </div>
+</div>

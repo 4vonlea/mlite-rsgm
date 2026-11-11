@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>SURAT PENGANTAR RAWAT INAP - {$data.no_rawat}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 8mm 12mm 10mm 12mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 9.5pt;
+            line-height: 1.3;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
+            background-color: #f5f5f5;
+            padding: 15px 0;
+        }
+        .page {
+            background: #fff;
+            width: 195mm;
+            min-height: 275mm;
+            margin: 0 auto;
+            padding: 8mm 12mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        {/if}
+
+        .no-print-toolbar {
+            width: 195mm;
+            margin: 0 auto 10px auto;
+            padding: 8px 12px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+        }
+        .btn-toolbar {
+            display: inline-block;
+            padding: 5px 12px;
+            font-size: 9pt;
+            font-weight: bold;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-right: 5px;
+        }
+        .btn-print { background-color: #27ae60; }
+        .btn-pdf { background-color: #c0392b; }
+        .btn-close { background-color: #7f8c8d; }
+
+        @media print {
+            .no-print-toolbar { display: none !important; }
+            body { background: transparent !important; padding: 0 !important; }
+            .page { width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 2px solid #000;
+            padding-bottom: 4px;
+        }
+        .header-table td {
+            vertical-align: middle;
+        }
+        .title-doc {
+            text-align: center;
+            font-weight: bold;
+            font-size: 13pt;
+            margin-top: 14px;
+            margin-bottom: 14px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10pt;
+        }
+        .content-table td {
+            padding: 4px 2px;
+            vertical-align: top;
+        }
+        .dotted-line {
+            border-bottom: 1px dotted #333;
+            min-height: 18px;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .box-layanan {
+            display: inline-block;
+            border: 2px solid #000;
+            padding: 4px 10px;
+            font-weight: bold;
+            font-size: 10.5pt;
+            margin-right: 12px;
+            margin-bottom: 6px;
+            background: #fff;
+        }
+        .box-layanan.active {
+            border: 2.5px solid #000;
+            background: #eef2f7;
+        }
+
+        .gender-circ {
+            display: inline-block;
+            border: 1.5px solid #000;
+            border-radius: 50%;
+            padding: 1px 8px;
+        }
+
+        .footer-note {
+            font-size: 8pt;
+            font-style: italic;
+            text-align: right;
+            margin-top: 25px;
+            font-weight: bold;
+        }
+        .footer-doc {
+            font-size: 8pt;
+            font-weight: bold;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+
+{if: empty($is_mpdf)}
+<div class="no-print-toolbar">
+    <button onclick="window.print()" class="btn-toolbar btn-print"><i class="fa fa-print"></i> Cetak Dokumen</button>
+    <a href="{?=url([ADMIN, 'form_rme', 'pengantarranapcetak', '?id='.$data.id.'&pdf=1'])?}" target="_blank" class="btn-toolbar btn-pdf">
+        <i class="fa fa-file-pdf-o"></i> Download PDF
+    </a>
+    <button onclick="window.close()" class="btn-toolbar btn-close">Tutup</button>
+</div>
+{/if}
+
+<div class="page">
+    <!-- HEADER KOP RSGM -->
+    <table class="header-table">
+        <tr>
+            <td style="width: 15%; text-align: center;">
+                <img src="{if: !empty($logo_prov)}{$logo_prov}{else}{?=url('assets/img/logo_kalsel.png')?}{/if}" style="height: 60px; max-width: 60px;" alt="Logo Prov">
+            </td>
+            <td style="width: 70%; text-align: center; padding: 0 6px;">
+                <div style="font-size: 9pt; font-weight: bold; text-transform: uppercase;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+                <div style="font-size: 11.5pt; font-weight: bold; text-transform: uppercase;">RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</div>
+                <div style="font-size: 7.5pt;">Jl. Simpang Ulin Nomor 28 Banjarmasin Kode Pos 70233 Telp. (0511) 3260818</div>
+                <div style="font-size: 7.5pt;">Email : rsgmgustihasanaman@yahoo.com</div>
+            </td>
+            <td style="width: 15%; text-align: center;">
+                <img src="{if: !empty($logo_rs)}{$logo_rs}{else}{?=url('assets/img/logo_rsgm.png')?}{/if}" style="height: 55px; max-width: 60px;" alt="Logo RSGM">
+            </td>
+        </tr>
+    </table>
+
+    <!-- JUDUL -->
+    <div class="title-doc">SURAT PENGANTAR RAWAT INAP</div>
+
+    <!-- ISI FORMULIR SESUAI FISIK -->
+    <table class="content-table">
+        <tr>
+            <td style="width: 25%;">Pasien dikirim dari unit</td>
+            <td style="width: 2%;">:</td>
+            <td style="width: 73%; border-bottom: 1px dotted #000;">
+                <strong>{$data.unit_asal}</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ke Unit : <strong>{$data.unit_tujuan}</strong>
+            </td>
+        </tr>
+        <tr>
+            <td>Hari/ Tanggal/ Jam</td>
+            <td>:</td>
+            <td style="border-bottom: 1px dotted #000;">{$data.hari_tgl_jam}</td>
+        </tr>
+        <tr>
+            <td>Nomor Rekam Medis</td>
+            <td>:</td>
+            <td style="border-bottom: 1px dotted #000; font-weight: bold;">{$data.no_rkm_medis}</td>
+        </tr>
+        <tr>
+            <td>Nama Pasien</td>
+            <td>:</td>
+            <td style="border-bottom: 1px dotted #000; font-weight: bold;">{$data.nama_pasien}</td>
+        </tr>
+        <tr>
+            <td>Tanggal Lahir</td>
+            <td>:</td>
+            <td style="border-bottom: 1px dotted #000;">
+                {$data.tgl_lahir_indo} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                ({if: $data.jk == 'L'}<span class="gender-circ">Laki-laki</span> / Perempuan{else}Laki-laki / <span class="gender-circ">Perempuan</span>{/if})
+            </td>
+        </tr>
+        <tr>
+            <td>Alamat</td>
+            <td>:</td>
+            <td style="border-bottom: 1px dotted #000;">{$data.alamat}</td>
+        </tr>
+        <tr>
+            <td>Ruang / Kelas</td>
+            <td>:</td>
+            <td style="border-bottom: 1px dotted #000;">{$data.ruang_kelas}</td>
+        </tr>
+        <tr>
+            <td>Riwayat Penyakit</td>
+            <td>:</td>
+            <td style="border-bottom: 1px dotted #000;">{$data.riwayat_penyakit}</td>
+        </tr>
+        <tr>
+            <td colspan="3" style="height: 10px;"></td>
+        </tr>
+        <tr>
+            <td>Tanda - Tanda Vital</td>
+            <td>:</td>
+            <td style="border-bottom: 1px dotted #000;">
+                Tensi : <strong>{$data.tensi}</strong> mmHg &nbsp;&nbsp;&nbsp;&nbsp;
+                Nadi : <strong>{$data.nadi}</strong> X/mt &nbsp;&nbsp;&nbsp;&nbsp;
+                RR : <strong>{$data.rr}</strong> X/mt
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td style="border-bottom: 1px dotted #000;">
+                Suhu : <strong>{$data.suhu}</strong> &deg;C &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                Berat badan : <strong>{$data.berat_badan}</strong> Kg
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3" style="height: 6px;"></td>
+        </tr>
+        <tr>
+            <td>Diagnosa Sementara</td>
+            <td>:</td>
+            <td style="border-bottom: 1px dotted #000;"><strong>{$data.diagnosa_sementara}</strong></td>
+        </tr>
+        <tr>
+            <td>Tindakan yang diberikan</td>
+            <td>:</td>
+            <td style="border-bottom: 1px dotted #000;">{$data.tindakan_diberikan}</td>
+        </tr>
+        <tr>
+            <td style="vertical-align: middle;">Nama DPJP</td>
+            <td style="vertical-align: middle;">:</td>
+            <td style="vertical-align: middle;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 55%; border-bottom: 1px dotted #000; vertical-align: middle;">
+                            <strong>{$data.nama_dpjp}</strong>
+                        </td>
+                        <td style="width: 45%; vertical-align: middle; padding-left: 15px;">
+                            <!-- KOTAK PILIHAN PELAYANAN (AKP 1.2 EP A) -->
+                            <table style="border-collapse: separate; border-spacing: 6px 4px;">
+                                <tr>
+                                    <td>
+                                        <div class="box-layanan {if: $data.layanan_promotif == 'Ya'}active{/if}">
+                                            {if: $data.layanan_promotif == 'Ya'}&#9745;{else}&#9633;{/if} Promotif
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="box-layanan {if: $data.layanan_kuratif == 'Ya'}active{/if}">
+                                            {if: $data.layanan_kuratif == 'Ya'}&#9745;{else}&#9633;{/if} Kuratif
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="box-layanan {if: $data.layanan_preventif == 'Ya'}active{/if}">
+                                            {if: $data.layanan_preventif == 'Ya'}&#9745;{else}&#9633;{/if} Preventif
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="box-layanan {if: $data.layanan_rehabilitatif == 'Ya'}active{/if}">
+                                            {if: $data.layanan_rehabilitatif == 'Ya'}&#9745;{else}&#9633;{/if} Rehabilitatif
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- TANDA TANGAN -->
+    <table style="width: 100%; margin-top: 30px; text-align: center; font-size: 10pt;">
+        <tr>
+            <td style="width: 50%;">
+                Menyetujui<br>
+                Penanggung jawab pasien<br><br><br><br>
+                <div style="font-family: 'Brush Script MT', cursive, sans-serif; font-size: 16pt; color: #1a237e;">Paraf</div>
+                <div style="border-bottom: 1px dotted #000; width: 70%; margin: 4px auto 0 auto;"></div>
+                <strong>( {if: !empty($data.penanggung_jawab_nama)}{$data.penanggung_jawab_nama}{else}..................................................{/if} )</strong>
+            </td>
+            <td style="width: 50%;">
+                Dokter yang mengirim<br><br><br><br>
+                <div style="font-family: 'Brush Script MT', cursive, sans-serif; font-size: 16pt; color: #1a237e;">Paraf</div>
+                <div style="border-bottom: 1px dotted #000; width: 70%; margin: 4px auto 0 auto;"></div>
+                <strong>( {if: !empty($data.dokter_pengirim_nama)}{$data.dokter_pengirim_nama}{else}..................................................{/if} )</strong>
+            </td>
+        </tr>
+    </table>
+
+    <!-- FOOTER NOTE -->
+    <div class="footer-note">
+        Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas
+    </div>
+    <div class="footer-doc">
+        RSGM/Ed-Rev/01/2020
+    </div>
+</div>
+
+</body>
+</html>
+

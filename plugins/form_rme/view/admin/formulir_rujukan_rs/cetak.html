@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>FORMULIR RUJUKAN - {$data.no_rawat}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 6mm 8mm 6mm 8mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8.2pt;
+            color: #000;
+            margin: 0;
+            padding: 0;
+            line-height: 1.22;
+        }
+        {if: empty($is_mpdf)}
+        @media screen {
+            body {
+                background-color: #f4f6f9 !important;
+                padding: 15px 0 !important;
+            }
+            .page {
+                background: #fff !important;
+                width: 196mm;
+                min-height: 282mm;
+                margin: 0 auto 20px auto !important;
+                padding: 5mm 7mm !important;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important;
+                position: relative;
+            }
+        }
+        {/if}
+
+        .no-print-toolbar {
+            width: 100%;
+            max-width: 196mm;
+            margin: 0 auto 12px auto;
+            padding: 8px 14px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-toolbar {
+            padding: 5px 12px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; }
+        .btn-close { background: #7f8c8d; color: #fff; }
+
+        .outer-frame {
+            border: 1.5px solid #000;
+            width: 100%;
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1.5px solid #000;
+        }
+        .header-table td {
+            padding: 3px 6px;
+            vertical-align: middle;
+        }
+        .rmbox {
+            display: inline-block;
+            width: 16px;
+            height: 18px;
+            border: 1.2px solid #000;
+            text-align: center;
+            line-height: 17px;
+            font-size: 9.5pt;
+            font-weight: bold;
+            vertical-align: middle;
+        }
+        .rm-sep {
+            display: inline-block;
+            width: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .circle-sex {
+            display: inline-block;
+            border: 1.5px solid #000;
+            border-radius: 50%;
+            padding: 0 4px;
+            font-weight: bold;
+        }
+
+        .sec-header {
+            background: #f5f5f5;
+            font-weight: bold;
+            font-size: 8.2pt;
+            padding: 2px 6px;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            text-transform: uppercase;
+        }
+
+        .ttv-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8pt;
+        }
+        .ttv-table th, .ttv-table td {
+            border: 1px solid #000;
+            padding: 3px 4px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .ttv-table th:first-child, .ttv-table td:first-child { border-left: none; }
+        .ttv-table th:last-child, .ttv-table td:last-child { border-right: none; }
+
+        .grid-2col {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .grid-2col > tbody > tr > td {
+            border: 1px solid #000;
+            padding: 3px 6px;
+            vertical-align: top;
+        }
+        .grid-2col > tbody > tr > td:first-child { border-left: none; }
+        .grid-2col > tbody > tr > td:last-child { border-right: none; }
+
+        .obat-subtable {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7.8pt;
+            margin-top: 2px;
+        }
+        .obat-subtable th, .obat-subtable td {
+            border: 1px solid #555;
+            padding: 2px 4px;
+            text-align: left;
+        }
+        .obat-subtable th {
+            text-align: center;
+            background: #fafafa;
+        }
+
+        .cb {
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            border: 1px solid #000;
+            text-align: center;
+            line-height: 10px;
+            font-size: 9px;
+            font-weight: bold;
+            vertical-align: middle;
+            margin-right: 3px;
+        }
+
+        .pre-line {
+            white-space: pre-line;
+        }
+
+        @media print {
+            .no-print-toolbar { display: none !important; }
+            body { background: transparent !important; padding: 0 !important; }
+            .page { width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    {if: empty($is_mpdf)}
+    <div class="no-print-toolbar">
+        <button onclick="window.print()" class="btn-toolbar btn-print"><i class="fa fa-print"></i> Cetak Dokumen</button>
+        <a href="{?=url([ADMIN, 'form_rme', 'formulirrujukancetak', 'id=' . $data.id . '&pdf=1'])?}" target="_blank" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Download PDF</a>
+        <button onclick="window.close()" class="btn-toolbar btn-close"><i class="fa fa-times"></i> Tutup</button>
+    </div>
+    {/if}
+
+    <div class="page">
+        <div class="outer-frame">
+            <!-- HEADER KOP & IDENTITAS -->
+            <table class="header-table">
+                <tr>
+                    <td style="width: 57%; border-right: 1.5px solid #000;">
+                        <img src="{if: !empty($kop_img)}{$kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop RSGM" style="width: 100%; max-height: 62px; object-fit: contain; display: block;">
+                    </td>
+                    <td style="width: 43%; padding: 3px 8px;">
+                        <table style="width: 100%; border: none; font-size: 8.2pt;">
+                            <tr>
+                                <td style="width: 28%; padding: 1px 0; font-weight: bold;">No RM</td>
+                                <td style="width: 4%; padding: 1px 0;">:</td>
+                                <td style="padding: 1px 0;">
+                                    <span class="rmbox">{$p.rm0}</span><span class="rmbox">{$p.rm1}</span><span class="rm-sep">-</span><span class="rmbox">{$p.rm2}</span><span class="rmbox">{$p.rm3}</span><span class="rm-sep">-</span><span class="rmbox">{$p.rm4}</span><span class="rmbox">{$p.rm5}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1px 0; font-weight: bold;">Nama Pasien</td>
+                                <td style="padding: 1px 0;">:</td>
+                                <td style="padding: 1px 0; border-bottom: 1px dotted #000;">
+                                    <strong>{$p.nm_pasien}</strong>
+                                    <span style="float: right;">
+                                        {if: $p.jk == 'L'}<span class="circle-sex">L</span>/P{elseif: $p.jk == 'P'}L/<span class="circle-sex">P</span>{else}L/P{/if}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1px 0; font-weight: bold;">Tanggal Lahir</td>
+                                <td style="padding: 1px 0;">:</td>
+                                <td style="padding: 1px 0; border-bottom: 1px dotted #000;">{$p.tgl_lahir_fmt}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- PERHATIAN & KEPADA YTH -->
+            <div style="font-size: 6.8pt; padding: 2px 6px; border-bottom: 1px solid #000;">
+                Perhatian :<br>
+                *Harap semua penulisan dilakukan dengan keterbacaan yang jelas, benar dan lengkap.<br>
+                *Berilah tanda centang (√) pada kotak pilihan yang telah disediakan.<br>
+                *Berilah tanda lingkar pada pilihan yang telah disediakan.
+                <div style="text-align: center; font-weight: bold; font-size: 10pt; margin-top: 1px;">FORMULIR RUJUKAN</div>
+            </div>
+
+            <div style="padding: 4px 6px; font-size: 8.2pt;">
+                Kepada Yth.<br>
+                Teman Sejawat/Dokter Ahli: dr/drg. <span style="border-bottom: 1px dotted #000; display: inline-block; min-width: 240px; font-weight: bold;">{$data.kepada_yth}</span><br>
+                RS Instansi : <span style="border-bottom: 1px dotted #000; display: inline-block; min-width: 280px; font-weight: bold;">{$data.rs_instansi}</span><br>
+                Dengan hormat,<br>
+                Mohon perawatan selanjutnya terhadap pasien :
+            </div>
+
+            <!-- IDENTITAS -->
+            <div class="sec-header">IDENTITAS</div>
+            <table class="grid-2col">
+                <tr>
+                    <td style="width: 50%; border-top: none;">
+                        Nama &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <strong>{$p.nm_pasien}</strong><br>
+                        Tanggal Lahir : <strong>{$p.tgl_lahir_fmt}</strong>
+                    </td>
+                    <td style="width: 50%; border-top: none;">
+                        Alamat : <strong>{$p.alamat}</strong>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- HASIL PEMERIKSAAN YANG TELAH DILAKUKAN -->
+            <div class="sec-header" style="border-top: none;">HASIL PEMERIKSAAN YANG TELAH DILAKUKAN</div>
+            <div style="padding: 3px 6px; border-bottom: 1px solid #000;" class="pre-line">
+                <strong>Anamnesis :</strong> {$data.anamnesis}
+            </div>
+            <div style="padding: 2px 6px; font-weight: bold; font-size: 8pt;">Pemeriksaan fisik/klinis</div>
+            <table class="ttv-table">
+                <thead>
+                    <tr>
+                        <th style="width: 16%;">Keadaan umum</th>
+                        <th style="width: 10%;">Kesadaran</th>
+                        <th style="width: 13%;">TD</th>
+                        <th style="width: 11%;">Nadi</th>
+                        <th style="width: 12%;">Pernafasan</th>
+                        <th style="width: 10%;">Suhu</th>
+                        <th style="width: 15%;">Skala nyeri</th>
+                        <th style="width: 13%;">Saturasi Oksigen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-weight: bold;">{$data.ku_awal}</td>
+                        <td style="font-weight: bold;">{$data.kesadaran_awal}</td>
+                        <td style="font-weight: bold;">{$data.td_awal}</td>
+                        <td style="font-weight: bold;">{$data.nadi_awal}</td>
+                        <td style="font-weight: bold;">{$data.rr_awal}</td>
+                        <td style="font-weight: bold;">{$data.suhu_awal}</td>
+                        <td style="font-weight: bold;">{$data.nyeri_awal}</td>
+                        <td style="font-weight: bold;">{$data.spo2_awal}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table class="grid-2col">
+                <tr>
+                    <td style="width: 45%; border-top: none;">
+                        &bull; Intraoral : {$data.intraoral}
+                    </td>
+                    <td style="width: 55%; border-top: none;">
+                        &bull; Ekstraoral : {$data.ekstraoral}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>Pemeriksaan penunjang :</strong>
+                        <div style="font-weight: bold; font-size: 9pt; margin-top: 2px;">{$data.pemeriksaan_penunjang}</div>
+                    </td>
+                    <td>
+                        <strong>Diagnosis :</strong>
+                        <div style="font-weight: bold; font-size: 9pt; margin-top: 2px;">{$data.diagnosis}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>Terapi / tindakan yang telah dilakukan</strong>
+                        <div class="pre-line" style="margin-top: 3px; font-weight: bold;">{$data.terapi_tindakan}</div>
+                    </td>
+                    <td style="padding: 0;">
+                        <div style="padding: 3px 6px; font-weight: bold; border-bottom: 1px solid #000;">Obat-obatan yang telah diberikan</div>
+                        <table class="obat-subtable" style="border: none; margin: 0;">
+                            <thead>
+                                <tr>
+                                    <th style="border-left: none; border-top: none; width: 38%;">Nama obat</th>
+                                    <th style="border-top: none; width: 20%;">Jumlah</th>
+                                    <th style="border-top: none; width: 24%;">Dosis</th>
+                                    <th style="border-right: none; border-top: none; width: 18%;">Frekuensi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loop: $obat_rows}
+                                <tr>
+                                    <td style="border-left: none; font-weight: bold;">- {$value.nama_obat}</td>
+                                    <td style="text-align: center; font-weight: bold;">{$value.jumlah}</td>
+                                    <td style="text-align: center; font-weight: bold;">{$value.dosis}</td>
+                                    <td style="border-right: none; text-align: center; font-weight: bold;">{$value.frekuensi}</td>
+                                </tr>
+                                {/loop}
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>Alasan rujuk</strong>
+                        <div class="pre-line" style="margin-top: 3px; font-weight: bold;">{$data.alasan_rujuk}</div>
+                    </td>
+                    <td>
+                        <strong>Pasien/keluarga menyetujui alasan rujuk</strong><br>
+                        <div style="margin: 2px 0 2px 15px;">
+                            <span class="cb">{if: $data.persetujuan_rujuk == 'Ya'}&#10003;{/if}</span> Ya<br>
+                            <span class="cb">{if: $data.persetujuan_rujuk == 'Tidak'}&#10003;{/if}</span> Tidak
+                        </div>
+                        Keluarga/kerabat pasien pemberi persetujuan<br>
+                        Nama : <span style="border-bottom: 1px dotted #000; font-weight: bold;">{$data.nama_keluarga_setuju}</span><br>
+                        Hubungan dengan pasien : <span style="border-bottom: 1px dotted #000; font-weight: bold;">{$data.hubungan_keluarga}</span>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- KONDISI PASIEN SAAT RUJUK -->
+            <div class="sec-header" style="border-top: none;">KONDISI PASIEN SAAT RUJUK</div>
+            <table class="ttv-table">
+                <thead>
+                    <tr>
+                        <th style="width: 16%; border-top: none;">Keadaan Umum</th>
+                        <th style="width: 10%; border-top: none;">Kesadaran</th>
+                        <th style="width: 14%; border-top: none;">TD</th>
+                        <th style="width: 11%; border-top: none;">Nadi</th>
+                        <th style="width: 12%; border-top: none;">Pernafasan</th>
+                        <th style="width: 10%; border-top: none;">Suhu</th>
+                        <th style="width: 14%; border-top: none;">Skala nyeri</th>
+                        <th style="width: 13%; border-top: none;">Saturasi Oksigen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-weight: bold;">{$data.ku_rujuk}</td>
+                        <td style="font-weight: bold;">{$data.kesadaran_rujuk}</td>
+                        <td style="font-weight: bold;">{$data.td_rujuk}</td>
+                        <td style="font-weight: bold;">{$data.nadi_rujuk}</td>
+                        <td style="font-weight: bold;">{$data.rr_rujuk}</td>
+                        <td style="font-weight: bold;">{$data.suhu_rujuk}</td>
+                        <td style="font-weight: bold;">{$data.nyeri_rujuk}</td>
+                        <td style="font-weight: bold;">{$data.spo2_rujuk}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table class="grid-2col">
+                <tr>
+                    <td style="width: 45%; border-top: none;">
+                        <strong>Status Fungsional Pasien</strong>
+                        <div style="margin-top: 3px; line-height: 1.4;">
+                            <span class="cb">{if: $data.status_fungsional == 'Mandiri'}&#10003;{/if}</span> Mandiri<br>
+                            <span class="cb">{if: $data.status_fungsional == 'Ketergantungan penuh'}&#10003;{/if}</span> Ketergantungan penuh<br>
+                            <span class="cb">{if: $data.status_fungsional == 'Ketergantungan sebagian'}&#10003;{/if}</span> Ketergantungan sebagian
+                        </div>
+                        {if: !empty($data.catatan_komunikasi)}
+                        <div style="margin-top: 4px; font-weight: bold; font-size: 8.5pt;">
+                            {$data.catatan_komunikasi}
+                        </div>
+                        {/if}
+                    </td>
+                    <td style="width: 55%; border-top: none; padding: 0;">
+                        <div style="padding: 3px 6px; font-weight: bold; border-bottom: 1px solid #000;">Peralatan yang menyertai pasien saat rujuk</div>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="width: 50%; padding: 4px 8px; border-right: 1px solid #000; line-height: 1.5;">
+                                    <span class="cb">{if: in_array('Nasal canule', $peralatan_list)}&#10003;{/if}</span> Nasal canule<br>
+                                    <span class="cb">{if: in_array('Oksigen portable', $peralatan_list)}&#10003;{/if}</span> Oksigen portable<br>
+                                    <span class="cb">{if: in_array('Suction', $peralatan_list)}&#10003;{/if}</span> Suction
+                                </td>
+                                <td style="width: 50%; padding: 4px 8px; line-height: 1.5;">
+                                    <span class="cb">{if: in_array('Bagging', $peralatan_list)}&#10003;{/if}</span> Bagging<br>
+                                    <span class="cb">{if: in_array('NGT', $peralatan_list)}&#10003;{/if}</span> NGT<br>
+                                    <span class="cb">{if: in_array('Infuse pump', $peralatan_list)}&#10003;{/if}</span> Infuse pump
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td rowspan="2" style="text-align: center; vertical-align: middle; border-bottom: none; padding: 10px;">
+                        <div style="font-weight: bold; margin-bottom: 6px;">Tanda tangan petugas yang mengirim</div>
+                        {if: !empty($data.ttd_pengirim)}
+                            {if: strpos($data.ttd_pengirim, 'data:image') === 0 || strpos($data.ttd_pengirim, 'http') === 0}
+                                <img src="{$data.ttd_pengirim}" style="max-height: 65px; max-width: 140px; object-fit: contain; display: block; margin: 0 auto 4px auto;">
+                            {else}
+                                <div style="margin: 0 auto 4px auto;">{?= $data['ttd_pengirim'] ?}</div>
+                            {/if}
+                        {else}
+                            <div style="height: 55px;"></div>
+                        {/if}
+                        <div style="font-weight: bold;">( {if: !empty($data.petugas_pengirim)}{$data.petugas_pengirim}{else}........................................{/if} )</div>
+                    </td>
+                    <td style="padding: 4px 8px;">
+                        <strong>Tiba di tempat rujukan pukul :</strong> <span style="font-weight: bold;">{$data.tiba_pukul}</span><br>
+                        <strong>Keadaan umum pasien</strong>
+                        <table style="width: 100%; border: none; font-size: 8pt; margin-top: 2px;">
+                            <tr>
+                                <td style="width: 24%; border: none; padding: 1px 0;">Tensi</td>
+                                <td style="width: 4%; border: none; padding: 1px 0;">:</td>
+                                <td style="border: none; border-bottom: 1px dotted #000; padding: 1px 0; font-weight: bold;">{$data.tiba_tensi}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: none; padding: 1px 0;">Suhu</td>
+                                <td style="border: none; padding: 1px 0;">:</td>
+                                <td style="border: none; border-bottom: 1px dotted #000; padding: 1px 0; font-weight: bold;">{$data.tiba_suhu}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: none; padding: 1px 0;">Pernafasan</td>
+                                <td style="border: none; padding: 1px 0;">:</td>
+                                <td style="border: none; border-bottom: 1px dotted #000; padding: 1px 0; font-weight: bold;">{$data.tiba_rr}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: none; padding: 1px 0;">Nadi</td>
+                                <td style="border: none; padding: 1px 0;">:</td>
+                                <td style="border: none; border-bottom: 1px dotted #000; padding: 1px 0; font-weight: bold;">{$data.tiba_nadi}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; vertical-align: middle; border-bottom: none; padding: 6px;">
+                        <div style="font-weight: bold; margin-bottom: 4px;">Tanda tangan petugas yang menerima</div>
+                        {if: !empty($data.ttd_penerima)}
+                            {if: strpos($data.ttd_penerima, 'data:image') === 0 || strpos($data.ttd_penerima, 'http') === 0}
+                                <img src="{$data.ttd_penerima}" style="max-height: 60px; max-width: 140px; object-fit: contain; display: block; margin: 0 auto 2px auto;">
+                            {else}
+                                <div style="margin: 0 auto 2px auto;">{?= $data['ttd_penerima'] ?}</div>
+                            {/if}
+                        {else}
+                            <div style="height: 50px;"></div>
+                        {/if}
+                        <div style="font-weight: bold;">( {if: !empty($data.petugas_penerima)}{$data.petugas_penerima}{else}........................................{/if} )</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: 7.8pt; font-weight: bold;">
+            <div>RSGM/Ed-Rev/01/2020</div>
+            <div style="font-style: italic;">Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</div>
+        </div>
+    </div>
+
+</body>
+</html>

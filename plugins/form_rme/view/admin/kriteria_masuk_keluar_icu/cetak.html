@@ -1,0 +1,445 @@
+<style>
+@page {
+    margin: 10mm 12mm 10mm 12mm;
+    size: portrait;
+}
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8.5pt;
+    line-height: 1.25;
+    color: #000;
+}
+.header-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-bottom: 2px solid #000;
+    margin-bottom: 5px;
+}
+.header-table td {
+    padding: 2px 4px;
+    vertical-align: middle;
+}
+.title-doc {
+    text-align: center;
+    font-size: 10.5pt;
+    font-weight: bold;
+    margin: 6px 0 6px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.box-border {
+    border: 1px solid #000;
+    padding: 4px;
+    margin-bottom: 6px;
+}
+.table-data {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 6px;
+}
+.table-data th, .table-data td {
+    border: 1px solid #000;
+    padding: 3px 4px;
+    font-size: 8pt;
+    vertical-align: middle;
+}
+.table-data th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    text-align: center;
+}
+.section-head {
+    background-color: #e6e6e6;
+    font-weight: bold;
+    padding: 3px 5px;
+    border: 1px solid #000;
+    margin-top: 5px;
+    margin-bottom: 3px;
+    font-size: 8.5pt;
+}
+.checkbox-box {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 1px solid #000;
+    text-align: center;
+    line-height: 10px;
+    font-size: 8pt;
+    margin-right: 3px;
+    font-weight: bold;
+}
+.page-break {
+    page-break-after: always;
+}
+.footer-text {
+    font-size: 7.5pt;
+    font-style: italic;
+    color: #444;
+    text-align: right;
+    margin-top: 5px;
+}
+</style>
+
+<!-- ============================================== -->
+<!-- HALAMAN 1 & 2 : FORMULIR PENILAIAN KRITERIA MASUK RUANG RAWAT INTENSIF (ICU) -->
+<!-- ============================================== -->
+<table class="header-table">
+    <tr>
+        <td width="12%" align="center">
+            <img src="{?=url()?}/assets/img/logo.png" style="width: 55px; height: auto;" alt="Logo RSGM">
+        </td>
+        <td width="48%">
+            <div style="font-size: 8.5pt; font-weight: bold; text-transform: uppercase;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+            <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">RSGM GUSTI HASAN AMAN</div>
+            <div style="font-size: 7.5pt;">Jl. Simpang Ulin No. 28 Telp. (0511) 3260618 BANJARMASIN</div>
+        </td>
+        <td width="40%" style="border-left: 1px solid #000; padding-left: 6px;">
+            <table style="width: 100%; font-size: 8pt; border-collapse: collapse;">
+                <tr><td width="35%"><strong>No. RM</strong></td><td width="5%">:</td><td><strong>{$data.no_rkm_medis}</strong></td></tr>
+                <tr><td><strong>Nama Pasien</strong></td><td>:</td><td>{$data.nama_pasien}</td></tr>
+                <tr><td><strong>L / P</strong></td><td>:</td><td>{$data.jk}</td></tr>
+                <tr><td><strong>Tgl Lahir</strong></td><td>:</td><td>{$data.tgl_lahir}</td></tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<div class="title-doc">FORMULIR PENILAIAN KRITERIA MASUK DAN KELUAR RUANG RAWAT INTENSIF (ICU)</div>
+
+<table style="width: 100%; font-size: 8pt; margin-bottom: 5px; border-collapse: collapse;">
+    <tr>
+        <td width="20%"><strong>Tanggal/jam penilaian</strong></td><td width="2%">:</td><td width="30%">{$data.tgl_penilaian_masuk}</td>
+        <td width="15%"><strong>Asal unit</strong></td><td width="2%">:</td>
+        <td width="31%">
+            <span class="checkbox-box">{if: $data.asal_unit_masuk == 'UGD'}✓{/if}</span> UGD &nbsp;
+            <span class="checkbox-box">{if: $data.asal_unit_masuk == 'Rawat Inap'}✓{/if}</span> Rawat Inap &nbsp;
+            <span class="checkbox-box">{if: $data.asal_unit_masuk == 'Kamar Operasi'}✓{/if}</span> Kamar Operasi &nbsp;
+            <span class="checkbox-box">{if: $data.asal_unit_masuk == 'Lainnya'}✓{/if}</span> Lainnya: {$data.asal_unit_lainnya}
+        </td>
+    </tr>
+    <tr>
+        <td><strong>DPJP</strong></td><td>:</td><td>{$data.dpjp_masuk}</td>
+        <td><strong>Dokter penilai ICU</strong></td><td>:</td><td>{$data.dokter_penilai_icu}</td>
+    </tr>
+    <tr>
+        <td><strong>Diagnosis utama / indikasi</strong></td><td>:</td><td colspan="4">{$data.diagnosis_indikasi_masuk}</td>
+    </tr>
+</table>
+
+<div class="section-head">A. PENILAIAN KLINIS AWAL / KONDISI PASIEN</div>
+<table class="table-data">
+    <tr>
+        <th width="20%">Parameter</th><th width="30%">Hasil</th>
+        <th width="20%">Parameter</th><th width="30%">Hasil</th>
+    </tr>
+    <tr>
+        <td><strong>Kesadaran / GCS</strong></td>
+        <td>E: {$data.gcs_e} &nbsp; V: {$data.gcs_v} &nbsp; M: {$data.gcs_m}</td>
+        <td><strong>Tekanan darah / MAP</strong></td>
+        <td>{$data.td_sistolik_masuk}/{$data.td_diastolik_masuk} mmHg &nbsp;|&nbsp; MAP: {$data.map_masuk}</td>
+    </tr>
+    <tr>
+        <td><strong>Frekuensi napas</strong></td>
+        <td>{$data.rr_masuk} x/menit</td>
+        <td><strong>Nadi</strong></td>
+        <td>{$data.hr_masuk} x/menit</td>
+    </tr>
+    <tr>
+        <td><strong>SpO<sub>2</sub> / kebutuhan O<sub>2</sub></strong></td>
+        <td>{$data.spo2_masuk} %; O<sub>2</sub>: {$data.o2_masuk} L/menit</td>
+        <td><strong>Suhu</strong></td>
+        <td>{$data.suhu_masuk} °C</td>
+    </tr>
+    <tr>
+        <td><strong>Jalan napas</strong></td>
+        <td>
+            <span class="checkbox-box">{if: $data.jalan_napas_masuk == 'Paten'}✓{/if}</span> Paten &nbsp;
+            <span class="checkbox-box">{if: $data.jalan_napas_masuk == 'Terancam'}✓{/if}</span> Terancam &nbsp;
+            <span class="checkbox-box">{if: $data.jalan_napas_masuk == 'ETT'}✓{/if}</span> ETT
+        </td>
+        <td><strong>Sirkulasi</strong></td>
+        <td>
+            <span class="checkbox-box">{if: $data.sirkulasi_masuk == 'Stabil'}✓{/if}</span> Stabil &nbsp;
+            <span class="checkbox-box">{if: $data.sirkulasi_masuk == 'Syok'}✓{/if}</span> Syok
+        </td>
+    </tr>
+    <tr>
+        <td><strong>Ventilasi</strong></td>
+        <td>
+            <span class="checkbox-box">{if: $data.ventilasi_masuk == 'Spontan'}✓{/if}</span> Spontan &nbsp;
+            <span class="checkbox-box">{if: $data.ventilasi_masuk == 'NIV'}✓{/if}</span> NIV &nbsp;
+            <span class="checkbox-box">{if: $data.ventilasi_masuk == 'Ventilator'}✓{/if}</span> Ventilator
+        </td>
+        <td><strong>Vasopresor/inotropik</strong></td>
+        <td>
+            <span class="checkbox-box">{if: $data.vasopresor_masuk == 'Tidak'}✓{/if}</span> Tidak &nbsp;
+            <span class="checkbox-box">{if: $data.vasopresor_masuk == 'Ya'}✓{/if}</span> Ya: {$data.vasopresor_ket}
+        </td>
+    </tr>
+</table>
+
+<div class="section-head">B. SKRINING KEBUTUHAN ICU (centang yang sesuai)</div>
+<table style="width: 100%; font-size: 8pt; margin-bottom: 5px;">
+    <tr><td><span class="checkbox-box">{if: $data.skrining_gagal_napas}✓{/if}</span> Gagal napas akut / kebutuhan ventilasi invasif atau dukungan pernapasan intensif.</td></tr>
+    <tr><td><span class="checkbox-box">{if: $data.skrining_ancaman_obstruksi}✓{/if}</span> Ancaman obstruksi jalan napas (mis. angina Ludwig, edema orofaring/laring, infeksi odontogenik luas).</td></tr>
+    <tr><td><span class="checkbox-box">{if: $data.skrining_syok_hemodinamik}✓{/if}</span> Syok / instabilitas hemodinamik yang memerlukan resusitasi berkelanjutan atau vasopresor.</td></tr>
+    <tr><td><span class="checkbox-box">{if: $data.skrining_penurunan_kesadaran}✓{/if}</span> Penurunan kesadaran akut, kejang berulang/status epileptikus, atau gangguan neurologis berat.</td></tr>
+    <tr><td><span class="checkbox-box">{if: $data.skrining_perdarahan_aktif}✓{/if}</span> Perdarahan aktif/massif, termasuk pascaoperasi mulut-rahang, dengan risiko gangguan jalan napas/sirkulasi.</td></tr>
+    <tr><td><span class="checkbox-box">{if: $data.skrining_pascaoperasi_kompleks}✓{/if}</span> Pascaoperasi kompleks dengan kebutuhan pemantauan atau intervensi organ intensif.</td></tr>
+    <tr><td><span class="checkbox-box">{if: !empty($data.skrining_gangguan_organ_lain)}✓{/if}</span> Gangguan organ akut lain / kebutuhan pemantauan ketat: {$data.skrining_gangguan_organ_lain}</td></tr>
+</table>
+
+<div class="section-head">C. PENILAIAN NEWS2 DAN TANDA BAHAYA</div>
+<div style="font-size: 7.5pt; margin-bottom: 3px;">
+    <strong>NEWS2 total :</strong> {$data.news2_total} &nbsp;&nbsp;|&nbsp;&nbsp;
+    <strong>Parameter skor 3 tunggal :</strong> <span class="checkbox-box">{if: $data.news2_skor3_tunggal == 'Ada'}✓{/if}</span> Ada &nbsp; <span class="checkbox-box">{if: $data.news2_skor3_tunggal == 'Tidak'}✓{/if}</span> Tidak &nbsp;&nbsp;|&nbsp;&nbsp;
+    <strong>Red flag klinis :</strong> <span class="checkbox-box">{if: $data.red_flag_klinis == 'Ada'}✓{/if}</span> Ada &nbsp; <span class="checkbox-box">{if: $data.red_flag_klinis == 'Tidak'}✓{/if}</span> Tidak<br>
+    <em>Catatan: NEWS2 membantu mendeteksi perburukan; keputusan ICU tidak didasarkan pada skor saja. Skor NEWS2 &ge;5 memerlukan respons klinis segera; &ge;7 mengindikasikan risiko tinggi dan penilaian respons emergency.</em>
+</div>
+
+<table class="table-data" style="font-size: 7.5pt;">
+    <tr>
+        <th>Parameter</th><th>Skor 3</th><th>Skor 2</th><th>Skor 1</th><th>Skor 0</th><th>Skor 1</th><th>Skor 2</th><th>Skor 3</th><th style="background:#e6f2ff;">Skor Pasien</th>
+    </tr>
+    <tr>
+        <td>RR /menit</td><td>&le;8</td><td>&mdash;</td><td>9&ndash;11</td><td>12&ndash;20</td><td>&mdash;</td><td>21&ndash;24</td><td>&ge;25</td><td align="center"><strong>{$data.news2_rr}</strong></td>
+    </tr>
+    <tr>
+        <td>SpO<sub>2</sub> Skala 1</td><td>&le;91%</td><td>92&ndash;93%</td><td>94&ndash;95%</td><td>&ge;96%</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td align="center"><strong>{$data.news2_spo2}</strong></td>
+    </tr>
+    <tr>
+        <td>Oksigen tambahan</td><td>&mdash;</td><td>Ya</td><td>&mdash;</td><td>Tidak</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td align="center"><strong>{$data.news2_oksigen}</strong></td>
+    </tr>
+    <tr>
+        <td>TD sistolik mmHg</td><td>&le;90</td><td>91&ndash;100</td><td>101&ndash;110</td><td>111&ndash;219</td><td>&mdash;</td><td>&mdash;</td><td>&ge;220</td><td align="center"><strong>{$data.news2_td}</strong></td>
+    </tr>
+    <tr>
+        <td>Nadi /menit</td><td>&le;40</td><td>&mdash;</td><td>41&ndash;50</td><td>51&ndash;90</td><td>91&ndash;110</td><td>111&ndash;130</td><td>&ge;131</td><td align="center"><strong>{$data.news2_hr}</strong></td>
+    </tr>
+    <tr>
+        <td>Kesadaran (ACVPU)</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>Alert</td><td>&mdash;</td><td>&mdash;</td><td>C / V / P / U</td><td align="center"><strong>{$data.news2_kesadaran}</strong></td>
+    </tr>
+    <tr>
+        <td>Suhu &deg;C</td><td>&le;35,0</td><td>&mdash;</td><td>35,1&ndash;36,0</td><td>36,1&ndash;38,0</td><td>38,1&ndash;39,0</td><td>&ge;39,1</td><td>&mdash;</td><td align="center"><strong>{$data.news2_suhu}</strong></td>
+    </tr>
+</table>
+<div style="font-size: 7.5pt; margin-bottom: 4px;">
+    <strong>TOTAL NEWS2: {$data.news2_total}</strong> &nbsp;|&nbsp; <strong>Skor 3 pada satu parameter:</strong> {$data.news2_skor3_satu_param} &nbsp;|&nbsp; <strong>Skala SpO<sub>2</sub>:</strong> {$data.news2_skala_spo2}<br>
+    <em>ACVPU: A = sadar/alert; C = kebingungan baru; V = respons suara; P = respons nyeri; U = tidak respons.</em>
+</div>
+
+<div style="font-weight: bold; font-size: 8pt; margin: 4px 0 2px 0;">RED FLAG KEBUTUHAN DUKUNGAN ORGAN (centang setiap baris)</div>
+<table class="table-data" style="font-size: 7.5pt;">
+    <tr>
+        <th width="76%">Red flag klinis</th><th width="12%">Ya</th><th width="12%">Tidak</th>
+    </tr>
+    <tr><td>Ancaman jalan napas, tidak mampu mempertahankan jalan napas, atau perlu intubasi.</td><td align="center">{if: $data.rf_ancaman_jalan_napas == 'Ya'}✓{/if}</td><td align="center">{if: $data.rf_ancaman_jalan_napas == 'Tidak'}✓{/if}</td></tr>
+    <tr><td>Hipoksemia menetap/memburuk meskipun sudah diberi oksigen; memerlukan HFNC/NIV atau ventilasi invasif.</td><td align="center">{if: $data.rf_hipoksemia == 'Ya'}✓{/if}</td><td align="center">{if: $data.rf_hipoksemia == 'Tidak'}✓{/if}</td></tr>
+    <tr><td>Syok/hipoperfusi: MAP &lt;65 mmHg, TD sistolik &le;90 mmHg, CRT memanjang, mottling atau laktat meningkat.</td><td align="center">{if: $data.rf_syok_hipoperfusi == 'Ya'}✓{/if}</td><td align="center">{if: $data.rf_syok_hipoperfusi == 'Tidak'}✓{/if}</td></tr>
+    <tr><td>Memerlukan vasopresor atau inotropik kontinu.</td><td align="center">{if: $data.rf_vasopresor == 'Ya'}✓{/if}</td><td align="center">{if: $data.rf_vasopresor == 'Tidak'}✓{/if}</td></tr>
+    <tr><td>Penurunan kesadaran progresif, GCS &le;8 atau tidak mampu melindungi jalan napas.</td><td align="center">{if: $data.rf_kesadaran_progresif == 'Ya'}✓{/if}</td><td align="center">{if: $data.rf_kesadaran_progresif == 'Tidak'}✓{/if}</td></tr>
+    <tr><td>Status epileptikus atau kejang berulang tanpa pemulihan kesadaran.</td><td align="center">{if: $data.rf_status_epileptikus == 'Ya'}✓{/if}</td><td align="center">{if: $data.rf_status_epileptikus == 'Tidak'}✓{/if}</td></tr>
+    <tr><td>Cedera ginjal akut progresif/oliguria berat, hiperkalemia dengan perubahan EKG, atau asidosis berat.</td><td align="center">{if: $data.rf_cedera_ginjal == 'Ya'}✓{/if}</td><td align="center">{if: $data.rf_cedera_ginjal == 'Tidak'}✓{/if}</td></tr>
+    <tr><td>Perdarahan masif atau instabilitas akibat perdarahan, termasuk perdarahan pascaoperasi mulut-rahang.</td><td align="center">{if: $data.rf_perdarahan_masif == 'Ya'}✓{/if}</td><td align="center">{if: $data.rf_perdarahan_masif == 'Tidak'}✓{/if}</td></tr>
+    <tr><td>Memerlukan ventilasi mekanik, CRRT, monitoring invasif atau terapi penunjang organ lain.</td><td align="center">{if: $data.rf_ventilasi_mekanik == 'Ya'}✓{/if}</td><td align="center">{if: $data.rf_ventilasi_mekanik == 'Tidak'}✓{/if}</td></tr>
+    <tr><td>Perburukan cepat/kebutuhan monitoring dan intervensi melampaui kemampuan ruang rawat biasa.</td><td align="center">{if: $data.rf_perburukan_cepat == 'Ya'}✓{/if}</td><td align="center">{if: $data.rf_perburukan_cepat == 'Tidak'}✓{/if}</td></tr>
+</table>
+<div style="font-size: 7.5pt; margin-bottom: 5px;">
+    <strong>Jumlah red flag positif:</strong> {$data.jumlah_red_flag_positif} &nbsp;|&nbsp; <em>Catatan: Red flag menunjukkan perlunya penilaian segera untuk dukungan organ/ICU, bukan kriteria tunggal otomatis masuk ICU.</em>
+</div>
+
+<div class="section-head">D. PRIORITAS MASUK ICU DAN KEPUTUSAN</div>
+<div style="font-size: 8pt; margin-bottom: 4px;">
+    <span class="checkbox-box">{if: $data.prioritas_masuk == 'Prioritas 1'}✓{/if}</span> <strong>Prioritas 1:</strong> memerlukan terapi penunjang organ / intervensi intensif segera.<br>
+    <span class="checkbox-box">{if: $data.prioritas_masuk == 'Prioritas 2'}✓{/if}</span> <strong>Prioritas 2:</strong> risiko tinggi memburuk dan memerlukan pemantauan intensif.<br>
+    <span class="checkbox-box">{if: $data.prioritas_masuk == 'Prioritas 3'}✓{/if}</span> <strong>Prioritas 3:</strong> penyakit berat/komorbid signifikan, manfaat ICU perlu pertimbangan individual.<br>
+    <span class="checkbox-box">{if: $data.prioritas_masuk == 'Prioritas 4'}✓{/if}</span> <strong>Prioritas 4:</strong> ICU tidak diindikasikan / manfaat tidak sebanding; pertimbangkan tujuan perawatan dan paliatif.
+</div>
+<table style="width: 100%; font-size: 8pt; margin-bottom: 4px;">
+    <tr>
+        <td width="15%"><strong>Keputusan :</strong></td>
+        <td>
+            <span class="checkbox-box">{if: $data.keputusan_masuk == 'DITERIMA ICU'}✓{/if}</span> <strong>DITERIMA ICU</strong> &nbsp;&nbsp;
+            <span class="checkbox-box">{if: $data.keputusan_masuk == 'Belum memenuhi indikasi'}✓{/if}</span> Belum memenuhi indikasi &nbsp;&nbsp;
+            <span class="checkbox-box">{if: $data.keputusan_masuk == 'Dirujuk karena kapasitas/kemampuan'}✓{/if}</span> Dirujuk karena kapasitas/kemampuan &nbsp;&nbsp;
+            <span class="checkbox-box">{if: $data.keputusan_masuk == 'Lainnya'}✓{/if}</span> Lainnya: {$data.keputusan_masuk_lainnya}
+        </td>
+    </tr>
+    <tr>
+        <td><strong>Alasan / rencana:</strong></td>
+        <td>{$data.alasan_rencana_asuhan_masuk}</td>
+    </tr>
+    <tr>
+        <td><strong>Tanggal/jam masuk:</strong></td>
+        <td>
+            {$data.tgl_jam_masuk} &nbsp;&nbsp;|&nbsp;&nbsp;
+            <strong>Ketersediaan tempat:</strong> <span class="checkbox-box">{if: $data.ketersediaan_tempat_masuk == 'Ada'}✓{/if}</span> Ada &nbsp; <span class="checkbox-box">{if: $data.ketersediaan_tempat_masuk == 'Tidak'}✓{/if}</span> Tidak &nbsp;&nbsp;|&nbsp;&nbsp;
+            <strong>Persetujuan DPJP:</strong> <span class="checkbox-box">{if: $data.persetujuan_dpjp_masuk == 'Ya'}✓{/if}</span> Ya &nbsp; <span class="checkbox-box">{if: $data.persetujuan_dpjp_masuk == 'Tidak'}✓{/if}</span> Tidak
+        </td>
+    </tr>
+</table>
+
+<div class="section-head">E. VERIFIKASI DAN DOKUMENTASI</div>
+<div style="font-size: 8pt; margin-bottom: 4px;">
+    <span class="checkbox-box">{if: $data.dok_hasil_asemen_masuk}✓{/if}</span> Hasil asesmen, keputusan, instruksi, dan komunikasi antarunit dicatat dalam RME/SIMRS serta CPPT.<br>
+    <span class="checkbox-box">{if: $data.dok_dpjp_autentikasi_masuk}✓{/if}</span> DPJP melakukan autentikasi pada akun RME.<br>
+    <span class="checkbox-box">{if: $data.dok_serah_terima_masuk}✓{/if}</span> Serah terima pasien dilakukan sesuai SOP transfer.
+</div>
+<table class="table-data" style="margin-top: 5px;">
+    <tr>
+        <th width="50%">Dokter penilai / dokter jaga</th>
+        <th width="50%">DPJP / dokter penanggung jawab ICU</th>
+    </tr>
+    <tr>
+        <td style="height: 55px; vertical-align: bottom;">
+            Nama: <strong>{$data.dokter_penilai_nama}</strong><br>
+            Tgl/jam: {$data.dokter_penilai_tgljam}<br>
+            Tanda tangan / autentikasi: [Terautentikasi Digital]
+        </td>
+        <td style="height: 55px; vertical-align: bottom;">
+            Nama: <strong>{$data.dpjp_icu_nama}</strong><br>
+            Tgl/jam: {$data.dpjp_icu_tgljam}<br>
+            Tanda tangan / autentikasi: [Terautentikasi Digital]
+        </td>
+    </tr>
+</table>
+
+<div class="footer-text">RSGM Gusti Hasan Aman | Formulir Kriteria Masuk/Keluar ICU | Draf untuk penetapan internal</div>
+
+<div class="page-break"></div>
+
+<!-- ============================================== -->
+<!-- HALAMAN 3 & 4 : LEMBAR PENILAIAN KRITERIA KELUAR ICU / TRANSFER KE RAWAT INAP -->
+<!-- ============================================== -->
+<table class="header-table">
+    <tr>
+        <td width="12%" align="center">
+            <img src="{?=url()?}/assets/img/logo.png" style="width: 55px; height: auto;" alt="Logo RSGM">
+        </td>
+        <td width="48%">
+            <div style="font-size: 8.5pt; font-weight: bold; text-transform: uppercase;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+            <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">RSGM GUSTI HASAN AMAN</div>
+            <div style="font-size: 7.5pt;">Jl. Simpang Ulin No. 28 Telp. (0511) 3260618 BANJARMASIN</div>
+        </td>
+        <td width="40%" style="border-left: 1px solid #000; padding-left: 6px;">
+            <table style="width: 100%; font-size: 8pt; border-collapse: collapse;">
+                <tr><td width="35%"><strong>No. RM</strong></td><td width="5%">:</td><td><strong>{$data.no_rkm_medis}</strong></td></tr>
+                <tr><td><strong>Nama Pasien</strong></td><td>:</td><td>{$data.nama_pasien}</td></tr>
+                <tr><td><strong>L / P</strong></td><td>:</td><td>{$data.jk}</td></tr>
+                <tr><td><strong>Tgl Lahir</strong></td><td>:</td><td>{$data.tgl_lahir}</td></tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<div class="title-doc">LEMBAR PENILAIAN KRITERIA KELUAR ICU / TRANSFER KE RAWAT INAP</div>
+
+<table style="width: 100%; font-size: 8pt; margin-bottom: 5px; border-collapse: collapse;">
+    <tr>
+        <td width="20%"><strong>Tanggal/jam evaluasi</strong></td><td width="2%">:</td><td width="30%">{$data.tgl_evaluasi_keluar}</td>
+        <td width="18%"><strong>Lama perawatan ICU</strong></td><td width="2%">:</td><td width="28%">{$data.lama_perawatan_icu}</td>
+    </tr>
+    <tr>
+        <td><strong>Tujuan transfer</strong></td><td>:</td><td>{$data.tujuan_transfer_keluar}</td>
+        <td><strong>Diagnosis / masalah aktif</strong></td><td>:</td><td>{$data.diagnosis_masalah_aktif_keluar}</td>
+    </tr>
+</table>
+
+<div class="section-head">F. KRITERIA KELUAR ICU (nilai setiap komponen)</div>
+<table class="table-data" style="font-size: 7.5pt;">
+    <tr>
+        <th width="45%">Kriteria klinis</th><th width="8%">Ya</th><th width="8%">Tidak</th><th width="39%">Catatan / hasil objektif</th>
+    </tr>
+    <tr><td>Kondisi penyebab masuk ICU membaik / teratasi</td><td align="center">{if: $data.keluar_penyebab_membaik == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_penyebab_membaik == 'Tidak'}✓{/if}</td><td>{$data.keluar_penyebab_membaik_ket}</td></tr>
+    <tr><td>Hemodinamik stabil; tidak memerlukan titrasi vasopresor atau resusitasi intensif</td><td align="center">{if: $data.keluar_hemodinamik_stabil == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_hemodinamik_stabil == 'Tidak'}✓{/if}</td><td>{$data.keluar_hemodinamik_stabil_ket}</td></tr>
+    <tr><td>Jalan napas aman, tidak ada ancaman obstruksi akut</td><td align="center">{if: $data.keluar_jalan_napas_aman == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_jalan_napas_aman == 'Tidak'}✓{/if}</td><td>{$data.keluar_jalan_napas_aman_ket}</td></tr>
+    <tr><td>Tidak memerlukan ventilasi mekanik invasif atau dukungan napas setingkat ICU</td><td align="center">{if: $data.keluar_tidak_perlu_ventilasi == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_tidak_perlu_ventilasi == 'Tidak'}✓{/if}</td><td>{$data.keluar_tidak_perlu_ventilasi_ket}</td></tr>
+    <tr><td>Kesadaran / status neurologis stabil atau sesuai kondisi dasar</td><td align="center">{if: $data.keluar_kesadaran_stabil == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_kesadaran_stabil == 'Tidak'}✓{/if}</td><td>{$data.keluar_kesadaran_stabil_ket}</td></tr>
+    <tr><td>Perdarahan terkendali; tidak ada risiko segera yang membutuhkan intervensi intensif</td><td align="center">{if: $data.keluar_perdarahan_terkendali == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_perdarahan_terkendali == 'Tidak'}✓{/if}</td><td>{$data.keluar_perdarahan_terkendali_ket}</td></tr>
+    <tr><td>Nyeri dan kebutuhan terapi dapat dikelola di ruang rawat inap</td><td align="center">{if: $data.keluar_nyeri_terkelola == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_nyeri_terkelola == 'Tidak'}✓{/if}</td><td>{$data.keluar_nyeri_terkelola_ket}</td></tr>
+    <tr><td>Parameter vital dan tren NEWS2/MEWS dinilai aman untuk kemampuan monitoring ruangan tujuan</td><td align="center">{if: $data.keluar_tanda_vital_aman == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_tanda_vital_aman == 'Tidak'}✓{/if}</td><td>{$data.keluar_tanda_vital_aman_ket}</td></tr>
+    <tr><td>Rencana pengobatan, monitoring, eskalasi dan tindak lanjut sudah ditetapkan</td><td align="center">{if: $data.keluar_rencana_pengobatan_tetap == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_rencana_pengobatan_tetap == 'Tidak'}✓{/if}</td><td>{$data.keluar_rencana_pengobatan_tetap_ket}</td></tr>
+</table>
+
+<div style="font-weight: bold; font-size: 8pt; margin: 4px 0 2px 0;">PENILAIAN TERINCI KELAYAKAN KELUAR ICU (centang Ya/Tidak dan isi hasil objektif)</div>
+<table class="table-data" style="font-size: 7.5pt;">
+    <tr>
+        <th width="50%">Kriteria dan parameter objektif</th><th width="8%">Ya</th><th width="8%">Tidak</th><th width="34%">Catatan</th>
+    </tr>
+    <tr><td>Masalah akut penyebab masuk ICU telah membaik/teratasi; tidak lagi membutuhkan dukungan organ setingkat ICU.</td><td align="center">{if: $data.keluar_det_masalah_akut == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_det_masalah_akut == 'Tidak'}✓{/if}</td><td>{$data.keluar_det_masalah_akut_ket}</td></tr>
+    <tr><td>Hemodinamik stabil tanpa syok atau titrasi vasopresor.</td><td align="center">{if: $data.keluar_det_hemodinamik == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_det_hemodinamik == 'Tidak'}✓{/if}</td><td>{$data.keluar_det_hemodinamik_ket}</td></tr>
+    <tr><td>Jalan napas aman; tidak ada edema/obstruksi orofaring-laring progresif, termasuk risiko pascaoperasi mulut-rahang.</td><td align="center">{if: $data.keluar_det_jalan_napas == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_det_jalan_napas == 'Tidak'}✓{/if}</td><td>{$data.keluar_det_jalan_napas_ket}</td></tr>
+    <tr><td>Ventilasi dan oksigenasi stabil dengan dukungan yang mampu diberikan di ruang tujuan.</td><td align="center">{if: $data.keluar_det_ventilasi == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_det_ventilasi == 'Tidak'}✓{/if}</td><td>{$data.keluar_det_ventilasi_ket}</td></tr>
+    <tr><td>Tidak memerlukan ventilator invasif, HFNC/NIV atau pemantauan respirasi intensif yang tidak tersedia di ruang tujuan.</td><td align="center">{if: $data.keluar_det_ventilator_bebas == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_det_ventilator_bebas == 'Tidak'}✓{/if}</td><td>{$data.keluar_det_ventilator_bebas_ket}</td></tr>
+    <tr><td>Kesadaran dan status neurologis stabil/membaik; tidak ada kejang tidak terkontrol.</td><td align="center">{if: $data.keluar_det_kesadaran == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_det_kesadaran == 'Tidak'}✓{/if}</td><td>{$data.keluar_det_kesadaran_ket}</td></tr>
+    <tr><td>Perdarahan terkontrol; tidak ada kebutuhan transfusi masif atau intervensi hemostasis emergensi.</td><td align="center">{if: $data.keluar_det_perdarahan == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_det_perdarahan == 'Tidak'}✓{/if}</td><td>{$data.keluar_det_perdarahan_ket}</td></tr>
+    <tr><td>Perfusi, fungsi ginjal dan metabolik stabil; diuresis, elektrolit/asam basa aman atau terkelola.</td><td align="center">{if: $data.keluar_det_perfusi_ginjal == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_det_perfusi_ginjal == 'Tidak'}✓{/if}</td><td>{$data.keluar_det_perfusi_ginjal_ket}</td></tr>
+    <tr><td>Nyeri, sedasi, delirium, dan kebutuhan terapi dapat ditangani dengan aman oleh ruang tujuan.</td><td align="center">{if: $data.keluar_det_nyeri_sedasi == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_det_nyeri_sedasi == 'Tidak'}✓{/if}</td><td>{$data.keluar_det_nyeri_sedasi_ket}</td></tr>
+    <tr><td>NEWS2 tren stabil/membaik dan rencana monitoring/eskalasi jelas.</td><td align="center">{if: $data.keluar_det_news2_stabil == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_det_news2_stabil == 'Tidak'}✓{/if}</td><td>{$data.keluar_det_news2_stabil_ket}</td></tr>
+    <tr><td>DPJP/dokter ICU menyetujui; ruang penerima mampu memenuhi kebutuhan pemantauan, terapi dan kesiapan alat.</td><td align="center">{if: $data.keluar_det_dpjp_setuju == 'Ya'}✓{/if}</td><td align="center">{if: $data.keluar_det_dpjp_setuju == 'Tidak'}✓{/if}</td><td>{$data.keluar_det_dpjp_setuju_ket}</td></tr>
+</table>
+<div style="font-size: 7.5pt; margin-bottom: 5px;">
+    <em>Interpretasi: seluruh aspek yang relevan harus dinilai. Ketidakstabilan atau kebutuhan dukungan organ yang belum dapat dipenuhi ruang tujuan merupakan alasan menunda transfer. NEWS2 bukan ambang tunggal untuk keluar ICU; gunakan tren dan asesmen DPJP. Bila tujuan perawatan berubah menjadi paliatif, dokumentasikan keputusan bersama pasien/keluarga sesuai ketentuan.</em>
+</div>
+
+<div class="section-head">G. PERTIMBANGAN KHUSUS DAN KEPUTUSAN KELUAR</div>
+<div style="font-size: 8pt; margin-bottom: 4px;">
+    <span class="checkbox-box">{if: $data.pertimbangan_transfer_ranap}✓{/if}</span> Transfer ke rawat inap karena kebutuhan terapi dan pemantauan intensif sudah tidak ada.<br>
+    <span class="checkbox-box">{if: $data.pertimbangan_transfer_faskes}✓{/if}</span> Transfer ke fasilitas dengan tingkat layanan lebih sesuai.<br>
+    <span class="checkbox-box">{if: $data.pertimbangan_penyesuaian_tujuan}✓{/if}</span> Penyesuaian tujuan perawatan berdasarkan keputusan klinis bersama pasien/keluarga dan ketentuan yang berlaku.<br>
+    {if: !empty($data.pertimbangan_lainnya)}<span class="checkbox-box">✓</span> Lainnya: {$data.pertimbangan_lainnya}{/if}
+</div>
+<table style="width: 100%; font-size: 8pt; margin-bottom: 4px;">
+    <tr>
+        <td width="15%"><strong>Keputusan :</strong></td>
+        <td>
+            <span class="checkbox-box">{if: $data.keputusan_keluar == 'LAYAK KELUAR ICU'}✓{/if}</span> <strong>LAYAK KELUAR ICU</strong> &nbsp;&nbsp;
+            <span class="checkbox-box">{if: $data.keputusan_keluar == 'TETAP DI ICU'}✓{/if}</span> TETAP DI ICU &nbsp;&nbsp;
+            <span class="checkbox-box">{if: $data.keputusan_keluar == 'RUJUK / TRANSFER LAINNYA'}✓{/if}</span> RUJUK / TRANSFER LAINNYA
+        </td>
+    </tr>
+    <tr>
+        <td><strong>Alasan / pemantauan:</strong></td>
+        <td>{$data.alasan_masalah_dipantau_keluar}</td>
+    </tr>
+    <tr>
+        <td><strong>Instruksi monitoring:</strong></td>
+        <td>{$data.instruksi_monitoring_ruang_tujuan}</td>
+    </tr>
+    <tr>
+        <td><strong>Tanda bahaya eskalasi:</strong></td>
+        <td>{$data.tanda_bahaya_eskalasi_keluar}</td>
+    </tr>
+    <tr>
+        <td><strong>Rencana terapi:</strong></td>
+        <td>{$data.rencana_terapi_keluar}</td>
+    </tr>
+</table>
+
+<div class="section-head">H. SERAH TERIMA DAN DOKUMENTASI</div>
+<div style="font-size: 8pt; margin-bottom: 4px;">
+    <span class="checkbox-box">{if: $data.dok_ringkasan_keluar}✓{/if}</span> Ringkasan kondisi, terapi, alat terpasang, hasil pemeriksaan dan risiko disampaikan kepada unit penerima.<br>
+    <span class="checkbox-box">{if: $data.dok_keputusan_keluar}✓{/if}</span> Keputusan keluar, asesmen terakhir, dan instruksi dicatat dalam RME/SIMRS/CPPT.<br>
+    <span class="checkbox-box">{if: $data.dok_dpjp_autentikasi_keluar}✓{/if}</span> Autentikasi DPJP dilakukan pada akun RME.
+</div>
+<table class="table-data" style="margin-top: 5px;">
+    <tr>
+        <th width="50%">Dokter penanggung jawab ICU / DPJP</th>
+        <th width="50%">Petugas unit penerima</th>
+    </tr>
+    <tr>
+        <td style="height: 55px; vertical-align: bottom;">
+            Nama: <strong>{$data.dokter_keluar_nama}</strong><br>
+            Tanggal/jam: {$data.dokter_keluar_tgljam}<br>
+            Tanda tangan / autentikasi: [Terautentikasi Digital]
+        </td>
+        <td style="height: 55px; vertical-align: bottom;">
+            Nama: <strong>{$data.petugas_penerima_nama}</strong><br>
+            Tanggal/jam: {$data.petugas_penerima_tgljam}<br>
+            Tanda tangan / autentikasi: [Terautentikasi Digital]
+        </td>
+    </tr>
+</table>
+
+<div class="footer-text">RSGM Gusti Hasan Aman | Formulir Kriteria Masuk/Keluar ICU | Draf untuk penetapan internal</div>
+

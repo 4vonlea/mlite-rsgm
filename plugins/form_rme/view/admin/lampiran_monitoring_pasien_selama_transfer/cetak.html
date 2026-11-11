@@ -404,7 +404,13 @@
                         </td>
                         <td style="width: 40%; text-align: center; font-size: 8.5pt;">
                             <div style="margin-bottom: 2px;">Petugas Transfer</div>
-                            <div style="height: 52px; line-height: 52px;">&nbsp;</div>
+                            <div style="height: 52px; display: flex; align-items: center; justify-content: center;">
+                                {if: !empty($data.ttd_petugas)}
+                                    {?= $data['ttd_petugas'] ?}
+                                {else}
+                                    &nbsp;
+                                {/if}
+                            </div>
                             <div>
                                 ( {if: !empty($data.petugas_transfer)}{$data.petugas_transfer}{else}....................................{/if} )
                             </div>

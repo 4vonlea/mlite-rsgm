@@ -209,19 +209,55 @@
                 Demikian pernyataan ini saya buat dengan sesungguhnya untuk diketahui dan digunakan sebagaimana
                 perlunya.
 
-                <table class="ttd-table" style="margin-top: 30px;">
+                <table class="ttd-table" style="margin-top: 25px;">
                     <tr>
-                        <td>Saksi Rumah Sakit</td>
-                        <td>Saksi Pasien</td>
-                        <td>Banjarmasin, {$data.tgl_surat_indo}<br>Pembuat Pernyataan</td>
+                        <td style="width: 33%; vertical-align: top;">Saksi Rumah Sakit</td>
+                        <td style="width: 33%; vertical-align: top;">Saksi Pasien</td>
+                        <td style="width: 34%; vertical-align: top;">Banjarmasin, {$data.tgl_surat_indo}<br>Pembuat Pernyataan</td>
                     </tr>
                     <tr>
-                        <td style="padding-top:70px;">( .................................... )<br>Nama Jelas</td>
-                        <td style="padding-top:70px;">( .................................... )<br>Nama Jelas</td>
-                        <td style="padding-top:70px;">( {$data.nama_pihak} )<br>Nama Jelas</td>
+                        <td style="height: 90px; vertical-align: middle; text-align: center;">
+                            {if: !empty($data.ttd_saksi_rs)}
+                                <img src="{$data.ttd_saksi_rs}" style="max-height: 75px; max-width: 140px; object-fit: contain;">
+                            {else}
+                                <br><br><br>
+                            {/if}
+                        </td>
+                        <td style="height: 90px; vertical-align: middle; text-align: center;">
+                            {if: !empty($data.ttd_saksi_pasien)}
+                                <img src="{$data.ttd_saksi_pasien}" style="max-height: 75px; max-width: 140px; object-fit: contain;">
+                            {else}
+                                <br><br><br>
+                            {/if}
+                        </td>
+                        <td style="height: 90px; vertical-align: middle; text-align: center;">
+                            <div style="position: relative; display: inline-block; min-width: 120px; min-height: 70px;">
+                                <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); border: 1.5px dashed #c0392b; background: rgba(231,76,60,0.06); padding: 3px 6px; border-radius: 4px; color: #c0392b; font-size: 8px; font-weight: bold; text-align: center; line-height: 1.1; z-index: 1;">
+                                    <span style="font-size: 6px; display: block; color: #7f8c8d;">BEA METERAI</span>
+                                    METERAI TEMPEL<br>
+                                    <span style="font-size: 10px; font-weight: 900; color: #c0392b;">10000</span>
+                                </div>
+                                {if: !empty($data.ttd_pembuat)}
+                                    <img src="{$data.ttd_pembuat}" style="position: relative; z-index: 2; max-height: 80px; max-width: 140px; object-fit: contain;">
+                                {else}
+                                    <div style="height: 70px;"></div>
+                                {/if}
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">( {if: !empty($data.saksi_rs)}{$data.saksi_rs}{else}....................................{/if} )<br>Nama Jelas</td>
+                        <td style="vertical-align: top;">( {if: !empty($data.saksi_pasien)}{$data.saksi_pasien}{else}....................................{/if} )<br>Nama Jelas</td>
+                        <td style="vertical-align: top;">( {if: !empty($data.pembuat_pernyataan)}{$data.pembuat_pernyataan}{elseif: !empty($data.nama_pihak)}{$data.nama_pihak}{else}....................................{/if} )<br>Nama Jelas</td>
                     </tr>
                 </table>
             </div>
+            <div style="text-align: right; font-size: 9px; font-style: italic; margin-top: 15px; padding-right: 10px;">
+                Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas
+            </div>
+        </div>
+        <div style="font-size: 8px; margin-top: 3px; font-weight: bold;">
+            RSGM/Ed-Rev/01/2020
         </div>
     </div>
 

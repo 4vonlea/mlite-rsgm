@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>RM.RI 06A - Form Asesmen Risiko Jatuh Dewasa dan Geriatri - {$pasien.no_rawat}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 6mm 8mm 6mm 8mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8pt;
+            line-height: 1.15;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        {if: empty($is_mpdf)}
+        body {
+            background-color: #f5f5f5;
+            padding: 10px 0;
+        }
+        .page {
+            background: #fff;
+            width: 200mm;
+            min-height: 285mm;
+            margin: 0 auto 15px auto;
+            padding: 6mm 8mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        {/if}
+
+        .no-print-toolbar {
+            width: 200mm;
+            margin: 0 auto 10px auto;
+            padding: 8px 12px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 4px;
+        }
+        .btn-toolbar {
+            display: inline-block;
+            padding: 5px 12px;
+            font-size: 9pt;
+            font-weight: bold;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-right: 5px;
+        }
+        .btn-print { background-color: #27ae60; }
+        .btn-pdf { background-color: #c0392b; }
+        .btn-close { background-color: #7f8c8d; }
+
+        @media print {
+            .no-print-toolbar { display: none !important; }
+            body { background: transparent !important; padding: 0 !important; }
+            .page { width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
+        }
+
+        .border-all {
+            border: 1.5px solid #000;
+        }
+        .table-header {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1.5px solid #000;
+        }
+        .table-header td {
+            vertical-align: middle;
+            padding: 2px 4px;
+        }
+        .rm-box {
+            display: inline-block;
+            border: 1.2px solid #000;
+            width: 15px;
+            height: 17px;
+            line-height: 17px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 9pt;
+            margin-right: 1px;
+        }
+        .title-doc {
+            text-align: center;
+            font-weight: bold;
+            font-size: 10.5pt;
+            padding: 4px 2px;
+            letter-spacing: 0.5px;
+            border-bottom: 1.5px solid #000;
+        }
+        .table-grid {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7.5pt;
+        }
+        .table-grid th, .table-grid td {
+            border: 1px solid #000;
+            padding: 2px 4px;
+            vertical-align: top;
+        }
+        .table-grid th {
+            background-color: #f2f2f2;
+            text-align: center;
+            font-weight: bold;
+        }
+        .sec-head {
+            background-color: #e2e2e2;
+            font-weight: bold;
+            text-align: center;
+            padding: 3px;
+            font-size: 8pt;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+        }
+        .active-cell {
+            background-color: #d1ecf1;
+            font-weight: bold;
+        }
+        .circled-val {
+            border: 1.5px solid #000;
+            border-radius: 50%;
+            padding: 0 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+{if: empty($is_mpdf)}
+<div class="no-print-toolbar">
+    <button onclick="window.print()" class="btn-toolbar btn-print"><i class="fa fa-print"></i> Cetak Dokumen</button>
+    <a href="{?=url([ADMIN, 'form_rme', 'jatuhdewasacetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
+    <button onclick="window.close()" class="btn-toolbar btn-close"><i class="fa fa-times"></i> Tutup</button>
+</div>
+{/if}
+
+<div class="page">
+    <div class="border-all">
+        <!-- HEADER KOP & IDENTITAS -->
+        <table class="table-header">
+            <tr>
+                <td style="width: 58%; border-right: 1.5px solid #000; text-align: center; padding: 2px;">
+                    <img src="{if: !empty($kop_img)}{$kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="KOP RSGM" style="width: 100%; max-height: 65px; object-fit: contain;">
+                </td>
+                <td style="width: 42%; padding: 2px 6px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
+                        <tr>
+                            <td style="width: 28%; font-weight: bold; padding: 1px 0;">No RM</td>
+                            <td style="width: 4%;">:</td>
+                            <td style="width: 68%;">
+                                <span class="rm-box">{$pasien.rm0}</span><span class="rm-box">{$pasien.rm1}</span><span class="rm-box">{$pasien.rm2}</span><span class="rm-box">{$pasien.rm3}</span><span class="rm-box">{$pasien.rm4}</span><span class="rm-box">{$pasien.rm5}</span>
+                                <span style="float: right; font-weight: bold; font-size: 9.5pt; border: 1.5px solid #000; padding: 0 4px;">RM RI 06A</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold; padding: 1px 0;">Nama Pasien</td>
+                            <td>:</td>
+                            <td><strong>{$pasien.nm_pasien}</strong> &nbsp; ({if: $pasien.jk == 'L'}<u>L</u> / P{elseif: $pasien.jk == 'P'}L / <u>P</u>{else}L / P{/if})</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold; padding: 1px 0;">Tanggal Lahir</td>
+                            <td>:</td>
+                            <td>{$pasien.tgl_lahir_indo}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <div style="font-size: 6.5pt; font-style: italic; padding: 2px 4px; border-bottom: 1px solid #000;">
+            Perhatian : * Harap semua penulisan dilakukan dengan keterbacaan yang jelas, benar dan lengkap. * Isilah kolom sesuai keterangan yang telah disediakan.
+        </div>
+
+        <div class="title-doc">FORM ASESMEN RISIKO JATUH DEWASA DAN GERIATRI RAWAT INAP</div>
+
+        <table style="width: 100%; border-collapse: collapse; border-bottom: 1.5px solid #000; font-size: 8pt;">
+            <tr>
+                <td style="width: 50%; padding: 3px 6px; border-right: 1.5px solid #000;">
+                    <strong>Instalasi/Unit/Ruangan:</strong> {$data.instalasi_unit}
+                </td>
+                <td style="width: 50%; padding: 3px 6px;">
+                    <strong>Tanggal dan Jam:</strong> {$data.tanggal_indo} / {$data.jam} WITA
+                </td>
+            </tr>
+        </table>
+
+        <!-- MORSE FALL SCALE (18-65 TAHUN) -->
+        <div class="sec-head">MORSE FALL SCALE (18-65 tahun)</div>
+        <table class="table-grid">
+            <tr>
+                <th style="width: 5%;">NO</th>
+                <th style="width: 40%;">FAKTOR RISIKO</th>
+                <th style="width: 40%;">SKALA</th>
+                <th style="width: 15%;">POIN</th>
+            </tr>
+            <!-- Riwayat jatuh -->
+            <tr>
+                <td class="text-center" rowspan="2">1</td>
+                <td rowspan="2"><strong>Riwayat jatuh</strong></td>
+                <td {if: $morse.riwayat_jatuh == 25}class="active-cell"{/if}>Ya</td>
+                <td class="text-center {if: $morse.riwayat_jatuh == 25}active-cell{/if}">25</td>
+            </tr>
+            <tr>
+                <td {if: $morse.riwayat_jatuh == 0}class="active-cell"{/if}>Tidak</td>
+                <td class="text-center {if: $morse.riwayat_jatuh == 0}active-cell{/if}"><span class="{if: $morse.riwayat_jatuh == 0}circled-val{/if}">0</span></td>
+            </tr>
+            <!-- Diagnosis sekunder -->
+            <tr>
+                <td class="text-center" rowspan="2">2</td>
+                <td rowspan="2"><strong>Diagnosis sekunder (&ge;2 diagnosis medis)</strong></td>
+                <td {if: $morse.diagnosis_sekunder == 15}class="active-cell"{/if}>Ya</td>
+                <td class="text-center {if: $morse.diagnosis_sekunder == 15}active-cell{/if}">15</td>
+            </tr>
+            <tr>
+                <td {if: $morse.diagnosis_sekunder == 0}class="active-cell"{/if}>Tidak</td>
+                <td class="text-center {if: $morse.diagnosis_sekunder == 0}active-cell{/if}"><span class="{if: $morse.diagnosis_sekunder == 0}circled-val{/if}">0</span></td>
+            </tr>
+            <!-- Alat bantu -->
+            <tr>
+                <td class="text-center" rowspan="3">3</td>
+                <td rowspan="3"><strong>Alat bantu</strong></td>
+                <td {if: $morse.alat_bantu == 30}class="active-cell"{/if}>Berpegangan pada perabot</td>
+                <td class="text-center {if: $morse.alat_bantu == 30}active-cell{/if}">30</td>
+            </tr>
+            <tr>
+                <td {if: $morse.alat_bantu == 15}class="active-cell"{/if}>Tongkat / walker</td>
+                <td class="text-center {if: $morse.alat_bantu == 15}active-cell{/if}">15</td>
+            </tr>
+            <tr>
+                <td {if: $morse.alat_bantu == 0}class="active-cell"{/if}>Tidak ada/kursi roda/perawat/tirah baring</td>
+                <td class="text-center {if: $morse.alat_bantu == 0}active-cell{/if}"><span class="{if: $morse.alat_bantu == 0}circled-val{/if}">0</span></td>
+            </tr>
+            <!-- Terpasang infuse -->
+            <tr>
+                <td class="text-center" rowspan="2">4</td>
+                <td rowspan="2"><strong>Terpasang infuse</strong></td>
+                <td {if: $morse.terpasang_infuse == 20}class="active-cell"{/if}>Ya</td>
+                <td class="text-center {if: $morse.terpasang_infuse == 20}active-cell{/if}">20</td>
+            </tr>
+            <tr>
+                <td {if: $morse.terpasang_infuse == 0}class="active-cell"{/if}>Tidak</td>
+                <td class="text-center {if: $morse.terpasang_infuse == 0}active-cell{/if}"><span class="{if: $morse.terpasang_infuse == 0}circled-val{/if}">0</span></td>
+            </tr>
+            <!-- Gaya berjalan -->
+            <tr>
+                <td class="text-center" rowspan="3">5</td>
+                <td rowspan="3"><strong>Gaya berjalan</strong></td>
+                <td {if: $morse.gaya_berjalan == 20}class="active-cell"{/if}>Terganggu</td>
+                <td class="text-center {if: $morse.gaya_berjalan == 20}active-cell{/if}">20</td>
+            </tr>
+            <tr>
+                <td {if: $morse.gaya_berjalan == 10}class="active-cell"{/if}>Lemah</td>
+                <td class="text-center {if: $morse.gaya_berjalan == 10}active-cell{/if}">10</td>
+            </tr>
+            <tr>
+                <td {if: $morse.gaya_berjalan == 0}class="active-cell"{/if}>Normal/tirah baring/imobilisasi</td>
+                <td class="text-center {if: $morse.gaya_berjalan == 0}active-cell{/if}"><span class="{if: $morse.gaya_berjalan == 0}circled-val{/if}">0</span></td>
+            </tr>
+            <!-- Status mental -->
+            <tr>
+                <td class="text-center" rowspan="2">6</td>
+                <td rowspan="2"><strong>Status mental</strong></td>
+                <td {if: $morse.status_mental == 15}class="active-cell"{/if}>Sering lupa akan keterbatasan yang dimiliki</td>
+                <td class="text-center {if: $morse.status_mental == 15}active-cell{/if}">15</td>
+            </tr>
+            <tr>
+                <td {if: $morse.status_mental == 0}class="active-cell"{/if}>Sadar akan kemampuan diri sendiri</td>
+                <td class="text-center {if: $morse.status_mental == 0}active-cell{/if}"><span class="{if: $morse.status_mental == 0}circled-val{/if}">0</span></td>
+            </tr>
+            <!-- TOTAL MORSE -->
+            <tr>
+                <td colspan="3" style="font-weight: bold; background: #e8e8e8;">TOTAL SKOR MORSE</td>
+                <td class="text-center" style="font-weight: bold; font-size: 9.5pt; background: #e8e8e8;"><span class="circled-val">{$data.morse_total}</span></td>
+            </tr>
+        </table>
+
+        <div style="padding: 4px 6px; font-size: 7.5pt; border-bottom: 1.5px solid #000;">
+            <strong>Kategori Morse:</strong> &nbsp;&nbsp;&nbsp;&nbsp;
+            <span style="{if: $data.morse_total <= 24}border:1.5px solid #000; padding:1px 6px; border-radius:10px; font-weight:bold;{/if}">Skor 0-24 : Risiko Rendah (RR) &#10003;</span> &nbsp;&nbsp;&nbsp;&nbsp;
+            <span style="{if: $data.morse_total >= 25 && $data.morse_total <= 44}border:1.5px solid #000; padding:1px 6px; border-radius:10px; font-weight:bold;{/if}">24-44 : Risiko Sedang (RS)</span> &nbsp;&nbsp;&nbsp;&nbsp;
+            <span style="{if: $data.morse_total >= 45}border:1.5px solid #000; padding:1px 6px; border-radius:10px; font-weight:bold;{/if}">&ge; 45 : Risiko Tinggi (RT)</span>
+        </div>
+
+        <!-- ONTARIO MODIFIED STRATIFY - SYDNEY SCORING (>= 65 TAHUN) -->
+        <div class="sec-head">ONTARIO MODIFIED STRATIFY - SYDNEY SCORING (&ge; 65 TAHUN)</div>
+        <table class="table-grid">
+            <tr>
+                <th style="width: 20%;">PARAMETER</th>
+                <th style="width: 45%;">SKRINING</th>
+                <th style="width: 12%;">JAWABAN</th>
+                <th style="width: 15%;">KETERANGAN</th>
+                <th style="width: 8%;">SKOR</th>
+            </tr>
+            <!-- Riwayat Jatuh -->
+            <tr>
+                <td rowspan="2"><strong>Riwayat Jatuh</strong></td>
+                <td>Apakah pasien datang kerumah sakit karena jatuh?</td>
+                <td class="text-center">Ya / Tidak</td>
+                <td rowspan="2" style="font-size: 7pt;">Salah satu jawaban ya = 6</td>
+                <td rowspan="2" class="text-center" style="vertical-align: middle;">{if: $sydney.riwayat_jatuh == 'Ya'}6{else}0{/if}</td>
+            </tr>
+            <tr>
+                <td>Jika tidak, apakah pasien mengalami jatuh dalam 2 bulan terakhir ini?</td>
+                <td class="text-center">Ya / Tidak</td>
+            </tr>
+            <!-- Status Mental -->
+            <tr>
+                <td rowspan="3"><strong>Status Mental</strong></td>
+                <td>Apakah pasien delirium? (Tidak dapat membuat keputusan, pola pikir tidak terorganisir, gangguan daya ingat)</td>
+                <td class="text-center">Ya / Tidak</td>
+                <td rowspan="3" style="font-size: 7pt;">Salah satu jawaban Ya = 14</td>
+                <td rowspan="3" class="text-center" style="vertical-align: middle;">{if: $sydney.status_mental == 'Ya'}14{else}0{/if}</td>
+            </tr>
+            <tr>
+                <td>Apakah pasien disorientasi? (salah menyebutkan waktu, tempat atau orang)</td>
+                <td class="text-center">Ya / Tidak</td>
+            </tr>
+            <tr>
+                <td>Apakah pasien mengalami agitasi? (ketakutan, gelisah, dan Cemas)</td>
+                <td class="text-center">Ya / Tidak</td>
+            </tr>
+            <!-- Penglihatan -->
+            <tr>
+                <td rowspan="3"><strong>Penglihatan</strong></td>
+                <td>Apakah pasien memakai kacamata?</td>
+                <td class="text-center">Ya / Tidak</td>
+                <td rowspan="3" style="font-size: 7pt;">Salah satu jawaban Ya = 1</td>
+                <td rowspan="3" class="text-center" style="vertical-align: middle;">{if: $sydney.penglihatan == 'Ya'}1{else}0{/if}</td>
+            </tr>
+            <tr>
+                <td>Apakah pasien mengeluh adanya penglihatan buram?</td>
+                <td class="text-center">Ya / Tidak</td>
+            </tr>
+            <tr>
+                <td>Apakah pasien mempunyai Glaukoma/ Katarak/ degenerasi makula?</td>
+                <td class="text-center">Ya / Tidak</td>
+            </tr>
+            <!-- Kebiasaan berkemih -->
+            <tr>
+                <td><strong>Kebiasaan berkemih</strong></td>
+                <td>Apakah terdapat perubahan perilaku berkemih? (frekuensi, urgensi, inkontinensia, nokturia)</td>
+                <td class="text-center">Ya / Tidak</td>
+                <td style="font-size: 7pt;">Ya = 2</td>
+                <td class="text-center">{if: $sydney.kebiasaan_berkemih == 'Ya'}2{else}0{/if}</td>
+            </tr>
+            <!-- Transfer & Mobilitas -->
+            <tr>
+                <td rowspan="4"><strong>Transfer &amp; Mobilitas</strong></td>
+                <td>Mandiri (boleh memakai alat bantu jalan)</td>
+                <td class="text-center">0</td>
+                <td rowspan="4" style="font-size: 6.5pt;">Jumlah nilai transfer &amp; mobilitas:<br>0-3 => skor = 0<br>4-6 => skor = 7</td>
+                <td rowspan="4" class="text-center" style="vertical-align: middle;">{$sydney.transfer_mobilitas}</td>
+            </tr>
+            <tr>
+                <td>Memerlukan sedikit bantuan (1 orang) / dalam pengawasan</td>
+                <td class="text-center">1</td>
+            </tr>
+            <tr>
+                <td>Memerlukan bantuan yang nyata (2 orang)</td>
+                <td class="text-center">2</td>
+            </tr>
+            <tr>
+                <td>Tidak dapat duduk dengan seimbang, perlu bantuan total / imobilisasi</td>
+                <td class="text-center">3</td>
+            </tr>
+            <!-- TOTAL SKOR SYDNEY -->
+            <tr>
+                <td colspan="4" style="font-weight: bold; background: #e8e8e8;">TOTAL SKOR SYDNEY</td>
+                <td class="text-center" style="font-weight: bold; font-size: 9.5pt; background: #e8e8e8;">{$data.sydney_total}</td>
+            </tr>
+        </table>
+
+        <div style="padding: 4px 6px; font-size: 7.5pt; border-bottom: 1.5px solid #000;">
+            <strong>Kategori Sydney:</strong> Pasien berisiko jatuh apabila total skor &ge; 9 &nbsp;&nbsp;&nbsp;&nbsp;
+            Status: <strong>{if: $data.sydney_total >= 9}<span style="color: red;">Berisiko Jatuh</span>{else}Tidak Berisiko Jatuh{/if}</strong>
+        </div>
+
+        <!-- TANDA TANGAN PETUGAS -->
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="width: 60%; padding: 6px;"></td>
+                <td style="width: 40%; text-align: center; padding: 6px;">
+                    <strong>Petugas Pengkaji</strong><br><br>
+                    {if: !empty($data.petugas_ttd)}
+                    <img src="{$data.petugas_ttd}" style="max-height: 45px;"><br>
+                    {else}
+                    <div style="height: 40px;"></div>
+                    {/if}
+                    ( <strong>{$data.petugas_nama}</strong> )<br>
+                    <span style="font-size: 7pt;">Tanda Tangan &amp; Nama Jelas</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="font-size: 7pt; margin-top: 3px; display: table; width: 100%;">
+        <div style="float: left;">RSGM/Ed-Rev/01/2020</div>
+        <div style="float: right; font-style: italic;">Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas &nbsp; <b>RM.RI 06A Hal 1 - 1</b></div>
+    </div>
+</div>
+
+</body>
+</html>

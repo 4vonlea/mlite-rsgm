@@ -2,86 +2,109 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>RM.RJ - 07 Asesmen Ulang Nyeri</title>
+    <title>RM.RJ - 07 Asesmen Ulang Nyeri - {$d.no_rawat}</title>
     <style>
-        @page { size: A4 portrait; margin: 10mm; }
-        body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 0; }
-        .page { width: 190mm; margin: 0 auto; position: relative; }
+        @page { size: A4 portrait; margin: 8mm 10mm 10mm 10mm; }
+        * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; line-height: 1.2; margin: 0; padding: 0; color: #000; }
+        {if: empty($is_mpdf)}
+        body { background-color: #f4f6f9; padding: 15px 0; }
+        .page { background: #fff; width: 195mm; min-height: 280mm; margin: 0 auto 20px auto; padding: 6mm 8mm; box-shadow: 0 2px 10px rgba(0,0,0,0.15); position: relative; }
+        {/if}
         
-        .header-table { width: 100%; border-collapse: collapse; border-bottom: 1px solid #000; }
-        .header-table td { padding: 4px; vertical-align: top; }
+        .header-table { width: 100%; border-collapse: collapse; border-bottom: 1.5px solid #000; }
+        .header-table td { padding: 4px; vertical-align: middle; }
         
-        .rmbox { display: inline-block; width: 15px; height: 16px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; vertical-align: middle; }
+        .rmbox { display: inline-block; width: 16px; height: 18px; border: 1.2px solid #000; text-align: center; line-height: 18px; font-size: 10pt; font-weight: bold; vertical-align: middle; margin-right: 1px; }
 
-        .title-doc { text-align: center; font-size: 14px; font-weight: bold; margin: 0; padding: 5px 0; border-bottom: 1.5px solid #000; }
+        .title-doc { text-align: center; font-size: 11pt; font-weight: bold; margin: 0; padding: 6px 0; border-bottom: 1.5px solid #000; letter-spacing: 0.5px; }
 
-        .list-section { font-size: 10px; text-align: justify; padding: 5px 10px; border-bottom: 1.5px solid #000; }
-        .list-section ul { margin-top: 5px; margin-bottom: 5px; padding-left: 18px; }
+        .list-section { font-size: 8pt; text-align: justify; padding: 4px 8px; border-bottom: 1.5px solid #000; }
+        .list-section ul { margin: 3px 0; padding-left: 18px; }
         .list-section li { margin-bottom: 2px; }
 
-        .content-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        .content-table th, .content-table td { border: 1px solid #000; padding: 5px; vertical-align: top; }
-        .content-table th { text-align: center; font-weight: normal; }
+        .content-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+        .content-table th, .content-table td { border: 1px solid #000; padding: 4px 6px; vertical-align: top; }
+        .content-table th { text-align: center; font-weight: bold; background-color: #f7f7f7; }
 
-        .footer-note { font-size: 8px; font-style: italic; text-align: right; margin-top: 5px; }
-        .footer-bottom { font-size: 9px; display: flex; justify-content: space-between; margin-top: 5px; font-weight: bold; }
-        
-        @media print {
-            body { -webkit-print-color-adjust: exact; }
+        .scale-box {
+            display: inline-block;
+            background: #000;
+            color: #fff;
+            border-right: 1px solid #fff;
+            position: relative;
+            padding: 2px 0;
+            font-weight: bold;
+            font-size: 8pt;
+            width: 100%;
+            text-align: center;
         }
-    
-{if: empty($is_mpdf)}
-@media screen {
-    body { background-color: #f4f6f9 !important; padding: 15px 0 !important; }
-    .container, .page, .main-box, .main-container { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; margin: 0 auto 20px auto !important; padding: 8mm 10mm !important; }
-}
-{/if}
-.no-print-toolbar { width: 100%; max-width: 195mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
-.btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-decoration: none; display: inline-block; }
-.btn-print { background: #27ae60; color: #fff; }
-.btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
-.btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
-@media print {
-    .no-print-toolbar { display: none !important; }
-    body { background: transparent !important; padding: 0 !important; }
-    .container, .page, .main-box, .main-container { box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
-}
 
-</style>
+        .circ-active {
+            position: absolute;
+            border: 2px solid #c0392b;
+            background: rgba(231, 76, 60, 0.2);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            top: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+        }
+
+        .footer-note { font-size: 7.5pt; font-style: italic; text-align: right; margin-top: 6px; font-weight: bold; }
+        .footer-bottom { font-size: 8pt; display: flex; justify-content: space-between; margin-top: 4px; font-weight: bold; }
+        
+        .no-print-toolbar { width: 100%; max-width: 195mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
+        .btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 9pt; text-decoration: none; display: inline-block; margin-right: 5px; }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; }
+        .btn-close { background: #7f8c8d; color: #fff; }
+
+        @media print {
+            .no-print-toolbar { display: none !important; }
+            body { background: transparent !important; padding: 0 !important; }
+            .page { width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
+        }
+    </style>
 </head>
-<body >
+<body>
 
     {if: empty($is_mpdf)}
     <div class="no-print-toolbar">
         <button onclick="window.print()" class="btn-toolbar btn-print"><i class="fa fa-print"></i> Cetak Dokumen</button>
-        <a href="#" onclick="window.open(window.location.href + (window.location.href.indexOf('?') !== -1 ? (window.location.href.indexOf('pdf=1') !== -1 ? '' : '&pdf=1') : '?pdf=1'), '_blank'); return false;" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Download PDF</a>
+        <a href="{?=url([ADMIN, 'update_bmt', 'rj07cetak', '?id='.$d.id.'&pdf=1'])?}" target="_blank" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Download PDF</a>
         <button onclick="window.close()" class="btn-toolbar btn-close"><i class="fa fa-times"></i> Tutup</button>
     </div>
     {/if}
 
 <div class="page">
   <div style="border: 1.5px solid #000;">
+    <!-- HEADER KOP & IDENTITAS -->
     <table class="header-table">
         <tr>
-            <td style="width:55%; border-right:1px solid #000;">
-                <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{elseif: !empty($p.kop_img)}{$p.kop_img}{elseif: !empty($d.kop_img)}{$d.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop" style="width:100%; max-height:75px; object-fit:contain; display:block;">
+            <td style="width:58%; border-right:1.5px solid #000; padding: 4px;">
+                <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{elseif: !empty($p.kop_img)}{$p.kop_img}{elseif: !empty($d.kop_img)}{$d.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop RSGM Gusti Hasan Aman" style="width:100%; max-height:72px; object-fit:contain; display:block;">
             </td>
-            <td style="width:45%; padding-left:15px; vertical-align:middle;">
-                <table style="width:100%; border:none; font-size:11px;">
+            <td style="width:42%; padding: 4px 8px; vertical-align:middle;">
+                <table style="width:100%; border:none; font-size:8.5pt;">
                     <tr>
-                        <td style="width:30%; padding:2px 0;">No RM</td>
-                        <td style="width:5%;">:</td>
-                        <td style="width:65%;">
+                        <td style="width:30%; font-weight:bold; padding:2px 0;">NO. RM</td>
+                        <td style="width:4%;">:</td>
+                        <td style="width:66%;">
                             <span class="rmbox">{$p.rm0}</span><span class="rmbox">{$p.rm1}</span><span class="rmbox">{$p.rm2}</span><span class="rmbox">{$p.rm3}</span><span class="rmbox">{$p.rm4}</span><span class="rmbox">{$p.rm5}</span>
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding:2px 0;">Nama Pasien</td>
+                        <td style="font-weight:bold; padding:2px 0;">Nama Pasien</td>
                         <td>:</td>
-                        <td style="border-bottom:1px dotted #000;">{$p.nm_pasien} &nbsp;&nbsp;&nbsp;&nbsp; {$p.lp}</td>
+                        <td style="border-bottom:1px dotted #000; font-weight:bold;">
+                            {$p.nm_pasien} &nbsp;&nbsp; {if: $p.lp == 'L'}&#9794; L{elseif: $p.lp == 'P'}&#9792; P{else}{$p.lp}{/if}
+                        </td>
                     </tr>
                     <tr>
-                        <td style="padding:2px 0;">Tanggal Lahir</td>
+                        <td style="font-weight:bold; padding:2px 0;">Tanggal Lahir</td>
                         <td>:</td>
                         <td style="border-bottom:1px dotted #000;">{$p.tgl_lahir}</td>
                     </tr>
@@ -90,7 +113,7 @@
         </tr>
     </table>
 
-    <div style="font-size:9px; border-bottom: 1.5px solid #000; padding: 2px 10px;">
+    <div style="font-size:7.5pt; border-bottom: 1.5px solid #000; padding: 3px 8px; font-style: italic;">
         Perhatian :<br>
         * Harap semua penulisan dilakukan dengan keterbacaan yang jelas, benar dan lengkap.<br>
         * Berilah tanda lingkar pada pilihan yang telah disediakan
@@ -101,7 +124,7 @@
     <div class="list-section">
         <strong>PENGKAJIAN ULANG</strong>
         <ul style="list-style-type: disc;">
-            <li>Setelah tindakan sebelum pasien pulang pada pasien rawat jalan</li>
+            <li>Setelah tindakan, sebelum pasien pulang pada pasien rawat jalan</li>
             <li>15 menit setelah intervensi obat injeksi</li>
             <li>1 jam setelah intervensi obat oral/lainnya</li>
             <li>1x/shift, jika skor nyeri 1-3</li>
@@ -114,8 +137,8 @@
     <table class="content-table" style="border:none; border-top:none;">
         <thead>
             <tr>
-                <th style="width:15%; border-top:none; border-left:none;">Tanggal /<br>Jam</th>
-                <th style="width:45%; border-top:none;">Hasil Asesmen Nyeri</th>
+                <th style="width:13%; border-top:none; border-left:none;">Tanggal /<br>Jam</th>
+                <th style="width:47%; border-top:none;">Hasil Asesmen Nyeri</th>
                 <th style="width:25%; border-top:none;">Manajemen Nyeri</th>
                 <th style="width:15%; border-top:none; border-right:none;">Paraf dan<br>Nama</th>
             </tr>
@@ -123,146 +146,96 @@
         <tbody>
             {loop: $d.form_data.asesmen}
             <tr>
-                <td style="border-left:none; text-align:center;">
+                <td style="border-left:none; text-align:center; padding-top:8px;">
                     {if: (!empty($value.tgl_jam))}
-                        {?=date('d-m-Y', strtotime($value.tgl_jam))?}<br>{?=date('H:i', strtotime($value.tgl_jam))?}
+                        <strong>{?=date('d/m/Y', strtotime($value.tgl_jam))?}</strong><br>
+                        <span style="font-size:8.5pt;">{?=date('H:i', strtotime($value.tgl_jam))?}</span>
+                    {else}
+                        &nbsp;
                     {/if}
                 </td>
                 <td>
-                    <div style="margin-bottom:10px;">Kondisi Umum: {$value.kondisi_umum}</div>
+                    <div style="margin-bottom:6px; font-size:8.5pt;"><strong>Kondisi Umum:</strong> {if: !empty($value.kondisi_umum)}{$value.kondisi_umum}{else}-{/if}</div>
                     
-                    <div style="width:90%; margin: 0 auto;">
-                        <table style="width:100%; border-collapse:collapse; text-align:center; font-size:8px;">
+                    <div style="width:96%; margin: 0 auto;">
+                        <table style="width:100%; border-collapse:collapse; text-align:center; font-size:7.5pt; font-weight:bold;">
                             <tr>
-                                <td colspan="1" style="width:9%;">Tidak<br>Nyeri</td>
-                                <td colspan="3" style="width:27%;">Nyeri<br>Ringan</td>
-                                <td colspan="3" style="width:27%;">Nyeri<br>Sedang</td>
-                                <td colspan="4" style="width:37%;">Nyeri<br>Berat</td>
+                                <td style="width:9.09%;">Tidak<br>Nyeri</td>
+                                <td colspan="3" style="width:27.27%;">Nyeri<br>Ringan</td>
+                                <td colspan="3" style="width:27.27%;">Nyeri<br>Sedang</td>
+                                <td colspan="4" style="width:36.36%;">Nyeri<br>Berat</td>
                             </tr>
                             <tr>
-                                <td colspan="1"><div style="border-left:1px solid #000; border-right:1px solid #000; border-top:1px solid #000; height:8px; margin-top:2px;"></div></td>
-                                <td colspan="3"><div style="border-right:1px solid #000; border-top:1px solid #000; height:8px; margin-top:2px;"></div></td>
-                                <td colspan="3"><div style="border-right:1px solid #000; border-top:1px solid #000; height:8px; margin-top:2px;"></div></td>
-                                <td colspan="4"><div style="border-right:1px solid #000; border-top:1px solid #000; height:8px; margin-top:2px;"></div></td>
+                                <td><div style="border-left:1px solid #000; border-right:1px solid #000; border-top:1px solid #000; height:6px; margin-top:2px;"></div></td>
+                                <td colspan="3"><div style="border-right:1px solid #000; border-top:1px solid #000; height:6px; margin-top:2px;"></div></td>
+                                <td colspan="3"><div style="border-right:1px solid #000; border-top:1px solid #000; height:6px; margin-top:2px;"></div></td>
+                                <td colspan="4"><div style="border-right:1px solid #000; border-top:1px solid #000; height:6px; margin-top:2px;"></div></td>
                             </tr>
                         </table>
                         
-                        <table style="width:100%; border-collapse:collapse; font-size:9px; text-align:center; margin-top:2px; margin-bottom:8px;">
+                        <!-- BARIS ANGKA 0 - 10 DENGAN LINGKARAN MERAH -->
+                        <table style="width:100%; border-collapse:collapse; font-size:8pt; text-align:center; margin-top:1px; margin-bottom:6px;">
                             <tr>
+                                {for: $n=0; $n<=10; $n++}
                                 <td style="width:9.09%; padding:0;">
-                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
-                                        {if: ($value.skor_nyeri === '0')}
-                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
+                                    <div class="scale-box">
+                                        {if: ($value.skor_nyeri !== '' && (string)$value.skor_nyeri === (string)$n)}
+                                        <div class="circ-active"></div>
                                         {/if}
-                                        0
+                                        {$n}
                                     </div>
                                 </td>
-                                <td style="width:9.09%; padding:0;">
-                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
-                                        {if: ($value.skor_nyeri === '1')}
-                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
-                                        {/if}
-                                        1
-                                    </div>
-                                </td>
-                                <td style="width:9.09%; padding:0;">
-                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
-                                        {if: ($value.skor_nyeri === '2')}
-                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
-                                        {/if}
-                                        2
-                                    </div>
-                                </td>
-                                <td style="width:9.09%; padding:0;">
-                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
-                                        {if: ($value.skor_nyeri === '3')}
-                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
-                                        {/if}
-                                        3
-                                    </div>
-                                </td>
-                                <td style="width:9.09%; padding:0;">
-                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
-                                        {if: ($value.skor_nyeri === '4')}
-                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
-                                        {/if}
-                                        4
-                                    </div>
-                                </td>
-                                <td style="width:9.09%; padding:0;">
-                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
-                                        {if: ($value.skor_nyeri === '5')}
-                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
-                                        {/if}
-                                        5
-                                    </div>
-                                </td>
-                                <td style="width:9.09%; padding:0;">
-                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
-                                        {if: ($value.skor_nyeri === '6')}
-                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
-                                        {/if}
-                                        6
-                                    </div>
-                                </td>
-                                <td style="width:9.09%; padding:0;">
-                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
-                                        {if: ($value.skor_nyeri === '7')}
-                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
-                                        {/if}
-                                        7
-                                    </div>
-                                </td>
-                                <td style="width:9.09%; padding:0;">
-                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
-                                        {if: ($value.skor_nyeri === '8')}
-                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
-                                        {/if}
-                                        8
-                                    </div>
-                                </td>
-                                <td style="width:9.09%; padding:0;">
-                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
-                                        {if: ($value.skor_nyeri === '9')}
-                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
-                                        {/if}
-                                        9
-                                    </div>
-                                </td>
-                                <td style="width:9.09%; padding:0;">
-                                    <div style="background:#000; color:#fff; border-right:1px solid #fff; position:relative; padding:1px 0; font-weight:bold;">
-                                        {if: ($value.skor_nyeri === '10')}
-                                        <div style="position:absolute; border:2px solid red; border-radius:50%; width:16px; height:16px; top:-2px; left:50%; transform:translateX(-50%); z-index:2;"></div>
-                                        {/if}
-                                        10
-                                    </div>
-                                </td>
+                                {/for}
                             </tr>
                         </table>
 
-                        <table style="width:100%; border-collapse:collapse; text-align:center; font-size:7px;">
+                        <!-- WONG-BAKER FACES SVG SESUAI FORM FISIK -->
+                        <table style="width:100%; border-collapse:collapse; text-align:center; font-size:6.5pt; line-height:1.1;">
                             <tr>
-                                <td style="width:16%; font-size:18px;">😃</td>
-                                <td style="width:16%; font-size:18px;">😐</td>
-                                <td style="width:16%; font-size:18px;">😟</td>
-                                <td style="width:16%; font-size:18px;">😢</td>
-                                <td style="width:16%; font-size:18px;">😫</td>
-                                <td style="width:16%; font-size:18px;">😭</td>
-                            </tr>
-                            <tr>
-                                <td>Tidak<br>Nyeri</td>
-                                <td>Sedikit<br>Nyeri</td>
-                                <td>Sedikit<br>Lebih Nyeri</td>
-                                <td>Lebih<br>Nyeri Lagi</td>
-                                <td>Sangat<br>Nyeri</td>
-                                <td>Nyeri<br>Sangat Hebat</td>
+                                <td style="width:16.66%;">
+                                    <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><circle cx="34" cy="38" r="5" fill="#000"/><circle cx="66" cy="38" r="5" fill="#000"/><path d="M 28 58 Q 50 84 72 58" fill="none" stroke="#000" stroke-width="4.5" stroke-linecap="round"/></svg><br>
+                                    Tidak<br>Nyeri
+                                </td>
+                                <td style="width:16.66%;">
+                                    <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><circle cx="34" cy="38" r="5" fill="#000"/><circle cx="66" cy="38" r="5" fill="#000"/><path d="M 32 62 Q 50 74 68 62" fill="none" stroke="#000" stroke-width="4.5" stroke-linecap="round"/></svg><br>
+                                    Sedikit<br>Nyeri
+                                </td>
+                                <td style="width:16.66%;">
+                                    <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><circle cx="34" cy="38" r="5" fill="#000"/><circle cx="66" cy="38" r="5" fill="#000"/><line x1="32" y1="64" x2="68" y2="64" stroke="#000" stroke-width="4.5" stroke-linecap="round"/></svg><br>
+                                    Sedikit<br>Lebih Nyeri
+                                </td>
+                                <td style="width:16.66%;">
+                                    <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><circle cx="34" cy="40" r="5" fill="#000"/><circle cx="66" cy="40" r="5" fill="#000"/><path d="M 32 70 Q 50 58 68 70" fill="none" stroke="#000" stroke-width="4.5" stroke-linecap="round"/></svg><br>
+                                    Lebih<br>Nyeri Lagi
+                                </td>
+                                <td style="width:16.66%;">
+                                    <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><path d="M 26 30 L 42 34" stroke="#000" stroke-width="3.5" stroke-linecap="round"/><path d="M 74 30 L 58 34" stroke="#000" stroke-width="3.5" stroke-linecap="round"/><circle cx="34" cy="42" r="5" fill="#000"/><circle cx="66" cy="42" r="5" fill="#000"/><path d="M 28 74 Q 50 52 72 74" fill="none" stroke="#000" stroke-width="4.5" stroke-linecap="round"/></svg><br>
+                                    Sangat<br>Nyeri
+                                </td>
+                                <td style="width:16.66%;">
+                                    <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><path d="M 24 28 L 42 36" stroke="#000" stroke-width="4" stroke-linecap="round"/><path d="M 76 28 L 58 36" stroke="#000" stroke-width="4" stroke-linecap="round"/><circle cx="34" cy="44" r="5" fill="#000"/><circle cx="66" cy="44" r="5" fill="#000"/><path d="M 28 48 Q 24 58 28 64 Q 32 58 28 48 Z" fill="#337ab7"/><path d="M 72 48 Q 68 58 72 64 Q 76 58 72 48 Z" fill="#337ab7"/><path d="M 30 76 Q 50 56 70 76 Q 50 70 30 76 Z" fill="#000"/></svg><br>
+                                    Nyeri<br>Sangat Hebat
+                                </td>
                             </tr>
                         </table>
                     </div>
                 </td>
-                <td>{?=nl2br($value.manajemen)?}</td>
-                <td style="border-right:none; text-align:center; vertical-align:bottom; height:60px;">
-                    ( {$value.paraf_nama} )
+                <td style="padding-top:8px;">
+                    {if: !empty($value.manajemen)}
+                        <strong>{?=nl2br($value.manajemen)?}</strong>
+                    {else}
+                        &nbsp;
+                    {/if}
+                </td>
+                <td style="border-right:none; text-align:center; vertical-align:bottom; height:65px; padding-bottom:6px;">
+                    {if: !empty($value.paraf_nama)}
+                        <div style="font-family:'Brush Script MT', cursive, sans-serif; font-size:16pt; line-height:1; color:#1a237e;">Paraf</div>
+                        <div style="font-size:7.5pt; font-weight:bold; border-top:1px dotted #333; margin-top:4px; padding-top:2px;">
+                            {$value.paraf_nama}
+                        </div>
+                    {else}
+                        &nbsp;
+                    {/if}
                 </td>
             </tr>
             {/loop}
@@ -271,15 +244,18 @@
 
   </div>
 
-    <div class="footer-note">
-        Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas 
-        <span style="display:inline-block; width:10px; height:10px; border:1px solid #000; margin-left:5px; vertical-align:middle;"></span>
-    </div>
-    
-    <div class="footer-bottom">
-        <div>RSGM/Ed-Rev/02/2023</div>
-        <div style="color:blue;"><u>RM.RJ – 07</u></div>
-    </div>
+    <table style="width:100%; border:none; margin-top:4px; font-size:7.5pt;">
+        <tr>
+            <td style="text-align:right; font-style:italic; font-weight:bold;" colspan="2">
+                Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas 
+                <span style="display:inline-block; width:10px; height:10px; border:1px solid #000; margin-left:3px; vertical-align:middle;"></span>
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align:left; font-weight:bold;">RSGM/Ed-Rev/02/2023</td>
+            <td style="text-align:right; font-weight:bold;">RM.RJ – 07 Hal 1 - 1</td>
+        </tr>
+    </table>
 </div>
 </body>
 </html>

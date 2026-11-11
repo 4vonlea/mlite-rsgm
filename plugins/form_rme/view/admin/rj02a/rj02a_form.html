@@ -231,6 +231,37 @@
                   <input type="text" class="form-control input-sm f-catatan" id="catatan" value="{?=isset_or($data['form_data']['catatan'])?}" placeholder="Catatan khusus penjelasan bila ada (misal: Pasien telah memahami seluruh butir hak dan kewajiban)" style="height: 34px; border-radius: 6px;">
                 </div>
               </div>
+
+              <!-- Tanda Tangan Digital -->
+              <div class="row" style="margin-top:15px; border-top:1px dashed #cbd5e1; padding-top:15px;">
+                <div class="col-md-6" style="margin-bottom: 12px;">
+                  <label style="font-weight: 600; font-size: 12px; display: block; margin-bottom: 6px;"><i class="fa fa-pencil text-danger"></i> Tanda Tangan Pasien / Penanggung Jawab</label>
+                  <div style="border: 2px dashed #cbd5e1; border-radius: 6px; background: #fafafa; width: 100%; height: 130px; display: flex; align-items: center; justify-content: center;">
+                    <canvas id="canvas_ttd_pasien" width="340" height="120" style="touch-action: none; width: 100%; height: 100%; cursor: crosshair;"></canvas>
+                  </div>
+                  <input type="hidden" class="f-ttd_pasien" id="input_ttd_pasien" value="{$data.form_data.ttd_pasien}">
+                  <div style="margin-top: 5px;">
+                    <button type="button" class="btn btn-default btn-xs" id="btn_clear_pasien"><i class="fa fa-eraser"></i> Hapus Goresan</button>
+                    <span id="status_ttd_pasien" class="text-success" style="font-size: 11px; margin-left: 10px;">
+                      {if: !empty($data.form_data.ttd_pasien)}<i class="fa fa-check-circle"></i> TTD Digital Tersimpan{/if}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="col-md-6" style="margin-bottom: 12px;">
+                  <label style="font-weight: 600; font-size: 12px; display: block; margin-bottom: 6px;"><i class="fa fa-pencil text-primary"></i> Tanda Tangan Petugas Pemberi Edukasi</label>
+                  <div style="border: 2px dashed #cbd5e1; border-radius: 6px; background: #fafafa; width: 100%; height: 130px; display: flex; align-items: center; justify-content: center;">
+                    <canvas id="canvas_ttd_edukasi" width="340" height="120" style="touch-action: none; width: 100%; height: 100%; cursor: crosshair;"></canvas>
+                  </div>
+                  <input type="hidden" class="f-ttd_edukasi" id="input_ttd_edukasi" value="{$data.form_data.ttd_edukasi}">
+                  <div style="margin-top: 5px;">
+                    <button type="button" class="btn btn-default btn-xs" id="btn_clear_edukasi"><i class="fa fa-eraser"></i> Hapus Goresan</button>
+                    <span id="status_ttd_edukasi" class="text-success" style="font-size: 11px; margin-left: 10px;">
+                      {if: !empty($data.form_data.ttd_edukasi)}<i class="fa fa-check-circle"></i> TTD Digital Tersimpan{/if}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
           </div> <!-- /.rsgm-reg-body -->
@@ -316,9 +347,72 @@ $(document).ready(function() {
       hubungan_pj: $('#hubungan_pj').val() || 'Diri Sendiri',
       pemberi_edukasi: $('#pemberi_edukasi').val() || '',
       tgl_ttd: $('#tgl_ttd').val() || '{?=date("Y-m-d")?}',
-      catatan: $('#catatan').val() || ''
+      catatan: $('#catatan').val() || '',
+      ttd_pasien: $('#input_ttd_pasien').val() || '',
+      ttd_edukasi: $('#input_ttd_edukasi').val() || ''
     };
     $('#json_form_data').val(JSON.stringify(fd));
   });
+
+  // Helper canvas signature pad
+  function setupCanvas(canvasId, inputId, clearBtnId, statusId) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var drawing = false;
+    var prevX = 0, prevY = 0;
+
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+
+    var existingData = $('#' + inputId).val();
+    if (existingData && existingData.indexOf('data:image') === 0) {
+      var img = new Image();
+      img.onload = function() { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); };
+      img.src = existingData;
+    }
+
+    function getPos(c, e) {
+      var rect = c.getBoundingClientRect();
+      var clientX = e.clientX || (e.touches && e.touches[0].clientX);
+      var clientY = e.clientY || (e.touches && e.touches[0].clientY);
+      return {
+        x: (clientX - rect.left) * (c.width / rect.width),
+        y: (clientY - rect.top) * (c.height / rect.height)
+      };
+    }
+
+    function start(x, y) { drawing = true; prevX = x; prevY = y; }
+    function draw(x, y) {
+      if (!drawing) return;
+      ctx.beginPath();
+      ctx.moveTo(prevX, prevY);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      prevX = x; prevY = y;
+      $('#' + inputId).val(canvas.toDataURL('image/png'));
+      $('#' + statusId).html('<i class="fa fa-pencil text-primary"></i> Goresan aktif');
+    }
+    function stop() { drawing = false; }
+
+    $(canvas).on('mousedown', function(e) { var p = getPos(canvas, e.originalEvent); start(p.x, p.y); });
+    $(canvas).on('mousemove', function(e) { var p = getPos(canvas, e.originalEvent); draw(p.x, p.y); });
+    $(window).on('mouseup', stop);
+
+    canvas.addEventListener('touchstart', function(e) { e.preventDefault(); var p = getPos(canvas, e); start(p.x, p.y); }, { passive: false });
+    canvas.addEventListener('touchmove', function(e) { e.preventDefault(); var p = getPos(canvas, e); draw(p.x, p.y); }, { passive: false });
+    canvas.addEventListener('touchend', function(e) { e.preventDefault(); stop(); }, { passive: false });
+
+    $('#' + clearBtnId).on('click', function() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      $('#' + inputId).val('');
+      $('#' + statusId).html('<span class="text-muted">Goresan dihapus</span>');
+    });
+  }
+
+  setupCanvas('canvas_ttd_pasien', 'input_ttd_pasien', 'btn_clear_pasien', 'status_ttd_pasien');
+  setupCanvas('canvas_ttd_edukasi', 'input_ttd_edukasi', 'btn_clear_edukasi', 'status_ttd_edukasi');
 });
 </script>

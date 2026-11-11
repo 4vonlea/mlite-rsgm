@@ -1,0 +1,98 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="btn-group pull-right" style="margin-top:-5px;">
+                    <a href="{?=url([ADMIN, 'form_rme', 'pengantarranapform'])?}" class="btn btn-primary btn-sm"><i
+                            class="fa fa-plus"></i> Tambah Surat Pengantar</a>
+                </div>
+                <h3 class="panel-title"><i class="fa fa-bed"></i> <strong>SURAT PENGANTAR RAWAT INAP (SKRINING ADMISI
+                        RANAP - AKP 1.2 EP A)</strong></h3>
+            </div>
+            <div class="panel-body">
+                <form method="GET" action="{?=url([ADMIN, 'form_rme', 'pengantarranapmanage'])?}"
+                    class="form-inline m-b-md">
+                    <div class="form-group">
+                        <input type="text" name="cari" class="form-control input-sm"
+                            placeholder="No. Rawat / No. RM / Nama" value="{$cari}">
+                    </div>
+                    <button type="submit" class="btn btn-default btn-sm"><i class="fa fa-search"></i> Cari</button>
+                    {if: !empty($cari)}
+                    <a href="{?=url([ADMIN, 'form_rme', 'pengantarranapmanage'])?}"
+                        class="btn btn-link btn-sm">Reset</a>
+                    {/if}
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover">
+                        <thead>
+                            <tr class="info">
+                                <th width="5%" class="text-center">No</th>
+                                <th width="15%">No. Rawat</th>
+                                <th width="10%">No. RM</th>
+                                <th width="18%">Nama Pasien</th>
+                                <th width="14%">Pengiriman Unit</th>
+                                <th width="18%">Diagnosa Sementara</th>
+                                <th width="10%">Fokus Layanan</th>
+                                <th width="10%" class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {if: !empty($data)}
+                            {loop: $data}
+                            <tr>
+                                <td class="text-center">{$key + 1}</td>
+                                <td><strong>{$value.no_rawat}</strong></td>
+                                <td>{$value.no_rkm_medis}</td>
+                                <td>{$value.nama_pasien} ({$value.jk})</td>
+                                <td>
+                                    <span class="label label-primary">{$value.unit_asal}</span> &rarr; <span
+                                        class="label label-success">{$value.unit_tujuan}</span><br>
+                                    <small class="text-muted">{$value.hari_tgl_jam}</small>
+                                </td>
+                                <td>{$value.diagnosa_sementara}</td>
+                                <td>
+                                    {if: $value.layanan_promotif == 'Ya'}<span class="label label-info">Promotif</span>
+                                    {/if}
+                                    {if: $value.layanan_preventif == 'Ya'}<span
+                                        class="label label-warning">Preventif</span> {/if}
+                                    {if: $value.layanan_kuratif == 'Ya'}<span class="label label-primary">Kuratif</span>
+                                    {/if}
+                                    {if: $value.layanan_rehabilitatif == 'Ya'}<span
+                                        class="label label-success">Rehabilitatif</span> {/if}
+                                    {if: $value.layanan_paliatif == 'Ya'}<span
+                                        class="label label-default">Paliatif</span> {/if}
+                                    {if: $value.layanan_intensif == 'Ya'}<span
+                                        class="label label-danger">Intensif</span> {/if}
+                                    {if: $value.layanan_khusus == 'Ya'}<span class="label label-danger">Khusus</span>
+                                    {/if}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{?=url([ADMIN, 'form_rme', 'pengantarranapcetak', '?id='.$value.id])?}"
+                                        target="_blank" class="btn btn-xs btn-success" title="Cetak"><i
+                                            class="fa fa-print"></i> Cetak</a>
+                                    <a href="{?=url([ADMIN, 'form_rme', 'pengantarranapcetak', '?id='.$value.id.'&pdf=1'])?}"
+                                        target="_blank" class="btn btn-xs btn-danger" title="Unduh PDF"><i
+                                            class="fa fa-file-pdf-o"></i> PDF</a>
+                                    <a href="{?=url([ADMIN, 'form_rme', 'pengantarranapform', '?id='.$value.id])?}"
+                                        class="btn btn-xs btn-primary" title="Edit"><i class="fa fa-edit"></i> Edit</a>
+                                    <a href="{?=url([ADMIN, 'form_rme', 'pengantarranaphapus', '?id='.$value.id])?}"
+                                        class="btn btn-xs btn-danger"
+                                        onclick="return confirm('Hapus surat pengantar ini?');" title="Hapus"><i
+                                            class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {/loop}
+                            {else}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">Belum ada data Surat Pengantar Rawat Inap
+                                </td>
+                            </tr>
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,215 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="btn-group pull-right" style="margin-top:-5px;">
+                    <a href="{?=url([ADMIN, 'form_rme', 'cpptcetak', '?no_rawat='.$pasien.no_rawat])?}" target="_blank" class="btn btn-success btn-sm"><i class="fa fa-print"></i> Cetak CPPT</a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'cpptcetak', '?no_rawat='.$pasien.no_rawat.'&pdf=1'])?}" target="_blank" class="btn btn-danger btn-sm"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'cpptmanage'])?}" class="btn btn-default btn-sm"><i class="fa fa-arrow-left"></i> Kembali</a>
+                </div>
+                <h3 class="panel-title"><i class="fa fa-edit"></i> <strong>CATATAN PERKEMBANGAN PASIEN TERINTEGRASI (CPPT)</strong></h3>
+            </div>
+            <div class="panel-body">
+                <!-- Info Pasien -->
+                <div class="well well-sm" style="background:#fcfcfc;">
+                    <div class="row">
+                        <div class="col-sm-3"><strong>No. Rawat:</strong> {$pasien.no_rawat}</div>
+                        <div class="col-sm-3"><strong>No. RM:</strong> {$pasien.no_rkm_medis}</div>
+                        <div class="col-sm-3"><strong>Nama Pasien:</strong> {$pasien.nm_pasien} ({$pasien.jk})</div>
+                        <div class="col-sm-3"><strong>Poli / Unit:</strong> {$pasien.nm_poli}</div>
+                    </div>
+                </div>
+
+                <!-- Form Tambah Entry SOAP Baru -->
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h4 class="panel-title"><i class="fa fa-plus-circle"></i> Tambah Catatan Asesmen Ulang / CPPT Baru</h4>
+                    </div>
+                    <div class="panel-body">
+                        <form method="POST" action="{?=url([ADMIN, 'form_rme', 'cpptsave'])?}">
+                            <input type="hidden" name="no_rawat" value="{$pasien.no_rawat}">
+                            
+                            <div class="row">
+                                <div class="col-sm-2">
+                                    <div class="form-group">
+                                        <label>Tanggal</label>
+                                        <input type="date" name="tgl_perawatan" class="form-control input-sm" value="{?=date('Y-m-d')?}" required>
+                                    </div>
+                                </div>
+                                <div class="col-sm-2">
+                                    <div class="form-group">
+                                        <label>Jam (WITA)</label>
+                                        <input type="time" name="jam_rawat" class="form-control input-sm" value="{?=date('H:i:s')?}" required>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label>Profesional Pemberi Asuhan (PPA)</label>
+                                        <select name="nip" class="form-control input-sm" required>
+                                            {loop: $pegawai_list}
+                                            <option value="{$value.nik}" {if: $current_user == $value.nik}selected{/if}>{$value.nama} ({$value.jbtn})</option>
+                                            {/loop}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label>Tipe Layanan</label>
+                                        <select name="jenis_rawat" class="form-control input-sm">
+                                            <option value="ralan">Rawat Jalan / UGD</option>
+                                            <option value="ranap">Rawat Inap</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-2">
+                                    <div class="form-group">
+                                        <label>Tensi (mmHg)</label>
+                                        <input type="text" name="tensi" class="form-control input-sm" placeholder="120/80" value="120/80">
+                                    </div>
+                                </div>
+                                <div class="col-sm-2">
+                                    <div class="form-group">
+                                        <label>Nadi (/menit)</label>
+                                        <input type="text" name="nadi" class="form-control input-sm" placeholder="80" value="80">
+                                    </div>
+                                </div>
+                                <div class="col-sm-2">
+                                    <div class="form-group">
+                                        <label>RR (/menit)</label>
+                                        <input type="text" name="respirasi" class="form-control input-sm" placeholder="20" value="20">
+                                    </div>
+                                </div>
+                                <div class="col-sm-2">
+                                    <div class="form-group">
+                                        <label>Suhu (&deg;C)</label>
+                                        <input type="text" name="suhu_tubuh" class="form-control input-sm" placeholder="36.5" value="36.5">
+                                    </div>
+                                </div>
+                                <div class="col-sm-2">
+                                    <div class="form-group">
+                                        <label>SpO2 (%)</label>
+                                        <input type="text" name="spo2" class="form-control input-sm" placeholder="98" value="98">
+                                    </div>
+                                </div>
+                                <div class="col-sm-2">
+                                    <div class="form-group">
+                                        <label>Kesadaran</label>
+                                        <select name="kesadaran" class="form-control input-sm">
+                                            <option value="Compos Mentis">Compos Mentis</option>
+                                            <option value="Somnolence">Somnolence</option>
+                                            <option value="Sopor">Sopor</option>
+                                            <option value="Coma">Coma</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label><strong>S (Subjective) - Keluhan &amp; Anamnesis Lanjutan</strong></label>
+                                        <textarea name="keluhan" class="form-control" rows="3" placeholder="Keluhan yang dirasakan pasien..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label><strong>O (Objective) - Pemeriksaan Fisik / Lokalis Ulang</strong></label>
+                                        <textarea name="pemeriksaan" class="form-control" rows="3" placeholder="Hasil pemeriksaan fisik, tanda vital, lokalis..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label><strong>A (Assessment) - Penilaian Klinis / Diagnosis Masalah</strong></label>
+                                        <textarea name="penilaian" class="form-control" rows="3" placeholder="Penilaian kondisi atau diagnosa perkembangan..." required></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label><strong>P (Plan) - Rencana Asuhan &amp; Penatalaksanaan</strong></label>
+                                        <textarea name="rtl" class="form-control" rows="3" placeholder="Rencana terapi, observasi, dan edukasi..." required></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label><strong>Instruksi PPA Termasuk Pasca Bedah</strong></label>
+                                        <textarea name="instruksi" class="form-control" rows="2" placeholder="Instruksi spesifik pelaksanaan terapi..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label><strong>Evaluasi Asesmen Ulang / Catatan Perkembangan</strong></label>
+                                        <textarea name="evaluasi" class="form-control" rows="2" placeholder="Respon pasien pasca intervensi..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan Catatan CPPT</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Riwayat CPPT Yang Sudah Ada -->
+                <h4 class="m-t-md"><i class="fa fa-history"></i> Riwayat CPPT Pasien</h4>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr class="active">
+                                <th width="12%">Tgl &amp; Jam</th>
+                                <th width="18%">PPA (Petugas)</th>
+                                <th width="45%">Hasil Asesmen SOAP</th>
+                                <th width="20%">Instruksi &amp; Evaluasi</th>
+                                <th width="5%" class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {if: !empty($cppt_list)}
+                            {loop: $cppt_list}
+                            <tr>
+                                <td>
+                                    <strong>{$value.tgl_perawatan}</strong><br>
+                                    {$value.jam_rawat} WITA<br>
+                                    <span class="label label-default">{$value.jenis_rawat}</span>
+                                </td>
+                                <td>
+                                    <strong>{$value.nama_petugas}</strong><br>
+                                    <small class="text-muted">{$value.profesi}</small>
+                                </td>
+                                <td>
+                                    <small><strong>TTV:</strong> TD {$value.tensi}, HR {$value.nadi}, RR {$value.respirasi}, Temp {$value.suhu_tubuh}&deg;C, SpO2 {$value.spo2}%</small><br>
+                                    <strong>S:</strong> {$value.keluhan}<br>
+                                    <strong>O:</strong> {$value.pemeriksaan}<br>
+                                    <strong>A:</strong> {$value.penilaian}<br>
+                                    <strong>P:</strong> {$value.rtl}
+                                </td>
+                                <td>
+                                    <strong>Instruksi:</strong> {if: !empty($value.instruksi)}{$value.instruksi}{else}-{/if}<br>
+                                    <strong>Evaluasi:</strong> {if: !empty($value.evaluasi)}{$value.evaluasi}{else}-{/if}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{?=url([ADMIN, 'form_rme', 'cppthapus', '?no_rawat='.$value.no_rawat.'&tgl='.$value.tgl_perawatan.'&jam='.$value.jam_rawat.'&jenis='.$value.jenis_rawat])?}" class="btn btn-xs btn-danger" onclick="return confirm('Hapus catatan CPPT ini?');" title="Hapus"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {/loop}
+                            {else}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">Belum ada catatan CPPT untuk pasien ini</td>
+                            </tr>
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+

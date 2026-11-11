@@ -1,0 +1,373 @@
+<style>
+@page {
+    margin: 8mm 10mm 8mm 10mm;
+    size: portrait;
+}
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8pt;
+    line-height: 1.25;
+    color: #000;
+}
+.header-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-bottom: 2px solid #000;
+    margin-bottom: 5px;
+}
+.header-table td {
+    padding: 2px 4px;
+    vertical-align: middle;
+}
+.title-doc {
+    text-align: center;
+    font-size: 11pt;
+    font-weight: bold;
+    margin: 5px 0 8px 0;
+    text-transform: uppercase;
+}
+.table-data {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 6px;
+}
+.table-data th, .table-data td {
+    border: 1px solid #000;
+    padding: 3px 5px;
+    font-size: 8pt;
+    vertical-align: middle;
+}
+.table-data th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    text-align: center;
+}
+.checkbox-box {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border: 1px solid #000;
+    text-align: center;
+    line-height: 11px;
+    font-size: 8pt;
+    margin-right: 3px;
+    font-weight: bold;
+}
+.page-break {
+    page-break-after: always;
+}
+.footer-text {
+    font-size: 7.5pt;
+    font-style: italic;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    border-top: 0.5px solid #ccc;
+    padding-top: 2px;
+}
+ol.gc-list {
+    margin: 0;
+    padding-left: 18px;
+}
+ol.gc-list > li {
+    margin-bottom: 6px;
+    text-align: justify;
+}
+ol.gc-sublist {
+    margin-top: 3px;
+    padding-left: 18px;
+    list-style-type: lower-alpha;
+}
+ol.gc-sublist > li {
+    margin-bottom: 3px;
+}
+</style>
+
+<!-- ============================================== -->
+<!-- HALAMAN 1 DARI 3: FORMULIR PERSETUJUAN UMUM (HAL 1-3) -->
+<!-- ============================================== -->
+<table class="header-table">
+    <tr>
+        <td width="12%" align="center">
+            <img src="{?=url()?}/assets/img/logo.png" style="width: 50px; height: auto;" alt="Logo RSGM">
+        </td>
+        <td width="48%">
+            <div style="font-size: 8pt; font-weight: bold; text-transform: uppercase;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+            <div style="font-size: 10.5pt; font-weight: bold; text-transform: uppercase;">RSGM GUSTI HASAN AMAN</div>
+            <div style="font-size: 7.5pt;">Jl. Simpang Ulin No. 28 Telp. (0511) 3260618 BANJARMASIN</div>
+            <div style="font-size: 7pt; color: #555;">Email: rsgmgustihasanaman@yahoo.com</div>
+        </td>
+        <td width="40%" style="border-left: 1px solid #000; padding-left: 6px;">
+            <table style="width: 100%; font-size: 8pt; border-collapse: collapse;">
+                <tr><td width="35%"><strong>No. RM</strong></td><td width="5%">:</td><td><strong>{$data.no_rkm_medis}</strong></td></tr>
+                <tr><td><strong>Nama Pasien</strong></td><td>:</td><td>{$data.nama_pasien} &nbsp; ({$data.jk})</td></tr>
+                <tr><td><strong>Tanggal Lahir</strong></td><td>:</td><td>{$data.tgl_lahir}</td></tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<div style="font-size: 7pt; font-style: italic; margin-bottom: 3px;">
+    Perhatian : * Harap semua penulisan dilakukan dengan keterbacaan yang jelas, benar dan lengkap.
+</div>
+
+<div class="title-doc">FORMULIR PERSETUJUAN UMUM</div>
+
+<ol class="gc-list">
+    <li>
+        <strong>PERSETUJUAN UNTUK PERAWATAN DAN PENGOBATAN.</strong> Saya mengetahui bahwa saya memiliki kondisi yang membutuhkan perawatan medis, saya mengijinkan dokter dan professional kesehatan lainnya untuk melakukan prosedur diagnostik dan untuk memberikan pengobatan medis seperti yang diperlukan dalam penilaian professional mereka. Prosedur diagnostik dan perawatan medis termasuk tetapi tidak terbatas pada electrocardiograms, x-ray, tes darah, terapi fisik, dan pemberian obat.
+    </li>
+    <li>
+        <strong>PERSETUJUAN PELAYANAN KESEHATAN.</strong> Saya sadar bahwa praktik kedokteran dan bedah bukan lah ilmu pasti dan saya mengakui bahwa tidak ada jaminan atas hasil apapun, terhadap perawatan prosedur atau pemeriksaan apapun yang dilakukan kepada saya.
+    </li>
+    <li>
+        <strong>Saya mengerti dan memahami bahwa :</strong>
+        <ol class="gc-sublist">
+            <li>Saya memiliki hak untuk mengajukan pertanyaan tentang pengobatan yang di usulkan (termasuk identitas setiap orang yang memberikan atau mengamati pengobatan) setiap saat.</li>
+            <li>Saya mengerti dan memahami bahwa saya memiliki hak untuk persetujuan dan atau menolak persetujuan untuk setiap prosedur / terapi.</li>
+            <li>Saya mengerti bahwa banyak dokter pada staff Rumah Sakit Gigi dan Mulut Gusti Hasan Aman.</li>
+        </ol>
+    </li>
+    <li>
+        <strong>BARANG PRIBADI.</strong> Saya telah memahami bahwa rumah sakit tidak bertanggung jawab atas semua kehilangan barang-barang milik saya dan saya secara pribadi bertanggung jawab atas barang barang berharga yang saya miliki termasuk namun tidak terbatas pada uang, perhiasan, buku cek, kartu kredit, handphone atau barang lainnya. Dan apabila saya membutuhkan maka saya dapat menitipkan barang-barang saya kepada rumah sakit. Saya juga mengerti bahwa saya harus memberitahu/menitipkan pada rumah sakit jika saya memiliki gigi palsu, kacamata, lensa kontak, prosthetics atau barang lainnya yang saya butuhkan untuk di amankan.
+    </li>
+</ol>
+
+<div class="footer-text">
+    <span>RSGM/Ed-Rev/02/2023</span>
+    <span>Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</span>
+    <span>RM.RJ - 02 Hal 1 - 3</span>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ============================================== -->
+<!-- HALAMAN 2 DARI 3: FORMULIR PERSETUJUAN UMUM (HAL 2-3) -->
+<!-- ============================================== -->
+<table style="width: 100%; font-size: 8pt; border-bottom: 1px solid #000; padding-bottom: 3px; margin-bottom: 6px;">
+    <tr>
+        <td width="55%"><strong>Nama Pasien:</strong> {$data.nama_pasien} &nbsp;&nbsp; <strong>L/P:</strong> {$data.jk} &nbsp;&nbsp; <strong>Tanggal Lahir:</strong> {$data.tgl_lahir}</td>
+        <td width="45%" align="right"><strong>No RM :</strong> [ {$data.no_rkm_medis} ]</td>
+    </tr>
+</table>
+
+<ol class="gc-list" start="5">
+    <li>
+        <strong>PERSETUJUAN PELEPASAN INFORMASI.</strong> Saya memahami informasi yang ada di dalam diri saya, termasuk diagnosis, hasil laboratorium, dan hasil tes diagnostic yang akan digunakan untuk perawatan medis, Rumah Sakit Gigi dan Mulut Gusti Hasan Aman akan menjamin kerahasiaannya.<br>
+        Saya memberi wewenang kepada rumah sakit untuk memberikan informasi tentang diagnosis, hasil pelayanan dan pengobatan bila diperlukan untuk memproses klaim asuransi/jamkesmas/jamkesda perusahaan dan atau lembaga pemerintah.<br>
+        Saya memberi wewenang kepada rumah sakit untuk memberikan informasi tentang diagnosis, hasil pelayanan, dan pengobatan kepada anggota keluarga saya kepada :
+        <div style="margin: 4px 0 4px 10px; font-size: 8pt;">
+            1. <strong>{if: !empty($data.pelepasan_info_keluarga_1)}{$data.pelepasan_info_keluarga_1}{else}....................................................................................................{/if}</strong><br>
+            2. <strong>{if: !empty($data.pelepasan_info_keluarga_2)}{$data.pelepasan_info_keluarga_2}{else}....................................................................................................{/if}</strong><br>
+            3. <strong>{if: !empty($data.pelepasan_info_keluarga_3)}{$data.pelepasan_info_keluarga_3}{else}....................................................................................................{/if}</strong><br>
+            <span style="font-size: 7.5pt; font-style: italic;">(Nama yang tertera disini merupakan nama yang bertandatangan di Lembar Persetujuan/Penolakan Tindakan Kedokteran)</span>
+        </div>
+    </li>
+    <li>
+        <strong>HAK DAN KEWAJIBAN SEBAGAI PASIEN.</strong> Saya telah mendapat informasi tentang "Hak dan Kewajiban Pasien" di RSGM Gusti Hasan Aman melalui leaflet dan banner yang disediakan oleh petugas.
+    </li>
+    <li>
+        <strong>INFORMASI RAWAT INAP.</strong> Saya telah menerima informasi tentang peraturan yang diberlakukan oleh RSGM Gusti Hasan Aman dan saya beserta keluarga bersedia mematuhinya termasuk akan mematuhi jam berkunjung pasien sesuai dengan aturan RSGM Gusti Hasan Aman.<br>
+        Anggota keluarga saya yang menunggu saya, bersedia untuk selalu memakai tanda pengenal khusus yang diberikan oleh Rumah sakit, dan demi keamanan seluruh pasien setiap keluarga dan siapapun yang mengunjungi saya di luar jam berkunjung, bersedia untuk diminta / diperiksa identitasnya.
+    </li>
+</ol>
+
+<div class="footer-text" style="margin-top: 180px;">
+    <span>RSGM/Ed-Rev/02/2023</span>
+    <span>Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</span>
+    <span>RM.RJ - 02 Hal 2 - 3</span>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ============================================== -->
+<!-- HALAMAN 3 DARI 3: FORMULIR PERSETUJUAN UMUM (HAL 3-3) -->
+<!-- ============================================== -->
+<table style="width: 100%; font-size: 8pt; border-bottom: 1px solid #000; padding-bottom: 3px; margin-bottom: 6px;">
+    <tr>
+        <td width="55%"><strong>Nama Pasien:</strong> {$data.nama_pasien} &nbsp;&nbsp; <strong>L/P:</strong> {$data.jk} &nbsp;&nbsp; <strong>Tanggal Lahir:</strong> {$data.tgl_lahir}</td>
+        <td width="45%" align="right"><strong>No RM :</strong> [ {$data.no_rkm_medis} ]</td>
+    </tr>
+</table>
+
+<ol class="gc-list" start="8">
+    <li>
+        <strong>PENELITIAN PENDIDIKAN.</strong> Apabila saya terlibat dalam penelitian atau prosedur eksperimental, maka hal tersebut hanya dapat dilakukan dengan sepengetahuan dan persetujuan saya. Saya setuju untuk mengijinkan medis, keperawatan, dan tenaga kesehatan lainnya dalam pendidikan/pelatihan, dan mahasiswa yang berpraktik di RSGM Gusti Hasan Aman, kecuali diminta sebaliknya, untuk hadir selama perawatan pasien, atau berpartisipasi dalam perawatan pasien sebagai bagian dari pendidikan mereka.
+    </li>
+    <li>
+        <strong>PENGAJUAN KELUHAN.</strong> Saya menyatakan bahwa saya telah menerima informasi tentang adanya tatacara mengajukan dan mengatasi keluhan terkait pelayanan medik yang diberikan terhadap diri saya. Saya setuju untuk mengikuti tatacara mengajukan keluhan sesuai prosedur yang ada.
+    </li>
+    <li>
+        <strong>KEWAJIBAN PEMBAYARAN DAN INFORMASI BIAYA.</strong> Saya telah memperoleh penjelasan dari petugas admisi mengenai penjaminan pelayanan, hak kelas rawat inap, tarif kamar dan/atau perkiraan biaya yang mungkin menjadi tanggungan saya, sebagaimana tercatat pada <strong>Lembar Penjelasan Perkiraan Biaya Rawat Inap</strong> yang merupakan bagian dari persetujuan umum ini.
+    </li>
+</ol>
+
+<div style="margin-top: 25px; text-align: center;">
+    <strong>TANDATANGAN</strong><br>
+    Dengan tandatangan saya dibawah, Saya menyatakan bahwa saya telah membaca dan memahami item pada Persetujuan Umum/ General Consent.
+</div>
+
+<table style="width: 100%; margin-top: 30px; font-size: 8.5pt;">
+    <tr>
+        <td width="50%" align="center">
+            Tandatangan dan Nama<br>
+            (Wali jika pasien &lt;18 Tahun)<br>
+            <div style="height: 65px; line-height: 65px; margin: 5px 0;">
+                {if: !empty($data.ttd_pasien)}
+                <img src="{$data.ttd_pasien}" style="max-height: 60px; max-width: 180px; vertical-align: middle;">
+                {else}
+                <span style="color:#aaa; font-style:italic; font-size:8pt;">(Belum TTD Digital)</span>
+                {/if}
+            </div>
+            <strong>( {if: !empty($data.penandatangan_nama)}{$data.penandatangan_nama}{else}{$data.nama_pasien}{/if} )</strong><br>
+            <small style="color:#555;">Hubungan: {$data.penandatangan_hubungan}</small>
+        </td>
+        <td width="50%" align="center" style="vertical-align: bottom; padding-bottom: 12px;">
+            Tanggal : <strong>{$data.tanggal_persetujuan_indo}</strong>
+        </td>
+    </tr>
+</table>
+
+<div class="footer-text" style="margin-top: 220px;">
+    <span>RSGM/Ed-Rev/02/2023</span>
+    <span>Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</span>
+    <span>RM.RJ - 02 Hal 3 - 3</span>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ============================================== -->
+<!-- HALAMAN 4: LEMBAR PENJELASAN PERKIRAAN BIAYA DAN HAK KELAS RAWAT INAP -->
+<!-- ============================================== -->
+<div style="text-align: center; margin-bottom: 8px;">
+    <div style="font-weight: bold; font-size: 9.5pt; text-transform: uppercase;">RSGM GUSTI HASAN AMAN</div>
+    <div style="font-weight: bold; font-size: 10.5pt; text-transform: uppercase;">LEMBAR PENJELASAN PERKIRAAN BIAYA DAN HAK KELAS RAWAT INAP</div>
+    <div style="font-size: 7.5pt; font-style: italic;">Lampiran Formulir Persetujuan Umum (General Consent) – Bukti penjelasan petugas admisi pada saat registrasi</div>
+</div>
+
+<table style="width: 100%; font-size: 8pt; margin-bottom: 6px; border-collapse: collapse;">
+    <tr>
+        <td width="15%"><strong>Nama pasien</strong></td><td width="2%">:</td><td width="33%">{$data.nama_pasien}</td>
+        <td width="12%"><strong>No. RM</strong></td><td width="2%">:</td><td width="16%">{$data.no_rkm_medis}</td>
+        <td width="10%"><strong>Tanggal/jam</strong></td><td width="2%">:</td><td width="8%">{$data.tanggal_jam_biaya}</td>
+    </tr>
+    <tr>
+        <td><strong>Jenis penjaminan</strong></td><td>:</td>
+        <td colspan="7">
+            <span class="checkbox-box">{if: $data.jenis_penjaminan == 'Umum/non-BPJS'}✓{/if}</span> Umum/non-BPJS &nbsp;&nbsp;&nbsp;
+            <span class="checkbox-box">{if: $data.jenis_penjaminan == 'JKN/BPJS Kesehatan'}✓{/if}</span> JKN/BPJS Kesehatan &nbsp;&nbsp;&nbsp;
+            <span class="checkbox-box">{if: $data.jenis_penjaminan == 'Asuransi lainnya'}✓{/if}</span> Asuransi lainnya: {$data.penjaminan_lainnya}
+        </td>
+    </tr>
+</table>
+
+<div style="font-weight: bold; font-size: 8.5pt; margin-top: 4px; margin-bottom: 2px;">A. PASIEN UMUM / NON-BPJS</div>
+<div style="font-size: 7.5pt; margin-bottom: 4px;">
+    Petugas admisi telah menjelaskan tarif kamar rawat inap RSGM Gusti Hasan Aman berdasarkan pamflet informasi rumah sakit:
+</div>
+
+<table class="table-data" style="font-size: 8pt; margin-bottom: 5px;">
+    <tr>
+        <th width="40%">Kelas kamar</th>
+        <th width="40%">Tarif kamar per malam</th>
+        <th width="20%">Pilihan</th>
+    </tr>
+    <tr>
+        <td>VIP</td>
+        <td>Rp606.000</td>
+        <td align="center"><span class="checkbox-box">{if: $data.pilihan_kelas_kamar == 'VIP'}✓{/if}</span></td>
+    </tr>
+    <tr>
+        <td>Kelas I</td>
+        <td>Rp454.000</td>
+        <td align="center"><span class="checkbox-box">{if: $data.pilihan_kelas_kamar == 'Kelas I'}✓{/if}</span></td>
+    </tr>
+    <tr>
+        <td>Kelas II</td>
+        <td>Rp335.000</td>
+        <td align="center"><span class="checkbox-box">{if: $data.pilihan_kelas_kamar == 'Kelas II'}✓{/if}</span></td>
+    </tr>
+    <tr>
+        <td>Kelas III</td>
+        <td>Rp285.000</td>
+        <td align="center"><span class="checkbox-box">{if: $data.pilihan_kelas_kamar == 'Kelas III'}✓{/if}</span></td>
+    </tr>
+</table>
+
+<div style="font-size: 8pt; line-height: 1.4; margin-bottom: 6px;">
+    Perkiraan lama rawat: <strong>{$data.perkiraan_lama_rawat}</strong> malam. Perkiraan biaya kamar: Rp <strong>{?=number_format($data.perkiraan_biaya_kamar, 0, ',', '.')?}</strong> (tarif kamar &times; perkiraan malam).<br>
+    Perkiraan biaya lain (jika telah diketahui): tindakan Rp <strong>{?=number_format($data.perkiraan_biaya_tindakan, 0, ',', '.')?}</strong>; obat/BMHP Rp <strong>{?=number_format($data.perkiraan_biaya_obat, 0, ',', '.')?}</strong>; pemeriksaan Rp <strong>{?=number_format($data.perkiraan_biaya_pemeriksaan, 0, ',', '.')?}</strong>; lainnya Rp <strong>{?=number_format($data.perkiraan_biaya_lainnya, 0, ',', '.')?}</strong>.<br>
+    <strong>Total perkiraan biaya pelayanan: Rp {?=number_format($data.total_perkiraan_biaya, 0, ',', '.')?}</strong>. <em>Perkiraan ini bukan tagihan akhir; biaya aktual dapat berubah sesuai kondisi klinis, tindakan, lama rawat, dan tarif rumah sakit yang berlaku.</em>
+</div>
+
+<div style="font-weight: bold; font-size: 8.5pt; margin-top: 6px; margin-bottom: 2px;">B. PASIEN JKN / BPJS KESEHATAN</div>
+<div style="font-size: 7.5pt; margin-bottom: 3px;">
+    Status kepesertaan: <span class="checkbox-box">{if: $data.bpjs_status_kepesertaan == 'Aktif'}✓{/if}</span> Aktif &nbsp;&nbsp; <span class="checkbox-box">{if: $data.bpjs_status_kepesertaan == 'Belum terverifikasi'}✓{/if}</span> Belum terverifikasi. &nbsp;&nbsp;
+    Segmen: <span class="checkbox-box">{if: $data.bpjs_segmen == 'PBI/penerima bantuan iuran'}✓{/if}</span> PBI/penerima bantuan iuran &nbsp;&nbsp; <span class="checkbox-box">{if: $data.bpjs_segmen == 'Non-PBI'}✓{/if}</span> Non-PBI &nbsp;&nbsp; <span class="checkbox-box">{if: $data.bpjs_segmen == 'Lainnya'}✓{/if}</span> Lainnya: {$data.bpjs_segmen_lainnya}
+</div>
+<div style="font-size: 7.5pt; margin-bottom: 3px;">
+    Hak kelas rawat inap berdasarkan hasil verifikasi kepesertaan/SEP dan ketentuan yang berlaku: 
+    <span class="checkbox-box">{if: $data.bpjs_hak_kelas == 'III'}✓{/if}</span> III &nbsp;
+    <span class="checkbox-box">{if: $data.bpjs_hak_kelas == 'II'}✓{/if}</span> II &nbsp;
+    <span class="checkbox-box">{if: $data.bpjs_hak_kelas == 'I'}✓{/if}</span> I &nbsp;
+    KRIS/ketentuan lain: <strong>{$data.bpjs_kris_ketentuan}</strong>. Kelas penempatan: <strong>{$data.bpjs_kelas_penempatan}</strong>.
+</div>
+<div style="font-size: 7.5pt; line-height: 1.35; margin-bottom: 4px; text-align: justify;">
+    Petugas menjelaskan bahwa pelayanan yang dijamin sesuai ketentuan JKN tidak dipungut biaya tambahan di luar ketentuan. Tarif kamar umum pada tabel A bukan tarif tambahan otomatis untuk pasien JKN.<br>
+    Apabila peserta mengajukan kelas di atas haknya, kelayakan dan selisih biaya harus diverifikasi menurut ketentuan JKN yang berlaku; tidak semua segmen peserta diperbolehkan naik kelas atas permintaan sendiri. Penjelasan dan persetujuan tertulis khusus selisih biaya dilakukan sebelum pelayanan bila relevan.
+</div>
+<div style="font-size: 7.5pt; margin-bottom: 6px;">
+    Pilihan pasien: 
+    <span class="checkbox-box">{if: $data.bpjs_pilihan_pasien == 'Menggunakan kelas sesuai hak'}✓{/if}</span> Menggunakan kelas sesuai hak &nbsp;&nbsp;&nbsp;
+    <span class="checkbox-box">{if: $data.bpjs_pilihan_pasien == 'Meminta peningkatan kelas'}✓{/if}</span> Meminta peningkatan kelas (form persetujuan selisih biaya terpisah) &nbsp;&nbsp;&nbsp;
+    <span class="checkbox-box">{if: $data.bpjs_pilihan_pasien == 'Lainnya'}✓{/if}</span> Lainnya: {$data.bpjs_pilihan_lainnya}
+</div>
+
+<div style="font-weight: bold; font-size: 8.5pt; margin-top: 6px; margin-bottom: 2px;">C. KONFIRMASI PENJELASAN</div>
+<div style="font-size: 7.5pt; margin-bottom: 4px;">
+    Saya/pihak keluarga telah mendapat kesempatan bertanya dan memahami informasi biaya, penjaminan, hak kelas, serta kemungkinan perubahan perkiraan biaya yang dijelaskan oleh petugas admisi.
+</div>
+
+<table style="width: 100%; font-size: 8pt; margin-top: 10px; border-collapse: collapse;">
+    <tr>
+        <td width="50%">Tanggal/jam penjelasan: <strong>{$data.konfirmasi_tgljam}</strong></td>
+        <td width="50%">Nama & hubungan keluarga (jika diwakili): <strong>{$data.nama_pasien_keluarga_konfirmasi} ({$data.hubungan_keluarga_konfirmasi})</strong></td>
+    </tr>
+    <tr>
+        <td align="center" style="padding-top: 10px;">
+            Nama petugas admisi: <strong>{$data.nama_petugas_admisi}</strong><br>
+            Tanda tangan petugas:<br>
+            <div style="height: 55px; line-height: 55px; margin: 3px 0;">
+                {if: !empty($data.ttd_petugas_admisi)}
+                <img src="{$data.ttd_petugas_admisi}" style="max-height: 50px; max-width: 140px; vertical-align: middle;">
+                {else}
+                <span style="color:#888; font-style:italic;">[Petugas Admisi]</span>
+                {/if}
+            </div>
+            ( <strong>{$data.nama_petugas_admisi}</strong> )
+        </td>
+        <td align="center" style="padding-top: 10px;">
+            Tanda tangan pasien/keluarga:<br>
+            <div style="height: 55px; line-height: 55px; margin: 3px 0;">
+                {if: !empty($data.ttd_pasien_keluarga_konfirmasi)}
+                <img src="{$data.ttd_pasien_keluarga_konfirmasi}" style="max-height: 50px; max-width: 140px; vertical-align: middle;">
+                {elseif: !empty($data.ttd_pasien)}
+                <img src="{$data.ttd_pasien}" style="max-height: 50px; max-width: 140px; vertical-align: middle;">
+                {else}
+                <span style="color:#888; font-style:italic;">(Belum TTD Digital)</span>
+                {/if}
+            </div>
+            ( <strong>{if: !empty($data.nama_pasien_keluarga_konfirmasi)}{$data.nama_pasien_keluarga_konfirmasi}{else}{$data.nama_pasien}{/if}</strong> )
+        </td>
+    </tr>
+</table>
+
+<div style="font-size: 7pt; font-style: italic; margin-top: 10px; color: #444;">
+    Catatan: Dokumentasikan pemberian informasi dan lembar persetujuan ini dalam rekam medis elektronik (RME)/SIMRS sesuai kebijakan rumah sakit.
+</div>
+
+<div class="footer-text" style="margin-top: 10px;">
+    <span>RSGM/Ed-Rev/02/2023</span>
+    <span>RM.RJ - 02 Hal 3 - 3</span>
+</div>

@@ -1,0 +1,488 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="btn-group pull-right" style="margin-top:-5px;">
+                    <a href="{?=url([ADMIN, 'form_rme', 'generalconsentmanage'])?}" class="btn btn-default btn-sm"><i class="fa fa-arrow-left"></i> Kembali ke Daftar</a>
+                </div>
+                <h3 class="panel-title"><i class="fa fa-pencil-square-o"></i> <strong>FORMULIR GENERAL CONSENT / PERSETUJUAN UMUM REVISI (AKP 2 EP C)</strong></h3>
+            </div>
+            <div class="panel-body">
+                <form action="{?=url([ADMIN, 'form_rme', 'generalconsentsave'])?}" method="POST" class="form-horizontal">
+                    <input type="hidden" name="id" value="{$data.id}">
+
+                    <!-- IDENTITAS PASIEN -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading"><strong>IDENTITAS PASIEN RAWAT INAP</strong></div>
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">No. Rawat</label>
+                                <div class="col-sm-4">
+                                    {if: !empty($data.no_rawat)}
+    <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" readonly style="background-color: #f8fafc; font-weight: bold; color: #1d4ed8;">
+{else}
+    <div class="input-group">
+                                        <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required placeholder="202X/XX/XX/XXXXXX">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default" type="button" id="btn_cari_pasien"><i class="fa fa-search"></i> Cari</button>
+                                        </span>
+                                    </div>
+{/if}
+                                </div>
+                                <label class="col-sm-2 control-label">No. RM</label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Nama Pasien</label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="nama_pasien" id="nama_pasien" class="form-control" value="{$data.nama_pasien}" readonly>
+                                </div>
+                                <label class="col-sm-2 control-label">Jenis Kelamin / Tgl Lahir</label>
+                                <div class="col-sm-2">
+                                    <input type="text" name="jk" id="jk" class="form-control" value="{$data.jk}" readonly>
+                                </div>
+                                <div class="col-sm-2">
+                                    <input type="text" name="tgl_lahir" id="tgl_lahir" class="form-control" value="{$data.tgl_lahir}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TABS: GENERAL CONSENT vs PENJELASAN TARIF BIAYA -->
+                    <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 20px;">
+                        <li role="presentation" class="active"><a href="#tab_general_consent" aria-controls="tab_general_consent" role="tab" data-toggle="tab"><i class="fa fa-file-text-o text-primary"></i> <strong>BAGIAN 1: PERSETUJUAN UMUM (GENERAL CONSENT 10 POIN)</strong></a></li>
+                        <li role="presentation"><a href="#tab_perkiraan_biaya" aria-controls="tab_perkiraan_biaya" role="tab" data-toggle="tab"><i class="fa fa-money text-success"></i> <strong>BAGIAN 2: PENJELASAN PERKIRAAN BIAYA & HAK KELAS (AKP 2 EP C)</strong></a></li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <!-- TAB 1: GENERAL CONSENT -->
+                        <div role="tabpanel" class="tab-pane active" id="tab_general_consent">
+                            
+                            <!-- RINGKASAN BUTIR 1-4 -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>1 - 4. PERSETUJUAN PERAWATAN, PELAYANAN KESEHATAN, HAK PERTANYAAN & BARANG PRIBADI</strong></div>
+                                <div class="panel-body" style="font-size: 12px; color: #555;">
+                                    <p><strong>1. PERSETUJUAN UNTUK PERAWATAN DAN PENGOBATAN:</strong> Mengijinkan dokter dan tenaga medis melakukan tindakan diagnostik (ECG, X-ray, lab, terapi fisik, obat).</p>
+                                    <p><strong>2. PERSETUJUAN PELAYANAN KESEHATAN:</strong> Menyadari ilmu kedokteran bukan ilmu pasti dan tidak ada jaminan kesembuhan mutlak.</p>
+                                    <p><strong>3. HAK PASIEN:</strong> Hak mengajukan pertanyaan, hak menyetujui/menolak tindakan, memahami staf dokter RSGM.</p>
+                                    <p><strong>4. BARANG PRIBADI:</strong> Rumah sakit tidak bertanggung jawab atas kehilangan barang pribadi berharga yang tidak dititipkan.</p>
+                                </div>
+                            </div>
+
+                            <!-- BUTIR 5: PELEPASAN INFORMASI KELUARGA -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>5. PELEPASAN INFORMASI KEPADA ANGGOTA KELUARGA</strong></div>
+                                <div class="panel-body">
+                                    <p class="text-muted" style="font-size: 11px;">Nama keluarga yang diberi wewenang menerima informasi medis & bertandatangan di lembar persetujuan/penolakan tindakan:</p>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Keluarga 1</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" name="pelepasan_info_keluarga_1" class="form-control" value="{$data.pelepasan_info_keluarga_1}" placeholder="Nama lengkap anggota keluarga 1">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Keluarga 2</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" name="pelepasan_info_keluarga_2" class="form-control" value="{$data.pelepasan_info_keluarga_2}" placeholder="Nama lengkap anggota keluarga 2 (opsional)">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Keluarga 3</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" name="pelepasan_info_keluarga_3" class="form-control" value="{$data.pelepasan_info_keluarga_3}" placeholder="Nama lengkap anggota keluarga 3 (opsional)">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RINGKASAN BUTIR 6-10 -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>6 - 10. ATURAN RAWAT INAP, PENDIDIKAN, KELUHAN & KEWAJIBAN BIAYA</strong></div>
+                                <div class="panel-body" style="font-size: 12px; color: #555;">
+                                    <p><strong>6. HAK & KEWAJIBAN PASIEN:</strong> Telah memahami leaflet dan banner hak kewajiban.</p>
+                                    <p><strong>7. INFORMASI RAWAT INAP:</strong> Mematuhi jam berkunjung, kartu penunggu, dan pemeriksaan identitas.</p>
+                                    <p><strong>8. PENELITIAN PENDIDIKAN:</strong> Izin keterlibatan mahasiswa / residen dalam pendidikan klinis.</p>
+                                    <p><strong>9. PENGAJUAN KELUHAN:</strong> Tata cara penanganan keluhan dan pengaduan medik.</p>
+                                    <p><strong>10. KEWAJIBAN PEMBAYARAN DAN INFORMASI BIAYA:</strong> Telah memperoleh penjelasan dari petugas admisi mengenai penjaminan pelayanan, hak kelas ranap, tarif kamar, dan perkiraan biaya rawat inap.</p>
+                                </div>
+                            </div>
+
+                            <!-- TANDA TANGAN DIGITAL PASIEN / WALI -->
+                            <div class="panel panel-primary">
+                                <div class="panel-heading"><strong>TANDA TANGAN PERSETUJUAN UMUM (GENERAL CONSENT)</strong></div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Tanggal Persetujuan</label>
+                                        <div class="col-sm-4">
+                                            <input type="date" name="tanggal_persetujuan" class="form-control" value="{$data.tanggal_persetujuan}">
+                                        </div>
+                                        <label class="col-sm-2 control-label">Hubungan dengan Pasien</label>
+                                        <div class="col-sm-4">
+                                            <select name="penandatangan_hubungan" id="penandatangan_hubungan" class="form-control">
+                                                <option value="Pasien Sendiri" {if: $data.penandatangan_hubungan == 'Pasien Sendiri'}selected{/if}>Pasien Sendiri</option>
+                                                <option value="Suami / Istri" {if: $data.penandatangan_hubungan == 'Suami / Istri'}selected{/if}>Suami / Istri</option>
+                                                <option value="Orang Tua / Wali" {if: $data.penandatangan_hubungan == 'Orang Tua / Wali'}selected{/if}>Orang Tua / Wali</option>
+                                                <option value="Anak" {if: $data.penandatangan_hubungan == 'Anak'}selected{/if}>Anak</option>
+                                                <option value="Keluarga Lainnya" {if: $data.penandatangan_hubungan == 'Keluarga Lainnya'}selected{/if}>Keluarga Lainnya</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Nama Penandatangan</label>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="penandatangan_nama" id="penandatangan_nama" class="form-control" value="{$data.penandatangan_nama}" placeholder="Nama terang penandatangan">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label"><i class="fa fa-pencil text-danger"></i> TTD Digital Pasien/Wali</label>
+                                        <div class="col-sm-5">
+                                            <p class="text-muted" style="font-size: 11px;">Goreskan tanda tangan pada canvas di bawah ini:</p>
+                                            <div style="border: 2px dashed #999; border-radius: 4px; background: #fafafa; width: 100%; max-width: 400px; height: 150px;">
+                                                <canvas id="canvas_ttd_pasien" width="400" height="150" style="touch-action: none; width: 100%; height: 100%; cursor: crosshair;"></canvas>
+                                            </div>
+                                            <input type="hidden" name="ttd_pasien" id="ttd_pasien" value="{$data.ttd_pasien}">
+                                            <div style="margin-top: 5px;">
+                                                <button type="button" class="btn btn-default btn-xs" id="btn_clear_ttd_pasien"><i class="fa fa-eraser"></i> Hapus Goresan</button>
+                                                <span id="status_ttd_pasien" class="text-success" style="font-size: 11px; margin-left: 10px;">
+                                                    {if: !empty($data.ttd_pasien)}<i class="fa fa-check-circle"></i> TTD Digital Tersimpan{/if}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-5">
+                                            {if: !empty($data.ttd_pasien)}
+                                            <div class="panel panel-info">
+                                                <div class="panel-heading" style="padding: 3px 8px; font-size: 11px;">Preview TTD Tersimpan:</div>
+                                                <div class="panel-body text-center" style="padding: 10px;">
+                                                    <img src="{$data.ttd_pasien}" style="max-height: 100px; background: #fff; border: 1px solid #ddd; padding: 3px;">
+                                                </div>
+                                            </div>
+                                            {/if}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: PENJELASAN PERKIRAAN BIAYA & HAK KELAS RAWAT INAP -->
+                        <div role="tabpanel" class="tab-pane" id="tab_perkiraan_biaya">
+                            
+                            <div class="panel panel-success">
+                                <div class="panel-heading"><strong>PENJELASAN PERKIRAAN BIAYA & PENJAMINAN (LAMPIRAN GENERAL CONSENT)</strong></div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Tanggal & Jam Penjelasan</label>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="tanggal_jam_biaya" class="form-control" value="{$data.tanggal_jam_biaya}" placeholder="DD/MM/YYYY HH:MM WITA">
+                                        </div>
+                                        <label class="col-sm-2 control-label">Jenis Penjaminan</label>
+                                        <div class="col-sm-4">
+                                            <label class="radio-inline"><input type="radio" name="jenis_penjaminan" value="Umum/non-BPJS" {if: $data.jenis_penjaminan == 'Umum/non-BPJS'}checked{/if}> Umum / Non-BPJS</label>
+                                            <label class="radio-inline"><input type="radio" name="jenis_penjaminan" value="JKN/BPJS Kesehatan" {if: $data.jenis_penjaminan == 'JKN/BPJS Kesehatan'}checked{/if}> JKN / BPJS</label>
+                                            <label class="radio-inline"><input type="radio" name="jenis_penjaminan" value="Asuransi lainnya" {if: $data.jenis_penjaminan == 'Asuransi lainnya'}checked{/if}> Asuransi Lainnya</label>
+                                            <input type="text" name="penjaminan_lainnya" class="form-control input-sm m-t-xs" placeholder="Sebutkan jika asuransi lainnya..." value="{$data.penjaminan_lainnya}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SEKSI A: PASIEN UMUM / NON-BPJS -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>A. PASIEN UMUM / NON-BPJS (TARIF RESMI KAMAR & PERKIRAAN BIAYA)</strong></div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label>Pilihan Kelas Kamar & Tarif Resmi per Malam:</label>
+                                            <div class="radio">
+                                                <label><input type="radio" name="pilihan_kelas_kamar" class="radio_kelas" data-tarif="606000" value="VIP" {if: $data.pilihan_kelas_kamar == 'VIP'}checked{/if}> <strong>VIP</strong> &mdash; Rp 606.000 / malam</label>
+                                            </div>
+                                            <div class="radio">
+                                                <label><input type="radio" name="pilihan_kelas_kamar" class="radio_kelas" data-tarif="454000" value="Kelas I" {if: $data.pilihan_kelas_kamar == 'Kelas I'}checked{/if}> <strong>Kelas I</strong> &mdash; Rp 454.000 / malam</label>
+                                            </div>
+                                            <div class="radio">
+                                                <label><input type="radio" name="pilihan_kelas_kamar" class="radio_kelas" data-tarif="335000" value="Kelas II" {if: $data.pilihan_kelas_kamar == 'Kelas II'}checked{/if}> <strong>Kelas II</strong> &mdash; Rp 335.000 / malam</label>
+                                            </div>
+                                            <div class="radio">
+                                                <label><input type="radio" name="pilihan_kelas_kamar" class="radio_kelas" data-tarif="285000" value="Kelas III" {if: $data.pilihan_kelas_kamar == 'Kelas III'}checked{/if}> <strong>Kelas III</strong> &mdash; Rp 285.000 / malam</label>
+                                            </div>
+                                            <input type="hidden" name="tarif_kamar_per_malam" id="tarif_kamar_per_malam" value="{$data.tarif_kamar_per_malam}">
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="col-sm-5 control-label">Perkiraan Lama Rawat</label>
+                                                <div class="col-sm-7">
+                                                    <div class="input-group">
+                                                        <input type="number" name="perkiraan_lama_rawat" id="perkiraan_lama_rawat" class="form-control hitung-biaya" value="{$data.perkiraan_lama_rawat}" min="1">
+                                                        <span class="input-group-addon">malam</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-5 control-label">Perkiraan Biaya Kamar</label>
+                                                <div class="col-sm-7">
+                                                    <input type="number" name="perkiraan_biaya_kamar" id="perkiraan_biaya_kamar" class="form-control" value="{$data.perkiraan_biaya_kamar}" readonly>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-5 control-label">Biaya Tindakan</label>
+                                                <div class="col-sm-7">
+                                                    <input type="number" name="perkiraan_biaya_tindakan" id="perkiraan_biaya_tindakan" class="form-control hitung-biaya" value="{$data.perkiraan_biaya_tindakan}">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-5 control-label">Biaya Obat / BMHP</label>
+                                                <div class="col-sm-7">
+                                                    <input type="number" name="perkiraan_biaya_obat" id="perkiraan_biaya_obat" class="form-control hitung-biaya" value="{$data.perkiraan_biaya_obat}">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-5 control-label">Biaya Pemeriksaan</label>
+                                                <div class="col-sm-7">
+                                                    <input type="number" name="perkiraan_biaya_pemeriksaan" id="perkiraan_biaya_pemeriksaan" class="form-control hitung-biaya" value="{$data.perkiraan_biaya_pemeriksaan}">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-5 control-label">Biaya Lainnya</label>
+                                                <div class="col-sm-7">
+                                                    <input type="number" name="perkiraan_biaya_lainnya" id="perkiraan_biaya_lainnya" class="form-control hitung-biaya" value="{$data.perkiraan_biaya_lainnya}">
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="background: #eef2f7; padding: 10px 0; border-radius: 4px;">
+                                                <label class="col-sm-5 control-label" style="font-size: 14px; color: #1e3a8a;">Total Perkiraan Biaya</label>
+                                                <div class="col-sm-7">
+                                                    <input type="number" name="total_perkiraan_biaya" id="total_perkiraan_biaya" class="form-control" style="font-weight: bold; font-size: 15px; color: #1e3a8a;" value="{$data.total_perkiraan_biaya}" readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SEKSI B: PASIEN JKN / BPJS KESEHATAN -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>B. PASIEN JKN / BPJS KESEHATAN</strong></div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Status Kepesertaan</label>
+                                        <div class="col-sm-4">
+                                            <label class="radio-inline"><input type="radio" name="bpjs_status_kepesertaan" value="Aktif" {if: $data.bpjs_status_kepesertaan == 'Aktif'}checked{/if}> Aktif</label>
+                                            <label class="radio-inline"><input type="radio" name="bpjs_status_kepesertaan" value="Belum terverifikasi" {if: $data.bpjs_status_kepesertaan == 'Belum terverifikasi'}checked{/if}> Belum Terverifikasi</label>
+                                        </div>
+                                        <label class="col-sm-2 control-label">Segmen BPJS</label>
+                                        <div class="col-sm-4">
+                                            <label class="radio-inline"><input type="radio" name="bpjs_segmen" value="PBI/penerima bantuan iuran" {if: $data.bpjs_segmen == 'PBI/penerima bantuan iuran'}checked{/if}> PBI</label>
+                                            <label class="radio-inline"><input type="radio" name="bpjs_segmen" value="Non-PBI" {if: $data.bpjs_segmen == 'Non-PBI'}checked{/if}> Non-PBI</label>
+                                            <label class="radio-inline"><input type="radio" name="bpjs_segmen" value="Lainnya" {if: $data.bpjs_segmen == 'Lainnya'}checked{/if}> Lainnya</label>
+                                            <input type="text" name="bpjs_segmen_lainnya" class="form-control input-sm m-t-xs" placeholder="Jika segmen lainnya..." value="{$data.bpjs_segmen_lainnya}">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Hak Kelas Sesuai SEP</label>
+                                        <div class="col-sm-4">
+                                            <label class="radio-inline"><input type="radio" name="bpjs_hak_kelas" value="I" {if: $data.bpjs_hak_kelas == 'I'}checked{/if}> Kelas I</label>
+                                            <label class="radio-inline"><input type="radio" name="bpjs_hak_kelas" value="II" {if: $data.bpjs_hak_kelas == 'II'}checked{/if}> Kelas II</label>
+                                            <label class="radio-inline"><input type="radio" name="bpjs_hak_kelas" value="III" {if: $data.bpjs_hak_kelas == 'III'}checked{/if}> Kelas III</label>
+                                        </div>
+                                        <label class="col-sm-2 control-label">KRIS / Kelas Penempatan</label>
+                                        <div class="col-sm-2">
+                                            <input type="text" name="bpjs_kris_ketentuan" class="form-control" placeholder="KRIS" value="{$data.bpjs_kris_ketentuan}">
+                                        </div>
+                                        <div class="col-sm-2">
+                                            <input type="text" name="bpjs_kelas_penempatan" class="form-control" placeholder="Kelas Penempatan" value="{$data.bpjs_kelas_penempatan}">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Pilihan Pasien BPJS</label>
+                                        <div class="col-sm-10">
+                                            <div class="radio"><label><input type="radio" name="bpjs_pilihan_pasien" value="Menggunakan kelas sesuai hak" {if: $data.bpjs_pilihan_pasien == 'Menggunakan kelas sesuai hak'}checked{/if}> Menggunakan kelas sesuai hak</label></div>
+                                            <div class="radio"><label><input type="radio" name="bpjs_pilihan_pasien" value="Meminta peningkatan kelas" {if: $data.bpjs_pilihan_pasien == 'Meminta peningkatan kelas'}checked{/if}> Meminta peningkatan kelas (form persetujuan selisih biaya terpisah)</label></div>
+                                            <div class="radio"><label><input type="radio" name="bpjs_pilihan_pasien" value="Lainnya" {if: $data.bpjs_pilihan_pasien == 'Lainnya'}checked{/if}> Lainnya: <input type="text" name="bpjs_pilihan_lainnya" class="form-control input-sm" style="display:inline-block; width: 60%;" value="{$data.bpjs_pilihan_lainnya}"></label></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SEKSI C: KONFIRMASI PENJELASAN & PENGESAHAN -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>C. KONFIRMASI PENJELASAN & PENGESAHAN PETUGAS ADMISI</strong></div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Tanggal/Jam Konfirmasi</label>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="konfirmasi_tgljam" class="form-control" value="{$data.konfirmasi_tgljam}">
+                                        </div>
+                                        <label class="col-sm-2 control-label">Petugas Admisi</label>
+                                        <div class="col-sm-4">
+                                            <select name="nip_petugas_admisi" id="nip_petugas_admisi" class="form-control">
+                                                <option value="">-- Pilih Petugas Admisi --</option>
+                                                {loop: $petugas}
+                                                <option value="{$value.nip}" data-nama="{$value.nama}" {if: $data.nip_petugas_admisi == $value.nip}selected{/if}>{$value.nama}</option>
+                                                {/loop}
+                                            </select>
+                                            <input type="hidden" name="nama_petugas_admisi" id="nama_petugas_admisi" value="{$data.nama_petugas_admisi}">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Nama Pasien / Keluarga</label>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="nama_pasien_keluarga_konfirmasi" id="nama_pasien_keluarga_konfirmasi" class="form-control" value="{$data.nama_pasien_keluarga_konfirmasi}">
+                                        </div>
+                                        <label class="col-sm-2 control-label">Hubungan Keluarga</label>
+                                        <div class="col-sm-4">
+                                            <input type="text" name="hubungan_keluarga_konfirmasi" id="hubungan_keluarga_konfirmasi" class="form-control" value="{$data.hubungan_keluarga_konfirmasi}">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Catatan Admisi</label>
+                                        <div class="col-sm-10">
+                                            <textarea name="catatan_admisi" class="form-control" rows="2" placeholder="Catatan tambahan penjelasan biaya...">{$data.catatan_admisi}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="form-group m-t-md">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan General Consent & Perkiraan Biaya</button>
+                            <a href="{?=url([ADMIN, 'form_rme', 'generalconsentmanage'])?}" class="btn btn-default">Batal</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Auto calculate biaya rawat inap
+    function hitungTotal() {
+        var lama = parseInt($('#perkiraan_lama_rawat').val()) || 1;
+        var tarif = parseFloat($('#tarif_kamar_per_malam').val()) || 0;
+        var biayaKamar = lama * tarif;
+        $('#perkiraan_biaya_kamar').val(biayaKamar);
+
+        var tindakan = parseFloat($('#perkiraan_biaya_tindakan').val()) || 0;
+        var obat = parseFloat($('#perkiraan_biaya_obat').val()) || 0;
+        var lab = parseFloat($('#perkiraan_biaya_pemeriksaan').val()) || 0;
+        var lain = parseFloat($('#perkiraan_biaya_lainnya').val()) || 0;
+
+        var grandTotal = biayaKamar + tindakan + obat + lab + lain;
+        $('#total_perkiraan_biaya').val(grandTotal);
+    }
+
+    $('.radio_kelas').on('change', function() {
+        var t = $(this).data('tarif');
+        $('#tarif_kamar_per_malam').val(t);
+        hitungTotal();
+    });
+
+    $('.hitung-biaya').on('input change', function() {
+        hitungTotal();
+    });
+
+    $('#nip_petugas_admisi').on('change', function() {
+        var nama = $(this).find('option:selected').data('nama') || '';
+        $('#nama_petugas_admisi').val(nama);
+    });
+
+    // Cari Pasien
+    $('#btn_cari_pasien').on('click', function() {
+        var no_rawat = $('#no_rawat').val();
+        if(!no_rawat) {
+            alert('Masukkan No. Rawat terlebih dahulu');
+            return;
+        }
+        $.ajax({
+            url: '{?=url([ADMIN, 'form_rme', "generalconsentgetpasien"])?}',
+            type: 'POST',
+            data: { no_rawat: no_rawat },
+            dataType: 'json',
+            success: function(res) {
+                if(res.status == 'success') {
+                    $('#no_rkm_medis').val(res.data.no_rkm_medis);
+                    $('#nama_pasien').val(res.data.nm_pasien);
+                    $('#jk').val(res.data.jk == 'L' ? 'L' : 'P');
+                    $('#tgl_lahir').val(res.data.tgl_lahir);
+                    if(!$('#penandatangan_nama').val()) {
+                        $('#penandatangan_nama').val(res.data.nm_pasien);
+                    }
+                    if(!$('#nama_pasien_keluarga_konfirmasi').val()) {
+                        $('#nama_pasien_keluarga_konfirmasi').val(res.data.nm_pasien);
+                    }
+                } else {
+                    alert(res.message || 'Pasien tidak ditemukan');
+                }
+            },
+            error: function() {
+                alert('Gagal mengambil data pasien.');
+            }
+        });
+    });
+
+    // Signature Pad untuk TTD Pasien
+    var canvas = document.getElementById('canvas_ttd_pasien');
+    if (canvas) {
+        var ctx = canvas.getContext('2d');
+        var drawing = false;
+        var prevX = 0;
+        var prevY = 0;
+
+        function getMousePos(c, e) {
+            var rect = c.getBoundingClientRect();
+            return {
+                x: (e.clientX - rect.left) * (c.width / rect.width),
+                y: (e.clientY - rect.top) * (c.height / rect.height)
+            };
+        }
+
+        function getTouchPos(c, e) {
+            var rect = c.getBoundingClientRect();
+            var t = e.touches[0];
+            return {
+                x: (t.clientX - rect.left) * (c.width / rect.width),
+                y: (t.clientY - rect.top) * (c.height / rect.height)
+            };
+        }
+
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+
+        function start(x, y) { drawing = true; prevX = x; prevY = y; }
+        function draw(x, y) {
+            if (!drawing) return;
+            ctx.beginPath();
+            ctx.moveTo(prevX, prevY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            prevX = x;
+            prevY = y;
+            $('#ttd_pasien').val(canvas.toDataURL('image/png'));
+            $('#status_ttd_pasien').html('<i class="fa fa-pencil text-primary"></i> Goresan aktif');
+        }
+        function stop() { drawing = false; }
+
+        $(canvas).on('mousedown', function(e) { var p = getMousePos(canvas, e.originalEvent); start(p.x, p.y); });
+        $(canvas).on('mousemove', function(e) { var p = getMousePos(canvas, e.originalEvent); draw(p.x, p.y); });
+        $(window).on('mouseup', stop);
+
+        canvas.addEventListener('touchstart', function(e) { e.preventDefault(); var p = getTouchPos(canvas, e); start(p.x, p.y); }, { passive: false });
+        canvas.addEventListener('touchmove', function(e) { e.preventDefault(); var p = getTouchPos(canvas, e); draw(p.x, p.y); }, { passive: false });
+        canvas.addEventListener('touchend', function(e) { e.preventDefault(); stop(); }, { passive: false });
+
+        $('#btn_clear_ttd_pasien').on('click', function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            $('#ttd_pasien').val('');
+            $('#status_ttd_pasien').html('<span class="text-muted">Goresan dihapus</span>');
+        });
+    }
+});
+</script>

@@ -1,0 +1,198 @@
+<style>
+@page {
+    margin: 8mm 12mm 8mm 12mm;
+    size: portrait;
+}
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9pt;
+    line-height: 1.35;
+    color: #000;
+}
+.header-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-bottom: 2px solid #000;
+    margin-bottom: 8px;
+}
+.header-table td {
+    padding: 2px 4px;
+    vertical-align: middle;
+}
+.title-doc {
+    text-align: center;
+    font-size: 11pt;
+    font-weight: bold;
+    margin: 8px 0 12px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.checkbox-box {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 1.2px solid #000;
+    text-align: center;
+    line-height: 12px;
+    font-size: 9pt;
+    margin-right: 5px;
+    font-weight: bold;
+}
+.dot-row {
+    margin-bottom: 4px;
+}
+.table-data {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 6px;
+    font-size: 9pt;
+}
+.table-data td {
+    padding: 3px 0;
+    vertical-align: top;
+}
+.footer-text {
+    font-size: 7.5pt;
+    font-style: italic;
+    color: #333;
+    text-align: right;
+    margin-top: 25px;
+}
+</style>
+
+<table class="header-table">
+    <tr>
+        <td width="12%" align="center">
+            <img src="{?=url()?}/assets/img/logo.png" style="width: 55px; height: auto;" alt="Logo RSGM">
+        </td>
+        <td width="50%">
+            <div style="font-size: 8pt; font-weight: bold; text-transform: uppercase;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+            <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">RSGM GUSTI HASAN AMAN</div>
+            <div style="font-size: 7.5pt;">Jl. Simpang Ulin No. 28 Telp. (0511) 3260618 BANJARMASIN</div>
+            <div style="font-size: 7pt; color: #555;">Email: rsgmgustihasanaman@yahoo.com</div>
+        </td>
+        <td width="38%" style="border-left: 1px solid #000; padding-left: 8px;">
+            <table style="width: 100%; font-size: 8.5pt; border-collapse: collapse;">
+                <tr><td width="35%"><strong>No. RM</strong></td><td width="5%">:</td><td><strong>{$data.no_rkm_medis}</strong></td></tr>
+                <tr><td><strong>Nama Pasien</strong></td><td>:</td><td>{$data.nama_pasien} &nbsp; ({$data.jk_pasien})</td></tr>
+                <tr><td><strong>Tanggal Lahir</strong></td><td>:</td><td>{$data.tgl_lahir_pasien}</td></tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<div class="title-doc">SURAT PERNYATAAN JAMINAN PEMBIAYAAN</div>
+
+<div style="margin-bottom: 6px;">Yang bertanda tangan di bawah ini :</div>
+
+<table class="table-data" style="margin-left: 10px; margin-bottom: 10px;">
+    <tr>
+        <td width="25%">Nama</td><td width="3%">:</td>
+        <td width="72%"><strong>{$data.nama_penanggung_jawab}</strong></td>
+    </tr>
+    <tr>
+        <td>Tempat/Tanggal Lahir</td><td>:</td>
+        <td>{$data.ttl_penanggung_jawab}</td>
+    </tr>
+    <tr>
+        <td>Pekerjaan</td><td>:</td>
+        <td>{$data.pekerjaan_penanggung_jawab}</td>
+    </tr>
+    <tr>
+        <td>Alamat Rumah</td><td>:</td>
+        <td>{$data.alamat_penanggung_jawab}</td>
+    </tr>
+    <tr>
+        <td>No. KTP</td><td>:</td>
+        <td>{$data.no_ktp_penanggung_jawab}</td>
+    </tr>
+</table>
+
+<div style="margin-bottom: 6px;">Dengan ini menyatakan pasien,</div>
+
+<table class="table-data" style="margin-left: 10px; margin-bottom: 10px;">
+    <tr>
+        <td width="25%">Nama</td><td width="3%">:</td>
+        <td width="72%"><strong>{$data.nama_pasien}</strong></td>
+    </tr>
+    <tr>
+        <td>Alamat</td><td>:</td>
+        <td>{$data.alamat_pasien}</td>
+    </tr>
+    <tr>
+        <td>Nomor RM <small>(diisi oleh petugas)</small></td><td>:</td>
+        <td><strong>{$data.no_rkm_medis}</strong></td>
+    </tr>
+    <tr>
+        <td>Hubungan dengan pasien</td><td>:</td>
+        <td>
+            <span style="border-bottom: 1px dotted #000; font-weight: bold; padding: 0 5px;">{$data.hubungan_dengan_pasien}</span>
+            <small style="color: #666; margin-left: 10px;">( Suami / Istri / Anak / Orangtua / Lainnya )</small>
+        </td>
+    </tr>
+</table>
+
+<div style="margin-bottom: 6px; text-align: justify;">
+    Bahwa biaya yang timbul atas seluruh pelayanan kesehatan di RSGM Gusti Hasan Aman, akan menggunakan: <small><em>(Disilang sesuai dengan system pembayaran yang akan dilakukan)</em></small>
+</div>
+
+<div style="margin-left: 15px; margin-bottom: 12px; font-size: 9.5pt;">
+    <div style="margin-bottom: 4px;">
+        <span class="checkbox-box">{if: $data.jenis_jaminan == 'Umum'}✓{/if}</span> <strong>Umum</strong>
+    </div>
+    <div style="margin-bottom: 4px;">
+        <span class="checkbox-box">{if: $data.jenis_jaminan == 'BPJS Kesehatan'}✓{/if}</span> <strong>BPJS Kesehatan</strong>
+    </div>
+    <div style="margin-bottom: 4px;">
+        <span class="checkbox-box">{if: $data.jenis_jaminan == 'Jamkesprov'}✓{/if}</span> <strong>Jamkesprov</strong>
+    </div>
+    <div>
+        <span class="checkbox-box">{if: $data.jenis_jaminan == 'Asuransi lainnya'}✓{/if}</span> <strong>Asuransi lainnya:</strong> 
+        {if: !empty($data.asuransi_lainnya_nama)}<u>{$data.asuransi_lainnya_nama}</u>{else}............................................................{/if}
+    </div>
+</div>
+
+<div style="text-align: justify; line-height: 1.45; margin-bottom: 8px;">
+    <strong>Proses administrasi dilakukan maksimal 3x24 jam atau sebelum pasien pulang. Jika tidak sesuai dengan ketentuan tersebut maka seluruh biaya akan diterapkan sebagai biaya pasien umum (menjadi tanggung jawab pasien dan keluarga).</strong>
+</div>
+
+<div style="text-align: justify; margin-bottom: 18px;">
+    Demikian pernyataan ini dibuat dalam kondisi sadar, semoga dapat dipergunakan sebagaimana mestinya.
+</div>
+
+<div style="text-align: right; margin-bottom: 10px; padding-right: 40px;">
+    {$data.kota}, <strong>{$data.tanggal_surat_indo}</strong>
+</div>
+
+<table style="width: 100%; font-size: 9pt; border-collapse: collapse;">
+    <tr>
+        <td width="50%" align="center">
+            Saksi,<br>
+            Petugas PPRI/Rawat inap<br>
+            <div style="height: 65px; line-height: 65px; margin: 4px 0;">
+                {if: !empty($data.ttd_saksi)}
+                <img src="{$data.ttd_saksi}" style="max-height: 55px; max-width: 160px; vertical-align: middle;">
+                {else}
+                <span style="color: #888; font-style: italic;">[Petugas Admisi]</span>
+                {/if}
+            </div>
+            ( <strong>{$data.saksi_nama}</strong> )
+        </td>
+        <td width="50%" align="center">
+            <br>
+            Yang membuat pernyataan<br>
+            <div style="height: 65px; line-height: 65px; margin: 4px 0;">
+                {if: !empty($data.ttd_pembuat_pernyataan)}
+                <img src="{$data.ttd_pembuat_pernyataan}" style="max-height: 55px; max-width: 160px; vertical-align: middle;">
+                {else}
+                <span style="color: #aaa; font-style: italic;">(Belum TTD Digital)</span>
+                {/if}
+            </div>
+            ( <strong>{$data.nama_pembuat_pernyataan}</strong> )
+        </td>
+    </tr>
+</table>
+
+<div class="footer-text">
+    Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas &#9634;
+</div>
