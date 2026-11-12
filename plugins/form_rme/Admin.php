@@ -9,6 +9,9 @@ class Admin extends AdminModule
     public function init()
     {
         $this->core->addCSS(url([ADMIN, 'form_rme', 'css']));
+        $this->core->addJS(url('assets/jscripts/qrcode.js'), 'footer');
+        $this->core->addJS(url('assets/jscripts/jquery.qrcode.js'), 'footer');
+        $this->core->addJS(url('plugins/esignature/assets/signature_pad.min.js'), 'footer');
         $this->core->addJS(url([ADMIN, 'form_rme', 'js']), 'footer');
         \Systems\Lib\Event::add("rsgmgha.dropdown_menu", function ($row) {
             $this->renderDropdownMenu($row);
@@ -1207,6 +1210,8 @@ public function getJs()
         $token = json_encode($_SESSION['token'] ?? '');
         $userRole = json_encode($this->getCurrentUserClinicalRole());
         $actorMap = json_encode($this->getFormActorMap());
+        $tteUrl = json_encode(url([ADMIN, 'form_rme', 'tteverifysave']));
+        $currentUserName = json_encode($this->core->getUserInfo('fullname') ?: ($this->core->getUserInfo('username') ?: 'Petugas RS'));
 
         echo "window._RME_ROUTES = {$jsonMap};\n";
         echo "window._RME_CETAK_BASE = {$cetakBaseUrl};\n";
@@ -1214,6 +1219,8 @@ public function getJs()
         echo "window._RME_TOKEN = {$token};\n";
         echo "window._RME_USER_ROLE = {$userRole};\n";
         echo "window._RME_ACTOR_MAP = {$actorMap};\n";
+        echo "window._RME_TTE_URL = {$tteUrl};\n";
+        echo "window._RME_CURRENT_USER_NAME = {$currentUserName};\n";
 
         echo <<<'JS'
 (function($) {
@@ -1868,6 +1875,368 @@ public function getJs()
             }
         });
 
+        // ============================================================
+        // 5. TTE INTERNAL RS & FULLSCREEN TABLET CANVAS PASIEN
+        // ============================================================
+        
+        // A. Inject CSS
+        if (!$('#rme-signature-styles').length) {
+            $('head').append('<style id="rme-signature-styles">' +
+                '.modal-tte-center { display: flex !important; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); z-index: 105000 !important; }' +
+                '.modal-tte-center .modal-dialog { margin: auto; width: 420px; max-width: 92vw; }' +
+                '.modal-tte-center .modal-content { border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: none; overflow: hidden; }' +
+                '.modal-tte-center .modal-header { border-bottom: none; padding-top: 20px; }' +
+                '.modal-tte-center .modal-footer { border-top: none; background: #f8fafc; padding: 14px 20px; }' +
+                '.modal-tte-center .btn-tte-confirm { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; width: 100%; transition: all 0.2s; font-size: 13.5px; }' +
+                '.modal-tte-center .btn-tte-confirm:hover { background: #1d4ed8; }' +
+                '.modal-tte-center .btn-tte-cancel { color: #64748b; background: transparent; border: none; font-weight: 600; padding: 8px; width: 100%; margin-top: 6px; }' +
+                '.modal-tte-center .btn-tte-cancel:hover { color: #334155; }' +
+                '#modal-ttd-pasien-fullscreen { position: fixed; inset: 0; z-index: 100050; width: 100vw; height: 100vh; background: #ffffff; display: none; flex-direction: column; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }' +
+                '#modal-ttd-pasien-fullscreen.is-open { display: flex !important; }' +
+                '.rsgm-tte-verified-card { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; text-align: center; display: inline-block; min-width: 150px; }' +
+                '.rsgm-tte-verified-card .tte-qr-canvas { margin: 6px auto; display: block; }' +
+            '</style>');
+        }
+
+        // B. Inject Fullscreen Tablet Modal DOM
+        if (!$('#modal-ttd-pasien-fullscreen').length) {
+            var fullscreenModalHtml = [
+                '<div id="modal-ttd-pasien-fullscreen">',
+                '  <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #3b82f6; box-shadow: 0 4px 12px rgba(0,0,0,0.15); flex-shrink: 0;">',
+                '    <div style="display: flex; align-items: center; gap: 14px;">',
+                '      <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #60a5fa;">',
+                '        <i class="fa fa-tablet"></i>',
+                '      </div>',
+                '      <div>',
+                '        <div style="font-size: 15px; font-weight: 800; letter-spacing: 0.5px; color: #ffffff; display: flex; align-items: center; gap: 8px;">',
+                '          <span>LEMBAR TANDA TANGAN PASIEN / WALI</span>',
+                '          <span class="badge" id="ttd-modal-doc-code" style="background: #3b82f6; font-size: 11px; font-weight: 700; padding: 3px 8px;">RME</span>',
+                '        </div>',
+                '        <div id="ttd-modal-doc-title" style="font-size: 12px; color: #cbd5e1; margin-top: 2px;">Persetujuan Pasien &amp; Rekam Medis Elektronik</div>',
+                '      </div>',
+                '    </div>',
+                '    <div style="display: flex; align-items: center; gap: 14px;">',
+                '      <div style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 14px; text-align: right;">',
+                '        <div style="font-size: 13.5px; font-weight: 700; color: #ffffff;" id="ttd-modal-patient-name">Nama Pasien</div>',
+                '        <div style="font-size: 11px; color: #94a3b8;">No. RM: <strong style="color: #60a5fa;" id="ttd-modal-patient-norm">-</strong> &bull; <span id="ttd-modal-signer-title">Pasien / Wali</span></div>',
+                '      </div>',
+                '      <button type="button" id="btn-close-ttd-fullscreen" class="btn btn-default" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #ffffff; border-radius: 8px; padding: 8px 16px; font-weight: 600;" title="Tutup / Batalkan">',
+                '        <i class="fa fa-times"></i> Batal',
+                '      </button>',
+                '    </div>',
+                '  </div>',
+                '  <div style="background: #f0fdf4; border-bottom: 1px solid #bbf7d0; padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">',
+                '    <div style="display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: #166534;">',
+                '      <i class="fa fa-info-circle text-success" style="font-size: 16px;"></i>',
+                '      <span><strong>Pernyataan:</strong> Saya yang bertanda tangan di bawah ini menyatakan telah membaca, memahami penjelasan petugas RSGM, dan menyetujui dokumen ini secara sadar tanpa paksaan.</span>',
+                '    </div>',
+                '    <span class="badge" style="background: #16a34a; font-size: 11px; padding: 4px 8px; font-weight: 700;"><i class="fa fa-tablet"></i> Tablet / Touch Mode</span>',
+                '  </div>',
+                '  <div style="flex: 1; padding: 18px 24px; display: flex; flex-direction: column; background: #f8fafc; min-height: 0;">',
+                '    <div style="flex: 1; background: #ffffff; border: 2px dashed #94a3b8; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: relative; overflow: hidden; display: flex; flex-direction: column;">',
+                '      <canvas id="canvas_ttd_fullscreen_pasien" style="width: 100%; height: 100%; flex: 1; touch-action: none !important; cursor: crosshair; display: block;"></canvas>',
+                '      <div style="position: absolute; bottom: 35px; left: 10%; right: 10%; pointer-events: none; text-align: center; border-bottom: 1px dashed #cbd5e1; padding-bottom: 6px;">',
+                '        <span style="font-size: 12.5px; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px;">( Tanda Tangan Pasien / Wali di Sini &bull; Silakan Sentuh Menggunakan Jari atau Stylus Pen )</span>',
+                '      </div>',
+                '    </div>',
+                '  </div>',
+                '  <div style="background: #ffffff; border-top: 1px solid #e2e8f0; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; box-shadow: 0 -4px 12px rgba(0,0,0,0.03);">',
+                '    <button type="button" id="btn-clear-ttd-fullscreen" class="btn btn-default btn-lg" style="border-radius: 8px; font-weight: 700; padding: 10px 22px; color: #475569; border: 1px solid #cbd5e1;">',
+                '      <i class="fa fa-eraser"></i> Hapus &amp; Ulangi',
+                '    </button>',
+                '    <div style="display: flex; align-items: center; gap: 12px;">',
+                '      <button type="button" id="btn-cancel-ttd-fullscreen" class="btn btn-default btn-lg" style="border-radius: 8px; font-weight: 600; padding: 10px 20px;">',
+                '        Batal',
+                '      </button>',
+                '      <button type="button" id="btn-save-ttd-fullscreen" class="btn btn-success btn-lg" style="border-radius: 8px; font-weight: 800; padding: 10px 32px; background: #16a34a; border-color: #15803d; box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);">',
+                '        <i class="fa fa-check-circle"></i> Selesai &amp; Simpan Tanda Tangan',
+                '      </button>',
+                '    </div>',
+                '  </div>',
+                '</div>'
+            ].join('');
+            $('body').append(fullscreenModalHtml);
+        }
+
+        // C. Handlers for Tablet Patient Signature
+        var activeTargetInput = null;
+        var activePreviewImg = null;
+        var activePreviewBox = null;
+        var activeStatusText = null;
+        var activePad = null;
+
+        function initFullscreenPad() {
+            var canvas = document.getElementById('canvas_ttd_fullscreen_pasien');
+            if (!canvas) return;
+
+            var ratio = Math.max(window.devicePixelRatio || 1, 1);
+            var rect = canvas.getBoundingClientRect();
+            var w = rect.width || $(canvas).width() || $(canvas).parent().width();
+            var h = rect.height || $(canvas).height() || $(canvas).parent().height();
+            if (w < 200) w = window.innerWidth - 60;
+            if (h < 200) h = window.innerHeight - 200;
+
+            canvas.width = w * ratio;
+            canvas.height = h * ratio;
+            var ctx = canvas.getContext("2d");
+            ctx.scale(ratio, ratio);
+
+            if (typeof SignaturePad !== 'undefined') {
+                if (activePad) {
+                    try { activePad.off(); } catch(e) {}
+                }
+                activePad = new SignaturePad(canvas, {
+                    penColor: 'rgb(15, 23, 42)',
+                    minWidth: 2,
+                    maxWidth: 4.5,
+                    throttle: 16
+                });
+                activePad.clear();
+            } else {
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = 3;
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                var isDown = false, lastX = 0, lastY = 0;
+
+                function getTouchPos(c, e) {
+                    var r = c.getBoundingClientRect();
+                    var t = e.touches ? e.touches[0] : e;
+                    return { x: (t.clientX - r.left), y: (t.clientY - r.top) };
+                }
+
+                $(canvas).off('mousedown mousemove mouseup touchstart touchmove touchend');
+                $(canvas).on('mousedown touchstart', function(e) {
+                    e.preventDefault();
+                    isDown = true;
+                    var p = getTouchPos(canvas, e.originalEvent || e);
+                    lastX = p.x; lastY = p.y;
+                });
+                $(canvas).on('mousemove touchmove', function(e) {
+                    if (!isDown) return;
+                    e.preventDefault();
+                    var p = getTouchPos(canvas, e.originalEvent || e);
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(p.x, p.y);
+                    ctx.stroke();
+                    lastX = p.x; lastY = p.y;
+                });
+                $(window).on('mouseup touchend', function() { isDown = false; });
+            }
+        }
+
+        $(document).on('click', '.btn-buka-ttd-pasien, [data-toggle="ttd-pasien"]', function(e) {
+            e.preventDefault();
+            var btn = $(this);
+            activeTargetInput = btn.data('target-input') || btn.attr('data-target-input') || 'ttd_pasien';
+            activePreviewImg  = btn.data('preview-img') || btn.attr('data-preview-img') || 'img_preview_' + activeTargetInput;
+            activePreviewBox  = btn.data('preview-box') || btn.attr('data-preview-box') || 'preview_box_' + activeTargetInput;
+            activeStatusText  = btn.data('status-text') || btn.attr('data-status-text') || 'status_' + activeTargetInput;
+
+            var docTitle = btn.data('doc-title') || $('.rsgm-reg-head .rsgm-reg-title span').text() || 'Formulir Persetujuan RME';
+            var docCode = btn.data('doc-code') || $('.rsgm-reg-head .rsgm-code-pill').text() || 'RME';
+            var patientName = btn.data('patient-name') || $('#nama_pasien').val() || $('#nm_pasien').val() || 'Pasien RSGM';
+            var patientNorm = btn.data('patient-norm') || $('#no_rkm_medis').val() || '-';
+            var signerTitle = btn.data('signer-title') || $('#penandatangan_hubungan').val() || 'Pasien / Wali';
+
+            $('#ttd-modal-doc-title').text(docTitle);
+            $('#ttd-modal-doc-code').text(docCode);
+            $('#ttd-modal-patient-name').text(patientName);
+            $('#ttd-modal-patient-norm').text(patientNorm);
+            $('#ttd-modal-signer-title').text(signerTitle);
+
+            $('#modal-ttd-pasien-fullscreen').addClass('is-open');
+            setTimeout(function() {
+                initFullscreenPad();
+            }, 60);
+        });
+
+        $(document).on('click', '#btn-clear-ttd-fullscreen', function() {
+            if (activePad) {
+                activePad.clear();
+            } else {
+                var c = document.getElementById('canvas_ttd_fullscreen_pasien');
+                if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height);
+            }
+        });
+
+        $(document).on('click', '#btn-close-ttd-fullscreen, #btn-cancel-ttd-fullscreen', function() {
+            $('#modal-ttd-pasien-fullscreen').removeClass('is-open');
+        });
+
+        $(document).on('click', '#btn-save-ttd-fullscreen', function() {
+            var canvas = document.getElementById('canvas_ttd_fullscreen_pasien');
+            if (!canvas) return;
+
+            var isEmpty = activePad ? activePad.isEmpty() : false;
+            if (isEmpty) {
+                alert('Silakan bubuhkan tanda tangan pasien/wali terlebih dahulu pada area canvas.');
+                return;
+            }
+
+            var dataUrl = canvas.toDataURL('image/png');
+            if (activeTargetInput) {
+                $('#' + activeTargetInput).val(dataUrl);
+            }
+
+            var $pImg = $('#' + activePreviewImg);
+            var $pBox = $('#' + activePreviewBox);
+            if ($pImg.length) {
+                $pImg.attr('src', dataUrl).show();
+            } else if ($pBox.length) {
+                $pBox.html('<img src="' + dataUrl + '" id="' + activePreviewImg + '" style="max-height: 80px; max-width: 100%; border: 1px solid #cbd5e1; padding: 4px; border-radius: 4px; background: #fff;">');
+            }
+
+            if (activeStatusText && $('#' + activeStatusText).length) {
+                $('#' + activeStatusText).html('<i class="fa fa-check-circle text-success"></i> TTD Tersimpan');
+            }
+
+            $('[data-target-input="' + activeTargetInput + '"]').html('<i class="fa fa-pencil"></i> Ubah / Tanda Tangan Ulang (Tablet)');
+
+            $('#modal-ttd-pasien-fullscreen').removeClass('is-open');
+            showToast('✓ Tanda tangan pasien berhasil disimpan!', 'success');
+            markDirty();
+        });
+
+        // D. Handlers for Internal Hospital Staff TTE (Dokter / Perawat / Petugas)
+        $(document).on('click', '.btn-tte-rme, .btn-tte', function(e) {
+            e.preventDefault();
+            var btn = $(this);
+            var ref_type = btn.attr('data-ref_type') || 'form_rme';
+            var ref_id = btn.attr('data-ref_id') || ($form.find('input[name="no_rawat"]').val() || '');
+            var signer_name = btn.attr('data-signer_name') || window._RME_CURRENT_USER_NAME || 'Petugas RS';
+            var signer_role = btn.attr('data-signer_role') || window._RME_USER_ROLE || 'petugas';
+            var target_input = btn.attr('data-target_input') || '';
+            var container_id = btn.attr('data-container_id') || ('sign_container_' + ref_id.replace(/[^a-zA-Z0-9]/g, ''));
+            var tteUrl = window._RME_TTE_URL || (mlite.url + '/' + mlite.admin + '/form_rme/tteverifysave');
+
+            var formHtml = '<div class="text-center" style="padding: 10px;">' +
+                '<i class="fa fa-lock fa-4x text-primary" style="margin-bottom: 16px; color: #2563eb;"></i>' +
+                '<h4 style="margin-bottom: 10px; color: #0f172a; font-weight: 800;">Tanda Tangan Elektronik (TTE)</h4>' +
+                '<p class="text-muted" style="margin-bottom: 20px; font-size: 13px; line-height: 1.5;">' +
+                'Penandatangan: <strong>' + signer_name + '</strong><br>' +
+                'Masukkan kata sandi (login) akun MLITE Anda untuk memverifikasi dokumen ini.<br>' +
+                '<strong style="color: #e11d48;">Pastikan isian data telah benar dan sesuai.</strong>' +
+                '</p>' +
+                '<div class="form-group">' +
+                    '<input type="password" id="tte-passphrase-input" class="form-control text-center" placeholder="Kata Sandi Akun MLITE" style="font-size: 17px; letter-spacing: 2px; padding: 12px 15px; border-radius: 8px; border: 2px solid #cbd5e1; outline: none; box-shadow: none;">' +
+                '</div>' +
+            '</div>';
+
+            var dialog = bootbox.dialog({
+                message: formHtml,
+                className: 'modal-tte-center',
+                closeButton: false,
+                buttons: {
+                    confirm: {
+                        label: '<i class="fa fa-check-circle"></i> VERIFIKASI SEKARANG',
+                        className: 'btn-tte-confirm',
+                        callback: function() {
+                            var passphrase = $('#tte-passphrase-input').val();
+                            if (!passphrase) {
+                                $('#tte-passphrase-input').css('border-color', '#e11d48');
+                                $('#tte-passphrase-input').animate({marginLeft: "-8px"}, 80).animate({marginLeft: "8px"}, 80).animate({marginLeft: "0"}, 80);
+                                return false;
+                            }
+
+                            var processingDialog = bootbox.dialog({
+                                message: '<p class="text-center mb-0" style="padding: 20px;"><i class="fa fa-spin fa-spinner fa-2x text-primary" style="margin-bottom:10px;"></i><br>Sedang memverifikasi TTE...</p>',
+                                closeButton: false,
+                                className: 'modal-tte-center'
+                            });
+
+                            $.ajax({
+                                url: tteUrl,
+                                type: 'POST',
+                                dataType: 'json',
+                                data: {
+                                    ref_type: ref_type,
+                                    ref_id: ref_id,
+                                    signer_name: signer_name,
+                                    signer_role: signer_role,
+                                    passphrase: passphrase,
+                                    t: window._RME_TOKEN || (window.mlite && window.mlite.token ? window.mlite.token : '')
+                                },
+                                success: function(res) {
+                                    processingDialog.modal('hide');
+                                    if (res && res.status === 'success') {
+                                        if (target_input && $('#' + target_input).length) {
+                                            $('#' + target_input).val(res.hash);
+                                        }
+
+                                        var $container = $('#' + container_id);
+                                        if (!$container.length && btn.parent().length) {
+                                            $container = btn.parent();
+                                        }
+
+                                        var qrBoxId = 'qr_tte_' + res.hash.substring(0, 10);
+                                        var badgeHtml = '<div class="rsgm-tte-verified-card">' +
+                                            '<div style="color: #16a34a; font-weight: 700; font-size: 11px; margin-bottom: 4px;">' +
+                                            '<i class="fa fa-check-circle"></i> Terverifikasi TTE' +
+                                            '</div>' +
+                                            '<div id="' + qrBoxId + '" style="margin: 6px auto; width: 90px; height: 90px;"></div>' +
+                                            '<div style="font-weight: 700; font-size: 11.5px; color: #0f172a; margin-top: 4px;">' + res.signer_name + '</div>' +
+                                            '<div style="font-size: 10px; color: #64748b;">' + (res.signed_at_indo || res.signed_at) + '</div>' +
+                                            '<a href="' + res.verify_url + '" target="_blank" style="font-size: 9.5px; color: #2563eb; text-decoration: underline; margin-top: 3px; display: block;">' +
+                                            '<i class="fa fa-external-link"></i> Verifikasi Legalitas' +
+                                            '</a>' +
+                                            '</div>';
+
+                                        $container.html(badgeHtml);
+
+                                        if ($.fn.qrcode) {
+                                            $('#' + qrBoxId).qrcode({
+                                                width: 90,
+                                                height: 90,
+                                                text: res.verify_url
+                                            });
+                                        }
+
+                                        showToast('✓ Tanda tangan elektronik berhasil diverifikasi!', 'success');
+                                        markDirty();
+                                        performSave(false);
+                                    } else {
+                                        bootbox.alert({
+                                            message: '❌ Gagal: ' + (res.message || 'Verifikasi gagal.'),
+                                            className: 'modal-tte-center'
+                                        });
+                                    }
+                                },
+                                error: function(xhr) {
+                                    processingDialog.modal('hide');
+                                    var msg = 'Kata sandi tidak valid atau terjadi kendala verifikasi.';
+                                    try {
+                                        var r = JSON.parse(xhr.responseText);
+                                        if (r && r.message) msg = r.message;
+                                    } catch(e) {}
+                                    bootbox.alert({
+                                        message: '❌ Gagal: ' + msg,
+                                        className: 'modal-tte-center'
+                                    });
+                                }
+                            });
+                        }
+                    },
+                    cancel: {
+                        label: 'Batal',
+                        className: 'btn-tte-cancel',
+                        callback: function() {}
+                    }
+                }
+            });
+
+            dialog.on('shown.bs.modal', function() {
+                $('#tte-passphrase-input').focus();
+                $('#tte-passphrase-input').on('keypress', function(e) {
+                    if (e.which === 13) {
+                        e.preventDefault();
+                        $('.btn-tte-confirm').click();
+                    }
+                });
+            });
+        });
+
         // Peringatan jika tab ditutup saat ada perubahan belum tersimpan
         window.addEventListener('beforeunload', function(e) {
             if (isDirty) {
@@ -2017,6 +2386,107 @@ public function getPatientContext($no_rawat)
         header('Content-Type: application/json');
         echo json_encode($patient);
         exit();
+    }
+
+    public function anyTteverifysave()
+    {
+        if (ob_get_length()) {
+            ob_clean();
+        }
+        header('Content-Type: application/json');
+
+        try {
+            $ref_type   = trim($_POST['ref_type'] ?? 'form_rme');
+            $ref_id     = trim($_POST['ref_id'] ?? '');
+            $passphrase = trim($_POST['passphrase'] ?? '');
+            $signerName = trim($_POST['signer_name'] ?? '');
+            $signerRole = trim($_POST['signer_role'] ?? '');
+
+            if (empty($passphrase)) {
+                throw new \Exception("Kata sandi (passphrase) verifikasi TTE wajib diisi.");
+            }
+
+            $userId = $_SESSION['mlite_user'] ?? null;
+            if (!$userId) {
+                throw new \Exception("Sesi login Anda telah berakhir, silakan login ulang.");
+            }
+
+            $user = $this->db('mlite_users')->where('id', $userId)->oneArray();
+            if (!$user) {
+                throw new \Exception("Pengguna tidak ditemukan.");
+            }
+
+            if (!password_verify($passphrase, $user['password'])) {
+                throw new \Exception("Kata sandi (login) tidak valid!");
+            }
+
+            if (empty($signerName)) {
+                $signerName = $user['fullname'] ?? ($user['username'] ?? 'Petugas RS');
+            }
+            if (empty($signerRole)) {
+                $signerRole = $user['role'] ?? 'petugas';
+            }
+
+            $hash = hash('sha256', uniqid('tte_', true) . bin2hex(random_bytes(16)) . $ref_type . $ref_id . $userId);
+
+            $dir = WEBAPPS_PATH . '/berkas/esignature/';
+            if (!file_exists($dir)) {
+                @mkdir($dir, 0755, true);
+            }
+            $filename = 'tte_' . time() . '_' . substr($hash, 0, 10) . '.png';
+            $path = $dir . $filename;
+            if (!file_exists($path)) {
+                $img = imagecreatetruecolor(1, 1);
+                imagesavealpha($img, true);
+                $color = imagecolorallocatealpha($img, 0, 0, 0, 127);
+                imagefill($img, 0, 0, $color);
+                @imagepng($img, $path);
+                @imagedestroy($img);
+            }
+
+            $signedAt = date('Y-m-d H:i:s');
+            $this->db('mlite_esignatures')->save([
+                'ref_type'       => $ref_type,
+                'ref_id'         => $ref_id ?: (string)time(),
+                'signer_role'    => $signerRole,
+                'signer_id'      => $user['username'] ?? (string)$userId,
+                'signer_name'    => $signerName,
+                'signature_path' => $filename,
+                'signature_hash' => $hash,
+                'signed_at'      => $signedAt,
+                'ip_address'     => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+                'user_agent'     => $_SERVER['HTTP_USER_AGENT'] ?? 'MLITE-RME-Client',
+                'legal_basis'    => 'UU ITE No 11 Tahun 2008 & Permenkes RME No 24 Tahun 2022',
+                'audit_json'     => json_encode([
+                    'user_id'    => $userId,
+                    'username'   => $user['username'] ?? '',
+                    'signed_at'  => $signedAt,
+                    'ref_type'   => $ref_type,
+                    'ref_id'     => $ref_id
+                ])
+            ]);
+
+            $verifyUrl = url(['esignature', 'verify', $hash]);
+
+            echo json_encode([
+                'status'         => 'success',
+                'hash'           => $hash,
+                'signer_name'    => $signerName,
+                'signer_role'    => $signerRole,
+                'signed_at'      => $signedAt,
+                'signed_at_indo' => date('d-m-Y H:i', strtotime($signedAt)) . ' WITA',
+                'verify_url'     => $verifyUrl,
+                'message'        => 'Tanda tangan elektronik (TTE) berhasil diverifikasi dan disimpan.'
+            ]);
+            exit();
+        } catch (\Throwable $e) {
+            http_response_code(400);
+            echo json_encode([
+                'status'  => 'error',
+                'message' => $e->getMessage()
+            ]);
+            exit();
+        }
     }
 
     public function getRmeFormMap()
@@ -17629,7 +18099,13 @@ if (ob_get_length()) {
         }
         $kategori_list = [];
 
+        $no = 1;
         foreach ($all_forms as &$f) {
+            $f['no'] = $no++;
+            $f['urutan'] = (int)($f['urutan'] ?? 0);
+            if ($f['urutan'] <= 0) {
+                $f['urutan'] = $f['no'];
+            }
             $f['status'] = (string)($f['status'] ?? '1');
             $f['target_aktor'] = (string)($f['target_aktor'] ?? 'medis,paramedis');
             $f['roles_list'] = array_filter(array_map('trim', explode(',', $f['target_aktor'])));
@@ -23631,21 +24107,41 @@ if (ob_get_length()) {
             $data = $this->db("ri04_asesmen_keperawatan_ranap")->where("id", $id)->oneArray();
         } elseif (!empty($no_rawat)) {
             $data = $this->db("ri04_asesmen_keperawatan_ranap")->where("no_rawat", $no_rawat)->oneArray();
-            if (empty($data)) {
-                $data["no_rawat"] = $no_rawat;
-                $data["tgl_masuk"] = date("Y-m-d");
-                $data["jam_masuk"] = date("H:i");
-                $data["tgl_asesmen"] = date("Y-m-d");
-                $data["jam_asesmen"] = date("H:i");
-                $data["ruangan"] = "Rawat Inap";
-                $data["kelas"] = "1";
-                $data["sumber_data"] = "Auto Anamnesis";
-                $data["jenis_kasus"] = "Gigi";
-                $data["kategori_usia"] = "Dewasa";
-                $data["asal_masuk"] = "UGD";
-                $data["cara_masuk"] = "Jalan Kaki";
-                $data["asuransi"] = "BPJS";
-            }
+        }
+
+        if (empty($data)) {
+            $data = [
+                "id" => "",
+                "no_rawat" => $no_rawat,
+                "no_rkm_medis" => "",
+                "nm_pasien" => "",
+                "jk" => "",
+                "tgl_lahir" => "",
+                "tgl_masuk" => date("Y-m-d"),
+                "jam_masuk" => date("H:i"),
+                "tgl_asesmen" => date("Y-m-d"),
+                "jam_asesmen" => date("H:i"),
+                "ruangan" => "Rawat Inap",
+                "kelas" => "1",
+                "sumber_data" => "Auto Anamnesis",
+                "keluhan_utama" => "",
+                "riwayat_penyakit" => "",
+                "pemeriksaan_fisik" => "",
+                "psikososial" => "",
+                "status_fungsional" => "",
+                "skrining_gizi" => "",
+                "asesmen_nyeri" => "",
+                "risiko_jatuh" => "",
+                "perencanaan_pulang" => "",
+                "masalah_keperawatan" => "",
+                "rencana_tindakan" => "",
+                "petugas_nama" => "",
+                "jenis_kasus" => "Gigi",
+                "kategori_usia" => "Dewasa",
+                "asal_masuk" => "UGD",
+                "cara_masuk" => "Jalan Kaki",
+                "asuransi" => "BPJS",
+            ];
         }
 
         if (!empty($data["no_rawat"])) {
@@ -23657,6 +24153,8 @@ if (ob_get_length()) {
             if ($reg) {
                 $data["no_rkm_medis"] = $reg["no_rkm_medis"];
                 $data["nm_pasien"] = $reg["nm_pasien"];
+                $data["jk"] = $reg["jk"];
+                $data["tgl_lahir"] = $reg["tgl_lahir"];
             }
         }
 
@@ -23861,15 +24359,41 @@ if (ob_get_length()) {
             $data = $this->db("ri05a_asesmen_medis_ranap_gigi")->where("id", $id)->oneArray();
         } elseif (!empty($no_rawat)) {
             $data = $this->db("ri05a_asesmen_medis_ranap_gigi")->where("no_rawat", $no_rawat)->oneArray();
-            if (empty($data)) {
-                $data["no_rawat"] = $no_rawat;
-                $data["tgl_asesmen"] = date("Y-m-d");
-                $data["jam_asesmen"] = date("H:i");
-                $data["ruangan"] = "Kelas 1";
-                $data["kelas"] = "1";
-                $data["anamnesis_sumber"] = "Autoanamnesis";
-                $data["prognosis"] = "Dubia ad Bonam";
-            }
+        }
+
+        if (empty($data)) {
+            $data = [
+                "id" => "",
+                "no_rawat" => $no_rawat,
+                "no_rkm_medis" => "",
+                "nm_pasien" => "",
+                "jk" => "",
+                "tgl_lahir" => "",
+                "tgl_asesmen" => date("Y-m-d"),
+                "jam_asesmen" => date("H:i"),
+                "ruangan" => "Kelas 1",
+                "kelas" => "1",
+                "anamnesis_sumber" => "Autoanamnesis",
+                "keluhan_utama" => "",
+                "riwayat_penyakit_sekarang" => "",
+                "riwayat_penyakit_dahulu" => "",
+                "riwayat_penyakit_keluarga" => "",
+                "riwayat_pengobatan" => "",
+                "riwayat_alergi" => "",
+                "keadaan_umum" => "Baik",
+                "kesadaran" => "Compos Mentis",
+                "tanda_vital" => "",
+                "pemeriksaan_ekstraoral" => "",
+                "pemeriksaan_intraoral" => "",
+                "pemeriksaan_penunjang" => "",
+                "diagnosis_utama" => "",
+                "diagnosis_sekunder" => "",
+                "tata_laksana" => "",
+                "edukasi" => "",
+                "prognosis" => "Dubia ad Bonam",
+                "asesmen_nyeri" => "",
+                "dokter_dpjp_nama" => ""
+            ];
         }
 
         if (!empty($data["no_rawat"])) {
@@ -23881,6 +24405,8 @@ if (ob_get_length()) {
             if ($reg) {
                 $data["no_rkm_medis"] = $reg["no_rkm_medis"];
                 $data["nm_pasien"] = $reg["nm_pasien"];
+                $data["jk"] = $reg["jk"];
+                $data["tgl_lahir"] = $reg["tgl_lahir"];
             }
         }
 
@@ -24061,16 +24587,26 @@ if (ob_get_length()) {
             $data = $this->db("rj_asesmen_jatuh_nyeri_anak")->where("id", $id)->oneArray();
         } elseif (!empty($no_rawat)) {
             $data = $this->db("rj_asesmen_jatuh_nyeri_anak")->where("no_rawat", $no_rawat)->oneArray();
-            if (empty($data)) {
-                $data["no_rawat"] = $no_rawat;
-                $data["tanggal"] = date("Y-m-d");
-                $data["jam"] = date("H:i");
-                $data["instalasi_unit"] = "Poliklinik Gigi Anak / Rawat Inap";
-                $data["humpty_dumpty_total"] = 7;
-                $data["humpty_dumpty_kategori"] = "Risiko Rendah (RR)";
-                $data["flacc_total"] = 0;
-                $data["flacc_kategori"] = "Tidak Nyeri";
-            }
+        }
+
+        if (empty($data)) {
+            $data = [
+                "id" => "",
+                "no_rawat" => $no_rawat,
+                "no_rkm_medis" => "",
+                "nm_pasien" => "",
+                "jk" => "",
+                "tgl_lahir" => "",
+                "tanggal" => date("Y-m-d"),
+                "jam" => date("H:i"),
+                "instalasi_unit" => "Poliklinik Gigi Anak / Rawat Inap",
+                "humpty_dumpty" => "",
+                "humpty_dumpty_total" => 7,
+                "humpty_dumpty_kategori" => "Risiko Rendah (RR)",
+                "flacc" => "",
+                "flacc_total" => 0,
+                "flacc_kategori" => "Tidak Nyeri",
+            ];
         }
 
         if (!empty($data["no_rawat"])) {
@@ -24082,6 +24618,8 @@ if (ob_get_length()) {
             if ($reg) {
                 $data["no_rkm_medis"] = $reg["no_rkm_medis"];
                 $data["nm_pasien"] = $reg["nm_pasien"];
+                $data["jk"] = $reg["jk"];
+                $data["tgl_lahir"] = $reg["tgl_lahir"];
             }
         }
 
@@ -24273,16 +24811,26 @@ if (ob_get_length()) {
             $data = $this->db("ri06a_asesmen_jatuh_dewasa_geriatri")->where("id", $id)->oneArray();
         } elseif (!empty($no_rawat)) {
             $data = $this->db("ri06a_asesmen_jatuh_dewasa_geriatri")->where("no_rawat", $no_rawat)->oneArray();
-            if (empty($data)) {
-                $data["no_rawat"] = $no_rawat;
-                $data["tanggal"] = date("Y-m-d");
-                $data["jam"] = date("H:i");
-                $data["instalasi_unit"] = "Rawat Inap";
-                $data["morse_total"] = 0;
-                $data["morse_kategori"] = "Risiko Rendah (RR)";
-                $data["sydney_total"] = 0;
-                $data["sydney_kategori"] = "Tidak Berisiko";
-            }
+        }
+
+        if (empty($data)) {
+            $data = [
+                "id" => "",
+                "no_rawat" => $no_rawat,
+                "no_rkm_medis" => "",
+                "nm_pasien" => "",
+                "jk" => "",
+                "tgl_lahir" => "",
+                "tanggal" => date("Y-m-d"),
+                "jam" => date("H:i"),
+                "instalasi_unit" => "Rawat Inap",
+                "morse_skala" => "",
+                "morse_total" => 0,
+                "morse_kategori" => "Risiko Rendah (RR)",
+                "sydney_skala" => "",
+                "sydney_total" => 0,
+                "sydney_kategori" => "Tidak Berisiko",
+            ];
         }
 
         if (!empty($data["no_rawat"])) {
@@ -24294,6 +24842,8 @@ if (ob_get_length()) {
             if ($reg) {
                 $data["no_rkm_medis"] = $reg["no_rkm_medis"];
                 $data["nm_pasien"] = $reg["nm_pasien"];
+                $data["jk"] = $reg["jk"];
+                $data["tgl_lahir"] = $reg["tgl_lahir"];
             }
         }
 
@@ -24488,11 +25038,22 @@ if (ob_get_length()) {
             $data = $this->db("ri07_observasi_pasien")->where("id", $id)->oneArray();
         } elseif (!empty($no_rawat)) {
             $data = $this->db("ri07_observasi_pasien")->where("no_rawat", $no_rawat)->oneArray();
-            if (empty($data)) {
-                $data["no_rawat"] = $no_rawat;
-                $data["tgl_masuk"] = date("Y-m-d");
-                $data["jam_masuk"] = date("H:i");
-            }
+        }
+
+        if (empty($data)) {
+            $data = [
+                "id" => "",
+                "no_rawat" => $no_rawat,
+                "no_rkm_medis" => "",
+                "nm_pasien" => "",
+                "jk" => "",
+                "tgl_lahir" => "",
+                "tgl_masuk" => date("Y-m-d"),
+                "jam_masuk" => date("H:i"),
+                "ruangan" => "Rawat Inap",
+                "petugas_nama" => "",
+                "observasi_detail" => ""
+            ];
         }
 
         if (!empty($data["no_rawat"])) {
@@ -24504,6 +25065,8 @@ if (ob_get_length()) {
             if ($reg) {
                 $data["no_rkm_medis"] = $reg["no_rkm_medis"];
                 $data["nm_pasien"] = $reg["nm_pasien"];
+                $data["jk"] = $reg["jk"];
+                $data["tgl_lahir"] = $reg["tgl_lahir"];
             }
         }
 
@@ -24692,11 +25255,22 @@ if (ob_get_length()) {
             $data = $this->db("ri05c_dokter_penanggung_jawab")->where("id", $id)->oneArray();
         } elseif (!empty($no_rawat)) {
             $data = $this->db("ri05c_dokter_penanggung_jawab")->where("no_rawat", $no_rawat)->oneArray();
-            if (empty($data)) {
-                $data["no_rawat"] = $no_rawat;
-                $data["diagnosa"] = "";
-                $data["dpjp_utama"] = "";
-            }
+        }
+
+        if (empty($data)) {
+            $data = [
+                "id" => "",
+                "no_rawat" => $no_rawat,
+                "no_rkm_medis" => "",
+                "nm_pasien" => "",
+                "jk" => "",
+                "tgl_lahir" => "",
+                "diagnosa" => "",
+                "dpjp_utama" => "",
+                "dpjp_ruangan" => "",
+                "rawat_bersama" => "[]",
+                "alih_rawat" => "[]"
+            ];
         }
 
         if (!empty($data["no_rawat"])) {
@@ -24708,6 +25282,8 @@ if (ob_get_length()) {
             if ($reg) {
                 $data["no_rkm_medis"] = $reg["no_rkm_medis"];
                 $data["nm_pasien"] = $reg["nm_pasien"];
+                $data["jk"] = $reg["jk"];
+                $data["tgl_lahir"] = $reg["tgl_lahir"];
             }
         }
 
@@ -25050,7 +25626,7 @@ if (ob_get_length()) {
     }
 
     // ============================================================
-    // FORMULIR RUJUKAN KOMUNIKASI ANTAR RS (AKP 5.4 - 5.6)
+    // FORMULIR RUJUKAN KOMUNIKASI ANTAR RS
     // ============================================================
 
     public function anyFormulirrujukanmanage()

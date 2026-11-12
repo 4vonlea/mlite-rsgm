@@ -33,6 +33,9 @@ class Site extends SiteModule
              } elseif ($signature['ref_type'] == 'soap_ranap') {
                  $signature['jenis_dokumen'] = 'Rekam Medis Elektronik';
                  $signature['nama_dokumen'] = 'Catatan Perkembangan Pasien Terintegrasi (CPPT) Rawat Inap';
+             } elseif (strpos($signature['ref_type'], 'form_rme') !== false || strpos($signature['ref_type'], 'rme_') !== false || strpos($signature['ref_type'], 'gc_') !== false || strpos($signature['ref_type'], 'jaminan_') !== false || strpos($signature['ref_type'], 'pulangaps') !== false) {
+                 $signature['jenis_dokumen'] = 'Rekam Medis Elektronik (RME)';
+                 $signature['nama_dokumen'] = 'Dokumen Rekam Medis Elektronik Terintegrasi RSGM';
              }
              
              $no_rawat_clean = '';
@@ -41,6 +44,8 @@ class Site extends SiteModule
                  $no_rawat_clean = isset($parts[1]) ? $parts[1] : '';
              } else if (in_array($signature['ref_type'], ['soap_ralan', 'soap_ranap'])) {
                  $no_rawat_clean = substr($signature['ref_id'], 0, -14);
+             } else if (!empty($signature['ref_id'])) {
+                 $no_rawat_clean = str_replace('/', '', $signature['ref_id']);
              }
              
              if ($no_rawat_clean) {

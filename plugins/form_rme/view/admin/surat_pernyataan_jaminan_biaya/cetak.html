@@ -169,11 +169,16 @@ body {
         <td width="50%" align="center">
             Saksi,<br>
             Petugas PPRI/Rawat inap<br>
-            <div style="height: 65px; line-height: 65px; margin: 4px 0;">
+            <div style="min-height: 65px; margin: 4px 0; text-align: center;">
                 {if: !empty($data.ttd_saksi)}
-                <img src="{$data.ttd_saksi}" style="max-height: 55px; max-width: 160px; vertical-align: middle;">
+                    {if: strlen($data.ttd_saksi) == 64}
+                        <barcode code="{?=url(['esignature', 'verify', $data.ttd_saksi])?}" type="QR" class="barcode" size="0.7" error="M" disableborder="1" /><br>
+                        <span style="font-size: 8px; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
+                    {else}
+                        <img src="{$data.ttd_saksi}" style="max-height: 55px; max-width: 160px; vertical-align: middle;">
+                    {/if}
                 {else}
-                <span style="color: #888; font-style: italic;">[Petugas Admisi]</span>
+                    <span style="color: #888; font-style: italic; line-height: 65px;">[Petugas Admisi]</span>
                 {/if}
             </div>
             ( <strong>{$data.saksi_nama}</strong> )
@@ -181,11 +186,16 @@ body {
         <td width="50%" align="center">
             <br>
             Yang membuat pernyataan<br>
-            <div style="height: 65px; line-height: 65px; margin: 4px 0;">
+            <div style="min-height: 65px; margin: 4px 0; text-align: center;">
                 {if: !empty($data.ttd_pembuat_pernyataan)}
-                <img src="{$data.ttd_pembuat_pernyataan}" style="max-height: 55px; max-width: 160px; vertical-align: middle;">
+                    {if: strlen($data.ttd_pembuat_pernyataan) == 64}
+                        <barcode code="{?=url(['esignature', 'verify', $data.ttd_pembuat_pernyataan])?}" type="QR" class="barcode" size="0.7" error="M" disableborder="1" /><br>
+                        <span style="font-size: 8px; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
+                    {else}
+                        <img src="{$data.ttd_pembuat_pernyataan}" style="max-height: 55px; max-width: 160px; vertical-align: middle;">
+                    {/if}
                 {else}
-                <span style="color: #aaa; font-style: italic;">(Belum TTD Digital)</span>
+                    <span style="color: #aaa; font-style: italic; line-height: 65px;">(Belum TTD Digital)</span>
                 {/if}
             </div>
             ( <strong>{$data.nama_pembuat_pernyataan}</strong> )

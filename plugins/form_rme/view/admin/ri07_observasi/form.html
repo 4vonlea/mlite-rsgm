@@ -1,134 +1,233 @@
-<div class="panel panel-default">
-    <div class="panel-heading">
-        <h3 class="panel-title"><i class="fa fa-heartbeat"></i> Form RM.RI 07 - Observasi Pasien Rawat Inap</h3>
-    </div>
-    <div class="panel-body">
-        <form action="{?=url([ADMIN, 'form_rme', 'riobservasisave'])?}" method="POST" id="formObservasi">
-            <input type="hidden" name="id" value="{$data.id}">
+<style>
+    #tblObs > thead > tr > th,
+    #tblObs > tbody > tr > th,
+    #tblObs > tbody > tr > td {
+        vertical-align: top !important;
+    }
+    #tblObs .btn-del {
+        margin-top: 3px;
+    }
+</style>
+<div id="form_soap" class="rsgm-reg-form clearfix">
+    <form action="{?=url([ADMIN, 'form_rme', 'riobservasisave'])?}" method="POST" id="formObservasi">
+        <input type="hidden" name="id" value="{$data.id}">
 
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>No. Rawat <span class="text-danger">*</span></label>
-                        {if: !empty($data.no_rawat)}
-    <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" readonly style="background-color: #f8fafc; font-weight: bold; color: #1d4ed8;">
-{else}
-    <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required placeholder="Contoh: 2022/11/14/000001">
-{/if}
+        <!-- ============================================================
+             SEKSI ATAS (HYBRID 2 KOLOM): IDENTITAS PASIEN & ADMISI SHIFT
+             ============================================================ -->
+        <div class="row" style="margin-bottom: 15px;">
+            <!-- Kolom Kiri (5): Identitas Pasien -->
+            <div class="col-md-5">
+                <div class="rsgm-reg-shell rsgm-patient-side-shell" style="height: 100%;">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-id-card-o text-primary"></i></span>
+                            <span>Data Pasien</span>
+                        </h4>
+                        <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>No. RM &amp; Nama Pasien</label>
-                        <input type="text" id="info_pasien" class="form-control" value="{$data.no_rkm_medis} - {$data.nm_pasien}" readonly>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label>Tgl Masuk</label>
-                        <input type="date" name="tgl_masuk" class="form-control" value="{$data.tgl_masuk}">
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label>Jam Masuk</label>
-                        <input type="time" name="jam_masuk" class="form-control" value="{$data.jam_masuk}">
+
+                    <div class="rsgm-reg-body">
+                        <div class="row">
+                            <div class="col-sm-6 form-group" style="margin-bottom: 10px;">
+                                <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+                                {if: !empty($data.no_rawat)}
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" readonly style="background-color: #f8fafc; font-weight: 700; color: #1d4ed8; border-radius: 6px; height: 34px;">
+                                {else}
+                                <div class="input-group">
+                                    <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                                    <span class="input-group-btn">
+                                        <button type="button" class="btn btn-default" id="btn_cari_pasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                                            <i class="fa fa-search text-primary"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                {/if}
+                            </div>
+                            <div class="col-sm-6 form-group" style="margin-bottom: 10px;">
+                                <label for="no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> No. RM</label>
+                                <input type="text" id="no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly style="background-color: #f8fafc; font-weight: 700;">
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+                            <input type="text" id="nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{?=isset_or($data['nm_pasien'])?}" required readonly style="background-color: #f8fafc; font-weight: 700; color: #0f172a;">
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Perawat Jaga (Penanggung Jawab)</label>
-                        <input type="text" name="perawat_jaga" class="form-control" value="{$data.perawat_jaga}" placeholder="Nama perawat jaga...">
+            <!-- Kolom Kanan (7): Admisi & Shift Jaga -->
+            <div class="col-md-7">
+                <div class="rsgm-reg-shell" style="height: 100%;">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-clock-o text-primary"></i></span>
+                            <span>Waktu Admisi &amp; Perawat Penanggung Jawab</span>
+                        </h4>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">RM.RI 07</span>
+                            <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-heartbeat"></i> Observasi TTV</span>
+                        </div>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+                        <div class="row">
+                            <div class="col-sm-4 form-group" style="margin-bottom: 10px;">
+                                <label class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tgl Masuk</label>
+                                <input type="date" name="tgl_masuk" class="form-control" value="{if: !empty($data.tgl_masuk)}{$data.tgl_masuk}{else}{?=date('Y-m-d')?}{/if}">
+                            </div>
+                            <div class="col-sm-3 form-group" style="margin-bottom: 10px;">
+                                <label class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Jam Masuk</label>
+                                <input type="time" name="jam_masuk" class="form-control" value="{if: !empty($data.jam_masuk)}{$data.jam_masuk}{else}{?=date('H:i')?}{/if}">
+                            </div>
+                            <div class="col-sm-5 form-group" style="margin-bottom: 10px;">
+                                <label class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Perawat Jaga (PJ Shift)</label>
+                                <input type="text" name="perawat_jaga" class="form-control" value="{$data.perawat_jaga}" placeholder="Nama perawat penanggung jawab shift...">
+                            </div>
+                        </div>
+
+                        <div style="font-size: 11px; color: #64748b; line-height: 1.45;">
+                            <i class="fa fa-info-circle text-info"></i> Lembar observasi berkala diisi per shift (pagi, sore, malam) atau setiap kali terjadi perubahan parameter fisiologis pasien di ruang rawat inap.
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- TABEL DETAIL OBSERVASI -->
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h4 class="panel-title">Tabel Pemantauan / Observasi Pasien</h4>
-                </div>
-                <div class="panel-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped" id="tblObs">
-                            <thead>
-                                <tr class="active">
-                                    <th width="120">Tanggal</th>
-                                    <th width="80">Jam</th>
-                                    <th width="90">KU</th>
-                                    <th width="90">Kesadaran</th>
-                                    <th width="90">Tensi</th>
-                                    <th width="70">Nadi</th>
-                                    <th width="70">Nafas</th>
-                                    <th width="70">Suhu</th>
-                                    <th width="70">SaO2</th>
-                                    <th>Masalah</th>
-                                    <th>Intervensi</th>
-                                    <th width="100">Petugas</th>
-                                    <th width="40"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loop: $obs_list}
-                                <tr>
-                                    <td><input type="date" name="obs[{$key}][tgl]" class="form-control input-sm" value="{$value.tgl}"></td>
-                                    <td><input type="text" name="obs[{$key}][jam]" class="form-control input-sm" value="{$value.jam}"></td>
-                                    <td><input type="text" name="obs[{$key}][ku]" class="form-control input-sm" value="{$value.ku}"></td>
-                                    <td><input type="text" name="obs[{$key}][kesadaran]" class="form-control input-sm" value="{$value.kesadaran}"></td>
-                                    <td><input type="text" name="obs[{$key}][tensi]" class="form-control input-sm" value="{$value.tensi}"></td>
-                                    <td><input type="text" name="obs[{$key}][nadi]" class="form-control input-sm" value="{$value.nadi}"></td>
-                                    <td><input type="text" name="obs[{$key}][nafas]" class="form-control input-sm" value="{$value.nafas}"></td>
-                                    <td><input type="text" name="obs[{$key}][suhu]" class="form-control input-sm" value="{$value.suhu}"></td>
-                                    <td><input type="text" name="obs[{$key}][sao2]" class="form-control input-sm" value="{$value.sao2}"></td>
-                                    <td><input type="text" name="obs[{$key}][masalah]" class="form-control input-sm" value="{$value.masalah}"></td>
-                                    <td><input type="text" name="obs[{$key}][intervensi]" class="form-control input-sm" value="{$value.intervensi}"></td>
-                                    <td><input type="text" name="obs[{$key}][petugas]" class="form-control input-sm" value="{$value.petugas}"></td>
-                                    <td><button type="button" class="btn btn-xs btn-danger btn-del"><i class="fa fa-trash"></i></button></td>
-                                </tr>
-                                {/loop}
-                            </tbody>
-                        </table>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-info" id="btnAddRow"><i class="fa fa-plus"></i> Tambah Baris Observasi</button>
+        <!-- ============================================================
+             SEKSI BAWAH: FULL-WIDTH TABLE PEMANTAUAN & OBSERVASI PASIEN
+             ============================================================ -->
+        <div class="rsgm-reg-shell">
+            <div class="rsgm-reg-header">
+                <h4 class="rsgm-reg-title">
+                    <span class="rsgm-reg-icon"><i class="fa fa-heartbeat text-danger"></i></span>
+                    <span>Tabel Pemantauan / Observasi Fisiologis Berkala</span>
+                </h4>
+                <div>
+                    <button type="button" class="btn btn-xs btn-success" id="btnAddRow" style="font-weight: 600; border-radius: 4px; padding: 4px 10px;">
+                        <i class="fa fa-plus"></i> Tambah Baris Observasi
+                    </button>
                 </div>
             </div>
 
-            <div class="form-group text-right">
-                <a href="{?=url([ADMIN, 'form_rme', 'riobservasimanage'])?}" class="btn btn-default"><i class="fa fa-arrow-left"></i> Kembali</a>
-                <button type="submit" class="btn btn-success"><i class="fa fa-save"></i> Simpan Lembar Observasi</button>
+            <div class="rsgm-reg-body" style="padding: 10px;">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover" id="tblObs" style="font-size: 11.5px; margin-bottom: 0;">
+                        <thead>
+                            <tr style="background: #eef2f6;">
+                                <th width="125">Tanggal</th>
+                                <th width="80">Jam</th>
+                                <th width="85">KU</th>
+                                <th width="85">Kesadaran</th>
+                                <th width="90">TD (mmHg)</th>
+                                <th width="75">Nadi (x/m)</th>
+                                <th width="75">RR (x/m)</th>
+                                <th width="75">Suhu (&deg;C)</th>
+                                <th width="75">SaO2 (%)</th>
+                                <th>Masalah Klinis</th>
+                                <th>Intervensi &amp; Terapi</th>
+                                <th width="120">Petugas</th>
+                                <th width="40" class="text-center">#</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loop: $obs_list}
+                            <tr class="obs-row">
+                                <td><input type="date" name="obs[{$key}][tgl]" class="form-control input-sm" value="{$value.tgl}"></td>
+                                <td><input type="text" name="obs[{$key}][jam]" class="form-control input-sm" value="{$value.jam}" placeholder="08:00"></td>
+                                <td><input type="text" name="obs[{$key}][ku]" class="form-control input-sm" value="{$value.ku}" placeholder="Baik"></td>
+                                <td><input type="text" name="obs[{$key}][kesadaran]" class="form-control input-sm" value="{$value.kesadaran}" placeholder="CM"></td>
+                                <td><input type="text" name="obs[{$key}][tensi]" class="form-control input-sm" value="{$value.tensi}" placeholder="120/80"></td>
+                                <td><input type="text" name="obs[{$key}][nadi]" class="form-control input-sm" value="{$value.nadi}" placeholder="80"></td>
+                                <td><input type="text" name="obs[{$key}][nafas]" class="form-control input-sm" value="{$value.nafas}" placeholder="20"></td>
+                                <td><input type="text" name="obs[{$key}][suhu]" class="form-control input-sm" value="{$value.suhu}" placeholder="36.5"></td>
+                                <td><input type="text" name="obs[{$key}][sao2]" class="form-control input-sm" value="{$value.sao2}" placeholder="98%"></td>
+                                <td><input type="text" name="obs[{$key}][masalah]" class="form-control input-sm" value="{$value.masalah}" placeholder="Keluhan / Masalah..."></td>
+                                <td><input type="text" name="obs[{$key}][intervensi]" class="form-control input-sm" value="{$value.intervensi}" placeholder="Intervensi / Terapi..."></td>
+                                <td><input type="text" name="obs[{$key}][petugas]" class="form-control input-sm" value="{$value.petugas}" placeholder="Nama perawat"></td>
+                                <td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-del" style="border-radius: 4px;"><i class="fa fa-trash"></i></button></td>
+                            </tr>
+                            {/loop}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </form>
-    </div>
+
+            <!-- FOOTER ACTIONS -->
+            <div class="rsgm-reg-footer">
+                <div>
+                    <a href="{?=url([ADMIN, 'form_rme', 'riobservasimanage'])?}" class="btn btn-default" style="border-radius: 6px;">
+                        <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+                    </a>
+                </div>
+                <div class="rsgm-reg-actions">
+                    {if: !empty($data.id)}
+                    <a href="{?=url([ADMIN, 'form_rme', 'riobservasicetak', '?id='.$data.id])?}" target="_blank" class="btn btn-info" style="font-weight: 600; border-radius: 6px;" title="Cetak Lembar Observasi">
+                        <i class="fa fa-print"></i> Cetak
+                    </a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'riobservasicetak', '?id='.$data.id.'&pdf=1'])?}" target="_blank" class="btn btn-danger" style="font-weight: 600; border-radius: 6px;" title="Unduh PDF">
+                        <i class="fa fa-file-pdf-o"></i> Unduh PDF
+                    </a>
+                    {/if}
+                    <button type="submit" class="btn btn-primary" id="btn_simpan_observasi" style="font-weight: 700; border-radius: 6px;">
+                        <i class="fa fa-save"></i> Simpan Lembar Observasi
+                    </button>
+                </div>
+            </div>
+        </div> <!-- /.rsgm-reg-shell -->
+    </form>
 </div>
 
 <script>
 $(document).ready(function() {
-    var rowCount = $('#tblObs tbody tr').length;
+    function loadPasienObs() {
+        var nr = $('#no_rawat').val();
+        if(!nr) return;
+        $.get('{?=url([ADMIN, 'form_rme', "akgmupatientinfo"])?}&no_rawat=' + encodeURIComponent(nr), function(res) {
+            try {
+                var d = (typeof res === 'object') ? res : JSON.parse(res);
+                if(d.success) {
+                    if (d.no_rkm_medis) $('#no_rkm_medis').val(d.no_rkm_medis);
+                    if (d.nm_pasien) $('#nm_pasien').val(d.nm_pasien);
+                }
+            } catch(e) {}
+        });
+    }
+
+    $('#btn_cari_pasien').on('click', loadPasienObs);
+    $('#no_rawat').on('blur change', loadPasienObs);
+
     $('#btnAddRow').click(function() {
-        var tr = '<tr>' +
-            '<td><input type="date" name="obs[' + rowCount + '][tgl]" class="form-control input-sm" value="' + new Date().toISOString().slice(0, 10) + '"></td>' +
-            '<td><input type="text" name="obs[' + rowCount + '][jam]" class="form-control input-sm" value="' + new Date().toTimeString().slice(0, 5) + '"></td>' +
+        var rowCount = $('#tblObs tbody tr').length;
+        var now = new Date();
+        var tgl = now.toISOString().slice(0, 10);
+        var jam = now.toTimeString().slice(0, 5);
+        var tr = '<tr class="obs-row">' +
+            '<td><input type="date" name="obs[' + rowCount + '][tgl]" class="form-control input-sm" value="' + tgl + '"></td>' +
+            '<td><input type="text" name="obs[' + rowCount + '][jam]" class="form-control input-sm" value="' + jam + '"></td>' +
             '<td><input type="text" name="obs[' + rowCount + '][ku]" class="form-control input-sm" value="Baik"></td>' +
             '<td><input type="text" name="obs[' + rowCount + '][kesadaran]" class="form-control input-sm" value="CM"></td>' +
             '<td><input type="text" name="obs[' + rowCount + '][tensi]" class="form-control input-sm" value="120/80"></td>' +
             '<td><input type="text" name="obs[' + rowCount + '][nadi]" class="form-control input-sm" value="80"></td>' +
             '<td><input type="text" name="obs[' + rowCount + '][nafas]" class="form-control input-sm" value="18"></td>' +
             '<td><input type="text" name="obs[' + rowCount + '][suhu]" class="form-control input-sm" value="36.5"></td>' +
-            '<td><input type="text" name="obs[' + rowCount + '][sao2]" class="form-control input-sm" value="-"></td>' +
-            '<td><input type="text" name="obs[' + rowCount + '][masalah]" class="form-control input-sm" value="-"></td>' +
-            '<td><input type="text" name="obs[' + rowCount + '][intervensi]" class="form-control input-sm" value="-"></td>' +
-            '<td><input type="text" name="obs[' + rowCount + '][petugas]" class="form-control input-sm"></td>' +
-            '<td><button type="button" class="btn btn-xs btn-danger btn-del"><i class="fa fa-trash"></i></button></td>' +
-            '</tr>';
+            '<td><input type="text" name="obs[' + rowCount + '][sao2]" class="form-control input-sm" value="98%"></td>' +
+            '<td><input type="text" name="obs[' + rowCount + '][masalah]" class="form-control input-sm" placeholder="Masalah..."></td>' +
+            '<td><input type="text" name="obs[' + rowCount + '][intervensi]" class="form-control input-sm" placeholder="Intervensi..."></td>' +
+            '<td><input type="text" name="obs[' + rowCount + '][petugas]" class="form-control input-sm" placeholder="Nama perawat"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-xs btn-danger btn-del" style="border-radius: 4px;"><i class="fa fa-trash"></i></button></td>' +
+        '</tr>';
         $('#tblObs tbody').append(tr);
-        rowCount++;
     });
 
-    $(document).on('click', '.btn-del', function() {
-        $(this).closest('tr').remove();
+    $('body').on('click', '.btn-del', function() {
+        if ($('.obs-row').length > 1) {
+            $(this).closest('tr').remove();
+        } else {
+            $(this).closest('tr').find('input').val('');
+        }
     });
 });
 </script>

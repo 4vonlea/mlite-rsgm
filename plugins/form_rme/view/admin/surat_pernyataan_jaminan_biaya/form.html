@@ -1,98 +1,124 @@
-<div class="row">
-    <div class="col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <div class="btn-group pull-right" style="margin-top:-5px;">
-                    <a href="{?=url([ADMIN, 'form_rme', 'jaminanbiayamanage'])?}" class="btn btn-default btn-sm"><i class="fa fa-arrow-left"></i> Kembali ke Daftar</a>
-                </div>
-                <h3 class="panel-title"><i class="fa fa-pencil-square-o"></i> <strong>FORMULIR SURAT PERNYATAAN JAMINAN PEMBIAYAAN</strong></h3>
-            </div>
-            <div class="panel-body">
-                <form action="{?=url([ADMIN, 'form_rme', 'jaminanbiayasave'])?}" method="POST" class="form-horizontal">
-                    <input type="hidden" name="id" value="{$data.id}">
+<div id="form_soap" class="rsgm-reg-form clearfix">
+    <form action="{?=url([ADMIN, 'form_rme', 'jaminanbiayasave'])?}" method="POST" id="frm_jaminan_biaya">
+        <input type="hidden" name="id" value="{$data.id}">
 
-                    <!-- SEKSI 1: REGISTRASI PASIEN -->
-                    <div class="panel panel-info">
-                        <div class="panel-heading"><strong>1. DATA REGISTRASI & PASIEN</strong></div>
-                        <div class="panel-body">
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">No. Rawat</label>
-                                <div class="col-sm-4">
-                                    {if: !empty($data.no_rawat)}
-    <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" readonly style="background-color: #f8fafc; font-weight: bold; color: #1d4ed8;">
-{else}
-    <div class="input-group">
-                                        <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required placeholder="202X/XX/XX/XXXXXX">
-                                        <span class="input-group-btn">
-                                            <button class="btn btn-default" type="button" id="btn_cari_pasien"><i class="fa fa-search"></i> Cari</button>
-                                        </span>
-                                    </div>
-{/if}
-                                </div>
-                                <label class="col-sm-2 control-label">No. RM</label>
-                                <div class="col-sm-4">
-                                    <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" readonly>
+        <div class="rsgm-soap-flex-row clearfix">
+            <!-- ============================================================
+                 KOLOM KIRI (3): SIDEBAR IDENTITAS & REGISTRASI PASIEN
+                 ============================================================ -->
+            <div class="col-md-3">
+                <div class="rsgm-reg-shell rsgm-patient-side-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-id-card-o text-primary"></i></span>
+                            <span>Data Pasien</span>
+                        </h4>
+                        <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
+                    </div>
+
+                    <div class="rsgm-reg-body">
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+                            {if: !empty($data.no_rawat)}
+                            <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" readonly style="background-color: #f8fafc; font-weight: 700; color: #1d4ed8; border-radius: 6px; height: 34px;">
+                            {else}
+                            <div class="input-group">
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" id="btn_cari_pasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                                        <i class="fa fa-search text-primary"></i>
+                                    </button>
+                                </span>
+                            </div>
+                            {/if}
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+                            <input type="text" name="no_rkm_medis" id="no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{$data.no_rkm_medis}" readonly style="background-color: #f8fafc; font-weight: 700;">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="nama_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+                            <input type="text" name="nama_pasien" id="nama_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{$data.nama_pasien}" required readonly style="background-color: #f8fafc; font-weight: 700; color: #0f172a;">
+                        </div>
+
+                        <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                                    <input type="text" name="jk_pasien" id="jk_pasien" class="form-control" value="{$data.jk_pasien}" readonly style="background-color: #f8fafc; font-weight: 600;">
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Nama Pasien</label>
-                                <div class="col-sm-4">
-                                    <input type="text" name="nama_pasien" id="nama_pasien" class="form-control" value="{$data.nama_pasien}" readonly>
-                                </div>
-                                <label class="col-sm-2 control-label">Tgl Lahir / JK</label>
-                                <div class="col-sm-2">
-                                    <input type="text" name="tgl_lahir_pasien" id="tgl_lahir_pasien" class="form-control" value="{$data.tgl_lahir_pasien}" readonly>
-                                </div>
-                                <div class="col-sm-2">
-                                    <input type="text" name="jk_pasien" id="jk_pasien" class="form-control" value="{$data.jk_pasien}" readonly>
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tgl Lahir</label>
+                                    <input type="text" name="tgl_lahir_pasien" id="tgl_lahir_pasien" class="form-control" value="{$data.tgl_lahir_pasien}" readonly style="background-color: #f8fafc; font-weight: 600;">
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Alamat Pasien</label>
-                                <div class="col-sm-10">
-                                    <textarea name="alamat_pasien" id="alamat_pasien" class="form-control" rows="2" readonly>{$data.alamat_pasien}</textarea>
-                                </div>
-                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="alamat_pasien" class="rsgm-compact-label"><i class="fa fa-map-marker text-muted"></i> Alamat Domisili Pasien</label>
+                            <textarea name="alamat_pasien" id="alamat_pasien" class="form-control" rows="3" readonly style="background-color: #f8fafc; resize: vertical;">{$data.alamat_pasien}</textarea>
+                        </div>
+
+                        <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+                            <button type="button" class="btn btn-default btn-sm btn-block" id="btn_salin_pasien" style="border-radius: 6px; font-weight: 600; color: #2563eb;" title="Salin data identitas pasien ke form penanggung jawab">
+                                <i class="fa fa-copy"></i> Salin ke Penanggung Jawab
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================
+                 KOLOM KANAN (9): WORKSTATION JAMINAN PEMBIAYAAN
+                 ============================================================ -->
+            <div class="col-md-9">
+                <div class="rsgm-reg-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-file-text-o text-primary"></i></span>
+                            <span>Surat Pernyataan Jaminan Pembiayaan</span>
+                        </h4>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">Keuangan Ranap</span>
+                            <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-shield"></i> Jaminan Biaya</span>
                         </div>
                     </div>
 
-                    <!-- SEKSI 2: DATA PENANGGUNG JAWAB -->
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <span class="pull-right">
-                                <button type="button" class="btn btn-xs btn-default" id="btn_salin_pasien"><i class="fa fa-copy"></i> Salin Data Pasien Sendiri</button>
-                            </span>
-                            <strong>2. DATA YANG MEMBUAT PERNYATAAN / PENANGGUNG JAWAB</strong>
-                        </div>
-                        <div class="panel-body">
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Nama Penanggung Jawab</label>
-                                <div class="col-sm-4">
-                                    <input type="text" name="nama_penanggung_jawab" id="nama_penanggung_jawab" class="form-control" value="{$data.nama_penanggung_jawab}" required placeholder="Nama lengkap">
+                    <div class="rsgm-reg-body">
+                        <!-- 1. DATA PENANGGUNG JAWAB -->
+                        <div class="rsgm-soap-section">
+                            <div class="rsgm-soap-sec-title">
+                                <i class="fa fa-user-circle-o text-primary"></i>
+                                <span>1. Data Yang Membuat Pernyataan / Penanggung Jawab</span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">Nama Lengkap Penanggung Jawab <span class="text-danger">*</span></label>
+                                    <input type="text" name="nama_penanggung_jawab" id="nama_penanggung_jawab" class="form-control" value="{$data.nama_penanggung_jawab}" required placeholder="Nama lengkap penanggung jawab">
                                 </div>
-                                <label class="col-sm-2 control-label">Tempat / Tgl Lahir</label>
-                                <div class="col-sm-4">
+                                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">Tempat / Tanggal Lahir</label>
                                     <input type="text" name="ttl_penanggung_jawab" id="ttl_penanggung_jawab" class="form-control" value="{$data.ttl_penanggung_jawab}" placeholder="Contoh: Banjarmasin, 15-04-1994">
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Pekerjaan</label>
-                                <div class="col-sm-4">
-                                    <input type="text" name="pekerjaan_penanggung_jawab" id="pekerjaan_penanggung_jawab" class="form-control" value="{$data.pekerjaan_penanggung_jawab}" placeholder="Pekerjaan">
+
+                            <div class="row">
+                                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">Pekerjaan</label>
+                                    <input type="text" name="pekerjaan_penanggung_jawab" id="pekerjaan_penanggung_jawab" class="form-control" value="{$data.pekerjaan_penanggung_jawab}" placeholder="Pekerjaan saat ini">
                                 </div>
-                                <label class="col-sm-2 control-label">No. KTP / NIK</label>
-                                <div class="col-sm-4">
+                                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">Nomor KTP / NIK</label>
                                     <input type="text" name="no_ktp_penanggung_jawab" id="no_ktp_penanggung_jawab" class="form-control" value="{$data.no_ktp_penanggung_jawab}" placeholder="16 digit NIK">
                                 </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Alamat Rumah</label>
-                                <div class="col-sm-4">
-                                    <textarea name="alamat_penanggung_jawab" id="alamat_penanggung_jawab" class="form-control" rows="2">{$data.alamat_penanggung_jawab}</textarea>
-                                </div>
-                                <label class="col-sm-2 control-label">Hubungan dgn Pasien</label>
-                                <div class="col-sm-4">
-                                    <select name="hubungan_dengan_pasien" id="hubungan_dengan_pasien" class="form-control">
+                                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">Hubungan dengan Pasien</label>
+                                    <select name="hubungan_dengan_pasien" id="hubungan_dengan_pasien" class="form-control" style="font-weight: 600;">
                                         <option value="Pasien Sendiri" {if: $data.hubungan_dengan_pasien == 'Pasien Sendiri'}selected{/if}>Pasien Sendiri</option>
                                         <option value="Suami" {if: $data.hubungan_dengan_pasien == 'Suami'}selected{/if}>Suami</option>
                                         <option value="Istri" {if: $data.hubungan_dengan_pasien == 'Istri'}selected{/if}>Istri</option>
@@ -102,78 +128,116 @@
                                     </select>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- SEKSI 3: SISTEM PENJAMINAN BIAYA -->
-                    <div class="panel panel-success">
-                        <div class="panel-heading"><strong>3. SISTEM PENJAMINAN BIAYA PELAYANAN KESEHATAN</strong></div>
-                        <div class="panel-body">
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Pilihan Jaminan</label>
-                                <div class="col-sm-10">
-                                    <label class="radio-inline" style="font-size: 13px; font-weight: bold; margin-right: 20px;">
-                                        <input type="radio" name="jenis_jaminan" value="Umum" {if: $data.jenis_jaminan == 'Umum'}checked{/if}> Umum
-                                    </label>
-                                    <label class="radio-inline" style="font-size: 13px; font-weight: bold; margin-right: 20px;">
-                                        <input type="radio" name="jenis_jaminan" value="BPJS Kesehatan" {if: $data.jenis_jaminan == 'BPJS Kesehatan'}checked{/if}> BPJS Kesehatan
-                                    </label>
-                                    <label class="radio-inline" style="font-size: 13px; font-weight: bold; margin-right: 20px;">
-                                        <input type="radio" name="jenis_jaminan" value="Jamkesprov" {if: $data.jenis_jaminan == 'Jamkesprov'}checked{/if}> Jamkesprov
-                                    </label>
-                                    <label class="radio-inline" style="font-size: 13px; font-weight: bold;">
-                                        <input type="radio" name="jenis_jaminan" value="Asuransi lainnya" {if: $data.jenis_jaminan == 'Asuransi lainnya'}checked{/if}> Asuransi lainnya
-                                    </label>
-                                    <input type="text" name="asuransi_lainnya_nama" class="form-control input-sm m-t-xs" placeholder="Jika asuransi lainnya, sebutkan nama perusahaan asuransi..." value="{$data.asuransi_lainnya_nama}">
-                                </div>
-                            </div>
-                            <div class="alert alert-warning" style="margin-bottom: 0;">
-                                <i class="fa fa-info-circle"></i> <strong>Ketentuan:</strong> Proses administrasi dilakukan maksimal 3x24 jam atau sebelum pasien pulang. Jika tidak sesuai dengan ketentuan tersebut maka seluruh biaya akan diterapkan sebagai biaya pasien umum (menjadi tanggung jawab pasien dan keluarga).
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="rsgm-compact-label">Alamat Rumah Tinggal</label>
+                                <textarea name="alamat_penanggung_jawab" id="alamat_penanggung_jawab" class="form-control" rows="2" placeholder="Alamat lengkap tempat tinggal penanggung jawab">{$data.alamat_penanggung_jawab}</textarea>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- SEKSI 4: TANDA TANGAN DIGITAL & PENGESAHAN -->
-                    <div class="panel panel-default">
-                        <div class="panel-heading"><strong>4. TANGGAL SURAT & TANDA TANGAN DIGITAL</strong></div>
-                        <div class="panel-body">
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Kota & Tanggal Surat</label>
-                                <div class="col-sm-2">
-                                    <input type="text" name="kota" class="form-control" value="{$data.kota}">
+                        <!-- 2. SISTEM PENJAMINAN BIAYA -->
+                        <div class="rsgm-soap-section" style="border: 1px solid #bfdbfe; background-color: #f0fdf4;">
+                            <div class="rsgm-soap-sec-title" style="color: #166534;">
+                                <i class="fa fa-shield text-success"></i>
+                                <span>2. Sistem Penjaminan Biaya Pelayanan Kesehatan</span>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label class="rsgm-compact-label">Pilihan Jenis Penjaminan Biaya:</label>
+                                <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 4px;">
+                                    <label style="font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                        <input type="radio" name="jenis_jaminan" value="Umum" {if: $data.jenis_jaminan == 'Umum'}checked{/if} style="accent-color: #16a34a; width: 16px; height: 16px;"> Umum / Mandiri
+                                    </label>
+                                    <label style="font-size: 13px; font-weight: 700; color: #15803d; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                        <input type="radio" name="jenis_jaminan" value="BPJS Kesehatan" {if: $data.jenis_jaminan == 'BPJS Kesehatan'}checked{/if} style="accent-color: #16a34a; width: 16px; height: 16px;"> BPJS Kesehatan
+                                    </label>
+                                    <label style="font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                        <input type="radio" name="jenis_jaminan" value="Jamkesprov" {if: $data.jenis_jaminan == 'Jamkesprov'}checked{/if} style="accent-color: #16a34a; width: 16px; height: 16px;"> Jamkesprov
+                                    </label>
+                                    <label style="font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                        <input type="radio" name="jenis_jaminan" value="Asuransi lainnya" {if: $data.jenis_jaminan == 'Asuransi lainnya'}checked{/if} style="accent-color: #16a34a; width: 16px; height: 16px;"> Asuransi Lainnya
+                                    </label>
                                 </div>
-                                <div class="col-sm-3">
-                                    <input type="date" name="tanggal_surat" class="form-control" value="{$data.tanggal_surat}">
+                                <div style="margin-top: 8px;">
+                                    <input type="text" name="asuransi_lainnya_nama" class="form-control" placeholder="Jika memilih asuransi lainnya, sebutkan nama perusahaan asuransi / instansi..." value="{$data.asuransi_lainnya_nama}">
                                 </div>
                             </div>
-                            <div class="row" style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px;">
+
+                            <div class="alert alert-warning" style="margin-bottom: 0; font-size: 11.5px; line-height: 1.45; border-radius: 6px;">
+                                <i class="fa fa-exclamation-triangle text-warning"></i> <strong>Ketentuan Waktu Administrasi:</strong> Proses administrasi penjaminan dilakukan maksimal 3x24 jam hari kerja atau sebelum pasien pulang. Jika tidak sesuai dengan ketentuan tersebut maka seluruh biaya pelayanan rawat inap diterapkan sebagai biaya pasien umum (menjadi tanggung jawab penuh pasien dan keluarga).
+                            </div>
+                        </div>
+
+                        <!-- 3. TANDA TANGAN DIGITAL & PENGESAHAN -->
+                        <div class="rsgm-soap-section" style="margin-bottom: 0;">
+                            <div class="rsgm-soap-sec-title">
+                                <i class="fa fa-pencil-square-o text-primary"></i>
+                                <span>3. Tanggal Surat &amp; Tanda Tangan Digital Pengesahan</span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 form-group" style="margin-bottom: 12px;">
+                                    <label class="rsgm-compact-label">Kota Diterbitkan</label>
+                                    <input type="text" name="kota" class="form-control" value="{if: !empty($data.kota)}{$data.kota}{else}Banjarmasin{/if}">
+                                </div>
+                                <div class="col-md-6 form-group" style="margin-bottom: 12px;">
+                                    <label class="rsgm-compact-label">Tanggal Pernyataan</label>
+                                    <input type="date" name="tanggal_surat" class="form-control" value="{if: !empty($data.tanggal_surat)}{$data.tanggal_surat}{else}{?=date('Y-m-d')?}{/if}">
+                                </div>
+                            </div>
+
+                            <div class="row" style="border-top: 1px dashed #cbd5e1; padding-top: 14px; margin-top: 8px;">
+                                <!-- Yang Membuat Pernyataan & TTD Tablet Fullscreen -->
                                 <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Yang Membuat Pernyataan</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="nama_pembuat_pernyataan" id="nama_pembuat_pernyataan" class="form-control" value="{$data.nama_pembuat_pernyataan}" placeholder="Nama terang">
-                                        </div>
+                                    <div class="form-group" style="margin-bottom: 8px;">
+                                        <label class="rsgm-compact-label">Nama Pembuat Pernyataan</label>
+                                        <input type="text" name="nama_pembuat_pernyataan" id="nama_pembuat_pernyataan" class="form-control" value="{$data.nama_pembuat_pernyataan}" placeholder="Nama terang pembuat pernyataan">
                                     </div>
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label"><i class="fa fa-pencil text-danger"></i> TTD Digital</label>
-                                        <div class="col-sm-8">
-                                            <div style="border: 2px dashed #999; border-radius: 4px; background: #fafafa; width: 100%; height: 140px;">
-                                                <canvas id="canvas_ttd_pembuat" width="350" height="140" style="touch-action: none; width: 100%; height: 100%; cursor: crosshair;"></canvas>
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label class="rsgm-compact-label"><i class="fa fa-tablet text-primary"></i> Tanda Tangan Pembuat Pernyataan (Tablet &amp; Layar Sentuh)</label>
+                                        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px; text-align: center;">
+                                            <div id="preview_box_ttd_pembuat" style="min-height: 85px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 6px;">
+                                                {if: !empty($data.ttd_pembuat_pernyataan)}
+                                                    <img src="{$data.ttd_pembuat_pernyataan}" id="img_preview_ttd_pembuat" style="max-height: 75px; max-width: 100%; border-radius: 4px;">
+                                                {else}
+                                                    <div id="placeholder_ttd_pembuat" style="color: #94a3b8; font-size: 12px; font-style: italic; padding: 10px;">
+                                                        <i class="fa fa-pencil-square-o fa-2x" style="display: block; margin-bottom: 4px; color: #cbd5e1;"></i>
+                                                        Belum ada tanda tangan pembuat pernyataan
+                                                    </div>
+                                                {/if}
                                             </div>
                                             <input type="hidden" name="ttd_pembuat_pernyataan" id="ttd_pembuat_pernyataan" value="{$data.ttd_pembuat_pernyataan}">
-                                            <div style="margin-top: 5px;">
-                                                <button type="button" class="btn btn-default btn-xs" id="btn_clear_pembuat"><i class="fa fa-eraser"></i> Hapus Goresan</button>
-                                                <span id="status_ttd_pembuat" class="text-success" style="font-size: 11px; margin-left: 10px;">
-                                                    {if: !empty($data.ttd_pembuat_pernyataan)}<i class="fa fa-check-circle"></i> TTD Tersimpan{/if}
-                                                </span>
+                                            <div style="display: flex; gap: 8px; justify-content: center;">
+                                                <button type="button" class="btn btn-info btn-sm btn-buka-ttd-pasien" 
+                                                    data-target-input="ttd_pembuat_pernyataan" 
+                                                    data-preview-img="img_preview_ttd_pembuat"
+                                                    data-preview-box="preview_box_ttd_pembuat"
+                                                    data-doc-title="Surat Pernyataan Jaminan Biaya Perawatan"
+                                                    data-doc-code="JAMINAN_BIAYA"
+                                                    data-patient-name="{$data.nama_pasien}"
+                                                    data-patient-norm="{$data.no_rkm_medis}"
+                                                    data-signer-title="Pembuat Pernyataan / Penanggung Jawab"
+                                                    style="border-radius: 6px; font-weight: 600; flex: 1;">
+                                                    <i class="fa fa-tablet"></i> {if: !empty($data.ttd_pembuat_pernyataan)}Buka TTD Ulang (Tablet){else}Buka Canvas TTD Pasien/Penjamin (Tablet){/if}
+                                                </button>
+                                                {if: !empty($data.ttd_pembuat_pernyataan)}
+                                                <button type="button" class="btn btn-default btn-sm" onclick="$('#ttd_pembuat_pernyataan').val(''); $('#preview_box_ttd_pembuat').html('<div style=\'color: #94a3b8; font-size: 12px; font-style: italic; padding: 10px;\'><i class=\'fa fa-pencil-square-o fa-2x\' style=\'display: block; margin-bottom: 4px; color: #cbd5e1;\'></i>Belum ada tanda tangan</div>');" title="Hapus Tanda Tangan" style="border-radius: 6px;">
+                                                    <i class="fa fa-trash text-danger"></i>
+                                                </button>
+                                                {/if}
+                                            </div>
+                                            <div style="font-size: 11px; color: #64748b; margin-top: 6px;">
+                                                <i class="fa fa-info-circle text-info"></i> Sodorkan tablet ke penanggung jawab/pasien untuk tanda tangan fullscreen.
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Saksi Petugas PPRI/Ranap dengan TTE -->
                                 <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Saksi Petugas PPRI/Ranap</label>
-                                        <div class="col-sm-8">
+                                    <div class="row">
+                                        <div class="col-xs-7 form-group" style="margin-bottom: 8px;">
+                                            <label class="rsgm-compact-label">Saksi Petugas PPRI / Admisi</label>
                                             <select name="saksi_nip" id="saksi_nip" class="form-control">
                                                 <option value="">-- Pilih Petugas Admisi / PPRI --</option>
                                                 {loop: $petugas}
@@ -182,28 +246,86 @@
                                             </select>
                                             <input type="hidden" name="saksi_nama" id="saksi_nama" value="{$data.saksi_nama}">
                                         </div>
+                                        <div class="col-xs-5 form-group" style="margin-bottom: 8px;">
+                                            <label class="rsgm-compact-label">Jabatan Saksi</label>
+                                            <input type="text" name="saksi_jabatan" id="saksi_jabatan" class="form-control" value="{if: !empty($data.saksi_jabatan)}{$data.saksi_jabatan}{else}Petugas Admisi Ranap / PPRI{/if}">
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Jabatan Saksi</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="saksi_jabatan" class="form-control" value="{$data.saksi_jabatan}">
+
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label class="rsgm-compact-label"><i class="fa fa-lock text-primary"></i> TTE Saksi Petugas RS</label>
+                                        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px; text-align: center;">
+                                            <div id="sign_container_saksi_jaminan" style="min-height: 85px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 6px;">
+                                                {if: !empty($data.ttd_saksi)}
+                                                    {if: strlen($data.ttd_saksi) == 64}
+                                                        <div class="rsgm-tte-verified-card">
+                                                            <div style="color: #16a34a; font-weight: 700; font-size: 11px; margin-bottom: 4px;">
+                                                                <i class="fa fa-check-circle"></i> Terverifikasi TTE
+                                                            </div>
+                                                            <div id="qr_box_saksi_jaminan_exist" style="margin: 6px auto; width: 75px; height: 75px;"></div>
+                                                            <div style="font-weight: 700; font-size: 11px; color: #0f172a;">{$data.saksi_nama}</div>
+                                                            <a href="{?=url(['esignature', 'verify', $data.ttd_saksi])?}" target="_blank" style="font-size: 9px; color: #2563eb; text-decoration: underline;">Verifikasi Legalitas</a>
+                                                        </div>
+                                                        <script>
+                                                            $(document).ready(function() {
+                                                                if ($.fn.qrcode) {
+                                                                    $('#qr_box_saksi_jaminan_exist').qrcode({ width: 75, height: 75, text: "{?=url(['esignature', 'verify', $data.ttd_saksi])?}" });
+                                                                }
+                                                            });
+                                                        </script>
+                                                    {else}
+                                                        <img src="{$data.ttd_saksi}" style="max-height: 75px; max-width: 100%;">
+                                                    {/if}
+                                                {else}
+                                                    <div style="color: #94a3b8; font-size: 12px; font-style: italic; padding: 10px;">
+                                                        <i class="fa fa-clock-o fa-2x" style="display: block; margin-bottom: 4px; color: #cbd5e1;"></i>
+                                                        Belum Ditandatangani Saksi RS
+                                                    </div>
+                                                {/if}
+                                            </div>
+                                            <input type="hidden" name="ttd_saksi" id="ttd_saksi" value="{$data.ttd_saksi}">
+                                            <button type="button" class="btn btn-primary btn-sm btn-tte-rme"
+                                                data-ref_type="jaminan_biaya"
+                                                data-ref_id="{$data.no_rawat}"
+                                                data-signer_name="{$data.saksi_nama}"
+                                                data-signer_role="Saksi Petugas PPRI"
+                                                data-target_input="ttd_saksi"
+                                                data-container_id="sign_container_saksi_jaminan"
+                                                style="border-radius: 6px; font-weight: 600; width: 100%;">
+                                                <i class="fa fa-lock"></i> {if: !empty($data.ttd_saksi)}Tanda Tangani Ulang (TTE){else}Tanda Tangani (TTE Saksi RS){/if}
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> <!-- /.rsgm-reg-body -->
 
-                    <div class="form-group m-t-md">
-                        <div class="col-sm-offset-2 col-sm-10">
-                            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan Surat Jaminan Pembiayaan</button>
-                            <a href="{?=url([ADMIN, 'form_rme', 'jaminanbiayamanage'])?}" class="btn btn-default">Batal</a>
+                    <!-- FOOTER ACTIONS -->
+                    <div class="rsgm-reg-footer">
+                        <div>
+                            <a href="{?=url([ADMIN, 'form_rme', 'jaminanbiayamanage'])?}" class="btn btn-default" style="border-radius: 6px;">
+                                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+                            </a>
+                        </div>
+                        <div class="rsgm-reg-actions">
+                            {if: !empty($data.id)}
+                            <a href="{?=url([ADMIN, 'form_rme', 'jaminanbiayacetak', '?id='.$data.id])?}" target="_blank" class="btn btn-info" style="font-weight: 600; border-radius: 6px;" title="Cetak Surat Pernyataan Jaminan Biaya">
+                                <i class="fa fa-print"></i> Cetak
+                            </a>
+                            <a href="{?=url([ADMIN, 'form_rme', 'jaminanbiayacetak', '?id='.$data.id.'&pdf=1'])?}" target="_blank" class="btn btn-danger" style="font-weight: 600; border-radius: 6px;" title="Unduh PDF">
+                                <i class="fa fa-file-pdf-o"></i> Unduh PDF
+                            </a>
+                            {/if}
+                            <button type="submit" class="btn btn-primary" id="btn_simpan_jaminan" style="font-weight: 700; border-radius: 6px;">
+                                <i class="fa fa-save"></i> Simpan Surat Jaminan
+                            </button>
                         </div>
                     </div>
-                </form>
-            </div>
-        </div>
-    </div>
+                </div> <!-- /.rsgm-reg-shell -->
+            </div> <!-- /.col-md-9 -->
+        </div> <!-- /.rsgm-soap-flex-row -->
+    </form>
 </div>
 
 <script>
@@ -234,12 +356,9 @@ $(document).ready(function() {
         $('#hubungan_dengan_pasien').val('Pasien Sendiri');
     });
 
-    $('#btn_cari_pasien').on('click', function() {
+    function cariPasienJaminan() {
         var no_rawat = $('#no_rawat').val();
-        if(!no_rawat) {
-            alert('Masukkan No. Rawat terlebih dahulu');
-            return;
-        }
+        if(!no_rawat) return;
         $.ajax({
             url: '{?=url([ADMIN, 'form_rme', "jaminanbiayagetpasien"])?}',
             type: 'POST',
@@ -258,64 +377,20 @@ $(document).ready(function() {
                         $('#hubungan_dengan_pasien').val(res.data.hubunganpj || 'Pasien Sendiri');
                         $('#nama_pembuat_pernyataan').val(res.data.p_jawab || res.data.nm_pasien);
                     }
-                } else {
-                    alert(res.message || 'Pasien tidak ditemukan');
                 }
-            },
-            error: function() {
-                alert('Gagal mengambil data pasien.');
             }
         });
-    });
-
-    // Signature Pad
-    var canvas = document.getElementById('canvas_ttd_pembuat');
-    if (canvas) {
-        var ctx = canvas.getContext('2d');
-        var drawing = false;
-        var prevX = 0, prevY = 0;
-
-        ctx.strokeStyle = "#000000";
-        ctx.lineWidth = 2.5;
-        ctx.lineJoin = "round";
-        ctx.lineCap = "round";
-
-        function getPos(c, e) {
-            var rect = c.getBoundingClientRect();
-            var clientX = e.clientX || (e.touches && e.touches[0].clientX);
-            var clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            return {
-                x: (clientX - rect.left) * (c.width / rect.width),
-                y: (clientY - rect.top) * (c.height / rect.height)
-            };
-        }
-
-        function start(x, y) { drawing = true; prevX = x; prevY = y; }
-        function draw(x, y) {
-            if (!drawing) return;
-            ctx.beginPath();
-            ctx.moveTo(prevX, prevY);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            prevX = x; prevY = y;
-            $('#ttd_pembuat_pernyataan').val(canvas.toDataURL('image/png'));
-            $('#status_ttd_pembuat').html('<i class="fa fa-pencil text-primary"></i> Goresan aktif');
-        }
-        function stop() { drawing = false; }
-
-        $(canvas).on('mousedown', function(e) { var p = getPos(canvas, e.originalEvent); start(p.x, p.y); });
-        $(canvas).on('mousemove', function(e) { var p = getPos(canvas, e.originalEvent); draw(p.x, p.y); });
-        $(window).on('mouseup', stop);
-
-        canvas.addEventListener('touchstart', function(e) { e.preventDefault(); var p = getPos(canvas, e); start(p.x, p.y); }, { passive: false });
-        canvas.addEventListener('touchmove', function(e) { e.preventDefault(); var p = getPos(canvas, e); draw(p.x, p.y); }, { passive: false });
-        canvas.addEventListener('touchend', function(e) { e.preventDefault(); stop(); }, { passive: false });
-
-        $('#btn_clear_pembuat').on('click', function() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            $('#ttd_pembuat_pernyataan').val('');
-            $('#status_ttd_pembuat').html('<span class="text-muted">Goresan dihapus</span>');
-        });
     }
+
+    $('#btn_cari_pasien').on('click', cariPasienJaminan);
+    $('#no_rawat').on('blur change', cariPasienJaminan);
+
+    // Update Saksi Nama when Petugas selected
+    $('#saksi_nip').on('change', function() {
+        var opt = $(this).find('option:selected');
+        var nama = opt.data('nama') || opt.text() || '';
+        $('#saksi_nama').val(nama);
+        $('.btn-tte-rme[data-target_input="ttd_saksi"]').attr('data-signer_name', nama);
+    });
 });
 </script>

@@ -145,10 +145,10 @@
             <a href="#" class="btn btn-danger" id="buka_asesmen_ulang_nyeri"><i class="fa fa-heartbeat"></i><span class="hidden-xs"> Asesmen Ulang Nyeri</span></a>
             <a href="#" class="btn btn-warning assesment" id="buka_assessment"><i class="fa fa-file-text"></i><span class="hidden-xs"> Asesmen Medis Gigi</span></a>
             <a href="#" class="btn btn-primary" id="buka_assessment_umum"><i class="fa fa-stethoscope"></i><span class="hidden-xs"> Asesmen Medis Umum</span></a>
-            <a href="#" class="btn btn-default" id="buka_pengantar_ranap" style="background:#e0f2fe;color:#0369a1;border-color:#bae6fd;"><i class="fa fa-bed"></i><span class="hidden-xs"> Pengantar Ranap (AKP 1.2)</span></a>
-            <a href="#" class="btn btn-default" id="buka_kriteria_icu" style="background:#fee2e2;color:#991b1b;border-color:#fecaca;"><i class="fa fa-heartbeat"></i><span class="hidden-xs"> Kriteria ICU (AKP 1.2 C)</span></a>
-            <a href="#" class="btn btn-default" id="buka_penundaan_layanan" style="background:#fef3c7;color:#92400e;border-color:#fde68a;"><i class="fa fa-clock-o"></i><span class="hidden-xs"> Penundaan Layanan (AKP 1.3)</span></a>
-            <a href="#" class="btn btn-default" id="buka_general_consent" style="background:#ecfdf5;color:#065f46;border-color:#a7f3d0;"><i class="fa fa-file-text-o"></i><span class="hidden-xs"> General Consent & Biaya (AKP 2 C)</span></a>
+            <a href="#" class="btn btn-default" id="buka_pengantar_ranap" style="background:#e0f2fe;color:#0369a1;border-color:#bae6fd;"><i class="fa fa-bed"></i><span class="hidden-xs"> Pengantar Ranap</span></a>
+            <a href="#" class="btn btn-default" id="buka_kriteria_icu" style="background:#fee2e2;color:#991b1b;border-color:#fecaca;"><i class="fa fa-heartbeat"></i><span class="hidden-xs"> Kriteria ICU</span></a>
+            <a href="#" class="btn btn-default" id="buka_penundaan_layanan" style="background:#fef3c7;color:#92400e;border-color:#fde68a;"><i class="fa fa-clock-o"></i><span class="hidden-xs"> Penundaan Layanan</span></a>
+            <a href="#" class="btn btn-default" id="buka_general_consent" style="background:#ecfdf5;color:#065f46;border-color:#a7f3d0;"><i class="fa fa-file-text-o"></i><span class="hidden-xs"> General Consent &amp; Biaya</span></a>
             <a href="#" class="btn btn-default" id="buka_jaminan_biaya" style="background:#f3e8ff;color:#6b21a8;border-color:#d8b4fe;"><i class="fa fa-shield"></i><span class="hidden-xs"> Jaminan Biaya</span></a>
           </span>
         </div>
@@ -350,7 +350,7 @@
     return false;
   });
 
-  // Handler untuk tombol Surat Pengantar Rawat Inap (AKP 1.2 EP A)
+  // Handler untuk tombol Surat Pengantar Rawat Inap
   $("#form_soap").on("click","#buka_pengantar_ranap", function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
@@ -363,7 +363,7 @@
     return false;
   });
 
-  // Handler untuk tombol Kriteria Masuk dan Keluar ICU (AKP 1.2 EP C)
+  // Handler untuk tombol Kriteria Masuk dan Keluar ICU
   $("#form_soap").on("click","#buka_kriteria_icu", function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
@@ -376,7 +376,7 @@
     return false;
   });
 
-  // Handler untuk tombol Penundaan dan Kelambatan Pelayanan (AKP 1.3 EP a & b)
+  // Handler untuk tombol Penundaan dan Kelambatan Pelayanan
   $("#form_soap").on("click","#buka_penundaan_layanan", function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
@@ -389,7 +389,7 @@
     return false;
   });
 
-  // Handler untuk tombol General Consent & Biaya Ranap (AKP 2 EP C)
+  // Handler untuk tombol General Consent & Biaya Ranap
   $("#form_soap").on("click","#buka_general_consent", function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();

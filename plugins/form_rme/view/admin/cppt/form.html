@@ -1,104 +1,158 @@
-<div class="row">
-    <div class="col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <div class="btn-group pull-right" style="margin-top:-5px;">
-                    <a href="{?=url([ADMIN, 'form_rme', 'cpptcetak', '?no_rawat='.$pasien.no_rawat])?}" target="_blank" class="btn btn-success btn-sm"><i class="fa fa-print"></i> Cetak CPPT</a>
-                    <a href="{?=url([ADMIN, 'form_rme', 'cpptcetak', '?no_rawat='.$pasien.no_rawat.'&pdf=1'])?}" target="_blank" class="btn btn-danger btn-sm"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
-                    <a href="{?=url([ADMIN, 'form_rme', 'cpptmanage'])?}" class="btn btn-default btn-sm"><i class="fa fa-arrow-left"></i> Kembali</a>
+<style>
+    #tblCpptList > thead > tr > th,
+    #tblCpptList > tbody > tr > th,
+    #tblCpptList > tbody > tr > td {
+        vertical-align: top !important;
+    }
+</style>
+<div id="form_soap" class="rsgm-reg-form clearfix">
+    <div class="rsgm-soap-flex-row clearfix">
+        <!-- ============================================================
+             KOLOM KIRI (3): SIDEBAR IDENTITAS PASIEN & RINGKASAN CPPT
+             ============================================================ -->
+        <div class="col-md-3">
+            <div class="rsgm-reg-shell rsgm-patient-side-shell">
+                <div class="rsgm-reg-header">
+                    <h4 class="rsgm-reg-title">
+                        <span class="rsgm-reg-icon"><i class="fa fa-id-card-o text-primary"></i></span>
+                        <span>Data Pasien</span>
+                    </h4>
+                    <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
                 </div>
-                <h3 class="panel-title"><i class="fa fa-edit"></i> <strong>CATATAN PERKEMBANGAN PASIEN TERINTEGRASI (CPPT)</strong></h3>
+
+                <div class="rsgm-reg-body">
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat</label>
+                        <input type="text" class="form-control" value="{$pasien.no_rawat}" readonly style="background-color: #f8fafc; font-weight: 700; color: #1d4ed8; border-radius: 6px; height: 34px;">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+                        <input type="text" class="form-control" value="{$pasien.no_rkm_medis}" readonly style="background-color: #f8fafc; font-weight: 700;">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien</label>
+                        <input type="text" class="form-control" value="{$pasien.nm_pasien}" readonly style="background-color: #f8fafc; font-weight: 700; color: #0f172a;">
+                    </div>
+
+                    <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                        <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> Gender</label>
+                                <input type="text" class="form-control" value="{if: $pasien.jk == 'L'}Laki-laki{elseif: $pasien.jk == 'P'}Perempuan{else}{$pasien.jk}{/if}" readonly style="background-color: #f8fafc; font-weight: 600;">
+                            </div>
+                        </div>
+                        <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label class="rsgm-compact-label"><i class="fa fa-birthday-cake text-muted"></i> Umur</label>
+                                <input type="text" class="form-control" value="{$pasien.umur}" readonly style="background-color: #f8fafc; font-weight: 600;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="rsgm-compact-label"><i class="fa fa-hospital-o text-muted"></i> Poliklinik / Unit</label>
+                        <input type="text" class="form-control" value="{$pasien.nm_poli}" readonly style="background-color: #f8fafc; font-weight: 600;">
+                    </div>
+
+                    <!-- Counter Card -->
+                    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px; margin-bottom: 12px; text-align: center;">
+                        <div style="font-size: 11px; font-weight: 600; color: #1e40af; text-transform: uppercase;">Total Catatan CPPT</div>
+                        <div style="font-size: 22px; font-weight: 800; color: #1d4ed8; line-height: 1.2; margin-top: 2px;">
+                            {?=count($cppt_list)?}
+                        </div>
+                        <div style="font-size: 10.5px; color: #64748b;">Entri SOAP Terintegrasi</div>
+                    </div>
+
+                    <div class="alert alert-info" style="font-size: 11px; padding: 10px; margin-bottom: 0; line-height: 1.45; border-radius: 6px;">
+                        <i class="fa fa-info-circle text-primary"></i> <strong>Standar PAP 1.2:</strong> Semua PPA (Dokter DPJP, Perawat, Bidan, Apoteker, Ahli Gizi) mencatat perkembangan pasien secara terintegrasi dengan format SOAP.
+                    </div>
+                </div>
             </div>
-            <div class="panel-body">
-                <!-- Info Pasien -->
-                <div class="well well-sm" style="background:#fcfcfc;">
-                    <div class="row">
-                        <div class="col-sm-3"><strong>No. Rawat:</strong> {$pasien.no_rawat}</div>
-                        <div class="col-sm-3"><strong>No. RM:</strong> {$pasien.no_rkm_medis}</div>
-                        <div class="col-sm-3"><strong>Nama Pasien:</strong> {$pasien.nm_pasien} ({$pasien.jk})</div>
-                        <div class="col-sm-3"><strong>Poli / Unit:</strong> {$pasien.nm_poli}</div>
+        </div>
+
+        <!-- ============================================================
+             KOLOM KANAN (9): WORKSTATION CPPT (ENTRI BARU & TIMELINE RIWAYAT)
+             ============================================================ -->
+        <div class="col-md-9">
+            <div class="rsgm-reg-shell">
+                <div class="rsgm-reg-header">
+                    <h4 class="rsgm-reg-title">
+                        <span class="rsgm-reg-icon"><i class="fa fa-edit text-primary"></i></span>
+                        <span>Catatan Perkembangan Pasien Terintegrasi (CPPT)</span>
+                    </h4>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">PAP 1.2</span>
+                        <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-heartbeat"></i> SOAP Multi-PPA</span>
                     </div>
                 </div>
 
-                <!-- Form Tambah Entry SOAP Baru -->
-                <div class="panel panel-info">
-                    <div class="panel-heading">
-                        <h4 class="panel-title"><i class="fa fa-plus-circle"></i> Tambah Catatan Asesmen Ulang / CPPT Baru</h4>
-                    </div>
-                    <div class="panel-body">
-                        <form method="POST" action="{?=url([ADMIN, 'form_rme', 'cpptsave'])?}">
-                            <input type="hidden" name="no_rawat" value="{$pasien.no_rawat}">
-                            
+                <div class="rsgm-reg-body">
+                    <!-- 1. FORM TAMBAH ENTRY CPPT BARU -->
+                    <form method="POST" action="{?=url([ADMIN, 'form_rme', 'cpptsave'])?}" id="frm_new_cppt">
+                        <input type="hidden" name="no_rawat" value="{$pasien.no_rawat}">
+
+                        <div class="rsgm-soap-section" style="border: 1px solid #bfdbfe; background-color: #f8fafc;">
+                            <div class="rsgm-soap-sec-title" style="color: #1e40af;">
+                                <i class="fa fa-plus-circle text-primary"></i>
+                                <span>Tambah Entri Catatan Asesmen Ulang / CPPT Baru</span>
+                            </div>
+
+                            <!-- Metadata Waktu, PPA & Tipe Layanan -->
                             <div class="row">
-                                <div class="col-sm-2">
-                                    <div class="form-group">
-                                        <label>Tanggal</label>
-                                        <input type="date" name="tgl_perawatan" class="form-control input-sm" value="{?=date('Y-m-d')?}" required>
-                                    </div>
+                                <div class="col-md-3 col-xs-6 form-group" style="margin-bottom: 8px;">
+                                    <label class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tanggal</label>
+                                    <input type="date" name="tgl_perawatan" class="form-control input-sm" value="{?=date('Y-m-d')?}" required>
                                 </div>
-                                <div class="col-sm-2">
-                                    <div class="form-group">
-                                        <label>Jam (WITA)</label>
-                                        <input type="time" name="jam_rawat" class="form-control input-sm" value="{?=date('H:i:s')?}" required>
-                                    </div>
+                                <div class="col-md-2 col-xs-6 form-group" style="margin-bottom: 8px;">
+                                    <label class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Jam (WITA)</label>
+                                    <input type="time" name="jam_rawat" class="form-control input-sm" value="{?=date('H:i')?}" required>
                                 </div>
-                                <div class="col-sm-4">
-                                    <div class="form-group">
-                                        <label>Profesional Pemberi Asuhan (PPA)</label>
-                                        <select name="nip" class="form-control input-sm" required>
-                                            {loop: $pegawai_list}
-                                            <option value="{$value.nik}" {if: $current_user == $value.nik}selected{/if}>{$value.nama} ({$value.jbtn})</option>
-                                            {/loop}
-                                        </select>
-                                    </div>
+                                <div class="col-md-4 form-group" style="margin-bottom: 8px;">
+                                    <label class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Profesional Pemberi Asuhan (PPA) <span class="text-danger">*</span></label>
+                                    <select name="nip" class="form-control input-sm" required style="font-weight: 600;">
+                                        {loop: $pegawai_list}
+                                        <option value="{$value.nik}" {if: $current_user == $value.nik}selected{/if}>{$value.nama} ({$value.jbtn})</option>
+                                        {/loop}
+                                    </select>
                                 </div>
-                                <div class="col-sm-4">
-                                    <div class="form-group">
-                                        <label>Tipe Layanan</label>
-                                        <select name="jenis_rawat" class="form-control input-sm">
-                                            <option value="ralan">Rawat Jalan / UGD</option>
-                                            <option value="ranap">Rawat Inap</option>
-                                        </select>
-                                    </div>
+                                <div class="col-md-3 form-group" style="margin-bottom: 8px;">
+                                    <label class="rsgm-compact-label"><i class="fa fa-hospital-o text-muted"></i> Layanan</label>
+                                    <select name="jenis_rawat" class="form-control input-sm" style="font-weight: 600;">
+                                        <option value="ralan">Rawat Jalan / UGD</option>
+                                        <option value="ranap">Rawat Inap</option>
+                                    </select>
                                 </div>
                             </div>
 
-                            <div class="row">
-                                <div class="col-sm-2">
-                                    <div class="form-group">
-                                        <label>Tensi (mmHg)</label>
+                            <!-- Tanda-Tanda Vital -->
+                            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px;">
+                                <div class="row">
+                                    <div class="col-md-2 col-xs-4 form-group" style="margin-bottom: 4px;">
+                                        <label class="rsgm-compact-label">TD (mmHg)</label>
                                         <input type="text" name="tensi" class="form-control input-sm" placeholder="120/80" value="120/80">
                                     </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="form-group">
-                                        <label>Nadi (/menit)</label>
+                                    <div class="col-md-2 col-xs-4 form-group" style="margin-bottom: 4px;">
+                                        <label class="rsgm-compact-label">Nadi (x/m)</label>
                                         <input type="text" name="nadi" class="form-control input-sm" placeholder="80" value="80">
                                     </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="form-group">
-                                        <label>RR (/menit)</label>
+                                    <div class="col-md-2 col-xs-4 form-group" style="margin-bottom: 4px;">
+                                        <label class="rsgm-compact-label">RR (x/m)</label>
                                         <input type="text" name="respirasi" class="form-control input-sm" placeholder="20" value="20">
                                     </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="form-group">
-                                        <label>Suhu (&deg;C)</label>
+                                    <div class="col-md-2 col-xs-4 form-group" style="margin-bottom: 4px;">
+                                        <label class="rsgm-compact-label">Suhu (&deg;C)</label>
                                         <input type="text" name="suhu_tubuh" class="form-control input-sm" placeholder="36.5" value="36.5">
                                     </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="form-group">
-                                        <label>SpO2 (%)</label>
+                                    <div class="col-md-2 col-xs-4 form-group" style="margin-bottom: 4px;">
+                                        <label class="rsgm-compact-label">SpO2 (%)</label>
                                         <input type="text" name="spo2" class="form-control input-sm" placeholder="98" value="98">
                                     </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="form-group">
-                                        <label>Kesadaran</label>
+                                    <div class="col-md-2 col-xs-4 form-group" style="margin-bottom: 4px;">
+                                        <label class="rsgm-compact-label">Kesadaran</label>
                                         <select name="kesadaran" class="form-control input-sm">
-                                            <option value="Compos Mentis">Compos Mentis</option>
+                                            <option value="Compos Mentis">CM</option>
                                             <option value="Somnolence">Somnolence</option>
                                             <option value="Sopor">Sopor</option>
                                             <option value="Coma">Coma</option>
@@ -107,109 +161,150 @@
                                 </div>
                             </div>
 
+                            <!-- S & O -->
                             <div class="row">
-                                <div class="col-sm-6">
-                                    <div class="form-group">
-                                        <label><strong>S (Subjective) - Keluhan &amp; Anamnesis Lanjutan</strong></label>
-                                        <textarea name="keluhan" class="form-control" rows="3" placeholder="Keluhan yang dirasakan pasien..."></textarea>
-                                    </div>
+                                <div class="col-md-6 form-group" style="margin-bottom: 8px;">
+                                    <label class="rsgm-compact-label">
+                                        <span class="rsgm-soap-tag rsgm-soap-tag-s" style="margin-right: 4px;">S</span>
+                                        <strong>Subjective &mdash; Keluhan &amp; Anamnesis Pasien</strong>
+                                    </label>
+                                    <textarea name="keluhan" class="form-control input-sm" rows="3" placeholder="Keluhan yang dirasakan pasien, perkembangan gejala..."></textarea>
                                 </div>
-                                <div class="col-sm-6">
-                                    <div class="form-group">
-                                        <label><strong>O (Objective) - Pemeriksaan Fisik / Lokalis Ulang</strong></label>
-                                        <textarea name="pemeriksaan" class="form-control" rows="3" placeholder="Hasil pemeriksaan fisik, tanda vital, lokalis..."></textarea>
-                                    </div>
+                                <div class="col-md-6 form-group" style="margin-bottom: 8px;">
+                                    <label class="rsgm-compact-label">
+                                        <span class="rsgm-soap-tag rsgm-soap-tag-o" style="margin-right: 4px;">O</span>
+                                        <strong>Objective &mdash; Pemeriksaan Fisik &amp; Lokalis Ulang</strong>
+                                    </label>
+                                    <textarea name="pemeriksaan" class="form-control input-sm" rows="3" placeholder="Hasil pemeriksaan fisik, luka operasi, tanda infeksi, lokalis..."></textarea>
                                 </div>
                             </div>
 
+                            <!-- A & P -->
                             <div class="row">
-                                <div class="col-sm-6">
-                                    <div class="form-group">
-                                        <label><strong>A (Assessment) - Penilaian Klinis / Diagnosis Masalah</strong></label>
-                                        <textarea name="penilaian" class="form-control" rows="3" placeholder="Penilaian kondisi atau diagnosa perkembangan..." required></textarea>
-                                    </div>
+                                <div class="col-md-6 form-group" style="margin-bottom: 8px;">
+                                    <label class="rsgm-compact-label">
+                                        <span class="rsgm-soap-tag rsgm-soap-tag-a" style="margin-right: 4px;">A</span>
+                                        <strong>Assessment &mdash; Penilaian Klinis / Diagnosa Perkembangan</strong> <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea name="penilaian" class="form-control input-sm" rows="3" placeholder="Penilaian kondisi klinis pasien saat ini..." required></textarea>
                                 </div>
-                                <div class="col-sm-6">
-                                    <div class="form-group">
-                                        <label><strong>P (Plan) - Rencana Asuhan &amp; Penatalaksanaan</strong></label>
-                                        <textarea name="rtl" class="form-control" rows="3" placeholder="Rencana terapi, observasi, dan edukasi..." required></textarea>
-                                    </div>
+                                <div class="col-md-6 form-group" style="margin-bottom: 8px;">
+                                    <label class="rsgm-compact-label">
+                                        <span class="rsgm-soap-tag rsgm-soap-tag-p" style="margin-right: 4px;">P</span>
+                                        <strong>Plan &mdash; Rencana Terapi &amp; Penatalaksanaan</strong> <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea name="rtl" class="form-control input-sm" rows="3" placeholder="Rencana terapi lanjutan, observasi berkala, edukasi..." required></textarea>
                                 </div>
                             </div>
 
+                            <!-- Instruksi & Evaluasi -->
                             <div class="row">
-                                <div class="col-sm-6">
-                                    <div class="form-group">
-                                        <label><strong>Instruksi PPA Termasuk Pasca Bedah</strong></label>
-                                        <textarea name="instruksi" class="form-control" rows="2" placeholder="Instruksi spesifik pelaksanaan terapi..."></textarea>
-                                    </div>
+                                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label"><strong>Instruksi PPA Termasuk Pasca Bedah</strong></label>
+                                    <textarea name="instruksi" class="form-control input-sm" rows="2" placeholder="Instruksi spesifik pelaksanaan medikasi, ganti perban, batasan diet..."></textarea>
                                 </div>
-                                <div class="col-sm-6">
-                                    <div class="form-group">
-                                        <label><strong>Evaluasi Asesmen Ulang / Catatan Perkembangan</strong></label>
-                                        <textarea name="evaluasi" class="form-control" rows="2" placeholder="Respon pasien pasca intervensi..."></textarea>
-                                    </div>
+                                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label"><strong>Evaluasi Asesmen Ulang / Catatan Perkembangan</strong></label>
+                                    <textarea name="evaluasi" class="form-control input-sm" rows="2" placeholder="Respon pasien pasca intervensi / evaluasi berkala..."></textarea>
                                 </div>
                             </div>
 
-                            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan Catatan CPPT</button>
-                        </form>
+                            <div class="text-right">
+                                <button type="submit" class="btn btn-primary" style="font-weight: 700; border-radius: 6px;">
+                                    <i class="fa fa-save"></i> Simpan Catatan CPPT Baru
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- 2. RIWAYAT CPPT PASIEN -->
+                    <div class="rsgm-soap-section" style="margin-bottom: 0;">
+                        <div class="rsgm-soap-sec-title">
+                            <i class="fa fa-history text-primary"></i>
+                            <span>Riwayat Catatan Perkembangan Pasien Terintegrasi (CPPT)</span>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped table-hover" id="tblCpptList" style="font-size: 11.5px; margin-bottom: 0;">
+                                <thead>
+                                    <tr style="background: #eef2f6;">
+                                        <th width="12%">Tgl &amp; Jam</th>
+                                        <th width="18%">PPA (Petugas)</th>
+                                        <th width="45%">Hasil Asesmen SOAP</th>
+                                        <th width="20%">Instruksi &amp; Evaluasi</th>
+                                        <th width="5%" class="text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {if: !empty($cppt_list)}
+                                    {loop: $cppt_list}
+                                    <tr>
+                                        <td>
+                                            <strong style="color: #1e3a8a;">{$value.tgl_perawatan}</strong><br>
+                                            <span style="font-size: 11px;"><i class="fa fa-clock-o text-muted"></i> {$value.jam_rawat} WITA</span><br>
+                                            <span class="badge" style="background: #e2e8f0; color: #334155; font-size: 10px; margin-top: 3px;">{$value.jenis_rawat}</span>
+                                        </td>
+                                        <td>
+                                            <strong style="color: #0f172a;">{$value.nama_petugas}</strong><br>
+                                            <span class="label label-info" style="font-size: 10px; font-weight: 600;">{$value.profesi}</span>
+                                        </td>
+                                        <td style="line-height: 1.5;">
+                                            <div style="background: #f1f5f9; padding: 4px 6px; border-radius: 4px; font-size: 10.5px; margin-bottom: 4px;">
+                                                <strong>TTV:</strong> TD {$value.tensi} &bull; HR {$value.nadi} &bull; RR {$value.respirasi} &bull; Temp {$value.suhu_tubuh}&deg;C &bull; SpO2 {$value.spo2}%
+                                            </div>
+                                            <div><span class="rsgm-soap-tag rsgm-soap-tag-s" style="font-size: 10px; padding: 1px 4px;">S</span> {$value.keluhan}</div>
+                                            <div style="margin-top: 2px;"><span class="rsgm-soap-tag rsgm-soap-tag-o" style="font-size: 10px; padding: 1px 4px;">O</span> {$value.pemeriksaan}</div>
+                                            <div style="margin-top: 2px;"><span class="rsgm-soap-tag rsgm-soap-tag-a" style="font-size: 10px; padding: 1px 4px;">A</span> <strong>{$value.penilaian}</strong></div>
+                                            <div style="margin-top: 2px;"><span class="rsgm-soap-tag rsgm-soap-tag-p" style="font-size: 10px; padding: 1px 4px;">P</span> {$value.rtl}</div>
+                                        </td>
+                                        <td style="font-size: 11px; line-height: 1.45;">
+                                            <div style="margin-bottom: 4px;">
+                                                <strong class="text-primary"><i class="fa fa-arrow-circle-right"></i> Instruksi:</strong><br>
+                                                {if: !empty($value.instruksi)}{$value.instruksi}{else}<span class="text-muted">-</span>{/if}
+                                            </div>
+                                            <div>
+                                                <strong class="text-success"><i class="fa fa-check-circle"></i> Evaluasi:</strong><br>
+                                                {if: !empty($value.evaluasi)}{$value.evaluasi}{else}<span class="text-muted">-</span>{/if}
+                                            </div>
+                                        </td>
+                                        <td class="text-center" style="vertical-align: top;">
+                                            <a href="{?=url([ADMIN, 'form_rme', 'cppthapus'])?}?no_rawat={$value.no_rawat}&tgl={$value.tgl_perawatan}&jam={$value.jam_rawat}&jenis={$value.jenis_rawat}" class="btn btn-xs btn-danger" onclick="return confirm('Hapus catatan CPPT ini?');" title="Hapus Catatan" style="border-radius: 4px; margin-top: 2px;">
+                                                <i class="fa fa-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {/loop}
+                                    {else}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted" style="padding: 20px;">
+                                            <i class="fa fa-info-circle fa-2x text-muted" style="display: block; margin-bottom: 6px;"></i>
+                                            Belum ada catatan CPPT untuk pasien ini. Silakan tambahkan pada formulir di atas.
+                                        </td>
+                                    </tr>
+                                    {/if}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div> <!-- /.rsgm-reg-body -->
+
+                <!-- FOOTER ACTIONS -->
+                <div class="rsgm-reg-footer">
+                    <div>
+                        <a href="{?=url([ADMIN, 'form_rme', 'cpptmanage'])?}" class="btn btn-default" style="border-radius: 6px;">
+                            <i class="fa fa-arrow-left"></i> Kembali ke Riwayat Pasien
+                        </a>
+                    </div>
+                    <div class="rsgm-reg-actions">
+                        <a href="{?=url([ADMIN, 'form_rme', 'cpptcetak'])?}?no_rawat={$pasien.no_rawat}" target="_blank" class="btn btn-info" style="font-weight: 600; border-radius: 6px;" title="Cetak Riwayat CPPT">
+                            <i class="fa fa-print"></i> Cetak CPPT
+                        </a>
+                        <a href="{?=url([ADMIN, 'form_rme', 'cpptcetak'])?}?no_rawat={$pasien.no_rawat}&pdf=1" target="_blank" class="btn btn-danger" style="font-weight: 600; border-radius: 6px;" title="Unduh PDF CPPT">
+                            <i class="fa fa-file-pdf-o"></i> Unduh PDF
+                        </a>
                     </div>
                 </div>
-
-                <!-- Riwayat CPPT Yang Sudah Ada -->
-                <h4 class="m-t-md"><i class="fa fa-history"></i> Riwayat CPPT Pasien</h4>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped">
-                        <thead>
-                            <tr class="active">
-                                <th width="12%">Tgl &amp; Jam</th>
-                                <th width="18%">PPA (Petugas)</th>
-                                <th width="45%">Hasil Asesmen SOAP</th>
-                                <th width="20%">Instruksi &amp; Evaluasi</th>
-                                <th width="5%" class="text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {if: !empty($cppt_list)}
-                            {loop: $cppt_list}
-                            <tr>
-                                <td>
-                                    <strong>{$value.tgl_perawatan}</strong><br>
-                                    {$value.jam_rawat} WITA<br>
-                                    <span class="label label-default">{$value.jenis_rawat}</span>
-                                </td>
-                                <td>
-                                    <strong>{$value.nama_petugas}</strong><br>
-                                    <small class="text-muted">{$value.profesi}</small>
-                                </td>
-                                <td>
-                                    <small><strong>TTV:</strong> TD {$value.tensi}, HR {$value.nadi}, RR {$value.respirasi}, Temp {$value.suhu_tubuh}&deg;C, SpO2 {$value.spo2}%</small><br>
-                                    <strong>S:</strong> {$value.keluhan}<br>
-                                    <strong>O:</strong> {$value.pemeriksaan}<br>
-                                    <strong>A:</strong> {$value.penilaian}<br>
-                                    <strong>P:</strong> {$value.rtl}
-                                </td>
-                                <td>
-                                    <strong>Instruksi:</strong> {if: !empty($value.instruksi)}{$value.instruksi}{else}-{/if}<br>
-                                    <strong>Evaluasi:</strong> {if: !empty($value.evaluasi)}{$value.evaluasi}{else}-{/if}
-                                </td>
-                                <td class="text-center">
-                                    <a href="{?=url([ADMIN, 'form_rme', 'cppthapus', '?no_rawat='.$value.no_rawat.'&tgl='.$value.tgl_perawatan.'&jam='.$value.jam_rawat.'&jenis='.$value.jenis_rawat])?}" class="btn btn-xs btn-danger" onclick="return confirm('Hapus catatan CPPT ini?');" title="Hapus"><i class="fa fa-trash"></i></a>
-                                </td>
-                            </tr>
-                            {/loop}
-                            {else}
-                            <tr>
-                                <td colspan="5" class="text-center text-muted">Belum ada catatan CPPT untuk pasien ini</td>
-                            </tr>
-                            {/if}
-                        </tbody>
-                    </table>
-                </div>
-
-            </div>
-        </div>
-    </div>
+            </div> <!-- /.rsgm-reg-shell -->
+        </div> <!-- /.col-md-9 -->
+    </div> <!-- /.rsgm-soap-flex-row -->
 </div>
-

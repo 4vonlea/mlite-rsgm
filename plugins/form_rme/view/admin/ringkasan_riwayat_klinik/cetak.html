@@ -268,7 +268,10 @@
                         <td style="text-align: center; font-weight: bold;">{$value.kode_penyakit}</td>
                         <td style="text-align: center; vertical-align: middle; padding-top: 40px;">
                             {if: !empty($value.ttd_dpjp)}
-                                {if: strpos($value.ttd_dpjp, 'data:image') === 0 || strpos($value.ttd_dpjp, 'http') === 0}
+                                {if: strlen($value.ttd_dpjp) == 64}
+                                    <barcode code="{?=url(['esignature', 'verify', $value.ttd_dpjp])?}" type="QR" class="barcode" size="0.6" error="M" disableborder="1" /><br>
+                                    <span style="font-size: 7pt; color: #16a34a; font-weight: bold;">TTE Verified</span>
+                                {elseif: strpos($value.ttd_dpjp, 'data:image') === 0 || strpos($value.ttd_dpjp, 'http') === 0}
                                     <img src="{$value.ttd_dpjp}" style="max-height: 75px; max-width: 110px; object-fit: contain; display: block; margin: 0 auto 4px auto;">
                                 {else}
                                     <div style="margin-bottom: 4px;">{?= $value['ttd_dpjp'] ?}</div>

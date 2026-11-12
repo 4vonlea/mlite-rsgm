@@ -218,7 +218,12 @@
                     <tr>
                         <td style="height: 90px; vertical-align: middle; text-align: center;">
                             {if: !empty($data.ttd_saksi_rs)}
-                                <img src="{$data.ttd_saksi_rs}" style="max-height: 75px; max-width: 140px; object-fit: contain;">
+                                {if: strlen($data.ttd_saksi_rs) == 64}
+                                    <barcode code="{?=url(['esignature', 'verify', $data.ttd_saksi_rs])?}" type="QR" class="barcode" size="0.7" error="M" disableborder="1" /><br>
+                                    <span style="font-size: 8px; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
+                                {else}
+                                    <img src="{$data.ttd_saksi_rs}" style="max-height: 75px; max-width: 140px; object-fit: contain;">
+                                {/if}
                             {else}
                                 <br><br><br>
                             {/if}

@@ -1872,6 +1872,19 @@ h6,
     overflow: visible;
 }
 
+/* Table Vertically Top Alignment for RME Form Entry Workstations */
+.rsgm-reg-form .table > tbody > tr > td,
+.rsgm-reg-form .table > thead > tr > th,
+.rsgm-reg-form .table > tbody > tr > th,
+.rsgm-reg-shell .table > tbody > tr > td,
+.rsgm-reg-shell .table > thead > tr > th,
+.rsgm-reg-shell .table > tbody > tr > th,
+.table-valign-top > tbody > tr > td,
+.table-valign-top > thead > tr > th,
+.table-valign-top > tbody > tr > th {
+    vertical-align: top !important;
+}
+
 .rsgm-reg-grid {
     display: flex;
     flex-wrap: wrap;

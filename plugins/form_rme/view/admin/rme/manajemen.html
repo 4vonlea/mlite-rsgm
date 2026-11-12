@@ -100,7 +100,7 @@
                     </td>
                     <td style="vertical-align: middle;">
                       <strong class="rsgm-patient-name" style="font-size: 13px;">{$value.nama_form}</strong>
-                      {if: $value.status == '0'}
+                      {if: !empty($value.status) && $value.status == '0'}
                       <div class="rsgm-cell-sub-alert" style="margin-top: 3px;">
                         <i class="fa fa-exclamation-triangle"></i> Form nonaktif di master (disembunyikan dari petugas)
                       </div>
@@ -112,7 +112,7 @@
                       </span>
                     </td>
                     <td class="text-center" style="vertical-align: middle; white-space: nowrap;">
-                      {if: $value.status == '1'}
+                      {if: !empty($value.status) && $value.status == '1'}
                         <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check-circle"></i> Aktif</span>
                       {else}
                         <span class="rsgm-badge rsgm-badge-rose"><i class="fa fa-wrench"></i> Nonaktif</span>
@@ -300,6 +300,25 @@
                 </div>
               </div>
 
+              <!-- Contextual Batch Action Bar saat Formulir Dicentang -->
+              <div id="batch-action-bar" style="display: none; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 16px; margin-bottom: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="badge" id="batch-selected-count" style="background: #16a34a; font-size: 12px; padding: 4px 8px; font-weight: 700;">0</span>
+                  <span style="font-weight: 600; color: #14532d; font-size: 13px;">Formulir Dipilih untuk Aksi Massal</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <button type="button" class="btn btn-sm btn-success btn-submit-batch" data-action="1" style="font-weight: 600; border-radius: 6px;">
+                    <i class="fa fa-play"></i> Aktifkan Terpilih
+                  </button>
+                  <button type="button" class="btn btn-sm btn-danger btn-submit-batch" data-action="0" style="font-weight: 600; border-radius: 6px;">
+                    <i class="fa fa-pause"></i> Nonaktifkan Terpilih
+                  </button>
+                  <button type="button" class="btn btn-sm btn-default" id="btnCancelBatch" style="border-radius: 6px; font-weight: 500;">
+                    <i class="fa fa-times text-muted"></i> Batal Pilih
+                  </button>
+                </div>
+              </div>
+
               <!-- Form Batch Wrapper -->
               <form id="formBatchStatus" action="{?=url([ADMIN, 'form_rme', 'batchstatusform'])?}" method="POST">
                 <input type="hidden" name="t" value="{$token}">
@@ -333,7 +352,7 @@
                           <input type="checkbox" name="selected_ids[]" value="{$f.id}" class="chk-row-item" style="cursor: pointer; width: 16px; height: 16px; accent-color: #2563eb;">
                         </td>
                         <td class="text-center" style="vertical-align: middle; white-space: nowrap;">
-                          <span class="rsgm-visit-id">{$f.urutan}</span>
+                          <span class="rsgm-visit-id form-row-number">{$f.no}</span>
                         </td>
                         <td style="vertical-align: middle; white-space: nowrap;">
                           <span class="rsgm-code-chip">{$f.kode_form}</span>
@@ -400,7 +419,7 @@
                           </div>
                         </td>
                         <td class="text-center status-badge-container" style="vertical-align: middle; white-space: nowrap;">
-                          {if: $f.status == '1'}
+                          {if: !empty($f.status) && $f.status == '1'}
                             <span class="rsgm-badge rsgm-badge-emerald"><i class="fa fa-check-circle"></i> Aktif</span>
                           {else}
                             <span class="rsgm-badge rsgm-badge-rose"><i class="fa fa-wrench"></i> Nonaktif</span>
@@ -783,8 +802,9 @@
             var matchSearch = (currentSearchKeyword === '') || (rowSearch.indexOf(currentSearchKeyword) !== -1);
 
             if (matchStatus && matchCategory && matchAktor && matchSearch) {
-              row.show();
               visibleCount++;
+              row.find('.form-row-number').text(visibleCount);
+              row.show();
             } else {
               row.hide();
             }
@@ -818,32 +838,60 @@
         // ==========================================
         // 2. CHECKBOX & BATCH ACTIONS
         // ==========================================
+        function setCheckboxVisualState($input, isChecked) {
+          $input.prop('checked', isChecked);
+          var $toggle = $input.next('.toggle');
+          if ($toggle.length) {
+            if (isChecked) {
+              $toggle.addClass('checked');
+            } else {
+              $toggle.removeClass('checked');
+            }
+          }
+        }
+
         function updateBatchButtons() {
           var checkedCount = $('.chk-row-item:checked').length;
           $('.btn-submit-batch').toggleClass('disabled', checkedCount === 0);
+          if (checkedCount > 0) {
+            $('#batch-selected-count').text(checkedCount);
+            $('#batch-action-bar').slideDown(150);
+          } else {
+            $('#batch-action-bar').slideUp(150);
+          }
         }
 
-        $('#chk-head-all').on('change', function() {
+        $(document).on('change', '#chk-head-all', function() {
           var isChecked = $(this).is(':checked');
-          $('.master-form-row:visible .chk-row-item').prop('checked', isChecked);
+          $('.master-form-row:visible .chk-row-item').each(function() {
+            setCheckboxVisualState($(this), isChecked);
+          });
           updateBatchButtons();
         });
 
         $(document).on('change', '.chk-row-item', function() {
+          var visibleRows = $('.master-form-row:visible .chk-row-item');
+          var checkedRows = $('.master-form-row:visible .chk-row-item:checked');
+          var allChecked = (visibleRows.length > 0 && checkedRows.length === visibleRows.length);
+          setCheckboxVisualState($('#chk-head-all'), allChecked);
           updateBatchButtons();
         });
 
         $('#btnSelectAllRows').on('click', function(e) {
           e.preventDefault();
-          $('.master-form-row:visible .chk-row-item').prop('checked', true);
-          $('#chk-head-all').prop('checked', true);
+          setCheckboxVisualState($('#chk-head-all'), true);
+          $('.master-form-row:visible .chk-row-item').each(function() {
+            setCheckboxVisualState($(this), true);
+          });
           updateBatchButtons();
         });
 
-        $('#btnDeselectAllRows').on('click', function(e) {
+        $('#btnDeselectAllRows, #btnCancelBatch').on('click', function(e) {
           e.preventDefault();
-          $('.chk-row-item').prop('checked', false);
-          $('#chk-head-all').prop('checked', false);
+          setCheckboxVisualState($('#chk-head-all'), false);
+          $('.chk-row-item').each(function() {
+            setCheckboxVisualState($(this), false);
+          });
           updateBatchButtons();
         });
 

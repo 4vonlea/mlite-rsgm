@@ -1,202 +1,285 @@
-<div class="panel panel-default">
-    <div class="panel-heading">
-        <h3 class="panel-title"><i class="fa fa-male"></i> Form RM.RI 06A - Asesmen Risiko Jatuh Dewasa dan Geriatri Rawat Inap</h3>
-    </div>
-    <div class="panel-body">
-        <form action="{?=url([ADMIN, 'form_rme', 'jatuhdewasasave'])?}" method="POST" id="formJatuhDewasa">
-            <input type="hidden" name="id" value="{$data.id}">
+<div id="form_soap" class="rsgm-reg-form clearfix">
+    <form action="{?=url([ADMIN, 'form_rme', 'jatuhdewasasave'])?}" method="POST" id="formJatuhDewasa">
+        <input type="hidden" name="id" value="{$data.id}">
 
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>No. Rawat <span class="text-danger">*</span></label>
-                        {if: !empty($data.no_rawat)}
-    <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" readonly style="background-color: #f8fafc; font-weight: bold; color: #1d4ed8;">
-{else}
-    <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" required placeholder="Contoh: 2022/11/14/000001">
-{/if}
+        <div class="rsgm-soap-flex-row clearfix">
+            <!-- ============================================================
+                 KOLOM KIRI (3): SIDEBAR IDENTITAS & WAKTU PENGKAJIAN
+                 ============================================================ -->
+            <div class="col-md-3">
+                <div class="rsgm-reg-shell rsgm-patient-side-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-id-card-o text-primary"></i></span>
+                            <span>Data Pasien</span>
+                        </h4>
+                        <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>No. RM &amp; Nama Pasien</label>
-                        <input type="text" id="info_pasien" class="form-control" value="{$data.no_rkm_medis} - {$data.nm_pasien}" readonly>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label>Tanggal</label>
-                        <input type="date" name="tanggal" class="form-control" value="{$data.tanggal}">
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label>Jam</label>
-                        <input type="time" name="jam" class="form-control" value="{$data.jam}">
+
+                    <div class="rsgm-reg-body">
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rawat" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat <span class="text-danger">*</span></label>
+                            {if: !empty($data.no_rawat)}
+                            <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" readonly style="background-color: #f8fafc; font-weight: 700; color: #1d4ed8; border-radius: 6px; height: 34px;">
+                            {else}
+                            <div class="input-group">
+                                <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{$data.no_rawat}" placeholder="Contoh: 2026/10/16/000001" required autocomplete="off" style="font-weight: 700; color: #1d4ed8;">
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" id="btn_cari_pasien" title="Cari / Muat Data Pasien" style="border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; height: 34px;">
+                                        <i class="fa fa-search text-primary"></i>
+                                    </button>
+                                </span>
+                            </div>
+                            {/if}
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> Nomor Rekam Medis</label>
+                            <input type="text" id="no_rkm_medis" class="form-control" placeholder="Nomor RM" value="{?=isset_or($data['no_rkm_medis'])?}" readonly style="background-color: #f8fafc; font-weight: 700;">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="nm_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+                            <input type="text" id="nm_pasien" class="form-control" placeholder="Nama lengkap pasien" value="{?=isset_or($data['nm_pasien'])?}" required readonly style="background-color: #f8fafc; font-weight: 700; color: #0f172a;">
+                        </div>
+
+                        <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tanggal</label>
+                                    <input type="date" name="tanggal" class="form-control" value="{if: !empty($data.tanggal)}{$data.tanggal}{else}{?=date('Y-m-d')?}{/if}">
+                                </div>
+                            </div>
+                            <div class="col-xs-6" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Jam</label>
+                                    <input type="time" name="jam" class="form-control" value="{if: !empty($data.jam)}{$data.jam}{else}{?=date('H:i')?}{/if}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label class="rsgm-compact-label"><i class="fa fa-hospital-o text-muted"></i> Instalasi / Unit / Ruang</label>
+                            <input type="text" name="instalasi_unit" class="form-control" value="{if: !empty($data.instalasi_unit)}{$data.instalasi_unit}{else}Rawat Inap{/if}">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Petugas Pengkaji</label>
+                            <input type="text" name="petugas_nama" class="form-control" value="{$data.petugas_nama}" placeholder="Nama perawat / pengkaji...">
+                        </div>
+
+                        <div class="alert alert-warning" style="font-size: 11px; padding: 10px; margin-bottom: 0; line-height: 1.45; border-radius: 6px;">
+                            <i class="fa fa-warning text-warning"></i> <strong>Instruksi Asesmen:</strong> Gunakan <em>Morse Fall Scale</em> untuk pasien dewasa (18 - 64 tahun) dan <em>Sydney Scoring</em> untuk pasien geriatri (&ge; 65 tahun).
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Instalasi / Unit / Ruangan</label>
-                        <input type="text" name="instalasi_unit" class="form-control" value="{$data.instalasi_unit}">
+            <!-- ============================================================
+                 KOLOM KANAN (9): WORKSTATION ASESMEN RISIKO JATUH DEWASA
+                 ============================================================ -->
+            <div class="col-md-9">
+                <div class="rsgm-reg-shell">
+                    <div class="rsgm-reg-header">
+                        <h4 class="rsgm-reg-title">
+                            <span class="rsgm-reg-icon"><i class="fa fa-male text-primary"></i></span>
+                            <span>Asesmen Risiko Jatuh Dewasa &amp; Geriatri</span>
+                        </h4>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">RM.RI 06A</span>
+                            <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-shield"></i> Patient Safety</span>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Petugas Pengkaji</label>
-                        <input type="text" name="petugas_nama" class="form-control" value="{$data.petugas_nama}" placeholder="Nama perawat / petugas...">
-                    </div>
-                </div>
-            </div>
 
-            <!-- MORSE FALL SCALE (18-65 TAHUN) -->
-            <div class="panel panel-primary">
-                <div class="panel-heading"><h4 class="panel-title">Morse Fall Scale (18-65 Tahun)</h4></div>
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>1. Riwayat Jatuh</label>
-                                <select name="morse[riwayat_jatuh]" class="form-control calc-morse">
-                                    <option value="0" {if: $morse.riwayat_jatuh == 0}selected{/if}>Tidak (0)</option>
-                                    <option value="25" {if: $morse.riwayat_jatuh == 25}selected{/if}>Ya (25)</option>
-                                </select>
+                    <div class="rsgm-reg-body">
+                        <!-- 1. MORSE FALL SCALE (18-64 TAHUN) -->
+                        <div class="rsgm-soap-section">
+                            <div class="rsgm-soap-sec-title">
+                                <i class="fa fa-user text-primary"></i>
+                                <span>1. Morse Fall Scale &mdash; Pasien Dewasa (18 &ndash; 64 Tahun)</span>
                             </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>2. Diagnosis Sekunder (&ge;2 diagnosis)</label>
-                                <select name="morse[diagnosis_sekunder]" class="form-control calc-morse">
-                                    <option value="0" {if: $morse.diagnosis_sekunder == 0}selected{/if}>Tidak (0)</option>
-                                    <option value="15" {if: $morse.diagnosis_sekunder == 15}selected{/if}>Ya (15)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>3. Alat Bantu</label>
-                                <select name="morse[alat_bantu]" class="form-control calc-morse">
-                                    <option value="0" {if: $morse.alat_bantu == 0}selected{/if}>Tidak ada/kursi roda/tirah baring (0)</option>
-                                    <option value="15" {if: $morse.alat_bantu == 15}selected{/if}>Tongkat / walker (15)</option>
-                                    <option value="30" {if: $morse.alat_bantu == 30}selected{/if}>Berpegangan pada perabot (30)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>4. Terpasang Infuse</label>
-                                <select name="morse[terpasang_infuse]" class="form-control calc-morse">
-                                    <option value="0" {if: $morse.terpasang_infuse == 0}selected{/if}>Tidak (0)</option>
-                                    <option value="20" {if: $morse.terpasang_infuse == 20}selected{/if}>Ya (20)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>5. Gaya Berjalan</label>
-                                <select name="morse[gaya_berjalan]" class="form-control calc-morse">
-                                    <option value="0" {if: $morse.gaya_berjalan == 0}selected{/if}>Normal / imobilisasi (0)</option>
-                                    <option value="10" {if: $morse.gaya_berjalan == 10}selected{/if}>Lemah (10)</option>
-                                    <option value="20" {if: $morse.gaya_berjalan == 20}selected{/if}>Terganggu (20)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>6. Status Mental</label>
-                                <select name="morse[status_mental]" class="form-control calc-morse">
-                                    <option value="0" {if: $morse.status_mental == 0}selected{/if}>Sadar kemampuan diri (0)</option>
-                                    <option value="15" {if: $morse.status_mental == 15}selected{/if}>Sering lupa keterbatasan (15)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="well well-sm">
-                        <strong>Total Skor Morse:</strong> <span id="morse_total_display" class="badge">{$data.morse_total}</span>
-                        <input type="hidden" name="morse_total" id="morse_total" value="{$data.morse_total}">
-                        <input type="hidden" name="morse_kategori" id="morse_kategori" value="{$data.morse_kategori}">
-                        <div id="morse_kategori_display" style="margin-top: 5px; font-weight: bold;">{$data.morse_kategori}</div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- ONTARIO MODIFIED STRATIFY - SYDNEY SCORING (>= 65 TAHUN) -->
-            <div class="panel panel-info">
-                <div class="panel-heading"><h4 class="panel-title">Ontario Modified Stratify - Sydney Scoring (&ge;65 Tahun)</h4></div>
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Riwayat Jatuh (Ada/Ya = 6)</label>
-                                <select name="sydney[riwayat_jatuh]" class="form-control calc-sydney">
-                                    <option value="Tidak" {if: $sydney.riwayat_jatuh == 'Tidak'}selected{/if}>Tidak (0)</option>
-                                    <option value="Ya" {if: $sydney.riwayat_jatuh == 'Ya'}selected{/if}>Ya (6)</option>
-                                </select>
+                            <div class="row">
+                                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">1. Riwayat Jatuh (3 Bulan Terakhir)</label>
+                                    <select name="morse[riwayat_jatuh]" class="form-control calc-morse" style="font-weight: 600;">
+                                        <option value="0" {if: $morse.riwayat_jatuh == 0}selected{/if}>Tidak Ada Riwayat (Skor 0)</option>
+                                        <option value="25" {if: $morse.riwayat_jatuh == 25}selected{/if}>Ada Riwayat Jatuh (Skor 25)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">2. Diagnosis Sekunder (&ge; 2 Diagnosis)</label>
+                                    <select name="morse[diagnosis_sekunder]" class="form-control calc-morse" style="font-weight: 600;">
+                                        <option value="0" {if: $morse.diagnosis_sekunder == 0}selected{/if}>Tidak (Skor 0)</option>
+                                        <option value="15" {if: $morse.diagnosis_sekunder == 15}selected{/if}>Ya (&ge;2 diagnosis) (Skor 15)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">3. Alat Bantu Berjalan</label>
+                                    <select name="morse[alat_bantu]" class="form-control calc-morse" style="font-weight: 600;">
+                                        <option value="0" {if: $morse.alat_bantu == 0}selected{/if}>Tidak ada / Bed rest / Kursi roda (Skor 0)</option>
+                                        <option value="15" {if: $morse.alat_bantu == 15}selected{/if}>Tongkat / Walker (Skor 15)</option>
+                                        <option value="30" {if: $morse.alat_bantu == 30}selected{/if}>Berpegangan perabot / dinding (Skor 30)</option>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Status Mental (Delirium/Agitasi = 14)</label>
-                                <select name="sydney[status_mental]" class="form-control calc-sydney">
-                                    <option value="Tidak" {if: $sydney.status_mental == 'Tidak'}selected{/if}>Tidak (0)</option>
-                                    <option value="Ya" {if: $sydney.status_mental == 'Ya'}selected{/if}>Ya (14)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Penglihatan (Kacamata/Buram = 1)</label>
-                                <select name="sydney[penglihatan]" class="form-control calc-sydney">
-                                    <option value="Tidak" {if: $sydney.penglihatan == 'Tidak'}selected{/if}>Tidak (0)</option>
-                                    <option value="Ya" {if: $sydney.penglihatan == 'Ya'}selected{/if}>Ya (1)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Kebiasaan Berkemih (Ada gangguan = 2)</label>
-                                <select name="sydney[kebiasaan_berkemih]" class="form-control calc-sydney">
-                                    <option value="Tidak" {if: $sydney.kebiasaan_berkemih == 'Tidak'}selected{/if}>Tidak (0)</option>
-                                    <option value="Ya" {if: $sydney.kebiasaan_berkemih == 'Ya'}selected{/if}>Ya (2)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Transfer &amp; Mobilitas (Nilai gabungan 4-6 skor = 7)</label>
-                                <select name="sydney[transfer_mobilitas]" class="form-control calc-sydney">
-                                    <option value="0" {if: $sydney.transfer_mobilitas == 0}selected{/if}>Mandiri / Sedikit bantuan (Skor 0)</option>
-                                    <option value="7" {if: $sydney.transfer_mobilitas == 7}selected{/if}>Bantuan 2 orang / Kursi roda / Imobilisasi (Skor 7)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="well well-sm">
-                        <strong>Total Skor Sydney:</strong> <span id="sydney_total_display" class="badge">{$data.sydney_total}</span>
-                        <input type="hidden" name="sydney_total" id="sydney_total" value="{$data.sydney_total}">
-                        <input type="hidden" name="sydney_kategori" id="sydney_kategori" value="{$data.sydney_kategori}">
-                        <div id="sydney_kategori_display" style="margin-top: 5px; font-weight: bold;">{$data.sydney_kategori}</div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="form-group text-right">
-                <a href="{?=url([ADMIN, 'form_rme', 'jatuhdewasamanage'])?}" class="btn btn-default"><i class="fa fa-arrow-left"></i> Kembali</a>
-                <button type="submit" class="btn btn-success"><i class="fa fa-save"></i> Simpan Asesmen Risiko Jatuh</button>
-            </div>
-        </form>
-    </div>
+                            <div class="row">
+                                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">4. Terpasang Infus / Heparin Lock</label>
+                                    <select name="morse[terpasang_infuse]" class="form-control calc-morse" style="font-weight: 600;">
+                                        <option value="0" {if: $morse.terpasang_infuse == 0}selected{/if}>Tidak Terpasang (Skor 0)</option>
+                                        <option value="20" {if: $morse.terpasang_infuse == 20}selected{/if}>Ya, Terpasang Infus (Skor 20)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">5. Gaya Berjalan / Berpindah</label>
+                                    <select name="morse[gaya_berjalan]" class="form-control calc-morse" style="font-weight: 600;">
+                                        <option value="0" {if: $morse.gaya_berjalan == 0}selected{/if}>Normal / Bed rest / Imobil (Skor 0)</option>
+                                        <option value="10" {if: $morse.gaya_berjalan == 10}selected{/if}>Lemah / Lambat (Skor 10)</option>
+                                        <option value="20" {if: $morse.gaya_berjalan == 20}selected{/if}>Terganggu / Goyah (Skor 20)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">6. Status Mental</label>
+                                    <select name="morse[status_mental]" class="form-control calc-morse" style="font-weight: 600;">
+                                        <option value="0" {if: $morse.status_mental == 0}selected{/if}>Sadar kemampuan diri (Skor 0)</option>
+                                        <option value="15" {if: $morse.status_mental == 15}selected{/if}>Lupa keterbatasan / Overestimasi (Skor 15)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Live Morse Summary Banner -->
+                            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-weight: 700; color: #1e3a8a; font-size: 13px;">Total Skor Morse:</span>
+                                    <span id="morse_total_display" class="badge" style="background: #2563eb; font-size: 14px; padding: 5px 12px; font-weight: 800;">{if: isset($data.morse_total)}{$data.morse_total}{else}0{/if}</span>
+                                </div>
+                                <div>
+                                    <input type="hidden" name="morse_total" id="morse_total" value="{if: isset($data.morse_total)}{$data.morse_total}{else}0{/if}">
+                                    <input type="hidden" name="morse_kategori" id="morse_kategori" value="{if: !empty($data.morse_kategori)}{$data.morse_kategori}{else}Risiko Rendah (RR){/if}">
+                                    <div id="morse_kategori_display">
+                                        <span class="label {if: !empty($data.morse_total) && $data.morse_total >= 45}label-danger{elseif: !empty($data.morse_total) && $data.morse_total >= 25}label-warning{else}label-success{/if}" style="font-size: 12px; padding: 5px 10px;">
+                                            {if: !empty($data.morse_kategori)}{$data.morse_kategori}{else}Risiko Rendah (RR){/if}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. ONTARIO MODIFIED STRATIFY - SYDNEY SCORING (>=65 TAHUN) -->
+                        <div class="rsgm-soap-section" style="background-color: #f8fafc; border-color: #cbd5e1; margin-bottom: 0;">
+                            <div class="rsgm-soap-sec-title">
+                                <i class="fa fa-wheelchair text-primary"></i>
+                                <span>2. Ontario Modified Stratify &mdash; Sydney Scoring (&ge; 65 Tahun / Geriatri)</span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">1. Riwayat Jatuh</label>
+                                    <select name="sydney[riwayat_jatuh]" class="form-control calc-sydney" style="font-weight: 600;">
+                                        <option value="Tidak" {if: $sydney.riwayat_jatuh == 'Tidak'}selected{/if}>Tidak (Skor 0)</option>
+                                        <option value="Ya" {if: $sydney.riwayat_jatuh == 'Ya'}selected{/if}>Ya, Riwayat Jatuh (Skor 6)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">2. Status Mental</label>
+                                    <select name="sydney[status_mental]" class="form-control calc-sydney" style="font-weight: 600;">
+                                        <option value="Tidak" {if: $sydney.status_mental == 'Tidak'}selected{/if}>Tidak (Skor 0)</option>
+                                        <option value="Ya" {if: $sydney.status_mental == 'Ya'}selected{/if}>Delirium / Agitasi (Skor 14)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">3. Gangguan Penglihatan</label>
+                                    <select name="sydney[penglihatan]" class="form-control calc-sydney" style="font-weight: 600;">
+                                        <option value="Tidak" {if: $sydney.penglihatan == 'Tidak'}selected{/if}>Tidak (Skor 0)</option>
+                                        <option value="Ya" {if: $sydney.penglihatan == 'Ya'}selected{/if}>Ya, Kacamata/Buram (Skor 1)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">4. Kebiasaan Berkemih</label>
+                                    <select name="sydney[kebiasaan_berkemih]" class="form-control calc-sydney" style="font-weight: 600;">
+                                        <option value="Tidak" {if: $sydney.kebiasaan_berkemih == 'Tidak'}selected{/if}>Normal (Skor 0)</option>
+                                        <option value="Ya" {if: $sydney.kebiasaan_berkemih == 'Ya'}selected{/if}>Inkontinensia / Urgensi (Skor 2)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                                    <label class="rsgm-compact-label">5. Transfer &amp; Mobilitas Pasien</label>
+                                    <select name="sydney[transfer_mobilitas]" class="form-control calc-sydney" style="font-weight: 600;">
+                                        <option value="0" {if: $sydney.transfer_mobilitas == 0}selected{/if}>Mandiri / Sedikit bantuan (Skor 0)</option>
+                                        <option value="7" {if: $sydney.transfer_mobilitas == 7}selected{/if}>Bantuan 2 orang / Kursi roda / Imobilisasi (Skor 7)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Live Sydney Summary Banner -->
+                            <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-weight: 700; color: #334155; font-size: 13px;">Total Skor Sydney:</span>
+                                    <span id="sydney_total_display" class="badge" style="background: #475569; font-size: 14px; padding: 5px 12px; font-weight: 800;">{if: isset($data.sydney_total)}{$data.sydney_total}{else}0{/if}</span>
+                                </div>
+                                <div>
+                                    <input type="hidden" name="sydney_total" id="sydney_total" value="{if: isset($data.sydney_total)}{$data.sydney_total}{else}0{/if}">
+                                    <input type="hidden" name="sydney_kategori" id="sydney_kategori" value="{if: !empty($data.sydney_kategori)}{$data.sydney_kategori}{else}Tidak Berisiko{/if}">
+                                    <div id="sydney_kategori_display">
+                                        <span class="label {if: !empty($data.sydney_total) && $data.sydney_total >= 9}label-danger{else}label-default{/if}" style="font-size: 12px; padding: 5px 10px;">
+                                            {if: !empty($data.sydney_kategori)}{$data.sydney_kategori}{else}Tidak Berisiko{/if}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- /.rsgm-reg-body -->
+
+                    <!-- FOOTER ACTIONS -->
+                    <div class="rsgm-reg-footer">
+                        <div>
+                            <a href="{?=url([ADMIN, 'form_rme', 'jatuhdewasamanage'])?}" class="btn btn-default" style="border-radius: 6px;">
+                                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+                            </a>
+                        </div>
+                        <div class="rsgm-reg-actions">
+                            {if: !empty($data.id)}
+                            <a href="{?=url([ADMIN, 'form_rme', 'jatuhdewasacetak', '?id='.$data.id])?}" target="_blank" class="btn btn-info" style="font-weight: 600; border-radius: 6px;" title="Cetak Asesmen Risiko Jatuh">
+                                <i class="fa fa-print"></i> Cetak
+                            </a>
+                            <a href="{?=url([ADMIN, 'form_rme', 'jatuhdewasacetak', '?id='.$data.id.'&pdf=1'])?}" target="_blank" class="btn btn-danger" style="font-weight: 600; border-radius: 6px;" title="Unduh PDF">
+                                <i class="fa fa-file-pdf-o"></i> Unduh PDF
+                            </a>
+                            {/if}
+                            <button type="submit" class="btn btn-primary" id="btn_simpan_jatuh_dewasa" style="font-weight: 700; border-radius: 6px;">
+                                <i class="fa fa-save"></i> Simpan Asesmen Risiko Jatuh
+                            </button>
+                        </div>
+                    </div>
+                </div> <!-- /.rsgm-reg-shell -->
+            </div> <!-- /.col-md-9 -->
+        </div> <!-- /.rsgm-soap-flex-row -->
+    </form>
 </div>
 
 <script>
 $(document).ready(function() {
+    function loadPasienJatuhDewasa() {
+        var nr = $('#no_rawat').val();
+        if(!nr) return;
+        $.get('{?=url([ADMIN, 'form_rme', "akgmupatientinfo"])?}&no_rawat=' + encodeURIComponent(nr), function(res) {
+            try {
+                var d = (typeof res === 'object') ? res : JSON.parse(res);
+                if(d.success) {
+                    if (d.no_rkm_medis) $('#no_rkm_medis').val(d.no_rkm_medis);
+                    if (d.nm_pasien) $('#nm_pasien').val(d.nm_pasien);
+                }
+            } catch(e) {}
+        });
+    }
+
+    $('#btn_cari_pasien').on('click', loadPasienJatuhDewasa);
+    $('#no_rawat').on('blur change', loadPasienJatuhDewasa);
+
     function hitungMorse() {
         var tot = 0;
         $('.calc-morse').each(function() {
@@ -208,7 +291,7 @@ $(document).ready(function() {
         if (tot >= 45) kat = 'Risiko Tinggi (RT)';
         else if (tot >= 25) kat = 'Risiko Sedang (RS)';
         $('#morse_kategori').val(kat);
-        $('#morse_kategori_display').html('<span class="label ' + (tot >= 45 ? 'label-danger' : (tot >= 25 ? 'label-warning' : 'label-success')) + '">' + kat + '</span>');
+        $('#morse_kategori_display').html('<span class="label ' + (tot >= 45 ? 'label-danger' : (tot >= 25 ? 'label-warning' : 'label-success')) + '" style="font-size: 12px; padding: 5px 10px;">' + kat + '</span>');
     }
 
     function hitungSydney() {
@@ -223,7 +306,7 @@ $(document).ready(function() {
         $('#sydney_total').val(tot);
         var kat = (tot >= 9) ? 'Berisiko Jatuh (Skor >= 9)' : 'Tidak Berisiko';
         $('#sydney_kategori').val(kat);
-        $('#sydney_kategori_display').html('<span class="label ' + (tot >= 9 ? 'label-danger' : 'label-default') + '">' + kat + '</span>');
+        $('#sydney_kategori_display').html('<span class="label ' + (tot >= 9 ? 'label-danger' : 'label-default') + '" style="font-size: 12px; padding: 5px 10px;">' + kat + '</span>');
     }
 
     $('.calc-morse').change(hitungMorse);

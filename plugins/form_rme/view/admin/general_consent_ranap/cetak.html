@@ -338,11 +338,16 @@ ol.gc-sublist > li {
         <td align="center" style="padding-top: 10px;">
             Nama petugas admisi: <strong>{$data.nama_petugas_admisi}</strong><br>
             Tanda tangan petugas:<br>
-            <div style="height: 55px; line-height: 55px; margin: 3px 0;">
+            <div style="min-height: 55px; margin: 3px 0; text-align: center;">
                 {if: !empty($data.ttd_petugas_admisi)}
-                <img src="{$data.ttd_petugas_admisi}" style="max-height: 50px; max-width: 140px; vertical-align: middle;">
+                    {if: strlen($data.ttd_petugas_admisi) == 64}
+                        <barcode code="{?=url(['esignature', 'verify', $data.ttd_petugas_admisi])?}" type="QR" class="barcode" size="0.7" error="M" disableborder="1" /><br>
+                        <span style="font-size: 8px; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
+                    {else}
+                        <img src="{$data.ttd_petugas_admisi}" style="max-height: 50px; max-width: 140px; vertical-align: middle;">
+                    {/if}
                 {else}
-                <span style="color:#888; font-style:italic;">[Petugas Admisi]</span>
+                    <span style="color:#888; font-style:italic; line-height: 55px;">[Petugas Admisi]</span>
                 {/if}
             </div>
             ( <strong>{$data.nama_petugas_admisi}</strong> )
