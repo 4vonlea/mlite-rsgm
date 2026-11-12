@@ -946,6 +946,14 @@ async function openFrista(noka) {
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
 
+    var $btnSimpan = $('#simpan');
+    if ($btnSimpan.prop('disabled')) {
+      return false;
+    }
+    $btnSimpan.prop('disabled', true);
+    var originalBtnVal = $btnSimpan.val();
+    $btnSimpan.val('Memproses BPJS...');
+
     var url = baseURL + '/vclaim/savesep?t=' + mlite.token;
 
     var no_rawat = $('#sep_no_rawat').val();
@@ -1070,6 +1078,9 @@ async function openFrista(noka) {
         } else {
           alert('Gagal menyimpan data ke database SIMRS');
         }
+      },
+      complete: function(){
+        $btnSimpan.prop('disabled', false).val(originalBtnVal);
       }
     });
   });

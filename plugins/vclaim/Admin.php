@@ -96,8 +96,7 @@ class Admin extends AdminModule
   public function postSaveSEP()
   {
 
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $_POST['kdppkpelayanan'] = $this->settings->get('settings.ppk_bpjs');
@@ -199,13 +198,21 @@ class Admin extends AdminModule
 
         $_POST['sep_no_sep'] = $data['response']['sep']['noSep'];
 
-        if ($_POST['jnspelayanan'] == 1) {
-          $this->db('bridging_surat_pri_bpjs')->where('no_surat', $_POST['noskdp'])->update([
-            'no_sep' => $_POST['sep_no_sep']
-          ]);
+        $pdo = \Systems\Lib\QueryWrapper::pdo();
+        $inTransaction = false;
+        if ($pdo && !$pdo->inTransaction()) {
+          $pdo->beginTransaction();
+          $inTransaction = true;
         }
 
-        $simpan_sep = $this->db('bridging_sep')->save([
+        try {
+          if ($_POST['jnspelayanan'] == 1) {
+            $this->db('bridging_surat_pri_bpjs')->where('no_surat', $_POST['noskdp'])->update([
+              'no_sep' => $_POST['sep_no_sep']
+            ]);
+          }
+
+          $simpan_sep = $this->db('bridging_sep')->save([
           'no_sep' => $_POST['sep_no_sep'],
           'no_rawat' => $_POST['no_rawat'],
           'tglsep' => $_POST['tglsep'],
@@ -331,6 +338,15 @@ class Admin extends AdminModule
           }
           echo htmlspecialchars($_POST['sep_no_sep']);
         }
+        if ($inTransaction && $pdo) {
+          $pdo->commit();
+        }
+      } catch (\Throwable $e) {
+        if ($inTransaction && $pdo) {
+          $pdo->rollBack();
+        }
+        echo 'Gagal menyimpan SEP ke database lokal SIMRS: ' . $e->getMessage();
+      }
       } else {
         echo '{
             	"metaData": {
@@ -362,8 +378,7 @@ class Admin extends AdminModule
 
     $data = json_encode($data);
 
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'SEP/2.0/delete';
@@ -528,8 +543,7 @@ class Admin extends AdminModule
   public function postSyncSEP()
   {
     $date = date('Y-m-d');
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     header('Content-type: text/html');
@@ -710,8 +724,7 @@ class Admin extends AdminModule
 
   public function getCariByNoRujukanModal($searchBy, $keyword)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     if ($searchBy == 'RS') {
@@ -747,8 +760,7 @@ class Admin extends AdminModule
 
   public function getDiagnosa($keyword)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'referensi/diagnosa/' . $keyword;
@@ -778,8 +790,7 @@ class Admin extends AdminModule
 
   public function getDiagnosaPrb()
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'referensi/diagnosaprb';
@@ -808,8 +819,7 @@ class Admin extends AdminModule
 
   public function getObatPrb($keyword)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'referensi/obatprb/' . $keyword;
@@ -839,8 +849,7 @@ class Admin extends AdminModule
 
   public function getPoli($keyword)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'referensi/poli/' . $keyword;
@@ -869,8 +878,7 @@ class Admin extends AdminModule
 
   public function getFaskes($kd_faskes = null, $jns_faskes = null)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'referensi/faskes/' . $kd_faskes . '/' . $jns_faskes;
@@ -899,8 +907,7 @@ class Admin extends AdminModule
 
   public function getDokterDpjp($jnsPelayanan, $tglPelayanan, $spesialis)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
     $url = $this->api_url . 'referensi/dokter/pelayanan/' . $jnsPelayanan . '/tglPelayanan/' . $tglPelayanan . '/Spesialis/' . $spesialis;
     $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
@@ -928,8 +935,7 @@ class Admin extends AdminModule
 
   public function getPropinsi()
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'referensi/propinsi';
@@ -958,8 +964,7 @@ class Admin extends AdminModule
 
   public function getKabupaten($kdPropinsi)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'referensi/kabupaten/propinsi/' . $kdPropinsi;
@@ -988,8 +993,7 @@ class Admin extends AdminModule
 
   public function getKecamatan($kdKabupaten)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'referensi/kecamatan/kabupaten/' . $kdKabupaten;
@@ -1018,8 +1022,7 @@ class Admin extends AdminModule
 
   public function getProcedure($keyword)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'referensi/procedure/' . $keyword;
@@ -1048,8 +1051,7 @@ class Admin extends AdminModule
 
   public function getKelasRawat()
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'referensi/kelasrawat';
@@ -1078,8 +1080,7 @@ class Admin extends AdminModule
 
   public function getDokter($keyword)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'referensi/dokter/' . $keyword;
@@ -1110,8 +1111,7 @@ class Admin extends AdminModule
   public function getFinger($keyword)
   {
     $dateNow = date('Y-m-d');
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . '/SEP/FingerPrint/Peserta/' . $keyword . '/TglPelayanan/'.$dateNow.'';
@@ -1142,8 +1142,7 @@ class Admin extends AdminModule
   public function getFrista($keyword)
   {
     $dateNow = date('Y-m-d');
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . '/SEP/FingerPrint/Peserta/' . $keyword . '/TglPelayanan/'.$dateNow.'';
@@ -1175,8 +1174,7 @@ class Admin extends AdminModule
   {
     $dateNow = date('Y-m-d');
     $_POST['sep_user']  = $this->core->getUserInfo('fullname', null, true);
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $data = [
@@ -1219,8 +1217,7 @@ class Admin extends AdminModule
 
   public function getSpesialistik()
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'referensi/spesialistik';
@@ -1249,8 +1246,7 @@ class Admin extends AdminModule
 
   public function getRuangRawat()
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'referensi/ruangrawat';
@@ -1279,8 +1275,7 @@ class Admin extends AdminModule
 
   public function getCaraKeluar()
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'referensi/carakeluar';
@@ -1309,8 +1304,7 @@ class Admin extends AdminModule
 
   public function getPascaPulang()
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'referensi/pascapulang';
@@ -1339,8 +1333,7 @@ class Admin extends AdminModule
 
   public function getByNoKartu($noKartu, $tglPelayananSEP)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'Peserta/nokartu/' . $noKartu . '/tglSEP/' . $tglPelayananSEP;
@@ -1369,8 +1362,7 @@ class Admin extends AdminModule
 
   public function getByNIK($nik, $tglPelayananSEP)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'Peserta/nik/' . $nik . '/tglSEP/' . $tglPelayananSEP;
@@ -1455,8 +1447,7 @@ class Admin extends AdminModule
 
     $data = json_encode($data);
 
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'SEP/2.0/insert';
@@ -1468,8 +1459,7 @@ class Admin extends AdminModule
 
   public function postUpdateSEP($data = [])
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'SEP/2.0/Update';
@@ -1514,8 +1504,7 @@ class Admin extends AdminModule
 
     $data = json_encode($data);
 
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'SEP/2.0/delete';
@@ -1555,8 +1544,7 @@ class Admin extends AdminModule
 
     $data = json_encode($data);
 
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'RencanaKontrol/Delete';
@@ -1585,8 +1573,7 @@ class Admin extends AdminModule
 
   public function getCariSEP($keyword)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'SEP/' . $keyword;
@@ -1615,8 +1602,7 @@ class Admin extends AdminModule
 
   public function getSuplesiJasaRaharja($noKartu, $tglPelayanan)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'sep/JasaRaharja/Suplesi/' . $noKartu . '/tglPelayanan/' . $tglPelayanan;
@@ -1644,8 +1630,7 @@ class Admin extends AdminModule
   }
   public function postPengajuanPenjaminanSep($data = [])
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'Sep/pengajuanSEP';
@@ -1673,8 +1658,7 @@ class Admin extends AdminModule
   }
   public function postApprovalPenjaminanSep($data = [])
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'Sep/aprovalSEP';
@@ -1708,8 +1692,7 @@ class Admin extends AdminModule
 
   public function __postUpdateTglPlg($data = [])
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'Sep/updtglplg';
@@ -1743,8 +1726,7 @@ class Admin extends AdminModule
 
   public function postUpdateTglPlg2()
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $data = [
@@ -1797,8 +1779,7 @@ class Admin extends AdminModule
 
   public function getUpdateTglPlg()
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $data = [
@@ -1841,8 +1822,7 @@ class Admin extends AdminModule
 
   public function getInacbgSEP($keyword)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'sep/cbg/' . $keyword;
@@ -1871,8 +1851,7 @@ class Admin extends AdminModule
 
   public function getSepInternal($noSep)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'SEP/Internal/' . $noSep;
@@ -1905,8 +1884,7 @@ class Admin extends AdminModule
 
   public function postInsertRujukan($data = [])
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'Rujukan/insert';
@@ -1935,8 +1913,7 @@ class Admin extends AdminModule
 
   public function postUpdateRujukan($data = [])
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'Rujukan/update';
@@ -1965,8 +1942,7 @@ class Admin extends AdminModule
 
   public function postDeleteRujukan($data = [])
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'Rujukan/delete';
@@ -1995,8 +1971,7 @@ class Admin extends AdminModule
 
   public function getCariByNoRujukan($searchBy, $keyword)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     if ($searchBy == 'RS') {
@@ -2031,8 +2006,7 @@ class Admin extends AdminModule
 
   public function getCariByNoKartu($searchBy, $keyword, $multi = false)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $record = $multi ? 'List/' : '';
@@ -2072,8 +2046,7 @@ class Admin extends AdminModule
 
   public function getCariByTglRujukan($searchBy, $keyword)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     if ($searchBy == 'RS') {
@@ -2121,8 +2094,7 @@ class Admin extends AdminModule
 
   public function getCariByTglRujukan_BackUp($searchBy, $keyword)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     if ($searchBy == 'RS') {
@@ -2174,8 +2146,7 @@ class Admin extends AdminModule
 
   public function postInsertLPK($data = [])
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'LPK/insert';
@@ -2204,8 +2175,7 @@ class Admin extends AdminModule
 
   public function postUpdateLPK($data = [])
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'LPK/update';
@@ -2234,8 +2204,7 @@ class Admin extends AdminModule
 
   public function postDeleteLPK($data = [])
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'LPK/delete';
@@ -2264,8 +2233,7 @@ class Admin extends AdminModule
 
   public function getCariLPK($tglMasuk, $jnsPelayanan)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'LPK/TglMasuk/' . $tglMasuk . '/JnsPelayanan/' . $jnsPelayanan;
@@ -2299,8 +2267,7 @@ class Admin extends AdminModule
 
   public function getDataKunjungan($tglSep, $jnsPelayanan)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'Monitoring/Kunjungan/Tanggal/' . $tglSep . '/JnsPelayanan/' . $jnsPelayanan;
@@ -2334,8 +2301,7 @@ class Admin extends AdminModule
 
   public function getDataKlaim($tglPulang, $jnsPelayanan, $statusKlaim)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'Monitoring/Klaim/Tanggal/' . $tglPulang . '/JnsPelayanan/' . $jnsPelayanan . '/Status/' . $statusKlaim;
@@ -2364,8 +2330,7 @@ class Admin extends AdminModule
 
   public function getHistoriPelayanan($noKartu, $tglAwal, $tglAkhir)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'monitoring/HistoriPelayanan/NoKartu/' . $noKartu . '/tglMulai/' . $tglAwal . '/tglAkhir/' . $tglAkhir;
@@ -2394,8 +2359,7 @@ class Admin extends AdminModule
 
   public function getDataKlaimJasaRaharja($tglMulai, $tglAkhir)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'monitoring/JasaRaharja/tglMulai/' . $tglMulai . '/tglAkhir/' . $tglAkhir;
@@ -2454,8 +2418,7 @@ class Admin extends AdminModule
 
   public function postSaveSPRI($no_kartu, $no_rawat)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
     $_POST['sep_user']  = $this->core->getUserInfo('fullname', null, true);
 
@@ -2506,8 +2469,7 @@ class Admin extends AdminModule
 
   public function postUpdateSPRI($no_surat)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
     $_POST['sep_user']  = $this->core->getUserInfo('fullname', null, true);
 
@@ -2555,8 +2517,7 @@ class Admin extends AdminModule
   
   public function postDeleteSPRI($no_surat)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
     $_POST['sep_user']  = $this->core->getUserInfo('fullname', null, true);
 
@@ -2656,8 +2617,7 @@ class Admin extends AdminModule
         $request = json_encode($data, JSON_PRETTY_PRINT);
         $data = json_encode($data);
 
-        date_default_timezone_set('UTC');
-        $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+        $tStamp = strval(time());
         $key = $this->settings->get('jkn_mobile.BpjsConsID') . $this->settings->get('jkn_mobile.BpjsSecretKey') . $tStamp;
 
         $url = $this->settings->get('jkn_mobile.BpjsAntrianUrl').'antrean/add';
@@ -2747,8 +2707,7 @@ class Admin extends AdminModule
 
   public function getAprovalSepDisplay($bln_aproval, $tahun_aproval)
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . 'Sep/persetujuanSEP/list/bulan/' . $bln_aproval . '/tahun/' . $tahun_aproval;
@@ -2778,8 +2737,7 @@ class Admin extends AdminModule
   public function postSaveAprovalSEP()
   {
     $date = date('Y-m-d');
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $request = [
@@ -2887,8 +2845,7 @@ class Admin extends AdminModule
   public function postSaveSyncSEP()
   {
     $date = date('Y-m-d');
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     header('Content-type: text/html');
@@ -3083,8 +3040,7 @@ class Admin extends AdminModule
 
   public function postSaveKontrol()
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
     $_POST['sep_user']  = $this->core->getUserInfo('fullname', null, true);
     if($_POST['no_surkon'] == ''){
@@ -3251,8 +3207,7 @@ class Admin extends AdminModule
 
   public function postSaveRujukKeluar()
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
     $_POST['sep_user']  = $this->core->getUserInfo('fullname', null, true);
     $data = [
@@ -3347,8 +3302,7 @@ class Admin extends AdminModule
 
   public function postSaveSrb()
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
     $_POST['sep_user']  = $this->core->getUserInfo('fullname', null, true);
     $data = [
@@ -3425,8 +3379,7 @@ class Admin extends AdminModule
   {
     $tahun = substr($tanggal,0,4);
     $bulan = substr($tanggal,5,2);
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $url = $this->api_url . '/RencanaKontrol/ListRencanaKontrol/Bulan/'.$bulan.'/Tahun/'.$tahun.'/Nokartu/'.$no_kartu.'/filter/2';
@@ -3463,8 +3416,7 @@ class Admin extends AdminModule
 
   public function postDiRujukSave()
   {
-    date_default_timezone_set('UTC');
-    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
 
     $data = [

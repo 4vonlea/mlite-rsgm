@@ -37,8 +37,7 @@ class PcareService
 
     protected static function request($type, $url, $datafields, $consid, $secretkey, $user_key, $pcareUname, $pcarePWD, $kdAplikasi)
     {
-        date_default_timezone_set('UTC');
-        $stamp          = strval(time() - strtotime("1970-01-01 00:00:00"));
+        $stamp          = strval(time());
         $data           = $consid.'&'.$stamp;
 
         $signature = hash_hmac('sha256', $data, $secretkey, true);
@@ -78,8 +77,7 @@ class PcareService
     }
     protected static function request2($type, $url, $datafields, $consid, $secretkey, $user_key, $pcareUname, $pcarePWD, $kdAplikasi)
     {
-        date_default_timezone_set('UTC');
-        $stamp          = time();
+        $stamp          = strval(time());
         $data           = $consid.'&'.$stamp;
 
         $signature = hash_hmac('sha256', $data, $secretkey, true);
@@ -120,8 +118,7 @@ class PcareService
 
     protected static function requestIcare($type, $url, $datafields, $consid, $secretkey, $user_key, $pcareUname, $pcarePWD, $kdAplikasi)
     {
-        date_default_timezone_set('UTC');
-        $stamp          = time();
+        $stamp          = strval(time());
         $data           = $consid.'&'.$stamp;
 
         $signature = hash_hmac('sha256', $data, $secretkey, true);
