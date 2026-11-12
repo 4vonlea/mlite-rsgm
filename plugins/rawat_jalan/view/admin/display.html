@@ -1,4 +1,16 @@
 <div id="display">
+<style>
+  .btn-batal-checkin {
+    transition: all 0.2s ease;
+  }
+  .btn-batal-checkin:hover {
+    background-color: #d9534f !important;
+    color: #fff !important;
+  }
+  .btn-batal-checkin:hover .fa-check:before {
+    content: "\f00d" !important;
+  }
+</style>
   <!-- Tab Navigation -->
   <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" class="active">
@@ -58,10 +70,9 @@
                 </li>
               {/if}
               <li><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal">Elektronik Rekam Medis</a></li>
-              {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
+              {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis' || $this->core->getUserInfo('role') == 'rekammedis' || $this->core->getUserInfo('role') == 'pengguna'}
               <li><a href="#soap" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-umur="{$value.umurdaftar} {$value.sttsumur}" data-tgl_registrasi="{$value.tgl_registrasi}" data-stts_daftar="{$value.stts_daftar}" data-status_poli="{$value.status_poli}">SOAPIE & Pemeriksaan</a></li>
               <li><a href="#layanan_obat" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-kd_dokter="{$value.kd_dokter}" data-nm_dokter="{$value.nm_dokter}">Layanan & Tindakan</a></li>
-              {? \Systems\Lib\Event::call('rsgmgha.dropdown_menu', [$value]) ?}
               <li class="dropdown-submenu">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Surat-Surat</a>
                 <ul class="dropdown-menu">
@@ -74,7 +85,7 @@
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Set Status</a>
                 <ul class="dropdown-menu">
                   <li><a href="#rujuk_internal" data-no_rawat="{$value.no_rawat}">Rujuk Internal</a></li>
-                  <li><a href="#status_rawat" data-no_rawat="{$value.no_rawat}" data-stts="{$value.stts}">Status Rawat</a></li>
+                  <li><a href="#status_rawat" data-no_rawat="{$value.no_rawat}" data-stts="{$value.stts}" data-checkin_time="{$value.checkin_time}" data-nm_pasien="{$value.nm_pasien}">Status Rawat</a></li>
                   <li><a href="#status_lanjut" data-no_rawat="{$value.no_rawat}">Status Lanjut</a></li>
                   <li><a href="#obat_kronis" data-no_rawat="{$value.no_rawat}">Obat Kronis</a></li>
                   <li><a href="#kps" data-no_rawat="{$value.no_rawat}" data-kd_dokter="{$value.kd_dokter}">Set KPS</a></li>
@@ -87,8 +98,17 @@
             </ul>
             {if: $responsivevoice == 'true'}<button type="button" name="button" class="btn btn-xs btn-primary panggil" data-nm_pasien="{?=strtolower($value.nm_pasien)?}" data-nm_poli="{?=strtolower($value.nm_poli)?}" data-no_reg="{?=strtolower($value.no_reg)?}"><i class="fa fa-bullhorn"></i><span class="hidden-xs hidden-sm"> Panggil</span></button>{/if}
           </td>
-          <td class="rsgm-cell-wrap"><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal" class="rsgm-patient-link">{$value.nm_pasien}</a></td>
-          <td class="edit rsgm-visit-id" data-no_rawat="{$value.no_rawat}">{$value.no_rawat}</td>
+          <td class="rsgm-cell-wrap">
+            <a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal" class="rsgm-patient-link">{$value.nm_pasien}</a>
+          </td>
+          <td class="rsgm-visit-id" style="white-space: nowrap;">
+            <div class="edit" data-no_rawat="{$value.no_rawat}" style="cursor: pointer;">{$value.no_rawat}</div>
+            {if: !empty($value.checkin_time)}
+              <div style="margin-top: 3px;">
+                <a href="#batal_checkin" class="label label-success btn-batal-checkin" style="font-size: 10px; padding: 2px 6px; display: inline-block; font-weight: normal; cursor: pointer; text-decoration: none;" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-tgl_registrasi="{$value.tgl_registrasi}" data-nm_pasien="{$value.nm_pasien}" title="Klik untuk membatalkan kehadiran"><i class="fa fa-check"></i> Hadir {$value.checkin_time}</a>
+              </div>
+            {/if}
+          </td>
           <td style="white-space: nowrap;">
             <button type="button" name="button" class="btn btn-xs btn-warning antrian"
               data-no_rawat="{$value.no_rawat}"
@@ -96,6 +116,9 @@
               disabled
               {/if}
             ><span class="fa fa-print"></span> {$value.no_reg}</button>
+            {if: empty($value.checkin_time)}
+            <button type="button" class="btn btn-xs btn-default btn-checkin" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-tgl_registrasi="{$value.tgl_registrasi}" data-nm_pasien="{$value.nm_pasien}" title="Klik saat pasien tiba di loket pendaftaran"><i class="fa fa-check text-success"></i> <span class="hidden-xs">Hadir</span></button>
+            {/if}
             {if: $value.kd_pj == 'BPJ'}
               {if: $cek_pcare}
                 <button class="badge progress-bar-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="fa fa-send"></span> Antrian</button>
@@ -463,58 +486,214 @@
     });
   });
 
+  // Handle Check-In Pasien Hadir
+  $(document).off('click', 'a[href="#checkin_pasien"], .btn-checkin').on('click', 'a[href="#checkin_pasien"], .btn-checkin', function(event){
+    event.preventDefault();
+    var baseURL = mlite.url + '/' + mlite.admin;
+    var url = baseURL + '/rawat_jalan/checkinpasien?t=' + mlite.token;
+    var no_rawat = $(this).attr("data-no_rawat");
+    var no_rkm_medis = $(this).attr("data-no_rkm_medis");
+    var tgl_registrasi = $(this).attr("data-tgl_registrasi");
+    var nm_pasien = $(this).attr("data-nm_pasien");
+
+    bootbox.confirm({
+      title: "Konfirmasi Kehadiran Pasien",
+      message: "Tandai bahwa pasien <strong>" + nm_pasien + "</strong> telah tiba / hadir di loket pendaftaran saat ini?",
+      buttons: {
+        cancel: {
+          label: '<i class="fa fa-times"></i> Batal',
+          className: 'btn-default'
+        },
+        confirm: {
+          label: '<i class="fa fa-check"></i> Pasien Hadir (Check-In)',
+          className: 'btn-success'
+        }
+      },
+      callback: function (result) {
+        if (result) {
+          $.post(url, {
+            no_rawat: no_rawat,
+            no_rkm_medis: no_rkm_medis,
+            tgl_registrasi: tgl_registrasi
+          }, function(response) {
+            if ($('#submit_periode_rawat_jalan').length) {
+              $('#submit_periode_rawat_jalan').trigger('click');
+            } else {
+              $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+            }
+            $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
+              "<i class=\"fa fa-check-circle\"></i> Pasien <strong>" + nm_pasien + "</strong> berhasil di-check-in hadir pada jam <strong>" + (response.checkin_time || 'sekarang') + "</strong>!" +
+              "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
+              "</div>").show();
+          }, 'json');
+        }
+      }
+    });
+  });
+
+  // Handle Batalkan Check-In Pasien
+  $(document).off('click', 'a[href="#batal_checkin"], .btn-batal-checkin').on('click', 'a[href="#batal_checkin"], .btn-batal-checkin', function(event){
+    event.preventDefault();
+    event.stopPropagation();
+    var baseURL = mlite.url + '/' + mlite.admin;
+    var url = baseURL + '/rawat_jalan/batalcheckinpasien?t=' + mlite.token;
+    var no_rkm_medis = $(this).attr("data-no_rkm_medis");
+    var tgl_registrasi = $(this).attr("data-tgl_registrasi");
+    var nm_pasien = $(this).attr("data-nm_pasien");
+
+    bootbox.confirm({
+      title: "Batalkan Check-In Kehadiran",
+      message: "Batalkan status kehadiran untuk pasien <strong>" + nm_pasien + "</strong>?",
+      buttons: {
+        cancel: {
+          label: 'Kembali',
+          className: 'btn-default'
+        },
+        confirm: {
+          label: '<i class="fa fa-trash"></i> Batalkan Hadir',
+          className: 'btn-danger'
+        }
+      },
+      callback: function (result) {
+        if (result) {
+          $.post(url, {
+            no_rkm_medis: no_rkm_medis,
+            tgl_registrasi: tgl_registrasi
+          }, function(response) {
+            if ($('#submit_periode_rawat_jalan').length) {
+              $('#submit_periode_rawat_jalan').trigger('click');
+            } else {
+              $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+            }
+            $('#notif').html("<div class=\"alert alert-warning alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
+              "Status check-in kehadiran pasien " + nm_pasien + " telah dibatalkan." +
+              "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
+              "</div>").show();
+          }, 'json');
+        }
+      }
+    });
+  });
+
   $(document).off('click', 'a[href="#status_rawat"]').on('click', 'a[href="#status_rawat"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var url = baseURL + '/rawat_jalan/statusrawat?t=' + mlite.token;
     var no_rawat = $(this).attr("data-no_rawat");
     var stts = $(this).attr("data-stts");
+    var checkin_time = $(this).attr("data-checkin_time");
+    var nm_pasien = $(this).attr("data-nm_pasien") || "Pasien";
 
-    // tampilkan dialog konfirmasi
+    var isHadir = checkin_time && checkin_time.trim() !== '';
+
+    // Jika pasien belum hadir, jangan buka opsi status medis, melainkan tampilkan dialog peringatan
+    if (!isHadir) {
+      var isAlreadyBatal = (stts === 'Batal');
+      var modalMsg = "<div style='font-size: 13px; line-height: 1.6;'>" +
+        "<p>Pasien <strong>" + nm_pasien + "</strong> belum melakukan check-in / belum ditandai <strong>Hadir</strong> di loket pendaftaran.</p>" +
+        "<div class='alert alert-warning' style='margin-bottom: 12px; padding: 10px; font-size: 12px;'>" +
+        "<i class='fa fa-lock'></i> Seluruh perubahan status pelayanan medis (Berkas Diterima, Belum Periksa, Sudah Periksa, dsb.) <strong>terkunci</strong> sampai pasien tiba di rumah sakit." +
+        "</div>" +
+        (isAlreadyBatal 
+          ? "<p style='color: #d9534f; margin-bottom: 0;'><strong>Status kunjungan pasien saat ini sudah Batal Periksa.</strong></p>"
+          : "<p style='color: #666; margin-bottom: 0;'>Jika pasien berhalangan hadir atau membatalkan kedatangan (no-show), Anda dapat langsung menandai statusnya sebagai <strong>Batal Periksa</strong> di bawah ini.</p>") +
+        "</div>";
+
+      var dialogButtons = {};
+      if (!isAlreadyBatal) {
+        dialogButtons.batalPeriksa = {
+          label: "<i class='fa fa-times-circle'></i> Tandai Batal Periksa",
+          className: "btn-danger",
+          callback: function() {
+            bootbox.confirm("Apakah Anda yakin ingin mengubah status kunjungan pasien <strong>" + nm_pasien + "</strong> menjadi <strong>Batal Periksa</strong>?", function(confirmed) {
+              if (confirmed) {
+                $.post(url, {
+                  no_rawat: no_rawat,
+                  stts: 'Batal'
+                }, function(data) {
+                  if ($('#submit_periode_rawat_jalan').length) {
+                    $('#submit_periode_rawat_jalan').trigger('click');
+                  } else {
+                    $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+                  }
+                  $('#notif').html("<div class=\"alert alert-warning alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
+                    "Status kunjungan pasien <strong>" + nm_pasien + "</strong> telah diubah menjadi <strong>Batal Periksa</strong>." +
+                    "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
+                    "</div>").show();
+                }).fail(function(xhr) {
+                  var msg = "Gagal membatalkan periksa!";
+                  try {
+                    var res = JSON.parse(xhr.responseText);
+                    if (res && res.message) msg = res.message;
+                  } catch(e) {}
+                  bootbox.alert({
+                    title: "<span class='text-danger'><i class='fa fa-exclamation-triangle'></i> Peringatan</span>",
+                    message: msg
+                  });
+                });
+              }
+            });
+          }
+        };
+      }
+      dialogButtons.close = {
+        label: "Tutup",
+        className: "btn-default"
+      };
+
+      bootbox.dialog({
+        title: "<span class='text-danger'><i class='fa fa-lock'></i> Status Rawat Terkunci (Pasien Belum Hadir)</span>",
+        message: modalMsg,
+        buttons: dialogButtons
+      });
+      return false;
+    }
+
+    var options = [
+      {
+        text: 'Berkas Dikirim',
+        value: 'Berkas Dikirim',
+      },
+      {
+        text: 'Berkas Diterima',
+        value: 'Berkas Diterima',
+      },
+      {
+        text: 'Belum Periksa',
+        value: 'Belum',
+      },
+      {
+        text: 'Sudah Periksa',
+        value: 'Sudah',
+      },
+      {
+        text: 'Batal Periksa',
+        value: 'Batal',
+      },
+      {
+        text: 'Pasien Dirujuk',
+        value: 'Dirujuk',
+      },
+      {
+        text: 'Meninggal',
+        value: 'Meninggal',
+      },
+      {
+        text: 'Dirawat',
+        value: 'Dirawat',
+      },
+      {
+        text: 'Pulang Paksa',
+        value: 'Pulang Paksa',
+      }
+    ];
 
     bootbox.prompt({
         title: "Status Rawat Pasien",
         message: '',
         inputType: 'radio',
         value: stts,
-        inputOptions: [
-        {
-            text: 'Berkas Dikirim',
-            value: 'Berkas Dikirim',
-        },
-        {
-            text: 'Berkas Diterima',
-            value: 'Berkas Diterima',
-        },
-        {
-            text: 'Belum Periksa',
-            value: 'Belum',
-        },
-        {
-            text: 'Sudah Periksa',
-            value: 'Sudah',
-        },
-        {
-            text: 'Batal Periksa',
-            value: 'Batal',
-        },
-        {
-            text: 'Pasien Dirujuk',
-            value: 'Dirujuk',
-        },
-        {
-            text: 'Meninggal',
-            value: 'Meninggal',
-        },
-        {
-            text: 'Dirawat',
-            value: 'Dirawat',
-        },
-        {
-            text: 'Pulang Paksa',
-            value: 'Pulang Paksa',
-        }
-        ],
+        inputOptions: options,
         callback: function (result) {
             // ketika ditekan tombol ok
             if (result){
@@ -533,6 +712,16 @@
                 "Status rawat pasien telah disimpan!"+
                 "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
                 "</div>").show();
+              }).fail(function(xhr) {
+                var msg = "Gagal memperbarui status rawat!";
+                try {
+                  var res = JSON.parse(xhr.responseText);
+                  if (res && res.message) msg = res.message;
+                } catch(e) {}
+                bootbox.alert({
+                  title: "<span class='text-danger'><i class='fa fa-exclamation-triangle'></i> Peringatan</span>",
+                  message: msg
+                });
               });
             }
         }

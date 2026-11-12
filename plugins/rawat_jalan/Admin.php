@@ -1063,6 +1063,17 @@ class Admin extends AdminModule
         foreach ($rows as $row) {
           $bridging_sep = $this->db('bridging_sep')->where('no_rawat', $row['no_rawat'])->oneArray();
           $row['no_sep'] = isset_or($bridging_sep['no_sep']);
+
+          // Cek kehadiran / check-in pasien
+          $antrian_loket = $this->db('mlite_antrian_loket')
+            ->where('no_rkm_medis', $row['no_rkm_medis'])
+            ->where('postdate', $row['tgl_registrasi'])
+            ->oneArray();
+          $row['checkin_time'] = '';
+          if ($antrian_loket) {
+            $row['checkin_time'] = !empty($antrian_loket['end_time']) ? $antrian_loket['end_time'] : $antrian_loket['start_time'];
+          }
+
           $this->assign['list'][] = $row;
         }
 
@@ -1866,6 +1877,28 @@ class Admin extends AdminModule
         exit();
       }
 
+      $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+      $tgl_reg = $reg['tgl_registrasi'] ?? date('Y-m-d');
+      $rm = $reg['no_rkm_medis'] ?? '';
+
+      $antrian_loket = $this->db('mlite_antrian_loket')
+        ->where('no_rkm_medis', $rm)
+        ->where('postdate', $tgl_reg)
+        ->oneArray();
+
+      $is_hadir = $antrian_loket && (!empty($antrian_loket['end_time']) || !empty($antrian_loket['start_time']));
+
+      // Jika belum hadir di pendaftaran, hanya status Batal atau Berkas Dikirim yang diizinkan
+      if (!$is_hadir && !in_array($stts, ['Batal', 'Berkas Dikirim'])) {
+        header('HTTP/1.1 400 Bad Request');
+        header('Content-Type: application/json');
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Status rawat tidak dapat diubah karena pasien belum ditandai Hadir di pendaftaran.'
+        ]);
+        exit();
+      }
+
       $cek = $this->db('mutasi_berkas')->where('no_rawat', $no_rawat)->oneArray();
       if($stts == 'Berkas Dikirim') {
           if(!$cek) {
@@ -1884,26 +1917,31 @@ class Admin extends AdminModule
               'dikirim' => $datetime
             ]);
           }
-          $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
           if ($reg && $reg['stts'] == 'Berkas Diterima') {
             $this->db('reg_periksa')->where('no_rawat', $no_rawat)->save(['stts' => 'Belum']);
           }
       } else if ($stts == 'Berkas Diterima') {
+          $dikirim_auto = date('Y-m-d H:i:s', strtotime($datetime) - 300);
           if(!$cek) {
             $this->db('mutasi_berkas')->save([
               'no_rawat' => htmlspecialchars($no_rawat, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
               'status' => 'Sudah Diterima',
-              'dikirim' => $datetime,
+              'dikirim' => $dikirim_auto,
               'diterima' => $datetime,
               'kembali' => '1900-01-01 00:00:00',
               'tidakada' => '1900-01-01 00:00:00',
               'ranap' => '1900-01-01 00:00:00'
             ]);
           } else {
-            $this->db('mutasi_berkas')->where('no_rawat', $no_rawat)->save([
+            $update_data = [
               'status' => 'Sudah Diterima',
               'diterima' => $datetime
-            ]);
+            ];
+            // Jika RM belum klik kirim (kosong atau tanggal default) atau tanggal kirim >= diterima
+            if (empty($cek['dikirim']) || $cek['dikirim'] <= '1970-01-01 00:00:00' || strtotime($cek['dikirim']) >= strtotime($datetime)) {
+              $update_data['dikirim'] = $dikirim_auto;
+            }
+            $this->db('mutasi_berkas')->where('no_rawat', $no_rawat)->save($update_data);
           }
           $this->db('reg_periksa')->where('no_rawat', $no_rawat)->save(['stts' => 'Berkas Diterima']);
       } else {
@@ -1919,6 +1957,161 @@ class Admin extends AdminModule
     {
       $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save([
         'status_lanjut' => $_POST['status_lanjut']
+      ]);
+      exit();
+    }
+
+    public function postCheckinPasien()
+    {
+      $no_rawat = $_POST['no_rawat'] ?? '';
+      if (strpos($no_rawat, '/') === false && strlen($no_rawat) == 14) {
+        $no_rawat = revertNorawat($no_rawat);
+      }
+      $no_rkm_medis = $_POST['no_rkm_medis'] ?? '';
+      $tgl_registrasi = $_POST['tgl_registrasi'] ?? date('Y-m-d');
+      $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+
+      if (empty($no_rawat) || empty($no_rkm_medis)) {
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'message' => 'Data nomor rawat atau no RM tidak lengkap']);
+        exit();
+      }
+
+      $now_time = date('H:i:s');
+      $start_time = date('H:i:s', strtotime('-3 minutes'));
+      $no_reg = !empty($reg['no_reg']) ? $reg['no_reg'] : '1';
+
+      $cek = $this->db('mlite_antrian_loket')
+        ->where('no_rkm_medis', $no_rkm_medis)
+        ->where('postdate', $tgl_registrasi)
+        ->oneArray();
+
+      if (!$cek) {
+        $this->db('mlite_antrian_loket')->save([
+          'type' => 'Loket',
+          'noantrian' => $no_reg,
+          'postdate' => $tgl_registrasi,
+          'start_time' => $start_time,
+          'end_time' => $now_time,
+          'no_rkm_medis' => $no_rkm_medis,
+          'status' => 2
+        ]);
+      } else {
+        $this->db('mlite_antrian_loket')
+          ->where('no_rkm_medis', $no_rkm_medis)
+          ->where('postdate', $tgl_registrasi)
+          ->save([
+            'start_time' => $start_time,
+            'end_time' => $now_time,
+            'status' => 2
+          ]);
+      }
+
+      // Jika ada mlite_antrian_referensi, simpan langsung Task 1 dan Task 2
+      $antrol = $this->db('mlite_antrian_referensi')
+        ->where('tanggal_periksa', $tgl_registrasi)
+        ->where('no_rkm_medis', $no_rkm_medis)
+        ->oneArray();
+
+      if (!$antrol) {
+        $p = $this->db('pasien')->where('no_rkm_medis', $no_rkm_medis)->oneArray();
+        if ($p && !empty($p['no_peserta'])) {
+          $antrol = $this->db('mlite_antrian_referensi')
+            ->where('tanggal_periksa', $tgl_registrasi)
+            ->where('nomor_kartu', $p['no_peserta'])
+            ->oneArray();
+        }
+      }
+
+      if ($antrol && !empty($antrol['kodebooking'])) {
+        $kb = $antrol['kodebooking'];
+        $t1 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '1')->oneArray();
+        if (!$t1) {
+          $this->db('mlite_antrian_referensi_taskid')->save([
+            'tanggal_periksa' => $tgl_registrasi,
+            'nomor_referensi' => $kb,
+            'taskid' => 1,
+            'waktu' => strtotime($tgl_registrasi . ' ' . $start_time) * 1000,
+            'status' => 'Belum',
+            'keterangan' => ''
+          ]);
+        } elseif ($t1['status'] != 'Sudah') {
+          $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '1')->save([
+            'waktu' => strtotime($tgl_registrasi . ' ' . $start_time) * 1000
+          ]);
+        }
+
+        $t2 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '2')->oneArray();
+        if (!$t2) {
+          $this->db('mlite_antrian_referensi_taskid')->save([
+            'tanggal_periksa' => $tgl_registrasi,
+            'nomor_referensi' => $kb,
+            'taskid' => 2,
+            'waktu' => strtotime($tgl_registrasi . ' ' . $now_time) * 1000,
+            'status' => 'Belum',
+            'keterangan' => ''
+          ]);
+        } elseif ($t2['status'] != 'Sudah') {
+          $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '2')->save([
+            'waktu' => strtotime($tgl_registrasi . ' ' . $now_time) * 1000
+          ]);
+        }
+      }
+
+      header('Content-Type: application/json');
+      echo json_encode([
+        'status' => 'success',
+        'message' => 'Pasien berhasil di-check-in hadir pada jam ' . $now_time,
+        'checkin_time' => $now_time
+      ]);
+      exit();
+    }
+
+    public function postBatalCheckinPasien()
+    {
+      $no_rkm_medis = $_POST['no_rkm_medis'] ?? '';
+      $tgl_registrasi = $_POST['tgl_registrasi'] ?? date('Y-m-d');
+
+      if (!empty($no_rkm_medis)) {
+        $this->db('mlite_antrian_loket')
+          ->where('no_rkm_medis', $no_rkm_medis)
+          ->where('postdate', $tgl_registrasi)
+          ->delete();
+
+        $antrol = $this->db('mlite_antrian_referensi')
+          ->where('tanggal_periksa', $tgl_registrasi)
+          ->where('no_rkm_medis', $no_rkm_medis)
+          ->oneArray();
+
+        if (!$antrol) {
+          $p = $this->db('pasien')->where('no_rkm_medis', $no_rkm_medis)->oneArray();
+          if ($p && !empty($p['no_peserta'])) {
+            $antrol = $this->db('mlite_antrian_referensi')
+              ->where('tanggal_periksa', $tgl_registrasi)
+              ->where('nomor_kartu', $p['no_peserta'])
+              ->oneArray();
+          }
+        }
+
+        if ($antrol && !empty($antrol['kodebooking'])) {
+          $kb = $antrol['kodebooking'];
+          $this->db('mlite_antrian_referensi_taskid')
+            ->where('nomor_referensi', $kb)
+            ->where('taskid', '1')
+            ->where('status', '!=', 'Sudah')
+            ->delete();
+          $this->db('mlite_antrian_referensi_taskid')
+            ->where('nomor_referensi', $kb)
+            ->where('taskid', '2')
+            ->where('status', '!=', 'Sudah')
+            ->delete();
+        }
+      }
+
+      header('Content-Type: application/json');
+      echo json_encode([
+        'status' => 'success',
+        'message' => 'Status kehadiran / check-in pasien berhasil dibatalkan'
       ]);
       exit();
     }

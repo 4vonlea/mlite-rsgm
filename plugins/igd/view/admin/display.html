@@ -27,7 +27,7 @@
                 <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynik', $value.no_ktp, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal">[BPJS] Cek Nomor KTP</a></li>
               {/if}
               <li><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal">Elektronik Rekam Medis</a></li>
-              {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
+              {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis' || $this->core->getUserInfo('role') == 'rekammedis' || $this->core->getUserInfo('role') == 'pengguna'}
               <li><a href="#soap" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-umur="{$value.umurdaftar} {$value.sttsumur}">SOAPIE & Pemeriksaan</a></li>
               <li><a href="#layanan_obat" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}">Layanan & Tindakan</a></li>
               {? \Systems\Lib\Event::call('rsgmgha.dropdown_menu', [$value]) ?}
@@ -43,7 +43,7 @@
                   <li><a href="{?=url([ADMIN,'igd','suratsakit',convertNorawat($value.no_rawat)])?}" target="_blank">Surat Keterangan Sakit</a></li>
                 </ul>
               </li>
-              {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
+              {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis' || $this->core->getUserInfo('role') == 'rekammedis' || $this->core->getUserInfo('role') == 'pengguna'}
               <li><a href="#berkas_digital" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}">Berkas Digital</a></li>
               <li><a href="#status_rawat" data-no_rawat="{$value.no_rawat}" data-stts="{$value.stts}">Status Rawat</a></li>
               <li><a href="#status_lanjut" data-no_rawat="{$value.no_rawat}">Status Lanjut</a></li>

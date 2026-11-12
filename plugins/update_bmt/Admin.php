@@ -8,8 +8,12 @@ class Admin extends AdminModule
 
         public function init()
     {
-        $this->core->addCSS(url([ADMIN, 'form_rme', 'css']));
-        $this->core->addJS(url([ADMIN, 'form_rme', 'js']), 'footer');
+        $uri = $_SERVER['REQUEST_URI'] ?? '';
+        $urlSeg = function_exists('parseURL') ? parseURL(2) : null;
+        if ($urlSeg === 'form_rme' || $urlSeg === 'update_bmt' || strpos($uri, 'form_rme') !== false || strpos($uri, 'update_bmt') !== false) {
+            $this->core->addCSS(url([ADMIN, 'form_rme', 'css']));
+            $this->core->addJS(url([ADMIN, 'form_rme', 'js']), 'footer');
+        }
         \Systems\Lib\Event::add("rsgmgha.dropdown_menu", function ($row) {
             $this->renderDropdownMenu($row);
         });
@@ -123,7 +127,6 @@ class Admin extends AdminModule
 /* ==============================================================
    UNIVERSAL MODERN RME CARD & FORM DESIGN SYSTEM (ALL 58 FORMS)
    ============================================================== */
-.panel-default:has(form),
 form[action*="form_rme"] .panel,
 form[action*="update_bmt"] .panel,
 .rme-modern-panel,
@@ -135,8 +138,8 @@ form[action*="update_bmt"] .panel,
     margin-bottom: 22px !important;
 }
 
-.panel-default:has(form) > .panel-heading,
 form[action*="form_rme"] .panel-heading,
+form[action*="update_bmt"] .panel-heading,
 .rme-card-header {
     background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
     border-bottom: 1px solid #e2e8f0 !important;
@@ -150,8 +153,8 @@ form[action*="form_rme"] .panel-heading,
     border-top-right-radius: 11px !important;
 }
 
-.panel-default:has(form) > .panel-heading .panel-title,
 form[action*="form_rme"] .panel-title,
+form[action*="update_bmt"] .panel-title,
 .rme-card-title {
     font-size: 15px !important;
     font-weight: 700 !important;
@@ -163,8 +166,8 @@ form[action*="form_rme"] .panel-title,
     flex-wrap: wrap !important;
 }
 
-.panel-default:has(form) > .panel-body,
-form[action*="form_rme"] .panel-body {
+form[action*="form_rme"] .panel-body,
+form[action*="update_bmt"] .panel-body {
     padding: 20px 22px !important;
 }
 
@@ -522,8 +525,16 @@ public function getJs()
 (function($) {
     'use strict';
     $(document).ready(function() {
+        // Hanya jalankan pada halaman modul form_rme atau update_bmt
+        var currentPath = window.location.pathname || '';
+        var currentSearch = window.location.search || '';
+        var isRmePage = currentPath.indexOf('form_rme') !== -1 || currentPath.indexOf('update_bmt') !== -1 || currentSearch.indexOf('form_rme') !== -1 || currentSearch.indexOf('update_bmt') !== -1;
+        if (!isRmePage) {
+            return;
+        }
+
         // 1. Deteksi form RME aktif di halaman
-        var $form = $('form[action*="form_rme"], form[action*="update_bmt"], form:has(input[name="no_rawat"])').first();
+        var $form = $('form[action*="form_rme"], form[action*="update_bmt"]').first();
         if (!$form.length) return;
 
         // Jangan aktifkan jika hanya form pencarian / filter di halaman manage tanpa isian no_rawat
@@ -563,7 +574,13 @@ public function getJs()
         }
 
         // 3. Tambahkan Tombol [Lihat Form Output (Cetak / PDF)] di Header jika belum ada
-        var $heading = $('.panel-heading').first();
+        var $heading = $form.find('.panel-heading').first();
+        if (!$heading.length) {
+            $heading = $form.closest('.panel').find('.panel-heading').first();
+        }
+        if (!$heading.length) {
+            $heading = $('.panel-heading').first();
+        }
         if ($heading.length) {
             if (!$heading.find('.btn-trigger-rme-preview, .btn-rme-live-preview').length) {
                 var $topPreviewBtn = $(

@@ -373,244 +373,314 @@ class Admin extends AdminModule
 
     public function anyTaskID()
     {
-      $this->_addHeaderFiles();
-      $this->getCssCard();
-      $date = date('Y-m-d');
-      if(isset($_POST['periode_antrol']) && $_POST['periode_antrol'] !='')
-        $date = $_POST['periode_antrol'];
+      try {
+        $this->_addHeaderFiles();
+        $this->getCssCard();
+        $date = date('Y-m-d');
+        if(isset($_POST['periode_antrol']) && $_POST['periode_antrol'] !='')
+          $date = $_POST['periode_antrol'];
 
-      $exclude_setting = $this->settings->get('jkn_mobile.exclude_taskid');
-      $exclude_list = array_filter(array_map('trim', explode(',', (string)$exclude_setting)));
-      if (!empty($exclude_list)) {
-          $placeholders = implode(',', array_fill(0, count($exclude_list), '?'));
-          $sql = "SELECT pasien.no_peserta,pasien.no_rkm_medis,pasien.no_ktp,pasien.no_tlp,pasien.nm_pasien,reg_periksa.no_reg,reg_periksa.no_rawat,reg_periksa.tgl_registrasi,reg_periksa.kd_dokter,dokter.nm_dokter,reg_periksa.kd_poli,poliklinik.nm_poli,reg_periksa.stts_daftar,reg_periksa.stts
-          FROM reg_periksa 
-          INNER JOIN pasien ON reg_periksa.no_rkm_medis=pasien.no_rkm_medis 
-          INNER JOIN dokter ON reg_periksa.kd_dokter=dokter.kd_dokter 
-          INNER JOIN poliklinik ON reg_periksa.kd_poli=poliklinik.kd_poli 
-          WHERE reg_periksa.tgl_registrasi=? AND reg_periksa.kd_poli NOT IN ($placeholders)
-          ORDER BY concat(reg_periksa.tgl_registrasi,' ',reg_periksa.jam_reg)";
-          $params = array_merge([$date], $exclude_list);
-      } else {
-          $sql = "SELECT pasien.no_peserta,pasien.no_rkm_medis,pasien.no_ktp,pasien.no_tlp,pasien.nm_pasien,reg_periksa.no_reg,reg_periksa.no_rawat,reg_periksa.tgl_registrasi,reg_periksa.kd_dokter,dokter.nm_dokter,reg_periksa.kd_poli,poliklinik.nm_poli,reg_periksa.stts_daftar,reg_periksa.stts
-          FROM reg_periksa 
-          INNER JOIN pasien ON reg_periksa.no_rkm_medis=pasien.no_rkm_medis 
-          INNER JOIN dokter ON reg_periksa.kd_dokter=dokter.kd_dokter 
-          INNER JOIN poliklinik ON reg_periksa.kd_poli=poliklinik.kd_poli 
-          WHERE reg_periksa.tgl_registrasi=?
-          ORDER BY concat(reg_periksa.tgl_registrasi,' ',reg_periksa.jam_reg)";
-          $params = [$date];
+        $exclude_setting = $this->settings->get('jkn_mobile.exclude_taskid');
+        $exclude_list = array_values(array_filter(array_map('trim', explode(',', (string)$exclude_setting))));
+        if (!empty($exclude_list)) {
+            $placeholders = implode(',', array_fill(0, count($exclude_list), '?'));
+            $sql = "SELECT pasien.no_peserta,pasien.no_rkm_medis,pasien.no_ktp,pasien.no_tlp,pasien.nm_pasien,reg_periksa.no_reg,reg_periksa.no_rawat,reg_periksa.tgl_registrasi,reg_periksa.kd_dokter,dokter.nm_dokter,reg_periksa.kd_poli,poliklinik.nm_poli,reg_periksa.stts_daftar,reg_periksa.stts
+            FROM reg_periksa 
+            INNER JOIN pasien ON reg_periksa.no_rkm_medis=pasien.no_rkm_medis 
+            INNER JOIN dokter ON reg_periksa.kd_dokter=dokter.kd_dokter 
+            INNER JOIN poliklinik ON reg_periksa.kd_poli=poliklinik.kd_poli 
+            WHERE reg_periksa.tgl_registrasi=? AND reg_periksa.kd_poli NOT IN ($placeholders)
+            ORDER BY concat(reg_periksa.tgl_registrasi,' ',reg_periksa.jam_reg)";
+            $params = array_merge([$date], $exclude_list);
+        } else {
+            $sql = "SELECT pasien.no_peserta,pasien.no_rkm_medis,pasien.no_ktp,pasien.no_tlp,pasien.nm_pasien,reg_periksa.no_reg,reg_periksa.no_rawat,reg_periksa.tgl_registrasi,reg_periksa.kd_dokter,dokter.nm_dokter,reg_periksa.kd_poli,poliklinik.nm_poli,reg_periksa.stts_daftar,reg_periksa.stts
+            FROM reg_periksa 
+            INNER JOIN pasien ON reg_periksa.no_rkm_medis=pasien.no_rkm_medis 
+            INNER JOIN dokter ON reg_periksa.kd_dokter=dokter.kd_dokter 
+            INNER JOIN poliklinik ON reg_periksa.kd_poli=poliklinik.kd_poli 
+            WHERE reg_periksa.tgl_registrasi=?
+            ORDER BY concat(reg_periksa.tgl_registrasi,' ',reg_periksa.jam_reg)";
+            $params = [$date];
+        }
+        $stmt = $this->db()->pdo()->prepare($sql);
+        $stmt->execute($params);
+        $query = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $rows = [];
+        foreach ($query as $q) {
+            $no_rawat = $q['no_rawat'] ?? '';
+            $batal = (($q['stts'] ?? '') == 'Batal') ? ($q['tgl_registrasi'].' '.date('H:i:s')) : '0000-00-00 00:00:00';
+
+            $mlite_antrian_referensi = null;
+            if (!empty($q['no_peserta'])) {
+                $mlite_antrian_referensi = $this->db('mlite_antrian_referensi')->where('tanggal_periksa', $q['tgl_registrasi'])->where('nomor_kartu', $q['no_peserta'])->oneArray();
+            }
+            if (!$mlite_antrian_referensi && !empty($q['no_rkm_medis'])) {
+                $mlite_antrian_referensi = $this->db('mlite_antrian_referensi')->where('tanggal_periksa', $q['tgl_registrasi'])->where('no_rkm_medis', $q['no_rkm_medis'])->oneArray();
+            }
+
+            $mutasi_berkas = !empty($no_rawat) ? $this->db('mutasi_berkas')->select('dikirim')->where('no_rawat', $no_rawat)->where('dikirim', '>', '1970-01-01 00:00:00')->oneArray() : null;
+            $mutasi_berkas2 = !empty($no_rawat) ? $this->db('mutasi_berkas')->select('diterima')->where('no_rawat', $no_rawat)->where('diterima', '>', '1970-01-01 00:00:00')->oneArray() : null;
+            $pemeriksaan_ralan = !empty($no_rawat) ? $this->db('pemeriksaan_ralan')->select(['datajam' => 'concat(tgl_perawatan," ",jam_rawat)'])->where('no_rawat', $no_rawat)->oneArray() : null;
+            $resep_obat = !empty($no_rawat) ? $this->db('resep_obat')->select(['datajam' => 'concat(tgl_perawatan," ",jam)'])->where('no_rawat', $no_rawat)->oneArray() : null;
+            $resep_obat2 = !empty($no_rawat) ? $this->db('resep_obat')->select(['datajam' => 'concat(tgl_peresepan," ",jam_peresepan)'])->where('no_rawat', $no_rawat)->where('concat(tgl_perawatan," ",jam)', '<>', 'concat(tgl_peresepan," ",jam_peresepan)')->oneArray() : null;
+
+            $mlite_antrian_loket = !empty($q['no_rkm_medis']) ? $this->db('mlite_antrian_loket')->where('postdate', $date)->where('type','Loket')->where('no_rkm_medis', $q['no_rkm_medis'])->oneArray() : null;
+            $task1 = '';
+            $task2 = '';
+            if(!empty($mlite_antrian_loket['start_time'])) {
+              $task1 = $mlite_antrian_loket['postdate'].' '.$mlite_antrian_loket['start_time'];
+            }
+            if(!empty($mlite_antrian_loket['end_time'])) {
+              $task2 = $mlite_antrian_loket['postdate'].' '.$mlite_antrian_loket['end_time'];
+            }
+
+            $q['nomor_referensi'] = $mlite_antrian_referensi['kodebooking'] ?? '';
+            $q['status_kirim'] = $mlite_antrian_referensi['status_kirim'] ?? '';
+
+            $q['task1'] = '';
+            $q['task2'] = '';
+            $q['task3'] = '';
+            $q['task4'] = '';
+            $q['task5'] = '';
+            $q['task6'] = '';
+            $q['task7'] = '';
+            $q['task99'] = '';
+
+            if(!empty($q['nomor_referensi'])) {
+              $taskid_records = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $q['nomor_referensi'])->toArray();
+              $taskid_map = [];
+              foreach ($taskid_records as $tr) {
+                $taskid_map[$tr['taskid']] = $tr['waktu'];
+              }
+              if (!empty($taskid_map['1']) && is_numeric($taskid_map['1'])) {
+                $q['task1'] = date('Y-m-d H:i:s', (int)($taskid_map['1'] / 1000));
+              }
+              if (!empty($taskid_map['2']) && is_numeric($taskid_map['2'])) {
+                $q['task2'] = date('Y-m-d H:i:s', (int)($taskid_map['2'] / 1000));
+              }
+              if (!empty($taskid_map['3']) && is_numeric($taskid_map['3'])) {
+                $q['task3'] = date('Y-m-d H:i:s', (int)($taskid_map['3'] / 1000));
+              }
+              if (!empty($taskid_map['4']) && is_numeric($taskid_map['4'])) {
+                $q['task4'] = date('Y-m-d H:i:s', (int)($taskid_map['4'] / 1000));
+              }
+              if (!empty($taskid_map['5']) && is_numeric($taskid_map['5'])) {
+                $q['task5'] = date('Y-m-d H:i:s', (int)($taskid_map['5'] / 1000));
+              }
+              if (!empty($taskid_map['6']) && is_numeric($taskid_map['6'])) {
+                $q['task6'] = date('Y-m-d H:i:s', (int)($taskid_map['6'] / 1000));
+              }
+              if (!empty($taskid_map['7']) && is_numeric($taskid_map['7'])) {
+                $q['task7'] = date('Y-m-d H:i:s', (int)($taskid_map['7'] / 1000));
+              }
+              if (!empty($taskid_map['99']) && is_numeric($taskid_map['99'])) {
+                $q['task99'] = date('Y-m-d H:i:s', (int)($taskid_map['99'] / 1000));
+              }
+            }
+
+            if(empty($q['task4'])) {
+              $q['task4'] = !empty($mutasi_berkas2['diterima']) ? $mutasi_berkas2['diterima'] : '';
+            }
+            if(empty($q['task5'])) {
+              $q['task5'] = !empty($pemeriksaan_ralan['datajam']) ? $pemeriksaan_ralan['datajam'] : '';
+            }
+            if(empty($q['task3'])) {
+              if (!empty($mutasi_berkas['dikirim'])) {
+                $q['task3'] = $mutasi_berkas['dikirim'];
+              } elseif (!empty($q['task4'])) {
+                $q['task3'] = date('Y-m-d H:i:s', strtotime($q['task4']) - 300);
+              } elseif (!empty($q['task5'])) {
+                $q['task3'] = date('Y-m-d H:i:s', strtotime($q['task5']) - 600);
+              } else {
+                $q['task3'] = '';
+              }
+            }
+            if(empty($q['task4']) && !empty($q['task5'])) {
+              $q['task4'] = date('Y-m-d H:i:s', strtotime($q['task5']) - 300);
+            }
+            if(!empty($q['task3']) && !empty($q['task4']) && strtotime($q['task3']) >= strtotime($q['task4'])) {
+              $q['task3'] = date('Y-m-d H:i:s', strtotime($q['task4']) - 300);
+            }
+
+            if(empty($q['task1']) || empty($q['task2'])) {
+              if(!empty($task1) && !empty($task2)) {
+                if(empty($q['task1'])) $q['task1'] = $task1;
+                if(empty($q['task2'])) $q['task2'] = $task2;
+              } elseif(!empty($q['task3'])) {
+                $t3_time = strtotime($q['task3']);
+                if(empty($q['task2'])) $q['task2'] = date('Y-m-d H:i:s', $t3_time - 180);
+                if(empty($q['task1'])) $q['task1'] = date('Y-m-d H:i:s', $t3_time - 600);
+              } else {
+                if(empty($q['task1'])) $q['task1'] = '';
+                if(empty($q['task2'])) $q['task2'] = '';
+              }
+            }
+
+            if(empty($q['task6'])) {
+              $q['task6'] = !empty($resep_obat2['datajam']) ? $resep_obat2['datajam'] : '';
+            }
+            if(empty($q['task7'])) {
+              $q['task7'] = !empty($resep_obat['datajam']) ? $resep_obat['datajam'] : '';
+            }
+            if(empty($q['task99'])) {
+              $q['task99'] = $batal;
+            }
+            $rows[] = $q;
+        }
+
+        $taskid = $rows;
+        return $this->draw('taskid.html', ['taskid' => $taskid, 'date' => $date, 'tgl' => $date]);
+      } catch (\Throwable $e) {
+        error_log("anyTaskID Error: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
+        $msg = htmlspecialchars($e->getMessage());
+        $file = htmlspecialchars($e->getFile() . ':' . $e->getLine());
+        return '<div class="row" style="margin-top:15px;"><div class="col-xs-12">' .
+               '<div class="panel panel-danger">' .
+               '<div class="panel-heading"><h3 class="panel-title"><i class="fa fa-exclamation-triangle"></i> Gagal Memuat Halaman Task ID JKN</h3></div>' .
+               '<div class="panel-body">' .
+               '<div class="alert alert-danger" style="margin-bottom:10px;"><strong>Error:</strong> ' . $msg . '</div>' .
+               '<p class="text-muted"><small>Lokasi: ' . $file . '</small></p>' .
+               '<a href="' . url([ADMIN, 'jkn_mobile', 'taskid']) . '" class="btn btn-default btn-sm"><i class="fa fa-refresh"></i> Muat Ulang</a>' .
+               '</div></div></div></div>';
       }
-      $stmt = $this->db()->pdo()->prepare($sql);
-      $stmt->execute($params);
-      $query = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-      $rows = [];
-      foreach ($query as $q) {
-          $no_rawat = $q['no_rawat'] ?? '';
-          $batal = ($q['stts'] ?? '') == 'Batal' ? $q['tgl_registrasi'].' '.date('H:i:s') : '0000-00-00 00:00:00';
-
-          $mlite_antrian_referensi = null;
-          if (!empty($q['no_peserta'])) {
-              $mlite_antrian_referensi = $this->db('mlite_antrian_referensi')->where('tanggal_periksa', $q['tgl_registrasi'])->where('nomor_kartu', $q['no_peserta'])->oneArray();
-          }
-          if (!$mlite_antrian_referensi && !empty($q['no_rkm_medis'])) {
-              $mlite_antrian_referensi = $this->db('mlite_antrian_referensi')->where('tanggal_periksa', $q['tgl_registrasi'])->where('no_rkm_medis', $q['no_rkm_medis'])->oneArray();
-          }
-
-          $mutasi_berkas = !empty($no_rawat) ? $this->db('mutasi_berkas')->select('dikirim')->where('no_rawat', $no_rawat)->where('dikirim', '>', '1970-01-01 00:00:00')->oneArray() : null;
-          $mutasi_berkas2 = !empty($no_rawat) ? $this->db('mutasi_berkas')->select('diterima')->where('no_rawat', $no_rawat)->where('diterima', '>', '1970-01-01 00:00:00')->oneArray() : null;
-          $pemeriksaan_ralan = !empty($no_rawat) ? $this->db('pemeriksaan_ralan')->select(['datajam' => 'concat(tgl_perawatan," ",jam_rawat)'])->where('no_rawat', $no_rawat)->oneArray() : null;
-          $resep_obat = !empty($no_rawat) ? $this->db('resep_obat')->select(['datajam' => 'concat(tgl_perawatan," ",jam)'])->where('no_rawat', $no_rawat)->oneArray() : null;
-          $resep_obat2 = !empty($no_rawat) ? $this->db('resep_obat')->select(['datajam' => 'concat(tgl_peresepan," ",jam_peresepan)'])->where('no_rawat', $no_rawat)->where('concat(tgl_perawatan," ",jam)', '<>', 'concat(tgl_peresepan," ",jam_peresepan)')->oneArray() : null;
-
-          $mlite_antrian_loket = !empty($q['no_rkm_medis']) ? $this->db('mlite_antrian_loket')->where('postdate', $date)->where('type','Loket')->where('no_rkm_medis', $q['no_rkm_medis'])->oneArray() : null;
-          $task1 = '';
-          $task2 = '';
-          if(!empty($mlite_antrian_loket['start_time'])) {
-            $task1 = $mlite_antrian_loket['postdate'].' '.$mlite_antrian_loket['start_time'];
-          }
-          if(!empty($mlite_antrian_loket['end_time'])) {
-            $task2 = $mlite_antrian_loket['postdate'].' '.$mlite_antrian_loket['end_time'];
-          }
-
-          $q['nomor_referensi'] = $mlite_antrian_referensi['kodebooking'] ?? '';
-          $q['status_kirim'] = $mlite_antrian_referensi['status_kirim'] ?? '';
-
-          $taskid1_waktu = '';
-          $taskid2_waktu = '';
-          $taskid3_waktu = '';
-          $taskid4_waktu = '';
-          $taskid5_waktu = '';
-          $taskid6_waktu = '';
-          $taskid7_waktu = '';
-          $taskid99_waktu = '';
-
-          if(!empty($q['nomor_referensi'])) {
-            $taskid_records = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $q['nomor_referensi'])->toArray();
-            $taskid_map = [];
-            foreach ($taskid_records as $tr) {
-              $taskid_map[$tr['taskid']] = $tr['waktu'];
-            }
-            if (!empty($taskid_map['1']) && is_numeric($taskid_map['1'])) {
-              $taskid1_waktu = $taskid_map['1'];
-              $q['task1'] = date('Y-m-d H:i:s', (int)($taskid_map['1'] / 1000));
-            }
-            if (!empty($taskid_map['2']) && is_numeric($taskid_map['2'])) {
-              $taskid2_waktu = $taskid_map['2'];
-              $q['task2'] = date('Y-m-d H:i:s', (int)($taskid_map['2'] / 1000));
-            }
-            if (!empty($taskid_map['3']) && is_numeric($taskid_map['3'])) {
-              $taskid3_waktu = $taskid_map['3'];
-              $q['task3'] = date('Y-m-d H:i:s', (int)($taskid_map['3'] / 1000));
-            }
-            if (!empty($taskid_map['4']) && is_numeric($taskid_map['4'])) {
-              $taskid4_waktu = $taskid_map['4'];
-              $q['task4'] = date('Y-m-d H:i:s', (int)($taskid_map['4'] / 1000));
-            }
-            if (!empty($taskid_map['5']) && is_numeric($taskid_map['5'])) {
-              $taskid5_waktu = $taskid_map['5'];
-              $q['task5'] = date('Y-m-d H:i:s', (int)($taskid_map['5'] / 1000));
-            }
-            if (!empty($taskid_map['6']) && is_numeric($taskid_map['6'])) {
-              $taskid6_waktu = $taskid_map['6'];
-              $q['task6'] = date('Y-m-d H:i:s', (int)($taskid_map['6'] / 1000));
-            }
-            if (!empty($taskid_map['7']) && is_numeric($taskid_map['7'])) {
-              $taskid7_waktu = $taskid_map['7'];
-              $q['task7'] = date('Y-m-d H:i:s', (int)($taskid_map['7'] / 1000));
-            }
-            if (!empty($taskid_map['99']) && is_numeric($taskid_map['99'])) {
-              $taskid99_waktu = $taskid_map['99'];
-              $q['task99'] = date('Y-m-d H:i:s', (int)($taskid_map['99'] / 1000));
-            }
-          }
-
-          if($taskid1_waktu == '') {
-            $q['task1'] = $task1;
-          }
-          if($taskid2_waktu == '') {
-            $q['task2'] = $task2;
-          }
-          if($taskid3_waktu == '') {
-            $q['task3'] = !empty($mutasi_berkas['dikirim']) ? $mutasi_berkas['dikirim'] : '';
-          }
-          if($taskid4_waktu == '') {
-            $q['task4'] = !empty($mutasi_berkas2['diterima']) ? $mutasi_berkas2['diterima'] : '';
-          }
-          if($taskid5_waktu == '') {
-            $q['task5'] = !empty($pemeriksaan_ralan['datajam']) ? $pemeriksaan_ralan['datajam'] : '';
-          }
-          if($taskid6_waktu == '') {
-            $q['task6'] = !empty($resep_obat2['datajam']) ? $resep_obat2['datajam'] : '';
-          }
-          if($taskid7_waktu == '') {
-            $q['task7'] = !empty($resep_obat['datajam']) ? $resep_obat['datajam'] : '';
-          }
-          if($taskid99_waktu == '') {
-            $q['task99'] = $batal;
-          }
-          $rows[] = $q;
-      }
-
-      $taskid = $rows;
-      return $this->draw('taskid.html', ['taskid' => $taskid, 'date' => $date, 'tgl' => $date]);
     }
 
     public function getTaskIDInput($no_rawat)
     {
-      $no_rawat = revertNorawat($no_rawat);
-      $pasien = $this->db('reg_periksa')
-        ->select([
-          'no_rawat' => 'no_rawat',
-          'no_rkm_medis' => 'reg_periksa.no_rkm_medis',
-          'nm_pasien' => 'nm_pasien',
-          'kd_pj' => 'reg_periksa.kd_pj',
-          'tgl_registrasi' => 'tgl_registrasi',
-          'jam_reg' => 'jam_reg'
-        ])
-        ->join('pasien', 'pasien.no_rkm_medis=reg_periksa.no_rkm_medis')
-        ->where('no_rawat', $no_rawat)
-        ->oneArray();
+      try {
+        $no_rawat = revertNorawat($no_rawat);
+        $pasien = $this->db('reg_periksa')
+          ->select([
+            'no_rawat' => 'no_rawat',
+            'no_rkm_medis' => 'reg_periksa.no_rkm_medis',
+            'nm_pasien' => 'nm_pasien',
+            'kd_pj' => 'reg_periksa.kd_pj',
+            'tgl_registrasi' => 'tgl_registrasi',
+            'jam_reg' => 'jam_reg'
+          ])
+          ->join('pasien', 'pasien.no_rkm_medis=reg_periksa.no_rkm_medis')
+          ->where('no_rawat', $no_rawat)
+          ->oneArray();
 
-      if (!$pasien) {
-        echo '<div class="alert alert-danger">Data pasien tidak ditemukan.</div>';
+        if (!$pasien) {
+          echo '<div class="alert alert-danger">Data pasien tidak ditemukan.</div>';
+          exit();
+        }
+
+        $mlite_antrian_referensi = null;
+        if (!empty($pasien['no_rkm_medis']) && !empty($pasien['tgl_registrasi'])) {
+          $mlite_antrian_referensi = $this->db('mlite_antrian_referensi')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('tanggal_periksa', $pasien['tgl_registrasi'])->oneArray();
+        }
+        $nomor_referensi = '';
+        $kode_booking = '';
+        if($mlite_antrian_referensi) {
+          $nomor_referensi = $mlite_antrian_referensi['nomor_referensi'] ?? '';
+          $kode_booking = $mlite_antrian_referensi['kodebooking'] ?? '';
+        }
+
+        $taskid_records = !empty($kode_booking) ? $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->toArray() : [];
+        $taskid_map = [];
+        foreach ($taskid_records as $tr) {
+          $taskid_map[$tr['taskid']] = $tr['waktu'];
+        }
+
+        $taskid = [];
+        $taskid['1'] = (!empty($taskid_map['1']) && is_numeric($taskid_map['1'])) ? date('Y-m-d H:i:s', (int)($taskid_map['1'] / 1000)) : '';
+        $taskid['2'] = (!empty($taskid_map['2']) && is_numeric($taskid_map['2'])) ? date('Y-m-d H:i:s', (int)($taskid_map['2'] / 1000)) : '';
+        $taskid['3'] = (!empty($taskid_map['3']) && is_numeric($taskid_map['3'])) ? date('Y-m-d H:i:s', (int)($taskid_map['3'] / 1000)) : '';
+        $taskid['4'] = (!empty($taskid_map['4']) && is_numeric($taskid_map['4'])) ? date('Y-m-d H:i:s', (int)($taskid_map['4'] / 1000)) : '';
+        $taskid['5'] = (!empty($taskid_map['5']) && is_numeric($taskid_map['5'])) ? date('Y-m-d H:i:s', (int)($taskid_map['5'] / 1000)) : '';
+        $taskid['6'] = (!empty($taskid_map['6']) && is_numeric($taskid_map['6'])) ? date('Y-m-d H:i:s', (int)($taskid_map['6'] / 1000)) : '';
+        $taskid['7'] = (!empty($taskid_map['7']) && is_numeric($taskid_map['7'])) ? date('Y-m-d H:i:s', (int)($taskid_map['7'] / 1000)) : '';
+        $taskid['99'] = (!empty($taskid_map['99']) && is_numeric($taskid_map['99'])) ? date('Y-m-d H:i:s', (int)($taskid_map['99'] / 1000)) : '';
+
+        $mlite_antrian_loket = !empty($pasien['no_rkm_medis']) ? $this->db('mlite_antrian_loket')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('postdate', $pasien['tgl_registrasi'])->oneArray() : null;
+        $berkas_dikirim = !empty($pasien['no_rawat']) ? $this->db('mutasi_berkas')->select('dikirim')->where('no_rawat', $pasien['no_rawat'])->where('dikirim', '>', '1970-01-01 00:00:00')->oneArray() : null;
+        $berkas_diterima = !empty($pasien['no_rawat']) ? $this->db('mutasi_berkas')->select('diterima')->where('no_rawat', $pasien['no_rawat'])->where('diterima', '>', '1970-01-01 00:00:00')->oneArray() : null;
+        $pemeriksaan_ralan = !empty($pasien['no_rawat']) ? $this->db('pemeriksaan_ralan')->select(['datajam' => 'concat(tgl_perawatan," ",jam_rawat)'])->where('no_rawat', $pasien['no_rawat'])->oneArray() : null;
+        $resep_obat = !empty($pasien['no_rawat']) ? $this->db('resep_obat')->select(['datajam' => 'concat(tgl_peresepan," ",jam_peresepan)', 'datajam2' => 'concat(tgl_perawatan," ",jam)', 'no_resep' => 'no_resep'])->where('no_rawat', $pasien['no_rawat'])->oneArray() : null;
+
+        $jenisresep = 'Non racikan';
+        if($resep_obat && !empty($resep_obat['no_resep'])) {
+          $resep_dokter_racikan = $this->db('resep_dokter_racikan')->where('no_resep', $resep_obat['no_resep'])->oneArray();
+          if(!empty($resep_dokter_racikan)) {
+            $jenisresep = 'Racikan';
+          }
+        }
+
+        if(empty($taskid['4'])) {
+          $taskid['4'] = !empty($berkas_diterima['diterima']) ? $berkas_diterima['diterima'] : '';
+        }
+        if(empty($taskid['5'])) {
+          $taskid['5'] = !empty($pemeriksaan_ralan['datajam']) ? $pemeriksaan_ralan['datajam'] : '';
+        }
+        if(empty($taskid['3'])) {
+          if (!empty($berkas_dikirim['dikirim'])) {
+            $taskid['3'] = $berkas_dikirim['dikirim'];
+          } elseif (!empty($taskid['4'])) {
+            // Jika berkas sudah diterima di poli tapi RM belum klik kirim, otomatis 5 menit sebelum diterima
+            $taskid['3'] = date('Y-m-d H:i:s', strtotime($taskid['4']) - 300);
+          } elseif (!empty($taskid['5'])) {
+            // Jika dokter sudah mulai periksa, otomatis 10 menit sebelum periksa
+            $taskid['3'] = date('Y-m-d H:i:s', strtotime($taskid['5']) - 600);
+          } else {
+            $taskid['3'] = '';
+          }
+        }
+        if(empty($taskid['4']) && !empty($taskid['5'])) {
+          $taskid['4'] = date('Y-m-d H:i:s', strtotime($taskid['5']) - 300);
+        }
+        if(!empty($taskid['3']) && !empty($taskid['4']) && strtotime($taskid['3']) >= strtotime($taskid['4'])) {
+          $taskid['3'] = date('Y-m-d H:i:s', strtotime($taskid['4']) - 300);
+        }
+
+        if(empty($taskid['1']) || empty($taskid['2'])) {
+          if(!empty($mlite_antrian_loket['start_time']) && !empty($mlite_antrian_loket['end_time'])) {
+            if(empty($taskid['1'])) {
+              $taskid['1'] = $mlite_antrian_loket['postdate'].' '.$mlite_antrian_loket['start_time'];
+            }
+            if(empty($taskid['2'])) {
+              $taskid['2'] = $mlite_antrian_loket['postdate'].' '.$mlite_antrian_loket['end_time'];
+            }
+          } elseif(!empty($taskid['3'])) {
+            $t3_time = strtotime($taskid['3']);
+            if(empty($taskid['2'])) {
+              $taskid['2'] = date('Y-m-d H:i:s', $t3_time - 180);
+            }
+            if(empty($taskid['1'])) {
+              $taskid['1'] = date('Y-m-d H:i:s', $t3_time - 600);
+            }
+          } else {
+            if(empty($taskid['1'])) {
+              $taskid['1'] = '';
+            }
+            if(empty($taskid['2'])) {
+              $taskid['2'] = '';
+            }
+          }
+        }
+        if(empty($taskid['6'])) {
+          $taskid['6'] = !empty($resep_obat['datajam']) ? $resep_obat['datajam'] : '';
+        }
+        if(empty($taskid['7'])) {
+          $taskid['7'] = !empty($resep_obat['datajam2']) ? $resep_obat['datajam2'] : '';
+        }
+        if(empty($taskid['99'])) {
+          $taskid['99'] = '';
+        }
+        $status_antrol = !empty($nomor_referensi) ? $this->db('mlite_antrian_referensi')->where('nomor_referensi', $nomor_referensi)->where('status_kirim', 'Sudah')->oneArray() : null;
+        $status_kirim_antrol = 'Belum';
+        if($status_antrol && !empty($status_antrol['status_kirim'])) {
+          $status_kirim_antrol = $status_antrol['status_kirim'];
+        }
+        echo $this->draw('taskid.input.html', ['pasien' => $pasien, 'taskid' => $taskid, 'nomor_referensi' => $nomor_referensi, 'kode_booking' => $kode_booking, 'status_kirim_antrol' => $status_kirim_antrol]);
+        exit();
+      } catch (\Throwable $e) {
+        error_log("getTaskIDInput error: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
+        echo '<div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title text-danger">Error Memuat Task ID</h4></div><div class="modal-body"><div class="alert alert-danger">' . htmlspecialchars($e->getMessage()) . '</div><small>' . htmlspecialchars($e->getFile() . ':' . $e->getLine()) . '</small></div>';
         exit();
       }
-
-      $mlite_antrian_referensi = null;
-      if (!empty($pasien['no_rkm_medis']) && !empty($pasien['tgl_registrasi'])) {
-        $mlite_antrian_referensi = $this->db('mlite_antrian_referensi')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('tanggal_periksa', $pasien['tgl_registrasi'])->oneArray();
-      }
-      $nomor_referensi = '';
-      $kode_booking = '';
-      if($mlite_antrian_referensi) {
-        $nomor_referensi = $mlite_antrian_referensi['nomor_referensi'] ?? '';
-        $kode_booking = $mlite_antrian_referensi['kodebooking'] ?? '';
-      }
-
-      $datetime_reg_periksa = ($pasien['tgl_registrasi'] ?? date('Y-m-d')).' '.($pasien['jam_reg'] ?? date('H:i:s'));
-      $def_time = (int)(strtotime($datetime_reg_periksa) * 1000);
-
-      $taskid_records = !empty($kode_booking) ? $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->toArray() : [];
-      $taskid_map = [];
-      foreach ($taskid_records as $tr) {
-        $taskid_map[$tr['taskid']] = $tr['waktu'];
-      }
-
-      $taskid = [];
-      for ($i = 1; $i <= 7; $i++) {
-        $waktu = $taskid_map[(string)$i] ?? $def_time;
-        $taskid[(string)$i] = date('Y-m-d H:i:s', (int)($waktu / 1000));
-      }
-
-      $taskid['99'] = !empty($taskid_map['99']) && is_numeric($taskid_map['99']) ? date('Y-m-d H:i:s', (int)($taskid_map['99'] / 1000)) : '';
-
-      $mlite_antrian_loket = !empty($pasien['no_rkm_medis']) ? $this->db('mlite_antrian_loket')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('postdate', $pasien['tgl_registrasi'])->oneArray() : null;
-      $berkas_dikirim = !empty($pasien['no_rawat']) ? $this->db('mutasi_berkas')->select('dikirim')->where('no_rawat', $pasien['no_rawat'])->where('dikirim', '>', '1970-01-01 00:00:00')->oneArray() : null;
-      $berkas_diterima = !empty($pasien['no_rawat']) ? $this->db('mutasi_berkas')->select('diterima')->where('no_rawat', $pasien['no_rawat'])->where('diterima', '>', '1970-01-01 00:00:00')->oneArray() : null;
-      $pemeriksaan_ralan = !empty($pasien['no_rawat']) ? $this->db('pemeriksaan_ralan')->select(['datajam' => 'concat(tgl_perawatan," ",jam_rawat)'])->where('no_rawat', $pasien['no_rawat'])->oneArray() : null;
-      $resep_obat = !empty($pasien['no_rawat']) ? $this->db('resep_obat')->select(['datajam' => 'concat(tgl_peresepan," ",jam_peresepan)', 'datajam2' => 'concat(tgl_perawatan," ",jam)', 'no_resep' => 'no_resep'])->where('no_rawat', $pasien['no_rawat'])->oneArray() : null;
-
-      $jenisresep = 'Non racikan';
-      if($resep_obat && !empty($resep_obat['no_resep'])) {
-        $resep_dokter_racikan = $this->db('resep_dokter_racikan')->where('no_resep', $resep_obat['no_resep'])->oneArray();
-        if(!empty($resep_dokter_racikan)) {
-          $jenisresep = 'Racikan';
-        }
-      }
-
-      if(empty($taskid_map['1'])) {
-        $taskid['1'] = (!empty($mlite_antrian_loket['postdate']) ? $mlite_antrian_loket['postdate'] : $pasien['tgl_registrasi']).' '.(!empty($mlite_antrian_loket['start_time']) ? $mlite_antrian_loket['start_time'] : $pasien['jam_reg']);
-      }
-      if(empty($taskid_map['2'])) {
-        $taskid['2'] = (!empty($mlite_antrian_loket['postdate']) ? $mlite_antrian_loket['postdate'] : $pasien['tgl_registrasi']).' '.(!empty($mlite_antrian_loket['end_time']) ? $mlite_antrian_loket['end_time'] : $pasien['jam_reg']);
-      }
-      if(empty($taskid_map['3'])) {
-        $taskid['3'] = !empty($berkas_dikirim['dikirim']) ? $berkas_dikirim['dikirim'] : '';
-      }
-      if(empty($taskid_map['4'])) {
-        $taskid['4'] = !empty($berkas_diterima['diterima']) ? $berkas_diterima['diterima'] : '';
-      }
-      if(empty($taskid_map['5'])) {
-        $taskid['5'] = !empty($pemeriksaan_ralan['datajam']) ? $pemeriksaan_ralan['datajam'] : '';
-      }
-      if(empty($taskid_map['6'])) {
-        $taskid['6'] = !empty($resep_obat['datajam']) ? $resep_obat['datajam'] : '';
-      }
-      if(empty($taskid_map['7'])) {
-        $taskid['7'] = !empty($resep_obat['datajam2']) ? $resep_obat['datajam2'] : '';
-      }
-      if(empty($taskid_map['99'])) {
-        $taskid['99'] = '';
-      }
-      $status_antrol = !empty($nomor_referensi) ? $this->db('mlite_antrian_referensi')->where('nomor_referensi', $nomor_referensi)->where('status_kirim', 'Sudah')->oneArray() : null;
-      $status_kirim_antrol = 'Belum';
-      if($status_antrol && !empty($status_antrol['status_kirim'])) {
-        $status_kirim_antrol = $status_antrol['status_kirim'];
-      }
-      echo $this->draw('taskid.input.html', ['pasien' => $pasien, 'taskid' => $taskid, 'nomor_referensi' => $nomor_referensi, 'kode_booking' => $kode_booking, 'status_kirim_antrol' => $status_kirim_antrol]);
-      exit();
     }
 
     public function postSaveTaskIDInput()
