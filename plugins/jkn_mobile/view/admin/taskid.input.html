@@ -73,9 +73,13 @@
   </form>
 </div>
 <div class="modal-footer">
+{if: isset_or($nomor_referensi)!='' && isset_or($kode_booking)!=''}
     <a href="{?=url([ADMIN,'jkn_mobile','updatewaktu',$nomor_referensi,$kode_booking,'batal'])?}" class="btn btn-info" target="_blank">Batal Antrian</a>
     <a href="{?=url([ADMIN,'jkn_mobile','updatewaktu',$nomor_referensi,$kode_booking,'v2'])?}" class="btn btn-warning" target="_blank">Update Waktu V2</a>
     <a href="{?=url([ADMIN,'jkn_mobile','updatewaktu',$nomor_referensi,$kode_booking,'v3'])?}" class="btn btn-danger" target="_blank">Update Waktu V3</a>
+{else}
+    <span class="text-danger">Nomor referensi/kode booking belum tersedia. Silakan klik Kirim Antrol terlebih dahulu.</span>
+{/if}
     <button type="button" class="btn btn-primary" data-dismiss="modal">Tutup</button>
 </div>
 <script type="text/javascript">
