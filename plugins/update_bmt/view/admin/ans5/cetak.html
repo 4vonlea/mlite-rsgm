@@ -2,32 +2,40 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title>STATUS ANESTESI - {$data.no_rkm_medis}</title>
+    <title>STATUS ANESTESI (INTRA ANESTESI) - {$data.no_rkm_medis}</title>
     <style>
         {if: empty($is_mpdf)}
         @page {
-            size: A4 portrait;
-            margin: 5mm 6mm;
+            size: A4 landscape;
+            margin: 4mm 5mm;
         }
         body {
             background: #f4f6f9;
-            padding: 15px 0;
+            padding: 10px 0;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 7.2pt;
+            color: #000;
+            line-height: 1.15;
+            margin: 0;
         }
         .cetak-wrapper {
             background: #fff;
-            width: 196mm;
+            width: 286mm;
             margin: 0 auto 20px auto;
             box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-            padding: 4px;
+            padding: 4px 6px;
+            border: 1.5px solid #000;
+            box-sizing: border-box;
         }
         .no-print-toolbar {
-            width: 196mm;
+            width: 286mm;
             margin: 0 auto 10px auto;
             padding: 8px 12px;
             background: #2c3e50;
             color: #fff;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
+            box-sizing: border-box;
         }
         .btn-toolbar {
             padding: 4px 10px;
@@ -45,68 +53,63 @@
         @media print {
             .no-print-toolbar { display: none !important; }
             body { background: transparent !important; padding: 0 !important; }
-            .cetak-wrapper { box-shadow: none !important; margin: 0 !important; width: 100% !important; border: 1.5px solid #000 !important; }
+            .cetak-wrapper { box-shadow: none !important; margin: 0 !important; width: 100% !important; border: 1.5px solid #000 !important; padding: 2px 4px !important; }
         }
-        {/if}
-
+        {else}
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 8px;
+            font-size: 7pt;
             color: #000;
             line-height: 1.15;
             margin: 0;
             padding: 0;
         }
         .cetak-wrapper {
+            width: 100%;
             border: 1.5px solid #000;
+            padding: 2px 4px;
         }
+        {/if}
+
         table {
             border-collapse: collapse;
             width: 100%;
         }
-        .table-border {
+        .table-bordered {
             border: 1px solid #000;
         }
-        .table-border th, .table-border td {
-            border: 1px solid #000;
-            padding: 1.5px 3px;
-            vertical-align: top;
-        }
-        .table-grid {
-            border-collapse: collapse;
-            width: 100%;
-            font-size: 7.2px;
-        }
-        .table-grid th, .table-grid td {
-            border: 0.7px solid #000;
-            padding: 1px 1.5px;
-            text-align: center;
+        .table-bordered th, .table-bordered td {
+            border: 0.8px solid #000;
+            padding: 1.5px 2.5px;
             vertical-align: middle;
-        }
-        .table-grid td.label-col {
-            text-align: left;
-            padding-left: 3px;
-            font-weight: bold;
-            font-size: 7.2px;
-            white-space: nowrap;
         }
         .header-title {
             text-align: center;
-            font-size: 14px;
+            font-size: 14pt;
             font-weight: bold;
             letter-spacing: 1px;
-            padding: 3px 0;
             text-transform: uppercase;
+        }
+        .box-rm {
+            display: inline-block;
+            width: 13px;
+            height: 14px;
+            border: 1px solid #000;
+            text-align: center;
+            line-height: 14px;
+            font-size: 8.5pt;
+            font-weight: bold;
+            margin-right: 1px;
         }
         .box-check {
             display: inline-block;
-            width: 8px;
-            height: 8px;
+            width: 9px;
+            height: 9px;
             border: 1px solid #000;
             text-align: center;
-            line-height: 8px;
-            font-size: 7px;
-            margin-right: 1.5px;
+            line-height: 9px;
+            font-size: 7.5px;
+            margin-right: 2px;
             vertical-align: middle;
         }
         .box-check.checked {
@@ -114,11 +117,45 @@
             background: #000;
             color: #fff;
         }
+        .left-box {
+            border: 0.8px solid #000;
+            padding: 2px 3.5px;
+            margin-bottom: 2px;
+            font-size: 6.8pt;
+            line-height: 1.2;
+            background: #fff;
+        }
+        .left-box-title {
+            font-weight: bold;
+            font-size: 7.2pt;
+            margin-bottom: 1.5px;
+            text-decoration: underline;
+        }
+        .grid-header th {
+            background-color: #f2f2f2;
+            text-align: center;
+            font-weight: bold;
+            font-size: 6.8pt;
+            padding: 1.5px 1px;
+            border: 0.8px solid #000;
+        }
+        .grid-row td {
+            border: 0.8px solid #000;
+            font-size: 6.6pt;
+            height: 13.5px;
+            padding: 0 2px;
+            vertical-align: middle;
+        }
+        .grid-row-header {
+            background-color: #f7f9fa;
+            font-weight: bold;
+            font-size: 6.8pt;
+        }
         .legend-box {
-            font-size: 6.5px;
+            font-size: 6.2pt;
             line-height: 1.15;
-            text-align: left;
-            padding: 1px;
+            padding: 1px 3px;
+            background: #fff;
         }
     </style>
 </head>
@@ -127,172 +164,440 @@
     {if: empty($is_mpdf)}
     <div class="no-print-toolbar">
         <button onclick="window.print()" class="btn-toolbar btn-print"><i class="fa fa-print"></i> Cetak Dokumen</button>
-        <a href="{?=url([ADMIN, 'update_bmt', 'ans5cetak', $data['id']])?}&pdf=1" target="_blank" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
+        <a href="{?=url([ADMIN, 'update_bmt', 'ans5cetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
         <button onclick="window.close()" class="btn-toolbar btn-close"><i class="fa fa-times"></i> Tutup</button>
+        <span style="float: right; line-height: 24px; color: #bdc3c7;">ANS5 - STATUS ANESTESI (02 INTRA ANESTESI)</span>
     </div>
     {/if}
 
     <div class="cetak-wrapper">
 
-        <!-- HEADER KOP & JUDUL FORM -->
-        <table style="width: 100%; border-bottom: 2px solid #000; margin-bottom: 2px;">
+        <!-- HEADER KOP & IDENTITAS PASIEN (STANDAR INTRA ANESTESI RSGM) -->
+        <table style="width: 100%; border-bottom: 1.5px solid #000; margin-bottom: 3px;">
             <tr>
-                <td style="width: 52%; vertical-align: middle; padding: 1px 2px;">
+                <td style="width: 50%; vertical-align: middle; padding: 1px 2px;">
                     {if: !empty($kop_img)}
                         <img src="{$kop_img}" alt="KOP RSGM" style="width: 100%; max-height: 48px;">
                     {else}
-                        <div style="font-size: 8.5px; line-height: 1.1; text-align: center;">
+                        <div style="font-size: 8px; line-height: 1.1; text-align: center;">
                             <strong style="font-size: 9.5px;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</strong><br>
-                            <strong style="font-size: 10.5px;">RSGM GUSTI HASAN AMAN</strong><br>
-                            <span style="font-size: 7.5px;">Jl. Simpang Ulin No.28 Telp. (0511) 3260818 BANJARMASIN</span>
+                            <strong style="font-size: 11px;">RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</strong><br>
+                            <span style="font-size: 7.5px;">Jl. Simpang Ulin No. 28 Banjarmasin | Telp: (0511) 3260818</span>
                         </div>
                     {/if}
                 </td>
-                <td style="width: 48%; vertical-align: middle; text-align: right; border-left: 1.5px solid #000; padding: 1px 6px;">
-                    <div class="header-title">STATUS ANESTESI</div>
-                    <div style="font-size: 8px; margin-top: 1px;">
-                        <strong>Tanggal :</strong> {?=!empty($data['tgl_indo']) ? $data['tgl_indo'] : '-'?}
+                <td style="width: 26%; vertical-align: middle; text-align: center; border-left: 1.5px solid #000; padding: 2px 4px;">
+                    <div class="header-title">INTRA ANESTESI</div>
+                    <div style="font-size: 7.5pt; margin-top: 1px;">
+                        <strong>Tanggal :</strong> {?=!empty($data['tanggal_indo']) ? $data['tanggal_indo'] : (!empty($data['tanggal']) ? $data['tanggal'] : '-')?}
                     </div>
+                </td>
+                <td style="width: 24%; vertical-align: middle; border-left: 1.5px solid #000; padding: 2px 6px; font-size: 7.2pt;">
+                    <div style="margin-bottom: 2px;">
+                        <strong>No. RM :</strong> &nbsp;
+                        <span class="box-rm">{?=isset($data['rm0']) ? $data['rm0'] : ''?}</span>
+                        <span class="box-rm">{?=isset($data['rm1']) ? $data['rm1'] : ''?}</span>
+                        <span class="box-rm">{?=isset($data['rm2']) ? $data['rm2'] : ''?}</span>
+                        <span class="box-rm">{?=isset($data['rm3']) ? $data['rm3'] : ''?}</span>
+                        <span class="box-rm">{?=isset($data['rm4']) ? $data['rm4'] : ''?}</span>
+                        <span class="box-rm">{?=isset($data['rm5']) ? $data['rm5'] : ''?}</span>
+                    </div>
+                    <div><strong>Nama :</strong> {$data.nm_pasien} &nbsp; ({$data.jk})</div>
+                    <div><strong>Tgl Lahir / Umur :</strong> {?=!empty($data['tgl_lahir_indo']) ? $data['tgl_lahir_indo'] : ($data['tgl_lahir'] ?? '-')?} {if: !empty($data['umur'])} / {$data.umur}{/if}</div>
                 </td>
             </tr>
         </table>
 
-        <!-- INFORMASI PASIEN & IDENTITAS OPERASI (GRID KOTAK) -->
-        <table class="table-border" style="margin-bottom: 2px; font-size: 7.8px;">
+        <!-- MAIN LAYOUT: KOLOM KIRI (8 KOTAK KLINIS) & KOLOM KANAN (GRAFIK & MONITORING MATRIX) -->
+        <table style="width: 100%; border-collapse: collapse;">
             <tr>
-                <td style="width: 17%;"><strong>No RM :</strong> {$data.no_rkm_medis}</td>
-                <td style="width: 25%;"><strong>Nama Pasien :</strong> {$data.nm_pasien}</td>
-                <td style="width: 8%; text-align: center;"><strong>L/P :</strong> {$data.jk}</td>
-                <td style="width: 25%;"><strong>Diagnosa Pra bedah :</strong> {$data.diagnosa_prabedah}</td>
-                <td style="width: 25%;"><strong>dr. Anestesi / Asisten :</strong> {$data.dr_anestesi}</td>
-            </tr>
-            <tr>
-                <td><strong>Umur :</strong> {$data.umur}</td>
-                <td colspan="2">
-                    <strong>Status Fisik :</strong> &nbsp;
-                    <span class="box-check {if: $data.status_fisik == '1'}checked{/if}">1</span> 1 &nbsp;
-                    <span class="box-check {if: $data.status_fisik == '2'}checked{/if}">2</span> 2 &nbsp;
-                    <span class="box-check {if: $data.status_fisik == '3'}checked{/if}">3</span> 3 &nbsp;
-                    <span class="box-check {if: $data.status_fisik == '4'}checked{/if}">4</span> 4 &nbsp;
-                    <span class="box-check {if: $data.status_fisik == '5'}checked{/if}">5</span> 5 &nbsp;
-                    <span class="box-check {if: $data.status_fisik == 'E'}checked{/if}">E</span> E
+                <!-- KOLOM KIRI (8 KOTAK) -->
+                <td style="width: 27%; vertical-align: top; padding-right: 3px;">
+                    
+                    <!-- 1. JENIS ANESTESI -->
+                    <div class="left-box">
+                        <div class="left-box-title">JENIS ANESTESI:</div>
+                        <div>
+                            <span class="box-check {if: !empty($data.ga_intubasi) && $data.ga_intubasi == 'Y' || !empty($data.ga_lma) && $data.ga_lma == 'Y' || !empty($data.ga_masker) && $data.ga_masker == 'Y' || !empty($data.ga_tiva) && $data.ga_tiva == 'Y' || !empty($data.jenis_anestesi_general) && $data.jenis_anestesi_general == 'Y'}checked{/if}">{if: !empty($data.ga_intubasi) && $data.ga_intubasi == 'Y' || !empty($data.ga_lma) && $data.ga_lma == 'Y' || !empty($data.ga_masker) && $data.ga_masker == 'Y' || !empty($data.ga_tiva) && $data.ga_tiva == 'Y' || !empty($data.jenis_anestesi_general) && $data.jenis_anestesi_general == 'Y'}✓{/if}</span>
+                            General: GETA / TIVA / LMA / Face Mask
+                        </div>
+                        <div>
+                            <span class="box-check {if: !empty($data.teknik_regional) && $data.teknik_regional == 'Y' || !empty($data.jenis_anestesi_regional) && $data.jenis_anestesi_regional == 'Y' || !empty($data.reg_sab) && $data.reg_sab == 'Y' || !empty($data.reg_epidural) && $data.reg_epidural == 'Y' || !empty($data.reg_caudal) && $data.reg_caudal == 'Y'}checked{/if}">{if: !empty($data.teknik_regional) && $data.teknik_regional == 'Y' || !empty($data.jenis_anestesi_regional) && $data.jenis_anestesi_regional == 'Y' || !empty($data.reg_sab) && $data.reg_sab == 'Y' || !empty($data.reg_epidural) && $data.reg_epidural == 'Y' || !empty($data.reg_caudal) && $data.reg_caudal == 'Y'}✓{/if}</span>
+                            Regional: SAB / Epidural / Caudal
+                        </div>
+                        <div>
+                            <span class="box-check {if: !empty($data.jenis_anestesi_lain)}checked{/if}">{if: !empty($data.jenis_anestesi_lain)}✓{/if}</span>
+                            {if: !empty($data.jenis_anestesi_lain)}{$data.jenis_anestesi_lain}{else}................................................{/if}
+                        </div>
+                    </div>
+
+                    <!-- 2. POSISI -->
+                    <div class="left-box">
+                        <div class="left-box-title">POSISI:</div>
+                        <table style="width: 100%;">
+                            <tr>
+                                <td style="width: 48%; padding: 0;">
+                                    <span class="box-check {if: !empty($data.posisi_supine) && $data.posisi_supine == 'Y'}checked{/if}">{if: !empty($data.posisi_supine) && $data.posisi_supine == 'Y'}✓{/if}</span> Supine
+                                </td>
+                                <td style="width: 52%; padding: 0;">
+                                    <span class="box-check {if: !empty($data.posisi_lateral) && $data.posisi_lateral == 'Y'}checked{/if}">{if: !empty($data.posisi_lateral) && $data.posisi_lateral == 'Y'}✓{/if}</span> Lateral
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0;">
+                                    <span class="box-check {if: !empty($data.posisi_lithotomi) && $data.posisi_lithotomi == 'Y'}checked{/if}">{if: !empty($data.posisi_lithotomi) && $data.posisi_lithotomi == 'Y'}✓{/if}</span> Lithotomi
+                                </td>
+                                <td style="padding: 0;">
+                                    <span class="box-check {if: !empty($data.posisi_prone) && $data.posisi_prone == 'Y'}checked{/if}">{if: !empty($data.posisi_prone) && $data.posisi_prone == 'Y'}✓{/if}</span> Prone
+                                </td>
+                            </tr>
+                        </table>
+                        {if: !empty($data.posisi_lain)}
+                        <div style="margin-top: 1px;"><span class="box-check checked">✓</span> Lainnya: {$data.posisi_lain}</div>
+                        {elseif: !empty($data.posisi_lainnya)}
+                        <div style="margin-top: 1px;"><span class="box-check checked">✓</span> Lainnya: {$data.posisi_lainnya}</div>
+                        {/if}
+                    </div>
+
+                    <!-- 3. INDUKSI -->
+                    <div class="left-box">
+                        <div class="left-box-title">INDUKSI:</div>
+                        <div>
+                            <span class="box-check {if: !empty($data.induksi_iv)}checked{/if}">{if: !empty($data.induksi_iv)}✓{/if}</span>
+                            IV: {if: !empty($data.induksi_iv)}<strong>{$data.induksi_iv}</strong>{else}................................................{/if}
+                        </div>
+                        <div>
+                            <span class="box-check {if: !empty($data.induksi_inhalasi)}checked{/if}">{if: !empty($data.induksi_inhalasi)}✓{/if}</span>
+                            Inhalasi: {if: !empty($data.induksi_inhalasi)}<strong>{$data.induksi_inhalasi}</strong>{else}................................................{/if}
+                        </div>
+                    </div>
+
+                    <!-- 4. JALAN NAPAS -->
+                    <div class="left-box">
+                        <div class="left-box-title">JALAN NAPAS:</div>
+                        <div>
+                            <span class="box-check {if: !empty($data.jn_lma) && $data.jn_lma == 'Y' || !empty($data.jalan_napas_lma) && $data.jalan_napas_lma == 'Y'}checked{/if}">{if: !empty($data.jn_lma) && $data.jn_lma == 'Y' || !empty($data.jalan_napas_lma) && $data.jalan_napas_lma == 'Y'}✓{/if}</span>
+                            LMA NO : {if: !empty($data.jn_lma_no)}<strong>{$data.jn_lma_no}</strong>{else}.....{/if} &nbsp; Cuff: {if: !empty($data.jn_lma_cuff)}<strong>{$data.jn_lma_cuff}</strong>{else}.....{/if} cmH2O
+                        </div>
+                        <div>
+                            <span class="box-check {if: !empty($data.jn_ett_kink) && $data.jn_ett_kink == 'Y' || !empty($data.jn_ett_nonkink) && $data.jn_ett_nonkink == 'Y'}checked{/if}">{if: !empty($data.jn_ett_kink) && $data.jn_ett_kink == 'Y' || !empty($data.jn_ett_nonkink) && $data.jn_ett_nonkink == 'Y'}✓{/if}</span>
+                            ETT: {if: !empty($data.jn_ett_kink) && $data.jn_ett_kink == 'Y'}<u>Kink</u>{else}Kink{/if} / {if: !empty($data.jn_ett_nonkink) && $data.jn_ett_nonkink == 'Y'}<u>Non Kink</u>{else}Non Kink{/if} &nbsp; ({if: !empty($data.jn_ett_oral_nasal)}{$data.jn_ett_oral_nasal}{else}Oral/Nasal{/if})
+                        </div>
+                        <div style="padding-left: 11px;">
+                            No: {if: !empty($data.jn_ett_no)}<strong>{$data.jn_ett_no}</strong>{else}.....{/if} &nbsp; Cuff: {if: !empty($data.jn_ett_cuff)}<strong>{$data.jn_ett_cuff}</strong>{else}.....{/if} cmH2O &nbsp; Batas: {if: !empty($data.jn_ett_batas)}<strong>{$data.jn_ett_batas}</strong>{else}.....{/if}
+                        </div>
+                        <div style="margin-top: 1px;">
+                            <span class="box-check {if: !empty($data.jn_masker) && $data.jn_masker == 'Y' || !empty($data.jalan_napas_facemask) && $data.jalan_napas_facemask == 'Y'}checked{/if}">{if: !empty($data.jn_masker) && $data.jn_masker == 'Y' || !empty($data.jalan_napas_facemask) && $data.jalan_napas_facemask == 'Y'}✓{/if}</span> Masker &nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="box-check {if: !empty($data.jn_nasal_kanul) && $data.jn_nasal_kanul == 'Y' || !empty($data.jalan_napas_nasal) && $data.jalan_napas_nasal == 'Y'}checked{/if}">{if: !empty($data.jn_nasal_kanul) && $data.jn_nasal_kanul == 'Y' || !empty($data.jalan_napas_nasal) && $data.jalan_napas_nasal == 'Y'}✓{/if}</span> Nasal Kanul
+                        </div>
+                    </div>
+
+                    <!-- 5. VENTILASI -->
+                    <div class="left-box">
+                        <div class="left-box-title">VENTILASI:</div>
+                        <table style="width: 100%;">
+                            <tr>
+                                <td style="width: 48%; padding: 0;">
+                                    <span class="box-check {if: !empty($data.ventilasi_spontan) && $data.ventilasi_spontan == 'Y'}checked{/if}">{if: !empty($data.ventilasi_spontan) && $data.ventilasi_spontan == 'Y'}✓{/if}</span> Spontan
+                                </td>
+                                <td style="width: 52%; padding: 0;">
+                                    <span class="box-check {if: !empty($data.ventilasi_kendali) && $data.ventilasi_kendali == 'Y'}checked{/if}">{if: !empty($data.ventilasi_kendali) && $data.ventilasi_kendali == 'Y'}✓{/if}</span> Kendali
+                                </td>
+                            </tr>
+                        </table>
+                        <div style="margin-top: 1.5px;">
+                            <span class="box-check {if: !empty($data.ventilasi_ventilator) && $data.ventilasi_ventilator == 'Y'}checked{/if}">{if: !empty($data.ventilasi_ventilator) && $data.ventilasi_ventilator == 'Y'}✓{/if}</span>
+                            Ventilator: &nbsp; TV: {if: !empty($data.ventilasi_tv)}<strong>{$data.ventilasi_tv}</strong>{else}.....{/if} &nbsp; RR: {if: !empty($data.ventilasi_rr)}<strong>{$data.ventilasi_rr}</strong>{else}.....{/if}
+                        </div>
+                    </div>
+
+                    <!-- 6. TEKNIK REGIONAL -->
+                    <div class="left-box">
+                        <div class="left-box-title">TEKNIK REGIONAL:</div>
+                        <div>
+                            <span class="box-check {if: !empty($data.reg_epidural) && $data.reg_epidural == 'Y'}checked{/if}">{if: !empty($data.reg_epidural) && $data.reg_epidural == 'Y'}✓{/if}</span> Epidural &nbsp;&nbsp;
+                            <span class="box-check {if: !empty($data.reg_sab) && $data.reg_sab == 'Y'}checked{/if}">{if: !empty($data.reg_sab) && $data.reg_sab == 'Y'}✓{/if}</span> SAB &nbsp;&nbsp;
+                            <span class="box-check {if: !empty($data.reg_lainnya)}checked{/if}">{if: !empty($data.reg_lainnya)}✓{/if}</span> {if: !empty($data.reg_lainnya)}{$data.reg_lainnya}{else}.....{/if}
+                        </div>
+                        <div style="margin-top: 1px;">
+                            Jenis Jarum: {if: !empty($data.reg_jenis_jarum)}<strong>{$data.reg_jenis_jarum}</strong>{else}.....{/if} # {if: !empty($data.reg_jenis_jarum_no)}<strong>{$data.reg_jenis_jarum_no}</strong>{else}.....{/if}
+                        </div>
+                        <div>
+                            Blok V: {if: !empty($data.reg_blok_vth)}<strong>{$data.reg_blok_vth}</strong>{else}.....{/if} &nbsp; Jenis PNR: {if: !empty($data.reg_jenis_pnb)}<strong>{$data.reg_jenis_pnb}</strong>{else}.....{/if}
+                        </div>
+                        <div>
+                            Obat: {if: !empty($data.reg_obat)}<strong>{$data.reg_obat}</strong>{else}.....{/if} % &nbsp; Dosis: {if: !empty($data.reg_dosis)}<strong>{$data.reg_dosis}</strong>{else}.....{/if} mg &nbsp; Vol: {if: !empty($data.reg_vol)}<strong>{$data.reg_vol}</strong>{else}.....{/if} cc
+                        </div>
+                        <div>
+                            EPIDURAL: {if: !empty($data.reg_epidural_ket)}<strong>{$data.reg_epidural_ket}</strong>{else}................................................{/if}
+                        </div>
+                    </div>
+
+                    <!-- 7. MASALAH SAAT INDUKSI -->
+                    <div class="left-box">
+                        <div class="left-box-title">MASALAH SAAT INDUKSI:</div>
+                        <div>
+                            {if: isset($data.masalah_induksi) && $data.masalah_induksi == 'Ada'}<u><strong>Ada</strong></u> / Tidak Ada{elseif: isset($data.masalah_induksi) && $data.masalah_induksi == 'Tidak Ada'}Ada / <u><strong>Tidak Ada</strong></u>{else}Ada / Tidak Ada{/if}
+                        </div>
+                        <div>
+                            Sebutkan, jika ada: <strong>{if: !empty($data.masalah_induksi_ket)}{$data.masalah_induksi_ket}{else}-{/if}</strong>
+                        </div>
+                    </div>
+
+                    <!-- 8. PERUBAHAN RENCANA ANESTESI -->
+                    <div class="left-box" style="margin-bottom: 0;">
+                        <div class="left-box-title">PERUBAHAN RENCANA ANESTESI:</div>
+                        <div>
+                            {if: isset($data.perubahan_rencana) && $data.perubahan_rencana == 'Ada'}<u><strong>Ada</strong></u> / Tidak Ada{elseif: isset($data.perubahan_rencana) && $data.perubahan_rencana == 'Tidak Ada'}Ada / <u><strong>Tidak Ada</strong></u>{else}Ada / Tidak Ada{/if}
+                        </div>
+                        <div>
+                            Sebutkan, jika ada: <strong>{if: !empty($data.perubahan_rencana_ket)}{$data.perubahan_rencana_ket}{else}-{/if}</strong>
+                        </div>
+                    </div>
+
                 </td>
-                <td><strong>Diagnosa Pasca Bedah :</strong> {$data.diagnosa_pascabedah}</td>
-                <td><strong>Penata Anestesi :</strong> {$data.penata_anestesi}</td>
-            </tr>
-            <tr>
-                <td>
-                    <strong>Gol. Darah :</strong>
-                    <span class="box-check {if: $data.gol_darah == 'A'}checked{/if}">A</span> A &nbsp;
-                    <span class="box-check {if: $data.gol_darah == 'B'}checked{/if}">B</span> B &nbsp;
-                    <span class="box-check {if: $data.gol_darah == 'O'}checked{/if}">O</span> O &nbsp;
-                    <span class="box-check {if: $data.gol_darah == 'AB'}checked{/if}">AB</span> AB &nbsp;
-                    <strong>Rh:</strong> {$data.rh}
+
+                <!-- KOLOM KANAN (MONITORING GRID & GRAFIK TTV) -->
+                <td style="width: 73%; vertical-align: top; padding-left: 2px;">
+                    <?php
+                    // Helper function untuk merender 12 interval + 1 kolom Jumlah
+                    $renderRowCells = function($arr, $calcSum = true) {
+                        $out = '';
+                        $sum = 0;
+                        $hasNum = false;
+                        for ($i = 0; $i < 12; $i++) {
+                            $val = isset($arr[$i]) && $arr[$i] !== '' ? $arr[$i] : '';
+                            $out .= '<td style="text-align: center; font-size: 6.5pt; height: 13.5px; padding: 0 1px;">' . htmlspecialchars($val) . '</td>';
+                            if (is_numeric($val)) {
+                                $sum += (float)$val;
+                                $hasNum = true;
+                            }
+                        }
+                        $sumDisplay = ($calcSum && $hasNum) ? $sum : '';
+                        $out .= '<td style="text-align: center; font-size: 6.5pt; font-weight: bold; background: #fafafa; padding: 0 1px;">' . $sumDisplay . '</td>';
+                        return $out;
+                    };
+                    ?>
+
+                    <table class="table-bordered" style="width: 100%; border-collapse: collapse;">
+                        <!-- HEADER WAKTU (12 INTERVAL) -->
+                        <tr class="grid-header">
+                            <th rowspan="2" style="width: 20%; text-align: center; vertical-align: middle;">Waktu</th>
+                            <th colspan="3" style="width: 18%;">Jam 1</th>
+                            <th colspan="3" style="width: 18%;">Jam 2</th>
+                            <th colspan="3" style="width: 18%;">Jam 3</th>
+                            <th colspan="3" style="width: 18%;">Jam 4</th>
+                            <th rowspan="2" style="width: 8%; text-align: center; vertical-align: middle;">Jumlah</th>
+                        </tr>
+                        <tr class="grid-header">
+                            <th style="width: 6%;">15</th>
+                            <th style="width: 6%;">30</th>
+                            <th style="width: 6%;">45</th>
+                            <th style="width: 6%;">15</th>
+                            <th style="width: 6%;">30</th>
+                            <th style="width: 6%;">45</th>
+                            <th style="width: 6%;">15</th>
+                            <th style="width: 6%;">30</th>
+                            <th style="width: 6%;">45</th>
+                            <th style="width: 6%;">15</th>
+                            <th style="width: 6%;">30</th>
+                            <th style="width: 6%;">45</th>
+                        </tr>
+
+                        <!-- GAS INHALASI -->
+                        <tr class="grid-row">
+                            <td class="grid-row-header">O2 (L/mnt)</td>
+                            <?php echo $renderRowCells($gridData['o2'] ?? [], false); ?>
+                        </tr>
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Sevofluran (Vol%)</td>
+                            <?php echo $renderRowCells($gridData['sevofluran'] ?? [], false); ?>
+                        </tr>
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Isofluran (Vol%)</td>
+                            <?php echo $renderRowCells($gridData['isofluran'] ?? [], false); ?>
+                        </tr>
+
+                        <!-- OBAT-OBATAN INTRAOPERATIF -->
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Ketorolac (mg)</td>
+                            <?php echo $renderRowCells($gridData['ketorolac'] ?? [], true); ?>
+                        </tr>
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Ondansetron (mg)</td>
+                            <?php echo $renderRowCells($gridData['ondansetron'] ?? [], true); ?>
+                        </tr>
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Dexametason (mg)</td>
+                            <?php echo $renderRowCells($gridData['dexametason'] ?? [], true); ?>
+                        </tr>
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Midazolam (mg)</td>
+                            <?php echo $renderRowCells($gridData['midazolam'] ?? [], true); ?>
+                        </tr>
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Fentanyl (µg)</td>
+                            <?php echo $renderRowCells($gridData['fentanyl'] ?? [], true); ?>
+                        </tr>
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Lidokain (mg)</td>
+                            <?php echo $renderRowCells($gridData['lidokain'] ?? [], true); ?>
+                        </tr>
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Ketamin (mg)</td>
+                            <?php echo $renderRowCells($gridData['ketamin'] ?? [], true); ?>
+                        </tr>
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Propofol (mg)</td>
+                            <?php echo $renderRowCells($gridData['propofol'] ?? [], true); ?>
+                        </tr>
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Atracurium (mg)</td>
+                            <?php echo $renderRowCells($gridData['atracurium'] ?? [], true); ?>
+                        </tr>
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Efedrin (mg)</td>
+                            <?php echo $renderRowCells($gridData['efedrin'] ?? [], true); ?>
+                        </tr>
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Dexmedetomidin (µg)</td>
+                            <?php echo $renderRowCells($gridData['dexmedetomidin'] ?? [], true); ?>
+                        </tr>
+
+                        <!-- EPIDURAL / SPINAL -->
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Epidural / Spinal</td>
+                            <?php echo $renderRowCells($gridData['epidural_spinal'] ?? [], false); ?>
+                        </tr>
+
+                        <!-- GRAFIK TTV INTRAOPERATIF (SKALA 40 - 200) & LEGENDA -->
+                        <tr>
+                            <td style="vertical-align: top; padding: 2px; background: #fff;">
+                                <div class="legend-box">
+                                    <div><strong>↓</strong> IV</div>
+                                    <div><strong style="color: #e74c3c;">•</strong> Nadi</div>
+                                    <div><strong style="color: #2980b9;">v</strong> Sistol</div>
+                                    <div><strong style="color: #27ae60;">^</strong> Diastolik</div>
+                                    <div><strong>///</strong> Resp. Spontan</div>
+                                    <div><strong>vv</strong> Resp. Kontrol</div>
+                                    <div><strong>x</strong> Mulai Anestesi</div>
+                                    <div><strong>x-</strong> Selesai</div>
+                                    <div><strong>⊙</strong> Mulai Operasi</div>
+                                    <div><strong>⊙-</strong> Selesai</div>
+                                </div>
+                            </td>
+                            <td colspan="12" style="padding: 0; background: #fff; vertical-align: middle; height: 145px;">
+                                {$chartSvg}
+                            </td>
+                            <td style="background: #fafafa;"></td>
+                        </tr>
+
+                        <!-- TANDA (KODE) -->
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Tanda (Kode)</td>
+                            <?php echo $renderRowCells($gridData['events'] ?? [], false); ?>
+                        </tr>
+
+                        <!-- RESP. SPONTAN / KONTROL -->
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Resp. Spontan/Kontrol</td>
+                            <?php echo $renderRowCells($gridData['resp_spontan_kontrol'] ?? [], false); ?>
+                        </tr>
+
+                        <!-- SATURASI O2 -->
+                        <tr class="grid-row">
+                            <td class="grid-row-header">Saturasi O2 (%)</td>
+                            <?php echo $renderRowCells($gridData['saturasi'] ?? [], false); ?>
+                        </tr>
+
+                        <!-- INPUT CAIRAN -->
+                        <tr class="grid-row" style="background: #fdfefe;">
+                            <td class="grid-row-header"><strong>INPUT:</strong> Ringer Laktat/asetat</td>
+                            <?php echo $renderRowCells($gridData['input_rl'] ?? [], true); ?>
+                        </tr>
+                        <tr class="grid-row" style="background: #fdfefe;">
+                            <td class="grid-row-header" style="padding-left: 12px;">NaCl 0,9%</td>
+                            <?php echo $renderRowCells($gridData['input_nacl'] ?? [], true); ?>
+                        </tr>
+
+                        <!-- OUTPUT CAIRAN -->
+                        <tr class="grid-row" style="background: #fdfefe;">
+                            <td class="grid-row-header"><strong>OUTPUT:</strong> Pendarahan</td>
+                            <?php echo $renderRowCells($gridData['output_pendarahan'] ?? [], true); ?>
+                        </tr>
+                        <tr class="grid-row" style="background: #fdfefe;">
+                            <td class="grid-row-header" style="padding-left: 12px;">Urine</td>
+                            <?php echo $renderRowCells($gridData['output_urine'] ?? [], true); ?>
+                        </tr>
+                    </table>
+
                 </td>
-                <td colspan="2">
-                    <strong>BB :</strong> {if: !empty($data.bb)}{$data.bb} Kg{else}___ Kg{/if} &nbsp;&nbsp;&nbsp;
-                    <strong>TB :</strong> {if: !empty($data.tb)}{$data.tb} Cm{else}___ Cm{/if}
-                </td>
-                <td><strong>Tindakan :</strong> {$data.tindakan}</td>
-                <td><strong>dr. Operator / Asisten :</strong> {$data.dr_operator}</td>
-            </tr>
-            <tr>
-                <td colspan="2"><strong>Waktu Mulai Pembiusan :</strong> {if: !empty($data.waktu_mulai_pembiusan)}{$data.waktu_mulai_pembiusan}{else}___ : ___{/if}</td>
-                <td colspan="2"><strong>Waktu Selesai Pembiusan :</strong> {if: !empty($data.waktu_selesai_pembiusan)}{$data.waktu_selesai_pembiusan}{else}___ : ___{/if}</td>
-                <td><strong>Lama Pembiusan :</strong> {$data.lama_pembiusan}</td>
             </tr>
         </table>
 
-        <!-- TANDA VITAL PREINDUKSI -->
-        <table class="table-border" style="margin-bottom: 2px; font-size: 7.8px; background: #fafafa;">
+        <!-- BAGIAN BAWAH: KETERANGAN WAKTU, CATATAN INTRA, & TANDA TANGAN -->
+        <table class="table-bordered" style="margin-top: 3px; width: 100%;">
             <tr>
-                <td style="width: 18%; font-weight: bold; background: #eee;">Tanda Vital Preinduksi :</td>
-                <td style="width: 22%;"><strong>TD :</strong> {if: !empty($data.preinduksi_td_sistolik)}{$data.preinduksi_td_sistolik}/{$data.preinduksi_td_diastolik}{else}___ / ___{/if} mmHg</td>
-                <td style="width: 15%;"><strong>Nadi :</strong> {if: !empty($data.preinduksi_nadi)}{$data.preinduksi_nadi}{else}___{/if} x/menit</td>
-                <td style="width: 15%;"><strong>RR :</strong> {if: !empty($data.preinduksi_rr)}{$data.preinduksi_rr}{else}___{/if} x/menit</td>
-                <td style="width: 15%;"><strong>Suhu :</strong> {if: !empty($data.preinduksi_suhu)}{$data.preinduksi_suhu}{else}___{/if} °C</td>
-                <td style="width: 15%;"><strong>VAS :</strong> {if: !empty($data.preinduksi_vas)}{$data.preinduksi_vas}{else}___{/if} / 10</td>
-            </tr>
-        </table>
+                <!-- KETERANGAN WAKTU & CATATAN -->
+                <td style="width: 60%; vertical-align: top; padding: 4px 6px;">
+                    <div style="font-weight: bold; font-size: 7.2pt; margin-bottom: 2px;">KETERANGAN WAKTU:</div>
+                    <table style="width: 100%; font-size: 6.8pt; line-height: 1.3;">
+                        <tr>
+                            <td style="width: 33%; padding: 0;">
+                                Induksi : <strong>{if: !empty($data.waktu_induksi)}{$data.waktu_induksi}{else}......{/if}</strong> WIB
+                            </td>
+                            <td style="width: 34%; padding: 0;">
+                                Operasi Mulai : <strong>{if: !empty($data.waktu_operasi_mulai)}{$data.waktu_operasi_mulai}{else}......{/if}</strong> WIB
+                            </td>
+                            <td style="width: 33%; padding: 0;">
+                                Anestesi Selesai : <strong>{if: !empty($data.waktu_anestesi_selesai)}{$data.waktu_anestesi_selesai}{else}......{/if}</strong> WIB
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0;">
+                                Insisi : <strong>{if: !empty($data.waktu_insisi)}{$data.waktu_insisi}{else}......{/if}</strong> WIB
+                            </td>
+                            <td style="padding: 0;">
+                                Operasi Selesai : <strong>{if: !empty($data.waktu_operasi_selesai)}{$data.waktu_operasi_selesai}{else}......{/if}</strong> WIB
+                            </td>
+                            <td style="padding: 0;"></td>
+                        </tr>
+                    </table>
 
-        <!-- TABEL MONITORING LENGKAP DENGAN GRAFIK (INTRAOPERATIVE GRID) -->
-        <table class="table-grid" style="margin-bottom: 2px;">
-            <thead>
-                <tr style="background: #f2f2f2; font-weight: bold;">
-                    <th style="width: 115px; text-align: left; padding-left: 3px;">Waktu</th>
-                    {$html_time_headers}
-                    <th style="width: 30px; text-align: center;">Jml</th>
-                </tr>
-            </thead>
-            <tbody>
-                {$html_grid_body}
-            </tbody>
-        </table>
-
-        <!-- BAGIAN BAWAH: MASALAH, PROSEDUR, JENIS ANESTESI, JALAN NAPAS & POSISI -->
-        <table class="table-border" style="margin-bottom: 2px; font-size: 7.5px;">
-            <tr>
-                <!-- SISI KIRI: MASALAH & PROSEDUR ANESTESI -->
-                <td style="width: 58%; padding: 2.5px; vertical-align: top;">
-                    <strong>MASALAH :</strong><br>
-                    <div style="min-height: 22px; padding-top: 1px;">
-                        {if: !empty($data.masalah)}{$data.masalah}{else}<em>Tidak ada masalah / komplikasi selama pembiusan.</em>{/if}
-                    </div>
-
-                    <div style="border-top: 0.8px solid #000; margin-top: 2px; padding-top: 2px;">
-                        <strong>PROSEDUR ANESTESI:</strong><br>
-                        • <strong>Loading cairan :</strong> {if: !empty($data.prosedur_loading_cairan)}{$data.prosedur_loading_cairan}{else}-{/if}<br>
-                        • <strong>Premedikasi :</strong> {if: !empty($data.prosedur_premedikasi)}{$data.prosedur_premedikasi}{else}-{/if}<br>
-                        • <strong>Maintenance :</strong> {if: !empty($data.prosedur_maintenance)}{$data.prosedur_maintenance}{else}-{/if}
+                    <div style="margin-top: 4px; font-weight: bold; font-size: 7.2pt;">CATATAN:</div>
+                    <div style="font-size: 6.8pt; min-height: 24px; border-bottom: 1px dotted #888; padding-top: 2px;">
+                        {if: !empty($data.catatan_intra)}{$data.catatan_intra}{else}&nbsp;{/if}
                     </div>
                 </td>
 
-                <!-- SISI KANAN: JENIS ANESTESI, JALAN NAPAS, POSISI -->
-                <td style="width: 42%; padding: 2.5px; vertical-align: top; border-left: 1.5px solid #000;">
-                    <strong>JENIS ANESTESI</strong><br>
-                    <span class="box-check {if: $data.jenis_anestesi_general == 'Y'}checked{/if}">✓</span> General : {if: !empty($data.jenis_anestesi_general_tipe)}{$data.jenis_anestesi_general_tipe}{else}GETA / TIVA / LMA / Face Mask{/if}<br>
-                    <span class="box-check {if: $data.jenis_anestesi_regional == 'Y'}checked{/if}">✓</span> Regional : {if: !empty($data.jenis_anestesi_regional_tipe)}{$data.jenis_anestesi_regional_tipe}{else}SAB / Epidural / Caudal{/if}<br>
-                    <span class="box-check {if: !empty($data.jenis_anestesi_lain)}checked{/if}">✓</span> {if: !empty($data.jenis_anestesi_lain)}{$data.jenis_anestesi_lain}{else}................................................................{/if}
-
-                    <div style="border-top: 0.8px solid #000; margin-top: 2px; padding-top: 2px;">
-                        <strong>JALAN NAPAS</strong><br>
-                        <span class="box-check {if: $data.jalan_napas_nasal == 'Y'}checked{/if}">✓</span> Nasal Kanul &nbsp;&nbsp;
-                        <span class="box-check {if: $data.jalan_napas_facemask == 'Y'}checked{/if}">✓</span> Face Mask &nbsp;&nbsp;
-                        <span class="box-check {if: $data.jalan_napas_lma == 'Y'}checked{/if}">✓</span> LMA<br>
-                        <span class="box-check {if: $data.jalan_napas_orotrakeal == 'Y'}checked{/if}">✓</span> Orotrakeal &nbsp;&nbsp;
-                        <span class="box-check {if: !empty($data.jalan_napas_lain)}checked{/if}">✓</span> {if: !empty($data.jalan_napas_lain)}{$data.jalan_napas_lain}{else}.....................................{/if}
-                    </div>
-
-                    <div style="border-top: 0.8px solid #000; margin-top: 2px; padding-top: 2px;">
-                        <strong>POSISI</strong><br>
-                        <span class="box-check {if: $data.posisi_supine == 'Y'}checked{/if}">✓</span> Supine &nbsp;&nbsp;
-                        <span class="box-check {if: $data.posisi_lateral == 'Y'}checked{/if}">✓</span> Lateral &nbsp;&nbsp;
-                        <span class="box-check {if: $data.posisi_prone == 'Y'}checked{/if}">✓</span> Prone<br>
-                        <span class="box-check {if: $data.posisi_lithotomi == 'Y'}checked{/if}">✓</span> Lithotomi &nbsp;&nbsp;
-                        <span class="box-check {if: !empty($data.posisi_lain)}checked{/if}">✓</span> {if: !empty($data.posisi_lain)}{$data.posisi_lain}{else}.....................................{/if}
-                    </div>
+                <!-- DUA TANDA TANGAN: PENATA ANESTESI & DOKTER ANESTESI -->
+                <td style="width: 40%; vertical-align: top; padding: 4px 6px;">
+                    <table style="width: 100%; text-align: center; font-size: 7.2pt;">
+                        <tr>
+                            <td style="width: 50%; vertical-align: top; padding: 0;">
+                                <strong>Penata Anestesi</strong>
+                                <div style="height: 40px;"></div>
+                                ( <u>{if: !empty($data.penata_anestesi)}{$data.penata_anestesi}{elseif: !empty($data.tanda_tangan_penata)}{$data.tanda_tangan_penata}{else}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{/if}</u> )
+                            </td>
+                            <td style="width: 50%; vertical-align: top; padding: 0;">
+                                <strong>Dokter Anestesi</strong>
+                                <div style="height: 40px;"></div>
+                                ( <u>{if: !empty($data.dr_anestesi)}{$data.dr_anestesi}{elseif: !empty($data.dokter_anestesi_ttd)}{$data.dokter_anestesi_ttd}{else}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{/if}</u> )
+                            </td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
         </table>
 
-        <!-- FOOTER: 3 KOLOM PENYULIT, KEADAAN AKHIR & PENGESAHAN DOKTER -->
-        <table class="table-border" style="font-size: 7.5px;">
-            <tr style="background: #f7f7f7;">
-                <td style="width: 35%; font-weight: bold; text-align: center;">PENYULIT SELAMA PEMBEDAHAN</td>
-                <td style="width: 35%; font-weight: bold; text-align: center;">KEADAAN AKHIR PEMBEDAHAN</td>
-                <td style="width: 30%; font-weight: bold; text-align: center;">DOKTER ANESTESI</td>
-            </tr>
+        <!-- FOOTER DOKUMEN: 02 INTRA ANESTESI RSGM -->
+        <table style="width: 100%; margin-top: 2px; font-size: 6.5pt; color: #555;">
             <tr>
-                <td style="height: 44px; vertical-align: top; padding: 2.5px;">
-                    {if: !empty($data.penyulit_pembedahan)}{$data.penyulit_pembedahan}{else}<em>Tidak ada penyulit.</em>{/if}
+                <td style="width: 30%; text-align: left; padding: 0;">
+                    <strong>RSGM/Anes-02/Rev01</strong>
                 </td>
-                <td style="height: 44px; vertical-align: top; padding: 2.5px;">
-                    {if: !empty($data.keadaan_akhir_pembedahan)}{$data.keadaan_akhir_pembedahan}{else}<em>Pasien sadar baik, refleks jalan napas adekuat, tanda vital stabil, ditransfer ke Recovery Room (PACU).</em>{/if}
-                </td>
-                <td style="height: 44px; vertical-align: bottom; text-align: center; padding-bottom: 2.5px;">
-                    <div style="font-size: 8px;">
-                        ( <strong>{if: !empty($data.dokter_anestesi_ttd)}{$data.dokter_anestesi_ttd}{elseif: !empty($data.dr_anestesi)}{$data.dr_anestesi}{else}......................................................{/if}</strong> )
-                    </div>
+                <td style="width: 70%; text-align: right; padding: 0; font-style: italic;">
+                    Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
                 </td>
             </tr>
         </table>

@@ -2,10 +2,10 @@
     <div class="col-md-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">Data ANS4 - Rencana Anestesi</h3>
+                <h3 class="panel-title">Data ANS4 - Evaluasi Pra-Anestesi (01 Pra Anestesi)</h3>
                 <ul class="nav nav-tabs">
                     <li class="active">
-                        <a href="{?=url([ADMIN, 'update_bmt', 'ans4manage'])?}" role="tab">Data Rencana Anestesi</a>
+                        <a href="{?=url([ADMIN, 'update_bmt', 'ans4manage'])?}" role="tab">Data Evaluasi Pra-Anestesi</a>
                     </li>
                     <li>
                         <a href="{?=url([ADMIN, 'update_bmt', 'ans4form'])?}" role="tab">Tambah Data</a>
@@ -14,37 +14,82 @@
             </div>
             <div class="panel-body">
                 <div class="table-responsive no-margin">
-                    <table class="table table-striped no-margin dataTable" id="data-table">
+                    <table class="table table-striped table-hover no-margin dataTable" id="data-table-ans4">
                         <thead>
                             <tr>
+                                <th style="width: 35px;">No</th>
                                 <th>No. Rawat</th>
                                 <th>No. RM</th>
                                 <th>Nama Pasien</th>
-                                <th>Tanggal</th>
-                                <th>Jam</th>
-                                <th>Aksi</th>
+                                <th>Tanggal & Jam</th>
+                                <th>Diagnosis / Tindakan</th>
+                                <th>Tim Medis</th>
+                                <th>Status ASA</th>
+                                <th style="text-align: center; width: 140px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {if: !empty($data)}
                             {loop: $data}
                             <tr>
-                                <td>{$value.no_rawat}</td>
-                                <td>{$value.no_rkm_medis}</td>
-                                <td>{if: !empty($value.nama_pasien)}{$value.nama_pasien}{elseif: !empty($value.nm_pasien)}{$value.nm_pasien}{else}-{/if}</td>
-                                <td>{$value.tanggal}</td>
-                                <td>{$value.jam}</td>
+                                <td>{$key + 1}</td>
+                                <td><span class="label label-info">{$value.no_rawat}</span></td>
+                                <td><strong>{$value.no_rkm_medis}</strong></td>
                                 <td>
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans4form'])?}&t={?=$_SESSION['token']?}&id={$value.id}" class="btn btn-xs btn-warning"><i class="fa fa-pencil"></i></a>
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans4cetak'])?}&t={?=$_SESSION['token']?}&id={$value.id}" class="btn btn-xs btn-primary" target="_blank"><i class="fa fa-print"></i></a>
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans4cetak'])?}&t={?=$_SESSION['token']?}&id={$value.id}&pdf=1" class="btn btn-xs btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
-                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans4manage'])?}&t={?=$_SESSION['token']?}&action=delete&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?')"><i class="fa fa-trash"></i></a>
+                                    <strong>{if: !empty($value.nama_pasien)}{$value.nama_pasien}{elseif: !empty($value.nm_pasien)}{$value.nm_pasien}{else}-{/if}</strong>
+                                    <div class="text-muted" style="font-size: 11px;">
+                                        {if: !empty($value.jk)}{$value.jk}{/if} {if: !empty($value.umur)}| {$value.umur}{/if}
+                                    </div>
+                                </td>
+                                <td>
+                                    {$value.tanggal}
+                                    <div class="text-muted" style="font-size: 11px;">
+                                        <i class="fa fa-clock-o"></i> {$value.jam} WIB
+                                    </div>
+                                </td>
+                                <td>
+                                    {if: !empty($value.diagnosis_prabedah)}
+                                        <span title="{$value.diagnosis_prabedah}">{?=strlen($value['diagnosis_prabedah']) > 30 ? substr($value['diagnosis_prabedah'], 0, 30) . '...' : $value['diagnosis_prabedah']?}</span>
+                                    {elseif: !empty($value.diagnosa_prabedah)}
+                                        <span>{$value.diagnosa_prabedah}</span>
+                                    {else}
+                                        -
+                                    {/if}
+                                    {if: !empty($value.tindakan)}
+                                        <div class="text-muted" style="font-size: 11px;"><i class="fa fa-cut"></i> {$value.tindakan}</div>
+                                    {/if}
+                                </td>
+                                <td>
+                                    {if: !empty($value.dr_anestesi)}
+                                        <div><i class="fa fa-user-md text-primary"></i> {$value.dr_anestesi}</div>
+                                    {elseif: !empty($value.dokter_nama)}
+                                        <div><i class="fa fa-user-md text-primary"></i> {$value.dokter_nama}</div>
+                                    {/if}
+                                    {if: !empty($value.penata_anestesi)}
+                                        <div class="text-muted" style="font-size: 11px;">Penata: {$value.penata_anestesi}</div>
+                                    {/if}
+                                </td>
+                                <td>
+                                    {if: !empty($value.status_asa)}
+                                        <span class="label label-primary">ASA {$value.status_asa}</span>
+                                    {else}
+                                        -
+                                    {/if}
+                                </td>
+                                <td style="text-align: center; white-space: nowrap;">
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans4form', $value.id])?}" class="btn btn-xs btn-warning" title="Edit Data"><i class="fa fa-pencil"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans4cetak', $value.id])?}" class="btn btn-xs btn-primary" target="_blank" title="Cetak HTML"><i class="fa fa-print"></i></a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans4cetak', $value.id])?}&pdf=1" class="btn btn-xs btn-danger" target="_blank" title="Download PDF"><i class="fa fa-file-pdf-o"></i> PDF</a>
+                                    <a href="{?=url([ADMIN, 'update_bmt', 'ans4manage'])?}&action=delete&id={$value.id}" class="btn btn-xs btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')" title="Hapus"><i class="fa fa-trash"></i></a>
                                 </td>
                             </tr>
                             {/loop}
                             {else}
                             <tr>
-                                <td colspan="6" class="text-center">Tidak ada data ditemukan.</td>
+                                <td colspan="9" class="text-center" style="padding: 20px; color: #888;">
+                                    <i class="fa fa-folder-open-o fa-2x" style="margin-bottom: 5px; display: block;"></i>
+                                    Belum ada data Evaluasi Pra-Anestesi (ANS4). Silakan klik tab <strong>Tambah Data</strong>.
+                                </td>
                             </tr>
                             {/if}
                         </tbody>
@@ -57,8 +102,21 @@
 
 <script>
 $(document).ready(function() {
-    $('#data-table').DataTable({
-        "ordering": false
+    $('#data-table-ans4').DataTable({
+        "ordering": false,
+        "language": {
+            "search": "Cari:",
+            "lengthMenu": "Tampilkan _MENU_ data",
+            "zeroRecords": "Data tidak ditemukan",
+            "info": "Menampilkan _START_ s/d _END_ dari _TOTAL_ data",
+            "infoEmpty": "Menampilkan 0 data",
+            "paginate": {
+                "first": "Awal",
+                "last": "Akhir",
+                "next": "&raquo;",
+                "previous": "&laquo;"
+            }
+        }
     });
 });
 </script>

@@ -5,218 +5,401 @@
                 <h3 class="panel-title">Form Status Post Anestesi</h3>
                 <ul class="nav nav-tabs">
                     <li><a href="{?=url([ADMIN, 'update_bmt', 'ans6manage'])?}">Data Status Post Anestesi</a></li>
-                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ans6form'])?}">Tambah Baru</a></li>
+                    <li class="active"><a href="{?=url([ADMIN, 'update_bmt', 'ans6form'])?}">Form Input</a></li>
                 </ul>
             </div>
             <div class="panel-body">
                 <form action="{?=url([ADMIN, 'update_bmt', 'ans6save'])?}" method="POST">
                     <input type="hidden" name="id" value="{?=isset($data['id']) ? $data['id'] : ''?}">
                     
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>No. Rawat</label>
-                                <div class="input-group">
-                                    <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset($data['no_rawat']) ? $data['no_rawat'] : ''?}" required>
-                                    <span class="input-group-btn">
-                                        <button class="btn btn-default" type="button" id="btn-cari-pasien"><i class="fa fa-search"></i> Cari</button>
-                                    </span>
+                    <!-- IDENTITAS PASIEN & OPERASI -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading"><b>Identitas Pasien & Informasi Tindakan</b></div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>No. Rawat</label>
+                                        <div class="input-group">
+                                            <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset($data['no_rawat']) ? $data['no_rawat'] : ''?}" required placeholder="Contoh: 2022/11/14/000002">
+                                            <span class="input-group-btn">
+                                                <button class="btn btn-primary" type="button" id="btn-cari-pasien"><i class="fa fa-search"></i> Cari Pasien</button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Nama Pasien</label>
+                                        <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" value="{?=isset($data['nm_pasien']) ? $data['nm_pasien'] : ''?}" readonly>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Jenis Kelamin</label>
+                                                <input type="text" id="jk" class="form-control" value="{?=isset($data['jk']) ? $data['jk'] : ''?}" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Umur</label>
+                                                <input type="text" id="umur" class="form-control" value="{?=isset($data['umur']) ? $data['umur'] : ''?}" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Jenis Anestesi</label>
+                                        <input type="text" name="jenis_anestesi" class="form-control" value="{?=isset($data['jenis_anestesi']) ? $data['jenis_anestesi'] : 'General Anestesi (GETA)'?}" placeholder="General Anestesi / Regional (SAB) / Sedasi">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Tanggal Operasi</label>
+                                        <input type="date" name="tanggal" class="form-control" value="{?=isset($data['tanggal']) ? $data['tanggal'] : date('Y-m-d')?}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Diagnosa Pascabedah</label>
+                                        <input type="text" name="diagnosa_pascabedah" class="form-control" value="{?=isset($data['diagnosa_pascabedah']) ? $data['diagnosa_pascabedah'] : ''?}" placeholder="Diagnosa post operatif">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Tindakan</label>
+                                        <input type="text" name="tindakan" class="form-control" value="{?=isset($data['tindakan']) ? $data['tindakan'] : ''?}" placeholder="Tindakan bedah yang dilakukan">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>dr. Anestesi / Asisten</label>
+                                                <input type="text" name="dr_anestesi" class="form-control" value="{?=isset($data['dr_anestesi']) ? $data['dr_anestesi'] : ''?}" placeholder="Nama dr. Anestesi">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Penata / Perawat Anestesi</label>
+                                                <input type="text" name="penata_anestesi" class="form-control" value="{?=isset($data['penata_anestesi']) ? $data['penata_anestesi'] : (isset($data['perawat_pacu']) ? $data['perawat_pacu'] : '')?}" placeholder="Nama Penata Anestesi">
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label>Nama Pasien</label>
-                                <input type="text" name="nm_pasien" id="nm_pasien" class="form-control" value="{?=isset($data['nm_pasien']) ? $data['nm_pasien'] : ''?}" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label>Umur / Jenis Kelamin</label>
-                                <input type="text" class="form-control" value="{?=isset($data['umur']) ? $data['umur'] : ''?} / {?=isset($data['jk']) ? $data['jk'] : ''?}" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label>Jenis Anestesi</label>
-                                <input type="text" name="jenis_anestesi" class="form-control" value="{?=isset($data['jenis_anestesi']) ? $data['jenis_anestesi'] : ''?}">
-                            </div>
-                            <div class="form-group">
-                                <label>Tindakan</label>
-                                <input type="text" name="tindakan" class="form-control" value="{?=isset($data['tindakan']) ? $data['tindakan'] : ''?}">
+                        </div>
+                    </div>
+
+                    <!-- TANDA VITAL TIBA DI PACU -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading"><b>Tanda Vital Tiba di PACU</b></div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>TD Sistolik (mmHg)</label>
+                                        <input type="number" name="vital_sistolik" class="form-control" value="{?=isset($data['vital_sistolik']) ? $data['vital_sistolik'] : ''?}" placeholder="120">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>TD Diastolik (mmHg)</label>
+                                        <input type="number" name="vital_diastolik" class="form-control" value="{?=isset($data['vital_diastolik']) ? $data['vital_diastolik'] : ''?}" placeholder="80">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Nadi (x/menit)</label>
+                                        <input type="number" name="vital_nadi" class="form-control" value="{?=isset($data['vital_nadi']) ? $data['vital_nadi'] : ''?}" placeholder="80">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Respirasi / RR (x/menit)</label>
+                                        <input type="number" name="vital_rr" class="form-control" value="{?=isset($data['vital_rr']) ? $data['vital_rr'] : ''?}" placeholder="18">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>SpO2 (%)</label>
+                                        <input type="number" name="vital_saturasi" class="form-control" value="{?=isset($data['vital_saturasi']) ? $data['vital_saturasi'] : ''?}" placeholder="99">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>VAS Nyeri (0-10)</label>
+                                        <input type="number" name="vital_vas" class="form-control" value="{?=isset($data['vital_vas']) ? $data['vital_vas'] : ''?}" placeholder="2" min="0" max="10">
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Tanggal</label>
-                                <input type="date" name="tanggal" class="form-control" value="{?=isset($data['tanggal']) ? $data['tanggal'] : date('Y-m-d')?}">
+                    </div>
+
+                    <!-- OBSERVASI WAKTU TTV PASCA ANESTESI (12 INTERVAL WAKTU) -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading"><b>Grafik Observasi Waktu TTV Pasca Anestesi (PACU)</b></div>
+                        <div class="panel-body">
+                            <p class="text-muted"><small>Input data tanda vital pada interval waktu pasca anestesi. Nilai akan di-plot secara grafis (• Nadi, ° Suhu, v Sistolik, ^ Diastolik) pada cetakan dokumen.</small></p>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-condensed text-center" style="font-size: 11px;">
+                                    <thead>
+                                        <tr class="active">
+                                            <th rowspan="2" style="vertical-align: middle; text-align: left; width: 120px;">Parameter</th>
+                                            <th colspan="3">Jam 1</th>
+                                            <th colspan="3">Jam 2</th>
+                                            <th colspan="3">Jam 3</th>
+                                            <th colspan="3">Jam 4</th>
+                                        </tr>
+                                        <tr class="active">
+                                            <th>15'</th><th>30'</th><th>45'</th>
+                                            <th>15'</th><th>30'</th><th>45'</th>
+                                            <th>15'</th><th>30'</th><th>45'</th>
+                                            <th>15'</th><th>30'</th><th>45'</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="text-align: left; font-weight: bold; color: #2980b9;">v Sistolik (mmHg)</td>
+                                            {for: $i = 0; $i < 12; $i++}
+                                            <td><input type="text" name="grid_sistolik[]" class="form-control input-sm text-center" value="{?=isset($gridData['sistolik'][$i]) ? $gridData['sistolik'][$i] : ''?}" style="padding: 2px 4px; height: 26px;"></td>
+                                            {/for}
+                                        </tr>
+                                        <tr>
+                                            <td style="text-align: left; font-weight: bold; color: #27ae60;">^ Diastolik (mmHg)</td>
+                                            {for: $i = 0; $i < 12; $i++}
+                                            <td><input type="text" name="grid_diastolik[]" class="form-control input-sm text-center" value="{?=isset($gridData['diastolik'][$i]) ? $gridData['diastolik'][$i] : ''?}" style="padding: 2px 4px; height: 26px;"></td>
+                                            {/for}
+                                        </tr>
+                                        <tr>
+                                            <td style="text-align: left; font-weight: bold; color: #e74c3c;">• Nadi (x/mnt)</td>
+                                            {for: $i = 0; $i < 12; $i++}
+                                            <td><input type="text" name="grid_nadi[]" class="form-control input-sm text-center" value="{?=isset($gridData['nadi'][$i]) ? $gridData['nadi'][$i] : ''?}" style="padding: 2px 4px; height: 26px;"></td>
+                                            {/for}
+                                        </tr>
+                                        <tr>
+                                            <td style="text-align: left; font-weight: bold; color: #f39c12;">° Suhu (°C)</td>
+                                            {for: $i = 0; $i < 12; $i++}
+                                            <td><input type="text" name="grid_suhu[]" class="form-control input-sm text-center" value="{?=isset($gridData['suhu'][$i]) ? $gridData['suhu'][$i] : ''?}" style="padding: 2px 4px; height: 26px;"></td>
+                                            {/for}
+                                        </tr>
+                                        <tr>
+                                            <td style="text-align: left; font-weight: bold;">Saturasi O2 (%)</td>
+                                            {for: $i = 0; $i < 12; $i++}
+                                            <td><input type="text" name="grid_saturasi[]" class="form-control input-sm text-center" value="{?=isset($gridData['saturasi'][$i]) ? $gridData['saturasi'][$i] : ''?}" style="padding: 2px 4px; height: 26px;"></td>
+                                            {/for}
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <div class="form-group">
-                                <label>Diagnosa Pascabedah</label>
-                                <input type="text" name="diagnosa_pascabedah" class="form-control" value="{?=isset($data['diagnosa_pascabedah']) ? $data['diagnosa_pascabedah'] : ''?}">
+                        </div>
+                    </div>
+
+                    <!-- EVALUASI SKOR PASCA ANESTESI (ALDRETTE / STEWARD / BROMAGE) -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading"><b>Waktu Evaluasi Aldrette / Steward / Bromage Score</b></div>
+                        <div class="panel-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-condensed text-center" style="font-size: 11px;">
+                                    <thead>
+                                        <tr class="active">
+                                            <th rowspan="2" style="vertical-align: middle; text-align: left; width: 220px;">Kriteria Evaluasi</th>
+                                            <th colspan="3">Menit Pasca Anestesi</th>
+                                            <th colspan="4">Jam Observasi</th>
+                                            <th rowspan="2" style="vertical-align: middle;">Jam Pindah Ruangan</th>
+                                        </tr>
+                                        <tr class="active">
+                                            <th>15'</th><th>30'</th><th>45'</th>
+                                            <th>Jam 1</th><th>Jam 2</th><th>Jam 3</th><th>Jam 4</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- ALDRETTE SCORE -->
+                                        <tr class="info">
+                                            <td colspan="9" style="text-align: left; font-weight: bold;">
+                                                ALDRETTE SCORE (DEWASA) <span class="badge" style="background:#2980b9;">Boleh Pindah Ruangan jika Skor &ge; 8</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="text-align: left; font-weight: bold;">Total Skor Aldrette (0-10)</td>
+                                            <td><input type="text" name="aldrete_jam_pasca_15" class="form-control input-sm text-center" value="{?=isset($data['aldrete_jam_pasca_15']) ? $data['aldrete_jam_pasca_15'] : ''?}"></td>
+                                            <td><input type="text" name="aldrete_jam_pasca_30" class="form-control input-sm text-center" value="{?=isset($data['aldrete_jam_pasca_30']) ? $data['aldrete_jam_pasca_30'] : ''?}"></td>
+                                            <td><input type="text" name="aldrete_jam_pasca_45" class="form-control input-sm text-center" value="{?=isset($data['aldrete_jam_pasca_45']) ? $data['aldrete_jam_pasca_45'] : ''?}"></td>
+                                            <td><input type="text" name="aldrete_jam_1" class="form-control input-sm text-center" value="{?=isset($data['aldrete_jam_1']) ? $data['aldrete_jam_1'] : ''?}"></td>
+                                            <td><input type="text" name="aldrete_jam_2" class="form-control input-sm text-center" value="{?=isset($data['aldrete_jam_2']) ? $data['aldrete_jam_2'] : ''?}"></td>
+                                            <td><input type="text" name="aldrete_jam_3" class="form-control input-sm text-center" value="{?=isset($data['aldrete_jam_3']) ? $data['aldrete_jam_3'] : ''?}"></td>
+                                            <td><input type="text" name="aldrete_jam_4" class="form-control input-sm text-center" value="{?=isset($data['aldrete_jam_4']) ? $data['aldrete_jam_4'] : ''?}"></td>
+                                            <td><input type="text" name="aldrete_jam_pindah" class="form-control input-sm text-center" value="{?=isset($data['aldrete_jam_pindah']) ? $data['aldrete_jam_pindah'] : ''?}"></td>
+                                        </tr>
+
+                                        <!-- STEWARD SCORE -->
+                                        <tr class="warning">
+                                            <td colspan="9" style="text-align: left; font-weight: bold;">
+                                                STEWARD SCORE (ANAK-ANAK) <span class="badge" style="background:#f39c12;">Boleh Pindah Ruangan jika Skor &ge; 5</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="text-align: left; font-weight: bold;">Total Skor Steward (0-6)</td>
+                                            <td><input type="text" name="steward_jam_pasca_15" class="form-control input-sm text-center" value="{?=isset($data['steward_jam_pasca_15']) ? $data['steward_jam_pasca_15'] : ''?}"></td>
+                                            <td><input type="text" name="steward_jam_pasca_30" class="form-control input-sm text-center" value="{?=isset($data['steward_jam_pasca_30']) ? $data['steward_jam_pasca_30'] : ''?}"></td>
+                                            <td><input type="text" name="steward_jam_pasca_45" class="form-control input-sm text-center" value="{?=isset($data['steward_jam_pasca_45']) ? $data['steward_jam_pasca_45'] : ''?}"></td>
+                                            <td><input type="text" name="steward_jam_1" class="form-control input-sm text-center" value="{?=isset($data['steward_jam_1']) ? $data['steward_jam_1'] : ''?}"></td>
+                                            <td><input type="text" name="steward_jam_2" class="form-control input-sm text-center" value="{?=isset($data['steward_jam_2']) ? $data['steward_jam_2'] : ''?}"></td>
+                                            <td><input type="text" name="steward_jam_3" class="form-control input-sm text-center" value="{?=isset($data['steward_jam_3']) ? $data['steward_jam_3'] : ''?}"></td>
+                                            <td><input type="text" name="steward_jam_4" class="form-control input-sm text-center" value="{?=isset($data['steward_jam_4']) ? $data['steward_jam_4'] : ''?}"></td>
+                                            <td><input type="text" name="steward_jam_pindah" class="form-control input-sm text-center" value="{?=isset($data['steward_jam_pindah']) ? $data['steward_jam_pindah'] : ''?}"></td>
+                                        </tr>
+
+                                        <!-- BROMAGE SCORE -->
+                                        <tr class="success">
+                                            <td colspan="9" style="text-align: left; font-weight: bold;">
+                                                BROMAGE SCORE (SAB / SUB ARACHNOID BLOCK) <span class="badge" style="background:#27ae60;">Boleh Pindah Ruangan jika Skor &le; 2</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="text-align: left; font-weight: bold;">Total Skor Bromage (0-3)</td>
+                                            <td><input type="text" name="bromage_jam_pasca_15" class="form-control input-sm text-center" value="{?=isset($data['bromage_jam_pasca_15']) ? $data['bromage_jam_pasca_15'] : ''?}"></td>
+                                            <td><input type="text" name="bromage_jam_pasca_30" class="form-control input-sm text-center" value="{?=isset($data['bromage_jam_pasca_30']) ? $data['bromage_jam_pasca_30'] : ''?}"></td>
+                                            <td><input type="text" name="bromage_jam_pasca_45" class="form-control input-sm text-center" value="{?=isset($data['bromage_jam_pasca_45']) ? $data['bromage_jam_pasca_45'] : ''?}"></td>
+                                            <td><input type="text" name="bromage_jam_1" class="form-control input-sm text-center" value="{?=isset($data['bromage_jam_1']) ? $data['bromage_jam_1'] : ''?}"></td>
+                                            <td><input type="text" name="bromage_jam_2" class="form-control input-sm text-center" value="{?=isset($data['bromage_jam_2']) ? $data['bromage_jam_2'] : ''?}"></td>
+                                            <td><input type="text" name="bromage_jam_3" class="form-control input-sm text-center" value="{?=isset($data['bromage_jam_3']) ? $data['bromage_jam_3'] : ''?}"></td>
+                                            <td><input type="text" name="bromage_jam_4" class="form-control input-sm text-center" value="{?=isset($data['bromage_jam_4']) ? $data['bromage_jam_4'] : ''?}"></td>
+                                            <td><input type="text" name="bromage_jam_pindah" class="form-control input-sm text-center" value="{?=isset($data['bromage_jam_pindah']) ? $data['bromage_jam_pindah'] : ''?}"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <div class="form-group">
-                                <label>Dr. Anestesi / Asisten</label>
-                                <input type="text" name="dr_anestesi" class="form-control" value="{?=isset($data['dr_anestesi']) ? $data['dr_anestesi'] : ''?}">
+
+                            <!-- PASIEN DIPINDAHKAN KE RUANGAN -->
+                            <div class="well well-sm" style="margin-top: 10px; margin-bottom: 0;">
+                                <label style="margin-right: 15px;">Pasien Dipindahkan ke :</label>
+                                <label class="radio-inline">
+                                    <input type="radio" name="pindah_ke" value="Ruang Rawat" {if: isset($data['pindah_ke']) && $data['pindah_ke'] == 'Ruang Rawat'}checked{/if}> Ruang Rawat Inap:
+                                </label>
+                                <input type="text" name="pindah_ke_ruang" class="form-control input-sm" style="display: inline-block; width: 220px;" placeholder="Nama / No. Kamar Rawat" value="{?=isset($data['pindah_ke_ruang']) ? $data['pindah_ke_ruang'] : ''?}">
+                                &nbsp;&nbsp;&nbsp;&nbsp;
+                                <label class="radio-inline">
+                                    <input type="radio" name="pindah_ke" value="ICU" {if: isset($data['pindah_ke']) && $data['pindah_ke'] == 'ICU'}checked{/if}> ICU / HCU
+                                </label>
                             </div>
-                            <div class="form-group">
-                                <label>Perawat PACU</label>
-                                <input type="text" name="perawat_pacu" class="form-control" value="{?=isset($data['perawat_pacu']) ? $data['perawat_pacu'] : ''?}">
+                        </div>
+                    </div>
+
+                    <!-- PROTOKOL NYERI (OPSIONAL / JIKA DIPERLUKAN) -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <b>Protokol Kontrol Nyeri Tambahan di PACU (Opsional)</b>
+                            <button type="button" class="btn btn-xs btn-success pull-right" id="btn-add-protokol"><i class="fa fa-plus"></i> Tambah Obat</button>
+                        </div>
+                        <div class="panel-body">
+                            <table class="table table-bordered table-condensed" id="table-protokol">
+                                <thead>
+                                    <tr class="active">
+                                        <th style="width: 25%;">Tanggal / Jam</th>
+                                        <th>Obat / Dosis / Cara Pemberian</th>
+                                        <th style="width: 25%;">Tanda Tangan Dokter</th>
+                                        <th style="width: 50px;">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {if: !empty($detail)}
+                                        {loop: $detail}
+                                        <tr>
+                                            <td><input type="text" name="detail_tanggal[]" class="form-control input-sm" value="{$value.tanggal}"></td>
+                                            <td><input type="text" name="detail_obat[]" class="form-control input-sm" value="{$value.obat}"></td>
+                                            <td><input type="text" name="detail_ttd[]" class="form-control input-sm" value="{$value.tanda_tangan_dokter}"></td>
+                                            <td><button type="button" class="btn btn-xs btn-danger btn-remove-protokol"><i class="fa fa-trash"></i></button></td>
+                                        </tr>
+                                        {/loop}
+                                    {else}
+                                        <tr>
+                                            <td><input type="text" name="detail_tanggal[]" class="form-control input-sm" placeholder="Contoh: 14/11/2022 17:30"></td>
+                                            <td><input type="text" name="detail_obat[]" class="form-control input-sm" placeholder="Nama obat / dosis / rute"></td>
+                                            <td><input type="text" name="detail_ttd[]" class="form-control input-sm" placeholder="Nama dokter"></td>
+                                            <td><button type="button" class="btn btn-xs btn-danger btn-remove-protokol"><i class="fa fa-trash"></i></button></td>
+                                        </tr>
+                                    {/if}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- INSTRUKSI PASCA ANESTESI & PENGESAHAN -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading"><b>Instruksi Pasca Anestesi & Pengesahan</b></div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>1. Infus</label>
+                                        <input type="text" name="instruksi_prosedur_infus" class="form-control" value="{?=isset($data['instruksi_prosedur_infus']) ? $data['instruksi_prosedur_infus'] : 'RL 20 tpm'?}" placeholder="Contoh: RL 20 tpm">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>2. Puasa sampai dengan</label>
+                                        <input type="text" name="instruksi_prosedur_puasa" class="form-control" value="{?=isset($data['instruksi_prosedur_puasa']) ? $data['instruksi_prosedur_puasa'] : 'Sadar baik, bising usus normal (+)'?}" placeholder="Contoh: Sadar penuh / bising usus normal (+)">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>3. Observasi Tanda Vital</label><br>
+                                        <div class="row" style="margin-bottom: 5px;">
+                                            <div class="col-md-4">
+                                                <label class="checkbox-inline"><input type="checkbox" name="instruksi_obs_td" value="Y" {if: isset($data['instruksi_obs_td']) && $data['instruksi_obs_td'] == 'Y'}checked{/if}> <b>TD</b></label>
+                                                <input type="text" name="instruksi_obs_td_ket" class="form-control input-sm" placeholder="Keterangan" value="{?=isset($data['instruksi_obs_td_ket']) ? $data['instruksi_obs_td_ket'] : 'Tiap 15 mnt'?}">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="checkbox-inline"><input type="checkbox" name="instruksi_obs_nadi" value="Y" {if: isset($data['instruksi_obs_nadi']) && $data['instruksi_obs_nadi'] == 'Y'}checked{/if}> <b>Nadi</b></label>
+                                                <input type="text" name="instruksi_obs_nadi_ket" class="form-control input-sm" placeholder="Keterangan" value="{?=isset($data['instruksi_obs_nadi_ket']) ? $data['instruksi_obs_nadi_ket'] : 'Tiap 15 mnt'?}">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="checkbox-inline"><input type="checkbox" name="instruksi_obs_urin" value="Y" {if: isset($data['instruksi_obs_urin']) && $data['instruksi_obs_urin'] == 'Y'}checked{/if}> <b>Urin</b></label>
+                                                <input type="text" name="instruksi_obs_urin_ket" class="form-control input-sm" placeholder="Keterangan" value="{?=isset($data['instruksi_obs_urin_ket']) ? $data['instruksi_obs_urin_ket'] : 'Pantau produksi'?}">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="checkbox-inline"><input type="checkbox" name="instruksi_obs_respirasi" value="Y" {if: isset($data['instruksi_obs_respirasi']) && $data['instruksi_obs_respirasi'] == 'Y'}checked{/if}> <b>Respirasi</b></label>
+                                                <input type="text" name="instruksi_obs_respirasi_ket" class="form-control input-sm" placeholder="Keterangan" value="{?=isset($data['instruksi_obs_respirasi_ket']) ? $data['instruksi_obs_respirasi_ket'] : 'Tiap 15 mnt'?}">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="checkbox-inline"><input type="checkbox" name="instruksi_obs_kesadaran" value="Y" {if: isset($data['instruksi_obs_kesadaran']) && $data['instruksi_obs_kesadaran'] == 'Y'}checked{/if}> <b>Kesadaran</b></label>
+                                                <input type="text" name="instruksi_obs_kesadaran_ket" class="form-control input-sm" placeholder="Keterangan" value="{?=isset($data['instruksi_obs_kesadaran_ket']) ? $data['instruksi_obs_kesadaran_ket'] : 'Berkala'?}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>4. Obat / Medikasi</label>
+                                        <div class="input-group" style="margin-bottom: 5px;">
+                                            <span class="input-group-addon">a.</span>
+                                            <input type="text" name="instruksi_obat_a" class="form-control" value="{?=isset($data['instruksi_obat_a']) ? $data['instruksi_obat_a'] : 'Ketorolac 30mg IV bila nyeri'?}" placeholder="Obat a">
+                                        </div>
+                                        <div class="input-group" style="margin-bottom: 5px;">
+                                            <span class="input-group-addon">b.</span>
+                                            <input type="text" name="instruksi_obat_b" class="form-control" value="{?=isset($data['instruksi_obat_b']) ? $data['instruksi_obat_b'] : 'Ondansetron 4mg IV bila mual/muntah'?}" placeholder="Obat b">
+                                        </div>
+                                        <div class="input-group">
+                                            <span class="input-group-addon">c.</span>
+                                            <input type="text" name="instruksi_obat_c" class="form-control" value="{?=isset($data['instruksi_obat_c']) ? $data['instruksi_obat_c'] : 'Paracetamol drip 1 gr bila demam'?}" placeholder="Obat c">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>5. Catatan</label>
+                                        <textarea name="instruksi_catatan" class="form-control" rows="2" placeholder="Catatan khusus pasca anestesi">{?=isset($data['instruksi_catatan']) ? $data['instruksi_catatan'] : (isset($data['instruksi_posisi_lainnya']) ? $data['instruksi_posisi_lainnya'] : 'Tirah baring 2 jam pasca bedah. Bila kesadaran baik, perbolehkan minum sedikit-sedikit.')?}</textarea>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Nama Penata Anestesi</label>
+                                                <input type="text" name="tanda_tangan_penata" class="form-control" value="{?=isset($data['tanda_tangan_penata']) ? $data['tanda_tangan_penata'] : (isset($data['penata_anestesi']) ? $data['penata_anestesi'] : '')?}" placeholder="Penata Anestesi">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Nama Dokter Anestesi</label>
+                                                <input type="text" name="tanda_tangan_dokter" class="form-control" value="{?=isset($data['tanda_tangan_dokter']) ? $data['tanda_tangan_dokter'] : (isset($data['dr_anestesi']) ? $data['dr_anestesi'] : '')?}" placeholder="Dokter Anestesi">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <hr>
-                    <h4>Tanda Vital Tiba di PACU</h4>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-condensed">
-                            <thead>
-                                <tr>
-                                    <th>Parameter</th>
-                                    <th>Jam 1 (15')</th>
-                                    <th>Jam 1 (30')</th>
-                                    <th>Jam 1 (45')</th>
-                                    <th>Jam 2 (15')</th>
-                                    <th>Jam 2 (30')</th>
-                                    <th>Jam 2 (45')</th>
-                                    <th>Jam 3 (15')</th>
-                                    <th>Jam 3 (30')</th>
-                                    <th>Jam 3 (45')</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Nadi, Suhu, Tensi, dsb (Input JSON Sementara)</td>
-                                    <td colspan="9"><textarea name="vital_nadi" class="form-control" rows="3">{?=isset($data['vital_nadi']) ? $data['vital_nadi'] : ''?}</textarea></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <hr>
-                    <h4>Waktu Evaluasi Aldrette / Steward Score</h4>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-condensed">
-                            <thead>
-                                <tr>
-                                    <th rowspan="2">Kriteria</th>
-                                    <th colspan="3">Jam Pasca Anestesi</th>
-                                    <th colspan="4">Jam</th>
-                                    <th rowspan="2">Jam Pindah</th>
-                                </tr>
-                                <tr>
-                                    <th>15'</th><th>30'</th><th>45'</th>
-                                    <th>1</th><th>2</th><th>3</th><th>4</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="info"><td colspan="9"><b>ALDRETTE SCORE (DEWASA)</b></td></tr>
-                                <tr>
-                                    <td>Skor (0-10)</td>
-                                    <td><input type="text" name="aldrete_jam_pasca_15" class="form-control input-sm" value="{?=isset($data['aldrete_jam_pasca_15']) ? $data['aldrete_jam_pasca_15'] : ''?}"></td>
-                                    <td><input type="text" name="aldrete_jam_pasca_30" class="form-control input-sm" value="{?=isset($data['aldrete_jam_pasca_30']) ? $data['aldrete_jam_pasca_30'] : ''?}"></td>
-                                    <td><input type="text" name="aldrete_jam_pasca_45" class="form-control input-sm" value="{?=isset($data['aldrete_jam_pasca_45']) ? $data['aldrete_jam_pasca_45'] : ''?}"></td>
-                                    <td><input type="text" name="aldrete_jam_1" class="form-control input-sm" value="{?=isset($data['aldrete_jam_1']) ? $data['aldrete_jam_1'] : ''?}"></td>
-                                    <td><input type="text" name="aldrete_jam_2" class="form-control input-sm" value="{?=isset($data['aldrete_jam_2']) ? $data['aldrete_jam_2'] : ''?}"></td>
-                                    <td><input type="text" name="aldrete_jam_3" class="form-control input-sm" value="{?=isset($data['aldrete_jam_3']) ? $data['aldrete_jam_3'] : ''?}"></td>
-                                    <td><input type="text" name="aldrete_jam_4" class="form-control input-sm" value="{?=isset($data['aldrete_jam_4']) ? $data['aldrete_jam_4'] : ''?}"></td>
-                                    <td><input type="text" name="aldrete_jam_pindah" class="form-control input-sm" value="{?=isset($data['aldrete_jam_pindah']) ? $data['aldrete_jam_pindah'] : ''?}"></td>
-                                </tr>
-                                <tr class="info"><td colspan="9"><b>STEWARD SCORE (ANAK-ANAK)</b></td></tr>
-                                <tr>
-                                    <td>Skor (0-6)</td>
-                                    <td><input type="text" name="steward_jam_pasca_15" class="form-control input-sm" value="{?=isset($data['steward_jam_pasca_15']) ? $data['steward_jam_pasca_15'] : ''?}"></td>
-                                    <td><input type="text" name="steward_jam_pasca_30" class="form-control input-sm" value="{?=isset($data['steward_jam_pasca_30']) ? $data['steward_jam_pasca_30'] : ''?}"></td>
-                                    <td><input type="text" name="steward_jam_pasca_45" class="form-control input-sm" value="{?=isset($data['steward_jam_pasca_45']) ? $data['steward_jam_pasca_45'] : ''?}"></td>
-                                    <td><input type="text" name="steward_jam_1" class="form-control input-sm" value="{?=isset($data['steward_jam_1']) ? $data['steward_jam_1'] : ''?}"></td>
-                                    <td><input type="text" name="steward_jam_2" class="form-control input-sm" value="{?=isset($data['steward_jam_2']) ? $data['steward_jam_2'] : ''?}"></td>
-                                    <td><input type="text" name="steward_jam_3" class="form-control input-sm" value="{?=isset($data['steward_jam_3']) ? $data['steward_jam_3'] : ''?}"></td>
-                                    <td><input type="text" name="steward_jam_4" class="form-control input-sm" value="{?=isset($data['steward_jam_4']) ? $data['steward_jam_4'] : ''?}"></td>
-                                    <td><input type="text" name="steward_jam_pindah" class="form-control input-sm" value="{?=isset($data['steward_jam_pindah']) ? $data['steward_jam_pindah'] : ''?}"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <hr>
-                    <h4>Protokol Nyeri di PACU</h4>
-                    <table class="table table-bordered" id="table-protokol">
-                        <thead>
-                            <tr>
-                                <th>Tanggal</th>
-                                <th>Obat</th>
-                                <th>Tanda Tangan Dokter</th>
-                                <th><button type="button" class="btn btn-xs btn-success" id="btn-add-protokol"><i class="fa fa-plus"></i></button></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {if: !empty($detail)}
-                                {loop: $detail}
-                                <tr>
-                                    <td><input type="text" name="detail_tanggal[]" class="form-control" value="{$value.tanggal}"></td>
-                                    <td><input type="text" name="detail_obat[]" class="form-control" value="{$value.obat}"></td>
-                                    <td><input type="text" name="detail_ttd[]" class="form-control" value="{$value.tanda_tangan_dokter}"></td>
-                                    <td><button type="button" class="btn btn-xs btn-danger btn-remove-protokol"><i class="fa fa-trash"></i></button></td>
-                                </tr>
-                                {/loop}
-                            {else}
-                                <tr>
-                                    <td><input type="text" name="detail_tanggal[]" class="form-control"></td>
-                                    <td><input type="text" name="detail_obat[]" class="form-control"></td>
-                                    <td><input type="text" name="detail_ttd[]" class="form-control"></td>
-                                    <td><button type="button" class="btn btn-xs btn-danger btn-remove-protokol"><i class="fa fa-trash"></i></button></td>
-                                </tr>
-                            {/if}
-                        </tbody>
-                    </table>
-                    
-                    <hr>
-                    <h4>Instruksi Pasca Anestesi</h4>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>1. Infus</label>
-                                <input type="text" name="instruksi_prosedur_infus" class="form-control" value="{?=isset($data['instruksi_prosedur_infus']) ? $data['instruksi_prosedur_infus'] : ''?}">
-                            </div>
-                            <div class="form-group">
-                                <label>2. Puasa sampai dengan</label>
-                                <input type="text" name="instruksi_prosedur_puasa" class="form-control" value="{?=isset($data['instruksi_prosedur_puasa']) ? $data['instruksi_prosedur_puasa'] : ''?}">
-                            </div>
-                            <div class="form-group">
-                                <label>3. Observasi Tanda Vital</label><br>
-                                <label class="checkbox-inline"><input type="checkbox" name="instruksi_obs_td" value="Y" {if: isset($data['instruksi_obs_td']) && $data['instruksi_obs_td'] == 'Y'}checked{/if}> TD</label>
-                                <label class="checkbox-inline"><input type="checkbox" name="instruksi_obs_respirasi" value="Y" {if: isset($data['instruksi_obs_respirasi']) && $data['instruksi_obs_respirasi'] == 'Y'}checked{/if}> Respirasi</label>
-                                <label class="checkbox-inline"><input type="checkbox" name="instruksi_obs_nadi" value="Y" {if: isset($data['instruksi_obs_nadi']) && $data['instruksi_obs_nadi'] == 'Y'}checked{/if}> Nadi</label>
-                                <label class="checkbox-inline"><input type="checkbox" name="instruksi_obs_kesadaran" value="Y" {if: isset($data['instruksi_obs_kesadaran']) && $data['instruksi_obs_kesadaran'] == 'Y'}checked{/if}> Kesadaran</label>
-                                <label class="checkbox-inline"><input type="checkbox" name="instruksi_obs_urin" value="Y" {if: isset($data['instruksi_obs_urin']) && $data['instruksi_obs_urin'] == 'Y'}checked{/if}> Urin</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>4. Obat / Medikasi</label>
-                                <div class="input-group" style="margin-bottom: 5px;">
-                                    <span class="input-group-addon">a.</span>
-                                    <input type="text" name="instruksi_obat_a" class="form-control" value="{?=isset($data['instruksi_obat_a']) ? $data['instruksi_obat_a'] : ''?}">
-                                </div>
-                                <div class="input-group" style="margin-bottom: 5px;">
-                                    <span class="input-group-addon">b.</span>
-                                    <input type="text" name="instruksi_obat_b" class="form-control" value="{?=isset($data['instruksi_obat_b']) ? $data['instruksi_obat_b'] : ''?}">
-                                </div>
-                                <div class="input-group">
-                                    <span class="input-group-addon">c.</span>
-                                    <input type="text" name="instruksi_obat_c" class="form-control" value="{?=isset($data['instruksi_obat_c']) ? $data['instruksi_obat_c'] : ''?}">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Posisi</label><br>
-                                <label class="checkbox-inline"><input type="checkbox" name="instruksi_posisi_supine" value="Y" {if: isset($data['instruksi_posisi_supine']) && $data['instruksi_posisi_supine'] == 'Y'}checked{/if}> Supine</label>
-                                <label class="checkbox-inline"><input type="checkbox" name="instruksi_posisi_setengah_duduk" value="Y" {if: isset($data['instruksi_posisi_setengah_duduk']) && $data['instruksi_posisi_setengah_duduk'] == 'Y'}checked{/if}> Setengah duduk</label>
-                                <input type="text" name="instruksi_posisi_lainnya" class="form-control input-sm" style="display:inline-block; width:150px;" placeholder="..." value="{?=isset($data['instruksi_posisi_lainnya']) ? $data['instruksi_posisi_lainnya'] : ''?}">
-                            </div>
-                            <div class="form-group">
-                                <label>Tanda Tangan Dokter</label>
-                                <input type="text" name="tanda_tangan_dokter" class="form-control" value="{?=isset($data['tanda_tangan_dokter']) ? $data['tanda_tangan_dokter'] : ''?}">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                    <a href="{?=url([ADMIN, 'update_bmt', 'ans6manage'])?}" class="btn btn-default">Batal</a>
+                    <button type="submit" class="btn btn-primary btn-lg"><i class="fa fa-save"></i> Simpan Data</button>
+                    <a href="{?=url([ADMIN, 'update_bmt', 'ans6manage'])?}" class="btn btn-default btn-lg">Batal</a>
                 </form>
             </div>
         </div>
@@ -234,6 +417,8 @@ $('#btn-cari-pasien').click(function(){
             success: function(res) {
                 if(res.success) {
                     $('#nm_pasien').val(res.nama_pasien);
+                    $('#jk').val(res.jk);
+                    $('#umur').val(res.umur);
                 } else {
                     alert('Data pasien tidak ditemukan untuk No. Rawat tersebut!');
                 }
@@ -244,9 +429,9 @@ $('#btn-cari-pasien').click(function(){
 
 $('#btn-add-protokol').click(function(){
     var tr = '<tr>' +
-        '<td><input type="text" name="detail_tanggal[]" class="form-control"></td>' +
-        '<td><input type="text" name="detail_obat[]" class="form-control"></td>' +
-        '<td><input type="text" name="detail_ttd[]" class="form-control"></td>' +
+        '<td><input type="text" name="detail_tanggal[]" class="form-control input-sm"></td>' +
+        '<td><input type="text" name="detail_obat[]" class="form-control input-sm"></td>' +
+        '<td><input type="text" name="detail_ttd[]" class="form-control input-sm"></td>' +
         '<td><button type="button" class="btn btn-xs btn-danger btn-remove-protokol"><i class="fa fa-trash"></i></button></td>' +
     '</tr>';
     $('#table-protokol tbody').append(tr);

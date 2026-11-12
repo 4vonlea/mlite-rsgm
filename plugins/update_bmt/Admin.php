@@ -2618,22 +2618,22 @@ if (ob_get_length()) {
             $data['padded_alergi'][] = ['tanggal' => '', 'alergi' => ''];
         }
 
-        // Page 2 Diagnosa Ranap: at least 6 rows
-        $targetRanapRows = max(6, count($data['diagnosa_ranap_list']));
+        // Page 2 Diagnosa Ranap: at least 8 rows (sesuai formulir fisik scan)
+        $targetRanapRows = max(8, count($data['diagnosa_ranap_list']));
         $data['padded_ranap'] = $data['diagnosa_ranap_list'];
         while (count($data['padded_ranap']) < $targetRanapRows) {
             $data['padded_ranap'][] = ['tanggal' => '', 'diagnosa' => ''];
         }
 
-        // Page 2 Operasi: at least 6 rows
-        $targetOpRows = max(6, count($data['operasi_tindakan_list']));
+        // Page 2 Operasi: at least 10 rows (sesuai formulir fisik scan)
+        $targetOpRows = max(10, count($data['operasi_tindakan_list']));
         $data['padded_operasi'] = $data['operasi_tindakan_list'];
         while (count($data['padded_operasi']) < $targetOpRows) {
             $data['padded_operasi'][] = ['tanggal' => '', 'operasi_tindakan' => ''];
         }
 
-        // Page 2 Obat: at least 12 rows
-        $targetObatRows = max(12, count($data['obat_obatan_list']));
+        // Page 2 Obat: at least 16 rows (sesuai formulir fisik scan)
+        $targetObatRows = max(16, count($data['obat_obatan_list']));
         $data['padded_obat'] = $data['obat_obatan_list'];
         while (count($data['padded_obat']) < $targetObatRows) {
             $data['padded_obat'][] = [
@@ -7542,9 +7542,9 @@ if (ob_get_length()) {
                 'ANS1 - INFORMASI TINDAKAN PEMBIUSAN' => 'ans1manage',
                 'ANS2 - PERSETUJUAN TINDAKAN PEMBIUSAN' => 'ans2manage',
                 'ANS3 - ASSESMEN PRASEDASI / ANESTESI' => 'ans3manage',
-                'ANS4 - RENCANA ANESTESI' => 'ans4manage',
-                'ANS5 - STATUS ANESTESI' => 'ans5manage',
-                'ANS6 - STATUS POST ANESTESI' => 'ans6manage',
+                'ANS4 - RENCANA ANESTESI (01 PRA ANESTESI)' => 'ans4manage',
+                'ANS5 - STATUS ANESTESI (02 INTRA ANESTESI)' => 'ans5manage',
+                'ANS6 - STATUS POST ANESTESI (03 PASCA ANESTESI)' => 'ans6manage',
                 'ANS7 - SERAH TERIMA PASIEN PASCA OPERASI' => 'ans7manage',
                 'BM3 - ASESMEN PRA BEDAH MAYOR' => 'bm3manage',
                 'BM5 - CHECKLIST KESELAMATAN PASIEN OPERASI' => 'bm5manage',
@@ -8966,8 +8966,12 @@ if (ob_get_length()) {
         return $this->draw('ans4/manage.html', ['data' => $data]);
     }
 
-    public function getAns4form()
+    public function getAns4form($id = null)
     {
+        if (empty($id)) {
+            $id = $_GET['id'] ?? '';
+        }
+
         if (isset($_GET['ajax_patient'])) {
             $no_rawat = $_GET['no_rawat'] ?? '';
             $no_rawat = trim($no_rawat);
@@ -9009,10 +9013,7 @@ if (ob_get_length()) {
             exit();
         }
 
-        $id = $_GET['id'] ?? '';
         $data = [];
-        $detail = [];
-
         if (!empty($id)) {
             $data = $this->db('ans4_rencana_anestesi')->where('id', $id)->oneArray();
             if ($data && !empty($data['no_rawat'])) {
@@ -9024,17 +9025,38 @@ if (ob_get_length()) {
 
                 if ($reg) {
                     $data['nm_pasien'] = $reg['nm_pasien'];
+                    $data['no_rkm_medis'] = !empty($data['no_rkm_medis']) ? $data['no_rkm_medis'] : $reg['no_rkm_medis'];
                     $data['umur_pasien'] = $reg['umur'];
                     $data['jk_pasien'] = $reg['jk'];
                     $data['tgl_lahir'] = $reg['tgl_lahir'];
                 }
             }
-            $detail = $this->db('ans4_evaluasi_premedikasi_detail')->where('id_ans4', $id)->toArray();
+        } elseif (!empty($_GET['no_rawat'])) {
+            $no_rawat = trim($_GET['no_rawat']);
+            $reg = $this->db('reg_periksa')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $no_rawat)
+                ->orWhere('reg_periksa.no_rkm_medis', $no_rawat)
+                ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+                ->desc('reg_periksa.tgl_registrasi')
+                ->desc('reg_periksa.jam_reg')
+                ->oneArray();
+            if ($reg) {
+                $data['no_rawat'] = $reg['no_rawat'];
+                $data['no_rkm_medis'] = $reg['no_rkm_medis'];
+                $data['nm_pasien'] = $reg['nm_pasien'];
+                $data['jk_pasien'] = $reg['jk'];
+                $data['tgl_lahir'] = $reg['tgl_lahir'];
+            }
         }
 
         $this->tpl->set('data', $data);
-        $this->tpl->set('detail', $detail);
-        return $this->draw('ans4/form.html', ['data' => $data, 'detail' => $detail]);
+        return $this->draw('ans4/form.html', ['data' => $data]);
+    }
+
+    public function anyAns4form($id = null)
+    {
+        return $this->getAns4form($id);
     }
 
     public function postAns4save()
@@ -9045,10 +9067,61 @@ if (ob_get_length()) {
             $data = $post;
             unset($data['id']);
             unset($data['nm_pasien']);
-            unset($data['detail_obat']);
-            unset($data['detail_dosis']);
-            unset($data['detail_jam']);
-            unset($data['detail_pelaksana']);
+
+            if (!empty($data['no_rawat']) && empty($data['no_rkm_medis'])) {
+                $reg = $this->db('reg_periksa')->where('no_rawat', $data['no_rawat'])->oneArray();
+                if ($reg) {
+                    $data['no_rkm_medis'] = $reg['no_rkm_medis'];
+                }
+            }
+
+            // Sync aliases
+            if (!empty($data['dr_anestesi']) && empty($data['dokter_nama'])) {
+                $data['dokter_nama'] = $data['dr_anestesi'];
+            } elseif (!empty($data['dokter_nama']) && empty($data['dr_anestesi'])) {
+                $data['dr_anestesi'] = $data['dokter_nama'];
+            }
+
+            if (!empty($data['penata_anestesi']) && empty($data['tanda_tangan_penata'])) {
+                $data['tanda_tangan_penata'] = $data['penata_anestesi'];
+            }
+
+            if (!empty($data['td'])) {
+                $data['eval_td'] = $data['td'];
+            }
+            if (!empty($data['nadi'])) {
+                $data['eval_hr'] = $data['nadi'];
+            }
+            if (!empty($data['rr'])) {
+                $data['eval_rr'] = $data['rr'];
+            }
+            if (!empty($data['suhu'])) {
+                $data['eval_sb'] = $data['suhu'];
+            }
+            if (!empty($data['spo2'])) {
+                $data['eval_spo2'] = $data['spo2'];
+            }
+            if (!empty($data['persediaan_darah'])) {
+                $data['persiapan_darah'] = $data['persediaan_darah'];
+            }
+            if (!empty($data['persediaan_darah_ket'])) {
+                $data['persiapan_darah_ket'] = $data['persediaan_darah_ket'];
+            }
+
+            // Default checkboxes if unchecked
+            $checkboxes = [
+                'buka_mulut_2jari', 'jarak_thyromental_3jari', 'gerakan_leher_maksimum',
+                'tilik_identifikasi', 'tilik_persetujuan', 'tilik_puasa', 'tilik_mesin',
+                'tilik_suction', 'tilik_obat', 'tilik_antibiotik', 'tilik_pulse_oxy',
+                'tilik_ekg', 'tilik_nibp', 'tilik_termometer', 'tilik_stetoskop',
+                'tilik_urine', 'tilik_ngt', 'tilik_selimut', 'tilik_sabuk', 'tilik_pasca_induksi',
+                'pra_td_check', 'pra_n_check', 'pra_temp_check', 'pra_rr_check', 'pra_spo2_check'
+            ];
+            foreach ($checkboxes as $cb) {
+                if (!isset($data[$cb])) {
+                    $data[$cb] = 'N';
+                }
+            }
 
             foreach ($data as $key => $val) {
                 if ($val === '') {
@@ -9058,32 +9131,10 @@ if (ob_get_length()) {
 
             if ($id) {
                 $this->db('ans4_rencana_anestesi')->where('id', $id)->save($data);
-                $this->notify('success', 'Data berhasil diupdate');
+                $this->notify('success', 'Data Evaluasi Pra-Anestesi berhasil diupdate');
             } else {
                 $this->db('ans4_rencana_anestesi')->save($data);
-                $inserted = $this->db('ans4_rencana_anestesi')->where('no_rawat', $data['no_rawat'])->desc('id')->oneArray();
-                $id = $inserted['id'] ?? null;
-                $this->notify('success', 'Data berhasil disimpan');
-            }
-
-            if ($id) {
-                $this->db('ans4_evaluasi_premedikasi_detail')->where('id_ans4', $id)->delete();
-                $obat = $post['detail_obat'] ?? [];
-                $dosis = $post['detail_dosis'] ?? [];
-                $jam = $post['detail_jam'] ?? [];
-                $pelaksana = $post['detail_pelaksana'] ?? [];
-                
-                foreach ($obat as $k => $v) {
-                    if (!empty($v) || !empty($dosis[$k])) {
-                        $this->db('ans4_evaluasi_premedikasi_detail')->save([
-                            'id_ans4' => $id,
-                            'obat_premedikasi' => $v,
-                            'dosis' => $dosis[$k] ?? '',
-                            'jam' => $jam[$k] ?? '',
-                            'pelaksana' => $pelaksana[$k] ?? ''
-                        ]);
-                    }
-                }
+                $this->notify('success', 'Data Evaluasi Pra-Anestesi berhasil disimpan');
             }
 
             redirect(url([ADMIN, 'update_bmt', 'ans4manage']));
@@ -9092,9 +9143,16 @@ if (ob_get_length()) {
         }
     }
 
-    public function getAns4cetak()
+    public function anyAns4save()
     {
-        $id = $_GET['id'] ?? '';
+        return $this->postAns4save();
+    }
+
+    public function getAns4cetak($id = null)
+    {
+        if (empty($id)) {
+            $id = $_GET['id'] ?? '';
+        }
         if (!$id) {
             echo "ID tidak ditemukan.";
             exit();
@@ -9102,9 +9160,9 @@ if (ob_get_length()) {
 
         $data = $this->db('ans4_rencana_anestesi')
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans4_rencana_anestesi.no_rawat')
-            ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(ans4_rencana_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis)')
             ->where('ans4_rencana_anestesi.id', $id)
-            ->select('ans4_rencana_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+            ->select('ans4_rencana_anestesi.*, COALESCE(ans4_rencana_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
             ->oneArray();
 
         if (!$data) {
@@ -9112,45 +9170,62 @@ if (ob_get_length()) {
             exit();
         }
 
-        $detail = $this->db('ans4_evaluasi_premedikasi_detail')->where('id_ans4', $id)->toArray();
-
-        $rm = str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT);
+        $rm = str_pad($data['no_rkm_medis'] ?? '', 6, '0', STR_PAD_LEFT);
         for ($i=0; $i<6; $i++) {
-            $data['rm'.$i] = $rm[$i];
+            $data['rm'.$i] = $rm[$i] ?? '';
         }
-        $data['lp'] = $data['jk'] == 'L' ? '(Laki-laki)' : ($data['jk'] == 'P' ? '(Perempuan)' : '');
+        $data['lp'] = ($data['jk'] ?? '') == 'L' ? '(Laki-laki)' : ((($data['jk'] ?? '') == 'P') ? '(Perempuan)' : '');
 
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         if (!empty($data['tgl_lahir'])) {
-            $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
             $tgl = explode('-', $data['tgl_lahir']);
             if (count($tgl) == 3) {
-                $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+                $data['tgl_lahir_indo'] = (int)$tgl[2] . ' ' . ($bulan[(int)$tgl[1]] ?? '') . ' ' . $tgl[0];
             }
         }
         
         if (!empty($data['tanggal'])) {
             $tgl = explode('-', $data['tanggal']);
             if (count($tgl) == 3) {
-                $data['tanggal_indo'] = (int)$tgl[2] . ' ' . $bulan[(int)$tgl[1]] . ' ' . $tgl[0];
+                $data['tanggal_indo'] = (int)$tgl[2] . ' ' . ($bulan[(int)$tgl[1]] ?? '') . ' ' . $tgl[0];
             }
         }
 
         $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
         $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
-        $html = $this->draw('ans4/cetak.html', ['data' => $data, 'detail' => $detail, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        
+        $viewParams = [
+            'data' => $data,
+            'kop_img' => $data['kop_img'],
+            'is_mpdf' => $is_mpdf
+        ];
+
+        $html = $this->draw('ans4/cetak.html', $viewParams);
         if ($is_mpdf) {
-@ini_set('display_errors', '0');
-            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            @ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf([
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'margin_left' => 6,
+                'margin_right' => 6,
+                'margin_top' => 6,
+                'margin_bottom' => 6
+            ]);
             $mpdf->WriteHTML($html);
-if (ob_get_length()) {
-    ob_clean();
-}
-            $mpdf->Output('ANS4_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
+            if (ob_get_length()) {
+                ob_clean();
+            }
+            $mpdf->Output('ANS4_Evaluasi_Pra_Anestesi_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
             exit();
         }
         echo $html;
         exit();
+    }
+
+    public function anyAns4cetak($id = null)
+    {
+        return $this->getAns4cetak($id);
     }
 
     // ============================================================
@@ -9242,47 +9317,20 @@ if (ob_get_length()) {
             $data = [];
         }
 
-        $defaults = [
-            'id' => '', 'no_rawat' => '', 'no_rkm_medis' => '', 'nm_pasien' => '', 'jk' => '', 'umur' => '',
-            'tanggal' => date('Y-m-d'), 'diagnosa_prabedah' => '', 'diagnosa_pascabedah' => '',
-            'status_fisik' => '1', 'gol_darah' => '', 'rh' => '+', 'bb' => '', 'tb' => '',
-            'tindakan' => '', 'dr_anestesi' => '', 'kd_dokter_anestesi' => '',
-            'penata_anestesi' => '', 'dr_operator' => '', 'kd_dokter_operator' => '',
-            'waktu_mulai_pembiusan' => '08:00', 'waktu_selesai_pembiusan' => '09:30', 'lama_pembiusan' => '1 Jam 30 Menit',
-            'preinduksi_td_sistolik' => '120', 'preinduksi_td_diastolik' => '80', 'preinduksi_nadi' => '78',
-            'preinduksi_rr' => '18', 'preinduksi_suhu' => '36.5', 'preinduksi_vas' => '0',
-            'grid_data' => '', 'masalah' => '', 'prosedur_loading_cairan' => '', 'prosedur_premedikasi' => '', 'prosedur_maintenance' => '',
-            'jenis_anestesi_general' => 'Y', 'jenis_anestesi_general_tipe' => 'GETA',
-            'jenis_anestesi_regional' => 'N', 'jenis_anestesi_regional_tipe' => '', 'jenis_anestesi_lain' => '',
-            'jalan_napas_nasal' => 'N', 'jalan_napas_facemask' => 'N', 'jalan_napas_lma' => 'N', 'jalan_napas_orotrakeal' => 'Y', 'jalan_napas_lain' => '',
-            'posisi_supine' => 'Y', 'posisi_lateral' => 'N', 'posisi_prone' => 'N', 'posisi_lithotomi' => 'N', 'posisi_lain' => '',
-            'penyulit_pembedahan' => '', 'keadaan_akhir_pembedahan' => '', 'dokter_anestesi_ttd' => ''
-        ];
-
-        foreach ($defaults as $k => $v) {
-            if (!isset($data[$k]) || $data[$k] === null) {
-                $data[$k] = $v;
-            }
+        $gridData = [];
+        if (!empty($data['grid_data'])) {
+            $gridData = json_decode($data['grid_data'], true);
         }
-        $data['grid_data_json'] = htmlspecialchars($data['grid_data'] ?: '{}', ENT_QUOTES, 'UTF-8');
-
-        $dokter = $this->db('dokter')->where('status', '1')->toArray();
-
-        $pasien_list = $this->db('reg_periksa')
-            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-            ->select('reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
-            ->desc('reg_periksa.tgl_registrasi')
-            ->limit(30)
-            ->toArray();
+        if (!is_array($gridData)) {
+            $gridData = [];
+        }
 
         $this->tpl->set('data', $data);
-        $this->tpl->set('dokter', $dokter);
-        $this->tpl->set('pasien_list', $pasien_list);
+        $this->tpl->set('gridData', $gridData);
 
         return $this->draw('ans5/form.html', [
             'data' => $data,
-            'dokter' => $dokter,
-            'pasien_list' => $pasien_list
+            'gridData' => $gridData
         ]);
     }
 
@@ -9308,59 +9356,105 @@ if (ob_get_length()) {
             }
         }
 
+        // Pack intraoperative 12-interval monitoring grid
+        $gridArray = [
+            'o2' => $_POST['grid_o2'] ?? [],
+            'sevofluran' => $_POST['grid_sevofluran'] ?? [],
+            'isofluran' => $_POST['grid_isofluran'] ?? [],
+            'ketorolac' => $_POST['grid_ketorolac'] ?? [],
+            'ondansetron' => $_POST['grid_ondansetron'] ?? [],
+            'dexametason' => $_POST['grid_dexametason'] ?? [],
+            'midazolam' => $_POST['grid_midazolam'] ?? [],
+            'fentanyl' => $_POST['grid_fentanyl'] ?? [],
+            'lidokain' => $_POST['grid_lidokain'] ?? [],
+            'ketamin' => $_POST['grid_ketamin'] ?? [],
+            'propofol' => $_POST['grid_propofol'] ?? [],
+            'atracurium' => $_POST['grid_atracurium'] ?? [],
+            'efedrin' => $_POST['grid_efedrin'] ?? [],
+            'dexmedetomidin' => $_POST['grid_dexmedetomidin'] ?? [],
+            'epidural_spinal' => $_POST['grid_epidural_spinal'] ?? [],
+            'sistolik' => $_POST['grid_sistolik'] ?? [],
+            'diastolik' => $_POST['grid_diastolik'] ?? [],
+            'nadi' => $_POST['grid_nadi'] ?? [],
+            'suhu' => $_POST['grid_suhu'] ?? [],
+            'events' => $_POST['grid_events'] ?? [],
+            'resp_spontan_kontrol' => $_POST['grid_resp_spontan_kontrol'] ?? [],
+            'saturasi' => $_POST['grid_saturasi'] ?? [],
+            'input_rl' => $_POST['grid_input_rl'] ?? [],
+            'input_nacl' => $_POST['grid_input_nacl'] ?? [],
+            'output_pendarahan' => $_POST['grid_output_pendarahan'] ?? [],
+            'output_urine' => $_POST['grid_output_urine'] ?? []
+        ];
+
         $now = date('Y-m-d H:i:s');
         $saveData = [
             'no_rawat' => $no_rawat,
             'no_rkm_medis' => $no_rkm_medis,
             'tanggal' => !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d'),
             'jam' => !empty($_POST['jam']) ? $_POST['jam'] : date('H:i:s'),
-            'diagnosa_prabedah' => trim($_POST['diagnosa_prabedah'] ?? ''),
-            'diagnosa_pascabedah' => trim($_POST['diagnosa_pascabedah'] ?? ''),
-            'status_fisik' => trim($_POST['status_fisik'] ?? '1'),
-            'gol_darah' => trim($_POST['gol_darah'] ?? ''),
-            'rh' => trim($_POST['rh'] ?? '+'),
-            'bb' => trim($_POST['bb'] ?? ''),
-            'tb' => trim($_POST['tb'] ?? ''),
-            'tindakan' => trim($_POST['tindakan'] ?? ''),
-            'dr_anestesi' => trim($_POST['dr_anestesi'] ?? ''),
-            'kd_dokter_anestesi' => trim($_POST['kd_dokter_anestesi'] ?? ''),
+            'grid_data' => json_encode($gridArray),
+            'waktu_induksi' => trim($_POST['waktu_induksi'] ?? ''),
+            'waktu_insisi' => trim($_POST['waktu_insisi'] ?? ''),
+            'waktu_operasi_mulai' => trim($_POST['waktu_operasi_mulai'] ?? ''),
+            'waktu_operasi_selesai' => trim($_POST['waktu_operasi_selesai'] ?? ''),
+            'waktu_anestesi_selesai' => trim($_POST['waktu_anestesi_selesai'] ?? ''),
+            'catatan_intra' => trim($_POST['catatan_intra'] ?? ''),
             'penata_anestesi' => trim($_POST['penata_anestesi'] ?? ''),
-            'dr_operator' => trim($_POST['dr_operator'] ?? ''),
-            'kd_dokter_operator' => trim($_POST['kd_dokter_operator'] ?? ''),
-            'waktu_mulai_pembiusan' => trim($_POST['waktu_mulai_pembiusan'] ?? ''),
-            'waktu_selesai_pembiusan' => trim($_POST['waktu_selesai_pembiusan'] ?? ''),
-            'lama_pembiusan' => trim($_POST['lama_pembiusan'] ?? ''),
-            'preinduksi_td_sistolik' => trim($_POST['preinduksi_td_sistolik'] ?? ''),
-            'preinduksi_td_diastolik' => trim($_POST['preinduksi_td_diastolik'] ?? ''),
-            'preinduksi_nadi' => trim($_POST['preinduksi_nadi'] ?? ''),
-            'preinduksi_rr' => trim($_POST['preinduksi_rr'] ?? ''),
-            'preinduksi_suhu' => trim($_POST['preinduksi_suhu'] ?? ''),
-            'preinduksi_vas' => trim($_POST['preinduksi_vas'] ?? ''),
-            'grid_data' => trim($_POST['grid_data'] ?? ''),
-            'masalah' => trim($_POST['masalah'] ?? ''),
-            'prosedur_loading_cairan' => trim($_POST['prosedur_loading_cairan'] ?? ''),
-            'prosedur_premedikasi' => trim($_POST['prosedur_premedikasi'] ?? ''),
-            'prosedur_maintenance' => trim($_POST['prosedur_maintenance'] ?? ''),
-            'jenis_anestesi_general' => (!empty($_POST['jenis_anestesi_general']) && $_POST['jenis_anestesi_general'] == 'Y') ? 'Y' : 'N',
-            'jenis_anestesi_general_tipe' => trim($_POST['jenis_anestesi_general_tipe'] ?? ''),
+            'tanda_tangan_penata' => trim($_POST['tanda_tangan_penata'] ?? ($_POST['penata_anestesi'] ?? '')),
+            'dr_anestesi' => trim($_POST['dr_anestesi'] ?? ($_POST['dokter_anestesi_ttd'] ?? '')),
+            'dokter_anestesi_ttd' => trim($_POST['dr_anestesi'] ?? ($_POST['dokter_anestesi_ttd'] ?? '')),
+            'ga_intubasi' => (!empty($_POST['ga_intubasi']) && $_POST['ga_intubasi'] == 'Y') ? 'Y' : 'N',
+            'ga_tiva' => (!empty($_POST['ga_tiva']) && $_POST['ga_tiva'] == 'Y') ? 'Y' : 'N',
+            'ga_lma' => (!empty($_POST['ga_lma']) && $_POST['ga_lma'] == 'Y') ? 'Y' : 'N',
+            'ga_masker' => (!empty($_POST['ga_masker']) && $_POST['ga_masker'] == 'Y') ? 'Y' : 'N',
             'jenis_anestesi_regional' => (!empty($_POST['jenis_anestesi_regional']) && $_POST['jenis_anestesi_regional'] == 'Y') ? 'Y' : 'N',
-            'jenis_anestesi_regional_tipe' => trim($_POST['jenis_anestesi_regional_tipe'] ?? ''),
             'jenis_anestesi_lain' => trim($_POST['jenis_anestesi_lain'] ?? ''),
-            'jalan_napas_nasal' => (!empty($_POST['jalan_napas_nasal']) && $_POST['jalan_napas_nasal'] == 'Y') ? 'Y' : 'N',
-            'jalan_napas_facemask' => (!empty($_POST['jalan_napas_facemask']) && $_POST['jalan_napas_facemask'] == 'Y') ? 'Y' : 'N',
-            'jalan_napas_lma' => (!empty($_POST['jalan_napas_lma']) && $_POST['jalan_napas_lma'] == 'Y') ? 'Y' : 'N',
-            'jalan_napas_orotrakeal' => (!empty($_POST['jalan_napas_orotrakeal']) && $_POST['jalan_napas_orotrakeal'] == 'Y') ? 'Y' : 'N',
-            'jalan_napas_lain' => trim($_POST['jalan_napas_lain'] ?? ''),
             'posisi_supine' => (!empty($_POST['posisi_supine']) && $_POST['posisi_supine'] == 'Y') ? 'Y' : 'N',
             'posisi_lateral' => (!empty($_POST['posisi_lateral']) && $_POST['posisi_lateral'] == 'Y') ? 'Y' : 'N',
             'posisi_prone' => (!empty($_POST['posisi_prone']) && $_POST['posisi_prone'] == 'Y') ? 'Y' : 'N',
             'posisi_lithotomi' => (!empty($_POST['posisi_lithotomi']) && $_POST['posisi_lithotomi'] == 'Y') ? 'Y' : 'N',
             'posisi_lain' => trim($_POST['posisi_lain'] ?? ''),
-            'penyulit_pembedahan' => trim($_POST['penyulit_pembedahan'] ?? ''),
-            'keadaan_akhir_pembedahan' => trim($_POST['keadaan_akhir_pembedahan'] ?? ''),
-            'dokter_anestesi_ttd' => trim($_POST['dokter_anestesi_ttd'] ?? ''),
+            'induksi_iv' => trim($_POST['induksi_iv'] ?? ''),
+            'induksi_inhalasi' => trim($_POST['induksi_inhalasi'] ?? ''),
+            'jn_lma_no' => trim($_POST['jn_lma_no'] ?? ''),
+            'jn_lma_cuff' => trim($_POST['jn_lma_cuff'] ?? ''),
+            'jn_ett_kink' => (!empty($_POST['jn_ett_kink']) && $_POST['jn_ett_kink'] == 'Y') ? 'Y' : 'N',
+            'jn_ett_nonkink' => (!empty($_POST['jn_ett_nonkink']) && $_POST['jn_ett_nonkink'] == 'Y') ? 'Y' : 'N',
+            'jn_ett_oral_nasal' => trim($_POST['jn_ett_oral_nasal'] ?? 'Oral'),
+            'jn_ett_no' => trim($_POST['jn_ett_no'] ?? ''),
+            'jn_ett_cuff' => trim($_POST['jn_ett_cuff'] ?? ''),
+            'jn_ett_batas' => trim($_POST['jn_ett_batas'] ?? ''),
+            'jn_masker' => (!empty($_POST['jn_masker']) && $_POST['jn_masker'] == 'Y') ? 'Y' : 'N',
+            'jn_nasal_kanul' => (!empty($_POST['jn_nasal_kanul']) && $_POST['jn_nasal_kanul'] == 'Y') ? 'Y' : 'N',
+            'ventilasi_spontan' => (!empty($_POST['ventilasi_spontan']) && $_POST['ventilasi_spontan'] == 'Y') ? 'Y' : 'N',
+            'ventilasi_kendali' => (!empty($_POST['ventilasi_kendali']) && $_POST['ventilasi_kendali'] == 'Y') ? 'Y' : 'N',
+            'ventilasi_ventilator' => (!empty($_POST['ventilasi_ventilator']) && $_POST['ventilasi_ventilator'] == 'Y') ? 'Y' : 'N',
+            'ventilasi_tv' => trim($_POST['ventilasi_tv'] ?? ''),
+            'ventilasi_rr' => trim($_POST['ventilasi_rr'] ?? ''),
+            'reg_epidural' => (!empty($_POST['reg_epidural']) && $_POST['reg_epidural'] == 'Y') ? 'Y' : 'N',
+            'reg_sab' => (!empty($_POST['reg_sab']) && $_POST['reg_sab'] == 'Y') ? 'Y' : 'N',
+            'reg_caudal' => (!empty($_POST['reg_caudal']) && $_POST['reg_caudal'] == 'Y') ? 'Y' : 'N',
+            'reg_lainnya' => trim($_POST['reg_lainnya'] ?? ''),
+            'reg_jenis_jarum' => trim($_POST['reg_jenis_jarum'] ?? ''),
+            'reg_jenis_jarum_no' => trim($_POST['reg_jenis_jarum_no'] ?? ''),
+            'reg_blok_vth' => trim($_POST['reg_blok_vth'] ?? ''),
+            'reg_jenis_pnb' => trim($_POST['reg_jenis_pnb'] ?? ''),
+            'reg_obat' => trim($_POST['reg_obat'] ?? ''),
+            'reg_dosis' => trim($_POST['reg_dosis'] ?? ''),
+            'reg_vol' => trim($_POST['reg_vol'] ?? ''),
+            'reg_epidural_ket' => trim($_POST['reg_epidural_ket'] ?? ''),
+            'masalah_induksi' => trim($_POST['masalah_induksi'] ?? 'Tidak Ada'),
+            'masalah_induksi_ket' => trim($_POST['masalah_induksi_ket'] ?? ''),
+            'perubahan_rencana' => trim($_POST['perubahan_rencana'] ?? 'Tidak Ada'),
+            'perubahan_rencana_ket' => trim($_POST['perubahan_rencana_ket'] ?? ''),
             'updated_at' => $now
         ];
+
+        foreach ($saveData as $k => $v) {
+            if ($v === '') {
+                $saveData[$k] = null;
+            }
+        }
 
         if ($id) {
             $this->db('ans5_status_anestesi')->where('id', $id)->save($saveData);
@@ -9419,12 +9513,26 @@ if (ob_get_length()) {
             redirect(url([ADMIN, 'update_bmt', 'ans5manage']));
         }
 
+        $rm = str_pad($data['no_rkm_medis'] ?? '', 6, '0', STR_PAD_LEFT);
+        for ($i = 0; $i < 6; $i++) {
+            $data['rm' . $i] = $rm[$i] ?? '';
+        }
+
         $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         if (!empty($data['tanggal']) && $data['tanggal'] != '0000-00-00') {
             $p = explode('-', $data['tanggal']);
-            $data['tgl_indo'] = (int)$p[2] . ' ' . ($bulan[(int)$p[1]] ?? '') . ' ' . $p[0];
+            if (count($p) == 3) {
+                $data['tanggal_indo'] = (int)$p[2] . ' ' . ($bulan[(int)$p[1]] ?? '') . ' ' . $p[0];
+            }
         } else {
-            $data['tgl_indo'] = '-';
+            $data['tanggal_indo'] = '-';
+        }
+
+        if (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') {
+            $p = explode('-', $data['tgl_lahir']);
+            if (count($p) == 3) {
+                $data['tgl_lahir_indo'] = (int)$p[2] . ' ' . ($bulan[(int)$p[1]] ?? '') . ' ' . $p[0];
+            }
         }
 
         $gridData = [];
@@ -9436,7 +9544,6 @@ if (ob_get_length()) {
         }
 
         $chartSvg = $this->renderAns5SvgChart($gridData);
-        $gridBuild = $this->buildAns5CetakGrid($gridData, $chartSvg);
 
         $is_pdf = isset($_GET['pdf']) && $_GET['pdf'] == 1;
         $kop_file = BASE_DIR . '/assets/img/KOP-SURAT.png';
@@ -9444,11 +9551,13 @@ if (ob_get_length()) {
 
         $viewParams = [
             'data' => $data,
+            'gridData' => $gridData,
+            'chartSvg' => $chartSvg,
             'kop_img' => $kop_img,
-            'html_time_headers' => $gridBuild['time_headers'],
-            'html_grid_body' => $gridBuild['body'],
             'is_mpdf' => $is_pdf
         ];
+
+        $html = $this->draw('ans5/cetak.html', $viewParams);
 
         if ($is_pdf) {
             try {
@@ -9456,17 +9565,16 @@ if (ob_get_length()) {
                 @ini_set('display_errors', '0');
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
-                    'format' => 'A4',
-                    'margin_left' => 6,
-                    'margin_right' => 6,
-                    'margin_top' => 6,
-                    'margin_bottom' => 6,
+                    'format' => 'A4-L',
+                    'margin_left' => 5,
+                    'margin_right' => 5,
+                    'margin_top' => 5,
+                    'margin_bottom' => 5,
                     'tempDir' => BASE_DIR . '/tmp'
                 ]);
 
-                $html = $this->draw('ans5/cetak.html', $viewParams);
                 $mpdf->WriteHTML($html);
-                $filename = 'ANS5_Status_Anestesi_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
+                $filename = 'ANS5_Intra_Anestesi_' . str_replace('/', '_', $data['no_rawat']) . '.pdf';
 
                 while (ob_get_level()) {
                     ob_end_clean();
@@ -9479,18 +9587,18 @@ if (ob_get_length()) {
             }
         }
 
-        echo $this->draw('ans5/cetak.html', $viewParams);
+        echo $html;
         exit();
     }
 
     private function renderAns5SvgChart($gridData)
     {
         $w = 640;
-        $h = 160;
+        $h = 150;
         $padLeft = 32;
-        $padRight = 20;
-        $padTop = 10;
-        $padBottom = 16;
+        $padRight = 10;
+        $padTop = 8;
+        $padBottom = 8;
         $chartW = $w - $padLeft - $padRight;
         $chartH = $h - $padTop - $padBottom;
         $minY = 40;
@@ -9501,11 +9609,12 @@ if (ob_get_length()) {
             return $padTop + $chartH - (($val - $minY) / ($maxY - $minY)) * $chartH;
         };
 
-        $getX = function($colIdx) use ($padLeft, $chartW) {
-            return $padLeft + ($colIdx / 15) * $chartW;
+        $colW = $chartW / 12;
+        $getX = function($colIdx) use ($padLeft, $colW) {
+            return $padLeft + ($colIdx + 0.5) * $colW;
         };
 
-        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $w . ' ' . $h . '" style="width: 100%; height: 160px; display: block;">';
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $w . ' ' . $h . '" style="width: 100%; height: 150px; display: block;">';
 
         // Horizontal grid lines
         $levels = [40, 60, 80, 100, 120, 140, 160, 180, 200];
@@ -9517,54 +9626,56 @@ if (ob_get_length()) {
             $svg .= '<text x="' . ($padLeft - 4) . '" y="' . ($y + 2.5) . '" font-size="7.5" fill="#555" text-anchor="end" font-family="Arial">' . $l . '</text>';
         }
 
-        // Vertical interval lines
-        for ($c = 0; $c < 16; $c++) {
-            $x = $getX($c);
-            $strokeCol = ($c % 4 == 0) ? '#95a5a6' : '#ececec';
-            $strokeW = ($c % 4 == 0) ? '1' : '0.6';
-            $svg .= '<line x1="' . $x . '" y1="' . $padTop . '" x2="' . $x . '" y2="' . ($padTop + $chartH) . '" stroke="' . $strokeCol . '" stroke-width="' . $strokeW . '" />';
+        // Intermediate ticks (every 10)
+        for ($subL = 50; $subL < 200; $subL += 20) {
+            $sy = $getY($subL);
+            $svg .= '<line x1="' . $padLeft . '" y1="' . $sy . '" x2="' . ($padLeft + $chartW) . '" y2="' . $sy . '" stroke="#f5f5f5" stroke-width="0.5" stroke-dasharray="2,2" />';
+        }
+
+        // Vertical interval lines (12 intervals)
+        for ($c = 0; $c <= 12; $c++) {
+            $x = $padLeft + $c * $colW;
+            $strokeCol = ($c % 3 == 0) ? '#95a5a6' : '#e8e8e8';
+            $strokeW = ($c % 3 == 0) ? '1' : '0.6';
+            $dash = ($c % 3 == 0) ? '' : ' stroke-dasharray="2,2"';
+            $svg .= '<line x1="' . $x . '" y1="' . $padTop . '" x2="' . $x . '" y2="' . ($padTop + $chartH) . '" stroke="' . $strokeCol . '" stroke-width="' . $strokeW . '"' . $dash . ' />';
         }
 
         // Extract points
         $nadiPoints = [];
         $sistolikPoints = [];
         $diastolikPoints = [];
-        $suhuPoints = [];
         $events = [];
 
-        $rows = $gridData['rows'] ?? [];
+        $nadi = $gridData['nadi'] ?? [];
+        $sistolik = $gridData['sistolik'] ?? [];
+        $diastolik = $gridData['diastolik'] ?? [];
+        $eventsArr = $gridData['events'] ?? [];
 
-        for ($c = 0; $c < 16; $c++) {
+        for ($c = 0; $c < 12; $c++) {
             $x = $getX($c);
 
             // Nadi
-            if (isset($rows['vital_nadi'][$c]) && is_numeric($rows['vital_nadi'][$c])) {
-                $ny = $getY($rows['vital_nadi'][$c]);
+            if (isset($nadi[$c]) && is_numeric($nadi[$c]) && $nadi[$c] > 0) {
+                $ny = $getY($nadi[$c]);
                 $nadiPoints[] = ['x' => $x, 'y' => $ny];
             }
 
             // Sistolik
-            if (isset($rows['vital_sistolik'][$c]) && is_numeric($rows['vital_sistolik'][$c])) {
-                $sy = $getY($rows['vital_sistolik'][$c]);
+            if (isset($sistolik[$c]) && is_numeric($sistolik[$c]) && $sistolik[$c] > 0) {
+                $sy = $getY($sistolik[$c]);
                 $sistolikPoints[] = ['x' => $x, 'y' => $sy];
             }
 
             // Diastolik
-            if (isset($rows['vital_diastolik'][$c]) && is_numeric($rows['vital_diastolik'][$c])) {
-                $dy = $getY($rows['vital_diastolik'][$c]);
+            if (isset($diastolik[$c]) && is_numeric($diastolik[$c]) && $diastolik[$c] > 0) {
+                $dy = $getY($diastolik[$c]);
                 $diastolikPoints[] = ['x' => $x, 'y' => $dy];
             }
 
-            // Suhu
-            if (isset($rows['vital_suhu'][$c]) && is_numeric($rows['vital_suhu'][$c])) {
-                $tempVal = (float)$rows['vital_suhu'][$c];
-                $ty = $getY(40 + ($tempVal - 35) * 12);
-                $suhuPoints[] = ['x' => $x, 'y' => $ty];
-            }
-
-            // Event
-            if (!empty($rows['vital_event'][$c])) {
-                $events[] = ['x' => $x, 'char' => $rows['vital_event'][$c]];
+            // Event symbols
+            if (!empty($eventsArr[$c])) {
+                $events[] = ['x' => $x, 'text' => $eventsArr[$c]];
             }
         }
 
@@ -9586,137 +9697,23 @@ if (ob_get_length()) {
         if (count($diastolikPoints) > 1) {
             $svg .= '<path d="' . $makePath($diastolikPoints) . '" fill="none" stroke="#27ae60" stroke-width="1.2" stroke-dasharray="3,2" />';
         }
-        if (count($suhuPoints) > 1) {
-            $svg .= '<path d="' . $makePath($suhuPoints) . '" fill="none" stroke="#f39c12" stroke-width="1" />';
-        }
 
         // Draw markers
         foreach ($nadiPoints as $p) {
             $svg .= '<circle cx="' . round($p['x'], 1) . '" cy="' . round($p['y'], 1) . '" r="2.8" fill="#e74c3c" />';
         }
         foreach ($sistolikPoints as $p) {
-            $svg .= '<text x="' . round($p['x'], 1) . '" y="' . round($p['y'] + 3, 1) . '" font-size="10" font-weight="bold" fill="#2980b9" text-anchor="middle" font-family="Arial">∨</text>';
+            $svg .= '<text x="' . round($p['x'], 1) . '" y="' . round($p['y'] + 3, 1) . '" font-size="10" font-weight="bold" fill="#2980b9" text-anchor="middle" font-family="Arial">v</text>';
         }
         foreach ($diastolikPoints as $p) {
-            $svg .= '<text x="' . round($p['x'], 1) . '" y="' . round($p['y'] + 3, 1) . '" font-size="10" font-weight="bold" fill="#27ae60" text-anchor="middle" font-family="Arial">∧</text>';
-        }
-        foreach ($suhuPoints as $p) {
-            $svg .= '<circle cx="' . round($p['x'], 1) . '" cy="' . round($p['y'], 1) . '" r="2.8" fill="#fff" stroke="#f39c12" stroke-width="1.2" />';
+            $svg .= '<text x="' . round($p['x'], 1) . '" y="' . round($p['y'] + 3, 1) . '" font-size="10" font-weight="bold" fill="#27ae60" text-anchor="middle" font-family="Arial">^</text>';
         }
         foreach ($events as $ev) {
-            $svg .= '<text x="' . round($ev['x'], 1) . '" y="' . ($padTop + 10) . '" font-size="10" font-weight="bold" fill="#8e44ad" text-anchor="middle" font-family="Arial">' . htmlspecialchars($ev['char']) . '</text>';
+            $svg .= '<text x="' . round($ev['x'], 1) . '" y="' . ($padTop + 10) . '" font-size="9" font-weight="bold" fill="#8e44ad" text-anchor="middle" font-family="Arial">' . htmlspecialchars($ev['text']) . '</text>';
         }
 
         $svg .= '</svg>';
         return $svg;
-    }
-
-    private function buildAns5CetakGrid($gridData, $chartSvg)
-    {
-        $times = $gridData['times'] ?? [];
-        $rows = $gridData['rows'] ?? [];
-        $totals = $gridData['totals'] ?? [];
-
-        // 1. Time headers
-        $timeTh = '';
-        for ($c = 0; $c < 16; $c++) {
-            $tVal = !empty($times[$c]) ? htmlspecialchars($times[$c]) : '';
-            if (empty($tVal)) {
-                $sub = ($c % 4) * 15;
-                $tVal = $sub > 0 ? (string)$sub : '';
-            }
-            $timeTh .= '<th style="width: 3.8%; text-align: center; font-size: 7px;">' . $tVal . '</th>';
-        }
-
-        // Helper to format a table row
-        $renderRow = function($id, $label) use ($rows, $totals) {
-            $tr = '<tr>';
-            $tr .= '<td class="label-col">' . htmlspecialchars($label) . '</td>';
-            for ($c = 0; $c < 16; $c++) {
-                $val = isset($rows[$id][$c]) ? htmlspecialchars((string)$rows[$id][$c]) : '';
-                $tr .= '<td>' . ($val !== '' ? $val : '&nbsp;') . '</td>';
-            }
-            $tot = isset($totals[$id]) ? htmlspecialchars((string)$totals[$id]) : '';
-            $tr .= '<td><strong>' . ($tot !== '' ? $tot : '&nbsp;') . '</strong></td>';
-            $tr .= '</tr>';
-            return $tr;
-        };
-
-        $body = '';
-
-        // Gas Inhalasi
-        $body .= $renderRow('gas_o2', 'O2 (L/Mnt)');
-        $body .= $renderRow('gas_halotan', 'Halotan (Vol%)');
-        $body .= $renderRow('gas_isofluran', 'Isofluran (Vol%)');
-        $body .= $renderRow('gas_sevofluran', 'Sevofluran (Vol%)');
-
-        // Obat-Obatan
-        $meds = [
-            'med_ketorolac' => 'Ketorolac (mg)',
-            'med_ondansetron' => 'Ondansetron (mg)',
-            'med_ranitidin' => 'Ranitidin (mg)',
-            'med_midazolam' => 'Midazolam (mg)',
-            'med_fentanyl' => 'Fentanyl (µg)',
-            'med_lidokain' => 'Lidokain (mg)',
-            'med_ketamin' => 'Ketamin (mg)',
-            'med_propofol' => 'Propofol (mg)',
-            'med_atracurium' => 'Atracurium (mg)',
-            'med_efedrin' => 'Efedrin (µg)',
-            'med_obat_lain1' => 'Obat Tambahan 1',
-            'med_obat_lain2' => 'Obat Tambahan 2',
-            'med_epidural' => 'Epidural / Spinal'
-        ];
-        foreach ($meds as $mid => $mlbl) {
-            $body .= $renderRow($mid, $mlbl);
-        }
-
-        // Baris Grafik Tanda Vital
-        $body .= '<tr>';
-        $body .= '<td style="vertical-align: top; padding: 2px; text-align: left; background: #fff;">';
-        $body .= '<table style="width: 100%; border: none; font-size: 6.8px;"><tr>';
-        $body .= '<td style="border: none; vertical-align: top; width: 22px; padding: 0; line-height: 1.15;">';
-        $body .= '<strong>200</strong><br><strong>180</strong><br><strong>160</strong><br><strong>140</strong><br><strong>120</strong><br><strong>100</strong><br><strong>80</strong><br><strong>60</strong><br><strong>40</strong>';
-        $body .= '</td>';
-        $body .= '<td style="border: none; vertical-align: top; padding: 0 0 0 2px;">';
-        $body .= '<div class="legend-box">';
-        $body .= '▼ i.m &nbsp;&nbsp;&nbsp; ↓ i.v<br>';
-        $body .= '• nadi &nbsp;&nbsp; ○ suhu<br>';
-        $body .= '∨ sistole ∧ diastole<br>';
-        $body .= '/// resp spontan<br>';
-        $body .= 'vv resp kontrol<br>';
-        $body .= 'x anestesi ⊙ operasi<br>';
-        $body .= '△ intubasi ▽ ekstubasi<br>';
-        $body .= '* kateter epidural';
-        $body .= '</div>';
-        $body .= '</td>';
-        $body .= '</tr></table>';
-        $body .= '</td>';
-        $body .= '<td colspan="17" style="padding: 0; background: #fff; vertical-align: middle; height: 160px;">';
-        $body .= $chartSvg;
-        $body .= '</td>';
-        $body .= '</tr>';
-
-        // Keterangan Bawah Grafik
-        $body .= $renderRow('ket_tanda_kode', 'Tanda (Kode)');
-        $body .= $renderRow('ket_rsp', 'Rsp. Spontan / Kontrol');
-        $body .= $renderRow('ket_saturasi', 'Saturasi O2 (%)');
-
-        // INPUT CAIRAN
-        $body .= '<tr style="background: #f9f9f9;"><td class="label-col" style="background: #f0f0f0;"><strong>INPUT:</strong></td><td colspan="17" style="border: 0.8px solid #000;"></td></tr>';
-        $body .= $renderRow('in_rl', 'Ringer Laktat/Asetat (cc)');
-        $body .= $renderRow('in_nacl', 'NaCl 0.9% (cc)');
-        $body .= $renderRow('in_koloid', 'Koloid / Darah / Lain (cc)');
-
-        // OUTPUT CAIRAN
-        $body .= '<tr style="background: #f9f9f9;"><td class="label-col" style="background: #f0f0f0;"><strong>OUTPUT:</strong></td><td colspan="17" style="border: 0.8px solid #000;"></td></tr>';
-        $body .= $renderRow('out_darah', 'Pendarahan (cc)');
-        $body .= $renderRow('out_urine', 'Urine (cc)');
-        $body .= $renderRow('out_lain', 'Output Lain (cc)');
-
-        return [
-            'time_headers' => $timeTh,
-            'body' => $body
-        ];
     }
 
     public function getAns6manage()
@@ -9735,9 +9732,9 @@ if (ob_get_length()) {
         return $this->draw('ans6/manage.html', ['list' => $query]);
     }
 
-    public function getAns6form()
+    public function getAns6form($id = null)
     {
-        $id = $_GET['id'] ?? '';
+        $id = $id ?? ($_GET['id'] ?? '');
         $data = [];
         $detail = [];
         
@@ -9746,12 +9743,19 @@ if (ob_get_length()) {
             $patient = $this->db('reg_periksa')
                 ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
                 ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
-                ->select('pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
+                ->select('pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.no_rkm_medis, pasien.jk, pasien.umur')
                 ->oneArray();
                 
             header('Content-Type: application/json');
             if ($patient) {
-                echo json_encode(['success' => true, 'no_rawat' => $_GET['no_rawat'], 'nama_pasien' => $patient['nm_pasien']]);
+                echo json_encode([
+                    'success' => true,
+                    'no_rawat' => $_GET['no_rawat'],
+                    'nama_pasien' => $patient['nm_pasien'],
+                    'no_rkm_medis' => $patient['no_rkm_medis'],
+                    'jk' => $patient['jk'],
+                    'umur' => $patient['umur']
+                ]);
             } else {
                 echo json_encode(['success' => false]);
             }
@@ -9769,7 +9773,28 @@ if (ob_get_length()) {
             $detail = $this->db('ans6_protokol_nyeri_detail')->where('id_ans6', $id)->toArray();
         }
 
-        return $this->draw('ans6/form.html', ['data' => $data, 'detail' => $detail]);
+        $gridData = [];
+        if (!empty($data['grid_data'])) {
+            $gridData = json_decode($data['grid_data'], true);
+        }
+        if (!is_array($gridData)) {
+            $gridData = [];
+        }
+
+        $skorDetail = [];
+        if (!empty($data['skor_detail'])) {
+            $skorDetail = json_decode($data['skor_detail'], true);
+        }
+        if (!is_array($skorDetail)) {
+            $skorDetail = [];
+        }
+
+        return $this->draw('ans6/form.html', [
+            'data' => $data,
+            'detail' => $detail,
+            'gridData' => $gridData,
+            'skorDetail' => $skorDetail
+        ]);
     }
 
     public function postAns6save()
@@ -9781,11 +9806,41 @@ if (ob_get_length()) {
         $detail_obat = $data['detail_obat'] ?? [];
         $detail_ttd = $data['detail_ttd'] ?? [];
         
+        // Grid Vital Sign PACU
+        if (isset($data['grid_nadi']) || isset($data['grid_sistolik'])) {
+            $gridArray = [
+                'nadi' => $data['grid_nadi'] ?? [],
+                'sistolik' => $data['grid_sistolik'] ?? [],
+                'diastolik' => $data['grid_diastolik'] ?? [],
+                'suhu' => $data['grid_suhu'] ?? [],
+                'saturasi' => $data['grid_saturasi'] ?? []
+            ];
+            $data['grid_data'] = json_encode($gridArray);
+        }
+
+        // Skor Detail (pilihan sub-kriteria)
+        if (isset($data['skor_item'])) {
+            $data['skor_detail'] = json_encode($data['skor_item']);
+        }
+
+        if (empty($data['penata_anestesi']) && !empty($data['perawat_pacu'])) {
+            $data['penata_anestesi'] = $data['perawat_pacu'];
+        }
+        if (empty($data['perawat_pacu']) && !empty($data['penata_anestesi'])) {
+            $data['perawat_pacu'] = $data['penata_anestesi'];
+        }
+        
         unset($data['id']);
         unset($data['nm_pasien']);
         unset($data['detail_tanggal']);
         unset($data['detail_obat']);
         unset($data['detail_ttd']);
+        unset($data['grid_nadi']);
+        unset($data['grid_sistolik']);
+        unset($data['grid_diastolik']);
+        unset($data['grid_suhu']);
+        unset($data['grid_saturasi']);
+        unset($data['skor_item']);
         
         if (empty($data['tanggal'])) {
             $data['tanggal'] = date('Y-m-d');
@@ -9827,9 +9882,9 @@ if (ob_get_length()) {
         redirect(url([ADMIN, 'update_bmt', 'ans6manage']));
     }
 
-    public function getAns6cetak()
+    public function getAns6cetak($id = null)
     {
-        $id = $_GET['id'] ?? '';
+        $id = $id ?? ($_GET['id'] ?? '');
         if (!$id) {
             echo "ID tidak ditemukan.";
             exit();
@@ -9849,21 +9904,190 @@ if (ob_get_length()) {
 
         $detail = $this->db('ans6_protokol_nyeri_detail')->where('id_ans6', $id)->toArray();
 
-        $data['kop_img'] = !empty($_GET['pdf']) ? (defined('BASE_DIR') ? BASE_DIR . '/assets/img/KOP-SURAT.png' : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        if (!empty($data['tanggal']) && $data['tanggal'] != '0000-00-00') {
+            $p = explode('-', $data['tanggal']);
+            $data['tgl_indo'] = (int)$p[2] . ' ' . ($bulan[(int)$p[1]] ?? '') . ' ' . $p[0];
+        } else {
+            $data['tgl_indo'] = '-';
+        }
+
+        $gridData = [];
+        if (!empty($data['grid_data'])) {
+            $gridData = json_decode($data['grid_data'], true);
+        }
+        if (!is_array($gridData)) {
+            $gridData = [];
+        }
+
+        $skorDetail = [];
+        if (!empty($data['skor_detail'])) {
+            $skorDetail = json_decode($data['skor_detail'], true);
+        }
+        if (!is_array($skorDetail)) {
+            $skorDetail = [];
+        }
+
+        $chartSvg = $this->renderAns6SvgChart($gridData);
+
         $is_mpdf = !empty($_GET['pdf']) && $_GET['pdf'] == '1';
-        $html = $this->draw('ans6/cetak.html', ['data' => $data, 'detail' => $detail, 'kop_img' => $data['kop_img'], 'is_mpdf' => $is_mpdf]);
+        $kop_file = BASE_DIR . '/assets/img/KOP-SURAT.png';
+        $kop_img = is_file($kop_file) ? ($is_mpdf ? $kop_file : url('assets/img/KOP-SURAT.png')) : url('assets/img/KOP-SURAT.png');
+        $data['kop_img'] = $kop_img;
+
+        $viewParams = [
+            'data' => $data,
+            'detail' => $detail,
+            'kop_img' => $kop_img,
+            'chartSvg' => $chartSvg,
+            'gridData' => $gridData,
+            'skorDetail' => $skorDetail,
+            'is_mpdf' => $is_mpdf
+        ];
+
+        $html = $this->draw('ans6/cetak.html', $viewParams);
         if ($is_mpdf) {
-@ini_set('display_errors', '0');
-            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10]);
+            @ini_set('display_errors', '0');
+            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 6, 'margin_right' => 6, 'margin_top' => 6, 'margin_bottom' => 6]);
             $mpdf->WriteHTML($html);
-if (ob_get_length()) {
-    ob_clean();
-}
+            if (ob_get_length()) {
+                ob_clean();
+            }
             $mpdf->Output('ANS6_' . ($data['no_rkm_medis'] ?? 'dokumen') . '.pdf', 'I');
             exit();
         }
         echo $html;
         exit();
+    }
+
+    private function renderAns6SvgChart($gridData)
+    {
+        $w = 640;
+        $h = 140;
+        $padLeft = 32;
+        $padRight = 10;
+        $padTop = 8;
+        $padBottom = 8;
+        $chartW = $w - $padLeft - $padRight;
+        $chartH = $h - $padTop - $padBottom;
+        $minY = 40;
+        $maxY = 200;
+
+        $getY = function($val) use ($padTop, $chartH, $minY, $maxY) {
+            $val = max($minY, min($maxY, (float)$val));
+            return $padTop + $chartH - (($val - $minY) / ($maxY - $minY)) * $chartH;
+        };
+
+        $colW = $chartW / 12;
+        $getX = function($colIdx) use ($padLeft, $colW) {
+            return $padLeft + ($colIdx + 0.5) * $colW;
+        };
+
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $w . ' ' . $h . '" style="width: 100%; height: 140px; display: block;">';
+
+        // Horizontal grid lines
+        $levels = [40, 60, 80, 100, 120, 140, 160, 180, 200];
+        foreach ($levels as $l) {
+            $y = $getY($l);
+            $colStroke = ($l == 100 || $l == 140) ? '#95a5a6' : '#e0e0e0';
+            $strokeW = ($l == 100 || $l == 140) ? '1' : '0.6';
+            $svg .= '<line x1="' . $padLeft . '" y1="' . $y . '" x2="' . ($padLeft + $chartW) . '" y2="' . $y . '" stroke="' . $colStroke . '" stroke-width="' . $strokeW . '" />';
+            $svg .= '<text x="' . ($padLeft - 4) . '" y="' . ($y + 2.5) . '" font-size="7.5" fill="#555" text-anchor="end" font-family="Arial">' . $l . '</text>';
+        }
+
+        // Intermediate ticks (every 10)
+        for ($subL = 50; $subL < 200; $subL += 20) {
+            $sy = $getY($subL);
+            $svg .= '<line x1="' . $padLeft . '" y1="' . $sy . '" x2="' . ($padLeft + $chartW) . '" y2="' . $sy . '" stroke="#f5f5f5" stroke-width="0.5" stroke-dasharray="2,2" />';
+        }
+
+        // Vertical interval lines
+        for ($c = 0; $c <= 12; $c++) {
+            $x = $padLeft + $c * $colW;
+            $strokeCol = ($c % 3 == 0) ? '#95a5a6' : '#e8e8e8';
+            $strokeW = ($c % 3 == 0) ? '1' : '0.6';
+            $dash = ($c % 3 == 0) ? '' : ' stroke-dasharray="2,2"';
+            $svg .= '<line x1="' . $x . '" y1="' . $padTop . '" x2="' . $x . '" y2="' . ($padTop + $chartH) . '" stroke="' . $strokeCol . '" stroke-width="' . $strokeW . '"' . $dash . ' />';
+        }
+
+        // Extract points
+        $nadiPoints = [];
+        $sistolikPoints = [];
+        $diastolikPoints = [];
+        $suhuPoints = [];
+
+        $nadi = $gridData['nadi'] ?? [];
+        $sistolik = $gridData['sistolik'] ?? [];
+        $diastolik = $gridData['diastolik'] ?? [];
+        $suhu = $gridData['suhu'] ?? [];
+
+        for ($c = 0; $c < 12; $c++) {
+            $x = $getX($c);
+
+            // Nadi
+            if (isset($nadi[$c]) && is_numeric($nadi[$c]) && $nadi[$c] > 0) {
+                $ny = $getY($nadi[$c]);
+                $nadiPoints[] = ['x' => $x, 'y' => $ny];
+            }
+
+            // Sistolik
+            if (isset($sistolik[$c]) && is_numeric($sistolik[$c]) && $sistolik[$c] > 0) {
+                $sy = $getY($sistolik[$c]);
+                $sistolikPoints[] = ['x' => $x, 'y' => $sy];
+            }
+
+            // Diastolik
+            if (isset($diastolik[$c]) && is_numeric($diastolik[$c]) && $diastolik[$c] > 0) {
+                $dy = $getY($diastolik[$c]);
+                $diastolikPoints[] = ['x' => $x, 'y' => $dy];
+            }
+
+            // Suhu (scale 35C to 41C)
+            if (isset($suhu[$c]) && is_numeric($suhu[$c]) && $suhu[$c] > 30) {
+                $tempVal = (float)$suhu[$c];
+                $ty = $getY(40 + ($tempVal - 35) * (160 / 6));
+                $suhuPoints[] = ['x' => $x, 'y' => $ty];
+            }
+        }
+
+        // Draw connecting polylines
+        $makePath = function($pts) {
+            $d = '';
+            foreach ($pts as $idx => $p) {
+                $d .= ($idx == 0 ? 'M' : ' L') . round($p['x'], 1) . ',' . round($p['y'], 1);
+            }
+            return $d;
+        };
+
+        if (count($nadiPoints) > 1) {
+            $svg .= '<path d="' . $makePath($nadiPoints) . '" fill="none" stroke="#e74c3c" stroke-width="1.2" />';
+        }
+        if (count($sistolikPoints) > 1) {
+            $svg .= '<path d="' . $makePath($sistolikPoints) . '" fill="none" stroke="#2980b9" stroke-width="1.2" stroke-dasharray="3,2" />';
+        }
+        if (count($diastolikPoints) > 1) {
+            $svg .= '<path d="' . $makePath($diastolikPoints) . '" fill="none" stroke="#27ae60" stroke-width="1.2" stroke-dasharray="3,2" />';
+        }
+        if (count($suhuPoints) > 1) {
+            $svg .= '<path d="' . $makePath($suhuPoints) . '" fill="none" stroke="#f39c12" stroke-width="1" stroke-dasharray="2,2" />';
+        }
+
+        // Draw markers
+        foreach ($nadiPoints as $p) {
+            $svg .= '<circle cx="' . round($p['x'], 1) . '" cy="' . round($p['y'], 1) . '" r="2.8" fill="#e74c3c" />';
+        }
+        foreach ($sistolikPoints as $p) {
+            $svg .= '<text x="' . round($p['x'], 1) . '" y="' . round($p['y'] + 3, 1) . '" font-size="10" font-weight="bold" fill="#2980b9" text-anchor="middle" font-family="Arial">v</text>';
+        }
+        foreach ($diastolikPoints as $p) {
+            $svg .= '<text x="' . round($p['x'], 1) . '" y="' . round($p['y'] + 3, 1) . '" font-size="10" font-weight="bold" fill="#27ae60" text-anchor="middle" font-family="Arial">^</text>';
+        }
+        foreach ($suhuPoints as $p) {
+            $svg .= '<circle cx="' . round($p['x'], 1) . '" cy="' . round($p['y'], 1) . '" r="2.8" fill="#fff" stroke="#f39c12" stroke-width="1.2" />';
+        }
+
+        $svg .= '</svg>';
+        return $svg;
     }
     public function getAns7manage()
     {

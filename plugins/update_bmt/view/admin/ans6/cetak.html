@@ -1,54 +1,44 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>ANS6 - Status Post Anestesi & Protokol Nyeri - {$data.no_rawat}</title>
+    <meta charset="utf-8">
+    <title>STATUS POST ANESTESI - {$data.no_rkm_medis}</title>
     <style>
         {if: empty($is_mpdf)}
         @page {
             size: A4 portrait;
-            margin: 8mm 10mm;
-        }
-        {/if}
-        * {
-            box-sizing: border-box;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            margin: 4mm 6mm;
         }
         body {
+            background: #f4f6f9;
+            padding: 10px 0;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 8.5pt;
-            line-height: 1.25;
+            font-size: 7.5pt;
             color: #000;
+            line-height: 1.15;
             margin: 0;
-            padding: 0;
         }
-        {if: empty($is_mpdf)}
-        body {
-            background-color: #f4f6f9;
-            padding: 15px 0;
-        }
-        .page {
+        .cetak-wrapper {
             background: #fff;
-            width: 195mm;
-            min-height: 280mm;
+            width: 196mm;
             margin: 0 auto 20px auto;
-            padding: 8mm 10mm;
             box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-            position: relative;
+            padding: 4px 6px;
+            border: 1.5px solid #000;
+            box-sizing: border-box;
         }
-        {/if}
-
         .no-print-toolbar {
-            width: 195mm;
-            margin: 0 auto 12px auto;
-            padding: 8px 14px;
+            width: 196mm;
+            margin: 0 auto 10px auto;
+            padding: 8px 12px;
             background: #2c3e50;
             color: #fff;
             border-radius: 4px;
+            font-size: 11px;
+            box-sizing: border-box;
         }
         .btn-toolbar {
-            padding: 5px 12px;
+            padding: 4px 10px;
             border-radius: 3px;
             border: none;
             cursor: pointer;
@@ -60,111 +50,85 @@
         .btn-print { background: #27ae60; color: #fff; }
         .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
         .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
-
-        .outer-border-box {
+        @media print {
+            .no-print-toolbar { display: none !important; }
+            body { background: transparent !important; padding: 0 !important; }
+            .cetak-wrapper { box-shadow: none !important; margin: 0 !important; width: 100% !important; border: 1.5px solid #000 !important; padding: 2px 4px !important; }
+        }
+        {else}
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 7.2pt;
+            color: #000;
+            line-height: 1.15;
+            margin: 0;
+            padding: 0;
+        }
+        .cetak-wrapper {
+            width: 100%;
             border: 1.5px solid #000;
-            padding: 8px 10px;
-            width: 100%;
+            padding: 2px 4px;
         }
+        {/if}
 
-        .header-table {
-            width: 100%;
+        table {
             border-collapse: collapse;
-            margin-bottom: 6px;
+            width: 100%;
         }
-        .header-table td {
+        .table-border {
+            border: 1px solid #000;
+        }
+        .table-border th, .table-border td {
+            border: 1px solid #000;
+            padding: 1.5px 3px;
             vertical-align: middle;
         }
-        .header-kop {
-            width: 58%;
-            text-align: center;
-            padding-right: 8px;
-        }
-        .header-kop img {
-            width: 100%;
-            max-height: 68px;
-            object-fit: contain;
-        }
-        .header-pasien {
-            width: 42%;
-            font-size: 8pt;
-            padding-left: 6px;
-            vertical-align: top;
-        }
-        .header-pasien table {
-            width: 100%;
+        .table-score {
             border-collapse: collapse;
-        }
-        .header-pasien td {
-            padding: 1.5px 0;
-            vertical-align: top;
-            font-size: 8pt;
-        }
-        .box-rm {
-            display: inline-block;
-            border: 1px solid #000;
-            width: 14px;
-            height: 15px;
-            line-height: 15px;
-            text-align: center;
-            font-weight: bold;
-            margin-right: 1px;
-            font-size: 8pt;
-        }
-
-        .title-banner {
-            border-top: 1.5px solid #000;
-            border-bottom: 1.5px solid #000;
-            background: #eef2f7;
-            text-align: center;
-            font-weight: bold;
-            font-size: 9.5pt;
-            padding: 4px;
-            margin-bottom: 8px;
-            letter-spacing: 0.5px;
-        }
-
-        .table-data {
             width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 8px;
-            font-size: 8pt;
+            font-size: 7pt;
         }
-        .table-data th, .table-data td {
-            border: 1px solid #000;
-            padding: 3px 5px;
+        .table-score th, .table-score td {
+            border: 0.8px solid #000;
+            padding: 1px 2px;
             vertical-align: middle;
         }
-        .table-data th {
+        .table-score th {
             background-color: #f2f2f2;
             text-align: center;
-        }
-
-        .cb-box {
-            display: inline-block;
-            width: 11px;
-            height: 11px;
-            border: 1px solid #000;
-            vertical-align: middle;
-            text-align: center;
-            line-height: 11px;
-            font-size: 8pt;
-            margin-right: 3px;
-        }
-
-        .section-header {
             font-weight: bold;
-            background-color: #eaeaea;
-            padding: 3px 5px;
-            border: 1px solid #000;
-            border-bottom: none;
-            font-size: 8.5pt;
         }
-
-        @media print {
-            body { background: transparent; padding: 0; }
-            .no-print-toolbar { display: none !important; }
-            .page { box-shadow: none; margin: 0; padding: 0; width: 100%; }
+        .header-title {
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .box-check {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            border: 1px solid #000;
+            text-align: center;
+            line-height: 9px;
+            font-size: 7.5px;
+            margin-right: 2px;
+            vertical-align: middle;
+        }
+        .box-check.checked {
+            font-weight: bold;
+            background: #000;
+            color: #fff;
+        }
+        .section-bar {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+            padding: 1.5px 0;
+            font-size: 7.5pt;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
         }
     </style>
 </head>
@@ -172,220 +136,504 @@
 
     {if: empty($is_mpdf)}
     <div class="no-print-toolbar">
-        <button onclick="window.print()" class="btn-toolbar btn-print">
-            <i class="fa fa-print"></i> Cetak Dokumen
-        </button>
-        <a href="{?=url([ADMIN, 'update_bmt', 'ans6cetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
-            <i class="fa fa-file-pdf-o"></i> Download PDF
-        </a>
-        <button onclick="window.close()" class="btn-toolbar btn-close">
-            <i class="fa fa-times"></i> Tutup
-        </button>
-        <span style="float: right; font-size: 11px; line-height: 24px; color: #bdc3c7;">
-            ANS6 - Status Pasca Sedasi / Anestesi & Kontrol Nyeri
-        </span>
+        <button onclick="window.print()" class="btn-toolbar btn-print"><i class="fa fa-print"></i> Cetak Dokumen</button>
+        <a href="{?=url([ADMIN, 'update_bmt', 'ans6cetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
+        <button onclick="window.close()" class="btn-toolbar btn-close"><i class="fa fa-times"></i> Tutup</button>
+        <span style="float: right; line-height: 24px; color: #bdc3c7;">ANS6 - STATUS POST ANESTESI</span>
     </div>
     {/if}
 
-    <div class="page">
-        <div class="outer-border-box">
-            <!-- HEADER KOP & IDENTITAS -->
-            <table class="header-table">
-                <tr>
-                    <td class="header-kop">
-                        <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop Surat">
-                    </td>
-                    <td class="header-pasien">
-                        <table style="border: 1px solid #000; padding: 4px 6px;">
-                            <tr>
-                                <td style="width: 75px;">No. RM</td>
-                                <td style="width: 8px;">:</td>
-                                <td>
-                                    <div class="box-rm">{?=isset($data['no_rkm_medis'][0])?$data['no_rkm_medis'][0]:''?}</div>-<div class="box-rm">{?=isset($data['no_rkm_medis'][1])?$data['no_rkm_medis'][1]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][2])?$data['no_rkm_medis'][2]:''?}</div>-<div class="box-rm">{?=isset($data['no_rkm_medis'][3])?$data['no_rkm_medis'][3]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][4])?$data['no_rkm_medis'][4]:''?}</div><div class="box-rm">{?=isset($data['no_rkm_medis'][5])?$data['no_rkm_medis'][5]:''?}</div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Nama Pasien</td>
-                                <td>:</td>
-                                <td><strong>{$data.nm_pasien}</strong> ({?=isset($data['jk']) && $data['jk'] == 'L' ? 'L' : 'P'?})</td>
-                            </tr>
-                            <tr>
-                                <td>Tgl Lahir / Umur</td>
-                                <td>:</td>
-                                <td>{$data.tgl_lahir} / {$data.umur}</td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
+    <div class="cetak-wrapper">
 
-            <div class="title-banner">
-                STATUS PASCA SEDASI / ANESTESI DAN PROTOKOL KONTROL NYERI
-            </div>
-
-            <!-- DATA UMUM -->
-            <table class="table-data" style="margin-bottom: 6px;">
-                <tr>
-                    <td style="width: 18%; font-weight: bold; background: #fafafa;">No. Rawat</td>
-                    <td style="width: 32%;">{$data.no_rawat}</td>
-                    <td style="width: 18%; font-weight: bold; background: #fafafa;">Tanggal Operasi</td>
-                    <td style="width: 32%;">{$data.tanggal}</td>
-                </tr>
-                <tr>
-                    <td style="font-weight: bold; background: #fafafa;">Diagnosa Pascabedah</td>
-                    <td>{$data.diagnosa_pascabedah}</td>
-                    <td style="font-weight: bold; background: #fafafa;">Tindakan</td>
-                    <td>{$data.tindakan}</td>
-                </tr>
-                <tr>
-                    <td style="font-weight: bold; background: #fafafa;">Jenis Anestesi</td>
-                    <td>{$data.jenis_anestesi}</td>
-                    <td style="font-weight: bold; background: #fafafa;">Dr. Anestesi</td>
-                    <td>{$data.dr_anestesi}</td>
-                </tr>
-                <tr>
-                    <td style="font-weight: bold; background: #fafafa;">Perawat PACU</td>
-                    <td colspan="3">{$data.perawat_pacu}</td>
-                </tr>
-            </table>
-
-            <!-- VITAL PACU -->
-            <div class="section-header">1. TANDA VITAL TIBA DI PACU</div>
-            <table class="table-data" style="margin-bottom: 6px;">
-                <tr>
-                    <td style="width: 25%; font-weight: bold;">Tekanan Darah (TD)</td>
-                    <td style="width: 25%;">{$data.vital_sistolik}/{$data.vital_diastolik} mmHg</td>
-                    <td style="width: 25%; font-weight: bold;">Nadi</td>
-                    <td style="width: 25%;">{$data.vital_nadi} x/menit</td>
-                </tr>
-                <tr>
-                    <td style="font-weight: bold;">Suhu</td>
-                    <td>{$data.vital_suhu} °C</td>
-                    <td style="font-weight: bold;">Saturasi O2 (SpO2)</td>
-                    <td>{$data.vital_saturasi} %</td>
-                </tr>
-            </table>
-
-            <!-- EVALUASI SKOR -->
-            <div class="section-header">2. EVALUASI SKOR PEMULIHAN PASCA SEDASI / ANESTESI</div>
-            <table class="table-data" style="margin-bottom: 6px;">
-                <thead>
-                    <tr>
-                        <th rowspan="2" style="width: 28%;">Kriteria Skor</th>
-                        <th colspan="3">Jam Pasca Anestesi</th>
-                        <th colspan="4">Jam Observasi</th>
-                        <th rowspan="2" style="width: 12%;">Jam Pindah</th>
-                    </tr>
-                    <tr>
-                        <th style="width: 8%;">15'</th>
-                        <th style="width: 8%;">30'</th>
-                        <th style="width: 8%;">45'</th>
-                        <th style="width: 8%;">Jam 1</th>
-                        <th style="width: 8%;">Jam 2</th>
-                        <th style="width: 8%;">Jam 3</th>
-                        <th style="width: 8%;">Jam 4</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>ALDRETTE SCORE (Dewasa)</strong></td>
-                        <td style="text-align: center;">{$data.aldrete_jam_pasca_15}</td>
-                        <td style="text-align: center;">{$data.aldrete_jam_pasca_30}</td>
-                        <td style="text-align: center;">{$data.aldrete_jam_pasca_45}</td>
-                        <td style="text-align: center;">{$data.aldrete_jam_1}</td>
-                        <td style="text-align: center;">{$data.aldrete_jam_2}</td>
-                        <td style="text-align: center;">{$data.aldrete_jam_3}</td>
-                        <td style="text-align: center;">{$data.aldrete_jam_4}</td>
-                        <td style="text-align: center;">{$data.aldrete_jam_pindah}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>STEWARD SCORE (Anak)</strong></td>
-                        <td style="text-align: center;">{$data.steward_jam_pasca_15}</td>
-                        <td style="text-align: center;">{$data.steward_jam_pasca_30}</td>
-                        <td style="text-align: center;">{$data.steward_jam_pasca_45}</td>
-                        <td style="text-align: center;">{$data.steward_jam_1}</td>
-                        <td style="text-align: center;">{$data.steward_jam_2}</td>
-                        <td style="text-align: center;">{$data.steward_jam_3}</td>
-                        <td style="text-align: center;">{$data.steward_jam_4}</td>
-                        <td style="text-align: center;">{$data.steward_jam_pindah}</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <!-- PROTOKOL NYERI -->
-            <div class="section-header">3. PROTOKOL KONTROL NYERI DI PACU</div>
-            <table class="table-data" style="margin-bottom: 6px;">
-                <thead>
-                    <tr>
-                        <th style="width: 10%;">No</th>
-                        <th style="width: 30%;">Tanggal & Jam</th>
-                        <th style="width: 40%;">Obat / Dosis / Cara Pemberian</th>
-                        <th style="width: 20%;">TTD Dokter</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {if: !empty($detail)}
-                    {loop: $detail}
-                    <tr>
-                        <td style="text-align: center;">{$key + 1}</td>
-                        <td>{$value.tanggal}</td>
-                        <td>{$value.obat}</td>
-                        <td style="text-align: center;">{$value.tanda_tangan_dokter}</td>
-                    </tr>
-                    {/loop}
+        <!-- HEADER KOP & JUDUL FORM -->
+        <table style="width: 100%; border-bottom: 2px solid #000; margin-bottom: 2px;">
+            <tr>
+                <td style="width: 52%; vertical-align: middle; padding: 1px 2px;">
+                    {if: !empty($kop_img)}
+                        <img src="{$kop_img}" alt="KOP RSGM" style="width: 100%; max-height: 48px;">
                     {else}
-                    <tr>
-                        <td colspan="4" style="text-align: center; color: #888;">Tidak ada instruksi protokol nyeri tambahan.</td>
-                    </tr>
+                        <div style="font-size: 8px; line-height: 1.1; text-align: center;">
+                            <strong style="font-size: 9px;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</strong><br>
+                            <strong style="font-size: 10px;">RSGM GUSTI HASAN AMAN</strong><br>
+                            <span style="font-size: 7px;">Jl. Simpang Ulin No.28 Telp. (0511) 3260818 BANJARMASIN</span>
+                        </div>
                     {/if}
-                </tbody>
-            </table>
+                </td>
+                <td style="width: 48%; vertical-align: middle; text-align: right; border-left: 1.5px solid #000; padding: 2px 6px;">
+                    <div class="header-title">STATUS POST ANESTESI</div>
+                    <div style="font-size: 8pt; margin-top: 2px;">
+                        <strong>Tanggal :</strong> {?=!empty($data['tgl_indo']) ? $data['tgl_indo'] : (!empty($data['tanggal']) ? $data['tanggal'] : '-')?}
+                    </div>
+                </td>
+            </tr>
+        </table>
 
-            <!-- INSTRUKSI PASCA ANESTESI -->
-            <div class="section-header">4. INSTRUKSI PASCA ANESTESI</div>
-            <table class="table-data" style="margin-bottom: 8px;">
+        <!-- INFORMASI PASIEN & IDENTITAS OPERASI -->
+        <table class="table-border" style="margin-bottom: 2px; font-size: 7.5pt;">
+            <tr>
+                <td style="width: 40%;">
+                    <strong>NAMA PENDERITA :</strong> {$data.nm_pasien} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>L/P :</strong> {$data.jk}
+                </td>
+                <td style="width: 30%;">
+                    <strong>DIAGNOSA PASCABEDAH :</strong> {$data.diagnosa_pascabedah}
+                </td>
+                <td style="width: 30%;">
+                    <strong>dr. ANESTESI / ASISTEN :</strong> {$data.dr_anestesi}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <strong>UMUR :</strong> {$data.umur} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>JENIS ANESTESI :</strong> {$data.jenis_anestesi}
+                </td>
+                <td>
+                    <strong>TINDAKAN :</strong> {$data.tindakan}
+                </td>
+                <td>
+                    <strong>PENATA / PERAWAT ANESTESI :</strong> {if: !empty($data.penata_anestesi)}{$data.penata_anestesi}{else}{$data.perawat_pacu}{/if}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="background: #fafafa; padding: 2.5px 4px;">
+                    <strong>TANDA VITAL TIBA DI PACU</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <strong>TD :</strong> {if: !empty($data.vital_sistolik)}{$data.vital_sistolik}/{$data.vital_diastolik}{else}___ / ___{/if} mmHg &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <strong>Nadi :</strong> {if: !empty($data.vital_nadi)}{$data.vital_nadi}{else}___{/if} x/menit &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <strong>RR :</strong> {if: !empty($data.vital_rr)}{$data.vital_rr}{else}___{/if} x/menit &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <strong>SpO2 :</strong> {if: !empty($data.vital_saturasi)}{$data.vital_saturasi}{else}___{/if} % &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <strong>VAS :</strong> {if: !empty($data.vital_vas)}{$data.vital_vas}{else}___{/if} /10
+                </td>
+            </tr>
+        </table>
+
+        <!-- GRAFIK MONITORING OBSERVASI WAKTU TTV PASCA ANESTESI -->
+        <table class="table-score" style="margin-bottom: 2px;">
+            <thead>
                 <tr>
-                    <td style="width: 50%; vertical-align: top;">
-                        <p style="margin: 2px 0;"><strong>1. Infus:</strong> {$data.instruksi_prosedur_infus}</p>
-                        <p style="margin: 4px 0;"><strong>2. Puasa:</strong> {$data.instruksi_prosedur_puasa}</p>
-                        <p style="margin: 4px 0;"><strong>3. Observasi Tanda Vital:</strong></p>
-                        <div style="margin-left: 10px;">
-                            <span class="cb-box">{if: $data.instruksi_obs_td == 'Y'}✓{/if}</span> TD &nbsp;&nbsp;
-                            <span class="cb-box">{if: $data.instruksi_obs_respirasi == 'Y'}✓{/if}</span> Respirasi &nbsp;&nbsp;
-                            <span class="cb-box">{if: $data.instruksi_obs_nadi == 'Y'}✓{/if}</span> Nadi &nbsp;&nbsp;
-                            <span class="cb-box">{if: $data.instruksi_obs_kesadaran == 'Y'}✓{/if}</span> Kesadaran &nbsp;&nbsp;
-                            <span class="cb-box">{if: $data.instruksi_obs_urin == 'Y'}✓{/if}</span> Urin
+                    <th rowspan="2" style="width: 110px; text-align: left; padding-left: 4px;">Waktu</th>
+                    <th colspan="3" style="width: 18%;">Jam 1</th>
+                    <th colspan="3" style="width: 18%;">Jam 2</th>
+                    <th colspan="3" style="width: 18%;">Jam 3</th>
+                    <th colspan="3" style="width: 18%;">Jam 4</th>
+                    <th rowspan="2" style="width: 32px;">Jumlah</th>
+                </tr>
+                <tr>
+                    <th style="width: 6%;">15</th><th style="width: 6%;">30</th><th style="width: 6%;">45</th>
+                    <th style="width: 6%;">15</th><th style="width: 6%;">30</th><th style="width: 6%;">45</th>
+                    <th style="width: 6%;">15</th><th style="width: 6%;">30</th><th style="width: 6%;">45</th>
+                    <th style="width: 6%;">15</th><th style="width: 6%;">30</th><th style="width: 6%;">45</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <!-- SISI KIRI: LEGENDA & SKALA Y -->
+                    <td style="vertical-align: top; padding: 2px; text-align: left; background: #fff;">
+                        <div style="font-size: 6.5pt; line-height: 1.15; margin-bottom: 3px; border-bottom: 0.5px solid #ccc; padding-bottom: 2px;">
+                            <span style="color:#e74c3c; font-weight:bold;">•</span> Nadi &nbsp;&nbsp;&nbsp;
+                            <span style="color:#f39c12; font-weight:bold;">°</span> Suhu<br>
+                            <span style="color:#2980b9; font-weight:bold;">v</span> Sistolik &nbsp;
+                            <span style="color:#27ae60; font-weight:bold;">^</span> Diastolik
+                        </div>
+                        <div style="font-size: 6.8pt; line-height: 1.25; font-weight: bold; color: #333;">
+                            200<br>180<br>160<br>140<br>120<br>100<br>80<br>60<br>40
                         </div>
                     </td>
-                    <td style="width: 50%; vertical-align: top;">
-                        <p style="margin: 2px 0;"><strong>4. Obat / Medikasi:</strong></p>
-                        <div style="margin-left: 10px;">
-                            a. {$data.instruksi_obat_a}<br>
-                            b. {$data.instruksi_obat_b}<br>
-                            c. {$data.instruksi_obat_c}
-                        </div>
-                        <p style="margin: 4px 0;"><strong>5. Posisi:</strong></p>
-                        <div style="margin-left: 10px;">
-                            <span class="cb-box">{if: $data.instruksi_posisi_supine == 'Y'}✓{/if}</span> Supine &nbsp;&nbsp;
-                            <span class="cb-box">{if: $data.instruksi_posisi_setengah_duduk == 'Y'}✓{/if}</span> Setengah Duduk &nbsp;&nbsp;
-                            {if: !empty($data.instruksi_posisi_lainnya)}Lainnya: {$data.instruksi_posisi_lainnya}{/if}
-                        </div>
+                    <!-- SISI KANAN: AREA GRAFIK PLOTTING SVG -->
+                    <td colspan="13" style="padding: 0; background: #fff; vertical-align: middle; height: 140px;">
+                        {$chartSvg}
                     </td>
                 </tr>
-            </table>
-
-            <!-- TANDA TANGAN -->
-            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                <tr>
-                    <td style="width: 60%;"></td>
-                    <td style="width: 40%; text-align: center; font-size: 8.5pt;">
-                        Banjarmasin, {$data.tanggal}<br>
-                        Dokter Anestesi,<br><br><br><br>
-                        <strong>( {if: !empty($data.tanda_tangan_dokter)}{$data.tanda_tangan_dokter}{elseif: !empty($data.dr_anestesi)}{$data.dr_anestesi}{else}................................................{/if} )</strong>
+                <!-- BARIS SATURASI O2 -->
+                <tr style="background: #fafafa;">
+                    <td style="font-weight: bold; text-align: left; padding-left: 4px; font-size: 6.8pt;">Saturasi O2 (%)</td>
+                    <td style="text-align: center; font-size: 6.8pt;">{?=isset($gridData['saturasi'][0]) ? $gridData['saturasi'][0] : ''?}</td>
+                    <td style="text-align: center; font-size: 6.8pt;">{?=isset($gridData['saturasi'][1]) ? $gridData['saturasi'][1] : ''?}</td>
+                    <td style="text-align: center; font-size: 6.8pt;">{?=isset($gridData['saturasi'][2]) ? $gridData['saturasi'][2] : ''?}</td>
+                    <td style="text-align: center; font-size: 6.8pt;">{?=isset($gridData['saturasi'][3]) ? $gridData['saturasi'][3] : ''?}</td>
+                    <td style="text-align: center; font-size: 6.8pt;">{?=isset($gridData['saturasi'][4]) ? $gridData['saturasi'][4] : ''?}</td>
+                    <td style="text-align: center; font-size: 6.8pt;">{?=isset($gridData['saturasi'][5]) ? $gridData['saturasi'][5] : ''?}</td>
+                    <td style="text-align: center; font-size: 6.8pt;">{?=isset($gridData['saturasi'][6]) ? $gridData['saturasi'][6] : ''?}</td>
+                    <td style="text-align: center; font-size: 6.8pt;">{?=isset($gridData['saturasi'][7]) ? $gridData['saturasi'][7] : ''?}</td>
+                    <td style="text-align: center; font-size: 6.8pt;">{?=isset($gridData['saturasi'][8]) ? $gridData['saturasi'][8] : ''?}</td>
+                    <td style="text-align: center; font-size: 6.8pt;">{?=isset($gridData['saturasi'][9]) ? $gridData['saturasi'][9] : ''?}</td>
+                    <td style="text-align: center; font-size: 6.8pt;">{?=isset($gridData['saturasi'][10]) ? $gridData['saturasi'][10] : ''?}</td>
+                    <td style="text-align: center; font-size: 6.8pt;">{?=isset($gridData['saturasi'][11]) ? $gridData['saturasi'][11] : ''?}</td>
+                    <td style="text-align: center; font-size: 6.8pt; font-weight: bold;">
+                        {?=!empty($gridData['saturasi']) ? round(array_sum(array_filter($gridData['saturasi'], 'is_numeric')) / max(1, count(array_filter($gridData['saturasi'], 'is_numeric')))) : ''?}
                     </td>
                 </tr>
-            </table>
+            </tbody>
+        </table>
+
+        <!-- WAKTU EVALUASI ALDRETTE / STEWARDS / BROMAGE SCORE -->
+        <table class="table-score" style="margin-bottom: 2px;">
+            <thead>
+                <tr>
+                    <th rowspan="2" colspan="2" style="width: 32%;">WAKTU EVALUASI ALDRETTE / STEWARDS / BROMAGE SCORE</th>
+                    <th rowspan="2" style="width: 5%;">Nilai</th>
+                    <th colspan="3">Menit</th>
+                    <th colspan="4">Jam</th>
+                    <th rowspan="2" style="width: 11%;">Jam Pindah Ruang Perawatan</th>
+                </tr>
+                <tr>
+                    <th style="width: 6%;">15</th>
+                    <th style="width: 6%;">30</th>
+                    <th style="width: 6%;">45</th>
+                    <th style="width: 6%;">1</th>
+                    <th style="width: 6%;">2</th>
+                    <th style="width: 6%;">3</th>
+                    <th style="width: 6%;">4</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ALDRETTE SCORE (DEWASA) -->
+                <tr class="section-bar">
+                    <td colspan="11" style="font-weight: bold; background: #eef2f7; text-align: center;">ALDRETTE SCORE (DEWASA)</td>
+                </tr>
+                <!-- SIRKULASI -->
+                <tr>
+                    <td rowspan="3" style="width: 14%; font-weight: bold; text-align: center; vertical-align: middle;">SIRKULASI</td>
+                    <td style="width: 26%;">Tekanan Darah Sistolik 20% pre anestesi</td>
+                    <td style="text-align: center; font-weight: bold;">2</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_15']['sirkulasi']) ? $skorDetail['aldrette_15']['sirkulasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_30']['sirkulasi']) ? $skorDetail['aldrette_30']['sirkulasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_45']['sirkulasi']) ? $skorDetail['aldrette_45']['sirkulasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_1']['sirkulasi']) ? $skorDetail['aldrette_1']['sirkulasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_2']['sirkulasi']) ? $skorDetail['aldrette_2']['sirkulasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_3']['sirkulasi']) ? $skorDetail['aldrette_3']['sirkulasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_4']['sirkulasi']) ? $skorDetail['aldrette_4']['sirkulasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_pindah']['sirkulasi']) ? $skorDetail['aldrette_pindah']['sirkulasi'] : ''?}</td>
+                </tr>
+                <tr>
+                    <td>20 - 50 %</td>
+                    <td style="text-align: center; font-weight: bold;">1</td>
+                </tr>
+                <tr>
+                    <td>&lt; 50 %</td>
+                    <td style="text-align: center; font-weight: bold;">0</td>
+                </tr>
+
+                <!-- KESADARAN -->
+                <tr>
+                    <td rowspan="3" style="font-weight: bold; text-align: center; vertical-align: middle;">KESADARAN</td>
+                    <td>Sadar penuh</td>
+                    <td style="text-align: center; font-weight: bold;">2</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_15']['kesadaran']) ? $skorDetail['aldrette_15']['kesadaran'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_30']['kesadaran']) ? $skorDetail['aldrette_30']['kesadaran'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_45']['kesadaran']) ? $skorDetail['aldrette_45']['kesadaran'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_1']['kesadaran']) ? $skorDetail['aldrette_1']['kesadaran'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_2']['kesadaran']) ? $skorDetail['aldrette_2']['kesadaran'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_3']['kesadaran']) ? $skorDetail['aldrette_3']['kesadaran'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_4']['kesadaran']) ? $skorDetail['aldrette_4']['kesadaran'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_pindah']['kesadaran']) ? $skorDetail['aldrette_pindah']['kesadaran'] : ''?}</td>
+                </tr>
+                <tr>
+                    <td>Bangun jika dipanggil</td>
+                    <td style="text-align: center; font-weight: bold;">1</td>
+                </tr>
+                <tr>
+                    <td>Belum respon</td>
+                    <td style="text-align: center; font-weight: bold;">0</td>
+                </tr>
+
+                <!-- RESPIRASI -->
+                <tr>
+                    <td rowspan="3" style="font-weight: bold; text-align: center; vertical-align: middle;">RESPIRASI</td>
+                    <td>Mampu bernafas dan batuk</td>
+                    <td style="text-align: center; font-weight: bold;">2</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_15']['respirasi']) ? $skorDetail['aldrette_15']['respirasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_30']['respirasi']) ? $skorDetail['aldrette_30']['respirasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_45']['respirasi']) ? $skorDetail['aldrette_45']['respirasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_1']['respirasi']) ? $skorDetail['aldrette_1']['respirasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_2']['respirasi']) ? $skorDetail['aldrette_2']['respirasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_3']['respirasi']) ? $skorDetail['aldrette_3']['respirasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_4']['respirasi']) ? $skorDetail['aldrette_4']['respirasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_pindah']['respirasi']) ? $skorDetail['aldrette_pindah']['respirasi'] : ''?}</td>
+                </tr>
+                <tr>
+                    <td>Sesak / bernafas dengan periode apnea</td>
+                    <td style="text-align: center; font-weight: bold;">1</td>
+                </tr>
+                <tr>
+                    <td>Apnea</td>
+                    <td style="text-align: center; font-weight: bold;">0</td>
+                </tr>
+
+                <!-- WARNA KULIT -->
+                <tr>
+                    <td rowspan="3" style="font-weight: bold; text-align: center; vertical-align: middle;">WARNA KULIT</td>
+                    <td>Kulit kemerahan</td>
+                    <td style="text-align: center; font-weight: bold;">2</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_15']['warna_kulit']) ? $skorDetail['aldrette_15']['warna_kulit'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_30']['warna_kulit']) ? $skorDetail['aldrette_30']['warna_kulit'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_45']['warna_kulit']) ? $skorDetail['aldrette_45']['warna_kulit'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_1']['warna_kulit']) ? $skorDetail['aldrette_1']['warna_kulit'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_2']['warna_kulit']) ? $skorDetail['aldrette_2']['warna_kulit'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_3']['warna_kulit']) ? $skorDetail['aldrette_3']['warna_kulit'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_4']['warna_kulit']) ? $skorDetail['aldrette_4']['warna_kulit'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_pindah']['warna_kulit']) ? $skorDetail['aldrette_pindah']['warna_kulit'] : ''?}</td>
+                </tr>
+                <tr>
+                    <td>Pucat / dingin</td>
+                    <td style="text-align: center; font-weight: bold;">1</td>
+                </tr>
+                <tr>
+                    <td>Sianosis</td>
+                    <td style="text-align: center; font-weight: bold;">0</td>
+                </tr>
+
+                <!-- EKSTREMITAS -->
+                <tr>
+                    <td rowspan="3" style="font-weight: bold; text-align: center; vertical-align: middle;">EKSTREMITAS</td>
+                    <td>Mampu menggerakkan 4 ekstremitas</td>
+                    <td style="text-align: center; font-weight: bold;">2</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_15']['ekstremitas']) ? $skorDetail['aldrette_15']['ekstremitas'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_30']['ekstremitas']) ? $skorDetail['aldrette_30']['ekstremitas'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_45']['ekstremitas']) ? $skorDetail['aldrette_45']['ekstremitas'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_1']['ekstremitas']) ? $skorDetail['aldrette_1']['ekstremitas'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_2']['ekstremitas']) ? $skorDetail['aldrette_2']['ekstremitas'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_3']['ekstremitas']) ? $skorDetail['aldrette_3']['ekstremitas'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_4']['ekstremitas']) ? $skorDetail['aldrette_4']['ekstremitas'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['aldrette_pindah']['ekstremitas']) ? $skorDetail['aldrette_pindah']['ekstremitas'] : ''?}</td>
+                </tr>
+                <tr>
+                    <td>Mampu menggerakkan 2 ekstremitas</td>
+                    <td style="text-align: center; font-weight: bold;">1</td>
+                </tr>
+                <tr>
+                    <td>Tidak mampu menggerakkan ekstremitas</td>
+                    <td style="text-align: center; font-weight: bold;">0</td>
+                </tr>
+
+                <!-- TOTAL ALDRETTE -->
+                <tr style="background: #fafafa; font-weight: bold;">
+                    <td colspan="3">Total Skor (Boleh Pindah Ruangan jika Skor &ge; 8)</td>
+                    <td style="text-align: center;">{$data.aldrete_jam_pasca_15}</td>
+                    <td style="text-align: center;">{$data.aldrete_jam_pasca_30}</td>
+                    <td style="text-align: center;">{$data.aldrete_jam_pasca_45}</td>
+                    <td style="text-align: center;">{$data.aldrete_jam_1}</td>
+                    <td style="text-align: center;">{$data.aldrete_jam_2}</td>
+                    <td style="text-align: center;">{$data.aldrete_jam_3}</td>
+                    <td style="text-align: center;">{$data.aldrete_jam_4}</td>
+                    <td style="text-align: center;">{$data.aldrete_jam_pindah}</td>
+                </tr>
+
+                <!-- STEWARD SCORE (ANAK-ANAK) -->
+                <tr class="section-bar">
+                    <td colspan="11" style="font-weight: bold; background: #eef2f7; text-align: center;">STEWARD SCORE (ANAK-ANAK)</td>
+                </tr>
+                <!-- KESADARAN -->
+                <tr>
+                    <td rowspan="3" style="font-weight: bold; text-align: center; vertical-align: middle;">KESADARAN</td>
+                    <td>Sadar penuh</td>
+                    <td style="text-align: center; font-weight: bold;">2</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_15']['kesadaran']) ? $skorDetail['steward_15']['kesadaran'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_30']['kesadaran']) ? $skorDetail['steward_30']['kesadaran'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_45']['kesadaran']) ? $skorDetail['steward_45']['kesadaran'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_1']['kesadaran']) ? $skorDetail['steward_1']['kesadaran'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_2']['kesadaran']) ? $skorDetail['steward_2']['kesadaran'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_3']['kesadaran']) ? $skorDetail['steward_3']['kesadaran'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_4']['kesadaran']) ? $skorDetail['steward_4']['kesadaran'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_pindah']['kesadaran']) ? $skorDetail['steward_pindah']['kesadaran'] : ''?}</td>
+                </tr>
+                <tr>
+                    <td>Bangun jika dipanggil</td>
+                    <td style="text-align: center; font-weight: bold;">1</td>
+                </tr>
+                <tr>
+                    <td>Belum respon</td>
+                    <td style="text-align: center; font-weight: bold;">0</td>
+                </tr>
+
+                <!-- RESPIRASI -->
+                <tr>
+                    <td rowspan="3" style="font-weight: bold; text-align: center; vertical-align: middle;">RESPIRASI</td>
+                    <td>Batuk menangis</td>
+                    <td style="text-align: center; font-weight: bold;">2</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_15']['respirasi']) ? $skorDetail['steward_15']['respirasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_30']['respirasi']) ? $skorDetail['steward_30']['respirasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_45']['respirasi']) ? $skorDetail['steward_45']['respirasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_1']['respirasi']) ? $skorDetail['steward_1']['respirasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_2']['respirasi']) ? $skorDetail['steward_2']['respirasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_3']['respirasi']) ? $skorDetail['steward_3']['respirasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_4']['respirasi']) ? $skorDetail['steward_4']['respirasi'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_pindah']['respirasi']) ? $skorDetail['steward_pindah']['respirasi'] : ''?}</td>
+                </tr>
+                <tr>
+                    <td>Perlu bantuan bernafas</td>
+                    <td style="text-align: center; font-weight: bold;">1</td>
+                </tr>
+                <tr>
+                    <td>Tidak ada</td>
+                    <td style="text-align: center; font-weight: bold;">0</td>
+                </tr>
+
+                <!-- AKTIFITAS MOTORIK -->
+                <tr>
+                    <td rowspan="3" style="font-weight: bold; text-align: center; vertical-align: middle;">AKTIFITAS MOTORIK</td>
+                    <td>Gerakan bertujuan</td>
+                    <td style="text-align: center; font-weight: bold;">2</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_15']['motorik']) ? $skorDetail['steward_15']['motorik'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_30']['motorik']) ? $skorDetail['steward_30']['motorik'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_45']['motorik']) ? $skorDetail['steward_45']['motorik'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_1']['motorik']) ? $skorDetail['steward_1']['motorik'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_2']['motorik']) ? $skorDetail['steward_2']['motorik'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_3']['motorik']) ? $skorDetail['steward_3']['motorik'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_4']['motorik']) ? $skorDetail['steward_4']['motorik'] : ''?}</td>
+                    <td rowspan="3" style="text-align: center; vertical-align: middle;">{?=isset($skorDetail['steward_pindah']['motorik']) ? $skorDetail['steward_pindah']['motorik'] : ''?}</td>
+                </tr>
+                <tr>
+                    <td>Gerakan tanpa tujuan</td>
+                    <td style="text-align: center; font-weight: bold;">1</td>
+                </tr>
+                <tr>
+                    <td>Tidak bergerak</td>
+                    <td style="text-align: center; font-weight: bold;">0</td>
+                </tr>
+
+                <!-- TOTAL STEWARD -->
+                <tr style="background: #fafafa; font-weight: bold;">
+                    <td colspan="3">Total Skor (Boleh Pindah Ruangan jika Skor &ge; 5)</td>
+                    <td style="text-align: center;">{$data.steward_jam_pasca_15}</td>
+                    <td style="text-align: center;">{$data.steward_jam_pasca_30}</td>
+                    <td style="text-align: center;">{$data.steward_jam_pasca_45}</td>
+                    <td style="text-align: center;">{$data.steward_jam_1}</td>
+                    <td style="text-align: center;">{$data.steward_jam_2}</td>
+                    <td style="text-align: center;">{$data.steward_jam_3}</td>
+                    <td style="text-align: center;">{$data.steward_jam_4}</td>
+                    <td style="text-align: center;">{$data.steward_jam_pindah}</td>
+                </tr>
+
+                <!-- BROMAGE SCORE (SAB / SUB ARACHNOID BLOCK) -->
+                <tr class="section-bar">
+                    <td colspan="11" style="font-weight: bold; background: #eef2f7; text-align: center;">BROMAGE SCORE (SAB / SUB ARACHNOID BLOCK)</td>
+                </tr>
+                <tr>
+                    <td colspan="2">Gerakan penuh dari tungkai</td>
+                    <td style="text-align: center; font-weight: bold;">0</td>
+                    <td rowspan="4" style="text-align: center; vertical-align: middle;">{$data.bromage_jam_pasca_15}</td>
+                    <td rowspan="4" style="text-align: center; vertical-align: middle;">{$data.bromage_jam_pasca_30}</td>
+                    <td rowspan="4" style="text-align: center; vertical-align: middle;">{$data.bromage_jam_pasca_45}</td>
+                    <td rowspan="4" style="text-align: center; vertical-align: middle;">{$data.bromage_jam_1}</td>
+                    <td rowspan="4" style="text-align: center; vertical-align: middle;">{$data.bromage_jam_2}</td>
+                    <td rowspan="4" style="text-align: center; vertical-align: middle;">{$data.bromage_jam_3}</td>
+                    <td rowspan="4" style="text-align: center; vertical-align: middle;">{$data.bromage_jam_4}</td>
+                    <td rowspan="4" style="text-align: center; vertical-align: middle;">{$data.bromage_jam_pindah}</td>
+                </tr>
+                <tr>
+                    <td colspan="2">Tak mampu ekstensi tungkai</td>
+                    <td style="text-align: center; font-weight: bold;">1</td>
+                </tr>
+                <tr>
+                    <td colspan="2">Tak mampu fleksi lutut</td>
+                    <td style="text-align: center; font-weight: bold;">2</td>
+                </tr>
+                <tr>
+                    <td colspan="2">Tak mampu fleksi pergelangan kaki</td>
+                    <td style="text-align: center; font-weight: bold;">3</td>
+                </tr>
+                <!-- TOTAL BROMAGE -->
+                <tr style="background: #fafafa; font-weight: bold;">
+                    <td colspan="3">Total Skor (Boleh Pindah Ruangan jika Skor &le; 2)</td>
+                    <td style="text-align: center;">{$data.bromage_jam_pasca_15}</td>
+                    <td style="text-align: center;">{$data.bromage_jam_pasca_30}</td>
+                    <td style="text-align: center;">{$data.bromage_jam_pasca_45}</td>
+                    <td style="text-align: center;">{$data.bromage_jam_1}</td>
+                    <td style="text-align: center;">{$data.bromage_jam_2}</td>
+                    <td style="text-align: center;">{$data.bromage_jam_3}</td>
+                    <td style="text-align: center;">{$data.bromage_jam_4}</td>
+                    <td style="text-align: center;">{$data.bromage_jam_pindah}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- STATUS PINDAH RUANGAN -->
+        <div style="border: 1px solid #000; border-top: none; padding: 2px 5px; font-size: 7.5pt; margin-bottom: 2px;">
+            Pasien dipindahke ruangan : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="box-check {if: $data.pindah_ke == 'Ruang Rawat'}checked{/if}">{if: $data.pindah_ke == 'Ruang Rawat'}✓{/if}</span> Ruang Rawat <u>&nbsp;&nbsp;{if: !empty($data.pindah_ke_ruang)}{$data.pindah_ke_ruang}{else}................................................{/if}&nbsp;&nbsp;</u> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="box-check {if: $data.pindah_ke == 'ICU'}checked{/if}">{if: $data.pindah_ke == 'ICU'}✓{/if}</span> ICU
         </div>
+
+        <!-- INSTRUKSI PASCA ANESTESI & TANDA TANGAN -->
+        <table class="table-border" style="margin-bottom: 1px; font-size: 7.5pt;">
+            <tr>
+                <td colspan="2" style="background: #f0f0f0; font-weight: bold; text-align: center; padding: 2px 0; font-size: 7.5pt;">
+                    INSTRUKSI PASCA ANESTESI
+                </td>
+            </tr>
+            <tr>
+                <!-- SISI KIRI: INSTRUKSI DAN PROSEDUR -->
+                <td style="width: 68%; vertical-align: top; padding: 3px 5px; border-right: 1px solid #000;">
+                    <div style="margin-bottom: 2.5px;">
+                        <strong>1. Infus :</strong> {if: !empty($data.instruksi_prosedur_infus)}{$data.instruksi_prosedur_infus}{else}....................................................................................................................................{/if}
+                    </div>
+                    <div style="margin-bottom: 2.5px;">
+                        <strong>2. Puasa sampai dengan :</strong> {if: !empty($data.instruksi_prosedur_puasa)}{$data.instruksi_prosedur_puasa}{else}...............................................................................................................{/if}
+                    </div>
+                    <div style="margin-bottom: 2.5px;">
+                        <strong>3. Observasi tanda vital :</strong><br>
+                        <div style="margin-left: 12px; margin-top: 1px;">
+                            <span class="box-check {if: $data.instruksi_obs_td == 'Y'}checked{/if}">{if: $data.instruksi_obs_td == 'Y'}✓{/if}</span> TD {if: !empty($data.instruksi_obs_td_ket)}<u>&nbsp;{$data.instruksi_obs_td_ket}&nbsp;</u>{else}..............{/if} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="box-check {if: $data.instruksi_obs_nadi == 'Y'}checked{/if}">{if: $data.instruksi_obs_nadi == 'Y'}✓{/if}</span> Nadi {if: !empty($data.instruksi_obs_nadi_ket)}<u>&nbsp;{$data.instruksi_obs_nadi_ket}&nbsp;</u>{else}..............{/if} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="box-check {if: $data.instruksi_obs_urin == 'Y'}checked{/if}">{if: $data.instruksi_obs_urin == 'Y'}✓{/if}</span> Urin {if: !empty($data.instruksi_obs_urin_ket)}<u>&nbsp;{$data.instruksi_obs_urin_ket}&nbsp;</u>{else}..............{/if}<br>
+                            <span class="box-check {if: $data.instruksi_obs_respirasi == 'Y'}checked{/if}">{if: $data.instruksi_obs_respirasi == 'Y'}✓{/if}</span> Respirasi {if: !empty($data.instruksi_obs_respirasi_ket)}<u>&nbsp;{$data.instruksi_obs_respirasi_ket}&nbsp;</u>{else}..............{/if} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="box-check {if: $data.instruksi_obs_kesadaran == 'Y'}checked{/if}">{if: $data.instruksi_obs_kesadaran == 'Y'}✓{/if}</span> Kesadaran {if: !empty($data.instruksi_obs_kesadaran_ket)}<u>&nbsp;{$data.instruksi_obs_kesadaran_ket}&nbsp;</u>{else}..............{/if}
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 2.5px;">
+                        <strong>4. Obat / Medikasi :</strong>
+                        <div style="margin-left: 12px; margin-top: 1px;">
+                            a. {if: !empty($data.instruksi_obat_a)}{$data.instruksi_obat_a}{else}................................................................................................................{/if}<br>
+                            b. {if: !empty($data.instruksi_obat_b)}{$data.instruksi_obat_b}{else}................................................................................................................{/if}<br>
+                            c. {if: !empty($data.instruksi_obat_c)}{$data.instruksi_obat_c}{else}................................................................................................................{/if}
+                        </div>
+                    </div>
+                    <div>
+                        <strong>5. Catatan :</strong> {if: !empty($data.instruksi_catatan)}{$data.instruksi_catatan}{elseif: !empty($data.instruksi_posisi_lainnya)}{$data.instruksi_posisi_lainnya}{else}.......................................................................................................................................{/if}
+                    </div>
+                </td>
+
+                <!-- SISI KANAN: DUA KOTAK TANDA TANGAN (PENATA & DOKTER ANESTESI) -->
+                <td style="width: 32%; vertical-align: top; padding: 0;">
+                    <!-- PENATA ANESTESI -->
+                    <div style="border-bottom: 1px solid #000; text-align: center; padding: 2px 4px; height: 60px;">
+                        <strong style="font-size: 7.2pt;">PENATA ANESTESI</strong><br>
+                        <div style="height: 30px;">
+                            {if: !empty($data.tanda_tangan_penata_img)}
+                                <img src="{$data.tanda_tangan_penata_img}" style="max-height: 28px;">
+                            {/if}
+                        </div>
+                        <div style="font-size: 7.2pt;">
+                            ( <strong>{if: !empty($data.tanda_tangan_penata)}{$data.tanda_tangan_penata}{elseif: !empty($data.penata_anestesi)}{$data.penata_anestesi}{elseif: !empty($data.perawat_pacu)}{$data.perawat_pacu}{else}................................................{/if}</strong> )
+                        </div>
+                    </div>
+
+                    <!-- DOKTER ANESTESI -->
+                    <div style="text-align: center; padding: 2px 4px; height: 60px;">
+                        <strong style="font-size: 7.2pt;">DOKTER ANESTESI</strong><br>
+                        <div style="height: 30px;">
+                            {if: !empty($data.tanda_tangan_dokter_img)}
+                                <img src="{$data.tanda_tangan_dokter_img}" style="max-height: 28px;">
+                            {/if}
+                        </div>
+                        <div style="font-size: 7.2pt;">
+                            ( <strong>{if: !empty($data.tanda_tangan_dokter)}{$data.tanda_tangan_dokter}{elseif: !empty($data.dr_anestesi)}{$data.dr_anestesi}{else}................................................{/if}</strong> )
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- FOOTER RSGM -->
+        <table style="width: 100%; font-size: 6.5pt; color: #555; margin-top: 1px;">
+            <tr>
+                <td style="text-align: left; width: 30%;">
+                    <em>RSGM/Anes-03/Rev01</em>
+                </td>
+                <td style="text-align: right; width: 70%;">
+                    <em>Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</em>
+                </td>
+            </tr>
+        </table>
+
     </div>
 
 </body>
