@@ -407,7 +407,22 @@ abstract class Main
         $last_no_rm = $this->db('set_no_rkm_medis')->oneArray();
         $last_no_rm_val = !empty($last_no_rm['no_rkm_medis']) ? intval(substr($last_no_rm['no_rkm_medis'], 0, 6)) : 0;
 
-        $current_max = $last_no_rm_val;
+        // Ambil nomor RM 6-digit tertinggi dari tabel pasien (abaikan entri anomali yang lebih dari 6 digit/bukan format standar)
+        try {
+            $max_pasien = $this->db()->pdo()->query(
+                "SELECT MAX(CAST(no_rkm_medis AS UNSIGNED)) 
+                 FROM pasien 
+                 WHERE LENGTH(no_rkm_medis) <= 6 
+                   AND no_rkm_medis REGEXP '^[0-9]+$' 
+                   AND CAST(no_rkm_medis AS UNSIGNED) < 1000000"
+            )->fetchColumn();
+            $max_pasien_val = !empty($max_pasien) ? intval($max_pasien) : 0;
+        } catch (\Throwable $e) {
+            $max_pasien_val = 0;
+        }
+
+        // Ambil angka tertinggi antara counter set_no_rkm_medis dan data riil 6-digit di tabel pasien
+        $current_max = max($last_no_rm_val, $max_pasien_val);
         $next_no_rm = sprintf('%06s', ($current_max + 1));
 
         // Pastikan tidak duplikat dengan pasien yang sudah ada
