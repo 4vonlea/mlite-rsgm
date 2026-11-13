@@ -874,6 +874,27 @@
     var no_sep = $(this).attr("data-no_sep");
     window.open(baseURL + '/vclaim/cetaksepinternal/' + no_sep + '?t=' + mlite.token);
   });
+  $("#form_sep").on("click", ".tarik_sep_simrs", function(event){
+    var baseURL = mlite.url + '/' + mlite.admin;
+    event.preventDefault();
+    var no_sep = $(this).attr("data-no_sep") || $(this).data("no_sep");
+    var no_rawat = $('#sep_no_rawat').val();
+    var $btn = $(this);
+    var oldHtml = $btn.html();
+    $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
+    $.post(baseURL + '/vclaim/tariksep?t=' + mlite.token, {no_sep: no_sep, no_rawat: no_rawat}, function(res){
+      $btn.prop('disabled', false).html(oldHtml);
+      try {
+        var json = typeof res === 'object' ? res : JSON.parse(res);
+        alert(json.message);
+      } catch(e) {
+        alert(res);
+      }
+    }).fail(function(){
+      $btn.prop('disabled', false).html(oldHtml);
+      alert('Gagal menghubungi server untuk menarik SEP.');
+    });
+  });
   $("#form_sep").on("click","#finger", function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
@@ -1827,7 +1848,7 @@ async function openFrista(noka) {
                 output+="No. Rjk : " + histori[i].noRujukan + "<br/>";
                 output+="PPK Pelayanan : " + histori[i].ppkPelayanan;
                 output+="</div>";
-                output+="<div class=\"panel-footer\"><button class=\"btn btn-success btn-xs ubah_sep\" data-diagnosa=" + histori[i].diagnosa + " data-poli=" + poli + " data-tgl_sep=" + histori[i].tglSep + " data-no_sep=" + histori[i].noSep + " data-no_rujukan=" + histori[i].noRujukan + ">Ubah</button> <button class=\"btn btn-danger btn-xs hapus_sep\" data-no_sep=" + histori[i].noSep + ">Hapus</button> <button class=\"btn btn-primary btn-xs print_sep\" data-no_sep=" + histori[i].noSep + ">Cetak</button>";
+                output+="<div class=\"panel-footer\"><button class=\"btn btn-success btn-xs ubah_sep\" data-diagnosa=" + histori[i].diagnosa + " data-poli=" + poli + " data-tgl_sep=" + histori[i].tglSep + " data-no_sep=" + histori[i].noSep + " data-no_rujukan=" + histori[i].noRujukan + ">Ubah</button> <button class=\"btn btn-danger btn-xs hapus_sep\" data-no_sep=" + histori[i].noSep + ">Hapus</button> <button class=\"btn btn-primary btn-xs print_sep\" data-no_sep=" + histori[i].noSep + ">Cetak</button> <button class=\"btn btn-info btn-xs tarik_sep_simrs\" data-no_sep=" + histori[i].noSep + " title=\"Tarik data SEP ini ke database lokal SIMRS\"><i class=\"fa fa-download\"></i> Tarik SIMRS</button>";
                 if(histori[i].jnsPelayanan == 1) {
                   output+=" <button class=\"btn btn-warning text-primary btn-xs sep_pulang\" data-no_sep=" + histori[i].noSep + " id=\"sep_pulang_" + histori[i].noSep + "\">Pulang</button>";
                 }
@@ -1872,7 +1893,7 @@ async function openFrista(noka) {
                 output+="No. Rjk : " + histori[i].noRujukan + "<br/>";
                 output+="PPK Pelayanan : " + histori[i].ppkPelayanan;
                 output+="</div>";
-                output+="<div class=\"panel-footer\"><button class=\"btn btn-success btn-xs ubah_sep\" data-diagnosa=" + histori[i].diagnosa + " data-poli=" + poli + " data-tgl_sep=" + histori[i].tglSep + " data-no_sep=" + histori[i].noSep + " data-no_rujukan=" + histori[i].noRujukan + ">Ubah</button> <button class=\"btn btn-danger btn-xs hapus_sep\" data-no_sep=" + histori[i].noSep + ">Hapus</button> <button class=\"btn btn-primary btn-xs print_sep\" data-no_sep=" + histori[i].noSep + ">Cetak</button>";
+                output+="<div class=\"panel-footer\"><button class=\"btn btn-success btn-xs ubah_sep\" data-diagnosa=" + histori[i].diagnosa + " data-poli=" + poli + " data-tgl_sep=" + histori[i].tglSep + " data-no_sep=" + histori[i].noSep + " data-no_rujukan=" + histori[i].noRujukan + ">Ubah</button> <button class=\"btn btn-danger btn-xs hapus_sep\" data-no_sep=" + histori[i].noSep + ">Hapus</button> <button class=\"btn btn-primary btn-xs print_sep\" data-no_sep=" + histori[i].noSep + ">Cetak</button> <button class=\"btn btn-info btn-xs tarik_sep_simrs\" data-no_sep=" + histori[i].noSep + " title=\"Tarik data SEP ini ke database lokal SIMRS\"><i class=\"fa fa-download\"></i> Tarik SIMRS</button>";
                 if(histori[i].jnsPelayanan == 1) {
                   output+=" <button class=\"btn btn-warning text-primary btn-xs sep_pulang\" data-no_sep=" + histori[i].noSep + " id=\"sep_pulang_" + histori[i].noSep + "\">Pulang</button>";
                 }
