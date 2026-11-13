@@ -1262,25 +1262,92 @@ class Admin extends AdminModule
       $userKey = $this->settings->get('jkn_mobile.BpjsUserKey');
 
       if (!empty($antrianUrl) && !empty($consId)) {
-        $resp = BpjsService::post($antrianUrl, $payload, $consId, $secKey, $userKey, NULL);
+        $tStamp = strval(time());
+        $sig = base64_encode(hash_hmac('sha256', $consId . "&" . $tStamp, $secKey, true));
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $antrianUrl);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'X-cons-id: ' . $consId,
+            'X-timestamp: ' . $tStamp,
+            'X-signature: ' . $sig,
+            'user_key: ' . $userKey,
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 12);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $resp = curl_exec($ch);
+        curl_close($ch);
         $resJson = json_decode($resp, true);
 
         $code = isset($resJson['metadata']['code']) ? $resJson['metadata']['code'] : (isset($resJson['metaData']['code']) ? $resJson['metaData']['code'] : null);
         $msg = isset($resJson['metadata']['message']) ? $resJson['metadata']['message'] : (isset($resJson['metaData']['message']) ? $resJson['metaData']['message'] : 'Response null');
 
         // 200 = Success, 208 = Kode booking sudah ada di BPJS
-        $statusKirim = ($code == 200 || $code == 208) ? 'Sudah' : 'Gagal';
-        $this->db('mlite_antrian_referensi')->save([
-          'tanggal_periksa' => $reg_periksa['tgl_registrasi'],
-          'no_rkm_medis' => $no_rkm_medis,
-          'nomor_kartu' => $nomorkartu,
-          'nomor_referensi' => $nomorreferensi,
-          'kodebooking' => $kodebooking,
-          'jenis_kunjungan' => $jenis_kunjungan,
-          'status_kirim' => $statusKirim,
-          'keterangan' => $code . ': ' . $msg
-        ]);
-        error_log("_autoKirimAntreanBpjs for rawat {$no_rawat} done with status: {$statusKirim} ({$code}: {$msg})");
+        if ($code == 200 || $code == 208) {
+          $this->db('mlite_antrian_referensi')->save([
+            'tanggal_periksa' => $reg_periksa['tgl_registrasi'],
+            'no_rkm_medis' => $no_rkm_medis,
+            'nomor_kartu' => $nomorkartu,
+            'nomor_referensi' => $nomorreferensi,
+            'kodebooking' => $kodebooking,
+            'jenis_kunjungan' => $jenis_kunjungan,
+            'status_kirim' => 'Sudah',
+            'keterangan' => $code . ': ' . $msg
+          ]);
+        } else {
+          // Jika bukan 200/208 (misal code 201), cek apakah antrean pasien sudah terdaftar di server BPJS
+          $foundBpjs = null;
+          try {
+            $urlCheck = $this->settings->get('jkn_mobile.BpjsAntrianUrl') . 'antrean/pendaftaran/tanggal/' . $reg_periksa['tgl_registrasi'];
+            $checkOutput = BpjsService::get($urlCheck, [], $consId, $secKey, $userKey, $tStamp);
+            $checkJson = json_decode($checkOutput, true);
+            if (!empty($checkJson['response'])) {
+                $key = $consId . $secKey . $tStamp;
+                $decrypt = stringDecrypt($key, $checkJson['response']);
+                $decomp = \LZCompressor\LZString::decompressFromEncodedURIComponent($decrypt);
+                $pendaftaranList = json_decode($decomp, true);
+                if (is_array($pendaftaranList)) {
+                    foreach ($pendaftaranList as $item) {
+                        if ((!empty($item['norekammedis']) && $item['norekammedis'] === $no_rkm_medis) ||
+                            (!empty($item['nokapst']) && $item['nokapst'] === $nomorkartu) ||
+                            (!empty($item['nik']) && $item['nik'] === $nik)) {
+                            $foundBpjs = $item;
+                            break;
+                        }
+                    }
+                }
+            }
+          } catch (\Throwable $err) {}
+
+          if ($foundBpjs) {
+            $this->db('mlite_antrian_referensi')->save([
+              'tanggal_periksa' => $reg_periksa['tgl_registrasi'],
+              'no_rkm_medis' => $no_rkm_medis,
+              'nomor_kartu' => $nomorkartu,
+              'nomor_referensi' => !empty($foundBpjs['nomorreferensi']) ? $foundBpjs['nomorreferensi'] : $nomorreferensi,
+              'kodebooking' => $foundBpjs['kodebooking'],
+              'jenis_kunjungan' => !empty($foundBpjs['jeniskunjungan']) ? $foundBpjs['jeniskunjungan'] : $jenis_kunjungan,
+              'status_kirim' => 'Sudah',
+              'keterangan' => 'Sudah terdaftar di BPJS (Sumber: ' . ($foundBpjs['sumberdata'] ?? 'BPJS') . ')'
+            ]);
+          } else {
+            $this->db('mlite_antrian_referensi')->save([
+              'tanggal_periksa' => $reg_periksa['tgl_registrasi'],
+              'no_rkm_medis' => $no_rkm_medis,
+              'nomor_kartu' => $nomorkartu,
+              'nomor_referensi' => $nomorreferensi,
+              'kodebooking' => $kodebooking,
+              'jenis_kunjungan' => $jenis_kunjungan,
+              'status_kirim' => 'Gagal',
+              'keterangan' => $code . ': ' . $msg
+            ]);
+          }
+        }
+        error_log("_autoKirimAntreanBpjs for rawat {$no_rawat} processed ({$code}: {$msg})");
         return true;
       }
     } catch (\Throwable $e) {
@@ -3073,16 +3140,61 @@ class Admin extends AdminModule
     exit();
   }
 
-  function getAddAntrian($no_rkm_medis, $no_rawat, $nomor_rujukan,  $jenis_kunjungan) {
+  function getAddAntrian($no_rkm_medis, $no_rawat, $nomor_rujukan = null, $jenis_kunjungan = null) {
 
     try {
-        if (empty($no_rkm_medis) || empty($no_rawat) || empty($nomor_rujukan) || empty($jenis_kunjungan)) {
-            throw new \Exception("Parameter tidak lengkap.");
+        if (empty($no_rkm_medis) || empty($no_rawat)) {
+            throw new \Exception("Nomor Rekam Medis dan Nomor Rawat harus diisi.");
+        }
+
+        // Tangani parameter yang bergeser jika $nomor_rujukan berupa jenis kunjungan (1-4)
+        if (empty($jenis_kunjungan) && in_array($nomor_rujukan, ['1', '2', '3', '4'])) {
+            $jenis_kunjungan = $nomor_rujukan;
+            $nomor_rujukan = null;
+        }
+
+        $no_rawat_db = revertNoRawat($no_rawat);
+
+        // Jika nomor referensi belum ada di URL, coba cari otomatis dari database lokal
+        if (empty($nomor_rujukan) || $nomor_rujukan === '-') {
+            $sep = $this->db('bridging_sep')->where('no_rawat', $no_rawat_db)->oneArray();
+            if ($sep) {
+                if ($jenis_kunjungan == '3' && !empty($sep['noskdp'])) {
+                    $nomor_rujukan = $sep['noskdp'];
+                } elseif (!empty($sep['no_rujukan'])) {
+                    $nomor_rujukan = $sep['no_rujukan'];
+                } elseif (!empty($sep['noskdp'])) {
+                    $nomor_rujukan = $sep['noskdp'];
+                }
+            }
+
+            // Jika masih kosong dan jenis_kunjungan adalah 3 (Kontrol), cari dari tabel surat kontrol lokal
+            if (empty($nomor_rujukan) && $jenis_kunjungan == '3') {
+                $sk = $this->db('bridging_surat_kontrol_bpjs')
+                    ->where('no_surat', '!=', '')
+                    ->where('tgl_rencana', '>=', date('Y-m-d', strtotime('-30 days')))
+                    ->where('tgl_rencana', '<=', date('Y-m-d', strtotime('+30 days')))
+                    ->desc('tgl_rencana')
+                    ->oneArray();
+                if ($sk) {
+                    $nomor_rujukan = $sk['no_surat'];
+                }
+            }
+        }
+
+        // Tentukan jenis kunjungan default jika masih belum ada
+        if (empty($jenis_kunjungan)) {
+            $jenis_kunjungan = '1';
+        }
+
+        if (empty($nomor_rujukan)) {
+            $label = ($jenis_kunjungan == '3') ? 'Surat Kontrol (SKDP)' : 'Rujukan';
+            throw new \Exception("Nomor " . $label . " belum terisi untuk kunjungan pasien ini. Silakan buat atau pilih Nomor " . $label . " terlebih dahulu.");
         }
 
         $date = date('Y-m-d');
         $time = date('H:i:s');
-        $tentukan_hari=date('D',strtotime(date('Y-m-d')));
+        $tentukan_hari = date('D', strtotime($date));
 
         $day = array(
           'Sun' => 'AKHAD',
@@ -3093,95 +3205,184 @@ class Admin extends AdminModule
           'Fri' => 'JUMAT',
           'Sat' => 'SABTU'
         );
-        $hari=$day[$tentukan_hari];
+        $hari = $day[$tentukan_hari];
 
-        $reg_periksa = $this->db('reg_periksa')->where('no_rawat', revertNoRawat($no_rawat))->oneArray();
+        $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $no_rawat_db)->oneArray();
         if (!$reg_periksa) {
-            throw new \Exception("Data registrasi tidak ditemukan.");
+            throw new \Exception("Data registrasi pasien (" . $no_rawat_db . ") tidak ditemukan.");
         }
 
         $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $reg_periksa['kd_dokter'])->oneArray();
         $maping_poli_bpjs = $this->db('maping_poli_bpjs')->where('kd_poli_rs', $reg_periksa['kd_poli'])->oneArray();
-        $jadwaldokter = $this->db('jadwal')->where('kd_dokter', $reg_periksa['kd_dokter'])->where('kd_poli', $reg_periksa['kd_poli'])->where('hari_kerja', $hari)->oneArray();
+        
+        $kd_dokter_bpjs = $maping_dokter_dpjpvclaim ? $maping_dokter_dpjpvclaim['kd_dokter_bpjs'] : '';
+        $nm_dokter_bpjs = $maping_dokter_dpjpvclaim ? $maping_dokter_dpjpvclaim['nm_dokter_bpjs'] : '';
+        $kd_poli_bpjs = $maping_poli_bpjs ? $maping_poli_bpjs['kd_poli_bpjs'] : '';
+        $nm_poli_bpjs = $maping_poli_bpjs ? $maping_poli_bpjs['nm_poli_bpjs'] : '';
 
-        if (!$maping_dokter_dpjpvclaim || !$maping_poli_bpjs || !$jadwaldokter) {
-            throw new \Exception("Data mapping dokter/poli atau jadwal tidak lengkap.");
+        // Fallback dari bridging_sep jika mapping belum ada
+        if (empty($kd_dokter_bpjs) || empty($kd_poli_bpjs)) {
+            $sep = $this->db('bridging_sep')->where('no_rawat', $no_rawat_db)->oneArray();
+            if ($sep) {
+                if (empty($kd_dokter_bpjs)) {
+                    $kd_dokter_bpjs = !empty($sep['kddpjppelayanan']) ? $sep['kddpjppelayanan'] : (!empty($sep['kddpjp']) ? $sep['kddpjp'] : '');
+                    $nm_dokter_bpjs = !empty($sep['nmdpjppelayanan']) ? $sep['nmdpjppelayanan'] : (!empty($sep['nmdpdjp']) ? $sep['nmdpdjp'] : '');
+                }
+                if (empty($kd_poli_bpjs)) {
+                    $kd_poli_bpjs = !empty($sep['kdpolitujuan']) ? $sep['kdpolitujuan'] : '';
+                    $nm_poli_bpjs = !empty($sep['nmpolitujuan']) ? $sep['nmpolitujuan'] : '';
+                }
+            }
         }
 
-        $no_urut_reg = substr($reg_periksa['no_reg'], 0, 3);
-        $minutes = $no_urut_reg * 10;
-        $cek_kuota['jam_mulai'] = date('H:i:s',strtotime('+'.$minutes.' minutes',strtotime($jadwaldokter['jam_mulai'])));
+        if (empty($kd_dokter_bpjs) || empty($kd_poli_bpjs)) {
+            throw new \Exception("Data mapping dokter BPJS atau poli BPJS belum lengkap untuk dokter: " . $reg_periksa['kd_dokter'] . " / poli: " . $reg_periksa['kd_poli']);
+        }
 
-        $kodebooking = $this->settings->get('settings.ppk_bpjs').''.convertNorawat($reg_periksa['no_rawat']).''.$maping_poli_bpjs['kd_poli_bpjs'].''.$reg_periksa['no_reg'];
+        $jadwaldokter = $this->db('jadwal')->where('kd_dokter', $reg_periksa['kd_dokter'])->where('kd_poli', $reg_periksa['kd_poli'])->where('hari_kerja', $hari)->oneArray();
+        if (!$jadwaldokter) {
+            $jadwaldokter = $this->db('jadwal')->where('kd_dokter', $reg_periksa['kd_dokter'])->where('kd_poli', $reg_periksa['kd_poli'])->oneArray();
+        }
 
-        $nomorreferensi = $nomor_rujukan;
+        $jam_mulai = ($jadwaldokter && !empty($jadwaldokter['jam_mulai'])) ? $jadwaldokter['jam_mulai'] : '08:00:00';
+        $jam_selesai = ($jadwaldokter && !empty($jadwaldokter['jam_selesai'])) ? $jadwaldokter['jam_selesai'] : '14:00:00';
+        $kuota = ($jadwaldokter && !empty($jadwaldokter['kuota'])) ? intval($jadwaldokter['kuota']) : 30;
+
+        $no_reg_int = intval(ltrim($reg_periksa['no_reg'], '0'));
+        if ($no_reg_int <= 0) $no_reg_int = 1;
+        $minutes = ($no_reg_int - 1) * 10;
+        $jam_est = date('H:i:s', strtotime('+' . $minutes . ' minutes', strtotime($jam_mulai)));
+
+        $ppk_bpjs = $this->settings->get('settings.ppk_bpjs');
+        $kodebooking = $ppk_bpjs . convertNorawat($reg_periksa['no_rawat']) . $kd_poli_bpjs . $reg_periksa['no_reg'];
+
+        $nomorkartu = $this->core->getPasienInfo('no_peserta', $no_rkm_medis);
+        $nik = $this->core->getPasienInfo('no_ktp', $no_rkm_medis);
+        $nohp = $this->core->getPasienInfo('no_tlp', $no_rkm_medis);
+        if (empty($nohp)) {
+            $nohp = '0000000000';
+        }
+
+        $sisa_kuota = max(0, $kuota - $no_reg_int);
 
         $data = [
             'kodebooking' => $kodebooking,
             'jenispasien' => 'JKN',
-            'nomorkartu' => $this->core->getPasienInfo('no_peserta', $no_rkm_medis),
-            'nik' => $this->core->getPasienInfo('no_ktp', $no_rkm_medis),
-            'nohp' => $this->core->getPasienInfo('no_tlp', $no_rkm_medis),
-            'kodepoli' => $maping_poli_bpjs['kd_poli_bpjs'],
-            'namapoli' => $maping_poli_bpjs['nm_poli_bpjs'],
-            'pasienbaru' => '0',
+            'nomorkartu' => $nomorkartu,
+            'nik' => $nik,
+            'nohp' => $nohp,
+            'kodepoli' => $kd_poli_bpjs,
+            'namapoli' => $nm_poli_bpjs,
+            'pasienbaru' => ($reg_periksa['stts_daftar'] == 'Baru') ? 1 : 0,
             'norm' => $no_rkm_medis,
             'tanggalperiksa' => $date,
-            'kodedokter' => $maping_dokter_dpjpvclaim['kd_dokter_bpjs'],
-            'namadokter' => $maping_dokter_dpjpvclaim['nm_dokter_bpjs'],
-            'jampraktek' => substr($jadwaldokter['jam_mulai'],0,5).'-'.substr($jadwaldokter['jam_selesai'],0,5),
-            'jeniskunjungan' => $jenis_kunjungan,
-            'nomorreferensi' => $nomorreferensi,
-            'nomorantrean' => $maping_poli_bpjs['kd_poli_bpjs'].'-'.$reg_periksa['no_reg'],
-            'angkaantrean' => $reg_periksa['no_reg'],
-            'estimasidilayani' => strtotime($reg_periksa['tgl_registrasi'].' '.$cek_kuota['jam_mulai']) * 1000,
-            'sisakuotajkn' => $jadwaldokter['kuota']-ltrim($reg_periksa['no_reg'],'0'),
-            'kuotajkn' => intval($jadwaldokter['kuota']),
-            'sisakuotanonjkn' => $jadwaldokter['kuota']-ltrim($reg_periksa['no_reg'],'0'),
-            'kuotanonjkn' => intval($jadwaldokter['kuota']),
+            'kodedokter' => intval($kd_dokter_bpjs),
+            'namadokter' => $nm_dokter_bpjs,
+            'jampraktek' => substr($jam_mulai, 0, 5) . '-' . substr($jam_selesai, 0, 5),
+            'jeniskunjungan' => intval($jenis_kunjungan),
+            'nomorreferensi' => $nomor_rujukan,
+            'nomorantrean' => $kd_poli_bpjs . '-' . $reg_periksa['no_reg'],
+            'angkaantrean' => $no_reg_int,
+            'estimasidilayani' => strtotime($reg_periksa['tgl_registrasi'] . ' ' . $jam_est) * 1000,
+            'sisakuotajkn' => $sisa_kuota,
+            'kuotajkn' => $kuota,
+            'sisakuotanonjkn' => $sisa_kuota,
+            'kuotanonjkn' => $kuota,
             'keterangan' => 'Peserta harap 30 menit lebih awal guna pencatatan administrasi.'
         ];
         $request = json_encode($data, JSON_PRETTY_PRINT);
-        $data = json_encode($data);
 
         $tStamp = strval(time());
-        $key = $this->settings->get('jkn_mobile.BpjsConsID') . $this->settings->get('jkn_mobile.BpjsSecretKey') . $tStamp;
+        $consid = $this->settings->get('jkn_mobile.BpjsConsID');
+        $secretkey = $this->settings->get('jkn_mobile.BpjsSecretKey');
+        $user_key = $this->settings->get('jkn_mobile.BpjsUserKey');
+        $antrianUrl = $this->settings->get('jkn_mobile.BpjsAntrianUrl');
+        $url = $antrianUrl . 'antrean/add';
 
-        $url = $this->settings->get('jkn_mobile.BpjsAntrianUrl').'antrean/add';
-        $output = BpjsService::post($url, $data, $this->settings->get('jkn_mobile.BpjsConsID'), $this->settings->get('jkn_mobile.BpjsSecretKey'), $this->settings->get('jkn_mobile.BpjsUserKey'), NULL);
-        $data = json_decode($output, true);
-        $response = json_encode($data, JSON_PRETTY_PRINT);
+        // Kirim antrean dengan cURL Content-Type: application/json
+        $signature = base64_encode(hash_hmac('sha256', $consid . "&" . $tStamp, $secretkey, true));
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'X-cons-id: ' . $consid,
+            'X-timestamp: ' . $tStamp,
+            'X-signature: ' . $signature,
+            'user_key: ' . $user_key,
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $output = curl_exec($ch);
+        curl_close($ch);
+
+        $resJson = json_decode($output, true);
+        $response = json_encode($resJson, JSON_PRETTY_PRINT);
         
-        if(isset($data['metadata']['code']) && ($data['metadata']['code'] == 200 || $data['metadata']['code'] == 208)) {
+        $code = isset($resJson['metadata']['code']) ? $resJson['metadata']['code'] : (isset($resJson['metaData']['code']) ? $resJson['metaData']['code'] : null);
+        $message = isset($resJson['metadata']['message']) ? $resJson['metadata']['message'] : (isset($resJson['metaData']['message']) ? $resJson['metaData']['message'] : 'Tidak ada respon dari server BPJS');
+
+        if ($code == 200 || $code == 208) {
           $this->db('mlite_antrian_referensi')->save([
               'tanggal_periksa' => $date,
               'no_rkm_medis' => $no_rkm_medis,
-              'nomor_kartu' => $this->core->getPasienInfo('no_peserta', $no_rkm_medis),
-              'nomor_referensi' => $nomorreferensi,
+              'nomor_kartu' => $nomorkartu,
+              'nomor_referensi' => $nomor_rujukan,
               'kodebooking' => $kodebooking,
               'jenis_kunjungan' => $jenis_kunjungan,
               'status_kirim' => 'Sudah',
-              'keterangan' => $data['metadata']['code'].': '.$data['metadata']['message']
+              'keterangan' => $code . ': ' . $message
           ]);
-          $status = 'Antrian telah dikirim';
-        } else if ($data == null) {
-          // Log null response but consider as sent? Maybe should be 'Gagal'
-          $this->db('mlite_antrian_referensi')->save([
-            'tanggal_periksa' => $date,
-            'no_rkm_medis' => $no_rkm_medis,
-            'nomor_kartu' => $this->core->getPasienInfo('no_peserta', $no_rkm_medis),
-            'nomor_referensi' => $nomorreferensi,
-            'kodebooking' => $kodebooking,
-            'jenis_kunjungan' => $jenis_kunjungan,
-            'status_kirim' => 'Sudah',
-            'keterangan' => 'Response null'
-          ]);
-          $status = 'Antrian telah dikirim (Response Null)';
+          $status = ($code == 200) ? 'Antrean telah berhasil dikirim ke server BPJS Antrean Online.' : 'Antrean sudah terdaftar sebelumnya di BPJS (' . $code . ': ' . $message . ').';
         } else {
-          $status = 'Gagal kirim antrian: ' . (isset($data['metadata']['message']) ? $data['metadata']['message'] : 'Unknown error');
+          // Jika respon BPJS bukan 200/208 (misal code 201 "API Versi 2"), cek apakah antrean pasien sebetulnya sudah ada di BPJS
+          $foundBpjs = null;
+          try {
+            $urlCheck = $antrianUrl . 'antrean/pendaftaran/tanggal/' . $date;
+            $checkOutput = BpjsService::get($urlCheck, [], $consid, $secretkey, $user_key, $tStamp);
+            $checkJson = json_decode($checkOutput, true);
+            if (!empty($checkJson['response'])) {
+                $key = $consid . $secretkey . $tStamp;
+                $decrypt = stringDecrypt($key, $checkJson['response']);
+                $decomp = \LZCompressor\LZString::decompressFromEncodedURIComponent($decrypt);
+                $pendaftaranList = json_decode($decomp, true);
+                if (is_array($pendaftaranList)) {
+                    foreach ($pendaftaranList as $item) {
+                        if ((!empty($item['norekammedis']) && $item['norekammedis'] === $no_rkm_medis) ||
+                            (!empty($item['nokapst']) && $item['nokapst'] === $nomorkartu) ||
+                            (!empty($item['nik']) && $item['nik'] === $nik)) {
+                            $foundBpjs = $item;
+                            break;
+                        }
+                    }
+                }
+            }
+          } catch (\Throwable $errCheck) {}
+
+          if ($foundBpjs) {
+            $existingBooking = $foundBpjs['kodebooking'];
+            $existingNoAntrean = $foundBpjs['noantrean'];
+            $sumber = !empty($foundBpjs['sumberdata']) ? $foundBpjs['sumberdata'] : 'BPJS';
+            $this->db('mlite_antrian_referensi')->save([
+                'tanggal_periksa' => $date,
+                'no_rkm_medis' => $no_rkm_medis,
+                'nomor_kartu' => $nomorkartu,
+                'nomor_referensi' => !empty($foundBpjs['nomorreferensi']) ? $foundBpjs['nomorreferensi'] : $nomor_rujukan,
+                'kodebooking' => $existingBooking,
+                'jenis_kunjungan' => !empty($foundBpjs['jeniskunjungan']) ? $foundBpjs['jeniskunjungan'] : $jenis_kunjungan,
+                'status_kirim' => 'Sudah',
+                'keterangan' => 'Sudah terdaftar di BPJS (Sumber: ' . $sumber . ')'
+            ]);
+            $status = 'Antrean pasien SUDAH TERDAFTAR di server BPJS (Kode Booking: ' . $existingBooking . ', No Antrean: ' . $existingNoAntrean . ', Sumber: ' . $sumber . '). Data telah otomatis disinkronkan ke SIMRS!';
+          } else {
+            $status = 'Gagal kirim antrian ke server BPJS: ' . $message . ' (Kode: ' . $code . ')';
+          }
         }
 
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         $status = 'Error: ' . $e->getMessage();
         $request = isset($request) ? $request : '';
         $response = isset($response) ? $response : json_encode(['error' => $e->getMessage()]);

@@ -715,27 +715,53 @@
   $("#form_sep").on("click",".add_antrian", function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
-    var no_rkm_medis = $('input:text[name=no_rkm_medis]').val();
-    var no_rujukan = $('input:text[name=sep_nomor_rujukan]').val();
-    var no_skpd = $('input:text[name=sep_nomor_skdp]').val();
-    var find_no_rawat = $('input:text[name=sep_no_rawat]').val();
+    var no_rkm_medis = ($('input:text[name=no_rkm_medis]').val() || '').trim();
+    var no_rujukan = ($('input:text[name=sep_nomor_rujukan]').val() || '').trim();
+    var no_skpd = ($('input:text[name=sep_nomor_skdp]').val() || '').trim();
+    var find_no_rawat = ($('input:text[name=sep_no_rawat]').val() || '').trim();
     var no_rawat = find_no_rawat.replace(/\//g,'');
     var jenis_kunjungan = $(this).attr("data-jenis_kunjungan");
+    
+    // Tentukan nomor referensi berdasarkan jenis kunjungan:
+    // 1 = Rujukan FKTP (pakai no_rujukan)
+    // 2 = Rujukan Internal (bisa pakai no_skpd / no_rujukan jika ada)
+    // 3 = Kontrol (wajib no_skpd / Surat Kontrol)
+    // 4 = Rujukan Antar RS (pakai no_rujukan)
     var nomor_rujukan = '';
     if (jenis_kunjungan == '1') {
-      nomor_rujukan = no_rujukan
-    } else {
-      nomor_rujukan = no_skpd
+      nomor_rujukan = no_rujukan;
+    } else if (jenis_kunjungan == '2') {
+      nomor_rujukan = no_skpd ? no_skpd : no_rujukan;
+    } else if (jenis_kunjungan == '3') {
+      nomor_rujukan = no_skpd;
+    } else if (jenis_kunjungan == '4') {
+      nomor_rujukan = no_rujukan ? no_rujukan : no_skpd;
     }
 
-    var loadURL =  baseURL + '/vclaim/addantrian/' + no_rkm_medis + '/' + no_rawat + '/' + nomor_rujukan + '/' + jenis_kunjungan + '?t=' + mlite.token;
-    // alert(loadURL);
+    if (!nomor_rujukan || nomor_rujukan === '') {
+      if (jenis_kunjungan == '3') {
+        alert('Nomor Surat Kontrol (SKDP) belum terisi!\n\nSilakan klik tombol "Kontrol" untuk membuat atau memilih Surat Kontrol terlebih dahulu sebelum mengirim antrean Kontrol.');
+        return false;
+      } else if (jenis_kunjungan == '1') {
+        alert('Nomor Rujukan FKTP belum terisi!\n\nSilakan isi Nomor Rujukan terlebih dahulu.');
+        return false;
+      } else if (jenis_kunjungan == '4') {
+        alert('Nomor Rujukan Antar RS belum terisi!\n\nSilakan isi Nomor Rujukan terlebih dahulu.');
+        return false;
+      } else {
+        alert('Nomor Rujukan atau Surat Kontrol internal belum terisi untuk kunjungan ini!');
+        return false;
+      }
+    }
+
+    var loadURL = baseURL + '/vclaim/addantrian/' + encodeURIComponent(no_rkm_medis) + '/' + encodeURIComponent(no_rawat) + '/' + encodeURIComponent(nomor_rujukan) + '/' + encodeURIComponent(jenis_kunjungan) + '?t=' + mlite.token;
 
     var modal = $('#add_antrianModal');
     var modalContent = $('#add_antrianModal .modal-content');
 
     modal.off('show.bs.modal');
     modal.on('show.bs.modal', function () {
+        modalContent.empty().html('<div class="modal-body text-center" style="padding: 40px;"><i class="fa fa-spinner fa-spin fa-2x"></i><br><br>Sedang memproses antrean BPJS...</div>');
         modalContent.load(loadURL);
     }).modal();
     return false;
