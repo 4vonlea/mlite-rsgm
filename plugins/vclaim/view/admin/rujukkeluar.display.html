@@ -1,26 +1,44 @@
-  <table class="table">
+<div class="table-responsive">
+  <table class="table table-striped table-bordered table-hover">
     <thead>
-      <tr>
-        <th>No Rawat</th>
-        <th>No SEP</th>
-        <th>No Surat</th>
-        <th>Tgl. Surat</th>
-        <th>Tgl. Periksa</th>
-        <th>Dokter</th>
-        <th>Poli</th>
+      <tr class="info">
+        <th style="text-align:center;">No. Rujukan</th>
+        <th style="text-align:center;">No. SEP</th>
+        <th style="text-align:center;">Tgl. Rujuk</th>
+        <th style="text-align:center;">Tgl. Rencana</th>
+        <th style="text-align:center;">PPK Tujuan</th>
+        <th style="text-align:center;">Poli</th>
+        <th style="text-align:center;">Diagnosa</th>
+        <th style="text-align:center;">Tipe</th>
+        <th style="text-align:center; min-width:140px;">Aksi</th>
       </tr>
     </thead>
     <tbody>
+      {if: !empty($rujuk_keluar)}
       {loop: $rujuk_keluar}
       <tr>
-        <td>{?=isset_or($value.no_rawat)?}</td>
-        <td id="ubah_kontrol" data-no_surat="{?=isset_or($value.no_surat)?}" data-no_sep="{?=isset_or($value.no_sep)?}" data-kd_poli="{?=isset_or($value.kd_poli_bpjs)?}" data-kd_dokter="{?=isset_or($value.kd_dokter_bpjs)?}" data-tanggal_kontrol="{?=isset_or($value.tgl_rencana)?}" data-tanggal_surat="{?=isset_or($value.tgl_surat)?}">{?=isset_or($value.no_sep)?}</td>
-        <td class="pilih_nosurat" data-no_surat="{?=isset_or($value.no_surat)?}">{?=isset_or($value.no_surat)?}</td>
-        <td>{?=isset_or($value.tgl_surat)?}</td>
-        <td>{?=isset_or($value.tgl_rencana)?}</td>
-        <td>{?=isset_or($value.nm_dokter_bpjs)?}</td>
-        <td>{?=isset_or($value.nm_poli_bpjs)?}</td>
+        <td style="font-weight:bold; color:#1e88e5;">{?=isset_or($value.no_rujukan)?}</td>
+        <td>{?=isset_or($value.no_sep)?}</td>
+        <td style="text-align:center;">{?=isset_or($value.tglRujukan)?}</td>
+        <td style="text-align:center;">{?=isset_or($value.tglRencanaKunjungan)?}</td>
+        <td>{?=isset_or($value.nm_ppkDirujuk)?} <small class="text-muted">({?=isset_or($value.ppkDirujuk)?})</small></td>
+        <td>{?=isset_or($value.nama_poliRujukan)?}</td>
+        <td>{?=isset_or($value.diagRujukan)?} - {?=isset_or($value.nama_diagRujukan)?}</td>
+        <td style="text-align:center;"><span class="label label-primary">{?=isset_or($value.tipeRujukan)?}</span></td>
+        <td style="text-align:center;">
+          <a href="{?=url([ADMIN,'vclaim','cetakrujukankeluar', $value.no_rujukan])?}?t={?=$_SESSION['token']?}" target="_blank" class="btn btn-xs btn-success" title="Cetak Rujukan"><i class="fa fa-print"></i> Cetak</a>
+          <button type="button" class="btn btn-xs btn-danger btn-hapus-rujukan" data-norujukan="{?=isset_or($value.no_rujukan)?}" data-nosep="{?=isset_or($value.no_sep)?}" title="Hapus Rujukan"><i class="fa fa-trash"></i> Hapus</button>
+        </td>
       </tr>
       {/loop}
+      {else}
+      <tr>
+        <td colspan="9" class="text-center text-muted" style="padding: 20px;">
+          <i class="fa fa-info-circle fa-2x"></i><br>
+          Belum ada riwayat Rujukan Keluar untuk pasien ini.
+        </td>
+      </tr>
+      {/if}
     </tbody>
   </table>
+</div>

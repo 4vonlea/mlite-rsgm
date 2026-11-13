@@ -1,26 +1,53 @@
-  <table class="table">
+<div class="table-responsive">
+  <table class="table table-striped table-bordered table-hover">
     <thead>
-      <tr>
-        <th>No Rawat</th>
-        <th>No SEP</th>
-        <th>No Surat</th>
-        <th>Nama Program</th>
-        <th>Dokter</th>
-        <th>Keterangan</th>
-        <th>Saran</th>
+      <tr class="info">
+        <th style="text-align:center;">No. SRB</th>
+        <th style="text-align:center;">No. SEP</th>
+        <th style="text-align:center;">Tgl. SRB</th>
+        <th style="text-align:center;">Program PRB</th>
+        <th style="text-align:center;">Dokter DPJP</th>
+        <th style="text-align:center;">Obat PRB</th>
+        <th style="text-align:center;">Keterangan & Saran</th>
+        <th style="text-align:center; min-width:140px;">Aksi</th>
       </tr>
     </thead>
     <tbody>
+      {if: !empty($rujuk_keluar)}
       {loop: $rujuk_keluar}
       <tr>
-        <td>{?=isset_or($value.no_rawat)?}</td>
+        <td style="font-weight:bold; color:#1e88e5;">{?=isset_or($value.no_srb)?}</td>
         <td>{?=isset_or($value.no_sep)?}</td>
-        <td class="pilih_nosurat" data-no_surat="{?=isset_or($value.no_sep)?}">{?=isset_or($value.no_srb)?}</td>
-        <td>{?=isset_or($value.namaprogram)?}</td>
+        <td style="text-align:center;">{?=isset_or($value.tgl_srb)?}</td>
+        <td><b>{?=isset_or($value.namaprogram)?}</b> <small class="text-muted">({?=isset_or($value.kodeprogram)?})</small></td>
         <td>{?=isset_or($value.nmdpjp)?}</td>
-        <td>{?=isset_or($value.keterangan)?}</td>
-        <td>{?=isset_or($value.saran)?}</td>
+        <td>
+          {if: !empty($value.daftar_obat)}
+            <small>{?=isset_or($value.daftar_obat)?}</small>
+          {else}
+            <span class="text-muted">-</span>
+          {/if}
+        </td>
+        <td>
+          <small>
+            <b>Ket:</b> {?=isset_or($value.keterangan)?}<br>
+            <b>Saran:</b> {?=isset_or($value.saran)?}
+          </small>
+        </td>
+        <td style="text-align:center;">
+          <a href="{?=url([ADMIN,'vclaim','cetaksrb', $value.no_sep])?}?t={?=$_SESSION['token']?}" target="_blank" class="btn btn-xs btn-success" title="Cetak SRB"><i class="fa fa-print"></i> Cetak</a>
+          <button type="button" class="btn btn-xs btn-danger btn-hapus-srb" data-nosrb="{?=isset_or($value.no_srb)?}" data-nosep="{?=isset_or($value.no_sep)?}" title="Hapus SRB"><i class="fa fa-trash"></i> Hapus</button>
+        </td>
       </tr>
       {/loop}
+      {else}
+      <tr>
+        <td colspan="8" class="text-center text-muted" style="padding: 20px;">
+          <i class="fa fa-info-circle fa-2x"></i><br>
+          Belum ada data Program PRB / Surat Rujuk Balik tersimpan untuk pasien ini.
+        </td>
+      </tr>
+      {/if}
     </tbody>
   </table>
+</div>

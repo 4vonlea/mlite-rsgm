@@ -826,7 +826,13 @@
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var no_peserta = $('input:text[name=sep_no_kartu]').val();
-    var loadURL =  baseURL + '/vclaim/rujukkeluar/' + no_peserta + '?t=' + mlite.token;
+    var find_no_rawat = $('input:text[name=sep_no_rawat]').val();
+    var no_rawat = find_no_rawat ? find_no_rawat.replace(/\//g,'') : '';
+    if (!no_peserta) {
+      alert('Nomor Kartu BPJS atau Pasien belum dipilih!');
+      return false;
+    }
+    var loadURL = baseURL + '/vclaim/rujukkeluar/' + encodeURIComponent(no_peserta) + (no_rawat ? '/' + encodeURIComponent(no_rawat) : '') + '?t=' + mlite.token;
 
     var modal = $('#rujukkeluarModal');
     var modalContent = $('#rujukkeluarModal .modal-content');
@@ -843,8 +849,12 @@
     event.preventDefault();
     var no_peserta = $('input:text[name=sep_no_kartu]').val();
     var find_no_rawat = $('input:text[name=sep_no_rawat]').val();
-    var no_rawat = find_no_rawat.replace(/\//g,'');
-    var loadURL =  baseURL + '/vclaim/srb/' + no_peserta + '/'+no_rawat+'?t=' + mlite.token;
+    var no_rawat = find_no_rawat ? find_no_rawat.replace(/\//g,'') : '';
+    if (!no_peserta) {
+      alert('Nomor Kartu BPJS atau Pasien belum dipilih!');
+      return false;
+    }
+    var loadURL = baseURL + '/vclaim/srb/' + encodeURIComponent(no_peserta) + (no_rawat ? '/' + encodeURIComponent(no_rawat) : '') + '?t=' + mlite.token;
 
     var modal = $('#prbModal');
     var modalContent = $('#prbModal .modal-content');

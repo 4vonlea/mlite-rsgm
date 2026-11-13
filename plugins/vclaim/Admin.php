@@ -4091,15 +4091,23 @@ class Admin extends AdminModule
     exit();
   }
 
-  public function getRujukKeluar($no_kartu)
+  public function getRujukKeluar($no_kartu, $no_rawat = null)
   {
     $this->_addHeaderFiles();
-    $rujuk_keluar = $this->db('bridging_rujukan_bpjs')
-      ->join('bridging_sep', 'bridging_sep.no_sep=bridging_rujukan_bpjs.no_sep')
-      ->where('bridging_sep.no_kartu', $no_kartu)
-      ->toArray();
-    $this->tpl->set('rujuk_keluar', $this->tpl->noParse_array(htmlspecialchars_array($rujuk_keluar)));
+    $sep = null;
+    if ($no_rawat) {
+      $sep = $this->db('bridging_sep')->where('no_rawat', revertNorawat($no_rawat))->oneArray();
+    }
+    if (!$sep && $no_kartu) {
+      $sep = $this->db('bridging_sep')->where('no_kartu', $no_kartu)->desc('tglsep')->oneArray();
+    }
+
     $this->tpl->set('no_kartu', $no_kartu);
+    $this->tpl->set('no_rawat', $no_rawat ? revertNorawat($no_rawat) : ($sep['no_rawat'] ?? ''));
+    $this->tpl->set('no_sep', $sep['no_sep'] ?? '');
+    $this->tpl->set('diag_awal', $sep['diagawal'] ?? '');
+    $this->tpl->set('nm_diag_awal', $sep['nmdiagnosaawal'] ?? '');
+    $this->tpl->set('jns_pelayanan', $sep['jnspelayanan'] ?? '2');
     echo $this->draw('rujukkeluar.html');
     exit();
   }
@@ -4109,7 +4117,13 @@ class Admin extends AdminModule
     $rujuk_keluar = $this->db('bridging_rujukan_bpjs')
       ->join('bridging_sep', 'bridging_sep.no_sep=bridging_rujukan_bpjs.no_sep')
       ->where('bridging_sep.no_kartu', $no_kartu)
+      ->desc('bridging_rujukan_bpjs.tglRujukan')
       ->toArray();
+    if (empty($rujuk_keluar)) {
+      $rujuk_keluar = $this->db('bridging_rujukan_bpjs')
+        ->desc('tglRujukan')
+        ->toArray();
+    }
     $this->tpl->set('rujuk_keluar', $this->tpl->noParse_array(htmlspecialchars_array($rujuk_keluar)));
     $this->tpl->set('no_kartu', $no_kartu);
     echo $this->draw('rujukkeluar.display.html');
@@ -4120,7 +4134,7 @@ class Admin extends AdminModule
   {
     $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
-    $_POST['sep_user']  = $this->core->getUserInfo('fullname', null, true);
+    $_POST['sep_user'] = $this->core->getUserInfo('fullname', null, true);
     $data = [
       'request' => [
         't_rujukan' => [
@@ -4137,64 +4151,123 @@ class Admin extends AdminModule
         ]
       ]
     ];
-    $method = 'post';
-
 
     $data = json_encode($data);
-
     $url = $this->api_url . 'Rujukan/2.0/insert';
-    $output = BpjsService::$method($url, $data, $this->consid, $this->secretkey, $this->user_key, $tStamp);
-    $data = json_decode($output, true);
-    // echo $data;
-    //echo $data['metaData']['message'];
-    if ($data == NULL) {
+    $output = BpjsService::post($url, $data, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+    $res = json_decode($output, true);
+
+    if ($res == NULL) {
       echo 'Koneksi ke server BPJS terputus. Silahkan ulangi beberapa saat lagi!';
-    } else if ($data['metaData']['code'] == 200) {
-      $stringDecrypt = stringDecrypt($key, $data['response']);
+    } else if (isset($res['metaData']['code']) && ($res['metaData']['code'] == 200 || $res['metaData']['code'] == '200')) {
+      $stringDecrypt = stringDecrypt($key, $res['response']);
       $decompress = '""';
-      $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
+      if (!empty($stringDecrypt)) {
+        $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
+      }
       $spri = json_decode($decompress, true);
-      // echo $spri['rujukan']['noRujukan'];
+      $no_rujukan = $spri['rujukan']['noRujukan'] ?? '';
 
       $bridging_surat_pri_bpjs = $this->db('bridging_rujukan_bpjs')->save([
         'no_sep' => $_POST['no_sep'],
         'tglRujukan' => $_POST['tanggal_surat'],
-        'no_rujukan' => $spri['rujukan']['noRujukan'],
+        'no_rujukan' => $no_rujukan,
         'tglRencanaKunjungan' => $_POST['tanggal_periksa'],
         'ppkDirujuk' => $_POST['sep_asal_rujukan_kode_rujuk'],
         'nm_ppkDirujuk' => $_POST['sep_asal_rujukan_nama_rujuk'],
         'jnsPelayanan' => $_POST['jns_rujuk'],
         'diagRujukan' => $_POST['sep_diagnosa_kode_rujuk'],
         'nama_diagRujukan' => $_POST['sep_diagnosa_nama_rujuk'],
-        'tipeRujukan' => $_POST['tanggal_periksa'],
+        'tipeRujukan' => $_POST['tipe_rujuk'],
         'poliRujukan' => $_POST['sep_spesialis_kode_rujuk'],
         'nama_poliRujukan' => $_POST['sep_spesialis_nama_rujuk'],
         'user' => $_POST['sep_user'],
         'catatan' => $_POST['catatan'],
       ]);
-      if ($bridging_surat_pri_bpjs) {
-        echo 'Sukses Simpan';
-      }
+      echo 'Sukses: Rujukan Keluar berhasil disimpan dengan No. ' . $no_rujukan;
     } else {
-      echo htmlspecialchars($data['metaData']['code'] . ' ' . $data['metaData']['message'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      $code = $res['metaData']['code'] ?? 'Error';
+      $message = $res['metaData']['message'] ?? 'Gagal menyimpan rujukan ke BPJS';
+      echo htmlspecialchars($code . ' - ' . $message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
     exit();
   }
 
-  public function getSrb($no_kartu, $no_rawat)
+  public function postHapusRujukKeluar()
+  {
+    $tStamp = strval(time());
+    $key = $this->consid . $this->secretkey . $tStamp;
+    $user = $this->core->getUserInfo('fullname', null, true);
+    $data = [
+      'request' => [
+        't_rujukan' => [
+          'noRujukan' => $_POST['no_rujukan'],
+          'user' => $user
+        ]
+      ]
+    ];
+    $data = json_encode($data);
+    $url = $this->api_url . 'Rujukan/delete';
+    $output = BpjsService::delete($url, $data, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+    $res = json_decode($output, true);
+    if ($res != null && ($res['metaData']['code'] == 200 || $res['metaData']['code'] == '200')) {
+      $this->db('bridging_rujukan_bpjs')->where('no_rujukan', $_POST['no_rujukan'])->delete();
+      echo 'Sukses: Data Rujukan berhasil dihapus di BPJS!';
+    } else {
+      $msg = isset($res['metaData']['message']) ? $res['metaData']['code'] . ' - ' . $res['metaData']['message'] : 'Gagal menghubungi BPJS';
+      echo $msg;
+    }
+    exit();
+  }
+
+  public function getCetakRujukanKeluar($no_rujukan)
+  {
+    $settings = $this->settings('settings');
+    $this->tpl->set('settings', $this->tpl->noParse_array(htmlspecialchars_array($settings)));
+    $data_rujuk = $this->db('bridging_rujukan_bpjs')
+      ->join('bridging_sep', 'bridging_sep.no_sep=bridging_rujukan_bpjs.no_sep')
+      ->where('bridging_rujukan_bpjs.no_rujukan', $no_rujukan)
+      ->oneArray();
+    if (!$data_rujuk) {
+      $data_rujuk = $this->db('bridging_rujukan_bpjs')
+        ->where('no_rujukan', $no_rujukan)
+        ->oneArray();
+    }
+    echo $this->draw('cetak.rujukan.html', ['data_rujuk' => htmlspecialchars_array($data_rujuk ?: [])]);
+    exit();
+  }
+
+  public function getSrb($no_kartu, $no_rawat = null)
   {
     $this->_addHeaderFiles();
-    $no_rawat = revertNorawat($no_rawat);
-    $rujuk_keluar = $this->db('bridging_sep')
-      ->where('bridging_sep.no_rawat', $no_rawat)
-      ->oneArray();
-    $reg = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
-    $alamat = $this->core->getPasienInfo('alamat', $reg);
+    $no_rawat = $no_rawat ? revertNorawat($no_rawat) : '';
+    $sep = null;
+    if ($no_rawat) {
+      $sep = $this->db('bridging_sep')->where('no_rawat', $no_rawat)->oneArray();
+    }
+    if (!$sep && $no_kartu) {
+      $sep = $this->db('bridging_sep')->where('no_kartu', $no_kartu)->desc('tglsep')->oneArray();
+    }
+    $alamat = '';
+    if ($no_rawat) {
+      $reg = $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
+      if ($reg) {
+        $alamat = $this->core->getPasienInfo('alamat', $reg);
+      }
+    }
+    if (empty($alamat) && !empty($sep['nomr'])) {
+      $alamat = $this->core->getPasienInfo('alamat', $sep['nomr']);
+    }
+
+    $kddpjp = !empty($sep['kddpjplayanan']) ? $sep['kddpjplayanan'] : (!empty($sep['kddpjp']) ? $sep['kddpjp'] : '');
+    $nmdpjp = !empty($sep['nmdpjplayanan']) ? $sep['nmdpjplayanan'] : (!empty($sep['nmdpdjp']) ? $sep['nmdpdjp'] : '');
+
     $this->tpl->set('no_kartu', $no_kartu);
+    $this->tpl->set('no_rawat', $no_rawat ?: ($sep['no_rawat'] ?? ''));
     $this->tpl->set('alamat', $alamat);
-    $this->tpl->set('no_sep', isset($rujuk_keluar['no_sep']) ? $rujuk_keluar['no_sep'] : '');
-    $this->tpl->set('kddpjp', isset($rujuk_keluar['kddpjp']) ? $rujuk_keluar['kddpjp'] : '');
-    $this->tpl->set('nmdpjp', isset($rujuk_keluar['nmdpdjp']) ? $rujuk_keluar['nmdpdjp'] : '');
+    $this->tpl->set('no_sep', isset($sep['no_sep']) ? $sep['no_sep'] : '');
+    $this->tpl->set('kddpjp', $kddpjp);
+    $this->tpl->set('nmdpjp', $nmdpjp);
     echo $this->draw('srb.html');
     exit();
   }
@@ -4204,7 +4277,24 @@ class Admin extends AdminModule
     $rujuk_keluar = $this->db('bridging_srb_bpjs')
       ->join('bridging_sep', 'bridging_sep.no_sep=bridging_srb_bpjs.no_sep')
       ->where('bridging_sep.no_kartu', $no_kartu)
+      ->desc('bridging_srb_bpjs.tgl_srb')
       ->toArray();
+    if (empty($rujuk_keluar)) {
+      $rujuk_keluar = $this->db('bridging_srb_bpjs')
+        ->desc('tgl_srb')
+        ->toArray();
+    }
+
+    foreach ($rujuk_keluar as &$item) {
+      $obats = $this->db('bridging_srb_bpjs_obat')->where('no_srb', $item['no_srb'])->toArray();
+      $obat_strings = [];
+      foreach ($obats as $ob) {
+        $obat_strings[] = $ob['nm_obat'] . ' (' . $ob['signa1'] . 'x' . $ob['signa2'] . ', ' . $ob['jumlah'] . ')';
+      }
+      $item['daftar_obat'] = implode(', ', $obat_strings);
+    }
+    unset($item);
+
     $this->tpl->set('rujuk_keluar', $this->tpl->noParse_array(htmlspecialchars_array($rujuk_keluar)));
     $this->tpl->set('no_kartu', $no_kartu);
     echo $this->draw('srb.display.html');
@@ -4215,7 +4305,7 @@ class Admin extends AdminModule
   {
     $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
-    $_POST['sep_user']  = $this->core->getUserInfo('fullname', null, true);
+    $_POST['sep_user'] = $this->core->getUserInfo('fullname', null, true);
     $data = [
       'request' => [
         't_prb' => [
@@ -4227,12 +4317,12 @@ class Admin extends AdminModule
           'kodeDPJP' => $_POST['dpjp'],
           'keterangan' => $_POST['keterangan'],
           'saran' => $_POST['saran'],
-          'user' => '123123123',
+          'user' => $_POST['sep_user'],
           'obat' => [
             [
               'kdObat' => $_POST['sep_kode_obat'],
               'signa1' => $_POST['signa1'],
-              'signa2' => $_POST['signa1'],
+              'signa2' => $_POST['signa2'],
               'jmlObat' => $_POST['jumlah'],
             ],
           ]
@@ -4241,25 +4331,24 @@ class Admin extends AdminModule
     ];
     $method = 'post';
 
-
     $data = json_encode($data);
-    echo htmlspecialchars($data, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     $url = $this->api_url . 'PRB/insert';
     $output = BpjsService::$method($url, $data, $this->consid, $this->secretkey, $this->user_key, $tStamp);
-    $data = json_decode($output, true);
-    // echo $data['metaData']['message'];
-    if ($data == NULL) {
+    $res = json_decode($output, true);
+    if ($res == NULL) {
       echo 'Koneksi ke server BPJS terputus. Silahkan ulangi beberapa saat lagi!';
-    } else if ($data['metaData']['code'] == 200) {
-      $stringDecrypt = stringDecrypt($key, $data['response']);
+    } else if (isset($res['metaData']['code']) && ($res['metaData']['code'] == 200 || $res['metaData']['code'] == '200')) {
+      $stringDecrypt = stringDecrypt($key, $res['response']);
       $decompress = '""';
-      $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
+      if (!empty($stringDecrypt)) {
+        $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
+      }
       $spri = json_decode($decompress, true);
-      echo htmlspecialchars($spri['noSRB'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      $no_srb = $spri['noSRB'] ?? ($spri['rujukan']['noSRB'] ?? '');
 
       $bridging_srb_bpjs = $this->db('bridging_srb_bpjs')->save([
         'no_sep' => $_POST['no_sep'],
-        'no_srb' => $spri['noSRB'],
+        'no_srb' => $no_srb,
         'tgl_srb' => $_POST['tanggal_srb'],
         'alamat' => $_POST['alamat'],
         'email' => $_POST['email'],
@@ -4273,15 +4362,47 @@ class Admin extends AdminModule
       ]);
       $bridging_srb_bpjs_obat = $this->db('bridging_srb_bpjs_obat')->save([
         'no_sep' => $_POST['no_sep'],
-        'no_srb' => $spri['noSRB'],
+        'no_srb' => $no_srb,
         'kd_obat' => $_POST['sep_kode_obat'],
         'nm_obat' => $_POST['sep_nama_obat'],
         'jumlah' => $_POST['jumlah'],
         'signa1' => $_POST['signa1'],
         'signa2' => $_POST['signa2'],
       ]);
+      echo 'Sukses: SRB berhasil dibuat dengan No. ' . $no_srb;
     } else {
-      echo htmlspecialchars($data['metaData']['code'] . ' ' . $data['metaData']['message'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      $code = $res['metaData']['code'] ?? 'Error';
+      $message = $res['metaData']['message'] ?? 'Gagal menyimpan SRB ke BPJS';
+      echo htmlspecialchars($code . ' - ' . $message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+    exit();
+  }
+
+  public function postHapusSrb()
+  {
+    $tStamp = strval(time());
+    $key = $this->consid . $this->secretkey . $tStamp;
+    $user = $this->core->getUserInfo('fullname', null, true);
+    $data = [
+      'request' => [
+        't_prb' => [
+          'noSrb' => $_POST['no_srb'],
+          'noSep' => $_POST['no_sep'],
+          'user' => $user
+        ]
+      ]
+    ];
+    $data = json_encode($data);
+    $url = $this->api_url . 'PRB/Delete';
+    $output = BpjsService::delete($url, $data, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+    $res = json_decode($output, true);
+    if ($res != null && ($res['metaData']['code'] == 200 || $res['metaData']['code'] == '200')) {
+      $this->db('bridging_srb_bpjs_obat')->where('no_srb', $_POST['no_srb'])->delete();
+      $this->db('bridging_srb_bpjs')->where('no_srb', $_POST['no_srb'])->delete();
+      echo 'Sukses: Data PRB/SRB berhasil dihapus di BPJS!';
+    } else {
+      $msg = isset($res['metaData']['message']) ? $res['metaData']['code'] . ' - ' . $res['metaData']['message'] : 'Gagal menghubungi BPJS';
+      echo $msg;
     }
     exit();
   }
