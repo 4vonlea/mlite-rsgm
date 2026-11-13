@@ -1,3 +1,18 @@
+<style>
+@keyframes vclaimSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.vclaim-spinner {
+  display: inline-block;
+  width: 46px;
+  height: 46px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #0284c7;
+  border-radius: 50%;
+  animation: vclaimSpin 0.75s linear infinite;
+}
+</style>
 <div id="form_sep">
   <div class="col-md-3">
     <div class="panel panel-default">
@@ -8,6 +23,7 @@
               <img src="{?=url()?}/plugins/vclaim/img/default.png" alt="" style="border-radius: 50%;width:150px;">
               <h5 class="nama_peserta"></h5>
               <h5 id="no_kartu_peserta"></h5>
+              <div id="vclaim_autofetch_status" style="margin-top:6px;font-size:12px;font-weight:normal;"></div>
               <h4 style="color:red;"><span class="prolainis_peserta"></span></h4>
             </div>
           </div>
@@ -154,10 +170,23 @@
     </div>
   </div>
   <div class="col-md-9">
-    <div id="data_sep">
+    <div id="data_sep" style="position:relative;">
+      <!-- Loading Overlay BPJS VClaim -->
+      <div id="vclaim_loading_overlay" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.92);z-index:9999;border-radius:4px;min-height:450px;">
+        <div style="position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+          <div class="vclaim-spinner"></div>
+          <h4 id="vclaim_loading_title" style="margin-top:16px;color:#1e293b;font-weight:600;font-size:16px;">Menghubungkan ke BPJS VClaim...</h4>
+          <p id="vclaim_loading_subtitle" style="color:#64748b;font-size:13px;margin:0;">Sedang mengambil data peserta...</p>
+        </div>
+      </div>
       <div class="panel panel-default">
         <div class="form-horizontal">
           <div class="panel-body">
+            <!-- Alert Banner Info VClaim Rujukan / Error -->
+            <div id="vclaim_info_banner" style="display:none;margin-bottom:15px;border-radius:4px;" class="alert alert-warning alert-dismissible" role="alert">
+              <button type="button" class="close" onclick="$('#vclaim_info_banner').slideUp();" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <div id="vclaim_info_banner_content"></div>
+            </div>
             <ul class="nav nav-tabs m-b-xl" role="tablist">
                 <li role="presentation" class="active"><a href="#satu" aria-controls="satu" role="tab" data-toggle="tab">Informasi Rujukan</a></li>
                 <li role="presentation"><a href="#dua" aria-controls="dua" role="tab" data-toggle="tab">Informasi Tambahan</a></li>
@@ -717,17 +746,24 @@
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var no_peserta = $('input:text[name=sep_no_kartu]').val();
+    if (!no_peserta || no_peserta.trim() === '') {
+      alert('Nomor kartu BPJS pasien masih kosong! Pastikan nomor kartu terisi terlebih dahulu.');
+      return false;
+    }
     var find_no_rawat = $('input:text[name=sep_no_rawat]').val();
-    var no_rawat = find_no_rawat.replace(/\//g,'');
-    var loadURL =  baseURL + '/vclaim/spri/' + no_peserta + '/' + no_rawat + '?t=' + mlite.token;
+    var no_rawat = find_no_rawat ? find_no_rawat.replace(/\//g,'').trim() : '';
+    var loadURL =  baseURL + '/vclaim/spri/' + encodeURIComponent(no_peserta.trim()) + '/' + encodeURIComponent(no_rawat) + '?t=' + mlite.token;
 
     var modal = $('#spriModal');
     var modalContent = $('#spriModal .modal-content');
 
-    modal.off('show.bs.modal');
-    modal.on('show.bs.modal', function () {
-        modalContent.load(loadURL);
-    }).modal();
+    modalContent.html('<div class="modal-body text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">Memuat data SPRI...</p></div>');
+    modal.modal('show');
+    modalContent.load(loadURL, function(response, status, xhr) {
+      if (status == "error") {
+        modalContent.html('<div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Gagal Memuat SPRI</h4></div><div class="modal-body"><div class="alert alert-danger">Gagal memuat SPRI: ' + xhr.status + ' ' + xhr.statusText + '</div></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button></div>');
+      }
+    });
     return false;
   });
 </script>
@@ -736,15 +772,26 @@
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
     var no_peserta = $('input:text[name=sep_no_kartu]').val();
-    var loadURL =  baseURL + '/vclaim/kontrol/' + no_peserta + '?t=' + mlite.token;
+    if (!no_peserta || no_peserta.trim() === '') {
+      alert('Nomor kartu BPJS pasien masih kosong! Pastikan nomor kartu terisi terlebih dahulu.');
+      return false;
+    }
+    var find_no_rawat = $('input:text[name=sep_no_rawat]').val();
+    var no_rawat = find_no_rawat ? find_no_rawat.replace(/\//g,'').trim() : '';
+    var no_sep = $('input:text[name=no_sep]').val() || $('input:text[name=sep_nomor_rujukan]').val() || '';
+
+    var loadURL =  baseURL + '/vclaim/kontrol/' + encodeURIComponent(no_peserta.trim()) + '?no_rawat=' + encodeURIComponent(no_rawat) + '&no_sep=' + encodeURIComponent(no_sep.trim()) + '&t=' + mlite.token;
 
     var modal = $('#kontrolModal');
     var modalContent = $('#kontrolModal .modal-content');
 
-    modal.off('show.bs.modal');
-    modal.on('show.bs.modal', function () {
-        modalContent.load(loadURL);
-    }).modal();
+    modalContent.html('<div class="modal-body text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">Memuat data Kontrol...</p></div>');
+    modal.modal('show');
+    modalContent.load(loadURL, function(response, status, xhr) {
+      if (status == "error") {
+        modalContent.html('<div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Gagal Memuat Kontrol</h4></div><div class="modal-body"><div class="alert alert-danger">Gagal memuat data Kontrol: ' + xhr.status + ' ' + xhr.statusText + '</div></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button></div>');
+      }
+    });
     return false;
   });
 </script>
@@ -793,6 +840,15 @@
 </script>
 <script type="text/javascript">
   $("#form_sep").on("click","#selesai", function(event){
+    if (window.currentVclaimXHR && typeof window.currentVclaimXHR.abort === 'function') {
+      try { window.currentVclaimXHR.abort(); } catch(e) {}
+    }
+    if (typeof window.resetFormSep === 'function') {
+      window.resetFormSep();
+    }
+    if (typeof window.hideVclaimLoading === 'function') {
+      window.hideVclaimLoading();
+    }
     bersih();
     $("#form_rincian").hide();
     $("#form_soap").hide();
@@ -1086,6 +1142,341 @@ async function openFrista(noka) {
   });
 </script>
 <script type="text/javascript">
+  window.showVclaimLoading = function(title, subtitle) {
+    if (title) $('#vclaim_loading_title').text(title);
+    if (subtitle) $('#vclaim_loading_subtitle').text(subtitle);
+    $('#vclaim_loading_overlay').fadeIn(150);
+  };
+
+  window.hideVclaimLoading = function() {
+    $('#vclaim_loading_overlay').fadeOut(200);
+  };
+
+  window.resetFormSep = function() {
+    if (typeof window.hideVclaimLoading === 'function') {
+      window.hideVclaimLoading();
+    }
+    // Clear patient profile
+    $('.nama_peserta').text('');
+    $('#no_kartu_peserta').text('');
+    $('#no_mr_peserta').text('');
+    $('#nik_peserta').text('');
+    $('#prov_umum_peserta').text('');
+    $('#tgl_lahir_peserta').text('');
+    $('#status_peserta').text('');
+    $('#jenis_peserta').text('');
+    $('.prolainis_peserta').text('');
+    $('#vclaim_autofetch_status').html('').hide();
+    $('#vclaim_info_banner').hide();
+    $('#vclaim_info_banner_content').html('');
+
+    // Clear left panel inputs & containers
+    $('#no_rujukan_pcare').val('');
+    $('#no_rujukan_rs').val('');
+    $('#no_kartu_pcare').val('');
+    $('#no_kartu_rs').val('');
+    $('#nomor_asuransi').val('');
+    $('#nomor_sep_internal').val('');
+    $('#histori_pelayanan').html('').hide();
+    $('#sep_internal').html('').hide();
+
+    // Clear main form inputs
+    $('#get_no_sep').val('');
+    $('#no_sep_input').attr('hidden', true);
+    $('#sep_jenis_peserta').val('');
+    $('#sep_no_kartu').val('');
+    $('#sep_tanggal_lahir').val('');
+    $('#sep_jenis_kelamin_nama').val('');
+    $('#sep_jenis_kelamin_kode').val('');
+    $('#sep_no_rawat').val('');
+    $('#sep_norm').val('');
+    $('input:text[name=sep_norm]').val('');
+    $('#sep_eksekutif_nama').val('Tidak');
+    $('#sep_eksekutif_kode').val('0');
+    $('#sep_kunjungan_nama').val('Normal');
+    $('#sep_kunjungan_kode').val('0');
+    $('#sep_cob_nama').val('Tidak');
+    $('#sep_cob_kode').val('0');
+    $('#sep_katarak_nama').val('Tidak');
+    $('#sep_katarak_kode').val('0');
+    $('#sep_status_kecelakaan_nama').val('Tidak');
+    $('#sep_status_kecelakaan_kode').val('0');
+    $('#sep_penjamin_kecelakaan_nama').val('Tidak');
+    $('#sep_penjamin_kecelakaan_kode').val('0');
+    $('#sep_suplesi_nama').val('Tidak');
+    $('#sep_suplesi_kode').val('0');
+    $('#sep_asal_faskes_nama').val('');
+    $('#sep_asal_faskes_kode').val('');
+    $('#sep_pelayanan_nama').val('Rawat Jalan');
+    $('#sep_pelayanan_kode').val('2');
+    $('#sep_kelas_nama').val('');
+    $('#sep_kelas_kode').val('');
+    $('#sep_asal_rujukan_nama').val('');
+    $('#sep_asal_rujukan_kode').val('');
+    $('#sep_nomor_rujukan').val('');
+    $('#sep_tanggal_rujukan').val('');
+    $('#sep_spesialis_nama').val('');
+    $('#sep_spesialis_kode').val('');
+    $('#sep_dpjp_yang_melayani_nama').val('');
+    $('#sep_dpjp_yang_melayani_kode').val('');
+    $('#sep_dpjp_pelayanan_nama').val('');
+    $('#sep_dpjp_pelayanan_kode').val('');
+    $('#sep_tanggal_sep').val('{?=date("Y-m-d")?}');
+    $('#sep_nomor_skdp').val('');
+    $('#sep_tanggal_pulang').val('{?=date("Y-m-d")?}');
+    $('#sep_nomor_telepon').val('');
+    $('input:text[name=sep_nomor_telepon]').val('');
+    $('#sep_diagnosa_nama').val('');
+    $('#sep_diagnosa_kode').val('');
+    $('#sep_catatan').val('');
+
+    // Clear & hide all autocomplete dropdowns
+    $('#dokterdpjpList').html('').hide();
+    $('#dokterdpjpList2').html('').hide();
+    $('#poliList').html('').hide();
+    $('#diagnosaList').html('').hide();
+    $('#faskesList').html('').hide();
+  };
+
+  function populateRujukanData(rujukan, asalFaskes) {
+    if (!rujukan) return;
+    var asalFaskes_nama = (asalFaskes == 2) ? 'Faskes 2 (RS)' : 'Faskes 1';
+    var jenis_kelamin = (rujukan.peserta && rujukan.peserta.sex == 'P') ? 'Perempuan' : 'Laki-Laki';
+
+    if (rujukan.peserta) {
+      $('input:text[name=sep_jenis_kelamin_nama]').val(jenis_kelamin);
+      $('input:text[name=sep_jenis_kelamin_kode]').val(rujukan.peserta.sex || '');
+      $('input:text[name=sep_tanggal_lahir]').val(rujukan.peserta.tglLahir || '');
+      if (rujukan.peserta.jenisPeserta) {
+        $('input:text[name=sep_jenis_peserta]').val(rujukan.peserta.jenisPeserta.keterangan || '');
+      }
+      $('input:text[name=sep_no_kartu]').val(rujukan.peserta.noKartu || '');
+      if (rujukan.peserta.mr) {
+        $('input:text[name=sep_norm]').val(rujukan.peserta.mr.noMR || '');
+        if (rujukan.peserta.mr.noTelepon) {
+          $('input:text[name=sep_nomor_telepon]').val(rujukan.peserta.mr.noTelepon);
+        }
+      }
+      if (rujukan.peserta.hakKelas) {
+        $('input:text[name=sep_kelas_kode]').val(rujukan.peserta.hakKelas.kode || '');
+        $('input:text[name=sep_kelas_nama]').val(rujukan.peserta.hakKelas.keterangan || '');
+      }
+    }
+
+    $('input:text[name=sep_eksekutif_kode]').val("0");
+    $('input:text[name=sep_eksekutif_nama]').val("Tidak");
+    $('input:text[name=sep_kunjungan_kode]').val("0");
+    $('input:text[name=sep_kunjungan_nama]').val("Normal");
+    $('input:text[name=sep_cob_kode]').val("0");
+    $('input:text[name=sep_cob_nama]').val("Tidak");
+    $('input:text[name=sep_katarak_kode]').val("0");
+    $('input:text[name=sep_katarak_nama]').val("Tidak");
+    $('input:text[name=sep_status_kecelakaan_kode]').val("0");
+    $('input:text[name=sep_status_kecelakaan_nama]').val("Tidak");
+    $('input:text[name=sep_penjamin_kecelakaan_kode]').val("0");
+    $('input:text[name=sep_penjamin_kecelakaan_nama]').val("Tidak");
+    $('input:text[name=sep_suplesi_kode]').val("0");
+    $('input:text[name=sep_suplesi_nama]').val("Tidak");
+
+    if (rujukan.pelayanan) {
+      $('input:text[name=sep_pelayanan_kode]').val(rujukan.pelayanan.kode || '');
+      $('input:text[name=sep_pelayanan_nama]').val(rujukan.pelayanan.nama || '');
+    }
+    $('input:text[name=sep_asal_faskes_kode]').val(asalFaskes);
+    $('input:text[name=sep_asal_faskes_nama]').val(asalFaskes_nama);
+
+    if (rujukan.provPerujuk) {
+      $('input:text[name=sep_asal_rujukan_nama]').val(rujukan.provPerujuk.nama || '');
+      $('input:text[name=sep_asal_rujukan_kode]').val(rujukan.provPerujuk.kode || '');
+    }
+    $('input:text[name=sep_tanggal_rujukan]').val(rujukan.tglKunjungan || '');
+    $('input:text[name=sep_nomor_rujukan]').val(rujukan.noKunjungan || '');
+
+    if (rujukan.poliRujukan) {
+      $('input:text[name=sep_spesialis_kode]').val(rujukan.poliRujukan.kode || '');
+      $('input:text[name=sep_spesialis_nama]').val(rujukan.poliRujukan.nama || '');
+    }
+    if (rujukan.diagnosa) {
+      $('input:text[name=sep_diagnosa_kode]').val(rujukan.diagnosa.kode || '');
+      $('input:text[name=sep_diagnosa_nama]').val(rujukan.diagnosa.nama || '');
+    }
+
+    if (asalFaskes == 2) {
+      $('input:text[name=no_rujukan_rs]').val(rujukan.noKunjungan || '');
+    } else {
+      $('input:text[name=no_rujukan_pcare]').val(rujukan.noKunjungan || '');
+    }
+  }
+
+  window.showVclaimInfoBanner = function(type, title, messageHtml) {
+    var $banner = $('#vclaim_info_banner');
+    $banner.removeClass('alert-warning alert-danger alert-info alert-success')
+           .addClass('alert-' + (type || 'warning'));
+    var icon = (type === 'danger') ? 'fa-times-circle' : (type === 'success' ? 'fa-check-circle' : (type === 'info' ? 'fa-info-circle' : 'fa-exclamation-triangle'));
+    var content = '<div style="font-size:13px;line-height:1.6;">' +
+      (title ? '<div style="font-weight:700;font-size:14px;margin-bottom:6px;"><i class="fa ' + icon + '"></i> ' + title + '</div>' : '') +
+      '<div>' + messageHtml + '</div>' +
+    '</div>';
+    $('#vclaim_info_banner_content').html(content);
+    $banner.slideDown();
+  };
+
+  window.hideVclaimInfoBanner = function() {
+    $('#vclaim_info_banner').slideUp();
+    $('#vclaim_info_banner_content').html('');
+  };
+
+  window.vclaimAutoFetchRujukan = function(noKartu, noRawat, targetNmDokter, onComplete) {
+    if (!noKartu || noKartu.trim() === '') {
+      if (typeof onComplete === 'function') onComplete();
+      return;
+    }
+    var baseURL = mlite.url + '/' + mlite.admin;
+    var $status = $('#vclaim_autofetch_status');
+    $status.html('<span class="text-primary"><i class="fa fa-spinner fa-spin"></i> Mencari rujukan aktif BPJS...</span>').show();
+    if (typeof window.hideVclaimInfoBanner === 'function') {
+      window.hideVclaimInfoBanner();
+    }
+
+    if (typeof window.showVclaimLoading === 'function') {
+      window.showVclaimLoading('Memeriksa Rujukan BPJS...', 'Mencari rujukan aktif FKTP (PCare)...');
+    }
+
+    var finishLookup = function(docTarget, isAlreadyMapped) {
+      if (typeof window.showVclaimLoading === 'function') {
+        window.showVclaimLoading('Menghubungkan Dokter DPJP...', 'Mencocokkan dokter dengan BPJS...');
+      }
+      if (typeof loadDokterDpjpBySpesialisKode === 'function') {
+        loadDokterDpjpBySpesialisKode(docTarget, false, function() {
+          if (typeof window.hideVclaimLoading === 'function') {
+            window.hideVclaimLoading();
+          }
+          if (typeof onComplete === 'function') onComplete();
+        }, isAlreadyMapped);
+      } else {
+        if (typeof window.hideVclaimLoading === 'function') {
+          window.hideVclaimLoading();
+        }
+        if (typeof onComplete === 'function') onComplete();
+      }
+    };
+
+    var checkDoctorMappingAndFinish = function() {
+      if (noRawat) {
+        var cleanRawat = noRawat.replace(/\//g, '');
+        $.get(baseURL + '/vclaim/mapingdokter/' + cleanRawat + '?t=' + mlite.token, function(res) {
+          var isAlreadyMapped = false;
+          try {
+            var m = (typeof res === 'string') ? JSON.parse(res) : res;
+            if (m && m.status === 'success') {
+              if (m.nm_dokter && !targetNmDokter) {
+                targetNmDokter = m.nm_dokter;
+              }
+              if (m.kd_dokter_bpjs && m.nm_dokter_bpjs) {
+                var namaDenganGelar = m.nm_dokter || m.nm_dokter_bpjs;
+                $('#sep_dpjp_yang_melayani_nama').val(namaDenganGelar);
+                $('#sep_dpjp_yang_melayani_kode').val(m.kd_dokter_bpjs);
+                $('#sep_dpjp_pelayanan_nama').val(namaDenganGelar);
+                $('#sep_dpjp_pelayanan_kode').val(m.kd_dokter_bpjs);
+                isAlreadyMapped = true;
+              }
+            }
+          } catch(e) {}
+          finishLookup(targetNmDokter, isAlreadyMapped);
+        }).fail(function() {
+          finishLookup(targetNmDokter, false);
+        });
+      } else {
+        finishLookup(targetNmDokter, false);
+      }
+    };
+
+    // 1. Check PCare (FKTP)
+    var pcareMsg = '';
+    var urlPcare = baseURL + '/vclaim/caribynokartu/PCare/' + encodeURIComponent(noKartu) + '/?t=' + mlite.token;
+    $.get(urlPcare, function(pcareData) {
+      try {
+        var pJson = (typeof pcareData === 'string') ? JSON.parse(pcareData) : pcareData;
+        if (pJson && pJson.metaData) {
+          pcareMsg = pJson.metaData.message || '';
+          if (pJson.metaData.code == 200 && pJson.response && pJson.response.rujukan) {
+            populateRujukanData(pJson.response.rujukan, pJson.response.asalFaskes || 1);
+            $status.html('<span class="label label-success" style="display:inline-block;padding:4px 8px;font-size:11px;margin-top:4px;" title="' + pJson.response.rujukan.noKunjungan + '"><i class="fa fa-check-circle"></i> Rujukan FKTP: ' + pJson.response.rujukan.noKunjungan + '</span>');
+            if (typeof window.hideVclaimInfoBanner === 'function') {
+              window.hideVclaimInfoBanner();
+            }
+            checkDoctorMappingAndFinish();
+            return;
+          }
+        }
+      } catch(e) {
+        pcareMsg = 'Gagal memproses respon rujukan FKTP';
+      }
+
+      // 2. Fallback to RS
+      $status.html('<span class="text-primary"><i class="fa fa-spinner fa-spin"></i> FKTP nihil, cek Rujukan RS...</span>');
+      if (typeof window.showVclaimLoading === 'function') {
+        window.showVclaimLoading('Memeriksa Rujukan RS...', 'Mencari rujukan antar Rumah Sakit...');
+      }
+
+      var rsMsg = '';
+      var urlRs = baseURL + '/vclaim/caribynokartu/RS/' + encodeURIComponent(noKartu) + '/?t=' + mlite.token;
+      $.get(urlRs, function(rsData) {
+        try {
+          var rJson = (typeof rsData === 'string') ? JSON.parse(rsData) : rsData;
+          if (rJson && rJson.metaData) {
+            rsMsg = rJson.metaData.message || '';
+            if (rJson.metaData.code == 200 && rJson.response && rJson.response.rujukan) {
+              populateRujukanData(rJson.response.rujukan, rJson.response.asalFaskes || 2);
+              $status.html('<span class="label label-success" style="display:inline-block;padding:4px 8px;font-size:11px;margin-top:4px;" title="' + rJson.response.rujukan.noKunjungan + '"><i class="fa fa-check-circle"></i> Rujukan RS: ' + rJson.response.rujukan.noKunjungan + '</span>');
+              if (typeof window.hideVclaimInfoBanner === 'function') {
+                window.hideVclaimInfoBanner();
+              }
+              checkDoctorMappingAndFinish();
+              return;
+            }
+          }
+        } catch(e) {
+          rsMsg = 'Gagal memproses respon rujukan RS';
+        }
+
+        // Neither found - Tampilkan alert banner informatif
+        var pcareInfo = pcareMsg || 'Data Rujukan Tidak Ditemukan';
+        var rsInfo = rsMsg || 'Data Rujukan Tidak Ditemukan';
+        $status.html('<span class="label label-warning" style="display:inline-block;padding:4px 8px;font-size:11px;margin-top:4px;" title="FKTP: ' + pcareInfo + ' | RS: ' + rsInfo + '"><i class="fa fa-exclamation-triangle"></i> Rujukan Tidak Ada</span>');
+
+        var bannerHtml = '<div style="margin-bottom:8px;padding:8px 12px;background:rgba(255,255,255,0.85);border-radius:4px;border-left:4px solid #f0ad4e;">' +
+          '<strong>Respon Server BPJS:</strong><br>' +
+          '&bull; <strong>Faskes 1 (PCare):</strong> <span class="text-danger">' + pcareInfo + '</span><br>' +
+          '&bull; <strong>Faskes 2 (RS):</strong> <span class="text-danger">' + rsInfo + '</span>' +
+          '</div>' +
+          '<div style="margin-bottom:4px;"><strong>Petunjuk untuk Petugas:</strong></div>' +
+          '<ul style="margin:0 0 0 18px;padding:0;">' +
+          '<li><strong>Pasien Kontrol / Lanjutan:</strong> Klik tombol <strong class="text-primary">KONTROL</strong> atau <strong class="text-primary">SPRI</strong> di bagian bawah untuk memilih surat kontrol aktif pasien.</li>' +
+          '<li><strong>Pasien Rujukan Fisik / Faskes Luar:</strong> Masukkan nomor rujukan pada tab <em>Nomor Rujukan</em> di panel sebelah kiri lalu klik <em>Kirim Parameter</em>.</li>' +
+          '<li><strong>Kasus IGD / Darurat:</strong> Ubah Pelayanan menjadi Rawat Inap/IGD atau tentukan Poli, Diagnosa, dan DPJP secara manual.</li>' +
+          '</ul>';
+
+        if (typeof window.showVclaimInfoBanner === 'function') {
+          window.showVclaimInfoBanner('warning', 'Pemberitahuan: Data Rujukan Otomatis Tidak Ditemukan di BPJS', bannerHtml);
+        }
+        checkDoctorMappingAndFinish();
+      }).fail(function() {
+        $status.html('<span class="label label-danger" style="display:inline-block;padding:4px 8px;font-size:11px;margin-top:4px;"><i class="fa fa-times-circle"></i> Gagal Koneksi RS</span>');
+        if (typeof window.showVclaimInfoBanner === 'function') {
+          window.showVclaimInfoBanner('danger', 'Gagal Terhubung ke BPJS VClaim', 'Terjadi gangguan koneksi saat mencari rujukan Rumah Sakit. Silakan periksa koneksi jaringan atau coba beberapa saat lagi.');
+        }
+        checkDoctorMappingAndFinish();
+      });
+    }).fail(function() {
+      $status.html('<span class="label label-danger" style="display:inline-block;padding:4px 8px;font-size:11px;margin-top:4px;"><i class="fa fa-times-circle"></i> Gagal Koneksi FKTP</span>');
+      if (typeof window.showVclaimInfoBanner === 'function') {
+        window.showVclaimInfoBanner('danger', 'Gagal Terhubung ke BPJS VClaim', 'Terjadi gangguan koneksi saat mencari rujukan PCare (Faskes 1). Silakan periksa koneksi jaringan atau coba beberapa saat lagi.');
+      }
+      checkDoctorMappingAndFinish();
+    });
+  };
+
   // ketika inputbox pencarian diisi
   $('#parameter_no_rujukan_pcare').on('click',function(e){
     var baseURL = mlite.url + '/' + mlite.admin;
@@ -1143,8 +1534,18 @@ async function openFrista(noka) {
             $('input:text[name=sep_diagnosa_kode]').val(json_obj[0].response.rujukan.diagnosa.kode);
             $('input:text[name=sep_diagnosa_nama]').val(json_obj[0].response.rujukan.diagnosa.nama);
             $('input:text[name=sep_nomor_telepon]').val(json_obj[0].response.rujukan.peserta.mr.noTelepon);
+            if (typeof window.hideVclaimInfoBanner === 'function') {
+              window.hideVclaimInfoBanner();
+            }
+            $('#vclaim_autofetch_status').html('<span class="label label-success" style="display:inline-block;padding:4px 8px;font-size:11px;margin-top:4px;"><i class="fa fa-check-circle"></i> Rujukan PCare Terisi</span>').show();
+            if (typeof loadDokterDpjpBySpesialisKode === 'function') {
+              loadDokterDpjpBySpesialisKode('', false);
+            }
           } else {
             alert(json_obj[0].metaData.message);
+            if (typeof window.showVclaimInfoBanner === 'function') {
+              window.showVclaimInfoBanner('warning', 'Pencarian Rujukan PCare Manual', 'Respon BPJS: <strong class="text-danger">' + json_obj[0].metaData.message + '</strong>. Pastikan nomor rujukan FKTP sudah benar dan masih dalam masa berlaku.');
+            }
           }
         });
     }
@@ -1209,8 +1610,18 @@ async function openFrista(noka) {
             $('input:text[name=sep_diagnosa_kode]').val(json_obj[0].response.rujukan.diagnosa.kode);
             $('input:text[name=sep_diagnosa_nama]').val(json_obj[0].response.rujukan.diagnosa.nama);
             $('input:text[name=sep_nomor_telepon]').val(json_obj[0].response.rujukan.peserta.mr.noTelepon);
+            if (typeof window.hideVclaimInfoBanner === 'function') {
+              window.hideVclaimInfoBanner();
+            }
+            $('#vclaim_autofetch_status').html('<span class="label label-success" style="display:inline-block;padding:4px 8px;font-size:11px;margin-top:4px;"><i class="fa fa-check-circle"></i> Rujukan RS Terisi</span>').show();
+            if (typeof loadDokterDpjpBySpesialisKode === 'function') {
+              loadDokterDpjpBySpesialisKode('', false);
+            }
           } else {
             alert(json_obj[0].metaData.message);
+            if (typeof window.showVclaimInfoBanner === 'function') {
+              window.showVclaimInfoBanner('warning', 'Pencarian Rujukan RS Manual', 'Respon BPJS: <strong class="text-danger">' + json_obj[0].metaData.message + '</strong>. Pastikan nomor rujukan RS sudah benar dan masih dalam masa berlaku.');
+            }
           }
 
         });
@@ -1281,9 +1692,19 @@ async function openFrista(noka) {
               $('input:text[name=sep_diagnosa_kode]').val(json_obj[0].response.rujukan.diagnosa.kode);
               $('input:text[name=sep_diagnosa_nama]').val(json_obj[0].response.rujukan.diagnosa.nama);
               $('input:text[name=sep_nomor_telepon]').val(json_obj[0].response.rujukan.peserta.mr.noTelepon);
+              if (typeof window.hideVclaimInfoBanner === 'function') {
+                window.hideVclaimInfoBanner();
+              }
+              $('#vclaim_autofetch_status').html('<span class="label label-success" style="display:inline-block;padding:4px 8px;font-size:11px;margin-top:4px;"><i class="fa fa-check-circle"></i> Rujukan PCare Terisi</span>').show();
+              if (typeof loadDokterDpjpBySpesialisKode === 'function') {
+                loadDokterDpjpBySpesialisKode('', false);
+              }
             }
           } else {
             alert(json_obj[0].metaData.message);
+            if (typeof window.showVclaimInfoBanner === 'function') {
+              window.showVclaimInfoBanner('warning', 'Pencarian Rujukan by No. Kartu (PCare)', 'Respon BPJS: <strong class="text-danger">' + json_obj[0].metaData.message + '</strong>. Pastikan rujukan FKTP masih aktif atau gunakan rujukan RS.');
+            }
           }
 
         });
@@ -1349,8 +1770,18 @@ async function openFrista(noka) {
             $('input:text[name=sep_diagnosa_kode]').val(json_obj[0].response.rujukan.diagnosa.kode);
             $('input:text[name=sep_diagnosa_nama]').val(json_obj[0].response.rujukan.diagnosa.nama);
             $('input:text[name=sep_nomor_telepon]').val(json_obj[0].response.rujukan.peserta.mr.noTelepon);
+            if (typeof window.hideVclaimInfoBanner === 'function') {
+              window.hideVclaimInfoBanner();
+            }
+            $('#vclaim_autofetch_status').html('<span class="label label-success" style="display:inline-block;padding:4px 8px;font-size:11px;margin-top:4px;"><i class="fa fa-check-circle"></i> Rujukan RS Terisi</span>').show();
+            if (typeof loadDokterDpjpBySpesialisKode === 'function') {
+              loadDokterDpjpBySpesialisKode('', false);
+            }
           } else {
             alert(json_obj[0].metaData.message);
+            if (typeof window.showVclaimInfoBanner === 'function') {
+              window.showVclaimInfoBanner('warning', 'Pencarian Rujukan by No. Kartu (RS)', 'Respon BPJS: <strong class="text-danger">' + json_obj[0].metaData.message + '</strong>. Pastikan rujukan RS masih aktif atau periksa faskes perujuk.');
+            }
           }
 
         });
@@ -1814,42 +2245,124 @@ async function openFrista(noka) {
   });
 </script>
 <script type="text/javascript">
-  var loadDokterDpjpBySpesialisKode = function () {
+  var cleanDoctorName = function(name) {
+    if (!name) return '';
+    return name.toLowerCase()
+      .replace(/[\.,\/\(\)\-_]/g, ' ')
+      .replace(/\b(prof|dr|drg|sp|subsp|kga|bmm|bm|mf|ort|orto|perio|pros|kg|pm|rad|an|pk|pd|mkes|kes|msi|si|mm|mars|mdsc|dsc|mh|phd|ssos|sos|sh)\b/gi, ' ')
+      .replace(/[^a-z0-9]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  var loadDokterDpjpBySpesialisKode = function (targetNmDokter, showDropdown, callback, skipAutoSelect) {
     var query = $('#sep_spesialis_kode').val();
-    var sep_pelayanan_kode = $('input:text[name=sep_pelayanan_kode]').val();
+    var sep_pelayanan_kode = $('input:text[name=sep_pelayanan_kode]').val() || '2';
     if ($('#sep_spesialis_kode').val() == 'IGD') {
       sep_pelayanan_kode = '1';
     }
-    var sep_tanggal_sep = $('input:text[name=sep_tanggal_sep]').val();
+    var sep_tanggal_sep = $('input:text[name=sep_tanggal_sep]').val() || '{?=date("Y-m-d")?}';
 
     if (query != '') {
+      var token = (typeof mlite !== 'undefined' && mlite.token) ? mlite.token : '{?=$_SESSION["token"]?}';
+      var dpjpUrl = (typeof mlite !== 'undefined' ? mlite.url + '/' + mlite.admin : '{?=url()?}/{?=ADMIN?}') + '/vclaim/dokterdpjp/' + encodeURIComponent(sep_pelayanan_kode) + '/' + encodeURIComponent(sep_tanggal_sep) + '/' + encodeURIComponent(query) + '?t=' + token;
+
       $.ajax({
-        url: '{?=url()?}/{?=ADMIN?}/vclaim/dokterdpjp/' + encodeURIComponent(sep_pelayanan_kode) + '/' + encodeURIComponent(sep_tanggal_sep) + '/' + encodeURIComponent(query) + '?t={?=$_SESSION["token"]?}',
-        method:"GET",
-        data:{},
-        success:function(data)
-        {
-          var data = JSON.parse(data);
-          var json_obj = [data];
-          var output='';
-          if(json_obj[0].metaData.code == 200) {
-            var dokterdpjp = json_obj[0].response.list;
-            for (var i in dokterdpjp) {
-              output+='<li class=\"list-group-item link-class\">' + dokterdpjp[i].kode + ': ' + dokterdpjp[i].nama + '</li>';
+        url: dpjpUrl,
+        method: "GET",
+        data: {},
+        success: function(data) {
+          try {
+            var dataObj = (typeof data === 'string') ? JSON.parse(data) : data;
+            var json_obj = [dataObj];
+            var output = '';
+            if (json_obj[0] && json_obj[0].metaData && json_obj[0].metaData.code == 200) {
+              var dokterdpjp = json_obj[0].response.list || [];
+              var cleanedTarget = cleanDoctorName(targetNmDokter);
+              var targetWords = cleanedTarget ? cleanedTarget.split(' ').filter(function(w){ return w.length > 2; }) : [];
+              var bestDoc = null;
+              var bestScore = 0;
+
+              for (var i = 0; i < dokterdpjp.length; i++) {
+                var doc = dokterdpjp[i];
+                output += '<li class="list-group-item link-class" style="cursor:pointer;">' + doc.kode + ': ' + doc.nama + '</li>';
+
+                if (targetWords.length > 0) {
+                  var cleanedDoc = cleanDoctorName(doc.nama);
+                  var docWords = cleanedDoc.split(' ').filter(function(w){ return w.length > 2; });
+                  var score = 0;
+                  for (var t = 0; t < targetWords.length; t++) {
+                    var tw = targetWords[t];
+                    var hasWordMatch = docWords.some(function(dw) {
+                      return dw === tw || (tw.length >= 4 && dw.indexOf(tw) !== -1) || (dw.length >= 4 && tw.indexOf(dw) !== -1);
+                    });
+                    if (hasWordMatch) {
+                      score++;
+                    }
+                  }
+                  if (score > bestScore) {
+                    bestScore = score;
+                    bestDoc = doc;
+                  }
+                }
+              }
+
+              // Hanya pilih otomatis jika skor kecocokan >= 1 (nama asli dokter cocok)
+              var matchedDoc = (bestScore >= 1) ? bestDoc : null;
+
+              // Jika tidak cocok nama tetapi hanya ada 1 dokter di poli tersebut, pilih langsung
+              if (!matchedDoc && dokterdpjp.length === 1) {
+                matchedDoc = dokterdpjp[0];
+              }
+
+              // Jika dokter cocok dan belum terisi dari mapping database, otomatis isi DPJP
+              if (matchedDoc && skipAutoSelect !== true) {
+                // Utamakan nama lengkap dokter beserta gelar dari SIMRS jika ada
+                var namaLengkapDokter = (targetNmDokter && targetNmDokter.trim() !== '') ? targetNmDokter : matchedDoc.nama;
+                $('#sep_dpjp_yang_melayani_nama').val(namaLengkapDokter);
+                $('#sep_dpjp_yang_melayani_kode').val(matchedDoc.kode);
+                $('#sep_dpjp_pelayanan_nama').val(namaLengkapDokter);
+                $('#sep_dpjp_pelayanan_kode').val(matchedDoc.kode);
+              }
+
+              $('#dokterdpjpList').html(output);
+              if (showDropdown === true) {
+                $('#dokterdpjpList').fadeIn().show();
+              } else {
+                $('#dokterdpjpList').hide();
+              }
+
+            } else {
+              var errMsg = (json_obj[0] && json_obj[0].metaData) ? json_obj[0].metaData.message : 'DPJP tidak ditemukan';
+              $('#dokterdpjpList').html('<li class="list-group-item link-class">' + errMsg + '</li>');
+              if (showDropdown === true) {
+                $('#dokterdpjpList').fadeIn().show();
+              } else {
+                $('#dokterdpjpList').hide();
+              }
             }
-          } else {
-            output+='<li class=\"list-group-item link-class\">' + json_obj[0].metaData.message + '</li>';
+          } catch(err) {
+            console.error('Error parsing dokter DPJP:', err);
           }
-          output+='';
-          $('#dokterdpjpList').fadeIn();
-          $('#dokterdpjpList').html(output).show();
+        },
+        error: function() {
+          $('#dokterdpjpList').hide();
+        },
+        complete: function() {
+          if (typeof callback === 'function') {
+            callback();
+          }
         }
       });
+    } else {
+      if (typeof callback === 'function') {
+        callback();
+      }
     }
   };
 
-  $('#sep_spesialis_kode').on('keyup click', function(){
-    loadDokterDpjpBySpesialisKode();
+  $('#sep_spesialis_kode, #sep_dpjp_yang_melayani_nama').on('keyup click focus', function(){
+    loadDokterDpjpBySpesialisKode('', true);
   });
   $('#dokterdpjpList').on('click', 'li', function(){
     var kode_pelayanan = $('#sep_pelayanan_kode').val();
@@ -1863,6 +2376,24 @@ async function openFrista(noka) {
     if (kode_pelayanan == '1') {
        $('#sep_spesialis_kode').val('');
        $('#sep_spesialis_nama').val('');
+    }
+  });
+
+  $(document).on('click', function(e) {
+    if (!$(e.target).closest('#sep_dpjp_yang_melayani_nama, #sep_dpjp_yang_melayani_kode, #sep_spesialis_kode, #dokterdpjpList').length) {
+      $('#dokterdpjpList').fadeOut();
+    }
+    if (!$(e.target).closest('#sep_dpjp_pelayanan_nama, #sep_dpjp_pelayanan_kode, #dokterdpjpList2').length) {
+      $('#dokterdpjpList2').fadeOut();
+    }
+    if (!$(e.target).closest('#sep_spesialis_nama, #sep_spesialis_kode, #poliList').length) {
+      $('#poliList').fadeOut();
+    }
+    if (!$(e.target).closest('#sep_diagnosa_nama, #sep_diagnosa_kode, #diagnosaList').length) {
+      $('#diagnosaList').fadeOut();
+    }
+    if (!$(e.target).closest('#sep_asal_rujukan_nama, #sep_asal_rujukan_kode, #faskesList').length) {
+      $('#faskesList').fadeOut();
     }
   });
 </script>

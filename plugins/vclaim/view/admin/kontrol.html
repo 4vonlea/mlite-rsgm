@@ -1,24 +1,49 @@
-<div class="modal-header">
+<div class="modal-header" style="background:#f8fafc; border-bottom:1px solid #e2e8f0; border-top-left-radius:6px; border-top-right-radius:6px;">
     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span> Tutup</button>
-    <h4 class="modal-title">Riwayat Kontrol</h4>
+    <h4 class="modal-title" style="font-weight:700; color:#0f172a;"><i class="fa fa-calendar-check-o text-primary"></i> Surat Rencana Kontrol (Rawat Jalan)</h4>
 </div>
-<div class="modal-body">
+<div class="modal-body" style="padding:20px;">
+  <div id="notif"></div>
 
   <div id="form_skontrol">
-      <div class="panel panel-default">
-        <div class="panel-body">
+      <div class="panel panel-default" style="border-radius:4px; border:1px solid #cbd5e1; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div class="panel-heading" style="background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:10px 15px;">
+          <h3 class="panel-title" style="font-size:14px; font-weight:700; color:#1e293b;">
+            <span id="title_form_kontrol"><i class="fa fa-plus-circle text-primary"></i> Buat Surat Kontrol Baru</span>
+          </h3>
+        </div>
+        <div class="panel-body" style="padding:20px;">
           <div class="row clearfix">
               <div class="col-md-12">
-                  <div class="form-group">
-                      <label>Nomor SEP</label>
-                      <input type="text" name="no_sep" id="no_sep" class="form-control" value="{?=isset_or($no_sep)?}"/>
-                      <input type="text" style="display: none;" name="no_surkon" id="no_surkon" class="form-control" />
+                  <div class="form-group" style="margin-bottom:18px;">
+                      <label style="font-weight:600; color:#334155;">Nomor SEP Asal Kunjungan <span class="text-danger">*</span></label>
+                      {if: !empty($histori_sep)}
+                      <div style="margin-bottom:8px;">
+                        <select class="form-control" id="select_histori_sep" style="font-weight:600; color:#0369a1; background-color:#f0f9ff; border:1px solid #7dd3fc; border-radius:4px;">
+                          <option value="">-- Pilih dari Kunjungan SEP Pasien Sebelumnya (90 Hari Terakhir) --</option>
+                          {loop: $histori_sep}
+                          <option value="{?=isset_or($value.noSep)?}" {if: $value.noSep == $no_sep}selected{/if} data-poli="{?=isset_or($value.poli)?}">
+                            {?=isset_or($value.noSep)?} &mdash; Tgl: {?=isset_or($value.tglSep)?} | Poli: {?=isset_or($value.poli)?} | {?=isset_or($value.diagnosa)?}
+                          </option>
+                          {/loop}
+                        </select>
+                      </div>
+                      {/if}
+                      <div class="input-group">
+                        <span class="input-group-addon" style="background:#f1f5f9; border-color:#cbd5e1;"><i class="fa fa-id-card-o text-muted"></i></span>
+                        <input type="text" name="no_sep" id="no_sep" class="form-control" value="{?=isset_or($no_sep)?}" placeholder="Ketik atau pilih Nomor SEP asal di atas" style="font-weight:bold; letter-spacing:0.5px;" />
+                      </div>
+                      <span class="help-block" style="margin:5px 0 0 0; font-size:11px; color:#64748b;">
+                        <i class="fa fa-info-circle"></i> Nomor SEP acuan yang akan dikontrol. Pilih kunjungan SEP sebelumnya dari dropdown di atas atau ketik manual.
+                      </span>
+                      <input type="hidden" name="no_surkon" id="no_surkon" />
                   </div>
               </div>
               <div class="col-md-6 dokter">
-                  <div class="form-group">
-                      <label>Dokter</label>
-                      <select class="form-control" name="dokter" id="dokter" data-use-search="true">
+                  <div class="form-group" style="margin-bottom:18px;">
+                      <label style="font-weight:600; color:#334155;">Dokter DPJP Kontrol <span class="text-danger">*</span></label>
+                      <select class="form-control" name="dokter" id="dokter_kontrol" data-use-search="true">
+                        <option value="">-- Pilih Dokter DPJP --</option>
                         {loop: $maping_dokter_dpjpvclaim}
                         <option value="{?=isset_or($value.kd_dokter_bpjs)?}">{?=isset_or($value.nm_dokter_bpjs)?}</option>
                         {/loop}
@@ -26,9 +51,10 @@
                   </div>
               </div>
               <div class="col-md-6 poli">
-                  <div class="form-group">
-                      <label>Poli/Unit</label>
-                      <select class="form-control" name="poli" id="poli" data-use-search="true">
+                  <div class="form-group" style="margin-bottom:18px;">
+                      <label style="font-weight:600; color:#334155;">Poli / Unit Kontrol <span class="text-danger">*</span></label>
+                      <select class="form-control" name="poli" id="poli_kontrol" data-use-search="true">
+                        <option value="">-- Pilih Poli / Unit --</option>
                         {loop: $maping_poli_bpjs}
                         <option value="{?=isset_or($value.kd_poli_bpjs)?}">{?=isset_or($value.nm_poli_bpjs)?}</option>
                         {/loop}
@@ -36,120 +62,266 @@
                   </div>
               </div>
               <div class="col-md-6">
-                  <div class="form-group">
-                      <label>Tanggal Surat</label>
-                      <input type="text" name="tanggal_rujukan" id="tanggal_rujukan" class="form-control tanggal" value="{?=date('Y-m-d')?}" />
+                  <div class="form-group" style="margin-bottom:18px;">
+                      <label style="font-weight:600; color:#334155;">Tanggal Surat Kontrol</label>
+                      <input type="text" name="tanggal_rujukan" id="tanggal_rujukan_kontrol" class="form-control tanggal" value="{?=date('Y-m-d')?}" />
                   </div>
               </div>
               <div class="col-md-6">
-                  <div class="form-group">
-                      <label>Tanggal Kontrol</label>
-                      <input type="text" name="tanggal_datang" id="tanggal_datang" class="form-control tanggal" />
+                  <div class="form-group" style="margin-bottom:18px;">
+                      <label style="font-weight:600; color:#334155;">Tanggal Rencana Kontrol <span class="text-danger">*</span></label>
+                      <input type="text" name="tanggal_datang" id="tanggal_datang_kontrol" class="form-control tanggal" value="{?=date('Y-m-d')?}" />
                   </div>
               </div>
           </div>
-          <div class="row clearfix">
+          <div class="row clearfix" style="margin-top:10px;">
               <div class="col-md-12">
-                  <button type="button" class="btn btn-primary" id="simpan_kontrol">Simpan</button>
-                  <button type="button" class="btn btn-primary" id="load_kontrol">Load</button>
-                  <button type="button" class="btn btn-danger" id="hapus_kontrol">Hapus</button>
+                  <button type="button" class="btn btn-primary" id="simpan_kontrol" style="margin-right:6px; margin-bottom:6px;">
+                    <i class="fa fa-save"></i> Buat & Simpan Surat Kontrol
+                  </button>
+                  <button type="button" class="btn btn-warning" id="ubah_kontrol_btn" style="display:none; margin-right:6px; margin-bottom:6px;">
+                    <i class="fa fa-pencil"></i> Simpan Perubahan
+                  </button>
+                  <button type="button" class="btn btn-danger" id="hapus_kontrol" style="display:none; margin-right:6px; margin-bottom:6px;">
+                    <i class="fa fa-trash"></i> Hapus Surat Kontrol
+                  </button>
+                  <button type="button" class="btn btn-default" id="batal_edit_kontrol" style="display:none; margin-right:6px; margin-bottom:6px;">
+                    <i class="fa fa-times"></i> Batal Edit
+                  </button>
+                  <button type="button" class="btn btn-info" id="sync_kontrol_bpjs" style="margin-right:6px; margin-bottom:6px;">
+                    <i class="fa fa-cloud-download"></i> Tarik dari BPJS
+                  </button>
+                  <button type="button" class="btn btn-default" id="load_kontrol" style="margin-bottom:6px;">
+                    <i class="fa fa-refresh"></i> Refresh List
+                  </button>
               </div>
           </div>
         </div>
       </div>
   </div>
-  <br><br>
 
-  <div id="kontroldisplay">
+  <div class="panel panel-info" style="border-radius:4px; border:1px solid #bae6fd; margin-top:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+    <div class="panel-heading" style="background:#f0f9ff; border-bottom:1px solid #bae6fd; padding:10px 15px;">
+      <h3 class="panel-title" style="font-size:14px; font-weight:700; color:#0369a1;">
+        <i class="fa fa-list"></i> Riwayat Surat Kontrol Pasien Ini
+      </h3>
+    </div>
+    <div class="panel-body" style="padding:0;">
+      <div id="kontroldisplay">
+        <p class="text-center text-muted" style="padding:25px;"><i class="fa fa-spinner fa-spin"></i> Memuat riwayat kontrol...</p>
+      </div>
+    </div>
   </div>
 </div>
-<div class="modal-footer">
-    <button type="button" class="btn btn-primary" data-dismiss="modal">Tutup</button>
+<div class="modal-footer" style="background:#f8fafc; border-top:1px solid #e2e8f0; border-bottom-left-radius:6px; border-bottom-right-radius:6px;">
+    <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
 </div>
 <script type="text/javascript">
-  $("#hapus_kontrol").hide();
-   $('select').selectator();
-   $(function () {
-       $('.tanggal').datetimepicker({
-         format: 'YYYY-MM-DD',
-         locale: 'id'
-       });
-   });
-   $(function () {
-       $('.jam').datetimepicker({
-         format: 'HH:mm:ss',
-         locale: 'id'
-       });
-   });
-</script>
-<script type="text/javascript">
-  $("#form_skontrol").on("click","#load_kontrol", function(event){
-    var baseURL = mlite.url + '/' + mlite.admin;
+  $('#ubah_kontrol_btn').hide();
+  $('#hapus_kontrol').hide();
+  $('#batal_edit_kontrol').hide();
+
+  if ($.fn.selectator) {
+    try {
+      $('#dokter_kontrol').selectator();
+      $('#poli_kontrol').selectator();
+    } catch(e) {}
+  }
+
+  $(function () {
+    $('.tanggal').datetimepicker({
+      format: 'YYYY-MM-DD',
+      locale: 'id'
+    });
+  });
+
+  var baseURL = mlite.url + '/' + mlite.admin;
+  var noKartu = '{?=isset_or($no_kartu)?}';
+
+  // Event saat memilih dari dropdown histori SEP
+  $("#select_histori_sep").on("change", function(){
+    var val = $(this).val();
+    if (val) {
+      $("#no_sep").val(val);
+    }
+  });
+
+  function refreshKontrolList() {
+    $("#kontroldisplay").html('<p class="text-center text-muted" style="padding:25px;"><i class="fa fa-spinner fa-spin"></i> Memuat riwayat kontrol...</p>');
+    $("#kontroldisplay").load(baseURL + '/vclaim/kontroldisplay/' + encodeURIComponent(noKartu) + '?t=' + mlite.token);
+  }
+
+  // Muat riwayat kontrol saat modal terbuka
+  refreshKontrolList();
+
+  $("#form_skontrol").on("click", "#load_kontrol", function(event){
     event.preventDefault();
-    $("#kontroldisplay").show().load(baseURL + '/vclaim/kontroldisplay/{?=isset_or($no_kartu)?}?t=' + mlite.token);
-    $("#hapus_kontrol").hide();
+    refreshKontrolList();
   });
 
-  $(document).ready(function() {
-    var baseURL = mlite.url + '/' + mlite.admin;
-    $("#kontroldisplay").show().load(baseURL + '/vclaim/kontroldisplay/{?=isset_or($no_kartu)?}?t=' + mlite.token);
+  $("#form_skontrol").on("click", "#sync_kontrol_bpjs", function(event){
+    event.preventDefault();
+    var btn = $(this);
+    btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menarik BPJS...');
+    $.get(baseURL + '/vclaim/synckontrol/' + encodeURIComponent(noKartu) + '?t=' + mlite.token, function(res){
+      btn.prop('disabled', false).html('<i class="fa fa-cloud-download"></i> Tarik dari BPJS');
+      var r = {};
+      try {
+        r = typeof res === 'object' ? res : JSON.parse(res);
+      } catch(e) {
+        r = { message: res };
+      }
+      alert(r.message || 'Selesai sinkron data Surat Kontrol');
+      refreshKontrolList();
+    }).fail(function(){
+      btn.prop('disabled', false).html('<i class="fa fa-cloud-download"></i> Tarik dari BPJS');
+      alert('Gagal menghubungi server untuk sinkronisasi Surat Kontrol dari BPJS');
+    });
   });
 
-  $("#form_skontrol").on("click","#simpan_kontrol", function(event){
-    var baseURL = mlite.url + '/' + mlite.admin;
+  $("#form_skontrol").on("click", "#simpan_kontrol", function(event){
     event.preventDefault();
     var no_sep          = $('#no_sep').val();
     var no_surkon       = $('#no_surkon').val();
-    var tanggal_surat   = $('#tanggal_rujukan').val();
-    var tanggal_periksa = $('#tanggal_datang').val();
-    var poli            = $('#poli').val();
-    var dokter          = $('#dokter').val();
+    var tanggal_surat   = $('#tanggal_rujukan_kontrol').val();
+    var tanggal_periksa = $('#tanggal_datang_kontrol').val();
+    var poli            = $('#poli_kontrol').val();
+    var dokter          = $('#dokter_kontrol').val();
+
+    if (!no_sep || no_sep.trim() === '') {
+      alert('Nomor SEP asal wajib diisi! Masukkan Nomor SEP atau pilih dari menu Histori SEP di atas.');
+      $('#no_sep').focus();
+      return false;
+    }
+    if (!dokter) {
+      alert('Silahkan pilih Dokter DPJP terlebih dahulu!');
+      return false;
+    }
+    if (!poli) {
+      alert('Silahkan pilih Poli/Unit tujuan kontrol terlebih dahulu!');
+      return false;
+    }
+    if (!tanggal_periksa) {
+      alert('Tanggal Rencana Kontrol wajib diisi!');
+      return false;
+    }
+
+    var btn = $('#simpan_kontrol');
+    btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
 
     var url = baseURL + '/vclaim/savekontrol?t=' + mlite.token;
 
-    $.post(url,{
+    $.post(url, {
       no_sep: no_sep,
       no_surkon: no_surkon,
-      tanggal_surat : tanggal_surat,
-      tanggal_periksa : tanggal_periksa,
-      dokter : dokter,
-      poli : poli
-    } ,function(data) {
-        alert(data);
-        $("#kontroldisplay").show().load(baseURL + '/vclaim/kontroldisplay/{?=isset_or($no_kartu)?}?t=' + mlite.token);
-        $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-        "Data Kontrol VClaim telah disimpan!"+
+      no_kartu: noKartu,
+      tanggal_surat: tanggal_surat,
+      tanggal_periksa: tanggal_periksa,
+      dokter: dokter,
+      poli: poli,
+      nm_dokter: $('#dokter_kontrol option:selected').text(),
+      nm_poli: $('#poli_kontrol option:selected').text()
+    }, function(res) {
+      btn.prop('disabled', false).html('<i class="fa fa-save"></i> Buat & Simpan Surat Kontrol');
+      var data = {};
+      try {
+        data = typeof res === 'object' ? res : JSON.parse(res);
+      } catch(e) {
+        data = { status: 'info', message: res };
+      }
+
+      if (data.status === 'success') {
+        alert(data.message);
+        if (data.no_surat) {
+          $('input:text[name=sep_nomor_skdp]').val(data.no_surat);
+        }
+        $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\">"+
+        data.message +
         "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
         "</div>").show();
+        refreshKontrolList();
+        resetKontrolForm();
+      } else {
+        alert('Gagal: ' + (data.message || 'Terjadi kesalahan'));
+        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\">"+
+        (data.message || 'Terjadi kesalahan') +
+        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+        "</div>").show();
+      }
+    }).fail(function(){
+      btn.prop('disabled', false).html('<i class="fa fa-save"></i> Buat & Simpan Surat Kontrol');
+      alert('Gagal menghubungi server untuk menyimpan Surat Kontrol');
     });
   });
 
-  $("#form_skontrol").on("click","#hapus_kontrol", function(event){
-    var baseURL = mlite.url + '/' + mlite.admin;
+  $("#form_skontrol").on("click", "#ubah_kontrol_btn", function(event){
     event.preventDefault();
-    var no_surkon       = $('#no_surkon').val();
+    $("#simpan_kontrol").click();
+  });
+
+  $("#form_skontrol").on("click", "#hapus_kontrol", function(event){
+    event.preventDefault();
+    var no_surkon = $('#no_surkon').val();
+    if (!no_surkon) {
+      alert('Nomor surat kontrol tidak ditemukan.');
+      return false;
+    }
+    if (!confirm('Apakah Anda yakin ingin menghapus Surat Kontrol nomor: ' + no_surkon + '?')) {
+      return false;
+    }
+
+    var btn = $('#hapus_kontrol');
+    btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menghapus...');
 
     var url = baseURL + '/vclaim/deletesuratkontrol?t=' + mlite.token;
-
-    $.post(url,{
+    $.post(url, {
       no_surkon: no_surkon
-    } ,function(data) {
-        alert(data);
-        $("#kontroldisplay").show().load(baseURL + '/vclaim/kontroldisplay/{?=isset_or($no_kartu)?}?t=' + mlite.token);
-        $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-        "Data Kontrol VClaim telah disimpan!"+
-        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
-        "</div>").show();
+    }, function(res) {
+      btn.prop('disabled', false).html('<i class="fa fa-trash"></i> Hapus Surat Kontrol');
+      var data = {};
+      try {
+        data = typeof res === 'object' ? res : JSON.parse(res);
+      } catch(e) {
+        data = { message: res };
+      }
+      alert(data.message || 'Surat Kontrol telah dihapus');
+      refreshKontrolList();
+      resetKontrolForm();
+    }).fail(function(){
+      btn.prop('disabled', false).html('<i class="fa fa-trash"></i> Hapus Surat Kontrol');
+      alert('Gagal menghubungi server untuk menghapus Surat Kontrol');
     });
   });
 
-  $("#kontroldisplay").on("click", ".pilih_nosurat", function(event){
-    var no_surat = $(this).attr("data-no_surat");
-    $('input:text[name=sep_nomor_skdp]').val(no_surat);
-    $('#kontrolModal').modal('hide');
+  function resetKontrolForm() {
+    $('#no_surkon').val('');
+    $('#ubah_kontrol_btn').hide();
+    $('#hapus_kontrol').hide();
+    $('#batal_edit_kontrol').hide();
+    $('#simpan_kontrol').show();
+    $('#no_sep').attr('readonly', false);
+    $('#title_form_kontrol').html('<i class="fa fa-plus-circle text-primary"></i> Buat Surat Kontrol Baru');
+  }
+
+  $("#form_skontrol").on("click", "#batal_edit_kontrol", function(event){
+    event.preventDefault();
+    resetKontrolForm();
   });
 
+  // Memilih nomor surat kontrol untuk form SEP
+  $("#kontroldisplay").on("click", ".pilih_nosurat", function(event){
+    event.preventDefault();
+    var no_surat = $(this).attr("data-no_surat");
+    if (no_surat) {
+      $('input:text[name=sep_nomor_skdp]').val(no_surat);
+      $('#kontrolModal').modal('hide');
+      alert('Nomor Surat Kontrol ' + no_surat + ' telah dimasukkan ke kolom No Surat Kontrol / SPRI!');
+    }
+  });
+
+  // Edit surat kontrol
   $("#kontroldisplay").on("click", ".ubah_kontrol", function(event){
+    event.preventDefault();
     var no_surkon = $(this).attr("data-no_surat");
     var no_sep = $(this).attr("data-no_sep");
     var kd_poli = $(this).attr("data-kd_poli");
@@ -157,14 +329,32 @@
     var tanggal_surat = $(this).attr("data-tanggal_surat");
     var tanggal_kontrol = $(this).attr("data-tanggal_kontrol");
 
-    $('input:text[name=no_sep]').val(no_sep);
-    $('input:text[name=no_surkon]').val(no_surkon);
-    $('input:text[name=tanggal_rujukan]').val(tanggal_surat);
-    $('input:text[name=tanggal_datang]').val(tanggal_kontrol);
-    $("div.dokter select").val(kd_dokter).change();
-    $("div.poli select").val(kd_poli).change();
-    $('#tanggal_rujukan').attr('readonly', true);
-    $('#no_sep').attr('readonly', true);
-    $("#hapus_kontrol").show();
+    $('#no_sep').val(no_sep).attr('readonly', true);
+    if ($("#select_histori_sep").length) {
+      $("#select_histori_sep").val(no_sep);
+    }
+    $('#no_surkon').val(no_surkon);
+    $('#tanggal_rujukan_kontrol').val(tanggal_surat);
+    $('#tanggal_datang_kontrol').val(tanggal_kontrol);
+
+    if (kd_dokter) {
+      $('#dokter_kontrol').val(kd_dokter);
+      if ($.fn.selectator) {
+        try { $('#dokter_kontrol').selectator('refresh'); } catch(e) {}
+      }
+    }
+    if (kd_poli) {
+      $('#poli_kontrol').val(kd_poli);
+      if ($.fn.selectator) {
+        try { $('#poli_kontrol').selectator('refresh'); } catch(e) {}
+      }
+    }
+
+    $('#ubah_kontrol_btn').show();
+    $('#hapus_kontrol').show();
+    $('#batal_edit_kontrol').show();
+    $('#simpan_kontrol').hide();
+    $('#title_form_kontrol').html('<i class="fa fa-pencil text-warning"></i> Edit Surat Kontrol: ' + no_surkon);
+    $('html, body, #kontrolModal').animate({ scrollTop: 0 }, 200);
   });
 </script>

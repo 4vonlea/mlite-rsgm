@@ -341,6 +341,7 @@ class Admin extends AdminModule
         if ($inTransaction && $pdo) {
           $pdo->commit();
         }
+        $this->_autoKirimAntreanBpjs($_POST);
       } catch (\Throwable $e) {
         if ($inTransaction && $pdo) {
           $pdo->rollBack();
@@ -912,25 +913,189 @@ class Admin extends AdminModule
     $url = $this->api_url . 'referensi/dokter/pelayanan/' . $jnsPelayanan . '/tglPelayanan/' . $tglPelayanan . '/Spesialis/' . $spesialis;
     $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
     $json = json_decode($output, true);
-    //echo json_encode(htmlspecialchars_array($json));
-    $code = $json['metaData']['code'];
-    $message = $json['metaData']['message'];
-    $stringDecrypt = stringDecrypt($key, $json['response']);
-    $decompress = '""';
-    if (!empty($stringDecrypt)) {
-      $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
-    }
-    if ($json != null) {
+    if ($json != null && isset($json['metaData'])) {
+      $code = $json['metaData']['code'] ?? '500';
+      $message = $json['metaData']['message'] ?? '';
+      $stringDecrypt = stringDecrypt($key, $json['response'] ?? '');
+      $decompress = '""';
+      if (!empty($stringDecrypt)) {
+        $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
+      }
       echo '{
           	"metaData": {
           		"code": "' . htmlspecialchars($code, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '",
           		"message": "' . htmlspecialchars($message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"
           	},
-          	"response": ' . $decompress . '}';
+          	"response": ' . ($decompress ?: '""') . '}';
     } else {
-      echo htmlspecialchars($json['metaData']['message'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      $cleanMsg = $output ? strip_tags(trim($output)) : 'DPJP tidak ditemukan atau koneksi BPJS terputus.';
+      echo json_encode([
+        'metaData' => [
+          'code' => '500',
+          'message' => $cleanMsg
+        ],
+        'response' => null
+      ]);
     }
     exit();
+  }
+
+  public function getMapingDokter($no_rawat)
+  {
+    $no_rawat = revertNoRawat($no_rawat);
+    $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+    if (!$reg) {
+      echo json_encode(['status' => 'error', 'message' => 'Registrasi tidak ditemukan']);
+      exit();
+    }
+    $dokter = $this->db('dokter')->where('kd_dokter', $reg['kd_dokter'])->oneArray();
+    $nm_dokter = $dokter ? $dokter['nm_dokter'] : '';
+    $maping = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $reg['kd_dokter'])->oneArray();
+
+    echo json_encode([
+      'status' => 'success',
+      'kd_dokter' => $reg['kd_dokter'],
+      'nm_dokter' => $nm_dokter,
+      'kd_dokter_bpjs' => $maping ? $maping['kd_dokter_bpjs'] : '',
+      'nm_dokter_bpjs' => $maping ? $maping['nm_dokter_bpjs'] : ''
+    ]);
+    exit();
+  }
+
+  private function _autoKirimAntreanBpjs($postData)
+  {
+    try {
+      $no_rawat = isset($postData['no_rawat']) ? revertNoRawat($postData['no_rawat']) : '';
+      if (empty($no_rawat)) {
+        return false;
+      }
+
+      $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+      if (!$reg_periksa) {
+        return false;
+      }
+
+      $date = !empty($postData['tglsep']) ? $postData['tglsep'] : date('Y-m-d');
+      $tentukan_hari = date('D', strtotime($date));
+      $day = array(
+        'Sun' => 'AKHAD',
+        'Mon' => 'SENIN',
+        'Tue' => 'SELASA',
+        'Wed' => 'RABU',
+        'Thu' => 'KAMIS',
+        'Fri' => 'JUMAT',
+        'Sat' => 'SABTU'
+      );
+      $hari = $day[$tentukan_hari];
+
+      $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $reg_periksa['kd_dokter'])->oneArray();
+      $maping_poli_bpjs = $this->db('maping_poli_bpjs')->where('kd_poli_rs', $reg_periksa['kd_poli'])->oneArray();
+      $jadwaldokter = $this->db('jadwal')->where('kd_dokter', $reg_periksa['kd_dokter'])->where('kd_poli', $reg_periksa['kd_poli'])->where('hari_kerja', $hari)->oneArray();
+
+      // Gunakan mapping dokter/poli, jika kosong gunakan data DPJP/Poli dari SEP yang baru saja disimpan
+      $kd_dokter_bpjs = $maping_dokter_dpjpvclaim ? $maping_dokter_dpjpvclaim['kd_dokter_bpjs'] : (!empty($postData['kddpjppelayanan']) ? $postData['kddpjppelayanan'] : (!empty($postData['kddpjp']) ? $postData['kddpjp'] : ''));
+      $nm_dokter_bpjs = $maping_dokter_dpjpvclaim ? $maping_dokter_dpjpvclaim['nm_dokter_bpjs'] : (!empty($postData['nmdpjppelayanan']) ? $postData['nmdpjppelayanan'] : (!empty($postData['nmdpdjp']) ? $postData['nmdpdjp'] : ''));
+      $kd_poli_bpjs = $maping_poli_bpjs ? $maping_poli_bpjs['kd_poli_bpjs'] : (!empty($postData['kdpolitujuan']) ? $postData['kdpolitujuan'] : '');
+      $nm_poli_bpjs = $maping_poli_bpjs ? $maping_poli_bpjs['nm_poli_bpjs'] : (!empty($postData['nmpolitujuan']) ? $postData['nmpolitujuan'] : '');
+
+      if (empty($kd_dokter_bpjs) || empty($kd_poli_bpjs)) {
+        error_log("_autoKirimAntreanBpjs skipped: missing dokter or poli BPJS code for rawat " . $no_rawat);
+        return false;
+      }
+
+      $jam_mulai = ($jadwaldokter && !empty($jadwaldokter['jam_mulai'])) ? $jadwaldokter['jam_mulai'] : '08:00:00';
+      $jam_selesai = ($jadwaldokter && !empty($jadwaldokter['jam_selesai'])) ? $jadwaldokter['jam_selesai'] : '14:00:00';
+      $kuota = ($jadwaldokter && !empty($jadwaldokter['kuota'])) ? intval($jadwaldokter['kuota']) : 30;
+
+      $no_urut_reg = substr($reg_periksa['no_reg'], 0, 3);
+      $minutes = intval($no_urut_reg) * 10;
+      $jam_est = date('H:i:s', strtotime('+' . $minutes . ' minutes', strtotime($jam_mulai)));
+
+      $ppk = $this->settings->get('settings.ppk_bpjs');
+      $kodebooking = $ppk . convertNorawat($reg_periksa['no_rawat']) . $kd_poli_bpjs . $reg_periksa['no_reg'];
+
+      // Tentukan nomor referensi dan jenis kunjungan
+      // 1 = Rujukan FKTP, 2 = Rujukan Internal, 3 = Kontrol, 4 = Rujukan Antar RS
+      $jenis_kunjungan = 1;
+      $nomorreferensi = !empty($postData['norujukan']) ? $postData['norujukan'] : '';
+      if (!empty($postData['noskdp'])) {
+        $jenis_kunjungan = 3;
+        $nomorreferensi = $postData['noskdp'];
+      } elseif (isset($postData['asal_rujukan']) && $postData['asal_rujukan'] == '2') {
+        $jenis_kunjungan = 4;
+      }
+
+      if (empty($nomorreferensi)) {
+        error_log("_autoKirimAntreanBpjs skipped: nomor referensi empty for rawat " . $no_rawat);
+        return false;
+      }
+
+      $no_rkm_medis = $reg_periksa['no_rkm_medis'];
+      $nomorkartu = !empty($postData['no_kartu']) ? $postData['no_kartu'] : $this->core->getPasienInfo('no_peserta', $no_rkm_medis);
+      $nik = $this->core->getPasienInfo('no_ktp', $no_rkm_medis);
+      $nohp = !empty($postData['notelep']) ? $postData['notelep'] : $this->core->getPasienInfo('no_tlp', $no_rkm_medis);
+      if (empty($nohp)) {
+        $nohp = '0000000000';
+      }
+
+      $dataAntrean = [
+        'kodebooking' => $kodebooking,
+        'jenispasien' => 'JKN',
+        'nomorkartu' => $nomorkartu,
+        'nik' => $nik,
+        'nohp' => $nohp,
+        'kodepoli' => $kd_poli_bpjs,
+        'namapoli' => $nm_poli_bpjs,
+        'pasienbaru' => ($reg_periksa['stts_daftar'] == 'Baru') ? '1' : '0',
+        'norm' => $no_rkm_medis,
+        'tanggalperiksa' => $reg_periksa['tgl_registrasi'],
+        'kodedokter' => $kd_dokter_bpjs,
+        'namadokter' => $nm_dokter_bpjs,
+        'jampraktek' => substr($jam_mulai, 0, 5) . '-' . substr($jam_selesai, 0, 5),
+        'jeniskunjungan' => $jenis_kunjungan,
+        'nomorreferensi' => $nomorreferensi,
+        'nomorantrean' => $kd_poli_bpjs . '-' . $reg_periksa['no_reg'],
+        'angkaantrean' => $reg_periksa['no_reg'],
+        'estimasidilayani' => strtotime($reg_periksa['tgl_registrasi'] . ' ' . $jam_est) * 1000,
+        'sisakuotajkn' => max(0, $kuota - intval(ltrim($reg_periksa['no_reg'], '0'))),
+        'kuotajkn' => $kuota,
+        'sisakuotanonjkn' => max(0, $kuota - intval(ltrim($reg_periksa['no_reg'], '0'))),
+        'kuotanonjkn' => $kuota,
+        'keterangan' => 'Peserta harap 30 menit lebih awal guna pencatatan administrasi.'
+      ];
+
+      $payload = json_encode($dataAntrean);
+      $antrianUrl = $this->settings->get('jkn_mobile.BpjsAntrianUrl') . 'antrean/add';
+      $consId = $this->settings->get('jkn_mobile.BpjsConsID');
+      $secKey = $this->settings->get('jkn_mobile.BpjsSecretKey');
+      $userKey = $this->settings->get('jkn_mobile.BpjsUserKey');
+
+      if (!empty($antrianUrl) && !empty($consId)) {
+        $resp = BpjsService::post($antrianUrl, $payload, $consId, $secKey, $userKey, NULL);
+        $resJson = json_decode($resp, true);
+
+        $code = isset($resJson['metadata']['code']) ? $resJson['metadata']['code'] : (isset($resJson['metaData']['code']) ? $resJson['metaData']['code'] : null);
+        $msg = isset($resJson['metadata']['message']) ? $resJson['metadata']['message'] : (isset($resJson['metaData']['message']) ? $resJson['metaData']['message'] : 'Response null');
+
+        // 200 = Success, 208 = Kode booking sudah ada di BPJS
+        $statusKirim = ($code == 200 || $code == 208) ? 'Sudah' : 'Gagal';
+        $this->db('mlite_antrian_referensi')->save([
+          'tanggal_periksa' => $reg_periksa['tgl_registrasi'],
+          'no_rkm_medis' => $no_rkm_medis,
+          'nomor_kartu' => $nomorkartu,
+          'nomor_referensi' => $nomorreferensi,
+          'kodebooking' => $kodebooking,
+          'jenis_kunjungan' => $jenis_kunjungan,
+          'status_kirim' => $statusKirim,
+          'keterangan' => $code . ': ' . $msg
+        ]);
+        error_log("_autoKirimAntreanBpjs for rawat {$no_rawat} done with status: {$statusKirim} ({$code}: {$msg})");
+        return true;
+      }
+    } catch (\Throwable $e) {
+      error_log("_autoKirimAntreanBpjs error: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
+    }
+    return false;
   }
 
   public function getPropinsi()
@@ -1339,23 +1504,29 @@ class Admin extends AdminModule
     $url = $this->api_url . 'Peserta/nokartu/' . $noKartu . '/tglSEP/' . $tglPelayananSEP;
     $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
     $json = json_decode($output, true);
-    //echo json_encode(htmlspecialchars_array($json));
-    $code = $json['metaData']['code'];
-    $message = $json['metaData']['message'];
-    $stringDecrypt = stringDecrypt($key, $json['response']);
-    $decompress = '""';
-    if (!empty($stringDecrypt)) {
-      $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
-    }
-    if ($json != null) {
+    if ($json != null && isset($json['metaData'])) {
+      $code = $json['metaData']['code'] ?? '500';
+      $message = $json['metaData']['message'] ?? '';
+      $stringDecrypt = stringDecrypt($key, $json['response'] ?? '');
+      $decompress = '""';
+      if (!empty($stringDecrypt)) {
+        $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
+      }
       echo '{
           "metaData": {
             "code": "' . htmlspecialchars($code, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '",
             "message": "' . htmlspecialchars($message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"
           },
-          "response": ' . $decompress . '}';
+          "response": ' . ($decompress ?: '""') . '}';
     } else {
-      echo htmlspecialchars($json['metaData']['message'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      $cleanMsg = $output ? strip_tags(trim($output)) : 'Peserta tidak ditemukan atau koneksi BPJS terputus.';
+      echo json_encode([
+        'metaData' => [
+          'code' => '500',
+          'message' => $cleanMsg
+        ],
+        'response' => null
+      ]);
     }
     exit();
   }
@@ -1533,40 +1704,38 @@ class Admin extends AdminModule
 
   public function postDeleteSuratKontrol()
   {
+    header('Content-Type: application/json');
+    $no_surkon = $_POST['no_surkon'] ?? '';
+    if (empty($no_surkon)) {
+      echo json_encode(['status' => 'error', 'message' => 'Nomor surat kontrol tidak boleh kosong']);
+      exit();
+    }
+
+    $tStamp = strval(time());
+    $key = $this->consid . $this->secretkey . $tStamp;
+    $user = $this->core->getUserInfo('fullname', null, true);
+
     $data = [
       'request' => [
         't_suratkontrol' => [
-          'noSuratKontrol' => $_POST['no_surkon'],
-          'user' => 'admin'
+          'noSuratKontrol' => $no_surkon,
+          'user' => $user
         ]
       ]
     ];
 
     $data = json_encode($data);
-
-    $tStamp = strval(time());
-    $key = $this->consid . $this->secretkey . $tStamp;
-
     $url = $this->api_url . 'RencanaKontrol/Delete';
     $output = BpjsService::delete($url, $data, $this->consid, $this->secretkey, $this->user_key, $tStamp);
     $json = json_decode($output, true);
-    //echo json_encode(htmlspecialchars_array($json));
-    $code = $json['metaData']['code'];
-    $message = $json['metaData']['message'];
-    $stringDecrypt = stringDecrypt($key, $json['response']);
-    $decompress = '""';
-    if (!empty($stringDecrypt)) {
-      $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
-    }
-    if ($json != null) {
-      echo '{
-          	"metaData": {
-          		"code": "' . htmlspecialchars($code, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '",
-          		"message": "' . htmlspecialchars($message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"
-          	},
-          	"response": ' . $decompress . '}';
+    if ($json == NULL) {
+      echo json_encode(['status' => 'error', 'message' => 'Koneksi ke server BPJS terputus. Silahkan ulangi beberapa saat lagi!']);
+    } else if (isset($json['metaData']['code']) && $json['metaData']['code'] == 200) {
+      $this->db('bridging_surat_kontrol_bpjs')->where('no_surat', $no_surkon)->delete();
+      echo json_encode(['status' => 'success', 'message' => 'Surat Kontrol ' . $no_surkon . ' berhasil dihapus']);
     } else {
-      echo htmlspecialchars($data['metaData']['message'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      $pesan = $json['metaData']['message'] ?? 'Gagal menghapus Surat Kontrol di BPJS';
+      echo json_encode(['status' => 'error', 'message' => $pesan]);
     }
     exit();
   }
@@ -2018,28 +2187,29 @@ class Admin extends AdminModule
     $url = $this->api_url . '' . $url;
     $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
     $json = json_decode($output, true);
-    //echo json_encode(htmlspecialchars_array($json));
-    $code = $json['metaData']['code'];
-    $message = $json['metaData']['message'];
-    $stringDecrypt = stringDecrypt($key, $json['response']);
-    $decompress = '""';
-    if (!empty($stringDecrypt)) {
-      $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
-    }
-    if ($json != null) {
+    if ($json != null && isset($json['metaData'])) {
+      $code = $json['metaData']['code'] ?? '500';
+      $message = $json['metaData']['message'] ?? '';
+      $stringDecrypt = stringDecrypt($key, $json['response'] ?? '');
+      $decompress = '""';
+      if (!empty($stringDecrypt)) {
+        $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
+      }
       echo '{
           	"metaData": {
           		"code": "' . htmlspecialchars($code, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '",
           		"message": "' . htmlspecialchars($message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"
           	},
-          	"response": ' . $decompress . '}';
+          	"response": ' . ($decompress ?: '""') . '}';
     } else {
-      echo '{
-          	"metaData": {
-          		"code": "5000",
-          		"message": "ERROR"
-          	},
-          	"response": "ADA KESALAHAN ATAU SAMBUNGAN KE SERVER BPJS TERPUTUS."}';
+      $cleanMsg = $output ? strip_tags(trim($output)) : 'ADA KESALAHAN ATAU SAMBUNGAN KE SERVER BPJS TERPUTUS.';
+      echo json_encode([
+        'metaData' => [
+          'code' => '5000',
+          'message' => 'ERROR'
+        ],
+        'response' => $cleanMsg
+      ]);
     }
     exit();
   }
@@ -2391,6 +2561,55 @@ class Admin extends AdminModule
     $this->_addHeaderFiles();
     $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->toArray();
     $maping_poli_bpjs = $this->db('maping_poli_bpjs')->toArray();
+
+    // Fallback dokter jika tabel mapping kosong
+    if (empty($maping_dokter_dpjpvclaim)) {
+      $tStamp = strval(time());
+      $key = $this->consid . $this->secretkey . $tStamp;
+      $url = $this->api_url . 'referensi/dokter/pelayanan/1/tglPelayanan/' . date('Y-m-d') . '/Spesialis/GIG';
+      $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+      $json = json_decode($output, true);
+      if (!empty($json['response'])) {
+        $stringDecrypt = stringDecrypt($key, $json['response']);
+        if (!empty($stringDecrypt)) {
+          $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent($stringDecrypt);
+          $arr = json_decode($decompress, true);
+          if (!empty($arr['list']) && is_array($arr['list'])) {
+            foreach ($arr['list'] as $d) {
+              $maping_dokter_dpjpvclaim[] = [
+                'kd_dokter_bpjs' => $d['kode'],
+                'nm_dokter_bpjs' => $d['nama']
+              ];
+            }
+          }
+        }
+      }
+    }
+
+    // Fallback poli jika tabel mapping kosong
+    if (empty($maping_poli_bpjs)) {
+      $tStamp = strval(time());
+      $key = $this->consid . $this->secretkey . $tStamp;
+      $url = $this->api_url . 'referensi/poli/gigi';
+      $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+      $json = json_decode($output, true);
+      if (!empty($json['response'])) {
+        $stringDecrypt = stringDecrypt($key, $json['response']);
+        if (!empty($stringDecrypt)) {
+          $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent($stringDecrypt);
+          $arr = json_decode($decompress, true);
+          if (!empty($arr['poli']) && is_array($arr['poli'])) {
+            foreach ($arr['poli'] as $p) {
+              $maping_poli_bpjs[] = [
+                'kd_poli_bpjs' => $p['kode'],
+                'nm_poli_bpjs' => $p['nama']
+              ];
+            }
+          }
+        }
+      }
+    }
+
     $bridging_surat_pri_bpjs = $this->db('bridging_surat_pri_bpjs')->where('no_kartu', $no_kartu)->toArray();
     $this->tpl->set('spri', $this->tpl->noParse_array(htmlspecialchars_array($bridging_surat_pri_bpjs)));
     $this->tpl->set('maping_dokter_dpjpvclaim', $this->tpl->noParse_array(htmlspecialchars_array($maping_dokter_dpjpvclaim)));
@@ -2412,12 +2631,77 @@ class Admin extends AdminModule
   public function getSPRIData($no_surat)
   {
     $bridging_surat_pri_bpjs = $this->db('bridging_surat_pri_bpjs')->where('no_surat', $no_surat)->toArray();
-    echo json_encode($bridging_surat_pri_bpjs[0]);
+    echo json_encode(!empty($bridging_surat_pri_bpjs[0]) ? $bridging_surat_pri_bpjs[0] : []);
+    exit();
+  }
+
+  public function getSyncSPRI($no_kartu, $no_rawat)
+  {
+    header('Content-Type: application/json');
+    $tStamp = strval(time());
+    $key = $this->consid . $this->secretkey . $tStamp;
+
+    $synced = 0;
+    $rawat = revertNorawat($no_rawat);
+    $cek_rawat = $this->db('reg_periksa')->where('no_rawat', $rawat)->oneArray();
+    if (!$cek_rawat) {
+      $rawat = null;
+    }
+
+    $periods = [
+      ['m' => date('m'), 'y' => date('Y')],
+      ['m' => date('m', strtotime('-1 month')), 'y' => date('Y', strtotime('-1 month'))]
+    ];
+
+    foreach ($periods as $period) {
+      foreach ([2, 1] as $filter) {
+        $url = $this->api_url . 'RencanaKontrol/ListRencanaKontrol/Bulan/' . $period['m'] . '/Tahun/' . $period['y'] . '/Nokartu/' . $no_kartu . '/filter/' . $filter;
+        $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+        $json = json_decode($output, true);
+        if (!empty($json['metaData']['code']) && $json['metaData']['code'] == 200 && !empty($json['response'])) {
+          $stringDecrypt = stringDecrypt($key, $json['response']);
+          if (!empty($stringDecrypt)) {
+            $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent($stringDecrypt);
+            $resp = json_decode($decompress, true);
+            if (!empty($resp['list']) && is_array($resp['list'])) {
+              foreach ($resp['list'] as $item) {
+                $no_surat = $item['noSuratKontrol'] ?? ($item['noSPRI'] ?? '');
+                if (!empty($no_surat)) {
+                  $exist = $this->db('bridging_surat_pri_bpjs')->where('no_surat', $no_surat)->oneArray();
+                  if (!$exist) {
+                    $this->db('bridging_surat_pri_bpjs')->save([
+                      'no_rawat' => $rawat,
+                      'no_kartu' => $no_kartu,
+                      'tgl_surat' => $item['tglTerbitKontrol'] ?? date('Y-m-d'),
+                      'no_surat' => $no_surat,
+                      'tgl_rencana' => $item['tglRencanaKontrol'] ?? date('Y-m-d'),
+                      'kd_dokter_bpjs' => $item['kodeDokter'] ?? '',
+                      'nm_dokter_bpjs' => $item['namaDokter'] ?? '',
+                      'kd_poli_bpjs' => $item['kodePoliTujuan'] ?? '',
+                      'nm_poli_bpjs' => $item['namaPoliTujuan'] ?? '',
+                      'diagnosa' => '-',
+                      'no_sep' => '-'
+                    ]);
+                    $synced++;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    echo json_encode([
+      'status' => 'success',
+      'message' => $synced > 0 ? "Berhasil sinkron $synced SPRI dari server BPJS!" : "Tidak ada SPRI baru yang ditemukan di server BPJS untuk pasien ini."
+    ]);
     exit();
   }
 
   public function postSaveSPRI($no_kartu, $no_rawat)
   {
+    header('Content-Type: application/json');
     $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
     $_POST['sep_user']  = $this->core->getUserInfo('fullname', null, true);
@@ -2425,9 +2709,9 @@ class Admin extends AdminModule
     $data = [
       'request' => [
         'noKartu' => $no_kartu,
-        'kodeDokter' => $_POST['dokter'],
-        'poliKontrol' => $_POST['poli'],
-        'tglRencanaKontrol' => $_POST['tanggal_periksa'],
+        'kodeDokter' => $_POST['dokter'] ?? '',
+        'poliKontrol' => $_POST['poli'] ?? '',
+        'tglRencanaKontrol' => $_POST['tanggal_periksa'] ?? '',
         'user' => $_POST['sep_user']
       ]
     ];
@@ -2438,37 +2722,72 @@ class Admin extends AdminModule
     $output = BpjsService::post($url, $data, $this->consid, $this->secretkey, $this->user_key, $tStamp);
     $data = json_decode($output, true);
     if ($data == NULL) {
-      echo 'Koneksi ke server BPJS terputus. Silahkan ulangi beberapa saat lagi!';
-    } else if ($data['metaData']['code'] == 200) {
+      echo json_encode(['status' => 'error', 'message' => 'Koneksi ke server BPJS terputus. Silahkan ulangi beberapa saat lagi!']);
+    } else if (isset($data['metaData']['code']) && $data['metaData']['code'] == 200) {
       $stringDecrypt = stringDecrypt($key, $data['response']);
       $decompress = '""';
-      $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
+      if (!empty($stringDecrypt)) {
+        $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
+      }
       $spri = json_decode($decompress, true);
-      //echo $spri['noSPRI'];
-      $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $_POST['dokter'])->oneArray();
-      $maping_poli_bpjs = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $_POST['poli'])->oneArray();
+      $no_spri = isset($spri['noSPRI']) ? $spri['noSPRI'] : (isset($spri['noSuratKontrol']) ? $spri['noSuratKontrol'] : '');
 
-      $bridging_surat_pri_bpjs = $this->db('bridging_surat_pri_bpjs')->save([
-        'no_rawat' => revertNorawat($no_rawat),
+      $nm_dokter = '';
+      $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $_POST['dokter'])->oneArray();
+      if (!empty($maping_dokter_dpjpvclaim['nm_dokter_bpjs'])) {
+        $nm_dokter = $maping_dokter_dpjpvclaim['nm_dokter_bpjs'];
+      } elseif (!empty($_POST['nm_dokter'])) {
+        $nm_dokter = $_POST['nm_dokter'];
+      }
+
+      $nm_poli = '';
+      $maping_poli_bpjs = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $_POST['poli'])->oneArray();
+      if (!empty($maping_poli_bpjs['nm_poli_bpjs'])) {
+        $nm_poli = $maping_poli_bpjs['nm_poli_bpjs'];
+      } elseif (!empty($_POST['nm_poli'])) {
+        $nm_poli = $_POST['nm_poli'];
+      }
+
+      $rawat = revertNorawat($no_rawat);
+      $cek_rawat = $this->db('reg_periksa')->where('no_rawat', $rawat)->oneArray();
+      if (!$cek_rawat) {
+        $rawat = null;
+      }
+
+      $this->db('bridging_surat_pri_bpjs')->save([
+        'no_rawat' => $rawat,
         'no_kartu' => $no_kartu,
-        'tgl_surat' => $_POST['tanggal_surat'],
-        'no_surat' => $spri['noSPRI'],
-        'tgl_rencana' => $_POST['tanggal_periksa'],
-        'kd_dokter_bpjs' => $_POST['dokter'],
-        'nm_dokter_bpjs' => $maping_dokter_dpjpvclaim['nm_dokter_bpjs'],
-        'kd_poli_bpjs' => $_POST['poli'],
-        'nm_poli_bpjs' => $maping_poli_bpjs['nm_poli_bpjs'],
+        'tgl_surat' => $_POST['tanggal_surat'] ?? date('Y-m-d'),
+        'no_surat' => $no_spri,
+        'tgl_rencana' => $_POST['tanggal_periksa'] ?? date('Y-m-d'),
+        'kd_dokter_bpjs' => $_POST['dokter'] ?? '',
+        'nm_dokter_bpjs' => $nm_dokter,
+        'kd_poli_bpjs' => $_POST['poli'] ?? '',
+        'nm_poli_bpjs' => $nm_poli,
         'diagnosa' => '-',
         'no_sep' => '-'
       ]);
+
+      echo json_encode([
+        'status' => 'success',
+        'code' => 200,
+        'message' => 'SPRI berhasil diterbitkan dengan nomor: ' . $no_spri,
+        'no_surat' => $no_spri
+      ]);
     } else {
-      echo htmlspecialchars($data['metaData']['message'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      $pesan = isset($data['metaData']['message']) ? $data['metaData']['message'] : 'Gagal membuat SPRI di BPJS';
+      echo json_encode([
+        'status' => 'error',
+        'code' => $data['metaData']['code'] ?? 500,
+        'message' => $pesan
+      ]);
     }
     exit();
   }
 
   public function postUpdateSPRI($no_surat)
   {
+    header('Content-Type: application/json');
     $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
     $_POST['sep_user']  = $this->core->getUserInfo('fullname', null, true);
@@ -2476,47 +2795,64 @@ class Admin extends AdminModule
     $data = [
       'request' => [
         'noSPRI' => $no_surat,
-        'kodeDokter' => $_POST['dokter'],
-        'poliKontrol' => $_POST['poli'],
-        'tglRencanaKontrol' => $_POST['tanggal_periksa'],
+        'kodeDokter' => $_POST['dokter'] ?? '',
+        'poliKontrol' => $_POST['poli'] ?? '',
+        'tglRencanaKontrol' => $_POST['tanggal_periksa'] ?? '',
         'user' => $_POST['sep_user']
       ]
     ];
 
     $data = json_encode($data);
-    print_r($data);
     $url = $this->api_url . 'RencanaKontrol/UpdateSPRI';
     $output = BpjsService::put($url, $data, $this->consid, $this->secretkey, $this->user_key, $tStamp);
     $data = json_decode($output, true);
-    //echo $data['metaData']['message'];
     if ($data == NULL) {
-      echo 'Koneksi ke server BPJS terputus. Silahkan ulangi beberapa saat lagi!';
-    } else if ($data['metaData']['code'] == 200) {
+      echo json_encode(['status' => 'error', 'message' => 'Koneksi ke server BPJS terputus. Silahkan ulangi beberapa saat lagi!']);
+    } else if (isset($data['metaData']['code']) && $data['metaData']['code'] == 200) {
       $stringDecrypt = stringDecrypt($key, $data['response']);
       $decompress = '""';
-      $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
+      if (!empty($stringDecrypt)) {
+        $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
+      }
       $spri = json_decode($decompress, true);
-      //echo $spri['noSPRI'];
-      $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $_POST['dokter'])->oneArray();
-      $maping_poli_bpjs = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $_POST['poli'])->oneArray();
+      $no_spri = isset($spri['noSPRI']) ? $spri['noSPRI'] : $no_surat;
 
-      $bridging_surat_pri_bpjs = $this->db('bridging_surat_pri_bpjs')->where('no_surat', $no_surat)->update([
-        'tgl_surat' => $_POST['tanggal_surat'],
-        'no_surat' => $spri['noSPRI'],
-        'tgl_rencana' => $_POST['tanggal_periksa'],
-        'kd_dokter_bpjs' => $_POST['dokter'],
-        'nm_dokter_bpjs' => $maping_dokter_dpjpvclaim['nm_dokter_bpjs'],
-        'kd_poli_bpjs' => $_POST['poli'],
-        'nm_poli_bpjs' => $maping_poli_bpjs['nm_poli_bpjs'],
+      $nm_dokter = '';
+      $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $_POST['dokter'])->oneArray();
+      if (!empty($maping_dokter_dpjpvclaim['nm_dokter_bpjs'])) {
+        $nm_dokter = $maping_dokter_dpjpvclaim['nm_dokter_bpjs'];
+      } elseif (!empty($_POST['nm_dokter'])) {
+        $nm_dokter = $_POST['nm_dokter'];
+      }
+
+      $nm_poli = '';
+      $maping_poli_bpjs = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $_POST['poli'])->oneArray();
+      if (!empty($maping_poli_bpjs['nm_poli_bpjs'])) {
+        $nm_poli = $maping_poli_bpjs['nm_poli_bpjs'];
+      } elseif (!empty($_POST['nm_poli'])) {
+        $nm_poli = $_POST['nm_poli'];
+      }
+
+      $this->db('bridging_surat_pri_bpjs')->where('no_surat', $no_surat)->update([
+        'tgl_surat' => $_POST['tanggal_surat'] ?? date('Y-m-d'),
+        'no_surat' => $no_spri,
+        'tgl_rencana' => $_POST['tanggal_periksa'] ?? date('Y-m-d'),
+        'kd_dokter_bpjs' => $_POST['dokter'] ?? '',
+        'nm_dokter_bpjs' => $nm_dokter,
+        'kd_poli_bpjs' => $_POST['poli'] ?? '',
+        'nm_poli_bpjs' => $nm_poli,
       ]);
+      echo json_encode(['status' => 'success', 'message' => 'SPRI ' . $no_surat . ' berhasil diubah']);
     } else {
-      echo $data['metaData']['message'];
+      $pesan = isset($data['metaData']['message']) ? $data['metaData']['message'] : 'Gagal mengubah SPRI';
+      echo json_encode(['status' => 'error', 'message' => $pesan]);
     }
     exit();
   }
   
   public function postDeleteSPRI($no_surat)
   {
+    header('Content-Type: application/json');
     $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
     $_POST['sep_user']  = $this->core->getUserInfo('fullname', null, true);
@@ -2531,17 +2867,17 @@ class Admin extends AdminModule
     ];
 
     $data = json_encode($data);
-    print_r($data);
     $url = $this->api_url . 'RencanaKontrol/Delete';
     $output = BpjsService::delete($url, $data, $this->consid, $this->secretkey, $this->user_key, $tStamp);
     $data = json_decode($output, true);
-    //echo $data['metaData']['message'];
     if ($data == NULL) {
-      echo 'Koneksi ke server BPJS terputus. Silahkan ulangi beberapa saat lagi!';
-    } else if ($data['metaData']['code'] == 200) {
-      $bridging_surat_pri_bpjs = $this->db('bridging_surat_pri_bpjs')->where('no_surat', $no_surat)->delete();
+      echo json_encode(['status' => 'error', 'message' => 'Koneksi ke server BPJS terputus. Silahkan ulangi beberapa saat lagi!']);
+    } else if (isset($data['metaData']['code']) && $data['metaData']['code'] == 200) {
+      $this->db('bridging_surat_pri_bpjs')->where('no_surat', $no_surat)->delete();
+      echo json_encode(['status' => 'success', 'message' => 'SPRI ' . $no_surat . ' berhasil dihapus']);
     } else {
-      echo htmlentities($data['metaData']['message']);
+      $pesan = isset($data['metaData']['message']) ? $data['metaData']['message'] : 'Gagal menghapus SPRI';
+      echo json_encode(['status' => 'error', 'message' => $pesan]);
     }
     exit();
   }
@@ -3012,44 +3348,234 @@ class Admin extends AdminModule
     $this->_addHeaderFiles();
     $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->toArray();
     $maping_poli_bpjs = $this->db('maping_poli_bpjs')->toArray();
-    $bridging_surat_kontrol_bpjs = $this->db('bridging_surat_kontrol_bpjs')
-      ->join('bridging_sep', 'bridging_sep.no_sep=bridging_surat_kontrol_bpjs.no_sep')
-      ->where('bridging_sep.no_kartu', $no_kartu)
-      ->toArray();
-    $sep = $this->db('bridging_sep')->where('no_kartu',$no_kartu)->desc('tglsep')->oneArray();
-    $this->tpl->set('no_sep', isset($sep['no_sep']) ? $sep['no_sep'] : '');
+
+    // Fallback dokter jika mapping kosong
+    if (empty($maping_dokter_dpjpvclaim)) {
+      $tStamp = strval(time());
+      $key = $this->consid . $this->secretkey . $tStamp;
+      $url = $this->api_url . 'referensi/dokter/pelayanan/2/tglPelayanan/' . date('Y-m-d') . '/Spesialis/GIG';
+      $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+      $json = json_decode($output, true);
+      if (!empty($json['response'])) {
+        $stringDecrypt = stringDecrypt($key, $json['response']);
+        if (!empty($stringDecrypt)) {
+          $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent($stringDecrypt);
+          $arr = json_decode($decompress, true);
+          if (!empty($arr['list']) && is_array($arr['list'])) {
+            foreach ($arr['list'] as $d) {
+              $maping_dokter_dpjpvclaim[] = [
+                'kd_dokter_bpjs' => $d['kode'],
+                'nm_dokter_bpjs' => $d['nama']
+              ];
+            }
+          }
+        }
+      }
+    }
+
+    // Fallback poli jika mapping kosong
+    if (empty($maping_poli_bpjs)) {
+      $tStamp = strval(time());
+      $key = $this->consid . $this->secretkey . $tStamp;
+      $url = $this->api_url . 'referensi/poli/gigi';
+      $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+      $json = json_decode($output, true);
+      if (!empty($json['response'])) {
+        $stringDecrypt = stringDecrypt($key, $json['response']);
+        if (!empty($stringDecrypt)) {
+          $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent($stringDecrypt);
+          $arr = json_decode($decompress, true);
+          if (!empty($arr['poli']) && is_array($arr['poli'])) {
+            foreach ($arr['poli'] as $p) {
+              $maping_poli_bpjs[] = [
+                'kd_poli_bpjs' => $p['kode'],
+                'nm_poli_bpjs' => $p['nama']
+              ];
+            }
+          }
+        }
+      }
+    }
+
+    // Tentukan no_sep asal
+    $no_sep = $_GET['no_sep'] ?? '';
+    $histori_sep = [];
+    if (empty($no_sep)) {
+      $sep = $this->db('bridging_sep')->where('no_kartu', $no_kartu)->desc('tglsep')->oneArray();
+      if (!empty($sep['no_sep'])) {
+        $no_sep = $sep['no_sep'];
+      }
+    }
+
+    // Ambil histori SEP pasien dari BPJS (90 hari terakhir)
+    $tStamp = strval(time());
+    $key = $this->consid . $this->secretkey . $tStamp;
+    $tglMulai = date('Y-m-d', strtotime('-90 days'));
+    $tglAkhir = date('Y-m-d');
+    $url = $this->api_url . 'monitoring/HistoriPelayanan/NoKartu/' . $no_kartu . '/tglMulai/' . $tglMulai . '/tglAkhir/' . $tglAkhir;
+    $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+    $json = json_decode($output, true);
+    if (!empty($json['response'])) {
+      $stringDecrypt = stringDecrypt($key, $json['response']);
+      if (!empty($stringDecrypt)) {
+        $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent($stringDecrypt);
+        $arr = json_decode($decompress, true);
+        if (!empty($arr['histori']) && is_array($arr['histori'])) {
+          $histori_sep = $arr['histori'];
+          if (empty($no_sep) && !empty($arr['histori'][0]['noSep'])) {
+            $no_sep = $arr['histori'][0]['noSep'];
+          }
+        }
+      }
+    }
+
+    $seps = $this->db('bridging_sep')->where('no_kartu', $no_kartu)->toArray();
+    $sep_nums = array_column($seps, 'no_sep');
+    if (!empty($no_sep) && !in_array($no_sep, $sep_nums)) {
+      $sep_nums[] = $no_sep;
+    }
+
+    if (!empty($sep_nums)) {
+      $bridging_surat_kontrol_bpjs = $this->db('bridging_surat_kontrol_bpjs')
+        ->where('no_sep', 'IN', $sep_nums)
+        ->toArray();
+    } else {
+      $bridging_surat_kontrol_bpjs = $this->db('bridging_surat_kontrol_bpjs')->toArray();
+    }
+
+    $this->tpl->set('no_sep', htmlspecialchars($no_sep, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+    $this->tpl->set('histori_sep', $this->tpl->noParse_array(htmlspecialchars_array($histori_sep)));
     $this->tpl->set('kontrol', $this->tpl->noParse_array(htmlspecialchars_array($bridging_surat_kontrol_bpjs)));
     $this->tpl->set('maping_dokter_dpjpvclaim', $this->tpl->noParse_array(htmlspecialchars_array($maping_dokter_dpjpvclaim)));
     $this->tpl->set('maping_poli_bpjs', $this->tpl->noParse_array(htmlspecialchars_array($maping_poli_bpjs)));
-    $this->tpl->set('no_kartu', $no_kartu);
+    $this->tpl->set('no_kartu', htmlspecialchars($no_kartu, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
     echo $this->draw('kontrol.html');
     exit();
   }
 
   public function getKontrolDisplay($no_kartu)
   {
-    $bridging_surat_kontrol_bpjs = $this->db('bridging_surat_kontrol_bpjs')
-      ->join('bridging_sep', 'bridging_sep.no_sep=bridging_surat_kontrol_bpjs.no_sep')
-      ->where('bridging_sep.no_kartu', $no_kartu)
-      ->toArray();
+    $seps = $this->db('bridging_sep')->where('no_kartu', $no_kartu)->toArray();
+    $sep_nums = array_column($seps, 'no_sep');
+
+    if (!empty($sep_nums)) {
+      $bridging_surat_kontrol_bpjs = $this->db('bridging_surat_kontrol_bpjs')
+        ->where('no_sep', 'IN', $sep_nums)
+        ->toArray();
+    } else {
+      $bridging_surat_kontrol_bpjs = $this->db('bridging_surat_kontrol_bpjs')->toArray();
+    }
+
     $this->tpl->set('kontrol', $this->tpl->noParse_array(htmlspecialchars_array($bridging_surat_kontrol_bpjs)));
     $this->tpl->set('no_kartu', $no_kartu);
     echo $this->draw('kontrol.display.html');
     exit();
   }
 
+  public function getSyncKontrol($no_kartu)
+  {
+    header('Content-Type: application/json');
+    $tStamp = strval(time());
+    $key = $this->consid . $this->secretkey . $tStamp;
+
+    $synced = 0;
+    $periods = [
+      ['m' => date('m'), 'y' => date('Y')],
+      ['m' => date('m', strtotime('-1 month')), 'y' => date('Y', strtotime('-1 month'))],
+      ['m' => date('m', strtotime('+1 month')), 'y' => date('Y', strtotime('+1 month'))]
+    ];
+
+    foreach ($periods as $period) {
+      foreach ([2, 1] as $filter) {
+        $url = $this->api_url . 'RencanaKontrol/ListRencanaKontrol/Bulan/' . $period['m'] . '/Tahun/' . $period['y'] . '/Nokartu/' . $no_kartu . '/filter/' . $filter;
+        $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+        $json = json_decode($output, true);
+        if (!empty($json['metaData']['code']) && $json['metaData']['code'] == 200 && !empty($json['response'])) {
+          $stringDecrypt = stringDecrypt($key, $json['response']);
+          if (!empty($stringDecrypt)) {
+            $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent($stringDecrypt);
+            $resp = json_decode($decompress, true);
+            if (!empty($resp['list']) && is_array($resp['list'])) {
+              foreach ($resp['list'] as $item) {
+                $no_surat = $item['noSuratKontrol'] ?? '';
+                $no_sep = $item['noSepAsalKontrol'] ?? ($item['noSEP'] ?? '');
+                if (!empty($no_surat)) {
+                  if (!empty($no_sep)) {
+                    $chk = $this->db('bridging_sep')->where('no_sep', $no_sep)->oneArray();
+                    if (!$chk) {
+                      $this->db('bridging_sep')->save([
+                        'no_sep' => $no_sep,
+                        'no_kartu' => $no_kartu,
+                        'tglsep' => $item['tglTerbitKontrol'] ?? date('Y-m-d'),
+                        'klsnaik' => '', 'pembiayaan' => '', 'pjnaikkelas' => '', 'asal_rujukan' => '1. Faskes 1', 'eksekutif' => '0. Tidak', 'cob' => '0. Tidak', 'notelep' => '-', 'katarak' => '0. Tidak', 'tglkkl' => '0000-00-00', 'keterangankkl' => '-', 'suplesi' => '0. Tidak', 'no_sep_suplesi' => '-', 'kdprop' => '-', 'nmprop' => '-', 'kdkab' => '-', 'nmkab' => '-', 'kdkec' => '-', 'nmkec' => '-', 'noskdp' => '0', 'kddpjp' => '-', 'nmdpdjp' => '-', 'tujuankunjungan' => '0', 'flagprosedur' => '', 'penunjang' => '', 'asesmenpelayanan' => '', 'kddpjplayanan' => '-', 'nmdpjplayanan' => '-'
+                      ]);
+                    }
+                  } else {
+                    $no_sep = null;
+                  }
+
+                  $exist = $this->db('bridging_surat_kontrol_bpjs')->where('no_surat', $no_surat)->oneArray();
+                  if (!$exist) {
+                    $this->db('bridging_surat_kontrol_bpjs')->save([
+                      'no_sep' => $no_sep,
+                      'tgl_surat' => $item['tglTerbitKontrol'] ?? date('Y-m-d'),
+                      'no_surat' => $no_surat,
+                      'tgl_rencana' => $item['tglRencanaKontrol'] ?? date('Y-m-d'),
+                      'kd_dokter_bpjs' => $item['kodeDokter'] ?? '',
+                      'nm_dokter_bpjs' => $item['namaDokter'] ?? '',
+                      'kd_poli_bpjs' => $item['kodePoliTujuan'] ?? '',
+                      'nm_poli_bpjs' => $item['namaPoliTujuan'] ?? ''
+                    ]);
+                    $synced++;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    echo json_encode([
+      'status' => 'success',
+      'message' => $synced > 0 ? "Berhasil sinkron $synced Surat Kontrol dari server BPJS!" : "Tidak ada Surat Kontrol baru yang ditemukan di server BPJS untuk pasien ini."
+    ]);
+    exit();
+  }
+
   public function postSaveKontrol()
   {
+    header('Content-Type: application/json');
     $tStamp = strval(time());
     $key = $this->consid . $this->secretkey . $tStamp;
     $_POST['sep_user']  = $this->core->getUserInfo('fullname', null, true);
-    if($_POST['no_surkon'] == ''){
+
+    $no_sep = trim($_POST['no_sep'] ?? '');
+    $no_surkon = trim($_POST['no_surkon'] ?? '');
+    $dokter = trim($_POST['dokter'] ?? '');
+    $poli = trim($_POST['poli'] ?? '');
+    $tgl_rencana = trim($_POST['tanggal_periksa'] ?? date('Y-m-d'));
+
+    if (empty($no_sep)) {
+      echo json_encode(['status' => 'error', 'message' => 'Nomor SEP asal wajib diisi!']);
+      exit();
+    }
+    if (empty($dokter)) {
+      echo json_encode(['status' => 'error', 'message' => 'Dokter DPJP wajib dipilih!']);
+      exit();
+    }
+    if (empty($poli)) {
+      echo json_encode(['status' => 'error', 'message' => 'Poli tujuan kontrol wajib dipilih!']);
+      exit();
+    }
+
+    if ($no_surkon == '') {
       $data = [
         'request' => [
-          'noSEP' => $_POST['no_sep'],
-          'kodeDokter' => $_POST['dokter'],
-          'poliKontrol' => $_POST['poli'],
-          'tglRencanaKontrol' => $_POST['tanggal_periksa'],
+          'noSEP' => $no_sep,
+          'kodeDokter' => $dokter,
+          'poliKontrol' => $poli,
+          'tglRencanaKontrol' => $tgl_rencana,
           'user' => $_POST['sep_user']
         ]
       ];
@@ -3058,11 +3584,11 @@ class Admin extends AdminModule
     } else {
       $data = [
         'request' => [
-          'noSuratKontrol' => $_POST['no_surkon'],
-          'noSEP' => $_POST['no_sep'],
-          'kodeDokter' => $_POST['dokter'],
-          'poliKontrol' => $_POST['poli'],
-          'tglRencanaKontrol' => $_POST['tanggal_periksa'],
+          'noSuratKontrol' => $no_surkon,
+          'noSEP' => $no_sep,
+          'kodeDokter' => $dokter,
+          'poliKontrol' => $poli,
+          'tglRencanaKontrol' => $tgl_rencana,
           'user' => $_POST['sep_user']
         ]
       ];
@@ -3075,107 +3601,101 @@ class Admin extends AdminModule
     $url = $this->api_url . 'RencanaKontrol/' . $statusUrl;
     $output = BpjsService::$method($url, $data, $this->consid, $this->secretkey, $this->user_key, $tStamp);
     $data = json_decode($output, true);
-    //echo $data['metaData']['message'];
+
     if ($data == NULL) {
-      echo 'Koneksi ke server BPJS terputus. Silahkan ulangi beberapa saat lagi!';
-    } else if ($data['metaData']['code'] == 200) {
+      echo json_encode(['status' => 'error', 'message' => 'Koneksi ke server BPJS terputus. Silahkan ulangi beberapa saat lagi!']);
+    } else if (isset($data['metaData']['code']) && $data['metaData']['code'] == 200) {
       $stringDecrypt = stringDecrypt($key, $data['response']);
       $decompress = '""';
-      $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
-      $spri = json_decode($decompress, true);
-      //echo $spri['noSuratKontrol'];
-      $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $_POST['dokter'])->oneArray();
-      $maping_poli_bpjs = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $_POST['poli'])->oneArray();
-
-      if ($_POST['no_surkon'] == '') {
-        $bridging_surat_pri_bpjs = $this->db('bridging_surat_kontrol_bpjs')->save([
-          'no_sep' => $_POST['no_sep'],
-          'tgl_surat' => $_POST['tanggal_surat'],
-          'no_surat' => $spri['noSuratKontrol'],
-          'tgl_rencana' => $_POST['tanggal_periksa'],
-          'kd_dokter_bpjs' => $_POST['dokter'],
-          'nm_dokter_bpjs' => $maping_dokter_dpjpvclaim['nm_dokter_bpjs'],
-          'kd_poli_bpjs' => $_POST['poli'],
-          'nm_poli_bpjs' => $maping_poli_bpjs['nm_poli_bpjs']
-        ]);
-
-        $query = $this->db('skdp_bpjs')->save([
-          'tahun' => date('Y'),
-          'no_rkm_medis' => $_POST['no_rkm_medis'],
-          'diagnosa' => $_POST['diagnosa'],
-          'terapi' => $_POST['terapi'],
-          'alasan1' => $_POST['alasan1'],
-          'alasan2' => '',
-          'rtl1' => $_POST['rtl1'],
-          'rtl2' => '',
-          'tanggal_datang' => $_POST['tanggal_datang'],
-          'tanggal_rujukan' => $_POST['tanggal_rujukan'],
-          'no_antrian' => $this->core->setNoSKDP(),
-          'kd_dokter' => $this->core->getRegPeriksaInfo('kd_dokter', $_POST['no_rawat']),
-          'status' => 'Menunggu'
-        ]);
-
-        if ($query) {
-          $this->db('booking_registrasi')
-            ->save([
-              'tanggal_booking' => date('Y-m-d'),
-              'jam_booking' => date('H:i:s'),
-              'no_rkm_medis' => $_POST['no_rkm_medis'],
-              'tanggal_periksa' => $_POST['tanggal_datang'],
-              'kd_dokter' => $this->core->getRegPeriksaInfo('kd_dokter', $_POST['no_rawat']),
-              'kd_poli' => $this->core->getRegPeriksaInfo('kd_poli', $_POST['no_rawat']),
-              'no_reg' => $this->core->setNoBooking($this->core->getRegPeriksaInfo('kd_dokter', $_POST['no_rawat']), $_POST['tanggal_datang'], $this->core->getRegPeriksaInfo('kd_poli', $_POST['no_rawat'])),
-              'kd_pj' => $this->core->getRegPeriksaInfo('kd_pj', $_POST['no_rawat']),
-              'limit_reg' => 0,
-              'waktu_kunjungan' => $_POST['tanggal_datang'] . ' ' . date('H:i:s'),
-              'status' => 'Belum'
-            ]);
-        }
-      } else {
-        $this->db('bridging_surat_kontrol_bpjs')->where('no_sep',$_POST['no_sep'])->save([
-          'no_surat' => $spri['noSuratKontrol'],
-          'tgl_rencana' => $_POST['tanggal_periksa'],
-          'kd_dokter_bpjs' => $_POST['dokter'],
-          'nm_dokter_bpjs' => $maping_dokter_dpjpvclaim['nm_dokter_bpjs'],
-          'kd_poli_bpjs' => $_POST['poli'],
-          'nm_poli_bpjs' => $maping_poli_bpjs['nm_poli_bpjs']
-        ]);
-
-        $query = $this->db('skdp_bpjs')->save([
-          'tahun' => date('Y'),
-          'no_rkm_medis' => $_POST['no_rkm_medis'],
-          'diagnosa' => $_POST['diagnosa'],
-          'terapi' => $_POST['terapi'],
-          'alasan1' => $_POST['alasan1'],
-          'alasan2' => '',
-          'rtl1' => $_POST['rtl1'],
-          'rtl2' => '',
-          'tanggal_datang' => $_POST['tanggal_datang'],
-          'tanggal_rujukan' => $_POST['tanggal_rujukan'],
-          'no_antrian' => $this->core->setNoSKDP(),
-          'kd_dokter' => $this->core->getRegPeriksaInfo('kd_dokter', $_POST['no_rawat']),
-          'status' => 'Menunggu'
-        ]);
-
-        if ($query) {
-          $this->db('booking_registrasi')
-            ->save([
-              'tanggal_booking' => date('Y-m-d'),
-              'jam_booking' => date('H:i:s'),
-              'no_rkm_medis' => $_POST['no_rkm_medis'],
-              'tanggal_periksa' => $_POST['tanggal_datang'],
-              'kd_dokter' => $this->core->getRegPeriksaInfo('kd_dokter', $_POST['no_rawat']),
-              'kd_poli' => $this->core->getRegPeriksaInfo('kd_poli', $_POST['no_rawat']),
-              'no_reg' => $this->core->setNoBooking($this->core->getRegPeriksaInfo('kd_dokter', $_POST['no_rawat']), $_POST['tanggal_datang'], $this->core->getRegPeriksaInfo('kd_poli', $_POST['no_rawat'])),
-              'kd_pj' => $this->core->getRegPeriksaInfo('kd_pj', $_POST['no_rawat']),
-              'limit_reg' => 0,
-              'waktu_kunjungan' => $_POST['tanggal_datang'] . ' ' . date('H:i:s'),
-              'status' => 'Belum'
-            ]);
-        }
+      if (!empty($stringDecrypt)) {
+        $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
       }
+      $spri = json_decode($decompress, true);
+      $no_surat = !empty($spri['noSuratKontrol']) ? $spri['noSuratKontrol'] : (!empty($no_surkon) ? $no_surkon : '');
+
+      $nm_dokter = '';
+      $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $dokter)->oneArray();
+      if (!empty($maping_dokter_dpjpvclaim['nm_dokter_bpjs'])) {
+        $nm_dokter = $maping_dokter_dpjpvclaim['nm_dokter_bpjs'];
+      } elseif (!empty($_POST['nm_dokter'])) {
+        $nm_dokter = $_POST['nm_dokter'];
+      }
+
+      $nm_poli = '';
+      $maping_poli_bpjs = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $poli)->oneArray();
+      if (!empty($maping_poli_bpjs['nm_poli_bpjs'])) {
+        $nm_poli = $maping_poli_bpjs['nm_poli_bpjs'];
+      } elseif (!empty($_POST['nm_poli'])) {
+        $nm_poli = $_POST['nm_poli'];
+      }
+
+      // Pastikan bridging_sep memiliki no_sep agar constraint foreign key tidak gagal
+      $chk_sep = $this->db('bridging_sep')->where('no_sep', $no_sep)->oneArray();
+      if (!$chk_sep) {
+        $this->db('bridging_sep')->save([
+          'no_sep' => $no_sep,
+          'no_kartu' => $_POST['no_kartu'] ?? '',
+          'tglsep' => date('Y-m-d'),
+          'klsnaik' => '', 'pembiayaan' => '', 'pjnaikkelas' => '', 'asal_rujukan' => '1. Faskes 1', 'eksekutif' => '0. Tidak', 'cob' => '0. Tidak', 'notelep' => '-', 'katarak' => '0. Tidak', 'tglkkl' => '0000-00-00', 'keterangankkl' => '-', 'suplesi' => '0. Tidak', 'no_sep_suplesi' => '-', 'kdprop' => '-', 'nmprop' => '-', 'kdkab' => '-', 'nmkab' => '-', 'kdkec' => '-', 'nmkec' => '-', 'noskdp' => '0', 'kddpjp' => '-', 'nmdpdjp' => '-', 'tujuankunjungan' => '0', 'flagprosedur' => '', 'penunjang' => '', 'asesmenpelayanan' => '', 'kddpjplayanan' => '-', 'nmdpjplayanan' => '-'
+        ]);
+      }
+
+      if ($no_surkon == '') {
+        $this->db('bridging_surat_kontrol_bpjs')->save([
+          'no_sep' => $no_sep,
+          'tgl_surat' => $_POST['tanggal_surat'] ?? date('Y-m-d'),
+          'no_surat' => $no_surat,
+          'tgl_rencana' => $tgl_rencana,
+          'kd_dokter_bpjs' => $dokter,
+          'nm_dokter_bpjs' => $nm_dokter,
+          'kd_poli_bpjs' => $poli,
+          'nm_poli_bpjs' => $nm_poli
+        ]);
+      } else {
+        $this->db('bridging_surat_kontrol_bpjs')->where('no_surat', $no_surkon)->update([
+          'no_sep' => $no_sep,
+          'tgl_surat' => $_POST['tanggal_surat'] ?? date('Y-m-d'),
+          'no_surat' => $no_surat,
+          'tgl_rencana' => $tgl_rencana,
+          'kd_dokter_bpjs' => $dokter,
+          'nm_dokter_bpjs' => $nm_dokter,
+          'kd_poli_bpjs' => $poli,
+          'nm_poli_bpjs' => $nm_poli
+        ]);
+      }
+
+      // Opsional: simpan skdp_bpjs jika no_rkm_medis ada
+      if (!empty($_POST['no_rkm_medis'])) {
+        $this->db('skdp_bpjs')->save([
+          'tahun' => date('Y'),
+          'no_rkm_medis' => $_POST['no_rkm_medis'],
+          'diagnosa' => $_POST['diagnosa'] ?? '-',
+          'terapi' => $_POST['terapi'] ?? '-',
+          'alasan1' => $_POST['alasan1'] ?? '-',
+          'alasan2' => '',
+          'rtl1' => $_POST['rtl1'] ?? '-',
+          'rtl2' => '',
+          'tanggal_datang' => $tgl_rencana,
+          'tanggal_rujukan' => $_POST['tanggal_surat'] ?? date('Y-m-d'),
+          'no_antrian' => $this->core->setNoSKDP(),
+          'kd_dokter' => !empty($_POST['no_rawat']) ? $this->core->getRegPeriksaInfo('kd_dokter', $_POST['no_rawat']) : '',
+          'status' => 'Menunggu'
+        ]);
+      }
+
+      echo json_encode([
+        'status' => 'success',
+        'code' => 200,
+        'message' => ($no_surkon == '' ? 'Surat Kontrol berhasil dibuat' : 'Surat Kontrol berhasil diubah') . ' dengan nomor: ' . $no_surat,
+        'no_surat' => $no_surat
+      ]);
     } else {
-      echo htmlspecialchars($data['metaData']['message'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      $pesan = $data['metaData']['message'] ?? 'Gagal memproses Surat Kontrol di BPJS';
+      echo json_encode([
+        'status' => 'error',
+        'code' => $data['metaData']['code'] ?? 500,
+        'message' => $pesan
+      ]);
     }
     exit();
   }

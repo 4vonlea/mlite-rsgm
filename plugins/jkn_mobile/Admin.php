@@ -824,9 +824,19 @@ class Admin extends AdminModule
       $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $reg_periksa['kd_dokter'])->oneArray();
       $maping_poli_bpjs = $this->db('maping_poli_bpjs')->where('kd_poli_rs', $reg_periksa['kd_poli'])->oneArray();
       $jadwaldokter = $this->db('jadwal')->where('kd_dokter', $reg_periksa['kd_dokter'])->where('kd_poli', $reg_periksa['kd_poli'])->where('hari_kerja', $hari)->oneArray();
+
+      $kd_dokter_bpjs = $maping_dokter_dpjpvclaim ? $maping_dokter_dpjpvclaim['kd_dokter_bpjs'] : '';
+      $nm_dokter_bpjs = $maping_dokter_dpjpvclaim ? $maping_dokter_dpjpvclaim['nm_dokter_bpjs'] : '';
+      $kd_poli_bpjs = $maping_poli_bpjs ? $maping_poli_bpjs['kd_poli_bpjs'] : '';
+      $nm_poli_bpjs = $maping_poli_bpjs ? $maping_poli_bpjs['nm_poli_bpjs'] : '';
+
+      $jam_mulai = ($jadwaldokter && !empty($jadwaldokter['jam_mulai'])) ? $jadwaldokter['jam_mulai'] : '08:00:00';
+      $jam_selesai = ($jadwaldokter && !empty($jadwaldokter['jam_selesai'])) ? $jadwaldokter['jam_selesai'] : '14:00:00';
+      $kuota = ($jadwaldokter && !empty($jadwaldokter['kuota'])) ? intval($jadwaldokter['kuota']) : 30;
+
       $no_urut_reg = substr($reg_periksa['no_reg'], 0, 3);
-      $minutes = $no_urut_reg * 10;
-      $cek_kuota['jam_mulai'] = date('H:i:s',strtotime('+'.$minutes.' minutes',strtotime($jadwaldokter['jam_mulai'])));
+      $minutes = intval($no_urut_reg) * 10;
+      $cek_kuota['jam_mulai'] = date('H:i:s',strtotime('+'.$minutes.' minutes',strtotime($jam_mulai)));
       $jenispasien = 'NON JKN';
       if($reg_periksa['kd_pj'] == $this->settings->get('jkn_mobile.kd_pj_bpjs')) {
         $jenispasien = 'JKN';
@@ -855,17 +865,61 @@ class Admin extends AdminModule
       }
 
       $jeniskunjungan = 3;
-      $kodebooking = $this->settings->get('settings.ppk_bpjs').''.convertNorawat($reg_periksa['no_rawat']).''.$maping_poli_bpjs['kd_poli_bpjs'].''.$reg_periksa['no_reg'];
       $nomorreferensi = $this->settings->get('settings.ppk_bpjs').''.convertNorawat($reg_periksa['no_rawat']).''.$reg_periksa['no_reg'];
 
       if($jenispasien == 'JKN') {
           $bridging_sep = $this->db('bridging_sep')->where('no_rawat', $reg_periksa['no_rawat'])->oneArray();
-          $nomorreferensi = $bridging_sep['no_rujukan'];
-          if(!$bridging_sep) {
+          if ($bridging_sep) {
+            $nomorreferensi = $bridging_sep['no_rujukan'];
+            if (empty($kd_dokter_bpjs)) {
+              $kd_dokter_bpjs = $bridging_sep['kddpjplayanan'] ?: $bridging_sep['kddpjp'];
+              $nm_dokter_bpjs = $bridging_sep['nmdpjplayanan'] ?: $bridging_sep['nmdpdjp'];
+            }
+            if (empty($kd_poli_bpjs)) {
+              $kd_poli_bpjs = $bridging_sep['kdpolitujuan'];
+              $nm_poli_bpjs = $bridging_sep['nmpolitujuan'];
+            }
+          } else {
             $bridging_sep_internal = $this->db('bridging_sep_internal')->where('no_rawat', $reg_periksa['no_rawat'])->oneArray();
-            $nomorreferensi = $bridging_sep_internal['no_rujukan'];
+            if ($bridging_sep_internal) {
+              $nomorreferensi = $bridging_sep_internal['no_rujukan'];
+              if (empty($kd_dokter_bpjs)) {
+                $kd_dokter_bpjs = $bridging_sep_internal['kddpjplayanan'] ?: $bridging_sep_internal['kddpjp'];
+                $nm_dokter_bpjs = $bridging_sep_internal['nmdpjplayanan'] ?: $bridging_sep_internal['nmdpdjp'];
+              }
+              if (empty($kd_poli_bpjs)) {
+                $kd_poli_bpjs = $bridging_sep_internal['kdpolitujuan'];
+                $nm_poli_bpjs = $bridging_sep_internal['nmpolitujuan'];
+              }
+            }
+          }
+
+          if (empty($nomorreferensi)) {
+            $surat_pri = $this->db('bridging_surat_pri_bpjs')->where('no_rawat', $reg_periksa['no_rawat'])->oneArray();
+            if ($surat_pri && !empty($surat_pri['no_surat'])) {
+              $nomorreferensi = $surat_pri['no_surat'];
+              $jeniskunjungan = 3;
+            }
+          }
+
+          if (empty($nomorreferensi)) {
+            echo json_encode([
+              'status' => 'error',
+              'message' => 'Pasien BPJS/JKN ini belum memiliki SEP atau Nomor Rujukan. Silakan terbitkan SEP terlebih dahulu di menu Rawat Jalan (tombol BPJS) sebelum mengirim Antrol.'
+            ]);
+            exit();
           }
       }
+
+      if (empty($kd_dokter_bpjs) || empty($kd_poli_bpjs)) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Data mapping Dokter BPJS atau Poli BPJS belum tersedia. Silakan lengkapi Mapping Dokter/Poli di menu Bridging.'
+        ]);
+        exit();
+      }
+
+      $kodebooking = $this->settings->get('settings.ppk_bpjs').''.convertNorawat($reg_periksa['no_rawat']).''.$kd_poli_bpjs.''.$reg_periksa['no_reg'];
 
       $data = [
           'kodebooking' => $kodebooking,
@@ -873,35 +927,39 @@ class Admin extends AdminModule
           'nomorkartu' => $nomorkartu,
           'nik' => $nik,
           'nohp' => $nohp,
-          'kodepoli' => $maping_poli_bpjs['kd_poli_bpjs'],
-          'namapoli' => $maping_poli_bpjs['nm_poli_bpjs'],
+          'kodepoli' => $kd_poli_bpjs,
+          'namapoli' => $nm_poli_bpjs,
           'pasienbaru' => $pasienbaru,
           'norm' => $reg_periksa['no_rkm_medis'],
           'tanggalperiksa' => $reg_periksa['tgl_registrasi'],
-          'kodedokter' => $maping_dokter_dpjpvclaim['kd_dokter_bpjs'],
-          'namadokter' => $maping_dokter_dpjpvclaim['nm_dokter_bpjs'],
-          'jampraktek' => substr($jadwaldokter['jam_mulai'],0,5).'-'.substr($jadwaldokter['jam_selesai'],0,5),
+          'kodedokter' => $kd_dokter_bpjs,
+          'namadokter' => $nm_dokter_bpjs,
+          'jampraktek' => substr($jam_mulai,0,5).'-'.substr($jam_selesai,0,5),
           'jeniskunjungan' => $jeniskunjungan,
           'nomorreferensi' => $nomorreferensi,
-          'nomorantrean' => $maping_poli_bpjs['kd_poli_bpjs'].'-'.$reg_periksa['no_reg'],
+          'nomorantrean' => $kd_poli_bpjs.'-'.$reg_periksa['no_reg'],
           'angkaantrean' => $reg_periksa['no_reg'],
           'estimasidilayani' => strtotime($reg_periksa['tgl_registrasi'].' '.$cek_kuota['jam_mulai']) * 1000,
-          'sisakuotajkn' => $jadwaldokter['kuota']-ltrim($reg_periksa['no_reg'],'0'),
-          'kuotajkn' => intval($jadwaldokter['kuota']),
-          'sisakuotanonjkn' => $jadwaldokter['kuota']-ltrim($reg_periksa['no_reg'],'0'),
-          'kuotanonjkn' => intval($jadwaldokter['kuota']),
+          'sisakuotajkn' => max(0, $kuota - intval(ltrim($reg_periksa['no_reg'],'0'))),
+          'kuotajkn' => $kuota,
+          'sisakuotanonjkn' => max(0, $kuota - intval(ltrim($reg_periksa['no_reg'],'0'))),
+          'kuotanonjkn' => $kuota,
           'keterangan' => 'Peserta harap 30 menit lebih awal guna pencatatan administrasi.'
       ];
       $data = json_encode($data);
       $url = $this->bpjsurl.'antrean/add';
       $output = BpjsService::post($url, $data, $this->consid, $this->secretkey, $this->user_key, NULL);
       $data = json_decode($output, true);
-      if($data['metadata']['code'] == 200 || $data['metadata']['code'] == 208) {
+      $code = isset($data['metadata']['code']) ? $data['metadata']['code'] : (isset($data['metaData']['code']) ? $data['metaData']['code'] : 500);
+      $msg = isset($data['metadata']['message']) ? $data['metadata']['message'] : (isset($data['metaData']['message']) ? $data['metaData']['message'] : 'Gagal mengirim antrean ke server BPJS.');
+
+      if($code == 200 || $code == 208) {
         $response = [
-            'nomor_referensi' =>  $nomorreferensi,
-            'kode_booking' => $kodebooking
+            'status' => 'success',
+            'nomor_referensi' => $nomorreferensi,
+            'kode_booking' => $kodebooking,
+            'message' => 'Antrean berhasil dikirim ke BPJS (' . $code . ': ' . $msg . ')'
         ];
-        echo json_encode(htmlspecialchars_array($response));
         $this->db('mlite_antrian_referensi')->save([
             'tanggal_periksa' => $reg_periksa['tgl_registrasi'],
             'no_rkm_medis' => $reg_periksa['no_rkm_medis'],
@@ -910,10 +968,15 @@ class Admin extends AdminModule
             'kodebooking' => $kodebooking,
             'jenis_kunjungan' => $jeniskunjungan,
             'status_kirim' => 'Sudah',
-            'keterangan' => $data['metadata']['code'].': '.$data['metadata']['message']
+            'keterangan' => $code . ': ' . $msg
         ]);
+        echo json_encode(htmlspecialchars_array($response));
       } else {
-        echo $data['metadata']['code'].': '.$data['metadata']['message'];
+        echo json_encode([
+            'status' => 'error',
+            'code' => $code,
+            'message' => $code . ': ' . $msg
+        ]);
       }
       exit();
     }

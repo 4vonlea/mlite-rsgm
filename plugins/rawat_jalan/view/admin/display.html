@@ -148,6 +148,8 @@
                 data-nm_pasien="{$value.nm_pasien}"
                 data-no_rawat="{$value.no_rawat}"
                 data-no_peserta="{$value.no_peserta}"
+                data-kd_dokter="{$value.kd_dokter}"
+                data-nm_dokter="{$value.nm_dokter}"
                 {if: $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
                 disabled
                 {/if}

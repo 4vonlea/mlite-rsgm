@@ -9,6 +9,13 @@
     <h4 class="modal-title">Data Task ID</h4>
 </div>
 <div class="modal-body">
+  <div id="antrol_alert_box">
+    {if: empty($nomor_referensi)}
+    <div class="alert alert-warning" style="margin-bottom:12px;padding:8px 12px;font-size:12px;">
+      <i class="fa fa-info-circle"></i> <b>Catatan Bridging BPJS:</b> Nomor referensi/rujukan belum terhubung. Jika ini pasien BPJS, pastikan <b>SEP sudah diterbitkan</b> di menu Rawat Jalan (tombol BPJS) sebelum klik Kirim Antrol.
+    </div>
+    {/if}
+  </div>
   <label for="" style="width: 250px;">Nama</label><span>{?=isset_or($pasien.nm_pasien)?}</span><br>
   <label for="" style="width: 250px;">Nomor RM</label><span>{?=isset_or($pasien.no_rkm_medis)?}</span><br>
   <label for="" style="width: 250px;">Nomor Rawat</label><span>{?=isset_or($pasien.no_rawat)?}</span><br>
@@ -91,20 +98,43 @@
         });
     });
     $(document).ready(function(){
-      $("#kirimantrol").click(function(){
+      $("#kirimantrol").click(function(e){
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.prop('disabled')) return;
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Mengirim...');
+
         $.ajax({
              url: "{?=url([ADMIN,'jkn_mobile','kirimantrian',convertNoRawat($pasien.no_rawat)])?}",
-             method:"GET",
-             data:{},
-             success:function(data)
+             method: "GET",
+             data: {},
+             dataType: "json",
+             success: function(res)
              {
-               alert(data);
-               var data = JSON.parse(data);
-               $('#nomor_referensi').text(data.nomor_referensi + ' / ');
-               $('#kode_booking').text(data.kode_booking);
-               $('#status_kirim_antrol').text('Sudah');
-               $('input:hidden[name=nomor_referensi]').val(data.nomor_referensi);
-               $('#kirimantrol').hide();
+               if (res && res.status === 'success') {
+                 $('#nomor_referensi').text(res.nomor_referensi + ' / ');
+                 $('#kode_booking').text(res.kode_booking);
+                 $('#status_kirim_antrol').text('Sudah');
+                 $('input:hidden[name=nomor_referensi]').val(res.nomor_referensi);
+                 $('#kirimantrol').hide();
+                 $('#antrol_alert_box').html('<div class="alert alert-success" style="margin-bottom:12px;padding:8px 12px;font-size:12px;"><i class="fa fa-check-circle"></i> ' + (res.message || 'Antrean berhasil dikirim ke BPJS.') + '</div>');
+               } else {
+                 var errMsg = (res && res.message) ? res.message : 'Gagal mengirim antrean ke server BPJS.';
+                 alert(errMsg);
+                 $('#antrol_alert_box').html('<div class="alert alert-danger" style="margin-bottom:12px;padding:8px 12px;font-size:12px;"><i class="fa fa-exclamation-triangle"></i> ' + errMsg + '</div>');
+                 $btn.prop('disabled', false).html('<i class="fa fa-send"></i> Kirim Antrol');
+               }
+             },
+             error: function(xhr)
+             {
+               var txt = xhr.responseText || 'Koneksi ke server BPJS terputus.';
+               try {
+                 var parsed = JSON.parse(txt);
+                 if (parsed && parsed.message) txt = parsed.message;
+               } catch(e) {}
+               alert(txt);
+               $('#antrol_alert_box').html('<div class="alert alert-danger" style="margin-bottom:12px;padding:8px 12px;font-size:12px;"><i class="fa fa-times-circle"></i> ' + txt + '</div>');
+               $btn.prop('disabled', false).html('<i class="fa fa-send"></i> Kirim Antrol');
              }
         });
       });

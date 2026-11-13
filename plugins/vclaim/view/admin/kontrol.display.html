@@ -1,26 +1,45 @@
-  <table class="table">
+<div class="table-responsive">
+  <table class="table table-bordered table-striped table-hover" style="font-size:12px; margin-bottom:0;">
     <thead>
-      <tr>
-        <th>No Rawat</th>
-        <th>No SEP</th>
-        <th>No Surat</th>
+      <tr class="info">
+        <th style="width: 140px; text-align:center;">Aksi</th>
+        <th>No Surat Kontrol</th>
+        <th>No SEP Asal</th>
         <th>Tgl. Surat</th>
-        <th>Tgl. Periksa</th>
-        <th>Dokter</th>
-        <th>Poli</th>
+        <th>Tgl. Rencana</th>
+        <th>Dokter DPJP</th>
+        <th>Poli / Unit</th>
       </tr>
     </thead>
     <tbody>
+      {if: !empty($kontrol)}
       {loop: $kontrol}
       <tr>
-        <td class="ubah_kontrol" data-no_surat="{?=isset_or($value.no_surat)?}" data-no_sep="{?=isset_or($value.no_sep)?}" data-kd_poli="{?=isset_or($value.kd_poli_bpjs)?}" data-kd_dokter="{?=isset_or($value.kd_dokter_bpjs)?}" data-tanggal_kontrol="{?=isset_or($value.tgl_rencana)?}" data-tanggal_surat="{?=isset_or($value.tgl_surat)?}">{?=isset_or($value.no_rawat)?}</td>
-        <td class="ubah_kontrol" data-no_surat="{?=isset_or($value.no_surat)?}" data-no_sep="{?=isset_or($value.no_sep)?}" data-kd_poli="{?=isset_or($value.kd_poli_bpjs)?}" data-kd_dokter="{?=isset_or($value.kd_dokter_bpjs)?}" data-tanggal_kontrol="{?=isset_or($value.tgl_rencana)?}" data-tanggal_surat="{?=isset_or($value.tgl_surat)?}">{?=isset_or($value.no_sep)?}</td>
-        <td class="pilih_nosurat" data-no_surat="{?=isset_or($value.no_surat)?}">{?=isset_or($value.no_surat)?}</td>
+        <td style="text-align:center;">
+          <button type="button" class="btn btn-xs btn-success pilih_nosurat" data-no_surat="{?=isset_or($value.no_surat)?}" title="Gunakan Surat Kontrol ini untuk formulir SEP">
+            <i class="fa fa-check"></i> Gunakan
+          </button>
+          <button type="button" class="btn btn-xs btn-warning ubah_kontrol" data-no_surat="{?=isset_or($value.no_surat)?}" data-no_sep="{?=isset_or($value.no_sep)?}" data-kd_poli="{?=isset_or($value.kd_poli_bpjs)?}" data-kd_dokter="{?=isset_or($value.kd_dokter_bpjs)?}" data-tanggal_kontrol="{?=isset_or($value.tgl_rencana)?}" data-tanggal_surat="{?=isset_or($value.tgl_surat)?}" title="Edit Surat Kontrol">
+            <i class="fa fa-pencil"></i> Edit
+          </button>
+        </td>
+        <td><strong class="text-primary">{?=isset_or($value.no_surat)?}</strong></td>
+        <td>{?=isset_or($value.no_sep)?}</td>
         <td>{?=isset_or($value.tgl_surat)?}</td>
         <td>{?=isset_or($value.tgl_rencana)?}</td>
         <td>{?=isset_or($value.nm_dokter_bpjs)?}</td>
         <td>{?=isset_or($value.nm_poli_bpjs)?}</td>
       </tr>
       {/loop}
+      {else}
+      <tr>
+        <td colspan="7" class="text-center text-muted" style="padding:25px;">
+          <i class="fa fa-info-circle fa-2x"></i><br>
+          <span style="font-size:13px; font-weight:bold;">Belum ada data Surat Kontrol tersimpan untuk pasien ini.</span><br>
+          <small>Jika Surat Kontrol sudah pernah diterbitkan di VClaim BPJS, klik tombol <strong>"Tarik dari BPJS"</strong> di atas. Atau buat Surat Kontrol baru menggunakan formulir di atas.</small>
+        </td>
+      </tr>
+      {/if}
     </tbody>
   </table>
+</div>
