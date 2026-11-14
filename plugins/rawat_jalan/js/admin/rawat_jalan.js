@@ -1012,17 +1012,59 @@ $("#layanan").on("click", ".pilih_layanan", function(event){
 // ketika tombol panggil ditekan
 $("#display").on("click",".panggil", function(event){
   event.preventDefault();
+  var btn = $(this);
+  var baseURL = mlite.url + '/' + mlite.admin;
+  var nm_pasien = btn.attr("data-nm_pasien") || '';
+  var nm_poli = btn.attr("data-nm_poli") || '';
+  var no_reg = btn.attr("data-no_reg") || '';
+  var no_rawat = btn.attr("data-no_rawat") || '';
+  var no_rkm_medis = btn.attr("data-no_rkm_medis") || '';
+  var kd_poli = btn.attr("data-kd_poli") || '';
+  var kd_dokter = btn.attr("data-kd_dokter") || '';
 
-  var nm_pasien 	= $(this).attr("data-nm_pasien");
-  var nm_poli = $(this).attr("data-nm_poli");
-  var no_reg = $(this).attr("data-no_reg");
-  function play (){
-    responsiveVoice.speak(
-      nm_pasien + ", nomor antrian " + no_reg + ", ke " + nm_poli ,"Indonesian Male", {pitch: 1,rate: 0.8,volume: 2}
-    );
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i><span class="hidden-xs hidden-sm"> Memanggil...</span>');
+
+  // Kirim event panggilan ke server (update state TV Display & Task ID BPJS)
+  $.ajax({
+    url: baseURL + '/rawat_jalan/panggilpasien?t=' + mlite.token,
+    type: 'POST',
+    data: {
+      no_rawat: no_rawat,
+      no_rkm_medis: no_rkm_medis,
+      kd_poli: kd_poli,
+      kd_dokter: kd_dokter,
+      no_reg: no_reg,
+      nm_pasien: nm_pasien,
+      nm_poli: nm_poli
+    },
+    dataType: 'json',
+    complete: function() {
+      setTimeout(function() {
+        btn.prop('disabled', false).html('<i class="fa fa-bullhorn"></i><span class="hidden-xs hidden-sm"> Dipanggil</span>');
+      }, 1500);
+    }
+  });
+
+  // Sintesis Suara Pemanggilan Pasien
+  function speakPatient() {
+    var textToSpeak = nm_pasien + ", nomor antrean " + no_reg + ", silakan menuju " + nm_poli;
+    if (typeof responsiveVoice !== 'undefined' && responsiveVoice.voiceSupport()) {
+      try {
+        responsiveVoice.speak(nm_pasien + ", nomor antrian " + no_reg + ", ke " + nm_poli, "Indonesian Male", {pitch: 1, rate: 0.85, volume: 2});
+        return;
+      } catch (e) {}
+    }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      var utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'id-ID';
+      utterance.rate = 0.85;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
   }
-  play();
 
+  speakPatient();
 });
 // akhir kode panggil
 

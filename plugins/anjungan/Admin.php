@@ -67,30 +67,78 @@ class Admin extends AdminModule
           $loket = explode(",", $this->settings->get('anjungan.antrian_loket'));
           $namaloket = 'a';
           $panggil_loket = 'panggil_loket';
-          $get_antrian = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+          $get_antrian = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->desc('kd')->oneArray();
           $noantrian = 0;
           if(!empty($get_antrian['noantrian'])) {
-            $noantrian = $get_antrian['noantrian'];
+            $noantrian = intval($get_antrian['noantrian']);
           }
 
           $antriloket = $this->settings->get('anjungan.panggil_loket_nomor');
-          $tcounter = $antriloket;
-          $_tcounter = 1;
-          if(!empty($tcounter)) {
-            $_tcounter = $tcounter + 1;
+          $tcounter = !empty($antriloket) ? intval($antriloket) : 1;
+          if($tcounter <= 0) {
+            $tcounter = 1;
           }
-          if(isset($_GET['loket'])) {
+          $_tcounter = $tcounter + 1;
+
+          if((isset($_GET['action']) && $_GET['action'] == 'next') || (isset($_GET['loket']) && isset($_GET['next']))) {
+            $tcounter = $_tcounter;
+            $loketVal = isset($_GET['loket']) && $_GET['loket'] != '' ? $_GET['loket'] : '1';
+
+            // Bersihkan antrian pending hari ini
             $this->db('mlite_antrian_loket')
-              ->where('type', 'Loket')
-              ->where('noantrian', $tcounter)
               ->where('postdate', date('Y-m-d'))
-              ->save(['end_time' => date('H:i:s')]);
-            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket')->save(['value' => $_GET['loket']]);
-            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket_nomor')->save(['value' => $_tcounter]);
+              ->where('status', 1)
+              ->save(['status' => 2, 'end_time' => date('H:i:s')]);
+
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket')->save(['value' => $loketVal]);
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket_nomor')->save(['value' => $tcounter]);
+
+            $cek = $this->db('mlite_antrian_loket')->where('type', 'Loket')->where('noantrian', $tcounter)->where('postdate', date('Y-m-d'))->oneArray();
+            if ($cek) {
+                $this->db('mlite_antrian_loket')->where('type', 'Loket')->where('noantrian', $tcounter)->where('postdate', date('Y-m-d'))->save(['status' => 1, 'loket' => $loketVal, 'start_time' => date('H:i:s')]);
+            } else {
+                $this->db('mlite_antrian_loket')->save([
+                    'type' => 'Loket',
+                    'noantrian' => $tcounter,
+                    'loket' => $loketVal,
+                    'postdate' => date('Y-m-d'),
+                    'start_time' => date('H:i:s'),
+                    'end_time' => '00:00:00',
+                    'status' => 1
+                ]);
+            }
+            redirect(url(ADMIN.'/anjungan/pemanggil/?show=panggil_loket&loket='.$loketVal));
           }
-          if(isset($_GET['antrian'])) {
-            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket')->save(['value' => $_GET['reset']]);
-            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket_nomor')->save(['value' => $_GET['antrian']]);
+          if(isset($_GET['antrian']) && $_GET['antrian'] != '') {
+            $jumpAntrian = intval($_GET['antrian']);
+            if($jumpAntrian <= 0) $jumpAntrian = 1;
+            $jumpLoket = isset($_GET['reset']) && $_GET['reset'] != '' ? $_GET['reset'] : (isset($_GET['loket']) ? $_GET['loket'] : '1');
+            $tcounter = $jumpAntrian;
+
+            // Bersihkan antrian pending hari ini
+            $this->db('mlite_antrian_loket')
+              ->where('postdate', date('Y-m-d'))
+              ->where('status', 1)
+              ->save(['status' => 2, 'end_time' => date('H:i:s')]);
+
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket')->save(['value' => $jumpLoket]);
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket_nomor')->save(['value' => $tcounter]);
+
+            $cek = $this->db('mlite_antrian_loket')->where('type', 'Loket')->where('noantrian', $tcounter)->where('postdate', date('Y-m-d'))->oneArray();
+            if ($cek) {
+                $this->db('mlite_antrian_loket')->where('type', 'Loket')->where('noantrian', $tcounter)->where('postdate', date('Y-m-d'))->save(['status' => 1, 'loket' => $jumpLoket, 'start_time' => date('H:i:s')]);
+            } else {
+                $this->db('mlite_antrian_loket')->save([
+                    'type' => 'Loket',
+                    'noantrian' => $tcounter,
+                    'loket' => $jumpLoket,
+                    'postdate' => date('Y-m-d'),
+                    'start_time' => date('H:i:s'),
+                    'end_time' => '00:00:00',
+                    'status' => 1
+                ]);
+            }
+            redirect(url(ADMIN.'/anjungan/pemanggil/?show=panggil_loket&loket='.$jumpLoket));
           }
           if(isset($_GET['no_rkm_medis'])) {
             $this->db('mlite_antrian_loket')->where('noantrian', $_GET['noantrian'])->where('postdate', date('Y-m-d'))->save(['no_rkm_medis' => $_GET['no_rkm_medis']]);
@@ -111,31 +159,81 @@ class Admin extends AdminModule
           $loket = explode(",", $this->settings->get('anjungan.antrian_cs'));
           $namaloket = 'b';
           $panggil_loket = 'panggil_cs';
-          $get_antrian = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'CS')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+          $get_antrian = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'CS')->where('postdate', date('Y-m-d'))->desc('kd')->oneArray();
           $noantrian = 0;
           if(!empty($get_antrian['noantrian'])) {
-            $noantrian = $get_antrian['noantrian'];
+            $noantrian = intval($get_antrian['noantrian']);
           }
 
           $antriloket = $this->settings->get('anjungan.panggil_cs_nomor');
-          $tcounter = $antriloket;
-          $_tcounter = 1;
-          if(!empty($tcounter)) {
-            $_tcounter = $tcounter + 1;
+          $tcounter = !empty($antriloket) ? intval($antriloket) : 1;
+          if($tcounter <= 0) {
+            $tcounter = 1;
           }
-          if(isset($_GET['loket'])) {
+          $_tcounter = $tcounter + 1;
+
+          if((isset($_GET['action']) && $_GET['action'] == 'next') || (isset($_GET['loket']) && isset($_GET['next']))) {
+            $tcounter = $_tcounter;
+            $loketVal = isset($_GET['loket']) && $_GET['loket'] != '' ? $_GET['loket'] : '1';
+
+            // Bersihkan antrian pending hari ini
             $this->db('mlite_antrian_loket')
-              ->where('type', 'CS')
-              ->where('noantrian', $tcounter)
               ->where('postdate', date('Y-m-d'))
-              ->save(['end_time' => date('H:i:s')]);
-            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_cs')->save(['value' => $_GET['loket']]);
-            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_cs_nomor')->save(['value' => $_tcounter]);
+              ->where('status', 1)
+              ->save(['status' => 2, 'end_time' => date('H:i:s')]);
+
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_cs')->save(['value' => $loketVal]);
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_cs_nomor')->save(['value' => $tcounter]);
+
+            $cek = $this->db('mlite_antrian_loket')->where('type', 'CS')->where('noantrian', $tcounter)->where('postdate', date('Y-m-d'))->oneArray();
+            if ($cek) {
+                $this->db('mlite_antrian_loket')->where('type', 'CS')->where('noantrian', $tcounter)->where('postdate', date('Y-m-d'))->save(['status' => 1, 'loket' => $loketVal, 'start_time' => date('H:i:s')]);
+            } else {
+                $this->db('mlite_antrian_loket')->save([
+                    'type' => 'CS',
+                    'noantrian' => $tcounter,
+                    'loket' => $loketVal,
+                    'postdate' => date('Y-m-d'),
+                    'start_time' => date('H:i:s'),
+                    'end_time' => '00:00:00',
+                    'status' => 1
+                ]);
+            }
+            redirect(url(ADMIN.'/anjungan/pemanggil/?show=panggil_cs&loket='.$loketVal));
           }
-          if(isset($_GET['antrian'])) {
-            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_cs')->save(['value' => $_GET['reset']]);
-            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_cs_nomor')->save(['value' => $_GET['antrian']]);
+
+          if(isset($_GET['antrian']) && $_GET['antrian'] != '') {
+            $jumpAntrian = intval($_GET['antrian']);
+            if($jumpAntrian <= 0) $jumpAntrian = 1;
+            $jumpLoket = isset($_GET['reset']) && $_GET['reset'] != '' ? $_GET['reset'] : (isset($_GET['loket']) ? $_GET['loket'] : '1');
+            $tcounter = $jumpAntrian;
+
+            // Bersihkan antrian pending hari ini
+            $this->db('mlite_antrian_loket')
+              ->where('postdate', date('Y-m-d'))
+              ->where('status', 1)
+              ->save(['status' => 2, 'end_time' => date('H:i:s')]);
+
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_cs')->save(['value' => $jumpLoket]);
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_cs_nomor')->save(['value' => $tcounter]);
+
+            $cek = $this->db('mlite_antrian_loket')->where('type', 'CS')->where('noantrian', $tcounter)->where('postdate', date('Y-m-d'))->oneArray();
+            if ($cek) {
+                $this->db('mlite_antrian_loket')->where('type', 'CS')->where('noantrian', $tcounter)->where('postdate', date('Y-m-d'))->save(['status' => 1, 'loket' => $jumpLoket, 'start_time' => date('H:i:s')]);
+            } else {
+                $this->db('mlite_antrian_loket')->save([
+                    'type' => 'CS',
+                    'noantrian' => $tcounter,
+                    'loket' => $jumpLoket,
+                    'postdate' => date('Y-m-d'),
+                    'start_time' => date('H:i:s'),
+                    'end_time' => '00:00:00',
+                    'status' => 1
+                ]);
+            }
+            redirect(url(ADMIN.'/anjungan/pemanggil/?show=panggil_cs&loket='.$jumpLoket));
           }
+
           $hitung_antrian = $this->db('mlite_antrian_loket')
             ->where('type', 'CS')
             ->like('postdate', date('Y-m-d'))
@@ -152,30 +250,79 @@ class Admin extends AdminModule
           $loket = explode(",", $this->settings->get('anjungan.antrian_apotek'));
           $namaloket = 'f';
           $panggil_loket = 'panggil_apotek';
-          $get_antrian = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Apotek')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+          $get_antrian = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Apotek')->where('postdate', date('Y-m-d'))->desc('kd')->oneArray();
           $noantrian = 0;
           if(!empty($get_antrian['noantrian'])) {
-            $noantrian = $get_antrian['noantrian'];
+            $noantrian = intval($get_antrian['noantrian']);
           }
 
           $antriloket = $this->settings->get('anjungan.panggil_apotek_nomor');
-          $tcounter = $antriloket;
-          $_tcounter = 1;
-          if(!empty($tcounter)) {
-            $_tcounter = $tcounter + 1;
+          $tcounter = !empty($antriloket) ? intval($antriloket) : 1;
+          if($tcounter <= 0) {
+            $tcounter = 1;
           }
-          if(isset($_GET['loket'])) {
+          $_tcounter = $tcounter + 1;
+
+          if((isset($_GET['action']) && $_GET['action'] == 'next') || (isset($_GET['loket']) && isset($_GET['next']))) {
+            $tcounter = $_tcounter;
+            $loketVal = isset($_GET['loket']) && $_GET['loket'] != '' ? $_GET['loket'] : '1';
+
+            // Bersihkan antrian pending hari ini
             $this->db('mlite_antrian_loket')
-              ->where('type', 'Apotek')
-              ->where('noantrian', $tcounter)
               ->where('postdate', date('Y-m-d'))
-              ->save(['end_time' => date('H:i:s')]);
-            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_apotek')->save(['value' => $_GET['loket']]);
-            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_apotek_nomor')->save(['value' => $_tcounter]);
+              ->where('status', 1)
+              ->save(['status' => 2, 'end_time' => date('H:i:s')]);
+
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_apotek')->save(['value' => $loketVal]);
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_apotek_nomor')->save(['value' => $tcounter]);
+
+            $cek = $this->db('mlite_antrian_loket')->where('type', 'Apotek')->where('noantrian', $tcounter)->where('postdate', date('Y-m-d'))->oneArray();
+            if ($cek) {
+                $this->db('mlite_antrian_loket')->where('type', 'Apotek')->where('noantrian', $tcounter)->where('postdate', date('Y-m-d'))->save(['status' => 1, 'loket' => $loketVal, 'start_time' => date('H:i:s')]);
+            } else {
+                $this->db('mlite_antrian_loket')->save([
+                    'type' => 'Apotek',
+                    'noantrian' => $tcounter,
+                    'loket' => $loketVal,
+                    'postdate' => date('Y-m-d'),
+                    'start_time' => date('H:i:s'),
+                    'end_time' => '00:00:00',
+                    'status' => 1
+                ]);
+            }
+            redirect(url(ADMIN.'/anjungan/pemanggil/?show=panggil_apotek&loket='.$loketVal));
           }
-          if(isset($_GET['antrian'])) {
-            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_apotek')->save(['value' => $_GET['reset']]);
-            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_apotek_nomor')->save(['value' => $_GET['antrian']]);
+
+          if(isset($_GET['antrian']) && $_GET['antrian'] != '') {
+            $jumpAntrian = intval($_GET['antrian']);
+            if($jumpAntrian <= 0) $jumpAntrian = 1;
+            $jumpLoket = isset($_GET['reset']) && $_GET['reset'] != '' ? $_GET['reset'] : (isset($_GET['loket']) ? $_GET['loket'] : '1');
+            $tcounter = $jumpAntrian;
+
+            // Bersihkan antrian pending hari ini
+            $this->db('mlite_antrian_loket')
+              ->where('postdate', date('Y-m-d'))
+              ->where('status', 1)
+              ->save(['status' => 2, 'end_time' => date('H:i:s')]);
+
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_apotek')->save(['value' => $jumpLoket]);
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_apotek_nomor')->save(['value' => $tcounter]);
+
+            $cek = $this->db('mlite_antrian_loket')->where('type', 'Apotek')->where('noantrian', $tcounter)->where('postdate', date('Y-m-d'))->oneArray();
+            if ($cek) {
+                $this->db('mlite_antrian_loket')->where('type', 'Apotek')->where('noantrian', $tcounter)->where('postdate', date('Y-m-d'))->save(['status' => 1, 'loket' => $jumpLoket, 'start_time' => date('H:i:s')]);
+            } else {
+                $this->db('mlite_antrian_loket')->save([
+                    'type' => 'Apotek',
+                    'noantrian' => $tcounter,
+                    'loket' => $jumpLoket,
+                    'postdate' => date('Y-m-d'),
+                    'start_time' => date('H:i:s'),
+                    'end_time' => '00:00:00',
+                    'status' => 1
+                ]);
+            }
+            redirect(url(ADMIN.'/anjungan/pemanggil/?show=panggil_apotek&loket='.$jumpLoket));
           }
           $hitung_antrian = $this->db('mlite_antrian_loket')
             ->where('type', 'Apotek')

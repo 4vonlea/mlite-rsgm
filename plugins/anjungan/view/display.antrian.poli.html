@@ -1,83 +1,342 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="refresh" content="180">
+    <meta http-equiv="refresh" content="15">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <title>{?=isset_or($title)?} - {?=isset_or($settings.nama_instansi)?}</title>
+    <title>{?=isset_or($title, 'Antrian Poliklinik')?} - {?=isset_or($settings.nama_instansi)?}</title>
     <link rel="icon" href="{?=url()?}/favicon.png" type="image/x-icon">
     <link rel="stylesheet" href="{?=url()?}/assets/css/bootstrap.min.css">
     <link href="{?=url()?}/assets/css/font-awesome.css" rel="stylesheet">
     <script src="{?=url()?}/assets/jscripts/jquery.min.js"></script>
     <script src="{?=url()?}/assets/jscripts/bootstrap.min.js"></script>
     <style media="screen">
+      * { box-sizing: border-box; }
       body {
-        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+        font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
         color: #fff;
-      	background: #0264d6;
-      	height:calc(100vh);
-      	width:100%;
+        background: linear-gradient(135deg, #09192e 0%, #0d2b52 50%, #081d38 100%);
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
       }
-      footer {
-          position: fixed;
-          right: 0px;
-          bottom: 0px;
-          height: 40px;
-          width: calc(100% - 0px);
-          font-size: 14px;
-          color: #fff;
+
+      /* Header */
+      .header-display {
+        background: rgba(8, 25, 48, 0.95);
+        border-bottom: 2px solid rgba(0, 204, 255, 0.4);
+        padding: 10px 25px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
       }
-      footer a, footer a:hover {
-        color: #fff;
+      .header-left {
+        display: flex;
+        align-items: center;
       }
-      tr:nth-child(even) {color: #ffffff;}
+      .header-logo {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        margin-right: 15px;
+      }
+      .header-text h1 {
+        font-size: 24px;
+        font-weight: 800;
+        margin: 0;
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+      }
+      .header-text p {
+        font-size: 13px;
+        margin: 2px 0 0 0;
+        color: #58d0ff;
+        font-weight: 500;
+      }
+      .badge-live {
+        background: rgba(39, 174, 96, 0.2);
+        border: 1px solid #27ae60;
+        color: #2ecc71;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: bold;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .dot-pulse {
+        width: 10px;
+        height: 10px;
+        background: #2ecc71;
+        border-radius: 50%;
+        animation: pulseLive 1.5s infinite;
+      }
+      @keyframes pulseLive {
+        0% { transform: scale(0.9); opacity: 0.7; }
+        70% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(0.9); opacity: 0.7; }
+      }
+
+      /* Main Table Container */
+      .table-container {
+        padding: 15px 25px;
+        height: calc(100vh - 145px);
+        overflow-y: auto;
+      }
+      .poli-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+      }
+      .poli-table th {
+        background: rgba(13, 37, 68, 0.95);
+        color: #58d0ff;
+        font-size: 16px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        padding: 12px 18px;
+        border: none;
+      }
+      .poli-table tbody tr {
+        background: rgba(13, 37, 68, 0.85);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        border-radius: 10px;
+        transition: all 0.2s;
+      }
+      .poli-table tbody tr:hover {
+        background: rgba(20, 55, 100, 0.95);
+      }
+      .poli-table td {
+        padding: 16px 18px;
+        vertical-align: middle;
+        border: none;
+      }
+      .poli-table td:first-child {
+        border-top-left-radius: 10px;
+        border-bottom-left-radius: 10px;
+        border-left: 5px solid #00a8ff;
+      }
+      .poli-table td:last-child {
+        border-top-right-radius: 10px;
+        border-bottom-right-radius: 10px;
+      }
+
+      .clinic-name {
+        font-size: 20px;
+        font-weight: 800;
+        color: #ffffff;
+        margin-bottom: 3px;
+      }
+      .doctor-name {
+        font-size: 15px;
+        color: #a4b0be;
+        font-weight: 500;
+      }
+      .stats-badges {
+        margin-top: 6px;
+        display: flex;
+        gap: 8px;
+      }
+      .stat-pill {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 6px;
+        text-transform: uppercase;
+      }
+      .pill-antri { background: rgba(243, 156, 18, 0.25); color: #f39c12; border: 1px solid rgba(243, 156, 18, 0.4); }
+      .pill-layani { background: rgba(46, 204, 113, 0.25); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.4); }
+
+      .active-calling-box {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(46, 204, 113, 0.15);
+        border: 2px solid #2ecc71;
+        padding: 8px 16px;
+        border-radius: 10px;
+      }
+      .active-calling-number {
+        font-size: 28px;
+        font-weight: 900;
+        color: #2ecc71;
+        font-family: monospace;
+      }
+      .active-calling-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: #ffffff;
+      }
+      .empty-state {
+        color: #747d8c;
+        font-style: italic;
+        font-size: 15px;
+      }
+
+      .next-queue-item {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        padding: 4px 12px;
+        border-radius: 20px;
+        margin-right: 8px;
+        font-size: 14px;
+        color: #ffd32a;
+      }
+      .next-queue-item strong {
+        color: #ffffff;
+        margin-right: 4px;
+      }
+
+      /* Bottom Bar */
+      .bottom-bar {
+        height: 55px;
+        background: rgba(5, 17, 34, 0.98);
+        border-top: 2px solid rgba(0, 204, 255, 0.3);
+        display: flex;
+        align-items: center;
+        padding: 0 25px;
+        box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
+      }
+      .marquee-container {
+        flex: 1;
+        overflow: hidden;
+        white-space: nowrap;
+        margin-right: 25px;
+      }
+      .marquee-text {
+        display: inline-block;
+        font-size: 16px;
+        font-weight: 600;
+        color: #ffda79;
+        letter-spacing: 0.5px;
+        animation: marqueeAnimation 30s linear infinite;
+        padding-left: 100%;
+      }
+      @keyframes marqueeAnimation {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-100%); }
+      }
+      .clock-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        background: rgba(255, 255, 255, 0.06);
+        padding: 6px 18px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .clock-date { font-size: 14px; font-weight: 600; color: #ced6e0; }
+      .clock-time { font-size: 18px; font-weight: 800; color: #2ed573; font-family: monospace; letter-spacing: 1px; }
     </style>
 </head>
 <body>
-<div class="container-fluid">
-  <h1 class="display-3 text-center text-white m-3"><img class="logo" src="{?=url()?}/{?=isset_or($logo)?}" alt="" width="60px"> Antrian Poliklinik {?=isset_or($settings.nama_instansi)?}</h1>
-  <table class="table table-bordered table-striped lead text-primary" style="height: 75vh;">
-    <thead class="bg-primary">
-      <tr>
-        <th>Dokter/Klinik</th>
-        <th>Dalam Pemeriksaan</th>
-        <th>Nomor Urut Berikutnya</th>
-      </tr>
-    </thead>
-    <tbody>
-      {loop: $display}
-      <tr>
-        <th width="30%">{?=isset_or($value.nm_dokter)?}<br><small>{?=isset_or($value.nm_poli)?}</small><br><small>[ Antrian: {?=isset_or($value.dalam_antrian.jumlah)?} - Terlayani: {?=isset_or($value.sudah_dilayani.jumlah)?} ]</small></th>
-        <td width="20%">{if: empty($value.dalam_pemeriksaan)}Kosong{else}{?=isset_or($value.dalam_pemeriksaan.no_reg)?} - {?=isset_or($value.dalam_pemeriksaan.nm_pasien)?}{/if}</td>
-        <td>
-          <marquee scrollamount="3">
-            {if: !empty($value.selanjutnya)}
-              {loop: $value.selanjutnya as $data}
-                - {?=isset_or($data.nm_pasien)?} (<strong>{?=isset_or($data.no_reg)?}</strong>)
-                <!--- {?=isset_or($data.nm_pasien)?} (<strong>{?=isset_or($data.no_reg)?} - {?=isset_or($value.jam_mulai)?}</strong>)-->
-              {/loop}
-            {/if}
-          </marquee>
-        </td>
-      </tr>
-      {/loop}
-    </tbody>
-  </table>
-  <div class="row" style="bottom:0;position:absolute;width:100%;background-color:#fff;color:#ff0000;margin-top:20px;margin-bottom:40px;">
-    <h3 class="display-6"><marquee>{?=isset_or($running_text)?}</marquee></h3>
-  </div>
-</div>
-<footer class="visible-lg visible-md bg-primary" style="padding:10px;z-index:1000;">
-  <div class="canvas">
-    <p class="pull-right">
-      Made with <i class="fa fa-heart text-danger"></i> by <a href="https://basoro.id/" target="_blank"><b>drg. F. Basoro</b>.</a>
-      {?=isset_or($powered)?}.
-    </p>
-    <p><i class="fa fa-fw fa-calendar"></i> <span>{?=isset_or($tanggal)?}</span> <i class="fa fa-fw fa-clock-o"></i><span id="clock"></span> <i class="fa fa-fw fa-user"></i> <span>{?= sprintf('Login sebagai <strong>%s</strong>', $username) ?}</span></p>
-  </div>
-</footer>
+  <!-- Header Area -->
+  <header class="header-display">
+    <div class="header-left">
+      <img class="header-logo" src="{?=url()?}/{?=isset_or($logo)?}" alt="Logo RSGM">
+      <div class="header-text">
+        <h1>Antrian Poliklinik & Ruang Pemeriksaan</h1>
+        <p>{?=isset_or($settings.nama_instansi)?} &bull; Provinsi Kalimantan Selatan</p>
+      </div>
+    </div>
+    <div class="badge-live">
+      <span class="dot-pulse"></span> PEMBARUAN OTOMATIS
+    </div>
+  </header>
+
+  <!-- Table Content -->
+  <main class="table-container">
+    <table class="poli-table">
+      <thead>
+        <tr>
+          <th style="width: 32%;">Poliklinik & Dokter</th>
+          <th style="width: 30%;">Sedang Dilayani</th>
+          <th style="width: 38%;">Antrian Menunggu Berikutnya</th>
+        </tr>
+      </thead>
+      <tbody>
+        {if: !empty($display)}
+          {loop: $display}
+          <tr>
+            <td>
+              <div class="clinic-name">{?=isset_or($value.nm_poli)?}</div>
+              <div class="doctor-name"><i class="fa fa-user-md text-info"></i> {?=isset_or($value.nm_dokter)?}</div>
+              <div class="stats-badges">
+                <span class="stat-pill pill-antri">Menunggu: {?=isset_or($value.dalam_antrian.jumlah, 0)?}</span>
+                <span class="stat-pill pill-layani">Selesai: {?=isset_or($value.sudah_dilayani.jumlah, 0)?}</span>
+              </div>
+            </td>
+            <td>
+              {if: !empty($value.dalam_pemeriksaan.no_reg)}
+              <div class="active-calling-box">
+                <div class="active-calling-number">#{?=isset_or($value.dalam_pemeriksaan.no_reg)?}</div>
+                <div class="active-calling-name">{?=isset_or($value.dalam_pemeriksaan.nm_pasien)?}</div>
+              </div>
+              {else}
+              <span class="empty-state"><i class="fa fa-coffee"></i> Menunggu panggilan...</span>
+              {/if}
+            </td>
+            <td>
+              {if: !empty($value.selanjutnya)}
+                <div style="overflow-x: auto; white-space: nowrap; padding-bottom: 5px;">
+                  {loop: $value.selanjutnya as $data}
+                    <span class="next-queue-item">
+                      <strong>#{?=isset_or($data.no_reg)?}</strong> {?=isset_or($data.nm_pasien)?}
+                    </span>
+                  {/loop}
+                </div>
+              {else}
+                <span class="empty-state">Tidak ada antrian berikutnya</span>
+              {/if}
+            </td>
+          </tr>
+          {/loop}
+        {else}
+          <tr>
+            <td colspan="3" class="text-center" style="padding: 50px;">
+              <i class="fa fa-info-circle fa-3x text-info"></i><br><br>
+              <h4>Belum ada jadwal poliklinik atau antrian aktif hari ini</h4>
+              <p class="text-muted">Data akan otomatis diperbarui begitu pendaftaran atau pemanggilan pasien dimulai.</p>
+            </td>
+          </tr>
+        {/if}
+      </tbody>
+    </table>
+  </main>
+
+  <!-- Bottom Information Bar -->
+  <footer class="bottom-bar">
+    <div class="marquee-container">
+      <span class="marquee-text"><i class="fa fa-bullhorn text-warning"></i> &nbsp; {?=isset_or($running_text, 'Selamat Datang di RSGM Gusti Hasan Aman. Silakan memperhatikan nomor antrian pada layar.')?}</span>
+    </div>
+    <div class="clock-container">
+      <span class="clock-date">{?=isset_or($tanggal)?}</span>
+      <span class="clock-time" id="liveClock">00:00:00 WITA</span>
+    </div>
+    <div style="font-size: 11px; opacity: 0.6; margin-left: 15px; white-space: nowrap;">
+      Powered by <a href="https://mlite.id/" target="_blank" style="color: #cbd5e1;">mLITE</a>
+    </div>
+  </footer>
+  <div style="display: none;">Powered by <a href="https://mlite.id/">mLITE</a></div>
+
+  <script>
+  function updateLiveClock() {
+    var now = new Date();
+    var h = String(now.getHours()).padStart(2, '0');
+    var m = String(now.getMinutes()).padStart(2, '0');
+    var s = String(now.getSeconds()).padStart(2, '0');
+    document.getElementById('liveClock').innerText = h + ":" + m + ":" + s + " WITA";
+  }
+  setInterval(updateLiveClock, 1000);
+  updateLiveClock();
+  </script>
 </body>
 </html>

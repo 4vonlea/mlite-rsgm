@@ -96,7 +96,7 @@
               <li><a href="#kirimwaModal" data-toggle="modal" data-no_tlp="{$value.no_tlp}" data-nm_pasien="Yang terhormat {$value.nm_pasien} dengan nomor rekam medik {$value.no_rkm_medis}.&#013;&#010;&#013;&#010;-------------------&#013;&#010; Pesan WhatsApp ini dikirim otomatis oleh {$nama_instansi} &#013;&#010;Terima Kasih">Kirim WhatsApp</a></li>
               {/if}
             </ul>
-            {if: $responsivevoice == 'true'}<button type="button" name="button" class="btn btn-xs btn-primary panggil" data-nm_pasien="{?=strtolower($value.nm_pasien)?}" data-nm_poli="{?=strtolower($value.nm_poli)?}" data-no_reg="{?=strtolower($value.no_reg)?}"><i class="fa fa-bullhorn"></i><span class="hidden-xs hidden-sm"> Panggil</span></button>{/if}
+            <button type="button" name="button" class="btn btn-xs btn-primary panggil" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-nm_poli="{$value.nm_poli}" data-kd_poli="{$value.kd_poli}" data-kd_dokter="{$value.kd_dokter}" data-no_reg="{$value.no_reg}" title="Panggil pasien ke ruang poliklinik"><i class="fa fa-bullhorn"></i><span class="hidden-xs hidden-sm"> Panggil</span></button>
           </td>
           <td class="rsgm-cell-wrap">
             <a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal" class="rsgm-patient-link">{$value.nm_pasien}</a>
@@ -129,7 +129,7 @@
                 </ul>
               {/if}
             {/if}
-            {if: $responsivevoice == 'true'}<button type="button" name="button" class="btn btn-xs btn-primary panggil" data-nm_pasien="{?=strtolower($value.nm_pasien)?}" data-nm_poli="{?=strtolower($value.nm_poli)?}" data-no_reg="{?=strtolower($value.no_reg)?}"><i class="fa fa-bullhorn"></i><span class="hidden-xs hidden-sm"> Panggil</span></button>{/if}
+            <button type="button" name="button" class="btn btn-xs btn-primary panggil" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-nm_poli="{$value.nm_poli}" data-kd_poli="{$value.kd_poli}" data-kd_dokter="{$value.kd_dokter}" data-no_reg="{$value.no_reg}" title="Panggil pasien ke ruang poliklinik"><i class="fa fa-bullhorn"></i><span class="hidden-xs hidden-sm"> Panggil</span></button>
           </td>
           <td class="edit rsgm-cell-wrap" data-no_rawat="{$value.no_rawat}">{$value.nm_poli}</td>
           <td class="edit rsgm-cell-wrap" data-no_rawat="{$value.no_rawat}">

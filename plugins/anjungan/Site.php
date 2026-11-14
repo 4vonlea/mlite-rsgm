@@ -61,6 +61,7 @@ class Site extends SiteModule
         $this->route('anjungan/panggilselesai', 'getPanggilSelesai');
         $this->route('anjungan/simpannorm', 'getSimpanNoRM');
         $this->route('anjungan/setpanggil', 'getSetPanggil');
+        $this->route('anjungan/setpanggilnext', 'getSetPanggilNext');
         $this->route('anjungan/presensi', 'getPresensi');
         $this->route('anjungan/presensi/upload', 'getUpload');
         $this->route('anjungan/bed', 'getDisplayBed');
@@ -229,13 +230,13 @@ class Site extends SiteModule
 
     public function getDisplayAPM()
     {
-        $title = 'Display Antrian Poliklinik';
+        $title = 'Anjungan Pasien Mandiri (APM)';
         $logo  = $this->settings->get('settings.logo');
         $poliklinik = $this->db('poliklinik')->where('status', '1')->toArray();
         $carabayar = str_replace(",","','", $this->settings->get('anjungan.carabayar'));
         $penjab = $this->db()->pdo()->prepare("SELECT * FROM penjab WHERE kd_pj IN ('$carabayar')");
         $penjab->execute();
-        $penjab = $penjab->fetchAll(\PDO::FETCH_ASSOC);;
+        $penjab = $penjab->fetchAll(\PDO::FETCH_ASSOC);
 
         $_username = '';
         $__username = 'Tamu';
@@ -252,7 +253,7 @@ class Site extends SiteModule
           'powered' => 'Powered by <a href="https://mlite.id/">mLITE</a>',
           'username' => $username,
           'tanggal' => $tanggal,
-          'running_text' => $this->settings->get('anjungan.text_anjungan'),
+          'running_text' => $this->settings->get('anjungan.text_anjungan') ?: 'Selamat Datang di Anjungan Pasien Mandiri ' . ($this->settings->get('settings.nama_instansi') ?: 'RSGM') . '. Silakan pilih menu layanan yang Anda butuhkan.',
           'poliklinik' => $poliklinik,
           'penjab' => $penjab
         ]);
@@ -550,10 +551,31 @@ class Site extends SiteModule
         );
         $hari=$day[$tentukan_hari];
 
-        $poliklinik = str_replace(",","','", $this->settings->get('anjungan.display_poli'));
-        $query = $this->db()->pdo()->prepare("SELECT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter, a.jam_mulai, a.jam_selesai FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari'  AND a.kd_poli IN ('$poliklinik')");
+        $poliklinik_setting = $this->settings->get('anjungan.display_poli');
+        $filter_poli = "";
+        if (!empty($poliklinik_setting)) {
+            $poliklinik = str_replace(",","','", $poliklinik_setting);
+            $filter_poli = " AND a.kd_poli IN ('$poliklinik')";
+        }
+        $query = $this->db()->pdo()->prepare("SELECT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter, a.jam_mulai, a.jam_selesai FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari' $filter_poli");
         $query->execute();
-        $rows = $query->fetchAll(\PDO::FETCH_ASSOC);;
+        $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Fallback 1: Jika tabel jadwal kosong hari ini, ambil dari registrasi aktif hari ini
+        if (empty($rows)) {
+            $filter_reg_poli = !empty($poliklinik_setting) ? " AND reg_periksa.kd_poli IN ('$poliklinik')" : "";
+            $query2 = $this->db()->pdo()->prepare("SELECT DISTINCT reg_periksa.kd_dokter, reg_periksa.kd_poli, poliklinik.nm_poli, dokter.nm_dokter, '08:00:00' as jam_mulai, '14:00:00' as jam_selesai FROM reg_periksa JOIN poliklinik ON poliklinik.kd_poli = reg_periksa.kd_poli JOIN dokter ON dokter.kd_dokter = reg_periksa.kd_dokter WHERE reg_periksa.tgl_registrasi = '$date' $filter_reg_poli");
+            $query2->execute();
+            $rows = $query2->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        // Fallback 2: Jika belum ada pasien terdaftar hari ini, tampilkan poliklinik aktif agar TV tidak blank
+        if (empty($rows)) {
+            $filter_active = !empty($poliklinik_setting) ? " WHERE poliklinik.kd_poli IN ('$poliklinik')" : " WHERE poliklinik.status = '1'";
+            $query3 = $this->db()->pdo()->prepare("SELECT '-' as kd_dokter, poliklinik.kd_poli, poliklinik.nm_poli, 'Dokter Jaga' as nm_dokter, '08:00:00' as jam_mulai, '14:00:00' as jam_selesai FROM poliklinik $filter_active LIMIT 6");
+            $query3->execute();
+            $rows = $query3->fetchAll(\PDO::FETCH_ASSOC);
+        }
 
         $result = [];
         if (count($rows)) {
@@ -1293,17 +1315,52 @@ class Site extends SiteModule
         $tanggal       = getDayIndonesia(date('Y-m-d')).', '.dateIndonesia(date('Y-m-d'));
         $username      = !empty($_username) ? $_username : $__username;
 
+        // Video URL parser
+        $vidio_raw = trim($this->settings->get('anjungan.vidio') ?: '');
+        $vidio_url = '';
+        if(!empty($vidio_raw)) {
+            if(strpos($vidio_raw, 'PL') === 0 || strpos($vidio_raw, 'list=') !== false) {
+                $playlist_id = str_replace(['https://www.youtube.com/playlist?list=', 'list='], '', $vidio_raw);
+                $vidio_url = "https://www.youtube.com/embed/videoseries?list=" . htmlspecialchars($playlist_id) . "&autoplay=1&mute=1&loop=1";
+            } else {
+                $vid_id = $vidio_raw;
+                if(preg_match('/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/', $vidio_raw, $matches)) {
+                    $vid_id = $matches[1];
+                }
+                $vidio_url = "https://www.youtube.com/embed/" . htmlspecialchars($vid_id) . "?autoplay=1&mute=1&loop=1&playlist=" . htmlspecialchars($vid_id) . "&enablejsapi=1";
+            }
+        }
+
+        // Get initial values for Loket, CS, Apotek
+        $loketDB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->where('status', '>=', 1)->desc('kd')->oneArray();
+        $init_loket_no = !empty($loketDB['noantrian']) ? $loketDB['noantrian'] : ($this->settings->get('anjungan.panggil_loket_nomor') ?: 1);
+        $init_loket_counter = !empty($loketDB['loket']) ? $loketDB['loket'] : ($this->settings->get('anjungan.panggil_loket') ?: 1);
+
+        $csDB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')->where('type', 'CS')->where('postdate', date('Y-m-d'))->where('status', '>=', 1)->desc('kd')->oneArray();
+        $init_cs_no = !empty($csDB['noantrian']) ? $csDB['noantrian'] : ($this->settings->get('anjungan.panggil_cs_nomor') ?: 1);
+        $init_cs_counter = !empty($csDB['loket']) ? $csDB['loket'] : ($this->settings->get('anjungan.panggil_cs') ?: 1);
+
+        $apotekDB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')->where('type', 'Apotek')->where('postdate', date('Y-m-d'))->where('status', '>=', 1)->desc('kd')->oneArray();
+        $init_apotek_no = !empty($apotekDB['noantrian']) ? $apotekDB['noantrian'] : ($this->settings->get('anjungan.panggil_apotek_nomor') ?: 1);
+        $init_apotek_counter = !empty($apotekDB['loket']) ? $apotekDB['loket'] : ($this->settings->get('anjungan.panggil_apotek') ?: 1);
+
         $content = $this->draw('display.antrian.loket.html', [
           'title' => $title,
           'logo' => $logo,
           'powered' => 'Powered by <a href="https://mlite.id/">mLITE</a>',
           'username' => $username,
           'tanggal' => $tanggal,
-          'vidio' => $this->settings->get('anjungan.vidio'),
-          'running_text' => $this->settings->get('anjungan.text_loket'),
+          'vidio' => $vidio_raw,
+          'vidio_url' => $vidio_url,
+          'init_loket_no' => sprintf("%03d", intval($init_loket_no)),
+          'init_loket_counter' => $init_loket_counter,
+          'init_cs_no' => sprintf("%03d", intval($init_cs_no)),
+          'init_cs_counter' => $init_cs_counter,
+          'init_apotek_no' => sprintf("%03d", intval($init_apotek_no)),
+          'init_apotek_counter' => $init_apotek_counter,
+          'running_text' => $this->settings->get('anjungan.text_loket') ?: 'Selamat Datang di Rumah Sakit Gigi dan Mulut Gusti Hasan Aman. Silakan menunggu nomor antrian Anda dipanggil.',
           'display' => $display
         ]);
-
 
         $assign = [
             'title' => $this->settings->get('settings.nama_instansi'),
@@ -1312,9 +1369,7 @@ class Site extends SiteModule
         ];
 
         $this->setTemplate("canvas.html");
-
         $this->tpl->set('page', ['title' => $assign['title'], 'desc' => $assign['desc'], 'content' => $assign['content']]);
-
     }
 
     public function getDisplayAntrianLoket2()
@@ -1742,18 +1797,25 @@ class Site extends SiteModule
 
     public function getPanggilAntrian()
     {
+      $this->setTemplate(false);
       $res = [];
-
       $date = date('Y-m-d');
-      $sql = $this->db()->pdo()->prepare("SELECT * FROM mlite_antrian_loket WHERE status = 1 AND postdate = '$date' ORDER BY noantrian ASC");
+
+      // Ambil panggilan antrian TERAKHIR (kd DESC) yang berstatus 1 hari ini
+      $sql = $this->db()->pdo()->prepare("SELECT * FROM mlite_antrian_loket WHERE status = 1 AND postdate = '$date' ORDER BY kd DESC LIMIT 1");
 
       if($sql) {
-          //$data  = $query->fetch_object();
           $sql->execute();
-          $data = $sql->fetchAll(\PDO::FETCH_OBJ);;
-          //print_r($data);
-          // code...
-          switch (strtolower($data[0]->type)) {
+          $data = $sql->fetchAll(\PDO::FETCH_OBJ);
+          if (empty($data)) {
+              header('Content-Type: application/json');
+              echo json_encode(['status' => false]);
+              exit();
+          }
+
+          $item = $data[0];
+          $type = strtolower($item->type);
+          switch ($type) {
               case 'loket':
                   $kode = 'a';
                   break;
@@ -1764,23 +1826,34 @@ class Site extends SiteModule
                   $kode = 'f';
                   break;
               default:
-                  $kode = 'ahhay';
+                  $kode = 'a';
                   break;
           }
 
-          //$terbilang = Terbilang::convert($data->noantrian);
-          $terbilang = strtolower(terbilang($data[0]->noantrian));
-          $loket = strtolower(terbilang($data[0]->loket));
-          $text = "antrian $kode $terbilang counter $loket";
+          $numAntrian = intval($item->noantrian);
+          if ($numAntrian <= 0) $numAntrian = 1;
+          $numLoket = intval($item->loket);
+          if ($numLoket <= 0) $numLoket = 1;
+
+          $terbilang = strtolower(terbilang($numAntrian));
+          $loketTerbilang = strtolower(terbilang($numLoket));
+          
+          // Audio sequence: Chime notification -> antrian -> huruf -> nomor -> counter -> nomor loket
+          $text = "notification antrian $kode $terbilang counter $loketTerbilang";
+
+          // Selesaikan status antrian ini dan antrian lama yang tertinggal agar tidak berulang/stuck
+          $this->db('mlite_antrian_loket')->where('kd', $item->kd)->save(['status' => 2, 'end_time' => date('H:i:s')]);
+          $this->db('mlite_antrian_loket')->where('postdate', $date)->where('kd', '<=', $item->kd)->where('status', 1)->save(['status' => 2, 'end_time' => date('H:i:s')]);
 
           $res = [
-              'id' => $data[0]->kd,
+              'id' => $item->kd,
               'status' => true,
-              'type' => $data[0]->type,
+              'type' => $item->type,
               'kode' => $kode,
-              'noantrian' => $data[0]->noantrian,
-              'loket' => $data[0]->loket,
-              'panggil' => explode(" ", $text)
+              'noantrian' => sprintf("%03d", $numAntrian),
+              'raw_noantrian' => $numAntrian,
+              'loket' => (string) $numLoket,
+              'panggil' => array_values(array_filter(explode(" ", $text)))
           ];
 
       } else {
@@ -1789,59 +1862,147 @@ class Site extends SiteModule
           ];
       }
 
-      die(json_encode($res));
-
+      header('Content-Type: application/json');
+      echo json_encode($res);
       exit();
     }
 
     public function getPanggilSelesai()
     {
-      if(!isset($_GET['id']) || $_GET['id'] == '') die(json_encode(array('status' => false)));
-      $kode  = $_GET['id'];
-      $query = $this->db('mlite_antrian_loket')->where('kd', $kode)->update('status', 2);
-      if($query) {
-          $res = [
-              'status' => true,
-              'message' => 'Berhasil update',
-          ];
-      } else {
-          $res = [
-              'status' => false,
-              'message' => 'Gagal update',
-          ];
+      $this->setTemplate(false);
+      header('Content-Type: application/json');
+      if(!isset($_GET['id']) || $_GET['id'] == '') {
+        echo json_encode(['status' => false]);
+        exit();
       }
-
-      die(json_encode($res));
+      $kode  = $_GET['id'];
+      $query = $this->db('mlite_antrian_loket')->where('kd', $kode)->save(['status' => 2, 'end_time' => date('H:i:s')]);
+      echo json_encode([
+          'status' => true,
+          'message' => 'Berhasil update status panggilan'
+      ]);
       exit();
     }
 
     public function getSetPanggil()
     {
-      if(!isset($_GET['type']) || $_GET['type'] == '') die(json_encode(array('status' => false,'message' => 'Gagal Type')));
-      $type = 'CS';
-      if($_GET['type'] == 'loket') {
-        $type = 'Loket';
+      $this->setTemplate(false);
+      header('Content-Type: application/json');
+      $typeParam = strtolower($_GET['type'] ?? 'loket');
+      $type = 'Loket';
+      if($typeParam == 'cs') {
+        $type = 'CS';
       }
-      if($_GET['type'] == 'apotek') {
+      if($typeParam == 'apotek') {
         $type = 'Apotek';
       }
-      $noantrian  = $_GET['noantrian'];
-      $loket  = $_GET['loket'];
+      $noantrian  = intval($_GET['noantrian'] ?? 1);
+      if ($noantrian <= 0) $noantrian = 1;
+      $loket  = intval($_GET['loket'] ?? 1);
+      if ($loket <= 0) $loket = 1;
       $date = date('Y-m-d');
-      $query = $this->db('mlite_antrian_loket')->where('type', $type)->where('noantrian', $noantrian)->where('postdate', $date)->update(['status' => 1, 'loket' => $loket]);
-      if($query) {
-          $res = [
-              'status' => true,
-              'message' => 'Berhasil update' .$date,
-          ];
+
+      // Bersihkan antrian aktif sebelumnya hari ini
+      $this->db('mlite_antrian_loket')
+        ->where('postdate', $date)
+        ->where('type', $type)
+        ->where('status', 1)
+        ->save(['status' => 2, 'end_time' => date('H:i:s')]);
+
+      $cek = $this->db('mlite_antrian_loket')->where('type', $type)->where('noantrian', $noantrian)->where('postdate', $date)->oneArray();
+      if ($cek) {
+          $this->db('mlite_antrian_loket')->where('type', $type)->where('noantrian', $noantrian)->where('postdate', $date)->save([
+              'status' => 1,
+              'loket' => $loket,
+              'start_time' => date('H:i:s')
+          ]);
       } else {
-          $res = [
-              'status' => false,
-              'message' => 'Gagal update',
-          ];
+          $this->db('mlite_antrian_loket')->save([
+              'type' => $type,
+              'noantrian' => $noantrian,
+              'loket' => $loket,
+              'postdate' => $date,
+              'start_time' => date('H:i:s'),
+              'end_time' => '00:00:00',
+              'status' => 1
+          ]);
       }
 
-      die(json_encode($res));
+      // Update settings agar tampilan layar display sinkron seketika
+      $settingFieldNum = 'panggil_' . strtolower($type) . '_nomor';
+      $settingFieldLoket = 'panggil_' . strtolower($type);
+      $this->settings->set('anjungan.' . $settingFieldNum, $noantrian);
+      $this->settings->set('anjungan.' . $settingFieldLoket, $loket);
+
+      echo json_encode([
+          'status' => true,
+          'noantrian' => sprintf("%03d", $noantrian),
+          'raw_noantrian' => $noantrian,
+          'loket' => (string) $loket,
+          'type' => $type,
+          'message' => 'Berhasil memanggil antrian ' . $type . ' nomor ' . $noantrian . ' di loket ' . $loket
+      ]);
+      exit();
+    }
+
+    public function getSetPanggilNext()
+    {
+      $this->setTemplate(false);
+      header('Content-Type: application/json');
+      $typeParam = strtolower($_GET['type'] ?? 'loket');
+      $type = 'Loket';
+      if($typeParam == 'cs') $type = 'CS';
+      if($typeParam == 'apotek') $type = 'Apotek';
+
+      $loket = intval($_GET['loket'] ?? 1);
+      if ($loket <= 0) $loket = 1;
+      $date = date('Y-m-d');
+
+      $settingFieldNum = 'panggil_' . strtolower($type) . '_nomor';
+      $settingFieldLoket = 'panggil_' . strtolower($type);
+
+      $latest = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', $type)->where('postdate', $date)->where('status', '>=', 1)->desc('kd')->oneArray();
+      $currentNo = !empty($latest['noantrian']) ? intval($latest['noantrian']) : intval($this->settings->get('anjungan.' . $settingFieldNum) ?: 0);
+      $nextNo = $currentNo + 1;
+      if ($nextNo <= 0) $nextNo = 1;
+
+      // Bersihkan antrian aktif sebelumnya hari ini
+      $this->db('mlite_antrian_loket')
+        ->where('postdate', $date)
+        ->where('type', $type)
+        ->where('status', 1)
+        ->save(['status' => 2, 'end_time' => date('H:i:s')]);
+
+      $cek = $this->db('mlite_antrian_loket')->where('type', $type)->where('noantrian', $nextNo)->where('postdate', $date)->oneArray();
+      if ($cek) {
+          $this->db('mlite_antrian_loket')->where('type', $type)->where('noantrian', $nextNo)->where('postdate', $date)->save([
+              'status' => 1,
+              'loket' => $loket,
+              'start_time' => date('H:i:s')
+          ]);
+      } else {
+          $this->db('mlite_antrian_loket')->save([
+              'type' => $type,
+              'noantrian' => $nextNo,
+              'loket' => $loket,
+              'postdate' => $date,
+              'start_time' => date('H:i:s'),
+              'end_time' => '00:00:00',
+              'status' => 1
+          ]);
+      }
+
+      $this->settings->set('anjungan.' . $settingFieldNum, $nextNo);
+      $this->settings->set('anjungan.' . $settingFieldLoket, $loket);
+
+      echo json_encode([
+          'status' => true,
+          'noantrian' => sprintf("%03d", $nextNo),
+          'raw_noantrian' => $nextNo,
+          'loket' => (string) $loket,
+          'type' => $type,
+          'message' => 'Berhasil memanggil antrian ' . $type . ' nomor ' . $nextNo . ' di loket ' . $loket
+      ]);
       exit();
     }
 
@@ -1899,152 +2060,124 @@ class Site extends SiteModule
 
     public function getAjax()
     {
+      $this->setTemplate(false);
       $show = isset($_GET['show']) ? $_GET['show'] : "";
       switch($show){
        default:
+        exit();
         break;
         case "tampilloket":
-          $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
-          $noantrian = '';
-          if($result) {
-            $noantrian = $result['noantrian'];
-          }
-        	if($noantrian > 0) {
-        		$next_antrian = $noantrian + 1;
-        	} else {
-        		$next_antrian = 1;
-        	}
-        	echo '<div id="nomernya" align="center">';
-          echo '<h1 class="display-1">';
-          echo 'A'.$next_antrian;
+          $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->desc('kd')->oneArray();
+          $noantrian = !empty($result['noantrian']) ? intval($result['noantrian']) : 0;
+          $next_antrian = $noantrian + 1;
+          echo '<div id="nomernya" align="center">';
+          echo '<h1 class="display-1" style="font-weight:bold;color:#28a745;">';
+          echo 'A-'.sprintf("%03d", $next_antrian);
           echo '</h1>';
-          echo '['.date('Y-m-d').']';
+          echo '<span class="badge badge-light" style="font-size:16px;">['.date('d-m-Y').']</span>';
           echo '</div>';
           echo '<br>';
+          exit();
         break;
         case "printloket":
-          $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
-          $noantrian = '';
-          if($result) {
-            $noantrian = $result['noantrian'];
-          }
-        	if($noantrian > 0) {
-        		$next_antrian = $noantrian + 1;
-        	} else {
-        		$next_antrian = 1;
-        	}
-        	echo '<div id="nomernya" align="center">';
-          echo '<h1 class="display-1">';
-          echo 'A'.$next_antrian;
+          $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->desc('kd')->oneArray();
+          $noantrian = !empty($result['noantrian']) ? intval($result['noantrian']) : 0;
+          $next_antrian = $noantrian + 1;
+          echo '<div id="nomernya" align="center">';
+          echo '<h1 class="display-1" style="font-weight:bold;color:#28a745;">';
+          echo 'A-'.sprintf("%03d", $next_antrian);
           echo '</h1>';
-          echo '['.date('Y-m-d').']';
+          echo '<span class="badge badge-light" style="font-size:16px;">['.date('d-m-Y').']</span>';
           echo '</div>';
           echo '<br>';
-          ?>
-          <script>
-        	$(document).ready(function(){
-        		$("#btnKRM").on('click', function(){
-        			$("#formloket").submit(function(e){
-                e.preventDefault();
-                e.stopImmediatePropagation();
-        				$.ajax({
-        					url: "<?php echo url().'/anjungan/ajax?show=simpanloket&noantrian='.$next_antrian; ?>",
-        					type:"POST",
-        					data:$(this).serialize(),
-        					success:function(data){
-        						setTimeout('$("#loading").hide()',1000);
-        						//window.location.href = "{?=url('anjungan/pasien')?}";
-        						}
-        					});
-        				return false;
-        			});
-        		});
-        	})
-        	</script>
-          <?php
+          exit();
         break;
         case "simpanloket":
+          $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->desc('kd')->oneArray();
+          $last_no = !empty($result['noantrian']) ? intval($result['noantrian']) : 0;
+          $next_antrian = $last_no + 1;
+          if (isset($_REQUEST['noantrian']) && intval($_REQUEST['noantrian']) > 0) {
+            $next_antrian = intval($_REQUEST['noantrian']);
+          }
           $this->db('mlite_antrian_loket')
             ->save([
               'type' => 'Loket',
-              'noantrian' => $_GET['noantrian'],
+              'noantrian' => $next_antrian,
               'postdate' => date('Y-m-d'),
               'start_time' => date('H:i:s'),
-              'end_time' => '00:00:00'
+              'end_time' => '00:00:00',
+              'status' => 0
             ]);
-          //redirect(url('anjungan/pasien'));
-        break;
+          header('Content-Type: application/json');
+          echo json_encode([
+            'status' => 'ok',
+            'noantrian' => $next_antrian,
+            'formatted' => 'A-' . sprintf("%03d", $next_antrian),
+            'type' => 'Loket',
+            'nama_loket' => 'Loket Pendaftaran',
+            'nama_instansi' => $this->settings->get('settings.nama_instansi'),
+            'alamat' => $this->settings->get('settings.alamat'),
+            'nomor_telepon' => $this->settings->get('settings.nomor_telepon'),
+            'tanggal' => date('d-m-Y'),
+            'jam' => date('H:i:s')
+          ]);
+          exit();
         case "tampilcs":
-          $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'CS')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
-          $noantrian = '';
-          if($result) {
-            $noantrian = $result['noantrian'];
-          }
-        	if($noantrian > 0) {
-        		$next_antrian = $noantrian + 1;
-        	} else {
-        		$next_antrian = 1;
-        	}
-        	echo '<div id="nomernya" align="center">';
-          echo '<h1 class="display-1">';
-          echo 'B'.$next_antrian;
+          $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'CS')->where('postdate', date('Y-m-d'))->desc('kd')->oneArray();
+          $noantrian = !empty($result['noantrian']) ? intval($result['noantrian']) : 0;
+          $next_antrian = $noantrian + 1;
+          echo '<div id="nomernya" align="center">';
+          echo '<h1 class="display-1" style="font-weight:bold;color:#007bff;">';
+          echo 'B-'.sprintf("%03d", $next_antrian);
           echo '</h1>';
-          echo '['.date('Y-m-d').']';
+          echo '<span class="badge badge-light" style="font-size:16px;">['.date('d-m-Y').']</span>';
           echo '</div>';
           echo '<br>';
+          exit();
         break;
         case "printcs":
-          $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'CS')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
-          $noantrian = '';
-          if($result) {
-            $noantrian = $result['noantrian'];
-          }
-        	if($noantrian > 0) {
-        		$next_antrian = $noantrian + 1;
-        	} else {
-        		$next_antrian = 1;
-        	}
-        	echo '<div id="nomernya" align="center">';
-          echo '<h1 class="display-1">';
-          echo 'B'.$next_antrian;
+          $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'CS')->where('postdate', date('Y-m-d'))->desc('kd')->oneArray();
+          $noantrian = !empty($result['noantrian']) ? intval($result['noantrian']) : 0;
+          $next_antrian = $noantrian + 1;
+          echo '<div id="nomernya" align="center">';
+          echo '<h1 class="display-1" style="font-weight:bold;color:#007bff;">';
+          echo 'B-'.sprintf("%03d", $next_antrian);
           echo '</h1>';
-          echo '['.date('Y-m-d').']';
+          echo '<span class="badge badge-light" style="font-size:16px;">['.date('d-m-Y').']</span>';
           echo '</div>';
           echo '<br>';
-          ?>
-          <script>
-        	$(document).ready(function(){
-        		$("#btnKRMCS").on('click', function(){
-        			$("#formcs").submit(function(e){
-                e.preventDefault();
-                e.stopImmediatePropagation();
-        				$.ajax({
-        					url: "<?php echo url().'/anjungan/ajax?show=simpancs&noantrian='.$next_antrian; ?>",
-        					type:"POST",
-        					data:$(this).serialize(),
-        					success:function(data){
-        						setTimeout('$("#loading").hide()',1000);
-        						//window.location.href = "{?=url('anjungan/pasien')?}";
-        						}
-        					});
-        				return false;
-        			});
-        		});
-        	})
-        	</script>
-          <?php
+          exit();
         break;
         case "simpancs":
+          $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'CS')->where('postdate', date('Y-m-d'))->desc('kd')->oneArray();
+          $last_no = !empty($result['noantrian']) ? intval($result['noantrian']) : 0;
+          $next_antrian = $last_no + 1;
+          if (isset($_REQUEST['noantrian']) && intval($_REQUEST['noantrian']) > 0) {
+            $next_antrian = intval($_REQUEST['noantrian']);
+          }
           $this->db('mlite_antrian_loket')
             ->save([
               'type' => 'CS',
-              'noantrian' => $_GET['noantrian'],
+              'noantrian' => $next_antrian,
               'postdate' => date('Y-m-d'),
               'start_time' => date('H:i:s'),
-              'end_time' => '00:00:00'
+              'end_time' => '00:00:00',
+              'status' => 0
             ]);
-          //redirect(url('anjungan/pasien'));
-        break;
+          header('Content-Type: application/json');
+          echo json_encode([
+            'status' => 'ok',
+            'noantrian' => $next_antrian,
+            'formatted' => 'B-' . sprintf("%03d", $next_antrian),
+            'type' => 'CS',
+            'nama_loket' => 'Layanan Pelanggan (CS)',
+            'nama_instansi' => $this->settings->get('settings.nama_instansi'),
+            'alamat' => $this->settings->get('settings.alamat'),
+            'nomor_telepon' => $this->settings->get('settings.nomor_telepon'),
+            'tanggal' => date('d-m-Y'),
+            'jam' => date('H:i:s')
+          ]);
+          exit();
 
         case "tampilapotek":
           $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Apotek')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
@@ -2418,7 +2551,32 @@ class Site extends SiteModule
           }
         break;
         case "loket-display":
-          $apotek = $this->db('mlite_antrian_loket')
+          // Loket Pendaftaran (Type: Loket)
+          $loketDB = $this->db('mlite_antrian_loket')
+            ->select('noantrian')
+            ->select('loket')
+            ->where('type', 'Loket')
+            ->where('postdate', date('Y-m-d'))
+            ->where('status', '>=', 1)
+            ->desc('kd')
+            ->oneArray();
+          $noLoket = !empty($loketDB['noantrian']) ? $loketDB['noantrian'] : ($this->settings->get('anjungan.panggil_loket_nomor') ?: $this->settings->get('anjungan.no_antrian_loket') ?: 1);
+          $konterLoket = !empty($loketDB['loket']) ? $loketDB['loket'] : ($this->settings->get('anjungan.panggil_loket') ?: $this->settings->get('anjungan.konter_antrian_loket') ?: 1);
+
+          // CS (Type: CS)
+          $csDB = $this->db('mlite_antrian_loket')
+            ->select('noantrian')
+            ->select('loket')
+            ->where('type', 'CS')
+            ->where('postdate', date('Y-m-d'))
+            ->where('status', '>=', 1)
+            ->desc('kd')
+            ->oneArray();
+          $noCS = !empty($csDB['noantrian']) ? $csDB['noantrian'] : ($this->settings->get('anjungan.panggil_cs_nomor') ?: $this->settings->get('anjungan.no_antrian_cs') ?: 1);
+          $konterCS = !empty($csDB['loket']) ? $csDB['loket'] : ($this->settings->get('anjungan.panggil_cs') ?: $this->settings->get('anjungan.konter_antrian_cs') ?: 1);
+
+          // Apotek (Type: Apotek)
+          $apotekDB = $this->db('mlite_antrian_loket')
             ->select('noantrian')
             ->select('loket')
             ->where('type', 'Apotek')
@@ -2426,22 +2584,28 @@ class Site extends SiteModule
             ->where('status', '>=', 1)
             ->desc('kd')
             ->oneArray();
+          $noApotek = !empty($apotekDB['noantrian']) ? $apotekDB['noantrian'] : ($this->settings->get('anjungan.panggil_apotek_nomor') ?: $this->settings->get('anjungan.no_antrian_apotek') ?: 1);
+          $konterApotek = !empty($apotekDB['loket']) ? $apotekDB['loket'] : ($this->settings->get('anjungan.panggil_apotek') ?: $this->settings->get('anjungan.konter_antrian_apotek') ?: 1);
 
+          header('Content-Type: application/json');
           echo json_encode([
             'loket' => [
-              'antrian' => (string) $this->settings->get('anjungan.no_antrian_loket'),
-              'counter' => (string) $this->settings->get('anjungan.konter_antrian_loket')
+              'antrian' => sprintf("%03d", intval($noLoket)),
+              'raw_antrian' => intval($noLoket),
+              'counter' => (string) $konterLoket
             ],
             'cs' => [
-              'antrian' => (string) $this->settings->get('anjungan.no_antrian_cs'),
-              'counter' => (string) $this->settings->get('anjungan.konter_antrian_cs')
+              'antrian' => sprintf("%03d", intval($noCS)),
+              'raw_antrian' => intval($noCS),
+              'counter' => (string) $konterCS
             ],
             'apotek' => [
-              'antrian' => isset($apotek['noantrian']) ? (string) $apotek['noantrian'] : '',
-              'counter' => isset($apotek['loket']) ? (string) $apotek['loket'] : ''
+              'antrian' => sprintf("%03d", intval($noApotek)),
+              'raw_antrian' => intval($noApotek),
+              'counter' => (string) $konterApotek
             ]
           ]);
-        break;
+          exit();
         // FOR DISPLAY
         case "apotek-display":
           $rows = $this->_resultDisplayAntrianApotek();  
@@ -2491,7 +2655,7 @@ class Site extends SiteModule
           }
         break;
       }
-      exit();
+      return;
     }
 
     public function getPresensi()

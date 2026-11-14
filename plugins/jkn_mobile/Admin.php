@@ -837,8 +837,14 @@ class Admin extends AdminModule
       $no_urut_reg = substr($reg_periksa['no_reg'], 0, 3);
       $minutes = intval($no_urut_reg) * 10;
       $cek_kuota['jam_mulai'] = date('H:i:s',strtotime('+'.$minutes.' minutes',strtotime($jam_mulai)));
+      // Auto-heal setting kd_pj_bpjs jika di server masih strip (-)
+      if ($this->settings->get('jkn_mobile.kd_pj_bpjs') == '-' || $this->settings->get('jkn_mobile.kd_pj_bpjs') == '') {
+        $this->db('mlite_settings')->where('module', 'jkn_mobile')->where('field', 'kd_pj_bpjs')->save(['value' => 'BPJ']);
+      }
+
       $jenispasien = 'NON JKN';
-      if($reg_periksa['kd_pj'] == $this->settings->get('jkn_mobile.kd_pj_bpjs')) {
+      $bpj_codes = array_filter([$this->settings->get('jkn_mobile.kd_pj_bpjs'), $this->settings->get('manajemen.penjab_bpjs'), 'BPJ']);
+      if(in_array($reg_periksa['kd_pj'], $bpj_codes) || stripos($reg_periksa['kd_pj'], 'BPJ') !== false) {
         $jenispasien = 'JKN';
       }
       $pasienbaru = '1';
@@ -864,13 +870,27 @@ class Admin extends AdminModule
         $nohp = '';
       }
 
-      $jeniskunjungan = 3;
+      $jeniskunjungan = 1; // Default rujukan FKTP
       $nomorreferensi = $this->settings->get('settings.ppk_bpjs').''.convertNorawat($reg_periksa['no_rawat']).''.$reg_periksa['no_reg'];
 
       if($jenispasien == 'JKN') {
           $bridging_sep = $this->db('bridging_sep')->where('no_rawat', $reg_periksa['no_rawat'])->oneArray();
           if ($bridging_sep) {
-            $nomorreferensi = $bridging_sep['no_rujukan'];
+            // Tentukan jenis kunjungan & nomor referensi dari data SEP
+            if (!empty($bridging_sep['noskdp']) || $bridging_sep['tujuankunjungan'] == '1') {
+              $jeniskunjungan = 3; // Kontrol (SKDP)
+              $nomorreferensi = !empty($bridging_sep['noskdp']) ? $bridging_sep['noskdp'] : $bridging_sep['no_rujukan'];
+            } elseif ($bridging_sep['tujuankunjungan'] == '2') {
+              $jeniskunjungan = 2; // Rujukan Internal
+              $nomorreferensi = !empty($bridging_sep['noskdp']) ? $bridging_sep['noskdp'] : $bridging_sep['no_rujukan'];
+            } elseif ($bridging_sep['asal_rujukan'] == '2. Faskes 2(RS)') {
+              $jeniskunjungan = 4; // Rujukan Antar RS (Faskes 2)
+              $nomorreferensi = $bridging_sep['no_rujukan'];
+            } else {
+              $jeniskunjungan = 1; // Rujukan FKTP (Faskes 1)
+              $nomorreferensi = $bridging_sep['no_rujukan'];
+            }
+
             if (empty($kd_dokter_bpjs)) {
               $kd_dokter_bpjs = $bridging_sep['kddpjplayanan'] ?: $bridging_sep['kddpjp'];
               $nm_dokter_bpjs = $bridging_sep['nmdpjplayanan'] ?: $bridging_sep['nmdpdjp'];
@@ -882,7 +902,20 @@ class Admin extends AdminModule
           } else {
             $bridging_sep_internal = $this->db('bridging_sep_internal')->where('no_rawat', $reg_periksa['no_rawat'])->oneArray();
             if ($bridging_sep_internal) {
-              $nomorreferensi = $bridging_sep_internal['no_rujukan'];
+              if (!empty($bridging_sep_internal['noskdp']) || $bridging_sep_internal['tujuankunjungan'] == '1') {
+                $jeniskunjungan = 3;
+                $nomorreferensi = !empty($bridging_sep_internal['noskdp']) ? $bridging_sep_internal['noskdp'] : $bridging_sep_internal['no_rujukan'];
+              } elseif ($bridging_sep_internal['tujuankunjungan'] == '2') {
+                $jeniskunjungan = 2;
+                $nomorreferensi = !empty($bridging_sep_internal['noskdp']) ? $bridging_sep_internal['noskdp'] : $bridging_sep_internal['no_rujukan'];
+              } elseif ($bridging_sep_internal['asal_rujukan'] == '2. Faskes 2(RS)') {
+                $jeniskunjungan = 4;
+                $nomorreferensi = $bridging_sep_internal['no_rujukan'];
+              } else {
+                $jeniskunjungan = 1;
+                $nomorreferensi = $bridging_sep_internal['no_rujukan'];
+              }
+
               if (empty($kd_dokter_bpjs)) {
                 $kd_dokter_bpjs = $bridging_sep_internal['kddpjplayanan'] ?: $bridging_sep_internal['kddpjp'];
                 $nm_dokter_bpjs = $bridging_sep_internal['nmdpjplayanan'] ?: $bridging_sep_internal['nmdpdjp'];
@@ -929,16 +962,16 @@ class Admin extends AdminModule
           'nohp' => $nohp,
           'kodepoli' => $kd_poli_bpjs,
           'namapoli' => $nm_poli_bpjs,
-          'pasienbaru' => $pasienbaru,
+          'pasienbaru' => intval($pasienbaru),
           'norm' => $reg_periksa['no_rkm_medis'],
           'tanggalperiksa' => $reg_periksa['tgl_registrasi'],
-          'kodedokter' => $kd_dokter_bpjs,
+          'kodedokter' => intval($kd_dokter_bpjs),
           'namadokter' => $nm_dokter_bpjs,
           'jampraktek' => substr($jam_mulai,0,5).'-'.substr($jam_selesai,0,5),
-          'jeniskunjungan' => $jeniskunjungan,
+          'jeniskunjungan' => intval($jeniskunjungan),
           'nomorreferensi' => $nomorreferensi,
           'nomorantrean' => $kd_poli_bpjs.'-'.$reg_periksa['no_reg'],
-          'angkaantrean' => $reg_periksa['no_reg'],
+          'angkaantrean' => intval(ltrim($reg_periksa['no_reg'],'0')),
           'estimasidilayani' => strtotime($reg_periksa['tgl_registrasi'].' '.$cek_kuota['jam_mulai']) * 1000,
           'sisakuotajkn' => max(0, $kuota - intval(ltrim($reg_periksa['no_reg'],'0'))),
           'kuotajkn' => $kuota,
@@ -1106,7 +1139,7 @@ class Admin extends AdminModule
         $json1 = $this->_decodeBpjsResponse($output1);
         echo 'Response:<br>';
         echo json_encode(htmlspecialchars_array($json1));
-        if(($json1['metadata']['code'] ?? null) == 200){
+        if(($json1['metadata']['code'] ?? null) == 200 || ($json1['metadata']['code'] ?? null) == 208){
           $this->db('mlite_antrian_referensi_taskid')
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 1)
@@ -1141,7 +1174,7 @@ class Admin extends AdminModule
         $json2 = $this->_decodeBpjsResponse($output2);
         echo 'Response:<br>';
         echo json_encode(htmlspecialchars_array($json2));
-        if(($json2['metadata']['code'] ?? null) == 200){
+        if(($json2['metadata']['code'] ?? null) == 200 || ($json2['metadata']['code'] ?? null) == 208){
           $this->db('mlite_antrian_referensi_taskid')
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 2)
@@ -1176,7 +1209,7 @@ class Admin extends AdminModule
         $json3 = $this->_decodeBpjsResponse($output3);
         echo 'Response:<br>';
         echo json_encode(htmlspecialchars_array($json3));
-        if(($json3['metadata']['code'] ?? null) == 200){
+        if(($json3['metadata']['code'] ?? null) == 200 || ($json3['metadata']['code'] ?? null) == 208){
           $this->db('mlite_antrian_referensi_taskid')
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 3)
@@ -1211,7 +1244,7 @@ class Admin extends AdminModule
         $json4 = $this->_decodeBpjsResponse($output4);
         echo 'Response:<br>';
         echo json_encode(htmlspecialchars_array($json4));
-        if(($json4['metadata']['code'] ?? null) == 200){
+        if(($json4['metadata']['code'] ?? null) == 200 || ($json4['metadata']['code'] ?? null) == 208){
           $this->db('mlite_antrian_referensi_taskid')
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 4)
@@ -1256,7 +1289,7 @@ class Admin extends AdminModule
         $json5 = $this->_decodeBpjsResponse($output5);
         echo 'Response:<br>';
         echo json_encode(htmlspecialchars_array($json5));
-        if(($json5['metadata']['code'] ?? null) == 200){
+        if(($json5['metadata']['code'] ?? null) == 200 || ($json5['metadata']['code'] ?? null) == 208){
           $this->db('mlite_antrian_referensi_taskid')
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 5)
@@ -1291,7 +1324,7 @@ class Admin extends AdminModule
         $json6 = $this->_decodeBpjsResponse($output6);
         echo 'Response:<br>';
         echo json_encode(htmlspecialchars_array($json6));
-        if(($json6['metadata']['code'] ?? null) == 200){
+        if(($json6['metadata']['code'] ?? null) == 200 || ($json6['metadata']['code'] ?? null) == 208){
           $this->db('mlite_antrian_referensi_taskid')
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 6)
@@ -1326,7 +1359,7 @@ class Admin extends AdminModule
         $json7 = $this->_decodeBpjsResponse($output7);
         echo 'Response:<br>';
         echo json_encode(htmlspecialchars_array($json7));
-        if(($json7['metadata']['code'] ?? null) == 200){
+        if(($json7['metadata']['code'] ?? null) == 200 || ($json7['metadata']['code'] ?? null) == 208){
           $this->db('mlite_antrian_referensi_taskid')
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 7)
