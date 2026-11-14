@@ -1,467 +1,422 @@
-<script>
-function printContent(el){
-  var restorepage = document.body.innerHTML;
-  var printcontent = document.getElementById(el).innerHTML;
-  document.body.innerHTML = printcontent;
-  window.print();
-  document.body.innerHTML = restorepage;
-  window.close();
-}
-</script>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Cetak SEP - {?=isset_or($data_sep.no_sep)?}</title>
+  <style type="text/css">
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      color: #000;
+      background-color: #eef1f5;
+    }
+    #cetaksep {
+      width: 780px;
+      margin: 20px auto;
+      padding: 15px 20px 10px 20px;
+      background: #ffffff;
+      border: 1px solid #000;
+      box-sizing: border-box;
+    }
+    .sep-header {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+    }
+    .sep-header td {
+      vertical-align: middle;
+      padding: 0;
+    }
+    .sep-body-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+    .sep-body-table td {
+      padding: 1px 0;
+      vertical-align: top;
+    }
+    .sep-footer-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .sep-footer-table td {
+      vertical-align: top;
+      padding: 0;
+    }
+    .disclaimer-text {
+      font-size: 8px;
+      line-height: 1.25;
+      color: #000;
+    }
+    .signature-box {
+      text-align: center;
+      width: 180px;
+      margin-left: auto;
+      font-size: 11px;
+      line-height: 1.3;
+    }
+    .print-timestamp {
+      text-align: right;
+      font-size: 8.5px;
+      color: #000;
+      margin-top: 8px;
+    }
+    .btn-action {
+      display: inline-block;
+      padding: 7px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.4;
+      text-align: center;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      border-radius: 4px;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+    .btn-default {
+      color: #333;
+      background-color: #fff;
+      border-color: #ccc;
+    }
+    .btn-default:hover {
+      background-color: #e6e6e6;
+      border-color: #adadad;
+    }
+    .btn-primary {
+      color: #fff;
+      background-color: #007bff;
+      border-color: #007bff;
+      font-weight: bold;
+    }
+    .btn-primary:hover {
+      background-color: #0069d9;
+      border-color: #0062cc;
+    }
+    @media print {
+      @page {
+        size: auto;
+        margin: 5mm 8mm;
+      }
+      html, body {
+        background-color: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      #cetaksep {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 12px 15px 8px 15px !important;
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+      }
+      .no-print, .no-print * {
+        display: none !important;
+      }
+    }
+  </style>
+  <script>
+    function printSEP() {
+      window.print();
+    }
+    function printContent(el) {
+      window.print();
+    }
+  </script>
+</head>
 <body>
   {if: isset($data_sep.no_sep)}
   <div id="cetaksep">
-    <style  type="text/css">
-      html {
-        font-size:16px;
-        font-family: Arial, sans-serif;
-        margin: 20px;
-      }
-      table td {
-        font-size:16px;
-        padding: 0;
-      }
-      .cetak {
-    		display:inline-block;
-    		padding:6px 12px;
-    		margin:10px;
-    		font-size:14px;
-    		font-weight:400;
-    		line-height:1.5;
-    		white-space:nowrap;
-        float: right;
-        bottom: 10px;
-        right: 10px;
-    	}
-      .tutup {
-    		display:inline-block;
-    		padding:6px 12px;
-        margin:10px;
-    		font-size:14px;
-    		font-weight:400;
-    		line-height:1.5;
-    		white-space:nowrap;
-        float: right;
-        bottom: 10px;
-        right: 10px;
-    	}
-      .btn {
-    		display:inline-block;
-    		padding:6px 12px;
-        margin:10px;
-    		font-size:14px;
-    		font-weight:400;
-    		line-height:1.5;
-    		white-space:nowrap;
-        bottom: 10px;
-        right: 10px;
-    	}
-    </style>
-    <table width="1000">
+    <!-- Header: Logo BPJS & Judul Berdampingan -->
+    <table class="sep-header">
       <tr>
-        <td>
-          <table>
+        <td style="width: 190px; vertical-align: middle;">
+          <img src="{?=url()?}/plugins/vclaim/img/bpjslogo.png" alt="BPJS Kesehatan" style="height: 38px; width: auto; max-width: 185px; display: block;">
+        </td>
+        <td style="vertical-align: middle; padding-left: 8px;">
+          <div style="font-size: 13.5px; font-weight: bold; letter-spacing: 0.3px; color: #000; line-height: 1.25;">
+            SURAT ELEGIBILITAS PESERTA
+          </div>
+          <div style="font-size: 13.5px; font-weight: bold; color: #000; line-height: 1.25; margin-top: 1px;">
+            {?=strtoupper(isset_or($settings.nama_instansi))?}
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Data Body: 2 Kolom Sejajar Sesuai Standar Web BPJS -->
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <!-- Kolom Kiri -->
+        <td style="width: 58%; vertical-align: top; padding-right: 15px;">
+          <table class="sep-body-table">
             <tr>
-              <td width="420">
-                <img src="{?=url()?}/plugins/vclaim/img/bpjslogo.png" alt="Image" width="400" height="68">
-              </td>
-              <td width="580">
-                <div style="font-size:28px;text-align:center;font-weight:bold;">
-                  SURAT ELEGIBILITAS PESERTA
-                </div>
-                <div style="font-size:21px;text-align:center;">
-                  {?=isset_or($settings.nama_instansi)?}
-                </div>
-              </td>
+              <td style="width: 105px; white-space: nowrap;">No.SEP</td>
+              <td style="width: 12px; text-align: center;">:</td>
+              <td>{?=isset_or($data_sep.no_sep)?}</td>
+            </tr>
+            <tr>
+              <td>Tgl.SEP</td>
+              <td style="text-align: center;">:</td>
+              <td>{?=isset_or($data_sep.tglsep)?}</td>
+            </tr>
+            <tr>
+              <td>No.Kartu</td>
+              <td style="text-align: center;">:</td>
+              <td>{?=isset_or($data_sep.no_kartu)?} {if: !empty($data_sep.nomr)}( MR. {?=isset_or($data_sep.nomr)?} ){/if}</td>
+            </tr>
+            <tr>
+              <td>Nama Peserta</td>
+              <td style="text-align: center;">:</td>
+              <td>{?=isset_or($data_sep.nama_pasien)?}</td>
+            </tr>
+            <tr>
+              <td>Tgl.Lahir</td>
+              <td style="text-align: center;">:</td>
+              <td>{?=isset_or($data_sep.tanggal_lahir)?}&nbsp;&nbsp;Kelamin : {if: isset($data_sep.jkel) && ($data_sep.jkel == 'L' || $data_sep.jkel == '1' || $data_sep.jkel == 'Laki-Laki')}Laki-Laki{elseif: isset($data_sep.jkel) && ($data_sep.jkel == 'P' || $data_sep.jkel == '0' || $data_sep.jkel == 'Perempuan')}Perempuan{else}{?=isset_or($data_sep.jkel)?}{/if}</td>
+            </tr>
+            <tr>
+              <td>No.Telepon</td>
+              <td style="text-align: center;">:</td>
+              <td>{?=empty($data_sep.notelep) || $data_sep.notelep == '-' ? '-' : $data_sep.notelep?}</td>
+            </tr>
+            <tr>
+              <td>Sub/Spesialis</td>
+              <td style="text-align: center;">:</td>
+              <td>{?=isset_or($data_sep.nmpolitujuan)?}</td>
+            </tr>
+            <tr>
+              <td>Dokter</td>
+              <td style="text-align: center;">:</td>
+              <td>{?=!empty($data_sep.nmdpjplayanan) && $data_sep.nmdpjplayanan != '-' ? $data_sep.nmdpjplayanan : (isset_or($data_sep.nmdpdjp) ?: '-')?}</td>
+            </tr>
+            <tr>
+              <td>Faskes Perujuk</td>
+              <td style="text-align: center;">:</td>
+              <td>{?=empty($data_sep.nmppkrujukan) || $data_sep.nmppkrujukan == '-' ? '-' : $data_sep.nmppkrujukan?}</td>
+            </tr>
+            <tr>
+              <td>Diagnosa Awal</td>
+              <td style="text-align: center;">:</td>
+              <td>{?=isset_or($data_sep.diagawal)?}{if: !empty($data_sep.nmdiagnosaawal)} - {?=isset_or($data_sep.nmdiagnosaawal)?}{/if}</td>
+            </tr>
+            <tr>
+              <td style="vertical-align: top;">Catatan</td>
+              <td style="text-align: center; vertical-align: top;">:</td>
+              <td style="vertical-align: top;">{?=empty($data_sep.catatan) ? '' : $data_sep.catatan?}</td>
             </tr>
           </table>
         </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
+
+        <!-- Kolom Kanan -->
+        <td style="width: 42%; vertical-align: top;">
+          <table class="sep-body-table">
             <tr>
-              <td width="420">
-                  <b><u>{?=isset_or($data_sep.potensi_prb)?}</u></b>
-              </td>
-              <td width="580">
-                <center>
-                  <img src="{?=url()?}/api/barcode/?codetype=code39&size=60&text={?=isset_or($data_sep.no_sep)?}" alt="" width="200px">
-                </center>
+              <td style="width: 90px; white-space: nowrap;">Peserta</td>
+              <td style="width: 12px; text-align: center;">:</td>
+              <td>{?=isset_or($data_sep.peserta)?}</td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+            </tr>
+            <tr>
+              <td>Jns.Rawat</td>
+              <td style="text-align: center;">:</td>
+              <td>{if: isset($data_sep.jnspelayanan) && $data_sep.jnspelayanan == 1}R.Inap{else}R.Jalan{/if}</td>
+            </tr>
+            <tr>
+              <td>Jns.Kunjungan</td>
+              <td style="text-align: center;">:</td>
+              <td>
+                {if: isset($data_sep.tujuankunjungan) && $data_sep.tujuankunjungan == '1'}
+                  - Kunjungan Kontrol (ulangan)
+                {elseif: isset($data_sep.tujuankunjungan) && $data_sep.tujuankunjungan == '2'}
+                  - Rujukan Internal
+                {elseif: !empty($data_sep.no_rujukan)}
+                  - Kunjungan Rujukan Pertama
+                {else}
+                  - Kunjungan Normal
+                {/if}
               </td>
             </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
             <tr>
-              <td width="170">
-                No. SEP
-              </td>
+              <td>&nbsp;</td>
+              <td style="text-align: center;">:</td>
               <td>
-                :
-              </td>
-              <td>
-                {?=isset_or($data_sep.no_sep)?}
+                {if: isset($data_sep.flagprosedur) && $data_sep.flagprosedur == '1'}
+                  - Prosedur dan terapi berkelanjutan
+                {elseif: !empty($data_sep.asesmenpelayanan)}
+                  - {?=isset_or($data_sep.asesmenpelayanan)?}
+                {else}
+                  -
+                {/if}
               </td>
             </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
             <tr>
-              <td width="170">
-                Tgl. SEP
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {?=isset_or($data_sep.tglsep)?}
-              </td>
+              <td>Poli Perujuk</td>
+              <td style="text-align: center;">:</td>
+              <td>-</td>
             </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
             <tr>
-              <td width="170">
-                No. Kartu
-              </td>
-              <td>
-                :
-              </td>
-              <td width="450">
-                {?=isset_or($data_sep.no_kartu)?} (MR: {?=isset_or($data_sep.nomr)?})
-              </td>
-              <td width="90">
-                Peserta
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {?=isset_or($data_sep.peserta)?}
-              </td>
+              <td>Kls.Hak</td>
+              <td style="text-align: center;">:</td>
+              <td>Kelas {?=isset_or($data_sep.klsrawat)?}</td>
             </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
             <tr>
-              <td width="170">
-                Nama Peserta
-              </td>
-              <td>
-                :
-              </td>
-              <td width="450">
-                {?=isset_or($data_sep.nama_pasien)?} ({?=isset_or($data_sep.jkel)?})
-              </td>
-              <td width="90">
-                COB
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {if: $data_sep.cob == 0}0. Tidak{else}1. Ya{/if}
-              </td>
+              <td>Kls.Rawat</td>
+              <td style="text-align: center;">:</td>
+              <td>{if: !empty($data_sep.klsnaik) && $data_sep.klsnaik != '-' && $data_sep.klsnaik != $data_sep.klsrawat}Kelas {?=isset_or($data_sep.klsnaik)?}{else}-{/if}</td>
             </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
             <tr>
-              <td width="170">
-                Tgl. Lahir
-              </td>
-              <td>
-                :
-              </td>
-              <td width="450">
-                {?=isset_or($data_sep.tanggal_lahir)?}
-              </td>
-              <td width="90">
-                Jns. Rawat
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {if: $data_sep.jnspelayanan == 1}1. R. Inap{else}2. R.Jalan{/if}
-              </td>
+              <td>Penjamin</td>
+              <td style="text-align: center;">{if: !empty($data_sep.penjamin) && $data_sep.penjamin != '-'}:{/if}</td>
+              <td>{if: !empty($data_sep.penjamin) && $data_sep.penjamin != '-'}{?=isset_or($data_sep.penjamin)?}{/if}</td>
             </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
             <tr>
-              <td width="170">
-                No. Telepon
-              </td>
-              <td>
-                :
-              </td>
-              <td width="450">
-                {?=isset_or($data_sep.notelep)?}
-              </td>
-              <td width="90">
-                Kls. Rawat
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                Kelas {?=isset_or($data_sep.klsrawat)?}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                Spesialis/Sub Spesialis
-              </td>
-              <td>
-                :
-              </td>
-              <td width="450">
-                {?=isset_or($data_sep.nmpolitujuan)?}
-              </td>
-              <!--
-              <td width="90">
-                Penjamin
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {*$data_sep.penjamin*}
-              </td>
-              -->
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                DPJP Yg Melayani
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {?=isset_or($data_sep.nmdpdjp)?}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                Faskes Perujuk
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {?=isset_or($data_sep.nmppkrujukan)?}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                Diagnosa Awal
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {?=isset_or($data_sep.diagawal)?} - {?=isset_or($data_sep.nmdiagnosaawal)?}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170" valign="top">
-                Catatan
-              </td>
-              <td valign="top">
-                :
-              </td>
-              <td width="550" valign="top">
-                {?=isset_or($data_sep.catatan)?}
-              </td>
-              <td width="200" halign="center" valign="bottom">
-                Pasien/Keluarga Pasien
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="720" height="0">
-                <i style="font-size:11px;">
-                  *Saya Menyetujui BPJS Kesehatan menggunakan informasi Medis Pasien jika diperlukan.<br>
-                  **SEP bukan sebagai bukti penjaminan peserta<br>
-                  Cetakan ke 1 {?=date('d/m/Y H:i:s')?} PM<br>
-                  Masa berlaku {?=isset_or($data_sep.tglrujukan)?} s/d {?=isset_or($data_sep.batas_rujukan)?}
-                </i>
-              </td>
-              <td valign="bottom" halign="center" padding="0" margin="0">
-                <center>
-                  <!-- <div id="qrcodeSEP" style="margin-top:2px;width:50px;"></div><br> -->
-                  <img src="{?=url($data_sep.qrCode)?}" width="100px" style="margin: 0.2em;"/><br>
-                  {?=isset_or($data_sep.nama_pasien)?}<br>
-                </center>
-                -----------------------------------
-              </td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
             </tr>
           </table>
         </td>
       </tr>
     </table>
-  </div>
-  <center style="margin-top:100px;">
-    <button class="tutup" type="button" onclick="javascript:window.close();opener.window.focus();">Tutup Window</button>
-    <button class="cetak" onclick="printContent('cetaksep')" type="button">Cetak SEP</button>
-  </center>
-  {else}
 
+    <!-- Footer: Persetujuan Pasien -->
+    <table class="sep-footer-table">
+      <tr>
+        <!-- Sisi Kiri Kosong -->
+        <td style="width: 65%; vertical-align: top;">
+          &nbsp;
+        </td>
+
+        <!-- Tanda Tangan Persetujuan Sisi Kanan -->
+        <td style="width: 35%; vertical-align: top;">
+          <div class="signature-box">
+            <div>Persetujuan</div>
+            <div>Pasien/Keluarga Pasien</div>
+            <div style="height: 50px;"></div>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Cetakan Ke & Tanggal Jam di Kanan Bawah -->
+    <div class="print-timestamp">
+      Cetakan ke 1 {?=date('d-m-Y H:i:s')?}
+    </div>
+  </div>
+
+  <!-- Action Buttons (Hidden when printed) -->
+  <div class="no-print" style="width: 780px; margin: 15px auto 40px auto; text-align: right;">
+    <button type="button" class="btn-action btn-default" onclick="window.close(); opener.window.focus();">Tutup Window</button>
+    <button type="button" class="btn-action btn-primary" onclick="printSEP();" style="margin-left: 8px;">Cetak SEP</button>
+  </div>
+
+  {else}
+  <!-- Form Tarik Data SEP Jika Belum Tersimpan di SIMRS -->
   <script src="{?=url()?}/assets/jscripts/jquery.min.js?v=4.0.3"></script>
   <script src="{?=url()?}/assets/jscripts/bootstrap.min.js?v=4.0.3"></script>  
   <link rel="stylesheet" href="{?=url()?}/assets/css/bootstrap-datetimepicker.css">
   <script src="{?=url()?}/assets/jscripts/moment-with-locales.js"></script>
   <script src="{?=url()?}/assets/jscripts/bootstrap-datetimepicker.js"></script>  
-    <center>
-      <div class="alert alert-danger" id="sync">
-        Data SEP <span id="no_sep">{?=parseURL()[2]?}</span> di server SIMRS tidak ditemukan.<br>
-        Apakah akan menarik data dari v-Claim?<br>
-        Jika YA silahkan isikan form dibawah, kemudian klik tombol Simpan ke SIMRS<br>
-        <!-- <button class="btn" type="button" id="syncsep">Ya</button> -->
-        <button class="btn" type="button" onclick="javascript:window.close();opener.window.focus();">TUTUP</button>
-      </div>
-    </center>
-    <div class="container" id="form_tarik_sep">
-      
-      <link href="{?=url()?}/assets/css/ataaka.min.css" rel="stylesheet">
-
-      <form name="vedika" action="{?=url(ADMIN.'/vclaim/syncsep/')?}" method="POST" enctype="multipart/form-data">
-        <div class="col-md-12">
-          <div class="form-group">
-              <label>Nomor Rawat</label>
-              <input type="text" name="no_rawat" class="form-control" value="{?=revertNoRawat(parseUrl()[3])?}" />
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="form-group">
-              <label>Nomor SEP</label>
-              <input type="text" name="no_sep" class="form-control" placeholder="Nomor SEP" required value="{?=parseUrl()[2]?}" />
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="form-group">
-              <label>Asal Rujukan</label>
-              <select name="asal_rujukan" class="form-control">
-                  <option value="1">Faskes 1</option>
-                  <option value="2">Faskes 2</option>
-              </select>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="form-group">
-              <label>Tanggal Rujukan</label>
-              <input type="text" name="tgl_kunjungan" class="form-control tanggal" placeholder="Tanggal Rujukan" required value="" />
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="form-group">
-              <label>Kode Diagnosa</label>
-              <input type="text" name="kd_diagnosa" class="form-control" placeholder="Kode ICD-X" required value="" />
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="form-group">
-              <label>Poli Tujuan</label>
-              <select name="kd_poli" class="form-control" data-use-search="true">
-                  {loop: $poliklinik}
-                  <option value="{?=isset_or($value.kd_poli)?}">{?=isset_or($value.nm_poli)?}</option>
-                  {/loop}
-              </select>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="form-group">
-              <label>Dokter Penanggung Jawab</label>
-              <select name="kd_dokter" class="form-control">
-                  {loop: $dokter}
-                  <option value="{?=isset_or($value.kd_dokter)?}">{?=isset_or($value.nm_dokter)?}</option>
-                  {/loop}
-              </select>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="form-group">
-            <input type="submit" class="btn btn-primary" value="Simpan Ke SIMRS" />
-          </div>
-        </div>
-      </form>      
+  <center style="margin-top: 30px;">
+    <div class="alert alert-danger" id="sync" style="display: inline-block; max-width: 600px; text-align: center;">
+      Data SEP <span id="no_sep"><strong>{?=parseURL()[2]?}</strong></span> di server SIMRS tidak ditemukan.<br>
+      Apakah akan menarik data dari v-Claim?<br>
+      Jika YA silahkan isikan form dibawah, kemudian klik tombol Simpan ke SIMRS<br><br>
+      <button class="btn-action btn-default" type="button" onclick="window.close(); opener.window.focus();">TUTUP</button>
     </div>
-    <!-- <center style="margin-top:100px;">
-      <button class="tutup" type="button" onclick="javascript:window.close();opener.window.focus();">Tutup Window</button>
-      <button class="cetak" onclick="printContent('cetaksep')" type="button">Cetak SEP</button>
-    </center> -->
-
-    <script type="text/javascript">
-      $('.tanggal').datetimepicker({
-        format: 'YYYY-MM-DD',
-        locale: 'id'
-      });
-    </script>
-    
-    {/if}
-    <script src="{?=url()?}/assets/jscripts/jquery.min.js"></script>
-    <script type="text/javascript" src="{?=url()?}/assets/jscripts/jquery.qrcode.js"></script>
-    <script type="text/javascript" src="{?=url()?}/assets/jscripts/qrcode.js"></script>
-    <script>
-      jQuery('#qrcodeSEP').qrcode({
-        text	: "No.SEP: {?=isset_or($data_sep.no_sep)?}",
-        width : 80,
-        height: 80
-      });
-    </script>
-  </body>
+  </center>
+  <div class="container" id="form_tarik_sep" style="max-width: 700px; margin: 20px auto;">
+    <link href="{?=url()?}/assets/css/ataaka.min.css" rel="stylesheet">
+    <form name="vedika" action="{?=url(ADMIN.'/vclaim/syncsep/')?}" method="POST" enctype="multipart/form-data">
+      <div class="col-md-12">
+        <div class="form-group">
+          <label>Nomor Rawat</label>
+          <input type="text" name="no_rawat" class="form-control" value="{?=revertNoRawat(parseUrl()[3])?}" />
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-group">
+          <label>Nomor SEP</label>
+          <input type="text" name="no_sep" class="form-control" placeholder="Nomor SEP" required value="{?=parseUrl()[2]?}" />
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-group">
+          <label>Asal Rujukan</label>
+          <select name="asal_rujukan" class="form-control">
+            <option value="1">Faskes 1</option>
+            <option value="2">Faskes 2</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-group">
+          <label>Tanggal Rujukan</label>
+          <input type="text" name="tgl_kunjungan" class="form-control tanggal" placeholder="Tanggal Rujukan" required value="" />
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-group">
+          <label>Kode Diagnosa</label>
+          <input type="text" name="kd_diagnosa" class="form-control" placeholder="Kode ICD-X" required value="" />
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-group">
+          <label>Poli Tujuan</label>
+          <select name="kd_poli" class="form-control" data-use-search="true">
+            {loop: $poliklinik}
+            <option value="{?=isset_or($value.kd_poli)?}">{?=isset_or($value.nm_poli)?}</option>
+            {/loop}
+          </select>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-group">
+          <label>Dokter Penanggung Jawab</label>
+          <select name="kd_dokter" class="form-control">
+            {loop: $dokter}
+            <option value="{?=isset_or($value.kd_dokter)?}">{?=isset_or($value.nm_dokter)?}</option>
+            {/loop}
+          </select>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-group">
+          <input type="submit" class="btn btn-primary" value="Simpan Ke SIMRS" />
+        </div>
+      </div>
+    </form>      
+  </div>
+  <script type="text/javascript">
+    $('.tanggal').datetimepicker({
+      format: 'YYYY-MM-DD',
+      locale: 'id'
+    });
+  </script>
+  {/if}
+</body>
+</html>
