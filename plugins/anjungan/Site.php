@@ -233,10 +233,17 @@ class Site extends SiteModule
         $title = 'Anjungan Pasien Mandiri (APM)';
         $logo  = $this->settings->get('settings.logo');
         $poliklinik = $this->db('poliklinik')->where('status', '1')->toArray();
-        $carabayar = str_replace(",","','", $this->settings->get('anjungan.carabayar'));
-        $penjab = $this->db()->pdo()->prepare("SELECT * FROM penjab WHERE kd_pj IN ('$carabayar')");
-        $penjab->execute();
-        $penjab = $penjab->fetchAll(\PDO::FETCH_ASSOC);
+        $carabayar_setting = $this->settings->get('anjungan.carabayar');
+        $penjab = [];
+        if (!empty($carabayar_setting)) {
+            $carabayar = str_replace(",","','", $carabayar_setting);
+            $stmt = $this->db()->pdo()->prepare("SELECT * FROM penjab WHERE kd_pj IN ('$carabayar')");
+            $stmt->execute();
+            $penjab = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
+        if (empty($penjab)) {
+            $penjab = $this->db('penjab')->where('status', '1')->toArray();
+        }
 
         $_username = '';
         $__username = 'Tamu';
@@ -2333,7 +2340,10 @@ class Site extends SiteModule
                   $data['result'] = '';
               }
               echo json_encode(htmlspecialchars_array($data));
+              exit();
           }
+          echo json_encode(['status' => 'err', 'message' => 'No RM tidak boleh kosong']);
+          exit();
         break;
 
         case "get-daftar":
@@ -2350,86 +2360,268 @@ class Site extends SiteModule
                   $data['result'] = '';
               }
               echo json_encode(htmlspecialchars_array($data));
+              exit();
           }
+          echo json_encode(['status' => 'err', 'message' => 'No RM tidak boleh kosong']);
+          exit();
         break;
 
         case "get-poli":
+          $this->setTemplate(false);
+          header('Content-Type: application/json');
           if(!empty($_POST['no_rkm_medis'])){
               $data = array();
-              if($this->db('reg_periksa')->where('no_rkm_medis', $_POST['no_rkm_medis'])->where('tgl_registrasi', $_POST['tgl_registrasi'])->oneArray()) {
+              $norm = $_POST['no_rkm_medis'];
+              $tanggal = !empty($_POST['tgl_registrasi']) ? $_POST['tgl_registrasi'] : date('Y-m-d');
+
+              // Cek apakah sudah terdaftar di tanggal tersebut
+              $cekDaftar = $this->db('reg_periksa')->where('no_rkm_medis', $norm)->where('tgl_registrasi', $tanggal)->oneArray();
+              if($cekDaftar) {
                 $data['status'] = 'exist';
                 $data['result'] = '';
-                echo json_encode(htmlspecialchars_array($data));
-              } else {
-                $tanggal = $_POST['tgl_registrasi'];
-                $tentukan_hari = date('D',strtotime($tanggal));
-                $day = array('Sun' => 'AKHAD', 'Mon' => 'SENIN', 'Tue' => 'SELASA', 'Wed' => 'RABU', 'Thu' => 'KAMIS', 'Fri' => 'JUMAT', 'Sat' => 'SABTU');
-                $hari=$day[$tentukan_hari];
-                $query = $this->db('jadwal')
-                  ->select(['kd_poli' => 'jadwal.kd_poli'])
-                  ->select(['nm_poli' => 'poliklinik.nm_poli'])
-                  ->select(['jam_mulai' => 'jadwal.jam_mulai'])
-                  ->select(['jam_selesai' => 'jadwal.jam_selesai'])
-                  ->join('poliklinik', 'poliklinik.kd_poli = jadwal.kd_poli')
-                  ->join('dokter', 'dokter.kd_dokter = jadwal.kd_dokter')
-                  ->like('jadwal.hari_kerja', $hari)
-                  ->toArray();
-                if(!empty($query)){
-                    $data['status'] = 'ok';
-                    $data['result'] = $query;
-                }else{
-                    $data['status'] = 'err';
-                    $data['result'] = '';
-                }
-                echo json_encode(htmlspecialchars_array($data));
+                $data['message'] = 'Pasien sudah terdaftar pada tanggal ' . $tanggal;
+                echo json_encode($data);
+                exit();
               }
-          }
-        break;
-        case "get-dokter":
-          if(!empty($_POST['kd_poli'])){
-              $tanggal = $_POST['tgl_registrasi'];
-              $tentukan_hari = date('D',strtotime($tanggal));
+
+              $tentukan_hari = date('D', strtotime($tanggal));
               $day = array('Sun' => 'AKHAD', 'Mon' => 'SENIN', 'Tue' => 'SELASA', 'Wed' => 'RABU', 'Thu' => 'KAMIS', 'Fri' => 'JUMAT', 'Sat' => 'SABTU');
-              $hari=$day[$tentukan_hari];
+              $hari = $day[$tentukan_hari] ?? 'SENIN';
+
+              // Poliklinik filter setting dari admin
+              $poliklinik_setting = $this->settings->get('anjungan.display_poli');
+
+              // 1. Coba cari dari tabel jadwal jika ada
+              $query = $this->db('jadwal')
+                ->select(['kd_poli' => 'jadwal.kd_poli'])
+                ->select(['nm_poli' => 'poliklinik.nm_poli'])
+                ->join('poliklinik', 'poliklinik.kd_poli = jadwal.kd_poli')
+                ->join('dokter', 'dokter.kd_dokter = jadwal.kd_dokter')
+                ->where('dokter.status', '1')
+                ->like('jadwal.hari_kerja', $hari);
+
+              if (!empty($poliklinik_setting)) {
+                  $query = $query->where('jadwal.kd_poli', 'IN', explode(',', $poliklinik_setting));
+              }
+              $rawPoli = $query->toArray();
+
+              // Deduplikasi poliklinik agar setiap poliklinik hanya tampil 1 kali di dropdown
+              $uniquePolis = [];
+              if (!empty($rawPoli)) {
+                  foreach ($rawPoli as $r) {
+                      $kp = $r['kd_poli'];
+                      if (!isset($uniquePolis[$kp])) {
+                          $uniquePolis[$kp] = [
+                              'kd_poli' => $kp,
+                              'nm_poli' => $r['nm_poli']
+                          ];
+                      }
+                  }
+              }
+
+              // 2. Fallback: Jika tabel jadwal kosong, ambil dari master poliklinik aktif
+              if (empty($uniquePolis)) {
+                  $pQuery = $this->db('poliklinik')->where('status', '1');
+                  if (!empty($poliklinik_setting)) {
+                      $pQuery = $pQuery->where('kd_poli', 'IN', explode(',', $poliklinik_setting));
+                  }
+                  $activePolis = $pQuery->toArray();
+                  if (empty($activePolis)) {
+                      $activePolis = $this->db('poliklinik')->where('status', '1')->toArray();
+                  }
+                  foreach ($activePolis as $ap) {
+                      // Skip unit non-klinis jika ada
+                      if (in_array($ap['kd_poli'], ['CSUL', 'UA', 'RANAP', '-'])) continue;
+                      $uniquePolis[$ap['kd_poli']] = [
+                          'kd_poli' => $ap['kd_poli'],
+                          'nm_poli' => $ap['nm_poli']
+                      ];
+                  }
+              }
+
+              $rows = array_values($uniquePolis);
+
+              if(!empty($rows)){
+                  $data['status'] = 'ok';
+                  $data['result'] = $rows;
+              }else{
+                  $data['status'] = 'err';
+                  $data['result'] = [];
+                  $data['message'] = 'Tidak ada poliklinik tersedia';
+              }
+              echo json_encode($data);
+              exit();
+          }
+          echo json_encode(['status' => 'err', 'message' => 'No RM kosong']);
+          exit();
+        break;
+
+        case "get-dokter":
+          $this->setTemplate(false);
+          header('Content-Type: application/json');
+          $kd_poli = !empty($_POST['kd_poli']) ? $_POST['kd_poli'] : '';
+          $tanggal = !empty($_POST['tgl_registrasi']) ? $_POST['tgl_registrasi'] : date('Y-m-d');
+
+          if(!empty($kd_poli)){
+              $tentukan_hari = date('D', strtotime($tanggal));
+              $day = array('Sun' => 'AKHAD', 'Mon' => 'SENIN', 'Tue' => 'SELASA', 'Wed' => 'RABU', 'Thu' => 'KAMIS', 'Fri' => 'JUMAT', 'Sat' => 'SABTU');
+              $hari = $day[$tentukan_hari] ?? 'SENIN';
               $data = array();
-              $result = $this->db('jadwal')
+
+              // Helper closure untuk menghitung pasien terdaftar untuk dokter & poli pada tanggal kunjungan
+              $hitungTerdaftar = function($kd_dok, $kp, $tgl) {
+                  $stmt1 = $this->db()->pdo()->prepare("SELECT COUNT(*) FROM reg_periksa WHERE kd_dokter = :kd_dok AND kd_poli = :kp AND tgl_registrasi = :tgl");
+                  $stmt1->execute(['kd_dok' => $kd_dok, 'kp' => $kp, 'tgl' => $tgl]);
+                  $cnt1 = intval($stmt1->fetchColumn());
+
+                  $stmt2 = $this->db()->pdo()->prepare("SELECT COUNT(*) FROM booking_registrasi WHERE kd_dokter = :kd_dok AND kd_poli = :kp AND tanggal_periksa = :tgl AND status = 'Belum'");
+                  $stmt2->execute(['kd_dok' => $kd_dok, 'kp' => $kp, 'tgl' => $tgl]);
+                  $cnt2 = intval($stmt2->fetchColumn());
+
+                  return $cnt1 + $cnt2;
+              };
+
+              // 1. Coba ambil dari tabel jadwal jika ada
+              $queryJadwal = $this->db('jadwal')
                 ->select(['kd_dokter' => 'jadwal.kd_dokter'])
                 ->select(['nm_dokter' => 'dokter.nm_dokter'])
+                ->select(['jam_mulai' => 'jadwal.jam_mulai'])
+                ->select(['jam_selesai' => 'jadwal.jam_selesai'])
                 ->select(['kuota' => 'jadwal.kuota'])
                 ->join('poliklinik', 'poliklinik.kd_poli = jadwal.kd_poli')
                 ->join('dokter', 'dokter.kd_dokter = jadwal.kd_dokter')
-                ->where('jadwal.kd_poli', $_POST['kd_poli'])
+                ->where('jadwal.kd_poli', $kd_poli)
+                ->where('dokter.status', '1')
                 ->like('jadwal.hari_kerja', $hari)
-                ->oneArray();
-              $check_kuota = $this->db('reg_periksa')
-                ->select(['count' => 'COUNT(DISTINCT no_rawat)'])
-                ->where('kd_poli', $_POST['kd_poli'])
-                ->where('tgl_registrasi', $_POST['tgl_registrasi'])
-                ->oneArray();
-              $curr_count = $check_kuota['count'];
-              $curr_kuota = $result['kuota'];
-              $online = $curr_kuota/2;
-              if($curr_count > $online) {
-                $data['status'] = 'limit';
-              } else {
-                $query = $this->db('jadwal')
-                  ->select(['kd_dokter' => 'jadwal.kd_dokter'])
-                  ->select(['nm_dokter' => 'dokter.nm_dokter'])
-                  ->join('poliklinik', 'poliklinik.kd_poli = jadwal.kd_poli')
-                  ->join('dokter', 'dokter.kd_dokter = jadwal.kd_dokter')
-                  ->where('jadwal.kd_poli', $_POST['kd_poli'])
-                  ->like('jadwal.hari_kerja', $hari)
-                  ->toArray();
-                if(!empty($query)){
-                    $data['status'] = 'ok';
-                    $data['result'] = $query;
-                }else{
-                    $data['status'] = 'err';
-                    $data['result'] = '';
-                }
-                echo json_encode(htmlspecialchars_array($data));
+                ->asc('jadwal.jam_mulai')
+                ->toArray();
+
+              $dokters = [];
+              if (!empty($queryJadwal)) {
+                  foreach ($queryJadwal as $j) {
+                      $kuota = intval($j['kuota'] ?? 0);
+                      $terdaftar = $hitungTerdaftar($j['kd_dokter'], $kd_poli, $tanggal);
+                      $sisa_kuota = null;
+                      $is_penuh = false;
+
+                      if ($kuota > 0) {
+                          $sisa_kuota = max(0, $kuota - $terdaftar);
+                          if ($sisa_kuota <= 0) {
+                              $is_penuh = true;
+                          }
+                      }
+
+                      $jam_mulai = !empty($j['jam_mulai']) ? substr($j['jam_mulai'], 0, 5) : '08:00';
+                      $jam_selesai = !empty($j['jam_selesai']) ? substr($j['jam_selesai'], 0, 5) : '14:00';
+
+                      $dokters[] = [
+                          'kd_dokter' => $j['kd_dokter'],
+                          'nm_dokter' => $j['nm_dokter'],
+                          'jam_mulai' => $jam_mulai,
+                          'jam_selesai' => $jam_selesai,
+                          'jam_praktek' => $jam_mulai . ' - ' . $jam_selesai,
+                          'kuota' => $kuota,
+                          'terdaftar' => $terdaftar,
+                          'sisa_kuota' => $sisa_kuota,
+                          'is_penuh' => $is_penuh
+                      ];
+                  }
               }
+
+              // 2. Fallback 1: Ambil dokter dari riwayat pelayanan di poliklinik ini (reg_periksa) jika jadwal belum ada
+              if (empty($dokters)) {
+                  $sql = "SELECT DISTINCT d.kd_dokter, d.nm_dokter 
+                          FROM reg_periksa r 
+                          JOIN dokter d ON d.kd_dokter = r.kd_dokter 
+                          WHERE r.kd_poli = :kd_poli AND d.status = '1' 
+                          ORDER BY d.nm_dokter ASC";
+                  $stmt = $this->db()->pdo()->prepare($sql);
+                  $stmt->execute(['kd_poli' => $kd_poli]);
+                  $rawDokters = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+                  foreach ($rawDokters as $d) {
+                      $terdaftar = $hitungTerdaftar($d['kd_dokter'], $kd_poli, $tanggal);
+                      $dokters[] = [
+                          'kd_dokter' => $d['kd_dokter'],
+                          'nm_dokter' => $d['nm_dokter'],
+                          'jam_mulai' => '08:00',
+                          'jam_selesai' => '14:00',
+                          'jam_praktek' => '08:00 - 14:00',
+                          'kuota' => 0,
+                          'terdaftar' => $terdaftar,
+                          'sisa_kuota' => null,
+                          'is_penuh' => false
+                      ];
+                  }
+              }
+
+              // 3. Fallback 2: Ambil dokter berdasarkan kesamaan kode spesialis poliklinik
+              if (empty($dokters)) {
+                  $sql = "SELECT d.kd_dokter, d.nm_dokter 
+                          FROM dokter d 
+                          JOIN poliklinik p ON p.kd_poli = :kd_poli
+                          WHERE d.status = '1' 
+                          AND (d.kd_sps = :kd_poli OR p.nm_poli LIKE CONCAT('%', d.kd_sps, '%') OR d.kd_sps LIKE CONCAT('%', :kd_poli, '%'))
+                          ORDER BY d.nm_dokter ASC";
+                  $stmt = $this->db()->pdo()->prepare($sql);
+                  $stmt->execute(['kd_poli' => $kd_poli]);
+                  $rawDokters = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+                  foreach ($rawDokters as $d) {
+                      $terdaftar = $hitungTerdaftar($d['kd_dokter'], $kd_poli, $tanggal);
+                      $dokters[] = [
+                          'kd_dokter' => $d['kd_dokter'],
+                          'nm_dokter' => $d['nm_dokter'],
+                          'jam_mulai' => '08:00',
+                          'jam_selesai' => '14:00',
+                          'jam_praktek' => '08:00 - 14:00',
+                          'kuota' => 0,
+                          'terdaftar' => $terdaftar,
+                          'sisa_kuota' => null,
+                          'is_penuh' => false
+                      ];
+                  }
+              }
+
+              // 4. Fallback 3: Seluruh dokter aktif
+              if (empty($dokters)) {
+                  $sql = "SELECT d.kd_dokter, d.nm_dokter 
+                          FROM dokter d 
+                          WHERE d.status = '1' 
+                          ORDER BY d.nm_dokter ASC LIMIT 30";
+                  $stmt = $this->db()->pdo()->prepare($sql);
+                  $stmt->execute();
+                  $rawDokters = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+                  foreach ($rawDokters as $d) {
+                      $terdaftar = $hitungTerdaftar($d['kd_dokter'], $kd_poli, $tanggal);
+                      $dokters[] = [
+                          'kd_dokter' => $d['kd_dokter'],
+                          'nm_dokter' => $d['nm_dokter'],
+                          'jam_mulai' => '08:00',
+                          'jam_selesai' => '14:00',
+                          'jam_praktek' => '08:00 - 14:00',
+                          'kuota' => 0,
+                          'terdaftar' => $terdaftar,
+                          'sisa_kuota' => null,
+                          'is_penuh' => false
+                      ];
+                  }
+              }
+
+              if(!empty($dokters)){
+                  $data['status'] = 'ok';
+                  $data['result'] = $dokters;
+              }else{
+                  $data['status'] = 'err';
+                  $data['result'] = [];
+                  $data['message'] = 'Dokter tidak ditemukan untuk poliklinik ini';
+              }
+              echo json_encode($data);
+              exit();
           }
+          echo json_encode(['status' => 'err', 'message' => 'Poli tidak boleh kosong']);
+          exit();
         break;
         case "get-namapoli":
           //$_POST['kd_poli'] = 'INT';
@@ -2444,7 +2636,10 @@ class Site extends SiteModule
                   $data['result'] = '';
               }
               echo json_encode(htmlspecialchars_array($data));
+              exit();
           }
+          echo json_encode(['status' => 'err', 'message' => 'No RM tidak boleh kosong']);
+          exit();
         break;
         case "get-namadokter":
           //$_POST['kd_dokter'] = 'DR001';
@@ -2459,12 +2654,37 @@ class Site extends SiteModule
                   $data['result'] = '';
               }
               echo json_encode(htmlspecialchars_array($data));
+              exit();
           }
+          echo json_encode(['status' => 'err', 'message' => 'No RM tidak boleh kosong']);
+          exit();
         break;
         case "post-registrasi":
           if(!empty($_POST['no_rkm_medis'])){
               $data = array();
               $date = date('Y-m-d');
+              $tgl_periksa = !empty($_POST['tgl_registrasi']) ? $_POST['tgl_registrasi'] : $date;
+
+              // Validasi kuota dokter jika kuota > 0
+              $tentukan_hari = date('D', strtotime($tgl_periksa));
+              $day = array('Sun' => 'AKHAD', 'Mon' => 'SENIN', 'Tue' => 'SELASA', 'Wed' => 'RABU', 'Thu' => 'KAMIS', 'Fri' => 'JUMAT', 'Sat' => 'SABTU');
+              $hari = $day[$tentukan_hari] ?? 'SENIN';
+
+              $cekJadwalDokter = $this->db('jadwal')
+                ->where('kd_dokter', $_POST['kd_dokter'])
+                ->where('kd_poli', $_POST['kd_poli'])
+                ->like('hari_kerja', $hari)
+                ->oneArray();
+
+              if (!empty($cekJadwalDokter) && intval($cekJadwalDokter['kuota']) > 0) {
+                  $kuotaMaks = intval($cekJadwalDokter['kuota']);
+                  $cnt1 = $this->db('reg_periksa')->where('kd_dokter', $_POST['kd_dokter'])->where('kd_poli', $_POST['kd_poli'])->where('tgl_registrasi', $tgl_periksa)->count();
+                  $cnt2 = $this->db('booking_registrasi')->where('kd_dokter', $_POST['kd_dokter'])->where('kd_poli', $_POST['kd_poli'])->where('tanggal_periksa', $tgl_periksa)->where('status', 'Belum')->count();
+                  if (($cnt1 + $cnt2) >= $kuotaMaks) {
+                      echo json_encode(['status' => 'err', 'message' => 'Mohon maaf, kuota dokter ini sudah penuh untuk tanggal ' . $tgl_periksa . '. Silakan pilih dokter atau tanggal lain.']);
+                      exit();
+                  }
+              }
 
               $_POST['no_reg']     = $this->core->setNoReg($_POST['kd_dokter'], $_POST['kd_poli']);
               $_POST['hubunganpj'] = $this->core->getPasienInfo('keluarga', $_POST['no_rkm_medis']);
@@ -2548,7 +2768,10 @@ class Site extends SiteModule
                   $data['result'] = '';
               }
               echo json_encode(htmlspecialchars_array($data));
+              exit();
           }
+          echo json_encode(['status' => 'err', 'message' => 'No RM tidak boleh kosong']);
+          exit();
         break;
         case "loket-display":
           // Loket Pendaftaran (Type: Loket)

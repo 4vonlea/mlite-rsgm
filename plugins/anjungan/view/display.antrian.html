@@ -492,14 +492,19 @@
         background: rgba(15, 23, 42, 0.8) !important;
         border: 2px solid rgba(56, 189, 248, 0.4) !important;
         color: #ffffff !important;
-        font-size: 18px !important;
+        font-size: 17px !important;
         padding: 12px 18px !important;
         border-radius: 12px !important;
         height: auto !important;
       }
+      .form-control-kiosk option {
+        background-color: #0f172a !important;
+        color: #ffffff !important;
+        padding: 10px;
+      }
       .form-control-kiosk:focus {
         border-color: #38bdf8 !important;
-        box-shadow: 0 0 12px rgba(56, 189, 248, 0.5) !important;
+        box-shadow: 0 0 14px rgba(56, 189, 248, 0.5) !important;
       }
       .form-control-kiosk::placeholder {
         color: #64748b;
@@ -509,6 +514,44 @@
         color: #cbd5e1;
         margin-bottom: 8px;
         font-size: 14px;
+      }
+
+      /* Custom Kiosk Buttons */
+      .btn-kiosk-back {
+        background: #1e293b !important;
+        border: 1px solid #475569 !important;
+        color: #f1f5f9 !important;
+        font-weight: 600 !important;
+        font-size: 16px !important;
+        padding: 12px 28px !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer;
+      }
+      .btn-kiosk-back:hover {
+        background: #334155 !important;
+        border-color: #64748b !important;
+        color: #ffffff !important;
+      }
+      .btn-kiosk-submit {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 16px !important;
+        padding: 12px 32px !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
+        letter-spacing: 0.3px !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer;
+      }
+      .btn-kiosk-submit:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6) !important;
+        transform: translateY(-1px);
+        color: #ffffff !important;
       }
 
       /* Thermal Print Styles (Hidden in Web View) */
@@ -790,26 +833,31 @@
 
           <!-- STEP 2: PILIH POLIKLINIK & DOKTER -->
           <div id="daftarStep2" style="display: none;">
-            <div class="card p-3 mb-3" style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px;">
-              <div class="row">
-                <div class="col-sm-6">
-                  <div class="small text-muted">Nomor Rekam Medis:</div>
-                  <div class="font-weight-bold text-warning" id="resNoRM" style="font-size: 18px;">-</div>
+            
+            <!-- Patient Info Box -->
+            <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 14px; padding: 18px 22px; margin-bottom: 24px;">
+              <div class="row align-items-center">
+                <div class="col-sm-5 mb-2 mb-sm-0" style="border-right: 1px solid rgba(148, 163, 184, 0.2);">
+                  <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+                    <i class="fa fa-id-card text-warning mr-1"></i> Nomor Rekam Medis
+                  </div>
+                  <div class="font-weight-bold" id="resNoRM" style="font-size: 22px; color: #fbbf24; letter-spacing: 1.5px;">-</div>
                 </div>
-                <div class="col-sm-6">
-                  <div class="small text-muted">Nama Pasien:</div>
-                  <div class="font-weight-bold text-white" id="resNmPasien" style="font-size: 18px;">-</div>
-                </div>
-                <div class="col-12 mt-2">
-                  <div class="small text-muted">Alamat:</div>
-                  <div class="text-white small" id="resAlamat">-</div>
+                <div class="col-sm-7 pl-sm-4">
+                  <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+                    <i class="fa fa-user text-info mr-1"></i> Nama Pasien
+                  </div>
+                  <div class="font-weight-bold text-white" id="resNmPasien" style="font-size: 18px; margin-bottom: 4px;">-</div>
+                  <div style="font-size: 12px; color: #cbd5e1; line-height: 1.3;">
+                    <i class="fa fa-map-marker text-danger mr-1"></i> <span id="resAlamat">-</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group col-md-6">
-                <label><i class="fa fa-credit-card"></i> Cara Bayar</label>
+            <div class="form-row mb-2">
+              <div class="form-group col-md-6 mb-3">
+                <label style="color: #cbd5e1; font-weight: 600; font-size: 13.5px; margin-bottom: 8px;"><i class="fa fa-credit-card text-info mr-1"></i> Cara Bayar</label>
                 <select class="form-control form-control-kiosk" id="selectCaraBayar">
                   <option value="">-- Pilih Cara Bayar --</option>
                   {loop: $penjab}
@@ -817,33 +865,54 @@
                   {/loop}
                 </select>
               </div>
-              <div class="form-group col-md-6">
-                <label><i class="fa fa-calendar"></i> Tanggal Kunjungan</label>
-                <input type="date" class="form-control form-control-kiosk" id="inputTglKunjungan" value="{?=date('Y-m-d')?}">
+              <div class="form-group col-md-6 mb-3">
+                <label style="color: #cbd5e1; font-weight: 600; font-size: 13.5px; margin-bottom: 8px;"><i class="fa fa-calendar text-info mr-1"></i> Tanggal Kunjungan</label>
+                <input type="date" class="form-control form-control-kiosk" id="inputTglKunjungan" value="{?=date('Y-m-d')?}" onchange="loadPoliklinik()">
               </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group col-md-6">
-                <label><i class="fa fa-hospital-o"></i> Poliklinik Tujuan</label>
+            <div class="form-row mb-2">
+              <div class="form-group col-md-6 mb-3">
+                <label style="color: #cbd5e1; font-weight: 600; font-size: 13.5px; margin-bottom: 8px;"><i class="fa fa-hospital-o text-info mr-1"></i> Poliklinik Tujuan</label>
                 <select class="form-control form-control-kiosk" id="selectPoli" onchange="loadDokter()">
                   <option value="">-- Pilih Poliklinik --</option>
+                  {loop: $poliklinik}
+                  <option value="{$value.kd_poli}">{$value.nm_poli}</option>
+                  {/loop}
                 </select>
               </div>
-              <div class="form-group col-md-6">
-                <label><i class="fa fa-user-md"></i> Dokter Spesialis</label>
-                <select class="form-control form-control-kiosk" id="selectDokter">
+              <div class="form-group col-md-6 mb-3">
+                <label style="color: #cbd5e1; font-weight: 600; font-size: 13.5px; margin-bottom: 8px;"><i class="fa fa-user-md text-info mr-1"></i> Dokter Spesialis</label>
+                <select class="form-control form-control-kiosk" id="selectDokter" onchange="updateDokterInfoBadge()">
                   <option value="">-- Pilih Dokter --</option>
                 </select>
               </div>
             </div>
 
-            <div class="d-flex justify-content-between mt-4">
-              <button type="button" class="btn btn-secondary btn-lg" onclick="backToStep1()">
-                <i class="fa fa-arrow-left"></i> Kembali
+            <!-- Live Dokter & Kuota Info Badge -->
+            <div id="dokterInfoBadge" style="display: none; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 14px 20px; margin-top: 6px; margin-bottom: 24px;">
+              <div class="row align-items-center">
+                <div class="col-sm-5 mb-2 mb-sm-0">
+                  <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+                    <i class="fa fa-clock-o text-warning mr-1"></i> Jam Praktek Dokter:
+                  </div>
+                  <div class="font-weight-bold text-white" id="badgeJamPraktek" style="font-size: 16px;">-</div>
+                </div>
+                <div class="col-sm-7">
+                  <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+                    <i class="fa fa-ticket text-info mr-1"></i> Status / Sisa Kuota Pasien:
+                  </div>
+                  <div id="badgeSisaKuotaWrapper">-</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-4 pt-2">
+              <button type="button" class="btn btn-kiosk-back" onclick="backToStep1()">
+                <i class="fa fa-arrow-left mr-2"></i> Kembali
               </button>
-              <button type="button" class="btn btn-success btn-lg px-4" id="btnSimpanPendaftaran" onclick="simpanPendaftaran()">
-                <i class="fa fa-check"></i> Simpan & Lanjut Cetak
+              <button type="button" class="btn btn-kiosk-submit" id="btnSimpanPendaftaran" onclick="simpanPendaftaran()">
+                <i class="fa fa-check-circle mr-2"></i> Simpan & Lanjut Cetak
               </button>
             </div>
           </div>
@@ -886,16 +955,13 @@
             </div>
 
             <div class="text-center mt-4">
-              <button type="button" class="btn btn-primary btn-lg px-5 py-3" onclick="cetakBuktiDaftar()" style="border-radius: 30px; font-size: 18px;">
-                <i class="fa fa-print"></i> Cetak Bukti Pendaftaran
+              <button type="button" class="btn btn-primary btn-lg px-5 py-3" onclick="cetakBuktiDaftar()" style="border-radius: 30px; font-size: 18px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: none; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);">
+                <i class="fa fa-print mr-2"></i> Cetak Bukti Pendaftaran
               </button>
               <div class="small text-muted mt-2">Layar akan kembali otomatis dalam <span id="autoResetTimer">10</span> detik</div>
             </div>
           </div>
 
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="resetModalDaftar()">Tutup</button>
         </div>
       </div>
     </div>
@@ -1160,8 +1226,15 @@
     // ==========================================
     // MODAL #daftar: PENDAFTARAN MANDIRI WIZARD
     // ==========================================
+    var currentDokterList = [];
+
     function resetModalDaftar() {
       $('#inputNoRM').val('');
+      $('#selectCaraBayar').val('');
+      $('#selectPoli').val('');
+      $('#selectDokter').empty().append('<option value="">-- Pilih Dokter --</option>');
+      $('#dokterInfoBadge').hide();
+      currentDokterList = [];
       $('#daftarStep1').show();
       $('#daftarStep2').hide();
       $('#daftarStep3').hide();
@@ -1221,6 +1294,13 @@
     function loadPoliklinik() {
       var norm = $('#resNoRM').text();
       var tgl = $('#inputTglKunjungan').val();
+      var selectPoli = $('#selectPoli');
+      var selectDokter = $('#selectDokter');
+      var currentPoli = selectPoli.val();
+
+      $('#dokterInfoBadge').hide();
+      currentDokterList = [];
+      selectDokter.empty().append('<option value="">-- Pilih Dokter --</option>');
 
       $.ajax({
         url: '{?=url()?}/anjungan/ajax?show=get-poli',
@@ -1228,17 +1308,24 @@
         dataType: 'json',
         data: { no_rkm_medis: norm, tgl_registrasi: tgl },
         success: function(res) {
-          var selectPoli = $('#selectPoli');
-          selectPoli.empty().append('<option value="">-- Pilih Poliklinik --</option>');
-
-          if (res && res.status === 'ok' && res.result) {
+          if (res && res.status === 'ok' && res.result && res.result.length > 0) {
+            selectPoli.empty().append('<option value="">-- Pilih Poliklinik --</option>');
             $.each(res.result, function(i, item) {
-              selectPoli.append('<option value="' + item.kd_poli + '">' + item.nm_poli + ' (' + item.jam_mulai + ' - ' + item.jam_selesai + ')</option>');
+              selectPoli.append('<option value="' + item.kd_poli + '">' + item.nm_poli + '</option>');
             });
+
+            if (currentPoli) {
+              selectPoli.val(currentPoli);
+              if (selectPoli.val()) {
+                loadDokter();
+              }
+            }
           } else if (res && res.status === 'exist') {
             alert('Anda sudah terdaftar untuk pemeriksaan pada tanggal tersebut.');
           } else {
-            alert('Tidak ada jadwal poliklinik yang tersedia untuk tanggal ini.');
+            if (selectPoli.children('option').length <= 1) {
+              selectPoli.empty().append('<option value="">-- Tidak ada poliklinik tersedia --</option>');
+            }
           }
         }
       });
@@ -1248,9 +1335,14 @@
       var kd_poli = $('#selectPoli').val();
       var tgl = $('#inputTglKunjungan').val();
       var selectDokter = $('#selectDokter');
+      $('#dokterInfoBadge').slideUp(100);
+      currentDokterList = [];
+
       selectDokter.empty().append('<option value="">-- Pilih Dokter --</option>');
 
       if (!kd_poli) return;
+
+      selectDokter.empty().append('<option value="">Memuat data dokter & kuota...</option>');
 
       $.ajax({
         url: '{?=url()?}/anjungan/ajax?show=get-dokter',
@@ -1258,17 +1350,83 @@
         dataType: 'json',
         data: { kd_poli: kd_poli, tgl_registrasi: tgl },
         success: function(res) {
-          if (res && res.status === 'ok' && res.result) {
+          selectDokter.empty().append('<option value="">-- Pilih Dokter --</option>');
+          if (res && res.status === 'ok' && res.result && res.result.length > 0) {
+            currentDokterList = res.result;
+            var availableCount = 0;
+            var firstAvailableKd = '';
+
             $.each(res.result, function(i, item) {
-              selectDokter.append('<option value="' + item.kd_dokter + '">' + item.nm_dokter + '</option>');
+              var kuotaBadge = '';
+              var isDisabled = false;
+
+              if (item.kuota > 0) {
+                if (item.is_penuh || item.sisa_kuota <= 0) {
+                  kuotaBadge = ' [KUOTA PENUH]';
+                  isDisabled = true;
+                } else {
+                  kuotaBadge = ' (Sisa: ' + item.sisa_kuota + ')';
+                  availableCount++;
+                  if (!firstAvailableKd) firstAvailableKd = item.kd_dokter;
+                }
+              } else {
+                kuotaBadge = ' [Tersedia]';
+                availableCount++;
+                if (!firstAvailableKd) firstAvailableKd = item.kd_dokter;
+              }
+
+              var disabledAttr = isDisabled ? ' disabled style="color: #94a3b8;"' : '';
+              selectDokter.append('<option value="' + item.kd_dokter + '"' + disabledAttr + '>' + item.nm_dokter + kuotaBadge + '</option>');
             });
+
+            // Auto-select jika hanya 1 dokter yang kuotanya masih tersedia
+            if (availableCount === 1 && firstAvailableKd) {
+              selectDokter.val(firstAvailableKd);
+              updateDokterInfoBadge();
+            } else if (availableCount === 0) {
+              selectDokter.empty().append('<option value="">-- Semua Kuota Dokter Penuh --</option>');
+              alert('Semua kuota dokter untuk poliklinik ini sudah penuh pada tanggal tersebut. Silakan pilih poliklinik atau tanggal kunjungan lain.');
+            }
           } else if (res && res.status === 'limit') {
+            selectDokter.empty().append('<option value="">-- Kuota Dokter Penuh --</option>');
             alert('Kuota pendaftaran dokter sudah penuh untuk tanggal ini.');
           } else {
-            alert('Jadwal dokter tidak ditemukan.');
+            selectDokter.empty().append('<option value="">-- Tidak ada dokter praktek --</option>');
           }
+        },
+        error: function() {
+          selectDokter.empty().append('<option value="">-- Gagal memuat dokter --</option>');
         }
       });
+    }
+
+    function updateDokterInfoBadge() {
+      var kd_dokter = $('#selectDokter').val();
+      if (!kd_dokter || !currentDokterList || currentDokterList.length === 0) {
+        $('#dokterInfoBadge').slideUp(150);
+        return;
+      }
+
+      var doc = currentDokterList.find(function(d) { return d.kd_dokter === kd_dokter; });
+      if (!doc) {
+        $('#dokterInfoBadge').slideUp(150);
+        return;
+      }
+
+      $('#badgeJamPraktek').html('<i class="fa fa-clock-o text-warning mr-1"></i> ' + (doc.jam_praktek || '08:00 - 14:00'));
+
+      var badgeWrap = $('#badgeSisaKuotaWrapper');
+      if (doc.kuota > 0) {
+        if (doc.is_penuh || doc.sisa_kuota <= 0) {
+          badgeWrap.html('<span class="badge badge-danger px-3 py-2 font-weight-bold" style="font-size: 13px; border-radius: 8px;"><i class="fa fa-times-circle mr-1"></i> Kuota Penuh (' + doc.terdaftar + '/' + doc.kuota + ')</span>');
+        } else {
+          badgeWrap.html('<span class="badge badge-success px-3 py-2 font-weight-bold" style="font-size: 13px; border-radius: 8px; background-color: #10b981;"><i class="fa fa-check-circle mr-1"></i> Sisa ' + doc.sisa_kuota + ' Pasien (Terdaftar: ' + doc.terdaftar + '/' + doc.kuota + ')</span>');
+        }
+      } else {
+        badgeWrap.html('<span class="badge badge-info px-3 py-2 font-weight-bold" style="font-size: 13px; border-radius: 8px; background-color: #0284c7;"><i class="fa fa-info-circle mr-1"></i> Kuota Tersedia (Terdaftar: ' + doc.terdaftar + ' Pasien)</span>');
+      }
+
+      $('#dokterInfoBadge').slideDown(200);
     }
 
     function simpanPendaftaran() {
@@ -1289,6 +1447,15 @@
       if (!kd_dokter) {
         alert('Silakan pilih dokter spesialis.');
         return;
+      }
+
+      // Validasi kuota dokter di client
+      if (currentDokterList && currentDokterList.length > 0) {
+        var doc = currentDokterList.find(function(d) { return d.kd_dokter === kd_dokter; });
+        if (doc && doc.kuota > 0 && (doc.is_penuh || doc.sisa_kuota <= 0)) {
+          alert('Mohon maaf, kuota pendaftaran untuk dokter ini sudah penuh. Silakan pilih dokter atau tanggal kunjungan lain.');
+          return;
+        }
       }
 
       var btn = $('#btnSimpanPendaftaran');
@@ -1340,7 +1507,7 @@
             // Auto-trigger print
             cetakBuktiDaftar();
           } else {
-            alert('Gagal melakukan pendaftaran. Silakan hubungi petugas loket.');
+            alert((res && res.message) ? res.message : 'Gagal melakukan pendaftaran. Silakan hubungi petugas loket.');
           }
         },
         error: function() {

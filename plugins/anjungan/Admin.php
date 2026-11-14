@@ -374,14 +374,42 @@ class Admin extends AdminModule
         if ($this->core->getUserInfo('role') != 'admin') {
             $this->notify('failure', 'Anda tidak memiliki hak akses untuk halaman ini.');
             redirect(url([ADMIN, 'anjungan', 'index']));
+            exit;
         }
-        $_POST['anjungan']['display_poli'] = implode(',', $_POST['anjungan']['display_poli']);
-        $_POST['anjungan']['carabayar'] = implode(',', $_POST['anjungan']['carabayar']);
-        foreach ($_POST['anjungan'] as $key => $val) {
-            $this->settings('anjungan', $key, $val);
+
+        $anjungan = $_POST['anjungan'] ?? [];
+
+        // Handle multiple select fields safely (avoid PHP 8+ TypeError on null)
+        if (isset($anjungan['display_poli']) && is_array($anjungan['display_poli'])) {
+            $anjungan['display_poli'] = implode(',', array_filter($anjungan['display_poli']));
+        } else {
+            $anjungan['display_poli'] = is_string($anjungan['display_poli'] ?? '') ? $anjungan['display_poli'] : '';
         }
-        $this->notify('success', 'Pengaturan telah disimpan');
+
+        if (isset($anjungan['carabayar']) && is_array($anjungan['carabayar'])) {
+            $anjungan['carabayar'] = implode(',', array_filter($anjungan['carabayar']));
+        } else {
+            $anjungan['carabayar'] = is_string($anjungan['carabayar'] ?? '') ? $anjungan['carabayar'] : '';
+        }
+
+        foreach ($anjungan as $key => $val) {
+            $val = is_array($val) ? implode(',', $val) : (string)($val ?? '');
+            $cek = $this->db('mlite_settings')->where('module', 'anjungan')->where('field', $key)->oneArray();
+            if ($cek) {
+                $this->db('mlite_settings')->where('module', 'anjungan')->where('field', $key)->save(['value' => $val]);
+            } else {
+                $this->db('mlite_settings')->save([
+                    'module' => 'anjungan',
+                    'field' => $key,
+                    'value' => $val
+                ]);
+            }
+            $this->settings->set('anjungan', $key, $val);
+        }
+
+        $this->notify('success', 'Pengaturan Anjungan berhasil disimpan');
         redirect(url([ADMIN, 'anjungan', 'settings']));
+        exit;
     }
 
     private function _getPoliklinik($kd_poli = null)
@@ -437,7 +465,7 @@ class Admin extends AdminModule
     }
 
     public function getResetAnjunganLoket(){
-      date_default_timezone_set($this->settings->get('settings.timezone'));
+      date_default_timezone_set($this->settings->get('settings.timezone') ?: 'Asia/Makassar');
       $date = date('Y-m-d');
       $checkAnjungan = $this->db('mlite_antrian_loket')->where('postdate',$date)->oneArray();
       if($checkAnjungan){
@@ -460,7 +488,7 @@ class Admin extends AdminModule
     }
 
     public function getResetAnjunganCS(){
-      date_default_timezone_set($this->settings->get('settings.timezone'));
+      date_default_timezone_set($this->settings->get('settings.timezone') ?: 'Asia/Makassar');
       $date = date('Y-m-d');
       $checkAnjungan = $this->db('mlite_antrian_loket')->where('postdate',$date)->oneArray();
       if($checkAnjungan){
@@ -483,7 +511,7 @@ class Admin extends AdminModule
     }
 
     public function getResetAnjunganApotek(){
-      date_default_timezone_set($this->settings->get('settings.timezone'));
+      date_default_timezone_set($this->settings->get('settings.timezone') ?: 'Asia/Makassar');
       $date = date('Y-m-d');
       $checkAnjungan = $this->db('mlite_antrian_loket')->where('postdate',$date)->oneArray();
       if($checkAnjungan){
