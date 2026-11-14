@@ -110,18 +110,16 @@
                         &nbsp;&nbsp;&nbsp; T <span class="dotted" style="width:50px;">{?=isset($data['td']) ? $data['td'] : '&nbsp;'?}</span> mmHg &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; N : <span class="dotted" style="width:50px;">{?=isset($data['nadi']) ? $data['nadi'] : '&nbsp;'?}</span>x/menit<br>
                         &nbsp;&nbsp;&nbsp; R <span class="dotted" style="width:50px;">{?=isset($data['rr']) ? $data['rr'] : '&nbsp;'?}</span> x/menit &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; t : <span class="dotted" style="width:50px;">{?=isset($data['suhu']) ? $data['suhu'] : '&nbsp;'?}</span>°C<br>
                         
-                        <div style="float: right; width: 350px; text-align: center; margin-top: -30px;">
-                            <div class="face-scale"><small>Tidak<br>Nyeri</small><br><span class="checkbox-box {if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '0'}checked{/if}"></span></div>
-                            <div class="face-scale"><small>Sedikit<br>Nyeri</small><br><span class="checkbox-box {if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '1'}checked{/if}"></span></div>
-                            <div class="face-scale"><small>Sedikit<br>Lebih Nyeri</small><br><span class="checkbox-box {if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '2'}checked{/if}"></span></div>
-                            <div class="face-scale"><small>Lebih<br>Nyeri Lagi</small><br><span class="checkbox-box {if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '3'}checked{/if}"></span></div>
-                            <div class="face-scale"><small>Sangat<br>Nyeri</small><br><span class="checkbox-box {if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '4'}checked{/if}"></span></div>
-                            <div class="face-scale"><small>Nyeri<br>Sangat Hebat</small><br><span class="checkbox-box {if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '5'}checked{/if}"></span></div>
+                        <div style="float: right; width: 320px; text-align: center; margin-top: -15px;">
+                            {if: !empty($skala_nyeri_img)}
+                            <img src="{$skala_nyeri_img}" alt="Skala Nyeri" style="width: 240px; height: auto; display: block; margin: 0 auto 2px auto;">
+                            {/if}
+                            <div style="font-size: 8.5pt; font-weight: bold;">Skor Nyeri Dipilih: {?=isset($data['skala_nyeri']) && $data['skala_nyeri'] !== '' ? $data['skala_nyeri'] : '-'?}</div>
                         </div>
                         
                         b. Reaksi mual dan muntah : <span class="checkbox-box {if: isset($data['mual_muntah']) && $data['mual_muntah'] == 'Ya'}checked{/if}"></span> Ya &nbsp;&nbsp;&nbsp; <span class="checkbox-box {if: isset($data['mual_muntah']) && $data['mual_muntah'] == 'Tidak'}checked{/if}"></span> Tidak<br>
                         c. Respon Nyeri : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="checkbox-box {if: isset($data['respon_nyeri']) && $data['respon_nyeri'] == 'Ya'}checked{/if}"></span> Ya &nbsp;&nbsp;&nbsp; <span class="checkbox-box {if: isset($data['respon_nyeri']) && $data['respon_nyeri'] == 'Tidak'}checked{/if}"></span> Tidak<br>
-                        &nbsp;&nbsp;&nbsp; Dengan skala wajah &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Beri tanda centang ➔<br><br>
+                        &nbsp;&nbsp;&nbsp; Skala nyeri &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Mengacu skala di samping ➔<br><br>
                         
                         ALAT BANTU YANG TERPASANG<br>
                         Drain : <span class="checkbox-box {if: isset($data['alat_drain']) && $data['alat_drain'] == 'Ya'}checked{/if}"></span> Ya &nbsp;&nbsp;&nbsp; <span class="checkbox-box {if: isset($data['alat_drain']) && $data['alat_drain'] == 'Tidak'}checked{/if}"></span> Tidak &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;

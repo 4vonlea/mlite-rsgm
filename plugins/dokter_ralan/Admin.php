@@ -1300,9 +1300,7 @@ class Admin extends AdminModule
       $i = 1;
       $row['nama_petugas'] = '';
       $row['departemen_petugas'] = '';
-      $rows = $this->db('pemeriksaan_ralan')
-        ->where('no_rawat', $_POST['no_rawat'])
-        ->toArray();
+      $rows = \Systems\Lib\SoapRevision::fetchSoapRows($this->db()->pdo(), 'pemeriksaan_ralan', $_POST['no_rawat'], true, 'ASC');
       $result = [];
       foreach ($rows as $row) {
         $row['nomor'] = $i++;
@@ -1331,11 +1329,12 @@ class Admin extends AdminModule
         $result[] = $row;
       }
 
+      $result = \Systems\Lib\SoapRevision::enrichRows($this->core, 'pemeriksaan_ralan', $result, $this->_getNipPegawai($_POST['no_rawat'] ?? null));
+      $void_count = count(array_filter($result, function($r) { return !empty($r['is_voided']); }));
+
       $result_ranap = [];
       if($this->db('mlite_settings')->where('module', 'rawat_inap')->oneArray()) {
-        $rows_ranap = $this->db('pemeriksaan_ranap')
-         ->where('no_rawat', $_POST['no_rawat'])
-         ->toArray();
+        $rows_ranap = \Systems\Lib\SoapRevision::fetchSoapRows($this->db()->pdo(), 'pemeriksaan_ranap', $_POST['no_rawat'], true, 'ASC');
         foreach ($rows_ranap as $row) {
          $row['nomor'] = $i++;
          $row['nama_petugas'] = $this->core->getPegawaiInfo('nama',$row['nip']);
@@ -1359,11 +1358,15 @@ class Admin extends AdminModule
 
          $result_ranap[] = $row;
         }
+        $result_ranap = \Systems\Lib\SoapRevision::enrichRows($this->core, 'pemeriksaan_ranap', $result_ranap, $this->_getNipPegawai($_POST['no_rawat'] ?? null));
       }
+      $void_ranap_count = count(array_filter($result_ranap, function($r) { return !empty($r['is_voided']); }));
 
       echo $this->draw('soap.html', [
           'pemeriksaan' => htmlspecialchars_array($result), 
           'pemeriksaan_ranap' => htmlspecialchars_array($result_ranap), 
+          'void_count' => $void_count,
+          'void_ranap_count' => $void_ranap_count,
           'diagnosa' => htmlspecialchars_array($diagnosa), 
           'prosedur' => htmlspecialchars_array($prosedur), 
           'mapping_snomed' => htmlspecialchars_array($mapping_snomed),
@@ -1372,6 +1375,11 @@ class Admin extends AdminModule
           'current_user' => $this->core->getUserInfo('username')
       ]);
       exit();
+    }
+
+    public function anySoapHistory()
+    {
+      \Systems\Lib\SoapRevision::outputHistoryJson($this->core);
     }
 
     public function postSaveSOAP()
@@ -1419,33 +1427,51 @@ class Admin extends AdminModule
           unset($_POST['stts_daftar']);
       }
 
-      $cek = $this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->oneArray();
-      if(!$cek) {
-        $this->db('pemeriksaan_ralan')->save($_POST);
-        if($this->settings->get('dokter_ralan.set_sudah') == 'ya') {
-          $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save(['stts' => 'Sudah']);
-        }
-      } else {
-        $this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->save($_POST);
+      $actorNip = $_POST['nip'];
+      $res = \Systems\Lib\SoapRevision::saveSoap($this->core, 'dokter_ralan', 'pemeriksaan_ralan', $_POST, [
+          'actor_username' => $actorNip,
+      ]);
 
-        if($this->settings->get('dokter_ralan.set_sudah') == 'ya') {
-          $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save(['stts' => 'Sudah']);
-        }
+      if ($res['status'] === 'success') {
+          if($this->settings->get('dokter_ralan.set_sudah') == 'ya') {
+            $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save(['stts' => 'Sudah']);
+          }
+          $save_reg = [];
+          if($status_poli != '') $save_reg['status_poli'] = $status_poli;
+          if($stts_daftar != '') $save_reg['stts_daftar'] = $stts_daftar;
+          if(!empty($save_reg)) {
+              $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($save_reg);
+          }
       }
 
-      $save_reg = [];
-      if($status_poli != '') $save_reg['status_poli'] = $status_poli;
-      if($stts_daftar != '') $save_reg['stts_daftar'] = $stts_daftar;
-      if(!empty($save_reg)) {
-          $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($save_reg);
-      }
-
+      header('Content-Type: application/json; charset=utf-8');
+      echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
       exit();
     }
 
     public function postHapusSOAP()
     {
-      $this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->delete();
+      if (!$this->_canInput()) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Akses ditolak: Hanya dokter dan admin yang diperbolehkan membatalkan SOAP.'
+        ]);
+        exit();
+      }
+      $actorNip = $this->_getNipPegawai($_POST['no_rawat'] ?? null);
+      $reason = trim((string)($_POST['void_reason'] ?? $_POST['reason'] ?? ''));
+      $res = \Systems\Lib\SoapRevision::voidSoap(
+          $this->core,
+          'dokter_ralan',
+          'pemeriksaan_ralan',
+          $_POST['no_rawat'] ?? '',
+          $_POST['tgl_perawatan'] ?? '',
+          $_POST['jam_rawat'] ?? '',
+          $reason,
+          $actorNip
+      );
+      header('Content-Type: application/json; charset=utf-8');
+      echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
       exit();
     }
 

@@ -4,50 +4,46 @@
     <meta charset="utf-8">
     <title>RM.RJ - 02A Hak dan Kewajiban Pasien</title>
     <style>
+        {if: empty($is_mpdf)}
         @page { size: A4 portrait; margin: 10mm; }
         body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 0; }
         .page { width: 190mm; margin: 0 auto; position: relative; }
-        
+        @media screen {
+            body { background-color: #f4f6f9 !important; padding: 15px 0 !important; }
+            .container, .page, .main-box, .main-container { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; margin: 0 auto 20px auto !important; padding: 8mm 10mm !important; }
+        }
+        .no-print-toolbar { width: 100%; max-width: 195mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
+        .btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-decoration: none; display: inline-block; }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+        @media print {
+            body { -webkit-print-color-adjust: exact; background: transparent !important; padding: 0 !important; }
+            .no-print-toolbar { display: none !important; }
+            .container, .page, .main-box, .main-container { box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
+        }
+        {else}
+        body { font-family: Arial, sans-serif; font-size: 9.5px; line-height: 1.25; margin: 0; padding: 0; color: #000; }
+        .page { width: 100%; margin: 0; padding: 0; }
+        {/if}
+
         .header-table { width: 100%; border-collapse: collapse; border-bottom: 1px solid #000; }
         .header-table td { padding: 4px; vertical-align: top; }
-        
+
         .rmbox { display: inline-block; width: 15px; height: 16px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; vertical-align: middle; }
 
-        .content-wrapper { padding: 10px; }
-        .title-doc { text-align: center; font-size: 14px; font-weight: bold; margin: 10px 0 15px 0; }
+        .content-wrapper { padding: 8px 10px; }
+        .title-doc { text-align: center; font-size: 13px; font-weight: bold; margin: 6px 0 10px 0; }
 
-        .list-section { font-size: 10px; text-align: justify; }
-        .list-section ol { margin-top: 5px; margin-bottom: 10px; padding-left: 18px; }
-        .list-section li { margin-bottom: 2px; }
+        .list-section { font-size: 9.5px; text-align: justify; }
+        .list-section ol { margin-top: 4px; margin-bottom: 8px; padding-left: 18px; }
+        .list-section li { margin-bottom: 1.5px; }
 
-        .ttd-table { width: 100%; margin-top: 20px; text-align: center; font-size: 11px; }
-        .ttd-table td { padding: 5px; vertical-align: bottom; height: 60px; }
+        .ttd-table { width: 100%; margin-top: 10px; text-align: center; font-size: 10px; border-collapse: collapse; }
+        .ttd-table td { padding: 4px; vertical-align: bottom; }
 
-        .footer-note { font-size: 8px; font-style: italic; text-align: right; margin-top: 5px; }
-        .footer-bottom { font-size: 9px; display: flex; justify-content: space-between; margin-top: 5px; font-weight: bold; }
-        
-        @media print {
-            body { -webkit-print-color-adjust: exact; }
-        }
-    
-{if: empty($is_mpdf)}
-@media screen {
-    body { background-color: #f4f6f9 !important; padding: 15px 0 !important; }
-    .container, .page, .main-box, .main-container { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; margin: 0 auto 20px auto !important; padding: 8mm 10mm !important; }
-}
-{/if}
-.no-print-toolbar { width: 100%; max-width: 195mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
-.btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-decoration: none; display: inline-block; }
-.btn-print { background: #27ae60; color: #fff; }
-.btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
-.btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
-@media print {
-    .no-print-toolbar { display: none !important; }
-    body { background: transparent !important; padding: 0 !important; }
-    .container, .page, .main-box, .main-container { box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
-}
-
-</style>
+        .footer-note { font-size: 8px; font-style: italic; text-align: right; margin-top: 4px; }
+    </style>
 </head>
 <body >
 
@@ -140,14 +136,13 @@
         <table class="ttd-table">
             <tr>
                 <td style="width:50%;">
-                <td style="width:50%;">
                     <div>Pasien / Penanggung Jawab Pasien{if: !empty($d.form_data.hubungan_pj) && $d.form_data.hubungan_pj != 'Diri Sendiri'} ({$d.form_data.hubungan_pj}){/if},</div>
-                    <div style="height:55px; line-height:55px; margin:5px 0;">
+                    <div style="height:50px; margin:4px 0; text-align:center;">
                         {if: !empty($d.form_data.ttd_pasien)}
                             {if: strpos($d.form_data.ttd_pasien, 'data:image') === 0 || strpos($d.form_data.ttd_pasien, 'http') === 0}
-                            <img src="{$d.form_data.ttd_pasien}" style="max-height:50px; max-width:140px; vertical-align:middle;">
+                            <img src="{$d.form_data.ttd_pasien}" alt="TTD Pasien" style="max-height:46px; max-width:130px; display:inline-block;">
                             {else}
-                            <div style="margin: 0 auto; display: inline-block;">{?= $d['form_data']['ttd_pasien'] ?}</div>
+                            <span style="font-size:9px; font-style:italic;">{?=htmlspecialchars($d['form_data']['ttd_pasien'])?}</span>
                             {/if}
                         {else}
                         <span style="color:#aaa; font-style:italic; font-size:8px;">(Belum TTD Digital)</span>
@@ -158,12 +153,20 @@
                 </td>
                 <td style="width:50%;">
                     <div>Petugas Pemberi Edukasi,</div>
-                    <div style="height:55px; line-height:55px; margin:5px 0;">
-                        {if: !empty($d.form_data.ttd_edukasi)}
-                            {if: strpos($d.form_data.ttd_edukasi, 'data:image') === 0 || strpos($d.form_data.ttd_edukasi, 'http') === 0}
-                            <img src="{$d.form_data.ttd_edukasi}" style="max-height:50px; max-width:140px; vertical-align:middle;">
+                    <div style="height:50px; margin:4px 0; text-align:center;">
+                        {if: !empty($qr_ttd_edukasi)}
+                            <img src="{$qr_ttd_edukasi}" alt="QR TTE Petugas" style="width:42px; height:42px; display:inline-block;"><br>
+                            <span style="font-size: 7pt; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
+                        {elseif: !empty($d.form_data.ttd_edukasi)}
+                            {if: strlen($d.form_data.ttd_edukasi) == 64}
+                                {if: !empty($is_mpdf)}
+                                <barcode code="{?=url(['esignature', 'verify', $d.form_data.ttd_edukasi])?}" type="QR" class="barcode" size="0.6" error="M" disableborder="1" /><br>
+                                {/if}
+                                <span style="font-size: 7pt; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
+                            {elseif: strpos($d.form_data.ttd_edukasi, 'data:image') === 0 || strpos($d.form_data.ttd_edukasi, 'http') === 0}
+                            <img src="{$d.form_data.ttd_edukasi}" alt="TTD Petugas" style="max-height:46px; max-width:130px; display:inline-block;">
                             {else}
-                            <div style="margin: 0 auto; display: inline-block;">{?= $d['form_data']['ttd_edukasi'] ?}</div>
+                            <span style="font-size:9px; font-style:italic;">{?=htmlspecialchars($d['form_data']['ttd_edukasi'])?}</span>
                             {/if}
                         {else}
                         <span style="color:#aaa; font-style:italic; font-size:8px;">[Pemberi Edukasi]</span>
@@ -182,10 +185,12 @@
         <span style="display:inline-block; width:10px; height:10px; border:1px solid #000; margin-left:5px; vertical-align:middle;"></span>
     </div>
     
-    <div class="footer-bottom">
-        <div>RSGM/Ed-Rev/02/2023</div>
-        <div style="color:blue;"><u>RM.RJ – 02A</u></div>
-    </div>
+    <table style="width:100%; border-collapse:collapse; margin-top:4px; font-size:9px; font-weight:bold;">
+        <tr>
+            <td style="text-align:left;">RSGM/Ed-Rev/02/2023</td>
+            <td style="text-align:right; color:blue;"><u>RM.RJ &ndash; 02A</u></td>
+        </tr>
+    </table>
 </div>
 </body>
 </html>

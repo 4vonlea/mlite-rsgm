@@ -79,7 +79,7 @@
             <td><strong>PENANDAAN TEPAT LOKASI BEDAH MULUT</strong> &nbsp;<span style="opacity:.75;">No. Rawat: {$data.no_rawat}</span></td>
             <td style="text-align: right;">
                 <button type="button" onclick="window.print()" class="btn-toolbar btn-print">&#128438; Cetak</button>
-                <a href="{$pdf_url}" target="_blank" class="btn-toolbar btn-pdf">&#128196; Download PDF</a>
+                <a href="{if: !empty($pdf_url)}{$pdf_url}{else}?pdf=1{/if}" target="_blank" class="btn-toolbar btn-pdf">&#128196; Download PDF</a>
                 <button type="button" onclick="window.close()" class="btn-toolbar btn-close">&#10006; Tutup</button>
             </td>
         </tr>
@@ -145,6 +145,7 @@
 
     <!-- ODONTOGRAM (CENTANG SEKOTAKAN) -->
     <div class="odonto-area">
+        {if: !empty($odonto)}
         {loop: $odonto as $row}
         <table class="odo">
             {if: $row.label == 'top'}
@@ -176,6 +177,7 @@
         <div class="odo-gap"></div>
         {/if}
         {/loop}
+        {/if}
     </div>
 
     <!-- DIAGRAM ANATOMI (MULUT, DEPAN, KANAN, KIRI) -->
@@ -199,14 +201,28 @@
                 <td><br>Saksi</td>
             </tr>
             <tr>
-                <td class="sig-space"></td>
-                <td class="sig-space"></td>
-                <td class="sig-space"></td>
+                <td class="sig-space">
+                    {if: !empty($data.ttd_pasien) && strpos($data.ttd_pasien, 'data:image/') === 0}
+                    <img src="{$data.ttd_pasien}" style="max-height: 46px; max-width: 120px;">
+                    {/if}
+                </td>
+                <td class="sig-space">
+                    {if: !empty($qr_dokter)}
+                    <img src="{$qr_dokter}" style="width: 46px; height: 46px;">
+                    {/if}
+                </td>
+                <td class="sig-space">
+                    {if: !empty($qr_saksi)}
+                    <img src="{$qr_saksi}" style="width: 46px; height: 46px;">
+                    {elseif: !empty($ttd_saksi_img) && strpos($ttd_saksi_img, 'data:image/') === 0}
+                    <img src="{$ttd_saksi_img}" style="max-height: 46px; max-width: 120px;">
+                    {/if}
+                </td>
             </tr>
             <tr>
                 <td>( <span class="dots">&nbsp;{$data.nama_pasien_keluarga}&nbsp;</span> )</td>
-                <td>( <span class="dots">&nbsp;{$data.nama_dokter}&nbsp;</span> )</td>
-                <td>( <span class="dots">&nbsp;{$data.nama_saksi}&nbsp;</span> )</td>
+                <td>( <span class="dots">&nbsp;{if: !empty($tte_dokter.signer_name)}{$tte_dokter.signer_name}{else}{$data.nama_dokter}{/if}&nbsp;</span> )</td>
+                <td>( <span class="dots">&nbsp;{if: !empty($tte_saksi.signer_name)}{$tte_saksi.signer_name}{else}{$data.nama_saksi}{/if}&nbsp;</span> )</td>
             </tr>
         </table>
     </div>

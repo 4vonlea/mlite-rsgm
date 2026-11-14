@@ -2,8 +2,9 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title>RM.GD 07 / RM.RI 05 - CATATAN PERKEMBANGAN PASIEN TERINTEGRASI - {$pasien.no_rawat}</title>
+    <title>{if: !empty($is_ugd)}RM.GD 11{else}RM.GD 11 / RM.RI 05{/if} - CATATAN PERKEMBANGAN PASIEN TERINTEGRASI - {$pasien.no_rawat}</title>
     <style>
+        {if: empty($is_mpdf)}
         @page {
             size: A4 portrait;
             margin: 6mm 8mm 6mm 8mm;
@@ -18,12 +19,8 @@
             font-size: 8pt;
             line-height: 1.2;
             color: #000;
-            margin: 0;
-            padding: 0;
-        }
-        {if: empty($is_mpdf)}
-        body {
             background-color: #f5f5f5;
+            margin: 0;
             padding: 10px 0;
         }
         .page {
@@ -35,7 +32,6 @@
             box-shadow: 0 0 10px rgba(0,0,0,0.15);
             position: relative;
         }
-        {/if}
 
         .no-print-toolbar {
             width: 200mm;
@@ -66,6 +62,21 @@
             body { background: transparent !important; padding: 0 !important; }
             .page { width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
         }
+        {else}
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 7.8pt;
+            line-height: 1.18;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        .page {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        {/if}
 
         .border-all {
             border: 1.5px solid #000;
@@ -118,6 +129,62 @@
         .soap-p {
             margin-bottom: 3px;
             line-height: 1.25;
+        }
+        .void-row {
+            background-color: #fef2f2;
+        }
+        .void-strike {
+            text-decoration: line-through;
+            color: #7f1d1d;
+        }
+        .void-badge {
+            display: inline-block;
+            padding: 1px 4px;
+            font-size: 6.5pt;
+            font-weight: bold;
+            color: #fff;
+            background-color: #dc2626;
+            border-radius: 2px;
+            margin-top: 2px;
+        }
+        .void-box {
+            border: 1px solid #fca5a5;
+            background-color: #fee2e2;
+            color: #7f1d1d;
+            font-size: 6.8pt;
+            padding: 3px 5px;
+            margin-bottom: 4px;
+            line-height: 1.25;
+        }
+        .rev-badge {
+            display: inline-block;
+            padding: 1px 4px;
+            font-size: 6.5pt;
+            font-weight: bold;
+            color: #92400e;
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 2px;
+            margin-top: 2px;
+        }
+        .rev-footnote {
+            border-top: 1px dashed #d97706;
+            background-color: #fffbeb;
+            font-size: 6.8pt;
+            color: #78350f;
+            padding: 3px 5px;
+            margin-top: 4px;
+            line-height: 1.25;
+        }
+        .tte-outdated {
+            display: inline-block;
+            font-size: 6.5pt;
+            color: #92400e;
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            padding: 1px 4px;
+            margin-top: 2px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -200,64 +267,105 @@
             <tbody>
                 {if: !empty($cppt_list)}
                 {loop: $cppt_list}
-                <tr>
+                <tr class="{if: !empty($value.is_voided)}void-row{/if}">
                     <td style="text-align: center; vertical-align: top; padding-top: 6px;">
                         <strong>{?=date('d/m/Y', strtotime($value.tgl_perawatan))?}</strong><br>
                         <span style="font-size: 8.5pt;">{?=date('H:i', strtotime($value.jam_rawat))?}</span>
+                        {if: !empty($value.is_voided)}
+                        <br><span class="void-badge">VOID</span>
+                        {elseif: !empty($value.has_revisions)}
+                        <br><span class="rev-badge">Koreksi {$value.revision_count}x</span>
+                        {/if}
                     </td>
                     <td style="vertical-align: top; padding-top: 6px;">
-                        <strong>{$value.profesi}</strong><br>
-                        <span style="font-size: 7.5pt; color: #444;">{$value.nama_petugas}</span>
+                        <span class="{if: !empty($value.is_voided)}void-strike{/if}">
+                            <strong>{$value.profesi}</strong><br>
+                            <span style="font-size: 7.5pt; color: #444;">{$value.nama_petugas}</span>
+                        </span>
                     </td>
                     <td style="vertical-align: top;">
-                        {if: !empty($value.keluhan)}
-                        <div class="soap-p">
-                            <strong>S :</strong> {?=nl2br($value.keluhan)?}
+                        {if: !empty($value.is_voided)}
+                        <div class="void-box">
+                            <strong>DIBATALKAN (VOID):</strong> {?=isset_or($value.void_info.void_reason)?} &mdash; oleh <strong>{?=isset_or($value.void_info.deleted_by)?}</strong> ({?=isset_or($value.void_info.deleted_at)?})
                         </div>
                         {/if}
-                        
-                        {if: !empty($value.tensi) && $value.tensi != '-'}
-                        <div class="soap-p">
-                            <strong>O :</strong> TD: {$value.tensi} mmHg &nbsp;&nbsp; HR: {$value.nadi} x/m<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RR: {$value.respirasi} x/m &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; T: {$value.suhu_tubuh} &deg;C<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SpO2: {$value.spo2}%<br>
-                            {if: !empty($value.pemeriksaan) && $value.pemeriksaan != $value.tensi}
-                            {?=nl2br($value.pemeriksaan)?}
+                        <div class="{if: !empty($value.is_voided)}void-strike{/if}">
+                            {if: !empty($value.keluhan)}
+                            <div class="soap-p">
+                                <strong>S :</strong> {?=nl2br($value.keluhan)?}
+                            </div>
+                            {/if}
+
+                            {if: !empty($value.tensi) && $value.tensi != '-'}
+                            <div class="soap-p">
+                                <strong>O :</strong> TD: {$value.tensi} mmHg &nbsp;&nbsp; HR: {$value.nadi} x/m<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RR: {$value.respirasi} x/m &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; T: {$value.suhu_tubuh} &deg;C<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SpO2: {$value.spo2}%<br>
+                                {if: !empty($value.pemeriksaan) && $value.pemeriksaan != $value.tensi}
+                                {?=nl2br($value.pemeriksaan)?}
+                                {/if}
+                            </div>
+                            {elseif: !empty($value.pemeriksaan)}
+                            <div class="soap-p">
+                                <strong>O :</strong> {?=nl2br($value.pemeriksaan)?}
+                            </div>
+                            {/if}
+
+                            {if: !empty($value.penilaian)}
+                            <div class="soap-p">
+                                <strong>A :</strong> {?=nl2br($value.penilaian)?}
+                            </div>
+                            {/if}
+
+                            {if: !empty($value.rtl)}
+                            <div class="soap-p">
+                                <strong>P :</strong> {?=nl2br($value.rtl)?}
+                            </div>
+                            {/if}
+
+                            {if: !empty($value.evaluasi) && $value.evaluasi != '-'}
+                            <div class="soap-p" style="border-top: 1px dotted #ccc; padding-top: 2px;">
+                                <strong>E :</strong> {?=nl2br($value.evaluasi)?}
+                            </div>
                             {/if}
                         </div>
-                        {elseif: !empty($value.pemeriksaan)}
-                        <div class="soap-p">
-                            <strong>O :</strong> {?=nl2br($value.pemeriksaan)?}
-                        </div>
-                        {/if}
-
-                        {if: !empty($value.penilaian)}
-                        <div class="soap-p">
-                            <strong>A :</strong> {?=nl2br($value.penilaian)?}
-                        </div>
-                        {/if}
-
-                        {if: !empty($value.rtl)}
-                        <div class="soap-p">
-                            <strong>P :</strong> {?=nl2br($value.rtl)?}
-                        </div>
-                        {/if}
-
-                        {if: !empty($value.evaluasi) && $value.evaluasi != '-'}
-                        <div class="soap-p" style="border-top: 1px dotted #ccc; padding-top: 2px;">
-                            <strong>E :</strong> {?=nl2br($value.evaluasi)?}
+                        {if: !empty($value.has_revisions) && !empty($value.revisions_summary)}
+                        <div class="rev-footnote">
+                            <strong>Riwayat Koreksi (MRMIK 8):</strong>
+                            {loop: $value.revisions_summary as $rev}
+                            <br>&bull; <strong>v{$rev.revision_no}</strong> ({$rev.created_at}) oleh {$rev.actor_name}: <em>"{$rev.reason}"</em>
+                            {/loop}
                         </div>
                         {/if}
                     </td>
                     <td style="vertical-align: top;">
-                        {if: !empty($value.instruksi) && $value.instruksi != '-'}
-                        <div>{?=nl2br($value.instruksi)?}</div>
-                        {else}
-                        <div style="color: #888; font-style: italic;">-</div>
-                        {/if}
+                        <div class="{if: !empty($value.is_voided)}void-strike{/if}">
+                            {if: !empty($value.instruksi) && $value.instruksi != '-'}
+                            <div>{?=nl2br($value.instruksi)?}</div>
+                            {else}
+                            <div style="color: #888; font-style: italic;">-</div>
+                            {/if}
+                        </div>
                     </td>
                     <td style="text-align: center; vertical-align: bottom; height: 75px; padding-bottom: 6px;">
+                        {if: !empty($value.is_voided)}
+                        <span class="void-badge">ENTRY VOID</span>
+                        {elseif: !empty($value.qr_tte_data_uri)}
+                        <img src="{$value.qr_tte_data_uri}" style="width: 44px; height: 44px; display: block; margin: 0 auto 2px auto;" alt="QR TTE DPJP">
+                        <span style="font-size: 6.5pt; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
+                        {elseif: !empty($value.signature_hash)}
+                            {if: !empty($is_mpdf)}
+                            <barcode code="{?=url(['esignature', 'verify', $value.signature_hash])?}" type="QR" class="barcode" size="0.6" error="M" disableborder="1" /><br>
+                            {/if}
+                        <span style="font-size: 6.5pt; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
+                        {elseif: !empty($value.paraf) && (strpos($value.paraf, 'data:image') === 0 || strpos($value.paraf, 'http') === 0)}
+                        <img src="{$value.paraf}" style="max-height: 45px; max-width: 80px; object-fit: contain; display: block; margin: 0 auto 2px auto;">
+                        {else}
                         <div style="font-family: 'Brush Script MT', cursive, sans-serif; font-size: 18pt; line-height: 1; color: #1a237e;">Paraf</div>
+                        {/if}
+                        {if: !empty($value.is_tte_outdated)}
+                        <br><span class="tte-outdated">TTE Sebelum Koreksi</span>
+                        {/if}
                         <div style="font-size: 7pt; font-weight: bold; border-top: 1px solid #000; margin-top: 4px; padding-top: 2px; text-transform: uppercase;">
                             {$value.dpjp_nama}
                         </div>
@@ -285,7 +393,7 @@
         </tr>
         <tr>
             <td style="text-align: left; font-weight: bold;">RSGM/Ed-Rev/02/2023</td>
-            <td style="text-align: right; font-weight: bold;">RM.GD 07 - Hal 1 - 2</td>
+            <td style="text-align: right; font-weight: bold;">{if: !empty($is_ugd)}RM.GD 11{else}RM.GD 11 / RM.RI 05{/if} - Hal 1 - 2</td>
         </tr>
     </table>
 </div>

@@ -296,9 +296,9 @@ ol.gc-sublist > li {
 </table>
 
 <div style="font-size: 8pt; line-height: 1.4; margin-bottom: 6px;">
-    Perkiraan lama rawat: <strong>{$data.perkiraan_lama_rawat}</strong> malam. Perkiraan biaya kamar: Rp <strong>{?=number_format($data.perkiraan_biaya_kamar, 0, ',', '.')?}</strong> (tarif kamar &times; perkiraan malam).<br>
-    Perkiraan biaya lain (jika telah diketahui): tindakan Rp <strong>{?=number_format($data.perkiraan_biaya_tindakan, 0, ',', '.')?}</strong>; obat/BMHP Rp <strong>{?=number_format($data.perkiraan_biaya_obat, 0, ',', '.')?}</strong>; pemeriksaan Rp <strong>{?=number_format($data.perkiraan_biaya_pemeriksaan, 0, ',', '.')?}</strong>; lainnya Rp <strong>{?=number_format($data.perkiraan_biaya_lainnya, 0, ',', '.')?}</strong>.<br>
-    <strong>Total perkiraan biaya pelayanan: Rp {?=number_format($data.total_perkiraan_biaya, 0, ',', '.')?}</strong>. <em>Perkiraan ini bukan tagihan akhir; biaya aktual dapat berubah sesuai kondisi klinis, tindakan, lama rawat, dan tarif rumah sakit yang berlaku.</em>
+    Perkiraan lama rawat: <strong>{$data.perkiraan_lama_rawat}</strong> malam. Perkiraan biaya kamar: Rp <strong>{?=number_format((float)($data.perkiraan_biaya_kamar ?? 0), 0, ',', '.')?}</strong> (tarif kamar &times; perkiraan malam).<br>
+    Perkiraan biaya lain (jika telah diketahui): tindakan Rp <strong>{?=number_format((float)($data.perkiraan_biaya_tindakan ?? 0), 0, ',', '.')?}</strong>; obat/BMHP Rp <strong>{?=number_format((float)($data.perkiraan_biaya_obat ?? 0), 0, ',', '.')?}</strong>; pemeriksaan Rp <strong>{?=number_format((float)($data.perkiraan_biaya_pemeriksaan ?? 0), 0, ',', '.')?}</strong>; lainnya Rp <strong>{?=number_format((float)($data.perkiraan_biaya_lainnya ?? 0), 0, ',', '.')?}</strong>.<br>
+    <strong>Total perkiraan biaya pelayanan: Rp {?=number_format((float)($data.total_perkiraan_biaya ?? 0), 0, ',', '.')?}</strong>. <em>Perkiraan ini bukan tagihan akhir; biaya aktual dapat berubah sesuai kondisi klinis, tindakan, lama rawat, dan tarif rumah sakit yang berlaku.</em>
 </div>
 
 <div style="font-weight: bold; font-size: 8.5pt; margin-top: 6px; margin-bottom: 2px;">B. PASIEN JKN / BPJS KESEHATAN</div>
@@ -339,7 +339,10 @@ ol.gc-sublist > li {
             Nama petugas admisi: <strong>{$data.nama_petugas_admisi}</strong><br>
             Tanda tangan petugas:<br>
             <div style="min-height: 55px; margin: 3px 0; text-align: center;">
-                {if: !empty($data.ttd_petugas_admisi)}
+                {if: !empty($qr_petugas_admisi)}
+                    <img src="{$qr_petugas_admisi}" alt="QR TTE Petugas Admisi" style="width: 48px; height: 48px; display: block; margin: 0 auto 2px auto;">
+                    <span style="font-size: 8px; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
+                {elseif: !empty($data.ttd_petugas_admisi)}
                     {if: strlen($data.ttd_petugas_admisi) == 64}
                         <barcode code="{?=url(['esignature', 'verify', $data.ttd_petugas_admisi])?}" type="QR" class="barcode" size="0.7" error="M" disableborder="1" /><br>
                         <span style="font-size: 8px; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
@@ -350,7 +353,7 @@ ol.gc-sublist > li {
                     <span style="color:#888; font-style:italic; line-height: 55px;">[Petugas Admisi]</span>
                 {/if}
             </div>
-            ( <strong>{$data.nama_petugas_admisi}</strong> )
+            ( <strong>{if: !empty($data.nama_petugas_admisi)}{$data.nama_petugas_admisi}{elseif: !empty($tte_petugas_admisi.signer_name)}{$tte_petugas_admisi.signer_name}{/if}</strong> )
         </td>
         <td align="center" style="padding-top: 10px;">
             Tanda tangan pasien/keluarga:<br>

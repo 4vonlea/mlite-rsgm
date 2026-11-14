@@ -513,6 +513,9 @@ $("#soap").on("click",".edit_soap", function(event){
   $('textarea[name=instruksi]').val(instruksi);
   $('textarea[name=evaluasi]').val(evaluasi);
   $('input:text[name=spo2]').val(spo2);
+  if (window.RSGMSoapRevision) {
+    RSGMSoapRevision.enterEdit($(this), 'rawat_inap');
+  }
 });
 
 // ketika tombol simpan diklik
@@ -547,63 +550,48 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
     var spo2            = $('input:text[name=spo2]').val();
 
     var url = baseURL + '/rawat_inap/savesoap?t=' + mlite.token;
-    $.post(url, {no_rawat : no_rawat,
-    tgl_perawatan: tgl_perawatan,
-    jam_rawat: jam_rawat,
-    suhu_tubuh : suhu_tubuh,
-    tensi : tensi,
-    nadi : nadi,
-    respirasi : respirasi,
-    tinggi : tinggi,
-    berat : berat,
-    gcs : gcs,
-    kesadaran : kesadaran,
-    keluhan : keluhan,
-    pemeriksaan : pemeriksaan,
-    alergi : alergi,
-    penilaian : penilaian,
-    rtl : rtl,
-    instruksi : instruksi,
-    evaluasi : evaluasi,
-    spo2 : spo2
-    }, function(data) {
-      console.log(data);
-      // tampilkan data
+    var payload = {
+      no_rawat : no_rawat,
+      tgl_perawatan: tgl_perawatan,
+      jam_rawat: jam_rawat,
+      suhu_tubuh : suhu_tubuh,
+      tensi : tensi,
+      nadi : nadi,
+      respirasi : respirasi,
+      tinggi : tinggi,
+      berat : berat,
+      gcs : gcs,
+      kesadaran : kesadaran,
+      keluhan : keluhan,
+      pemeriksaan : pemeriksaan,
+      alergi : alergi,
+      penilaian : penilaian,
+      rtl : rtl,
+      instruksi : instruksi,
+      evaluasi : evaluasi,
+      spo2 : spo2
+    };
+
+    var reloadSoap = function() {
       $("#display").hide();
-      var url = baseURL + '/rawat_inap/soap?t=' + mlite.token;
-      $.post(url, {no_rawat : no_rawat,
-      }, function(data) {
-        // tampilkan data
+      $.post(baseURL + '/rawat_inap/soap?t=' + mlite.token, { no_rawat : no_rawat }, function(data) {
         $("#soap").html(data).show();
-        // Update vital signs chart
         if (typeof updateVitalSignsChart === 'function') {
           updateVitalSignsChart();
         }
       });
-      $('input:text[name=suhu_tubuh]').val("");
-      $('input:text[name=tensi]').val("");
-      $('input:text[name=nadi]').val("");
-      $('input:text[name=respirasi]').val("");
-      $('input:text[name=tinggi]').val("");
-      $('input:text[name=berat]').val("");
-      $('input:text[name=gcs]').val("");
-      $('input:text[name=kesadaran]').val("");
-      $('input:text[name=alergi]').val("");
-      $('textarea[name=keluhan]').val("");
-      $('textarea[name=pemeriksaan]').val("");
-      $('textarea[name=penilaian]').val("");
-      $('textarea[name=rtl]').val("");
-      $('textarea[name=instruksi]').val("");
-      $('textarea[name=evaluasi]').val("");
-      $('input:text[name=spo2]').val("");
       $('input:text[name=tgl_perawatan]').val("{?=date('Y-m-d')?}");
       $('input:text[name=tgl_registrasi]').val("{?=date('Y-m-d')?}");
       $('input:text[name=jam_rawat]').val("{?=date('H:i:s')?}");
-      $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-      "Data soap telah disimpan!"+
-      "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
-      "</div>").show();
-    });
+    };
+
+    if (window.RSGMSoapRevision) {
+      RSGMSoapRevision.saveSoap('rawat_inap', url, payload, reloadSoap);
+    } else {
+      $.post(url, payload, function() {
+        reloadSoap();
+      });
+    }
   {/if}
 });
 
@@ -648,104 +636,43 @@ $("#soap").on("click",".copy_soap", function(event){
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-$("#soap").on("click",".edit_soap", function(event){
-  var baseURL = mlite.url + '/' + mlite.admin;
-  event.preventDefault();
-  var no_rawat        = $(this).attr("data-no_rawat");
-  var tgl_perawatan   = $(this).attr("data-tgl_perawatan");
-  var jam_rawat       = $(this).attr("data-jam_rawat");
-  var suhu_tubuh      = $(this).attr("data-suhu_tubuh");
-  var tensi           = $(this).attr("data-tensi");
-  var nadi            = $(this).attr("data-nadi");
-  var respirasi       = $(this).attr("data-respirasi");
-  var tinggi          = $(this).attr("data-tinggi");
-  var berat           = $(this).attr("data-berat");
-  var gcs             = $(this).attr("data-gcs");
-  var kesadaran       = $(this).attr("data-kesadaran");
-  var alergi          = $(this).attr("data-alergi");
-  var keluhan         = $(this).attr("data-keluhan");
-  var pemeriksaan     = $(this).attr("data-pemeriksaan");
-  var penilaian       = $(this).attr("data-penilaian");
-  var rtl             = $(this).attr("data-rtl");
-  var instruksi       = $(this).attr("data-instruksi");
-  var evaluasi        = $(this).attr("data-evaluasi");
-  var spo2            = $(this).attr("data-spo2");
-
-  $('input:text[name=tgl_perawatan]').val(tgl_perawatan);
-  $('input:text[name=jam_rawat]').val(jam_rawat);
-  $('input:text[name=suhu_tubuh]').val(suhu_tubuh);
-  $('input:text[name=tensi]').val(tensi);
-  $('input:text[name=nadi]').val(nadi);
-  $('input:text[name=respirasi]').val(respirasi);
-  $('input:text[name=tinggi]').val(tinggi);
-  $('input:text[name=berat]').val(berat);
-  $('input:text[name=gcs]').val(gcs);
-  $('input:text[name=kesadaran]').val(kesadaran);
-  $('input:text[name=alergi]').val(alergi);
-  $('textarea[name=keluhan]').val(keluhan);
-  $('textarea[name=pemeriksaan]').val(pemeriksaan);
-  $('textarea[name=penilaian]').val(penilaian);
-  $('textarea[name=rtl]').val(rtl);
-  $('textarea[name=instruksi]').val(instruksi);
-  $('textarea[name=evaluasi]').val(evaluasi);
-  $('input:text[name=spo2]').val(spo2);
-
-});
-
-// ketika tombol hapus ditekan
+// ketika tombol hapus ditekan (Soft-Delete VOID MRMIK 8)
 $("#soap").on("click",".hapus_soap", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
+  var $btn = $(this);
   var url = baseURL + '/rawat_inap/hapussoap?t=' + mlite.token;
-  var no_rawat = $(this).attr("data-no_rawat");
-  var tgl_perawatan = $(this).attr("data-tgl_perawatan");
-  var jam_rawat = $(this).attr("data-jam_rawat");
+  var no_rawat = $btn.attr("data-no_rawat");
 
-  // tampilkan dialog konfirmasi
-  bootbox.confirm("Apakah Anda yakin ingin menghapus data ini?", function(result){
-    // ketika ditekan tombol ok
+  if (window.RSGMSoapRevision) {
+    RSGMSoapRevision.voidSoap($btn, 'rawat_inap', url, function() {
+      $.post(baseURL + '/rawat_inap/soap?t=' + mlite.token, { no_rawat: no_rawat }, function(data) {
+        $("#soap").html(data).show();
+        if (typeof updateVitalSignsChart === 'function') {
+          updateVitalSignsChart();
+        }
+      });
+      RSGMSoapRevision.resetEdit(true);
+    });
+    return;
+  }
+
+  var tgl_perawatan = $btn.attr("data-tgl_perawatan");
+  var jam_rawat = $btn.attr("data-jam_rawat");
+
+  bootbox.confirm("Apakah Anda yakin ingin membatalkan catatan SOAP ini?", function(result){
     if (result){
-      // mengirimkan perintah penghapusan
       $.post(url, {
         no_rawat: no_rawat,
         tgl_perawatan: tgl_perawatan,
         jam_rawat: jam_rawat
-      } ,function(data) {
-        // console.log(data);
-        var url = baseURL + '/rawat_inap/soap?t=' + mlite.token;
-        $.post(url, {no_rawat : no_rawat,
-        }, function(data) {
-          // tampilkan data
+      } ,function() {
+        $.post(baseURL + '/rawat_inap/soap?t=' + mlite.token, { no_rawat : no_rawat }, function(data) {
           $("#soap").html(data).show();
-          // Update vital signs chart
           if (typeof updateVitalSignsChart === 'function') {
             updateVitalSignsChart();
           }
         });
-        $('input:text[name=suhu_tubuh]').val("");
-        $('input:text[name=tensi]').val("");
-        $('input:text[name=nadi]').val("");
-        $('input:text[name=respirasi]').val("");
-        $('input:text[name=tinggi]').val("");
-        $('input:text[name=berat]').val("");
-        $('input:text[name=gcs]').val("");
-        $('input:text[name=kesadaran]').val("");
-        $('input:text[name=alergi]').val("");
-        $('input:text[name=lingkar_perut]').val("");
-        $('textarea[name=keluhan]').val("");
-        $('textarea[name=pemeriksaan]').val("");
-        $('textarea[name=penilaian]').val("");
-        $('textarea[name=rtl]').val("");
-        $('textarea[name=instruksi]').val("");
-        $('textarea[name=evaluasi]').val("");
-        $('input:text[name=spo2]').val("");
-        $('input:text[name=tgl_perawatan]').val("{?=date('Y-m-d')?}");
-        $('input:text[name=tgl_registrasi]').val("{?=date('Y-m-d')?}");
-        $('input:text[name=jam_rawat]').val("{?=date('H:i:s')?}");
-        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-        "Data rincian riwayat telah dihapus!"+
-        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
-        "</div>").show();
       });
     }
   });

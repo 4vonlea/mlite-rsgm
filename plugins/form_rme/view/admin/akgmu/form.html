@@ -96,6 +96,61 @@
                 <input type="text" name="nip" id="nip" class="form-control" value="{?=isset_or($data['nip'])?}" placeholder="NIP / Nama Perawat Gigi">
               </div>
 
+              <!-- TTE Perawat & Dokter DPJP (Internal RSGM) -->
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; margin-bottom: 8px;">
+                <label class="rsgm-compact-label" style="margin-bottom:4px;"><i class="fa fa-lock text-primary"></i> TTE Perawat Gigi UGD</label>
+                <div id="sign_container_akgmu_perawat" style="border: 1px solid #bfdbfe; border-radius: 5px; background: #fff; min-height: 48px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-bottom: 5px; text-align: center;">
+                  {if: !empty($tte_perawat.qr_data_uri)}
+                    <div style="text-align:center;">
+                      <img src="{$tte_perawat.qr_data_uri}" alt="QR TTE" style="height:40px; width:40px; display:block; margin:0 auto 2px;">
+                      <span class="label label-success" style="font-size:9px;"><i class="fa fa-check-circle"></i> {$tte_perawat.signer_name}</span>
+                    </div>
+                  {elseif: !empty($tte_perawat.signature_hash)}
+                    <div><span class="label label-success" style="font-size:9px;"><i class="fa fa-check-circle"></i> TTE Terverifikasi</span></div>
+                  {else}
+                    <span style="color: #94a3b8; font-size: 10.5px; font-style: italic;">Belum TTE Perawat</span>
+                  {/if}
+                </div>
+                <input type="hidden" id="input_tte_akgmu_perawat" value="{if: !empty($tte_perawat.signature_hash)}{$tte_perawat.signature_hash}{/if}">
+                <button type="button" class="btn btn-primary btn-xs btn-block btn-tte-rme" id="btn_tte_akgmu_perawat"
+                  data-ref_type="akgmu_perawat"
+                  data-ref_id="{if: !empty($data.no_rawat)}{$data.no_rawat}{else}{$no_rawat}{/if}"
+                  data-signer_name="{?=isset_or($data['nip'])?}"
+                  data-signer_role="Perawat Gigi UGD"
+                  data-target_input="input_tte_akgmu_perawat"
+                  data-container_id="sign_container_akgmu_perawat"
+                  style="border-radius: 5px; font-weight: 600;">
+                  <i class="fa fa-lock"></i> {if: !empty($tte_perawat.signature_hash)}Verifikasi Ulang{else}TTE Perawat{/if}
+                </button>
+              </div>
+
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; margin-bottom: 10px;">
+                <label class="rsgm-compact-label" style="margin-bottom:4px;"><i class="fa fa-lock text-primary"></i> TTE Dokter DPJP</label>
+                <div id="sign_container_akgmu_dpjp" style="border: 1px solid #bfdbfe; border-radius: 5px; background: #fff; min-height: 48px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-bottom: 5px; text-align: center;">
+                  {if: !empty($tte_dpjp.qr_data_uri)}
+                    <div style="text-align:center;">
+                      <img src="{$tte_dpjp.qr_data_uri}" alt="QR TTE" style="height:40px; width:40px; display:block; margin:0 auto 2px;">
+                      <span class="label label-success" style="font-size:9px;"><i class="fa fa-check-circle"></i> {$tte_dpjp.signer_name}</span>
+                    </div>
+                  {elseif: !empty($tte_dpjp.signature_hash)}
+                    <div><span class="label label-success" style="font-size:9px;"><i class="fa fa-check-circle"></i> TTE Terverifikasi</span></div>
+                  {else}
+                    <span style="color: #94a3b8; font-size: 10.5px; font-style: italic;">Belum TTE DPJP</span>
+                  {/if}
+                </div>
+                <input type="hidden" id="input_tte_akgmu_dpjp" value="{if: !empty($tte_dpjp.signature_hash)}{$tte_dpjp.signature_hash}{/if}">
+                <button type="button" class="btn btn-primary btn-xs btn-block btn-tte-rme" id="btn_tte_akgmu_dpjp"
+                  data-ref_type="akgmu_dpjp"
+                  data-ref_id="{if: !empty($data.no_rawat)}{$data.no_rawat}{else}{$no_rawat}{/if}"
+                  data-signer_name="{?=isset_or($data['nip_dpjp'])?}"
+                  data-signer_role="Dokter DPJP"
+                  data-target_input="input_tte_akgmu_dpjp"
+                  data-container_id="sign_container_akgmu_dpjp"
+                  style="border-radius: 5px; font-weight: 600;">
+                  <i class="fa fa-lock"></i> {if: !empty($tte_dpjp.signature_hash)}Verifikasi Ulang{else}TTE Dokter DPJP{/if}
+                </button>
+              </div>
+
               <button type="button" id="btn_demo" class="btn btn-warning btn-sm btn-block" style="border-radius: 6px; font-weight: 600;" title="Isi form dengan contoh data lengkap untuk uji coba klinis">
                 <i class="fa fa-magic"></i> Isi Contoh Data
               </button>
@@ -1032,7 +1087,18 @@ $(document).ready(function() {
     fillDemoData();
   });
 
-  // 7. AUTO-FILL DATA PASIEN SAAT NO. RAWAT DIISI
+  // 7. AUTO-FILL DATA PASIEN SAAT NO. RAWAT DIISI & SINKRON TTE
+  function syncAkgmuTteTargets() {
+    var nr = $('#no_rawat').val() ? $('#no_rawat').val().trim() : '';
+    var perawat = $('#nip').val() ? $('#nip').val().trim() : '';
+    var dpjp = $('#nip_dpjp').val() ? $('#nip_dpjp').val().trim() : '';
+    $('#btn_tte_akgmu_perawat').attr({ 'data-ref_id': nr, 'data-signer_name': perawat });
+    $('#btn_tte_akgmu_dpjp').attr({ 'data-ref_id': nr, 'data-signer_name': dpjp });
+  }
+
+  $('#no_rawat, #nip, #nip_dpjp').on('input change', syncAkgmuTteTargets);
+  syncAkgmuTteTargets();
+
   function fetchPatientByNoRawat() {
     var noRawat = $('#no_rawat').val().trim();
     if (!noRawat) return;
@@ -1042,6 +1108,7 @@ $(document).ready(function() {
       dataType: 'json',
       success: function(res) {
         if (res.success) {
+          if (res.no_rawat) $('#no_rawat').val(res.no_rawat);
           if (!$('#nama_pasien').val()) $('#nama_pasien').val(res.nama_pasien);
           if (!$('#tanggal_lahir').val()) $('#tanggal_lahir').val(res.tanggal_lahir);
           if (res.jenis_kelamin) $('#jenis_kelamin').val(res.jenis_kelamin).trigger('change');
@@ -1049,6 +1116,7 @@ $(document).ready(function() {
             $('#no_rkm_medis').val(res.no_rkm_medis);
             $('#display_no_rkm_medis').val(res.no_rkm_medis);
           }
+          syncAkgmuTteTargets();
         }
       }
     });

@@ -11,9 +11,9 @@ class Admin extends AdminModule
     public function init()
     {
         \Systems\Lib\Event::add('rawat_jalan.surat_menu', function ($row) {
-            echo '<li><a href="'.url([ADMIN, 'surat', 'suratrujukan', convertNorawat($row['no_rawat'])]).'" target="_blank">Surat Rujukan</a></li>';
-            echo '<li><a href="'.url([ADMIN, 'surat', 'suratsehat', convertNorawat($row['no_rawat'])]).'" target="_blank">Surat Keterangan Sehat</a></li>';
-            echo '<li><a href="'.url([ADMIN, 'surat', 'suratsakit', convertNorawat($row['no_rawat'])]).'" target="_blank">Surat Keterangan Sakit</a></li>';
+            echo '<li><a href="'.url([ADMIN, 'surat', 'suratrujukan', convertNorawat($row['no_rawat'])]).'" target="_blank"><i class="fa fa-external-link rsgm-ico-blue"></i> Surat Rujukan</a></li>';
+            echo '<li><a href="'.url([ADMIN, 'surat', 'suratsehat', convertNorawat($row['no_rawat'])]).'" target="_blank"><i class="fa fa-check-circle-o rsgm-ico-emerald"></i> Surat Keterangan Sehat</a></li>';
+            echo '<li><a href="'.url([ADMIN, 'surat', 'suratsakit', convertNorawat($row['no_rawat'])]).'" target="_blank"><i class="fa fa-bed rsgm-ico-amber"></i> Surat Keterangan Sakit</a></li>';
         });
     }
 

@@ -2,16 +2,20 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>RM.RJ-10 Lembar Edukasi Pasien dan Keluarga Terintegrasi</title>
+<title>{if: !empty($is_ugd)}RM.GD - 12{else}RM.RJ - 10{/if} Lembar Edukasi Pasien dan Keluarga Terintegrasi</title>
 <style>
+  {if: empty($is_mpdf)}
   @page { size: A4; margin: 8mm 10mm; }
   body { font-family: Arial, sans-serif; font-size: 9px; margin: 0; padding: 0; color: #000; }
-  
   .container { width: 100%; max-width: 192mm; margin: 0 auto; border: 1px solid #000; box-sizing: border-box; }
+  {else}
+  body { font-family: Arial, sans-serif; font-size: 7.5px; line-height: 1.15; margin: 0; padding: 0; color: #000; }
+  .container { width: 100%; margin: 0; border: 1px solid #000; }
+  {/if}
 
   /* Header */
   .table-header { width: 100%; border-collapse: collapse; }
-  .table-header td { border: 1px solid #000; padding: 4px; vertical-align: middle; }
+  .table-header td { border: 1px solid #000; padding: 3px; vertical-align: middle; }
   .title-center { text-align: center; }
   .title-center h3 { margin: 0; font-size: 11px; font-weight: bold; }
   .title-center h2 { margin: 2px 0; font-size: 13px; font-weight: bold; }
@@ -22,17 +26,17 @@
   .gha-img { width: 45px; height: auto; }
 
   /* RM Box */
-  .rm-header-td { vertical-align: top; padding: 4px; font-size: 9px; }
-  .box-rm { display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin-left: 1px; text-align: center; line-height: 14px; font-size: 10px; }
+  .rm-header-td { vertical-align: top; padding: 3px; font-size: 8.5px; }
+  .box-rm { display: inline-block; width: 13px; height: 13px; border: 1px solid #000; margin-left: 1px; text-align: center; line-height: 13px; font-size: 9px; }
 
   /* Section title */
-  .section-main-title { text-align: center; font-weight: bold; font-size: 11px; padding: 4px; border-top: 1px solid #000; border-bottom: 1px solid #000; background: #fff; }
+  .section-main-title { text-align: center; font-weight: bold; font-size: 10px; padding: 3px; border-top: 1px solid #000; border-bottom: 1px solid #000; background: #fff; }
 
   /* Tables */
   .table-body { width: 100%; border-collapse: collapse; }
-  .table-body td { border: 1px solid #000; padding: 3px 4px; vertical-align: top; font-size: 9px; }
+  .table-body td { border: 1px solid #000; padding: 2px 3px; vertical-align: top; font-size: 8px; }
   .table-no-border { width: 100%; border-collapse: collapse; }
-  .table-no-border td { border: none; padding: 1px 2px; vertical-align: top; font-size: 9px; }
+  .table-no-border td { border: none; padding: 1px 2px; vertical-align: top; font-size: 8px; }
 
   /* Checkbox */
   .cb { display: inline-block; width: 9px; height: 9px; border: 1px solid #000; vertical-align: middle; margin-right: 2px; text-align: center; line-height: 9px; font-size: 8px; }
@@ -42,16 +46,15 @@
   .dotted { border-bottom: 1px dotted #000; display: inline-block; min-width: 60px; }
 
   /* Heading inside td */
-  .heading-td { font-weight: bold; background: #f0f0f0; font-size: 9px; }
+  .heading-td { font-weight: bold; background: #f0f0f0; font-size: 8.5px; }
   
   /* Red strikethrough text (from sample) */
   .red-strike { color: red; text-decoration: line-through; }
 
   /* Pelaksanaan edukasi table */
-  .tbl-pelaksanaan { width: 100%; border-collapse: collapse; font-size: 8px; }
-  .tbl-pelaksanaan th { border: 1px solid #000; padding: 2px 3px; vertical-align: middle; text-align: center; font-size: 8px; line-height: 1.2; background: #fff; }
-  .tbl-pelaksanaan td { border: 1px solid #000; padding: 3px 3px; vertical-align: top; font-size: 8px; }
-
+  .tbl-pelaksanaan { width: 100%; border-collapse: collapse; font-size: 7.5px; }
+  .tbl-pelaksanaan th { border: 1px solid #000; padding: 2px 3px; vertical-align: middle; text-align: center; font-size: 7.5px; line-height: 1.15; background: #fff; }
+  .tbl-pelaksanaan td { border: 1px solid #000; padding: 2px 3px; vertical-align: top; font-size: 7.5px; }
 
   /* Page break */
   .page-break { page-break-after: always; }
@@ -62,26 +65,22 @@
   /* Signature */
   .ttd-area { text-align: center; padding: 3px; font-size: 8px; }
 
-  @media print {
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  }
-
 {if: empty($is_mpdf)}
 @media screen {
     body { background-color: #f4f6f9 !important; padding: 15px 0 !important; }
     .container, .page, .main-box, .main-container { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; margin: 0 auto 20px auto !important; padding: 8mm 10mm !important; }
 }
-{/if}
 .no-print-toolbar { width: 100%; max-width: 195mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
 .btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-decoration: none; display: inline-block; }
 .btn-print { background: #27ae60; color: #fff; }
 .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
 .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
 @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: transparent !important; padding: 0 !important; }
     .no-print-toolbar { display: none !important; }
-    body { background: transparent !important; padding: 0 !important; }
     .container, .page, .main-box, .main-container { box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
 }
+{/if}
 
 </style>
 </head>
@@ -195,7 +194,11 @@
       </td>
       <td>
         TTD: <br>
+        {if: !empty($qr_perawat)}
+        <img src="{$qr_perawat}" alt="QR TTE Perawat" style="width:36px; height:36px; display:block; margin:2px auto;">
+        {else}
         <br><br>
+        {/if}
         <span style="font-style:italic;">({?=isset_or($data['nip_perawat'])?})</span>
       </td>
       <td>
@@ -299,19 +302,27 @@
           3. Mengerti, Mengulang, Mendemonstrasikan{?= $eva == 'Mengerti, Mengulang, Mendemonstrasikan' ? ' <b>(✓)</b>' : '' ?}<br>
           <span style="color:red;text-decoration:line-through;">4. Re-<span style="font-style:italic;">edukasi</span></span>{?= $eva == 'Re-edukasi' ? ' <b>(✓)</b>' : '' ?}
         </td>
-        <td>
+        <td style="text-align:center;">
+          {if: !empty($value.qr_pemberi)}
+          <img src="{$value.qr_pemberi}" alt="QR TTE Pemberi" style="width:32px; height:32px; display:block; margin:1px auto;">
+          {else}
           <br><br><br>
+          {/if}
           {?=isset_or($value.nama_ttd_pemberi)?}
         </td>
-        <td>
+        <td style="text-align:center;">
+          {if: !empty($value.ttd_penerima_img) && strpos($value.ttd_penerima_img, 'data:image') === 0}
+          <img src="{$value.ttd_penerima_img}" alt="TTD Penerima" style="max-height:32px; max-width:75px; display:block; margin:1px auto;">
+          {else}
           <br><br><br>
+          {/if}
           {?=isset_or($value.nama_ttd_penerima)?}
         </td>
       </tr>
       {/loop}
       <?php // Tambah baris kosong jika detail kurang dari 3 ?>
       <?php for ($i = $shown; $i < 3; $i++): ?>
-      <tr style="height: 70px;">
+      <tr style="height: 55px;">
         <td></td>
         <td></td>
         <td></td>
@@ -333,7 +344,7 @@
   <table class="table-no-border" style="width:100%; margin-top: 2px;">
     <tr>
       <td style="font-size: 8px;">RSGWEd-Rev/02/2023</td>
-      <td style="text-align: right; font-size: 8px;">RM.RJ &ndash; 10 Hal 1 - 2</td>
+      <td style="text-align: right; font-size: 8px;">{if: !empty($is_ugd)}RM.GD &ndash; 12{else}RM.RJ &ndash; 10{/if} Hal 1 - 2</td>
     </tr>
   </table>
 </div>
@@ -410,19 +421,27 @@
           3. Mengerti, Mengulang, Mendemonstrasikan{?= $eva2 == 'Mengerti, Mengulang, Mendemonstrasikan' ? ' <b>(✓)</b>' : '' ?}<br>
           <span style="color:red;text-decoration:line-through;">4. Re-<span style="font-style:italic;">edukasi</span></span>{?= $eva2 == 'Re-edukasi' ? ' <b>(✓)</b>' : '' ?}
         </td>
-        <td>
+        <td style="text-align:center;">
+          {if: !empty($value.qr_pemberi)}
+          <img src="{$value.qr_pemberi}" alt="QR TTE Pemberi" style="width:32px; height:32px; display:block; margin:1px auto;">
+          {else}
           <br><br><br>
+          {/if}
           {?=isset_or($value.nama_ttd_pemberi)?}
         </td>
-        <td>
+        <td style="text-align:center;">
+          {if: !empty($value.ttd_penerima_img) && strpos($value.ttd_penerima_img, 'data:image') === 0}
+          <img src="{$value.ttd_penerima_img}" alt="TTD Penerima" style="max-height:32px; max-width:75px; display:block; margin:1px auto;">
+          {else}
           <br><br><br>
+          {/if}
           {?=isset_or($value.nama_ttd_penerima)?}
         </td>
       </tr>
       {/loop}
       <?php // Tambah baris kosong sampai 6 baris di hal 2 ?>
       <?php for ($i = $shown2; $i < 6; $i++): ?>
-      <tr style="height: 70px;">
+      <tr style="height: 55px;">
         <td></td>
         <td></td>
         <td></td>
@@ -444,13 +463,9 @@
   <table class="table-no-border" style="width:100%; margin-top: 2px;">
     <tr>
       <td style="font-size: 8px;">RSGMEd-Rev/02/ 2023</td>
-      <td style="text-align: right; font-size: 8px;">RM.RJ &ndash; 10 Hal 2 - 2</td>
+      <td style="text-align: right; font-size: 8px;">{if: !empty($is_ugd)}RM.GD &ndash; 12{else}RM.RJ &ndash; 10{/if} Hal 2 - 2</td>
     </tr>
   </table>
 </div>
-
-<script>
-window.onload = function() { window.print(); }
-</script>
 </body>
 </html>

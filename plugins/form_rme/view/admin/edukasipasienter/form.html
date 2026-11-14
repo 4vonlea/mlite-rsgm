@@ -15,7 +15,7 @@
               <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
               <span>Data Pasien</span>
             </h4>
-            <span class="badge" style="background-color: #f0fdf4; color: #166534; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #bbf7d0;">RM.RJ-10</span>
+            <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
           </div>
 
           <div class="rsgm-reg-body">
@@ -102,6 +102,36 @@
               </div>
             </div>
 
+            <!-- Verifikasi TTE Perawat Pengkaji -->
+            <div class="form-group" style="margin-bottom: 12px; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
+              <label class="rsgm-compact-label"><i class="fa fa-lock text-primary"></i> TTE Perawat Pengkaji</label>
+              <div id="sign_container_edukasi_pengkaji" style="border: 1px solid #bfdbfe; border-radius: 6px; background: #fafafa; min-height: 76px; display: flex; align-items: center; justify-content: center; padding: 6px; margin-bottom: 6px; text-align: center;">
+                {if: !empty($tte_perawat.signature_hash)}
+                  <div class="rsgm-tte-verified-card">
+                    {if: !empty($tte_perawat.qr_data_uri)}
+                      <img src="{$tte_perawat.qr_data_uri}" alt="QR TTE" style="height:40px; width:40px; display:block; margin:0 auto 2px;">
+                    {/if}
+                    <div style="color: #16a34a; font-weight: 700; font-size: 11px;"><i class="fa fa-check-circle"></i> Terverifikasi TTE</div>
+                    <div style="font-weight: 700; font-size: 11px; color: #0f172a;">{$tte_perawat.signer_name}</div>
+                    <div style="font-size: 9px; color: #15803d; font-family: monospace;">{?=substr($tte_perawat['signature_hash'], 0, 14)?}...</div>
+                  </div>
+                {else}
+                  <span style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum TTE</span>
+                {/if}
+              </div>
+              <input type="hidden" name="tte_perawat" id="input_tte_edukasi_pengkaji" value="{if: !empty($tte_perawat.signature_hash)}{$tte_perawat.signature_hash}{/if}">
+              <button type="button" class="btn btn-primary btn-xs btn-block btn-tte-rme" id="btn_tte_edukasi_pengkaji"
+                data-ref_type="edukasi_pengkaji"
+                data-ref_id="{$data.no_rawat}"
+                data-signer_name="{?=isset_or($data['nama_perawat'])?}"
+                data-signer_role="Perawat Pengkaji"
+                data-target_input="input_tte_edukasi_pengkaji"
+                data-container_id="sign_container_edukasi_pengkaji"
+                style="border-radius: 6px; font-weight: 600;">
+                <i class="fa fa-lock"></i> {if: !empty($tte_perawat.signature_hash)}Verifikasi Ulang TTE{else}Tanda Tangani (TTE){/if}
+              </button>
+            </div>
+
             <!-- Tombol Demo Data -->
             <button type="button" id="btn_demo" class="btn btn-warning btn-sm btn-block" style="border-radius: 6px; font-weight: 600; margin-top: 5px;" title="Isi form dengan contoh data lengkap untuk uji coba klinis">
               <i class="fa fa-magic"></i> Isi Contoh Data
@@ -121,7 +151,8 @@
               <span>Edukasi Pasien dan Keluarga Terintegrasi</span>
             </h4>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #f0fdf4; color: #166534; font-weight: 700;">Pelayanan RME RSGM</span>
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">{if: !empty($is_ugd)}RM.GD-12{else}RM.RJ-10{/if}</span>
+              <span class="rsgm-reg-badge-hint hidden-xs">Pelayanan RME RSGM</span>
             </div>
           </div>
 
@@ -313,11 +344,19 @@
                       </td>
                       <td style="vertical-align: middle;" class="td-pemberi">
                         <span class="view-pemberi">{?=isset_or($value.nama_ttd_pemberi, '-')?}</span>
+                        <div class="view-pemberi-tte" style="margin-top: 2px;">
+                          {if: !empty($value.tte_pemberi)}<span class="label label-success" style="font-size: 9px;"><i class="fa fa-lock"></i> TTE Verified</span>{/if}
+                        </div>
                         <input type="hidden" name="detail_nama_ttd_pemberi[]" class="in-pemberi" value="{?=isset_or($value.nama_ttd_pemberi)?}">
+                        <input type="hidden" name="detail_tte_pemberi[]" class="in-tte-pemberi" value="{?=isset_or($value.tte_pemberi)?}">
                       </td>
                       <td style="vertical-align: middle;" class="td-penerima">
                         <span class="view-penerima">{?=isset_or($value.nama_ttd_penerima, '-')?}</span>
+                        <div class="view-penerima-img" style="margin-top: 2px;">
+                          {if: !empty($value.ttd_penerima_img)}<img src="{$value.ttd_penerima_img}" alt="TTD" style="max-height: 26px; max-width: 70px; border: 1px solid #cbd5e1; border-radius: 3px; background: #fff;">{/if}
+                        </div>
                         <input type="hidden" name="detail_nama_ttd_penerima[]" class="in-penerima" value="{?=isset_or($value.nama_ttd_penerima)?}">
+                        <input type="hidden" name="detail_ttd_penerima_img[]" class="in-ttd-penerima-img" value="{?=isset_or($value.ttd_penerima_img)?}">
                       </td>
                       <td style="text-align: center; vertical-align: middle;">
                         <button type="button" class="btn btn-xs btn-default btn-edit-row" title="Edit Baris" style="border-radius: 4px; padding: 3px 6px;">
@@ -365,7 +404,7 @@
 <!-- ============================================================
      MODAL DIALOG: INPUT PELAKSANAAN EDUKASI PASIEN
      ============================================================ -->
-<div class="modal fade rsgm-modal" id="modalPelaksanaanEdukasi" tabindex="-1" role="dialog" aria-labelledby="modalEdukasiLabel">
+<div class="modal fade rsgm-modal" id="modalPelaksanaanEdukasi" role="dialog" aria-labelledby="modalEdukasiLabel">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -435,10 +474,44 @@
             <div class="col-md-6 form-group" style="margin-bottom: 5px;">
               <label class="rsgm-compact-label" for="m_pemberi"><i class="fa fa-user-md text-muted"></i> Edukator (Nama Pemberi Edukasi)</label>
               <input type="text" id="m_pemberi" class="form-control" placeholder="Nama edukator / dokter / perawat">
+              <div style="margin-top: 8px;">
+                <div id="sign_container_modal_pemberi" style="border: 1px solid #bfdbfe; border-radius: 6px; background: #fafafa; min-height: 54px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-bottom: 5px; text-align: center;">
+                  <span style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum TTE Edukator</span>
+                </div>
+                <input type="hidden" id="modal_tte_pemberi_input" value="">
+                <button type="button" class="btn btn-primary btn-xs btn-block btn-tte-rme" id="btn_tte_modal_pemberi"
+                  data-ref_type="edukasi_pemberi"
+                  data-ref_id="{$data.no_rawat}"
+                  data-signer_name=""
+                  data-signer_role="Pemberi Edukasi"
+                  data-target_input="modal_tte_pemberi_input"
+                  data-container_id="sign_container_modal_pemberi"
+                  style="border-radius: 6px; font-weight: 600;">
+                  <i class="fa fa-lock"></i> Tanda Tangani (TTE Edukator)
+                </button>
+              </div>
             </div>
             <div class="col-md-6 form-group" style="margin-bottom: 5px;">
               <label class="rsgm-compact-label" for="m_penerima"><i class="fa fa-user text-muted"></i> Sasaran (Nama Penerima Edukasi)</label>
               <input type="text" id="m_penerima" class="form-control" placeholder="Nama pasien / keluarga penerima">
+              <div style="margin-top: 8px;">
+                <div id="preview_box_modal_penerima" style="border: 1px dashed #cbd5e1; border-radius: 6px; background: #fafafa; min-height: 54px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-bottom: 5px; text-align: center;">
+                  <img id="img_preview_modal_penerima" src="" alt="TTD Penerima" style="display:none; max-height: 46px; max-width: 100%;">
+                  <span id="status_modal_penerima" style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum TTD Digital</span>
+                </div>
+                <input type="hidden" id="modal_ttd_penerima_input" value="">
+                <button type="button" class="btn btn-default btn-xs btn-block btn-buka-ttd-pasien" id="btn_ttd_modal_penerima"
+                  data-target-input="modal_ttd_penerima_input"
+                  data-preview-box="preview_box_modal_penerima"
+                  data-preview-img="img_preview_modal_penerima"
+                  data-status-text="status_modal_penerima"
+                  data-doc-title="Lembar Edukasi Pasien Terintegrasi"
+                  data-doc-code="{if: !empty($is_ugd)}RM.GD-12{else}RM.RJ-10{/if}"
+                  data-signer-title="Penerima Edukasi"
+                  style="border-radius: 6px; font-weight: 600;">
+                  <i class="fa fa-pencil"></i> TTD Layar Sentuh Penerima
+                </button>
+              </div>
             </div>
           </div>
         </form>
@@ -529,7 +602,46 @@ $(document).ready(function() {
         return isoStr;
     }
 
+    function renderEdukasiTteBox(containerId, hash, signerName, emptyLabel) {
+        var $c = $('#' + containerId).empty();
+        if (hash) {
+            var $card = $('<div>').addClass('rsgm-tte-verified-card');
+            $card.append($('<div>').css({color: '#16a34a', 'font-weight': 700, 'font-size': '11px'}).append($('<i>').addClass('fa fa-check-circle'), ' Terverifikasi TTE'));
+            if (signerName) {
+                $card.append($('<div>').css({'font-weight': 700, 'font-size': '11px', color: '#0f172a'}).text(signerName));
+            }
+            $card.append($('<div>').css({'font-size': '9px', color: '#15803d', 'font-family': 'monospace'}).text(String(hash).substring(0, 14) + '...'));
+            $c.append($card);
+        } else {
+            $c.append($('<span>').css({color: '#94a3b8', 'font-size': '11px', 'font-style': 'italic'}).text(emptyLabel || 'Belum TTE'));
+        }
+    }
+
+    function renderModalPenerimaImg(dataUrl) {
+        var $img = $('#img_preview_modal_penerima');
+        var $st = $('#status_modal_penerima');
+        if (dataUrl && dataUrl.indexOf('data:image') === 0) {
+            $img.attr('src', dataUrl).show();
+            $st.hide();
+        } else {
+            $img.attr('src', '').hide();
+            $st.text('Belum TTD Digital').show();
+        }
+    }
+
+    $('#nama_perawat').on('input change', function() {
+        $('#btn_tte_edukasi_pengkaji').attr('data-signer_name', $(this).val() || '');
+    });
+    $('#m_pemberi').on('input change', function() {
+        $('#btn_tte_modal_pemberi').attr('data-signer_name', $(this).val() || '');
+    });
+    $('#m_penerima').on('input change', function() {
+        $('#btn_ttd_modal_penerima').attr('data-signer-title', $(this).val() || 'Penerima Edukasi');
+    });
+
+    // Helper Bangun Baris Detail Tabel (DOM-safe)
     function buildRowHtml(data, num) {
+        data = data || {};
         var tgl = data.tanggal_jam || new Date().toISOString().slice(0, 16);
         var isi = data.isi_kebutuhan || '';
         var pra = data.kemampuan_pra || 'Perlu diulang';
@@ -537,53 +649,87 @@ $(document).ready(function() {
         var met = data.metode || 'Diskusi';
         var eva = data.evaluasi || 'Mengerti';
         var pem = data.nama_ttd_pemberi || $('#nama_perawat').val() || '';
+        var ttePem = data.tte_pemberi || '';
         var pen = data.nama_ttd_penerima || $('#nama_pasien').val() || '';
+        var ttdPenImg = data.ttd_penerima_img || '';
 
-        var html = '<tr class="detail-row">' +
-            '<td style="text-align: center; vertical-align: middle;" class="row-num">' + (num || 1) + '</td>' +
-            '<td style="vertical-align: middle;" class="td-tgl">' +
-                '<span class="view-tgl">' + formatDisplayDate(tgl) + '</span>' +
-                '<input type="hidden" name="detail_tanggal_jam[]" class="in-tgl" value="' + tgl + '">' +
-            '</td>' +
-            '<td style="vertical-align: middle;" class="td-isi">' +
-                '<div class="view-isi" style="font-weight: 500;">' + $('<div>').text(isi).html() + '</div>' +
-                '<input type="hidden" name="detail_isi_kebutuhan[]" class="in-isi" value="' + $('<div>').text(isi).html() + '">' +
-            '</td>' +
-            '<td style="text-align: center; vertical-align: middle;" class="td-pra">' +
-                '<span class="badge view-pra" style="background: #f1f5f9; color: #334155; font-size: 11px; border: 1px solid #cbd5e1;">' + pra + '</span>' +
-                '<input type="hidden" name="detail_kemampuan_pra[]" class="in-pra" value="' + pra + '">' +
-            '</td>' +
-            '<td style="text-align: center; vertical-align: middle;" class="td-sasaran">' +
-                '<span class="view-sasaran">' + sas + '</span>' +
-                '<input type="hidden" name="detail_sasaran[]" class="in-sasaran" value="' + sas + '">' +
-            '</td>' +
-            '<td style="text-align: center; vertical-align: middle;" class="td-metode">' +
-                '<span class="view-metode">' + met + '</span>' +
-                '<input type="hidden" name="detail_metode[]" class="in-metode" value="' + met + '">' +
-            '</td>' +
-            '<td style="text-align: center; vertical-align: middle;" class="td-evaluasi">' +
-                '<span class="badge view-evaluasi" style="background: #f0fdf4; color: #166534; font-size: 11px; border: 1px solid #bbf7d0;">' + eva + '</span>' +
-                '<input type="hidden" name="detail_evaluasi[]" class="in-evaluasi" value="' + eva + '">' +
-            '</td>' +
-            '<td style="vertical-align: middle;" class="td-pemberi">' +
-                '<span class="view-pemberi">' + pem + '</span>' +
-                '<input type="hidden" name="detail_nama_ttd_pemberi[]" class="in-pemberi" value="' + pem + '">' +
-            '</td>' +
-            '<td style="vertical-align: middle;" class="td-penerima">' +
-                '<span class="view-penerima">' + pen + '</span>' +
-                '<input type="hidden" name="detail_nama_ttd_penerima[]" class="in-penerima" value="' + pen + '">' +
-            '</td>' +
-            '<td style="text-align: center; vertical-align: middle;">' +
-                '<button type="button" class="btn btn-xs btn-default btn-edit-row" title="Edit Baris" style="border-radius: 4px; padding: 3px 6px; margin-right: 2px;">' +
-                    '<i class="fa fa-pencil text-primary"></i>' +
-                '</button>' +
-                '<button type="button" class="btn btn-xs btn-danger btn-hapus-row" title="Hapus Baris" style="border-radius: 4px; padding: 3px 6px;">' +
-                    '<i class="fa fa-trash"></i>' +
-                '</button>' +
-            '</td>' +
-        '</tr>';
+        var $tr = $('<tr>').addClass('detail-row');
+        $tr.append($('<td>').css({'text-align': 'center', 'vertical-align': 'middle'}).addClass('row-num').text(num || 1));
 
-        return html;
+        $tr.append(
+            $('<td>').css('vertical-align', 'middle').addClass('td-tgl').append(
+                $('<span>').addClass('view-tgl').text(formatDisplayDate(tgl)),
+                $('<input>', {type: 'hidden', name: 'detail_tanggal_jam[]'}).addClass('in-tgl').val(tgl)
+            )
+        );
+
+        $tr.append(
+            $('<td>').css('vertical-align', 'middle').addClass('td-isi').append(
+                $('<div>').addClass('view-isi').css('font-weight', 500).text(isi),
+                $('<input>', {type: 'hidden', name: 'detail_isi_kebutuhan[]'}).addClass('in-isi').val(isi)
+            )
+        );
+
+        $tr.append(
+            $('<td>').css({'text-align': 'center', 'vertical-align': 'middle'}).addClass('td-pra').append(
+                $('<span>').addClass('badge view-pra').css({background: '#f1f5f9', color: '#334155', 'font-size': '11px', border: '1px solid #cbd5e1'}).text(pra),
+                $('<input>', {type: 'hidden', name: 'detail_kemampuan_pra[]'}).addClass('in-pra').val(pra)
+            )
+        );
+
+        $tr.append(
+            $('<td>').css({'text-align': 'center', 'vertical-align': 'middle'}).addClass('td-sasaran').append(
+                $('<span>').addClass('view-sasaran').text(sas),
+                $('<input>', {type: 'hidden', name: 'detail_sasaran[]'}).addClass('in-sasaran').val(sas)
+            )
+        );
+
+        $tr.append(
+            $('<td>').css({'text-align': 'center', 'vertical-align': 'middle'}).addClass('td-metode').append(
+                $('<span>').addClass('view-metode').text(met),
+                $('<input>', {type: 'hidden', name: 'detail_metode[]'}).addClass('in-metode').val(met)
+            )
+        );
+
+        $tr.append(
+            $('<td>').css({'text-align': 'center', 'vertical-align': 'middle'}).addClass('td-evaluasi').append(
+                $('<span>').addClass('badge view-evaluasi').css({background: '#f0fdf4', color: '#166534', 'font-size': '11px', border: '1px solid #bbf7d0'}).text(eva),
+                $('<input>', {type: 'hidden', name: 'detail_evaluasi[]'}).addClass('in-evaluasi').val(eva)
+            )
+        );
+
+        var $tdPem = $('<td>').css('vertical-align', 'middle').addClass('td-pemberi').append(
+            $('<span>').addClass('view-pemberi').text(pem || '-'),
+            $('<input>', {type: 'hidden', name: 'detail_nama_ttd_pemberi[]'}).addClass('in-pemberi').val(pem),
+            $('<input>', {type: 'hidden', name: 'detail_tte_pemberi[]'}).addClass('in-tte-pemberi').val(ttePem)
+        );
+        var $tteBadgeWrap = $('<div>').addClass('view-pemberi-tte').css('margin-top', '2px');
+        if (ttePem) {
+            $tteBadgeWrap.append($('<span>').addClass('label label-success').css('font-size', '9px').append($('<i>').addClass('fa fa-lock'), ' TTE Verified'));
+        }
+        $tdPem.append($tteBadgeWrap);
+        $tr.append($tdPem);
+
+        var $tdPen = $('<td>').css('vertical-align', 'middle').addClass('td-penerima').append(
+            $('<span>').addClass('view-penerima').text(pen || '-'),
+            $('<input>', {type: 'hidden', name: 'detail_nama_ttd_penerima[]'}).addClass('in-penerima').val(pen),
+            $('<input>', {type: 'hidden', name: 'detail_ttd_penerima_img[]'}).addClass('in-ttd-penerima-img').val(ttdPenImg)
+        );
+        var $penImgWrap = $('<div>').addClass('view-penerima-img').css('margin-top', '2px');
+        if (ttdPenImg && ttdPenImg.indexOf('data:image') === 0) {
+            $penImgWrap.append($('<img>').attr({src: ttdPenImg, alt: 'TTD'}).css({'max-height': '26px', 'max-width': '70px', border: '1px solid #cbd5e1', 'border-radius': '3px', background: '#fff'}));
+        }
+        $tdPen.append($penImgWrap);
+        $tr.append($tdPen);
+
+        var $tdAct = $('<td>').css({'text-align': 'center', 'vertical-align': 'middle'});
+        $tdAct.append(
+            $('<button>', {type: 'button', title: 'Edit Baris'}).addClass('btn btn-xs btn-default btn-edit-row').css({'border-radius': '4px', padding: '3px 6px', 'margin-right': '2px'}).append($('<i>').addClass('fa fa-pencil text-primary')),
+            $('<button>', {type: 'button', title: 'Hapus Baris'}).addClass('btn btn-xs btn-danger btn-hapus-row').css({'border-radius': '4px', padding: '3px 6px'}).append($('<i>').addClass('fa fa-trash'))
+        );
+        $tr.append($tdAct);
+
+        return $tr;
     }
 
     // Buka Modal Tambah
@@ -597,8 +743,23 @@ $(document).ready(function() {
         $('#m_sasaran').val('Pasien');
         $('#m_metode').val('Diskusi');
         $('#m_evaluasi').val('Mengerti');
-        $('#m_pemberi').val($('#nama_perawat').val() || '');
-        $('#m_penerima').val($('#nama_pasien').val() || '');
+        var defPem = $('#nama_perawat').val() || '';
+        var defPen = $('#nama_pasien').val() || '';
+        $('#m_pemberi').val(defPem);
+        $('#m_penerima').val(defPen);
+        $('#modal_tte_pemberi_input').val('');
+        $('#modal_ttd_penerima_input').val('');
+        $('#btn_tte_modal_pemberi').attr({
+            'data-ref_id': $('#no_rawat').val() || '',
+            'data-signer_name': defPem
+        });
+        $('#btn_ttd_modal_penerima').attr({
+            'data-patient-name': defPen || 'Pasien RSGM',
+            'data-patient-norm': $('#no_rkm_medis').val() || '-',
+            'data-signer-title': defPen || 'Penerima Edukasi'
+        });
+        renderEdukasiTteBox('sign_container_modal_pemberi', '', defPem, 'Belum TTE Edukator');
+        renderModalPenerimaImg('');
         $('#modalPelaksanaanEdukasi').modal('show');
     });
 
@@ -616,8 +777,25 @@ $(document).ready(function() {
         $('#m_sasaran').val($tr.find('.in-sasaran').val());
         $('#m_metode').val($tr.find('.in-metode').val());
         $('#m_evaluasi').val($tr.find('.in-evaluasi').val());
-        $('#m_pemberi').val($tr.find('.in-pemberi').val());
-        $('#m_penerima').val($tr.find('.in-penerima').val());
+        var pemVal = $tr.find('.in-pemberi').val() || '';
+        var penVal = $tr.find('.in-penerima').val() || '';
+        var tteVal = $tr.find('.in-tte-pemberi').val() || '';
+        var ttdImgVal = $tr.find('.in-ttd-penerima-img').val() || '';
+        $('#m_pemberi').val(pemVal);
+        $('#m_penerima').val(penVal);
+        $('#modal_tte_pemberi_input').val(tteVal);
+        $('#modal_ttd_penerima_input').val(ttdImgVal);
+        $('#btn_tte_modal_pemberi').attr({
+            'data-ref_id': $('#no_rawat').val() || '',
+            'data-signer_name': pemVal
+        });
+        $('#btn_ttd_modal_penerima').attr({
+            'data-patient-name': $('#nama_pasien').val() || penVal || 'Pasien RSGM',
+            'data-patient-norm': $('#no_rkm_medis').val() || '-',
+            'data-signer-title': penVal || 'Penerima Edukasi'
+        });
+        renderEdukasiTteBox('sign_container_modal_pemberi', tteVal, pemVal, 'Belum TTE Edukator');
+        renderModalPenerimaImg(ttdImgVal);
 
         $('#modalPelaksanaanEdukasi').modal('show');
     });
@@ -647,7 +825,9 @@ $(document).ready(function() {
             metode: $('#m_metode').val(),
             evaluasi: $('#m_evaluasi').val(),
             nama_ttd_pemberi: $('#m_pemberi').val(),
-            nama_ttd_penerima: $('#m_penerima').val()
+            tte_pemberi: $('#modal_tte_pemberi_input').val() || '',
+            nama_ttd_penerima: $('#m_penerima').val(),
+            ttd_penerima_img: $('#modal_ttd_penerima_input').val() || ''
         };
 
         var editIdx = parseInt($('#modal_row_index').val());

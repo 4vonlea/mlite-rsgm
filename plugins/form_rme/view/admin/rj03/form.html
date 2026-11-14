@@ -1,0 +1,1077 @@
+<style>
+  .rsgm-reg-form * { box-sizing: border-box; }
+  .rsgm-soap-flex-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -10px;
+    margin-right: -10px;
+  }
+  .rsgm-soap-flex-row > [class*="col-"] {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .rsgm-reg-shell {
+    margin-bottom: 16px;
+  }
+  .rsgm-patient-side-shell {
+    position: sticky;
+    top: 15px;
+    z-index: 10;
+  }
+  .rsgm-compact-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .rsgm-sub-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+  .rsgm-sub-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 7px;
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+  .rsgm-sub-section-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .rsgm-inline-checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: center;
+  }
+  .rsgm-inline-checks label {
+    margin: 0;
+    font-weight: 600;
+    font-size: 12px;
+    color: #1e293b;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+  }
+  .rsgm-card-white {
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .rsgm-reg-footer {
+    background: #f8fafc;
+    border-top: 1px solid #cbd5e1;
+    padding: 12px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .rj03-menular-box {
+    border: 1px solid #fed7aa;
+    background: #fffbeb;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-top: 8px;
+  }
+  .rj03-nutrisi-highlight {
+    border: 2px solid #0d9488 !important;
+    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.12);
+  }
+  .rj03-status-pill {
+    display: none;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-top: 6px;
+  }
+</style>
+
+<div id="form_rj03_wrapper" class="rsgm-reg-form clearfix" style="margin-bottom: 25px;">
+  <form action="{?=url([ADMIN, 'form_rme', 'rj03save'])?}" method="post" id="form-rj03">
+    <input type="hidden" name="id" value="{$data.id}">
+    <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{$data.no_rkm_medis}">
+
+    <div class="rsgm-soap-flex-row clearfix">
+
+      <!-- ============================================================
+           SIDEBAR KIRI (3): IDENTITAS PASIEN, PENGISIAN & 3 TTE PENGESAHAN
+           ============================================================ -->
+      <div class="col-md-3">
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Data Pasien</span>
+            </h4>
+            <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
+          </div>
+
+          <div class="rsgm-reg-body">
+            <!-- No. Rawat / Pencarian -->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="no_rawat_input" class="rsgm-compact-label"><i class="fa fa-hashtag text-muted"></i> No. Rawat / No. RM <span class="text-danger">*</span></label>
+              {if: !empty($data.no_rawat)}
+              <input type="text" name="no_rawat" id="no_rawat_input" class="form-control" value="{$data.no_rawat}" readonly style="background-color: #f8fafc; font-weight: 700; color: #0f766e; border-radius: 6px; height: 34px;">
+              {else}
+              <div class="input-group">
+                <input type="text" name="no_rawat" id="no_rawat_input" class="form-control" value="{$data.no_rawat}" placeholder="No. Rawat atau No. RM" required autocomplete="off" style="font-weight: 700; color: #0f766e;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-primary" id="btn_cari_pasien_rj03" title="Cari & Muat Data Pasien" style="border-radius: 0 6px 6px 0; height: 34px;">
+                    <i class="fa fa-search"></i>
+                  </button>
+                </span>
+              </div>
+              <div id="rj03_search_status" class="rj03-status-pill"></div>
+              {/if}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="display_no_rkm_medis" class="rsgm-compact-label"><i class="fa fa-address-card-o text-muted"></i> No. Rekam Medis (6 Digit)</label>
+              <input type="text" id="display_no_rkm_medis" class="form-control" value="{$data.no_rkm_medis}" placeholder="Nomor RM" readonly style="background-color: #f8fafc; font-weight: 700;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label for="nama_pasien" class="rsgm-compact-label"><i class="fa fa-user-o text-muted"></i> Nama Pasien <span class="text-danger">*</span></label>
+              <input type="text" name="nama_pasien" id="nama_pasien" class="form-control" value="{$data.nama_pasien}" placeholder="Nama lengkap pasien" required readonly style="background-color: #f8fafc; font-weight: 700;">
+            </div>
+
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-5" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label"><i class="fa fa-venus-mars text-muted"></i> L / P</label>
+                  <input type="text" id="display_jk" class="form-control" value="{if: $data.jk == 'L' || $data.jk == 'Laki-Laki'}Laki-Laki{elseif: $data.jk == 'P' || $data.jk == 'Perempuan'}Perempuan{else}-{/if}" readonly style="background-color: #f8fafc; font-weight: 600; font-size: 11px;">
+                  <input type="hidden" name="jk" id="jk_input" value="{$data.jk}">
+                </div>
+              </div>
+              <div class="col-xs-7" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="tgl_lahir" class="rsgm-compact-label"><i class="fa fa-calendar-check-o text-muted"></i> Tgl. Lahir</label>
+                  <input type="text" name="tgl_lahir" id="tgl_lahir" class="form-control" value="{$data.tgl_lahir}" readonly style="background-color: #f8fafc; font-weight: 600; font-size: 11px;">
+                </div>
+              </div>
+            </div>
+
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-7" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="tanggal_kunjungan" class="rsgm-compact-label"><i class="fa fa-calendar text-muted"></i> Tgl. Kunjungan</label>
+                  <input type="date" name="tanggal_kunjungan" id="tanggal_kunjungan" class="form-control" value="{if: !empty($data.tanggal_kunjungan)}{$data.tanggal_kunjungan}{else}{?=date('Y-m-d')?}{/if}" style="font-size: 11px; padding: 6px 4px;">
+                </div>
+              </div>
+              <div class="col-xs-5" style="padding-left: 4px; padding-right: 4px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label for="pukul_kunjungan" class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Pukul</label>
+                  <input type="text" name="pukul_kunjungan" id="pukul_kunjungan" class="form-control" value="{if: !empty($data.pukul_kunjungan)}{$data.pukul_kunjungan}{else}{?=date('H:i')?}{/if}" placeholder="08:00" style="text-align: center; font-size: 11px;">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="unit_awal" class="rsgm-compact-label"><i class="fa fa-hospital-o text-muted"></i> Instalasi/Unit/Poliklinik Awal</label>
+              <input type="text" name="unit_awal" id="unit_awal" class="form-control input-sm" value="{$data.unit_awal}" placeholder="Contoh: Poliklinik Oral Diagnosa" list="datalist_poliklinik_rj03">
+              <datalist id="datalist_poliklinik_rj03">
+                {loop: $poliklinik}
+                <option value="{$value.nm_poli}"></option>
+                {/loop}
+              </datalist>
+            </div>
+
+            <!-- PETUGAS & PENGESAHAN (3 PENANDATANGAN) -->
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+              <label class="rsgm-compact-label"><i class="fa fa-user-md text-primary"></i> DPJP &amp; TTE DPJP</label>
+              <select name="kd_dpjp" id="kd_dpjp" class="form-control input-sm rj03-signer-select" data-name-target="nm_dpjp" data-btn-target="btn_tte_rj03_dpjp" style="margin-bottom: 6px; font-weight: 600;">
+                <option value="">-- Pilih DPJP --</option>
+                {loop: $dokter}
+                <option value="{$value.kd_dokter}" data-nama="{$value.nm_dokter}" {if: $data.kd_dpjp == $value.kd_dokter}selected{/if}>{$value.nm_dokter}</option>
+                {/loop}
+              </select>
+              <input type="hidden" name="nm_dpjp" id="nm_dpjp" value="{$data.nm_dpjp}">
+              <div id="sign_container_rj03_dpjp" style="border: 1px solid #bfdbfe; border-radius: 6px; background: #fff; min-height: 46px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-bottom: 5px; text-align: center;">
+                {if: !empty($tte_dpjp.qr_data_uri)}
+                  <div>
+                    <img src="{$tte_dpjp.qr_data_uri}" alt="QR TTE DPJP" style="height: 40px; width: 40px; display: block; margin: 0 auto 2px;">
+                    <span class="label label-success" style="font-size: 9px;">{$tte_dpjp.signer_name}</span>
+                  </div>
+                {elseif: !empty($tte_dpjp.hash)}
+                  <span class="label label-success"><i class="fa fa-check-circle"></i> TTE DPJP Terverifikasi</span>
+                {else}
+                  <span style="color: #94a3b8; font-size: 10.5px; font-style: italic;">Belum TTE DPJP</span>
+                {/if}
+              </div>
+              <input type="hidden" name="tte_dpjp" id="input_tte_rj03_dpjp" value="{if: !empty($tte_dpjp.hash)}{$tte_dpjp.hash}{else}{$data.tte_dpjp}{/if}">
+              <button type="button" class="btn btn-primary btn-xs btn-block btn-tte-rme" id="btn_tte_rj03_dpjp"
+                data-ref_type="rj03_dpjp"
+                data-ref_id="{if: !empty($data.id)}{$data.id}{else}{$data.no_rawat}{/if}"
+                data-signer_name="{if: !empty($tte_dpjp.signer_name)}{$tte_dpjp.signer_name}{else}{$data.nm_dpjp}{/if}"
+                data-signer_role="DPJP"
+                data-target_input="input_tte_rj03_dpjp"
+                data-container_id="sign_container_rj03_dpjp">
+                <i class="fa fa-lock"></i> {if: !empty($tte_dpjp.hash)}Verifikasi Ulang TTE DPJP{else}TTE DPJP{/if}
+              </button>
+            </div>
+
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+              <label class="rsgm-compact-label"><i class="fa fa-user-nurse text-info"></i> Perawat/TGM Poliklinik Oral Diagnosa</label>
+              <select name="nip_perawat_od" id="nip_perawat_od" class="form-control input-sm rj03-signer-select" data-name-target="nm_perawat_od" data-btn-target="btn_tte_rj03_perawat_od" style="margin-bottom: 6px; font-weight: 600;">
+                <option value="">-- Pilih Perawat / TGM OD --</option>
+                {loop: $petugas}
+                <option value="{$value.nip}" data-nama="{$value.nama}" {if: $data.nip_perawat_od == $value.nip}selected{/if}>{$value.nama}</option>
+                {/loop}
+              </select>
+              <input type="hidden" name="nm_perawat_od" id="nm_perawat_od" value="{$data.nm_perawat_od}">
+              <div id="sign_container_rj03_perawat_od" style="border: 1px solid #bae6fd; border-radius: 6px; background: #fff; min-height: 46px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-bottom: 5px; text-align: center;">
+                {if: !empty($tte_perawat_od.qr_data_uri)}
+                  <div>
+                    <img src="{$tte_perawat_od.qr_data_uri}" alt="QR TTE Perawat OD" style="height: 40px; width: 40px; display: block; margin: 0 auto 2px;">
+                    <span class="label label-success" style="font-size: 9px;">{$tte_perawat_od.signer_name}</span>
+                  </div>
+                {elseif: !empty($tte_perawat_od.hash)}
+                  <span class="label label-success"><i class="fa fa-check-circle"></i> TTE Perawat OD Terverifikasi</span>
+                {else}
+                  <span style="color: #94a3b8; font-size: 10.5px; font-style: italic;">Belum TTE Perawat/TGM OD</span>
+                {/if}
+              </div>
+              <input type="hidden" name="tte_perawat_od" id="input_tte_rj03_perawat_od" value="{if: !empty($tte_perawat_od.hash)}{$tte_perawat_od.hash}{else}{$data.tte_perawat_od}{/if}">
+              <button type="button" class="btn btn-info btn-xs btn-block btn-tte-rme" id="btn_tte_rj03_perawat_od"
+                data-ref_type="rj03_perawat_od"
+                data-ref_id="{if: !empty($data.id)}{$data.id}{else}{$data.no_rawat}{/if}"
+                data-signer_name="{if: !empty($tte_perawat_od.signer_name)}{$tte_perawat_od.signer_name}{else}{$data.nm_perawat_od}{/if}"
+                data-signer_role="Perawat/Terapis Gigi dan Mulut Poliklinik Oral Diagnosa"
+                data-target_input="input_tte_rj03_perawat_od"
+                data-container_id="sign_container_rj03_perawat_od">
+                <i class="fa fa-lock"></i> {if: !empty($tte_perawat_od.hash)}Verifikasi Ulang TTE OD{else}TTE Perawat/TGM OD{/if}
+              </button>
+            </div>
+
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+              <label class="rsgm-compact-label"><i class="fa fa-user-md text-success"></i> Perawat/Terapis Gigi dan Mulut</label>
+              <select name="nip_perawat" id="nip_perawat" class="form-control input-sm rj03-signer-select" data-name-target="nm_perawat" data-btn-target="btn_tte_rj03_perawat" style="margin-bottom: 6px; font-weight: 600;">
+                <option value="">-- Pilih Perawat / TGM --</option>
+                {loop: $petugas}
+                <option value="{$value.nip}" data-nama="{$value.nama}" {if: $data.nip_perawat == $value.nip}selected{/if}>{$value.nama}</option>
+                {/loop}
+              </select>
+              <input type="hidden" name="nm_perawat" id="nm_perawat" value="{$data.nm_perawat}">
+              <div id="sign_container_rj03_perawat" style="border: 1px solid #bbf7d0; border-radius: 6px; background: #fff; min-height: 46px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-bottom: 5px; text-align: center;">
+                {if: !empty($tte_perawat.qr_data_uri)}
+                  <div>
+                    <img src="{$tte_perawat.qr_data_uri}" alt="QR TTE Perawat" style="height: 40px; width: 40px; display: block; margin: 0 auto 2px;">
+                    <span class="label label-success" style="font-size: 9px;">{$tte_perawat.signer_name}</span>
+                  </div>
+                {elseif: !empty($tte_perawat.hash)}
+                  <span class="label label-success"><i class="fa fa-check-circle"></i> TTE Perawat Terverifikasi</span>
+                {else}
+                  <span style="color: #94a3b8; font-size: 10.5px; font-style: italic;">Belum TTE Perawat/TGM</span>
+                {/if}
+              </div>
+              <input type="hidden" name="tte_perawat" id="input_tte_rj03_perawat" value="{if: !empty($tte_perawat.hash)}{$tte_perawat.hash}{else}{$data.tte_perawat}{/if}">
+              <button type="button" class="btn btn-success btn-xs btn-block btn-tte-rme" id="btn_tte_rj03_perawat"
+                data-ref_type="rj03_perawat"
+                data-ref_id="{if: !empty($data.id)}{$data.id}{else}{$data.no_rawat}{/if}"
+                data-signer_name="{if: !empty($tte_perawat.signer_name)}{$tte_perawat.signer_name}{else}{$data.nm_perawat}{/if}"
+                data-signer_role="Perawat/Terapis Gigi dan Mulut"
+                data-target_input="input_tte_rj03_perawat"
+                data-container_id="sign_container_rj03_perawat">
+                <i class="fa fa-lock"></i> {if: !empty($tte_perawat.hash)}Verifikasi Ulang TTE TGM{else}TTE Perawat/TGM{/if}
+              </button>
+            </div>
+
+            <div class="row" style="margin-left: -4px; margin-right: -4px;">
+              <div class="col-xs-7" style="padding-left: 4px; padding-right: 4px;">
+                <label for="tanggal_ttd" class="rsgm-compact-label">Tgl. Pengesahan</label>
+                <input type="date" name="tanggal_ttd" id="tanggal_ttd" class="form-control input-sm" value="{if: !empty($data.tanggal_ttd)}{$data.tanggal_ttd}{else}{?=date('Y-m-d')?}{/if}" style="font-size: 11px;">
+              </div>
+              <div class="col-xs-5" style="padding-left: 4px; padding-right: 4px;">
+                <label for="pukul_ttd" class="rsgm-compact-label">Pukul WITA</label>
+                <input type="text" name="pukul_ttd" id="pukul_ttd" class="form-control input-sm" value="{if: !empty($data.pukul_ttd)}{$data.pukul_ttd}{else}{?=date('H:i')?}{/if}" placeholder="10:00" style="text-align: center; font-size: 11px;">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           WORKSTATION KANAN (9): HALAMAN 1 & HALAMAN 2 ASESMEN KEPERAWATAN GIGI
+           ============================================================ -->
+      <div class="col-md-9">
+        <div class="rsgm-reg-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-heartbeat"></i></span>
+              <span>ASESMEN KEPERAWATAN / ASUHAN KESEHATAN GIGI DAN MULUT RAWAT JALAN</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">RM.RJ - 03</span>
+              <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-clock-o"></i> Dilengkapi dalam 24 jam</span>
+            </div>
+          </div>
+
+          <div class="rsgm-reg-body">
+
+            <!-- 1. INFORMASI PENDAFTARAN & KATEGORI -->
+            <div class="rsgm-sub-section">
+              <div class="rsgm-sub-section-header">
+                <h5 class="rsgm-sub-section-title"><i class="fa fa-list-alt text-primary"></i> I. Klasifikasi Kunjungan, Rujukan &amp; Cara Masuk</h5>
+                <span class="text-muted" style="font-size: 11px;">Halaman 1</span>
+              </div>
+
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="rsgm-card-white">
+                    <label class="rsgm-compact-label">Jenis Asesmen:</label>
+                    <div class="rsgm-inline-checks">
+                      <label><input type="radio" name="jenis_asesmen" value="Asesmen Awal" {if: $data.jenis_asesmen == 'Asesmen Awal'}checked{/if}> Asesmen Awal</label>
+                      <label><input type="radio" name="jenis_asesmen" value="Asesmen Ulang" {if: $data.jenis_asesmen == 'Asesmen Ulang'}checked{/if}> Asesmen Ulang</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="rsgm-card-white">
+                    <label class="rsgm-compact-label">Jenis Kasus:</label>
+                    <div class="rsgm-inline-checks">
+                      <label><input type="radio" name="jenis_kasus" value="Kasus Gigi dan Mulut" {if: $data.jenis_kasus == 'Kasus Gigi dan Mulut'}checked{/if}> Kasus Gigi &amp; Mulut</label>
+                      <label><input type="radio" name="jenis_kasus" value="Kasus Umum" {if: $data.jenis_kasus == 'Kasus Umum'}checked{/if}> Kasus Umum</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="rsgm-card-white">
+                    <label class="rsgm-compact-label">Kelompok Usia Pasien:</label>
+                    <select name="kategori_pasien" id="kategori_pasien_rj03" class="form-control input-sm" style="font-weight: 600;">
+                      <option value="">-- Pilih Kelompok Usia --</option>
+                      <option value="Pasien Anak (0-<18 tahun)" {if: !empty($flags.kat_anak)}selected{/if}>Pasien Anak (0- &lt;18 tahun)</option>
+                      <option value="Pasien Dewasa (18-65 tahun)" {if: !empty($flags.kat_dewasa)}selected{/if}>Pasien Dewasa (18-65 tahun)</option>
+                      <option value="Pasien Geriatri (>65 tahun)" {if: !empty($flags.kat_geriatri)}selected{/if}>Pasien Geriatri (&gt;65 tahun)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-8">
+                  <div class="rsgm-card-white">
+                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;">
+                      <label class="rsgm-compact-label" style="margin: 0;">Rujukan:</label>
+                      <label style="margin: 0; font-size: 12px;"><input type="radio" name="rujukan" value="Ya" {if: $data.rujukan == 'Ya'}checked{/if}> Ya</label>
+                      <label style="margin: 0; font-size: 12px;"><input type="radio" name="rujukan" value="Tidak" {if: $data.rujukan == 'Tidak'}checked{/if}> Tidak</label>
+                    </div>
+                    <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                      <div class="col-sm-6" style="padding: 0 4px 6px;">
+                        <div class="input-group input-group-sm">
+                          <span class="input-group-addon"><input type="checkbox" name="rujukan_rs" value="Ya" {if: $data.rujukan_rs == 'Ya'}checked{/if}> RS</span>
+                          <input type="text" name="rujukan_rs_ket" class="form-control" value="{$data.rujukan_rs_ket}" placeholder="Nama RS...">
+                        </div>
+                      </div>
+                      <div class="col-sm-6" style="padding: 0 4px 6px;">
+                        <div class="input-group input-group-sm">
+                          <span class="input-group-addon"><input type="checkbox" name="rujukan_puskesmas" value="Ya" {if: $data.rujukan_puskesmas == 'Ya'}checked{/if}> Puskesmas</span>
+                          <input type="text" name="rujukan_puskesmas_ket" class="form-control" value="{$data.rujukan_puskesmas_ket}" placeholder="Nama Puskesmas...">
+                        </div>
+                      </div>
+                      <div class="col-sm-6" style="padding: 0 4px 6px;">
+                        <div class="input-group input-group-sm">
+                          <span class="input-group-addon"><input type="checkbox" name="rujukan_klinik" value="Ya" {if: $data.rujukan_klinik == 'Ya'}checked{/if}> Klinik</span>
+                          <input type="text" name="rujukan_klinik_ket" class="form-control" value="{$data.rujukan_klinik_ket}" placeholder="Nama Klinik...">
+                        </div>
+                      </div>
+                      <div class="col-sm-6" style="padding: 0 4px 6px;">
+                        <div class="input-group input-group-sm">
+                          <span class="input-group-addon"><input type="checkbox" name="rujukan_dokter" value="Ya" {if: $data.rujukan_dokter == 'Ya'}checked{/if}> Dokter</span>
+                          <input type="text" name="rujukan_dokter_ket" class="form-control" value="{$data.rujukan_dokter_ket}" placeholder="Nama Dokter...">
+                        </div>
+                      </div>
+                      <div class="col-sm-12" style="padding: 0 4px;">
+                        <input type="text" name="diagnosis_rujukan" class="form-control input-sm" value="{$data.diagnosis_rujukan}" placeholder="Diagnosis Rujukan...">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="rsgm-card-white">
+                    <label class="rsgm-compact-label">Pembiayaan:</label>
+                    <div class="rsgm-inline-checks" style="margin-bottom: 8px;">
+                      <label><input type="radio" name="pembiayaan" value="Asuransi" {if: $data.pembiayaan == 'Asuransi'}checked{/if}> Asuransi</label>
+                      <label><input type="radio" name="pembiayaan" value="Umum" {if: $data.pembiayaan == 'Umum'}checked{/if}> Umum</label>
+                      <label><input type="radio" name="pembiayaan" value="BPJS" {if: $data.pembiayaan == 'BPJS'}checked{/if}> BPJS</label>
+                    </div>
+                    <label class="rsgm-compact-label" style="border-top: 1px dashed #e2e8f0; padding-top: 6px;">Cara Masuk:</label>
+                    <div class="rsgm-inline-checks" style="margin-bottom: 8px;">
+                      <label><input type="radio" name="cara_masuk" value="Jalan Kaki" {if: $data.cara_masuk == 'Jalan Kaki'}checked{/if}> Jalan Kaki</label>
+                      <label><input type="radio" name="cara_masuk" value="Kursi Roda" {if: $data.cara_masuk == 'Kursi Roda'}checked{/if}> Kursi Roda</label>
+                      <label><input type="radio" name="cara_masuk" value="Brankar" {if: $data.cara_masuk == 'Brankar'}checked{/if}> Brankar</label>
+                      <label><input type="radio" name="cara_masuk" value="Digendong" {if: $data.cara_masuk == 'Digendong'}checked{/if}> Digendong</label>
+                    </div>
+                    <label class="rsgm-compact-label" style="border-top: 1px dashed #e2e8f0; padding-top: 6px;">Sumber Data:</label>
+                    <div class="rsgm-inline-checks">
+                      <label><input type="radio" name="sumber_data" value="Auto Anamnesis" {if: $data.sumber_data == 'Auto Anamnesis'}checked{/if}> Auto Anamnesis</label>
+                      <label><input type="radio" name="sumber_data" value="Allo Anamnesis" {if: $data.sumber_data == 'Allo Anamnesis'}checked{/if}> Allo Anamnesis</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. ANAMNESIS & RIWAYAT PENYAKIT MENULAR -->
+            <div class="rsgm-sub-section">
+              <div class="rsgm-sub-section-header">
+                <h5 class="rsgm-sub-section-title"><i class="fa fa-comments-o text-primary"></i> II. Anamnesis &amp; Riwayat Penyakit Menular</h5>
+                <span class="label label-warning">Lanjutkan khusus jika ada penyakit menular</span>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">KELUHAN UTAMA:</label>
+                  <textarea name="keluhan_utama" id="keluhan_utama" class="form-control" rows="2" placeholder="Keluhan utama pasien...">{$data.keluhan_utama}</textarea>
+                </div>
+                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">RIWAYAT PENYAKIT SEKARANG:</label>
+                  <textarea name="riwayat_penyakit_sekarang" class="form-control" rows="2" placeholder="Riwayat penyakit sekarang...">{$data.riwayat_penyakit_sekarang}</textarea>
+                </div>
+                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">RIWAYAT PENYAKIT DAHULU:</label>
+                  <textarea name="riwayat_penyakit_dahulu" class="form-control" rows="2" placeholder="Riwayat penyakit dahulu...">{$data.riwayat_penyakit_dahulu}</textarea>
+                </div>
+                <div class="col-md-6 form-group" style="margin-bottom: 10px;">
+                  <label class="rsgm-compact-label">RIWAYAT PENYAKIT KELUARGA:</label>
+                  <textarea name="riwayat_penyakit_keluarga" class="form-control" rows="2" placeholder="Riwayat penyakit keluarga...">{$data.riwayat_penyakit_keluarga}</textarea>
+                </div>
+              </div>
+
+              <div class="rsgm-card-white" style="margin-bottom: 0;">
+                <label class="rsgm-compact-label">RIWAYAT PENYAKIT MENULAR: <span class="text-muted" style="font-weight: 400;">(Jika ada lanjutkan dengan Pengkajian Khusus Penyakit Menular)</span></label>
+                <div class="rsgm-inline-checks">
+                  <label><input type="checkbox" class="rj03-menular-trigger" name="rpm_tbc" value="Ya" {if: $data.rpm_tbc == 'Ya'}checked{/if}> TBC</label>
+                  <label><input type="checkbox" class="rj03-menular-trigger" name="rpm_hepatitis" value="Ya" {if: $data.rpm_hepatitis == 'Ya'}checked{/if}> HEPATITIS</label>
+                  <label><input type="checkbox" class="rj03-menular-trigger" name="rpm_hiv" value="Ya" {if: $data.rpm_hiv == 'Ya'}checked{/if}> HIV/AIDS</label>
+                  <label><input type="checkbox" class="rj03-menular-trigger" name="rpm_lainnya" value="Ya" {if: $data.rpm_lainnya == 'Ya'}checked{/if}> Lainnya:</label>
+                  <input type="text" name="rpm_lainnya_ket" class="form-control input-sm" style="width: 240px;" value="{$data.rpm_lainnya_ket}" placeholder="Sebutkan penyakit menular lain...">
+                </div>
+
+                <div id="rj03_khusus_menular_box" class="rj03-menular-box">
+                  <div style="font-size: 12px; font-weight: 700; color: #9a3412; margin-bottom: 8px;">
+                    <i class="fa fa-exclamation-triangle"></i> KHUSUS PENYAKIT MENULAR
+                  </div>
+                  <div class="row" style="margin-bottom: 6px;">
+                    <div class="col-md-12">
+                      <label class="rsgm-compact-label">Sumber Informasi Penyakit ini diperoleh dari:</label>
+                      <div class="rsgm-inline-checks">
+                        <label><input type="checkbox" name="kpm_sumber_dokter" value="Ya" {if: $data.kpm_sumber_dokter == 'Ya'}checked{/if}> Dokter</label>
+                        <label><input type="checkbox" name="kpm_sumber_perawat" value="Ya" {if: $data.kpm_sumber_perawat == 'Ya'}checked{/if}> Perawat</label>
+                        <label><input type="checkbox" name="kpm_sumber_keluarga" value="Ya" {if: $data.kpm_sumber_keluarga == 'Ya'}checked{/if}> Keluarga</label>
+                        <label><input type="checkbox" name="kpm_sumber_lainnya" value="Ya" {if: $data.kpm_sumber_lainnya == 'Ya'}checked{/if}> Lainnya:</label>
+                        <input type="text" name="kpm_sumber_lainnya_ket" class="form-control input-sm" style="width: 200px;" value="{$data.kpm_sumber_lainnya_ket}" placeholder="Sebutkan sumber...">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row" style="margin-bottom: 6px;">
+                    <div class="col-md-6">
+                      <label class="rsgm-compact-label">Menerima Informasi Jangka Waktu Pengobatan:</label>
+                      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <label style="margin: 0; font-size: 12px;"><input type="radio" name="kpm_info_pengobatan" value="Tidak" {if: $data.kpm_info_pengobatan == 'Tidak'}checked{/if}> Tidak</label>
+                        <label style="margin: 0; font-size: 12px;"><input type="radio" name="kpm_info_pengobatan" value="Ya" {if: $data.kpm_info_pengobatan == 'Ya'}checked{/if}> Ya, Minggu/Bulan/Tahun/Lain:</label>
+                        <input type="text" name="kpm_info_pengobatan_ket" class="form-control input-sm" style="flex: 1; min-width: 140px;" value="{$data.kpm_info_pengobatan_ket}" placeholder="Contoh: 6 Bulan...">
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="rsgm-compact-label">Melakukan Pemeriksaan Rutin:</label>
+                      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <label style="margin: 0; font-size: 12px;"><input type="radio" name="kpm_periksa_rutin" value="Tidak" {if: $data.kpm_periksa_rutin == 'Tidak'}checked{/if}> Tidak</label>
+                        <label style="margin: 0; font-size: 12px;"><input type="radio" name="kpm_periksa_rutin" value="Ya" {if: $data.kpm_periksa_rutin == 'Ya'}checked{/if}> Ya di:</label>
+                        <input type="text" name="kpm_periksa_rutin_di" class="form-control input-sm" style="flex: 1; min-width: 140px;" value="{$data.kpm_periksa_rutin_di}" placeholder="Tempat pemeriksaan rutin...">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-7">
+                      <label class="rsgm-compact-label">Cara Penularan:</label>
+                      <div class="rsgm-inline-checks">
+                        <label><input type="checkbox" name="kpm_tular_airborne" value="Ya" {if: $data.kpm_tular_airborne == 'Ya'}checked{/if}> Airborne</label>
+                        <label><input type="checkbox" name="kpm_tular_droplet" value="Ya" {if: $data.kpm_tular_droplet == 'Ya'}checked{/if}> Droplet</label>
+                        <label><input type="checkbox" name="kpm_tular_kontak" value="Ya" {if: $data.kpm_tular_kontak == 'Ya'}checked{/if}> Kontak Langsung</label>
+                        <label><input type="checkbox" name="kpm_tular_cairan" value="Ya" {if: $data.kpm_tular_cairan == 'Ya'}checked{/if}> Cairan Tubuh</label>
+                      </div>
+                    </div>
+                    <div class="col-md-5">
+                      <label class="rsgm-compact-label">Penyakit Penyerta:</label>
+                      <input type="text" name="kpm_penyakit_penyerta" class="form-control input-sm" value="{$data.kpm_penyakit_penyerta}" placeholder="Penyakit penyerta...">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. PEMERIKSAAN FISIK -->
+            <div class="rsgm-sub-section">
+              <div class="rsgm-sub-section-header">
+                <h5 class="rsgm-sub-section-title"><i class="fa fa-stethoscope text-primary"></i> III. Pemeriksaan Fisik</h5>
+                <span class="text-muted" style="font-size: 11px;">Tanda-Tanda Vital &amp; Antropometri</span>
+              </div>
+
+              <div class="row">
+                <div class="col-md-4 form-group" style="margin-bottom: 8px;">
+                  <label class="rsgm-compact-label">Keadaan Umum:</label>
+                  <input type="text" name="keadaan_umum" id="keadaan_umum" class="form-control input-sm" value="{$data.keadaan_umum}" placeholder="Baik / Sedang / Lemah">
+                </div>
+                <div class="col-md-4 form-group" style="margin-bottom: 8px;">
+                  <label class="rsgm-compact-label">Kesadaran:</label>
+                  <input type="text" name="kesadaran" id="kesadaran" class="form-control input-sm" value="{$data.kesadaran}" placeholder="Compos Mentis">
+                </div>
+                <div class="col-md-4 form-group" style="margin-bottom: 8px;">
+                  <label class="rsgm-compact-label">Tekanan Darah (mmHg):</label>
+                  <input type="text" name="td" id="td" class="form-control input-sm" value="{$data.td}" placeholder="120/80">
+                </div>
+                <div class="col-md-4 form-group" style="margin-bottom: 8px;">
+                  <label class="rsgm-compact-label">Frekuensi Nadi (x/menit):</label>
+                  <input type="text" name="nadi" id="nadi" class="form-control input-sm" value="{$data.nadi}" placeholder="80">
+                </div>
+                <div class="col-md-4 form-group" style="margin-bottom: 8px;">
+                  <label class="rsgm-compact-label">Frekuensi Napas (x/menit):</label>
+                  <input type="text" name="rr" id="rr" class="form-control input-sm" value="{$data.rr}" placeholder="20">
+                </div>
+                <div class="col-md-4 form-group" style="margin-bottom: 8px;">
+                  <label class="rsgm-compact-label">Suhu (°C):</label>
+                  <input type="text" name="suhu" id="suhu" class="form-control input-sm" value="{$data.suhu}" placeholder="36.5">
+                </div>
+                <div class="col-md-4 form-group" style="margin-bottom: 4px;">
+                  <label class="rsgm-compact-label">Berat Badan (Kg):</label>
+                  <input type="text" name="bb" id="bb" class="form-control input-sm" value="{$data.bb}" placeholder="55">
+                </div>
+                <div class="col-md-4 form-group" style="margin-bottom: 4px;">
+                  <label class="rsgm-compact-label">Tinggi Badan (cm):</label>
+                  <input type="text" name="tb" id="tb" class="form-control input-sm" value="{$data.tb}" placeholder="165">
+                </div>
+                <div class="col-md-4 form-group" style="margin-bottom: 4px;">
+                  <label class="rsgm-compact-label">Golongan Darah:</label>
+                  <input type="text" name="gol_darah" id="gol_darah" class="form-control input-sm" value="{$data.gol_darah}" placeholder="A / B / AB / O">
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. PSIKOSOSIAL - KULTURAL - SPIRITUAL - EKONOMI -->
+            <div class="rsgm-sub-section">
+              <div class="rsgm-sub-section-header">
+                <h5 class="rsgm-sub-section-title"><i class="fa fa-users text-primary"></i> IV. Psikososial - Kultural - Spiritual - Ekonomi</h5>
+              </div>
+
+              <div class="rsgm-card-white">
+                <div class="row" style="margin-bottom: 8px;">
+                  <div class="col-md-5">
+                    <label class="rsgm-compact-label">Status Pernikahan:</label>
+                    <div class="rsgm-inline-checks">
+                      <label><input type="radio" name="status_pernikahan" value="Lajang" {if: $data.status_pernikahan == 'Lajang'}checked{/if}> Lajang</label>
+                      <label><input type="radio" name="status_pernikahan" value="Menikah" {if: $data.status_pernikahan == 'Menikah'}checked{/if}> Menikah</label>
+                      <label><input type="radio" name="status_pernikahan" value="Cerai" {if: $data.status_pernikahan == 'Cerai'}checked{/if}> Cerai</label>
+                    </div>
+                  </div>
+                  <div class="col-md-7">
+                    <label class="rsgm-compact-label">Tinggal Bersama Keluarga:</label>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                      <label style="margin: 0; font-size: 12px;"><input type="radio" name="tinggal_bersama_keluarga" value="Ya" {if: $data.tinggal_bersama_keluarga == 'Ya'}checked{/if}> Ya</label>
+                      <label style="margin: 0; font-size: 12px;"><input type="radio" name="tinggal_bersama_keluarga" value="Tidak" {if: $data.tinggal_bersama_keluarga == 'Tidak'}checked{/if}> Tidak, jelaskan:</label>
+                      <input type="text" name="tinggal_bersama_ket" class="form-control input-sm" style="flex: 1; min-width: 150px;" value="{$data.tinggal_bersama_ket}" placeholder="Keterangan tempat tinggal...">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row" style="margin-bottom: 8px;">
+                  <div class="col-md-7">
+                    <label class="rsgm-compact-label">Riwayat Kebiasaan:</label>
+                    <div class="rsgm-inline-checks">
+                      <label><input type="checkbox" name="kebiasaan_merokok" value="Ya" {if: $data.kebiasaan_merokok == 'Ya'}checked{/if}> Merokok</label>
+                      <label><input type="checkbox" name="kebiasaan_alkohol" value="Ya" {if: $data.kebiasaan_alkohol == 'Ya'}checked{/if}> Alkohol</label>
+                      <label><input type="checkbox" name="kebiasaan_napza" value="Ya" {if: $data.kebiasaan_napza == 'Ya'}checked{/if}> NAPZA</label>
+                      <label><input type="checkbox" name="kebiasaan_lainnya" value="Ya" {if: $data.kebiasaan_lainnya == 'Ya'}checked{/if}> Lainnya:</label>
+                      <input type="text" name="kebiasaan_lainnya_ket" class="form-control input-sm" style="width: 140px;" value="{$data.kebiasaan_lainnya_ket}" placeholder="Sebutkan...">
+                    </div>
+                  </div>
+                  <div class="col-md-5">
+                    <label class="rsgm-compact-label">Jenis dan Jumlah perhari:</label>
+                    <input type="text" name="kebiasaan_jenis_jumlah" class="form-control input-sm" value="{$data.kebiasaan_jenis_jumlah}" placeholder="Contoh: Rokok 5 batang/hari">
+                  </div>
+                </div>
+
+                <div class="row" style="margin-bottom: 8px;">
+                  <div class="col-md-6">
+                    <label class="rsgm-compact-label">Hambatan Fisik:</label>
+                    <div class="rsgm-inline-checks">
+                      <label><input type="checkbox" name="hambatan_pendengaran" value="Ya" {if: $data.hambatan_pendengaran == 'Ya'}checked{/if}> Pendengaran</label>
+                      <label><input type="checkbox" name="hambatan_bicara" value="Ya" {if: $data.hambatan_bicara == 'Ya'}checked{/if}> Bicara</label>
+                      <label><input type="checkbox" name="hambatan_penglihatan" value="Ya" {if: $data.hambatan_penglihatan == 'Ya'}checked{/if}> Penglihatan</label>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="rsgm-compact-label">Hambatan Kognitif:</label>
+                    <input type="text" name="hambatan_kognitif" class="form-control input-sm" value="{$data.hambatan_kognitif}" placeholder="Tidak ada / Sebutkan hambatan kognitif...">
+                  </div>
+                </div>
+
+                <div style="border-top: 1px dashed #e2e8f0; padding-top: 8px; margin-bottom: 8px;">
+                  <label class="rsgm-compact-label">Keyakinan dan Nilai-Nilai Pribadi Pasien:</label>
+                  <div class="row" style="margin-bottom: 6px; align-items: center;">
+                    <div class="col-md-6" style="font-size: 12px;">a. Dirawat dan diasuh oleh PPA sesama gender</div>
+                    <div class="col-md-6 rsgm-inline-checks">
+                      <label><input type="radio" name="nilai_gender_sama" value="Ya" {if: $data.nilai_gender_sama == 'Ya'}checked{/if}> Ya</label>
+                      <label><input type="radio" name="nilai_gender_sama" value="Tidak" {if: $data.nilai_gender_sama == 'Tidak'}checked{/if}> Tidak</label>
+                    </div>
+                  </div>
+                  <div class="row" style="margin-bottom: 6px; align-items: center;">
+                    <div class="col-md-6" style="font-size: 12px;">b. Ada pantangan makanan tertentu</div>
+                    <div class="col-md-6" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                      <label style="margin: 0; font-size: 12px;"><input type="radio" name="nilai_pantangan_makanan" value="Ya" {if: $data.nilai_pantangan_makanan == 'Ya'}checked{/if}> Ya, yaitu:</label>
+                      <input type="text" name="nilai_pantangan_makanan_ket" class="form-control input-sm" style="width: 160px;" value="{$data.nilai_pantangan_makanan_ket}" placeholder="Sebutkan...">
+                      <label style="margin: 0; font-size: 12px;"><input type="radio" name="nilai_pantangan_makanan" value="Tidak" {if: $data.nilai_pantangan_makanan == 'Tidak'}checked{/if}> Tidak</label>
+                    </div>
+                  </div>
+                  <div class="row" style="align-items: center;">
+                    <div class="col-md-6" style="font-size: 12px;">c. Ada hari yang dihindari atau diinginkan untuk tindakan</div>
+                    <div class="col-md-6" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                      <label style="margin: 0; font-size: 12px;"><input type="radio" name="nilai_hari_dihindari" value="Ya" {if: $data.nilai_hari_dihindari == 'Ya'}checked{/if}> Ya, yaitu:</label>
+                      <input type="text" name="nilai_hari_dihindari_ket" class="form-control input-sm" style="width: 160px;" value="{$data.nilai_hari_dihindari_ket}" placeholder="Sebutkan...">
+                      <label style="margin: 0; font-size: 12px;"><input type="radio" name="nilai_hari_dihindari" value="Tidak" {if: $data.nilai_hari_dihindari == 'Tidak'}checked{/if}> Tidak</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <label class="rsgm-compact-label">Bahasa yang digunakan:</label>
+                    <input type="text" name="bahasa_digunakan" class="form-control input-sm" value="{$data.bahasa_digunakan}" placeholder="Contoh: Indonesia / Banjar">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="rsgm-compact-label">Ekonomi:</label>
+                    <div class="rsgm-inline-checks" style="margin-top: 4px;">
+                      <label><input type="radio" name="ekonomi" value="Sangat Tinggi" {if: $data.ekonomi == 'Sangat Tinggi'}checked{/if}> Sangat Tinggi</label>
+                      <label><input type="radio" name="ekonomi" value="Tinggi" {if: $data.ekonomi == 'Tinggi'}checked{/if}> Tinggi</label>
+                      <label><input type="radio" name="ekonomi" value="Sedang" {if: $data.ekonomi == 'Sedang'}checked{/if}> Sedang</label>
+                      <label><input type="radio" name="ekonomi" value="Rendah" {if: $data.ekonomi == 'Rendah'}checked{/if}> Rendah</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. HALAMAN 2: SKRINING GIZI (MST DEWASA & STRONG-KIDS ANAK) -->
+            <div class="rsgm-sub-section">
+              <div class="rsgm-sub-section-header">
+                <h5 class="rsgm-sub-section-title"><i class="fa fa-balance-scale text-primary"></i> V. Skrining Gizi Berdasarkan Risiko Nutrisional</h5>
+                <span class="text-muted" style="font-size: 11px;">Halaman 2</span>
+              </div>
+
+              <div class="row">
+                <!-- MST DEWASA -->
+                <div class="col-md-6">
+                  <div id="box_mst_dewasa" class="rsgm-card-white">
+                    <div style="font-weight: 700; font-size: 12px; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 8px;">
+                      Malnutrition Screening Tool (MST) untuk Dewasa
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 8px;">
+                      <label class="rsgm-compact-label">1. Apakah pasien mengalami penurunan BB yang tidak diinginkan dalam 6 bulan terakhir?</label>
+                      <select name="mst_penurunan_bb" id="mst_penurunan_bb" class="form-control input-sm rj03-mst-calc">
+                        <option value="">-- Pilih Jawaban --</option>
+                        <option value="0" {if: $data.mst_penurunan_bb == '0'}selected{/if}>a. Tidak ada penurunan berat badan (Skor 0)</option>
+                        <option value="2_tahu" {if: $data.mst_penurunan_bb == '2_tahu'}selected{/if}>b. Tidak yakin / tidak tahu / terasa baju lebih longgar (Skor 2)</option>
+                        <option value="1" {if: $data.mst_penurunan_bb == '1'}selected{/if}>c. Jika ya: 1-5 kg (Skor 1)</option>
+                        <option value="2" {if: $data.mst_penurunan_bb == '2'}selected{/if}>c. Jika ya: 6-10 kg (Skor 2)</option>
+                        <option value="3" {if: $data.mst_penurunan_bb == '3'}selected{/if}>c. Jika ya: 11-15 kg (Skor 3)</option>
+                        <option value="4" {if: $data.mst_penurunan_bb == '4'}selected{/if}>c. Jika ya: &gt; 15 kg (Skor 4)</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 8px;">
+                      <label class="rsgm-compact-label">3. Apakah asupan makanan berkurang karena tidak nafsu makan?</label>
+                      <div class="rsgm-inline-checks">
+                        <label><input type="radio" name="mst_asupan_kurang" class="rj03-mst-calc" value="0" {if: $data.mst_asupan_kurang == '0'}checked{/if}> a. Tidak (0)</label>
+                        <label><input type="radio" name="mst_asupan_kurang" class="rj03-mst-calc" value="1" {if: $data.mst_asupan_kurang == '1'}checked{/if}> b. Ya (1)</label>
+                      </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 8px;">
+                      <label class="rsgm-compact-label">4. Pasien dengan diagnosis khusus:</label>
+                      <div class="rsgm-inline-checks">
+                        <label><input type="radio" name="mst_diagnosis_khusus" class="rj03-mst-calc" value="Ya" {if: $data.mst_diagnosis_khusus == 'Ya'}checked{/if}> Ya</label>
+                        <label><input type="radio" name="mst_diagnosis_khusus" class="rj03-mst-calc" value="Tidak" {if: $data.mst_diagnosis_khusus == 'Tidak'}checked{/if}> Tidak</label>
+                      </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label class="rsgm-compact-label">Total Skor MST:</label>
+                      <div class="input-group input-group-sm">
+                        <input type="text" name="mst_total_skor" id="mst_total_skor" class="form-control" value="{$data.mst_total_skor}" readonly style="font-weight: 700; background: #f8fafc;">
+                        <span class="input-group-addon" id="mst_risk_badge">Belum dihitung</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- STRONG-KIDS ANAK -->
+                <div class="col-md-6">
+                  <div id="box_strong_anak" class="rsgm-card-white">
+                    <div style="font-weight: 700; font-size: 12px; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 8px;">
+                      Modifikasi STRONG-kids untuk Anak (0- &lt;18 tahun)
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 6px;">
+                      <label class="rsgm-compact-label">1. Pasien tampak kurus</label>
+                      <div class="rsgm-inline-checks">
+                        <label><input type="radio" name="strong_kurus" class="rj03-strong-calc" value="Ya" {if: $data.strong_kurus == 'Ya'}checked{/if}> Ya (1)</label>
+                        <label><input type="radio" name="strong_kurus" class="rj03-strong-calc" value="Tidak" {if: $data.strong_kurus == 'Tidak'}checked{/if}> Tidak (0)</label>
+                      </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 6px;">
+                      <label class="rsgm-compact-label">2. Penurunan BB 1 bulan terakhir / BB bayi &lt;1 th tidak naik 3 bln</label>
+                      <div class="rsgm-inline-checks">
+                        <label><input type="radio" name="strong_bb_turun" class="rj03-strong-calc" value="Ya" {if: $data.strong_bb_turun == 'Ya'}checked{/if}> Ya (1)</label>
+                        <label><input type="radio" name="strong_bb_turun" class="rj03-strong-calc" value="Tidak" {if: $data.strong_bb_turun == 'Tidak'}checked{/if}> Tidak (0)</label>
+                      </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 6px;">
+                      <label class="rsgm-compact-label">3. Diare &ge;5x/hr dan/atau muntah &gt;3x/hr atau asupan berkurang 1 mgg terakhir</label>
+                      <div class="rsgm-inline-checks">
+                        <label><input type="radio" name="strong_kondisi" class="rj03-strong-calc" value="Ya" {if: $data.strong_kondisi == 'Ya'}checked{/if}> Ya (1)</label>
+                        <label><input type="radio" name="strong_kondisi" class="rj03-strong-calc" value="Tidak" {if: $data.strong_kondisi == 'Tidak'}checked{/if}> Tidak (0)</label>
+                      </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 6px;">
+                      <label class="rsgm-compact-label">4. Penyakit/keadaan berisiko mengalami malnutrisi</label>
+                      <div class="rsgm-inline-checks">
+                        <label><input type="radio" name="strong_penyakit" class="rj03-strong-calc" value="Ya" {if: $data.strong_penyakit == 'Ya'}checked{/if}> Ya (1)</label>
+                        <label><input type="radio" name="strong_penyakit" class="rj03-strong-calc" value="Tidak" {if: $data.strong_penyakit == 'Tidak'}checked{/if}> Tidak (0)</label>
+                      </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label class="rsgm-compact-label">Total Skor STRONG-kids:</label>
+                      <div class="input-group input-group-sm">
+                        <input type="text" name="strong_total_skor" id="strong_total_skor" class="form-control" value="{$data.strong_total_skor}" readonly style="font-weight: 700; background: #f8fafc;">
+                        <span class="input-group-addon" id="strong_risk_badge">Belum dihitung</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style="font-size: 11px; font-style: italic; color: #475569;">
+                *(Bila skor &ge;2 dan/atau pasien dengan diagnosis khusus pada dewasa, atau skor &ge;1 pada anak berarti pasien berisiko malnutrisi, dilaporkan ke DPJP dan dikonsulkan ke Nutrisionis jika perlu)
+              </div>
+            </div>
+
+            <!-- 6. ASESMEN RISIKO JATUH - GET UP AND GO TEST -->
+            <div class="rsgm-sub-section">
+              <div class="rsgm-sub-section-header">
+                <h5 class="rsgm-sub-section-title"><i class="fa fa-wheelchair text-primary"></i> VI. Asesmen Risiko Jatuh (Get Up and Go Test)</h5>
+              </div>
+
+              <div class="rsgm-card-white">
+                <div class="row" style="margin-bottom: 6px;">
+                  <div class="col-md-9" style="font-size: 12px;">a. Perhatikan cara berjalan. Apakah pasien tampak tidak seimbang (sempoyongan/limbung) atau menggunakan alat bantu jalan?</div>
+                  <div class="col-md-3 rsgm-inline-checks">
+                    <label><input type="radio" name="jatuh_a" class="rj03-jatuh-calc" value="Ya" {if: $data.jatuh_a == 'Ya'}checked{/if}> Ya</label>
+                    <label><input type="radio" name="jatuh_a" class="rj03-jatuh-calc" value="Tidak" {if: $data.jatuh_a == 'Tidak'}checked{/if}> Tidak</label>
+                  </div>
+                </div>
+                <div class="row" style="margin-bottom: 10px;">
+                  <div class="col-md-9" style="font-size: 12px;">b. Apakah pasien memegang pinggiran kursi atau meja atau benda lain sebagai penopang saat akan duduk?</div>
+                  <div class="col-md-3 rsgm-inline-checks">
+                    <label><input type="radio" name="jatuh_b" class="rj03-jatuh-calc" value="Ya" {if: $data.jatuh_b == 'Ya'}checked{/if}> Ya</label>
+                    <label><input type="radio" name="jatuh_b" class="rj03-jatuh-calc" value="Tidak" {if: $data.jatuh_b == 'Tidak'}checked{/if}> Tidak</label>
+                  </div>
+                </div>
+
+                <div class="row" style="border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+                  <div class="col-md-5">
+                    <label class="rsgm-compact-label">Hasil Penilaian Risiko Jatuh:</label>
+                    <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+                      <label style="margin: 0; font-weight: 600;"><input type="radio" name="jatuh_hasil" value="Tidak Berisiko" {if: $data.jatuh_hasil == 'Tidak Berisiko'}checked{/if}> Tidak Berisiko (tidak ditemukan a dan b)</label>
+                      <label style="margin: 0; font-weight: 600;"><input type="radio" name="jatuh_hasil" value="Risiko Rendah" {if: $data.jatuh_hasil == 'Risiko Rendah'}checked{/if}> Risiko Rendah (ditemukan a atau b)</label>
+                      <label style="margin: 0; font-weight: 600;"><input type="radio" name="jatuh_hasil" value="Risiko Tinggi" {if: $data.jatuh_hasil == 'Risiko Tinggi'}checked{/if}> Risiko Tinggi (a dan b ditemukan)</label>
+                    </div>
+                  </div>
+                  <div class="col-md-7">
+                    <label class="rsgm-compact-label">Tindakan Pencegahan Jatuh:</label>
+                    <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+                      <label style="margin: 0; font-weight: 600;"><input type="checkbox" name="jatuh_tindakan_tidak" value="Ya" {if: $data.jatuh_tindakan_tidak == 'Ya'}checked{/if}> Tidak ada tindakan</label>
+                      <label style="margin: 0; font-weight: 600;"><input type="checkbox" name="jatuh_tindakan_edukasi" value="Ya" {if: $data.jatuh_tindakan_edukasi == 'Ya'}checked{/if}> Edukasi kepada pasien tentang pencegahan jatuh</label>
+                      <label style="margin: 0; font-weight: 600;"><input type="checkbox" name="jatuh_tindakan_kalung" value="Ya" {if: $data.jatuh_tindakan_kalung == 'Ya'}checked{/if}> Dipasangkan kalung risiko jatuh</label>
+                      <label style="margin: 0; font-weight: 600;"><input type="checkbox" name="jatuh_tindakan_alat" value="Ya" {if: $data.jatuh_tindakan_alat == 'Ya'}checked{/if}> Diberikan alat bantu jalan (tongkat / kruk / kursi roda)</label>
+                      <label style="margin: 0; font-weight: 600;"><input type="checkbox" name="jatuh_tindakan_dampingi" value="Ya" {if: $data.jatuh_tindakan_dampingi == 'Ya'}checked{/if}> Dampingi pasien saat mobilisasi</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 7. PENUNJANG, MASALAH KEPERAWATAN, RENCANA & EVALUASI -->
+            <div class="rsgm-sub-section" style="margin-bottom: 0;">
+              <div class="rsgm-sub-section-header">
+                <h5 class="rsgm-sub-section-title"><i class="fa fa-clipboard text-success"></i> VII. Penunjang, Masalah Keperawatan, Rencana &amp; Evaluasi</h5>
+              </div>
+
+              <div class="row">
+                <div class="col-md-5">
+                  <div class="rsgm-card-white">
+                    <label class="rsgm-compact-label">PEMERIKSAAN PENUNJANG:</label>
+                    <div style="display: flex; flex-direction: column; gap: 5px; font-size: 12px;">
+                      <label style="margin: 0; font-weight: 600;"><input type="checkbox" name="penunjang_lab" value="Ya" {if: $data.penunjang_lab == 'Ya'}checked{/if}> Laboratorium</label>
+                      <label style="margin: 0; font-weight: 600;"><input type="checkbox" name="penunjang_rontgen" value="Ya" {if: $data.penunjang_rontgen == 'Ya'}checked{/if}> Rontgen</label>
+                      <div style="display: flex; align-items: center; gap: 6px;">
+                        <label style="margin: 0; font-weight: 600;"><input type="checkbox" name="penunjang_lain" value="Ya" {if: $data.penunjang_lain == 'Ya'}checked{/if}> Lain-lain:</label>
+                        <input type="text" name="penunjang_lain_ket" class="form-control input-sm" style="flex: 1;" value="{$data.penunjang_lain_ket}" placeholder="Sebutkan...">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-7">
+                  <div class="form-group">
+                    <label class="rsgm-compact-label">MASALAH KEPERAWATAN:</label>
+                    <textarea name="masalah_keperawatan" class="form-control" rows="4" placeholder="Rumuskan masalah / diagnosis keperawatan...">{$data.masalah_keperawatan}</textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="rsgm-compact-label">RENCANA DAN TINDAK LANJUT PERAWATAN, TERMASUK KEBUTUHAN EDUKASI:</label>
+                    <textarea name="rencana_tindak_lanjut" class="form-control" rows="4" placeholder="Rencana intervensi keperawatan dan kebutuhan edukasi pasien...">{$data.rencana_tindak_lanjut}</textarea>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="rsgm-card-white" style="margin-bottom: 0;">
+                    <label class="rsgm-compact-label">EVALUASI:</label>
+                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12px;">
+                      <div style="display: flex; align-items: center; gap: 6px;">
+                        <label style="margin: 0; font-weight: 600; min-width: 110px;"><input type="checkbox" name="evaluasi_kontrol" value="Ya" {if: $data.evaluasi_kontrol == 'Ya'}checked{/if}> Kontrol Tanggal:</label>
+                        <input type="date" name="evaluasi_kontrol_tgl" class="form-control input-sm" value="{$data.evaluasi_kontrol_tgl}">
+                      </div>
+                      <div style="display: flex; align-items: center; gap: 6px;">
+                        <label style="margin: 0; font-weight: 600; min-width: 110px;"><input type="checkbox" name="evaluasi_rujuk" value="Ya" {if: $data.evaluasi_rujuk == 'Ya'}checked{/if}> Rujuk ke RS:</label>
+                        <input type="text" name="evaluasi_rujuk_rs" class="form-control input-sm" value="{$data.evaluasi_rujuk_rs}" placeholder="Nama RS rujukan...">
+                      </div>
+                      <div style="display: flex; align-items: center; gap: 6px;">
+                        <label style="margin: 0; font-weight: 600; min-width: 110px;"><input type="checkbox" name="evaluasi_ranap" value="Ya" {if: $data.evaluasi_ranap == 'Ya'}checked{/if}> Rawat Inap Ruangan:</label>
+                        <input type="text" name="evaluasi_ranap_ruangan" class="form-control input-sm" value="{$data.evaluasi_ranap_ruangan}" placeholder="Nama ruangan...">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- FOOTER AKSI -->
+          <div class="rsgm-reg-footer">
+            <div>
+              <a href="{?=url([ADMIN, 'form_rme', 'rj03manage'])?}" class="btn btn-default btn-sm">
+                <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+              </a>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <button type="button" class="btn btn-info btn-sm btn-trigger-rme-preview" data-preview-url="{?=url([ADMIN, 'form_rme', 'rj03cetak'])?}">
+                <i class="fa fa-print"></i> Lihat Output (Cetak)
+              </button>
+              {if: !empty($data.id)}
+              <a href="{?=url([ADMIN, 'form_rme', 'rj03cetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn btn-danger btn-sm">
+                <i class="fa fa-file-pdf-o"></i> Unduh PDF
+              </a>
+              {/if}
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fa fa-save"></i> Simpan Asesmen RM.RJ 03
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+<script>
+$(function() {
+  var getPasienUrl = '{?=url([ADMIN, "form_rme", "rj03getpasien"])?}';
+
+  function showSearchStatus(text, isError) {
+    var $el = $('#rj03_search_status');
+    if (!$el.length) return;
+    $el.text(text)
+       .css({
+         display: 'block',
+         background: isError ? '#fef2f2' : '#f0fdf4',
+         color: isError ? '#b91c1c' : '#166534',
+         border: isError ? '1px solid #fecaca' : '1px solid #bbf7d0'
+       });
+  }
+
+  function updateAllRefIds(newRefId) {
+    if (!newRefId) return;
+    $('.btn-tte-rme').each(function() {
+      var cur = $(this).attr('data-ref_id');
+      if (!cur || !/^\d+$/.test(cur)) {
+        $(this).attr('data-ref_id', newRefId);
+      }
+    });
+  }
+
+  function syncSignerSelect($sel) {
+    var $opt = $sel.find('option:selected');
+    var nm = $opt.attr('data-nama') || '';
+    var targetNameId = $sel.attr('data-name-target');
+    var btnId = $sel.attr('data-btn-target');
+    if (targetNameId) {
+      $('#' + targetNameId).val(nm);
+    }
+    if (btnId && nm) {
+      $('#' + btnId).attr('data-signer_name', nm);
+    }
+  }
+
+  $('.rj03-signer-select').on('change', function() {
+    syncSignerSelect($(this));
+  }).each(function() {
+    if ($(this).val()) {
+      syncSignerSelect($(this));
+    }
+  });
+
+  function updateMenularBox() {
+    var hasMenular = $('.rj03-menular-trigger:checked').length > 0;
+    $('#rj03_khusus_menular_box').css('opacity', hasMenular ? '1' : '0.85');
+  }
+  $('.rj03-menular-trigger').on('change', updateMenularBox);
+  updateMenularBox();
+
+  function updateKategoriHighlight() {
+    var kat = $('#kategori_pasien_rj03').val() || '';
+    $('#box_mst_dewasa').toggleClass('rj03-nutrisi-highlight', kat.indexOf('Dewasa') !== -1 || kat.indexOf('Geriatri') !== -1);
+    $('#box_strong_anak').toggleClass('rj03-nutrisi-highlight', kat.indexOf('Anak') !== -1);
+  }
+  $('#kategori_pasien_rj03').on('change', updateKategoriHighlight);
+  updateKategoriHighlight();
+
+  function calcMst() {
+    var bbVal = $('#mst_penurunan_bb').val();
+    var asupanVal = $('input[name="mst_asupan_kurang"]:checked').val();
+    var diagKhusus = $('input[name="mst_diagnosis_khusus"]:checked').val();
+    if (!bbVal && typeof asupanVal === 'undefined') {
+      $('#mst_risk_badge').text('Belum dihitung');
+      return;
+    }
+    var s1 = bbVal ? (parseInt(bbVal, 10) || 0) : 0;
+    var s2 = typeof asupanVal !== 'undefined' ? (parseInt(asupanVal, 10) || 0) : 0;
+    var total = s1 + s2;
+    $('#mst_total_skor').val(total);
+    if (total >= 2 || diagKhusus === 'Ya') {
+      $('#mst_risk_badge').text('Berisiko Malnutrisi').css({ color: '#b91c1c', fontWeight: '700' });
+    } else {
+      $('#mst_risk_badge').text('Tidak Berisiko').css({ color: '#166534', fontWeight: '700' });
+    }
+  }
+  $('.rj03-mst-calc').on('change', calcMst);
+  calcMst();
+
+  function calcStrong() {
+    var fields = ['strong_kurus', 'strong_bb_turun', 'strong_kondisi', 'strong_penyakit'];
+    var answered = 0;
+    var total = 0;
+    for (var i = 0; i < fields.length; i++) {
+      var val = $('input[name="' + fields[i] + '"]:checked').val();
+      if (typeof val !== 'undefined') {
+        answered++;
+        if (val === 'Ya') total += 1;
+      }
+    }
+    if (answered === 0) {
+      $('#strong_risk_badge').text('Belum dihitung');
+      return;
+    }
+    $('#strong_total_skor').val(total);
+    if (total >= 1) {
+      $('#strong_risk_badge').text('Berisiko Malnutrisi').css({ color: '#b91c1c', fontWeight: '700' });
+    } else {
+      $('#strong_risk_badge').text('Tidak Berisiko').css({ color: '#166534', fontWeight: '700' });
+    }
+  }
+  $('.rj03-strong-calc').on('change', calcStrong);
+  calcStrong();
+
+  function calcJatuh() {
+    var a = $('input[name="jatuh_a"]:checked').val();
+    var b = $('input[name="jatuh_b"]:checked').val();
+    if (typeof a === 'undefined' && typeof b === 'undefined') return;
+    var res = 'Tidak Berisiko';
+    if (a === 'Ya' && b === 'Ya') {
+      res = 'Risiko Tinggi';
+    } else if (a === 'Ya' || b === 'Ya') {
+      res = 'Risiko Rendah';
+    }
+    $('input[name="jatuh_hasil"][value="' + res + '"]').prop('checked', true);
+  }
+  $('.rj03-jatuh-calc').on('change', calcJatuh);
+
+  function loadPasienRj03() {
+    var kw = $.trim($('#no_rawat_input').val());
+    if (!kw) {
+      showSearchStatus('Masukkan No. Rawat atau No. RM terlebih dahulu.', true);
+      return;
+    }
+    showSearchStatus('Mencari data kunjungan pasien...', false);
+    $.post(getPasienUrl, { no_rawat: kw }, function(res) {
+      if (res && res.status === 'success' && res.data) {
+        var d = res.data;
+        $('#no_rawat_input').val(d.no_rawat || kw);
+        $('#no_rkm_medis').val(d.no_rkm_medis || '');
+        $('#display_no_rkm_medis').val(d.no_rkm_medis || '');
+        $('#nama_pasien').val(d.nm_pasien || '');
+        $('#jk_input').val(d.jk || '');
+        $('#display_jk').val(d.jk === 'L' ? 'Laki-Laki' : (d.jk === 'P' ? 'Perempuan' : '-'));
+        $('#tgl_lahir').val(d.tgl_lahir || '');
+        if (d.tgl_registrasi) $('#tanggal_kunjungan').val(d.tgl_registrasi);
+        if (d.jam_reg) $('#pukul_kunjungan').val(d.jam_reg.substring(0, 5));
+        if (d.nm_poli) $('#unit_awal').val(d.nm_poli);
+        if (d.kategori_pasien) $('#kategori_pasien_rj03').val(d.kategori_pasien).trigger('change');
+        if (d.kd_dokter) $('#kd_dpjp').val(d.kd_dokter).trigger('change');
+        if (d.keluhan && !$('#keluhan_utama').val()) $('#keluhan_utama').val(d.keluhan);
+        if (d.td && !$('#td').val()) $('#td').val(d.td);
+        if (d.nadi && !$('#nadi').val()) $('#nadi').val(d.nadi);
+        if (d.rr && !$('#rr').val()) $('#rr').val(d.rr);
+        if (d.suhu && !$('#suhu').val()) $('#suhu').val(d.suhu);
+        if (d.bb && !$('#bb').val()) $('#bb').val(d.bb);
+        if (d.tb && !$('#tb').val()) $('#tb').val(d.tb);
+        if (d.gol_darah && !$('#gol_darah').val()) $('#gol_darah').val(d.gol_darah);
+        updateAllRefIds(d.no_rawat || kw);
+        showSearchStatus('Data pasien berhasil dimuat (' + (d.nm_pasien || d.no_rawat) + ').', false);
+      } else {
+        showSearchStatus((res && res.message) ? res.message : 'Data pasien tidak ditemukan.', true);
+      }
+    }, 'json').fail(function() {
+      showSearchStatus('Gagal terhubung ke server saat mencari pasien.', true);
+    });
+  }
+
+  $('#btn_cari_pasien_rj03').on('click', loadPasienRj03);
+  $('#no_rawat_input').on('keydown', function(e) {
+    if (e.key === 'Enter' && !$(this).prop('readonly')) {
+      e.preventDefault();
+      loadPasienRj03();
+    }
+  });
+});
+</script>

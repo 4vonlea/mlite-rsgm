@@ -60,9 +60,9 @@
                     <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px; margin-bottom: 12px; text-align: center;">
                         <div style="font-size: 11px; font-weight: 600; color: #1e40af; text-transform: uppercase;">Total Catatan CPPT</div>
                         <div style="font-size: 22px; font-weight: 800; color: #1d4ed8; line-height: 1.2; margin-top: 2px;">
-                            {?=count($cppt_list)?}
+                            {?=isset_or($active_cppt_count, count($cppt_list))?}
                         </div>
-                        <div style="font-size: 10.5px; color: #64748b;">Entri SOAP Terintegrasi</div>
+                        <div style="font-size: 10.5px; color: #64748b;">Entri SOAP Aktif{if: !empty($void_count)} &bull; <span class="text-danger">{$void_count} VOID</span>{/if}</div>
                     </div>
 
                     <div class="alert alert-info" style="font-size: 11px; padding: 10px; margin-bottom: 0; line-height: 1.45; border-radius: 6px;">
@@ -83,20 +83,32 @@
                         <span>Catatan Perkembangan Pasien Terintegrasi (CPPT)</span>
                     </h4>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">PAP 1.2</span>
+                        <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">{if: !empty($is_ugd)}RM.GD 11{else}RM.GD 11 / RM.RI 05{/if}</span>
                         <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-heartbeat"></i> SOAP Multi-PPA</span>
                     </div>
                 </div>
 
                 <div class="rsgm-reg-body">
-                    <!-- 1. FORM TAMBAH ENTRY CPPT BARU -->
+                    <!-- 1. FORM TAMBAH / EDIT ENTRY CPPT -->
                     <form method="POST" action="{?=url([ADMIN, 'form_rme', 'cpptsave'])?}" id="frm_new_cppt">
                         <input type="hidden" name="no_rawat" value="{$pasien.no_rawat}">
+                        <input type="hidden" name="is_edit" id="cppt_is_edit" value="0">
+                        <input type="hidden" name="original_tgl_perawatan" id="cppt_orig_tgl" value="">
+                        <input type="hidden" name="original_jam_rawat" id="cppt_orig_jam" value="">
+                        <input type="hidden" name="tinggi" id="cppt_tinggi" value="0">
+                        <input type="hidden" name="berat" id="cppt_berat" value="0">
+                        <input type="hidden" name="gcs" id="cppt_gcs" value="E4M6V5">
+                        <input type="hidden" name="alergi" id="cppt_alergi" value="Tidak Ada">
+
+                        <div id="cppt_edit_banner" class="alert alert-warning" style="display:none; padding: 9px 12px; margin-bottom: 10px; font-size: 12px; border-radius: 6px;">
+                            <i class="fa fa-pencil"></i> <strong>Mode Edit / Koreksi CPPT:</strong> <span id="cppt_edit_banner_info"></span>
+                            <button type="button" class="btn btn-xs btn-default pull-right js-cppt-cancel-edit"><i class="fa fa-times"></i> Batal Edit</button>
+                        </div>
 
                         <div class="rsgm-soap-section" style="border: 1px solid #bfdbfe; background-color: #f8fafc;">
                             <div class="rsgm-soap-sec-title" style="color: #1e40af;">
                                 <i class="fa fa-plus-circle text-primary"></i>
-                                <span>Tambah Entri Catatan Asesmen Ulang / CPPT Baru</span>
+                                <span id="cppt_form_heading">Tambah Entri Catatan Asesmen Ulang / CPPT Baru</span>
                             </div>
 
                             <!-- Metadata Waktu, PPA & Tipe Layanan -->
@@ -107,7 +119,7 @@
                                 </div>
                                 <div class="col-md-2 col-xs-6 form-group" style="margin-bottom: 8px;">
                                     <label class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Jam (WITA)</label>
-                                    <input type="time" name="jam_rawat" class="form-control input-sm" value="{?=date('H:i')?}" required>
+                                    <input type="time" step="1" name="jam_rawat" class="form-control input-sm" value="{?=date('H:i:s')?}" required>
                                 </div>
                                 <div class="col-md-4 form-group" style="margin-bottom: 8px;">
                                     <label class="rsgm-compact-label"><i class="fa fa-user-md text-muted"></i> Profesional Pemberi Asuhan (PPA) <span class="text-danger">*</span></label>
@@ -210,7 +222,10 @@
                             </div>
 
                             <div class="text-right">
-                                <button type="submit" class="btn btn-primary" style="font-weight: 700; border-radius: 6px;">
+                                <button type="button" id="btn_cppt_cancel_edit" class="btn btn-default js-cppt-cancel-edit" style="display:none; font-weight: 600; border-radius: 6px; margin-right: 6px;">
+                                    <i class="fa fa-times"></i> Batal Edit
+                                </button>
+                                <button type="submit" id="btn_cppt_submit" class="btn btn-primary" style="font-weight: 700; border-radius: 6px;">
                                     <i class="fa fa-save"></i> Simpan Catatan CPPT Baru
                                 </button>
                             </div>
@@ -219,9 +234,16 @@
 
                     <!-- 2. RIWAYAT CPPT PASIEN -->
                     <div class="rsgm-soap-section" style="margin-bottom: 0;">
-                        <div class="rsgm-soap-sec-title">
-                            <i class="fa fa-history text-primary"></i>
-                            <span>Riwayat Catatan Perkembangan Pasien Terintegrasi (CPPT)</span>
+                        <div class="rsgm-soap-sec-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                            <div>
+                                <i class="fa fa-history text-primary"></i>
+                                <span>Riwayat Catatan Perkembangan Pasien Terintegrasi (CPPT)</span>
+                            </div>
+                            {if: !empty($void_count)}
+                            <button type="button" class="btn btn-xs btn-default js-toggle-voided-soap" data-void-count="{$void_count}" data-shown="0">
+                                <i class="fa fa-eye"></i> Tampilkan Dibatalkan ({$void_count})
+                            </button>
+                            {/if}
                         </div>
 
                         <div class="table-responsive">
@@ -230,47 +252,137 @@
                                     <tr style="background: #eef2f6;">
                                         <th width="12%">Tgl &amp; Jam</th>
                                         <th width="18%">PPA (Petugas)</th>
-                                        <th width="45%">Hasil Asesmen SOAP</th>
+                                        <th width="42%">Hasil Asesmen SOAP</th>
                                         <th width="20%">Instruksi &amp; Evaluasi</th>
-                                        <th width="5%" class="text-center">Aksi</th>
+                                        <th width="8%" class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {if: !empty($cppt_list)}
                                     {loop: $cppt_list}
-                                    <tr>
+                                    <tr class="{if: $value.is_voided}is-voided js-soap-voided-item{/if}" {if: $value.is_voided}style="display:none; background:#fef2f2;"{/if} data-changed-map="{?=isset_or($value.changed_fields_json)?}" data-table_name="{?=isset_or($value.table_name)?}" data-record_key="{?=isset_or($value.record_key)?}">
                                         <td>
                                             <strong style="color: #1e3a8a;">{$value.tgl_perawatan}</strong><br>
                                             <span style="font-size: 11px;"><i class="fa fa-clock-o text-muted"></i> {$value.jam_rawat} WITA</span><br>
                                             <span class="badge" style="background: #e2e8f0; color: #334155; font-size: 10px; margin-top: 3px;">{$value.jenis_rawat}</span>
+                                            {if: $value.is_voided}
+                                            <br><span class="label label-danger" style="display:inline-block;margin-top:4px;"><i class="fa fa-ban"></i> DIBATALKAN (VOID)</span>
+                                            {else}
+                                              {if: $value.has_revisions}
+                                              <br><button type="button" class="rsgm-soap-rev-badge js-soap-rev-open" style="margin-top:4px;" data-module="form_rme" data-table="{?=isset_or($value.table_name)?}" data-key="{?=isset_or($value.record_key)?}"><i class="fa fa-history"></i> Dikoreksi ({?=isset_or($value.revision_count)?}x)</button>
+                                              {/if}
+                                            {/if}
                                         </td>
                                         <td>
                                             <strong style="color: #0f172a;">{$value.nama_petugas}</strong><br>
                                             <span class="label label-info" style="font-size: 10px; font-weight: 600;">{$value.profesi}</span>
+                                            <div id="sign_container_cppt_{$value.ref_id}" style="margin-top: 6px;">
+                                                {if: !empty($value.qr_tte_data_uri)}
+                                                <div style="display: inline-block; text-align: center; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 5px; padding: 3px 6px;">
+                                                    <img src="{$value.qr_tte_data_uri}" alt="QR TTE" style="height: 40px; width: 40px; display: block; margin: 0 auto 2px;">
+                                                    <span class="label label-success" style="font-size: 9px;"><i class="fa fa-check-circle"></i> TTE Verified</span>
+                                                </div>
+                                                {elseif: !empty($value.is_signed)}
+                                                <span class="label label-success" style="font-size: 9px;"><i class="fa fa-check-circle"></i> TTE Signed</span>
+                                                {else}
+                                                <span style="font-size: 10px; color: #94a3b8; font-style: italic;">Belum TTE</span>
+                                                {/if}
+                                                {if: $value.is_tte_outdated}
+                                                <div style="margin-top:3px;"><span class="rsgm-soap-tte-warn-badge js-soap-rev-open" data-module="form_rme" data-table="{?=isset_or($value.table_name)?}" data-key="{?=isset_or($value.record_key)?}"><i class="fa fa-exclamation-triangle"></i> TTE Kedaluwarsa</span></div>
+                                                {/if}
+                                            </div>
+                                            <button type="button" class="btn btn-primary btn-xs btn-tte-rme" style="margin-top: 4px; font-size: 10px; border-radius: 4px;"
+                                                data-ref_type="{$value.ref_type}"
+                                                data-ref_id="{$value.ref_id}"
+                                                data-signer_name="{$value.nama_petugas}"
+                                                data-signer_role="{$value.profesi}"
+                                                data-container_id="sign_container_cppt_{$value.ref_id}"
+                                                {if: $value.is_voided}disabled{/if}>
+                                                <i class="fa fa-lock"></i> {if: !empty($value.is_signed)}Verifikasi Ulang{else}TTE PPA{/if}
+                                            </button>
                                         </td>
                                         <td style="line-height: 1.5;">
-                                            <div style="background: #f1f5f9; padding: 4px 6px; border-radius: 4px; font-size: 10.5px; margin-bottom: 4px;">
-                                                <strong>TTV:</strong> TD {$value.tensi} &bull; HR {$value.nadi} &bull; RR {$value.respirasi} &bull; Temp {$value.suhu_tubuh}&deg;C &bull; SpO2 {$value.spo2}%
+                                            {if: $value.is_voided}
+                                            <div class="alert alert-danger" style="padding:5px 8px;margin-bottom:6px;font-size:11px;">
+                                                <i class="fa fa-ban"></i> <strong>Dibatalkan (VOID):</strong> {?=isset_or($value.void_info.void_reason)?} &mdash; oleh <strong>{?=isset_or($value.void_info.deleted_by)?}</strong> ({?=isset_or($value.void_info.deleted_at)?})
                                             </div>
-                                            <div><span class="rsgm-soap-tag rsgm-soap-tag-s" style="font-size: 10px; padding: 1px 4px;">S</span> {$value.keluhan}</div>
-                                            <div style="margin-top: 2px;"><span class="rsgm-soap-tag rsgm-soap-tag-o" style="font-size: 10px; padding: 1px 4px;">O</span> {$value.pemeriksaan}</div>
-                                            <div style="margin-top: 2px;"><span class="rsgm-soap-tag rsgm-soap-tag-a" style="font-size: 10px; padding: 1px 4px;">A</span> <strong>{$value.penilaian}</strong></div>
-                                            <div style="margin-top: 2px;"><span class="rsgm-soap-tag rsgm-soap-tag-p" style="font-size: 10px; padding: 1px 4px;">P</span> {$value.rtl}</div>
+                                            {else}
+                                              {if: $value.has_revisions}
+                                              <div class="rsgm-soap-rev-banner" style="padding:5px 8px;margin-bottom:6px;font-size:11px;gap:4px;">
+                                                  <span><i class="fa fa-history"></i> Dikoreksi <strong>{?=isset_or($value.last_revised_by)?}</strong> ({?=isset_or($value.last_revised_at_fmt)?}) &mdash; <em>"{?=isset_or($value.last_revised_reason)?}"</em></span>
+                                                  <button type="button" class="btn btn-xs btn-warning js-soap-rev-open" data-module="form_rme" data-table="{?=isset_or($value.table_name)?}" data-key="{?=isset_or($value.record_key)?}"><i class="fa fa-clock-o"></i> Riwayat</button>
+                                              </div>
+                                              {/if}
+                                            {/if}
+                                            <div style="background: #f1f5f9; padding: 4px 6px; border-radius: 4px; font-size: 10.5px; margin-bottom: 4px;">
+                                                <strong>TTV:</strong>
+                                                <span data-rev-field="tensi" style="padding:1px 3px;border-radius:3px;">TD {$value.tensi}</span> &bull;
+                                                <span data-rev-field="nadi" style="padding:1px 3px;border-radius:3px;">HR {$value.nadi}</span> &bull;
+                                                <span data-rev-field="respirasi" style="padding:1px 3px;border-radius:3px;">RR {$value.respirasi}</span> &bull;
+                                                <span data-rev-field="suhu_tubuh" style="padding:1px 3px;border-radius:3px;">Temp {$value.suhu_tubuh}&deg;C</span> &bull;
+                                                <span data-rev-field="spo2" style="padding:1px 3px;border-radius:3px;">SpO2 {$value.spo2}%</span>
+                                            </div>
+                                            <div data-rev-field="keluhan" style="padding:2px 4px;border-radius:4px;"><span class="rsgm-soap-tag rsgm-soap-tag-s" style="font-size: 10px; padding: 1px 4px;">S</span> {$value.keluhan}</div>
+                                            <div data-rev-field="pemeriksaan" style="margin-top: 2px;padding:2px 4px;border-radius:4px;"><span class="rsgm-soap-tag rsgm-soap-tag-o" style="font-size: 10px; padding: 1px 4px;">O</span> {$value.pemeriksaan}</div>
+                                            <div data-rev-field="penilaian" style="margin-top: 2px;padding:2px 4px;border-radius:4px;"><span class="rsgm-soap-tag rsgm-soap-tag-a" style="font-size: 10px; padding: 1px 4px;">A</span> <strong>{$value.penilaian}</strong></div>
+                                            <div data-rev-field="rtl" style="margin-top: 2px;padding:2px 4px;border-radius:4px;"><span class="rsgm-soap-tag rsgm-soap-tag-p" style="font-size: 10px; padding: 1px 4px;">P</span> {$value.rtl}</div>
                                         </td>
                                         <td style="font-size: 11px; line-height: 1.45;">
-                                            <div style="margin-bottom: 4px;">
+                                            <div data-rev-field="instruksi" style="margin-bottom: 4px;padding:2px 4px;border-radius:4px;">
                                                 <strong class="text-primary"><i class="fa fa-arrow-circle-right"></i> Instruksi:</strong><br>
                                                 {if: !empty($value.instruksi)}{$value.instruksi}{else}<span class="text-muted">-</span>{/if}
                                             </div>
-                                            <div>
+                                            <div data-rev-field="evaluasi" style="padding:2px 4px;border-radius:4px;">
                                                 <strong class="text-success"><i class="fa fa-check-circle"></i> Evaluasi:</strong><br>
                                                 {if: !empty($value.evaluasi)}{$value.evaluasi}{else}<span class="text-muted">-</span>{/if}
                                             </div>
                                         </td>
-                                        <td class="text-center" style="vertical-align: top;">
-                                            <a href="{?=url([ADMIN, 'form_rme', 'cppthapus'])?}?no_rawat={$value.no_rawat}&tgl={$value.tgl_perawatan}&jam={$value.jam_rawat}&jenis={$value.jenis_rawat}" class="btn btn-xs btn-danger" onclick="return confirm('Hapus catatan CPPT ini?');" title="Hapus Catatan" style="border-radius: 4px; margin-top: 2px;">
+                                        <td class="text-center" style="vertical-align: top; white-space: nowrap;">
+                                            <button type="button" class="btn btn-xs btn-success js-cppt-edit-btn" title="Edit / Koreksi Catatan CPPT" style="border-radius: 4px; margin-top: 2px;"
+                                                data-no_rawat="{?=isset_or($value.no_rawat)?}"
+                                                data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}"
+                                                data-jam_rawat="{?=isset_or($value.jam_rawat)?}"
+                                                data-nip="{?=isset_or($value.nip)?}"
+                                                data-jenis_rawat="{?=isset_or($value.jenis_rawat_code, 'ralan')?}"
+                                                data-tensi="{?=isset_or($value.tensi)?}"
+                                                data-nadi="{?=isset_or($value.nadi)?}"
+                                                data-respirasi="{?=isset_or($value.respirasi)?}"
+                                                data-suhu_tubuh="{?=isset_or($value.suhu_tubuh)?}"
+                                                data-spo2="{?=isset_or($value.spo2)?}"
+                                                data-tinggi="{?=isset_or($value.tinggi, '0')?}"
+                                                data-berat="{?=isset_or($value.berat, '0')?}"
+                                                data-gcs="{?=isset_or($value.gcs, 'E4M6V5')?}"
+                                                data-alergi="{?=isset_or($value.alergi, 'Tidak Ada')?}"
+                                                data-kesadaran="{?=isset_or($value.kesadaran, 'Compos Mentis')?}"
+                                                data-keluhan="{?=isset_or($value.keluhan)?}"
+                                                data-pemeriksaan="{?=isset_or($value.pemeriksaan)?}"
+                                                data-penilaian="{?=isset_or($value.penilaian)?}"
+                                                data-rtl="{?=isset_or($value.rtl)?}"
+                                                data-instruksi="{?=isset_or($value.instruksi)?}"
+                                                data-evaluasi="{?=isset_or($value.evaluasi)?}"
+                                                data-table_name="{?=isset_or($value.table_name)?}"
+                                                data-record_key="{?=isset_or($value.record_key)?}"
+                                                data-in_grace="{?= $value.in_grace ? '1' : '0' ?}"
+                                                data-needs_reason="{?= $value.needs_reason ? '1' : '0' ?}"
+                                                data-minutes_left="{?=isset_or($value.minutes_left, 0)?}"
+                                                data-grace_why="{?=isset_or($value.grace_why)?}"
+                                                {if: ($current_user != $value.nip && $this->core->getUserInfo('role') != 'admin') || $value.is_voided}disabled{/if}>
+                                                <i class="fa fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-xs btn-danger js-cppt-void-btn" title="Batalkan Catatan CPPT (VOID)" style="border-radius: 4px; margin-top: 2px;"
+                                                data-no_rawat="{?=isset_or($value.no_rawat)?}"
+                                                data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}"
+                                                data-jam_rawat="{?=isset_or($value.jam_rawat)?}"
+                                                data-jenis="{?=isset_or($value.jenis_rawat)?}"
+                                                data-table_name="{?=isset_or($value.table_name)?}"
+                                                data-record_key="{?=isset_or($value.record_key)?}"
+                                                data-in_grace="{?= $value.in_grace ? '1' : '0' ?}"
+                                                data-needs_reason="{?= $value.needs_reason ? '1' : '0' ?}"
+                                                data-minutes_left="{?=isset_or($value.minutes_left, 0)?}"
+                                                data-grace_why="{?=isset_or($value.grace_why)?}"
+                                                {if: ($current_user != $value.nip && $this->core->getUserInfo('role') != 'admin') || $value.is_voided}disabled{/if}>
                                                 <i class="fa fa-trash"></i>
-                                            </a>
+                                            </button>
                                         </td>
                                     </tr>
                                     {/loop}
@@ -308,3 +420,100 @@
         </div> <!-- /.col-md-9 -->
     </div> <!-- /.rsgm-soap-flex-row -->
 </div>
+<script type="text/javascript">
+(function($) {
+  if (!$) return;
+  var saveUrl = '{?=url([ADMIN, "form_rme", "cpptsave"])?}&ajax_save=1';
+  var hapusBaseUrl = '{?=url([ADMIN, "form_rme", "cppthapus"])?}&ajax_save=1';
+  var $form = $('#frm_new_cppt');
+  var $tbl = $('#tblCpptList');
+
+  if (window.RSGMSoapRevision && $tbl.length) {
+    window.RSGMSoapRevision.decorateContainer($tbl, 'form_rme');
+  }
+
+  function resetCpptForm() {
+    $('#cppt_is_edit').val('0');
+    $('#cppt_orig_tgl').val('');
+    $('#cppt_orig_jam').val('');
+    $('#cppt_edit_banner').hide();
+    $('#btn_cppt_cancel_edit').hide();
+    $('#cppt_form_heading').text('Tambah Entri Catatan Asesmen Ulang / CPPT Baru');
+    $('#btn_cppt_submit').html('<i class="fa fa-save"></i> Simpan Catatan CPPT Baru');
+  }
+
+  $tbl.on('click', '.js-cppt-edit-btn', function() {
+    var $b = $(this);
+    if ($b.is(':disabled')) return;
+    $('#cppt_is_edit').val('1');
+    $('#cppt_orig_tgl').val($b.attr('data-tgl_perawatan') || '');
+    $('#cppt_orig_jam').val($b.attr('data-jam_rawat') || '');
+    $form.find('[name="tgl_perawatan"]').val($b.attr('data-tgl_perawatan') || '');
+    $form.find('[name="jam_rawat"]').val($b.attr('data-jam_rawat') || '');
+    $form.find('[name="nip"]').val($b.attr('data-nip') || '');
+    $form.find('[name="jenis_rawat"]').val($b.attr('data-jenis_rawat') || 'ralan');
+    $form.find('[name="tensi"]').val($b.attr('data-tensi') || '');
+    $form.find('[name="nadi"]').val($b.attr('data-nadi') || '');
+    $form.find('[name="respirasi"]').val($b.attr('data-respirasi') || '');
+    $form.find('[name="suhu_tubuh"]').val($b.attr('data-suhu_tubuh') || '');
+    $form.find('[name="spo2"]').val($b.attr('data-spo2') || '');
+    $form.find('[name="kesadaran"]').val($b.attr('data-kesadaran') || 'Compos Mentis');
+    $('#cppt_tinggi').val($b.attr('data-tinggi') || '0');
+    $('#cppt_berat').val($b.attr('data-berat') || '0');
+    $('#cppt_gcs').val($b.attr('data-gcs') || 'E4M6V5');
+    $('#cppt_alergi').val($b.attr('data-alergi') || 'Tidak Ada');
+    $form.find('[name="keluhan"]').val($b.attr('data-keluhan') || '');
+    $form.find('[name="pemeriksaan"]').val($b.attr('data-pemeriksaan') || '');
+    $form.find('[name="penilaian"]').val($b.attr('data-penilaian') || '');
+    $form.find('[name="rtl"]').val($b.attr('data-rtl') || '');
+    $form.find('[name="instruksi"]').val($b.attr('data-instruksi') || '');
+    $form.find('[name="evaluasi"]').val($b.attr('data-evaluasi') || '');
+
+    var inGrace = $b.attr('data-in_grace') === '1';
+    var mins = $b.attr('data-minutes_left') || '0';
+    var why = $b.attr('data-grace_why') || '';
+    var info = inGrace
+      ? 'Masih dalam masa tenggang koreksi typo (sisa ~' + mins + ' menit).'
+      : 'Di luar masa tenggang (' + (why || 'koreksi wajib alasan') + ') \u2014 Alasan Koreksi wajib diisi saat menyimpan.';
+    $('#cppt_edit_banner_info').text(info);
+    $('#cppt_edit_banner').show();
+    $('#btn_cppt_cancel_edit').show();
+    $('#cppt_form_heading').text('Edit / Koreksi Catatan CPPT (' + ($b.attr('data-tgl_perawatan') || '') + ' ' + ($b.attr('data-jam_rawat') || '') + ')');
+    $('#btn_cppt_submit').html('<i class="fa fa-check"></i> Simpan Perubahan CPPT');
+    $('html, body').animate({ scrollTop: Math.max(0, $form.offset().top - 70) }, 250);
+  });
+
+  $(document).on('click', '.js-cppt-cancel-edit', function() {
+    resetCpptForm();
+  });
+
+  $form.on('submit', function(e) {
+    if (!window.RSGMSoapRevision) return true;
+    e.preventDefault();
+    var payload = { ajax_save: '1' };
+    $.each($form.serializeArray(), function(_, item) {
+      payload[item.name] = item.value;
+    });
+    window.RSGMSoapRevision.saveSoap('form_rme', saveUrl, payload, function(res) {
+      if (res && res.status === 'success') {
+        window.location.reload();
+      }
+    });
+    return false;
+  });
+
+  $tbl.on('click', '.js-cppt-void-btn', function() {
+    var $btn = $(this);
+    if ($btn.is(':disabled')) return;
+    var tblName = $btn.attr('data-table_name') || 'pemeriksaan_ralan';
+    var hapusUrl = hapusBaseUrl + '&table_name=' + encodeURIComponent(tblName);
+    if (window.RSGMSoapRevision) {
+      window.RSGMSoapRevision.voidSoap($btn, 'form_rme', hapusUrl, function(res) {
+        if (res && res.status === 'success') {
+          window.location.reload();
+        }
+      });
+    }
+  });
+})(window.jQuery);
+</script>

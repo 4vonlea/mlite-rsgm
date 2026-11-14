@@ -5,22 +5,24 @@
     <meta charset="utf-8">
     <title>Surat Pernyataan Pulang APS</title>
     <style>
+        {if: empty($is_mpdf)}
         @page {
             size: A4 portrait;
             margin: 10mm;
         }
+        {/if}
 
         body {
             font-family: Arial, sans-serif;
-            font-size: 13px;
+            font-size: {if: empty($is_mpdf)}13px{else}11px{/if};
             margin: 0;
             padding: 0;
         }
 
         .page {
-            width: 190mm;
+            width: {if: empty($is_mpdf)}190mm{else}100%{/if};
             margin: 0 auto;
-            position: relative;
+            {if: empty($is_mpdf)}position: relative;{/if}
         }
 
         .header-table {
@@ -92,28 +94,36 @@
             padding-bottom: 60px;
         }
 
+        {if: empty($is_mpdf)}
         @media print {
             body {
                 -webkit-print-color-adjust: exact;
             }
         }
-    
-{if: empty($is_mpdf)}
-@media screen {
-    body { background-color: #f4f6f9 !important; padding: 15px 0 !important; }
-    .container, .page, .main-box, .main-container { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; margin: 0 auto 20px auto !important; padding: 8mm 10mm !important; }
-}
-{/if}
-.no-print-toolbar { width: 100%; max-width: 195mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
-.btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-decoration: none; display: inline-block; }
-.btn-print { background: #27ae60; color: #fff; }
-.btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
-.btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
-@media print {
-    .no-print-toolbar { display: none !important; }
-    body { background: transparent !important; padding: 0 !important; }
-    .container, .page, .main-box, .main-container { box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
-}
+        @media screen {
+            body { background-color: #f4f6f9 !important; padding: 15px 0 !important; }
+            .container, .page, .main-box, .main-container { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; margin: 0 auto 20px auto !important; padding: 8mm 10mm !important; }
+        }
+        .no-print-toolbar { width: 100%; max-width: 195mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
+        .btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-decoration: none; display: inline-block; }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+        @media print {
+            .no-print-toolbar { display: none !important; }
+            body { background: transparent !important; padding: 0 !important; }
+            .container, .page, .main-box, .main-container { box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
+        }
+        {else}
+        .header-table { margin-bottom: 8px; padding-bottom: 3px; }
+        .title-doc { font-size: 12.5px; margin-bottom: 10px; }
+        .content { line-height: 1.35; font-size: 11px; }
+        .data-table { margin-bottom: 8px; }
+        .list-alasan { margin-top: 8px; margin-bottom: 8px; }
+        .list-alasan li { margin-bottom: 6px; }
+        .ttd-section { margin-top: 14px; }
+        .ttd-table td { padding-bottom: 12px; }
+        {/if}
 
 </style>
 </head>
@@ -147,8 +157,7 @@
                     <tr>
                         <td>Nama</td>
                         <td>:</td>
-                        <td>{$data.nama_pihak} &nbsp;&nbsp;&nbsp; ({if: ($data.jk_pihak ==
-                            'L')}laki-laki{else}perempuan{/if})</td>
+                        <td>{$data.nama_pihak} &nbsp;&nbsp;&nbsp; ({if: ($data.jk_pihak == 'L')}laki-laki{else}perempuan{/if})</td>
                     </tr>
                     <tr>
                         <td>No Kartu Identitas</td>
@@ -167,8 +176,7 @@
                     <tr>
                         <td>Nama</td>
                         <td>:</td>
-                        <td>{$data.nm_pasien} &nbsp;&nbsp;&nbsp; ({if: ($data.jk_pasien == 'L')}laki-laki{elseif:
-                            ($data.jk_pasien == 'P')}perempuan{else}-{/if})</td>
+                        <td>{$data.nm_pasien} &nbsp;&nbsp;&nbsp; ({if: ($data.jk_pasien == 'L')}laki-laki{elseif: ($data.jk_pasien == 'P')}perempuan{else}-{/if})</td>
                     </tr>
                     <tr>
                         <td>Tempat/Tanggal Lahir</td>
@@ -217,7 +225,10 @@
                     </tr>
                     <tr>
                         <td style="height: 90px; vertical-align: middle; text-align: center;">
-                            {if: !empty($data.ttd_saksi_rs)}
+                            {if: !empty($qr_saksi_rs)}
+                                <img src="{$qr_saksi_rs}" alt="QR TTE Saksi RS" style="width: 52px; height: 52px; display: block; margin: 0 auto 2px auto;">
+                                <span style="font-size: 8px; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
+                            {elseif: !empty($data.ttd_saksi_rs)}
                                 {if: strlen($data.ttd_saksi_rs) == 64}
                                     <barcode code="{?=url(['esignature', 'verify', $data.ttd_saksi_rs])?}" type="QR" class="barcode" size="0.7" error="M" disableborder="1" /><br>
                                     <span style="font-size: 8px; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
@@ -235,7 +246,8 @@
                                 <br><br><br>
                             {/if}
                         </td>
-                        <td style="height: 90px; vertical-align: middle; text-align: center;">
+                        <td style="height: {if: empty($is_mpdf)}90px{else}65px{/if}; vertical-align: middle; text-align: center;">
+                            {if: empty($is_mpdf)}
                             <div style="position: relative; display: inline-block; min-width: 120px; min-height: 70px;">
                                 <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); border: 1.5px dashed #c0392b; background: rgba(231,76,60,0.06); padding: 3px 6px; border-radius: 4px; color: #c0392b; font-size: 8px; font-weight: bold; text-align: center; line-height: 1.1; z-index: 1;">
                                     <span style="font-size: 6px; display: block; color: #7f8c8d;">BEA METERAI</span>
@@ -248,6 +260,15 @@
                                     <div style="height: 70px;"></div>
                                 {/if}
                             </div>
+                            {else}
+                                {if: !empty($data.ttd_pembuat)}
+                                    <img src="{$data.ttd_pembuat}" style="max-height: 60px; max-width: 130px;">
+                                {else}
+                                    <div style="border: 1px dashed #c0392b; padding: 3px 6px; color: #c0392b; font-size: 7.5px; font-weight: bold; text-align: center; width: 95px; margin: 0 auto;">
+                                        BEA METERAI<br>METERAI TEMPEL<br><span style="font-size: 9px;">10000</span>
+                                    </div>
+                                {/if}
+                            {/if}
                         </td>
                     </tr>
                     <tr>

@@ -2068,7 +2068,7 @@ CREATE TABLE IF NOT EXISTS `rm_lampiran_persetujuan_tindakan_radiologi` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
--- 62. LAMPIRAN - EWS DEWASA DAN ANAK (Ranap)
+-- 62. LAMPIRAN - EWS DEWASA (Ranap - RM RI 08)
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `rm_lampiran_ews` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -2077,6 +2077,26 @@ CREATE TABLE IF NOT EXISTS `rm_lampiran_ews` (
   `ruangan` varchar(100) DEFAULT NULL,
   `tanggal` date DEFAULT NULL,
   `detail_dewasa` longtext DEFAULT NULL,
+  `detail_anak` longtext DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
+  `kd_petugas` varchar(20) DEFAULT NULL,
+  `nama_petugas` varchar(150) DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `no_rawat` (`no_rawat`),
+  KEY `no_rkm_medis` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- 62A. LAMPIRAN - EWS ANAK (Ranap - RM RI 08A)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `rm_lampiran_ews_anak` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(20) NOT NULL,
+  `no_rkm_medis` varchar(15) DEFAULT NULL,
+  `ruangan` varchar(100) DEFAULT NULL,
+  `tanggal` date DEFAULT NULL,
   `detail_anak` longtext DEFAULT NULL,
   `catatan` text DEFAULT NULL,
   `kd_petugas` varchar(20) DEFAULT NULL,
@@ -2760,3 +2780,198 @@ CREATE TABLE IF NOT EXISTS `asesmen_medis_umum_ugd` (
   KEY `no_rawat` (`no_rawat`),
   KEY `no_rkm_medis` (`no_rkm_medis`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
+
+
+-- ========================================================
+-- UPDATE ANS4, ANS5, ANS6 & PENUNDAANKELAMBATAN (FORM-RME)
+-- ========================================================
+
+-- Update ANS4 Pra-Anestesi
+ALTER TABLE `rm_ans4_rencana_anestesi`
+  ADD COLUMN IF NOT EXISTS `no_rkm_medis` varchar(15) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `diagnosis_prabedah` text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `tindakan` text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `dr_operator` varchar(150) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `bb` varchar(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `tb` varchar(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `td` varchar(30) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `nadi` varchar(30) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `rr` varchar(30) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `suhu` varchar(30) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `spo2` varchar(30) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `hb` varchar(30) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `alergi` enum('Ya','Tidak') DEFAULT 'Tidak',
+  ADD COLUMN IF NOT EXISTS `alergi_ket` varchar(255) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `jalan_napas_status` enum('Normal','Abnormal') DEFAULT 'Normal',
+  ADD COLUMN IF NOT EXISTS `jalan_napas_abnormal_ket` varchar(150) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `buka_mulut_2jari` enum('Y','N') DEFAULT 'N',
+  ADD COLUMN IF NOT EXISTS `jarak_thyromental_3jari` enum('Y','N') DEFAULT 'N',
+  ADD COLUMN IF NOT EXISTS `mallampati` varchar(10) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `gerakan_leher_maksimum` enum('Y','N') DEFAULT 'N',
+  ADD COLUMN IF NOT EXISTS `status_asa` varchar(10) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `tilik_ngt` enum('Y','N') DEFAULT 'N',
+  ADD COLUMN IF NOT EXISTS `pra_td` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `pra_n` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `pra_temp` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `pra_rr` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `pra_spo2` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `pra_td_check` enum('Y','N') DEFAULT 'N',
+  ADD COLUMN IF NOT EXISTS `pra_n_check` enum('Y','N') DEFAULT 'N',
+  ADD COLUMN IF NOT EXISTS `pra_temp_check` enum('Y','N') DEFAULT 'N',
+  ADD COLUMN IF NOT EXISTS `pra_rr_check` enum('Y','N') DEFAULT 'N',
+  ADD COLUMN IF NOT EXISTS `pra_spo2_check` enum('Y','N') DEFAULT 'N',
+  ADD COLUMN IF NOT EXISTS `jenis_anestesi_lain` varchar(100) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ventilasi_spontan` char(1) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ventilasi_kendali` char(1) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ventilasi_ventilator` char(1) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ventilasi_tv` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ventilasi_rr` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `induksi_iv` varchar(100) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `induksi_inhalasi` varchar(100) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `jn_nasal_kanul` enum('Y','N') DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reg_lainnya` varchar(100) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reg_jenis_jarum_no` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `penata_anestesi` varchar(150) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `grid_data` longtext DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `waktu_induksi` varchar(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `waktu_insisi` varchar(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `waktu_operasi_mulai` varchar(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `waktu_operasi_selesai` varchar(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `waktu_anestesi_selesai` varchar(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `catatan_intra` text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `tanda_tangan_penata` varchar(150) DEFAULT NULL;
+
+-- View untuk kompatibilitas
+CREATE OR REPLACE VIEW `ans4_rencana_anestesi` AS SELECT * FROM `rm_ans4_rencana_anestesi`;
+
+-- Update ANS5 Status Anestesi
+ALTER TABLE `ans5_status_anestesi`
+  ADD COLUMN IF NOT EXISTS `waktu_induksi` varchar(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `waktu_insisi` varchar(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `waktu_operasi_mulai` varchar(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `waktu_operasi_selesai` varchar(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `waktu_anestesi_selesai` varchar(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `catatan_intra` text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `tanda_tangan_penata` varchar(150) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `induksi_iv` varchar(150) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `induksi_inhalasi` varchar(150) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `jn_lma_no` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `jn_lma_cuff` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `jn_ett_kink` enum('Y','N') DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `jn_ett_nonkink` enum('Y','N') DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `jn_ett_oral_nasal` enum('Oral','Nasal') DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `jn_ett_no` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `jn_ett_cuff` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `jn_ett_batas` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `jn_masker` enum('Y','N') DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `jn_nasal_kanul` enum('Y','N') DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ventilasi_spontan` char(1) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ventilasi_kendali` char(1) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ventilasi_ventilator` char(1) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ventilasi_tv` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ventilasi_rr` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reg_epidural` enum('Y','N') DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reg_sab` enum('Y','N') DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reg_caudal` enum('Y','N') DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reg_lainnya` varchar(100) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reg_jenis_jarum` varchar(100) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reg_jenis_jarum_no` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reg_blok_vth` varchar(100) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reg_jenis_pnb` varchar(100) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reg_obat` varchar(100) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reg_dosis` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reg_vol` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reg_epidural_ket` varchar(100) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `masalah_induksi` enum('Ada','Tidak Ada') DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `masalah_induksi_ket` text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `perubahan_rencana` enum('Ada','Tidak Ada') DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `perubahan_rencana_ket` text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ga_intubasi` enum('Y','N') DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ga_tiva` enum('Y','N') DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ga_lma` enum('Y','N') DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ga_masker` enum('Y','N') DEFAULT NULL;
+
+-- Update ANS6 Status Post Anestesi
+ALTER TABLE `rm_ans6_status_post_anestesi`
+  ADD COLUMN IF NOT EXISTS `penata_anestesi` varchar(150) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `vital_rr` varchar(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `vital_vas` varchar(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `grid_data` longtext DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `bromage_jam_pasca_15` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `bromage_jam_pasca_30` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `bromage_jam_pasca_45` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `bromage_jam_1` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `bromage_jam_2` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `bromage_jam_3` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `bromage_jam_4` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `bromage_jam_pindah` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `pindah_ke` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `pindah_ke_ruang` varchar(150) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `skor_detail` longtext DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `instruksi_obs_td_ket` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `instruksi_obs_respirasi_ket` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `instruksi_obs_nadi_ket` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `instruksi_obs_kesadaran_ket` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `instruksi_obs_urin_ket` varchar(50) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `instruksi_catatan` text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `tanda_tangan_penata` varchar(150) DEFAULT NULL;
+
+-- View untuk kompatibilitas
+CREATE OR REPLACE VIEW `ans6_status_post_anestesi` AS SELECT * FROM `rm_ans6_status_post_anestesi`;
+
+-- Update Penundaan dan Kelambatan Pelayanan
+ALTER TABLE `rm_lampiran_penundaan_kelambatan_pelayanan`
+  ADD COLUMN IF NOT EXISTS `status_setuju` varchar(20) DEFAULT 'SETUJU',
+  ADD COLUMN IF NOT EXISTS `ttd_keluarga` text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ttd_dpjp` text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ttd_petugas` text DEFAULT NULL;
+
+-- Formulir Persetujuan Umum (General Consent - RM.RJ 02 Hal 1-3)
+CREATE TABLE IF NOT EXISTS `rm_persetujuan_umum` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(30) NOT NULL,
+  `no_rkm_medis` varchar(20) DEFAULT NULL,
+  `nama_pasien` varchar(150) DEFAULT NULL,
+  `jk` varchar(10) DEFAULT NULL,
+  `tgl_lahir` varchar(30) DEFAULT NULL,
+  `pelepasan_info_keluarga_1` varchar(150) DEFAULT NULL,
+  `pelepasan_info_keluarga_2` varchar(150) DEFAULT NULL,
+  `pelepasan_info_keluarga_3` varchar(150) DEFAULT NULL,
+  `tanggal_persetujuan` date DEFAULT NULL,
+  `penandatangan_hubungan` varchar(50) DEFAULT 'Pasien Sendiri',
+  `penandatangan_nama` varchar(150) DEFAULT NULL,
+  `ttd_pasien` longtext DEFAULT NULL,
+  `nama_petugas` varchar(150) DEFAULT NULL,
+  `nip_petugas` varchar(50) DEFAULT NULL,
+  `ttd_petugas` text DEFAULT NULL,
+  `created_at` varchar(20) DEFAULT NULL,
+  `updated_at` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_rm_persetujuan_umum_no_rawat` (`no_rawat`),
+  KEY `idx_rm_persetujuan_umum_no_rm` (`no_rkm_medis`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `mlite_rme_form` (`kode_form`, `nama_form`, `kategori`, `target_aktor`, `route_manage`, `route_form`, `route_cetak`, `nama_tabel`, `deskripsi`, `status`, `urutan`)
+SELECT 'RJ02', 'RM.RJ 02 - Formulir Persetujuan Umum (General Consent)', 'Rajal', 'pasien,medis,paramedis,rekammedis', 'persetujuanumummanage', 'persetujuanumumform', 'persetujuanumumcetak', 'rm_persetujuan_umum', 'Formulir Persetujuan Umum (General Consent) 3 halaman sesuai RM.RJ - 02', '1', 28
+FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM `mlite_rme_form` WHERE `kode_form` = 'RJ02');
+
+-- Pemisahan Formulir EWS Dewasa (L_EWS) & EWS Anak (L_EWS_ANAK)
+UPDATE `mlite_rme_form`
+SET `nama_form` = 'Lampiran - Early Warning System (EWS) Dewasa',
+    `deskripsi` = 'Formulir Pemantauan EWS Pasien Dewasa (RM RI 08)'
+WHERE `kode_form` = 'L_EWS';
+
+INSERT INTO `mlite_rme_form` (`kode_form`, `nama_form`, `kategori`, `target_aktor`, `route_manage`, `route_form`, `route_cetak`, `nama_tabel`, `deskripsi`, `status`, `urutan`)
+SELECT 'L_EWS_ANAK', 'Lampiran - Early Warning System (EWS) Anak', 'Ranap', 'paramedis', 'ewsanakmanage', 'ewsanakform', 'ewsanakcetak', 'rm_lampiran_ews_anak', 'Formulir Pemantauan EWS Pasien Anak (RM RI 08A)', '1', 60
+FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM `mlite_rme_form` WHERE `kode_form` = 'L_EWS_ANAK');
+
+INSERT INTO `mlite_rme_unit_form` (`kd_poli`, `form_id`, `status`)
+SELECT 'RANAP', f.id, 1
+FROM `mlite_rme_form` f
+WHERE f.kode_form = 'L_EWS_ANAK'
+  AND NOT EXISTS (
+    SELECT 1 FROM `mlite_rme_unit_form` u WHERE u.kd_poli = 'RANAP' AND u.form_id = f.id
+  );
+

@@ -60,6 +60,9 @@
             <option value="9" {if: isset_or($penilaian_ulang_nyeri.skala_nyeri, '') == '9'}selected{/if}>9 - Nyeri Berat</option>
             <option value="10" {if: isset_or($penilaian_ulang_nyeri.skala_nyeri, '') == '10'}selected{/if}>10 - Nyeri Sangat Berat</option>
         </select>
+        <div style="margin-top: 6px; padding: 4px; background: #fff; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center;">
+          <img src="{?=url('assets/img/rj04_skala_nyeri.png')?}" alt="Skala Nyeri 0-10" style="max-width: 100%; height: auto; max-height: 85px; display: block; margin: 0 auto;">
+        </div>
       </div>
     </div>
     <div class="col-md-4">

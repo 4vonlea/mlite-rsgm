@@ -1,0 +1,832 @@
+<div id="form_soap" class="rsgm-reg-form clearfix">
+    <div class="rsgm-reg-shell">
+        <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+                <span class="rsgm-reg-icon"><i class="fa fa-child"></i></span>
+                <span>{if: !empty($id)}Edit{else}Tambah{/if} Formulir EWS Anak (Pediatric Early Warning Score)</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">RM RI 08A</span>
+                <a href="{?=url([ADMIN, 'form_rme', 'ewsanakmanage'])?}" class="btn btn-default btn-xs" style="border-radius: 6px; font-weight: 600;">
+                    <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+                </a>
+                {if: !empty($id)}
+                <a href="{?=url([ADMIN, 'form_rme', 'ewsanakcetak', $id])?}" target="_blank" class="btn btn-info btn-xs" style="border-radius: 6px; font-weight: 600;">
+                    <i class="fa fa-print"></i> Cetak / PDF
+                </a>
+                {/if}
+            </div>
+        </div>
+        <div class="rsgm-reg-body">
+        <form method="POST" action="" class="form-horizontal" id="form-ews-anak">
+            <!-- PENCARIAN & IDENTITAS PASIEN -->
+            <div class="alert alert-info" style="margin-bottom: 15px; padding: 12px 15px;">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label style="font-size: 12px; margin-bottom: 3px;">No. Rawat / RM <span class="text-danger">*</span></label>
+                        {if: !empty($data.no_rawat)}
+                        <input type="text" name="no_rawat" id="no_rawat" class="form-control" value="{?=isset_or($data['no_rawat'])?}" readonly style="background-color: #f8fafc; font-weight: 700; color: #1d4ed8; border-radius: 6px; height: 34px;">
+                        {else}
+                        <div class="input-group">
+                            <input type="text" name="no_rawat" id="no_rawat" class="form-control input-sm" value="{$data.no_rawat}" placeholder="No. Rawat / No. RM" required>
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary btn-sm" type="button" id="btn-cari-pasien" title="Cari data pasien dari database">
+                                    <i class="fa fa-search"></i> Cari
+                                </button>
+                            </span>
+                        </div>
+                        {/if}
+                    </div>
+                    <div class="col-md-3">
+                        <label style="font-size: 12px; margin-bottom: 3px;">Nama Pasien <span class="text-danger">*</span></label>
+                        <input type="text" name="nama_pasien" id="top_nama_pasien" class="form-control input-sm" value="{$data.nm_pasien}" placeholder="Nama Lengkap Pasien" required readonly style="background-color: #f8fafc; font-weight: 700;">
+                    </div>
+                    <div class="col-md-2">
+                        <label style="font-size: 12px; margin-bottom: 3px;">Tanggal Lahir</label>
+                        <input type="text" name="tgl_lahir" id="top_tgl_lahir" class="form-control input-sm" value="{$data.tgl_lahir_pasien}" readonly style="background-color: #f8fafc; font-weight: 600;">
+                    </div>
+                    <div class="col-md-2">
+                        <label style="font-size: 12px; margin-bottom: 3px;">Jenis Kelamin</label>
+                        <input type="text" id="display_top_jk" class="form-control input-sm" value="{if: $data.jk == 'L'}Laki-laki (L){elseif: $data.jk == 'P'}Perempuan (P){else}-{/if}" readonly style="background-color: #f8fafc; font-weight: 600;">
+                        <input type="hidden" name="jk" id="top_jk" value="{$data.jk}">
+                    </div>
+                    <div class="col-md-2">
+                        <label style="font-size: 12px; margin-bottom: 3px;">Ruangan / Kamar</label>
+                        <input type="text" name="ruangan" id="ruangan" class="form-control input-sm" value="{$data.ruangan}" placeholder="Ruangan / Kamar" required>
+                        <input type="hidden" name="no_rkm_medis" id="no_rkm_medis" value="{$data.no_rkm_medis}">
+                        <input type="hidden" name="tanggal" id="tanggal" value="{$data.tanggal}">
+                        <input type="hidden" name="nama_petugas" id="nama_petugas" value="{$data.nama_petugas}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOOLBAR CEPAT EWS ANAK -->
+            <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div style="font-size: 12px; color: #334155;">
+                    <strong><i class="fa fa-info-circle text-info"></i> Petunjuk Pengisian EWS Anak (RM RI 08A):</strong>
+                    Klik sel pengukuran (Keadaan Umum, Kardiovaskular, Respirasi) untuk menandai nilai (0 s/d 3). Total skor dan baris respon klinis terhitung otomatis.
+                </div>
+                <div style="display: flex; gap: 6px;">
+                    <button type="button" class="btn btn-success btn-xs" id="btn-quick-now-anak" title="Isikan tanggal & jam sekarang pada kolom kosong pertama">
+                        <i class="fa fa-clock-o"></i> + Tgl & Jam Sekarang
+                    </button>
+                    <button type="button" class="btn btn-default btn-xs" id="btn-clear-anak" title="Kosongkan seluruh data tabel EWS Anak">
+                        <i class="fa fa-eraser"></i> Bersihkan Kolom
+                    </button>
+                </div>
+            </div>
+
+            <!-- LEMBAR FISIK DOKUMEN EWS ANAK -->
+            <div class="ews-sheet-wrapper">
+                <div class="ews-sheet-container">
+                    <!-- KOP SURAT RSGM -->
+                    <div class="ews-kop-box">
+                        {if: !empty($kop_img)}
+                        <img src="{$kop_img}" alt="KOP RSGM Gusti Hasan Aman" class="ews-kop-img">
+                        {else}
+                        <div style="font-size: 10pt; font-weight: bold;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+                        <div style="font-size: 12pt; font-weight: bold;">RUMAH SAKIT GIGI DAN MULUT GUSTI HASAN AMAN</div>
+                        <div style="font-size: 7pt;">Jl. Simpang Ulin No. 28 Banjarmasin Kode Pos 70233 Telp/Fax (0511) 3260818<br>Email : rsgmgustihasanaman@yahoo.com Website : rsgm.kalselprov.go.id</div>
+                        {/if}
+                    </div>
+
+                    <!-- HEADER IDENTITAS PASIEN (SESUAI RM RI 08A) -->
+                    <table class="ews-patient-header">
+                        <tr>
+                            <td class="box-title" style="width: 25%;">
+                                Early Warning Scoring<br>System (Anak)
+                            </td>
+                            <td class="box-name" style="width: 45%; vertical-align: middle;">
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    <span style="font-weight: bold; white-space: nowrap;">Nama:</span>
+                                    <input type="text" id="inp_nama_pasien_anak" class="form-control input-sm inp-box-patient" value="{$data.nm_pasien}" placeholder="Nama pasien" readonly style="height: 24px; font-weight: 700; font-size: 11px; padding: 1px 6px; border: 1px solid #cbd5e1; background: #f8fafc;">
+                                </div>
+                            </td>
+                            <td class="box-meta" style="width: 30%; vertical-align: middle;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                                    <span style="font-weight: bold; white-space: nowrap;">Tanggal Lahir:</span>
+                                    <input type="text" id="inp_tgl_lahir_anak" class="form-control input-sm inp-box-patient" value="{$data.tgl_lahir_pasien}" readonly style="height: 22px; width: 130px; font-size: 10.5px; padding: 0 4px; border: 1px solid #cbd5e1; background: #f8fafc;">
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="font-weight: bold;">Jenis Kelamin :</span>
+                                    <span id="opt_jk_l" class="jk-click-opt {if: $data.jk == 'L'}jk-circle{/if}" data-jk="L" title="Pilih Laki-laki">L</span>
+                                    <span>/</span>
+                                    <span id="opt_jk_p" class="jk-click-opt {if: $data.jk == 'P'}jk-circle{/if}" data-jk="P" title="Pilih Perempuan">P</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- TABEL OBSERVASI 16 KOLOM EWS ANAK -->
+                    <div class="ews-grid-scroll">
+                        <table class="table-ews-grid table-h2-grid" id="table-ews-anak">
+                            <!-- ROW 1: TANGGAL -->
+                            <tr class="row-header">
+                                <td colspan="2" class="col-hdr-label" style="width: 250px;">Tanggal:</td>
+                                {loop: $colsH2}
+                                <td class="cell-inp-hdr" style="width: 32px;">
+                                    <input type="text" class="inp-cell-tgl-anak" data-col="{$value}" placeholder="dd/mm">
+                                </td>
+                                {/loop}
+                                <td class="col-score-mid" style="width: 38px;">SKOR</td>
+                            </tr>
+                            <!-- ROW 2: JAM -->
+                            <tr class="row-header">
+                                <td colspan="2" class="col-hdr-label">Jam:</td>
+                                {loop: $colsH2}
+                                <td class="cell-inp-hdr">
+                                    <input type="text" class="inp-cell-jam-anak" data-col="{$value}" placeholder="hh:mm">
+                                </td>
+                                {/loop}
+                                <td class="col-score-mid">&nbsp;</td>
+                            </tr>
+
+                            <!-- 1. KEADAAN UMUM -->
+                            <tr>
+                                <td rowspan="4" class="col-param-h2">KEADAAN<br>UMUM</td>
+                                <td class="h2-sub-label bg-h2-green">Interaksi biasa</td>
+                                {loop: $colsH2}<td class="cell-obs bg-h2-green clickable-cell-anak" data-col="{$value}" data-param="keadaan_umum" data-val="0"></td>{/loop}
+                                <td class="col-score-mid bg-h2-green">0</td>
+                            </tr>
+                            <tr>
+                                <td class="h2-sub-label bg-h2-yellow">somnolen atau rewel tetapi dapat ditenangkan</td>
+                                {loop: $colsH2}<td class="cell-obs bg-h2-yellow clickable-cell-anak" data-col="{$value}" data-param="keadaan_umum" data-val="1"></td>{/loop}
+                                <td class="col-score-mid bg-h2-yellow">1</td>
+                            </tr>
+                            <tr>
+                                <td class="h2-sub-label bg-h2-peach">Ilritabel, tidak dapat ditenangkan</td>
+                                {loop: $colsH2}<td class="cell-obs bg-h2-peach clickable-cell-anak" data-col="{$value}" data-param="keadaan_umum" data-val="2"></td>{/loop}
+                                <td class="col-score-mid bg-h2-peach">2</td>
+                            </tr>
+                            <tr>
+                                <td class="h2-sub-label bg-h2-pink">Letargi, Gelisah, penurunan respon terhadap nyeri</td>
+                                {loop: $colsH2}<td class="cell-obs bg-h2-pink clickable-cell-anak" data-col="{$value}" data-param="keadaan_umum" data-val="3"></td>{/loop}
+                                <td class="col-score-mid bg-h2-pink">3</td>
+                            </tr>
+
+                            <!-- 2. KARDIO VASKULAR -->
+                            <tr>
+                                <td rowspan="4" class="col-param-h2">KARDIO<br>VASKULAR</td>
+                                <td class="h2-sub-label bg-h2-green">• Tidak sianosis, ATAU Pengisisankapier &lt;2 detik</td>
+                                {loop: $colsH2}<td class="cell-obs bg-h2-green clickable-cell-anak" data-col="{$value}" data-param="kardiovaskular" data-val="0"></td>{/loop}
+                                <td class="col-score-mid bg-h2-green">0</td>
+                            </tr>
+                            <tr>
+                                <td class="h2-sub-label bg-h2-yellow">• Tidak Pucat ATAU Pengisisan kapier 2 detik</td>
+                                {loop: $colsH2}<td class="cell-obs bg-h2-yellow clickable-cell-anak" data-col="{$value}" data-param="kardiovaskular" data-val="1"></td>{/loop}
+                                <td class="col-score-mid bg-h2-yellow">1</td>
+                            </tr>
+                            <tr>
+                                <td class="h2-sub-label bg-h2-peach">• Tampak siasonik, ATAU Pengisian kapier &gt; 2 detik, ATAU Takikardi &gt; 20x di atas parameter RR sesuai usia/mt</td>
+                                {loop: $colsH2}<td class="cell-obs bg-h2-peach clickable-cell-anak" data-col="{$value}" data-param="kardiovaskular" data-val="2"></td>{/loop}
+                                <td class="col-score-mid bg-h2-peach">2</td>
+                            </tr>
+                            <tr>
+                                <td class="h2-sub-label bg-h2-pink">• Sianotik dan motlet, ATAU Pengisisan Kapier &gt; 5 detik ATAU Takikardi &gt; 30x di atas parameter RR sesuai usia/mt ATAU, Bradikardia (sesuai Usia)</td>
+                                {loop: $colsH2}<td class="cell-obs bg-h2-pink clickable-cell-anak" data-col="{$value}" data-param="kardiovaskular" data-val="3"></td>{/loop}
+                                <td class="col-score-mid bg-h2-pink">3</td>
+                            </tr>
+
+                            <!-- 3. RESPIRASI -->
+                            <tr>
+                                <td rowspan="4" class="col-param-h2">RESPIRASI</td>
+                                <td class="h2-sub-label bg-h2-green">• Respirasi dalam parameter mormal, tidak terdapat retraksi</td>
+                                {loop: $colsH2}<td class="cell-obs bg-h2-green clickable-cell-anak" data-col="{$value}" data-param="respirasi" data-val="0"></td>{/loop}
+                                <td class="col-score-mid bg-h2-green">0</td>
+                            </tr>
+                            <tr>
+                                <td class="h2-sub-label bg-h2-yellow">• Respirasi &gt; 10x di atas parameter RR sesuai Usia permenit, ATAU<br>• Menggunakan Otot alat bantu napas, ATAU Menggunakan FiO2 lebih dari 30%</td>
+                                {loop: $colsH2}<td class="cell-obs bg-h2-yellow clickable-cell-anak" data-col="{$value}" data-param="respirasi" data-val="1"></td>{/loop}
+                                <td class="col-score-mid bg-h2-yellow">1</td>
+                            </tr>
+                            <tr>
+                                <td class="h2-sub-label bg-h2-peach">• Respirasi &gt; 20x di atas parameter RR sesuai usia/menit, ATAU<br>• Ada retraksi, ATAU Menggunakan FiO2 lebih dari 40%</td>
+                                {loop: $colsH2}<td class="cell-obs bg-h2-peach clickable-cell-anak" data-col="{$value}" data-param="respirasi" data-val="2"></td>{/loop}
+                                <td class="col-score-mid bg-h2-peach">2</td>
+                            </tr>
+                            <tr>
+                                <td class="h2-sub-label bg-h2-pink">• Respirasi &gt; 30x di atas parameter normal, ATAU<br>• ≥ 5x di bawah RR sesuai usia per menit dengan retraksi berat ATAU Merintih, ATAU Menggunakan FiO2 lebih dari 50%</td>
+                                {loop: $colsH2}<td class="cell-obs bg-h2-pink clickable-cell-anak" data-col="{$value}" data-param="respirasi" data-val="3"></td>{/loop}
+                                <td class="col-score-mid bg-h2-pink">3</td>
+                            </tr>
+
+                            <!-- TOTAL SKOR EWS ANAK -->
+                            <tr class="row-total-skor">
+                                <td colspan="2" class="col-total-label">TOTAL SKOR</td>
+                                {loop: $colsH2}
+                                <td class="cell-obs total-skor-anak-cell" data-col="{$value}">-</td>
+                                {/loop}
+                                <td class="col-score-mid" style="background: #f8f9fa;">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- TABEL ACUAN TANDA VITAL BERDASARKAN USIA -->
+                    <table class="table-usia-h2">
+                        <tr>
+                            <th colspan="2" class="th-usia-blue">Usia</th>
+                            <th class="th-usia-blue">Nadi saat istirahat<br>(kali/menit)</th>
+                            <th class="th-usia-blue">Nafas saat istirahat<br>(napas/menit)</th>
+                        </tr>
+                        <tr class="tr-usia-row">
+                            <td class="td-usia-lbl">Neonatus</td>
+                            <td>0 - 1 bulan</td>
+                            <td>100 - 180</td>
+                            <td>40 - 60</td>
+                        </tr>
+                        <tr class="tr-usia-row">
+                            <td class="td-usia-lbl">Bayi</td>
+                            <td>1 - 12 bulan</td>
+                            <td>100 - 180</td>
+                            <td>35 - 40</td>
+                        </tr>
+                        <tr class="tr-usia-row">
+                            <td class="td-usia-lbl">Balita</td>
+                            <td>13 - 36 bulan</td>
+                            <td>70 - 110</td>
+                            <td>25 - 30</td>
+                        </tr>
+                        <tr class="tr-usia-row">
+                            <td class="td-usia-lbl">Pra-Sekolah</td>
+                            <td>4 - 6 tahun</td>
+                            <td>70 - 110</td>
+                            <td>21 - 23</td>
+                        </tr>
+                        <tr class="tr-usia-row">
+                            <td class="td-usia-lbl">Sekolah</td>
+                            <td>7 - 12 tahun</td>
+                            <td>70 - 110</td>
+                            <td>19 - 21</td>
+                        </tr>
+                        <tr class="tr-usia-row">
+                            <td class="td-usia-lbl">Remaja</td>
+                            <td>13 - 19 tahun</td>
+                            <td>55 - 90</td>
+                            <td>16 - 18</td>
+                        </tr>
+                    </table>
+
+                    <!-- TABEL PANDUAN RESPON KLINIS EWS ANAK -->
+                    <table class="ews-panduan-table" style="margin-top: 5px;">
+                        <tr id="guide-anak-stabil">
+                            <td class="lbl-guide-h2 bg-h2-green-guide">SKOR 0-2</td>
+                            <td>• Pasien dalam keadaan stabil, jika skor 0 lakukan evaluasi secara rutin tiap 8 jam, jika skor naik 1 atau 2, Lakukan evaluasi setiap 4 jam, jika diperlukan assessment oleh dokter jaga bangsal</td>
+                        </tr>
+                        <tr id="guide-anak-sedang">
+                            <td class="lbl-guide-h2 bg-h2-yellow-guide">SKOR 3-4</td>
+                            <td>• Ada penururnan kondisi pasien, assessment oleh dokter jaga bangsal, Lakukan evaluasi ulang setiap 2 jam atau lebih cepat, Konsultasi ke DPJP, lakukan terapi sesuai intruksi, jika diperlukan dipindahkan ke area dengan monitoring yang sesuai</td>
+                        </tr>
+                        <tr id="guide-anak-tinggi">
+                            <td class="lbl-guide-h2 bg-h2-red-guide">SKOR 5 atau lebih</td>
+                            <td>• Ada perubahan yang signifikan, Lakukan resusitasi, monitoring secara kontinyu, Aktivasi code blue kegawatan medis (666) respon Tim Medis Emergency (TME) segera, maksimal 10 menit, Informasi dan Konsultasikan ke DPJP</td>
+                        </tr>
+                        <tr id="guide-anak-henti">
+                            <td class="lbl-guide-h2 bg-h2-blue-guide">SKOR 0-5</td>
+                            <td>• Lakukan RJP oleh petugas/tim primer, aktivasi code blue henti jantung (666), respon Tim Medis Emergency, maksimal 5 menit, Informasikan dan Konsultasikan ke DPJP</td>
+                        </tr>
+                    </table>
+
+                    <!-- FOOTER HALAMAN EWS ANAK -->
+                    <table class="ews-footer-table">
+                        <tr>
+                            <td style="text-align: left; font-weight: bold; width: 30%;">RM.RI - 08A / RSGM/Ed-2022</td>
+                            <td style="text-align: right; font-style: italic; width: 70%;">
+                                Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas
+                                <span class="ews-square-box"></span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CATATAN TAMBAHAN & PETUGAS -->
+            <div class="row" style="margin-top: 15px;">
+                <div class="col-md-8">
+                    <div class="form-group" style="margin-left: 0; margin-right: 0;">
+                        <label>Catatan Tambahan / Instruksi Dokter DPJP:</label>
+                        <textarea name="catatan" id="catatan" class="form-control" rows="2" placeholder="Catatan instruksi DPJP atau catatan pemantauan khusus...">{$data.catatan}</textarea>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group" style="margin-left: 0; margin-right: 0;">
+                        <label>Nama Petugas Pelaksana:</label>
+                        <input type="text" name="nama_petugas_input" id="nama_petugas_input" class="form-control" value="{$data.nama_petugas}" placeholder="Nama Petugas Pelaksana">
+                    </div>
+                </div>
+            </div>
+
+            <!-- HIDDEN JSON FIELD -->
+            <input type="hidden" name="detail_anak" id="json_detail_anak" value="">
+
+            <!-- BUTTONS -->
+            <div class="text-right" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                <a href="{?=url([ADMIN, 'form_rme', 'ewsanakmanage'])?}" class="btn btn-default">
+                    <i class="fa fa-arrow-left"></i> Batal & Kembali
+                </a>
+                <button type="submit" class="btn btn-primary" style="min-width: 170px; font-weight: bold;" id="btn-simpan">
+                    <i class="fa fa-save"></i> Simpan Formulir EWS Anak
+                </button>
+            </div>
+        </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.ews-sheet-wrapper {
+    background: #525659;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+.ews-sheet-container {
+    background: #ffffff;
+    width: 1000px;
+    margin: 0 auto;
+    padding: 8px 10px;
+    border: 1.5px solid #000;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    font-family: Arial, Helvetica, sans-serif;
+    color: #000;
+}
+.ews-kop-box {
+    text-align: center;
+    border-bottom: 1.5px solid #000;
+    padding-bottom: 3px;
+    margin-bottom: 2px;
+}
+.ews-kop-img {
+    width: 100%;
+    max-height: 65px;
+    object-fit: contain;
+}
+
+/* HEADER INFO PASIEN */
+.ews-patient-header {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 3px;
+}
+.ews-patient-header td {
+    border: 1.5px solid #000;
+    padding: 3px 6px;
+    vertical-align: middle;
+}
+.box-title {
+    font-size: 7.5pt;
+    font-weight: bold;
+    line-height: 1.15;
+    text-align: center;
+}
+.box-name {
+    font-size: 7.2pt;
+}
+.box-meta {
+    font-size: 7.2pt;
+    line-height: 1.25;
+}
+.jk-circle {
+    display: inline-block;
+    border: 1.5px solid #000;
+    border-radius: 50%;
+    padding: 0 5px;
+    font-weight: bold;
+    background: #e2e8f0;
+}
+.jk-click-opt {
+    cursor: pointer;
+    display: inline-block;
+    padding: 0 5px;
+    font-weight: bold;
+    border-radius: 50%;
+    transition: all 0.15s ease;
+}
+.jk-click-opt:hover {
+    background: #cbd5e1;
+}
+
+/* TABEL OBSERVASI GRID */
+.ews-grid-scroll {
+    width: 100%;
+    overflow-x: auto;
+}
+.table-ews-grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 6.2pt;
+    table-layout: fixed;
+}
+.table-ews-grid th, .table-ews-grid td {
+    border: 1px solid #000;
+    padding: 0;
+    text-align: center;
+    vertical-align: middle;
+    height: 16px;
+}
+.table-ews-grid .col-hdr-label {
+    text-align: left;
+    padding-left: 4px;
+    font-weight: bold;
+    font-size: 6.8pt;
+}
+.col-score-mid {
+    font-weight: bold;
+    background: #ffffff;
+    color: #000;
+}
+.cell-inp-hdr {
+    padding: 0 !important;
+    background: #fff;
+}
+.inp-cell-tgl-anak, .inp-cell-jam-anak {
+    width: 100%;
+    height: 15.5px;
+    border: none;
+    background: transparent;
+    font-size: 6pt;
+    text-align: center;
+    padding: 0;
+    margin: 0;
+    font-weight: bold;
+    color: #000;
+}
+.inp-cell-tgl-anak:focus, .inp-cell-jam-anak:focus {
+    outline: 2px solid #3b82f6;
+    background: #eff6ff;
+}
+
+.cell-obs {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.1s;
+}
+.clickable-cell-anak:hover {
+    filter: brightness(0.9);
+    outline: 1.5px solid #2563eb;
+    z-index: 2;
+}
+.clickable-cell-anak.is-selected {
+    background-image: none !important;
+}
+.cell-mark-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    line-height: 9px;
+    background: #111;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 7px;
+    font-weight: bold;
+}
+
+.col-total-label {
+    text-align: center;
+    font-weight: bold;
+    font-size: 6.8pt;
+    background: #f8f9fa;
+}
+.total-skor-anak-cell {
+    font-size: 7.5pt;
+    font-weight: bold;
+    background: #f8f9fa;
+}
+
+.ews-panduan-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 6pt;
+    line-height: 1.15;
+    border-top: 1.5px solid #000;
+    margin-top: 4px;
+}
+.ews-panduan-table td {
+    border: 1px solid #000;
+    padding: 2.5px 4px;
+    vertical-align: middle;
+}
+.ews-panduan-table tr.active-guidance {
+    outline: 2px solid #000;
+}
+
+.col-param-h2 {
+    width: 76px;
+    font-weight: bold;
+    font-size: 6.5pt;
+    text-align: center;
+    padding: 1px 2px;
+}
+.h2-sub-label {
+    width: 220px;
+    text-align: left;
+    padding: 1.5px 5px !important;
+    font-size: 6.2pt;
+    line-height: 1.1;
+}
+.bg-h2-green { background-color: #d9ead3 !important; color: #000; }
+.bg-h2-yellow { background-color: #fff2cc !important; color: #000; }
+.bg-h2-peach { background-color: #fce5cd !important; color: #000; }
+.bg-h2-pink { background-color: #f4cccc !important; color: #000; }
+
+/* TABEL ACUAN USIA */
+.table-usia-h2 {
+    width: 68%;
+    margin: 8px auto;
+    border-collapse: collapse;
+    font-size: 6.2pt;
+    text-align: center;
+}
+.table-usia-h2 th, .table-usia-h2 td {
+    border: 1px solid #000;
+    padding: 2px 4px;
+}
+.th-usia-blue {
+    background-color: #8ea9db !important;
+    font-weight: bold;
+    color: #000;
+}
+.tr-usia-row {
+    background-color: #fce5cd !important;
+    color: #000;
+}
+.td-usia-lbl {
+    font-weight: bold;
+    text-align: center;
+    width: 24%;
+}
+
+.lbl-guide-h2 {
+    width: 165px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 6.5pt;
+}
+.bg-h2-green-guide { background-color: #d9ead3 !important; color: #000; }
+.bg-h2-yellow-guide { background-color: #ffff00 !important; color: #000; }
+.bg-h2-red-guide { background-color: #ff0000 !important; color: #fff; }
+.bg-h2-blue-guide { background-color: #00a2e8 !important; color: #fff; }
+
+/* FOOTER */
+.ews-footer-table {
+    width: 100%;
+    margin-top: 4px;
+    font-size: 6.5pt;
+}
+.ews-square-box {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border: 1.2px solid #000;
+    vertical-align: middle;
+    margin-left: 6px;
+}
+</style>
+
+<script>
+var rawAnakData = {$data.detail_anak_json};
+if (!Array.isArray(rawAnakData)) { rawAnakData = []; }
+
+var colAnak = [];
+for (var j = 0; j < 16; j++) {
+    if (rawAnakData[j]) {
+        colAnak[j] = Object.assign({
+            tgl: '', jam: '',
+            keadaan_umum: '',
+            kardiovaskular: '',
+            respirasi: '',
+            total_skor: ''
+        }, rawAnakData[j]);
+        if (colAnak[j].keadaan_umum !== undefined && colAnak[j].keadaan_umum !== '') colAnak[j].keadaan_umum = String(colAnak[j].keadaan_umum);
+        if (colAnak[j].kardiovaskular !== undefined && colAnak[j].kardiovaskular !== '') colAnak[j].kardiovaskular = String(colAnak[j].kardiovaskular);
+        if (colAnak[j].respirasi !== undefined && colAnak[j].respirasi !== '') colAnak[j].respirasi = String(colAnak[j].respirasi);
+    } else {
+        colAnak[j] = {
+            tgl: '', jam: '',
+            keadaan_umum: '',
+            kardiovaskular: '',
+            respirasi: '',
+            total_skor: ''
+        };
+    }
+}
+
+function refreshGridAnak() {
+    var lastActiveColAnak = -1;
+
+    for (var col = 0; col < 16; col++) {
+        var item = colAnak[col];
+
+        $('.inp-cell-tgl-anak[data-col="' + col + '"]').val(item.tgl || '');
+        $('.inp-cell-jam-anak[data-col="' + col + '"]').val(item.jam || '');
+
+        var paramsAnak = ['keadaan_umum', 'kardiovaskular', 'respirasi'];
+        paramsAnak.forEach(function(param) {
+            $('.clickable-cell-anak[data-col="' + col + '"][data-param="' + param + '"]').each(function() {
+                var cellVal = String($(this).data('val'));
+                var currentVal = String(item[param]);
+                if (currentVal !== '' && cellVal === currentVal) {
+                    $(this).addClass('is-selected').html('<span class="cell-mark-dot">&#9679;</span>');
+                } else {
+                    $(this).removeClass('is-selected').empty();
+                }
+            });
+        });
+
+        var hasValAnak = (item.keadaan_umum !== '' || item.kardiovaskular !== '' || item.respirasi !== '');
+        var totalCellAnak = $('.total-skor-anak-cell[data-col="' + col + '"]');
+
+        if (hasValAnak || item.tgl || item.jam) {
+            lastActiveColAnak = col;
+            var sumAnak = (parseInt(item.keadaan_umum) || 0) + (parseInt(item.kardiovaskular) || 0) + (parseInt(item.respirasi) || 0);
+            item.total_skor = sumAnak;
+            totalCellAnak.html(sumAnak);
+        } else {
+            item.total_skor = '';
+            totalCellAnak.html('-');
+        }
+    }
+
+    $('.ews-panduan-table tr').removeClass('active-guidance');
+    if (lastActiveColAnak >= 0) {
+        var lastItemAnak = colAnak[lastActiveColAnak];
+        var sAnak = parseInt(lastItemAnak.total_skor) || 0;
+        if (sAnak >= 5) {
+            $('#guide-anak-tinggi').addClass('active-guidance');
+        } else if (sAnak >= 3) {
+            $('#guide-anak-sedang').addClass('active-guidance');
+        } else {
+            $('#guide-anak-stabil').addClass('active-guidance');
+        }
+    }
+}
+
+function syncPatientFields(source) {
+    if (source === 'top') {
+        $('#inp_nama_pasien_anak').val($('#top_nama_pasien').val());
+        $('#inp_tgl_lahir_anak').val($('#top_tgl_lahir').val());
+        updateJkUi($('#top_jk').val());
+    } else {
+        $('#top_nama_pasien').val($('#inp_nama_pasien_anak').val());
+        $('#top_tgl_lahir').val($('#inp_tgl_lahir_anak').val());
+    }
+}
+
+function updateJkUi(jkVal) {
+    $('#top_jk').val(jkVal);
+    if (jkVal === 'L') {
+        $('#opt_jk_l').addClass('jk-circle');
+        $('#opt_jk_p').removeClass('jk-circle');
+        $('#display_top_jk').val('Laki-laki (L)');
+    } else if (jkVal === 'P') {
+        $('#opt_jk_p').addClass('jk-circle');
+        $('#opt_jk_l').removeClass('jk-circle');
+        $('#display_top_jk').val('Perempuan (P)');
+    } else {
+        $('#opt_jk_l, #opt_jk_p').removeClass('jk-circle');
+        $('#display_top_jk').val('-');
+    }
+}
+
+$(document).ready(function() {
+    refreshGridAnak();
+
+    $('#top_nama_pasien, #top_tgl_lahir').on('keyup change', function() { syncPatientFields('top'); });
+    $('#inp_nama_pasien_anak, #inp_tgl_lahir_anak').on('keyup change', function() { syncPatientFields('sheet'); });
+    $('.jk-click-opt').on('click', function() {
+        updateJkUi($(this).data('jk'));
+    });
+
+    $(document).on('click', '.clickable-cell-anak', function() {
+        var col = parseInt($(this).data('col'));
+        var param = $(this).data('param');
+        var val = String($(this).data('val'));
+
+        if ($(this).hasClass('is-selected')) {
+            colAnak[col][param] = '';
+        } else {
+            colAnak[col][param] = val;
+        }
+
+        if (!colAnak[col].tgl) {
+            var now = new Date();
+            var dd = String(now.getDate()).padStart(2, '0');
+            var mm = String(now.getMonth() + 1).padStart(2, '0');
+            colAnak[col].tgl = dd + '/' + mm;
+        }
+        if (!colAnak[col].jam) {
+            var now = new Date();
+            var hh = String(now.getHours()).padStart(2, '0');
+            var ii = String(now.getMinutes()).padStart(2, '0');
+            colAnak[col].jam = hh + ':' + ii;
+        }
+
+        refreshGridAnak();
+    });
+
+    $(document).on('change keyup', '.inp-cell-tgl-anak', function() {
+        var col = parseInt($(this).data('col'));
+        colAnak[col].tgl = $(this).val();
+    });
+    $(document).on('change keyup', '.inp-cell-jam-anak', function() {
+        var col = parseInt($(this).data('col'));
+        colAnak[col].jam = $(this).val();
+    });
+
+    $('#btn-quick-now-anak').on('click', function() {
+        var now = new Date();
+        var dd = String(now.getDate()).padStart(2, '0');
+        var mm = String(now.getMonth() + 1).padStart(2, '0');
+        var hh = String(now.getHours()).padStart(2, '0');
+        var ii = String(now.getMinutes()).padStart(2, '0');
+        var tglStr = dd + '/' + mm;
+        var jamStr = hh + ':' + ii;
+
+        var targetCol = -1;
+        for (var c = 0; c < 16; c++) {
+            if (!colAnak[c].tgl && colAnak[c].keadaan_umum === '' && colAnak[c].respirasi === '') {
+                targetCol = c;
+                break;
+            }
+        }
+        if (targetCol === -1) {
+            alert('Semua 16 kolom observasi EWS Anak telah terisi.');
+            return;
+        }
+
+        colAnak[targetCol].tgl = tglStr;
+        colAnak[targetCol].jam = jamStr;
+        colAnak[targetCol].keadaan_umum = '0';
+        colAnak[targetCol].kardiovaskular = '0';
+        colAnak[targetCol].respirasi = '0';
+
+        refreshGridAnak();
+        $('.inp-cell-jam-anak[data-col="' + targetCol + '"]').focus();
+    });
+
+    $('#btn-clear-anak').on('click', function() {
+        if (!confirm('Kosongkan seluruh kolom observasi EWS Anak?')) return;
+        for (var c = 0; c < 16; c++) {
+            colAnak[c] = {
+                tgl: '', jam: '',
+                keadaan_umum: '', kardiovaskular: '', respirasi: '', total_skor: ''
+            };
+        }
+        refreshGridAnak();
+    });
+
+    $('#nama_petugas_input').on('keyup change', function() {
+        $('#nama_petugas').val($(this).val());
+    });
+
+    $('#form-ews-anak').on('submit', function() {
+        $('#json_detail_anak').val(JSON.stringify(colAnak));
+        $('#nama_petugas').val($('#nama_petugas_input').val());
+        return true;
+    });
+
+    $('#btn-cari-pasien').on('click', function() {
+        var noRawat = $('#no_rawat').val().trim();
+        if (!noRawat) {
+            alert('Silakan masukkan No. Rawat atau No. RM terlebih dahulu');
+            return;
+        }
+
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Mencari...');
+
+        $.getJSON('{?=url([ADMIN, "form_rme", "ewsanakform"])?}', {
+            ajax_patient: 1,
+            no_rawat: noRawat
+        }, function(res) {
+            btn.prop('disabled', false).html('<i class="fa fa-search"></i> Cari');
+            if (res.success) {
+                $('#no_rawat').val(res.no_rawat);
+                $('#no_rkm_medis').val(res.no_rkm_medis);
+                $('#top_nama_pasien').val(res.nm_pasien);
+                $('#inp_nama_pasien_anak').val(res.nm_pasien);
+                $('#top_tgl_lahir').val(res.tgl_lahir);
+                $('#inp_tgl_lahir_anak').val(res.tgl_lahir);
+
+                updateJkUi(res.jk_code);
+
+                if (res.kamar && !$('#ruangan').val()) {
+                    $('#ruangan').val(res.kamar);
+                }
+            } else {
+                alert('Pasien dengan No. Rawat / RM tersebut tidak ditemukan.');
+            }
+        }).fail(function() {
+            btn.prop('disabled', false).html('<i class="fa fa-search"></i> Cari');
+            alert('Gagal menghubungi server.');
+        });
+    });
+
+    $('#no_rawat').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $('#btn-cari-pasien').click();
+        }
+    });
+});
+</script>
+

@@ -4,10 +4,12 @@
 <meta charset="utf-8">
 <title>RM.RI 02 - RINGKASAN MASUK DAN KELUAR</title>
 <style>
+  {if: empty($is_mpdf)}
   @page { size: A4; margin: 5mm 5mm; }
+  {/if}
   body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 0; color: #000; }
   
-  .container { width: 100%; max-width: 195mm; margin: 0 auto; box-sizing: border-box; }
+  .container { width: 100%; {if: empty($is_mpdf)}max-width: 192mm;{/if} margin: 0 auto; }
 
   .main-table { width: 100%; border-collapse: collapse; border: 1px solid #000; }
   .main-table td { border: 1px solid #000; padding: 3px 5px; vertical-align: top; font-size: 10px; }
@@ -20,72 +22,44 @@
 
   .dotted { border-bottom: 1px dotted #000; display: inline-block; min-width: 50px; }
 
+  {if: empty($is_mpdf)}
   @media print {
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
-
-  
-  
-  
-  .container { width: 100%; max-width: 192mm; margin: 0 auto; border: 1px solid #000; box-sizing: border-box; min-height: 250mm; position: relative;}
+  {/if}
 
   /* Header */
   .header-top { width: 100%; display: table; margin-bottom: 5px; border-bottom: 1px solid #000;}
   .header-col { display: table-cell; vertical-align: middle; }
   .header-identitas { width: 85%; font-size: 10px; padding: 5px; }
-  .header-rm { width: 15%; text-align: center; border-left: 1px solid #000; padding: 5px; background: #bced89; }
+  .header-rm { width: 15%; text-align: center; border: 1px solid #000; padding: 5px; background: #bced89; }
   
-  .judul { text-align: center; font-size: 14px; font-weight: bold; padding: 15px 0; }
+  .judul { text-align: center; font-size: 15px; font-weight: bold; padding: 10px 0; border-top: 1px solid #000; border-bottom: 1px solid #000; }
   
   .isi { padding: 10px 20px; font-size: 12px; line-height: 1.5; text-align: justify; }
 
   .ttd-box { width: 100%; display: table; margin-top: 30px; }
   .ttd-row { display: table-row; }
   .ttd-col { display: table-cell; width: 50%; text-align: left; vertical-align: top; font-size: 11px; padding: 0 20px;}
-  
-  .footer-wrap { width: 100%; font-size: 8px; margin-top: 20px; display: table; position: absolute; bottom: 5px; padding: 0 10px; box-sizing: border-box; border-top: 1px solid #000; padding-top: 5px;}
-  .footer-left { display: table-cell; text-align: left; }
-  .footer-center { display: table-cell; text-align: right; }
-  .footer-right { display: table-cell; text-align: right; width: 60px; font-weight: bold; }
 
-  
-
-
-  
-  
-  
-  .container { width: 100%; max-width: 192mm; margin: 0 auto; box-sizing: border-box; position: relative;}
-
-  /* Header */
-  .header-top { width: 100%; display: table; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom:5px; }
-  .header-col { display: table-cell; vertical-align: middle; }
-  .header-identitas { width: 85%; font-size: 10px; }
-  .header-rm { width: 15%; text-align: center; border: 1px solid #000; padding: 5px; background: #bced89; }
-  .box-rm { display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin-left: 2px; text-align: center; line-height: 14px; font-size: 12px; background: #fff; vertical-align: bottom; }
-  
-  .judul { text-align: center; font-size: 16px; padding: 10px 0; border-top: 1px solid #000; border-bottom: 1px solid #000; }
-  
   .identitas-table { width: 100%; border-collapse: collapse; border: 2px solid #000; margin-top: 10px; margin-bottom: 10px; }
   .identitas-table td { border: 1px solid #000; padding: 6px; font-size: 11px; }
 
   .tempel-box { width: 100%; border-collapse: collapse; border: 1px solid #000; }
   .tempel-box td { border: 1px solid #000; padding: 3px; font-size: 11px; height: 18px; }
   
-  .tempel-content { border: 1px solid #000; height: 140mm; border-top: none;}
+  .tempel-content { border: 1px solid #000; height: 110mm; border-top: none;}
 
-  .footer-wrap { width: 100%; font-size: 8px; margin-top: 5px; display: table; }
+  .footer-wrap { width: 100%; font-size: 8px; margin-top: 10px; display: table; border-top: 1px solid #000; padding-top: 4px; }
   .footer-left { display: table-cell; text-align: left; }
   .footer-center { display: table-cell; text-align: right; }
-  .footer-right { display: table-cell; text-align: right; width: 60px; }
+  .footer-right { display: table-cell; text-align: right; width: 65px; font-weight: bold; }
   
-  
-
 {if: empty($is_mpdf)}
 @media screen {
     body { background-color: #f4f6f9 !important; padding: 15px 0 !important; }
-    .container, .page, .main-box, .main-container { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; margin: 0 auto 20px auto !important; padding: 8mm 10mm !important; }
+    .container, .page, .main-box, .main-container { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; margin: 0 auto 20px auto !important; padding: 8mm 10mm !important; min-height: 250mm; }
 }
-{/if}
 .no-print-toolbar { width: 100%; max-width: 195mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
 .btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-decoration: none; display: inline-block; }
 .btn-print { background: #27ae60; color: #fff; }
@@ -96,7 +70,7 @@
     body { background: transparent !important; padding: 0 !important; }
     .container, .page, .main-box, .main-container { box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
 }
-
+{/if}
 </style>
 </head>
 <body >
@@ -137,7 +111,7 @@
     
     <tr>
         <td colspan="3">Nama Pasien :<br> <span style="font-size: 11px;">{$data.nm_pasien}</span> <br> <em>(dengan huruf cetak)</em></td>
-        <td width="25%">Jenis Kelamin<br>1. Lk &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2. Pr <br> {?= $data['jk']=='L'?'Laki-laki':'Perempuan' ?}</td>
+        <td width="25%">Jenis Kelamin<br>1. Lk &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2. Pr <br> {?= ($data['jk'] ?? '')=='L'?'Laki-laki':(($data['jk'] ?? '')=='P'?'Perempuan':'') ?}</td>
     </tr>
     <tr>
         <td colspan="2">Tempat/Tgl lahir : {$data.tgl_lahir}</td>
@@ -256,7 +230,7 @@
 <div class="container" style="page-break-before: always;">
   <div class="header-top">
     <div class="header-col header-identitas">
-      <strong>Nama Pasien:</strong> {$data.nm_pasien} &nbsp;&nbsp;&nbsp;&nbsp; <strong>L/P</strong> {?= $data['jk']=='L'?'L':'P' ?} &nbsp;&nbsp;&nbsp;&nbsp; <strong>Tanggal Lahir:</strong> {$data.tgl_lahir} &nbsp;&nbsp;&nbsp;&nbsp; <strong>NO. RM</strong> {$data.no_rkm_medis}
+      <strong>Nama Pasien:</strong> {$data.nm_pasien} &nbsp;&nbsp;&nbsp;&nbsp; <strong>L/P</strong> {?= ($data['jk'] ?? '')=='L'?'L':(($data['jk'] ?? '')=='P'?'P':'L/P') ?} &nbsp;&nbsp;&nbsp;&nbsp; <strong>Tanggal Lahir:</strong> {$data.tgl_lahir} &nbsp;&nbsp;&nbsp;&nbsp; <strong>NO. RM</strong> {$data.no_rkm_medis}
     </div>
     <div class="header-col header-rm">
       <strong style="font-size:12px;">RM<br>RI</strong><br><hr style="margin:2px 0;border-top:1px solid #000;"><strong style="font-size:12px;">02A</strong>
@@ -297,7 +271,7 @@
 <div class="container" style="page-break-before: always;">
   <div class="header-top">
     <div class="header-col header-identitas">
-      <strong>Nama Pasien:</strong> {$data.nm_pasien} &nbsp;&nbsp;&nbsp;&nbsp; <strong>L/P</strong> {?= $data['jk']=='L'?'L':'P' ?} &nbsp;&nbsp;&nbsp;&nbsp; <strong>Tanggal Lahir:</strong> {$data.tgl_lahir} &nbsp;&nbsp;&nbsp;&nbsp; <strong>NO. RM</strong>
+      <strong>Nama Pasien:</strong> {$data.nm_pasien} &nbsp;&nbsp;&nbsp;&nbsp; <strong>L/P</strong> {?= ($data['jk'] ?? '')=='L'?'L':(($data['jk'] ?? '')=='P'?'P':'L/P') ?} &nbsp;&nbsp;&nbsp;&nbsp; <strong>Tanggal Lahir:</strong> {$data.tgl_lahir} &nbsp;&nbsp;&nbsp;&nbsp; <strong>NO. RM</strong>
       <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 0, 1) ?}</div>
       <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 1, 1) ?}</div>
       <div class="box-rm">{?= substr(str_pad($data['no_rkm_medis'], 6, '0', STR_PAD_LEFT), 2, 1) ?}</div>

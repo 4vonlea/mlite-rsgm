@@ -228,8 +228,13 @@
                     </td>
                     <td width="50%">
                         <b>Skala Nyeri</b><br>
-                        <div style="font-size: 14px; font-weight:bold;">Nilai: {if: $data.skala_nyeri}{$data.skala_nyeri}{else}0{/if} / 10</div><br>
-                        <i>*Untuk pasien anak <6 tahun menggunakan skala FLACC</i>
+                        {if: $skala_nyeri_img}
+                        <div style="text-align: center; margin: 4px 0;">
+                            <img src="{$skala_nyeri_img}" alt="Skala Nyeri 0-10" style="width: 100%; max-width: 240px; height: auto;">
+                        </div>
+                        {/if}
+                        <div style="font-size: 12px; font-weight:bold;">Nilai: {if: $data.skala_nyeri}{$data.skala_nyeri}{else}0{/if} / 10</div>
+                        <i>*Untuk pasien anak &lt;6 tahun menggunakan skala FLACC</i>
                     </td>
                 </tr>
             </table>

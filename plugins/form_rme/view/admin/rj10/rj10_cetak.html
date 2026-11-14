@@ -2,60 +2,56 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>RM.RJ - 10 Lembar Edukasi Pasien</title>
+    <title>{if: !empty($is_ugd)}RM.GD - 12{else}RM.RJ - 10{/if} Lembar Edukasi Pasien</title>
     <style>
+        {if: empty($is_mpdf)}
         @page { size: A4 portrait; margin: 10mm; }
         body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 0; }
         .page { width: 190mm; margin: 0 auto; position: relative; }
-        
+        @media screen {
+            body { background-color: #f4f6f9 !important; padding: 15px 0 !important; }
+            .container, .page, .main-box, .main-container { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; margin: 0 auto 20px auto !important; padding: 8mm 10mm !important; }
+        }
+        .no-print-toolbar { width: 100%; max-width: 195mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
+        .btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-decoration: none; display: inline-block; }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+        .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+        @media print {
+            body { -webkit-print-color-adjust: exact; background: transparent !important; padding: 0 !important; }
+            .no-print-toolbar { display: none !important; }
+            .container, .page, .main-box, .main-container { box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
+        }
+        {else}
+        body { font-family: Arial, sans-serif; font-size: 8.5px; line-height: 1.15; margin: 0; padding: 0; color: #000; }
+        .page { width: 100%; margin: 0; padding: 0; }
+        {/if}
+
         .header-table { width: 100%; border-collapse: collapse; border-bottom: 1.5px solid #000; }
-        .header-table td { padding: 4px; vertical-align: top; }
-        
-        .rmbox { display: inline-block; width: 15px; height: 16px; border: 1px solid #000; text-align: center; line-height: 15px; font-size: 11px; vertical-align: middle; }
+        .header-table td { padding: 3px; vertical-align: top; }
 
-        .title-doc { text-align: center; font-size: 13px; font-weight: bold; margin: 0; padding: 5px 0; border-bottom: 1.5px solid #000; }
+        .rmbox { display: inline-block; width: 14px; height: 15px; border: 1px solid #000; text-align: center; line-height: 14px; font-size: 10px; vertical-align: middle; }
 
-        .content-table { width: 100%; border-collapse: collapse; font-size: 9px; }
-        .content-table th, .content-table td { border: 1.5px solid #000; padding: 3px; vertical-align: top; }
+        .title-doc { text-align: center; font-size: 12px; font-weight: bold; margin: 0; padding: 4px 0; border-bottom: 1.5px solid #000; }
+
+        .content-table { width: 100%; border-collapse: collapse; font-size: 8.5px; }
+        .content-table th, .content-table td { border: 1.5px solid #000; padding: 2px 3px; vertical-align: top; }
         .content-table th { text-align: center; font-weight: normal; }
 
-        .sub-table { width: 100%; border-collapse: collapse; height: 100%; }
+        .sub-table { width: 100%; border-collapse: collapse; }
         .sub-table td { border: none; padding: 2px; }
         .sub-table td.br { border-right: 1.5px solid #000; }
 
-        .circ { display: inline-block; width: 14px; height: 14px; text-align: center; line-height: 14px; border-radius: 50%; border: 1.5px solid transparent; margin: 0 1px; }
+        .circ { display: inline-block; width: 13px; height: 13px; text-align: center; line-height: 13px; border-radius: 50%; border: 1.5px solid transparent; margin: 0 1px; }
         .circ-red { border-color: red; font-weight: bold; }
 
-        .pel-table { width: 100%; border-collapse: collapse; font-size: 8px; text-align: center; }
-        .pel-table th, .pel-table td { border: 1.5px solid #000; padding: 3px; vertical-align: middle; }
+        .pel-table { width: 100%; border-collapse: collapse; font-size: 7.5px; text-align: center; }
+        .pel-table th, .pel-table td { border: 1.5px solid #000; padding: 2px; vertical-align: middle; }
         .pel-table td { text-align: left; }
         .pel-table th { font-weight: bold; }
 
-        .footer-note { font-size: 8px; font-style: italic; text-align: right; margin-top: 5px; }
-        .footer-bottom { font-size: 9px; display: flex; justify-content: space-between; margin-top: 5px; font-weight: bold; color: gray; }
-        
-        @media print {
-            body { -webkit-print-color-adjust: exact; }
-        }
-    
-{if: empty($is_mpdf)}
-@media screen {
-    body { background-color: #f4f6f9 !important; padding: 15px 0 !important; }
-    .container, .page, .main-box, .main-container { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; margin: 0 auto 20px auto !important; padding: 8mm 10mm !important; }
-}
-{/if}
-.no-print-toolbar { width: 100%; max-width: 195mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
-.btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-decoration: none; display: inline-block; }
-.btn-print { background: #27ae60; color: #fff; }
-.btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
-.btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
-@media print {
-    .no-print-toolbar { display: none !important; }
-    body { background: transparent !important; padding: 0 !important; }
-    .container, .page, .main-box, .main-container { box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
-}
-
-</style>
+        .footer-note { font-size: 8px; font-style: italic; text-align: right; margin-top: 4px; }
+    </style>
 </head>
 <body >
 
@@ -207,8 +203,14 @@
                             Nama Perawat yang<br>mengkaji<br><br><br>
                             <b><u>{$d.form_data.nama_perawat}</u></b>
                         </td>
-                        <td style="border-right:1.5px solid #000; vertical-align:top; padding:4px;">
-                            TTD:
+                        <td style="border-right:1.5px solid #000; vertical-align:top; padding:4px; text-align:center;">
+                            <div style="text-align:left;">TTD:</div>
+                            {if: !empty($qr_perawat)}
+                            <img src="{$qr_perawat}" alt="QR TTE Perawat" style="width:36px; height:36px; display:block; margin:2px auto;">
+                            <span style="font-size:6.5px; color:#16a34a; font-weight:bold;">TTE Terverifikasi</span>
+                            {else}
+                            <br><br>
+                            {/if}
                         </td>
                         <td style="vertical-align:top; padding:4px;">
                             Tanggal: {if: ($d.form_data.tgl_kaji)}{?=date('d-m-Y', strtotime($d.form_data.tgl_kaji))?}{/if}<br><br><br>
@@ -274,11 +276,19 @@
                 </td>
                 <td style="text-align:center; vertical-align:bottom;">
                     <div style="text-align:left; font-size:7px;">Profesi : {$value.profesi_pemberi}</div>
+                    {if: !empty($value.qr_pemberi)}
+                    <img src="{$value.qr_pemberi}" alt="QR TTE Pemberi" style="width:32px; height:32px; display:block; margin:2px auto;">
+                    {else}
                     <br><br><br>
+                    {/if}
                     ( {$value.nama_pemberi} )
                 </td>
                 <td style="border-right:none; text-align:center; vertical-align:bottom;">
+                    {if: !empty($value.ttd_penerima_img) && strpos($value.ttd_penerima_img, 'data:image') === 0}
+                    <img src="{$value.ttd_penerima_img}" alt="TTD Penerima" style="max-height:32px; max-width:75px; display:block; margin:2px auto;">
+                    {else}
                     <br><br><br><br>
+                    {/if}
                     ( {$value.nama_penerima} )
                 </td>
             </tr>
@@ -293,10 +303,12 @@
         <span style="display:inline-block; width:10px; height:10px; border:1px solid #000; margin-left:5px; vertical-align:middle;"></span>
     </div>
     
-    <div class="footer-bottom">
-        <div>RSGM/Ed-Rev/02/2023</div>
-        <div>RM.RJ – 10 Hal 1 - 2</div>
-    </div>
+    <table style="width:100%; border-collapse:collapse; margin-top:4px; font-size:9px; font-weight:bold; color:gray;">
+        <tr>
+            <td style="text-align:left;">RSGM/Ed-Rev/02/2023</td>
+            <td style="text-align:right;">{if: !empty($is_ugd)}RM.GD &ndash; 12{else}RM.RJ &ndash; 10{/if} Hal 1 - 2</td>
+        </tr>
+    </table>
 </div>
 </body>
 </html>

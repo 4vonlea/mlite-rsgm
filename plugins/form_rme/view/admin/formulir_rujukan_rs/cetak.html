@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>FORMULIR RUJUKAN - {$data.no_rawat}</title>
     <style>
+        {if: empty($is_mpdf)}
         @page {
             size: A4 portrait;
             margin: 6mm 8mm 6mm 8mm;
@@ -13,6 +14,7 @@
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
+        {/if}
         body {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 8.2pt;
@@ -37,8 +39,6 @@
                 position: relative;
             }
         }
-        {/if}
-
         .no-print-toolbar {
             width: 100%;
             max-width: 196mm;
@@ -63,6 +63,13 @@
         .btn-print { background: #27ae60; color: #fff; }
         .btn-pdf { background: #e74c3c; color: #fff; }
         .btn-close { background: #7f8c8d; color: #fff; }
+        {else}
+        .page {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        {/if}
 
         .outer-frame {
             border: 1.5px solid #000;
@@ -173,11 +180,13 @@
             white-space: pre-line;
         }
 
+        {if: empty($is_mpdf)}
         @media print {
             .no-print-toolbar { display: none !important; }
             body { background: transparent !important; padding: 0 !important; }
             .page { width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
         }
+        {/if}
     </style>
 </head>
 <body>
@@ -211,10 +220,14 @@
                                 <td style="padding: 1px 0; font-weight: bold;">Nama Pasien</td>
                                 <td style="padding: 1px 0;">:</td>
                                 <td style="padding: 1px 0; border-bottom: 1px dotted #000;">
-                                    <strong>{$p.nm_pasien}</strong>
-                                    <span style="float: right;">
-                                        {if: $p.jk == 'L'}<span class="circle-sex">L</span>/P{elseif: $p.jk == 'P'}L/<span class="circle-sex">P</span>{else}L/P{/if}
-                                    </span>
+                                    <table style="width: 100%; border-collapse: collapse; border: none;">
+                                        <tr>
+                                            <td style="padding: 0; border: none;"><strong>{$p.nm_pasien}</strong></td>
+                                            <td style="padding: 0; border: none; text-align: right; white-space: nowrap;">
+                                                {if: $p.jk == 'L'}<span class="circle-sex">L</span>/P{elseif: $p.jk == 'P'}L/<span class="circle-sex">P</span>{else}L/P{/if}
+                                            </td>
+                                        </tr>
+                                    </table>
                                 </td>
                             </tr>
                             <tr>
@@ -422,8 +435,14 @@
                 <tr>
                     <td rowspan="2" style="text-align: center; vertical-align: middle; border-bottom: none; padding: 10px;">
                         <div style="font-weight: bold; margin-bottom: 6px;">Tanda tangan petugas yang mengirim</div>
-                        {if: !empty($data.ttd_pengirim)}
-                            {if: strpos($data.ttd_pengirim, 'data:image') === 0 || strpos($data.ttd_pengirim, 'http') === 0}
+                        {if: !empty($qr_pengirim)}
+                            <img src="{$qr_pengirim}" alt="QR TTE Petugas Pengirim" style="width: 52px; height: 52px; display: block; margin: 0 auto 3px auto;">
+                            <span style="font-size: 7.5pt; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
+                        {elseif: !empty($data.ttd_pengirim)}
+                            {if: strlen($data.ttd_pengirim) == 64}
+                                <barcode code="{?=url(['esignature', 'verify', $data.ttd_pengirim])?}" type="QR" class="barcode" size="0.7" error="M" disableborder="1" /><br>
+                                <span style="font-size: 7.5pt; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
+                            {elseif: strpos($data.ttd_pengirim, 'data:image') === 0 || strpos($data.ttd_pengirim, 'http') === 0}
                                 <img src="{$data.ttd_pengirim}" style="max-height: 65px; max-width: 140px; object-fit: contain; display: block; margin: 0 auto 4px auto;">
                             {else}
                                 <div style="margin: 0 auto 4px auto;">{?= $data['ttd_pengirim'] ?}</div>
@@ -431,7 +450,7 @@
                         {else}
                             <div style="height: 55px;"></div>
                         {/if}
-                        <div style="font-weight: bold;">( {if: !empty($data.petugas_pengirim)}{$data.petugas_pengirim}{else}........................................{/if} )</div>
+                        <div style="font-weight: bold;">( {if: !empty($data.petugas_pengirim)}{$data.petugas_pengirim}{elseif: !empty($tte_pengirim.signer_name)}{$tte_pengirim.signer_name}{else}........................................{/if} )</div>
                     </td>
                     <td style="padding: 4px 8px;">
                         <strong>Tiba di tempat rujukan pukul :</strong> <span style="font-weight: bold;">{$data.tiba_pukul}</span><br>
@@ -478,10 +497,12 @@
             </table>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: 7.8pt; font-weight: bold;">
-            <div>RSGM/Ed-Rev/01/2020</div>
-            <div style="font-style: italic;">Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</div>
-        </div>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 7.8pt; font-weight: bold;">
+            <tr>
+                <td style="border: none; padding: 0;">RSGM/Ed-Rev/01/2020</td>
+                <td style="border: none; padding: 0; text-align: right; font-style: italic;">Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</td>
+            </tr>
+        </table>
     </div>
 
 </body>

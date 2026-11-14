@@ -1037,9 +1037,7 @@ class Admin extends AdminModule
       $i = 1;
       $row['nama_petugas'] = '';
       $row['departemen_petugas'] = '';
-      $rows = $this->db('pemeriksaan_ralan')
-        ->where('no_rawat', $_POST['no_rawat'])
-        ->toArray();
+      $rows = \Systems\Lib\SoapRevision::fetchSoapRows($this->db()->pdo(), 'pemeriksaan_ralan', $_POST['no_rawat'], true, 'ASC');
       $result = [];
       foreach ($rows as $row) {
         $row['nomor'] = $i++;
@@ -1065,9 +1063,10 @@ class Admin extends AdminModule
         $result[] = $row;
       }
 
-      $rows_ranap = $this->db('pemeriksaan_ranap')
-       ->where('no_rawat', $_POST['no_rawat'])
-       ->toArray();
+      $result = \Systems\Lib\SoapRevision::enrichRows($this->core, 'pemeriksaan_ralan', $result);
+      $void_count = count(array_filter($result, function($r) { return !empty($r['is_voided']); }));
+
+      $rows_ranap = \Systems\Lib\SoapRevision::fetchSoapRows($this->db()->pdo(), 'pemeriksaan_ranap', $_POST['no_rawat'], true, 'ASC');
       $result_ranap = [];
       foreach ($rows_ranap as $row) {
        $row['nomor'] = $i++;
@@ -1092,25 +1091,52 @@ class Admin extends AdminModule
        $result_ranap[] = $row;
       }
 
-      echo $this->draw('soap.html', ['pemeriksaan' => htmlspecialchars_array($result), 'pemeriksaan_ranap' => htmlspecialchars_array($result_ranap), 'diagnosa' => htmlspecialchars_array($diagnosa), 'prosedur' => htmlspecialchars_array($prosedur), 'mapping_snomed' => htmlspecialchars_array($mapping_snomed), 'mapping_snomed_icd9' => htmlspecialchars_array($mapping_snomed_icd9), 'admin_mode' => $this->settings->get('settings.admin_mode'), 'current_user' => $this->core->getUserInfo('username')]);
+      $result_ranap = \Systems\Lib\SoapRevision::enrichRows($this->core, 'pemeriksaan_ranap', $result_ranap);
+      $void_ranap_count = count(array_filter($result_ranap, function($r) { return !empty($r['is_voided']); }));
+
+      echo $this->draw('soap.html', [
+          'pemeriksaan' => htmlspecialchars_array($result),
+          'pemeriksaan_ranap' => htmlspecialchars_array($result_ranap),
+          'void_count' => $void_count,
+          'void_ranap_count' => $void_ranap_count,
+          'diagnosa' => htmlspecialchars_array($diagnosa),
+          'prosedur' => htmlspecialchars_array($prosedur),
+          'mapping_snomed' => htmlspecialchars_array($mapping_snomed),
+          'mapping_snomed_icd9' => htmlspecialchars_array($mapping_snomed_icd9),
+          'admin_mode' => $this->settings->get('settings.admin_mode'),
+          'current_user' => $this->core->getUserInfo('username')
+      ]);
       exit();
+    }
+
+    public function anySoapHistory()
+    {
+      \Systems\Lib\SoapRevision::outputHistoryJson($this->core);
     }
 
     public function postSaveSOAP()
     {
       $_POST['nip'] = $this->core->getUserInfo('username', null, true);
-
-      if(!$this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->oneArray()) {
-        $this->db('pemeriksaan_ralan')->save($_POST);
-      } else {
-        $this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->save($_POST);
-      }
+      $res = \Systems\Lib\SoapRevision::saveSoap($this->core, 'dokter_igd', 'pemeriksaan_ralan', $_POST);
+      header('Content-Type: application/json; charset=utf-8');
+      echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
       exit();
     }
 
     public function postHapusSOAP()
     {
-      $this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->delete();
+      $reason = trim((string)($_POST['void_reason'] ?? $_POST['reason'] ?? ''));
+      $res = \Systems\Lib\SoapRevision::voidSoap(
+          $this->core,
+          'dokter_igd',
+          'pemeriksaan_ralan',
+          $_POST['no_rawat'] ?? '',
+          $_POST['tgl_perawatan'] ?? '',
+          $_POST['jam_rawat'] ?? '',
+          $reason
+      );
+      header('Content-Type: application/json; charset=utf-8');
+      echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
       exit();
     }
 

@@ -513,13 +513,16 @@
                             </td>
                             <td style="width: 45%; text-align: center;">
                                 <div>Dokter Gigi</div>
-                                <div style="height: 38px; vertical-align: middle; display: flex; align-items: center; justify-content: center; margin-top: 4px;">
-                                    {if: !empty($data.nm_dokter)}
-                                        <span style="font-size: 7.5pt; color: #27ae60; font-weight: bold;">[Signed & Valid]</span>
+                                <div style="min-height: 46px; padding: 3px 0; text-align: center;">
+                                    {if: !empty($qr_dokter)}
+                                        <img src="{$qr_dokter}" alt="QR TTE Dokter Gigi" style="width: 38px; height: 38px; display: block; margin: 0 auto 2px auto;">
+                                        <span style="font-size: 6.5pt; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
+                                    {else}
+                                        <div style="height: 38px;"></div>
                                     {/if}
                                 </div>
                                 <div style="margin-top: 2px;">
-                                    ( <strong>{if: !empty($data.nm_dokter)}{$data.nm_dokter}{else}................................................{/if}</strong> )
+                                    ( <strong>{if: !empty($data.nm_dokter)}{$data.nm_dokter}{elseif: !empty($tte_dokter.signer_name)}{$tte_dokter.signer_name}{else}................................................{/if}</strong> )
                                 </div>
                             </td>
                         </tr>

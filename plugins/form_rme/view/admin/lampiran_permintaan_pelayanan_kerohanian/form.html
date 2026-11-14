@@ -1,17 +1,19 @@
-<div class="row">
-    <div class="col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
-                <h3 class="panel-title" style="font-weight: bold; font-size: 16px;">
-                    <i class="fa fa-pencil-square-o text-primary"></i> FORMULIR PERMINTAAN PELAYANAN KEROHANIAN
-                </h3>
-                <div>
-                    <a href="{?=url([ADMIN, 'form_rme', 'pelayanankerohanianmanage'])?}" class="btn btn-default btn-sm">
-                        <i class="fa fa-arrow-left"></i> Kembali ke Daftar
-                    </a>
-                </div>
+<div id="form_soap" class="rsgm-reg-form clearfix">
+    <div class="rsgm-reg-shell">
+        <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+                <span class="rsgm-reg-icon"><i class="fa fa-pencil-square-o"></i></span>
+                <span>Formulir Permintaan Pelayanan Kerohanian</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">KEROHANIAN</span>
+                <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-heart-o"></i> Pendampingan Rohani</span>
+                <a href="{?=url([ADMIN, 'form_rme', 'pelayanankerohanianmanage'])?}" class="btn btn-default btn-xs" style="border-radius: 6px; font-weight: 600;">
+                    <i class="fa fa-arrow-left"></i> Kembali ke Daftar
+                </a>
             </div>
-            <div class="panel-body">
+        </div>
+        <div class="rsgm-reg-body">
                 <form action="{?=url([ADMIN, 'form_rme', 'pelayanankerohaniansave'])?}" method="post" id="form-pelayanan-kerohanian">
                     <input type="hidden" name="id" value="{$data.id}">
 
@@ -264,7 +266,6 @@
                     </div>
 
                 </form>
-            </div>
         </div>
     </div>
 </div>

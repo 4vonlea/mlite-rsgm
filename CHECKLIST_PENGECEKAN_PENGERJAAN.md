@@ -1,6 +1,6 @@
 # CHECKLIST PENGECEKAN PENGERJAAN (INPUT & OUTPUT)
 ## Rekam Medis Elektronik (RME) RSGM Gusti Hasan Aman
-**Standar Akreditasi:** AKP, SKP, HPK, dan Pelayanan Medis / Keperawatan  
+**Standar Akreditasi:** SKP, HPK, dan Pelayanan Medis / Keperawatan  
 **Versi:** 1.0 (Pembaruan Form RME Fisik & Digital)  
 **Tanggal Verifikasi:** 11 November 2026  
 
@@ -18,29 +18,29 @@ Dokumen checklist ini memuat seluruh hasil verifikasi dan penyesuaian formulir k
 
 | No | Nama Dokumen Klinis | Standar Akreditasi | Pasien Sampel (Sesuai Foto) | Tabel Database | Status Input | Status Output | URL Akses di Sistem |
 |:---:|:---|:---:|:---|:---|:---:|:---:|:---|
-| 1 | **Ringkasan Riwayat Klinik (Evaluasi APS / FKTP)** | AKP 5.5 | `032499` - M. Thirafi H.S | `ringkasan_riwayat_klinik` | [x] Selesai | [x] Selesai | `/admin/update_bmt/ringkasanriwayatklinikmanage` |
-| 2 | **Formulir Rujukan Komunikasi Antar RS** | AKP 5.4 - 5.6 | `032742` - Tn. Slamet | `formulir_rujukan_rs` | [x] Selesai | [x] Selesai | `/admin/update_bmt/formulirrujukanmanage` |
-| 3 | **Stabilisasi Pasien Sebelum Transfer** | AKP 5.6 | `032742` - Tn. Slamet | `lampiran_stabilisasi_pasien` | [x] Selesai | [x] Selesai | `/admin/update_bmt/stabilisasipasienmanage` |
-| 4 | **Monitoring Pasien Selama Transfer (Ambulans)** | AKP 5.6 | `032742` - Tn. Slamet | `lampiran_monitoring_pasien_selama_transfer` | [x] Selesai | [x] Selesai | `/admin/update_bmt/monitoringpasienselamatransfermanage` |
-| 5 | **Profil Ringkas Medis Rawat Jalan (PRMRJ)** | AKP 1.1 / MIRM | `055875` - Thari Maulida N | `lampiran_profil_ringkas_medis_rajal` | [x] Selesai | [x] Selesai | `/admin/update_bmt/prmrjmanage` |
-| 6 | **Kriteria Masuk & Keluar Ruang Rawat Intensif (ICU)** | AKP 1.2 EP C | `032498` - dr. M. Ilyas Saputera | `kriteria_masuk_keluar_icu` | [x] Selesai | [x] Selesai | `/admin/update_bmt/kriteriaicumanage` |
-| 7 | **Informasi Penundaan & Kelambatan Pelayanan** | AKP 1.3 | `032498` - dr. M. Ilyas Saputera | `lampiran_penundaan_kelambatan_pelayanan` | [x] Selesai | [x] Selesai | `/admin/update_bmt/penundaankelambatanmanage` |
-| 8 | **General Consent Rawat Inap & Rincian Biaya** | AKP 2 EP C | `032498` - dr. M. Ilyas Saputera | `general_consent_ranap` | [x] Selesai | [x] Selesai | `/admin/update_bmt/generalconsentmanage` |
-| 9 | **Surat Pengantar Rawat Inap (Admisi)** | AKP 1.2 EP A | `032498` - dr. M. Ilyas Saputera | `surat_pengantar_ranap` | [x] Selesai | [x] Selesai | `/admin/update_bmt/pengantarranapmanage` |
-| 10 | **Surat Pernyataan Jaminan Pembiayaan** | Admisi / AKP 2 | `032498` - dr. M. Ilyas Saputera | `surat_pernyataan_jaminan_biaya` | [x] Selesai | [x] Selesai | `/admin/update_bmt/jaminanbiayamanage` |
+| 1 | **Ringkasan Riwayat Klinik (Evaluasi APS / FKTP)** | -| `032499` - M. Thirafi H.S | `ringkasan_riwayat_klinik` | [x] Selesai | [x] Selesai | `/admin/update_bmt/ringkasanriwayatklinikmanage` |
+| 2 | **Formulir Rujukan Komunikasi Antar RS** | -| `032742` - Tn. Slamet | `formulir_rujukan_rs` | [x] Selesai | [x] Selesai | `/admin/update_bmt/formulirrujukanmanage` |
+| 3 | **Stabilisasi Pasien Sebelum Transfer** | -| `032742` - Tn. Slamet | `lampiran_stabilisasi_pasien` | [x] Selesai | [x] Selesai | `/admin/update_bmt/stabilisasipasienmanage` |
+| 4 | **Monitoring Pasien Selama Transfer (Ambulans)** | -| `032742` - Tn. Slamet | `lampiran_monitoring_pasien_selama_transfer` | [x] Selesai | [x] Selesai | `/admin/update_bmt/monitoringpasienselamatransfermanage` |
+| 5 | **Profil Ringkas Medis Rawat Jalan (PRMRJ)** | -/ MIRM | `055875` - Thari Maulida N | `lampiran_profil_ringkas_medis_rajal` | [x] Selesai | [x] Selesai | `/admin/update_bmt/prmrjmanage` |
+| 6 | **Kriteria Masuk & Keluar Ruang Rawat Intensif (ICU)** | -| `032498` - dr. M. Ilyas Saputera | `kriteria_masuk_keluar_icu` | [x] Selesai | [x] Selesai | `/admin/update_bmt/kriteriaicumanage` |
+| 7 | **Informasi Penundaan & Kelambatan Pelayanan** | -| `032498` - dr. M. Ilyas Saputera | `lampiran_penundaan_kelambatan_pelayanan` | [x] Selesai | [x] Selesai | `/admin/update_bmt/penundaankelambatanmanage` |
+| 8 | **General Consent Rawat Inap & Rincian Biaya** | -| `032498` - dr. M. Ilyas Saputera | `general_consent_ranap` | [x] Selesai | [x] Selesai | `/admin/update_bmt/generalconsentmanage` |
+| 9 | **Surat Pengantar Rawat Inap (Admisi)** | -| `032498` - dr. M. Ilyas Saputera | `surat_pengantar_ranap` | [x] Selesai | [x] Selesai | `/admin/update_bmt/pengantarranapmanage` |
+| 10 | **Surat Pernyataan Jaminan Pembiayaan** | Admisi / -| `032498` - dr. M. Ilyas Saputera | `surat_pernyataan_jaminan_biaya` | [x] Selesai | [x] Selesai | `/admin/update_bmt/jaminanbiayamanage` |
 | 11 | **RM.RI 01B - Hak & Kewajiban Pasien Ranap** | HPK 1.1 | `032498` - dr. M. Ilyas Saputera | `ri01b_hak_kewajiban_pasien` | [x] Selesai | [x] Selesai | `/admin/update_bmt/ri01bmanage` |
 | 12 | **RM.RJ 02A - Hak & Kewajiban Pasien Rajal** | HPK 1.1 | `032498` - dr. M. Ilyas Saputera | `rj02a_hak_kewajiban` | [x] Selesai | [x] Selesai | `/admin/update_bmt/rj02amanage` |
-| 13 | **RM.RI 04 - Asesmen Keperawatan Rawat Inap** | AKP 1.1 | `032498` - dr. M. Ilyas Saputera | `ri04_asesmen_keperawatan_ranap` | [x] Selesai | [x] Selesai | `/admin/update_bmt/rikeperawatanmanage` |
-| 14 | **RM.RI 05A - Asesmen Medis Ranap Gigi & Mulut** | AKP 1.1 | `032498` - dr. M. Ilyas Saputera | `ri05a_asesmen_medis_ranap_gigi` | [x] Selesai | [x] Selesai | `/admin/update_bmt/rimedisgigimanage` |
-| 15 | **RM.RI 05C - Lembar Konsul / Alih Rawat DPJP** | AKP 3 | `032498` - dr. M. Ilyas Saputera | `ri05c_dokter_penanggung_jawab` | [x] Selesai | [x] Selesai | `/admin/update_bmt/ri05cmanage` |
+| 13 | **RM.RI 04 - Asesmen Keperawatan Rawat Inap** | -| `032498` - dr. M. Ilyas Saputera | `ri04_asesmen_keperawatan_ranap` | [x] Selesai | [x] Selesai | `/admin/update_bmt/rikeperawatanmanage` |
+| 14 | **RM.RI 05A - Asesmen Medis Ranap Gigi & Mulut** | -| `032498` - dr. M. Ilyas Saputera | `ri05a_asesmen_medis_ranap_gigi` | [x] Selesai | [x] Selesai | `/admin/update_bmt/rimedisgigimanage` |
+| 15 | **RM.RI 05C - Lembar Konsul / Alih Rawat DPJP** | -| `032498` - dr. M. Ilyas Saputera | `ri05c_dokter_penanggung_jawab` | [x] Selesai | [x] Selesai | `/admin/update_bmt/ri05cmanage` |
 | 16 | **RM.RI 06A - Asesmen Risiko Jatuh Pasien Dewasa** | SKP 6 | `032498` - dr. M. Ilyas Saputera | `ri06a_asesmen_jatuh_dewasa_geriatri` | [x] Selesai | [x] Selesai | `/admin/update_bmt/jatuhdewasamanage` |
 | 17 | **Asesmen Risiko Jatuh & Nyeri Pasien Anak** | SKP 6 | Pasien Anak Rawat Jalan | `rj_asesmen_jatuh_nyeri_anak` | [x] Selesai | [x] Selesai | `/admin/update_bmt/jatuhanakmanage` |
-| 18 | **RM.RI 07 - Lembar Observasi Pasien Rawat Inap** | AKP 1.1 | `032498` - dr. M. Ilyas Saputera | `ri07_observasi_pasien` | [x] Selesai | [x] Selesai | `/admin/update_bmt/riobservasimanage` |
-| 19 | **Catatan Perkembangan Pasien Terintegrasi (CPPT)** | AKP 1.1 EP C | `032498` - dr. M. Ilyas Saputera | `pemeriksaan_ranap` / SOAP | [x] Selesai | [x] Selesai | `/admin/update_bmt/cpptmanage` |
-| 20 | **Surat Pernyataan Pulang APS** | AKP 5.5 | `032498` - dr. M. Ilyas Saputera | `surat_pulang_aps` | [x] Selesai | [x] Selesai | `/admin/update_bmt/pulangapsmanage` |
-| 21 | **Form A MPP (Evaluasi Awal Skrining Pasien)** | AKP 3 | `016573` - Ny. Iriyanti | `lampiran_form_a_mpp` | [x] Selesai | [x] Selesai | `/admin/update_bmt/formamppmanage` |
-| 22 | **Form B MPP (Catatan Implementasi Tata Laksana)** | AKP 3 | `016573` - Ny. Iriyanti | `lampiran_form_b_mpp` | [x] Selesai | [x] Selesai | `/admin/update_bmt/formbmppmanage` |
-| 23 | **RM.GD 6 - Asesmen Awal Medis IGD Umum** | AKP 1.1 | `032498` - dr. M. Ilyas Saputera | `asesmen_medis_umum_ugd` | [x] Selesai | [x] Selesai | `/admin/update_bmt/rmgd6manage` |
+| 18 | **RM.RI 07 - Lembar Observasi Pasien Rawat Inap** | -| `032498` - dr. M. Ilyas Saputera | `ri07_observasi_pasien` | [x] Selesai | [x] Selesai | `/admin/update_bmt/riobservasimanage` |
+| 19 | **Catatan Perkembangan Pasien Terintegrasi (CPPT)** | -| `032498` - dr. M. Ilyas Saputera | `pemeriksaan_ranap` / SOAP | [x] Selesai | [x] Selesai | `/admin/update_bmt/cpptmanage` |
+| 20 | **Surat Pernyataan Pulang APS** | -| `032498` - dr. M. Ilyas Saputera | `surat_pulang_aps` | [x] Selesai | [x] Selesai | `/admin/update_bmt/pulangapsmanage` |
+| 21 | **Form A MPP (Evaluasi Awal Skrining Pasien)** | -| `016573` - Ny. Iriyanti | `lampiran_form_a_mpp` | [x] Selesai | [x] Selesai | `/admin/update_bmt/formamppmanage` |
+| 22 | **Form B MPP (Catatan Implementasi Tata Laksana)** | -| `016573` - Ny. Iriyanti | `lampiran_form_b_mpp` | [x] Selesai | [x] Selesai | `/admin/update_bmt/formbmppmanage` |
+| 23 | **RM.GD 6 - Asesmen Awal Medis IGD Umum** | -| `032498` - dr. M. Ilyas Saputera | `asesmen_medis_umum_ugd` | [x] Selesai | [x] Selesai | `/admin/update_bmt/rmgd6manage` |
 
 ---
 
@@ -83,20 +83,20 @@ Dokumen checklist ini memuat seluruh hasil verifikasi dan penyesuaian formulir k
     - Tabel Obat-obatan: Tepat **16 baris**.
     - Tanpa footer atau catatan kaki tambahan.
 
-### 6. Kriteria Masuk dan Keluar ICU (AKP 1.2 EP C)
+### 6. Kriteria Masuk dan Keluar ICU (-)
 - **Input:** Evaluasi kriteria prioritas masuk (Prioritas 1: hemodinamik tidak stabil; Prioritas 2: pemantauan intensif; Prioritas 3: penyakit kritis terminal), skor NEWS2, parameter jalan napas, ventilasi, dan sirkulasi.
 - **Output Cetak:** Lembar penilaian lengkap dengan tanda tangan dokter penilai ICU dan DPJP rawat intensif.
 
-### 7. Formulir Penundaan dan Kelambatan Pelayanan (AKP 1.3)
+### 7. Formulir Penundaan dan Kelambatan Pelayanan (-)
 - **Input:** Alasan penundaan pelayanan (penundaan pro odontektomi), tanggal jadwal pelayanan baru (15/11/2022), radio persetujuan/penolakan alternatif penundaan.
 - **Output Cetak:**
   - 3 Tanda tangan digital: TTD Pasien/Keluarga ([`dr. M. Ilyas Saputera`]), TTD DPJP Pemberi Informasi ([`dr. Nandita Yueri Agustin`]), dan TTD Dokter Penanggung Jawab Tindakan ([`drg. Tri Nurrahman, Sp.BM`]).
 
-### 8. General Consent Rawat Inap & Rincian Tarif (AKP 2 EP C)
+### 8. General Consent Rawat Inap & Rincian Tarif (-)
 - **Input:** Kelas perawatan (Kelas 1), tarif kamar per hari (Rp 454.000,-), estimasi lama rawat (3 hari), total perkiraan biaya (Rp 6.212.000,-), klausul persetujuan pelepasan informasi, barang berharga, dan hak privasi.
 - **Output Cetak:** Dokumen persetujuan umum resmi dengan rincian biaya yang disetujui pasien dan penjamin.
 
-### 9. Surat Pengantar Rawat Inap (AKP 1.2 EP A)
+### 9. Surat Pengantar Rawat Inap (-)
 - **Input:** Indikasi rawat inap (Impaksi Gigi M3 Mandibula Dextra), kamar rawat inap yang dituju (Kamar K1 Kelas 1), dokter perujuk IGD.
 - **Output Cetak:** Format standar admisi dengan TTD DPJP perujuk dr. Nandita Yueri Agustin.
 
@@ -166,3 +166,26 @@ Dokumen checklist ini memuat seluruh hasil verifikasi dan penyesuaian formulir k
    - **dr. M. Ilyas Saputera:** Cari No. Rawat `2022/11/14/000002` (atau `2022/11/14/000001`) / No. RM `032498`.
    - **Ny. Iriyanti:** Cari No. Rawat `2023/05/29/000001` atau No. RM `016573`.
 4. Klik tombol **Cetak (Ikon Printer)** untuk cetak HTML atau **Cetak PDF (Ikon PDF Merah/Biru)** untuk verifikasi keluaran mPDF resmi.
+
+---
+
+## 5. Audit & Standarisasi TTE serta Output Cetak/PDF (80 Formulir RME)
+
+### A. Konsep Tanda Tangan Elektronik (TTE) Sesuai Peran:
+1. **User Internal Rumah Sakit (Dokter DPJP, Perawat, Petugas Admisi / Edukasi):**
+   - Menggunakan mekanisme **SOAP-style TTE** berbasis tombol verifikasi (`.btn-tte-rme` / `.btn-tte`).
+   - Modal verifikasi kata sandi (passphrase login SIMRS) yang divalidasi ke tabel `mlite_users`.
+   - Mengenerate hash kriptografis SHA-256 tersimpan ke `mlite_esignatures`.
+   - Pada lembar cetak / PDF mPDF, jika panjang hash adalah 64 karakter, sistem merender **QR Code sertifikat verifikasi** (`<barcode code="..." type="QR">`) yang dapat dipindai langsung menuju URL verifikasi publik `/esignature/verify/{hash}`.
+2. **Pasien / Keluarga / Wali:**
+   - Menggunakan **Signature Canvas Touch / Tablet Pad** (`modal-ttd-pasien-fullscreen` atau canvas form) untuk menggoreskan tanda tangan langsung.
+   - Tersimpan dalam format data URI PNG base64 (`data:image/png;base64,...`) dan dirender langsung sebagai gambar tanda tangan basah digital pada lembar cetak / PDF.
+
+### B. Hasil Pengujian Output Cetak & PDF:
+- **Mode Kosongan (Dibuka langsung dari Manajemen Form RME):**
+  - **80 / 80 Form (100%) Berhasil Terbuka Sempurna**.
+  - Fallback aman (`renderLiveCetakPreview`) dengan nilai default lengkap tanpa crash atau notice PHP 8 TypeError.
+- **Mode Lembar Kerja (Dengan Konteks Pasien / No. Rawat):**
+  - **80 / 80 Form (100%) Berhasil Terbuka Sempurna** dengan pre-fill data pasien otomatis.
+- **Mode Ekspor PDF (mPDF Engine):**
+  - Seluruh formulir terverifikasi mampu men-generate stream biner PDF (`%PDF-1.4`) secara bersih tanpa tercemar warning atau error output.

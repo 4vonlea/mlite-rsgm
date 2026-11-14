@@ -5,7 +5,9 @@
   <div class="panel-body">
     <div class="row" style="margin-bottom: 15px;">
       <div class="col-md-12">
-        <a href="{?=url([ADMIN, 'form_rme', 'form'])?}" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Asesmen Baru</a>
+        <a href="{?=url([ADMIN, 'form_rme', 'akgmuform'])?}" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Asesmen Baru</a>
+        <a href="{?=url([ADMIN, 'form_rme', 'akgmucetak'])?}" target="_blank" class="btn btn-info"><i class="fa fa-print"></i> Cetak Kosongan</a>
+        <a href="{?=url([ADMIN, 'form_rme', 'akgmucetak'])?}&pdf=1" target="_blank" class="btn btn-danger"><i class="fa fa-file-pdf-o"></i> Unduh PDF Kosongan</a>
       </div>
     </div>
     <div class="table-responsive">
@@ -31,9 +33,9 @@
             <td>{$value.cara_datang}</td>
             <td>{$value.triase}</td>
             <td>
-              <a href="{?=url([ADMIN, 'form_rme', 'form'])?}&no_rawat={$value.no_rawat}" class="btn btn-xs btn-warning"><i class="fa fa-edit"></i> Edit</a>
-              <a href="{?=url([ADMIN, 'form_rme', 'cetak'])?}&no_rawat={$value.no_rawat}" class="btn btn-xs btn-info" target="_blank"><i class="fa fa-print"></i> Cetak</a>
-              <a href="{?=url([ADMIN, 'form_rme', 'cetak'])?}&no_rawat={$value.no_rawat}&pdf=1" class="btn btn-xs btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
+              <a href="{?=url([ADMIN, 'form_rme', 'akgmuform'])?}&no_rawat={$value.no_rawat}" class="btn btn-xs btn-warning"><i class="fa fa-edit"></i> Edit</a>
+              <a href="{?=url([ADMIN, 'form_rme', 'akgmucetak'])?}&no_rawat={$value.no_rawat}" class="btn btn-xs btn-info" target="_blank"><i class="fa fa-print"></i> Cetak</a>
+              <a href="{?=url([ADMIN, 'form_rme', 'akgmucetak'])?}&no_rawat={$value.no_rawat}&pdf=1" class="btn btn-xs btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i> Unduh PDF</a>
               <a href="{?=url([ADMIN, 'form_rme', 'akgmumanage'])?}&action=delete&no_rawat={$value.no_rawat}" class="btn btn-xs btn-default" onclick="return confirm('Yakin ingin menghapus data asesmen ini?')"><i class="fa fa-trash"></i> Hapus</a>
             </td>
           </tr>

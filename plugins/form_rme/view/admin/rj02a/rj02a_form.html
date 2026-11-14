@@ -10,16 +10,16 @@
            KOLOM KIRI (3): SIDEBAR IDENTITAS PASIEN
            ============================================================ -->
       <div class="col-md-3">
-        <div class="rsgm-reg-shell rsgm-patient-side-shell" style="border: 1px solid #dbe3ec; border-radius: 8px; background: #ffffff;">
-          <div class="rsgm-reg-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 12px 16px;">
-            <h4 class="rsgm-reg-title" style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a;">
-              <span class="rsgm-reg-icon" style="color: #0284c7;"><i class="fa fa-id-card-o"></i></span>
-              <span>Identitas Pasien</span>
+        <div class="rsgm-reg-shell rsgm-patient-side-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+              <span>Data Pasien</span>
             </h4>
-            <span class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 11px;">RM.RJ 02A</span>
+            <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
           </div>
 
-          <div class="rsgm-reg-body" style="padding: 14px 16px;">
+          <div class="rsgm-reg-body">
             <div class="form-group" style="margin-bottom: 12px;">
               <label for="no_rawat" class="rsgm-compact-label" style="font-weight: 600; font-size: 12px; margin-bottom: 4px; display: block;">
                 <i class="fa fa-hashtag text-primary"></i> No. Rawat <span class="text-danger">*</span>
@@ -87,25 +87,19 @@
            KOLOM KANAN (9): WORKSTATION HAK DAN KEWAJIBAN PASIEN
            ============================================================ -->
       <div class="col-md-9">
-        <div class="rsgm-reg-shell" style="border: 1px solid #dbe3ec; border-radius: 8px; background: #ffffff;">
-          <div class="rsgm-reg-header" style="background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <span class="rsgm-reg-icon" style="background: #e0f2fe; color: #0284c7; width: 36px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 17px;">
-                <i class="fa fa-balance-scale"></i>
-              </span>
-              <div>
-                <h4 class="rsgm-reg-title" style="margin: 0; font-size: 15px; font-weight: 700; color: #0f172a;">
-                  Formulir Penjelasan Hak dan Kewajiban Pasien
-                </h4>
-                <span style="font-size: 12px; color: #64748b;">Standar Pelayanan RSGM Gusti Hasan Aman &bull; UU RI No. 17 Tahun 2023 &amp; Permenkes</span>
-              </div>
-            </div>
-            <div>
-              <span class="badge" style="background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 12px; padding: 6px 12px; font-weight: 700;">RM.RJ 02A</span>
+        <div class="rsgm-reg-shell">
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-balance-scale"></i></span>
+              <span>Formulir Penjelasan Hak dan Kewajiban Pasien</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">RM.RJ 02A</span>
+              <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-check-square-o"></i> Hak &amp; Kewajiban</span>
             </div>
           </div>
 
-          <div class="rsgm-reg-body" style="padding: 18px 20px;">
+          <div class="rsgm-reg-body">
             
             <!-- SECTION 1: BUTIR HAK DAN KEWAJIBAN PASIEN -->
             <div class="rsgm-soap-section" style="margin-bottom: 20px;">
@@ -239,26 +233,59 @@
                   <div style="border: 2px dashed #cbd5e1; border-radius: 6px; background: #fafafa; width: 100%; height: 130px; display: flex; align-items: center; justify-content: center;">
                     <canvas id="canvas_ttd_pasien" width="340" height="120" style="touch-action: none; width: 100%; height: 100%; cursor: crosshair;"></canvas>
                   </div>
+                  <img id="img_preview_input_ttd_pasien" src="" alt="" style="display: none;">
                   <input type="hidden" class="f-ttd_pasien" id="input_ttd_pasien" value="{$data.form_data.ttd_pasien}">
-                  <div style="margin-top: 5px;">
+                  <div style="margin-top: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-primary btn-xs btn-buka-ttd-pasien"
+                      data-target-input="input_ttd_pasien"
+                      data-preview-img="img_preview_input_ttd_pasien"
+                      data-status-text="status_ttd_pasien"
+                      data-doc-title="Formulir Hak dan Kewajiban Pasien"
+                      data-doc-code="RM.RJ-02A"
+                      data-signer-title="Pasien / Penanggung Jawab">
+                      <i class="fa fa-tablet"></i> Mode Layar Penuh (Tablet)
+                    </button>
                     <button type="button" class="btn btn-default btn-xs" id="btn_clear_pasien"><i class="fa fa-eraser"></i> Hapus Goresan</button>
-                    <span id="status_ttd_pasien" class="text-success" style="font-size: 11px; margin-left: 10px;">
+                    <span id="status_ttd_pasien" class="text-success" style="font-size: 11px;">
                       {if: !empty($data.form_data.ttd_pasien)}<i class="fa fa-check-circle"></i> TTD Digital Tersimpan{/if}
                     </span>
                   </div>
                 </div>
 
                 <div class="col-md-6" style="margin-bottom: 12px;">
-                  <label style="font-weight: 600; font-size: 12px; display: block; margin-bottom: 6px;"><i class="fa fa-pencil text-primary"></i> Tanda Tangan Petugas Pemberi Edukasi</label>
-                  <div style="border: 2px dashed #cbd5e1; border-radius: 6px; background: #fafafa; width: 100%; height: 130px; display: flex; align-items: center; justify-content: center;">
-                    <canvas id="canvas_ttd_edukasi" width="340" height="120" style="touch-action: none; width: 100%; height: 100%; cursor: crosshair;"></canvas>
+                  <label style="font-weight: 600; font-size: 12px; display: block; margin-bottom: 6px;"><i class="fa fa-lock text-primary"></i> Tanda Tangan (TTE) Petugas Pemberi Edukasi</label>
+                  <div id="sign_container_edukasi" style="border: 1px solid #bfdbfe; border-radius: 6px; background: #fafafa; min-height: 100px; display: flex; align-items: center; justify-content: center; padding: 6px; margin-bottom: 6px;">
+                    {if: !empty($data.form_data.ttd_edukasi)}
+                      {if: strlen($data.form_data.ttd_edukasi) == 64}
+                        <div class="rsgm-tte-verified-card">
+                          <i class="fa fa-check-circle text-success fa-2x"></i>
+                          <div style="font-weight: 700; color: #166534; font-size: 11px; margin-top: 4px;">TERVERIFIKASI TTE</div>
+                          <div style="font-size: 9px; color: #15803d; font-family: monospace;">{?=substr($data.form_data.ttd_edukasi, 0, 16)?}...</div>
+                          <a href="{?=url(['esignature', 'verify', $data.form_data.ttd_edukasi])?}" target="_blank" class="btn btn-xs btn-link" style="padding: 0; font-size: 10px;">Lihat Sertifikat</a>
+                        </div>
+                      {else}
+                        <img src="{$data.form_data.ttd_edukasi}" style="max-height: 80px; max-width: 100%;">
+                      {/if}
+                    {else}
+                      <div style="color: #94a3b8; font-size: 12px; font-style: italic; text-align: center;">
+                        <i class="fa fa-user-md fa-2x" style="display: block; margin-bottom: 4px; color: #cbd5e1;"></i>
+                        Belum Ditandatangani Petugas
+                      </div>
+                    {/if}
                   </div>
                   <input type="hidden" class="f-ttd_edukasi" id="input_ttd_edukasi" value="{$data.form_data.ttd_edukasi}">
-                  <div style="margin-top: 5px;">
-                    <button type="button" class="btn btn-default btn-xs" id="btn_clear_edukasi"><i class="fa fa-eraser"></i> Hapus Goresan</button>
-                    <span id="status_ttd_edukasi" class="text-success" style="font-size: 11px; margin-left: 10px;">
-                      {if: !empty($data.form_data.ttd_edukasi)}<i class="fa fa-check-circle"></i> TTD Digital Tersimpan{/if}
-                    </span>
+                  <button type="button" class="btn btn-primary btn-sm btn-tte-rme"
+                    data-ref_type="rj02a_edukasi"
+                    data-ref_id="{$data.no_rawat}"
+                    data-signer_name="{$data.form_data.pemberi_edukasi}"
+                    data-signer_role="Pemberi Edukasi"
+                    data-target_input="input_ttd_edukasi"
+                    data-container_id="sign_container_edukasi"
+                    style="border-radius: 6px; font-weight: 600; width: 100%;">
+                    <i class="fa fa-lock"></i> {if: !empty($data.form_data.ttd_edukasi)}Tanda Tangani Ulang (TTE Petugas){else}Tanda Tangani (TTE Petugas){/if}
+                  </button>
+                  <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
+                    <i class="fa fa-shield text-primary"></i> Verifikasi TTE menggunakan kata sandi SIMRS
                   </div>
                 </div>
               </div>
@@ -340,8 +367,25 @@ $(document).ready(function() {
     $('#catatan').val('Pasien telah menerima penjelasan dan memahami seluruh butir hak dan kewajiban pasien');
   });
 
-  // 3. SERIALISASI SAAT SUBMIT
-  $('#rj02aForm').on('submit', function() {
+  // 3. SERIALISASI SAAT SUBMIT / LIVE PREVIEW
+  $('#pemberi_edukasi').on('input change', function() {
+    $('#rj02aForm .btn-tte-rme').attr('data-signer_name', $(this).val() || '');
+  });
+
+  $('#img_preview_input_ttd_pasien').on('load', function() {
+    var src = $(this).attr('src');
+    if (src && src.indexOf('data:image') === 0) {
+      var canvas = document.getElementById('canvas_ttd_pasien');
+      if (canvas) {
+        var ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
+      }
+      $(this).hide();
+    }
+  });
+
+  $('#rj02aForm').on('submit rme:beforeSave', function() {
     var fd = {
       nama_pasien_pj: $('#nama_pasien_pj').val() || '',
       hubungan_pj: $('#hubungan_pj').val() || 'Diri Sendiri',

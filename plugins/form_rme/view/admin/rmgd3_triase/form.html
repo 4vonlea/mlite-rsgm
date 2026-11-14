@@ -88,7 +88,7 @@
               <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
               <span>Data Pasien</span>
             </h4>
-            <span class="badge" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #bfdbfe;">RM.GD 3</span>
+            <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
           </div>
 
           <div class="rsgm-reg-body">
@@ -142,6 +142,37 @@
             <div class="form-group" style="margin-bottom: 12px;">
               <label for="jam_selesai_triase" class="rsgm-compact-label"><i class="fa fa-clock-o text-muted"></i> Jam Selesai Triase (WITA) <span class="text-danger">*</span></label>
               <input type="time" name="jam_selesai_triase" id="jam_selesai_triase" class="form-control" value="{$data.jam_selesai_triase}" required>
+            </div>
+
+            <!-- TTE Petugas Triase (Internal RSGM) -->
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+              <label class="rsgm-compact-label"><i class="fa fa-lock text-primary"></i> TTE Petugas Triase (RSGM)</label>
+              <div id="sign_container_rmgd3_petugas" style="border: 1px solid #bfdbfe; border-radius: 6px; background: #fff; min-height: 54px; display: flex; align-items: center; justify-content: center; padding: 6px; margin-bottom: 6px; text-align: center;">
+                {if: !empty($tte_petugas.qr_data_uri)}
+                  <div style="text-align:center;">
+                    <img src="{$tte_petugas.qr_data_uri}" alt="QR TTE" style="height:42px; width:42px; display:block; margin:0 auto 2px;">
+                    <span class="label label-success" style="font-size:9px;"><i class="fa fa-check-circle"></i> {$tte_petugas.signer_name}</span>
+                  </div>
+                {elseif: !empty($tte_petugas.signature_hash)}
+                  <div style="text-align:center;">
+                    <span class="label label-success"><i class="fa fa-check-circle"></i> TTE Terverifikasi</span>
+                    <div style="font-size:9px; color:#15803d; font-family:monospace;">{?=substr($tte_petugas['signature_hash'], 0, 14)?}...</div>
+                  </div>
+                {else}
+                  <span style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum TTE Petugas</span>
+                {/if}
+              </div>
+              <input type="hidden" id="input_tte_rmgd3_petugas" value="{if: !empty($tte_petugas.signature_hash)}{$tte_petugas.signature_hash}{/if}">
+              <button type="button" class="btn btn-primary btn-xs btn-block btn-tte-rme" id="btn_tte_rmgd3_petugas"
+                data-ref_type="rmgd3_triase"
+                data-ref_id="{if: !empty($data.id_triase)}{$data.id_triase}{else}{$data.no_rawat}{/if}"
+                data-signer_name="{?=isset_or($data['nama_petugas'])?}"
+                data-signer_role="Petugas Triase"
+                data-target_input="input_tte_rmgd3_petugas"
+                data-container_id="sign_container_rmgd3_petugas"
+                style="border-radius: 6px; font-weight: 600;">
+                <i class="fa fa-lock"></i> {if: !empty($tte_petugas.signature_hash)}Verifikasi Ulang TTE{else}Tanda Tangani (TTE Petugas){/if}
+              </button>
             </div>
 
             <div class="alert alert-info" style="font-size: 11px; padding: 10px; margin-bottom: 0; border-radius: 6px; line-height: 1.4;">
@@ -558,6 +589,19 @@
 
 <script>
 $(document).ready(function() {
+    function syncRmgd3TteTarget() {
+        var existingId = $('input[name="id_triase"]').val() || '';
+        var nr = $('#no_rawat').val() || '';
+        var petText = $('select[name="petugas_id"] option:selected').val() ? $('select[name="petugas_id"] option:selected').text().replace(/\s*\([^)]*\)\s*$/, '').trim() : '';
+        $('#btn_tte_rmgd3_petugas').attr({
+            'data-ref_id': existingId || nr,
+            'data-signer_name': petText
+        });
+    }
+
+    $('select[name="petugas_id"], #no_rawat').on('change input', syncRmgd3TteTarget);
+    syncRmgd3TteTarget();
+
     function fetchPasien(val) {
         if (!val) return;
         $.getJSON("{?=url([ADMIN, 'form_rme', 'rmgd3form'])?}&ajax_patient=1&no_rawat=" + encodeURIComponent(val), function(res) {
@@ -565,6 +609,7 @@ $(document).ready(function() {
                 $('#no_rawat').val(res.no_rawat);
                 $('#no_rkm_medis').val(res.no_rkm_medis);
                 $('#nm_pasien').val(res.nama_pasien);
+                syncRmgd3TteTarget();
             }
         });
     }

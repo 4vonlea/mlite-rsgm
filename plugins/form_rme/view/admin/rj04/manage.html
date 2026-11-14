@@ -1,0 +1,127 @@
+<div class="row">
+  <div class="col-md-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="btn-group pull-right" style="margin-top:-5px;">
+          <a href="{?=url([ADMIN, 'form_rme', 'rj04cetak'])?}" target="_blank" class="btn btn-default btn-sm" title="Cetak Blangko Kosongan">
+            <i class="fa fa-print"></i> Blangko Kosongan
+          </a>
+          <a href="{?=url([ADMIN, 'form_rme', 'rj04cetak'])?}&pdf=1" target="_blank" class="btn btn-danger btn-sm" title="PDF Blangko Kosongan">
+            <i class="fa fa-file-pdf-o"></i> PDF Kosongan
+          </a>
+          <a href="{?=url([ADMIN, 'form_rme', 'rj04form'])?}" class="btn btn-primary btn-sm">
+            <i class="fa fa-plus"></i> Tambah Asesmen RJ-04
+          </a>
+        </div>
+        <h3 class="panel-title">
+          <i class="fa fa-user-md"></i> <strong>RM.RJ 04 - ASESMEN MEDIS GIGI RAWAT JALAN</strong>
+        </h3>
+      </div>
+      <div class="panel-body">
+        <form method="GET" action="{?=url([ADMIN, 'form_rme', 'rj04manage'])?}" class="form-inline" style="margin-bottom: 15px;">
+          <div class="form-group">
+            <input type="text" name="cari" class="form-control input-sm" placeholder="No. Rawat / No. RM / Nama Pasien" value="{$cari}">
+          </div>
+          <button type="submit" class="btn btn-default btn-sm"><i class="fa fa-search"></i> Cari</button>
+          {if: !empty($cari)}
+          <a href="{?=url([ADMIN, 'form_rme', 'rj04manage'])?}" class="btn btn-link btn-sm">Reset</a>
+          {/if}
+        </form>
+
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped table-hover" id="table-rj04">
+            <thead>
+              <tr class="info">
+                <th width="4%" class="text-center">No</th>
+                <th width="13%">No. Rawat</th>
+                <th width="8%">No. RM</th>
+                <th width="17%">Nama Pasien</th>
+                <th width="13%">Tgl Kunjungan &amp; Unit</th>
+                <th width="17%">Diagnosis Sementara / Poli Tujuan</th>
+                <th width="16%">Diagnosis / Dokter</th>
+                <th width="12%" class="text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {if: !empty($data)}
+              {loop: $data}
+              <tr>
+                <td class="text-center">{$key + 1}</td>
+                <td><strong>{$value.no_rawat}</strong></td>
+                <td>{$value.no_rkm_medis}</td>
+                <td>{$value.nama_pasien}</td>
+                <td>
+                  {$value.tanggal_kunjungan} {if: !empty($value.pukul_kunjungan)}<small class="text-muted">{$value.pukul_kunjungan}</small>{/if}
+                  {if: !empty($value.unit_awal)}<br><small class="text-muted">{$value.unit_awal}</small>{/if}
+                </td>
+                <td>
+                  {if: !empty($value.poli_klinik_tujuan)}<span class="label label-info">{$value.poli_klinik_tujuan}</span><br>{/if}
+                  <small>{$value.diagnosis_sementara}</small>
+                </td>
+                <td>
+                  <strong>{$value.diagnosis}</strong>
+                  {if: !empty($value.nm_dpjp) || !empty($value.nm_dokter_od)}
+                  <br><small class="text-muted">{if: !empty($value.nm_dokter_od)}OD: {$value.nm_dokter_od}{/if}{if: !empty($value.nm_dpjp)} | DPJP: {$value.nm_dpjp}{/if}</small>
+                  {/if}
+                  <div style="margin-top:3px;">
+                    {if: !empty($value.tte_dokter_od)}<span class="label label-primary"><i class="fa fa-lock"></i> TTE OD</span>{/if}
+                    {if: !empty($value.tte_dpjp)}<span class="label label-success"><i class="fa fa-lock"></i> TTE DPJP</span>{/if}
+                  </div>
+                </td>
+                <td class="text-center">
+                  <div class="btn-group btn-group-xs">
+                    <a href="{?=url([ADMIN, 'form_rme', 'rj04cetak'])?}&id={$value.id}" target="_blank" class="btn btn-default" title="Cetak HTML"><i class="fa fa-print"></i></a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'rj04cetak'])?}&id={$value.id}&pdf=1" target="_blank" class="btn btn-danger" title="Download PDF"><i class="fa fa-file-pdf-o"></i></a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'rj04form'])?}&id={$value.id}" class="btn btn-warning" title="Edit Data"><i class="fa fa-edit"></i></a>
+                    <button type="button" class="btn btn-danger btn-rj04-delete" data-id="{$value.id}" data-label="{$value.no_rawat}" title="Hapus Data"><i class="fa fa-trash"></i></button>
+                  </div>
+                </td>
+              </tr>
+              {/loop}
+              {else}
+              <tr>
+                <td colspan="8" class="text-center text-muted">Belum ada data Asesmen Medis Gigi Rawat Jalan (RM.RJ 04).</td>
+              </tr>
+              {/if}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<form method="POST" action="{?=url([ADMIN, 'form_rme', 'rj04hapus'])?}" id="frm-rj04-delete" style="display:none;">
+  <input type="hidden" name="id" id="rj04_delete_id" value="">
+</form>
+
+<script>
+jQuery(document).ready(function($) {
+  'use strict';
+  if ($.fn.DataTable && $('#table-rj04 tbody tr td').length > 1) {
+    $('#table-rj04').DataTable({ pageLength: 25, order: [] });
+  }
+  $(document).on('click', '.btn-rj04-delete', function() {
+    var recId = $(this).attr('data-id') || '';
+    var label = $(this).attr('data-label') || '';
+    var submitDelete = function() {
+      $('#rj04_delete_id').val(recId);
+      $('#frm-rj04-delete').trigger('submit');
+    };
+    if (window.bootbox && typeof bootbox.confirm === 'function') {
+      bootbox.confirm({
+        title: 'Konfirmasi Hapus Data',
+        message: 'Hapus data RM.RJ 04 untuk kunjungan <strong>' + $('<div>').text(label).html() + '</strong>?',
+        buttons: {
+          cancel: { label: 'Batal', className: 'btn-default' },
+          confirm: { label: 'Hapus', className: 'btn-danger' }
+        },
+        callback: function(ok) { if (ok) submitDelete(); }
+      });
+    } else {
+      submitDelete();
+    }
+  });
+});
+</script>
+

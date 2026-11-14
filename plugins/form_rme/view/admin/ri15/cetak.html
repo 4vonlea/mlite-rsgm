@@ -3,9 +3,11 @@
 <head>
 <title>RM.RI 15 - FORMULIR INSTRUKSI MEDIS</title>
 <style>
+    {if: empty($is_mpdf)}
     @page { size: A4 portrait; margin: 10mm; }
-    body { font-family: Arial, sans-serif; font-size: 13px; margin: 0; padding: 0; line-height: 1.4; }
-    .page { width: 190mm; margin: 0 auto; position: relative; }
+    {/if}
+    body { font-family: Arial, sans-serif; font-size: 12.5px; margin: 0; padding: 0; line-height: 1.4; }
+    .page { {if: empty($is_mpdf)}width: 190mm; margin: 0 auto;{else}width: 100%; margin: 0;{/if} }
     .table-header { width: 100%; border-collapse: collapse; }
     .table-header td { border: 1px solid #000; padding: 4px; }
     .text-center { text-align: center; }
@@ -15,26 +17,25 @@
     
     .title-box { text-align: center; font-weight: bold; font-size: 18px; padding: 5px 0; border: 1.5px solid #000; border-top: none; }
     
-    .content-box { border: 1.5px solid #000; border-top: none; padding: 15px; min-height: 600px; }
+    .content-box { border: 1.5px solid #000; border-top: none; padding: 12px 15px; {if: empty($is_mpdf)}min-height: 600px;{/if} }
     
-    .alergi-box { display: flex; align-items: center; margin-bottom: 10px; }
     .ckbox { display: inline-block; width: 12px; height: 12px; border: 1px solid #000; margin-right: 5px; vertical-align: middle; text-align: center; line-height: 12px; font-size: 10px; font-weight: bold; }
     
-    .instructions { margin-top: 20px; }
+    .instructions { margin-top: 16px; }
     .instructions h4 { font-size: 13px; font-weight: bold; margin-bottom: 10px; }
     .instructions ol { padding-left: 20px; text-align: justify; }
-    .instructions li { margin-bottom: 15px; }
+    .instructions li { margin-bottom: 14px; }
     .instructions li strong { font-size: 12px; }
     
     .footer-note { font-size: 9px; font-style: italic; text-align: right; margin-top: 5px; }
-    .footer-bottom { font-size: 9px; display: flex; justify-content: space-between; margin-top: 20px; font-weight: bold; }
+    .footer-bottom-table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 12px; font-weight: bold; }
+    .footer-bottom-table td { border: none !important; padding: 0; }
 
 {if: empty($is_mpdf)}
 @media screen {
     body { background-color: #f4f6f9 !important; padding: 15px 0 !important; }
     .container, .page, .main-box, .main-container { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; margin: 0 auto 20px auto !important; padding: 8mm 10mm !important; }
 }
-{/if}
 .no-print-toolbar { width: 100%; max-width: 195mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
 .btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-decoration: none; display: inline-block; }
 .btn-print { background: #27ae60; color: #fff; }
@@ -45,7 +46,7 @@
     body { background: transparent !important; padding: 0 !important; }
     .container, .page, .main-box, .main-container { box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
 }
-
+{/if}
 </style>
 </head>
 <body >
@@ -85,23 +86,21 @@
     </div>
 
     <div class="content-box">
-        <div class="alergi-box">
-            <div style="width: 120px;">Riwayat Alergi :</div>
-            <div style="margin-right: 20px;">
-                <span class="ckbox">{if: ($p.riwayat_alergi == 'Ya')}V{else}&nbsp;{/if}</span> Ya
-            </div>
-            <div>
-                <span class="ckbox">{if: ($p.riwayat_alergi == 'Tidak')}V{else}&nbsp;{/if}</span> Tidak
-            </div>
-        </div>
-        <div class="alergi-box" style="align-items: flex-start; margin-top: 15px;">
-            <div style="width: 120px; margin-top: -3px;">Alergi terhadap :</div>
-            <div style="flex-grow: 1;">
-                <div style="border-bottom: 1px solid #000; min-height: 20px; padding-bottom: 2px;">{$p.alergi_terhadap}</div>
-                <div style="border-bottom: 1px solid #000; min-height: 20px; margin-top: 10px;"></div>
-                <div style="border-bottom: 1px solid #000; min-height: 20px; margin-top: 10px;"></div>
-            </div>
-        </div>
+        <table class="nob" style="width: 100%; margin-bottom: 8px; border-collapse: collapse;">
+            <tr>
+                <td style="width: 120px; border: none;">Riwayat Alergi :</td>
+                <td style="width: 80px; border: none;"><span class="ckbox">{if: ($p.riwayat_alergi == 'Ya')}V{else}&nbsp;{/if}</span> Ya</td>
+                <td style="border: none;"><span class="ckbox">{if: ($p.riwayat_alergi == 'Tidak')}V{else}&nbsp;{/if}</span> Tidak</td>
+            </tr>
+            <tr>
+                <td style="border: none; vertical-align: top; padding-top: 8px;">Alergi terhadap :</td>
+                <td colspan="2" style="border: none; padding-top: 8px;">
+                    <div style="border-bottom: 1px solid #000; min-height: 18px; padding-bottom: 2px;">{$p.alergi_terhadap}</div>
+                    <div style="border-bottom: 1px solid #000; height: 18px; margin-top: 8px;"></div>
+                    <div style="border-bottom: 1px solid #000; height: 18px; margin-top: 8px;"></div>
+                </td>
+            </tr>
+        </table>
 
         <div class="instructions">
             <h4>PETUNJUK PENGISIAN</h4>
@@ -128,10 +127,7 @@
 
     <div class="footer-note">Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</div>
     
-    <div class="footer-bottom">
-        <div>RSGM/Ed-Rev/02/2023</div>
-        <div>RM.RI - 15</div>
-    </div>
+    <table class="footer-bottom-table"><tr><td style="text-align:left; border:none;">RSGM/Ed-Rev/02/2023</td><td style="text-align:right; border:none;">RM.RI - 15</td></tr></table>
 </div>
 </body>
 </html>

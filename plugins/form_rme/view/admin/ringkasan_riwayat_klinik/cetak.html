@@ -267,7 +267,10 @@
                         <td class="pre-line">{$value.pengobatan}</td>
                         <td style="text-align: center; font-weight: bold;">{$value.kode_penyakit}</td>
                         <td style="text-align: center; vertical-align: middle; padding-top: 40px;">
-                            {if: !empty($value.ttd_dpjp)}
+                            {if: !empty($value.qr_dpjp)}
+                                <img src="{$value.qr_dpjp}" alt="QR TTE DPJP" style="width: 44px; height: 44px; display: block; margin: 0 auto 3px auto;">
+                                <span style="font-size: 7pt; color: #16a34a; font-weight: bold;">TTE Verified</span>
+                            {elseif: !empty($value.ttd_dpjp)}
                                 {if: strlen($value.ttd_dpjp) == 64}
                                     <barcode code="{?=url(['esignature', 'verify', $value.ttd_dpjp])?}" type="QR" class="barcode" size="0.6" error="M" disableborder="1" /><br>
                                     <span style="font-size: 7pt; color: #16a34a; font-weight: bold;">TTE Verified</span>

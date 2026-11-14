@@ -543,10 +543,22 @@ $(document).ready(function() {
         hitungTotal();
     });
 
+    function syncGcRanapTteMeta() {
+        var nr = $('#no_rawat').val() ? $('#no_rawat').val().trim() : '';
+        var admisi = $('#nama_petugas_admisi').val() ? $('#nama_petugas_admisi').val().trim() : '';
+        $('.btn-tte-rme[data-ref_type="gc_ranap"]').attr({
+            'data-ref_id': nr,
+            'data-signer_name': admisi
+        });
+    }
+
     $('#nip_petugas_admisi').on('change', function() {
         var nama = $(this).find('option:selected').data('nama') || '';
         $('#nama_petugas_admisi').val(nama);
+        syncGcRanapTteMeta();
     });
+    $('#no_rawat, #nama_petugas_admisi').on('input change blur', syncGcRanapTteMeta);
+    syncGcRanapTteMeta();
 
     function loadPasienConsent() {
         var no_rawat = $('#no_rawat').val();

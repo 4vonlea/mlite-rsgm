@@ -2,14 +2,26 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>RM.RJ - 07 Asesmen Ulang Nyeri - {$d.no_rawat}</title>
+    <title>{if: !empty($is_ugd)}RM.GD - 09{else}RM.RJ - 07{/if} Asesmen Ulang Nyeri - {$d.no_rawat}</title>
     <style>
+        {if: empty($is_mpdf)}
         @page { size: A4 portrait; margin: 8mm 10mm 10mm 10mm; }
         * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; line-height: 1.2; margin: 0; padding: 0; color: #000; }
-        {if: empty($is_mpdf)}
-        body { background-color: #f4f6f9; padding: 15px 0; }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; line-height: 1.2; margin: 0; padding: 15px 0; color: #000; background-color: #f4f6f9; }
         .page { background: #fff; width: 195mm; min-height: 280mm; margin: 0 auto 20px auto; padding: 6mm 8mm; box-shadow: 0 2px 10px rgba(0,0,0,0.15); position: relative; }
+        .no-print-toolbar { width: 100%; max-width: 195mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
+        .btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 9pt; text-decoration: none; display: inline-block; margin-right: 5px; }
+        .btn-print { background: #27ae60; color: #fff; }
+        .btn-pdf { background: #e74c3c; color: #fff; }
+        .btn-close { background: #7f8c8d; color: #fff; }
+        @media print {
+            .no-print-toolbar { display: none !important; }
+            body { background: transparent !important; padding: 0 !important; }
+            .page { width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
+        }
+        {else}
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; line-height: 1.18; margin: 0; padding: 0; color: #000; }
+        .page { width: 100%; margin: 0; padding: 0; }
         {/if}
         
         .header-table { width: 100%; border-collapse: collapse; border-bottom: 1.5px solid #000; }
@@ -32,7 +44,6 @@
             background: #000;
             color: #fff;
             border-right: 1px solid #fff;
-            position: relative;
             padding: 2px 0;
             font-weight: bold;
             font-size: 8pt;
@@ -40,33 +51,7 @@
             text-align: center;
         }
 
-        .circ-active {
-            position: absolute;
-            border: 2px solid #c0392b;
-            background: rgba(231, 76, 60, 0.2);
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            top: -2px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 2;
-        }
-
         .footer-note { font-size: 7.5pt; font-style: italic; text-align: right; margin-top: 6px; font-weight: bold; }
-        .footer-bottom { font-size: 8pt; display: flex; justify-content: space-between; margin-top: 4px; font-weight: bold; }
-        
-        .no-print-toolbar { width: 100%; max-width: 195mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
-        .btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 9pt; text-decoration: none; display: inline-block; margin-right: 5px; }
-        .btn-print { background: #27ae60; color: #fff; }
-        .btn-pdf { background: #e74c3c; color: #fff; }
-        .btn-close { background: #7f8c8d; color: #fff; }
-
-        @media print {
-            .no-print-toolbar { display: none !important; }
-            body { background: transparent !important; padding: 0 !important; }
-            .page { width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
-        }
     </style>
 </head>
 <body>
@@ -74,7 +59,7 @@
     {if: empty($is_mpdf)}
     <div class="no-print-toolbar">
         <button onclick="window.print()" class="btn-toolbar btn-print"><i class="fa fa-print"></i> Cetak Dokumen</button>
-        <a href="{?=url([ADMIN, 'update_bmt', 'rj07cetak', '?id='.$d.id.'&pdf=1'])?}" target="_blank" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Download PDF</a>
+        <a href="{?=url([ADMIN, 'form_rme', 'rj07cetak', '?id='.$d.id.'&pdf=1'])?}" target="_blank" class="btn-toolbar btn-pdf"><i class="fa fa-file-pdf-o"></i> Download PDF</a>
         <button onclick="window.close()" class="btn-toolbar btn-close"><i class="fa fa-times"></i> Tutup</button>
     </div>
     {/if}
@@ -176,48 +161,26 @@
                         <!-- BARIS ANGKA 0 - 10 DENGAN LINGKARAN MERAH -->
                         <table style="width:100%; border-collapse:collapse; font-size:8pt; text-align:center; margin-top:1px; margin-bottom:6px;">
                             <tr>
-                                {for: $n=0; $n<=10; $n++}
-                                <td style="width:9.09%; padding:0;">
-                                    <div class="scale-box">
-                                        {if: ($value.skor_nyeri !== '' && (string)$value.skor_nyeri === (string)$n)}
-                                        <div class="circ-active"></div>
-                                        {/if}
-                                        {$n}
-                                    </div>
-                                </td>
-                                {/for}
+                                <td style="width:9.09%; padding:0;">{if: isset($value['skor_nyeri']) && $value['skor_nyeri'] !== '' && (string)$value['skor_nyeri'] === '0'}<div class="scale-box" style="background:#c0392b; color:#fff; border:1px solid #900; font-weight:bold;">(0)</div>{else}<div class="scale-box">0</div>{/if}</td>
+                                <td style="width:9.09%; padding:0;">{if: isset($value['skor_nyeri']) && $value['skor_nyeri'] !== '' && (string)$value['skor_nyeri'] === '1'}<div class="scale-box" style="background:#c0392b; color:#fff; border:1px solid #900; font-weight:bold;">(1)</div>{else}<div class="scale-box">1</div>{/if}</td>
+                                <td style="width:9.09%; padding:0;">{if: isset($value['skor_nyeri']) && $value['skor_nyeri'] !== '' && (string)$value['skor_nyeri'] === '2'}<div class="scale-box" style="background:#c0392b; color:#fff; border:1px solid #900; font-weight:bold;">(2)</div>{else}<div class="scale-box">2</div>{/if}</td>
+                                <td style="width:9.09%; padding:0;">{if: isset($value['skor_nyeri']) && $value['skor_nyeri'] !== '' && (string)$value['skor_nyeri'] === '3'}<div class="scale-box" style="background:#c0392b; color:#fff; border:1px solid #900; font-weight:bold;">(3)</div>{else}<div class="scale-box">3</div>{/if}</td>
+                                <td style="width:9.09%; padding:0;">{if: isset($value['skor_nyeri']) && $value['skor_nyeri'] !== '' && (string)$value['skor_nyeri'] === '4'}<div class="scale-box" style="background:#c0392b; color:#fff; border:1px solid #900; font-weight:bold;">(4)</div>{else}<div class="scale-box">4</div>{/if}</td>
+                                <td style="width:9.09%; padding:0;">{if: isset($value['skor_nyeri']) && $value['skor_nyeri'] !== '' && (string)$value['skor_nyeri'] === '5'}<div class="scale-box" style="background:#c0392b; color:#fff; border:1px solid #900; font-weight:bold;">(5)</div>{else}<div class="scale-box">5</div>{/if}</td>
+                                <td style="width:9.09%; padding:0;">{if: isset($value['skor_nyeri']) && $value['skor_nyeri'] !== '' && (string)$value['skor_nyeri'] === '6'}<div class="scale-box" style="background:#c0392b; color:#fff; border:1px solid #900; font-weight:bold;">(6)</div>{else}<div class="scale-box">6</div>{/if}</td>
+                                <td style="width:9.09%; padding:0;">{if: isset($value['skor_nyeri']) && $value['skor_nyeri'] !== '' && (string)$value['skor_nyeri'] === '7'}<div class="scale-box" style="background:#c0392b; color:#fff; border:1px solid #900; font-weight:bold;">(7)</div>{else}<div class="scale-box">7</div>{/if}</td>
+                                <td style="width:9.09%; padding:0;">{if: isset($value['skor_nyeri']) && $value['skor_nyeri'] !== '' && (string)$value['skor_nyeri'] === '8'}<div class="scale-box" style="background:#c0392b; color:#fff; border:1px solid #900; font-weight:bold;">(8)</div>{else}<div class="scale-box">8</div>{/if}</td>
+                                <td style="width:9.09%; padding:0;">{if: isset($value['skor_nyeri']) && $value['skor_nyeri'] !== '' && (string)$value['skor_nyeri'] === '9'}<div class="scale-box" style="background:#c0392b; color:#fff; border:1px solid #900; font-weight:bold;">(9)</div>{else}<div class="scale-box">9</div>{/if}</td>
+                                <td style="width:9.09%; padding:0;">{if: isset($value['skor_nyeri']) && $value['skor_nyeri'] !== '' && (string)$value['skor_nyeri'] === '10'}<div class="scale-box" style="background:#c0392b; color:#fff; border:1px solid #900; font-weight:bold;">(10)</div>{else}<div class="scale-box">10</div>{/if}</td>
                             </tr>
                         </table>
 
-                        <!-- WONG-BAKER FACES SVG SESUAI FORM FISIK -->
-                        <table style="width:100%; border-collapse:collapse; text-align:center; font-size:6.5pt; line-height:1.1;">
-                            <tr>
-                                <td style="width:16.66%;">
-                                    <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><circle cx="34" cy="38" r="5" fill="#000"/><circle cx="66" cy="38" r="5" fill="#000"/><path d="M 28 58 Q 50 84 72 58" fill="none" stroke="#000" stroke-width="4.5" stroke-linecap="round"/></svg><br>
-                                    Tidak<br>Nyeri
-                                </td>
-                                <td style="width:16.66%;">
-                                    <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><circle cx="34" cy="38" r="5" fill="#000"/><circle cx="66" cy="38" r="5" fill="#000"/><path d="M 32 62 Q 50 74 68 62" fill="none" stroke="#000" stroke-width="4.5" stroke-linecap="round"/></svg><br>
-                                    Sedikit<br>Nyeri
-                                </td>
-                                <td style="width:16.66%;">
-                                    <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><circle cx="34" cy="38" r="5" fill="#000"/><circle cx="66" cy="38" r="5" fill="#000"/><line x1="32" y1="64" x2="68" y2="64" stroke="#000" stroke-width="4.5" stroke-linecap="round"/></svg><br>
-                                    Sedikit<br>Lebih Nyeri
-                                </td>
-                                <td style="width:16.66%;">
-                                    <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><circle cx="34" cy="40" r="5" fill="#000"/><circle cx="66" cy="40" r="5" fill="#000"/><path d="M 32 70 Q 50 58 68 70" fill="none" stroke="#000" stroke-width="4.5" stroke-linecap="round"/></svg><br>
-                                    Lebih<br>Nyeri Lagi
-                                </td>
-                                <td style="width:16.66%;">
-                                    <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><path d="M 26 30 L 42 34" stroke="#000" stroke-width="3.5" stroke-linecap="round"/><path d="M 74 30 L 58 34" stroke="#000" stroke-width="3.5" stroke-linecap="round"/><circle cx="34" cy="42" r="5" fill="#000"/><circle cx="66" cy="42" r="5" fill="#000"/><path d="M 28 74 Q 50 52 72 74" fill="none" stroke="#000" stroke-width="4.5" stroke-linecap="round"/></svg><br>
-                                    Sangat<br>Nyeri
-                                </td>
-                                <td style="width:16.66%;">
-                                    <svg width="22" height="22" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/><path d="M 24 28 L 42 36" stroke="#000" stroke-width="4" stroke-linecap="round"/><path d="M 76 28 L 58 36" stroke="#000" stroke-width="4" stroke-linecap="round"/><circle cx="34" cy="44" r="5" fill="#000"/><circle cx="66" cy="44" r="5" fill="#000"/><path d="M 28 48 Q 24 58 28 64 Q 32 58 28 48 Z" fill="#337ab7"/><path d="M 72 48 Q 68 58 72 64 Q 76 58 72 48 Z" fill="#337ab7"/><path d="M 30 76 Q 50 56 70 76 Q 50 70 30 76 Z" fill="#000"/></svg><br>
-                                    Nyeri<br>Sangat Hebat
-                                </td>
-                            </tr>
-                        </table>
+                        <!-- SKALA NYERI VISUAL RESMI (assets/img/rj04_skala_nyeri.png) -->
+                        {if: !empty($skala_nyeri_img)}
+                        <div style="text-align: center; margin-top: 3px;">
+                            <img src="{$skala_nyeri_img}" alt="Skala Nyeri" style="width: 100%; max-width: 240px; height: auto; display: block; margin: 0 auto;">
+                        </div>
+                        {/if}
                     </div>
                 </td>
                 <td style="padding-top:8px;">
@@ -228,7 +191,13 @@
                     {/if}
                 </td>
                 <td style="border-right:none; text-align:center; vertical-align:bottom; height:65px; padding-bottom:6px;">
-                    {if: !empty($value.paraf_nama)}
+                    {if: !empty($value.qr_petugas) || (!empty($qr_petugas) && (!empty($value.paraf_nama) || !empty($tte_petugas.signer_name)))}
+                        <img src="{?= !empty($value.qr_petugas) ? $value.qr_petugas : $qr_petugas ?}" alt="QR TTE Petugas" style="width:36px; height:36px; display:block; margin:0 auto 2px auto;">
+                        <span style="font-size:6.5pt; color:#16a34a; font-weight:bold;">TTE Terverifikasi</span>
+                        <div style="font-size:7.5pt; font-weight:bold; border-top:1px dotted #333; margin-top:4px; padding-top:2px;">
+                            {?= !empty($value.paraf_nama) ? $value.paraf_nama : (!empty($value.tte_signer) ? $value.tte_signer : (!empty($tte_petugas['signer_name']) ? $tte_petugas['signer_name'] : '')) ?}
+                        </div>
+                    {elseif: !empty($value.paraf_nama)}
                         <div style="font-family:'Brush Script MT', cursive, sans-serif; font-size:16pt; line-height:1; color:#1a237e;">Paraf</div>
                         <div style="font-size:7.5pt; font-weight:bold; border-top:1px dotted #333; margin-top:4px; padding-top:2px;">
                             {$value.paraf_nama}
@@ -253,7 +222,7 @@
         </tr>
         <tr>
             <td style="text-align:left; font-weight:bold;">RSGM/Ed-Rev/02/2023</td>
-            <td style="text-align:right; font-weight:bold;">RM.RJ – 07 Hal 1 - 1</td>
+            <td style="text-align:right; font-weight:bold;">{if: !empty($is_ugd)}RM.GD &ndash; 09{else}RM.RJ &ndash; 07{/if} Hal 1 - 1</td>
         </tr>
     </table>
 </div>

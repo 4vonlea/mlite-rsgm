@@ -324,6 +324,11 @@
                     <div>{$data.psikososial_spiritual}</div>
                 </td>
                 <td>
+                    {if: $skala_nyeri_img}
+                    <div style="text-align: center; margin-bottom: 4px;">
+                        <img src="{$skala_nyeri_img}" alt="Skala Nyeri 0-10" style="width: 100%; max-width: 240px; height: auto;">
+                    </div>
+                    {/if}
                     Skor Nyeri: <strong>{$nyeri.skor}</strong> &nbsp; ({if: $nyeri.skor == 0}Tidak Ada Nyeri{elseif: $nyeri.skor <= 3}Nyeri Ringan{elseif: $nyeri.skor <= 6}Nyeri Sedang{else}Nyeri Berat{/if})<br>
                     Lokasi: <strong>{$nyeri.lokasi}</strong> &nbsp;|&nbsp; Karakteristik: <strong>{$nyeri.karakteristik}</strong>
                 </td>

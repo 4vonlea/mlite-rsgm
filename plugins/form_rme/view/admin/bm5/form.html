@@ -287,10 +287,42 @@
                         </ul>
                       </div>
                     </div>
+                    <input type="hidden" name="tte_sign_in_dr" id="input_tte_sign_in_dr" value="{$data.tte_sign_in_dr}">
+                    <div id="sign_container_bm5_signin_dr" style="margin-top: 4px; text-align: center;">
+                      {if: !empty($ttes.sign_in_dr.hash)}
+                      <div style="font-size: 10px; color: #16a34a; font-weight: 700;"><i class="fa fa-check-circle"></i> TTE: {$ttes.sign_in_dr.signer_name}</div>
+                      {if: !empty($ttes.sign_in_dr.qr_data_uri)}<img src="{$ttes.sign_in_dr.qr_data_uri}" style="width: 48px; height: 48px; margin: 2px auto; display: block;">{/if}
+                      {/if}
+                    </div>
+                    <button type="button" class="btn btn-primary btn-xs btn-block btn-tte-rme" style="margin-top: 3px;"
+                      data-ref_type="bm5_sign_in_dr"
+                      data-ref_id="{if: !empty($data.id)}{$data.id}{else}{$data.no_rawat}{/if}"
+                      data-signer_name="{$data.sign_in_dr_operator}"
+                      data-signer_role="Sign In - dr. Bedah/Operator"
+                      data-target_input="input_tte_sign_in_dr"
+                      data-container_id="sign_container_bm5_signin_dr">
+                      <i class="fa fa-lock"></i> TTE dr. Operator
+                    </button>
                   </div>
                   <div class="form-group" style="margin-bottom: 0;">
                     <label class="rsgm-compact-label" style="font-size: 11px;">Perawat Bedah:</label>
-                    <input type="text" name="sign_in_perawat" class="form-control input-sm" value="{$data.sign_in_perawat}" placeholder="Nama Perawat Bedah">
+                    <input type="text" name="sign_in_perawat" id="sign_in_perawat" class="form-control input-sm" value="{$data.sign_in_perawat}" placeholder="Nama Perawat Bedah">
+                    <input type="hidden" name="tte_sign_in_perawat" id="input_tte_sign_in_perawat" value="{$data.tte_sign_in_perawat}">
+                    <div id="sign_container_bm5_signin_perawat" style="margin-top: 4px; text-align: center;">
+                      {if: !empty($ttes.sign_in_perawat.hash)}
+                      <div style="font-size: 10px; color: #16a34a; font-weight: 700;"><i class="fa fa-check-circle"></i> TTE: {$ttes.sign_in_perawat.signer_name}</div>
+                      {if: !empty($ttes.sign_in_perawat.qr_data_uri)}<img src="{$ttes.sign_in_perawat.qr_data_uri}" style="width: 48px; height: 48px; margin: 2px auto; display: block;">{/if}
+                      {/if}
+                    </div>
+                    <button type="button" class="btn btn-success btn-xs btn-block btn-tte-rme" style="margin-top: 3px;"
+                      data-ref_type="bm5_sign_in_perawat"
+                      data-ref_id="{if: !empty($data.id)}{$data.id}{else}{$data.no_rawat}{/if}"
+                      data-signer_name="{$data.sign_in_perawat}"
+                      data-signer_role="Sign In - Perawat Bedah"
+                      data-target_input="input_tte_sign_in_perawat"
+                      data-container_id="sign_container_bm5_signin_perawat">
+                      <i class="fa fa-lock"></i> TTE Perawat Bedah
+                    </button>
                   </div>
                 </div>
 
@@ -429,10 +461,42 @@
                         </ul>
                       </div>
                     </div>
+                    <input type="hidden" name="tte_time_out_dr" id="input_tte_time_out_dr" value="{$data.tte_time_out_dr}">
+                    <div id="sign_container_bm5_timeout_dr" style="margin-top: 4px; text-align: center;">
+                      {if: !empty($ttes.time_out_dr.hash)}
+                      <div style="font-size: 10px; color: #16a34a; font-weight: 700;"><i class="fa fa-check-circle"></i> TTE: {$ttes.time_out_dr.signer_name}</div>
+                      {if: !empty($ttes.time_out_dr.qr_data_uri)}<img src="{$ttes.time_out_dr.qr_data_uri}" style="width: 48px; height: 48px; margin: 2px auto; display: block;">{/if}
+                      {/if}
+                    </div>
+                    <button type="button" class="btn btn-primary btn-xs btn-block btn-tte-rme" style="margin-top: 3px;"
+                      data-ref_type="bm5_time_out_dr"
+                      data-ref_id="{if: !empty($data.id)}{$data.id}{else}{$data.no_rawat}{/if}"
+                      data-signer_name="{$data.time_out_dr_operator}"
+                      data-signer_role="Time Out - dr. Bedah/Operator"
+                      data-target_input="input_tte_time_out_dr"
+                      data-container_id="sign_container_bm5_timeout_dr">
+                      <i class="fa fa-lock"></i> TTE dr. Operator
+                    </button>
                   </div>
                   <div class="form-group" style="margin-bottom: 0;">
                     <label class="rsgm-compact-label" style="font-size: 11px;">Perawat Bedah:</label>
-                    <input type="text" name="time_out_perawat" class="form-control input-sm" value="{$data.time_out_perawat}" placeholder="Nama Perawat Bedah">
+                    <input type="text" name="time_out_perawat" id="time_out_perawat" class="form-control input-sm" value="{$data.time_out_perawat}" placeholder="Nama Perawat Bedah">
+                    <input type="hidden" name="tte_time_out_perawat" id="input_tte_time_out_perawat" value="{$data.tte_time_out_perawat}">
+                    <div id="sign_container_bm5_timeout_perawat" style="margin-top: 4px; text-align: center;">
+                      {if: !empty($ttes.time_out_perawat.hash)}
+                      <div style="font-size: 10px; color: #16a34a; font-weight: 700;"><i class="fa fa-check-circle"></i> TTE: {$ttes.time_out_perawat.signer_name}</div>
+                      {if: !empty($ttes.time_out_perawat.qr_data_uri)}<img src="{$ttes.time_out_perawat.qr_data_uri}" style="width: 48px; height: 48px; margin: 2px auto; display: block;">{/if}
+                      {/if}
+                    </div>
+                    <button type="button" class="btn btn-success btn-xs btn-block btn-tte-rme" style="margin-top: 3px;"
+                      data-ref_type="bm5_time_out_perawat"
+                      data-ref_id="{if: !empty($data.id)}{$data.id}{else}{$data.no_rawat}{/if}"
+                      data-signer_name="{$data.time_out_perawat}"
+                      data-signer_role="Time Out - Perawat Bedah"
+                      data-target_input="input_tte_time_out_perawat"
+                      data-container_id="sign_container_bm5_timeout_perawat">
+                      <i class="fa fa-lock"></i> TTE Perawat Bedah
+                    </button>
                   </div>
                 </div>
 
@@ -551,10 +615,42 @@
                         </ul>
                       </div>
                     </div>
+                    <input type="hidden" name="tte_sign_out_dr" id="input_tte_sign_out_dr" value="{$data.tte_sign_out_dr}">
+                    <div id="sign_container_bm5_signout_dr" style="margin-top: 4px; text-align: center;">
+                      {if: !empty($ttes.sign_out_dr.hash)}
+                      <div style="font-size: 10px; color: #16a34a; font-weight: 700;"><i class="fa fa-check-circle"></i> TTE: {$ttes.sign_out_dr.signer_name}</div>
+                      {if: !empty($ttes.sign_out_dr.qr_data_uri)}<img src="{$ttes.sign_out_dr.qr_data_uri}" style="width: 48px; height: 48px; margin: 2px auto; display: block;">{/if}
+                      {/if}
+                    </div>
+                    <button type="button" class="btn btn-primary btn-xs btn-block btn-tte-rme" style="margin-top: 3px;"
+                      data-ref_type="bm5_sign_out_dr"
+                      data-ref_id="{if: !empty($data.id)}{$data.id}{else}{$data.no_rawat}{/if}"
+                      data-signer_name="{$data.sign_out_dr_operator}"
+                      data-signer_role="Sign Out - dr. Bedah/Operator"
+                      data-target_input="input_tte_sign_out_dr"
+                      data-container_id="sign_container_bm5_signout_dr">
+                      <i class="fa fa-lock"></i> TTE dr. Operator
+                    </button>
                   </div>
                   <div class="form-group" style="margin-bottom: 0;">
                     <label class="rsgm-compact-label" style="font-size: 11px;">Perawat Bedah:</label>
-                    <input type="text" name="sign_out_perawat" class="form-control input-sm" value="{$data.sign_out_perawat}" placeholder="Nama Perawat Bedah">
+                    <input type="text" name="sign_out_perawat" id="sign_out_perawat" class="form-control input-sm" value="{$data.sign_out_perawat}" placeholder="Nama Perawat Bedah">
+                    <input type="hidden" name="tte_sign_out_perawat" id="input_tte_sign_out_perawat" value="{$data.tte_sign_out_perawat}">
+                    <div id="sign_container_bm5_signout_perawat" style="margin-top: 4px; text-align: center;">
+                      {if: !empty($ttes.sign_out_perawat.hash)}
+                      <div style="font-size: 10px; color: #16a34a; font-weight: 700;"><i class="fa fa-check-circle"></i> TTE: {$ttes.sign_out_perawat.signer_name}</div>
+                      {if: !empty($ttes.sign_out_perawat.qr_data_uri)}<img src="{$ttes.sign_out_perawat.qr_data_uri}" style="width: 48px; height: 48px; margin: 2px auto; display: block;">{/if}
+                      {/if}
+                    </div>
+                    <button type="button" class="btn btn-success btn-xs btn-block btn-tte-rme" style="margin-top: 3px;"
+                      data-ref_type="bm5_sign_out_perawat"
+                      data-ref_id="{if: !empty($data.id)}{$data.id}{else}{$data.no_rawat}{/if}"
+                      data-signer_name="{$data.sign_out_perawat}"
+                      data-signer_role="Sign Out - Perawat Bedah"
+                      data-target_input="input_tte_sign_out_perawat"
+                      data-container_id="sign_container_bm5_signout_perawat">
+                      <i class="fa fa-lock"></i> TTE Perawat Bedah
+                    </button>
                   </div>
                 </div>
 
@@ -670,24 +766,31 @@ $(document).ready(function() {
         }
     });
 
-    // 2. DOKTER SELECTION
+    // 2. DOKTER SELECTION & SYNC SIGNER NAME
     $(document).on('click', '.pilih-dr-signin', function(e) {
         e.preventDefault();
         var nama = $(this).data('nama');
-        $('#sign_in_dr_operator').val(nama);
-        if (!$('#time_out_dr_operator').val()) $('#time_out_dr_operator').val(nama);
-        if (!$('#sign_out_dr_operator').val()) $('#sign_out_dr_operator').val(nama);
+        $('#sign_in_dr_operator').val(nama).trigger('change');
+        if (!$('#time_out_dr_operator').val()) $('#time_out_dr_operator').val(nama).trigger('change');
+        if (!$('#sign_out_dr_operator').val()) $('#sign_out_dr_operator').val(nama).trigger('change');
     });
 
     $(document).on('click', '.pilih-dr-timeout', function(e) {
         e.preventDefault();
-        $('#time_out_dr_operator').val($(this).data('nama'));
+        $('#time_out_dr_operator').val($(this).data('nama')).trigger('change');
     });
 
     $(document).on('click', '.pilih-dr-signout', function(e) {
         e.preventDefault();
-        $('#sign_out_dr_operator').val($(this).data('nama'));
+        $('#sign_out_dr_operator').val($(this).data('nama')).trigger('change');
     });
+
+    $('#sign_in_dr_operator').on('input change', function() { $('.btn-tte-rme[data-ref_type="bm5_sign_in_dr"]').attr('data-signer_name', $(this).val().trim()); });
+    $('#sign_in_perawat').on('input change', function() { $('.btn-tte-rme[data-ref_type="bm5_sign_in_perawat"]').attr('data-signer_name', $(this).val().trim()); });
+    $('#time_out_dr_operator').on('input change', function() { $('.btn-tte-rme[data-ref_type="bm5_time_out_dr"]').attr('data-signer_name', $(this).val().trim()); });
+    $('#time_out_perawat').on('input change', function() { $('.btn-tte-rme[data-ref_type="bm5_time_out_perawat"]').attr('data-signer_name', $(this).val().trim()); });
+    $('#sign_out_dr_operator').on('input change', function() { $('.btn-tte-rme[data-ref_type="bm5_sign_out_dr"]').attr('data-signer_name', $(this).val().trim()); });
+    $('#sign_out_perawat').on('input change', function() { $('.btn-tte-rme[data-ref_type="bm5_sign_out_perawat"]').attr('data-signer_name', $(this).val().trim()); });
 
     // 3. DATATABLE PASIEN MODAL
     if ($.fn.DataTable.isDataTable('#table-pilih-pasien')) {

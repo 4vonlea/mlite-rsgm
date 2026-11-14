@@ -21,28 +21,32 @@
           <td style="white-space: nowrap;">
             <span class="dropdown-toggle" data-toggle="dropdown" data-disabled="true" aria-expanded="true"><button type="button" name="button" class="btn btn-sm btn-default">{?=isset_or($value.no_rkm_medis)?} <span class="caret"></span></button></span>
             <ul class="dropdown-menu" role="menu">
-              {if: $cek_vclaim}
-                <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynokartu', $value.no_peserta, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal">[BPJS] Cek Nomor Kartu</a></li>
-                <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynik', $value.no_ktp, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal">[BPJS] Cek Nomor KTP</a></li>
-              {/if}
-              <li><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal">Elektronik Rekam Medis</a></li>
               {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis' || $this->core->getUserInfo('role') == 'apoteker'}
-              <li><a href="#soap" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-umur="{?=isset_or($value.umurdaftar)?} {?=isset_or($value.sttsumur)?}">SOAPIE & Pemeriksaan</a></li>
-              <li><a href="#layanan_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}">Layanan & Obat</a></li>
               {? \Systems\Lib\Event::call('rsgmgha.dropdown_menu', [$value]) ?}
-              <li><a href="#berkas_digital" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}">Berkas Digital</a></li>
+              {/if}
+              {if: $cek_vclaim}
+                <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynokartu', $value.no_peserta, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal"><i class="fa fa-credit-card rsgm-ico-emerald"></i> [BPJS] Cek Nomor Kartu</a></li>
+                <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynik', $value.no_ktp, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal"><i class="fa fa-id-card-o rsgm-ico-emerald"></i> [BPJS] Cek Nomor KTP</a></li>
+              {/if}
+              <li><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal"><i class="fa fa-folder-open rsgm-ico-blue"></i> Elektronik Rekam Medis</a></li>
+              {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis' || $this->core->getUserInfo('role') == 'apoteker'}
+              <li><a href="#soap" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-umur="{?=isset_or($value.umurdaftar)?} {?=isset_or($value.sttsumur)?}"><i class="fa fa-stethoscope rsgm-ico-blue"></i> SOAPIE &amp; Pemeriksaan</a></li>
+              <li><a href="#layanan_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}"><i class="fa fa-medkit rsgm-ico-teal"></i> Layanan &amp; Obat</a></li>
+              <li class="divider"></li>
               <li class="dropdown-submenu">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Surat-Surat</a>
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i class="fa fa-envelope-o rsgm-ico-indigo"></i><span>Surat-Surat</span></a>
                 <ul class="dropdown-menu">
-                  <li><a href="{?=url([ADMIN,'rawat_inap','persetujuanumum',$value.no_rkm_medis])?}" target="_blank">Persetujuan Umum</a></li>
-                  <li><a href="#surat_kontrol" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}">Surat Kontrol</a></li>
-                  <li><a href="{?=url([ADMIN,'rawat_inap','suratrujukan',convertNorawat($value.no_rawat)])?}" target="_blank">Surat Rujukan</a></li>
-                  <li><a href="{?=url([ADMIN,'rawat_inap','suratsehat',convertNorawat($value.no_rawat)])?}" target="_blank">Surat Keterangan Sehat</a></li>
-                  <li><a href="{?=url([ADMIN,'rawat_inap','suratsakit',convertNorawat($value.no_rawat)])?}" target="_blank">Surat Keterangan Sakit</a></li>
+                  {* Persetujuan Umum bawaan mLITE dinonaktifkan; digantikan Form RME RM.RJ 02 *}
+                  <li><a href="#surat_kontrol" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}"><i class="fa fa-calendar-check-o rsgm-ico-indigo"></i> Surat Kontrol</a></li>
+                  <li><a href="{?=url([ADMIN,'rawat_inap','suratrujukan',convertNorawat($value.no_rawat)])?}" target="_blank"><i class="fa fa-external-link rsgm-ico-blue"></i> Surat Rujukan</a></li>
+                  <li><a href="{?=url([ADMIN,'rawat_inap','suratsehat',convertNorawat($value.no_rawat)])?}" target="_blank"><i class="fa fa-check-circle-o rsgm-ico-emerald"></i> Surat Keterangan Sehat</a></li>
+                  <li><a href="{?=url([ADMIN,'rawat_inap','suratsakit',convertNorawat($value.no_rawat)])?}" target="_blank"><i class="fa fa-bed rsgm-ico-amber"></i> Surat Keterangan Sakit</a></li>
                 </ul>
               </li>
-              <li><a href="#set_dpjp" data-no_rawat="{?=isset_or($value.no_rawat)?}">Set DPJP</a></li>
-              <li><a href="#ubah_penjab" data-no_rawat="{?=isset_or($value.no_rawat)?}">Ubah Penjamin</a></li>
+              <li><a href="#set_dpjp" data-no_rawat="{?=isset_or($value.no_rawat)?}"><i class="fa fa-user-md rsgm-ico-amber"></i> Set DPJP</a></li>
+              <li><a href="#ubah_penjab" data-no_rawat="{?=isset_or($value.no_rawat)?}"><i class="fa fa-exchange rsgm-ico-slate"></i> Ubah Penjamin</a></li>
+              <li class="divider"></li>
+              <li><a href="#berkas_digital" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}"><i class="fa fa-file-image-o rsgm-ico-emerald"></i> Berkas Digital</a></li>
               {/if}
             </ul>
           </td>

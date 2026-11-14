@@ -1066,9 +1066,7 @@ class Admin extends AdminModule
       $i = 1;
       $row['nama_petugas'] = '';
       $row['departemen_petugas'] = '';
-      $rows = $this->db('pemeriksaan_ralan')
-       ->where('no_rawat', $_POST['no_rawat'])
-       ->toArray();
+      $rows = \Systems\Lib\SoapRevision::fetchSoapRows($this->db()->pdo(), 'pemeriksaan_ralan', $_POST['no_rawat'], true, 'ASC');
       $result = [];
       foreach ($rows as $row) {
        $row['nomor'] = $i++;
@@ -1076,10 +1074,10 @@ class Admin extends AdminModule
        $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
        $result[] = $row;
       }
+      $result = \Systems\Lib\SoapRevision::enrichRows($this->core, 'pemeriksaan_ralan', $result);
+      $void_count = count(array_filter($result, function($r) { return !empty($r['is_voided']); }));
 
-      $rows_ranap = $this->db('pemeriksaan_ranap')
-       ->where('no_rawat', $_POST['no_rawat'])
-       ->toArray();
+      $rows_ranap = \Systems\Lib\SoapRevision::fetchSoapRows($this->db()->pdo(), 'pemeriksaan_ranap', $_POST['no_rawat'], true, 'ASC');
       $result_ranap = [];
       foreach ($rows_ranap as $row) {
        $row['nomor'] = $i++;
@@ -1087,26 +1085,48 @@ class Admin extends AdminModule
        $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
        $result_ranap[] = $row;
       }
+      $result_ranap = \Systems\Lib\SoapRevision::enrichRows($this->core, 'pemeriksaan_ranap', $result_ranap);
+      $void_ranap_count = count(array_filter($result_ranap, function($r) { return !empty($r['is_voided']); }));
 
-      echo $this->draw('soap.html', ['pemeriksaan' => htmlspecialchars_array($result), 'pemeriksaan_ranap' => htmlspecialchars_array($result_ranap), 'diagnosa' => htmlspecialchars_array($diagnosa), 'prosedur' => htmlspecialchars_array($prosedur)]);
+      echo $this->draw('soap.html', [
+        'pemeriksaan' => htmlspecialchars_array($result),
+        'pemeriksaan_ranap' => htmlspecialchars_array($result_ranap),
+        'void_count' => $void_count,
+        'void_ranap_count' => $void_ranap_count,
+        'diagnosa' => htmlspecialchars_array($diagnosa),
+        'prosedur' => htmlspecialchars_array($prosedur)
+      ]);
       exit();
+    }
+
+    public function anySoapHistory()
+    {
+      \Systems\Lib\SoapRevision::outputHistoryJson($this->core);
     }
 
     public function postSaveSOAP()
     {
       $_POST['nip'] = $this->core->getUserInfo('username', null, true);
-
-      if(!$this->db('pemeriksaan_ranap')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->oneArray()) {
-        $this->db('pemeriksaan_ranap')->save($_POST);
-      } else {
-        $this->db('pemeriksaan_ranap')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->save($_POST);
-      }
+      $res = \Systems\Lib\SoapRevision::saveSoap($this->core, 'dokter_ranap', 'pemeriksaan_ranap', $_POST);
+      header('Content-Type: application/json; charset=utf-8');
+      echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
       exit();
     }
 
     public function postHapusSOAP()
     {
-      $this->db('pemeriksaan_ranap')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->delete();
+      $reason = trim((string)($_POST['void_reason'] ?? $_POST['reason'] ?? ''));
+      $res = \Systems\Lib\SoapRevision::voidSoap(
+          $this->core,
+          'dokter_ranap',
+          'pemeriksaan_ranap',
+          $_POST['no_rawat'] ?? '',
+          $_POST['tgl_perawatan'] ?? '',
+          $_POST['jam_rawat'] ?? '',
+          $reason
+      );
+      header('Content-Type: application/json; charset=utf-8');
+      echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
       exit();
     }
 
@@ -2205,18 +2225,9 @@ class Admin extends AdminModule
     {
       $no_rawat = $_POST['no_rawat'];
       
-      // Ambil data tanda vital dari pemeriksaan_ralan dan pemeriksaan_ranap
-      $vital_signs_ralan = $this->db('pemeriksaan_ralan')
-        ->where('no_rawat', $no_rawat)
-        ->asc('tgl_perawatan')
-        ->asc('jam_rawat')
-        ->toArray();
-        
-      $vital_signs_ranap = $this->db('pemeriksaan_ranap')
-        ->where('no_rawat', $no_rawat)
-        ->asc('tgl_perawatan')
-        ->asc('jam_rawat')
-        ->toArray();
+      // Ambil data tanda vital aktif (non-VOID) dari pemeriksaan_ralan dan pemeriksaan_ranap
+      $vital_signs_ralan = \Systems\Lib\SoapRevision::fetchSoapRows($this->db()->pdo(), 'pemeriksaan_ralan', $no_rawat, false, 'ASC');
+      $vital_signs_ranap = \Systems\Lib\SoapRevision::fetchSoapRows($this->db()->pdo(), 'pemeriksaan_ranap', $no_rawat, false, 'ASC');
       
       // Gabungkan data dari kedua tabel
       $vital_signs = array_merge($vital_signs_ralan, $vital_signs_ranap);

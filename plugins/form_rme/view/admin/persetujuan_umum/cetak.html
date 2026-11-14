@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>RM.RJ - 02 Formulir Persetujuan Umum</title>
+<style>
+{if: empty($is_mpdf)}
+@page {
+    size: A4 portrait;
+    margin: 9mm 11mm;
+}
+* {
+    box-sizing: border-box;
+}
+{/if}
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10pt;
+    line-height: 1.8;
+    color: #000;
+    margin: 0;
+    padding: 0;
+}
+.page {
+    width: 188mm;
+    margin: 0 auto;
+}
+.page-break {
+    page-break-before: always;
+}
+.doc-frame {
+    width: 100%;
+    border-collapse: collapse;
+}
+.doc-frame-cell {
+    border: 1px solid #000;
+    vertical-align: top;
+    padding: 0;
+}
+.header-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.header-table td {
+    vertical-align: middle;
+}
+.header-left {
+    width: 55%;
+    border-right: 1px solid #000;
+    border-bottom: 1px solid #000;
+    padding: 6px 8px;
+}
+.header-right {
+    width: 45%;
+    border-bottom: 1px solid #000;
+    padding: 6px 10px;
+}
+.id-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    line-height: 1.35;
+}
+.id-table td {
+    padding: 3px 0;
+    vertical-align: middle;
+}
+.rmbox-table {
+    border-collapse: separate;
+    border-spacing: 2px 0;
+}
+.rmbox-cell {
+    width: 16px;
+    height: 18px;
+    border: 1px solid #000;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 8.5pt;
+    font-weight: bold;
+    padding: 0;
+}
+.rmbox-dash {
+    width: 7px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 9pt;
+    font-weight: bold;
+    padding: 0;
+}
+.repeat-id-bar {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+    margin-bottom: 5px;
+}
+.repeat-id-bar td {
+    padding: 2px 0;
+    vertical-align: middle;
+}
+.content-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.content-cell {
+    padding: 8px 18px 16px 16px;
+    vertical-align: top;
+}
+.notice-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.notice-cell {
+    font-size: 7.5pt;
+    font-style: italic;
+    line-height: 1.35;
+    padding: 0 0 12px 0;
+}
+.title-cell {
+    text-align: center;
+    font-size: 11.5pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 2px 0 18px 0;
+    letter-spacing: 0.2px;
+}
+.num-list-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.num-col {
+    width: 25px;
+    vertical-align: top;
+    padding: 0 0 20px 0;
+    font-size: 10pt;
+    line-height: 1.8;
+    font-weight: normal;
+}
+.text-col {
+    vertical-align: top;
+    padding: 0 0 20px 0;
+    text-align: justify;
+    font-size: 10pt;
+    line-height: 1.8;
+}
+.num-col-last,
+.text-col-last {
+    padding-bottom: 0;
+}
+.sub-alpha-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.sub-alpha-col {
+    width: 22px;
+    vertical-align: top;
+    padding: 12px 0 4px 0;
+    font-size: 10pt;
+    line-height: 1.8;
+}
+.sub-alpha-text {
+    vertical-align: top;
+    padding: 12px 0 4px 0;
+    text-align: justify;
+    font-size: 10pt;
+    line-height: 1.8;
+}
+.para-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.para-cell {
+    padding: 14px 0 0 0;
+    text-align: justify;
+    font-size: 10pt;
+    line-height: 1.8;
+}
+.family-table {
+    width: 72%;
+    border-collapse: collapse;
+    font-size: 10pt;
+}
+.family-table td {
+    padding: 7px 0 2px 0;
+    vertical-align: bottom;
+    line-height: 1.4;
+}
+.family-note-cell {
+    font-size: 8pt;
+    line-height: 1.4;
+    padding: 10px 0 0 0;
+    text-align: left;
+}
+.ttd-heading-cell {
+    padding: 18px 0 6px 0;
+    font-weight: bold;
+    text-align: center;
+    font-size: 10.5pt;
+    line-height: 1.4;
+}
+.ttd-statement-cell {
+    padding: 0 0 12px 25px;
+    text-align: left;
+    font-size: 10pt;
+    line-height: 1.65;
+}
+.ttd-wrap-cell {
+    padding: 28px 8px 0 25px;
+}
+.ttd-grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+    line-height: 1.45;
+}
+.ttd-space-cell {
+    height: 76px;
+    vertical-align: bottom;
+    padding: 0 0 6px 0;
+}
+.ttd-line-cell {
+    border-top: 1px solid #000;
+    padding: 4px 0 0 0;
+    vertical-align: top;
+}
+.footer-thanks-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.footer-thanks-cell {
+    text-align: right;
+    font-size: 8pt;
+    font-style: italic;
+    color: #111;
+    padding: 4px 0 0 0;
+    line-height: 1.3;
+}
+.footer-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.5pt;
+    font-weight: bold;
+    color: #111;
+}
+.footer-table td {
+    padding: 12px 0 0 0;
+}
+.no-print-toolbar {
+    width: 100%;
+    max-width: 196mm;
+    margin: 0 auto 12px auto;
+    padding: 8px 14px;
+    background: #1e293b;
+    color: #fff;
+    border-radius: 4px;
+}
+.btn-toolbar {
+    padding: 5px 12px;
+    border-radius: 3px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 11px;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-print { background: #16a34a; color: #fff; }
+.btn-pdf { background: #dc2626; color: #fff; margin-left: 6px; }
+.btn-close { background: #64748b; color: #fff; margin-left: 6px; }
+{if: empty($is_mpdf)}
+@media screen {
+    body { background-color: #eef2f6 !important; padding: 14px 0 !important; }
+    .page {
+        background: #fff !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14) !important;
+        margin: 0 auto 18px auto !important;
+        padding: 9mm 11mm !important;
+        width: 210mm !important;
+    }
+}
+{/if}
+@media print {
+    .no-print-toolbar { display: none !important; }
+    body { background: transparent !important; padding: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { box-shadow: none !important; margin: 0 !important; padding: 0 !important; width: 188mm !important; }
+}
+</style>
+</head>
+<body>
+
+{if: empty($is_mpdf)}
+<div class="no-print-toolbar">
+    <button onclick="window.print()" class="btn-toolbar btn-print">Cetak Dokumen</button>
+    <a href="#" onclick="window.open(window.location.href + (window.location.href.indexOf('?') !== -1 ? (window.location.href.indexOf('pdf=1') !== -1 ? '' : '&pdf=1') : '?pdf=1'), '_blank'); return false;" class="btn-toolbar btn-pdf">Download PDF</a>
+    <button onclick="window.close()" class="btn-toolbar btn-close">Tutup</button>
+</div>
+{/if}
+
+<!-- ============================================================
+     HALAMAN 1 - 3
+     ============================================================ -->
+<div class="page">
+    <table class="doc-frame">
+        <tr>
+            <td class="doc-frame-cell" style="height: 252mm;">
+                <table class="header-table">
+                    <tr>
+                        <td class="header-left">
+                            <img src="{$kop_img}" alt="Kop RSGM" style="width: 100%; max-height: 66px; object-fit: contain; display: block;">
+                        </td>
+                        <td class="header-right">
+                            <table class="id-table">
+                                <tr>
+                                    <td style="width: 34%;">No RM</td>
+                                    <td style="width: 5%;">:</td>
+                                    <td style="width: 61%;">
+                                        <table class="rmbox-table">
+                                            <tr>
+                                                <td class="rmbox-cell">{$p.rm0}</td>
+                                                <td class="rmbox-cell">{$p.rm1}</td>
+                                                <td class="rmbox-dash">-</td>
+                                                <td class="rmbox-cell">{$p.rm2}</td>
+                                                <td class="rmbox-cell">{$p.rm3}</td>
+                                                <td class="rmbox-dash">-</td>
+                                                <td class="rmbox-cell">{$p.rm4}</td>
+                                                <td class="rmbox-cell">{$p.rm5}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Nama Pasien</td>
+                                    <td>:</td>
+                                    <td>
+                                        {if: !empty($data.nama_pasien)}
+                                            <strong>{$data.nama_pasien}</strong>
+                                        {else}
+                                            .............................................
+                                        {/if}
+                                        {if: $data.jk == 'L'}<strong>L</strong>/<span style="text-decoration:line-through;color:#666;">P</span>{elseif: $data.jk == 'P'}<span style="text-decoration:line-through;color:#666;">L</span>/<strong>P</strong>{else}<strong>L/P</strong>{/if}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Tanggal Lahir</td>
+                                    <td>:</td>
+                                    <td>
+                                        {if: !empty($data.tgl_lahir_indo)}
+                                            {$data.tgl_lahir_indo}
+                                        {else}
+                                            ..................................................
+                                        {/if}
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+
+                <table class="content-table">
+                    <tr>
+                        <td class="content-cell">
+                            <table class="notice-table">
+                                <tr>
+                                    <td class="notice-cell">
+                                        Perhatian :<br>
+                                        * Harap semua penulisan dilakukan dengan keterbacaan yang jelas, benar dan lengkap.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" class="title-cell">FORMULIR PERSETUJUAN UMUM</td>
+                                </tr>
+                            </table>
+
+                            <table class="num-list-table">
+                                <tr>
+                                    <td class="num-col">1.</td>
+                                    <td class="text-col">
+                                        <strong>PERSETUJUAN UNTUK PERAWATAN DAN PENGOBATAN.</strong> Saya mengetahui bahwa saya memiliki kondisi yang membutuhkan perawatan medis, saya mengijinkan dokter dan professional kesehatan lainnya untuk melakukan prosedur diagnostik dan untuk memberikan pengobatan medis seperti yang diperlukan dalam penilaian professional mereka. Prosedur diagnostik dan perawatan medis termasuk tetapi tidak terbatas pada electrocardiograms, x-ray, tes darah, terapi fisik, dan pemberian obat.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="num-col">2.</td>
+                                    <td class="text-col">
+                                        <strong>PERSETUJUAN PELAYANAN KESEHATAN.</strong> Saya sadar bahwa praktik kedokteran dan bedah bukan lah ilmu pasti dan saya mengakui bahwa tidak ada jaminan atas hasil apapun, terhadap perawatan prosedur atau pemeriksaan apapun yang dilakukan kepada saya.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="num-col">3.</td>
+                                    <td class="text-col">
+                                        <strong>Saya mengerti dan memahami bahwa :</strong>
+                                        <table class="sub-alpha-table">
+                                            <tr>
+                                                <td class="sub-alpha-col">a.</td>
+                                                <td class="sub-alpha-text">Saya memiliki hak untuk mengajukan pertanyaan tentang pengobatan yang di usulkan (termasuk identitas setiap orang yang memberikan atau mengamati pengobatan) setiap saat.</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="sub-alpha-col">b.</td>
+                                                <td class="sub-alpha-text">Saya mengerti dan memahami bahwa saya memiliki hak untuk persetujuan dan atau menolak persetujuan untuk setiap prosedur / terapi.</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="sub-alpha-col" style="padding-bottom: 0;">c.</td>
+                                                <td class="sub-alpha-text" style="padding-bottom: 0;">Saya mengerti bahwa banyak dokter pada staff Rumah Sakit Gigi dan Mulut Gusti Hasan Aman.</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="num-col num-col-last">4.</td>
+                                    <td class="text-col text-col-last">
+                                        <strong>BARANG PRIBADI.</strong> Saya telah memahami bahwa rumah sakit tidak bertanggung jawab atas semua kehilangan barang-barang milik saya dan saya secara pribadi bertanggung jawab atas barang barang berharga yang saya miliki termasuk namun tidak terbatas pada uang, perhiasan, buku cek, kartu kredit, handphone atau barang lainnya. Dan apabila saya membutuhkan maka saya dapat menitipkan barang-barang saya kepada rumah sakit. Saya juga mengerti bahwa saya harus memberitahu/menitipkan pada rumah sakit jika saya memiliki gigi palsu, kacamata, lensa kontak, prosthetics atau barang lainnya yang saya butuhkan untuk di amankan.
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="footer-thanks-table">
+        <tr>
+            <td class="footer-thanks-cell">Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</td>
+        </tr>
+    </table>
+    <table class="footer-table">
+        <tr>
+            <td style="width: 50%; text-align: left;">RSGM/Ed-Rev/02/2023</td>
+            <td style="width: 50%; text-align: right;">RM.RJ - 02 Hal 1 - 3</td>
+        </tr>
+    </table>
+</div>
+
+<!-- ============================================================
+     HALAMAN 2 - 3
+     ============================================================ -->
+<div class="page page-break">
+    <table class="repeat-id-bar">
+        <tr>
+            <td style="width: 40%;">
+                <strong>Nama Pasien:</strong>
+                {if: !empty($data.nama_pasien)}<strong>{$data.nama_pasien}</strong>{else}....................................{/if}
+                {if: $data.jk == 'L'}<strong>L</strong>/<span style="text-decoration:line-through;color:#666;">P</span>{elseif: $data.jk == 'P'}<span style="text-decoration:line-through;color:#666;">L</span>/<strong>P</strong>{else}<strong>L/P</strong>{/if}
+            </td>
+            <td style="width: 34%; padding-left: 6px;">
+                <strong>Tanggal Lahir:</strong>
+                {if: !empty($data.tgl_lahir_indo)}{$data.tgl_lahir_indo}{else}......................................{/if}
+            </td>
+            <td style="width: 26%; text-align: right;">
+                <table style="border-collapse: collapse; margin-left: auto;">
+                    <tr>
+                        <td style="padding-right: 4px; font-weight: bold; white-space: nowrap;">No RM :</td>
+                        <td>
+                            <table class="rmbox-table">
+                                <tr>
+                                    <td class="rmbox-cell">{$p.rm0}</td>
+                                    <td class="rmbox-cell">{$p.rm1}</td>
+                                    <td class="rmbox-dash">-</td>
+                                    <td class="rmbox-cell">{$p.rm2}</td>
+                                    <td class="rmbox-cell">{$p.rm3}</td>
+                                    <td class="rmbox-dash">-</td>
+                                    <td class="rmbox-cell">{$p.rm4}</td>
+                                    <td class="rmbox-cell">{$p.rm5}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="doc-frame">
+        <tr>
+            <td class="doc-frame-cell" style="height: 245mm;">
+                <table class="content-table">
+                    <tr>
+                        <td class="content-cell" style="padding-top: 14px;">
+                            <table class="num-list-table">
+                                <tr>
+                                    <td class="num-col" style="padding-bottom: 20px;">5.</td>
+                                    <td class="text-col" style="padding-bottom: 20px;">
+                                        <strong>PERSETUJUAN PELEPASAN INFORMASI</strong> &nbsp;Saya memahami informasi yang ada di dalam diri saya, termasuk diagnosis, hasil laboratorium, dan hasil tes diagnostic yang akan digunakan untuk perawatan medis, Rumah Sakit Gigi dan Mulut Gusti Hasan Aman akan menjamin kerahasiaannya.
+                                        <table class="para-table">
+                                            <tr>
+                                                <td class="para-cell">
+                                                    Saya memberi wewenang kepada rumah sakit untuk memberikan informasi tentang diagnosis, hasil pelayanan dan pengobatan bila diperlukan untuk memproses klaim asuransi/ jamkesmas/jamkesda perusahaan dan atau lembaga pemerintah.
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="para-cell">
+                                                    Saya memberi wewenang kepada rumah sakit untuk memberikan informasi tentang diagnosis, hasil pelayanan, dan pengobatan kepada anggota keluarga saya kepada :
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding-top: 6px;">
+                                                    <table class="family-table">
+                                                        <tr>
+                                                            <td style="width: 22px;">1.</td>
+                                                            <td style="width: 220px;">
+                                                                {if: !empty($data.pelepasan_info_keluarga_1)}
+                                                                    <div style="border-bottom: 1px dotted #000; padding: 0 4px;"><strong>{$data.pelepasan_info_keluarga_1}</strong></div>
+                                                                {else}
+                                                                    .............................................
+                                                                {/if}
+                                                            </td>
+                                                            <td>&nbsp;</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>2.</td>
+                                                            <td>
+                                                                {if: !empty($data.pelepasan_info_keluarga_2)}
+                                                                    <div style="border-bottom: 1px dotted #000; padding: 0 4px;"><strong>{$data.pelepasan_info_keluarga_2}</strong></div>
+                                                                {else}
+                                                                    .............................................
+                                                                {/if}
+                                                            </td>
+                                                            <td>&nbsp;</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>3.</td>
+                                                            <td>
+                                                                {if: !empty($data.pelepasan_info_keluarga_3)}
+                                                                    <div style="border-bottom: 1px dotted #000; padding: 0 4px;"><strong>{$data.pelepasan_info_keluarga_3}</strong></div>
+                                                                {else}
+                                                                    .............................................
+                                                                {/if}
+                                                            </td>
+                                                            <td>&nbsp;</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="family-note-cell">
+                                                    (Nama yang tertera disini merupakan nama yang bertandatangan di Lembar Persetujuan/Penolakan Tindakan Kedokteran)
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="num-col" style="padding-bottom: 20px;">6.</td>
+                                    <td class="text-col" style="padding-bottom: 20px;">
+                                        <strong>HAK DAN KEWAJIBAN SEBAGAI PASIEN.</strong> Saya telah mendapat informasi tentang &ldquo;Hak dan Kewajiban Pasien&rdquo; di RSGM Gusti Hasan Aman melalui leaflet dan banner yang disediakan oleh petugas.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="num-col num-col-last">7.</td>
+                                    <td class="text-col text-col-last">
+                                        <strong>INFORMASI RAWAT INAP.</strong> Saya telah menerima informasi tentang peraturan yang diberlakukan oleh RSGM Gusti Hasan Aman dan saya beserta keluarga bersedia mematuhinya termasuk akan mematuhi jam berkunjung pasien sesuai dengan aturan RSGM Gusti Hasan Aman.
+                                        <table class="para-table">
+                                            <tr>
+                                                <td class="para-cell">
+                                                    Anggota keluarga saya yang menunggu saya, bersedia untuk selalu memakai tanda pengenal khusus yang diberikan oleh Rumah sakit, dan demi keamanan seluruh pasien setiap keluarga dan siapapun yang mengunjungi saya di luar jam berkunjung, bersedia untuk diminta / diperiksa identitasnya.
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="footer-thanks-table">
+        <tr>
+            <td class="footer-thanks-cell">Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</td>
+        </tr>
+    </table>
+    <table class="footer-table">
+        <tr>
+            <td style="width: 50%; text-align: left;">RSGM/Ed-Rev/02/2023</td>
+            <td style="width: 50%; text-align: right;">RM.RJ - 02 Hal 2 - 3</td>
+        </tr>
+    </table>
+</div>
+
+<!-- ============================================================
+     HALAMAN 3 - 3
+     ============================================================ -->
+<div class="page page-break">
+    <table class="repeat-id-bar">
+        <tr>
+            <td style="width: 40%;">
+                <strong>Nama Pasien:</strong>
+                {if: !empty($data.nama_pasien)}<strong>{$data.nama_pasien}</strong>{else}....................................{/if}
+                {if: $data.jk == 'L'}<strong>L</strong>/<span style="text-decoration:line-through;color:#666;">P</span>{elseif: $data.jk == 'P'}<span style="text-decoration:line-through;color:#666;">L</span>/<strong>P</strong>{else}<strong>L/P</strong>{/if}
+            </td>
+            <td style="width: 34%; padding-left: 6px;">
+                <strong>Tanggal Lahir:</strong>
+                {if: !empty($data.tgl_lahir_indo)}{$data.tgl_lahir_indo}{else}......................................{/if}
+            </td>
+            <td style="width: 26%; text-align: right;">
+                <table style="border-collapse: collapse; margin-left: auto;">
+                    <tr>
+                        <td style="padding-right: 4px; font-weight: bold; white-space: nowrap;">No RM :</td>
+                        <td>
+                            <table class="rmbox-table">
+                                <tr>
+                                    <td class="rmbox-cell">{$p.rm0}</td>
+                                    <td class="rmbox-cell">{$p.rm1}</td>
+                                    <td class="rmbox-dash">-</td>
+                                    <td class="rmbox-cell">{$p.rm2}</td>
+                                    <td class="rmbox-cell">{$p.rm3}</td>
+                                    <td class="rmbox-dash">-</td>
+                                    <td class="rmbox-cell">{$p.rm4}</td>
+                                    <td class="rmbox-cell">{$p.rm5}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="doc-frame">
+        <tr>
+            <td class="doc-frame-cell" style="height: 245mm;">
+                <table class="content-table">
+                    <tr>
+                        <td class="content-cell" style="padding-top: 14px;">
+                            <table class="num-list-table">
+                                <tr>
+                                    <td class="num-col" style="padding-bottom: 18px;">8.</td>
+                                    <td class="text-col" style="padding-bottom: 18px;">
+                                        <strong>PENELITIAN PENDIDIKAN.</strong> Apabila saya terlibat dalam penelitian atau prosedur eksperimental, maka hal tersebut hanya dapat dilakukan dengan sepengetahuan dan persetujuan saya. Saya setuju untuk mengijinkan medis, keperawatan, dan tenaga kesehatan lainnya dalam pendidikan/pelatihan, dan mahasiswa yang berpraktik di RSGM Gusti Hasan Aman, kecuali diminta sebaliknya, untuk hadir selama perawatan pasien, atau berpartisipasi dalam perawatan pasien sebagai bagian dari pendidikan mereka.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="num-col" style="padding-bottom: 18px;">9.</td>
+                                    <td class="text-col" style="padding-bottom: 18px;">
+                                        <strong>PENGAJUAN KELUHAN.</strong> Saya menyatakan bahwa saya telah menerima informasi tentang adanya tatacara mengajukan dan mengatasi keluhan terkait pelayanan medik yang diberikan terhadap diri saya. Saya setuju untuk mengikuti tatacara mengajukan keluhan sesuai prosedur yang ada.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="num-col">10.</td>
+                                    <td class="text-col">
+                                        <strong>KEWAJIBAN PEMBAYARAN.</strong> Saya menyatakan setuju, baik sebagai wali atau sebagai pasien, bahwa sesuai pertimbangan pelayanan yang diberikan kepada pasien, maka saya wajib untuk membayar total biaya pelayanan. Biaya pelayanan berdasarkan acuan biaya dan ketentuan RSGM Gusti Hasan Aman.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" align="center" class="ttd-heading-cell">TANDATANGAN</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" class="ttd-statement-cell">
+                                        Dengan tandatangan saya dibawah, Saya menyatakan bahwa saya telah membaca dan memahami item pada Persetujuan Umum/ General Consent.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" class="ttd-wrap-cell">
+                                        <table class="ttd-grid">
+                                            <tr>
+                                                <td class="ttd-space-cell" style="width: 62%; text-align: left;">
+                                                    {if: !empty($data.ttd_pasien)}
+                                                        <div style="margin-bottom: 4px;">
+                                                            <img src="{$data.ttd_pasien}" alt="TTD Pasien" style="max-height: 60px; max-width: 190px; display: block;">
+                                                        </div>
+                                                    {/if}
+                                                    {if: !empty($data.penandatangan_nama)}
+                                                        <div>
+                                                            <strong>{$data.penandatangan_nama}</strong>
+                                                            {if: !empty($data.penandatangan_hubungan) && $data.penandatangan_hubungan != 'Pasien Sendiri'}
+                                                                <span style="font-size: 8pt; color: #333;">({$data.penandatangan_hubungan})</span>
+                                                            {/if}
+                                                        </div>
+                                                    {/if}
+                                                </td>
+                                                <td class="ttd-space-cell" style="width: 38%; text-align: left; padding-left: 16px;">
+                                                    {if: !empty($data.ttd_petugas)}
+                                                        <div style="margin-bottom: 4px;">
+                                                            <div style="font-size: 7.5pt; color: #333; margin-bottom: 3px;">Petugas Pemberi Penjelasan</div>
+                                                            <table style="border-collapse: collapse;">
+                                                                <tr>
+                                                                    <td style="padding: 2px 0;">
+                                                                        {if: strlen($data.ttd_petugas) == 64}
+                                                                            {if: !empty($qr_tte_data_uri)}
+                                                                                <img src="{$qr_tte_data_uri}" alt="QR TTE" style="width: 48px; height: 48px; display: block;">
+                                                                            {elseif: empty($is_mpdf)}
+                                                                                <div class="qr-tte-html" data-url="{?=url(['esignature', 'verify', $data.ttd_petugas])?}" style="display:inline-block; width:48px; height:48px;"></div>
+                                                                            {/if}
+                                                                        {else}
+                                                                            <img src="{$data.ttd_petugas}" alt="TTD Petugas" style="max-height: 46px; max-width: 140px; display: block;">
+                                                                        {/if}
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                            {if: strlen($data.ttd_petugas) == 64}
+                                                                <div style="font-size: 7pt; color: #16a34a; font-weight: bold;">TTE Terverifikasi - {$data.nama_petugas}</div>
+                                                            {else}
+                                                                <div style="font-size: 8pt; font-weight: bold;">{$data.nama_petugas}</div>
+                                                            {/if}
+                                                        </div>
+                                                    {/if}
+                                                    {if: !empty($data.tanggal_persetujuan_indo)}
+                                                        <div><strong>{$data.tanggal_persetujuan_indo}</strong></div>
+                                                    {/if}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ttd-line-cell" style="width: 62%; text-align: left;">
+                                                    Tandatangan dan Nama<br>
+                                                    (Wali jika pasien &lt;18 Tahun)
+                                                </td>
+                                                <td class="ttd-line-cell" style="width: 38%; text-align: left; padding-left: 16px;">
+                                                    Tanggal
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="footer-thanks-table">
+        <tr>
+            <td class="footer-thanks-cell">Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</td>
+        </tr>
+    </table>
+    <table class="footer-table">
+        <tr>
+            <td style="width: 50%; text-align: left;">RSGM/Ed-Rev/02/2023</td>
+            <td style="width: 50%; text-align: right;">RM.RJ - 02 Hal 3 - 3</td>
+        </tr>
+    </table>
+</div>
+
+{if: empty($is_mpdf)}
+<script src="{?=url('assets/jscripts/jquery.min.js')?}"></script>
+<script src="{?=url('assets/jscripts/qrcode.js')?}"></script>
+<script src="{?=url('assets/jscripts/jquery.qrcode.js')?}"></script>
+<script>
+jQuery(function($) {
+    if ($.fn.qrcode) {
+        $('.qr-tte-html').each(function() {
+            var qrUrl = $(this).attr('data-url');
+            if (qrUrl) {
+                $(this).qrcode({ width: 50, height: 50, text: qrUrl });
+            }
+        });
+    }
+});
+</script>
+{/if}
+</body>
+</html>

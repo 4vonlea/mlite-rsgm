@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>RM.GD - 05 Asesmen Medis Gigi Unit Gawat Darurat - {$data.nama_pasien}</title>
   <style>
+    {if: empty($is_mpdf)}
     @page {
       margin: 6mm 8mm;
     }
@@ -61,9 +62,9 @@
         page-break-before: always;
       }
     }
-    {if: $is_mpdf}
-    body { background: #fff; font-size: 8.4pt; }
-    .page-sheet { width: 100%; margin: 0; padding: 0; box-shadow: none; }
+    {else}
+    body { font-family: Arial, Helvetica, sans-serif; background: #fff; color: #000; margin: 0; padding: 0; font-size: 7.4pt; }
+    .page-sheet { width: 100%; margin: 0; padding: 0; }
     .page-break { page-break-before: always; }
     {/if}
 
@@ -74,9 +75,9 @@
     }
     table.form-tbl td, table.form-tbl th {
       border: 1px solid #000;
-      padding: 3px 5px;
+      padding: {if: empty($is_mpdf)}3px 5px{else}1.8px 3.5px{/if};
       vertical-align: top;
-      line-height: 1.25;
+      line-height: {if: empty($is_mpdf)}1.25{else}1.15{/if};
     }
     table.no-border, table.no-border td {
       border: none !important;
@@ -649,14 +650,11 @@
               </table>
             </td>
             <td width="16%" style="text-align:center;vertical-align:middle;">
-              <svg width="68" height="72" viewBox="0 0 80 86" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22,78 C24,65 25,58 25,52 C18,48 16,38 17,28 C18,14 28,6 42,6 C56,6 64,15 64,28 C64,33 67,37 68,40 C69,42 66,44 64,45 C64,49 64,53 62,56 C60,59 54,60 48,59 C47,65 49,72 52,78" fill="none" stroke="#333" stroke-width="1.3"/>
-                <path d="M35,32 C32,32 30,36 32,40 C34,43 37,42 37,38" fill="none" stroke="#333" stroke-width="1.1"/>
-                <circle cx="55" cy="30" r="1.8" fill="#333"/>
-                <circle cx="36" cy="48" r="2.2" fill="none" stroke="#555" stroke-dasharray="1.5,1.5"/>
-                <circle cx="45" cy="54" r="2.5" fill="none" stroke="#555" stroke-dasharray="1.5,1.5"/>
-                <circle cx="34" cy="60" r="2.2" fill="none" stroke="#555" stroke-dasharray="1.5,1.5"/>
-              </svg>
+              {if: !empty($kepala_leher_src)}
+              <img src="{$kepala_leher_src}" alt="Sketsa Kepala Leher" style="width: 66px; height: 70px; object-fit: contain; display: block; margin: 0 auto 2px auto;">
+              {else}
+              <div style="width:66px;height:70px;border:1px dashed #999;margin:0 auto 2px auto;"></div>
+              {/if}
               <div style="font-size:6pt;font-style:italic;">*Lingkari daerah yang dimaksud</div>
             </td>
             <td width="45%">
@@ -806,15 +804,12 @@
           </tr>
         </table>
       </td>
-      <td width="46%">
-        <strong>Skala Nyeri</strong><br>
-        <table width="100%" style="border-collapse:collapse;text-align:center;margin-top:4px;font-size:7.5pt;">
-          <tr>
-            <td colspan="1" style="border:none;">Tidak<br>Nyeri</td>
-            <td colspan="3" style="border:none;">Nyeri<br>Ringan</td>
-            <td colspan="3" style="border:none;">Nyeri<br>Sedang</td>
-            <td colspan="4" style="border:none;">Nyeri<br>Berat</td>
-          </tr>
+      <td width="46%" style="text-align: center;">
+        <div style="text-align: left;"><strong>Skala Nyeri</strong></div>
+        {if: !empty($skala_nyeri_img)}
+        <div style="margin: 4px 0;"><img src="{$skala_nyeri_img}" alt="Skala Nyeri" style="width: 245px; height: auto;"></div>
+        {/if}
+        <table width="100%" style="border-collapse:collapse;text-align:center;margin-top:3px;font-size:7.5pt;">
           <tr>
             <td style="border:1px solid #000;padding:2px;{if: $data.skala_nyeri == '0'}background:#222;color:#fff;font-weight:bold;{/if}">0</td>
             <td style="border:1px solid #000;padding:2px;{if: $data.skala_nyeri == '1'}background:#222;color:#fff;font-weight:bold;{/if}">1</td>
@@ -829,35 +824,10 @@
             <td style="border:1px solid #000;padding:2px;{if: $data.skala_nyeri == '10'}background:#222;color:#fff;font-weight:bold;{/if}">10</td>
           </tr>
         </table>
-        <table width="100%" style="border-collapse:collapse;text-align:center;margin-top:4px;font-size:6.5pt;">
-          <tr>
-            <td width="16.6%" style="border:none;">
-              <svg width="24" height="24" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="10.5" cy="12" r="1.4" fill="#000"/><circle cx="19.5" cy="12" r="1.4" fill="#000"/><path d="M9.5,18 Q15,23 20.5,18" fill="none" stroke="#000" stroke-width="1.3"/></svg>
-              <div>Tidak<br>Nyeri</div>
-            </td>
-            <td width="16.6%" style="border:none;">
-              <svg width="24" height="24" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="10.5" cy="12" r="1.4" fill="#000"/><circle cx="19.5" cy="12" r="1.4" fill="#000"/><path d="M10,19 Q15,21.5 20,19" fill="none" stroke="#000" stroke-width="1.3"/></svg>
-              <div>Sedikit<br>Nyeri</div>
-            </td>
-            <td width="16.6%" style="border:none;">
-              <svg width="24" height="24" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="10.5" cy="12" r="1.4" fill="#000"/><circle cx="19.5" cy="12" r="1.4" fill="#000"/><line x1="10" y1="19.5" x2="20" y2="19.5" stroke="#000" stroke-width="1.3"/></svg>
-              <div>Sedikit<br>Lebih Nyeri</div>
-            </td>
-            <td width="16.6%" style="border:none;">
-              <svg width="24" height="24" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="10.5" cy="12" r="1.4" fill="#000"/><circle cx="19.5" cy="12" r="1.4" fill="#000"/><path d="M10,20.5 Q15,17.5 20,20.5" fill="none" stroke="#000" stroke-width="1.3"/></svg>
-              <div>Lebih<br>Nyeri Lagi</div>
-            </td>
-            <td width="16.6%" style="border:none;">
-              <svg width="24" height="24" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="10.5" cy="12" r="1.4" fill="#000"/><circle cx="19.5" cy="12" r="1.4" fill="#000"/><path d="M9.5,21.5 Q15,16 20.5,21.5" fill="none" stroke="#000" stroke-width="1.3"/></svg>
-              <div>Sangat<br>Nyeri</div>
-            </td>
-            <td width="16.6%" style="border:none;">
-              <svg width="24" height="24" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="none" stroke="#000" stroke-width="1.3"/><path d="M8.5,10.5 L12,13 M12,10.5 L8.5,13" stroke="#000" stroke-width="1.2"/><path d="M18,10.5 L21.5,13 M21.5,10.5 L18,13" stroke="#000" stroke-width="1.2"/><path d="M9.5,22 Q15,15.5 20.5,22" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="8" cy="16" r="1" fill="#000"/><circle cx="22" cy="16" r="1" fill="#000"/></svg>
-              <div>Nyeri<br>Sangat Hebat</div>
-            </td>
-          </tr>
-        </table>
-        <div style="margin-top:4px;font-size:7pt;border-top:1px dashed #999;padding-top:3px;">
+        {if: $data.skala_nyeri !== ''}
+        <div style="margin-top:3px;font-size:8pt;font-weight:bold;">Skor Nyeri Dipilih: {$data.skala_nyeri} / 10</div>
+        {/if}
+        <div style="margin-top:4px;font-size:7pt;border-top:1px dashed #999;padding-top:3px;text-align:left;">
           <em>*Untuk pasien anak &lt;6 tahun menggunakan skala FLACC :</em><br>
           Wajah ({$data.flacc_wajah}) + Kaki ({$data.flacc_kaki}) + Aktivitas ({$data.flacc_aktivitas}) + Menangis ({$data.flacc_menangis}) + Consolability ({$data.flacc_consolability}) = <strong>Total FLACC : {$data.flacc_total}</strong>
         </div>
@@ -916,7 +886,11 @@
             <td width="45%" style="text-align:center;">
               Banjarmasin, {$data.tgl_ttd_fmt} Pukul {?= !empty($data.pukul_ttd) ? $data.pukul_ttd : '...........' ?} WITA<br>
               <strong>DPJP</strong>
+              {if: !empty($qr_dokter)}
+              <div style="margin: 2px 0;"><img src="{$qr_dokter}" alt="QR TTE DPJP" style="width: 44px; height: 44px; display: inline-block;"></div>
+              {else}
               <br><br><br><br>
+              {/if}
               ( <u><strong>{?= !empty($data.nm_dokter) ? $data.nm_dokter : (!empty($data.kd_dokter) ? $data.kd_dokter : '................................................') ?}</strong></u> )<br>
               <span style="font-size:7.5pt;">Tanda Tangan &amp; Nama Jelas</span>
             </td>

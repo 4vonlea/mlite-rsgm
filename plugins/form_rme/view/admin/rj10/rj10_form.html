@@ -16,7 +16,7 @@
               <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
               <span>Data Pasien</span>
             </h4>
-            <span class="badge" style="background-color: #eff6ff; color: #1e40af; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #bfdbfe;">RM.RJ 10</span>
+            <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
           </div>
 
           <div class="rsgm-reg-body">
@@ -94,6 +94,33 @@
               <input type="datetime-local" id="f_tgl_kaji" class="form-control f-tgl_kaji" value="{if: !empty($data.form_data.tgl_kaji)}{$data.form_data.tgl_kaji}{else}{?=date('Y-m-d\TH:i')?}{/if}">
             </div>
 
+            <!-- TTE Perawat Pengkaji -->
+            <div class="form-group" style="margin-bottom: 12px; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
+              <label class="rsgm-compact-label"><i class="fa fa-lock text-primary"></i> TTE Perawat Pengkaji</label>
+              <div id="sign_container_rj10_perawat" style="border: 1px solid #bfdbfe; border-radius: 6px; background: #fafafa; min-height: 76px; display: flex; align-items: center; justify-content: center; padding: 6px; margin-bottom: 6px; text-align: center;">
+                {if: !empty($tte_perawat.signature_hash)}
+                  <div class="rsgm-tte-verified-card">
+                    <div style="color: #16a34a; font-weight: 700; font-size: 11px;"><i class="fa fa-check-circle"></i> Terverifikasi TTE</div>
+                    <div style="font-weight: 700; font-size: 11px; color: #0f172a;">{$tte_perawat.signer_name}</div>
+                    <div style="font-size: 9px; color: #15803d; font-family: monospace;">{?=substr($tte_perawat['signature_hash'], 0, 14)?}...</div>
+                  </div>
+                {else}
+                  <span style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum TTE</span>
+                {/if}
+              </div>
+              <input type="hidden" id="input_tte_rj10_perawat" value="{if: !empty($data.form_data.tte_perawat)}{$data.form_data.tte_perawat}{elseif: !empty($tte_perawat.signature_hash)}{$tte_perawat.signature_hash}{/if}">
+              <button type="button" class="btn btn-primary btn-xs btn-block btn-tte-rme" id="btn_tte_rj10_perawat"
+                data-ref_type="rj10_perawat"
+                data-ref_id="{$data.no_rawat}"
+                data-signer_name="{?=isset_or($data['form_data']['nama_perawat'])?}"
+                data-signer_role="Perawat Pengkaji"
+                data-target_input="input_tte_rj10_perawat"
+                data-container_id="sign_container_rj10_perawat"
+                style="border-radius: 6px; font-weight: 600;">
+                <i class="fa fa-lock"></i> {if: !empty($tte_perawat.signature_hash)}Verifikasi Ulang TTE{else}Tanda Tangani (TTE){/if}
+              </button>
+            </div>
+
             <!-- Tombol Demo Data -->
             <div style="border-top: 1px dashed #e2e8f0; padding-top: 10px; margin-top: 10px;">
               <button type="button" id="btn_demo" class="btn btn-warning btn-block btn-sm" style="font-weight: 700; border-radius: 6px;" title="Isi form dengan data simulasi realistis">
@@ -116,7 +143,8 @@
               <span>Lembar Edukasi Pasien Terintegrasi</span>
             </h4>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1e40af; font-weight: 700;">Rawat Jalan RSGM</span>
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">{if: !empty($is_ugd)}RM.GD-12{else}RM.RJ 10{/if}</span>
+              <span class="rsgm-reg-badge-hint hidden-xs">Rawat Jalan RSGM</span>
             </div>
           </div>
 
@@ -323,7 +351,7 @@
 <!-- ============================================================
      MODAL DIALOG: INPUT PELAKSANAAN EDUKASI PASIEN RM.RJ 10
      ============================================================ -->
-<div class="modal fade rsgm-modal" id="modalPelaksanaanEdukasiRj10" tabindex="-1" role="dialog" aria-labelledby="modalEdukasiRj10Label">
+<div class="modal fade rsgm-modal" id="modalPelaksanaanEdukasiRj10" role="dialog" aria-labelledby="modalEdukasiRj10Label">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -406,10 +434,44 @@
             <div class="col-md-4 form-group" style="margin-bottom: 5px;">
               <label class="rsgm-compact-label" for="m_nama_pemberi"><i class="fa fa-user-md text-muted"></i> Nama Edukator (Pemberi)</label>
               <input type="text" id="m_nama_pemberi" class="form-control" placeholder="Nama edukator / pemeriksa">
+              <div style="margin-top: 8px;">
+                <div id="sign_container_rj10_modal_pemberi" style="border: 1px solid #bfdbfe; border-radius: 6px; background: #fafafa; min-height: 52px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-bottom: 5px; text-align: center;">
+                  <span style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum TTE Edukator</span>
+                </div>
+                <input type="hidden" id="modal_rj10_tte_pemberi" value="">
+                <button type="button" class="btn btn-primary btn-xs btn-block btn-tte-rme" id="btn_tte_rj10_modal_pemberi"
+                  data-ref_type="rj10_pemberi"
+                  data-ref_id="{$data.no_rawat}"
+                  data-signer_name=""
+                  data-signer_role="Pemberi Edukasi"
+                  data-target_input="modal_rj10_tte_pemberi"
+                  data-container_id="sign_container_rj10_modal_pemberi"
+                  style="border-radius: 6px; font-weight: 600;">
+                  <i class="fa fa-lock"></i> Tanda Tangani (TTE Edukator)
+                </button>
+              </div>
             </div>
             <div class="col-md-4 form-group" style="margin-bottom: 5px;">
               <label class="rsgm-compact-label" for="m_nama_penerima"><i class="fa fa-user text-muted"></i> Nama Penerima Edukasi</label>
               <input type="text" id="m_nama_penerima" class="form-control" placeholder="Nama pasien / keluarga">
+              <div style="margin-top: 8px;">
+                <div id="preview_box_rj10_modal_penerima" style="border: 1px dashed #cbd5e1; border-radius: 6px; background: #fafafa; min-height: 52px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-bottom: 5px; text-align: center;">
+                  <img id="img_preview_rj10_modal_penerima" src="" alt="TTD Penerima" style="display:none; max-height: 44px; max-width: 100%;">
+                  <span id="status_rj10_modal_penerima" style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum TTD Digital</span>
+                </div>
+                <input type="hidden" id="modal_rj10_ttd_penerima" value="">
+                <button type="button" class="btn btn-default btn-xs btn-block btn-buka-ttd-pasien" id="btn_ttd_rj10_modal_penerima"
+                  data-target-input="modal_rj10_ttd_penerima"
+                  data-preview-box="preview_box_rj10_modal_penerima"
+                  data-preview-img="img_preview_rj10_modal_penerima"
+                  data-status-text="status_rj10_modal_penerima"
+                  data-doc-title="Lembar Edukasi Pasien"
+                  data-doc-code="{if: !empty($is_ugd)}RM.GD-12{else}RM.RJ-10{/if}"
+                  data-signer-title="Penerima Edukasi"
+                  style="border-radius: 6px; font-weight: 600;">
+                  <i class="fa fa-pencil"></i> TTD Layar Sentuh Penerima
+                </button>
+              </div>
             </div>
           </div>
         </form>
@@ -581,6 +643,35 @@ $(document).ready(function() {
         return isoStr;
     }
 
+    function makeBadgeEl(bg, color, border, label) {
+        return $('<span class="badge"></span>').css({
+            background: bg,
+            color: color,
+            border: '1px solid ' + border
+        }).text(label);
+    }
+
+    function buildPraBadgeEl(val) {
+        var map = {
+            '1': ['#f1f5f9', '#475569', '#cbd5e1', '1. Tdk Tahu'],
+            '2': ['#eff6ff', '#1e40af', '#bfdbfe', '2. Sedikit'],
+            '3': ['#f0fdf4', '#166534', '#bbf7d0', '3. Paham']
+        };
+        var cfg = map[String(val)] || ['#f1f5f9', '#475569', '#cbd5e1', '-'];
+        return makeBadgeEl(cfg[0], cfg[1], cfg[2], cfg[3]);
+    }
+
+    function buildEvalBadgeEl(val) {
+        var map = {
+            '1': ['#f0fdf4', '#166534', '#bbf7d0', '1. Mengerti'],
+            '2': ['#eff6ff', '#1e40af', '#bfdbfe', '2. Mengulang'],
+            '3': ['#faf5ff', '#6b21a8', '#e9d5ff', '3. Demonstrasi'],
+            '4': ['#fff1f2', '#be123c', '#fecdd3', '4. Re-edukasi']
+        };
+        var cfg = map[String(val)] || ['#f1f5f9', '#475569', '#cbd5e1', '-'];
+        return makeBadgeEl(cfg[0], cfg[1], cfg[2], cfg[3]);
+    }
+
     function buildRowHtml(data, num) {
         data = data || {};
         var tgl = data.tgl_jam || new Date().toISOString().slice(0, 16);
@@ -593,41 +684,74 @@ $(document).ready(function() {
         var pro = data.profesi_pemberi || 'Dokter Gigi';
         var pem = data.nama_pemberi || $('#f_perawat').val() || '';
         var pen = data.nama_penerima || $('#nm_pasien').val() || '';
+        var ttePem = data.tte_pemberi || '';
+        var ttdPenImg = data.ttd_penerima_img || '';
 
-        var html = '<tr class="pelaksanaan-row" ' +
-            'data-tgl="' + tgl + '" ' +
-            'data-isi="' + $('<div>').text(isi).html() + '" ' +
-            'data-pra="' + pra + '" ' +
-            'data-sas="' + sas + '" ' +
-            'data-saslain="' + $('<div>').text(sasLain).html() + '" ' +
-            'data-met="' + met + '" ' +
-            'data-eva="' + eva + '" ' +
-            'data-pro="' + $('<div>').text(pro).html() + '" ' +
-            'data-pem="' + $('<div>').text(pem).html() + '" ' +
-            'data-pen="' + $('<div>').text(pen).html() + '">' +
-            '<td style="text-align: center; vertical-align: middle;" class="row-num">' + (num || 1) + '</td>' +
-            '<td style="vertical-align: middle; text-align: center;" class="td-tgl">' + formatDisplayDate(tgl) + '</td>' +
-            '<td style="vertical-align: middle;" class="td-isi"><div style="font-weight: 500;">' + $('<div>').text(isi).html().replace(/\n/g, '<br>') + '</div></td>' +
-            '<td style="vertical-align: middle; text-align: center;" class="td-pra">' + getPraBadge(pra) + '</td>' +
-            '<td style="vertical-align: middle; text-align: center;" class="td-sas">' + getSasaranText(sas, sasLain) + '</td>' +
-            '<td style="vertical-align: middle; text-align: center;" class="td-met">' + getMetodeText(met) + '</td>' +
-            '<td style="vertical-align: middle; text-align: center;" class="td-eva">' + getEvaluasiBadge(eva) + '</td>' +
-            '<td style="vertical-align: middle;" class="td-pem">' +
-                '<span style="font-weight: 600; display: block;">' + (pem || '-') + '</span>' +
-                '<span style="font-size: 11px; color: #64748b;">' + (pro || '') + '</span>' +
-            '</td>' +
-            '<td style="vertical-align: middle;" class="td-pen">' + (pen || '-') + '</td>' +
-            '<td style="text-align: center; vertical-align: middle;">' +
-                '<button type="button" class="btn btn-xs btn-default btn-edit-row" title="Edit Baris" style="border-radius: 4px; padding: 3px 6px; margin-right: 2px;">' +
-                    '<i class="fa fa-pencil text-primary"></i>' +
-                '</button>' +
-                '<button type="button" class="btn btn-xs btn-danger btn-hapus-row" title="Hapus Baris" style="border-radius: 4px; padding: 3px 6px;">' +
-                    '<i class="fa fa-trash"></i>' +
-                '</button>' +
-            '</td>' +
-        '</tr>';
+        var $tr = $('<tr class="pelaksanaan-row"></tr>').attr({
+            'data-tgl': tgl,
+            'data-isi': isi,
+            'data-pra': pra,
+            'data-sas': sas,
+            'data-saslain': sasLain,
+            'data-met': met,
+            'data-eva': eva,
+            'data-pro': pro,
+            'data-pem': pem,
+            'data-pen': pen,
+            'data-tte_pemberi': ttePem,
+            'data-ttd_penerima_img': ttdPenImg
+        });
 
-        return html;
+        $('<td class="row-num"></td>').css({ textAlign: 'center', verticalAlign: 'middle' }).text(num || 1).appendTo($tr);
+        $('<td class="td-tgl"></td>').css({ verticalAlign: 'middle', textAlign: 'center' }).text(formatDisplayDate(tgl)).appendTo($tr);
+
+        var $isiWrap = $('<div></div>').css('font-weight', '500');
+        var isiLines = String(isi).split(/\r?\n/);
+        isiLines.forEach(function(line, i) {
+            if (i > 0) $isiWrap.append($('<br>'));
+            $isiWrap.append(document.createTextNode(line));
+        });
+        $('<td class="td-isi"></td>').css('vertical-align', 'middle').append($isiWrap).appendTo($tr);
+
+        $('<td class="td-pra"></td>').css({ verticalAlign: 'middle', textAlign: 'center' }).append(buildPraBadgeEl(pra)).appendTo($tr);
+        $('<td class="td-sas"></td>').css({ verticalAlign: 'middle', textAlign: 'center' }).text(getSasaranText(sas, sasLain)).appendTo($tr);
+        $('<td class="td-met"></td>').css({ verticalAlign: 'middle', textAlign: 'center' }).text(getMetodeText(met)).appendTo($tr);
+        $('<td class="td-eva"></td>').css({ verticalAlign: 'middle', textAlign: 'center' }).append(buildEvalBadgeEl(eva)).appendTo($tr);
+
+        var $tdPem = $('<td class="td-pem"></td>').css('vertical-align', 'middle');
+        $('<span></span>').css({ fontWeight: 600, display: 'block' }).text(pem || '-').appendTo($tdPem);
+        if (pro) {
+            $('<span></span>').css({ fontSize: '11px', color: '#64748b', display: 'block' }).text(pro).appendTo($tdPem);
+        }
+        if (ttePem) {
+            $('<span class="label label-success"></span>').css({ fontSize: '9px', display: 'inline-block', marginTop: '2px' })
+                .append($('<i class="fa fa-check-circle"></i>'))
+                .append(document.createTextNode(' TTE'))
+                .appendTo($tdPem);
+        }
+        $tdPem.appendTo($tr);
+
+        var $tdPen = $('<td class="td-pen"></td>').css('vertical-align', 'middle');
+        $('<span></span>').css({ fontWeight: 600, display: 'block' }).text(pen || '-').appendTo($tdPen);
+        if (ttdPenImg && ttdPenImg.indexOf('data:image') === 0) {
+            $('<img>').attr({ src: ttdPenImg, alt: 'TTD' })
+                .css({ maxHeight: '28px', maxWidth: '80px', display: 'block', marginTop: '3px', border: '1px solid #e2e8f0', borderRadius: '3px', background: '#fff' })
+                .appendTo($tdPen);
+        }
+        $tdPen.appendTo($tr);
+
+        var $tdAct = $('<td></td>').css({ textAlign: 'center', verticalAlign: 'middle' });
+        $('<button type="button" class="btn btn-xs btn-default btn-edit-row" title="Edit Baris"></button>')
+            .css({ borderRadius: '4px', padding: '3px 6px', marginRight: '2px' })
+            .append($('<i class="fa fa-pencil text-primary"></i>'))
+            .appendTo($tdAct);
+        $('<button type="button" class="btn btn-xs btn-danger btn-hapus-row" title="Hapus Baris"></button>')
+            .css({ borderRadius: '4px', padding: '3px 6px' })
+            .append($('<i class="fa fa-trash"></i>'))
+            .appendTo($tdAct);
+        $tdAct.appendTo($tr);
+
+        return $tr;
     }
 
     function renumberRows() {
@@ -636,12 +760,71 @@ $(document).ready(function() {
         });
         if ($('#tbodyPelaksanaan .pelaksanaan-row').length === 0) {
             if ($('#tbodyPelaksanaan .empty-tr').length === 0) {
-                $('#tbodyPelaksanaan').append('<tr class="empty-tr"><td colspan="10" style="text-align: center; color: #94a3b8; padding: 16px;"><em>Belum ada catatan pelaksanaan edukasi. Klik tombol "+ Tambah Pelaksanaan Edukasi" di atas untuk menambahkan data.</em></td></tr>');
+                var $emptyTd = $('<td colspan="10"></td>')
+                    .css({ textAlign: 'center', color: '#94a3b8', padding: '16px' })
+                    .append($('<em></em>').text('Belum ada catatan pelaksanaan edukasi. Klik tombol "+ Tambah Pelaksanaan Edukasi" di atas untuk menambahkan data.'));
+                $('#tbodyPelaksanaan').append($('<tr class="empty-tr"></tr>').append($emptyTd));
             }
         } else {
             $('#tbodyPelaksanaan .empty-tr').remove();
         }
     }
+
+    function setModalSignatureState(tteHash, ttdImg) {
+        tteHash = tteHash || '';
+        ttdImg = ttdImg || '';
+
+        $('#modal_rj10_tte_pemberi').val(tteHash);
+        var $tteBox = $('#sign_container_rj10_modal_pemberi').empty();
+        if (tteHash) {
+            var $wrap = $('<div></div>').css('text-align', 'center');
+            $('<span class="label label-success"></span>').css({ display: 'inline-block', marginBottom: '2px' })
+                .append($('<i class="fa fa-check-circle"></i>'))
+                .append(document.createTextNode(' TTE Tersimpan'))
+                .appendTo($wrap);
+            $('<div></div>').css({ fontSize: '9px', color: '#15803d', fontFamily: 'monospace' })
+                .text(tteHash.slice(0, 14) + '...')
+                .appendTo($wrap);
+            $tteBox.append($wrap);
+        } else {
+            $('<span></span>').css({ color: '#94a3b8', fontSize: '11px', fontStyle: 'italic' })
+                .text('Belum TTE Edukator')
+                .appendTo($tteBox);
+        }
+
+        $('#modal_rj10_ttd_penerima').val(ttdImg);
+        if (ttdImg && ttdImg.indexOf('data:image') === 0) {
+            $('#img_preview_rj10_modal_penerima').attr('src', ttdImg).show();
+            $('#status_rj10_modal_penerima').text('TTD Tersimpan').hide();
+        } else {
+            $('#img_preview_rj10_modal_penerima').attr('src', '').hide();
+            $('#status_rj10_modal_penerima').text('Belum TTD Digital').show();
+        }
+    }
+
+    function syncSignatureTargets() {
+        var nr = $('#no_rawat').val() || '';
+        var rm = $('#no_rkm_medis').val() || $('#display_no_rkm_medis').val() || '';
+        var pName = $('#nm_pasien').val() || '';
+        var perawat = $('#f_perawat').val() || '';
+        var pemberi = $('#m_nama_pemberi').val() || '';
+
+        $('#btn_tte_rj10_perawat').attr({
+            'data-ref_id': nr,
+            'data-signer_name': perawat
+        });
+        $('#btn_tte_rj10_modal_pemberi').attr({
+            'data-ref_id': nr,
+            'data-signer_name': pemberi
+        });
+        $('#btn_ttd_rj10_modal_penerima').attr({
+            'data-patient-name': pName,
+            'data-patient-norm': rm
+        });
+    }
+
+    $('#f_perawat, #m_nama_pemberi, #no_rawat, #nm_pasien').on('input change', syncSignatureTargets);
+    syncSignatureTargets();
 
     // Initialize existing rows
     if (Array.isArray(savedPelaksanaan) && savedPelaksanaan.length > 0) {
@@ -663,7 +846,9 @@ $(document).ready(function() {
     $('#btn-open-modal-rj10').on('click', function(e) {
         e.preventDefault();
         $('#modal_row_idx').val('-1');
-        $('#modalEdukasiRj10Title').html('<i class="fa fa-plus text-success"></i> Tambah Pelaksanaan Edukasi Pasien');
+        $('#modalEdukasiRj10Title').empty()
+            .append($('<i class="fa fa-plus text-success"></i>'))
+            .append(document.createTextNode(' Tambah Pelaksanaan Edukasi Pasien'));
         $('#m_tgl_jam').val(new Date().toISOString().slice(0, 16));
         $('#m_isi_kebutuhan').val('');
         $('#m_pengetahuan_pra').val('2');
@@ -674,6 +859,8 @@ $(document).ready(function() {
         $('#m_profesi').val('Dokter Gigi');
         $('#m_nama_pemberi').val($('#f_perawat').val() || '');
         $('#m_nama_penerima').val($('#nm_pasien').val() || '');
+        setModalSignatureState('', '');
+        syncSignatureTargets();
         $('#modalPelaksanaanEdukasiRj10').modal('show');
     });
 
@@ -683,7 +870,9 @@ $(document).ready(function() {
         var $tr = $(this).closest('tr');
         var idx = $('#tbodyPelaksanaan .pelaksanaan-row').index($tr);
         $('#modal_row_idx').val(idx);
-        $('#modalEdukasiRj10Title').html('<i class="fa fa-pencil text-primary"></i> Edit Pelaksanaan Edukasi Pasien');
+        $('#modalEdukasiRj10Title').empty()
+            .append($('<i class="fa fa-pencil text-primary"></i>'))
+            .append(document.createTextNode(' Edit Pelaksanaan Edukasi Pasien'));
 
         $('#m_tgl_jam').val($tr.attr('data-tgl') || '');
         $('#m_isi_kebutuhan').val($tr.attr('data-isi') || '');
@@ -695,6 +884,8 @@ $(document).ready(function() {
         $('#m_profesi').val($tr.attr('data-pro') || 'Dokter Gigi');
         $('#m_nama_pemberi').val($tr.attr('data-pem') || '');
         $('#m_nama_penerima').val($tr.attr('data-pen') || '');
+        setModalSignatureState($tr.attr('data-tte_pemberi') || '', $tr.attr('data-ttd_penerima_img') || '');
+        syncSignatureTargets();
 
         $('#modalPelaksanaanEdukasiRj10').modal('show');
     });
@@ -726,7 +917,9 @@ $(document).ready(function() {
             evaluasi: $('#m_evaluasi').val(),
             profesi_pemberi: $('#m_profesi').val(),
             nama_pemberi: $('#m_nama_pemberi').val().trim(),
-            nama_penerima: $('#m_nama_penerima').val().trim()
+            nama_penerima: $('#m_nama_penerima').val().trim(),
+            tte_pemberi: $('#modal_rj10_tte_pemberi').val() || '',
+            ttd_penerima_img: $('#modal_rj10_ttd_penerima').val() || ''
         };
 
         var editIdx = parseInt($('#modal_row_idx').val());
@@ -808,6 +1001,7 @@ $(document).ready(function() {
         fd.pendidikan_terakhir = $('#f_pendidikan').val() || '';
         fd.nama_perawat = $('#f_perawat').val() || '';
         fd.tgl_kaji = $('#f_tgl_kaji').val() || '';
+        fd.tte_perawat = $('#input_tte_rj10_perawat').val() || '';
 
         // Checklist Butir Materi
         var keb = [];
@@ -831,7 +1025,9 @@ $(document).ready(function() {
                 evaluasi: $tr.attr('data-eva') || '1',
                 profesi_pemberi: $tr.attr('data-pro') || '',
                 nama_pemberi: $tr.attr('data-pem') || '',
-                nama_penerima: $tr.attr('data-pen') || ''
+                nama_penerima: $tr.attr('data-pen') || '',
+                tte_pemberi: $tr.attr('data-tte_pemberi') || '',
+                ttd_penerima_img: $tr.attr('data-ttd_penerima_img') || ''
             });
         });
 
@@ -842,7 +1038,7 @@ $(document).ready(function() {
     }
 
     // Submit handler
-    $('#rj10Form').on('submit', function(e) {
+    $('#rj10Form').on('submit rme:beforeSave', function(e) {
         packFormData();
     });
 

@@ -14,7 +14,7 @@
               <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
               <span>Data Pasien</span>
             </h4>
-            <span class="badge" style="background-color: #fef2f2; color: #b91c1c; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #fecaca;">Intervensi Nyeri</span>
+            <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
           </div>
 
           <div class="rsgm-reg-body">
@@ -134,24 +134,21 @@
         <div class="rsgm-reg-shell">
 
           <!-- Header Shell -->
-          <div class="rsgm-reg-header" style="justify-content: space-between; align-items: center;">
-            <div>
-              <h4 class="rsgm-reg-title">
-                <span class="rsgm-reg-icon"><i class="fa fa-heartbeat text-danger"></i></span>
-                <span>Formulir Intervensi dan Pengkajian Ulang Nyeri</span>
-              </h4>
-              <small style="color: #64748b; font-size: 11.5px; display: block; margin-top: 2px;">
-                Pemantauan Skor Nyeri Klinis, Tanda Vital, Intervensi Farmakologi / Non-Farmakologi, &amp; Re-evaluasi Berkala
-              </small>
-            </div>
-            <div>
-              <button type="button" class="btn btn-info btn-sm btn-trigger-rme-preview" data-preview-url="{?=url([ADMIN, 'form_rme', 'intervensinyericetak'])?}" style="font-weight: 600; border-radius: 6px;" title="Lihat pratinjau form hasil cetak / PDF">
-                <i class="fa fa-print"></i> Lihat Output (Cetak / PDF)
+          <div class="rsgm-reg-header">
+            <h4 class="rsgm-reg-title">
+              <span class="rsgm-reg-icon"><i class="fa fa-heartbeat"></i></span>
+              <span>Formulir Intervensi dan Pengkajian Ulang Nyeri</span>
+            </h4>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">Intervensi Nyeri</span>
+              <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-line-chart"></i> Pemantauan Nyeri</span>
+              <button type="button" class="btn btn-info btn-xs btn-trigger-rme-preview" data-preview-url="{?=url([ADMIN, 'form_rme', 'intervensinyericetak'])?}" style="font-weight: 600; border-radius: 6px;" title="Lihat pratinjau form hasil cetak / PDF">
+                <i class="fa fa-print"></i> Lihat Output
               </button>
             </div>
           </div>
 
-          <div class="rsgm-reg-body" style="padding: 16px;">
+          <div class="rsgm-reg-body">
 
             <!-- ------------------------------------------------------------
                  SECTION 1: PEDOMAN KLINIS SKALA NYERI & PENGKAJIAN ULANG
@@ -166,24 +163,10 @@
                 <!-- Kolom A: Asesmen Skala Nyeri -->
                 <div class="col-md-5" style="border-right: 1px solid #e2e8f0;">
                   <span style="font-weight: 700; font-size: 12px; color: #1e40af; display: block; margin-bottom: 6px;">
-                    <i class="fa fa-smile-o"></i> Skala Nyeri Wong-Baker &amp; NRS
+                    <i class="fa fa-heartbeat"></i> Skala Nyeri Wong-Baker &amp; NRS
                   </span>
-                  <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px;">
-                    <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 10px; margin-bottom: 4px; text-align: center;">
-                      <span style="color: #166534; width: 22%;">Tidak Nyeri<br><b>(0)</b></span>
-                      <span style="color: #1d4ed8; width: 26%;">Nyeri Ringan<br><b>(1 - 3)</b></span>
-                      <span style="color: #854d0e; width: 26%;">Nyeri Sedang<br><b>(4 - 6)</b></span>
-                      <span style="color: #991b1b; width: 26%;">Nyeri Berat<br><b>(7 - 10)</b></span>
-                    </div>
-                    <!-- Face visual icons -->
-                    <div style="display: flex; justify-content: space-around; text-align: center; margin: 4px 0 2px 0; font-size: 18px; line-height: 1.2;">
-                      <div title="Tidak Nyeri (0)">&#128522;<br><span style="font-size: 9.5px; font-weight: 700; color: #166534;">0</span></div>
-                      <div title="Sedikit Nyeri (2)">&#128578;<br><span style="font-size: 9.5px; font-weight: 700; color: #1d4ed8;">2</span></div>
-                      <div title="Sedikit Lebih Nyeri (4)">&#128528;<br><span style="font-size: 9.5px; font-weight: 700; color: #854d0e;">4</span></div>
-                      <div title="Lebih Nyeri Lagi (6)">&#128577;<br><span style="font-size: 9.5px; font-weight: 700; color: #c2410c;">6</span></div>
-                      <div title="Sangat Nyeri (8)">&#128546;<br><span style="font-size: 9.5px; font-weight: 700; color: #b91c1c;">8</span></div>
-                      <div title="Nyeri Sangat Hebat (10)">&#128557;<br><span style="font-size: 9.5px; font-weight: 700; color: #7f1d1d;">10</span></div>
-                    </div>
+                  <div style="background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px; text-align: center;">
+                    <img src="{?=url('assets/img/rj04_skala_nyeri.png')?}" alt="Skala Nyeri 0-10" style="max-width: 100%; height: auto; max-height: 115px; display: block; margin: 0 auto;">
                   </div>
                   <small class="text-muted" style="display: block; font-size: 10.5px; font-style: italic; margin-top: 4px;">
                     *Untuk pasien anak &lt; 6 tahun dapat menggunakan skala penilaian <strong>FLACC</strong>.
@@ -393,18 +376,21 @@
             <div class="col-md-7 form-group" style="margin-bottom: 12px;">
               <label class="rsgm-compact-label" for="m_skor_nyeri"><i class="fa fa-tachometer text-muted"></i> Skor Nyeri (NRS 0 - 10) <span class="text-danger">*</span></label>
               <select id="m_skor_nyeri" class="form-control" style="font-weight: 700;">
-                <option value="0">0 - Tidak Nyeri (Bebas Nyeri) &#128522;</option>
-                <option value="1">1 - Nyeri Sangat Ringan &#128578;</option>
-                <option value="2">2 - Nyeri Ringan (Sedikit Nyeri) &#128578;</option>
-                <option value="3">3 - Nyeri Ringan (Bisa Diabaikan) &#128578;</option>
-                <option value="4">4 - Nyeri Sedang (Sedikit Mengganggu) &#128528;</option>
-                <option value="5">5 - Nyeri Sedang (Mengganggu Konsentrasi) &#128528;</option>
-                <option value="6">6 - Nyeri Sedang (Sangat Mengganggu Aktivitas) &#128577;</option>
-                <option value="7">7 - Nyeri Berat (Sulit Diajak Bicara) &#128546;</option>
-                <option value="8">8 - Nyeri Berat (Aktivitas Terhambat Total) &#128546;</option>
-                <option value="9">9 - Nyeri Berat Sangat Hebat &#128557;</option>
-                <option value="10">10 - Nyeri Berat Maksimal (Tak Tertahankan) &#128557;</option>
+                <option value="0">0 - Tidak Nyeri (Bebas Nyeri)</option>
+                <option value="1">1 - Nyeri Sangat Ringan</option>
+                <option value="2">2 - Nyeri Ringan (Sedikit Nyeri)</option>
+                <option value="3">3 - Nyeri Ringan (Bisa Diabaikan)</option>
+                <option value="4">4 - Nyeri Sedang (Sedikit Mengganggu)</option>
+                <option value="5">5 - Nyeri Sedang (Mengganggu Konsentrasi)</option>
+                <option value="6">6 - Nyeri Sedang (Sangat Mengganggu Aktivitas)</option>
+                <option value="7">7 - Nyeri Berat (Sulit Diajak Bicara)</option>
+                <option value="8">8 - Nyeri Berat (Aktivitas Terhambat Total)</option>
+                <option value="9">9 - Nyeri Berat Sangat Hebat</option>
+                <option value="10">10 - Nyeri Berat Maksimal (Tak Tertahankan)</option>
               </select>
+              <div style="margin-top: 6px; padding: 6px; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center;">
+                <img src="{?=url('assets/img/rj04_skala_nyeri.png')?}" alt="Skala Nyeri 0-10" style="max-width: 100%; height: auto; max-height: 95px; display: block; margin: 0 auto;">
+              </div>
               <div style="margin-top: 5px;">
                 <span id="modal_skor_badge" class="badge" style="font-size: 11px; padding: 4px 8px; font-weight: 700; background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;">
                   Bebas Nyeri (0)

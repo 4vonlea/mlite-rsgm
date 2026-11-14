@@ -7,28 +7,22 @@
     <!-- ============================================================
          1. TOP PATIENT BANNER (12 KOLOM)
          ============================================================ -->
-    <div class="rsgm-reg-shell" style="margin-bottom: 20px; border: 1px solid #dbe3ec; border-radius: 8px; background: #ffffff;">
-      <div class="rsgm-reg-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-radius: 8px 8px 0 0;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span class="rsgm-reg-icon" style="background: #fef2f2; color: #dc2626; width: 36px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 17px;">
-            <i class="fa fa-heartbeat"></i>
-          </span>
-          <div>
-            <h4 class="rsgm-reg-title" style="margin: 0; font-size: 15px; font-weight: 700; color: #0f172a;">
-              Identitas Pasien &amp; Pengkajian Nyeri
-            </h4>
-            <span style="font-size: 12px; color: #64748b;">Formulir RM.RJ 07 &bull; Asesmen Ulang Derajat &amp; Manajemen Nyeri</span>
-          </div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <button type="button" id="btn_demo" class="btn btn-warning btn-sm" style="border-radius: 6px; font-weight: 600;" title="Isi dengan contoh riwayat asesmen nyeri">
+    <div class="rsgm-reg-shell rsgm-patient-side-shell" style="margin-bottom: 16px;">
+      <div class="rsgm-reg-header">
+        <h4 class="rsgm-reg-title">
+          <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
+          <span>Data Pasien &amp; Pengkajian Nyeri</span>
+        </h4>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">{if: !empty($is_ugd)}RM.GD - 09{else}RM.RJ 07{/if}</span>
+          <span class="rsgm-reg-badge-hint hidden-xs">Identitas &amp; Derajat Nyeri</span>
+          <button type="button" id="btn_demo" class="btn btn-warning btn-xs" style="border-radius: 6px; font-weight: 600;" title="Isi dengan contoh riwayat asesmen nyeri">
             <i class="fa fa-magic"></i> Isi Contoh Data
           </button>
-          <span class="badge" style="background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; font-size: 12px; padding: 6px 12px; font-weight: 700;">RM.RJ 07</span>
         </div>
       </div>
 
-      <div class="rsgm-reg-body" style="padding: 16px 20px; background: #ffffff;">
+      <div class="rsgm-reg-body">
         <div class="row">
           <!-- No Rawat with Search -->
           <div class="col-md-3 col-sm-6" style="margin-bottom: 10px;">
@@ -98,57 +92,89 @@
     <!-- ============================================================
          2. WORKSTATION TABEL ASESMEN ULANG NYERI (12 KOLOM)
          ============================================================ -->
-    <div class="rsgm-reg-shell" style="border: 1px solid #dbe3ec; border-radius: 8px; background: #ffffff;">
-      <div class="rsgm-reg-header" style="background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-radius: 8px 8px 0 0;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span class="rsgm-reg-icon" style="background: #eff6ff; color: #2563eb; width: 36px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 17px;">
-            <i class="fa fa-table"></i>
-          </span>
-          <div>
-            <h4 class="rsgm-reg-title" style="margin: 0; font-size: 15px; font-weight: 700; color: #0f172a;">
-              Tabel Catatan Pengkajian Ulang Derajat Nyeri
-            </h4>
-            <span style="font-size: 12px; color: #64748b;">Pencatatan berkala skor nyeri Numeric Rating Scale (NRS) &amp; respon terhadap intervensi</span>
-          </div>
-        </div>
-        <div>
-          <button type="button" class="btn btn-primary" id="btnAdd" style="font-weight: 600; border-radius: 6px; padding: 7px 16px;">
+    <div class="rsgm-reg-shell">
+      <div class="rsgm-reg-header">
+        <h4 class="rsgm-reg-title">
+          <span class="rsgm-reg-icon"><i class="fa fa-table"></i></span>
+          <span>Tabel Catatan Pengkajian Ulang Derajat Nyeri</span>
+        </h4>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span class="rsgm-reg-badge-hint hidden-xs"><i class="fa fa-sliders"></i> Numeric Rating Scale (NRS)</span>
+          <button type="button" class="btn btn-primary btn-xs" id="btnAdd" style="font-weight: 600; border-radius: 6px; padding: 4px 10px;">
             <i class="fa fa-plus-circle"></i> Tambah Baris Asesmen
           </button>
         </div>
       </div>
 
-      <div class="rsgm-reg-body" style="padding: 18px 20px;">
+      <div class="rsgm-reg-body">
         
-        <!-- PANDUAN PENGKAJIAN ULANG NYERI -->
-        <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px;">
-          <div style="font-weight: 700; font-size: 12.5px; color: #166534; margin-bottom: 6px;">
-            <i class="fa fa-info-circle"></i> Panduan Interval Waktu Pengkajian Ulang Nyeri:
-          </div>
-          <div class="row" style="font-size: 11.5px; color: #15803d; line-height: 1.6;">
-            <div class="col-md-6">
-              &bull; <b>Pasien Rawat Jalan:</b> Sebelum pasien pulang setelah tindakan medis / bedah mulut.<br>
-              &bull; <b>Intervensi Injeksi:</b> Evaluasi 15 menit setelah pemberian obat injeksi.<br>
-              &bull; <b>Intervensi Oral:</b> Evaluasi 1 jam setelah pemberian obat oral / analgetik.
+        <!-- PANDUAN PENGKAJIAN ULANG NYERI & SKALA NYERI -->
+        <div class="row" style="margin-bottom: 16px;">
+          <div class="col-md-7" style="margin-bottom: 8px;">
+            <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; border-radius: 6px; padding: 12px 16px; height: 100%;">
+              <div style="font-weight: 700; font-size: 12.5px; color: #166534; margin-bottom: 6px;">
+                <i class="fa fa-info-circle"></i> Panduan Interval Waktu Pengkajian Ulang Nyeri:
+              </div>
+              <div class="row" style="font-size: 11.5px; color: #15803d; line-height: 1.6;">
+                <div class="col-md-6">
+                  &bull; <b>Pasien Rawat Jalan:</b> Sebelum pasien pulang setelah tindakan medis / bedah mulut.<br>
+                  &bull; <b>Intervensi Injeksi:</b> Evaluasi 15 menit setelah pemberian obat injeksi.<br>
+                  &bull; <b>Intervensi Oral:</b> Evaluasi 1 jam setelah pemberian obat oral / analgetik.
+                </div>
+                <div class="col-md-6">
+                  &bull; <b>Skor 1 - 3 (Nyeri Ringan):</b> Evaluasi 1x per shift / kunjungan kontrol.<br>
+                  &bull; <b>Skor 4 - 6 (Nyeri Sedang):</b> Evaluasi tiap 3 jam.<br>
+                  &bull; <b>Skor 7 - 10 (Nyeri Berat):</b> Evaluasi tiap 1 jam &amp; lapor DPJP. Dihentikan bila skor 0.
+                </div>
+              </div>
             </div>
-            <div class="col-md-6">
-              &bull; <b>Skor 1 - 3 (Nyeri Ringan):</b> Evaluasi 1x per shift / kunjungan kontrol.<br>
-              &bull; <b>Skor 4 - 6 (Nyeri Sedang):</b> Evaluasi tiap 3 jam.<br>
-              &bull; <b>Skor 7 - 10 (Nyeri Berat):</b> Evaluasi tiap 1 jam &amp; lapor DPJP. Dihentikan bila skor 0.
+          </div>
+          <div class="col-md-5" style="margin-bottom: 8px;">
+            <div style="background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; text-align: center;">
+              <div style="font-weight: 700; font-size: 11.5px; color: #1e3a8a; margin-bottom: 4px;">
+                Referensi Skala Nyeri (0 - 10)
+              </div>
+              <img src="{?=url('assets/img/rj04_skala_nyeri.png')?}" alt="Skala Nyeri 0-10" style="max-width: 100%; height: auto; max-height: 115px; display: block; margin: 0 auto;">
             </div>
           </div>
         </div>
 
         <!-- TABEL ASESMEN ULANG NYERI -->
+        <style>
+          .rj07-row-tte-box {
+            margin-top: 6px;
+            border: 1px solid #dbeafe;
+            border-radius: 6px;
+            background: #f8fafc;
+            padding: 6px;
+            text-align: center;
+          }
+          .rj07-row-tte-box .rsgm-tte-verified-card {
+            padding: 4px !important;
+            margin: 0 !important;
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+          }
+          .rj07-row-tte-box canvas {
+            width: 56px !important;
+            height: 56px !important;
+          }
+          .rj07-row-tte-box [id^="qr_tte_"] {
+            width: 56px !important;
+            height: 56px !important;
+            margin: 3px auto !important;
+          }
+        </style>
         <div class="table-responsive" style="border: 1px solid #e2e8f0; border-radius: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; background: #ffffff;">
-          <table class="table table-bordered table-hover" id="tblAsesmen" style="min-width: 1080px; width: 100%; margin-bottom: 0;">
+          <table class="table table-bordered table-hover" id="tblAsesmen" style="min-width: 1120px; width: 100%; margin-bottom: 0;">
             <thead>
               <tr style="background: #f8fafc; color: #334155; font-size: 12px;">
-                <th style="width: 180px; text-align: center; vertical-align: middle; font-weight: 700;">Tanggal &amp; Jam</th>
-                <th style="width: 220px; text-align: center; vertical-align: middle; font-weight: 700;">Kondisi Umum Pasien</th>
+                <th style="width: 175px; text-align: center; vertical-align: middle; font-weight: 700;">Tanggal &amp; Jam</th>
+                <th style="width: 210px; text-align: center; vertical-align: middle; font-weight: 700;">Kondisi Umum Pasien</th>
                 <th style="width: 170px; text-align: center; vertical-align: middle; font-weight: 700;">Skor Nyeri (0 - 10)</th>
-                <th style="min-width: 280px; text-align: center; vertical-align: middle; font-weight: 700;">Manajemen Nyeri &amp; Intervensi</th>
-                <th style="width: 190px; text-align: center; vertical-align: middle; font-weight: 700;">Nama &amp; Paraf Petugas</th>
+                <th style="min-width: 260px; text-align: center; vertical-align: middle; font-weight: 700;">Manajemen Nyeri &amp; Intervensi</th>
+                <th style="width: 235px; text-align: center; vertical-align: middle; font-weight: 700;">Petugas &amp; TTE</th>
                 <th style="width: 50px; text-align: center; vertical-align: middle; font-weight: 700;">#</th>
               </tr>
             </thead>
@@ -157,7 +183,7 @@
                 {loop: $data.form_data.asesmen}
                 <tr class="asesmen-row">
                   <td style="padding: 8px 8px; vertical-align: top;">
-                    <input type="text" class="form-control input-sm _tgl_jam" value="{$value.tgl_jam}" placeholder="YYYY-MM-DD HH:MM" style="height: 34px; border-radius: 6px; font-weight: 600;">
+                    <input type="text" class="form-control input-sm _tgl_jam" value="{if: !empty($value.tgl_jam)}{$value.tgl_jam}{else}{?=date('Y-m-d H:i')?}{/if}" data-auto-time="{if: !empty($value.is_new_row)}1{else}0{/if}" placeholder="YYYY-MM-DD HH:MM" style="height: 34px; border-radius: 6px; font-weight: 600;">
                   </td>
                   <td style="padding: 8px 8px; vertical-align: top;">
                     <input type="text" class="form-control input-sm _kondisi_umum" value="{$value.kondisi_umum}" placeholder="Tampak tenang / meringis / gelisah" style="height: 34px; border-radius: 6px;">
@@ -182,7 +208,34 @@
                     <textarea class="form-control input-sm _manajemen" rows="2" placeholder="Tindakan farmakologi (analgetik) &amp; non-farmakologi (relaksasi, kompres)" style="font-size: 12px; border-radius: 6px; resize: vertical;">{$value.manajemen}</textarea>
                   </td>
                   <td style="padding: 8px 8px; vertical-align: top;">
-                    <input type="text" class="form-control input-sm _paraf_nama" value="{$value.paraf_nama}" placeholder="Nama perawat/dokter" style="height: 34px; border-radius: 6px;">
+                    <input type="text" class="form-control input-sm _paraf_nama" value="{$value.paraf_nama}" placeholder="Nama perawat/dokter" style="height: 32px; border-radius: 6px;">
+                    <input type="hidden" class="_row_tte_hash" id="tte_hash_row_{$key}" value="{$value.tte_petugas}">
+                    <input type="hidden" class="_row_tte_signer" value="{$value.tte_signer}">
+                    <div class="rj07-row-tte-box">
+                      <div class="_row_tte_container" id="sign_container_rj07_row_{$key}" style="margin-bottom: 5px; font-size: 11px;">
+                        {if: !empty($value.tte_info.hash)}
+                          <div class="rsgm-tte-verified-card">
+                            <div style="color: #16a34a; font-weight: 700; font-size: 10.5px;"><i class="fa fa-check-circle"></i> TTE Terverifikasi</div>
+                            <div style="font-weight: 700; font-size: 10.5px; color: #0f172a;">{if: !empty($value.tte_info.signer_name)}{$value.tte_info.signer_name}{else}{$value.paraf_nama}{/if}</div>
+                            <div style="font-size: 8.5px; color: #15803d; font-family: monospace;">{?=substr($value['tte_info']['hash'], 0, 14)?}...</div>
+                            <a href="{?=url(['esignature', 'verify', $value['tte_info']['hash']])?}" target="_blank" style="font-size: 9.5px; color: #2563eb; text-decoration: underline;">Lihat Sertifikat</a>
+                          </div>
+                        {else}
+                          <span class="text-muted" style="font-size: 10.5px; font-style: italic;"><i class="fa fa-shield"></i> Belum ditandatangani</span>
+                        {/if}
+                      </div>
+                      <button type="button" class="btn btn-xs btn-primary btn-block btn-tte-rme btn-tte-row"
+                        id="btn_tte_rj07_row_{$key}"
+                        data-ref_type="rj07_petugas_row_{$key}"
+                        data-ref_id="{$data.no_rawat}"
+                        data-signer_name="{if: !empty($value.paraf_nama)}{$value.paraf_nama}{elseif: !empty($current_user_name)}{$current_user_name}{/if}"
+                        data-signer_role="Petugas Asesmen Nyeri"
+                        data-target_input="tte_hash_row_{$key}"
+                        data-container_id="sign_container_rj07_row_{$key}"
+                        style="border-radius: 5px; font-weight: 600;">
+                        <i class="fa fa-lock"></i> {if: !empty($value.tte_info.hash)}TTE Ulang{else}Tanda Tangani (TTE){/if}
+                      </button>
+                    </div>
                   </td>
                   <td style="padding: 8px 8px; vertical-align: top; text-align: center;">
                     <button type="button" class="btn btn-xs btn-danger btnDel" title="Hapus Baris" style="width: 28px; height: 28px; border-radius: 4px; padding: 0; line-height: 26px;">
@@ -194,7 +247,7 @@
               {else}
                 <tr class="asesmen-row">
                   <td style="padding: 8px 8px; vertical-align: top;">
-                    <input type="text" class="form-control input-sm _tgl_jam" value="{?=date('Y-m-d H:i')?}" placeholder="YYYY-MM-DD HH:MM" style="height: 34px; border-radius: 6px; font-weight: 600;">
+                    <input type="text" class="form-control input-sm _tgl_jam" value="{?=date('Y-m-d H:i')?}" data-auto-time="1" placeholder="YYYY-MM-DD HH:MM" style="height: 34px; border-radius: 6px; font-weight: 600;">
                   </td>
                   <td style="padding: 8px 8px; vertical-align: top;">
                     <input type="text" class="form-control input-sm _kondisi_umum" placeholder="Tampak meringis menahan sakit" style="height: 34px; border-radius: 6px;">
@@ -219,7 +272,25 @@
                     <textarea class="form-control input-sm _manajemen" rows="2" placeholder="Edukasi teknik relaksasi nafas dalam, kompres dingin pada pipi kanan, pemberian analgetik Asam Mefenamat 500mg p.o." style="font-size: 12px; border-radius: 6px; resize: vertical;"></textarea>
                   </td>
                   <td style="padding: 8px 8px; vertical-align: top;">
-                    <input type="text" class="form-control input-sm _paraf_nama" placeholder="Nama perawat/dokter" style="height: 34px; border-radius: 6px;">
+                    <input type="text" class="form-control input-sm _paraf_nama" value="{$current_user_name}" placeholder="Nama perawat/dokter" style="height: 32px; border-radius: 6px;">
+                    <input type="hidden" class="_row_tte_hash" id="tte_hash_row_0" value="">
+                    <input type="hidden" class="_row_tte_signer" value="">
+                    <div class="rj07-row-tte-box">
+                      <div class="_row_tte_container" id="sign_container_rj07_row_0" style="margin-bottom: 5px; font-size: 11px;">
+                        <span class="text-muted" style="font-size: 10.5px; font-style: italic;"><i class="fa fa-shield"></i> Belum ditandatangani</span>
+                      </div>
+                      <button type="button" class="btn btn-xs btn-primary btn-block btn-tte-rme btn-tte-row"
+                        id="btn_tte_rj07_row_0"
+                        data-ref_type="rj07_petugas_row_0"
+                        data-ref_id="{$data.no_rawat}"
+                        data-signer_name="{$current_user_name}"
+                        data-signer_role="Petugas Asesmen Nyeri"
+                        data-target_input="tte_hash_row_0"
+                        data-container_id="sign_container_rj07_row_0"
+                        style="border-radius: 5px; font-weight: 600;">
+                        <i class="fa fa-lock"></i> Tanda Tangani (TTE)
+                      </button>
+                    </div>
                   </td>
                   <td style="padding: 8px 8px; vertical-align: top; text-align: center;">
                     <button type="button" class="btn btn-xs btn-danger btnDel" title="Hapus Baris" style="width: 28px; height: 28px; border-radius: 4px; padding: 0; line-height: 26px;">
@@ -301,38 +372,70 @@ $(document).ready(function() {
   $('#no_rawat').on('blur change', fetchPatient);
   $('#btn_cari_pasien').on('click', fetchPatient);
 
-  // 2. TAMBAH BARIS
-  function addRow() {
-    var nowStr = getCurrentDateTime();
-    var tr = [
+  // 2. HELPER JAM BERJALAN & TAMBAH BARIS
+  var rowUidCounter = 1;
+  var scoreOptionsDef = [
+    { val: '', label: '- Pilih Skor -', style: '' },
+    { val: '0', label: '0 - Tidak Nyeri', style: 'background: #f0fdf4; color: #166534;' },
+    { val: '1', label: '1 - Nyeri Sangat Ringan', style: 'background: #fefce8; color: #854d0e;' },
+    { val: '2', label: '2 - Nyeri Ringan', style: 'background: #fefce8; color: #854d0e;' },
+    { val: '3', label: '3 - Nyeri Terasa Mengganggu', style: 'background: #fefce8; color: #854d0e;' },
+    { val: '4', label: '4 - Nyeri Sedang (Dapat Ditahan)', style: 'background: #fff7ed; color: #9a3412;' },
+    { val: '5', label: '5 - Nyeri Sedang (Menyita Perhatian)', style: 'background: #fff7ed; color: #9a3412;' },
+    { val: '6', label: '6 - Nyeri Sedang Kuat', style: 'background: #fff7ed; color: #9a3412;' },
+    { val: '7', label: '7 - Nyeri Berat (Sulit Beraktivitas)', style: 'background: #fef2f2; color: #991b1b;' },
+    { val: '8', label: '8 - Nyeri Sangat Berat', style: 'background: #fef2f2; color: #991b1b;' },
+    { val: '9', label: '9 - Nyeri Tak Tertahankan', style: 'background: #fef2f2; color: #991b1b;' },
+    { val: '10', label: '10 - Nyeri Paling Ekstrem', style: 'background: #450a0a; color: #ffffff;' }
+  ];
+
+  function buildRowHtml(opts) {
+    opts = opts || {};
+    var uid = 'u' + (rowUidCounter++);
+    var nowStr = opts.tgl_jam || getCurrentDateTime();
+    var autoAttr = opts.autoTime === false ? '0' : '1';
+    var defaultNama = opts.paraf_nama !== undefined ? opts.paraf_nama : (window._RME_CURRENT_USER_NAME || '');
+    var noRawatVal = $('#no_rawat').val() || '';
+    var selHtml = scoreOptionsDef.map(function(o) {
+      var selectedAttr = (String(opts.skor_nyeri || '') === o.val && o.val !== '') ? ' selected' : '';
+      var styleAttr = o.style ? ' style="' + o.style + '"' : '';
+      return '<option value="' + o.val + '"' + selectedAttr + styleAttr + '>' + o.label + '</option>';
+    }).join('');
+
+    return [
       '<tr class="asesmen-row">',
       '  <td style="padding: 8px 8px; vertical-align: top;">',
-      '    <input type="text" class="form-control input-sm _tgl_jam" value="' + nowStr + '" placeholder="YYYY-MM-DD HH:MM" style="height: 34px; border-radius: 6px; font-weight: 600;">',
+      '    <input type="text" class="form-control input-sm _tgl_jam" value="' + nowStr + '" data-auto-time="' + autoAttr + '" placeholder="YYYY-MM-DD HH:MM" style="height: 34px; border-radius: 6px; font-weight: 600;">',
       '  </td>',
       '  <td style="padding: 8px 8px; vertical-align: top;">',
-      '    <input type="text" class="form-control input-sm _kondisi_umum" placeholder="Kondisi umum pasien" style="height: 34px; border-radius: 6px;">',
+      '    <input type="text" class="form-control input-sm _kondisi_umum" value="' + (opts.kondisi_umum || '') + '" placeholder="Kondisi umum pasien" style="height: 34px; border-radius: 6px;">',
       '  </td>',
       '  <td style="padding: 8px 8px; vertical-align: top;">',
-      '    <select class="form-control input-sm _skor_nyeri" style="height: 34px; border-radius: 6px; font-weight: 700;">',
-      '      <option value="">- Pilih Skor -</option>',
-      '      <option value="0" style="background: #f0fdf4; color: #166534;">0 - Tidak Nyeri</option>',
-      '      <option value="1" style="background: #fefce8; color: #854d0e;">1 - Nyeri Sangat Ringan</option>',
-      '      <option value="2" style="background: #fefce8; color: #854d0e;">2 - Nyeri Ringan</option>',
-      '      <option value="3" style="background: #fefce8; color: #854d0e;">3 - Nyeri Terasa Mengganggu</option>',
-      '      <option value="4" style="background: #fff7ed; color: #9a3412;">4 - Nyeri Sedang (Dapat Ditahan)</option>',
-      '      <option value="5" style="background: #fff7ed; color: #9a3412;">5 - Nyeri Sedang (Menyita Perhatian)</option>',
-      '      <option value="6" style="background: #fff7ed; color: #9a3412;">6 - Nyeri Sedang Kuat</option>',
-      '      <option value="7" style="background: #fef2f2; color: #991b1b;">7 - Nyeri Berat (Sulit Beraktivitas)</option>',
-      '      <option value="8" style="background: #fef2f2; color: #991b1b;">8 - Nyeri Sangat Berat</option>',
-      '      <option value="9" style="background: #fef2f2; color: #991b1b;">9 - Nyeri Tak Tertahankan</option>',
-      '      <option value="10" style="background: #450a0a; color: #ffffff;">10 - Nyeri Paling Ekstrem</option>',
-      '    </select>',
+      '    <select class="form-control input-sm _skor_nyeri" style="height: 34px; border-radius: 6px; font-weight: 700;">' + selHtml + '</select>',
       '  </td>',
       '  <td style="padding: 8px 8px; vertical-align: top;">',
-      '    <textarea class="form-control input-sm _manajemen" rows="2" placeholder="Tindakan medis / analgetik &amp; non-farmakologi" style="font-size: 12px; border-radius: 6px; resize: vertical;"></textarea>',
+      '    <textarea class="form-control input-sm _manajemen" rows="2" placeholder="Tindakan medis / analgetik &amp; non-farmakologi" style="font-size: 12px; border-radius: 6px; resize: vertical;">' + (opts.manajemen || '') + '</textarea>',
       '  </td>',
       '  <td style="padding: 8px 8px; vertical-align: top;">',
-      '    <input type="text" class="form-control input-sm _paraf_nama" placeholder="Nama perawat/dokter" style="height: 34px; border-radius: 6px;">',
+      '    <input type="text" class="form-control input-sm _paraf_nama" value="' + defaultNama + '" placeholder="Nama perawat/dokter" style="height: 32px; border-radius: 6px;">',
+      '    <input type="hidden" class="_row_tte_hash" id="tte_hash_row_' + uid + '" value="">',
+      '    <input type="hidden" class="_row_tte_signer" value="">',
+      '    <div class="rj07-row-tte-box">',
+      '      <div class="_row_tte_container" id="sign_container_rj07_row_' + uid + '" style="margin-bottom: 5px; font-size: 11px;">',
+      '        <span class="text-muted" style="font-size: 10.5px; font-style: italic;"><i class="fa fa-shield"></i> Belum ditandatangani</span>',
+      '      </div>',
+      '      <button type="button" class="btn btn-xs btn-primary btn-block btn-tte-rme btn-tte-row"',
+      '        id="btn_tte_rj07_row_' + uid + '"',
+      '        data-ref_type="rj07_petugas_row_' + uid + '"',
+      '        data-ref_id="' + noRawatVal + '"',
+      '        data-signer_name="' + defaultNama + '"',
+      '        data-signer_role="Petugas Asesmen Nyeri"',
+      '        data-target_input="tte_hash_row_' + uid + '"',
+      '        data-container_id="sign_container_rj07_row_' + uid + '"',
+      '        style="border-radius: 5px; font-weight: 600;">',
+      '        <i class="fa fa-lock"></i> Tanda Tangani (TTE)',
+      '      </button>',
+      '    </div>',
       '  </td>',
       '  <td style="padding: 8px 8px; vertical-align: top; text-align: center;">',
       '    <button type="button" class="btn btn-xs btn-danger btnDel" title="Hapus Baris" style="width: 28px; height: 28px; border-radius: 4px; padding: 0; line-height: 26px;">',
@@ -341,7 +444,27 @@ $(document).ready(function() {
       '  </td>',
       '</tr>'
     ].join('');
-    $('#tblAsesmen tbody').append(tr);
+  }
+
+  function syncAutoDateTime() {
+    var nowStr = getCurrentDateTime();
+    $('._tgl_jam').each(function() {
+      var val = ($(this).val() || '').trim();
+      if ($(this).attr('data-auto-time') === '1' || val === '') {
+        $(this).val(nowStr).attr('data-auto-time', '1');
+      }
+    });
+  }
+
+  syncAutoDateTime();
+  setInterval(syncAutoDateTime, 15000);
+
+  $(document).on('input change', '._tgl_jam', function() {
+    $(this).attr('data-auto-time', '0');
+  });
+
+  function addRow() {
+    $('#tblAsesmen tbody').append(buildRowHtml());
   }
 
   $('#btnAdd, #btnAddBottom').on('click', addRow);
@@ -367,48 +490,63 @@ $(document).ready(function() {
 
     var nowStr = getCurrentDateTime();
     $('#tblAsesmen tbody').html([
-      '<tr class="asesmen-row">',
-      '  <td style="padding: 8px 8px; vertical-align: top;"><input type="text" class="form-control input-sm _tgl_jam" value="' + nowStr + '" style="height: 34px; border-radius: 6px; font-weight: 600;"></td>',
-      '  <td style="padding: 8px 8px; vertical-align: top;"><input type="text" class="form-control input-sm _kondisi_umum" value="Tampak meringis memegang pipi kanan" style="height: 34px; border-radius: 6px;"></td>',
-      '  <td style="padding: 8px 8px; vertical-align: top;">',
-      '    <select class="form-control input-sm _skor_nyeri" style="height: 34px; border-radius: 6px; font-weight: 700;">',
-      '      <option value="5" selected>5 - Nyeri Sedang (Menyita Perhatian)</option>',
-      '    </select>',
-      '  </td>',
-      '  <td style="padding: 8px 8px; vertical-align: top;"><textarea class="form-control input-sm _manajemen" rows="2" style="font-size: 12px; border-radius: 6px;">Edukasi nafas dalam, kompres dingin pipi kanan, pemberian Asam Mefenamat 500mg tab p.o.</textarea></td>',
-      '  <td style="padding: 8px 8px; vertical-align: top;"><input type="text" class="form-control input-sm _paraf_nama" value="Siti Rahmah, S.Kep., Ners" style="height: 34px; border-radius: 6px;"></td>',
-      '  <td style="padding: 8px 8px; vertical-align: top; text-align: center;"><button type="button" class="btn btn-xs btn-danger btnDel" style="width: 28px; height: 28px; border-radius: 4px; padding: 0;"><i class="fa fa-times"></i></button></td>',
-      '</tr>',
-      '<tr class="asesmen-row">',
-      '  <td style="padding: 8px 8px; vertical-align: top;"><input type="text" class="form-control input-sm _tgl_jam" value="' + nowStr + '" style="height: 34px; border-radius: 6px; font-weight: 600;"></td>',
-      '  <td style="padding: 8px 8px; vertical-align: top;"><input type="text" class="form-control input-sm _kondisi_umum" value="Tampak rileks, kooperatif, senyum" style="height: 34px; border-radius: 6px;"></td>',
-      '  <td style="padding: 8px 8px; vertical-align: top;">',
-      '    <select class="form-control input-sm _skor_nyeri" style="height: 34px; border-radius: 6px; font-weight: 700;">',
-      '      <option value="1" selected>1 - Nyeri Sangat Ringan</option>',
-      '    </select>',
-      '  </td>',
-      '  <td style="padding: 8px 8px; vertical-align: top;"><textarea class="form-control input-sm _manajemen" rows="2" style="font-size: 12px; border-radius: 6px;">Evaluasi 1 jam post obat: nyeri berkurang drastis, pasien diizinkan pulang dengan edukasi obat minum teratur</textarea></td>',
-      '  <td style="padding: 8px 8px; vertical-align: top;"><input type="text" class="form-control input-sm _paraf_nama" value="Siti Rahmah, S.Kep., Ners" style="height: 34px; border-radius: 6px;"></td>',
-      '  <td style="padding: 8px 8px; vertical-align: top; text-align: center;"><button type="button" class="btn btn-xs btn-danger btnDel" style="width: 28px; height: 28px; border-radius: 4px; padding: 0;"><i class="fa fa-times"></i></button></td>',
-      '</tr>'
+      buildRowHtml({
+        tgl_jam: nowStr,
+        kondisi_umum: 'Tampak meringis memegang pipi kanan',
+        skor_nyeri: '5',
+        manajemen: 'Edukasi nafas dalam, kompres dingin pipi kanan, pemberian Asam Mefenamat 500mg tab p.o.',
+        paraf_nama: 'Siti Rahmah, S.Kep., Ners'
+      }),
+      buildRowHtml({
+        tgl_jam: nowStr,
+        kondisi_umum: 'Tampak rileks, kooperatif, senyum',
+        skor_nyeri: '1',
+        manajemen: 'Evaluasi 1 jam post obat: nyeri berkurang drastis, pasien diizinkan pulang dengan edukasi obat minum teratur',
+        paraf_nama: 'Siti Rahmah, S.Kep., Ners'
+      })
     ].join(''));
   });
 
-  // 4. SERIALISASI SUBMIT
-  $('#rj07Form').on('submit', function() {
+  // 4. SINKRONISASI PETUGAS PER BARIS & SERIALISASI SUBMIT
+  $(document).on('input change', '._paraf_nama', function() {
+    var $row = $(this).closest('tr');
+    var nama = ($(this).val() || '').trim() || window._RME_CURRENT_USER_NAME || 'Petugas RS';
+    $row.find('.btn-tte-row').attr('data-signer_name', nama);
+  });
+
+  $(document).on('mousedown click', '.btn-tte-row', function() {
+    var $row = $(this).closest('tr');
+    var nama = ($row.find('._paraf_nama').val() || '').trim() || window._RME_CURRENT_USER_NAME || 'Petugas RS';
+    var nr = ($('#no_rawat').val() || '').trim();
+    $(this).attr('data-signer_name', nama);
+    if (nr) {
+      $(this).attr('data-ref_id', nr);
+    }
+  });
+
+  $('#rj07Form').on('submit rme:beforeSave', function() {
     var fd = {
       asesmen: []
     };
     $('.asesmen-row').each(function() {
-      var tgl = $(this).find('._tgl_jam').val();
-      var skor = $(this).find('._skor_nyeri').val();
-      if (tgl || skor) {
+      var $row = $(this);
+      var tgl = $row.find('._tgl_jam').val();
+      var kondisi = $row.find('._kondisi_umum').val() || '';
+      var skor = $row.find('._skor_nyeri').val();
+      var manajemen = $row.find('._manajemen').val() || '';
+      var tteHash = $row.find('._row_tte_hash').val() || '';
+      var signerCardNama = $row.find('._row_tte_container .rsgm-tte-verified-card > div').not('[id^="qr_tte_"]').eq(1).text() || '';
+      var tteSigner = ($row.find('._row_tte_signer').val() || signerCardNama || '').trim();
+      var parafNama = ($row.find('._paraf_nama').val() || '').trim();
+      if (tgl || skor || kondisi || manajemen || tteHash) {
         fd.asesmen.push({
           tgl_jam: tgl || '',
-          kondisi_umum: $(this).find('._kondisi_umum').val() || '',
+          kondisi_umum: kondisi,
           skor_nyeri: skor || '',
-          manajemen: $(this).find('._manajemen').val() || '',
-          paraf_nama: $(this).find('._paraf_nama').val() || ''
+          manajemen: manajemen,
+          paraf_nama: parafNama || tteSigner,
+          tte_petugas: tteHash,
+          tte_signer: tteSigner
         });
       }
     });

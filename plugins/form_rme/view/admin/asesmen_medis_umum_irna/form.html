@@ -328,6 +328,9 @@
                   <div class="col-md-5">
                     <label class="rsgm-compact-label">Skala Nyeri NRS (0 - 10): <b id="skala_val" style="color:#dc2626; font-size:14px;">{if: !empty($data.skala_nyeri)}{$data.skala_nyeri}{else}0{/if}</b></label>
                     <input type="range" name="skala_nyeri" id="skala_nyeri_range" min="0" max="10" value="{if: !empty($data.skala_nyeri)}{$data.skala_nyeri}{else}0{/if}" style="width: 100%; cursor: pointer;">
+                    <div style="margin-top: 6px; padding: 4px; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center;">
+                      <img src="{?=url('assets/img/rj04_skala_nyeri.png')?}" alt="Skala Nyeri 0-10" style="max-width: 100%; height: auto; max-height: 90px; display: block; margin: 0 auto;">
+                    </div>
                   </div>
                 </div>
               </div>

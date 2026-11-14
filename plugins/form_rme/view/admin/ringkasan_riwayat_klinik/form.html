@@ -102,16 +102,41 @@
                                 </div>
                             </div>
 
-                            <!-- Paraf Canvas DPJP -->
+                            <!-- TTE DPJP -->
                             <div class="col-sm-5">
-                                <label class="rsgm-compact-label"><i class="fa fa-pencil text-primary"></i> Paraf Digital DPJP</label>
-                                <div style="border: 2px dashed #93c5fd; border-radius: 6px; background: #fafafa; height: 80px; position: relative;">
-                                    <canvas id="pad_dpjp" width="250" height="80" style="touch-action: none; width: 100%; height: 100%; cursor: crosshair;"></canvas>
+                                <label class="rsgm-compact-label"><i class="fa fa-lock text-primary"></i> TTE / Tanda Tangan DPJP</label>
+                                <div id="sign_container_dpjp" style="border: 1px solid #bfdbfe; border-radius: 6px; background: #fafafa; min-height: 80px; display: flex; align-items: center; justify-content: center; padding: 6px; margin-bottom: 6px;">
+                                    {if: !empty($default_ttd)}
+                                        {if: strlen($default_ttd) == 64}
+                                            <div class="rsgm-tte-verified-card">
+                                                <i class="fa fa-check-circle text-success fa-2x"></i>
+                                                <div style="font-weight: 700; color: #166534; font-size: 11px; margin-top: 4px;">TERVERIFIKASI TTE</div>
+                                                <div style="font-size: 9px; color: #15803d; font-family: monospace;">{?=substr($default_ttd, 0, 16)?}...</div>
+                                                <a href="{?=url(['esignature', 'verify', $default_ttd])?}" target="_blank" class="btn btn-xs btn-link" style="padding: 0; font-size: 10px;">Lihat Sertifikat</a>
+                                            </div>
+                                        {else}
+                                            <img src="{$default_ttd}" style="max-height: 70px; max-width: 100%;">
+                                        {/if}
+                                    {else}
+                                        <div style="color: #94a3b8; font-size: 12px; font-style: italic; text-align: center;">
+                                            <i class="fa fa-user-md fa-2x" style="display: block; margin-bottom: 4px; color: #cbd5e1;"></i>
+                                            Belum Ditandatangani DPJP
+                                        </div>
+                                    {/if}
                                 </div>
-                                <input type="hidden" id="global_ttd_dpjp" value="{$default_ttd}">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
-                                    <button type="button" class="btn btn-default btn-xs" id="clear_dpjp" style="border-radius: 4px;"><i class="fa fa-eraser"></i> Hapus</button>
-                                    <span id="st_dpjp" class="small text-muted">{if: !empty($default_ttd)}<i class="fa fa-check text-success"></i> Tersimpan{else}Belum ada{/if}</span>
+                                <input type="hidden" id="global_ttd_dpjp" name="ttd_dpjp" value="{$default_ttd}">
+                                <button type="button" class="btn btn-primary btn-sm btn-tte-rme"
+                                    data-ref_type="ringkasan_klinik"
+                                    data-ref_id="{$data.no_rawat}"
+                                    data-signer_name="{$data.dokter_dpjp}"
+                                    data-signer_role="Dokter DPJP"
+                                    data-target_input="global_ttd_dpjp"
+                                    data-container_id="sign_container_dpjp"
+                                    style="border-radius: 6px; font-weight: 600; width: 100%;">
+                                    <i class="fa fa-lock"></i> {if: !empty($default_ttd)}Tanda Tangani Ulang (TTE DPJP){else}Tanda Tangani (TTE DPJP){/if}
+                                </button>
+                                <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
+                                    <i class="fa fa-shield text-primary"></i> Verifikasi TTE menggunakan kata sandi SIMRS
                                 </div>
                             </div>
                         </div>
@@ -230,7 +255,13 @@ $(document).ready(function() {
     }
 
     $('#btn_cari_pasien').on('click', loadPasienRingkasan);
+    function syncRingkasanTteRefId() {
+        var nr = $('#no_rawat').val() ? $('#no_rawat').val().trim() : '';
+        $('.btn-tte-rme[data-ref_type="ringkasan_klinik"]').attr('data-ref_id', nr);
+    }
+    $('#no_rawat').on('input change blur', syncRingkasanTteRefId);
     $('#no_rawat').on('blur change', loadPasienRingkasan);
+    syncRingkasanTteRefId();
 
     $('#btnAddRow').click(function() {
         var tr = '<tr class="riwayat-row">' +

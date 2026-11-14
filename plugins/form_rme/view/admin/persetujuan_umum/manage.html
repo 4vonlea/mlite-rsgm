@@ -1,0 +1,97 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="btn-group pull-right" style="margin-top:-5px;">
+                    <a href="{?=url([ADMIN, 'form_rme', 'persetujuanumumcetak'])?}" target="_blank" class="btn btn-default btn-sm" title="Cetak Blangko Kosongan">
+                        <i class="fa fa-print"></i> Blangko Kosongan
+                    </a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'persetujuanumumcetak', '?pdf=1'])?}" target="_blank" class="btn btn-danger btn-sm" title="PDF Blangko Kosongan">
+                        <i class="fa fa-file-pdf-o"></i> PDF Kosongan
+                    </a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'persetujuanumumform'])?}" class="btn btn-primary btn-sm">
+                        <i class="fa fa-plus"></i> Tambah Persetujuan Umum
+                    </a>
+                </div>
+                <h3 class="panel-title">
+                    <i class="fa fa-file-text-o"></i> <strong>RM.RJ 02 - FORMULIR PERSETUJUAN UMUM (GENERAL CONSENT)</strong>
+                </h3>
+            </div>
+            <div class="panel-body">
+                <form method="GET" action="{?=url([ADMIN, 'form_rme', 'persetujuanumummanage'])?}" class="form-inline m-b-md" style="margin-bottom: 15px;">
+                    <div class="form-group">
+                        <input type="text" name="cari" class="form-control input-sm" placeholder="No. Rawat / No. RM / Nama" value="{$cari}">
+                    </div>
+                    <button type="submit" class="btn btn-default btn-sm"><i class="fa fa-search"></i> Cari</button>
+                    {if: !empty($cari)}
+                    <a href="{?=url([ADMIN, 'form_rme', 'persetujuanumummanage'])?}" class="btn btn-link btn-sm">Reset</a>
+                    {/if}
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover">
+                        <thead>
+                            <tr class="info">
+                                <th width="4%" class="text-center">No</th>
+                                <th width="14%">No. Rawat</th>
+                                <th width="9%">No. RM</th>
+                                <th width="19%">Nama Pasien</th>
+                                <th width="17%">Penandatangan</th>
+                                <th width="11%" class="text-center">Tgl Persetujuan</th>
+                                <th width="8%" class="text-center">TTD Pasien</th>
+                                <th width="8%" class="text-center">TTE Petugas</th>
+                                <th width="10%" class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {if: !empty($data)}
+                            {loop: $data}
+                            <tr>
+                                <td class="text-center">{$key + 1}</td>
+                                <td><strong>{$value.no_rawat}</strong></td>
+                                <td>{$value.no_rkm_medis}</td>
+                                <td>{$value.nama_pasien}</td>
+                                <td>
+                                    <strong>{$value.penandatangan_nama}</strong>
+                                    {if: !empty($value.penandatangan_hubungan)}
+                                    <br><small class="text-muted">{$value.penandatangan_hubungan}</small>
+                                    {/if}
+                                </td>
+                                <td class="text-center">{$value.tanggal_persetujuan}</td>
+                                <td class="text-center">
+                                    {if: !empty($value.ttd_pasien)}
+                                    <span class="label label-success" title="TTD Pasien Tersimpan"><i class="fa fa-check"></i> Ada</span>
+                                    {else}
+                                    <span class="label label-default">Belum</span>
+                                    {/if}
+                                </td>
+                                <td class="text-center">
+                                    {if: !empty($value.ttd_petugas)}
+                                    <span class="label label-primary" title="TTE Petugas Terverifikasi"><i class="fa fa-lock"></i> TTE</span>
+                                    {else}
+                                    <span class="label label-default">Belum</span>
+                                    {/if}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-xs">
+                                        <a href="{?=url([ADMIN, 'form_rme', 'persetujuanumumcetak'])?}?id={$value.id}" target="_blank" class="btn btn-default" title="Cetak HTML"><i class="fa fa-print"></i></a>
+                                        <a href="{?=url([ADMIN, 'form_rme', 'persetujuanumumcetak'])?}?id={$value.id}&pdf=1" target="_blank" class="btn btn-danger" title="Download PDF"><i class="fa fa-file-pdf-o"></i></a>
+                                        <a href="{?=url([ADMIN, 'form_rme', 'persetujuanumumform'])?}?id={$value.id}" class="btn btn-warning" title="Edit Data"><i class="fa fa-edit"></i></a>
+                                        <a href="{?=url([ADMIN, 'form_rme', 'persetujuanumumhapus'])?}?id={$value.id}" onclick="return confirm('Hapus Formulir Persetujuan Umum ini?')" class="btn btn-danger" title="Hapus Data"><i class="fa fa-trash"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {/loop}
+                            {else}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted">Belum ada data Formulir Persetujuan Umum (RM.RJ 02).</td>
+                            </tr>
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

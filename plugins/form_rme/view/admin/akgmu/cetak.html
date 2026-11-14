@@ -4,24 +4,40 @@
 <meta charset="utf-8">
 <title>RM.GD 4 - Asesmen Keperawatan Unit Gawat Darurat</title>
 <style>
+    {if: empty($is_mpdf)}
     @page { size: A4; margin: 8mm; }
-    body { font-family: Arial, sans-serif; font-size: 9.5px; line-height: 1.25; margin: 0; padding: 0; color: #000; }
-    .container { width: 100%; max-width: 194mm; margin: 0 auto; border: 1.5px solid #000; box-sizing: border-box; }
-    .container-noborder { width: 100%; max-width: 194mm; margin: 0 auto; box-sizing: border-box; }
+    @media screen {
+        body { background-color: #f4f6f9 !important; padding: 15px 0 !important; }
+        .page-sheet { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; width: 210mm; margin: 0 auto 20px auto !important; padding: 8mm 8mm !important; box-sizing: border-box; }
+    }
+    .no-print-toolbar { width: 100%; max-width: 210mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
+    .btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-decoration: none; display: inline-block; }
+    .btn-print { background: #27ae60; color: #fff; }
+    .btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
+    .btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
+    @media print {
+        .no-print-toolbar { display: none !important; }
+        body { background: transparent !important; padding: 0 !important; }
+        .page-sheet { box-shadow: none !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    }
+    {/if}
+    body { font-family: Arial, sans-serif; font-size: {if: !empty($is_mpdf)}8.5px{else}9.5px{/if}; line-height: 1.2; margin: 0; padding: 0; color: #000; }
+    .container { width: 100%; {if: empty($is_mpdf)}max-width: 194mm; box-sizing: border-box;{/if} margin: 0 auto; border: 1.5px solid #000; }
+    .container-noborder { width: 100%; {if: empty($is_mpdf)}max-width: 194mm; box-sizing: border-box;{/if} margin: 0 auto; }
 
     /* Header Table */
     .table-header { width: 100%; border-collapse: collapse; }
-    .table-header td { border: 1px solid #000; padding: 4px 6px; vertical-align: top; }
+    .table-header td { border: 1px solid #000; padding: 3px 5px; vertical-align: top; }
 
     /* Input Boxes (RM) */
     .box-rm { display: inline-block; width: 14px; height: 15px; border: 1px solid #000; margin-left: 1px; text-align: center; font-weight: bold; line-height: 15px; font-size: 10px; }
 
     /* Form Sections */
-    .section-title { font-weight: bold; font-size: 11.5px; text-align: center; background-color: #fff; padding: 4px; border-top: 1px solid #000; border-bottom: 1px solid #000; }
-    .sub-title { font-size: 9px; text-align: center; font-weight: normal; margin-top: 1px; }
+    .section-title { font-weight: bold; font-size: 11px; text-align: center; background-color: #fff; padding: 3px; border-top: 1px solid #000; border-bottom: 1px solid #000; }
+    .sub-title { font-size: 8.5px; text-align: center; font-weight: normal; margin-top: 1px; }
 
     .table-body { width: 100%; border-collapse: collapse; }
-    .table-body td { border: 1px solid #000; padding: 3px 5px; vertical-align: top; }
+    .table-body td { border: 1px solid #000; padding: 2px 4px; vertical-align: top; }
 
     /* Checkbox */
     .cb { display: inline-block; width: 9px; height: 9px; border: 1px solid #000; vertical-align: middle; margin-right: 2px; font-size: 8.5px; line-height: 9px; text-align: center; font-weight: bold; }
@@ -39,30 +55,13 @@
     .triase-hitam { background-color: #222; color: #fff; }
 
     .pain-scale-table { width: 100%; border-collapse: collapse; text-align: center; margin-top: 3px; }
-    .pain-scale-table td { border: 1px solid #000; padding: 1px 2px; font-size: 8.5px; }
+    .pain-scale-table td { border: 1px solid #000; padding: 1px 2px; font-size: 8px; }
     .pain-active { background-color: #ddd; font-weight: bold; border: 1.5px solid #000 !important; }
 
-    .flacc-mini-table { width: 100%; border-collapse: collapse; margin-top: 3px; }
+    .flacc-mini-table { width: 100%; border-collapse: collapse; margin-top: 2px; }
     .flacc-mini-table th, .flacc-mini-table td { border: 1px solid #000; padding: 1px 3px; font-size: 8px; }
 
     .page-break { page-break-after: always; }
-
-{if: empty($is_mpdf)}
-@media screen {
-    body { background-color: #f4f6f9 !important; padding: 15px 0 !important; }
-    .page-sheet { background: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; width: 210mm; margin: 0 auto 20px auto !important; padding: 8mm 8mm !important; box-sizing: border-box; }
-}
-{/if}
-.no-print-toolbar { width: 100%; max-width: 210mm; margin: 0 auto 12px auto; padding: 8px 14px; background: #2c3e50; color: #fff; border-radius: 4px; box-sizing: border-box; }
-.btn-toolbar { padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-decoration: none; display: inline-block; }
-.btn-print { background: #27ae60; color: #fff; }
-.btn-pdf { background: #e74c3c; color: #fff; margin-left: 5px; }
-.btn-close { background: #7f8c8d; color: #fff; margin-left: 5px; }
-@media print {
-    .no-print-toolbar { display: none !important; }
-    body { background: transparent !important; padding: 0 !important; }
-    .page-sheet { box-shadow: none !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-}
 </style>
 </head>
 <body>
@@ -238,8 +237,8 @@
         </tr>
         <tr>
             <td colspan="2">
-                <b>KELUHAN UTAMA :</b> {?=nl2br(isset_or($data['keluhan_utama']))?}<br><br>
-                <b>RIWAYAT PENYAKIT SEKARANG :</b> {?=nl2br(isset_or($data['riwayat_penyakit_sekarang']))?}<br><br>
+                <b>KELUHAN UTAMA :</b> {?=nl2br((string)isset_or($data['keluhan_utama'], ''))?}<br><br>
+                <b>RIWAYAT PENYAKIT SEKARANG :</b> {?=nl2br((string)isset_or($data['riwayat_penyakit_sekarang'], ''))?}<br><br>
 
                 <!-- 1. RIWAYAT PENYAKIT (CHECKLIST) -->
                 <b>RIWAYAT PENYAKIT :</b>
@@ -413,7 +412,7 @@
 <table class="container-noborder" style="font-size: 8.5px; margin-top: 2px;">
     <tr>
         <td width="50%"><i>*penilaian menggunakan Barthel Index, dan dilampirkan di rekam medis</i><br><b>RSGM/Ed-Rev/01/2020</b></td>
-        <td width="50%" style="text-align:right;"><i>Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</i><br><b>RM.GD - 03 Hal 2 - 3</b></td>
+        <td width="50%" style="text-align:right;"><i>Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</i><br><b>RM.GD - 04 Hal 1 - 2</b></td>
     </tr>
 </table>
 </div>
@@ -445,7 +444,7 @@
                         <td colspan="2">1. Apakah pasien mengalami penurunan BB yang tidak diinginkan dalam 6 bulan terakhir?</td>
                     </tr>
                     <tr>
-                        <td width="88%" style="padding-left:8px;"><span class="{if: (!isset($data['mst_penurunan_opsi']) || $data['mst_penurunan_opsi'] === '0') && $data['mst_penurunan_bb'] == 0}circled{/if}">a.</span> Tidak ada penurunan berat badan</td>
+                        <td width="88%" style="padding-left:8px;"><span class="{if: (!isset($data['mst_penurunan_opsi']) || $data['mst_penurunan_opsi'] === '0') && isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == 0}circled{/if}">a.</span> Tidak ada penurunan berat badan</td>
                         <td width="12%" style="text-align:right;">0</td>
                     </tr>
                     <tr>
@@ -456,19 +455,19 @@
                         <td colspan="2" style="padding-left:8px;">c. Jika ya, berapa penurunan berat badan tersebut :</td>
                     </tr>
                     <tr>
-                        <td style="padding-left:18px;">- <span class="{if: (isset($data['mst_penurunan_opsi']) && $data['mst_penurunan_opsi'] === '1') || (empty($data['mst_penurunan_opsi']) && $data['mst_penurunan_bb'] == 1)}circled{/if}">1-5 kg</span></td>
+                        <td style="padding-left:18px;">- <span class="{if: (isset($data['mst_penurunan_opsi']) && $data['mst_penurunan_opsi'] === '1') || (empty($data['mst_penurunan_opsi']) && isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == 1)}circled{/if}">1-5 kg</span></td>
                         <td style="text-align:right;">1</td>
                     </tr>
                     <tr>
-                        <td style="padding-left:18px;">- <span class="{if: (isset($data['mst_penurunan_opsi']) && $data['mst_penurunan_opsi'] === '2') || (empty($data['mst_penurunan_opsi']) && $data['mst_penurunan_bb'] == 2)}circled{/if}">6-10 kg</span></td>
+                        <td style="padding-left:18px;">- <span class="{if: (isset($data['mst_penurunan_opsi']) && $data['mst_penurunan_opsi'] === '2') || (empty($data['mst_penurunan_opsi']) && isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == 2)}circled{/if}">6-10 kg</span></td>
                         <td style="text-align:right;">2</td>
                     </tr>
                     <tr>
-                        <td style="padding-left:18px;">- <span class="{if: (isset($data['mst_penurunan_opsi']) && $data['mst_penurunan_opsi'] === '3') || (empty($data['mst_penurunan_opsi']) && $data['mst_penurunan_bb'] == 3)}circled{/if}">11-15 kg</span></td>
+                        <td style="padding-left:18px;">- <span class="{if: (isset($data['mst_penurunan_opsi']) && $data['mst_penurunan_opsi'] === '3') || (empty($data['mst_penurunan_opsi']) && isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == 3)}circled{/if}">11-15 kg</span></td>
                         <td style="text-align:right;">3</td>
                     </tr>
                     <tr>
-                        <td style="padding-left:18px;">- <span class="{if: (isset($data['mst_penurunan_opsi']) && $data['mst_penurunan_opsi'] === '4') || (empty($data['mst_penurunan_opsi']) && $data['mst_penurunan_bb'] == 4)}circled{/if}">&gt;15 kg</span></td>
+                        <td style="padding-left:18px;">- <span class="{if: (isset($data['mst_penurunan_opsi']) && $data['mst_penurunan_opsi'] === '4') || (empty($data['mst_penurunan_opsi']) && isset($data['mst_penurunan_bb']) && $data['mst_penurunan_bb'] == 4)}circled{/if}">&gt;15 kg</span></td>
                         <td style="text-align:right;">4</td>
                     </tr>
                     <tr>
@@ -624,13 +623,12 @@
             </td>
             <td width="50%">
                 <b>Skala Nyeri</b>
+                {if: $skala_nyeri_img}
+                <div style="text-align: center; margin: 3px 0;">
+                    <img src="{$skala_nyeri_img}" alt="Skala Nyeri 0-10" style="width: 100%; max-width: 240px; height: auto;">
+                </div>
+                {/if}
                 <table class="pain-scale-table">
-                    <tr>
-                        <td>Tidak<br>Nyeri</td>
-                        <td colspan="3">Nyeri<br>Ringan</td>
-                        <td colspan="3">Nyeri<br>Sedang</td>
-                        <td colspan="4">Nyeri<br>Berat</td>
-                    </tr>
                     <tr>
                         <td class="{if: isset($data['skala_nyeri']) && $data['skala_nyeri'] === '0'}pain-active{/if}">0</td>
                         <td class="{if: isset($data['skala_nyeri']) && $data['skala_nyeri'] == '1'}pain-active{/if}">1</td>
@@ -749,13 +747,13 @@
             </td>
             <td width="50%" style="height: 55px;">
                 <b>MASALAH KEPERAWATAN</b><br>
-                {?=nl2br(isset_or($data['masalah_keperawatan']))?}
+                {?=nl2br((string)isset_or($data['masalah_keperawatan'], ''))?}
             </td>
         </tr>
         <tr>
             <td width="50%" style="height: 75px;">
                 <b>RENCANA DAN TINDAK LANJUT PERAWATAN, TERMASUK KEBUTUHAN EDUKASI</b><br>
-                {?=nl2br(isset_or($data['rencana_tindak_lanjut']))?}
+                {?=nl2br((string)isset_or($data['rencana_tindak_lanjut'], ''))?}
             </td>
             <td width="50%" style="height: 75px;">
                 <b>EVALUASI</b><br>
@@ -783,13 +781,23 @@
         <tr>
             <td width="50%" style="text-align:center; padding-top:6px; padding-bottom:6px;">
                 <br>
-                <b>DPJP</b><br><br><br><br><br>
+                <b>DPJP</b>
+                {if: !empty($data['qr_dpjp'])}
+                <div style="margin: 2px 0;"><img src="{$data.qr_dpjp}" alt="QR TTE DPJP" style="width: 44px; height: 44px; display: inline-block;"></div>
+                {else}
+                <br><br><br><br><br>
+                {/if}
                 ( <b>{?= !empty($data['nm_dokter']) ? $data['nm_dokter'] : isset_or($data['nip_dpjp'], '....................................................') ?}</b> )<br>
                 Tanda Tangan &amp; Nama Jelas
             </td>
             <td width="50%" style="text-align:center; padding-top:6px; padding-bottom:6px;">
                 Banjarmasin, {?=isset_or($data['tgl_kunj_indo'], '.... / .... / 20....')?} Pukul {?=isset_or($data['pukul_ttd_indo'], '..........')?} WITA<br>
-                <b>Perawat/Perawat Gigi</b><br><br><br><br><br>
+                <b>Perawat/Perawat Gigi</b>
+                {if: !empty($data['qr_perawat'])}
+                <div style="margin: 2px 0;"><img src="{$data.qr_perawat}" alt="QR TTE Perawat" style="width: 44px; height: 44px; display: inline-block;"></div>
+                {else}
+                <br><br><br><br><br>
+                {/if}
                 ( <b>{?= !empty($data['nm_perawat']) ? $data['nm_perawat'] : isset_or($data['nip'], '....................................................') ?}</b> )<br>
                 Tanda Tangan &amp; Nama Jelas
             </td>
@@ -799,7 +807,7 @@
 <table class="container-noborder" style="font-size: 8.5px; margin-top: 2px;">
     <tr>
         <td width="50%"><b>RSGM/Ed-Rev/01/2020</b></td>
-        <td width="50%" style="text-align:right;"><i>Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</i><br><b>RM.GD - 03 Hal 3 - 3</b></td>
+        <td width="50%" style="text-align:right;"><i>Terimakasih atas kerjasamanya telah mengisi formulir ini secara lengkap dan jelas</i><br><b>RM.GD - 04 Hal 2 - 2</b></td>
     </tr>
 </table>
 </div>

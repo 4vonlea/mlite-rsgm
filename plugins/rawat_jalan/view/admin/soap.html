@@ -39,6 +39,11 @@
       <button type="button" class="rsgm-cppt-actbtn js-cppt-collapse-all" title="Lipat semua rincian">
         <i class="fa fa-angle-double-up"></i> <span class="hidden-xs">Ringkas</span>
       </button>
+      {if: ($void_count > 0) || ($void_ranap_count > 0)}
+      <button type="button" class="rsgm-cppt-actbtn js-toggle-voided-soap" data-showing="0" title="Tampilkan atau sembunyikan catatan yang telah dibatalkan (VOID)">
+        <i class="fa fa-ban text-danger"></i> <span class="js-void-btn-lbl hidden-xs">Tampilkan Dibatalkan</span> ({?= $void_count + $void_ranap_count ?})
+      </button>
+      {/if}
     </div>
     {/if}
   </div>
@@ -49,7 +54,12 @@
       <div class="rsgm-cppt-list js-cppt-list">
         {if: $pemeriksaan}
         {loop: $pemeriksaan}
-        <div class="rsgm-cppt-card js-cppt-item {if: $value.nomor == count($pemeriksaan)}is-open{/if}">
+        <div class="rsgm-cppt-card js-cppt-item {if: $value.is_voided}is-voided js-soap-voided-item{/if} {if: $value.nomor == count($pemeriksaan)}is-open{/if}"
+          {if: $value.is_voided}style="display:none;"{/if}
+          data-soap-module="rawat_jalan"
+          data-table-name="pemeriksaan_ralan"
+          data-record-key="{?=isset_or($value.record_key)?}"
+          data-changed-map="{?=isset_or($value.changed_fields_json)?}">
           <div class="rsgm-cppt-head">
             <div class="rsgm-cppt-ident">
               <span class="rsgm-cppt-chev"><i class="fa fa-chevron-down"></i></span>
@@ -65,6 +75,16 @@
               <span class="rsgm-cppt-time">
                 <i class="fa fa-clock-o text-muted"></i> {?=isset_or($value.tgl_perawatan)?} <b>{?=isset_or($value.jam_rawat)?}</b>
               </span>
+              {if: $value.is_voided}
+              <span class="label label-danger" title="Dibatalkan oleh {?=isset_or($value.void_info.deleted_by)?}: {?=isset_or($value.void_info.void_reason)?}"><i class="fa fa-ban"></i> DIBATALKAN (VOID)</span>
+              {else}
+                {if: $value.has_revisions}
+                <button type="button" class="rsgm-soap-rev-badge js-soap-rev-open" data-module="rawat_jalan" data-table="pemeriksaan_ralan" data-key="{?=isset_or($value.record_key)?}" title="Dikoreksi {?=isset_or($value.revision_count)?}x terakhir oleh {?=isset_or($value.last_revised_by)?} ({?=isset_or($value.last_revised_at_fmt)?}) &bull; Klik untuk riwayat lengkap"><i class="fa fa-history"></i> Dikoreksi ({?=isset_or($value.revision_count)?}x)</button>
+                {/if}
+              {/if}
+              {if: $value.is_tte_outdated}
+              <span class="rsgm-soap-tte-warn-badge js-soap-rev-open" data-module="rawat_jalan" data-table="pemeriksaan_ralan" data-key="{?=isset_or($value.record_key)?}" title="Catatan dikoreksi setelah ditandatangani secara elektronik"><i class="fa fa-exclamation-triangle"></i> TTE Kedaluwarsa</span>
+              {/if}
             </div>
 
             <div class="rsgm-cppt-digest">
@@ -135,60 +155,85 @@
                 data-stts_daftar="{?=isset_or($value.stts_daftar)?}"
                 data-kasus_poli="{?=isset_or($value.kasus_poli, $value.status_poli)?}"
                 data-status_poli="{?=isset_or($value.status_poli)?}"
-                {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip}disabled{/if}
+                data-table_name="pemeriksaan_ralan"
+                data-record_key="{?=isset_or($value.record_key)?}"
+                data-in_grace="{?= $value.in_grace ? '1' : '0' ?}"
+                data-needs_reason="{?= $value.needs_reason ? '1' : '0' ?}"
+                data-minutes_left="{?=isset_or($value.minutes_left, 0)?}"
+                data-grace_why="{?=isset_or($value.grace_why)?}"
+                data-changed_fields="{?=isset_or($value.changed_fields_json)?}"
+                {if: ($this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip && $this->core->getUserInfo('role') != 'admin') || $value.is_voided}disabled{/if}
                 ><span class="fa fa-edit"></span><span class="hidden-xs"> Edit</span></button>
               <button type="button" name="button" class="btn btn-danger btn-xs hapus_soap"
-                title="Hapus Catatan SOAP"
+                title="Batalkan Catatan SOAP (VOID)"
                 data-no_rawat="{?=isset_or($value.no_rawat)?}"
                 data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}"
                 data-jam_rawat="{?=isset_or($value.jam_rawat)?}"
-                {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip}disabled{/if}
+                data-table_name="pemeriksaan_ralan"
+                data-record_key="{?=isset_or($value.record_key)?}"
+                data-in_grace="{?= $value.in_grace ? '1' : '0' ?}"
+                data-needs_reason="{?= $value.needs_reason ? '1' : '0' ?}"
+                data-minutes_left="{?=isset_or($value.minutes_left, 0)?}"
+                data-grace_why="{?=isset_or($value.grace_why)?}"
+                {if: ($this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip && $this->core->getUserInfo('role') != 'admin') || $value.is_voided}disabled{/if}
                 ><span class="fa fa-trash-o"></span><span class="hidden-xs"> Hapus</span></button>
             </div>
           </div>
 
           <div class="rsgm-cppt-body">
+            {if: $value.is_voided}
+            <div class="alert alert-danger" style="padding:7px 12px;margin-bottom:10px;font-size:12px;">
+              <i class="fa fa-ban"></i> <strong>Dibatalkan (VOID):</strong> {?=isset_or($value.void_info.void_reason)?} &mdash; oleh <strong>{?=isset_or($value.void_info.deleted_by)?}</strong> ({?=isset_or($value.void_info.deleted_at)?})
+            </div>
+            {else}
+              {if: $value.has_revisions}
+              <div class="rsgm-soap-rev-banner">
+                <span><i class="fa fa-history"></i> <strong>Koreksi Terakhir (#{?=isset_or($value.revision_count)?}):</strong> {?=isset_or($value.last_revised_reason)?} <small class="text-muted">({?=isset_or($value.last_revised_by)?}, {?=isset_or($value.last_revised_at_fmt)?})</small></span>
+                <button type="button" class="btn btn-warning btn-xs js-soap-rev-open" data-module="rawat_jalan" data-table="pemeriksaan_ralan" data-key="{?=isset_or($value.record_key)?}"><i class="fa fa-code-fork"></i> Lihat Diff &amp; Timeline</button>
+              </div>
+              {/if}
+            {/if}
             <div class="rsgm-cppt-split {if: $admin_mode == 'simple'}is-simple{/if}">
               {if: $admin_mode == 'complex'}
               <div class="rsgm-cppt-vitals-col">
                 <div class="rsgm-cppt-vgrid">
-                  <div class="rsgm-cppt-vitem">
+                  <div class="rsgm-cppt-vitem" data-rev-field="tensi">
                     <span>Tensi</span>
                     <strong>{?=isset_or($value.tensi, '-')?} <small>mmHg</small></strong>
                   </div>
-                  <div class="rsgm-cppt-vitem">
+                  <div class="rsgm-cppt-vitem" data-rev-field="suhu_tubuh">
                     <span>Suhu</span>
                     <strong>{?=isset_or($value.suhu_tubuh, '-')?} <small>&deg;C</small></strong>
                   </div>
-                  <div class="rsgm-cppt-vitem">
+                  <div class="rsgm-cppt-vitem" data-rev-field="nadi">
                     <span>Nadi</span>
                     <strong>{?=isset_or($value.nadi, '-')?} <small>/mnt</small></strong>
                   </div>
-                  <div class="rsgm-cppt-vitem">
+                  <div class="rsgm-cppt-vitem" data-rev-field="respirasi">
                     <span>Respirasi</span>
                     <strong>{?=isset_or($value.respirasi, '-')?} <small>/mnt</small></strong>
                   </div>
-                  <div class="rsgm-cppt-vitem">
+                  <div class="rsgm-cppt-vitem" data-rev-field="spo2">
                     <span>SpO2</span>
                     <strong>{?=isset_or($value.spo2, '-')?} <small>%</small></strong>
                   </div>
-                  <div class="rsgm-cppt-vitem">
+                  <div class="rsgm-cppt-vitem" data-rev-field="gcs">
                     <span>GCS</span>
                     <strong>{?=isset_or($value.gcs, '-')?}</strong>
                   </div>
-                  <div class="rsgm-cppt-vitem">
+                  <div class="rsgm-cppt-vitem" data-rev-field="tinggi,berat">
                     <span>TB / BB</span>
                     <strong>{?=isset_or($value.tinggi, '-')?}/{?=isset_or($value.berat, '-')?} <small>cm/kg</small></strong>
                   </div>
-                  <div class="rsgm-cppt-vitem">
+                  <div class="rsgm-cppt-vitem" data-rev-field="lingkar_perut">
                     <span>L. Perut</span>
                     <strong>{?=isset_or($value.lingkar_perut, '-')?}</strong>
                   </div>
-                  <div class="rsgm-cppt-vitem is-wide">
+                  <div class="rsgm-cppt-vitem is-wide" data-rev-field="kesadaran">
                     <span>Kesadaran</span>
                     <strong>{?=isset_or($value.kesadaran, '-')?}</strong>
                   </div>
-                  <div class="rsgm-cppt-vitem is-wide {if: !empty($value.alergi) && $value.alergi != '-'}is-alert{/if}">
+                  <div class="rsgm-cppt-vitem is-wide {if: !empty($value.alergi) && $value.alergi != '-'}is-alert{/if}" data-rev-field="alergi">
                     <span><i class="fa fa-exclamation-circle"></i> Alergi</span>
                     <strong>{?=isset_or($value.alergi, '-')?}</strong>
                   </div>
@@ -233,28 +278,28 @@
 
               <div class="rsgm-cppt-soapie-col">
                 <div class="rsgm-cppt-sgrid">
-                  <div class="rsgm-cppt-cell is-s">
+                  <div class="rsgm-cppt-cell is-s" data-rev-field="keluhan">
                     <span class="rsgm-soap-tag rsgm-soap-tag-s">S</span>
                     <div class="rsgm-cppt-cell-main">
                       <div class="rsgm-cppt-cell-lbl">Subyektif (Keluhan)</div>
                       <div class="rsgm-cppt-cell-txt">{?=isset_or($value.keluhan, '-')?}</div>
                     </div>
                   </div>
-                  <div class="rsgm-cppt-cell is-o">
+                  <div class="rsgm-cppt-cell is-o" data-rev-field="pemeriksaan">
                     <span class="rsgm-soap-tag rsgm-soap-tag-o">O</span>
                     <div class="rsgm-cppt-cell-main">
                       <div class="rsgm-cppt-cell-lbl">Obyektif (Pemeriksaan)</div>
                       <div class="rsgm-cppt-cell-txt">{?=isset_or($value.pemeriksaan, '-')?}</div>
                     </div>
                   </div>
-                  <div class="rsgm-cppt-cell is-a">
+                  <div class="rsgm-cppt-cell is-a" data-rev-field="penilaian">
                     <span class="rsgm-soap-tag rsgm-soap-tag-a">A</span>
                     <div class="rsgm-cppt-cell-main">
                       <div class="rsgm-cppt-cell-lbl">Assesment (Diagnosa)</div>
                       <div class="rsgm-cppt-cell-txt">{?=isset_or($value.penilaian, '-')?}</div>
                     </div>
                   </div>
-                  <div class="rsgm-cppt-cell is-p">
+                  <div class="rsgm-cppt-cell is-p" data-rev-field="rtl">
                     <span class="rsgm-soap-tag rsgm-soap-tag-p">P</span>
                     <div class="rsgm-cppt-cell-main">
                       <div class="rsgm-cppt-cell-lbl">Plan (Rencana / RTL)</div>
@@ -263,14 +308,14 @@
                   </div>
                   {if: $admin_mode == 'complex'}
                   {if: (!empty($value.instruksi) && $value.instruksi != '-') || (!empty($value.evaluasi) && $value.evaluasi != '-')}
-                  <div class="rsgm-cppt-cell is-i">
+                  <div class="rsgm-cppt-cell is-i" data-rev-field="instruksi">
                     <span class="rsgm-soap-tag rsgm-soap-tag-i">I</span>
                     <div class="rsgm-cppt-cell-main">
                       <div class="rsgm-cppt-cell-lbl">Instruksi</div>
                       <div class="rsgm-cppt-cell-txt">{?=isset_or($value.instruksi, '-')?}</div>
                     </div>
                   </div>
-                  <div class="rsgm-cppt-cell is-e">
+                  <div class="rsgm-cppt-cell is-e" data-rev-field="evaluasi">
                     <span class="rsgm-soap-tag rsgm-soap-tag-e">E</span>
                     <div class="rsgm-cppt-cell-main">
                       <div class="rsgm-cppt-cell-lbl">Evaluasi</div>
@@ -339,7 +384,12 @@
         {if: $admin_mode == 'complex'}
         {if: $pemeriksaan_ranap}
         {loop: $pemeriksaan_ranap as $data}
-        <div class="rsgm-cppt-card is-ranap js-cppt-item {if: empty($pemeriksaan) && $data.nomor == count($pemeriksaan_ranap)}is-open{/if}">
+        <div class="rsgm-cppt-card is-ranap js-cppt-item {if: $data.is_voided}is-voided js-soap-voided-item{/if} {if: empty($pemeriksaan) && $data.nomor == count($pemeriksaan_ranap)}is-open{/if}"
+          {if: $data.is_voided}style="display:none;"{/if}
+          data-soap-module="rawat_jalan"
+          data-table-name="pemeriksaan_ranap"
+          data-record-key="{?=isset_or($data.record_key)?}"
+          data-changed-map="{?=isset_or($data.changed_fields_json)?}">
           <div class="rsgm-cppt-head">
             <div class="rsgm-cppt-ident">
               <span class="rsgm-cppt-chev"><i class="fa fa-chevron-down"></i></span>
@@ -355,6 +405,16 @@
               <span class="rsgm-cppt-time">
                 <i class="fa fa-clock-o text-muted"></i> {?=isset_or($data.tgl_perawatan)?} <b>{?=isset_or($data.jam_rawat)?}</b>
               </span>
+              {if: $data.is_voided}
+              <span class="label label-danger"><i class="fa fa-ban"></i> DIBATALKAN (VOID)</span>
+              {else}
+                {if: $data.has_revisions}
+                <button type="button" class="rsgm-soap-rev-badge js-soap-rev-open" data-module="rawat_jalan" data-table="pemeriksaan_ranap" data-key="{?=isset_or($data.record_key)?}"><i class="fa fa-history"></i> Dikoreksi ({?=isset_or($data.revision_count)?}x)</button>
+                {/if}
+              {/if}
+              {if: $data.is_tte_outdated}
+              <span class="rsgm-soap-tte-warn-badge js-soap-rev-open" data-module="rawat_jalan" data-table="pemeriksaan_ranap" data-key="{?=isset_or($data.record_key)?}"><i class="fa fa-exclamation-triangle"></i> TTE Kedaluwarsa</span>
+              {/if}
             </div>
 
             <div class="rsgm-cppt-digest">
@@ -415,55 +475,81 @@
                 data-spo2="{?=isset_or($data.spo2)?}"
                 data-stts_daftar="{?=isset_or($data.stts_daftar)?}"
                 data-status_poli="{?=isset_or($data.status_poli)?}"
-                {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $data.nip}disabled{/if}
+                data-kesadaran="{?=isset_or($data.kesadaran)?}"
+                data-table_name="pemeriksaan_ranap"
+                data-record_key="{?=isset_or($data.record_key)?}"
+                data-in_grace="{?= $data.in_grace ? '1' : '0' ?}"
+                data-needs_reason="{?= $data.needs_reason ? '1' : '0' ?}"
+                data-minutes_left="{?=isset_or($data.minutes_left, 0)?}"
+                data-grace_why="{?=isset_or($data.grace_why)?}"
+                data-changed_fields="{?=isset_or($data.changed_fields_json)?}"
+                {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $data.nip || $data.is_voided}disabled{/if}
                 ><span class="fa fa-edit"></span><span class="hidden-xs"> Edit</span></button>
               <button type="button" name="button" class="btn btn-danger btn-xs hapus_soap"
-                title="Hapus Catatan SOAP"
+                title="Batalkan Catatan SOAP (VOID)"
                 data-no_rawat="{?=isset_or($data.no_rawat)?}"
                 data-tgl_perawatan="{?=isset_or($data.tgl_perawatan)?}"
                 data-jam_rawat="{?=isset_or($data.jam_rawat)?}"
-                {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $data.nip}disabled{/if}
+                data-table_name="pemeriksaan_ranap"
+                data-record_key="{?=isset_or($data.record_key)?}"
+                data-in_grace="{?= $data.in_grace ? '1' : '0' ?}"
+                data-needs_reason="{?= $data.needs_reason ? '1' : '0' ?}"
+                data-minutes_left="{?=isset_or($data.minutes_left, 0)?}"
+                data-grace_why="{?=isset_or($data.grace_why)?}"
+                {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $data.nip || $data.is_voided}disabled{/if}
                 ><span class="fa fa-trash-o"></span><span class="hidden-xs"> Hapus</span></button>
             </div>
           </div>
 
           <div class="rsgm-cppt-body">
+            {if: $data.is_voided}
+            <div class="alert alert-danger" style="padding:7px 12px;margin-bottom:10px;font-size:12px;">
+              <i class="fa fa-ban"></i> <strong>Dibatalkan (VOID):</strong> {?=isset_or($data.void_info.void_reason)?} &mdash; oleh <strong>{?=isset_or($data.void_info.deleted_by)?}</strong> ({?=isset_or($data.void_info.deleted_at)?})
+            </div>
+            {else}
+              {if: $data.has_revisions}
+              <div class="rsgm-soap-rev-banner">
+                <span><i class="fa fa-history"></i> <strong>Koreksi Terakhir (#{?=isset_or($data.revision_count)?}):</strong> {?=isset_or($data.last_revised_reason)?} <small class="text-muted">({?=isset_or($data.last_revised_by)?}, {?=isset_or($data.last_revised_at_fmt)?})</small></span>
+                <button type="button" class="btn btn-warning btn-xs js-soap-rev-open" data-module="rawat_jalan" data-table="pemeriksaan_ranap" data-key="{?=isset_or($data.record_key)?}"><i class="fa fa-code-fork"></i> Lihat Diff &amp; Timeline</button>
+              </div>
+              {/if}
+            {/if}
             <div class="rsgm-cppt-split">
               <div class="rsgm-cppt-vitals-col">
                 <div class="rsgm-cppt-vgrid">
-                  <div class="rsgm-cppt-vitem">
+                  <div class="rsgm-cppt-vitem" data-rev-field="tensi">
                     <span>Tensi</span>
                     <strong>{?=isset_or($data.tensi, '-')?} <small>mmHg</small></strong>
                   </div>
-                  <div class="rsgm-cppt-vitem">
+                  <div class="rsgm-cppt-vitem" data-rev-field="suhu_tubuh">
                     <span>Suhu</span>
                     <strong>{?=isset_or($data.suhu_tubuh, '-')?} <small>&deg;C</small></strong>
                   </div>
-                  <div class="rsgm-cppt-vitem">
+                  <div class="rsgm-cppt-vitem" data-rev-field="nadi">
                     <span>Nadi</span>
                     <strong>{?=isset_or($data.nadi, '-')?} <small>/mnt</small></strong>
                   </div>
-                  <div class="rsgm-cppt-vitem">
+                  <div class="rsgm-cppt-vitem" data-rev-field="respirasi">
                     <span>Respirasi</span>
                     <strong>{?=isset_or($data.respirasi, '-')?} <small>/mnt</small></strong>
                   </div>
-                  <div class="rsgm-cppt-vitem">
+                  <div class="rsgm-cppt-vitem" data-rev-field="spo2">
                     <span>SpO2</span>
                     <strong>{?=isset_or($data.spo2, '-')?} <small>%</small></strong>
                   </div>
-                  <div class="rsgm-cppt-vitem">
+                  <div class="rsgm-cppt-vitem" data-rev-field="gcs">
                     <span>GCS</span>
                     <strong>{?=isset_or($data.gcs, '-')?}</strong>
                   </div>
-                  <div class="rsgm-cppt-vitem is-wide">
+                  <div class="rsgm-cppt-vitem is-wide" data-rev-field="tinggi,berat">
                     <span>TB / BB</span>
                     <strong>{?=isset_or($data.tinggi, '-')?} cm / {?=isset_or($data.berat, '-')?} kg</strong>
                   </div>
-                  <div class="rsgm-cppt-vitem is-wide">
+                  <div class="rsgm-cppt-vitem is-wide" data-rev-field="kesadaran">
                     <span>Kesadaran</span>
                     <strong>{?=isset_or($data.kesadaran, '-')?}</strong>
                   </div>
-                  <div class="rsgm-cppt-vitem is-wide {if: !empty($data.alergi) && $data.alergi != '-'}is-alert{/if}">
+                  <div class="rsgm-cppt-vitem is-wide {if: !empty($data.alergi) && $data.alergi != '-'}is-alert{/if}" data-rev-field="alergi">
                     <span><i class="fa fa-exclamation-circle"></i> Alergi</span>
                     <strong>{?=isset_or($data.alergi, '-')?}</strong>
                   </div>
@@ -506,28 +592,28 @@
 
               <div class="rsgm-cppt-soapie-col">
                 <div class="rsgm-cppt-sgrid">
-                  <div class="rsgm-cppt-cell is-s">
+                  <div class="rsgm-cppt-cell is-s" data-rev-field="keluhan">
                     <span class="rsgm-soap-tag rsgm-soap-tag-s">S</span>
                     <div class="rsgm-cppt-cell-main">
                       <div class="rsgm-cppt-cell-lbl">Subyektif (Keluhan)</div>
                       <div class="rsgm-cppt-cell-txt">{?=isset_or($data.keluhan, '-')?}</div>
                     </div>
                   </div>
-                  <div class="rsgm-cppt-cell is-o">
+                  <div class="rsgm-cppt-cell is-o" data-rev-field="pemeriksaan">
                     <span class="rsgm-soap-tag rsgm-soap-tag-o">O</span>
                     <div class="rsgm-cppt-cell-main">
                       <div class="rsgm-cppt-cell-lbl">Obyektif (Pemeriksaan)</div>
                       <div class="rsgm-cppt-cell-txt">{?=isset_or($data.pemeriksaan, '-')?}</div>
                     </div>
                   </div>
-                  <div class="rsgm-cppt-cell is-a">
+                  <div class="rsgm-cppt-cell is-a" data-rev-field="penilaian">
                     <span class="rsgm-soap-tag rsgm-soap-tag-a">A</span>
                     <div class="rsgm-cppt-cell-main">
                       <div class="rsgm-cppt-cell-lbl">Assesment (Diagnosa)</div>
                       <div class="rsgm-cppt-cell-txt">{?=isset_or($data.penilaian, '-')?}</div>
                     </div>
                   </div>
-                  <div class="rsgm-cppt-cell is-p">
+                  <div class="rsgm-cppt-cell is-p" data-rev-field="rtl">
                     <span class="rsgm-soap-tag rsgm-soap-tag-p">P</span>
                     <div class="rsgm-cppt-cell-main">
                       <div class="rsgm-cppt-cell-lbl">Plan (Rencana / RTL)</div>
@@ -535,14 +621,14 @@
                     </div>
                   </div>
                   {if: (!empty($data.instruksi) && $data.instruksi != '-') || (!empty($data.evaluasi) && $data.evaluasi != '-')}
-                  <div class="rsgm-cppt-cell is-i">
+                  <div class="rsgm-cppt-cell is-i" data-rev-field="instruksi">
                     <span class="rsgm-soap-tag rsgm-soap-tag-i">I</span>
                     <div class="rsgm-cppt-cell-main">
                       <div class="rsgm-cppt-cell-lbl">Instruksi</div>
                       <div class="rsgm-cppt-cell-txt">{?=isset_or($data.instruksi, '-')?}</div>
                     </div>
                   </div>
-                  <div class="rsgm-cppt-cell is-e">
+                  <div class="rsgm-cppt-cell is-e" data-rev-field="evaluasi">
                     <span class="rsgm-soap-tag rsgm-soap-tag-e">E</span>
                     <div class="rsgm-cppt-cell-main">
                       <div class="rsgm-cppt-cell-lbl">Evaluasi</div>
@@ -634,14 +720,24 @@
 
     cpptShell.off('input.cpptFilter').on('input.cpptFilter', '.js-cppt-filter', function() {
       var q = jq.trim(jq(this).val()).toLowerCase();
+      var showVoid = cpptShell.find('.js-toggle-voided-soap').attr('data-showing') === '1';
       var visibleCount = 0;
       cpptShell.find('.js-cppt-item').each(function() {
-        var txt = jq(this).text().toLowerCase();
+        var $item = jq(this);
+        if ($item.hasClass('js-soap-voided-item') && !showVoid && !q) {
+          $item.hide();
+          return;
+        }
+        var txt = $item.text().toLowerCase();
         var match = !q || txt.indexOf(q) !== -1;
-        jq(this).toggle(match);
+        $item.toggle(match);
         if (match) visibleCount++;
       });
       cpptShell.find('.js-cppt-no-match').toggle(visibleCount === 0);
     });
+
+    if (window.RSGMSoapRevision) {
+      window.RSGMSoapRevision.decorateContainer(cpptShell, 'rawat_jalan');
+    }
   })(jQuery);
 </script>

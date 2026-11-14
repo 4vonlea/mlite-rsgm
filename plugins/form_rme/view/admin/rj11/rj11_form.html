@@ -16,7 +16,7 @@
               <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
               <span>Data Pasien</span>
             </h4>
-            <span class="badge" style="background-color: #eef2ff; color: #4338ca; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #c7d2fe;">RM.RJ 11</span>
+            <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
           </div>
 
           <div class="rsgm-reg-body">
@@ -113,7 +113,8 @@
               <span>Pemberian Informasi &amp; Persetujuan Tindakan Kedokteran</span>
             </h4>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eef2ff; color: #4338ca; font-weight: 700;">Informed Consent RSGM</span>
+              <span class="rsgm-reg-badge-hint hidden-xs" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700;">{if: !empty($is_ugd)}RM.GD - 13{else}RM.RJ 11{/if}</span>
+              <span class="rsgm-reg-badge-hint hidden-xs">Informed Consent RSGM</span>
             </div>
           </div>
 
@@ -235,13 +236,62 @@
               <!-- Konfirmasi Tanda Tangan -->
               <div class="row" style="margin-top: 14px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 10px; margin-left: 0; margin-right: 0;">
                 <div class="col-md-6 form-group" style="margin-bottom: 5px;">
-                  <label class="rsgm-compact-label" for="f_ttd_pemberi"><i class="fa fa-pencil text-primary"></i> Tanda Tangan &amp; Nama Dokter Pemberi Informasi</label>
-                  <input type="text" id="f_ttd_pemberi" class="form-control f-ttd-pemberi" placeholder="Nama dokter..." value="{?=isset_or($data['form_data']['ttd_pemberi'])?}">
+                  <label class="rsgm-compact-label"><i class="fa fa-lock text-primary"></i> TTE Dokter Pemberi Informasi (Internal RSGM)</label>
+                  <div id="sign_container_rj11_pemberi" style="border: 1px solid #bfdbfe; border-radius: 6px; background: #fff; min-height: 58px; display: flex; align-items: center; justify-content: center; padding: 6px; margin-bottom: 6px; text-align: center;">
+                    {if: !empty($tte_pemberi.qr_data_uri)}
+                      <div style="text-align:center;">
+                        <img src="{$tte_pemberi.qr_data_uri}" alt="QR TTE" style="height:44px; width:44px; display:block; margin:0 auto 2px;">
+                        <span class="label label-success" style="font-size:9px;"><i class="fa fa-check-circle"></i> {$tte_pemberi.signer_name}</span>
+                      </div>
+                    {elseif: !empty($tte_pemberi.signature_hash)}
+                      <div style="text-align:center;">
+                        <span class="label label-success"><i class="fa fa-check-circle"></i> TTE Terverifikasi</span>
+                        <div style="font-size:9px; color:#15803d; font-family:monospace;">{?=substr($tte_pemberi['signature_hash'], 0, 14)?}...</div>
+                      </div>
+                    {else}
+                      <span style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum TTE Dokter</span>
+                    {/if}
+                  </div>
+                  <input type="hidden" id="f_ttd_pemberi" value="{if: !empty($tte_pemberi.signature_hash)}{$tte_pemberi.signature_hash}{/if}">
+                  <button type="button" class="btn btn-primary btn-xs btn-block btn-tte-rme" id="btn_tte_rj11_pemberi"
+                    data-ref_type="rj11_pemberi"
+                    data-ref_id="{$data.no_rawat}"
+                    data-signer_name="{?=isset_or($data['form_data']['pemberi_informasi'])?}"
+                    data-signer_role="Dokter Pemberi Informasi"
+                    data-target_input="f_ttd_pemberi"
+                    data-container_id="sign_container_rj11_pemberi"
+                    style="border-radius: 6px; font-weight: 600;">
+                    <i class="fa fa-lock"></i> {if: !empty($tte_pemberi.signature_hash)}Verifikasi Ulang TTE{else}Tanda Tangani (TTE Dokter){/if}
+                  </button>
                   <span class="help-block" style="font-size: 11px; margin: 4px 0 0 0; color: #64748b;">Menerangkan telah memberikan informasi secara benar dan jujur.</span>
                 </div>
                 <div class="col-md-6 form-group" style="margin-bottom: 5px;">
-                  <label class="rsgm-compact-label" for="f_ttd_penerima"><i class="fa fa-pencil text-success"></i> Tanda Tangan &amp; Nama Penerima Informasi</label>
-                  <input type="text" id="f_ttd_penerima" class="form-control f-ttd-penerima" placeholder="Nama pasien / keluarga wali..." value="{?=isset_or($data['form_data']['ttd_penerima'])?}">
+                  <label class="rsgm-compact-label"><i class="fa fa-pencil text-success"></i> TTD Digital Penerima Informasi (Pasien / Wali)</label>
+                  <div id="preview_box_rj11_penerima" style="border: 1px dashed #bbf7d0; border-radius: 6px; background: #fff; min-height: 58px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-bottom: 6px; text-align: center;">
+                    {if: !empty($data.form_data.ttd_penerima_img)}
+                      <img id="img_preview_rj11_penerima" src="{$data.form_data.ttd_penerima_img}" alt="TTD Penerima" style="max-height: 48px; max-width: 100%;">
+                      <span id="status_rj11_penerima" style="display:none;">TTD Tersimpan</span>
+                    {else}
+                      <img id="img_preview_rj11_penerima" src="" alt="TTD Penerima" style="display:none; max-height: 48px; max-width: 100%;">
+                      <span id="status_rj11_penerima" style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum TTD Layar Sentuh</span>
+                    {/if}
+                  </div>
+                  <input type="hidden" id="input_ttd_penerima_img" value="{?=isset_or($data['form_data']['ttd_penerima_img'])?}">
+                  <div style="display:flex; gap:6px;">
+                    <button type="button" class="btn btn-default btn-xs btn-buka-ttd-pasien" id="btn_ttd_rj11_penerima" style="flex:1; border-radius: 6px; font-weight: 600;"
+                      data-target-input="input_ttd_penerima_img"
+                      data-preview-box="preview_box_rj11_penerima"
+                      data-preview-img="img_preview_rj11_penerima"
+                      data-status-text="status_rj11_penerima"
+                      data-doc-title="Penerima Informasi Tindakan Kedokteran"
+                      data-doc-code="{if: !empty($is_ugd)}RM.GD - 13{else}RM.RJ - 11{/if}"
+                      data-patient-name="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}{?=isset_or($data['nama_pasien'])?}{/if}"
+                      data-patient-norm="{?=isset_or($data['no_rkm_medis'])?}"
+                      data-signer-title="Penerima Informasi / Wali">
+                      <i class="fa fa-tablet text-success"></i> TTD Layar Sentuh Penerima
+                    </button>
+                    <button type="button" class="btn btn-default btn-xs" id="clear_rj11_penerima" title="Hapus TTD" style="border-radius: 6px;"><i class="fa fa-eraser text-danger"></i></button>
+                  </div>
                   <span class="help-block" style="font-size: 11px; margin: 4px 0 0 0; color: #64748b;">Menyatakan telah menerima informasi dan memahaminya.</span>
                 </div>
               </div>
@@ -376,6 +426,109 @@
                       </datalist>
                     </div>
                   </div>
+
+                  <hr style="margin: 12px 0;">
+                  <h5 style="font-weight: 700; color: #1e293b; margin-bottom: 6px;">Tanda Tangan Digital Persetujuan Tindakan</h5>
+                  <input type="hidden" id="input_ttd_setuju_menyatakan" value="{?=isset_or($data['form_data']['ttd_setuju_menyatakan'])?}">
+                  <input type="hidden" id="input_ttd_setuju_saksi1" value="{?=isset_or($data['form_data']['ttd_setuju_saksi1'])?}">
+                  <input type="hidden" id="input_ttd_setuju_saksi2" value="{if: !empty($tte_setuju_saksi2.signature_hash)}{$tte_setuju_saksi2.signature_hash}{/if}">
+
+                  <div class="row">
+                    <div class="col-md-4">
+                      <div class="panel panel-success" style="margin-bottom: 10px;">
+                        <div class="panel-heading" style="padding: 5px 10px; font-size: 11.5px; font-weight: bold;">TTD Yang Menyatakan (Pasien/Wali)</div>
+                        <div class="panel-body text-center" style="padding: 8px;">
+                          <div id="preview_box_setuju_menyatakan" style="border: 1px dashed #86efac; border-radius: 6px; background: #fafafa; min-height: 76px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-bottom: 6px;">
+                            {if: !empty($data.form_data.ttd_setuju_menyatakan)}
+                              <img id="img_preview_setuju_menyatakan" src="{$data.form_data.ttd_setuju_menyatakan}" alt="TTD Yang Menyatakan" style="max-height: 68px; max-width: 100%;">
+                              <span id="status_setuju_menyatakan" style="display:none;">TTD Tersimpan</span>
+                            {else}
+                              <img id="img_preview_setuju_menyatakan" src="" alt="TTD Yang Menyatakan" style="display:none; max-height: 68px; max-width: 100%;">
+                              <span id="status_setuju_menyatakan" style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum TTD</span>
+                            {/if}
+                          </div>
+                          <div style="display:flex; gap:4px;">
+                            <button type="button" class="btn btn-default btn-xs btn-buka-ttd-pasien" id="btn_ttd_setuju_menyatakan" style="flex:1; font-weight:600;"
+                              data-target-input="input_ttd_setuju_menyatakan"
+                              data-preview-box="preview_box_setuju_menyatakan"
+                              data-preview-img="img_preview_setuju_menyatakan"
+                              data-status-text="status_setuju_menyatakan"
+                              data-doc-title="Persetujuan Tindakan Kedokteran"
+                              data-doc-code="{if: !empty($is_ugd)}RM.GD - 13{else}RM.RJ - 11{/if}"
+                              data-patient-name="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}{?=isset_or($data['nama_pasien'])?}{/if}"
+                              data-patient-norm="{?=isset_or($data['no_rkm_medis'])?}"
+                              data-signer-title="Yang Menyatakan (Persetujuan)">
+                              <i class="fa fa-tablet text-success"></i> TTD Layar Sentuh
+                            </button>
+                            <button type="button" class="btn btn-default btn-xs" id="clear_setuju_menyatakan" title="Hapus"><i class="fa fa-eraser text-danger"></i></button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="panel panel-default" style="margin-bottom: 10px;">
+                        <div class="panel-heading" style="padding: 5px 10px; font-size: 11.5px; font-weight: bold;">TTD Saksi 1 (Keluarga)</div>
+                        <div class="panel-body text-center" style="padding: 8px;">
+                          <div id="preview_box_setuju_saksi1" style="border: 1px dashed #cbd5e1; border-radius: 6px; background: #fafafa; min-height: 76px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-bottom: 6px;">
+                            {if: !empty($data.form_data.ttd_setuju_saksi1)}
+                              <img id="img_preview_setuju_saksi1" src="{$data.form_data.ttd_setuju_saksi1}" alt="TTD Saksi 1" style="max-height: 68px; max-width: 100%;">
+                              <span id="status_setuju_saksi1" style="display:none;">TTD Tersimpan</span>
+                            {else}
+                              <img id="img_preview_setuju_saksi1" src="" alt="TTD Saksi 1" style="display:none; max-height: 68px; max-width: 100%;">
+                              <span id="status_setuju_saksi1" style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum TTD</span>
+                            {/if}
+                          </div>
+                          <div style="display:flex; gap:4px;">
+                            <button type="button" class="btn btn-default btn-xs btn-buka-ttd-pasien" id="btn_ttd_setuju_saksi1" style="flex:1; font-weight:600;"
+                              data-target-input="input_ttd_setuju_saksi1"
+                              data-preview-box="preview_box_setuju_saksi1"
+                              data-preview-img="img_preview_setuju_saksi1"
+                              data-status-text="status_setuju_saksi1"
+                              data-doc-title="Persetujuan Tindakan Kedokteran"
+                              data-doc-code="{if: !empty($is_ugd)}RM.GD - 13{else}RM.RJ - 11{/if}"
+                              data-patient-name="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}{?=isset_or($data['nama_pasien'])?}{/if}"
+                              data-patient-norm="{?=isset_or($data['no_rkm_medis'])?}"
+                              data-signer-title="Saksi 1 (Keluarga Pasien)">
+                              <i class="fa fa-tablet text-primary"></i> TTD Layar Sentuh
+                            </button>
+                            <button type="button" class="btn btn-default btn-xs" id="clear_setuju_saksi1" title="Hapus"><i class="fa fa-eraser text-danger"></i></button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="panel panel-primary" style="margin-bottom: 10px;">
+                        <div class="panel-heading" style="padding: 5px 10px; font-size: 11.5px; font-weight: bold;">TTE Saksi 2 (Petugas RSGM)</div>
+                        <div class="panel-body text-center" style="padding: 8px;">
+                          <div id="sign_container_rj11_setuju_saksi2" style="border: 1px solid #bfdbfe; border-radius: 6px; background: #fafafa; min-height: 76px; display: flex; align-items: center; justify-content: center; padding: 6px; margin-bottom: 6px;">
+                            {if: !empty($tte_setuju_saksi2.qr_data_uri)}
+                              <div style="text-align:center;">
+                                <img src="{$tte_setuju_saksi2.qr_data_uri}" alt="QR TTE" style="height:44px; width:44px; display:block; margin:0 auto 2px;">
+                                <span class="label label-success" style="font-size:9px;"><i class="fa fa-check-circle"></i> {$tte_setuju_saksi2.signer_name}</span>
+                              </div>
+                            {elseif: !empty($tte_setuju_saksi2.signature_hash)}
+                              <div>
+                                <span class="label label-success"><i class="fa fa-check-circle"></i> TTE Terverifikasi</span>
+                                <div style="font-size:9px; color:#15803d; font-family:monospace;">{?=substr($tte_setuju_saksi2['signature_hash'], 0, 14)?}...</div>
+                              </div>
+                            {else}
+                              <span style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum TTE Petugas</span>
+                            {/if}
+                          </div>
+                          <button type="button" class="btn btn-primary btn-xs btn-block btn-tte-rme" id="btn_tte_rj11_setuju_saksi2"
+                            data-ref_type="rj11_setuju_saksi2"
+                            data-ref_id="{$data.no_rawat}"
+                            data-signer_name="{?=isset_or($data['form_data']['setuju_saksi2'])?}"
+                            data-signer_role="Saksi 2 (RSGM)"
+                            data-target_input="input_ttd_setuju_saksi2"
+                            data-container_id="sign_container_rj11_setuju_saksi2"
+                            style="font-weight: 600;">
+                            <i class="fa fa-lock"></i> {if: !empty($tte_setuju_saksi2.signature_hash)}Verifikasi Ulang TTE{else}Tanda Tangani (TTE){/if}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div> <!-- /#tab_persetujuan -->
 
                 <!-- TAB 2: PENOLAKAN -->
@@ -483,17 +636,32 @@
                   <h5 style="font-weight: 700; color: #1e293b; margin-bottom: 4px;">Tanda Tangan Digital Penolakan Tindakan</h5>
                   <p class="text-muted small"><i class="fa fa-info-circle"></i> Tanda tangan pihak yang menyatakan dilengkapi stempel Materai 10.000 digital saat pencetakan.</p>
 
-                  <input type="hidden" id="input_ttd_tolak_menyatakan" value="{$data.form_data.ttd_tolak_menyatakan}">
-                  <input type="hidden" id="input_ttd_tolak_saksi1" value="{$data.form_data.ttd_tolak_saksi1}">
-                  <input type="hidden" id="input_ttd_tolak_saksi2" value="{$data.form_data.ttd_tolak_saksi2}">
+                  <input type="hidden" id="input_ttd_tolak_menyatakan" value="{?=isset_or($data['form_data']['ttd_tolak_menyatakan'])?}">
+                  <input type="hidden" id="input_ttd_tolak_saksi1" value="{?=isset_or($data['form_data']['ttd_tolak_saksi1'])?}">
+                  <input type="hidden" id="input_ttd_tolak_saksi2" value="{if: !empty($tte_tolak_saksi2.signature_hash)}{$tte_tolak_saksi2.signature_hash}{/if}">
 
                   <div class="row">
                     <div class="col-md-4">
                       <div class="panel panel-info" style="margin-bottom: 10px;">
-                        <div class="panel-heading" style="padding: 5px 10px; font-size: 11.5px; font-weight: bold;">TTD Yang Menyatakan</div>
+                        <div class="panel-heading" style="padding: 5px 10px; font-size: 11.5px; font-weight: bold;">TTD Yang Menyatakan (Pasien/Wali)</div>
                         <div class="panel-body text-center" style="padding: 8px;">
-                          <canvas id="pad_tolak_menyatakan" width="240" height="110" style="border:1px dashed #3498db; background:#fafafa; touch-action:none; cursor:crosshair;"></canvas>
-                          <div style="margin-top: 4px;">
+                          <div id="preview_box_tolak_menyatakan">
+                            <img id="img_preview_tolak_menyatakan" src="" alt="" style="display:none;">
+                            <canvas id="pad_tolak_menyatakan" width="240" height="110" style="border:1px dashed #3498db; background:#fafafa; touch-action:none; cursor:crosshair; max-width:100%;"></canvas>
+                          </div>
+                          <div style="margin-top: 4px; display:flex; gap:4px; align-items:center; justify-content:center;">
+                            <button type="button" class="btn btn-info btn-xs btn-buka-ttd-pasien" id="btn_ttd_tolak_menyatakan"
+                              data-target-input="input_ttd_tolak_menyatakan"
+                              data-preview-box="preview_box_tolak_menyatakan"
+                              data-preview-img="img_preview_tolak_menyatakan"
+                              data-status-text="st_tolak_menyatakan"
+                              data-doc-title="Penolakan Tindakan Kedokteran"
+                              data-doc-code="{if: !empty($is_ugd)}RM.GD - 13{else}RM.RJ - 11{/if}"
+                              data-patient-name="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}{?=isset_or($data['nama_pasien'])?}{/if}"
+                              data-patient-norm="{?=isset_or($data['no_rkm_medis'])?}"
+                              data-signer-title="Yang Menyatakan (Penolakan)">
+                              <i class="fa fa-tablet"></i> Layar Sentuh
+                            </button>
                             <button type="button" class="btn btn-default btn-xs" id="clear_tolak_menyatakan"><i class="fa fa-eraser"></i> Hapus</button>
                             <span id="st_tolak_menyatakan" class="small text-muted">{if: !empty($data.form_data.ttd_tolak_menyatakan)}<i class="fa fa-check text-success"></i> Ada{else}Belum ada{/if}</span>
                           </div>
@@ -502,10 +670,25 @@
                     </div>
                     <div class="col-md-4">
                       <div class="panel panel-default" style="margin-bottom: 10px;">
-                        <div class="panel-heading" style="padding: 5px 10px; font-size: 11.5px; font-weight: bold;">TTD Saksi 1</div>
+                        <div class="panel-heading" style="padding: 5px 10px; font-size: 11.5px; font-weight: bold;">TTD Saksi 1 (Keluarga)</div>
                         <div class="panel-body text-center" style="padding: 8px;">
-                          <canvas id="pad_tolak_saksi1" width="240" height="110" style="border:1px dashed #bdc3c7; background:#fafafa; touch-action:none; cursor:crosshair;"></canvas>
-                          <div style="margin-top: 4px;">
+                          <div id="preview_box_tolak_saksi1">
+                            <img id="img_preview_tolak_saksi1" src="" alt="" style="display:none;">
+                            <canvas id="pad_tolak_saksi1" width="240" height="110" style="border:1px dashed #bdc3c7; background:#fafafa; touch-action:none; cursor:crosshair; max-width:100%;"></canvas>
+                          </div>
+                          <div style="margin-top: 4px; display:flex; gap:4px; align-items:center; justify-content:center;">
+                            <button type="button" class="btn btn-default btn-xs btn-buka-ttd-pasien" id="btn_ttd_tolak_saksi1"
+                              data-target-input="input_ttd_tolak_saksi1"
+                              data-preview-box="preview_box_tolak_saksi1"
+                              data-preview-img="img_preview_tolak_saksi1"
+                              data-status-text="st_tolak_saksi1"
+                              data-doc-title="Penolakan Tindakan Kedokteran"
+                              data-doc-code="{if: !empty($is_ugd)}RM.GD - 13{else}RM.RJ - 11{/if}"
+                              data-patient-name="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{else}{?=isset_or($data['nama_pasien'])?}{/if}"
+                              data-patient-norm="{?=isset_or($data['no_rkm_medis'])?}"
+                              data-signer-title="Saksi 1 (Keluarga Pasien)">
+                              <i class="fa fa-tablet text-primary"></i> Layar Sentuh
+                            </button>
                             <button type="button" class="btn btn-default btn-xs" id="clear_tolak_saksi1"><i class="fa fa-eraser"></i> Hapus</button>
                             <span id="st_tolak_saksi1" class="small text-muted">{if: !empty($data.form_data.ttd_tolak_saksi1)}<i class="fa fa-check text-success"></i> Ada{else}Belum ada{/if}</span>
                           </div>
@@ -513,14 +696,34 @@
                       </div>
                     </div>
                     <div class="col-md-4">
-                      <div class="panel panel-default" style="margin-bottom: 10px;">
-                        <div class="panel-heading" style="padding: 5px 10px; font-size: 11.5px; font-weight: bold;">TTD Saksi 2</div>
+                      <div class="panel panel-primary" style="margin-bottom: 10px;">
+                        <div class="panel-heading" style="padding: 5px 10px; font-size: 11.5px; font-weight: bold;">TTE Saksi 2 (Petugas RSGM)</div>
                         <div class="panel-body text-center" style="padding: 8px;">
-                          <canvas id="pad_tolak_saksi2" width="240" height="110" style="border:1px dashed #bdc3c7; background:#fafafa; touch-action:none; cursor:crosshair;"></canvas>
-                          <div style="margin-top: 4px;">
-                            <button type="button" class="btn btn-default btn-xs" id="clear_tolak_saksi2"><i class="fa fa-eraser"></i> Hapus</button>
-                            <span id="st_tolak_saksi2" class="small text-muted">{if: !empty($data.form_data.ttd_tolak_saksi2)}<i class="fa fa-check text-success"></i> Ada{else}Belum ada{/if}</span>
+                          <div id="sign_container_rj11_tolak_saksi2" style="border: 1px solid #bfdbfe; border-radius: 6px; background: #fafafa; min-height: 110px; display: flex; align-items: center; justify-content: center; padding: 6px; margin-bottom: 6px;">
+                            {if: !empty($tte_tolak_saksi2.qr_data_uri)}
+                              <div style="text-align:center;">
+                                <img src="{$tte_tolak_saksi2.qr_data_uri}" alt="QR TTE" style="height:56px; width:56px; display:block; margin:0 auto 2px;">
+                                <span class="label label-success" style="font-size:9px;"><i class="fa fa-check-circle"></i> {$tte_tolak_saksi2.signer_name}</span>
+                              </div>
+                            {elseif: !empty($tte_tolak_saksi2.signature_hash)}
+                              <div>
+                                <span class="label label-success"><i class="fa fa-check-circle"></i> TTE Terverifikasi</span>
+                                <div style="font-size:9px; color:#15803d; font-family:monospace;">{?=substr($tte_tolak_saksi2['signature_hash'], 0, 14)?}...</div>
+                              </div>
+                            {else}
+                              <span style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum TTE Petugas</span>
+                            {/if}
                           </div>
+                          <button type="button" class="btn btn-primary btn-xs btn-block btn-tte-rme" id="btn_tte_rj11_tolak_saksi2"
+                            data-ref_type="rj11_tolak_saksi2"
+                            data-ref_id="{$data.no_rawat}"
+                            data-signer_name="{?=isset_or($data['form_data']['tolak_saksi2'])?}"
+                            data-signer_role="Saksi 2 (RSGM)"
+                            data-target_input="input_ttd_tolak_saksi2"
+                            data-container_id="sign_container_rj11_tolak_saksi2"
+                            style="font-weight: 600;">
+                            <i class="fa fa-lock"></i> {if: !empty($tte_tolak_saksi2.signature_hash)}Verifikasi Ulang TTE{else}Tanda Tangani (TTE){/if}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -579,10 +782,34 @@ $(document).ready(function() {
                 if (!$('#f_penerima').val()) {
                     $('#f_penerima').val(d.nm_pasien || d.nama_pasien || '');
                 }
-                if (!$('#f_ttd_penerima').val()) {
-                    $('#f_ttd_penerima').val(d.nm_pasien || d.nama_pasien || '');
-                }
+                syncSignatureTargets();
             }
+        });
+    }
+
+    function syncSignatureTargets() {
+        var nr = $('#no_rawat').val() || '';
+        var rm = $('#no_rkm_medis').val() || $('#display_no_rkm_medis').val() || '';
+        var pName = $('#nm_pasien').val() || '';
+        var dokter = $('#f_pemberi').val() || $('#f_pemberi_select').val() || '';
+        var s2Setuju = $('.s-saksi2').val() || '';
+        var s2Tolak = $('.t-saksi2').val() || '';
+
+        $('#btn_tte_rj11_pemberi').attr({
+            'data-ref_id': nr,
+            'data-signer_name': dokter
+        });
+        $('#btn_tte_rj11_setuju_saksi2').attr({
+            'data-ref_id': nr,
+            'data-signer_name': s2Setuju
+        });
+        $('#btn_tte_rj11_tolak_saksi2').attr({
+            'data-ref_id': nr,
+            'data-signer_name': s2Tolak
+        });
+        $('.btn-buka-ttd-pasien').attr({
+            'data-patient-name': pName,
+            'data-patient-norm': rm
         });
     }
 
@@ -603,26 +830,30 @@ $(document).ready(function() {
         fetchPatient(initRawat);
     }
 
-    // Dokter synchronization
+    // Dokter & Saksi 2 synchronization (do not overwrite TTE hash)
     $('#f_pemberi_select').on('change input', function() {
-        var val = $(this).val();
-        $('#f_pemberi').val(val);
-        $('#f_ttd_pemberi').val(val);
+        $('#f_pemberi').val($(this).val());
+        syncSignatureTargets();
     });
 
     $('#f_pemberi').on('change input', function() {
-        var val = $(this).val();
-        $('#f_pemberi_select').val(val);
-        if (!$('#f_ttd_pemberi').val()) {
-            $('#f_ttd_pemberi').val(val);
-        }
+        $('#f_pemberi_select').val($(this).val());
+        syncSignatureTargets();
     });
 
-    $('#f_penerima').on('change input', function() {
-        if (!$('#f_ttd_penerima').val()) {
-            $('#f_ttd_penerima').val($(this).val());
-        }
-    });
+    $('.s-saksi2, .t-saksi2, #no_rawat, #nm_pasien').on('change input', syncSignatureTargets);
+    syncSignatureTargets();
+
+    function bindTabletClear(btnId, inputId, imgId, statusId, emptyLabel) {
+        $('#' + btnId).on('click', function() {
+            $('#' + inputId).val('');
+            $('#' + imgId).attr('src', '').hide();
+            $('#' + statusId).text(emptyLabel || 'Belum TTD').show();
+        });
+    }
+    bindTabletClear('clear_rj11_penerima', 'input_ttd_penerima_img', 'img_preview_rj11_penerima', 'status_rj11_penerima', 'Belum TTD Layar Sentuh');
+    bindTabletClear('clear_setuju_menyatakan', 'input_ttd_setuju_menyatakan', 'img_preview_setuju_menyatakan', 'status_setuju_menyatakan', 'Belum TTD');
+    bindTabletClear('clear_setuju_saksi1', 'input_ttd_setuju_saksi1', 'img_preview_setuju_saksi1', 'status_setuju_saksi1', 'Belum TTD');
 
     // Checkbox toggles
     $('#btn_check_all_info').on('click', function(e) {
@@ -683,7 +914,8 @@ $(document).ready(function() {
             info_lain_isi: $('.f-i11').val() || '', info_lain_tanda: $('.cb-i11').is(':checked'),
 
             ttd_pemberi: $('#f_ttd_pemberi').val() || '',
-            ttd_penerima: $('#f_ttd_penerima').val() || '',
+            ttd_penerima: $('#f_penerima').val() || '',
+            ttd_penerima_img: $('#input_ttd_penerima_img').val() || '',
 
             setuju_nama: $('.s-nama').val() || '',
             setuju_umur: $('.s-umur').val() || '',
@@ -699,6 +931,9 @@ $(document).ready(function() {
             setuju_menyatakan: $('.s-menyatakan').val() || '',
             setuju_saksi1: $('.s-saksi1').val() || '',
             setuju_saksi2: $('.s-saksi2').val() || '',
+            ttd_setuju_menyatakan: $('#input_ttd_setuju_menyatakan').val() || '',
+            ttd_setuju_saksi1: $('#input_ttd_setuju_saksi1').val() || '',
+            ttd_setuju_saksi2: $('#input_ttd_setuju_saksi2').val() || '',
 
             tolak_nama: $('.t-nama').val() || '',
             tolak_umur: $('.t-umur').val() || '',
@@ -721,7 +956,19 @@ $(document).ready(function() {
         return fd;
     }
 
-    function initRj11Sig(canvasId, inputId, clearBtnId, statusId, existingData) {
+    function setSigStatus(statusId, iconCls, text, isDanger) {
+        var $st = $('#' + statusId).empty();
+        if (iconCls) {
+            $st.append($('<i></i>').addClass('fa ' + iconCls)).append(document.createTextNode(' '));
+        }
+        if (isDanger) {
+            $st.append($('<span class="text-danger"></span>').text(text));
+        } else {
+            $st.append(document.createTextNode(text));
+        }
+    }
+
+    function initRj11Sig(canvasId, inputId, clearBtnId, statusId, previewImgId, existingData) {
         var canvas = document.getElementById(canvasId);
         if (!canvas) return;
         var ctx = canvas.getContext('2d');
@@ -733,10 +980,30 @@ $(document).ready(function() {
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
 
-        if (existingData && existingData.indexOf('data:image') === 0) {
+        function renderToCanvas(dataUrl) {
+            if (!dataUrl || dataUrl.indexOf('data:image') !== 0) return;
             var img = new Image();
-            img.onload = function() { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); };
-            img.src = existingData;
+            img.onload = function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            };
+            img.src = dataUrl;
+        }
+
+        if (existingData && existingData.indexOf('data:image') === 0) {
+            renderToCanvas(existingData);
+        }
+
+        if (previewImgId) {
+            $('#' + previewImgId).on('load', function() {
+                var $this = $(this);
+                var dataUrl = $this.attr('src') || '';
+                $this.hide();
+                if (dataUrl.indexOf('data:image') === 0) {
+                    renderToCanvas(dataUrl);
+                    setSigStatus(statusId, 'fa-check text-success', 'Ada (Layar Sentuh)', false);
+                }
+            });
         }
 
         function getPos(c, e) {
@@ -758,7 +1025,7 @@ $(document).ready(function() {
             ctx.stroke();
             prevX = x; prevY = y;
             $('#' + inputId).val(canvas.toDataURL('image/png'));
-            $('#' + statusId).html('<i class="fa fa-pencil text-primary"></i> Aktif');
+            setSigStatus(statusId, 'fa-pencil text-primary', 'Aktif', false);
         }
         function stop() { drawing = false; }
 
@@ -773,15 +1040,14 @@ $(document).ready(function() {
         $('#' + clearBtnId).click(function() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             $('#' + inputId).val('');
-            $('#' + statusId).html('<span class="text-danger">Dihapus</span>');
+            setSigStatus(statusId, '', 'Dihapus', true);
         });
     }
 
-    initRj11Sig('pad_tolak_menyatakan', 'input_ttd_tolak_menyatakan', 'clear_tolak_menyatakan', 'st_tolak_menyatakan', '{$data.form_data.ttd_tolak_menyatakan}');
-    initRj11Sig('pad_tolak_saksi1', 'input_ttd_tolak_saksi1', 'clear_tolak_saksi1', 'st_tolak_saksi1', '{$data.form_data.ttd_tolak_saksi1}');
-    initRj11Sig('pad_tolak_saksi2', 'input_ttd_tolak_saksi2', 'clear_tolak_saksi2', 'st_tolak_saksi2', '{$data.form_data.ttd_tolak_saksi2}');
+    initRj11Sig('pad_tolak_menyatakan', 'input_ttd_tolak_menyatakan', 'clear_tolak_menyatakan', 'st_tolak_menyatakan', 'img_preview_tolak_menyatakan', '{$data.form_data.ttd_tolak_menyatakan}');
+    initRj11Sig('pad_tolak_saksi1', 'input_ttd_tolak_saksi1', 'clear_tolak_saksi1', 'st_tolak_saksi1', 'img_preview_tolak_saksi1', '{$data.form_data.ttd_tolak_saksi1}');
 
-    $('#rj11Form').on('submit', function() {
+    $('#rj11Form').on('submit rme:beforeSave', function() {
         var fd = packFormData();
         $('#json_form_data').val(JSON.stringify(fd));
     });
@@ -813,9 +1079,6 @@ $(document).ready(function() {
 
         $('.cb-tanda-info').prop('checked', true);
 
-        $('#f_ttd_pemberi').val(namaDokter);
-        $('#f_ttd_penerima').val(namaPasien);
-
         // Tab Persetujuan
         $('.s-nama').val(namaPasien);
         $('.s-umur').val(umurPasien);
@@ -831,6 +1094,7 @@ $(document).ready(function() {
         $('.s-menyatakan').val(namaPasien);
         $('.s-saksi1').val('Keluarga Pasien');
         $('.s-saksi2').val('Siti Rahmah, S.Tr.Kep');
+        syncSignatureTargets();
 
         $('a[href="#tab_persetujuan"]').tab('show');
 

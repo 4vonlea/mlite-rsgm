@@ -56,7 +56,7 @@ td.tooth-sep { width: 16px; font-size: 13px; font-weight: bold; color: #7f8c8d; 
               <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
               <span>Data Pasien</span>
             </h4>
-            <span class="badge" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #bfdbfe;">Bedah Mulut</span>
+            <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
           </div>
 
           <div class="rsgm-reg-body">
@@ -340,6 +340,113 @@ td.tooth-sep { width: 16px; font-size: 13px; font-weight: bold; color: #7f8c8d; 
               </div>
             </div>
 
+            <!-- 3. PENGESAHAN TANDA TANGAN (PASIEN & DOKTER & SAKSI) -->
+            <div class="rsgm-soap-section" style="margin-top: 14px; margin-bottom: 0; border-color: #cbd5e1;">
+              <div class="rsgm-soap-sec-title">
+                <i class="fa fa-pencil-square-o text-primary"></i>
+                <span>III. Pengesahan Tanda Tangan</span>
+              </div>
+              <input type="hidden" name="ttd_pasien" id="input_ttd_pasien" value="{?=isset_or($data['ttd_pasien'])?}">
+              <input type="hidden" name="tte_dokter" id="input_tte_dokter" value="{?=isset_or($data['tte_dokter'])?}">
+              <input type="hidden" name="ttd_saksi" id="input_ttd_saksi" value="{?=isset_or($data['ttd_saksi'])?}">
+              <div class="row">
+                <div class="col-md-4">
+                  <label class="rsgm-compact-label"><i class="fa fa-tablet text-info"></i> TTD Pasien / Keluarga</label>
+                  <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; text-align: center;">
+                    <div id="preview_box_ttd_pasien" style="min-height: 84px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; background: #fff; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 6px;">
+                      {if: !empty($data.ttd_pasien)}
+                      <img src="{$data.ttd_pasien}" id="img_preview_ttd_pasien" style="max-height: 70px; max-width: 100%; border-radius: 4px;">
+                      {else}
+                      <span style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum ada TTD Pasien</span>
+                      {/if}
+                    </div>
+                    <button type="button" class="btn btn-info btn-xs btn-buka-ttd-pasien"
+                      data-target-input="input_ttd_pasien"
+                      data-preview-img="img_preview_ttd_pasien"
+                      data-preview-box="preview_box_ttd_pasien"
+                      data-doc-title="Penandaan Lokasi Bedah Mulut"
+                      data-doc-code="SKP 4"
+                      data-patient-name="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{/if}"
+                      data-patient-norm="{if: !empty($data.no_rkm_medis)}{$data.no_rkm_medis}{/if}"
+                      data-signer-title="Pasien / Keluarga"
+                      style="border-radius: 5px; font-weight: 600; width: 100%; padding: 5px 8px;">
+                      <i class="fa fa-tablet"></i> {if: !empty($data.ttd_pasien)}Buka TTD Ulang{else}Buka Canvas TTD (Tablet){/if}
+                    </button>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label class="rsgm-compact-label"><i class="fa fa-lock text-primary"></i> TTE Dokter Operator Bedah</label>
+                  <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; text-align: center;">
+                    <div id="sign_container_penandaan_dokter" style="min-height: 84px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; background: #fff; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 6px;">
+                      {if: !empty($tte_dokter.hash)}
+                      <div class="rsgm-tte-verified-card" style="padding: 4px 8px;">
+                        <div style="color: #16a34a; font-weight: 700; font-size: 11px;"><i class="fa fa-check-circle"></i> Terverifikasi TTE</div>
+                        {if: !empty($tte_dokter.qr_data_uri)}<img src="{$tte_dokter.qr_data_uri}" style="width: 60px; height: 60px; margin: 3px auto; display: block;">{/if}
+                        <div style="font-weight: 700; font-size: 10.5px; color: #0f172a;">{$tte_dokter.signer_name}</div>
+                        <a href="{$tte_dokter.verify_url}" target="_blank" style="font-size: 9px; color: #2563eb; text-decoration: underline;">Verifikasi</a>
+                      </div>
+                      {else}
+                      <span style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum ditandatangani (TTE)</span>
+                      {/if}
+                    </div>
+                    <button type="button" class="btn btn-primary btn-xs btn-tte-rme"
+                      data-ref_type="penandaan_dokter"
+                      data-ref_id="{if: !empty($data.id)}{$data.id}{else}{$data.no_rawat}{/if}"
+                      data-signer_name="{$data.nama_dokter}"
+                      data-signer_role="Dokter Operator Bedah"
+                      data-target_input="input_tte_dokter"
+                      data-container_id="sign_container_penandaan_dokter"
+                      style="border-radius: 5px; font-weight: 600; width: 100%; padding: 5px 8px;">
+                      <i class="fa fa-lock"></i> {if: !empty($tte_dokter.hash)}Tanda Tangani Ulang (TTE){else}Tanda Tangani (TTE Dokter){/if}
+                    </button>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label class="rsgm-compact-label"><i class="fa fa-lock text-success"></i> TTE / TTD Saksi</label>
+                  <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; text-align: center;">
+                    <div id="preview_box_ttd_saksi" style="min-height: 84px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; background: #fff; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 6px;">
+                      {if: !empty($tte_saksi.hash)}
+                      <div class="rsgm-tte-verified-card" style="padding: 4px 8px;">
+                        <div style="color: #16a34a; font-weight: 700; font-size: 11px;"><i class="fa fa-check-circle"></i> Terverifikasi TTE</div>
+                        {if: !empty($tte_saksi.qr_data_uri)}<img src="{$tte_saksi.qr_data_uri}" style="width: 60px; height: 60px; margin: 3px auto; display: block;">{/if}
+                        <div style="font-weight: 700; font-size: 10.5px; color: #0f172a;">{$tte_saksi.signer_name}</div>
+                        <a href="{$tte_saksi.verify_url}" target="_blank" style="font-size: 9px; color: #2563eb; text-decoration: underline;">Verifikasi</a>
+                      </div>
+                      {elseif: !empty($data.ttd_saksi) && strlen($data.ttd_saksi) > 64}
+                      <img src="{$data.ttd_saksi}" id="img_preview_ttd_saksi" style="max-height: 70px; max-width: 100%; border-radius: 4px;">
+                      {else}
+                      <span style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum ada TTE/TTD Saksi</span>
+                      {/if}
+                    </div>
+                    <div style="display: flex; gap: 4px;">
+                      <button type="button" class="btn btn-success btn-xs btn-tte-rme"
+                        data-ref_type="penandaan_saksi"
+                        data-ref_id="{if: !empty($data.id)}{$data.id}{else}{$data.no_rawat}{/if}"
+                        data-signer_name="{$data.nama_saksi}"
+                        data-signer_role="Saksi"
+                        data-target_input="input_ttd_saksi"
+                        data-container_id="preview_box_ttd_saksi"
+                        style="border-radius: 5px; font-weight: 600; flex: 1; padding: 5px 6px;">
+                        <i class="fa fa-lock"></i> TTE Saksi
+                      </button>
+                      <button type="button" class="btn btn-info btn-xs btn-buka-ttd-pasien"
+                        data-target-input="input_ttd_saksi"
+                        data-preview-img="img_preview_ttd_saksi"
+                        data-preview-box="preview_box_ttd_saksi"
+                        data-doc-title="Penandaan Lokasi Bedah Mulut (Saksi)"
+                        data-doc-code="SKP 4"
+                        data-patient-name="{if: !empty($data.nm_pasien)}{$data.nm_pasien}{/if}"
+                        data-patient-norm="{if: !empty($data.no_rkm_medis)}{$data.no_rkm_medis}{/if}"
+                        data-signer-title="Saksi"
+                        style="border-radius: 5px; font-weight: 600; flex: 1; padding: 5px 6px;">
+                        <i class="fa fa-tablet"></i> Canvas
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div> <!-- /.rsgm-reg-body -->
 
           <!-- FOOTER ACTIONS INTEGRATED -->
@@ -412,7 +519,12 @@ $(document).ready(function() {
 
     $('#kd_dokter').on('change', function() {
         var opt = $(this).find('option:selected');
-        $('#nama_dokter').val(opt.data('nama') || '');
+        var nm = opt.data('nama') || '';
+        $('#nama_dokter').val(nm);
+        $('.btn-tte-rme[data-ref_type="penandaan_dokter"]').attr('data-signer_name', nm);
+    });
+    $('#nama_saksi').on('input change', function() {
+        $('.btn-tte-rme[data-ref_type="penandaan_saksi"]').attr('data-signer_name', $(this).val().trim());
     });
 
     // 2. ODONTOGRAM - CENTANG SEKOTAKAN

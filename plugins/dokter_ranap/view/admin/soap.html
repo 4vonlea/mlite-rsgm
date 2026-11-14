@@ -28,7 +28,15 @@
     </div>
   </div>
 </div>
-<h4>Rincian Riwayat</h4>
+<div class="rsgm-table-soap-shell">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+  <h4 style="margin:0;">Rincian Riwayat</h4>
+  {if: ($void_count > 0) || ($void_ranap_count > 0)}
+  <button type="button" class="btn btn-default btn-xs js-toggle-voided-soap" data-showing="0">
+    <i class="fa fa-ban text-danger"></i> <span class="js-void-btn-lbl">Tampilkan Dibatalkan</span> ({?= $void_count + $void_ranap_count ?})
+  </button>
+  {/if}
+</div>
 <div class="table-responsive no-margin">
   <table class="table table-bordered no-padding" width="100%">
     <thead>
@@ -47,28 +55,43 @@
         <th>Instruksi & Evaluasi</th>
       </tr>
     </thead>
-    <tbody>
       {if: $pemeriksaan}
       {loop: $pemeriksaan}
+      <tbody class="js-soap-entry {if: $value.is_voided}js-soap-voided-item is-voided{/if}"
+        {if: $value.is_voided}style="display:none;"{/if}
+        data-soap-module="dokter_ranap"
+        data-table-name="pemeriksaan_ralan"
+        data-record-key="{?=isset_or($value.record_key)?}"
+        data-changed-map="{?=isset_or($value.changed_fields_json)?}">
       <tr>
         <td rowspan="7" style="vertical-align:top;">{?=isset_or($value.nomor)?}</td>
         <td rowspan="6" style="vertical-align:top;white-space: nowrap;">
           <b>Rawat Jalan</b><br>
           {?=isset_or($value.tgl_perawatan)?} {?=isset_or($value.jam_rawat)?}<br>
           {?=isset_or($value.departemen_petugas)?}
+          {if: $value.is_voided}
+          <br><span class="label label-danger" title="{?=isset_or($value.void_info.void_reason)?}"><i class="fa fa-ban"></i> DIBATALKAN (VOID)</span>
+          {else}
+            {if: $value.has_revisions}
+            <br><button type="button" class="rsgm-soap-rev-badge js-soap-rev-open" data-module="dokter_ranap" data-table="pemeriksaan_ralan" data-key="{?=isset_or($value.record_key)?}"><i class="fa fa-history"></i> Dikoreksi ({?=isset_or($value.revision_count)?}x)</button>
+            {/if}
+          {/if}
         </td>
-        <td>{?=isset_or($value.suhu_tubuh)?}</td>
-        <td>{?=isset_or($value.tensi)?}</td>
-        <td>{?=isset_or($value.nadi)?}</td>
-        <td>{?=isset_or($value.respirasi)?}</td>
-        <td>{?=isset_or($value.tinggi)?}</td>
-        <td>{?=isset_or($value.berat)?}</td>
-        <td>{?=isset_or($value.gcs)?}</td>
-        <td>{?=isset_or($value.spo2)?}</td>
-        <td>{?=isset_or($value.alergi)?}</td>
+        <td data-rev-field="suhu_tubuh">{?=isset_or($value.suhu_tubuh)?}</td>
+        <td data-rev-field="tensi">{?=isset_or($value.tensi)?}</td>
+        <td data-rev-field="nadi">{?=isset_or($value.nadi)?}</td>
+        <td data-rev-field="respirasi">{?=isset_or($value.respirasi)?}</td>
+        <td data-rev-field="tinggi">{?=isset_or($value.tinggi)?}</td>
+        <td data-rev-field="berat">{?=isset_or($value.berat)?}</td>
+        <td data-rev-field="gcs">{?=isset_or($value.gcs)?}</td>
+        <td data-rev-field="spo2">{?=isset_or($value.spo2)?}</td>
+        <td data-rev-field="alergi">{?=isset_or($value.alergi)?}</td>
         <td rowspan="7" style="vertical-align:top;">
-          Instruksi: {?=isset_or($value.instruksi)?}<br><br>
-          Evaluasi: {?=isset_or($value.evaluasi)?}<br><br>
+          <div data-rev-field="instruksi">Instruksi: {?=isset_or($value.instruksi)?}</div><br>
+          <div data-rev-field="evaluasi">Evaluasi: {?=isset_or($value.evaluasi)?}</div><br>
+          {if: $value.is_voided}
+          <div class="alert alert-danger" style="padding:5px 8px;font-size:11px;margin-bottom:8px;"><strong>VOID:</strong> {?=isset_or($value.void_info.void_reason)?} ({?=isset_or($value.void_info.deleted_by)?})</div>
+          {/if}
           <div class="qrcodePetugas{?=isset_or($value.nomor)?}" style="margin-top:10px;width:40px;margin-right: 120px;"></div>
           {?=isset_or($value.nama_petugas)?}
           <script>
@@ -82,23 +105,23 @@
       </tr>
       <tr>
         <th colspan="2">Kesadaran</th>
-        <td colspan="7">{?=isset_or($value.kesadaran)?}</td>
+        <td colspan="7" data-rev-field="kesadaran">{?=isset_or($value.kesadaran)?}</td>
       </tr>
       <tr>
         <th colspan="2">Lingkar Perut</th>
-        <td colspan="7">{?=isset_or($value.lingkar_perut)?}</td>
+        <td colspan="7" data-rev-field="lingkar_perut">{?=isset_or($value.lingkar_perut)?}</td>
       </tr>
       <tr>
         <th colspan="2">Subyektif</th>
-        <td colspan="7">{?=isset_or($value.keluhan)?}</td>
+        <td colspan="7" data-rev-field="keluhan">{?=isset_or($value.keluhan)?}</td>
       </tr>
       <tr>
         <th colspan="2">Obyektif</th>
-        <td colspan="7">{?=isset_or($value.pemeriksaan)?}</td>
+        <td colspan="7" data-rev-field="pemeriksaan">{?=isset_or($value.pemeriksaan)?}</td>
       </tr>
       <tr>
         <th colspan="2">Assesment</th>
-        <td colspan="7">{?=isset_or($value.penilaian)?}</td>
+        <td colspan="7" data-rev-field="penilaian">{?=isset_or($value.penilaian)?}</td>
       </tr>
       <tr>
         <td>
@@ -147,42 +170,72 @@
               data-instruksi="{?=isset_or($value.instruksi)?}"
               data-evaluasi="{?=isset_or($value.evaluasi)?}"
               data-spo2="{?=isset_or($value.spo2)?}"
-              {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip}disabled{/if}
+              data-table_name="pemeriksaan_ralan"
+              data-record_key="{?=isset_or($value.record_key)?}"
+              data-in_grace="{?= $value.in_grace ? '1' : '0' ?}"
+              data-needs_reason="{?= $value.needs_reason ? '1' : '0' ?}"
+              data-minutes_left="{?=isset_or($value.minutes_left, 0)?}"
+              data-grace_why="{?=isset_or($value.grace_why)?}"
+              data-changed_fields="{?=isset_or($value.changed_fields_json)?}"
+              {if: ($this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip && $this->core->getUserInfo('role') != 'admin') || $value.is_voided}disabled{/if}
               ><span class="fa fa-edit"></span><span class="hidden-xs"> Edit</span></button>
             <button type="button" name="button" class="btn btn-danger btn-xs hapus_soap"
               data-no_rawat="{?=isset_or($value.no_rawat)?}"
               data-tgl_perawatan="{?=isset_or($value.tgl_perawatan)?}"
               data-jam_rawat="{?=isset_or($value.jam_rawat)?}"
-              {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip}disabled{/if}
+              data-table_name="pemeriksaan_ralan"
+              data-record_key="{?=isset_or($value.record_key)?}"
+              data-in_grace="{?= $value.in_grace ? '1' : '0' ?}"
+              data-needs_reason="{?= $value.needs_reason ? '1' : '0' ?}"
+              data-minutes_left="{?=isset_or($value.minutes_left, 0)?}"
+              data-grace_why="{?=isset_or($value.grace_why)?}"
+              {if: ($this->core->getUserInfo('username', $_SESSION['mlite_user']) != $value.nip && $this->core->getUserInfo('role') != 'admin') || $value.is_voided}disabled{/if}
               ><span class="fa fa-trash"></span><span class="hidden-xs"> Hapus</span></button>
           </div>
         </td>
         <th colspan="2">Plan</th>
-        <td colspan="7">{?=isset_or($value.rtl)?}</td>
+        <td colspan="7" data-rev-field="rtl">{?=isset_or($value.rtl)?}</td>
       </tr>
+      </tbody>
       {/loop}
       {/if}
       {if: $pemeriksaan_ranap}
       {loop: $pemeriksaan_ranap as $data}
+      <tbody class="js-soap-entry {if: $data.is_voided}js-soap-voided-item is-voided{/if}"
+        {if: $data.is_voided}style="display:none;"{/if}
+        data-soap-module="dokter_ranap"
+        data-table-name="pemeriksaan_ranap"
+        data-record-key="{?=isset_or($data.record_key)?}"
+        data-changed-map="{?=isset_or($data.changed_fields_json)?}">
       <tr>
         <td rowspan="6" style="vertical-align:top;">{?=isset_or($data.nomor)?}</td>
         <td rowspan="5" style="vertical-align:top;white-space: nowrap;">
           <b>Rawat Inap</b><br>
           {?=isset_or($data.tgl_perawatan)?} {?=isset_or($data.jam_rawat)?}<br>
           {?=isset_or($data.departemen_petugas)?}
+          {if: $data.is_voided}
+          <br><span class="label label-danger" title="{?=isset_or($data.void_info.void_reason)?}"><i class="fa fa-ban"></i> DIBATALKAN (VOID)</span>
+          {else}
+            {if: $data.has_revisions}
+            <br><button type="button" class="rsgm-soap-rev-badge js-soap-rev-open" data-module="dokter_ranap" data-table="pemeriksaan_ranap" data-key="{?=isset_or($data.record_key)?}"><i class="fa fa-history"></i> Dikoreksi ({?=isset_or($data.revision_count)?}x)</button>
+            {/if}
+          {/if}
         </td>
-        <td>{?=isset_or($data.suhu_tubuh)?}</td>
-        <td>{?=isset_or($data.tensi)?}</td>
-        <td>{?=isset_or($data.nadi)?}</td>
-        <td>{?=isset_or($data.respirasi)?}</td>
-        <td>{?=isset_or($data.tinggi)?}</td>
-        <td>{?=isset_or($data.berat)?}</td>
-        <td>{?=isset_or($data.gcs)?}</td>
-        <td>{?=isset_or($data.spo2)?}</td>
-        <td>{?=isset_or($data.alergi)?}</td>
+        <td data-rev-field="suhu_tubuh">{?=isset_or($data.suhu_tubuh)?}</td>
+        <td data-rev-field="tensi">{?=isset_or($data.tensi)?}</td>
+        <td data-rev-field="nadi">{?=isset_or($data.nadi)?}</td>
+        <td data-rev-field="respirasi">{?=isset_or($data.respirasi)?}</td>
+        <td data-rev-field="tinggi">{?=isset_or($data.tinggi)?}</td>
+        <td data-rev-field="berat">{?=isset_or($data.berat)?}</td>
+        <td data-rev-field="gcs">{?=isset_or($data.gcs)?}</td>
+        <td data-rev-field="spo2">{?=isset_or($data.spo2)?}</td>
+        <td data-rev-field="alergi">{?=isset_or($data.alergi)?}</td>
         <td rowspan="6" style="vertical-align:top;">
-          Instruksi: {?=isset_or($data.instruksi)?}<br><br>
-          Evaluasi: {?=isset_or($data.evaluasi)?}<br><br>
+          <div data-rev-field="instruksi">Instruksi: {?=isset_or($data.instruksi)?}</div><br>
+          <div data-rev-field="evaluasi">Evaluasi: {?=isset_or($data.evaluasi)?}</div><br>
+          {if: $data.is_voided}
+          <div class="alert alert-danger" style="padding:5px 8px;font-size:11px;margin-bottom:8px;"><strong>VOID:</strong> {?=isset_or($data.void_info.void_reason)?} ({?=isset_or($data.void_info.deleted_by)?})</div>
+          {/if}
           <div class="qrcodePetugas{?=isset_or($data.nomor)?}" style="margin-top:10px;width:40px;margin-right: 120px;"></div>
           {?=isset_or($data.nama_petugas)?}
           <script>
@@ -196,19 +249,19 @@
       </tr>
       <tr>
         <th colspan="2">Kesadaran</th>
-        <td colspan="7">{?=isset_or($data.kesadaran)?}</td>
+        <td colspan="7" data-rev-field="kesadaran">{?=isset_or($data.kesadaran)?}</td>
       </tr>
       <tr>
         <th colspan="2">Subyektif</th>
-        <td colspan="7">{?=isset_or($data.keluhan)?}</td>
+        <td colspan="7" data-rev-field="keluhan">{?=isset_or($data.keluhan)?}</td>
       </tr>
       <tr>
         <th colspan="2">Obyektif</th>
-        <td colspan="7">{?=isset_or($data.pemeriksaan)?}</td>
+        <td colspan="7" data-rev-field="pemeriksaan">{?=isset_or($data.pemeriksaan)?}</td>
       </tr>
       <tr>
         <th colspan="2">Assesment</th>
-        <td colspan="7">{?=isset_or($data.penilaian)?}</td>
+        <td colspan="7" data-rev-field="penilaian">{?=isset_or($data.penilaian)?}</td>
       </tr>
       <tr>
         <td>
@@ -251,24 +304,41 @@
               data-instruksi="{?=isset_or($data.instruksi)?}"
               data-evaluasi="{?=isset_or($data.evaluasi)?}"
               data-spo2="{?=isset_or($data.spo2)?}"
-              {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $data.nip}disabled{/if}
+              data-table_name="pemeriksaan_ranap"
+              data-record_key="{?=isset_or($data.record_key)?}"
+              data-in_grace="{?= $data.in_grace ? '1' : '0' ?}"
+              data-needs_reason="{?= $data.needs_reason ? '1' : '0' ?}"
+              data-minutes_left="{?=isset_or($data.minutes_left, 0)?}"
+              data-grace_why="{?=isset_or($data.grace_why)?}"
+              data-changed_fields="{?=isset_or($data.changed_fields_json)?}"
+              {if: ($this->core->getUserInfo('username', $_SESSION['mlite_user']) != $data.nip && $this->core->getUserInfo('role') != 'admin') || $data.is_voided}disabled{/if}
               ><span class="fa fa-edit"></span><span class="hidden-xs"> Edit</span></button>
             <button type="button" name="button" class="btn btn-danger btn-xs hapus_soap"
               data-no_rawat="{?=isset_or($data.no_rawat)?}"
               data-tgl_perawatan="{?=isset_or($data.tgl_perawatan)?}"
               data-jam_rawat="{?=isset_or($data.jam_rawat)?}"
-              {if: $this->core->getUserInfo('username', $_SESSION['mlite_user']) != $data.nip}disabled{/if}
+              data-table_name="pemeriksaan_ranap"
+              data-record_key="{?=isset_or($data.record_key)?}"
+              data-in_grace="{?= $data.in_grace ? '1' : '0' ?}"
+              data-needs_reason="{?= $data.needs_reason ? '1' : '0' ?}"
+              data-minutes_left="{?=isset_or($data.minutes_left, 0)?}"
+              data-grace_why="{?=isset_or($data.grace_why)?}"
+              {if: ($this->core->getUserInfo('username', $_SESSION['mlite_user']) != $data.nip && $this->core->getUserInfo('role') != 'admin') || $data.is_voided}disabled{/if}
               ><span class="fa fa-trash"></span><span class="hidden-xs"> Hapus</span></button>
           </div>
         </td>
         <th colspan="2">Plan</th>
-        <td colspan="7">{?=isset_or($data.rtl)?}</td>
+        <td colspan="7" data-rev-field="rtl">{?=isset_or($data.rtl)?}</td>
       </tr>
+      </tbody>
       {/loop}
       {/if}
-    </tbody>
   </table>
+</div>
 </div>
 <script type="text/javascript">
   $(".alert-dismissible").fadeTo(3000, 500).slideUp(500);
+  if (window.RSGMSoapRevision) {
+    window.RSGMSoapRevision.decorateContainer(jQuery('.rsgm-table-soap-shell'), 'dokter_ranap');
+  }
 </script>

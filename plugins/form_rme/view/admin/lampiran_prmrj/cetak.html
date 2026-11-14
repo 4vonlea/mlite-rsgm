@@ -4,10 +4,12 @@
     <meta charset="utf-8">
     <title>PROFIL RINGKAS MEDIS RAWAT JALAN (PRMRJ) - {$data.no_rawat}</title>
     <style>
+        {if: empty($is_mpdf)}
         @page {
             size: A4 portrait;
             margin: 7mm 8mm 7mm 8mm;
         }
+        {/if}
         * {
             box-sizing: border-box;
             -webkit-print-color-adjust: exact;
@@ -15,148 +17,152 @@
         }
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 9pt;
+            font-size: 8.5pt;
             color: #000;
-            background: #f0f0f0;
+            background: {if: !empty($is_mpdf)}#ffffff{else}#f0f0f0{/if};
             margin: 0;
-            padding: 15px 0;
-            line-height: 1.25;
+            padding: {if: !empty($is_mpdf)}0{else}15px 0{/if};
+            line-height: 1.2;
         }
 
         /* Toolbar Layar */
         .no-print-toolbar {
-            width: 195mm;
-            margin: 0 auto 12px auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            width: 210mm;
+            margin: 0 auto 10px auto;
+            padding: 8px 12px;
             background: #2c3e50;
             color: #fff;
-            padding: 10px 15px;
             border-radius: 4px;
-            box-sizing: border-box;
         }
         .btn-toolbar {
-            padding: 6px 14px;
-            font-size: 13px;
-            border-radius: 3px;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
+            display: inline-block;
+            padding: 5px 12px;
+            font-size: 9pt;
             font-weight: bold;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-right: 5px;
         }
-        .btn-print { background: #27ae60; color: #fff; }
-        .btn-print:hover { background: #219150; }
-        .btn-pdf { background: #e74c3c; color: #fff; }
-        .btn-pdf:hover { background: #c0392b; }
-        .btn-close { background: #95a5a6; color: #fff; }
-        .btn-close:hover { background: #7f8c8d; }
+        .btn-print { background-color: #27ae60; }
+        .btn-print:hover { background-color: #219150; }
+        .btn-pdf { background-color: #c0392b; }
+        .btn-pdf:hover { background-color: #a93226; }
+        .btn-close { background-color: #7f8c8d; }
+        .btn-close:hover { background-color: #707b7c; }
 
         /* Container Halaman Cetak A4 */
         .page {
-            width: 195mm;
-            min-height: 275mm;
-            margin: 0 auto 20px auto;
+            width: {if: !empty($is_mpdf)}100%{else}210mm{/if};
+            margin: {if: !empty($is_mpdf)}0{else}0 auto 15px auto{/if};
             background: #fff;
-            padding: 0;
-            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+            padding: {if: !empty($is_mpdf)}0{else}7mm 8mm{/if};
+            {if: empty($is_mpdf)}box-shadow: 0 0 10px rgba(0,0,0,0.15);{/if}
             position: relative;
         }
         .page-break {
             page-break-after: always;
         }
 
-        /* Header Kop & Pasien Box */
+        /* Header Kop & Kotak Identitas Pasien (sesuai template DOCX) */
         .header-outer-table {
             width: 100%;
-            border: 1.5px solid #000;
             border-collapse: collapse;
+            border: none;
         }
-        .header-outer-table td {
+        .header-outer-table > tbody > tr > td {
             vertical-align: middle;
-            padding: 4px 6px;
+            padding: 0;
+            border: none;
         }
         .kop-col {
-            width: 62%;
-            border-right: 1.5px solid #000;
-            text-align: center;
-            padding: 4px 8px;
+            width: 61%;
+            padding-right: 8px;
+            text-align: left;
         }
         .patient-box-col {
-            width: 38%;
-            padding: 6px 10px;
-            font-size: 9pt;
-            line-height: 1.45;
+            width: 39%;
+            padding-left: 6px;
+        }
+        .patient-box-tbl {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+            font-size: 8pt;
+            line-height: 1.4;
+        }
+        .patient-box-tbl td {
+            border: none;
+            padding: 2px 6px;
         }
 
-        .rm-box-group {
-            display: inline-flex;
+        .rm-boxes {
+            display: inline-table;
+            border-collapse: collapse;
             vertical-align: middle;
-            margin-left: 4px;
         }
-        .rm-digit-box {
-            display: inline-block;
+        table.rm-boxes td.rm-box {
             width: 16px;
-            height: 18px;
-            line-height: 18px;
+            height: 17px;
             border: 1px solid #000;
             text-align: center;
+            vertical-align: middle;
             font-weight: bold;
-            font-size: 9.5pt;
-            margin-right: 2px;
+            font-size: 8.5pt;
+            padding: 0;
+            line-height: 17px;
         }
 
         /* Judul Formulir */
-        .title-box {
-            border: 1.5px solid #000;
-            border-top: none;
-            padding: 6px 8px;
+        .title-row {
+            padding: 8px 4px 6px 4px;
             text-align: center;
             font-weight: bold;
             font-size: 11pt;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             text-transform: uppercase;
         }
 
         /* Tabel Demografi Pasien 2x2 */
         .patient-info-table {
             width: 100%;
-            border: 1.5px solid #000;
-            border-top: none;
+            border: 1px solid #000;
             border-collapse: collapse;
-            font-size: 8.5pt;
+            font-size: 8pt;
         }
         .patient-info-table td {
             padding: 3px 6px;
-            vertical-align: top;
+            vertical-align: middle;
             border: 1px solid #000;
             width: 50%;
+            height: 19px;
         }
 
-        /* Tabel Utama PRMRJ Grid */
+        /* Tabel Utama PRMRJ Grid (26 baris) */
         .table-prmrj {
             width: 100%;
             border-collapse: collapse;
-            border: 1.5px solid #000;
+            border: 1px solid #000;
             border-top: none;
-            font-size: 8pt;
+            font-size: 7.5pt;
         }
         .table-prmrj th, .table-prmrj td {
             border: 1px solid #000;
-            padding: 2px 4px;
+            padding: 2px 3px;
             vertical-align: middle;
         }
         .table-prmrj th {
             text-align: center;
             font-weight: bold;
             background: #fff;
-            line-height: 1.2;
+            line-height: 1.15;
+            font-size: 7.5pt;
+            padding: 3px 2px;
         }
         .table-prmrj td {
-            height: 18px;
+            height: 17px;
             line-height: 1.15;
         }
 
@@ -164,60 +170,64 @@
         .sub-table {
             width: 100%;
             border-collapse: collapse;
-            border: 1.5px solid #000;
+            border: 1px solid #000;
             font-size: 8pt;
         }
         .sub-table th, .sub-table td {
             border: 1px solid #000;
-            padding: 2px 4px;
+            padding: 2px 5px;
             vertical-align: middle;
         }
         .sub-table th {
             text-align: center;
             font-weight: bold;
             background: #fff;
-            padding: 4px;
+            padding: 3px 4px;
+            font-size: 8pt;
         }
         .sub-table td {
             height: 18px;
         }
 
         /* Halaman 2 Header Bar */
-        .hal2-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .hal2-header-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1px solid #000;
             font-size: 8.5pt;
-            padding: 4px 6px 6px 6px;
-            margin-bottom: 4px;
+            margin-bottom: 0;
+        }
+        .hal2-header-table td {
+            padding: 3px 2px 5px 2px;
+            vertical-align: middle;
         }
 
-        /* Catatan Kaki */
+        /* Catatan Kaki Halaman 1 */
         .footer-note-wrap {
-            margin-top: 5px;
+            margin-top: 6px;
             text-align: right;
             font-size: 7.5pt;
             font-style: italic;
-            color: #222;
+            color: #000;
         }
-        .page-footer-meta {
-            margin-top: 4px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 7.5pt;
+        .footer-doc-code {
+            margin-top: 10px;
+            text-align: left;
+            font-size: 6.5pt;
             font-weight: bold;
-            padding: 0 4px;
+            color: #000;
         }
 
         @media print {
             body {
-                background: #fff;
-                padding: 0;
+                background: #fff !important;
+                padding: 0 !important;
             }
             .page {
-                box-shadow: none;
-                width: 100%;
-                margin: 0;
+                box-shadow: none !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
             .page-break {
                 page-break-after: always;
@@ -228,25 +238,20 @@
         }
     </style>
 </head>
-<body {if: empty($is_mpdf)}onload="if(window.location.search.indexOf('noprint=1')===-1)window.print()"{/if}>
+<body>
 
+    {if: empty($is_mpdf)}
     <!-- Toolbar Layar (Tidak dicetak) -->
     <div class="no-print-toolbar no-print">
-        <div style="font-size: 13px; font-weight: bold;">
-            Preview Dokumen: Profil Ringkas Medis Rawat Jalan ({$data.no_rawat}) &mdash; 2 Halaman
-        </div>
-        <div style="display: flex; gap: 8px;">
-            <button onclick="window.print()" class="btn-toolbar btn-print">
-                &#128438; Cetak Dokumen
-            </button>
-            <a href="{?=url([ADMIN, 'form_rme', 'prmrjcetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">
-                &#128196; Download PDF
-            </a>
-            <button onclick="window.close()" class="btn-toolbar btn-close">
-                &#10006; Tutup
-            </button>
-        </div>
+        <button type="button" onclick="window.print()" class="btn-toolbar btn-print">Cetak Dokumen</button>
+        {if: !empty($data.id)}
+        <a href="{?=url([ADMIN, 'form_rme', 'prmrjcetak'])?}&id={$data.id}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">Unduh PDF</a>
+        {elseif: !empty($data.no_rawat)}
+        <a href="{?=url([ADMIN, 'form_rme', 'prmrjcetak'])?}&no_rawat={?=urlencode((string)$data['no_rawat'])?}&pdf=1" target="_blank" class="btn-toolbar btn-pdf">Unduh PDF</a>
+        {/if}
+        <button type="button" onclick="window.close()" class="btn-toolbar btn-close">Tutup</button>
     </div>
+    {/if}
 
     <!-- ======================================================== -->
     <!-- HALAMAN 1 : PROFIL RINGKAS MEDIS RAWAT JALAN & ALERGI    -->
@@ -257,31 +262,45 @@
         <table class="header-outer-table">
             <tr>
                 <td class="kop-col">
-                    <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop Surat RSGM Gusti Hasan Aman" style="width: 100%; max-height: 72px; object-fit: contain; display: block; margin: 0 auto;">
+                    <img src="{if: !empty($kop_img)}{$kop_img}{elseif: !empty($data.kop_img)}{$data.kop_img}{else}{?=url('assets/img/KOP-SURAT.png')?}{/if}" alt="Kop Surat RSGM Gusti Hasan Aman" style="width: 100%; max-height: 70px; object-fit: contain; display: block;">
                 </td>
                 <td class="patient-box-col">
-                    <div style="margin-bottom: 3px;">
-                        <span>No RM &nbsp;&nbsp;=</span>
-                        <div class="rm-box-group">
-                            {loop: $data.rm_digits}
-                            <span class="rm-digit-box">{$value}</span>
-                            {/loop}
-                        </div>
-                    </div>
-                    <div style="margin-bottom: 3px;">
-                        Nama Pasien : <strong>{$data.nm_pasien}</strong> &nbsp;({$data.jk})
-                    </div>
-                    <div>
-                        Tanggal Lahir : {$data.tgl_lahir_indo}
-                    </div>
+                    <table class="patient-box-tbl">
+                        <tr>
+                            <td style="width: 82px; white-space: nowrap; vertical-align: middle; padding-top: 4px;">No RM</td>
+                            <td style="width: 8px; vertical-align: middle; padding-top: 4px;">:</td>
+                            <td style="vertical-align: middle; padding-top: 4px;">
+                                <table class="rm-boxes">
+                                    <tr>
+                                        {loop: $data.rm_digits}
+                                        <td class="rm-box">{$value}</td>
+                                        {/loop}
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="white-space: nowrap; vertical-align: top;">Nama Pasien</td>
+                            <td style="vertical-align: top;">:</td>
+                            <td style="vertical-align: top;">
+                                <strong>{$data.nm_pasien}</strong>
+                                {if: !empty($data.jk)} ({$data.jk}){else} L/P{/if}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="white-space: nowrap; vertical-align: top; padding-bottom: 4px;">Tanggal Lahir</td>
+                            <td style="vertical-align: top; padding-bottom: 4px;">:</td>
+                            <td style="vertical-align: top; padding-bottom: 4px;">{$data.tgl_lahir_indo}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" class="title-row">
+                    FORMULIR PROFIL RINGKAS MEDIS RAWAT JALAN
                 </td>
             </tr>
         </table>
-
-        <!-- JUDUL DOKUMEN -->
-        <div class="title-box">
-            FORMULIR PROFIL RINGKAS MEDIS RAWAT JALAN
-        </div>
 
         <!-- DEMOGRAFI PASIEN 2X2 -->
         <table class="patient-info-table">
@@ -290,28 +309,28 @@
                 <td>Tempat / Tanggal Lahir : {if: !empty($data.tmp_lahir)}{$data.tmp_lahir}, {/if}{$data.tgl_lahir_indo}</td>
             </tr>
             <tr>
-                <td>Nomor Rekam Medis : <strong>{$data.no_rkm_medis}</strong></td>
-                <td>Jenis Kelamin : {if: $data.jk == 'L'}Laki-laki{elseif: $data.jk == 'P'}Perempuan{else}-{/if}</td>
+                <td style="border-bottom: none;">Nomor Rekam Medis : <strong>{$data.no_rkm_medis}</strong></td>
+                <td style="border-bottom: none;">Jenis Kelamin : {if: $data.jk == 'L'}Laki-laki{elseif: $data.jk == 'P'}Perempuan{else}-{/if}</td>
             </tr>
         </table>
 
-        <!-- TABEL UTAMA DIAGNOSA & DPJP -->
+        <!-- TABEL UTAMA DIAGNOSA & DPJP (26 BARIS) -->
         <table class="table-prmrj">
             <thead>
                 <tr>
-                    <th rowspan="2" style="width: 20%;">Diagnosa</th>
-                    <th colspan="4" style="width: 32%;">DPJP</th>
-                    <th colspan="4" style="width: 32%;">DPJP UTAMA</th>
-                    <th rowspan="2" style="width: 16%;">KETERANGAN</th>
+                    <th rowspan="2" style="width: 11.5%;">Diagnosa</th>
+                    <th colspan="4" style="width: 35.5%;">DPJP</th>
+                    <th colspan="4" style="width: 36%;">DPJP UTAMA</th>
+                    <th rowspan="2" style="width: 17%;">KETERANGAN</th>
                 </tr>
                 <tr>
-                    <th style="width: 13%;">Nama</th>
-                    <th style="width: 6.5%;">Tgl Mulai</th>
-                    <th style="width: 6.5%;">Tgl Akhir</th>
+                    <th style="width: 11.5%;">Nama</th>
+                    <th style="width: 9%;">Tgl Mulai</th>
+                    <th style="width: 9%;">Tgl Akhir</th>
                     <th style="width: 6%;">TTD</th>
-                    <th style="width: 13%;">Nama</th>
-                    <th style="width: 6.5%;">Tgl Mulai</th>
-                    <th style="width: 6.5%;">Tgl Akhir</th>
+                    <th style="width: 10.5%;">Nama</th>
+                    <th style="width: 9%;">Tgl Mulai</th>
+                    <th style="width: 10.5%;">Tgl Akhir</th>
                     <th style="width: 6%;">TTD</th>
                 </tr>
             </thead>
@@ -319,34 +338,34 @@
                 {loop: $data.padded_diagnosa}
                 <tr>
                     <td>{$value.diagnosa}</td>
-                    <td><small>{?= nl2br($value['dpjp_nama']) ?}</small></td>
-                    <td style="text-align: center;"><small>{$value.dpjp_tgl_mulai}</small></td>
-                    <td style="text-align: center;"><small>{$value.dpjp_tgl_akhir}</small></td>
-                    <td style="text-align: center;">{?= $value['dpjp_ttd'] ?}</td>
-                    <td><small>{?= nl2br($value['dpjp_utama_nama']) ?}</small></td>
-                    <td style="text-align: center;"><small>{$value.dpjp_utama_tgl_mulai}</small></td>
-                    <td style="text-align: center;"><small>{$value.dpjp_utama_tgl_akhir}</small></td>
-                    <td style="text-align: center;">{?= $value['dpjp_utama_ttd'] ?}</td>
-                    <td><small>{$value.keterangan}</small></td>
+                    <td>{?= nl2br(htmlspecialchars((string)($value['dpjp_nama'] ?? ''), ENT_QUOTES, 'UTF-8')) ?}</td>
+                    <td style="text-align: center;">{$value.dpjp_tgl_mulai}</td>
+                    <td style="text-align: center;">{$value.dpjp_tgl_akhir}</td>
+                    <td style="text-align: center;">{$value.dpjp_ttd}</td>
+                    <td>{?= nl2br(htmlspecialchars((string)($value['dpjp_utama_nama'] ?? ''), ENT_QUOTES, 'UTF-8')) ?}</td>
+                    <td style="text-align: center;">{$value.dpjp_utama_tgl_mulai}</td>
+                    <td style="text-align: center;">{$value.dpjp_utama_tgl_akhir}</td>
+                    <td style="text-align: center;">{$value.dpjp_utama_ttd}</td>
+                    <td>{$value.keterangan}</td>
                 </tr>
                 {/loop}
             </tbody>
         </table>
 
-        <!-- TABEL ALERGI -->
-        <div style="margin-top: 6px;">
+        <!-- TABEL ALERGI (6 BARIS) -->
+        <div style="margin-top: 8px;">
             <table class="sub-table">
                 <thead>
                     <tr>
-                        <th style="width: 25%;">TANGGAL</th>
-                        <th style="width: 75%;">ALERGI</th>
+                        <th style="width: 22.5%;">TANGGAL</th>
+                        <th style="width: 77.5%;">ALERGI</th>
                     </tr>
                 </thead>
                 <tbody>
                     {loop: $data.padded_alergi}
                     <tr>
                         <td style="text-align: center;">{$value.tanggal}</td>
-                        <td style="padding-left: 8px;">{$value.alergi}</td>
+                        <td>{$value.alergi}</td>
                     </tr>
                     {/loop}
                 </tbody>
@@ -355,7 +374,10 @@
 
         <!-- CATATAN KAKI HALAMAN 1 -->
         <div class="footer-note-wrap">
-            <em>Terima kasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</em>
+            <em>Terimakasih atas kerjasamanya telah mengisi formulir ini dengan benar dan jelas</em>
+        </div>
+        <div class="footer-doc-code">
+            RSGM/Ed-Rev/02/2023
         </div>
 
     </div>
@@ -363,90 +385,90 @@
     <!-- ======================================================== -->
     <!-- HALAMAN 2 : DIAGNOSA RANAP, TINDAKAN, OBAT-OBATAN        -->
     <!-- ======================================================== -->
-    <div class="page" style="padding-top: 15px;">
+    <div class="page">
 
-        <!-- HEADER HALAMAN 2 SESUAI DOKUMEN ASLI (IMAGE 8 OF 16) -->
-        <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 8px;">
+        <!-- HEADER HALAMAN 2 SESUAI FILE DOCX -->
+        <table class="hal2-header-table">
             <tr>
-                <td style="width: 44%; vertical-align: middle;">
-                    Pasien : <span style="display: inline-block; border-bottom: 1px dotted #000; min-width: 155px; font-weight: bold; padding: 0 4px;">{$data.nm_pasien}</span>
-                    &nbsp;&nbsp;
-                    <span style="display: inline-block; font-size: 8.5pt;">
-                        {if: $data.jk == 'L'}<span style="border: 1.5px solid #000; border-radius: 50%; padding: 0 4px; font-weight: bold;">L</span> / P{elseif: $data.jk == 'P'}L / <span style="border: 1.5px solid #000; border-radius: 50%; padding: 0 4px; font-weight: bold;">P</span>{else}L / P{/if}
-                    </span>
+                <td style="width: 41%;">
+                    Nama Pasien : <strong>{$data.nm_pasien}</strong>
+                    &nbsp;
+                    {if: $data.jk == 'L'}<strong><u>L</u></strong> / P{elseif: $data.jk == 'P'}L / <strong><u>P</u></strong>{else}L / P{/if}
                 </td>
-                <td style="width: 32%; vertical-align: middle;">
-                    Tanggal Lahir : <span style="display: inline-block; border-bottom: 1px dotted #000; min-width: 110px; font-weight: bold; padding: 0 4px; text-align: center;">{$data.tgl_lahir_indo}</span>
+                <td style="width: 30%;">
+                    Tanggal Lahir : <strong>{$data.tgl_lahir_indo}</strong>
                 </td>
-                <td style="width: 24%; text-align: right; vertical-align: middle;">
-                    <span style="font-weight: bold; margin-right: 3px;">No.RM :</span>
-                    <div class="rm-box-group" style="display: inline-flex; vertical-align: middle;">
-                        {loop: $data.rm_digits}
-                        <span class="rm-digit-box" style="width: 15px; height: 17px; line-height: 17px; border: 1px solid #000; text-align: center; font-weight: bold; font-size: 9pt; margin-left: 1px;">{$value}</span>
-                        {/loop}
-                    </div>
+                <td style="width: 29%; text-align: right;">
+                    <table class="rm-boxes" style="margin-left: auto;">
+                        <tr>
+                            <td style="border: none; font-weight: bold; padding-right: 4px; vertical-align: middle; white-space: nowrap;">No.RM :</td>
+                            {loop: $data.rm_digits}
+                            <td class="rm-box">{$value}</td>
+                            {/loop}
+                        </tr>
+                    </table>
                 </td>
             </tr>
         </table>
 
         <!-- 1. TABEL DIAGNOSA RAWAT INAP (JIKA ADA) - 8 BARIS -->
-        <table class="sub-table" style="margin-bottom: 10px;">
+        <table class="sub-table" style="border-top: none;">
             <thead>
                 <tr>
-                    <th style="width: 22%;">TANGGAL</th>
-                    <th style="width: 78%;">DIAGNOSA RAWAT INAP (JIKA ADA)</th>
+                    <th style="width: 22.5%; border-top: none;">TANGGAL</th>
+                    <th style="width: 77.5%; border-top: none;">DIAGNOSA RAWAT INAP (JIKA ADA)</th>
                 </tr>
             </thead>
             <tbody>
                 {loop: $data.padded_ranap}
                 <tr style="height: 20px;">
                     <td style="text-align: center;">{$value.tanggal}</td>
-                    <td style="padding-left: 8px;">{$value.diagnosa}</td>
+                    <td>{$value.diagnosa}</td>
                 </tr>
                 {/loop}
             </tbody>
         </table>
 
-        <!-- 2. TABEL OPERASI / TINDAKAN - 10 BARIS -->
-        <table class="sub-table" style="margin-bottom: 10px;">
+        <!-- 2. TABEL OPERASI / TINDAKAN - 8 BARIS -->
+        <table class="sub-table" style="margin-top: 10px;">
             <thead>
                 <tr>
-                    <th style="width: 22%;">TANGGAL</th>
-                    <th style="width: 78%;">OPERASI / TINDAKAN</th>
+                    <th style="width: 22.5%;">TANGGAL</th>
+                    <th style="width: 77.5%;">OPERASI / TINDAKAN</th>
                 </tr>
             </thead>
             <tbody>
                 {loop: $data.padded_operasi}
                 <tr style="height: 20px;">
                     <td style="text-align: center;">{$value.tanggal}</td>
-                    <td style="padding-left: 8px;">{$value.operasi_tindakan}</td>
+                    <td>{$value.operasi_tindakan}</td>
                 </tr>
                 {/loop}
             </tbody>
         </table>
 
-        <!-- 3. TABEL OBAT-OBATAN - 16 BARIS -->
-        <table class="sub-table">
+        <!-- 3. TABEL OBAT-OBATAN - 15 BARIS -->
+        <table class="sub-table" style="margin-top: 10px;">
             <thead>
                 <tr>
-                    <th colspan="5" style="font-size: 8.5pt; padding: 4px 0;">OBAT-OBATAN</th>
+                    <th colspan="5" style="font-size: 8.5pt;">OBAT-OBATAN</th>
                 </tr>
                 <tr>
-                    <th style="width: 18%;">TANGGAL MULAI</th>
-                    <th style="width: 34%;">NAMA OBAT</th>
-                    <th style="width: 16%;">DOSIS</th>
-                    <th style="width: 16%;">FREKUENSI</th>
-                    <th style="width: 16%;">TANGGAL SELESAI</th>
+                    <th style="width: 20%;">TANGGAL MULAI</th>
+                    <th style="width: 26%;">NAMA OBAT</th>
+                    <th style="width: 15%;">DOSIS</th>
+                    <th style="width: 18%;">FREKUENSI</th>
+                    <th style="width: 21%;">TANGGAL SELESAI</th>
                 </tr>
             </thead>
             <tbody>
                 {loop: $data.padded_obat}
                 <tr style="height: 20px;">
-                    <td style="text-align: center;"><small>{$value.tanggal_mulai}</small></td>
-                    <td style="padding-left: 6px;"><small>{$value.nama_obat}</small></td>
-                    <td style="text-align: center;"><small>{$value.dosis}</small></td>
-                    <td style="text-align: center;"><small>{$value.frekuensi}</small></td>
-                    <td style="text-align: center;"><small>{$value.tanggal_selesai}</small></td>
+                    <td style="text-align: center;">{$value.tanggal_mulai}</td>
+                    <td>{$value.nama_obat}</td>
+                    <td style="text-align: center;">{$value.dosis}</td>
+                    <td style="text-align: center;">{$value.frekuensi}</td>
+                    <td style="text-align: center;">{$value.tanggal_selesai}</td>
                 </tr>
                 {/loop}
             </tbody>

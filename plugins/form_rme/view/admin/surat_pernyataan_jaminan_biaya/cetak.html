@@ -170,7 +170,10 @@ body {
             Saksi,<br>
             Petugas PPRI/Rawat inap<br>
             <div style="min-height: 65px; margin: 4px 0; text-align: center;">
-                {if: !empty($data.ttd_saksi)}
+                {if: !empty($qr_saksi)}
+                    <img src="{$qr_saksi}" alt="QR TTE Saksi" style="width: 50px; height: 50px; display: block; margin: 0 auto 2px auto;">
+                    <span style="font-size: 8px; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
+                {elseif: !empty($data.ttd_saksi)}
                     {if: strlen($data.ttd_saksi) == 64}
                         <barcode code="{?=url(['esignature', 'verify', $data.ttd_saksi])?}" type="QR" class="barcode" size="0.7" error="M" disableborder="1" /><br>
                         <span style="font-size: 8px; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
@@ -181,13 +184,16 @@ body {
                     <span style="color: #888; font-style: italic; line-height: 65px;">[Petugas Admisi]</span>
                 {/if}
             </div>
-            ( <strong>{$data.saksi_nama}</strong> )
+            ( <strong>{if: !empty($data.saksi_nama)}{$data.saksi_nama}{elseif: !empty($tte_saksi.signer_name)}{$tte_saksi.signer_name}{/if}</strong> )
         </td>
         <td width="50%" align="center">
             <br>
             Yang membuat pernyataan<br>
             <div style="min-height: 65px; margin: 4px 0; text-align: center;">
-                {if: !empty($data.ttd_pembuat_pernyataan)}
+                {if: !empty($qr_pembuat)}
+                    <img src="{$qr_pembuat}" alt="QR TTE Pembuat Pernyataan" style="width: 50px; height: 50px; display: block; margin: 0 auto 2px auto;">
+                    <span style="font-size: 8px; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>
+                {elseif: !empty($data.ttd_pembuat_pernyataan)}
                     {if: strlen($data.ttd_pembuat_pernyataan) == 64}
                         <barcode code="{?=url(['esignature', 'verify', $data.ttd_pembuat_pernyataan])?}" type="QR" class="barcode" size="0.7" error="M" disableborder="1" /><br>
                         <span style="font-size: 8px; color: #16a34a; font-weight: bold;">TTE Terverifikasi</span>

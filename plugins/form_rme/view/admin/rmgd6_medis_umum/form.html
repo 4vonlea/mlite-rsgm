@@ -150,7 +150,7 @@
               <span class="rsgm-reg-icon"><i class="fa fa-id-card-o"></i></span>
               <span>Data Pasien</span>
             </h4>
-            <span class="badge" style="background-color: #eff6ff; color: #1d4ed8; font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid #bfdbfe;">RM.GD 6</span>
+            <span class="rsgm-reg-badge-hint hidden-xs">Identitas</span>
           </div>
 
           <div class="rsgm-reg-body">
@@ -306,6 +306,37 @@
                 <option value="{$value.kd_dokter}" {if: $data.kd_dokter == $value.kd_dokter}selected{/if}>{$value.nm_dokter}</option>
                 {/loop}
               </select>
+            </div>
+
+            <!-- TTE Dokter DPJP UGD (Internal RSGM) -->
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
+              <label class="rsgm-compact-label"><i class="fa fa-lock text-primary"></i> TTE Dokter UGD (Internal RSGM)</label>
+              <div id="sign_container_rmgd6_dokter" style="border: 1px solid #bfdbfe; border-radius: 6px; background: #fff; min-height: 54px; display: flex; align-items: center; justify-content: center; padding: 6px; margin-bottom: 6px; text-align: center;">
+                {if: !empty($tte_dokter.qr_data_uri)}
+                  <div style="text-align:center;">
+                    <img src="{$tte_dokter.qr_data_uri}" alt="QR TTE" style="height:42px; width:42px; display:block; margin:0 auto 2px;">
+                    <span class="label label-success" style="font-size:9px;"><i class="fa fa-check-circle"></i> {$tte_dokter.signer_name}</span>
+                  </div>
+                {elseif: !empty($tte_dokter.signature_hash)}
+                  <div style="text-align:center;">
+                    <span class="label label-success"><i class="fa fa-check-circle"></i> TTE Terverifikasi</span>
+                    <div style="font-size:9px; color:#15803d; font-family:monospace;">{?=substr($tte_dokter['signature_hash'], 0, 14)?}...</div>
+                  </div>
+                {else}
+                  <span style="color: #94a3b8; font-size: 11px; font-style: italic;">Belum TTE Dokter</span>
+                {/if}
+              </div>
+              <input type="hidden" id="input_tte_rmgd6_dokter" value="{if: !empty($tte_dokter.signature_hash)}{$tte_dokter.signature_hash}{/if}">
+              <button type="button" class="btn btn-primary btn-xs btn-block btn-tte-rme" id="btn_tte_rmgd6_dokter"
+                data-ref_type="rmgd6_medis_umum"
+                data-ref_id="{if: !empty($data.id)}{$data.id}{else}{$data.no_rawat}{/if}"
+                data-signer_name="{?=isset_or($tte_dokter['signer_name'])?}"
+                data-signer_role="Dokter UGD"
+                data-target_input="input_tte_rmgd6_dokter"
+                data-container_id="sign_container_rmgd6_dokter"
+                style="border-radius: 6px; font-weight: 600;">
+                <i class="fa fa-lock"></i> {if: !empty($tte_dokter.signature_hash)}Verifikasi Ulang TTE{else}Tanda Tangani (TTE Dokter){/if}
+              </button>
             </div>
 
             <div class="alert alert-info" style="font-size: 11px; padding: 8px 10px; margin-bottom: 0; border-radius: 6px; line-height: 1.4;">
@@ -1165,7 +1196,7 @@
                 <div class="col-md-6" style="margin-bottom: 8px;">
                   <div class="form-group" style="margin-bottom: 8px;">
                     <label class="rsgm-compact-label">Skala Nyeri (Numeric Rating Scale 0 - 10)</label>
-                    <select name="skala_nyeri" class="form-control input-sm" style="font-weight: 600;">
+                    <select name="skala_nyeri" id="rmgd6_skala_nyeri" class="form-control input-sm" style="font-weight: 600;">
                       <option value="0" {if: $data.skala_nyeri == '0'}selected{/if}>0 - Tidak Nyeri</option>
                       <option value="1" {if: $data.skala_nyeri == '1'}selected{/if}>1 - Nyeri Sangat Ringan</option>
                       <option value="2" {if: $data.skala_nyeri == '2'}selected{/if}>2 - Nyeri Ringan</option>
@@ -1178,6 +1209,45 @@
                       <option value="9" {if: $data.skala_nyeri == '9'}selected{/if}>9 - Nyeri Tak Tertahankan</option>
                       <option value="10" {if: $data.skala_nyeri == '10'}selected{/if}>10 - Nyeri Terhebat Tak Tertahankan</option>
                     </select>
+                    <div style="margin-top: 6px; padding: 6px; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center;">
+                      <img src="{?=url('assets/img/rj04_skala_nyeri.png')?}" alt="Skala Nyeri 0-10" style="max-width: 100%; height: auto; max-height: 95px; display: block; margin: 0 auto 4px auto;">
+                      <div id="rmgd6_pain_btns" style="display: flex; gap: 3px; justify-content: center; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-xs btn-default rmgd6-pain-btn" data-val="0" style="min-width:24px;font-weight:700;">0</button>
+                        <button type="button" class="btn btn-xs btn-default rmgd6-pain-btn" data-val="1" style="min-width:24px;font-weight:700;">1</button>
+                        <button type="button" class="btn btn-xs btn-default rmgd6-pain-btn" data-val="2" style="min-width:24px;font-weight:700;">2</button>
+                        <button type="button" class="btn btn-xs btn-default rmgd6-pain-btn" data-val="3" style="min-width:24px;font-weight:700;">3</button>
+                        <button type="button" class="btn btn-xs btn-default rmgd6-pain-btn" data-val="4" style="min-width:24px;font-weight:700;">4</button>
+                        <button type="button" class="btn btn-xs btn-default rmgd6-pain-btn" data-val="5" style="min-width:24px;font-weight:700;">5</button>
+                        <button type="button" class="btn btn-xs btn-default rmgd6-pain-btn" data-val="6" style="min-width:24px;font-weight:700;">6</button>
+                        <button type="button" class="btn btn-xs btn-default rmgd6-pain-btn" data-val="7" style="min-width:24px;font-weight:700;">7</button>
+                        <button type="button" class="btn btn-xs btn-default rmgd6-pain-btn" data-val="8" style="min-width:24px;font-weight:700;">8</button>
+                        <button type="button" class="btn btn-xs btn-default rmgd6-pain-btn" data-val="9" style="min-width:24px;font-weight:700;">9</button>
+                        <button type="button" class="btn btn-xs btn-default rmgd6-pain-btn" data-val="10" style="min-width:24px;font-weight:700;">10</button>
+                      </div>
+                    </div>
+                    <script>
+                      (function() {
+                        var $sel = document.getElementById('rmgd6_skala_nyeri');
+                        var $wrap = document.getElementById('rmgd6_pain_btns');
+                        if (!$sel || !$wrap) return;
+                        function syncBtns() {
+                          var val = String($sel.value || '0');
+                          var btns = $wrap.querySelectorAll('.rmgd6-pain-btn');
+                          for (var i = 0; i < btns.length; i++) {
+                            var active = btns[i].getAttribute('data-val') === val;
+                            btns[i].className = 'btn btn-xs rmgd6-pain-btn ' + (active ? 'btn-primary' : 'btn-default');
+                          }
+                        }
+                        $wrap.addEventListener('click', function(e) {
+                          var btn = e.target.closest('.rmgd6-pain-btn');
+                          if (!btn) return;
+                          $sel.value = btn.getAttribute('data-val');
+                          $sel.dispatchEvent(new Event('change', { bubbles: true }));
+                        });
+                        $sel.addEventListener('change', syncBtns);
+                        syncBtns();
+                      })();
+                    </script>
                   </div>
 
                   <!-- FLACC Scale -->
@@ -1437,7 +1507,20 @@ $(document).ready(function() {
     loadCanvasImage(defaultBgUrl);
   });
 
-  $('#form-rmgd6').on('submit', function() {
+  function syncRmgd6TteTarget() {
+    var existingId = $('input[name="id"]').val() || '';
+    var nr = $('#no_rawat_input').val() || '';
+    var dokText = $('#kd_dokter option:selected').val() ? $('#kd_dokter option:selected').text().trim() : '';
+    $('#btn_tte_rmgd6_dokter').attr({
+      'data-ref_id': existingId || nr,
+      'data-signer_name': dokText
+    });
+  }
+
+  $('#kd_dokter, #no_rawat_input').on('change input', syncRmgd6TteTarget);
+  syncRmgd6TteTarget();
+
+  $('#form-rmgd6').on('submit rme:beforeSave', function() {
     if (hasDrawn) {
       $('#lokalis_img').val(canvas.toDataURL('image/png'));
     }
@@ -1459,6 +1542,7 @@ $(document).ready(function() {
         if (res.tgl_lahir) $('#tanggal_lahir').val(res.tgl_lahir);
         if (res.gol_darah) $('#gol_darah').val(res.gol_darah);
         if (res.kd_dokter) $('#kd_dokter').val(res.kd_dokter);
+        syncRmgd6TteTarget();
         if (res.lokalis_url) {
           loadCanvasImage(res.lokalis_url);
         }

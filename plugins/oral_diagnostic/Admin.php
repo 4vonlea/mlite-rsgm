@@ -1822,10 +1822,16 @@ class Admin extends AdminModule
 
     public function getPersetujuanUmum($no_rkm_medis)
     {
-      $settings = $this->settings('settings');
-      $this->tpl->set('settings', $this->tpl->noParse_array(htmlspecialchars_array($settings)));
-      $pasien = $this->db('pasien')->where('no_rkm_medis', $no_rkm_medis)->oneArray();
-      echo $this->draw('persetujuan.umum.html', ['pasien' => htmlspecialchars_array($pasien)]);
+      http_response_code(410);
+      header('Content-Type: text/html; charset=utf-8');
+      $rmeUrl = htmlspecialchars(url([ADMIN, 'form_rme', 'persetujuanumummanage']), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Persetujuan Umum Dinonaktifkan</title></head>'
+         . '<body style="font-family:Arial,sans-serif;padding:32px;background:#f8fafc;color:#0f172a;">'
+         . '<div style="max-width:560px;margin:40px auto;background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:24px;">'
+         . '<h3 style="margin-top:0;color:#b91c1c;">Persetujuan Umum Bawaan mLITE Dinonaktifkan</h3>'
+         . '<p>Formulir Persetujuan Umum bawaan mLITE telah dinonaktifkan. Silakan gunakan <strong>RM.RJ 02 - Formulir Persetujuan Umum (General Consent)</strong> melalui modul <strong>Form RME</strong>.</p>'
+         . '<a href="' . $rmeUrl . '" style="display:inline-block;margin-top:8px;padding:8px 14px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">Buka Form RME Persetujuan Umum</a>'
+         . '</div></body></html>';
       exit();
     }
     

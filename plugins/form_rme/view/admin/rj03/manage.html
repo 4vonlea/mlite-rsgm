@@ -1,0 +1,123 @@
+<div class="row">
+  <div class="col-md-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="btn-group pull-right" style="margin-top:-5px;">
+          <a href="{?=url([ADMIN, 'form_rme', 'rj03cetak'])?}" target="_blank" class="btn btn-default btn-sm" title="Cetak Blangko Kosongan">
+            <i class="fa fa-print"></i> Blangko Kosongan
+          </a>
+          <a href="{?=url([ADMIN, 'form_rme', 'rj03cetak'])?}&pdf=1" target="_blank" class="btn btn-danger btn-sm" title="PDF Blangko Kosongan">
+            <i class="fa fa-file-pdf-o"></i> PDF Kosongan
+          </a>
+          <a href="{?=url([ADMIN, 'form_rme', 'rj03form'])?}" class="btn btn-primary btn-sm">
+            <i class="fa fa-plus"></i> Tambah Asesmen RJ-03
+          </a>
+        </div>
+        <h3 class="panel-title">
+          <i class="fa fa-stethoscope"></i> <strong>RM.RJ 03 - ASESMEN KEPERAWATAN / ASUHAN KESEHATAN GIGI DAN MULUT RAWAT JALAN</strong>
+        </h3>
+      </div>
+      <div class="panel-body">
+        <form method="GET" action="{?=url([ADMIN, 'form_rme', 'rj03manage'])?}" class="form-inline" style="margin-bottom: 15px;">
+          <div class="form-group">
+            <input type="text" name="cari" class="form-control input-sm" placeholder="No. Rawat / No. RM / Nama Pasien" value="{$cari}">
+          </div>
+          <button type="submit" class="btn btn-default btn-sm"><i class="fa fa-search"></i> Cari</button>
+          {if: !empty($cari)}
+          <a href="{?=url([ADMIN, 'form_rme', 'rj03manage'])?}" class="btn btn-link btn-sm">Reset</a>
+          {/if}
+        </form>
+
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped table-hover" id="table-rj03">
+            <thead>
+              <tr class="info">
+                <th width="4%" class="text-center">No</th>
+                <th width="14%">No. Rawat</th>
+                <th width="9%">No. RM</th>
+                <th width="18%">Nama Pasien</th>
+                <th width="14%">Tgl Kunjungan &amp; Unit</th>
+                <th width="16%">Jenis &amp; Keluhan Utama</th>
+                <th width="13%">Status TTE</th>
+                <th width="12%" class="text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {if: !empty($data)}
+              {loop: $data}
+              <tr>
+                <td class="text-center">{$key + 1}</td>
+                <td><strong>{$value.no_rawat}</strong></td>
+                <td>{$value.no_rkm_medis}</td>
+                <td>{$value.nama_pasien}</td>
+                <td>
+                  {$value.tanggal_kunjungan} {if: !empty($value.pukul_kunjungan)}<small class="text-muted">{$value.pukul_kunjungan}</small>{/if}
+                  {if: !empty($value.unit_awal)}<br><small class="text-muted">{$value.unit_awal}</small>{/if}
+                </td>
+                <td>
+                  {if: !empty($value.jenis_asesmen)}<span class="label label-info">{$value.jenis_asesmen}</span>{/if}
+                  {if: !empty($value.keluhan_utama)}<div style="margin-top:3px;font-size:11px;color:#475569;">{$value.keluhan_utama}</div>{/if}
+                </td>
+                <td>
+                  {if: !empty($value.tte_dpjp)}<span class="label label-success" style="display:inline-block;margin-bottom:2px;"><i class="fa fa-lock"></i> DPJP</span>{/if}
+                  {if: !empty($value.tte_perawat_od)}<span class="label label-primary" style="display:inline-block;margin-bottom:2px;"><i class="fa fa-lock"></i> Prwt OD</span>{/if}
+                  {if: !empty($value.tte_perawat)}<span class="label label-primary" style="display:inline-block;"><i class="fa fa-lock"></i> Prwt</span>{/if}
+                  {if: empty($value.tte_dpjp) && empty($value.tte_perawat_od) && empty($value.tte_perawat)}<span class="label label-default">Belum TTE</span>{/if}
+                </td>
+                <td class="text-center">
+                  <div class="btn-group btn-group-xs">
+                    <a href="{?=url([ADMIN, 'form_rme', 'rj03cetak'])?}&id={$value.id}" target="_blank" class="btn btn-default" title="Cetak HTML"><i class="fa fa-print"></i></a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'rj03cetak'])?}&id={$value.id}&pdf=1" target="_blank" class="btn btn-danger" title="Download PDF"><i class="fa fa-file-pdf-o"></i></a>
+                    <a href="{?=url([ADMIN, 'form_rme', 'rj03form'])?}&id={$value.id}" class="btn btn-warning" title="Edit Data"><i class="fa fa-edit"></i></a>
+                    <button type="button" class="btn btn-danger btn-rj03-delete" data-id="{$value.id}" data-label="{$value.no_rawat}" title="Hapus Data"><i class="fa fa-trash"></i></button>
+                  </div>
+                </td>
+              </tr>
+              {/loop}
+              {else}
+              <tr>
+                <td colspan="8" class="text-center text-muted">Belum ada data Asesmen Keperawatan / Asuhan Kesehatan Gigi &amp; Mulut Rawat Jalan (RM.RJ 03).</td>
+              </tr>
+              {/if}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<form method="POST" action="{?=url([ADMIN, 'form_rme', 'rj03hapus'])?}" id="frm-rj03-delete" style="display:none;">
+  <input type="hidden" name="id" id="rj03_delete_id" value="">
+</form>
+
+<script>
+jQuery(document).ready(function($) {
+  'use strict';
+  if ($.fn.DataTable && $('#table-rj03 tbody tr td').length > 1) {
+    $('#table-rj03').DataTable({ pageLength: 25, order: [] });
+  }
+  $(document).on('click', '.btn-rj03-delete', function() {
+    var recId = $(this).attr('data-id') || '';
+    var label = $(this).attr('data-label') || '';
+    var submitDelete = function() {
+      $('#rj03_delete_id').val(recId);
+      $('#frm-rj03-delete').trigger('submit');
+    };
+    if (window.bootbox && typeof bootbox.confirm === 'function') {
+      bootbox.confirm({
+        title: 'Konfirmasi Hapus Data',
+        message: 'Hapus data RM.RJ 03 untuk kunjungan <strong>' + $('<div>').text(label).html() + '</strong>?',
+        buttons: {
+          cancel: { label: 'Batal', className: 'btn-default' },
+          confirm: { label: 'Hapus', className: 'btn-danger' }
+        },
+        callback: function(ok) { if (ok) submitDelete(); }
+      });
+    } else {
+      submitDelete();
+    }
+  });
+});
+</script>
+

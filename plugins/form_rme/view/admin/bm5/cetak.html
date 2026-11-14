@@ -609,16 +609,16 @@
                         <tbody>
                             <tr>
                                 <td>dr. Bedah/<br>Operator</td>
-                                <td>{$data.sign_in_dr_operator}</td>
-                                <td style="text-align: center; height: 24px; vertical-align: middle;">
-                                    {if: !empty($data.sign_in_dr_operator)}<span style="font-size: 5.5pt; color: #27ae60;">[Valid]</span>{/if}
+                                <td>{if: !empty($ttes.sign_in_dr.signer_name)}{$ttes.sign_in_dr.signer_name}{else}{$data.sign_in_dr_operator}{/if}</td>
+                                <td style="text-align: center; height: 30px; vertical-align: middle;">
+                                    {if: !empty($ttes.sign_in_dr.qr_data_uri)}<img src="{$ttes.sign_in_dr.qr_data_uri}" style="width: 26px; height: 26px;">{/if}
                                 </td>
                             </tr>
                             <tr>
                                 <td>Perawat<br>bedah</td>
-                                <td>{$data.sign_in_perawat}</td>
-                                <td style="text-align: center; height: 24px; vertical-align: middle;">
-                                    {if: !empty($data.sign_in_perawat)}<span style="font-size: 5.5pt; color: #27ae60;">[Valid]</span>{/if}
+                                <td>{if: !empty($ttes.sign_in_perawat.signer_name)}{$ttes.sign_in_perawat.signer_name}{else}{$data.sign_in_perawat}{/if}</td>
+                                <td style="text-align: center; height: 30px; vertical-align: middle;">
+                                    {if: !empty($ttes.sign_in_perawat.qr_data_uri)}<img src="{$ttes.sign_in_perawat.qr_data_uri}" style="width: 26px; height: 26px;">{/if}
                                 </td>
                             </tr>
                         </tbody>
@@ -638,16 +638,16 @@
                         <tbody>
                             <tr>
                                 <td>dr. Bedah/<br>Operator</td>
-                                <td>{$data.time_out_dr_operator}</td>
-                                <td style="text-align: center; height: 24px; vertical-align: middle;">
-                                    {if: !empty($data.time_out_dr_operator)}<span style="font-size: 5.5pt; color: #27ae60;">[Valid]</span>{/if}
+                                <td>{if: !empty($ttes.time_out_dr.signer_name)}{$ttes.time_out_dr.signer_name}{else}{$data.time_out_dr_operator}{/if}</td>
+                                <td style="text-align: center; height: 30px; vertical-align: middle;">
+                                    {if: !empty($ttes.time_out_dr.qr_data_uri)}<img src="{$ttes.time_out_dr.qr_data_uri}" style="width: 26px; height: 26px;">{/if}
                                 </td>
                             </tr>
                             <tr>
                                 <td>Perawat<br>bedah</td>
-                                <td>{$data.time_out_perawat}</td>
-                                <td style="text-align: center; height: 24px; vertical-align: middle;">
-                                    {if: !empty($data.time_out_perawat)}<span style="font-size: 5.5pt; color: #27ae60;">[Valid]</span>{/if}
+                                <td>{if: !empty($ttes.time_out_perawat.signer_name)}{$ttes.time_out_perawat.signer_name}{else}{$data.time_out_perawat}{/if}</td>
+                                <td style="text-align: center; height: 30px; vertical-align: middle;">
+                                    {if: !empty($ttes.time_out_perawat.qr_data_uri)}<img src="{$ttes.time_out_perawat.qr_data_uri}" style="width: 26px; height: 26px;">{/if}
                                 </td>
                             </tr>
                         </tbody>
@@ -667,16 +667,16 @@
                         <tbody>
                             <tr>
                                 <td>dr. Bedah/<br>Operator</td>
-                                <td>{$data.sign_out_dr_operator}</td>
-                                <td style="text-align: center; height: 24px; vertical-align: middle;">
-                                    {if: !empty($data.sign_out_dr_operator)}<span style="font-size: 5.5pt; color: #27ae60;">[Valid]</span>{/if}
+                                <td>{if: !empty($ttes.sign_out_dr.signer_name)}{$ttes.sign_out_dr.signer_name}{else}{$data.sign_out_dr_operator}{/if}</td>
+                                <td style="text-align: center; height: 30px; vertical-align: middle;">
+                                    {if: !empty($ttes.sign_out_dr.qr_data_uri)}<img src="{$ttes.sign_out_dr.qr_data_uri}" style="width: 26px; height: 26px;">{/if}
                                 </td>
                             </tr>
                             <tr>
                                 <td>Perawat<br>bedah</td>
-                                <td>{$data.sign_out_perawat}</td>
-                                <td style="text-align: center; height: 24px; vertical-align: middle;">
-                                    {if: !empty($data.sign_out_perawat)}<span style="font-size: 5.5pt; color: #27ae60;">[Valid]</span>{/if}
+                                <td>{if: !empty($ttes.sign_out_perawat.signer_name)}{$ttes.sign_out_perawat.signer_name}{else}{$data.sign_out_perawat}{/if}</td>
+                                <td style="text-align: center; height: 30px; vertical-align: middle;">
+                                    {if: !empty($ttes.sign_out_perawat.qr_data_uri)}<img src="{$ttes.sign_out_perawat.qr_data_uri}" style="width: 26px; height: 26px;">{/if}
                                 </td>
                             </tr>
                         </tbody>

@@ -229,6 +229,9 @@
                         <label style="font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; margin: 0;"><input type="radio" name="respon_nyeri" value="Ya" {if: isset($data['respon_nyeri']) && $data['respon_nyeri'] == 'Ya'}checked{/if}> Ya</label>
                         <input type="number" name="skala_nyeri" class="form-control input-sm text-center" min="0" max="5" style="width: 60px;" placeholder="0-5" value="{?=isset_or($data['skala_nyeri'])?}">
                       </div>
+                      <div style="margin-top: 6px; padding: 4px; background: #fff; border: 1px solid #cbd5e1; border-radius: 5px; text-align: center;">
+                        <img src="{?=url('assets/img/rj04_skala_nyeri.png')?}" alt="Skala Nyeri" style="max-width: 100%; height: auto; max-height: 75px; display: block; margin: 0 auto;">
+                      </div>
                     </div>
                   </div>
 

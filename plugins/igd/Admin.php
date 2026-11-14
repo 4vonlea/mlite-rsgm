@@ -693,9 +693,7 @@ class Admin extends AdminModule
          $diagnosa[] = $row;
        }
 
-      $rows = $this->db('pemeriksaan_ralan')
-        ->where('no_rawat', $_POST['no_rawat'])
-        ->toArray();
+      $rows = \Systems\Lib\SoapRevision::fetchSoapRows($this->db()->pdo(), 'pemeriksaan_ralan', $_POST['no_rawat'], true, 'ASC');
       $i = 1;
       $row['nama_petugas'] = '';
       $row['departemen_petugas'] = '';
@@ -733,9 +731,10 @@ class Admin extends AdminModule
         $result[] = $row;
       }
 
-      $rows_ranap = $this->db('pemeriksaan_ranap')
-        ->where('no_rawat', $_POST['no_rawat'])
-        ->toArray();
+      $result = \Systems\Lib\SoapRevision::enrichRows($this->core, 'pemeriksaan_ralan', $result);
+      $void_count = count(array_filter($result, function($r) { return !empty($r['is_voided']); }));
+
+      $rows_ranap = \Systems\Lib\SoapRevision::fetchSoapRows($this->db()->pdo(), 'pemeriksaan_ranap', $_POST['no_rawat'], true, 'ASC');
       $result_ranap = [];
       foreach ($rows_ranap as $row) {
         $row['nomor'] = $i++;
@@ -760,25 +759,50 @@ class Admin extends AdminModule
         $result_ranap[] = $row;
       }
 
-      echo $this->draw('soap.html', ['pemeriksaan' => htmlspecialchars_array($result), 'pemeriksaan_ranap' => htmlspecialchars_array($result_ranap), 'diagnosa' => htmlspecialchars_array($diagnosa), 'prosedur' => htmlspecialchars_array($prosedur), 'admin_mode' => $this->settings->get('settings.admin_mode'), 'current_user' => $this->core->getUserInfo('username')]);
+      $result_ranap = \Systems\Lib\SoapRevision::enrichRows($this->core, 'pemeriksaan_ranap', $result_ranap);
+      $void_ranap_count = count(array_filter($result_ranap, function($r) { return !empty($r['is_voided']); }));
+
+      echo $this->draw('soap.html', [
+        'pemeriksaan' => htmlspecialchars_array($result),
+        'pemeriksaan_ranap' => htmlspecialchars_array($result_ranap),
+        'void_count' => $void_count,
+        'void_ranap_count' => $void_ranap_count,
+        'diagnosa' => htmlspecialchars_array($diagnosa),
+        'prosedur' => htmlspecialchars_array($prosedur),
+        'admin_mode' => $this->settings->get('settings.admin_mode'),
+        'current_user' => $this->core->getUserInfo('username')
+      ]);
       exit();
+    }
+
+    public function anySoapHistory()
+    {
+      \Systems\Lib\SoapRevision::outputHistoryJson($this->core);
     }
 
     public function postSaveSOAP()
     {
       $_POST['nip'] = $this->core->getUserInfo('username', null, true);
-
-      if(!$this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->oneArray()) {
-        $this->db('pemeriksaan_ralan')->save($_POST);
-      } else {
-        $this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->where('nip', $_POST['nip'])->save($_POST);
-      }
+      $res = \Systems\Lib\SoapRevision::saveSoap($this->core, 'igd', 'pemeriksaan_ralan', $_POST);
+      header('Content-Type: application/json; charset=utf-8');
+      echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
       exit();
     }
 
     public function postHapusSOAP()
     {
-      $this->db('pemeriksaan_ralan')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->delete();
+      $reason = trim((string)($_POST['void_reason'] ?? $_POST['reason'] ?? ''));
+      $res = \Systems\Lib\SoapRevision::voidSoap(
+          $this->core,
+          'igd',
+          'pemeriksaan_ralan',
+          $_POST['no_rawat'] ?? '',
+          $_POST['tgl_perawatan'] ?? '',
+          $_POST['jam_rawat'] ?? '',
+          $reason
+      );
+      header('Content-Type: application/json; charset=utf-8');
+      echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
       exit();
     }
 
@@ -1535,10 +1559,16 @@ class Admin extends AdminModule
 
     public function getPersetujuanUmum($no_rkm_medis)
     {
-      $settings = $this->settings('settings');
-      $this->tpl->set('settings', $this->tpl->noParse_array(htmlspecialchars_array($settings)));
-      $pasien = $this->db('pasien')->where('no_rkm_medis', $no_rkm_medis)->oneArray();
-      echo $this->draw('persetujuan.umum.html', ['pasien' => htmlspecialchars_array($pasien)]);
+      http_response_code(410);
+      header('Content-Type: text/html; charset=utf-8');
+      $rmeUrl = htmlspecialchars(url([ADMIN, 'form_rme', 'persetujuanumummanage']), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Persetujuan Umum Dinonaktifkan</title></head>'
+         . '<body style="font-family:Arial,sans-serif;padding:32px;background:#f8fafc;color:#0f172a;">'
+         . '<div style="max-width:560px;margin:40px auto;background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:24px;">'
+         . '<h3 style="margin-top:0;color:#b91c1c;">Persetujuan Umum Bawaan mLITE Dinonaktifkan</h3>'
+         . '<p>Formulir Persetujuan Umum bawaan mLITE telah dinonaktifkan. Silakan gunakan <strong>RM.RJ 02 - Formulir Persetujuan Umum (General Consent)</strong> melalui modul <strong>Form RME</strong>.</p>'
+         . '<a href="' . $rmeUrl . '" style="display:inline-block;margin-top:8px;padding:8px 14px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">Buka Form RME Persetujuan Umum</a>'
+         . '</div></body></html>';
       exit();
     }
     
@@ -2943,22 +2973,15 @@ class Admin extends AdminModule
                 if (!$this->core->checkPermission($username, 'can_create', 'igd')) {
                     return ['status' => 'error', 'message' => 'Invalid User Permission Credentials'];
                 }
-
-                $this->db('pemeriksaan_ralan')->save($input);
             } else {
 
                 if (!$this->core->checkPermission($username, 'can_update', 'igd')) {
                     return ['status' => 'error', 'message' => 'Invalid User Permission Credentials'];
                 }
-
-                $this->db('pemeriksaan_ralan')
-                    ->where('no_rawat', $input['no_rawat'])
-                    ->where('tgl_perawatan', $input['tgl_perawatan'])
-                    ->where('jam_rawat', $input['jam_rawat'])
-                    ->where('nip', $input['nip'])
-                    ->save($input);
             }
-            return ['status' => 'success', 'message' => 'SOAP saved'];
+            return \Systems\Lib\SoapRevision::saveSoap($this->core, 'igd', 'pemeriksaan_ralan', $input, [
+                'actor_username' => $username,
+            ]);
         } catch (\PDOException $e) {
             $message = $e->getMessage();
             $message = preg_replace('/`[^`]+`\./', '', $message);
@@ -2981,12 +3004,17 @@ class Admin extends AdminModule
         }
 
         try {
-            $this->db('pemeriksaan_ralan')
-                ->where('no_rawat', $input['no_rawat'])
-                ->where('tgl_perawatan', $input['tgl_perawatan'])
-                ->where('jam_rawat', $input['jam_rawat'])
-                ->delete();
-            return ['status' => 'success', 'message' => 'SOAP deleted'];
+            $reason = trim((string)($input['void_reason'] ?? $input['reason'] ?? ''));
+            return \Systems\Lib\SoapRevision::voidSoap(
+                $this->core,
+                'igd',
+                'pemeriksaan_ralan',
+                $input['no_rawat'],
+                $input['tgl_perawatan'],
+                $input['jam_rawat'],
+                $reason,
+                $username
+            );
         } catch (\PDOException $e) {
             $message = $e->getMessage();
             $message = preg_replace('/`[^`]+`\./', '', $message);

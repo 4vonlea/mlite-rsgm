@@ -42,47 +42,52 @@
           <td style="white-space: nowrap;">
             <span class="dropdown-toggle" data-toggle="dropdown" data-disabled="true" aria-expanded="true"><button type="button" name="button" class="btn btn-sm btn-default">{$value.no_rkm_medis} <span class="caret"></span></button></span>
             <ul class="dropdown-menu" role="menu">
+              {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
+              {? \Systems\Lib\Event::call('rsgmgha.dropdown_menu', [$value]) ?}
+              {/if}
               {if: $cek_vclaim}
 
                 <li class="dropdown-submenu">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">[BPJS]</a>
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i class="fa fa-shield rsgm-ico-emerald"></i><span>BPJS VClaim</span></a>
                   <ul class="dropdown-menu">
-                    <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynokartu', $value.no_peserta, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal">Cek Nomor Kartu</a></li>
-                    <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynik', $value.no_ktp, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal">Cek Nomor KTP</a></li>
-                    <li><a href="{?=url([ADMIN, 'jkn_mobile', 'onsite', $value.no_peserta, $value.kd_pj, $value.tgl_registrasi])?}" data-toggle="modal" data-target="#onsite">Antrian Onsite</a></li>
+                    <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynokartu', $value.no_peserta, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal"><i class="fa fa-credit-card rsgm-ico-emerald"></i> Cek Nomor Kartu</a></li>
+                    <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynik', $value.no_ktp, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal"><i class="fa fa-id-card-o rsgm-ico-emerald"></i> Cek Nomor KTP</a></li>
+                    <li><a href="{?=url([ADMIN, 'jkn_mobile', 'onsite', $value.no_peserta, $value.kd_pj, $value.tgl_registrasi])?}" data-toggle="modal" data-target="#onsite"><i class="fa fa-qrcode rsgm-ico-blue"></i> Antrian Onsite</a></li>
                     {if: $cek_pcare}
-                      <li><a href="{?=url([ADMIN, 'pasien', 'pcare_bynokartu', 'noka', $value.no_peserta])?}" data-toggle="modal" data-target="#asuransiModal">[PCare] Cek Nomor Kartu</a></li>
-                      <li><a href="{?=url([ADMIN, 'pasien', 'pcare_bynik', 'nik', $value.no_ktp])?}" data-toggle="modal" data-target="#asuransiModal">[PCare] Cek Nomor KTP</a></li>
+                      <li class="divider"></li>
+                      <li><a href="{?=url([ADMIN, 'pasien', 'pcare_bynokartu', 'noka', $value.no_peserta])?}" data-toggle="modal" data-target="#asuransiModal"><i class="fa fa-credit-card rsgm-ico-teal"></i> [PCare] Cek Nomor Kartu</a></li>
+                      <li><a href="{?=url([ADMIN, 'pasien', 'pcare_bynik', 'nik', $value.no_ktp])?}" data-toggle="modal" data-target="#asuransiModal"><i class="fa fa-id-card-o rsgm-ico-teal"></i> [PCare] Cek Nomor KTP</a></li>
                     {/if}
                   </ul>
                 </li>
               {/if}
-              <li><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal">Elektronik Rekam Medis</a></li>
+              <li><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal"><i class="fa fa-folder-open rsgm-ico-blue"></i> Elektronik Rekam Medis</a></li>
               {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
-              <li><a href="#soap" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-umur="{$value.umurdaftar} {$value.sttsumur}" data-tgl_registrasi="{$value.tgl_registrasi}" data-stts_daftar="{$value.stts_daftar}" data-status_poli="{$value.status_poli}">SOAPIE & Pemeriksaan</a></li>
-              <li><a href="#layanan_obat" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-kd_dokter="{$value.kd_dokter}" data-nm_dokter="{$value.nm_dokter}">Layanan & Tindakan</a></li>
-              {? \Systems\Lib\Event::call('rsgmgha.dropdown_menu', [$value]) ?}
+              <li><a href="#soap" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-umur="{$value.umurdaftar} {$value.sttsumur}" data-tgl_registrasi="{$value.tgl_registrasi}" data-stts_daftar="{$value.stts_daftar}" data-status_poli="{$value.status_poli}"><i class="fa fa-stethoscope rsgm-ico-blue"></i> SOAPIE &amp; Pemeriksaan</a></li>
+              <li><a href="#layanan_obat" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-kd_dokter="{$value.kd_dokter}" data-nm_dokter="{$value.nm_dokter}"><i class="fa fa-medkit rsgm-ico-teal"></i> Layanan &amp; Tindakan</a></li>
+              <li class="divider"></li>
               <li class="dropdown-submenu">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Surat-Surat</a>
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i class="fa fa-envelope-o rsgm-ico-indigo"></i><span>Surat-Surat</span></a>
                 <ul class="dropdown-menu">
-                  <li><a href="{?=url([ADMIN,'rawat_jalan','persetujuanumum',$value.no_rkm_medis])?}" target="_blank">Persetujuan Umum</a></li>
-                  <li><a href="#surat_kontrol" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-tgl_registrasi="{$value.tgl_registrasi}">Surat Kontrol</a></li>
+                  {* Persetujuan Umum bawaan mLITE dinonaktifkan; digantikan Form RME RM.RJ 02 *}
+                  <li><a href="#surat_kontrol" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-tgl_registrasi="{$value.tgl_registrasi}"><i class="fa fa-calendar-check-o rsgm-ico-indigo"></i> Surat Kontrol</a></li>
                   {? \Systems\Lib\Event::call('rawat_jalan.surat_menu', [$value]) ?}
                 </ul>
               </li>
               <li class="dropdown-submenu">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Set Status</a>
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i class="fa fa-sliders rsgm-ico-amber"></i><span>Set Status</span></a>
                 <ul class="dropdown-menu">
-                  <li><a href="#rujuk_internal" data-no_rawat="{$value.no_rawat}">Rujuk Internal</a></li>
-                  <li><a href="#status_rawat" data-no_rawat="{$value.no_rawat}" data-stts="{$value.stts}">Status Rawat</a></li>
-                  <li><a href="#status_lanjut" data-no_rawat="{$value.no_rawat}">Status Lanjut</a></li>
-                  <li><a href="#obat_kronis" data-no_rawat="{$value.no_rawat}">Obat Kronis</a></li>
-                  <li><a href="#kps" data-no_rawat="{$value.no_rawat}" data-kd_dokter="{$value.kd_dokter}">Set KPS</a></li>
+                  <li><a href="#rujuk_internal" data-no_rawat="{$value.no_rawat}"><i class="fa fa-share rsgm-ico-amber"></i> Rujuk Internal</a></li>
+                  <li><a href="#status_rawat" data-no_rawat="{$value.no_rawat}" data-stts="{$value.stts}"><i class="fa fa-tag rsgm-ico-blue"></i> Status Rawat</a></li>
+                  <li><a href="#status_lanjut" data-no_rawat="{$value.no_rawat}"><i class="fa fa-exchange rsgm-ico-indigo"></i> Status Lanjut</a></li>
+                  <li><a href="#obat_kronis" data-no_rawat="{$value.no_rawat}"><i class="fa fa-plus-square rsgm-ico-teal"></i> Obat Kronis</a></li>
+                  <li><a href="#kps" data-no_rawat="{$value.no_rawat}" data-kd_dokter="{$value.kd_dokter}"><i class="fa fa-bookmark rsgm-ico-slate"></i> Set KPS</a></li>
                 </ul>
               </li>
-              <li><a href="#berkas_digital" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}">Berkas Digital</a></li>
-              <li><a href="#data_tb" class="data-tb-link" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}">Data TB</a></li>
-              <li><a href="#kirimwaModal" data-toggle="modal" data-no_tlp="{$value.no_tlp}" data-nm_pasien="Yang terhormat {$value.nm_pasien} dengan nomor rekam medik {$value.no_rkm_medis}.&#013;&#010;&#013;&#010;-------------------&#013;&#010; Pesan WhatsApp ini dikirim otomatis oleh {$nama_instansi} &#013;&#010;Terima Kasih">Kirim WhatsApp</a></li>
+              <li class="divider"></li>
+              <li><a href="#berkas_digital" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}"><i class="fa fa-file-image-o rsgm-ico-emerald"></i> Berkas Digital</a></li>
+              <li><a href="#data_tb" class="data-tb-link" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}"><i class="fa fa-heartbeat rsgm-ico-rose"></i> Data TB</a></li>
+              <li><a href="#kirimwaModal" data-toggle="modal" data-no_tlp="{$value.no_tlp}" data-nm_pasien="Yang terhormat {$value.nm_pasien} dengan nomor rekam medik {$value.no_rkm_medis}.&#013;&#010;&#013;&#010;-------------------&#013;&#010; Pesan WhatsApp ini dikirim otomatis oleh {$nama_instansi} &#013;&#010;Terima Kasih"><i class="fa fa-whatsapp rsgm-ico-emerald"></i> Kirim WhatsApp</a></li>
               {/if}
             </ul>
             {if: $responsivevoice == 'true'}<button type="button" name="button" class="btn btn-xs btn-primary panggil" data-nm_pasien="{?=strtolower($value.nm_pasien)?}" data-nm_poli="{?=strtolower($value.nm_poli)?}" data-no_reg="{?=strtolower($value.no_reg)?}"><i class="fa fa-bullhorn"></i><span class="hidden-xs hidden-sm"> Panggil</span></button>{/if}

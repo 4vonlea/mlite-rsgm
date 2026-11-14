@@ -1,15 +1,15 @@
 <div class="panel panel-default">
     <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
         <h3 class="panel-title" style="font-weight: bold; font-size: 15px;">
-            <i class="fa fa-heartbeat"></i> Lampiran - Early Warning Scoring System (EWS) Dewasa & Anak (Ranap)
+            <i class="fa fa-heartbeat text-danger"></i> Lampiran - Early Warning Scoring System (EWS) Dewasa (RM RI 08)
         </h3>
         <a href="{?=url([ADMIN, 'form_rme', 'ewsform'])?}" class="btn btn-primary btn-sm">
-            <i class="fa fa-plus"></i> Tambah Lembar EWS Baru
+            <i class="fa fa-plus"></i> Tambah Lembar EWS Dewasa Baru
         </a>
     </div>
     <div class="panel-body">
         <div class="alert alert-info" style="font-size: 12.5px; margin-bottom: 15px;">
-            <i class="fa fa-info-circle"></i> <strong>Tentang Formulir EWS Terpadu:</strong> Formulir ini memantau skor peringatan dini kegawatan pasien rawat inap. Output dokumen cetak dan unduh PDF menggabungkan lembar <strong>EWS Dewasa (Halaman 1)</strong> dan <strong>Lembar Observasi EWS (Halaman 2)</strong> menjadi satu berkas rekam medis terpadu sesuai standar RSGM Gusti Hasan Aman.
+            <i class="fa fa-info-circle"></i> <strong>Tentang Formulir EWS Dewasa (RM RI 08):</strong> Formulir ini memantau skor peringatan dini kegawatan pasien dewasa rawat inap (24 kolom observasi tanda vital &amp; respon klinis) sesuai standar RSGM Gusti Hasan Aman. Untuk pemantauan pasien anak, gunakan formulir <strong>EWS Anak (RM RI 08A)</strong>.
         </div>
 
         <div class="table-responsive">
@@ -20,9 +20,8 @@
                         <th style="text-align: center; width: 140px;">No. Rawat & Tanggal</th>
                         <th style="text-align: center;">Identitas Pasien</th>
                         <th style="text-align: center; width: 120px;">Ruangan</th>
-                        <th style="text-align: center; width: 140px;">EWS Dewasa (Hal 1)</th>
-                        <th style="text-align: center; width: 140px;">Observasi EWS (Hal 2)</th>
-                        <th style="text-align: center; width: 130px;">Petugas</th>
+                        <th style="text-align: center; width: 170px;">Observasi EWS Dewasa (24 Kolom)</th>
+                        <th style="text-align: center; width: 140px;">Petugas</th>
                         <th style="text-align: center; width: 140px;">Aksi</th>
                     </tr>
                 </thead>
@@ -48,15 +47,6 @@
                                 <span class="badge" style="background-color: #337ab7;">{$value.jml_dewasa} observasi</span><br>
                                 <small>Skor Terakhir: <strong>{$value.skor_terakhir_dewasa}</strong></small><br>
                                 <span class="label {$value.label_class_dewasa}" style="font-size: 10px;">{$value.status_resiko_dewasa}</span>
-                            {else}
-                                <span class="text-muted"><em>Belum ada data</em></span>
-                            {/if}
-                        </td>
-                        <td style="vertical-align: middle;">
-                            {if: !empty($value.jml_anak)}
-                                <span class="badge" style="background-color: #f0ad4e;">{$value.jml_anak} observasi</span><br>
-                                <small>Skor Terakhir: <strong>{$value.skor_terakhir_anak}</strong></small><br>
-                                <span class="label {$value.label_class_anak}" style="font-size: 10px;">{$value.status_resiko_anak}</span>
                             {else}
                                 <span class="text-muted"><em>Belum ada data</em></span>
                             {/if}
