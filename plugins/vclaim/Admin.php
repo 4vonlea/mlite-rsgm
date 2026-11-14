@@ -1131,21 +1131,48 @@ class Admin extends AdminModule
     exit();
   }
 
-  public function getMapingDokter($no_rawat)
+  public function getMapingDokter($no_rawat = null, $kd_dokter = null)
   {
-    $no_rawat = revertNoRawat($no_rawat);
-    $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
-    if (!$reg) {
-      echo json_encode(['status' => 'error', 'message' => 'Registrasi tidak ditemukan']);
+    $no_rawat = $no_rawat ? revertNoRawat($no_rawat) : '';
+    $kd = $kd_dokter ?: ($_GET['kd_dokter'] ?? '');
+
+    // 1. Jika kd_dokter eksplisit belum ada, cek ke tabel oral diagnostic jika rawat ini tercatat di sana
+    if (empty($kd) && !empty($no_rawat)) {
+      $od = $this->db('mlite_pendaftaran_oral_diagnostic')->where('no_rawat', $no_rawat)->oneArray();
+      if ($od && !empty($od['kd_dokter'])) {
+        $kd = $od['kd_dokter'];
+      }
+    }
+
+    // 2. Jika masih kosong, cek ke reg_periksa
+    if (empty($kd) && !empty($no_rawat)) {
+      $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+      if ($reg && !empty($reg['kd_dokter'])) {
+        $kd = $reg['kd_dokter'];
+      }
+    }
+
+    if (empty($kd)) {
+      echo json_encode(['status' => 'error', 'message' => 'Dokter tidak ditemukan']);
       exit();
     }
-    $dokter = $this->db('dokter')->where('kd_dokter', $reg['kd_dokter'])->oneArray();
+
+    $dokter = $this->db('dokter')->where('kd_dokter', $kd)->oneArray();
     $nm_dokter = $dokter ? $dokter['nm_dokter'] : '';
-    $maping = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $reg['kd_dokter'])->oneArray();
+    $maping = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $kd)->oneArray();
+
+    // 3. Fallback: jika belum ada mapping berdasarkan kd_dokter, coba cari kecocokan nama dokter di tabel mapping
+    if (!$maping && !empty($nm_dokter)) {
+      $cleanName = preg_replace('/(drg|dr|sp\.[a-z]+|prof|\.|\,)/i', '', $nm_dokter);
+      $cleanName = trim($cleanName);
+      if (!empty($cleanName) && strlen($cleanName) >= 4) {
+        $maping = $this->db('maping_dokter_dpjpvclaim')->like('nm_dokter_bpjs', '%' . $cleanName . '%')->oneArray();
+      }
+    }
 
     echo json_encode([
       'status' => 'success',
-      'kd_dokter' => $reg['kd_dokter'],
+      'kd_dokter' => $kd,
       'nm_dokter' => $nm_dokter,
       'kd_dokter_bpjs' => $maping ? $maping['kd_dokter_bpjs'] : '',
       'nm_dokter_bpjs' => $maping ? $maping['nm_dokter_bpjs'] : ''

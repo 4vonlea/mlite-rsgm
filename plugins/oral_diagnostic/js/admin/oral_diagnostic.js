@@ -323,6 +323,14 @@ $(document).on("click", ".sep", function(event){
   $('input:text[name=no_kartu_rs]').val(no_peserta);
   $('input:text[name=sep_no_kartu]').val(no_peserta);
   $('input:text[name=sep_norm]').val(no_rkm_medis);
+  if (nm_dokter && nm_dokter.trim() !== '') {
+    $('#sep_dpjp_yang_melayani_nama').val(nm_dokter);
+    $('#sep_dpjp_pelayanan_nama').val(nm_dokter);
+  }
+  if (kd_dokter && kd_dokter.trim() !== '') {
+    $('#sep_dpjp_yang_melayani_kode').val(kd_dokter);
+    $('#sep_dpjp_pelayanan_kode').val(kd_dokter);
+  }
 
   // 5. Tampilkan form SEP
   $("#display").hide();
@@ -399,7 +407,7 @@ $(document).on("click", ".sep", function(event){
             if (typeof window.hideVclaimLoading === 'function') {
               window.hideVclaimLoading();
             }
-          });
+          }, kd_dokter);
         } else {
           if (typeof window.hideVclaimLoading === 'function') {
             window.hideVclaimLoading();

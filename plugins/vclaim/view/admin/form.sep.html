@@ -1383,7 +1383,7 @@ async function openFrista(noka) {
     $('#vclaim_info_banner_content').html('');
   };
 
-  window.vclaimAutoFetchRujukan = function(noKartu, noRawat, targetNmDokter, onComplete) {
+  window.vclaimAutoFetchRujukan = function(noKartu, noRawat, targetNmDokter, onComplete, targetKdDokter) {
     if (!noKartu || noKartu.trim() === '') {
       if (typeof onComplete === 'function') onComplete();
       return;
@@ -1421,7 +1421,16 @@ async function openFrista(noka) {
     var checkDoctorMappingAndFinish = function() {
       if (noRawat) {
         var cleanRawat = noRawat.replace(/\//g, '');
-        $.get(baseURL + '/vclaim/mapingdokter/' + cleanRawat + '?t=' + mlite.token, function(res) {
+        var urlMaping = baseURL + '/vclaim/mapingdokter/' + cleanRawat;
+        if (targetKdDokter) {
+          urlMaping += '/' + encodeURIComponent(targetKdDokter);
+        }
+        urlMaping += '?t=' + mlite.token;
+        if (targetKdDokter) {
+          urlMaping += '&kd_dokter=' + encodeURIComponent(targetKdDokter);
+        }
+
+        $.get(urlMaping, function(res) {
           var isAlreadyMapped = false;
           try {
             var m = (typeof res === 'string') ? JSON.parse(res) : res;
@@ -1430,7 +1439,7 @@ async function openFrista(noka) {
                 targetNmDokter = m.nm_dokter;
               }
               if (m.kd_dokter_bpjs && m.nm_dokter_bpjs) {
-                var namaDenganGelar = m.nm_dokter || m.nm_dokter_bpjs;
+                var namaDenganGelar = (targetNmDokter && targetNmDokter.trim() !== '') ? targetNmDokter : (m.nm_dokter || m.nm_dokter_bpjs);
                 $('#sep_dpjp_yang_melayani_nama').val(namaDenganGelar);
                 $('#sep_dpjp_yang_melayani_kode').val(m.kd_dokter_bpjs);
                 $('#sep_dpjp_pelayanan_nama').val(namaDenganGelar);
@@ -2367,8 +2376,8 @@ async function openFrista(noka) {
               // Hanya pilih otomatis jika skor kecocokan >= 1 (nama asli dokter cocok)
               var matchedDoc = (bestScore >= 1) ? bestDoc : null;
 
-              // Jika tidak cocok nama tetapi hanya ada 1 dokter di poli tersebut, pilih langsung
-              if (!matchedDoc && dokterdpjp.length === 1) {
+              // Jika nama target dokter kosong dan hanya ada 1 dokter di poli tersebut, pilih langsung
+              if (!matchedDoc && dokterdpjp.length === 1 && (!targetNmDokter || targetNmDokter.trim() === '')) {
                 matchedDoc = dokterdpjp[0];
               }
 
