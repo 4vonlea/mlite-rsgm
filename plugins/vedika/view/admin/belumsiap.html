@@ -1,13 +1,13 @@
 <div class="row">
-  <div class="col-md-8">
+  <div class="col-md-7">
     <h3 style="margin-top:0;">
       <i class="fa fa-exclamation-circle text-danger"></i> Daftar Pasien Belum Siap Klaim
       <small style="display:block;margin-top:4px;color:#718096;">Identifikasi otomatis berkas klinis & administrasi yang belum memenuhi syarat klaim BPJS</small>
     </h3>
   </div>
   <div class="col-md-5 text-right">
-    <a href="{?=url([ADMIN, 'vedika', 'auditperiode', '?periode=' . $periode])?}" class="btn btn-warning" onclick="return confirm('Jalankan audit kesiapan berkas & data klinis pasien BPJS untuk periode ini?');"><i class="fa fa-refresh"></i> Audit Massal Periode Ini</a>
-    <a href="{?=url([ADMIN, 'vedika', 'siapklaim'])?}" class="btn btn-success" style="margin-left:5px;"><i class="fa fa-check-circle"></i> Pasien Siap Klaim &raquo;</a>
+    <a href="{?=url([ADMIN, 'vedika', 'auditperiode', '?periode=' . $periode . '&from=belumsiap'])?}" class="btn btn-warning" onclick="return confirm('Jalankan audit kesiapan berkas & data klinis pasien BPJS untuk periode ini?');"><i class="fa fa-refresh"></i> Audit Massal Periode Ini</a>
+    <a href="{?=url([ADMIN, 'vedika', 'siapklaim', '?periode=' . $periode])?}" class="btn btn-success" style="margin-left:5px;"><i class="fa fa-check-circle"></i> Pasien Siap Klaim &raquo;</a>
   </div>
 </div>
 <hr style="margin-top:10px;margin-bottom:20px;">
@@ -70,7 +70,7 @@
       <tbody>
         {if: count($rows) > 0}
         {loop: $rows}
-        <tr>
+        <tr class="row-patient" data-norawat="{?=$value.no_rawat?}" data-needs-audit="{?=$value.needs_client_audit ? '1' : '0'?}">
           <td>
             <b>{?=$value.no_rawat?}</b><br>
             <span class="label label-default">RM: {?=$value.no_rkm_medis?}</span>
@@ -84,34 +84,48 @@
             <span class="text-primary">{?=$value.nm_poli?}</span> ({?=$value.status_lanjut?})
           </td>
           <td>{?=$value.nm_dokter?}</td>
-          <td>
-            {if: !empty($value.no_sep)}
+          <td class="col-sep">
+            {if: !empty($value.no_sep) && $value.no_sep != '-'}
             <span class="label label-success">{?=$value.no_sep?}</span>
             {else}
             <span class="label label-danger"><i class="fa fa-times"></i> Belum Terbit</span>
             {/if}
           </td>
-          <td>
-            <div class="progress" style="margin-bottom:2px;height:14px;width:70px;">
-              <div class="progress-bar progress-bar-danger" style="width:{?=$value.score_percent?}%;"></div>
+          <td class="col-readiness">
+            <div class="progress" style="margin-bottom:2px;height:14px;width:70px;background-color:#e2e8f0;">
+              <div class="progress-bar {if: $value.score_percent >= 80}progress-bar-success{elseif: $value.score_percent >= 50}progress-bar-warning{else}progress-bar-danger{/if}" style="width:{?=$value.score_percent?}%;"></div>
             </div>
-            <small><b>{?=$value.score_percent?}%</b></small>
+            <small><b class="readiness-score-text">{?=$value.score_percent?}%</b></small>
           </td>
-          <td style="max-width:250px;">
+          <td class="col-missing" style="max-width:250px;">
+            {if: $value.score_percent >= 100}
+            <span class="label label-success"><i class="fa fa-check"></i> Siap Verifikasi (Lengkap)</span>
+            {elseif: !empty($value.missing_items)}
             <small class="text-danger">
-              <i class="fa fa-warning"></i> {?=$value.missing_items ?: 'Sedang dianalisis mesin kesiapan klaim'?}<br>
+              <i class="fa fa-warning"></i> <span class="missing-items-text">{?=$value.missing_items?}</span>
             </small>
+            {else}
+            <small class="text-muted">
+              <i class="fa fa-spinner fa-spin"></i> <span class="missing-items-text">Sedang dianalisis mesin kesiapan...</span>
+            </small>
+            {/if}
           </td>
-          <td class="text-center" style="white-space:nowrap;">
+          <td class="text-center col-action" style="white-space:nowrap;">
             <button type="button" class="btn btn-info btn-xs btn-audit" data-norawat="{?=$value.no_rawat?}" title="Buka Detail Checklist Kesiapan">
               <i class="fa fa-stethoscope"></i> Checklist
             </button>
+            {if: $value.score_percent >= 100}
+            <a href="{?=url([ADMIN, 'vedika', 'siapklaim', '?periode=' . $periode])?}" class="btn btn-success btn-xs" title="Buka di Antrian Siap Klaim">
+              <i class="fa fa-arrow-right"></i> Siap Klaim
+            </a>
+            {else}
             <a href="{?=url([ADMIN, 'vedika', 'resume', convertNorawat($value.no_rawat)])?}" class="btn btn-warning btn-xs btn-open-modal-action" title="Lengkapi Resume Medis">
               <i class="fa fa-pencil"></i> Resume
             </a>
             <a href="{?=url([ADMIN, 'vedika', 'ubahdiagnosa', convertNorawat($value.no_rawat)])?}" class="btn btn-primary btn-xs btn-open-modal-action" title="Kelola ICD-10">
               <i class="fa fa-code"></i> Coding
             </a>
+            {/if}
           </td>
         </tr>
         {/loop}
@@ -197,6 +211,43 @@
       locale: 'id'
     });
 
+    // Helper update tampilan baris pasien di tabel secara real-time
+    function updateRowReadiness(tr, res) {
+      if (!tr || !tr.length) return;
+      var score = parseInt(res.score_percent) || 0;
+      var pBar = tr.find('.col-readiness .progress-bar');
+      pBar.css('width', score + '%');
+      pBar.removeClass('progress-bar-success progress-bar-warning progress-bar-danger');
+      if (score >= 80) {
+        pBar.addClass('progress-bar-success');
+      } else if (score >= 50) {
+        pBar.addClass('progress-bar-warning');
+      } else {
+        pBar.addClass('progress-bar-danger');
+      }
+      tr.find('.readiness-score-text').text(score + '%');
+
+      // Update kolom SEP jika nomor SEP terdeteksi
+      if (res.sep && res.sep.no_sep && res.sep.no_sep !== '-') {
+        tr.find('.col-sep').html('<span class="label label-success">' + res.sep.no_sep + '</span>');
+      }
+
+      // Update kolom status kelengkapan
+      var colMissing = tr.find('.col-missing');
+      var colAction = tr.find('.col-action');
+      if (score >= 100) {
+        colMissing.html('<span class="label label-success"><i class="fa fa-check"></i> Siap Verifikasi (Lengkap)</span>');
+        if (colAction.find('.btn-success').length === 0) {
+          colAction.find('.btn-warning, .btn-primary').remove();
+          colAction.append(' <a href="{?=url([ADMIN, "vedika", "siapklaim", "?periode=" . $periode])?}" class="btn btn-success btn-xs" title="Buka di Antrian Siap Klaim"><i class="fa fa-arrow-right"></i> Siap Klaim</a>');
+        }
+      } else {
+        var missingText = (res.missing_items && res.missing_items.length) ? res.missing_items.join('; ') : 'Beberapa variabel belum lengkap';
+        colMissing.html('<small class="text-danger"><i class="fa fa-warning"></i> <span class="missing-items-text">' + missingText + '</span></small>');
+      }
+      tr.removeAttr('data-needs-audit');
+    }
+
     // Handler Buka Modal Aksi (Resume / Coding)
     $(document).on('click', '.btn-open-modal-action', function(e) {
       e.preventDefault();
@@ -210,6 +261,7 @@
 
     $('.btn-audit').on('click', function() {
       var no_rawat = $(this).data('norawat');
+      var trRow = $(this).closest('tr');
       $('#modalAuditKlaim').modal('show');
       $('#modalLoading').show();
       $('#modalContent').hide();
@@ -224,6 +276,7 @@
           $('#modalContent').show();
 
           if (res.status === 'success') {
+            // Update modal popup
             $('#m_no_rawat').text(res.no_rawat);
             $('#m_nm_pasien').text(res.pasien.nm_pasien);
             $('#m_no_rm').text(res.pasien.no_rkm_medis);
@@ -254,6 +307,9 @@
                 '</tr>';
             });
             $('#m_checklist_body').html(html);
+
+            // Perbarui juga data baris tabel langsung
+            updateRowReadiness(trRow, res);
           } else {
             alert(res.message || 'Gagal memuat status kesiapan');
           }
@@ -264,6 +320,40 @@
         }
       });
     });
+
+    // Auto-audit queue di background untuk baris yang belum diaudit
+    var auditQueue = [];
+    $('tr[data-needs-audit="1"]').each(function() {
+      auditQueue.push($(this));
+    });
+
+    function runAuditQueue() {
+      if (auditQueue.length === 0) return;
+      var tr = auditQueue.shift();
+      var norawat = tr.data('norawat');
+      if (!norawat) {
+        runAuditQueue();
+        return;
+      }
+      $.ajax({
+        url: '{?=url([ADMIN, "vedika", "checkreadiness"])?}',
+        type: 'GET',
+        data: { no_rawat: norawat },
+        dataType: 'json',
+        success: function(res) {
+          if (res.status === 'success') {
+            updateRowReadiness(tr, res);
+          }
+        },
+        complete: function() {
+          setTimeout(runAuditQueue, 200);
+        }
+      });
+    }
+
+    if (auditQueue.length > 0) {
+      setTimeout(runAuditQueue, 500);
+    }
   });
 </script>
 

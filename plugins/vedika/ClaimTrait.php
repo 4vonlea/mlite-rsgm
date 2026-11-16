@@ -74,6 +74,7 @@ trait ClaimTrait
 
         $engine = $this->getClaimEngine();
         $result = $engine->checkPatient($no_rawat);
+        $result['missing_text'] = !empty($result['missing_items']) ? implode('; ', $result['missing_items']) : '';
         echo json_encode($result);
         exit();
     }
@@ -133,6 +134,37 @@ trait ClaimTrait
         $stmt = $this->db()->pdo()->prepare($sql);
         $stmt->execute($params);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Auto-audit on-the-fly untuk pasien yang belum pernah diaudit (cache mlite_klaim_readiness masih kosong/null)
+        $engine = null;
+        $maxDirectAudit = 25;
+        $auditedCount = 0;
+        foreach ($rows as $idx => $r) {
+            $isUncached = ($r['missing_items'] === null && $r['score_percent'] == 0);
+            if ($isUncached) {
+                if ($auditedCount < $maxDirectAudit) {
+                    if (!$engine) {
+                        $engine = $this->getClaimEngine();
+                    }
+                    $eval = $engine->checkPatient($r['no_rawat']);
+                    $rows[$idx]['score_percent'] = $eval['score_percent'];
+                    $rows[$idx]['status_readiness'] = $eval['status_readiness'];
+                    $rows[$idx]['missing_items'] = !empty($eval['missing_items']) ? implode('; ', $eval['missing_items']) : '';
+                    if (!empty($eval['sep']['no_sep'])) {
+                        $rows[$idx]['no_sep'] = $eval['sep']['no_sep'];
+                    }
+                    $rows[$idx]['is_ready'] = ($eval['score_percent'] >= 100);
+                    $rows[$idx]['needs_client_audit'] = 0;
+                    $auditedCount++;
+                } else {
+                    $rows[$idx]['needs_client_audit'] = 1;
+                    $rows[$idx]['is_ready'] = false;
+                }
+            } else {
+                $rows[$idx]['needs_client_audit'] = 0;
+                $rows[$idx]['is_ready'] = ($r['score_percent'] >= 100);
+            }
+        }
 
         $polis = $this->db('poliklinik')->where('status', '1')->toArray();
 
@@ -200,6 +232,39 @@ trait ClaimTrait
         $stmt->execute($params);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
+        // Jika data siap klaim masih kosong, periksa apakah tabel readiness belum pernah diisi pada periode ini
+        if (empty($rows)) {
+            $checkReadiness = $this->db()->pdo()->prepare("SELECT COUNT(*) FROM mlite_klaim_readiness WHERE tgl_registrasi LIKE ?");
+            $checkReadiness->execute([$periode . '%']);
+            $auditedCount = (int)$checkReadiness->fetchColumn();
+
+            // Jika belum ada pasien yang diaudit sama sekali di periode ini, lakukan audit otomatis untuk 20 pasien pertama
+            if ($auditedCount === 0) {
+                $engine = $this->getClaimEngine();
+                $findStmt = $this->db()->pdo()->prepare("
+                    SELECT reg_periksa.no_rawat 
+                    FROM reg_periksa
+                    JOIN penjab ON reg_periksa.kd_pj = penjab.kd_pj
+                    WHERE (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
+                    AND reg_periksa.tgl_registrasi LIKE ?
+                    ORDER BY reg_periksa.tgl_registrasi DESC
+                    LIMIT 20
+                ");
+                $findStmt->execute(array_merge($cleanPj, [$periode . '%']));
+                $toAudit = $findStmt->fetchAll(\PDO::FETCH_COLUMN);
+
+                foreach ($toAudit as $nr) {
+                    $engine->checkPatient($nr);
+                }
+
+                if (!empty($toAudit)) {
+                    $stmt = $this->db()->pdo()->prepare($sql);
+                    $stmt->execute($params);
+                    $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                }
+            }
+        }
+
         // Ambil daftar batch aktif untuk dropdown tambah ke batch
         $batches = $this->db('mlite_klaim_batch')->where('status_batch', 'draft')->toArray();
 
@@ -223,14 +288,15 @@ trait ClaimTrait
         $cleanPj = $this->getCleanCarabayar();
         $inPlaceholders = implode(',', array_fill(0, count($cleanPj), '?'));
 
-        // Prioritaskan evaluasi pasien BPJS pada periode ini (maksimal 100 pasien per klik)
+        // Prioritaskan evaluasi pasien yang belum pernah diaudit terlebih dahulu
         $sql = "
             SELECT reg_periksa.no_rawat 
             FROM reg_periksa
             JOIN penjab ON reg_periksa.kd_pj = penjab.kd_pj
+            LEFT JOIN mlite_klaim_readiness r ON reg_periksa.no_rawat = r.no_rawat
             WHERE (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
             AND reg_periksa.tgl_registrasi LIKE ?
-            ORDER BY reg_periksa.tgl_registrasi DESC
+            ORDER BY (r.id IS NULL) DESC, reg_periksa.tgl_registrasi DESC
             LIMIT 100
         ";
         $params = array_merge($cleanPj, [$periode . '%']);
@@ -249,8 +315,25 @@ trait ClaimTrait
             }
         }
 
+        if (isset($_GET['ajax']) && $_GET['ajax'] == 1) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'success',
+                'total' => count($patients),
+                'siap' => $siap,
+                'belum' => $belum,
+                'message' => "Audit Selesai: {$siap} Siap Klaim, {$belum} Belum Lengkap."
+            ]);
+            exit();
+        }
+
         $this->notify('success', "Audit Massal Selesai: Berhasil mengevaluasi " . count($patients) . " data pasien periode {$periode}. Ditemukan {$siap} pasien Siap Klaim dan {$belum} pasien Belum Lengkap.");
-        redirect(url([ADMIN, 'vedika', 'siapklaim', '?periode=' . $periode]));
+        $from = $_GET['from'] ?? '';
+        if ($from === 'belumsiap') {
+            redirect(url([ADMIN, 'vedika', 'belumsiap', '?periode=' . $periode]));
+        } else {
+            redirect(url([ADMIN, 'vedika', 'siapklaim', '?periode=' . $periode]));
+        }
     }
 
     /**
