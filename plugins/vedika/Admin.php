@@ -27,6 +27,199 @@ class Admin extends AdminModule
     $this->secretkey = $this->settings->get('settings.BpjsSecretKey');
     $this->user_key = $this->settings->get('settings.BpjsUserKey');
     $this->api_url = $this->settings->get('settings.BpjsApiUrl');
+    $this->_checkTables();
+  }
+
+  private function _checkTables()
+  {
+    static $checked = false;
+    if ($checked) return;
+    $checked = true;
+
+    try {
+      $pdo = $this->db()->pdo();
+      $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `mlite_klaim_readiness` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `no_rawat` varchar(50) NOT NULL,
+          `no_sep` varchar(50) DEFAULT NULL,
+          `no_rkm_medis` varchar(20) NOT NULL,
+          `tgl_registrasi` date NOT NULL,
+          `status_lanjut` enum('Ralan','Ranap') NOT NULL DEFAULT 'Ralan',
+          `kd_poli` varchar(10) DEFAULT NULL,
+          `kd_dokter` varchar(20) DEFAULT NULL,
+          `is_sep_valid` tinyint(1) DEFAULT '0',
+          `is_resume_valid` tinyint(1) DEFAULT '0',
+          `is_dpjp_valid` tinyint(1) DEFAULT '0',
+          `is_icd10_valid` tinyint(1) DEFAULT '0',
+          `is_icd9_valid` tinyint(1) DEFAULT '0',
+          `is_billing_valid` tinyint(1) DEFAULT '0',
+          `is_odontogram_valid` tinyint(1) DEFAULT '0',
+          `is_penunjang_valid` tinyint(1) DEFAULT '0',
+          `is_berkas_valid` tinyint(1) DEFAULT '0',
+          `score_percent` int DEFAULT '0',
+          `status_readiness` enum('belum_lengkap','siap_verifikasi','terverifikasi','siap_grouping','siap_batch') DEFAULT 'belum_lengkap',
+          `missing_items` text,
+          `updated_at` datetime DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `no_rawat` (`no_rawat`),
+          KEY `idx_no_sep` (`no_sep`),
+          KEY `idx_status_readiness` (`status_readiness`),
+          KEY `idx_tgl_registrasi` (`tgl_registrasi`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        CREATE TABLE IF NOT EXISTS `mlite_klaim_verifikasi` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `no_rawat` varchar(50) NOT NULL,
+          `no_sep` varchar(50) DEFAULT NULL,
+          `verif_admin_status` enum('pending','approved','rejected','need_revision') DEFAULT 'pending',
+          `verif_admin_user` varchar(50) DEFAULT NULL,
+          `verif_admin_at` datetime DEFAULT NULL,
+          `verif_admin_notes` text,
+          `verif_medis_status` enum('pending','approved','rejected','need_revision') DEFAULT 'pending',
+          `verif_medis_user` varchar(50) DEFAULT NULL,
+          `verif_medis_at` datetime DEFAULT NULL,
+          `verif_medis_notes` text,
+          `is_internal_verified` tinyint(1) DEFAULT '0',
+          `created_at` datetime DEFAULT NULL,
+          `updated_at` datetime DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `no_rawat` (`no_rawat`),
+          KEY `idx_v_sep` (`no_sep`),
+          KEY `idx_v_admin` (`verif_admin_status`),
+          KEY `idx_v_medis` (`verif_medis_status`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        CREATE TABLE IF NOT EXISTS `mlite_klaim_batch` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `kode_batch` varchar(50) NOT NULL,
+          `nama_batch` varchar(150) NOT NULL,
+          `periode_bulan` varchar(7) NOT NULL,
+          `jenis_pelayanan` enum('Ralan','Ranap','Campuran') NOT NULL DEFAULT 'Ralan',
+          `status_batch` enum('draft','locked','submitted','processed','completed') DEFAULT 'draft',
+          `total_pasien` int DEFAULT '0',
+          `total_tarif_rs` decimal(15,2) DEFAULT '0.00',
+          `total_tarif_inacbg` decimal(15,2) DEFAULT '0.00',
+          `total_tarif_disetujui` decimal(15,2) DEFAULT '0.00',
+          `total_tarif_dibayar` decimal(15,2) DEFAULT '0.00',
+          `submitted_at` datetime DEFAULT NULL,
+          `submitted_by` varchar(50) DEFAULT NULL,
+          `locked_at` datetime DEFAULT NULL,
+          `locked_by` varchar(50) DEFAULT NULL,
+          `notes` text,
+          `created_at` datetime DEFAULT NULL,
+          `created_by` varchar(50) DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `kode_batch` (`kode_batch`),
+          KEY `idx_periode` (`periode_bulan`),
+          KEY `idx_status` (`status_batch`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        CREATE TABLE IF NOT EXISTS `mlite_klaim_batch_detail` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `batch_id` int NOT NULL,
+          `no_rawat` varchar(50) NOT NULL,
+          `no_sep` varchar(50) NOT NULL,
+          `no_rkm_medis` varchar(20) NOT NULL,
+          `nama_pasien` varchar(150) DEFAULT NULL,
+          `tgl_pelayanan` date NOT NULL,
+          `kode_inacbg` varchar(50) DEFAULT NULL,
+          `deskripsi_inacbg` text,
+          `tarif_rs` decimal(15,2) DEFAULT '0.00',
+          `tarif_inacbg` decimal(15,2) DEFAULT '0.00',
+          `status_klaim` enum('draft','diajukan','pending','dispute','disetujui','ditolak','dibayar') DEFAULT 'draft',
+          `added_at` datetime DEFAULT NULL,
+          `added_by` varchar(50) DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `unique_batch_sep` (`batch_id`,`no_sep`),
+          KEY `idx_d_rawat` (`no_rawat`),
+          KEY `idx_d_sep` (`no_sep`),
+          KEY `idx_d_status` (`status_klaim`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        CREATE TABLE IF NOT EXISTS `mlite_klaim_dispute` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `no_rawat` varchar(50) NOT NULL,
+          `no_sep` varchar(50) NOT NULL,
+          `batch_id` int DEFAULT NULL,
+          `tipe_masalah` enum('pending','dispute','revisi','ditolak') NOT NULL,
+          `alasan_bpjs` text NOT NULL,
+          `dokumen_diminta` text,
+          `dokumen_lampiran` text,
+          `tanggapan_rs` text,
+          `status_dispute` enum('open','in_progress','resubmitted','resolved','rejected') DEFAULT 'open',
+          `deadline_tgl` date DEFAULT NULL,
+          `pj_user` varchar(50) DEFAULT NULL,
+          `created_at` datetime DEFAULT NULL,
+          `created_by` varchar(50) DEFAULT NULL,
+          `resolved_at` datetime DEFAULT NULL,
+          `resolved_by` varchar(50) DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          KEY `idx_dp_sep` (`no_sep`),
+          KEY `idx_dp_tipe` (`tipe_masalah`),
+          KEY `idx_dp_status` (`status_dispute`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        CREATE TABLE IF NOT EXISTS `mlite_klaim_pembayaran` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `no_bahp` varchar(100) NOT NULL,
+          `tgl_bahp` date NOT NULL,
+          `periode_klaim` varchar(7) NOT NULL,
+          `batch_id` int DEFAULT NULL,
+          `total_diajukan` decimal(15,2) DEFAULT '0.00',
+          `total_disetujui` decimal(15,2) DEFAULT '0.00',
+          `total_pending` decimal(15,2) DEFAULT '0.00',
+          `total_dispute` decimal(15,2) DEFAULT '0.00',
+          `total_ditolak` decimal(15,2) DEFAULT '0.00',
+          `total_dibayar` decimal(15,2) DEFAULT '0.00',
+          `selisih_pembayaran` decimal(15,2) DEFAULT '0.00',
+          `no_faktur_pembayaran` varchar(100) DEFAULT NULL,
+          `tgl_pembayaran` date DEFAULT NULL,
+          `bukti_transfer` varchar(255) DEFAULT NULL,
+          `status_pembayaran` enum('belum_dibayar','dibayar_sebagian','lunas') DEFAULT 'belum_dibayar',
+          `notes` text,
+          `created_at` datetime DEFAULT NULL,
+          `created_by` varchar(50) DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          KEY `idx_pay_bahp` (`no_bahp`),
+          KEY `idx_pay_periode` (`periode_klaim`),
+          KEY `idx_pay_status` (`status_pembayaran`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        CREATE TABLE IF NOT EXISTS `mlite_eklaim_logs` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `nomor_sep` varchar(30) NOT NULL,
+          `method` varchar(100) DEFAULT NULL,
+          `request_data` longtext,
+          `response_data` longtext,
+          `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+          `status` int DEFAULT '1',
+          `username` varchar(100) DEFAULT NULL,
+          PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        CREATE TABLE IF NOT EXISTS `mlite_klaim_audit_trail` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `no_rawat` varchar(50) NOT NULL,
+          `no_sep` varchar(50) DEFAULT NULL,
+          `action_type` varchar(50) NOT NULL,
+          `field_name` varchar(100) DEFAULT NULL,
+          `old_value` longtext,
+          `new_value` longtext,
+          `user_username` varchar(50) NOT NULL,
+          `ip_address` varchar(50) DEFAULT NULL,
+          `notes` text,
+          `created_at` datetime NOT NULL,
+          PRIMARY KEY (`id`),
+          KEY `idx_aud_rawat` (`no_rawat`),
+          KEY `idx_aud_sep` (`no_sep`),
+          KEY `idx_aud_act` (`action_type`),
+          KEY `idx_aud_time` (`created_at`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+      ");
+    } catch (\Throwable $e) {
+      // safe fallback if table creation restricted
+    }
   }
 
   public function navigation()
@@ -821,7 +1014,7 @@ class Admin extends AdminModule
     }
 
     // Cache key untuk statistik
-    $cache_key = 'vedika_stats_' . md5($date . $carabayar);
+    $cache_key = 'vedika_stats_' . md5($date . $rawCarabayar);
     
     // Cek cache terlebih dahulu
     if(function_exists('apcu_fetch') && \apcu_exists($cache_key)) {
@@ -1013,111 +1206,134 @@ class Admin extends AdminModule
     // Metrik Manajemen Klaim BPJS (Master Prompt Bagian 4)
     $periodeBulan = substr($date, 0, 7);
 
-    // 1. Total Pasien BPJS & Pasien Ber-SEP
-    $stmtPasien = $this->db()->pdo()->prepare("
-      SELECT 
-        COUNT(DISTINCT reg_periksa.no_rawat) AS total_pasien,
-        COUNT(DISTINCT CASE WHEN s.no_sep IS NOT NULL OR si.no_sep IS NOT NULL THEN reg_periksa.no_rawat END) AS total_sep
-      FROM reg_periksa
-      JOIN penjab ON reg_periksa.kd_pj = penjab.kd_pj
-      LEFT JOIN bridging_sep s ON reg_periksa.no_rawat = s.no_rawat
-      LEFT JOIN bridging_sep_internal si ON reg_periksa.no_rawat = si.no_rawat
-      WHERE reg_periksa.tgl_registrasi LIKE ? AND (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
-    ");
-    $stmtPasien->execute(array_merge([$periodeBulan . '%'], $carabayarArr));
-    $pasienStat = $stmtPasien->fetch(\PDO::FETCH_ASSOC);
+    // Inisialisasi default agar tidak undefined
+    $stats['totalPasienBPJS'] = 0;
+    $stats['totalMemilikiSEP'] = 0;
+    $stats['totalBelumLengkap'] = 0;
+    $stats['totalSiapKlaim'] = 0;
+    $stats['totalVerifInternal'] = 0;
+    $stats['totalBelumVerif'] = 0;
+    $stats['totalSudahGrouping'] = 0;
+    $stats['totalDiajukan'] = 0;
+    $stats['totalDisetujui'] = 0;
+    $stats['totalDitolak'] = 0;
+    $stats['totalDibayar'] = 0;
+    $stats['totalNilaiDiajukan'] = 0.00;
+    $stats['totalNilaiDisetujui'] = 0.00;
+    $stats['totalPending'] = 0;
+    $stats['totalDispute'] = 0;
+    $stats['totalNilaiDibayar'] = 0.00;
+    $stats['totalNilaiBelumDibayar'] = 0.00;
 
-    $stats['totalPasienBPJS'] = (int)($pasienStat['total_pasien'] ?? 0);
-    $stats['totalMemilikiSEP'] = (int)($pasienStat['total_sep'] ?? 0);
+    try {
+      // 1. Total Pasien BPJS & Pasien Ber-SEP
+      $stmtPasien = $this->db()->pdo()->prepare("
+        SELECT 
+          COUNT(DISTINCT reg_periksa.no_rawat) AS total_pasien,
+          COUNT(DISTINCT CASE WHEN s.no_sep IS NOT NULL OR si.no_sep IS NOT NULL THEN reg_periksa.no_rawat END) AS total_sep
+        FROM reg_periksa
+        JOIN penjab ON reg_periksa.kd_pj = penjab.kd_pj
+        LEFT JOIN bridging_sep s ON reg_periksa.no_rawat = s.no_rawat
+        LEFT JOIN bridging_sep_internal si ON reg_periksa.no_rawat = si.no_rawat
+        WHERE reg_periksa.tgl_registrasi LIKE ? AND (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
+      ");
+      $stmtPasien->execute(array_merge([$periodeBulan . '%'], $carabayarArr));
+      $pasienStat = $stmtPasien->fetch(\PDO::FETCH_ASSOC);
 
-    // 2. Kesiapan Dokumen Klaim (mlite_klaim_readiness)
-    $stmtReady = $this->db()->pdo()->prepare("
-      SELECT 
-        COUNT(CASE WHEN status_readiness = 'belum_lengkap' OR status_readiness IS NULL THEN 1 END) AS belum_lengkap,
-        COUNT(CASE WHEN status_readiness IN ('siap_verifikasi', 'terverifikasi', 'siap_grouping', 'siap_batch') THEN 1 END) AS siap_klaim
-      FROM mlite_klaim_readiness
-      WHERE tgl_registrasi LIKE ?
-    ");
-    $stmtReady->execute([$periodeBulan . '%']);
-    $readyStat = $stmtReady->fetch(\PDO::FETCH_ASSOC);
+      $stats['totalPasienBPJS'] = (int)($pasienStat['total_pasien'] ?? 0);
+      $stats['totalMemilikiSEP'] = (int)($pasienStat['total_sep'] ?? 0);
 
-    $stats['totalBelumLengkap'] = (int)($readyStat['belum_lengkap'] ?? max(0, $stats['totalPasienBPJS'] - ($readyStat['siap_klaim'] ?? 0)));
-    $stats['totalSiapKlaim'] = (int)($readyStat['siap_klaim'] ?? 0);
+      // 2. Kesiapan Dokumen Klaim (mlite_klaim_readiness)
+      $stmtReady = $this->db()->pdo()->prepare("
+        SELECT 
+          COUNT(CASE WHEN status_readiness = 'belum_lengkap' OR status_readiness IS NULL THEN 1 END) AS belum_lengkap,
+          COUNT(CASE WHEN status_readiness IN ('siap_verifikasi', 'terverifikasi', 'siap_grouping', 'siap_batch') THEN 1 END) AS siap_klaim
+        FROM mlite_klaim_readiness
+        WHERE tgl_registrasi LIKE ?
+      ");
+      $stmtReady->execute([$periodeBulan . '%']);
+      $readyStat = $stmtReady->fetch(\PDO::FETCH_ASSOC);
 
-    // 3. Verifikasi Internal (mlite_klaim_verifikasi)
-    $stmtVerif = $this->db()->pdo()->prepare("
-      SELECT 
-        COUNT(CASE WHEN is_internal_verified = 1 THEN 1 END) AS sudah_verif,
-        COUNT(CASE WHEN is_internal_verified = 0 OR is_internal_verified IS NULL THEN 1 END) AS belum_verif
-      FROM mlite_klaim_verifikasi v
-      JOIN reg_periksa r ON v.no_rawat = r.no_rawat
-      WHERE r.tgl_registrasi LIKE ?
-    ");
-    $stmtVerif->execute([$periodeBulan . '%']);
-    $verifStat = $stmtVerif->fetch(\PDO::FETCH_ASSOC);
+      $stats['totalBelumLengkap'] = (int)($readyStat['belum_lengkap'] ?? max(0, $stats['totalPasienBPJS'] - ($readyStat['siap_klaim'] ?? 0)));
+      $stats['totalSiapKlaim'] = (int)($readyStat['siap_klaim'] ?? 0);
 
-    $stats['totalVerifInternal'] = (int)($verifStat['sudah_verif'] ?? 0);
-    $stats['totalBelumVerif'] = (int)($verifStat['belum_verif'] ?? max(0, $stats['totalSiapKlaim'] - $stats['totalVerifInternal']));
+      // 3. Verifikasi Internal (mlite_klaim_verifikasi)
+      $stmtVerif = $this->db()->pdo()->prepare("
+        SELECT 
+          COUNT(CASE WHEN is_internal_verified = 1 THEN 1 END) AS sudah_verif,
+          COUNT(CASE WHEN is_internal_verified = 0 OR is_internal_verified IS NULL THEN 1 END) AS belum_verif
+        FROM mlite_klaim_verifikasi v
+        JOIN reg_periksa r ON v.no_rawat = r.no_rawat
+        WHERE r.tgl_registrasi LIKE ?
+      ");
+      $stmtVerif->execute([$periodeBulan . '%']);
+      $verifStat = $stmtVerif->fetch(\PDO::FETCH_ASSOC);
 
-    // 4. Grouping INA-CBG & E-Klaim
-    $stmtGroup = $this->db()->pdo()->prepare("
-      SELECT COUNT(DISTINCT nomor_sep) AS total_grouping 
-      FROM mlite_eklaim_logs 
-      WHERE method = 'grouper' AND created_at LIKE ?
-    ");
-    $stmtGroup->execute([$periodeBulan . '%']);
-    $stats['totalSudahGrouping'] = (int)$stmtGroup->fetchColumn();
+      $stats['totalVerifInternal'] = (int)($verifStat['sudah_verif'] ?? 0);
+      $stats['totalBelumVerif'] = (int)($verifStat['belum_verif'] ?? max(0, $stats['totalSiapKlaim'] - $stats['totalVerifInternal']));
 
-    // 5. Klaim Batch Detail (Diajukan, Disetujui, Ditolak, Dibayar)
-    $stmtBatch = $this->db()->pdo()->prepare("
-      SELECT 
-        COUNT(CASE WHEN bd.status_klaim = 'diajukan' THEN 1 END) AS diajukan,
-        COUNT(CASE WHEN bd.status_klaim = 'disetujui' THEN 1 END) AS disetujui,
-        COUNT(CASE WHEN bd.status_klaim = 'ditolak' THEN 1 END) AS ditolak,
-        COUNT(CASE WHEN bd.status_klaim = 'dibayar' THEN 1 END) AS dibayar,
-        SUM(bd.tarif_rs) AS nilai_diajukan,
-        SUM(bd.tarif_inacbg) AS nilai_disetujui
-      FROM mlite_klaim_batch_detail bd
-      JOIN mlite_klaim_batch b ON bd.batch_id = b.id
-      WHERE b.periode_bulan = ?
-    ");
-    $stmtBatch->execute([$periodeBulan]);
-    $batchStat = $stmtBatch->fetch(\PDO::FETCH_ASSOC);
+      // 4. Grouping INA-CBG & E-Klaim
+      $stmtGroup = $this->db()->pdo()->prepare("
+        SELECT COUNT(DISTINCT nomor_sep) AS total_grouping 
+        FROM mlite_eklaim_logs 
+        WHERE method = 'grouper' AND created_at LIKE ?
+      ");
+      $stmtGroup->execute([$periodeBulan . '%']);
+      $stats['totalSudahGrouping'] = (int)$stmtGroup->fetchColumn();
 
-    $stats['totalDiajukan'] = (int)($batchStat['diajukan'] ?? 0);
-    $stats['totalDisetujui'] = (int)($batchStat['disetujui'] ?? 0);
-    $stats['totalDitolak'] = (int)($batchStat['ditolak'] ?? 0);
-    $stats['totalDibayar'] = (int)($batchStat['dibayar'] ?? 0);
-    $stats['totalNilaiDiajukan'] = (float)($batchStat['nilai_diajukan'] ?? 0.00);
-    $stats['totalNilaiDisetujui'] = (float)($batchStat['nilai_disetujui'] ?? 0.00);
+      // 5. Klaim Batch Detail (Diajukan, Disetujui, Ditolak, Dibayar)
+      $stmtBatch = $this->db()->pdo()->prepare("
+        SELECT 
+          COUNT(CASE WHEN bd.status_klaim = 'diajukan' THEN 1 END) AS diajukan,
+          COUNT(CASE WHEN bd.status_klaim = 'disetujui' THEN 1 END) AS disetujui,
+          COUNT(CASE WHEN bd.status_klaim = 'ditolak' THEN 1 END) AS ditolak,
+          COUNT(CASE WHEN bd.status_klaim = 'dibayar' THEN 1 END) AS dibayar,
+          SUM(bd.tarif_rs) AS nilai_diajukan,
+          SUM(bd.tarif_inacbg) AS nilai_disetujui
+        FROM mlite_klaim_batch_detail bd
+        JOIN mlite_klaim_batch b ON bd.batch_id = b.id
+        WHERE b.periode_bulan = ?
+      ");
+      $stmtBatch->execute([$periodeBulan]);
+      $batchStat = $stmtBatch->fetch(\PDO::FETCH_ASSOC);
 
-    // 6. Dispute & Pending
-    $stmtDispute = $this->db()->pdo()->prepare("
-      SELECT 
-        COUNT(CASE WHEN tipe_masalah = 'pending' AND status_dispute != 'resolved' THEN 1 END) AS total_pending,
-        COUNT(CASE WHEN tipe_masalah = 'dispute' AND status_dispute != 'resolved' THEN 1 END) AS total_dispute
-      FROM mlite_klaim_dispute
-      WHERE created_at LIKE ?
-    ");
-    $stmtDispute->execute([$periodeBulan . '%']);
-    $disputeStat = $stmtDispute->fetch(\PDO::FETCH_ASSOC);
+      $stats['totalDiajukan'] = (int)($batchStat['diajukan'] ?? 0);
+      $stats['totalDisetujui'] = (int)($batchStat['disetujui'] ?? 0);
+      $stats['totalDitolak'] = (int)($batchStat['ditolak'] ?? 0);
+      $stats['totalDibayar'] = (int)($batchStat['dibayar'] ?? 0);
+      $stats['totalNilaiDiajukan'] = (float)($batchStat['nilai_diajukan'] ?? 0.00);
+      $stats['totalNilaiDisetujui'] = (float)($batchStat['nilai_disetujui'] ?? 0.00);
 
-    $stats['totalPending'] = (int)($disputeStat['total_pending'] ?? 0);
-    $stats['totalDispute'] = (int)($disputeStat['total_dispute'] ?? 0);
+      // 6. Dispute & Pending
+      $stmtDispute = $this->db()->pdo()->prepare("
+        SELECT 
+          COUNT(CASE WHEN tipe_masalah = 'pending' AND status_dispute != 'resolved' THEN 1 END) AS total_pending,
+          COUNT(CASE WHEN tipe_masalah = 'dispute' AND status_dispute != 'resolved' THEN 1 END) AS total_dispute
+        FROM mlite_klaim_dispute
+        WHERE created_at LIKE ?
+      ");
+      $stmtDispute->execute([$periodeBulan . '%']);
+      $disputeStat = $stmtDispute->fetch(\PDO::FETCH_ASSOC);
 
-    // 7. Pembayaran & Rekonsiliasi
-    $stmtPay = $this->db()->pdo()->prepare("
-      SELECT 
-        SUM(total_dibayar) AS total_dibayar,
-        SUM(selisih_pembayaran) AS selisih_pembayaran
-      FROM mlite_klaim_pembayaran
-      WHERE periode_klaim = ?
-    ");
-    $stmtPay->execute([$periodeBulan]);
-    $payStat = $stmtPay->fetch(\PDO::FETCH_ASSOC);
+      $stats['totalPending'] = (int)($disputeStat['total_pending'] ?? 0);
+      $stats['totalDispute'] = (int)($disputeStat['total_dispute'] ?? 0);
 
-    $stats['totalNilaiDibayar'] = (float)($payStat['total_dibayar'] ?? 0.00);
-    $stats['totalNilaiBelumDibayar'] = max(0.00, $stats['totalNilaiDisetujui'] - $stats['totalNilaiDibayar']);
+      // 7. Pembayaran & Rekonsiliasi
+      $stmtPay = $this->db()->pdo()->prepare("
+        SELECT 
+          SUM(total_dibayar) AS total_dibayar,
+          SUM(selisih_pembayaran) AS selisih_pembayaran
+        FROM mlite_klaim_pembayaran
+        WHERE periode_klaim = ?
+      ");
+      $stmtPay->execute([$periodeBulan]);
+      $payStat = $stmtPay->fetch(\PDO::FETCH_ASSOC);
+
+      $stats['totalNilaiDibayar'] = (float)($payStat['total_dibayar'] ?? 0.00);
+      $stats['totalNilaiBelumDibayar'] = max(0.00, $stats['totalNilaiDisetujui'] - $stats['totalNilaiDibayar']);
+    } catch (\Throwable $e) {
+      error_log('Error loading vedika stats: ' . $e->getMessage());
+    }
 
     $sub_modules = [
       ['name' => 'Pasien Belum Siap', 'url' => url([ADMIN, 'vedika', 'belumsiap']), 'icon' => 'exclamation-circle', 'desc' => 'Daftar Berkas Belum Lengkap'],
