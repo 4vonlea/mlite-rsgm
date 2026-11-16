@@ -217,6 +217,26 @@ class Admin extends AdminModule
           KEY `idx_aud_time` (`created_at`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
       ");
+
+      // Pastikan pengaturan vedika.carabayar khusus penjamin BPJS (hapus UMU / Umum dan '-')
+      $curCarabayar = $this->settings->get('vedika.carabayar');
+      if ($curCarabayar && (stripos($curCarabayar, 'UMU') !== false || strpos($curCarabayar, '-') !== false)) {
+        $parts = explode(',', $curCarabayar);
+        $filteredParts = array_filter($parts, function($v) {
+          $u = strtoupper(trim(str_replace(["'", '"'], '', $v)));
+          return !empty($u) && !in_array($u, ['UMU', 'UMUM', '-']);
+        });
+        $newCarabayar = !empty($filteredParts) ? implode(',', $filteredParts) : 'BPJ';
+        $this->settings('vedika', 'carabayar', $newCarabayar);
+      }
+
+      // Bersihkan data cache kesiapan klaim untuk pasien non-BPJS (UMUM) jika sempat tercatat
+      $pdo->exec("
+        DELETE r FROM mlite_klaim_readiness r
+        JOIN reg_periksa reg ON r.no_rawat = reg.no_rawat
+        JOIN penjab pj ON reg.kd_pj = pj.kd_pj
+        WHERE pj.png_jawab NOT LIKE '%BPJS%' OR pj.kd_pj = 'UMU' OR pj.kd_pj = '-'
+      ");
     } catch (\Throwable $e) {
       // safe fallback if table creation restricted
     }

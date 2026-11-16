@@ -97,6 +97,7 @@ trait ClaimTrait
 
     /**
      * Helper untuk mendapatkan daftar cara bayar BPJS bersih tanpa kutip
+     * Memastikan pasien tunai/umum (UMU) dan kosong (-) tidak pernah masuk ke modul klaim BPJS
      */
     protected function getCleanCarabayar()
     {
@@ -104,7 +105,13 @@ trait ClaimTrait
         $clean = array_filter(array_map(function($v) {
             return trim(str_replace(["'", '"'], '', $v));
         }, explode(',', $raw)));
-        return !empty($clean) ? array_values($clean) : ['BPJ'];
+
+        $filtered = array_filter($clean, function($v) {
+            $upper = strtoupper(trim($v));
+            return !empty($upper) && !in_array($upper, ['UMU', 'UMUM', '-', 'TUNAI', 'MANDIRI']);
+        });
+
+        return !empty($filtered) ? array_values($filtered) : ['BPJ'];
     }
 
     /**
@@ -617,12 +624,23 @@ trait ClaimTrait
         // 3. Pencarian otomatis berdasarkan identitas pasien (No. Peserta / NIK)
         $reg = $this->db('reg_periksa')
             ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->join('penjab', 'reg_periksa.kd_pj = penjab.kd_pj')
             ->where('reg_periksa.no_rawat', $no_rawat)
-            ->select(['reg_periksa.no_rawat', 'reg_periksa.tgl_registrasi', 'reg_periksa.no_rkm_medis', 'pasien.nm_pasien', 'pasien.no_peserta', 'pasien.no_ktp'])
+            ->select(['reg_periksa.no_rawat', 'reg_periksa.tgl_registrasi', 'reg_periksa.no_rkm_medis', 'reg_periksa.kd_pj', 'penjab.png_jawab', 'pasien.nm_pasien', 'pasien.no_peserta', 'pasien.no_ktp'])
             ->oneArray();
 
         if (!$reg) {
             echo json_encode(['status' => 'error', 'message' => 'Data registrasi pasien tidak ditemukan di SIMRS.']);
+            exit();
+        }
+
+        if ($reg['kd_pj'] === 'UMU' || stripos($reg['png_jawab'], 'umum') !== false) {
+            echo json_encode([
+                'status' => 'not_found',
+                'require_manual' => false,
+                'no_rawat' => $no_rawat,
+                'message' => "Pasien {$reg['nm_pasien']} terdaftar sebagai Pasien UMUM (Tunai / Bayar Mandiri), bukan peserta penjaminan BPJS Kesehatan."
+            ]);
             exit();
         }
 
@@ -711,6 +729,9 @@ trait ClaimTrait
 
         $whereSql = "
             WHERE (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
+            AND penjab.png_jawab NOT LIKE '%UMUM%'
+            AND penjab.kd_pj != 'UMU'
+            AND penjab.kd_pj != '-'
             AND reg_periksa.tgl_registrasi BETWEEN ? AND ?
             AND (r.status_readiness = 'belum_lengkap' OR r.status_readiness IS NULL)
         ";
@@ -872,6 +893,9 @@ trait ClaimTrait
 
         $whereSql = "
             WHERE (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
+            AND penjab.png_jawab NOT LIKE '%UMUM%'
+            AND penjab.kd_pj != 'UMU'
+            AND penjab.kd_pj != '-'
             AND reg_periksa.tgl_registrasi BETWEEN ? AND ?
             AND r.status_readiness IN ('siap_verifikasi', 'terverifikasi', 'siap_grouping', 'siap_batch')
         ";
@@ -1035,6 +1059,9 @@ trait ClaimTrait
             JOIN penjab ON reg_periksa.kd_pj = penjab.kd_pj
             LEFT JOIN mlite_klaim_readiness r ON reg_periksa.no_rawat = r.no_rawat
             WHERE (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
+            AND penjab.png_jawab NOT LIKE '%UMUM%'
+            AND penjab.kd_pj != 'UMU'
+            AND penjab.kd_pj != '-'
             AND reg_periksa.tgl_registrasi BETWEEN ? AND ?
             ORDER BY (r.id IS NULL) DESC, reg_periksa.tgl_registrasi DESC
             LIMIT 500
