@@ -151,8 +151,59 @@ trait ClaimTrait
         $kd_poli = $_GET['kd_poli'] ?? '';
         $search = $_GET['search'] ?? '';
 
+        $whereSql = "
+            WHERE (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
+            AND reg_periksa.tgl_registrasi BETWEEN ? AND ?
+            AND (r.status_readiness = 'belum_lengkap' OR r.status_readiness IS NULL)
+        ";
+        $params = array_merge($cleanPj, [$tgl_awal, $tgl_akhir]);
+
+        if (!empty($status_lanjut)) {
+            $whereSql .= " AND reg_periksa.status_lanjut = ?";
+            $params[] = $status_lanjut;
+        }
+        if (!empty($kd_poli)) {
+            $whereSql .= " AND reg_periksa.kd_poli = ?";
+            $params[] = $kd_poli;
+        }
+        if (!empty($search)) {
+            $whereSql .= " AND (reg_periksa.no_rawat LIKE ? OR reg_periksa.no_rkm_medis LIKE ? OR pasien.nm_pasien LIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+
+        // 1. Hitung total data aktual yang sesuai filter
+        $countSql = "
+            SELECT COUNT(*) 
+            FROM reg_periksa
+            JOIN pasien ON reg_periksa.no_rkm_medis = pasien.no_rkm_medis
+            JOIN poliklinik ON reg_periksa.kd_poli = poliklinik.kd_poli
+            JOIN dokter ON reg_periksa.kd_dokter = dokter.kd_dokter
+            JOIN penjab ON reg_periksa.kd_pj = penjab.kd_pj
+            LEFT JOIN mlite_klaim_readiness r ON reg_periksa.no_rawat = r.no_rawat
+            $whereSql
+        ";
+        $countStmt = $this->db()->pdo()->prepare($countSql);
+        $countStmt->execute($params);
+        $totalAll = (int)$countStmt->fetchColumn();
+
+        // 2. Konfigurasi pagination & limit
+        $defaultLimit = ($tgl_awal !== $tgl_akhir) ? 250 : 100;
+        $limitParam = $_GET['limit'] ?? $defaultLimit;
+        $limit = ($limitParam === 'all' || $limitParam === '0') ? 0 : intval($limitParam);
+        if ($limit < 0) $limit = $defaultLimit;
+
+        $order = (isset($_GET['order']) && strtoupper($_GET['order']) === 'ASC') ? 'ASC' : 'DESC';
+        $page = max(1, intval($_GET['page'] ?? 1));
+        $totalPages = ($limit > 0) ? max(1, (int)ceil($totalAll / $limit)) : 1;
+        if ($page > $totalPages) {
+            $page = $totalPages;
+        }
+        $offset = ($limit > 0) ? ($page - 1) * $limit : 0;
+
         $sql = "
-            SELECT reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, reg_periksa.status_lanjut,
+            SELECT reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, reg_periksa.jam_reg, reg_periksa.status_lanjut,
                    pasien.nm_pasien, pasien.no_peserta, poliklinik.nm_poli, dokter.nm_dokter,
                    COALESCE(s.no_sep, si.no_sep, r.no_sep, '-') AS no_sep,
                    COALESCE(r.score_percent, 0) AS score_percent,
@@ -166,29 +217,15 @@ trait ClaimTrait
             LEFT JOIN bridging_sep s ON reg_periksa.no_rawat = s.no_rawat
             LEFT JOIN bridging_sep_internal si ON reg_periksa.no_rawat = si.no_rawat
             LEFT JOIN mlite_klaim_readiness r ON reg_periksa.no_rawat = r.no_rawat
-            WHERE (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
-            AND reg_periksa.tgl_registrasi BETWEEN ? AND ?
-            AND (r.status_readiness = 'belum_lengkap' OR r.status_readiness IS NULL)
+            $whereSql
+            ORDER BY reg_periksa.tgl_registrasi $order, reg_periksa.jam_reg $order
         ";
-
-        $params = array_merge($cleanPj, [$tgl_awal, $tgl_akhir]);
-
-        if (!empty($status_lanjut)) {
-            $sql .= " AND reg_periksa.status_lanjut = ?";
-            $params[] = $status_lanjut;
-        }
-        if (!empty($kd_poli)) {
-            $sql .= " AND reg_periksa.kd_poli = ?";
-            $params[] = $kd_poli;
-        }
-        if (!empty($search)) {
-            $sql .= " AND (reg_periksa.no_rawat LIKE ? OR reg_periksa.no_rkm_medis LIKE ? OR pasien.nm_pasien LIKE ?)";
-            $params[] = "%$search%";
-            $params[] = "%$search%";
-            $params[] = "%$search%";
+        if ($limit > 0) {
+            $sql .= " LIMIT $limit OFFSET $offset";
+        } else {
+            $sql .= " LIMIT 3000";
         }
 
-        $sql .= " ORDER BY reg_periksa.tgl_registrasi DESC LIMIT 100";
         $stmt = $this->db()->pdo()->prepare($sql);
         $stmt->execute($params);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -226,6 +263,18 @@ trait ClaimTrait
 
         $polis = $this->db('poliklinik')->where('status', '1')->toArray();
 
+        // Siapkan data tombol halaman
+        $startPage = max(1, $page - 3);
+        $endPage = min($totalPages, $startPage + 6);
+        if ($endPage - $startPage < 6) {
+            $startPage = max(1, $endPage - 6);
+        }
+        $pageNumbers = range($startPage, $endPage);
+
+        $q = $_GET;
+        unset($q['page']);
+        $queryString = http_build_query($q);
+
         return $this->draw('belumsiap.html', [
             'rows' => $rows,
             'tgl_awal' => $tgl_awal,
@@ -234,8 +283,15 @@ trait ClaimTrait
             'status_lanjut' => $status_lanjut,
             'kd_poli' => $kd_poli,
             'search' => $search,
+            'limit' => $limit,
+            'order' => $order,
+            'page' => $page,
+            'total_pages' => $totalPages,
+            'page_numbers' => $pageNumbers,
+            'query_string' => $queryString,
             'polis' => $polis,
-            'total' => count($rows)
+            'total' => count($rows),
+            'total_all' => $totalAll
         ]);
     }
 
@@ -256,8 +312,55 @@ trait ClaimTrait
         $status_lanjut = $_GET['status_lanjut'] ?? '';
         $search = $_GET['search'] ?? '';
 
+        $whereSql = "
+            WHERE (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
+            AND reg_periksa.tgl_registrasi BETWEEN ? AND ?
+            AND r.status_readiness IN ('siap_verifikasi', 'terverifikasi', 'siap_grouping', 'siap_batch')
+        ";
+        $params = array_merge($cleanPj, [$tgl_awal, $tgl_akhir]);
+
+        if (!empty($status_lanjut)) {
+            $whereSql .= " AND reg_periksa.status_lanjut = ?";
+            $params[] = $status_lanjut;
+        }
+        if (!empty($search)) {
+            $whereSql .= " AND (reg_periksa.no_rawat LIKE ? OR reg_periksa.no_rkm_medis LIKE ? OR pasien.nm_pasien LIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+
+        // 1. Hitung total data aktual
+        $countSql = "
+            SELECT COUNT(*)
+            FROM reg_periksa
+            JOIN pasien ON reg_periksa.no_rkm_medis = pasien.no_rkm_medis
+            JOIN poliklinik ON reg_periksa.kd_poli = poliklinik.kd_poli
+            JOIN dokter ON reg_periksa.kd_dokter = dokter.kd_dokter
+            JOIN penjab ON reg_periksa.kd_pj = penjab.kd_pj
+            JOIN mlite_klaim_readiness r ON reg_periksa.no_rawat = r.no_rawat
+            $whereSql
+        ";
+        $countStmt = $this->db()->pdo()->prepare($countSql);
+        $countStmt->execute($params);
+        $totalAll = (int)$countStmt->fetchColumn();
+
+        // 2. Konfigurasi pagination & limit
+        $defaultLimit = ($tgl_awal !== $tgl_akhir) ? 250 : 100;
+        $limitParam = $_GET['limit'] ?? $defaultLimit;
+        $limit = ($limitParam === 'all' || $limitParam === '0') ? 0 : intval($limitParam);
+        if ($limit < 0) $limit = $defaultLimit;
+
+        $order = (isset($_GET['order']) && strtoupper($_GET['order']) === 'ASC') ? 'ASC' : 'DESC';
+        $page = max(1, intval($_GET['page'] ?? 1));
+        $totalPages = ($limit > 0) ? max(1, (int)ceil($totalAll / $limit)) : 1;
+        if ($page > $totalPages) {
+            $page = $totalPages;
+        }
+        $offset = ($limit > 0) ? ($page - 1) * $limit : 0;
+
         $sql = "
-            SELECT reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, reg_periksa.status_lanjut,
+            SELECT reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, reg_periksa.jam_reg, reg_periksa.status_lanjut,
                    pasien.nm_pasien, pasien.no_peserta, poliklinik.nm_poli, dokter.nm_dokter,
                    COALESCE(s.no_sep, si.no_sep, r.no_sep, '-') AS no_sep,
                    r.score_percent, r.status_readiness,
@@ -273,25 +376,15 @@ trait ClaimTrait
             JOIN mlite_klaim_readiness r ON reg_periksa.no_rawat = r.no_rawat
             LEFT JOIN mlite_klaim_verifikasi v ON reg_periksa.no_rawat = v.no_rawat
             LEFT JOIN mlite_billing b ON reg_periksa.no_rawat = b.no_rawat
-            WHERE (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
-            AND reg_periksa.tgl_registrasi BETWEEN ? AND ?
-            AND r.status_readiness IN ('siap_verifikasi', 'terverifikasi', 'siap_grouping', 'siap_batch')
+            $whereSql
+            ORDER BY reg_periksa.tgl_registrasi $order, reg_periksa.jam_reg $order
         ";
-
-        $params = array_merge($cleanPj, [$tgl_awal, $tgl_akhir]);
-
-        if (!empty($status_lanjut)) {
-            $sql .= " AND reg_periksa.status_lanjut = ?";
-            $params[] = $status_lanjut;
-        }
-        if (!empty($search)) {
-            $sql .= " AND (reg_periksa.no_rawat LIKE ? OR reg_periksa.no_rkm_medis LIKE ? OR pasien.nm_pasien LIKE ?)";
-            $params[] = "%$search%";
-            $params[] = "%$search%";
-            $params[] = "%$search%";
+        if ($limit > 0) {
+            $sql .= " LIMIT $limit OFFSET $offset";
+        } else {
+            $sql .= " LIMIT 3000";
         }
 
-        $sql .= " ORDER BY reg_periksa.tgl_registrasi DESC LIMIT 100";
         $stmt = $this->db()->pdo()->prepare($sql);
         $stmt->execute($params);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -332,6 +425,18 @@ trait ClaimTrait
         // Ambil daftar batch aktif untuk dropdown tambah ke batch
         $batches = $this->db('mlite_klaim_batch')->where('status_batch', 'draft')->toArray();
 
+        // Siapkan data tombol halaman
+        $startPage = max(1, $page - 3);
+        $endPage = min($totalPages, $startPage + 6);
+        if ($endPage - $startPage < 6) {
+            $startPage = max(1, $endPage - 6);
+        }
+        $pageNumbers = range($startPage, $endPage);
+
+        $q = $_GET;
+        unset($q['page']);
+        $queryString = http_build_query($q);
+
         return $this->draw('siapklaim.html', [
             'rows' => $rows,
             'tgl_awal' => $tgl_awal,
@@ -339,8 +444,15 @@ trait ClaimTrait
             'periode' => $periode,
             'status_lanjut' => $status_lanjut,
             'search' => $search,
+            'limit' => $limit,
+            'order' => $order,
+            'page' => $page,
+            'total_pages' => $totalPages,
+            'page_numbers' => $pageNumbers,
+            'query_string' => $queryString,
             'batches' => $batches,
-            'total' => count($rows)
+            'total' => count($rows),
+            'total_all' => $totalAll
         ]);
     }
 
@@ -358,7 +470,7 @@ trait ClaimTrait
         $cleanPj = $this->getCleanCarabayar();
         $inPlaceholders = implode(',', array_fill(0, count($cleanPj), '?'));
 
-        // Prioritaskan evaluasi pasien yang belum pernah diaudit terlebih dahulu
+        // Evaluasi pasien pada rentang tanggal (hingga 500 pasien)
         $sql = "
             SELECT reg_periksa.no_rawat 
             FROM reg_periksa
@@ -367,7 +479,7 @@ trait ClaimTrait
             WHERE (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
             AND reg_periksa.tgl_registrasi BETWEEN ? AND ?
             ORDER BY (r.id IS NULL) DESC, reg_periksa.tgl_registrasi DESC
-            LIMIT 100
+            LIMIT 500
         ";
         $params = array_merge($cleanPj, [$tgl_awal, $tgl_akhir]);
         $stmt = $this->db()->pdo()->prepare($sql);
@@ -448,7 +560,7 @@ trait ClaimTrait
             LEFT JOIN mlite_klaim_verifikasi v ON reg_periksa.no_rawat = v.no_rawat
             WHERE reg_periksa.tgl_registrasi BETWEEN ? AND ?
             AND penjab.png_jawab LIKE '%BPJS%'
-            ORDER BY reg_periksa.tgl_registrasi DESC LIMIT 100
+            ORDER BY reg_periksa.tgl_registrasi DESC, reg_periksa.jam_reg DESC LIMIT 250
         ";
         $stmt = $this->db()->pdo()->prepare($sql);
         $stmt->execute([$tgl_awal, $tgl_akhir]);
@@ -504,7 +616,7 @@ trait ClaimTrait
             LEFT JOIN mlite_klaim_verifikasi v ON reg_periksa.no_rawat = v.no_rawat
             WHERE reg_periksa.tgl_registrasi BETWEEN ? AND ?
             AND penjab.png_jawab LIKE '%BPJS%'
-            ORDER BY reg_periksa.tgl_registrasi DESC LIMIT 100
+            ORDER BY reg_periksa.tgl_registrasi DESC, reg_periksa.jam_reg DESC LIMIT 250
         ";
         $stmt = $this->db()->pdo()->prepare($sql);
         $stmt->execute([$tgl_awal, $tgl_akhir]);
@@ -553,7 +665,7 @@ trait ClaimTrait
             $params[] = "%$search%";
         }
 
-        $sql .= " ORDER BY reg_periksa.tgl_registrasi DESC LIMIT 50";
+        $sql .= " ORDER BY reg_periksa.tgl_registrasi DESC, reg_periksa.jam_reg DESC LIMIT 250";
         $stmt = $this->db()->pdo()->prepare($sql);
         $stmt->execute($params);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -636,7 +748,7 @@ trait ClaimTrait
             $params[] = "%$search%";
         }
 
-        $sql .= " ORDER BY reg_periksa.tgl_registrasi DESC LIMIT 100";
+        $sql .= " ORDER BY reg_periksa.tgl_registrasi DESC, reg_periksa.jam_reg DESC LIMIT 250";
         $stmt = $this->db()->pdo()->prepare($sql);
         $stmt->execute($params);
         $rawRows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -754,7 +866,7 @@ trait ClaimTrait
             $params[] = "%$search%";
         }
 
-        $sql .= " ORDER BY reg_periksa.tgl_registrasi DESC LIMIT 50";
+        $sql .= " ORDER BY reg_periksa.tgl_registrasi DESC, reg_periksa.jam_reg DESC LIMIT 250";
         $stmt = $this->db()->pdo()->prepare($sql);
         $stmt->execute($params);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -993,7 +1105,7 @@ trait ClaimTrait
             LEFT JOIN mlite_klaim_batch_detail bd ON r.no_rawat = bd.no_rawat
             LEFT JOIN mlite_klaim_batch b ON bd.batch_id = b.id
             WHERE r.tgl_registrasi BETWEEN ? AND ?
-            ORDER BY r.tgl_registrasi DESC LIMIT 100
+            ORDER BY r.tgl_registrasi DESC LIMIT 250
         ";
         $stmt = $this->db()->pdo()->prepare($sql);
         $stmt->execute([$tgl_awal, $tgl_akhir]);

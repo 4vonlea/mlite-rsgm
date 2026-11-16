@@ -36,7 +36,22 @@
         </select>
       </div>
       <div class="form-group" style="margin-left:5px;">
-        <input type="text" name="search" class="form-control input-sm" value="{?=$search?}" placeholder="Cari No Rawat / RM / Nama">
+        <input type="text" name="search" class="form-control input-sm" style="width:130px;" value="{?=$search?}" placeholder="Cari Pasien">
+      </div>
+      <div class="form-group" style="margin-left:5px;">
+        <select name="order" class="form-control input-sm" title="Urutan Tanggal">
+          <option value="DESC" {if: $order == 'DESC'}selected{/if}>Terkini (DESC)</option>
+          <option value="ASC" {if: $order == 'ASC'}selected{/if}>Terlama (ASC)</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-left:5px;">
+        <select name="limit" class="form-control input-sm" title="Jumlah Data Ditampilkan">
+          <option value="100" {if: $limit == 100}selected{/if}>100 Data</option>
+          <option value="250" {if: $limit == 250}selected{/if}>250 Data</option>
+          <option value="500" {if: $limit == 500}selected{/if}>500 Data</option>
+          <option value="1000" {if: $limit == 1000}selected{/if}>1000 Data</option>
+          <option value="all" {if: $limit == 0}selected{/if}>Semua Data</option>
+        </select>
       </div>
       <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
       <button type="submit" class="btn btn-primary btn-sm" style="margin-left:5px;"><i class="fa fa-filter"></i> Saring</button>
@@ -52,7 +67,10 @@
       <div class="row">
         <div class="col-md-6">
           <h3 class="panel-title" style="line-height:30px;">
-            <b>Ditemukan {?=$total?} Pasien Siap Diproses Klaim</b>
+            <b>Ditemukan {?=number_format($total_all)?} Pasien Siap Diproses Klaim</b>
+            {if: $total_all > $total}
+            <span class="badge" style="background:#38a169;margin-left:5px;">Menampilkan {?=$total?} data ({if: $order == 'DESC'}terkini{else}terlama{/if})</span>
+            {/if}
           </h3>
         </div>
         <div class="col-md-6 text-right">
@@ -149,6 +167,30 @@
         </tbody>
       </table>
     </div>
+    {if: $total_pages > 1}
+    <div class="panel-footer" style="padding:8px 15px;">
+      <div class="row">
+        <div class="col-md-6" style="line-height:30px;">
+          Menampilkan <b>{?=$total?}</b> data dari total <b>{?=number_format($total_all)?}</b> pasien ({if: $order == 'DESC'}terkini{else}terlama{/if}).
+        </div>
+        <div class="col-md-6 text-right">
+          <ul class="pagination pagination-sm" style="margin:0;">
+            <li class="{if: $page <= 1}disabled{/if}">
+              <a href="{if: $page > 1}?page={?=$page - 1?}&{?=$query_string?}{else}javascript:void(0){/if}">&laquo;</a>
+            </li>
+            {loop: $page_numbers}
+            <li class="{if: $value == $page}active{/if}">
+              <a href="?page={?=$value?}&{?=$query_string?}">{?=$value?}</a>
+            </li>
+            {/loop}
+            <li class="{if: $page >= $total_pages}disabled{/if}">
+              <a href="{if: $page < $total_pages}?page={?=$page + 1?}&{?=$query_string?}{else}javascript:void(0){/if}">&raquo;</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    {/if}
   </div>
 </form>
 
