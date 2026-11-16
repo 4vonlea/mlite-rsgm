@@ -62,6 +62,7 @@ class Site extends SiteModule
         $this->route('anjungan/simpannorm', 'getSimpanNoRM');
         $this->route('anjungan/setpanggil', 'getSetPanggil');
         $this->route('anjungan/setpanggilnext', 'getSetPanggilNext');
+        $this->route('anjungan/setskip', 'getSetSkip');
         $this->route('anjungan/presensi', 'getPresensi');
         $this->route('anjungan/presensi/upload', 'getUpload');
         $this->route('anjungan/bed', 'getDisplayBed');
@@ -261,6 +262,9 @@ class Site extends SiteModule
           'username' => $username,
           'tanggal' => $tanggal,
           'running_text' => $this->settings->get('anjungan.text_anjungan') ?: 'Selamat Datang di Anjungan Pasien Mandiri ' . ($this->settings->get('settings.nama_instansi') ?: 'RSGM') . '. Silakan pilih menu layanan yang Anda butuhkan.',
+          'display_card2' => $this->settings->get('anjungan.display_card2') ?: 'loket2',
+          'nama_loket_1' => $this->settings->get('anjungan.nama_loket_1') ?: 'Loket Pendaftaran 1',
+          'nama_loket_2' => $this->settings->get('anjungan.nama_loket_2') ?: 'Loket Pendaftaran 2',
           'poliklinik' => $poliklinik,
           'penjab' => $penjab
         ]);
@@ -1338,18 +1342,44 @@ class Site extends SiteModule
             }
         }
 
-        // Get initial values for Loket, CS, Apotek
-        $loketDB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->where('status', '>=', 1)->desc('kd')->oneArray();
-        $init_loket_no = !empty($loketDB['noantrian']) ? $loketDB['noantrian'] : ($this->settings->get('anjungan.panggil_loket_nomor') ?: 1);
-        $init_loket_counter = !empty($loketDB['loket']) ? $loketDB['loket'] : ($this->settings->get('anjungan.panggil_loket') ?: 1);
+        // Get settings and initial values for Loket 1, Loket 2 / CS, Apotek
+        $dateToday = date('Y-m-d');
+        $display_card2 = $this->settings->get('anjungan.display_card2') ?: 'loket2';
+        $nama_loket_1 = $this->settings->get('anjungan.nama_loket_1') ?: 'Loket Pendaftaran 1';
+        $nama_loket_2 = $this->settings->get('anjungan.nama_loket_2') ?: 'Loket Pendaftaran 2';
 
-        $csDB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')->where('type', 'CS')->where('postdate', date('Y-m-d'))->where('status', '>=', 1)->desc('kd')->oneArray();
-        $init_cs_no = !empty($csDB['noantrian']) ? $csDB['noantrian'] : ($this->settings->get('anjungan.panggil_cs_nomor') ?: 1);
-        $init_cs_counter = !empty($csDB['loket']) ? $csDB['loket'] : ($this->settings->get('anjungan.panggil_cs') ?: 1);
+        // Loket 1
+        $loket1DB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')
+          ->where('type', 'Loket')->where('loket', 1)->where('postdate', $dateToday)->where('status', '>=', 1)
+          ->desc('kd')->oneArray();
+        $init_loket1_no = !empty($loket1DB['noantrian']) ? $loket1DB['noantrian'] : 0;
+        $init_loket1_counter = 1;
 
-        $apotekDB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')->where('type', 'Apotek')->where('postdate', date('Y-m-d'))->where('status', '>=', 1)->desc('kd')->oneArray();
-        $init_apotek_no = !empty($apotekDB['noantrian']) ? $apotekDB['noantrian'] : ($this->settings->get('anjungan.panggil_apotek_nomor') ?: 1);
-        $init_apotek_counter = !empty($apotekDB['loket']) ? $apotekDB['loket'] : ($this->settings->get('anjungan.panggil_apotek') ?: 1);
+        // Card 2: Loket 2 or CS
+        if ($display_card2 == 'loket2') {
+          $loket2DB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')
+            ->where('type', 'Loket')->where('loket', 2)->where('postdate', $dateToday)->where('status', '>=', 1)
+            ->desc('kd')->oneArray();
+          $init_card2_no = !empty($loket2DB['noantrian']) ? $loket2DB['noantrian'] : 0;
+          $init_card2_counter = 2;
+          $card2_prefix = 'A';
+          $card2_title = $nama_loket_2;
+        } else {
+          $csDB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')
+            ->where('type', 'CS')->where('postdate', $dateToday)->where('status', '>=', 1)
+            ->desc('kd')->oneArray();
+          $init_card2_no = !empty($csDB['noantrian']) ? $csDB['noantrian'] : 0;
+          $init_card2_counter = !empty($csDB['loket']) ? $csDB['loket'] : 1;
+          $card2_prefix = 'B';
+          $card2_title = 'Customer Service / CS';
+        }
+
+        // Apotek
+        $apotekDB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')
+          ->where('type', 'Apotek')->where('postdate', $dateToday)->where('status', '>=', 1)
+          ->desc('kd')->oneArray();
+        $init_apotek_no = !empty($apotekDB['noantrian']) ? $apotekDB['noantrian'] : 0;
+        $init_apotek_counter = !empty($apotekDB['loket']) ? $apotekDB['loket'] : 1;
 
         $content = $this->draw('display.antrian.loket.html', [
           'title' => $title,
@@ -1359,12 +1389,22 @@ class Site extends SiteModule
           'tanggal' => $tanggal,
           'vidio' => $vidio_raw,
           'vidio_url' => $vidio_url,
-          'init_loket_no' => sprintf("%03d", intval($init_loket_no)),
-          'init_loket_counter' => $init_loket_counter,
-          'init_cs_no' => sprintf("%03d", intval($init_cs_no)),
-          'init_cs_counter' => $init_cs_counter,
+          'display_card2' => $display_card2,
+          'nama_loket_1' => $nama_loket_1,
+          'nama_loket_2' => $nama_loket_2,
+          'card2_prefix' => $card2_prefix,
+          'card2_title' => $card2_title,
+          'init_loket1_no' => sprintf("%03d", intval($init_loket1_no)),
+          'init_loket1_counter' => $init_loket1_counter,
+          'init_card2_no' => sprintf("%03d", intval($init_card2_no)),
+          'init_card2_counter' => $init_card2_counter,
           'init_apotek_no' => sprintf("%03d", intval($init_apotek_no)),
           'init_apotek_counter' => $init_apotek_counter,
+          // Legacy aliases
+          'init_loket_no' => sprintf("%03d", intval($init_loket1_no)),
+          'init_loket_counter' => $init_loket1_counter,
+          'init_cs_no' => sprintf("%03d", intval($init_card2_no)),
+          'init_cs_counter' => $init_card2_counter,
           'running_text' => $this->settings->get('anjungan.text_loket') ?: 'Selamat Datang di Rumah Sakit Gigi dan Mulut Gusti Hasan Aman. Silakan menunggu nomor antrian Anda dipanggil.',
           'display' => $display
         ]);
@@ -1503,17 +1543,28 @@ class Site extends SiteModule
     $date = date('Y-m-d');
 
     $rows = $this->db('permintaan_lab')
-      ->join('dokter', 'dokter.kd_dokter=permintaan_lab.dokter_perujuk')
+      ->select('permintaan_lab.noorder')
+      ->select('permintaan_lab.no_rawat')
+      ->select('permintaan_lab.tgl_permintaan')
+      ->select('permintaan_lab.jam_permintaan')
+      ->select('permintaan_lab.tgl_sampel')
+      ->select('permintaan_lab.jam_sampel')
+      ->select('permintaan_lab.tgl_hasil')
+      ->select('permintaan_lab.jam_hasil')
+      ->select('reg_periksa.no_reg')
+      ->select('pasien.no_rkm_medis')
+      ->select('pasien.nm_pasien')
+      ->select('poliklinik.nm_poli')
+      ->select('dokter.nm_dokter')
       ->join('reg_periksa', 'reg_periksa.no_rawat=permintaan_lab.no_rawat')
-      ->join('poliklinik', 'poliklinik.kd_poli=reg_periksa.kd_poli')
       ->join('pasien', 'pasien.no_rkm_medis=reg_periksa.no_rkm_medis')
-      ->join('permintaan_pemeriksaan_lab', 'permintaan_pemeriksaan_lab.noorder=permintaan_lab.noorder')
-      ->join('jns_perawatan_lab', 'jns_perawatan_lab.kd_jenis_prw=permintaan_pemeriksaan_lab.kd_jenis_prw')
+      ->leftJoin('dokter', 'dokter.kd_dokter=permintaan_lab.dokter_perujuk')
+      ->leftJoin('poliklinik', 'poliklinik.kd_poli=reg_periksa.kd_poli')
       ->where('permintaan_lab.tgl_hasil', '0000-00-00')
       ->where('permintaan_lab.tgl_permintaan', '>=', $date_start)
       ->where('permintaan_lab.tgl_permintaan', '<=', $date)
-      ->group('permintaan_lab.noorder')
       ->desc('permintaan_lab.tgl_permintaan')
+      ->desc('permintaan_lab.jam_permintaan')
       ->toArray();
     
     $filteredRows = [];
@@ -1534,9 +1585,7 @@ class Site extends SiteModule
       $filteredRows[] = $row;
     }
     
-    $rows = $filteredRows;
-    
-    return $rows;
+    return $filteredRows;
   }
 
   public function _resultDisplayAntrianRadiologi()
@@ -1545,17 +1594,28 @@ class Site extends SiteModule
     $date = date('Y-m-d');
 
     $rows = $this->db('permintaan_radiologi')
-      ->join('dokter', 'dokter.kd_dokter=permintaan_radiologi.dokter_perujuk')
+      ->select('permintaan_radiologi.noorder')
+      ->select('permintaan_radiologi.no_rawat')
+      ->select('permintaan_radiologi.tgl_permintaan')
+      ->select('permintaan_radiologi.jam_permintaan')
+      ->select('permintaan_radiologi.tgl_sampel')
+      ->select('permintaan_radiologi.jam_sampel')
+      ->select('permintaan_radiologi.tgl_hasil')
+      ->select('permintaan_radiologi.jam_hasil')
+      ->select('reg_periksa.no_reg')
+      ->select('pasien.no_rkm_medis')
+      ->select('pasien.nm_pasien')
+      ->select('poliklinik.nm_poli')
+      ->select('dokter.nm_dokter')
       ->join('reg_periksa', 'reg_periksa.no_rawat=permintaan_radiologi.no_rawat')
-      ->join('poliklinik', 'poliklinik.kd_poli=reg_periksa.kd_poli')
       ->join('pasien', 'pasien.no_rkm_medis=reg_periksa.no_rkm_medis')
-      ->join('permintaan_pemeriksaan_radiologi', 'permintaan_pemeriksaan_radiologi.noorder=permintaan_radiologi.noorder')
-      ->join('jns_perawatan_radiologi', 'jns_perawatan_radiologi.kd_jenis_prw=permintaan_pemeriksaan_radiologi.kd_jenis_prw')
+      ->leftJoin('dokter', 'dokter.kd_dokter=permintaan_radiologi.dokter_perujuk')
+      ->leftJoin('poliklinik', 'poliklinik.kd_poli=reg_periksa.kd_poli')
       ->where('permintaan_radiologi.tgl_hasil', '0000-00-00')
       ->where('permintaan_radiologi.tgl_permintaan', '>=', $date_start)
       ->where('permintaan_radiologi.tgl_permintaan', '<=', $date)
-      ->group('permintaan_radiologi.noorder')
       ->desc('permintaan_radiologi.tgl_permintaan')
+      ->desc('permintaan_radiologi.jam_permintaan')
       ->toArray();
 
     $filteredRows = [];
@@ -1908,8 +1968,10 @@ class Site extends SiteModule
       $loket  = intval($_GET['loket'] ?? 1);
       if ($loket <= 0) $loket = 1;
       $date = date('Y-m-d');
+      $silent = isset($_GET['silent']) && ($_GET['silent'] == '1' || $_GET['silent'] == 'true');
+      $targetStatus = $silent ? 2 : 1;
 
-      // Bersihkan antrian aktif sebelumnya hari ini
+      // Selesaikan panggilan aktif sebelumnya hari ini
       $this->db('mlite_antrian_loket')
         ->where('postdate', $date)
         ->where('type', $type)
@@ -1918,8 +1980,8 @@ class Site extends SiteModule
 
       $cek = $this->db('mlite_antrian_loket')->where('type', $type)->where('noantrian', $noantrian)->where('postdate', $date)->oneArray();
       if ($cek) {
-          $this->db('mlite_antrian_loket')->where('type', $type)->where('noantrian', $noantrian)->where('postdate', $date)->save([
-              'status' => 1,
+          $this->db('mlite_antrian_loket')->where('kd', $cek['kd'])->save([
+              'status' => $targetStatus,
               'loket' => $loket,
               'start_time' => date('H:i:s')
           ]);
@@ -1931,15 +1993,17 @@ class Site extends SiteModule
               'postdate' => $date,
               'start_time' => date('H:i:s'),
               'end_time' => '00:00:00',
-              'status' => 1
+              'status' => $targetStatus
           ]);
       }
 
       // Update settings agar tampilan layar display sinkron seketika
       $settingFieldNum = 'panggil_' . strtolower($type) . '_nomor';
       $settingFieldLoket = 'panggil_' . strtolower($type);
+      $settingFieldDate = 'panggil_' . strtolower($type) . '_tanggal';
       $this->settings->set('anjungan.' . $settingFieldNum, $noantrian);
       $this->settings->set('anjungan.' . $settingFieldLoket, $loket);
+      $this->settings->set('anjungan.' . $settingFieldDate, $date);
 
       echo json_encode([
           'status' => true,
@@ -1947,7 +2011,8 @@ class Site extends SiteModule
           'raw_noantrian' => $noantrian,
           'loket' => (string) $loket,
           'type' => $type,
-          'message' => 'Berhasil memanggil antrian ' . $type . ' nomor ' . $noantrian . ' di loket ' . $loket
+          'silent' => $silent,
+          'message' => $silent ? ('Nomor antrian ' . $type . ' nomor ' . $noantrian . ' disinkronkan ke loket ' . $loket . ' (tanpa suara)') : ('Berhasil memanggil antrian ' . $type . ' nomor ' . $noantrian . ' di loket ' . $loket)
       ]);
       exit();
     }
@@ -1965,42 +2030,80 @@ class Site extends SiteModule
       if ($loket <= 0) $loket = 1;
       $date = date('Y-m-d');
 
+      // NEXT/SKIP HARUS SELALU SENYAP (STATUS = 2), TIDAK BOLEH MEMICU SUARA PANGGILAN
+      $targetStatus = 2;
+
       $settingFieldNum = 'panggil_' . strtolower($type) . '_nomor';
       $settingFieldLoket = 'panggil_' . strtolower($type);
+      $settingFieldDate = 'panggil_' . strtolower($type) . '_tanggal';
 
-      $latest = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', $type)->where('postdate', $date)->where('status', '>=', 1)->desc('kd')->oneArray();
-      $currentNo = !empty($latest['noantrian']) ? intval($latest['noantrian']) : intval($this->settings->get('anjungan.' . $settingFieldNum) ?: 0);
-      $nextNo = $currentNo + 1;
+      // 1. Cek antrian yang berstatus 0 (menunggu tiket diambil dari anjungan) hari ini
+      $waiting = $this->db('mlite_antrian_loket')
+        ->where('type', $type)
+        ->where('postdate', $date)
+        ->where('status', 0)
+        ->asc('noantrian')
+        ->oneArray();
+
+      if (!empty($waiting)) {
+        $nextNo = intval($waiting['noantrian']);
+        $targetKd = $waiting['kd'];
+      } else {
+        // 2. Jika tidak ada yang berstatus 0, ambil nomor antrian tertinggi hari ini
+        $latest = $this->db('mlite_antrian_loket')
+          ->select('noantrian')
+          ->where('type', $type)
+          ->where('postdate', $date)
+          ->desc('noantrian')
+          ->oneArray();
+
+        if (!empty($latest['noantrian'])) {
+          $nextNo = intval($latest['noantrian']) + 1;
+        } else {
+          // Awal hari: jika belum ada antrian sama sekali hari ini, mulai dari 1
+          $nextNo = 1;
+        }
+        $targetKd = null;
+      }
+
       if ($nextNo <= 0) $nextNo = 1;
 
-      // Bersihkan antrian aktif sebelumnya hari ini
+      // Bersihkan SEMUA status 1 hari ini agar tidak ada suara tertinggal yang berbunyi
       $this->db('mlite_antrian_loket')
         ->where('postdate', $date)
-        ->where('type', $type)
         ->where('status', 1)
         ->save(['status' => 2, 'end_time' => date('H:i:s')]);
 
-      $cek = $this->db('mlite_antrian_loket')->where('type', $type)->where('noantrian', $nextNo)->where('postdate', $date)->oneArray();
-      if ($cek) {
-          $this->db('mlite_antrian_loket')->where('type', $type)->where('noantrian', $nextNo)->where('postdate', $date)->save([
-              'status' => 1,
-              'loket' => $loket,
-              'start_time' => date('H:i:s')
-          ]);
+      if ($targetKd) {
+        $this->db('mlite_antrian_loket')->where('kd', $targetKd)->save([
+          'status' => $targetStatus,
+          'loket' => $loket,
+          'start_time' => date('H:i:s')
+        ]);
       } else {
-          $this->db('mlite_antrian_loket')->save([
-              'type' => $type,
-              'noantrian' => $nextNo,
-              'loket' => $loket,
-              'postdate' => $date,
-              'start_time' => date('H:i:s'),
-              'end_time' => '00:00:00',
-              'status' => 1
+        $cek = $this->db('mlite_antrian_loket')->where('type', $type)->where('noantrian', $nextNo)->where('postdate', $date)->oneArray();
+        if ($cek) {
+          $this->db('mlite_antrian_loket')->where('kd', $cek['kd'])->save([
+            'status' => $targetStatus,
+            'loket' => $loket,
+            'start_time' => date('H:i:s')
           ]);
+        } else {
+          $this->db('mlite_antrian_loket')->save([
+            'type' => $type,
+            'noantrian' => $nextNo,
+            'loket' => $loket,
+            'postdate' => $date,
+            'start_time' => date('H:i:s'),
+            'end_time' => '00:00:00',
+            'status' => $targetStatus
+          ]);
+        }
       }
 
       $this->settings->set('anjungan.' . $settingFieldNum, $nextNo);
       $this->settings->set('anjungan.' . $settingFieldLoket, $loket);
+      $this->settings->set('anjungan.' . $settingFieldDate, $date);
 
       echo json_encode([
           'status' => true,
@@ -2008,7 +2111,47 @@ class Site extends SiteModule
           'raw_noantrian' => $nextNo,
           'loket' => (string) $loket,
           'type' => $type,
-          'message' => 'Berhasil memanggil antrian ' . $type . ' nomor ' . $nextNo . ' di loket ' . $loket
+          'silent' => true,
+          'message' => 'Nomor antrian ' . $type . ' nomor ' . $nextNo . ' disiapkan di loket ' . $loket . ' (tanpa suara)'
+      ]);
+      exit();
+    }
+
+    public function getSetSkip()
+    {
+      $this->setTemplate(false);
+      header('Content-Type: application/json');
+      $typeParam = strtolower($_GET['type'] ?? 'loket');
+      $type = 'Loket';
+      if($typeParam == 'cs') $type = 'CS';
+      if($typeParam == 'apotek') $type = 'Apotek';
+
+      $noantrian = intval($_GET['noantrian'] ?? 0);
+      $kd = intval($_GET['kd'] ?? 0);
+      $date = date('Y-m-d');
+
+      if ($kd > 0) {
+        $this->db('mlite_antrian_loket')->where('kd', $kd)->save([
+          'status' => 4,
+          'end_time' => date('H:i:s')
+        ]);
+      } elseif ($noantrian > 0) {
+        $this->db('mlite_antrian_loket')
+          ->where('type', $type)
+          ->where('noantrian', $noantrian)
+          ->where('postdate', $date)
+          ->save([
+            'status' => 4,
+            'end_time' => date('H:i:s')
+          ]);
+      } else {
+        echo json_encode(['status' => false, 'message' => 'Parameter nomor antrian tidak valid']);
+        exit();
+      }
+
+      echo json_encode([
+        'status' => true,
+        'message' => 'Antrian ' . $noantrian . ' berhasil ditandai sebagai dilewati (skip).'
       ]);
       exit();
     }
@@ -2291,34 +2434,22 @@ class Site extends SiteModule
           //redirect(url('anjungan/pasien'));
         break;
         case "loket":
-          //$antrian = $this->db('antriloket')->oneArray();
-          //echo $antrian['loket'];
-          echo $this->settings->get('anjungan.panggil_loket');
+          $loketDB = $this->db('mlite_antrian_loket')->select('loket')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->where('status', '>=', 1)->desc('kd')->oneArray();
+          echo !empty($loketDB['loket']) ? $loketDB['loket'] : ($this->settings->get('anjungan.panggil_loket') ?: 1);
         break;
         case "antriloket":
-          //$antrian = $this->db('antriloket')->oneArray();
-          //$antrian = $antrian['antrian'] - 1;
-          $antrian = $this->settings->get('anjungan.panggil_loket_nomor') - 1;
-          if($antrian == '-1') {
-            echo '0';
-          } else {
-            echo $antrian;
-          }
+          $loketDB = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->where('status', '>=', 1)->desc('kd')->oneArray();
+          $antrian = !empty($loketDB['noantrian']) ? intval($loketDB['noantrian']) : 0;
+          echo $antrian;
         break;
         case "cs":
-          //$antrian = $this->db('antrics')->oneArray();
-          //echo $antrian['loket'];
-          echo $this->settings->get('anjungan.panggil_cs');
+          $csDB = $this->db('mlite_antrian_loket')->select('loket')->where('type', 'CS')->where('postdate', date('Y-m-d'))->where('status', '>=', 1)->desc('kd')->oneArray();
+          echo !empty($csDB['loket']) ? $csDB['loket'] : ($this->settings->get('anjungan.panggil_cs') ?: 1);
         break;
         case "antrics":
-          //$antrian = $this->db('antrics')->oneArray();
-          //$antrian = $antrian['antrian'] - 1;
-          $antrian = $this->settings->get('anjungan.panggil_cs_nomor') - 1;
-          if($antrian == '-1') {
-            echo '0';
-          } else {
-            echo $antrian;
-          }
+          $csDB = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'CS')->where('postdate', date('Y-m-d'))->where('status', '>=', 1)->desc('kd')->oneArray();
+          $antrian = !empty($csDB['noantrian']) ? intval($csDB['noantrian']) : 0;
+          echo $antrian;
         break;
         case "get-skdp":
           if(!empty($_POST['no_rkm_medis'])){
@@ -2774,61 +2905,223 @@ class Site extends SiteModule
           exit();
         break;
         case "loket-display":
-          // Loket Pendaftaran (Type: Loket)
-          $loketDB = $this->db('mlite_antrian_loket')
+          $date = date('Y-m-d');
+          $display_card2 = $this->settings->get('anjungan.display_card2') ?: 'loket2';
+          $nama_loket_1 = $this->settings->get('anjungan.nama_loket_1') ?: 'Loket Pendaftaran 1';
+          $nama_loket_2 = $this->settings->get('anjungan.nama_loket_2') ?: 'Loket Pendaftaran 2';
+
+          // Loket 1
+          $loket1DB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')
+            ->where('type', 'Loket')->where('loket', 1)->where('postdate', $date)->where('status', '>=', 1)
+            ->desc('kd')->oneArray();
+          $noLoket1 = !empty($loket1DB['noantrian']) ? $loket1DB['noantrian'] : 0;
+
+          // Loket 2
+          $loket2DB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')
+            ->where('type', 'Loket')->where('loket', 2)->where('postdate', $date)->where('status', '>=', 1)
+            ->desc('kd')->oneArray();
+          $noLoket2 = !empty($loket2DB['noantrian']) ? $loket2DB['noantrian'] : 0;
+
+          // CS
+          $csDB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')
+            ->where('type', 'CS')->where('postdate', $date)->where('status', '>=', 1)
+            ->desc('kd')->oneArray();
+          $noCS = !empty($csDB['noantrian']) ? $csDB['noantrian'] : 0;
+          $konterCS = !empty($csDB['loket']) ? $csDB['loket'] : 1;
+
+          // Apotek
+          $apotekDB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')
+            ->where('type', 'Apotek')->where('postdate', $date)->where('status', '>=', 1)
+            ->desc('kd')->oneArray();
+          $noApotek = !empty($apotekDB['noantrian']) ? $apotekDB['noantrian'] : 0;
+          $konterApotek = !empty($apotekDB['loket']) ? $apotekDB['loket'] : 1;
+
+          $totLoket = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Loket')->where('postdate', $date)->desc('kd')->oneArray();
+          $totCS = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'CS')->where('postdate', $date)->desc('kd')->oneArray();
+          $totApotek = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Apotek')->where('postdate', $date)->desc('kd')->oneArray();
+          $totWaiting = $this->db('mlite_antrian_loket')->select('COUNT(*) as total')->where('type', 'Loket')->where('postdate', $date)->where('status', 0)->oneArray();
+
+          // Ambil daftar nomor antrian loket yang masih menunggu (status = 0)
+          $waitingRows = $this->db('mlite_antrian_loket')
             ->select('noantrian')
-            ->select('loket')
             ->where('type', 'Loket')
-            ->where('postdate', date('Y-m-d'))
-            ->where('status', '>=', 1)
-            ->desc('kd')
-            ->oneArray();
-          $noLoket = !empty($loketDB['noantrian']) ? $loketDB['noantrian'] : ($this->settings->get('anjungan.panggil_loket_nomor') ?: $this->settings->get('anjungan.no_antrian_loket') ?: 1);
-          $konterLoket = !empty($loketDB['loket']) ? $loketDB['loket'] : ($this->settings->get('anjungan.panggil_loket') ?: $this->settings->get('anjungan.konter_antrian_loket') ?: 1);
+            ->where('postdate', $date)
+            ->where('status', 0)
+            ->asc('CAST(noantrian AS UNSIGNED)')
+            ->toArray();
+          $waitingNums = [];
+          foreach($waitingRows as $wr) {
+            $waitingNums[] = 'A-' . sprintf("%03d", intval($wr['noantrian']));
+          }
+          $nextWaiting = !empty($waitingNums) ? $waitingNums[0] : '-';
 
-          // CS (Type: CS)
-          $csDB = $this->db('mlite_antrian_loket')
-            ->select('noantrian')
-            ->select('loket')
-            ->where('type', 'CS')
-            ->where('postdate', date('Y-m-d'))
-            ->where('status', '>=', 1)
-            ->desc('kd')
-            ->oneArray();
-          $noCS = !empty($csDB['noantrian']) ? $csDB['noantrian'] : ($this->settings->get('anjungan.panggil_cs_nomor') ?: $this->settings->get('anjungan.no_antrian_cs') ?: 1);
-          $konterCS = !empty($csDB['loket']) ? $csDB['loket'] : ($this->settings->get('anjungan.panggil_cs') ?: $this->settings->get('anjungan.konter_antrian_cs') ?: 1);
-
-          // Apotek (Type: Apotek)
-          $apotekDB = $this->db('mlite_antrian_loket')
-            ->select('noantrian')
-            ->select('loket')
-            ->where('type', 'Apotek')
-            ->where('postdate', date('Y-m-d'))
-            ->where('status', '>=', 1)
-            ->desc('kd')
-            ->oneArray();
-          $noApotek = !empty($apotekDB['noantrian']) ? $apotekDB['noantrian'] : ($this->settings->get('anjungan.panggil_apotek_nomor') ?: $this->settings->get('anjungan.no_antrian_apotek') ?: 1);
-          $konterApotek = !empty($apotekDB['loket']) ? $apotekDB['loket'] : ($this->settings->get('anjungan.panggil_apotek') ?: $this->settings->get('anjungan.konter_antrian_apotek') ?: 1);
+          $card2No = ($display_card2 == 'cs') ? $noCS : $noLoket2;
+          $card2Counter = ($display_card2 == 'cs') ? $konterCS : '2';
+          $card2Prefix = ($display_card2 == 'cs') ? 'B' : 'A';
+          $card2Title = ($display_card2 == 'cs') ? 'Customer Service / CS' : $nama_loket_2;
 
           header('Content-Type: application/json');
           echo json_encode([
-            'loket' => [
-              'antrian' => sprintf("%03d", intval($noLoket)),
-              'raw_antrian' => intval($noLoket),
-              'counter' => (string) $konterLoket
+            'display_card2' => $display_card2,
+            'loket1' => [
+              'antrian' => sprintf("%03d", intval($noLoket1)),
+              'raw_antrian' => intval($noLoket1),
+              'counter' => '1',
+              'nama' => $nama_loket_1,
+              'total' => !empty($totLoket['noantrian']) ? intval($totLoket['noantrian']) : 0,
+              'waiting' => !empty($totWaiting['total']) ? intval($totWaiting['total']) : 0,
+              'waiting_numbers' => $waitingNums,
+              'next_waiting' => $nextWaiting
+            ],
+            'loket2' => [
+              'antrian' => sprintf("%03d", intval($noLoket2)),
+              'raw_antrian' => intval($noLoket2),
+              'counter' => '2',
+              'nama' => $nama_loket_2,
+              'total' => !empty($totLoket['noantrian']) ? intval($totLoket['noantrian']) : 0,
+              'waiting' => !empty($totWaiting['total']) ? intval($totWaiting['total']) : 0,
+              'waiting_numbers' => $waitingNums,
+              'next_waiting' => $nextWaiting
+            ],
+            'card2' => [
+              'mode' => $display_card2,
+              'prefix' => $card2Prefix,
+              'title' => $card2Title,
+              'antrian' => sprintf("%03d", intval($card2No)),
+              'raw_antrian' => intval($card2No),
+              'counter' => (string) $card2Counter
             ],
             'cs' => [
               'antrian' => sprintf("%03d", intval($noCS)),
               'raw_antrian' => intval($noCS),
-              'counter' => (string) $konterCS
+              'counter' => (string) $konterCS,
+              'total' => !empty($totCS['noantrian']) ? intval($totCS['noantrian']) : 0
             ],
             'apotek' => [
               'antrian' => sprintf("%03d", intval($noApotek)),
               'raw_antrian' => intval($noApotek),
-              'counter' => (string) $konterApotek
+              'counter' => (string) $konterApotek,
+              'total' => !empty($totApotek['noantrian']) ? intval($totApotek['noantrian']) : 0
+            ],
+            // Backward compatibility
+            'loket' => [
+              'antrian' => sprintf("%03d", intval($noLoket1)),
+              'raw_antrian' => intval($noLoket1),
+              'counter' => '1',
+              'total' => !empty($totLoket['noantrian']) ? intval($totLoket['noantrian']) : 0,
+              'waiting' => !empty($totWaiting['total']) ? intval($totWaiting['total']) : 0,
+              'waiting_numbers' => $waitingNums,
+              'next_waiting' => $nextWaiting
             ]
           ]);
           exit();
+        case "antrian-list":
+          $date = date('Y-m-d');
+          $typeParam = strtolower($_GET['type'] ?? 'loket');
+          $type = 'Loket';
+          $prefix = 'A';
+          if($typeParam == 'cs') {
+            $type = 'CS';
+            $prefix = 'B';
+          } elseif($typeParam == 'apotek') {
+            $type = 'Apotek';
+            $prefix = 'F';
+          }
+
+          $rows = $this->db('mlite_antrian_loket')
+            ->where('type', $type)
+            ->where('postdate', $date)
+            ->asc('CAST(noantrian AS UNSIGNED)')
+            ->toArray();
+
+          $total = count($rows);
+          $waiting = 0;
+          $calling = 0;
+          $done = 0;
+          $skipped = 0;
+          $waiting_numbers = [];
+          $next_waiting = null;
+          $list = [];
+
+          $normList = [];
+          foreach($rows as $r) {
+            if(!empty($r['no_rkm_medis'])) {
+              $normList[] = $r['no_rkm_medis'];
+            }
+          }
+          $pasienMap = [];
+          if(!empty($normList)) {
+            $pasienRows = $this->db('pasien')->where('no_rkm_medis', $normList)->toArray();
+            foreach($pasienRows as $p) {
+              $pasienMap[$p['no_rkm_medis']] = $p['nm_pasien'];
+            }
+          }
+
+          foreach($rows as $r) {
+            $numInt = intval($r['noantrian']);
+            $formatted = $prefix . '-' . sprintf("%03d", $numInt);
+            $st = (string) $r['status'];
+
+            if ($st === '0') {
+              $status_label = 'Menunggu';
+              $status_badge = 'warning';
+              $waiting++;
+              $waiting_numbers[] = $formatted;
+              if ($next_waiting === null) {
+                $next_waiting = $formatted;
+              }
+            } elseif ($st === '1') {
+              $status_label = 'Sedang Dipanggil';
+              $status_badge = 'success';
+              $calling++;
+            } elseif ($st === '4') {
+              $status_label = 'Dilewati / Skip';
+              $status_badge = 'danger';
+              $skipped++;
+            } else {
+              $status_label = !empty($r['no_rkm_medis']) ? 'Selesai (RM)' : 'Sudah Dipanggil';
+              $status_badge = 'info';
+              $done++;
+            }
+
+            $nmPasien = !empty($r['no_rkm_medis']) && isset($pasienMap[$r['no_rkm_medis']]) ? $pasienMap[$r['no_rkm_medis']] : '';
+
+            $list[] = [
+              'kd' => $r['kd'],
+              'noantrian' => $numInt,
+              'formatted' => $formatted,
+              'raw_noantrian' => $numInt,
+              'loket' => !empty($r['loket']) ? intval($r['loket']) : null,
+              'loket_label' => !empty($r['loket']) ? ('Konter ' . $r['loket']) : '-',
+              'start_time' => !empty($r['start_time']) ? substr($r['start_time'], 0, 5) : '-',
+              'end_time' => (!empty($r['end_time']) && $r['end_time'] != '00:00:00') ? substr($r['end_time'], 0, 5) : '-',
+              'status' => $st,
+              'status_label' => $status_label,
+              'status_badge' => $status_badge,
+              'no_rkm_medis' => $r['no_rkm_medis'] ?? '',
+              'nm_pasien' => $nmPasien
+            ];
+          }
+
+          header('Content-Type: application/json');
+          echo json_encode([
+            'status' => 'success',
+            'type' => $type,
+            'prefix' => $prefix,
+            'date' => $date,
+            'summary' => [
+              'total' => $total,
+              'waiting' => $waiting,
+              'calling' => $calling,
+              'done' => $done,
+              'skipped' => $skipped,
+              'next_waiting' => $next_waiting ?: '-',
+              'waiting_numbers' => $waiting_numbers
+            ],
+            'data' => $list
+          ]);
+          exit();
+        break;
         // FOR DISPLAY
         case "apotek-display":
           $rows = $this->_resultDisplayAntrianApotek();  

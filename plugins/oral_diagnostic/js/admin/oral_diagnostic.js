@@ -312,6 +312,14 @@ $(document).on("click", ".sep", function(event){
   var tgl_registrasi = $(this).attr("data-tgl_registrasi");
   var kd_dokter = $(this).attr("data-kd_dokter") || '';
   var nm_dokter = $(this).attr("data-nm_dokter") || '';
+  var kd_poli = $(this).attr("data-kd_poli") || '';
+  var nm_poli = $(this).attr("data-nm_poli") || '';
+
+  // Filter out dokter skrining OD (199403032202201). DPJP harus dokter spesialis perujuk/tujuan di poli
+  if (kd_dokter === '199403032202201') {
+    kd_dokter = '';
+    nm_dokter = '';
+  }
 
   // 4. Set data identitas registrasi
   $('input:text[name=sep_no_rawat]').val(no_rawat);
@@ -326,10 +334,16 @@ $(document).on("click", ".sep", function(event){
   if (nm_dokter && nm_dokter.trim() !== '') {
     $('#sep_dpjp_yang_melayani_nama').val(nm_dokter);
     $('#sep_dpjp_pelayanan_nama').val(nm_dokter);
+  } else {
+    $('#sep_dpjp_yang_melayani_nama').val('');
+    $('#sep_dpjp_pelayanan_nama').val('');
   }
   if (kd_dokter && kd_dokter.trim() !== '') {
     $('#sep_dpjp_yang_melayani_kode').val(kd_dokter);
     $('#sep_dpjp_pelayanan_kode').val(kd_dokter);
+  } else {
+    $('#sep_dpjp_yang_melayani_kode').val('');
+    $('#sep_dpjp_pelayanan_kode').val('');
   }
 
   // 5. Tampilkan form SEP

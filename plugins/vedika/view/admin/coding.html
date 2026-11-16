@@ -1,0 +1,171 @@
+<div class="row">
+  <div class="col-md-8">
+    <h3 style="margin-top:0;">
+      <i class="fa fa-stethoscope text-primary"></i> Pengodean Diagnosis & Prosedur Medis (ICD-10 & ICD-9-CM)
+      <small style="display:block;margin-top:4px;color:#718096;">Standardisasi koding klinis Casemix sesuai rekam medis, aturan INA-CBG, dan karakteristik RSGM</small>
+    </h3>
+  </div>
+  <div class="col-md-4 text-right">
+    <form class="form-inline" action="" method="GET">
+      <input type="text" name="periode" class="form-control tanggal input-sm" value="{?=$periode?}" placeholder="YYYY-MM">
+      <input type="text" name="search" class="form-control input-sm" value="{?=$search?}" placeholder="Cari Pasien">
+      <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+      <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-filter"></i> Filter</button>
+    </form>
+  </div>
+</div>
+<hr style="margin-top:10px;margin-bottom:20px;">
+
+<!-- RSGM DENTAL CLINICAL CODING QUICK REFERENCE -->
+<div class="panel panel-info">
+  <div class="panel-heading" style="cursor:pointer;" data-toggle="collapse" data-target="#dentalGuide">
+    <h4 class="panel-title">
+      <i class="fa fa-book"></i> <b>Panduan Koding Khusus Rumah Sakit Gigi dan Mulut (RSGM)</b> 
+      <span class="pull-right"><i class="fa fa-chevron-down"></i></span>
+    </h4>
+  </div>
+  <div id="dentalGuide" class="panel-collapse collapse">
+    <div class="panel-body" style="font-size:12px;">
+      <div class="row">
+        <div class="col-md-6">
+          <b class="text-primary"><i class="fa fa-tag"></i> Diagnosis Umum Kedokteran Gigi (ICD-10):</b>
+          <ul style="padding-left:20px;margin-top:5px;">
+            <li><b>K02.0 - K02.9:</b> Karies Gigi (Enamel, Dentin, Sementum, Arrested Caries)</li>
+            <li><b>K04.0 - K04.9:</b> Penyakit Pulpa & Jaringan Periapikal (Pulpitis Reversibel/Irreversibel, Nekrosis Pulpa, Periodontitis Apikalis Akut/Kronis, Abses Periapikal)</li>
+            <li><b>K05.0 - K05.6:</b> Gingivitis & Penyakit Periodontal (Gingivitis Akut/Kronis, Periodontitis Kronis)</li>
+            <li><b>K07.0 - K07.9:</b> Anomali Dentofasial termasuk Maloklusi (Kesesuaian Rahang, Hubungan Busur Gigi)</li>
+            <li><b>K08.0 - K08.9:</b> Gangguan Lain Gigi & Jaringan Penyangga (Gigi Impaksi / Tertanam K01.x, Kehilangan Gigi / Edentulous)</li>
+            <li><b>K10.0 - K10.9:</b> Penyakit Rahang Lainnya (Osteomielitis Rahang, Kista Odontogenik)</li>
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <b class="text-success"><i class="fa fa-wrench"></i> Prosedur & Bedah Mulut (ICD-9-CM):</b>
+          <ul style="padding-left:20px;margin-top:5px;">
+            <li><b>23.01 - 23.19:</b> Ekstraksi Gigi (Pencabutan Gigi Sulung/Tetap, Pencabutan Komplikasi)</li>
+            <li><b>23.2:</b> Restorasi Gigi dengan Tumpatan (Komposit, Glass Ionomer / GIC)</li>
+            <li><b>23.70 - 23.73:</b> Perawatan Saluran Akar Gigi (Endodontik / Root Canal Treatment)</li>
+            <li><b>24.0 - 24.1:</b> Insisi & Biopsi Jaringan Gigi, Gusi, dan Alveolar</li>
+            <li><b>24.31:</b> Eksisi Lesi Gigi / Gingivektomi</li>
+            <li><b>24.39:</b> Odontektomi / Pengambilan Gigi Impaksi (Molar 3) dengan Pembedahan</li>
+            <li><b>24.4:</b> Eksisi Kista Odontogenik / Enukleasi Kista Rahang</li>
+            <li><b>24.5:</b> Alveolektomi & Alveoloplasti</li>
+          </ul>
+        </div>
+      </div>
+      <div class="alert alert-warning" style="margin-bottom:0;margin-top:10px;">
+        <i class="fa fa-exclamation-triangle"></i> <b>Catatan Penting Casemix:</b> Pastikan penentuan <b>Diagnosis Utama (P1)</b> adalah kondisi medis yang setelah diperiksa menjadi penyebab utama pasien dirawat/datang, dan seluruh prosedur didukung oleh laporan tindakan/operasi atau rekam medis fisik.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TABEL KODING PASIEN -->
+<div class="panel panel-default">
+  <div class="table-responsive">
+    <table class="table table-hover table-striped" style="margin-bottom:0;font-size:13px;">
+      <thead>
+        <tr class="active">
+          <th>No. Rawat / RM</th>
+          <th>Nama Pasien</th>
+          <th>Tgl Pelayanan / Poli</th>
+          <th>Dokter DPJP</th>
+          <th>Koding Diagnosis (ICD-10)</th>
+          <th>Koding Prosedur (ICD-9-CM)</th>
+          <th class="text-center">Aksi Pengodean</th>
+        </tr>
+      </thead>
+      <tbody>
+        {if: !empty($rows)}
+        {loop: $rows as $row}
+        <tr>
+          <td>
+            <b>{?=$row.no_rawat?}</b><br>
+            <span class="label label-default">RM: {?=$row.no_rkm_medis?}</span>
+          </td>
+          <td>
+            <b>{?=$row.nm_pasien?}</b><br>
+            <small class="text-muted">SEP: {?=$row.no_sep?:'-'?}</small>
+          </td>
+          <td>
+            {?=$row.tgl_registrasi?}<br>
+            <span class="text-primary">{?=$row.nm_poli?}</span>
+          </td>
+          <td>{?=$row.nm_dokter?}</td>
+          <td style="max-width:300px;">
+            {if: !empty($row.diagnosas)}
+              {loop: $row.diagnosas as $d}
+              <div style="margin-bottom:2px;">
+                <span class="label {if: $d.prioritas == 1}label-danger{else}label-default{/if}">P{?=$d.prioritas?}</span>
+                <b>{?=$d.kd_penyakit?}</b> - <small>{?=$d.nm_penyakit?}</small>
+              </div>
+              {/loop}
+            {else}
+              <span class="text-danger"><i class="fa fa-times"></i> Belum ada diagnosis (P1 Wajib)</span>
+            {/if}
+          </td>
+          <td style="max-width:300px;">
+            {if: !empty($row.prosedurs)}
+              {loop: $row.prosedurs as $p}
+              <div style="margin-bottom:2px;">
+                <span class="label label-info">P{?=$p.prioritas?}</span>
+                <b>{?=$p.kode?}</b> - <small>{?=$p.deskripsi_panjang?}</small>
+              </div>
+              {/loop}
+            {else}
+              <span class="text-muted">Tidak ada prosedur tercatat</span>
+            {/if}
+          </td>
+          <td class="text-center" style="white-space:nowrap;">
+            <a href="{?=url([ADMIN, 'vedika', 'ubahdiagnosa', convertNorawat($row.no_rawat)])?}" class="btn btn-primary btn-xs btn-open-modal-action" title="Kelola ICD-10">
+              <i class="fa fa-plus-circle"></i> ICD-10
+            </a>
+            <a href="{?=url([ADMIN, 'vedika', 'ubahprosedur', convertNorawat($row.no_rawat)])?}" class="btn btn-info btn-xs btn-open-modal-action" title="Kelola ICD-9-CM">
+              <i class="fa fa-plus-circle"></i> ICD-9
+            </a>
+          </td>
+        </tr>
+        {/loop}
+        {else}
+        <tr>
+          <td colspan="7" class="text-center" style="padding:30px;">
+            <span class="text-muted">Tidak ada data pasien untuk pengodean pada filter ini.</span>
+          </td>
+        </tr>
+        {/if}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL AKSI CEPAT (ICD-10 & ICD-9) -->
+<div class="modal fade" id="modalAction" tabindex="-1" role="dialog" style="z-index:1060;">
+  <div class="modal-dialog modal-lg" role="document" style="width:85%;">
+    <div class="modal-content">
+      <div class="modal-body text-center" style="padding:40px;">
+        <i class="fa fa-spinner fa-spin fa-2x"></i>
+        <p style="margin-top:10px;">Memuat formulir...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(function() {
+    $('.tanggal').datetimepicker({
+      format: 'YYYY-MM',
+      locale: 'id'
+    });
+
+    // Handler Buka Modal Aksi (ICD-10 / ICD-9)
+    $(document).on('click', '.btn-open-modal-action', function(e) {
+      e.preventDefault();
+      var url = $(this).attr('href');
+      var modal = $('#modalAction');
+      var modalContent = modal.find('.modal-content');
+      modalContent.html('<div class="modal-body text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">Memuat formulir...</p></div>');
+      modal.modal('show');
+      modalContent.load(url);
+    });
+  });
+</script>
+

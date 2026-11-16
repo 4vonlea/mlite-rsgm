@@ -1,0 +1,105 @@
+<div class="row">
+  <div class="col-md-8">
+    <h3 style="margin-top:0;">
+      <i class="fa fa-bar-chart text-primary"></i> Laporan & Analitik Klaim BPJS RSGM
+      <small style="display:block;margin-top:4px;color:#718096;">Rekapitulasi berkas, maturasi klaim per poliklinik spesialis, dan tren morbiditas kedokteran gigi</small>
+    </h3>
+  </div>
+  <div class="col-md-4 text-right">
+    <form class="form-inline" action="" method="GET">
+      <input type="text" name="periode" class="form-control tanggal input-sm" value="{?=$periode?}" placeholder="YYYY-MM">
+      <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+      <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-filter"></i> Filter</button>
+      <button type="button" class="btn btn-default btn-sm" onclick="window.print();"><i class="fa fa-print"></i> Cetak</button>
+    </form>
+  </div>
+</div>
+<hr style="margin-top:10px;margin-bottom:20px;">
+
+<!-- REKAP PER POLIKLINIK -->
+<div class="row">
+  <div class="col-md-7">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><b><i class="fa fa-hospital-o"></i> Rekapitulasi Kunjungan & Berkas Klaim per Poliklinik Spesialis</b></h3>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped" style="margin-bottom:0;font-size:12px;">
+          <thead>
+            <tr class="active">
+              <th>Nama Poliklinik Spesialis</th>
+              <th class="text-center">Kunjungan BPJS</th>
+              <th class="text-center">Terbit SEP</th>
+              <th class="text-center">Siap Klaim</th>
+              <th class="text-center">Rasio Kesiapan</th>
+            </tr>
+          </thead>
+          <tbody>
+            {if: count($rekapPoli) > 0}
+            {loop: $rekapPoli}
+            <tr>
+              <td><b>{?=$value.nm_poli?}</b></td>
+              <td class="text-center">{?=number_format($value.total_kunjungan)?}</td>
+              <td class="text-center">{?=number_format($value.total_sep)?}</td>
+              <td class="text-center"><b class="text-success">{?=number_format($value.siap_klaim)?}</b></td>
+              <td class="text-center">
+                {?=number_format(($value.siap_klaim / max(1, $value.total_kunjungan)) * 100, 1)?}%
+              </td>
+            </tr>
+            {/loop}
+            {else}
+            <tr>
+              <td colspan="5" class="text-center" style="padding:20px;">Tidak ada data kunjungan pada periode ini.</td>
+            </tr>
+            {/if}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP 10 PENYAKIT GIGI & MULUT -->
+  <div class="col-md-5">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><b><i class="fa fa-stethoscope"></i> Top 10 Diagnosis Morbiditas RSGM (ICD-10)</b></h3>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped" style="margin-bottom:0;font-size:12px;">
+          <thead>
+            <tr class="active">
+              <th>Kode</th>
+              <th>Nama Diagnosis ICD-10</th>
+              <th class="text-center">Kasus (P1)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {if: count($topPenyakit) > 0}
+            {loop: $topPenyakit}
+            <tr>
+              <td><span class="label label-primary">{?=$value.kd_penyakit?}</span></td>
+              <td><b>{?=$value.nm_penyakit?}</b></td>
+              <td class="text-center"><b>{?=number_format($value.jumlah)?}</b></td>
+            </tr>
+            {/loop}
+            {else}
+            <tr>
+              <td colspan="3" class="text-center" style="padding:20px;">Belum ada koding diagnosis tercatat.</td>
+            </tr>
+            {/if}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(function() {
+    $('.tanggal').datetimepicker({
+      format: 'YYYY-MM',
+      locale: 'id'
+    });
+  });
+</script>
+

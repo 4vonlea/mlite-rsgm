@@ -1,0 +1,177 @@
+<div class="row">
+  <div class="col-md-8">
+    <h3 style="margin-top:0;">
+      <i class="fa fa-money text-success"></i> Monitoring & Rekonsiliasi Pembayaran Klaim
+      <small style="display:block;margin-top:4px;color:#718096;">Pencatatan Berita Acara Hasil Verifikasi (BAHP), pencairan dana bank, serta rekonsiliasi selisih nilai klaim</small>
+    </h3>
+  </div>
+  <div class="col-md-4 text-right">
+    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalAddPayment">
+      <i class="fa fa-plus"></i> Input BAHP / Pembayaran Baru
+    </button>
+  </div>
+</div>
+<hr style="margin-top:10px;margin-bottom:20px;">
+
+<div class="alert alert-warning" style="font-size:13px;">
+  <i class="fa fa-info-circle"></i> <b>Prinsip Pemisahan Finansial:</b> Status klaim <b>Disetujui</b> dari verifikator BPJS tidak otomatis dianggap <b>Sudah Dibayar</b>. Status pembayaran hanya dinyatakan lunas setelah Berita Acara Hasil Verifikasi (BAHP) diterbitkan dan dana mutasi rekening kas rumah sakit terkonfirmasi masuk.
+</div>
+
+<!-- TABEL REKONSILIASI PEMBAYARAN -->
+<div class="panel panel-default">
+  <div class="table-responsive">
+    <table class="table table-hover table-striped" style="margin-bottom:0;font-size:13px;">
+      <thead>
+        <tr class="active">
+          <th>No. BAHP & Tanggal</th>
+          <th>Periode Klaim</th>
+          <th>Nilai Diajukan</th>
+          <th>Nilai Disetujui</th>
+          <th>Nilai Dibayar Kas RS</th>
+          <th>Selisih Pembayaran</th>
+          <th>Tgl Bayar & Status</th>
+          <th>Petugas Pencatat</th>
+        </tr>
+      </thead>
+      <tbody>
+        {if: count($pembayarans) > 0}
+        {loop: $pembayarans}
+        <tr>
+          <td>
+            <b class="text-primary">{?=$value.no_bahp?}</b><br>
+            <small class="text-muted"><i class="fa fa-calendar"></i> {?=$value.tgl_bahp?}</small>
+            {if: !empty($value.notes)}
+            <br><small>{?=$value.notes?}</small>
+            {/if}
+          </td>
+          <td>
+            <b>{?=$value.periode_klaim?}</b>
+          </td>
+          <td>
+            Rp {?=number_format($value.total_diajukan, 0, ',', '.')?}
+          </td>
+          <td>
+            <b class="text-info">Rp {?=number_format($value.total_disetujui, 0, ',', '.')?}</b>
+          </td>
+          <td>
+            <b class="text-success">Rp {?=number_format($value.total_dibayar, 0, ',', '.')?}</b>
+          </td>
+          <td>
+            <b class="{if: $value.selisih_pembayaran > 0}text-danger{else}text-success{/if}">
+              Rp {?=number_format($value.selisih_pembayaran, 0, ',', '.')?}
+            </b>
+          </td>
+          <td>
+            <small>{?=$value.tgl_pembayaran ?: 'Belum Cair'?}</small><br>
+            {if: $value.status_pembayaran == 'lunas'}
+            <span class="label label-success"><i class="fa fa-check"></i> LUNAS</span>
+            {elseif: $value.status_pembayaran == 'dibayar_sebagian'}
+            <span class="label label-warning"><i class="fa fa-hourglass-half"></i> DIBAYAR SEBAGIAN</span>
+            {else}
+            <span class="label label-danger"><i class="fa fa-clock-o"></i> BELUM DIBAYAR</span>
+            {/if}
+          </td>
+          <td>
+            <small><b>{?=$value.created_by?}</b><br>{?=$value.created_at?}</small>
+          </td>
+        </tr>
+        {/loop}
+        {else}
+        <tr>
+          <td colspan="8" class="text-center" style="padding:30px;">
+            <i class="fa fa-money fa-3x text-muted"></i><br>
+            <b style="font-size:15px;color:#4a5568;">Belum ada rekonsiliasi BAHP atau pembayaran yang tercatat.</b><br>
+            <span class="text-muted">Klik tombol "Input BAHP / Pembayaran Baru" untuk merekonsiliasi pembayaran BPJS.</span>
+          </td>
+        </tr>
+        {/if}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL TAMBAH PEMBAYARAN / BAHP -->
+<div class="modal fade" id="modalAddPayment" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form action="" method="POST">
+        <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+        <div class="modal-header bg-success" style="color:#fff;">
+          <button type="button" class="close" data-dismiss="modal" style="color:#fff;">&times;</button>
+          <h4 class="modal-title"><i class="fa fa-money"></i> Input Data BAHP & Realisasi Pembayaran BPJS</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Nomor BAHP (Berita Acara Hasil Verifikasi):</label>
+            <input type="text" name="no_bahp" class="form-control" placeholder="Contoh: 1205/BA-KLAIM/0290R025/1126" required>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Tanggal BAHP:</label>
+                <input type="date" name="tgl_bahp" class="form-control" value="{?=date('Y-m-d')?}" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Periode Klaim:</label>
+                <input type="text" name="periode_klaim" class="form-control tanggal" value="{?=date('Y-m')?}" required>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Batch Klaim Terkait:</label>
+            <select name="batch_id" class="form-control">
+              <option value="">-- Hubungkan dengan Batch (Opsional) --</option>
+              {loop: $batches}
+              <option value="{?=$value.id?}">{?=$value.kode_batch?} - {?=$value.nama_batch?}</option>
+              {/loop}
+            </select>
+          </div>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Total Diajukan (Rp):</label>
+                <input type="number" step="0.01" name="total_diajukan" class="form-control" placeholder="0" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Total Disetujui (Rp):</label>
+                <input type="number" step="0.01" name="total_disetujui" class="form-control" placeholder="0" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Total Dibayar (Rp):</label>
+                <input type="number" step="0.01" name="total_dibayar" class="form-control" placeholder="0" required>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Tanggal Pembayaran / Pencairan:</label>
+            <input type="date" name="tgl_pembayaran" class="form-control" value="{?=date('Y-m-d')?}">
+          </div>
+          <div class="form-group">
+            <label>Keterangan / Nomor Transaksi Bank:</label>
+            <textarea name="notes" class="form-control" rows="2" placeholder="Contoh: Transfer BNI Rekap FPK No. XXX / Rekonsiliasi Kas..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+          <button type="submit" name="save_pembayaran" class="btn btn-success"><i class="fa fa-save"></i> Simpan Pembayaran</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(function() {
+    $('.tanggal').datetimepicker({
+      format: 'YYYY-MM',
+      locale: 'id'
+    });
+  });
+</script>
+

@@ -1,0 +1,132 @@
+<div class="row">
+  <div class="col-md-8">
+    <h3 style="margin-top:0;">
+      <i class="fa {if: $type == 'pending'}fa-hourglass-half text-warning{else}fa-gavel text-danger{/if}"></i> {?=$title?}
+      <small style="display:block;margin-top:4px;color:#718096;">Pencatatan alasan konfirmasi BPJS, batas waktu tindak lanjut (SLA), upload berkas klarifikasi, dan pengajuan ulang</small>
+    </h3>
+  </div>
+  <div class="col-md-4 text-right">
+    <button type="button" class="btn {if: $type == 'pending'}btn-warning{else}btn-danger{/if}" data-toggle="modal" data-target="#modalAddIssue">
+      <i class="fa fa-plus"></i> Catat Klaim {?=ucfirst($type)?} Baru
+    </button>
+  </div>
+</div>
+<hr style="margin-top:10px;margin-bottom:20px;">
+
+<!-- TABEL DAFTAR PENDING / DISPUTE -->
+<div class="panel panel-default">
+  <div class="table-responsive">
+    <table class="table table-hover table-striped" style="margin-bottom:0;font-size:13px;">
+      <thead>
+        <tr class="active">
+          <th>No. Rawat / RM</th>
+          <th>Nama Pasien</th>
+          <th>No. SEP</th>
+          <th>Alasan Verifikator BPJS</th>
+          <th>Dokumen / Tindak Lanjut</th>
+          <th>Tanggapan & Dokumen RS</th>
+          <th>Batas Waktu (SLA)</th>
+          <th>Status Kasus</th>
+        </tr>
+      </thead>
+      <tbody>
+        {if: count($rows) > 0}
+        {loop: $rows}
+        <tr>
+          <td>
+            <b>{?=$value.no_rawat?}</b><br>
+            <span class="label label-default">RM: {?=$value.no_rkm_medis?}</span>
+          </td>
+          <td>
+            <b>{?=$value.nm_pasien?}</b><br>
+            <span class="text-primary">{?=$value.nm_poli?}</span>
+          </td>
+          <td>
+            <span class="label label-success">{?=$value.no_sep?}</span>
+          </td>
+          <td style="max-width:250px;">
+            <b class="text-danger">{?=$value.alasan_bpjs?}</b>
+          </td>
+          <td style="max-width:200px;">
+            <small class="text-muted">{?=$value.dokumen_diminta ?: 'Tidak ada berkas spesifik'?}</small>
+          </td>
+          <td style="max-width:250px;">
+            <small><b>Tanggapan RS:</b> {?=$value.tanggapan_rs ?: '-'?}</small>
+          </td>
+          <td>
+            <b>{?=$value.deadline_tgl?:'-'?}</b><br>
+            <small class="text-muted">PJ: {?=$value.pj_user?:'-'?}</small>
+          </td>
+          <td>
+            {if: $value.status_dispute == 'open'}
+            <span class="label label-danger"><i class="fa fa-exclamation-circle"></i> OPEN (Menunggu Respon)</span>
+            {elseif: $value.status_dispute == 'in_progress'}
+            <span class="label label-warning"><i class="fa fa-spinner"></i> IN PROGRESS</span>
+            {elseif: $value.status_dispute == 'resubmitted'}
+            <span class="label label-info"><i class="fa fa-paper-plane"></i> SUDAH DIAJUKAN ULANG</span>
+            {elseif: $value.status_dispute == 'resolved'}
+            <span class="label label-success"><i class="fa fa-check"></i> SELESAI (DISETUJUI)</span>
+            {elseif: $value.status_dispute == 'rejected'}
+            <span class="label label-default"><i class="fa fa-times"></i> DITOLAK FINAL</span>
+            {/if}
+          </td>
+        </tr>
+        {/loop}
+        {else}
+        <tr>
+          <td colspan="8" class="text-center" style="padding:30px;">
+            <i class="fa fa-check-circle-o fa-3x text-success"></i><br>
+            <b style="font-size:15px;color:#2f855a;">Tidak ada klaim berstatus {?=$type?} yang aktif saat ini.</b>
+          </td>
+        </tr>
+        {/if}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL TAMBAH PENDING/DISPUTE -->
+<div class="modal fade" id="modalAddIssue" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form action="" method="POST">
+        <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+        <div class="modal-header {if: $type == 'pending'}bg-warning{else}bg-danger{/if}" style="color:#fff;">
+          <button type="button" class="close" data-dismiss="modal" style="color:#fff;">&times;</button>
+          <h4 class="modal-title"><i class="fa fa-pencil"></i> Catat Kasus Klaim {?=ucfirst($type)?} BPJS</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>No. Rawat Pasien:</label>
+            <input type="text" name="no_rawat" class="form-control" placeholder="Contoh: 2026/11/14/000001" required>
+          </div>
+          <div class="form-group">
+            <label>No. SEP BPJS:</label>
+            <input type="text" name="no_sep" class="form-control" placeholder="Contoh: 0290R0251126V000001" required>
+          </div>
+          <div class="form-group">
+            <label>Alasan Pending / Dispute dari Verifikator BPJS:</label>
+            <textarea name="alasan_bpjs" class="form-control" rows="3" placeholder="Tuliskan catatan verifikator BPJS dari aplikasi E-Klaim / Portal Vedika..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label>Dokumen / Bukti Medis yang Dipersyaratkan:</label>
+            <textarea name="dokumen_diminta" class="form-control" rows="2" placeholder="Contoh: Foto rontgen panoramic dental, laporan operasi bedah mulut..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Tanggapan Awal Tim Casemix / RSGM:</label>
+            <textarea name="tanggapan_rs" class="form-control" rows="2" placeholder="Penjelasan atau sanggahan klinis RS..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Batas Waktu Penyelesaian (SLA Deadline):</label>
+            <input type="date" name="deadline_tgl" class="form-control" value="{?=date('Y-m-d', strtotime('+14 days'))?}">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+          <button type="submit" name="save_issue" class="btn btn-primary"><i class="fa fa-save"></i> Simpan Catatan {?=ucfirst($type)?}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

@@ -87,7 +87,12 @@
             <div><span class="rsgm-cell-sub-alert"><i class="fa fa-share"></i> {$value.poli_rujukan}</span></div>
             {/if}
           </td>
-          <td class="edit rsgm-cell-wrap" data-no_rawat="{?=isset_or($value.no_rawat)?}">{?=isset_or($value.nm_dokter)?}</td>
+          <td class="edit rsgm-cell-wrap" data-no_rawat="{?=isset_or($value.no_rawat)?}">
+            <span>{?=isset_or($value.nm_dokter)?}</span>
+            {if: !empty($value.dokter_rujukan)}
+            <div><span class="rsgm-cell-sub-alert" title="Dokter Perujuk / Spesialis Tujuan"><i class="fa fa-user-md"></i> {$value.dokter_rujukan}</span></div>
+            {/if}
+          </td>
           <td style="white-space: nowrap;">
           {if: $value.kd_pj == 'BPJ'}
             {if: $cek_vclaim}
@@ -97,8 +102,10 @@
                 data-nm_pasien="{?=isset_or($value.nm_pasien)?}"
                 data-no_rawat="{?=isset_or($value.no_rawat)?}"
                 data-no_peserta="{?=isset_or($value.no_peserta)?}"
-                data-kd_dokter="{?=isset_or($value.kd_dokter)?}"
-                data-nm_dokter="{?=isset_or($value.nm_dokter)?}"
+                data-kd_dokter="{?=!empty($value.kd_dokter_rujukan) ? $value.kd_dokter_rujukan : ''?}"
+                data-nm_dokter="{?=!empty($value.dokter_rujukan) ? $value.dokter_rujukan : ''?}"
+                data-kd_poli="{?=!empty($value.kd_poli_rujukan) ? $value.kd_poli_rujukan : ''?}"
+                data-nm_poli="{?=!empty($value.poli_rujukan) ? $value.poli_rujukan : ''?}"
                 data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}"
                 {if: $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
                 disabled

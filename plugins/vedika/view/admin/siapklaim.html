@@ -1,0 +1,160 @@
+<div class="row">
+  <div class="col-md-8">
+    <h3 style="margin-top:0;">
+      <i class="fa fa-check-circle text-success"></i> Daftar Pasien Siap Klaim BPJS
+      <small style="display:block;margin-top:4px;color:#718096;">Pasien yang telah memenuhi seluruh variabel wajib, siap diverifikasi internal, grouping, dan dimasukkan batch kolektif</small>
+    </h3>
+  </div>
+  <div class="col-md-5 text-right">
+    <a href="{?=url([ADMIN, 'vedika', 'auditperiode', '?periode=' . $periode])?}" class="btn btn-warning" onclick="return confirm('Jalankan audit kesiapan berkas & data klinis pasien BPJS untuk periode ini?');"><i class="fa fa-refresh"></i> Audit Massal Periode Ini</a>
+    <a href="{?=url([ADMIN, 'vedika', 'kolektif'])?}" class="btn btn-primary" style="margin-left:5px;"><i class="fa fa-cubes"></i> Kelola Batch &raquo;</a>
+  </div>
+</div>
+<hr style="margin-top:10px;margin-bottom:20px;">
+
+<!-- FILTER BAR -->
+<div class="panel panel-default">
+  <div class="panel-body">
+    <form class="form-inline" action="" method="GET">
+      <div class="form-group">
+        <label>Periode:</label>
+        <input type="text" name="periode" class="form-control tanggal input-sm" value="{?=$periode?}" placeholder="YYYY-MM">
+      </div>
+      <div class="form-group" style="margin-left:10px;">
+        <label>Pelayanan:</label>
+        <select name="status_lanjut" class="form-control input-sm">
+          <option value="">Semua</option>
+          <option value="Ralan" {if: $status_lanjut == 'Ralan'}selected{/if}>Rawat Jalan</option>
+          <option value="Ranap" {if: $status_lanjut == 'Ranap'}selected{/if}>Rawat Inap</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-left:10px;">
+        <input type="text" name="search" class="form-control input-sm" value="{?=$search?}" placeholder="Cari No Rawat / RM / Nama">
+      </div>
+      <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+      <button type="submit" class="btn btn-primary btn-sm" style="margin-left:10px;"><i class="fa fa-filter"></i> Saring</button>
+    </form>
+  </div>
+</div>
+
+<form action="{?=url([ADMIN, 'vedika', 'kolektif'])?}" method="POST">
+  <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+
+  <div class="panel panel-default">
+    <div class="panel-heading" style="padding:10px 15px;">
+      <div class="row">
+        <div class="col-md-6">
+          <h3 class="panel-title" style="line-height:30px;">
+            <b>Ditemukan {?=$total?} Pasien Siap Diproses Klaim</b>
+          </h3>
+        </div>
+        <div class="col-md-6 text-right">
+          <div class="form-inline">
+            <label style="font-size:12px;margin-right:5px;">Masukkan Pasien Terpilih ke Batch:</label>
+            <select name="batch_id" class="form-control input-sm" required style="max-width:200px;">
+              <option value="">-- Pilih Batch Aktif --</option>
+              {loop: $batches}
+              <option value="{?=$value.id?}">{?=$value.kode_batch?} ({?=$value.nama_batch?})</option>
+              {/loop}
+            </select>
+            <button type="submit" name="add_to_batch" class="btn btn-sm btn-success" style="margin-left:5px;">
+              <i class="fa fa-plus"></i> Tambahkan
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover table-striped" style="margin-bottom:0;font-size:13px;">
+        <thead>
+          <tr class="active">
+            <th width="30" class="text-center"><input type="checkbox" id="checkAll"></th>
+            <th>No. Rawat / RM</th>
+            <th>Nama Pasien</th>
+            <th>Tgl Pelayanan / Poli</th>
+            <th>No. SEP</th>
+            <th>Billing RS</th>
+            <th>Verif Internal</th>
+            <th>Status Klaim</th>
+            <th class="text-center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {if: count($rows) > 0}
+          {loop: $rows}
+          <tr>
+            <td class="text-center">
+              <input type="checkbox" name="selected_rawat[]" value="{?=$value.no_rawat?}" class="check-item">
+            </td>
+            <td>
+              <b>{?=$value.no_rawat?}</b><br>
+              <span class="label label-default">RM: {?=$value.no_rkm_medis?}</span>
+            </td>
+            <td>
+              <b>{?=$value.nm_pasien?}</b><br>
+              <small class="text-muted">Kartu: {?=$value.no_peserta?:'-'?}</small>
+            </td>
+            <td>
+              {?=$value.tgl_registrasi?}<br>
+              <span class="text-primary">{?=$value.nm_poli?}</span>
+            </td>
+            <td>
+              <span class="label label-success">{?=$value.no_sep?}</span>
+            </td>
+            <td>
+              <b>Rp {?=number_format($value.total_billing, 0, ',', '.')?}</b>
+            </td>
+            <td>
+              {if: $value.is_internal_verified}
+              <span class="label label-success"><i class="fa fa-check"></i> Terverifikasi</span>
+              {else}
+              <span class="label label-warning"><i class="fa fa-clock-o"></i> Menunggu Verif</span><br>
+              <small>Admin: {?=$value.verif_admin_status?:'pending'?}, Medis: {?=$value.verif_medis_status?:'pending'?}</small>
+              {/if}
+            </td>
+            <td>
+              <span class="label label-info">{?=strtoupper(str_replace('_', ' ', $value.status_readiness))?}</span>
+            </td>
+            <td class="text-center" style="white-space:nowrap;">
+              <a href="{?=url([ADMIN, 'vedika', 'pdf', convertNorawat($value.no_rawat)])?}" target="_blank" class="btn btn-default btn-xs" title="Preview Dokumen Klaim">
+                <i class="fa fa-file-pdf-o text-danger"></i> PDF
+              </a>
+              <a href="{?=url([ADMIN, 'vedika', 'grouping', '?search=' . $value.no_sep])?}" target="_blank" class="btn btn-primary btn-xs" title="Proses Grouping INA-CBG">
+                <i class="fa fa-calculator"></i> Grouping
+              </a>
+            </td>
+          </tr>
+          {/loop}
+          {else}
+          <tr>
+            <td colspan="9" class="text-center" style="padding:35px 20px;">
+              <i class="fa fa-folder-open-o fa-3x text-muted"></i><br>
+              <b style="font-size:15px;color:#4a5568;">Belum ada pasien yang berstatus Siap Klaim pada filter ini.</b><br>
+              <p class="text-muted" style="max-width:650px;margin:8px auto;">
+                Kriteria Pasien Siap Klaim (Skor 100%): Memenuhi SEP (Bridging VClaim / Scan Berkas Digital), Catatan Medis (Resume/EMR SOAP), Autentikasi DPJP, Diagnosa Utama ICD-10 (P1), Prosedur ICD-9-CM, Pemeriksaan Odontogram/Gigi, dan Billing Tagihan Rumah Sakit.
+              </p>
+              <a href="{?=url([ADMIN, 'vedika', 'auditperiode', '?periode=' . $periode])?}" class="btn btn-warning btn-sm" onclick="return confirm('Jalankan audit kesiapan berkas & data klinis pasien BPJS untuk periode ini?');">
+                <i class="fa fa-refresh"></i> Jalankan Audit & Sinkronisasi Pasien Periode Ini
+              </a>
+            </td>
+          </tr>
+          {/if}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</form>
+
+<script>
+  $(function() {
+    $('.tanggal').datetimepicker({
+      format: 'YYYY-MM',
+      locale: 'id'
+    });
+
+    $('#checkAll').on('change', function() {
+      $('.check-item').prop('checked', $(this).is(':checked'));
+    });
+  });
+</script>
+

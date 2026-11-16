@@ -1136,24 +1136,40 @@ class Admin extends AdminModule
     $no_rawat = $no_rawat ? revertNoRawat($no_rawat) : '';
     $kd = $kd_dokter ?: ($_GET['kd_dokter'] ?? '');
 
-    // 1. Jika kd_dokter eksplisit belum ada, cek ke tabel oral diagnostic jika rawat ini tercatat di sana
+    // Abaikan jika kd_dokter adalah dokter skrining Oral Diagnostic (199403032202201)
+    if ($kd == '199403032202201') {
+      $kd = '';
+    }
+
+    // 1. Cek rujukan internal poli jika ada dokter rujukan spesialis tujuan
     if (empty($kd) && !empty($no_rawat)) {
-      $od = $this->db('mlite_pendaftaran_oral_diagnostic')->where('no_rawat', $no_rawat)->oneArray();
-      if ($od && !empty($od['kd_dokter'])) {
-        $kd = $od['kd_dokter'];
+      $rujukan = $this->db('mlite_rujukan_internal_poli')->where('no_rawat', $no_rawat)->oneArray();
+      if ($rujukan && !empty($rujukan['kd_dokter']) && $rujukan['kd_dokter'] != '199403032202201') {
+        $kd = $rujukan['kd_dokter'];
       }
     }
 
-    // 2. Jika masih kosong, cek ke reg_periksa
+    // 2. Cek ke reg_periksa (ambil dokter poli spesialis tujuan jika bukan dokter OD)
     if (empty($kd) && !empty($no_rawat)) {
       $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
-      if ($reg && !empty($reg['kd_dokter'])) {
+      if ($reg && !empty($reg['kd_dokter']) && $reg['kd_dokter'] != '199403032202201') {
         $kd = $reg['kd_dokter'];
       }
     }
 
+    // 3. Cek apakah ada di bridging_sep
+    if (empty($kd) && !empty($no_rawat)) {
+      $sep = $this->db('bridging_sep')->where('no_rawat', $no_rawat)->oneArray();
+      if ($sep && !empty($sep['kddpjppelayanan'])) {
+        $mapingSep = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $sep['kddpjppelayanan'])->oneArray();
+        if ($mapingSep) {
+          $kd = $mapingSep['kd_dokter'];
+        }
+      }
+    }
+
     if (empty($kd)) {
-      echo json_encode(['status' => 'error', 'message' => 'Dokter tidak ditemukan']);
+      echo json_encode(['status' => 'error', 'message' => 'Dokter DPJP perujuk/pelayanan tidak ditemukan atau belum diset']);
       exit();
     }
 
@@ -1206,9 +1222,42 @@ class Admin extends AdminModule
       );
       $hari = $day[$tentukan_hari];
 
-      $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $reg_periksa['kd_dokter'])->oneArray();
-      $maping_poli_bpjs = $this->db('maping_poli_bpjs')->where('kd_poli_rs', $reg_periksa['kd_poli'])->oneArray();
-      $jadwaldokter = $this->db('jadwal')->where('kd_dokter', $reg_periksa['kd_dokter'])->where('kd_poli', $reg_periksa['kd_poli'])->where('hari_kerja', $hari)->oneArray();
+      $target_kd_dokter = $reg_periksa['kd_dokter'];
+      $target_kd_poli = $reg_periksa['kd_poli'];
+
+      // Jika pasien dari skrining OD (199403032202201 / OD), tentukan dokter & poli rujukan spesialis tujuan
+      if ($target_kd_poli == 'OD' || $target_kd_dokter == '199403032202201') {
+        $rujukan = $this->db('mlite_rujukan_internal_poli')->where('no_rawat', $no_rawat)->oneArray();
+        if ($rujukan) {
+          if (!empty($rujukan['kd_dokter']) && $rujukan['kd_dokter'] != '199403032202201') {
+            $target_kd_dokter = $rujukan['kd_dokter'];
+          }
+          if (!empty($rujukan['kd_poli']) && $rujukan['kd_poli'] != 'OD') {
+            $target_kd_poli = $rujukan['kd_poli'];
+          }
+        }
+      }
+
+      if ($target_kd_poli == 'OD' && !empty($postData['kdpolitujuan'])) {
+        $mapPoli = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $postData['kdpolitujuan'])->oneArray();
+        if ($mapPoli) {
+          $target_kd_poli = $mapPoli['kd_poli_rs'];
+        }
+      }
+      $dpjpKodePost = !empty($postData['kddpjppelayanan']) ? $postData['kddpjppelayanan'] : (!empty($postData['kddpjp']) ? $postData['kddpjp'] : '');
+      if ($target_kd_dokter == '199403032202201' && !empty($dpjpKodePost)) {
+        $mapDok = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $dpjpKodePost)->oneArray();
+        if ($mapDok) {
+          $target_kd_dokter = $mapDok['kd_dokter'];
+        }
+      }
+
+      $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $target_kd_dokter)->oneArray();
+      $maping_poli_bpjs = $this->db('maping_poli_bpjs')->where('kd_poli_rs', $target_kd_poli)->oneArray();
+      $jadwaldokter = $this->db('jadwal')->where('kd_dokter', $target_kd_dokter)->where('kd_poli', $target_kd_poli)->where('hari_kerja', $hari)->oneArray();
+      if (!$jadwaldokter) {
+        $jadwaldokter = $this->db('jadwal')->where('kd_dokter', $target_kd_dokter)->where('kd_poli', $target_kd_poli)->oneArray();
+      }
 
       // Gunakan mapping dokter/poli, jika kosong gunakan data DPJP/Poli dari SEP yang baru saja disimpan
       $kd_dokter_bpjs = $maping_dokter_dpjpvclaim ? $maping_dokter_dpjpvclaim['kd_dokter_bpjs'] : (!empty($postData['kddpjppelayanan']) ? $postData['kddpjppelayanan'] : (!empty($postData['kddpjp']) ? $postData['kddpjp'] : ''));
@@ -3239,17 +3288,70 @@ class Admin extends AdminModule
             throw new \Exception("Data registrasi pasien (" . $no_rawat_db . ") tidak ditemukan.");
         }
 
-        $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $reg_periksa['kd_dokter'])->oneArray();
-        $maping_poli_bpjs = $this->db('maping_poli_bpjs')->where('kd_poli_rs', $reg_periksa['kd_poli'])->oneArray();
+        $target_kd_dokter = $reg_periksa['kd_dokter'];
+        $target_kd_poli = $reg_periksa['kd_poli'];
+
+        // Jika pasien terdaftar di poli OD atau dokter skrining OD (199403032202201), cari dokter & poli perujuk / tujuan
+        if ($target_kd_poli == 'OD' || $target_kd_dokter == '199403032202201') {
+            $rujukan = $this->db('mlite_rujukan_internal_poli')->where('no_rawat', $no_rawat_db)->oneArray();
+            if ($rujukan) {
+                if (!empty($rujukan['kd_dokter']) && $rujukan['kd_dokter'] != '199403032202201') {
+                    $target_kd_dokter = $rujukan['kd_dokter'];
+                }
+                if (!empty($rujukan['kd_poli']) && $rujukan['kd_poli'] != 'OD') {
+                    $target_kd_poli = $rujukan['kd_poli'];
+                }
+            }
+        }
+
+        // Ambil parameter jika dikirim langsung dari modal SEP (form.sep.html)
+        $param_kd_dokter_bpjs = $_GET['kd_dokter_bpjs'] ?? ($_POST['kd_dokter_bpjs'] ?? '');
+        $param_nm_dokter_bpjs = $_GET['nm_dokter_bpjs'] ?? ($_POST['nm_dokter_bpjs'] ?? '');
+        $param_kd_poli_bpjs = $_GET['kd_poli_bpjs'] ?? ($_POST['kd_poli_bpjs'] ?? '');
+        $param_nm_poli_bpjs = $_GET['nm_poli_bpjs'] ?? ($_POST['nm_poli_bpjs'] ?? '');
+
+        // Jika dokter masih OD atau poli masih OD, coba resolve dari parameter yang dikirim
+        if ($target_kd_poli == 'OD' && !empty($param_kd_poli_bpjs)) {
+            $mapPoli = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $param_kd_poli_bpjs)->oneArray();
+            if ($mapPoli) {
+                $target_kd_poli = $mapPoli['kd_poli_rs'];
+            }
+        }
+        if ($target_kd_dokter == '199403032202201' && !empty($param_kd_dokter_bpjs)) {
+            $mapDok = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $param_kd_dokter_bpjs)->oneArray();
+            if ($mapDok) {
+                $target_kd_dokter = $mapDok['kd_dokter'];
+            }
+        }
+
+        // Cek juga ke bridging_sep jika ada
+        $sep = $this->db('bridging_sep')->where('no_rawat', $no_rawat_db)->oneArray();
+        if ($sep) {
+            if ($target_kd_poli == 'OD' && !empty($sep['kdpolitujuan'])) {
+                $mapPoli = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $sep['kdpolitujuan'])->oneArray();
+                if ($mapPoli) {
+                    $target_kd_poli = $mapPoli['kd_poli_rs'];
+                }
+            }
+            $dpjpSep = !empty($sep['kddpjppelayanan']) ? $sep['kddpjppelayanan'] : (!empty($sep['kddpjp']) ? $sep['kddpjp'] : '');
+            if ($target_kd_dokter == '199403032202201' && !empty($dpjpSep)) {
+                $mapDok = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $dpjpSep)->oneArray();
+                if ($mapDok) {
+                    $target_kd_dokter = $mapDok['kd_dokter'];
+                }
+            }
+        }
+
+        $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $target_kd_dokter)->oneArray();
+        $maping_poli_bpjs = $this->db('maping_poli_bpjs')->where('kd_poli_rs', $target_kd_poli)->oneArray();
         
-        $kd_dokter_bpjs = $maping_dokter_dpjpvclaim ? $maping_dokter_dpjpvclaim['kd_dokter_bpjs'] : '';
-        $nm_dokter_bpjs = $maping_dokter_dpjpvclaim ? $maping_dokter_dpjpvclaim['nm_dokter_bpjs'] : '';
-        $kd_poli_bpjs = $maping_poli_bpjs ? $maping_poli_bpjs['kd_poli_bpjs'] : '';
-        $nm_poli_bpjs = $maping_poli_bpjs ? $maping_poli_bpjs['nm_poli_bpjs'] : '';
+        $kd_dokter_bpjs = $maping_dokter_dpjpvclaim ? $maping_dokter_dpjpvclaim['kd_dokter_bpjs'] : (!empty($param_kd_dokter_bpjs) ? $param_kd_dokter_bpjs : '');
+        $nm_dokter_bpjs = $maping_dokter_dpjpvclaim ? $maping_dokter_dpjpvclaim['nm_dokter_bpjs'] : (!empty($param_nm_dokter_bpjs) ? $param_nm_dokter_bpjs : '');
+        $kd_poli_bpjs = $maping_poli_bpjs ? $maping_poli_bpjs['kd_poli_bpjs'] : (!empty($param_kd_poli_bpjs) ? $param_kd_poli_bpjs : '');
+        $nm_poli_bpjs = $maping_poli_bpjs ? $maping_poli_bpjs['nm_poli_bpjs'] : (!empty($param_nm_poli_bpjs) ? $param_nm_poli_bpjs : '');
 
         // Fallback dari bridging_sep jika mapping belum ada
         if (empty($kd_dokter_bpjs) || empty($kd_poli_bpjs)) {
-            $sep = $this->db('bridging_sep')->where('no_rawat', $no_rawat_db)->oneArray();
             if ($sep) {
                 if (empty($kd_dokter_bpjs)) {
                     $kd_dokter_bpjs = !empty($sep['kddpjppelayanan']) ? $sep['kddpjppelayanan'] : (!empty($sep['kddpjp']) ? $sep['kddpjp'] : '');
@@ -3263,12 +3365,12 @@ class Admin extends AdminModule
         }
 
         if (empty($kd_dokter_bpjs) || empty($kd_poli_bpjs)) {
-            throw new \Exception("Data mapping dokter BPJS atau poli BPJS belum lengkap untuk dokter: " . $reg_periksa['kd_dokter'] . " / poli: " . $reg_periksa['kd_poli']);
+            throw new \Exception("Data mapping dokter BPJS atau poli BPJS belum lengkap untuk dokter: " . $target_kd_dokter . " / poli: " . $target_kd_poli . ". Pastikan pasien sudah diset Poli & Dokter Tujuan di Oral Diagnostic atau pilih DPJP di form SEP.");
         }
 
-        $jadwaldokter = $this->db('jadwal')->where('kd_dokter', $reg_periksa['kd_dokter'])->where('kd_poli', $reg_periksa['kd_poli'])->where('hari_kerja', $hari)->oneArray();
+        $jadwaldokter = $this->db('jadwal')->where('kd_dokter', $target_kd_dokter)->where('kd_poli', $target_kd_poli)->where('hari_kerja', $hari)->oneArray();
         if (!$jadwaldokter) {
-            $jadwaldokter = $this->db('jadwal')->where('kd_dokter', $reg_periksa['kd_dokter'])->where('kd_poli', $reg_periksa['kd_poli'])->oneArray();
+            $jadwaldokter = $this->db('jadwal')->where('kd_dokter', $target_kd_dokter)->where('kd_poli', $target_kd_poli)->oneArray();
         }
 
         $jam_mulai = ($jadwaldokter && !empty($jadwaldokter['jam_mulai'])) ? $jadwaldokter['jam_mulai'] : '08:00:00';

@@ -1,210 +1,252 @@
 <style media="screen">
-  .stat-title {
-    padding:0;
-    margin:0;
-    font-size:16px;
+  .stat-card {
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
-  .stat-bold {
-    padding:0;
-    margin-top:0px;
-    margin-bottom:-10px;
-    font-size:18px;
+  .stat-card .number {
+    font-size: 24px;
+    font-weight: 700;
   }
-  .stat-up-down {
-    font-size:14px;
-    font-weight:bold;
+  .stat-card .label-text {
+    font-size: 13px;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
-  .text-white{color:#ffffff}
-  a.text-white:focus,a.text-white:hover{color:#ffffff}
+  .bg-grad-primary { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); }
+  .bg-grad-info { background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%); }
+  .bg-grad-warning { background: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%); }
+  .bg-grad-danger { background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); }
+  .bg-grad-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+  .bg-grad-purple { background: linear-gradient(135deg, #654ea3 0%, #eaafc8 100%); }
+  .bg-grad-dark { background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); }
 
-  .badge-success {
-    background-color: #4C9A2A;
+  .submodule-card {
+    transition: all 0.2s ease;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    background: #fff;
+  }
+  .submodule-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    border-color: #3182ce;
+  }
+  .submodule-icon {
+    font-size: 28px;
+    color: #3182ce;
+    margin-bottom: 8px;
   }
 </style>
-<h4>
-  Periode Klaim {?=bulan(date('m', strtotime($periode)))?} {?=date('Y', strtotime($periode))?}
-  <span class="pull-right">
-    <form class="" action="" method="">
-      <input type="text" name="periode" class="tanggal" value="" placeholder="Pilih periode">
-      <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
-      <input type="submit" value="Go">
+
+<div class="row">
+  <div class="col-md-8">
+    <h3 style="margin-top:0;">
+      <i class="fa fa-dashboard text-primary"></i> Dashboard Manajemen Klaim BPJS
+      <small style="display:block;margin-top:4px;color:#718096;">Pusat Kesiapan, Verifikasi Internal, Grouping INA-CBG, dan Rekonsiliasi Klaim RSGM</small>
+    </h3>
+  </div>
+  <div class="col-md-4 text-right">
+    <form class="form-inline" action="" method="GET">
+      <div class="input-group">
+        <input type="text" name="periode" class="form-control tanggal" value="{?=$periode?}" placeholder="Pilih periode (YYYY-MM)">
+        <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+        <span class="input-group-btn">
+          <button class="btn btn-primary" type="submit"><i class="fa fa-filter"></i> Filter</button>
+        </span>
+      </div>
     </form>
-  </span>
-</h4>
+  </div>
+</div>
+<hr style="margin-top:10px;margin-bottom:20px;">
+
+<!-- KPI ROW 1: KESIAPAN & VERIFIKASI AWAL -->
+<div class="row">
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card bg-grad-primary">
+      <div class="label-text"><i class="fa fa-users"></i> Pasien BPJS Terdaftar</div>
+      <div class="number">{?=number_format(isset_or($stats.totalPasienBPJS, 0))?}</div>
+      <div style="font-size:12px;margin-top:4px;">Ber-SEP: <b>{?=number_format(isset_or($stats.totalMemilikiSEP, 0))?}</b> ({?=number_format((isset_or($stats.totalMemilikiSEP, 0) / max(1, isset_or($stats.totalPasienBPJS, 1))) * 100, 1)?}%)</div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card bg-grad-danger">
+      <div class="label-text"><i class="fa fa-exclamation-circle"></i> Berkas Belum Lengkap</div>
+      <div class="number">{?=number_format(isset_or($stats.totalBelumLengkap, 0))?}</div>
+      <div style="font-size:12px;margin-top:4px;"><a href="{?=url([ADMIN, 'vedika', 'belumsiap'])?}" style="color:#fff;text-decoration:underline;">Lihat checklist perbaikan &raquo;</a></div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card bg-grad-info">
+      <div class="label-text"><i class="fa fa-check-circle"></i> Pasien Siap Klaim</div>
+      <div class="number">{?=number_format(isset_or($stats.totalSiapKlaim, 0))?}</div>
+      <div style="font-size:12px;margin-top:4px;">Verif Medis & Admin: <b>{?=number_format(isset_or($stats.totalVerifInternal, 0))?}</b></div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card bg-grad-success">
+      <div class="label-text"><i class="fa fa-calculator"></i> INA-CBG Grouping</div>
+      <div class="number">{?=number_format(isset_or($stats.totalSudahGrouping, 0))?}</div>
+      <div style="font-size:12px;margin-top:4px;">Tergrafik E-Klaim Kemenkes</div>
+    </div>
+  </div>
+</div>
+
+<!-- KPI ROW 2: STATUS PENGAJUAN & PENYELESAIAN BPJS -->
+<div class="row">
+  <div class="col-md-3 col-sm-6">
+    <div class="panel panel-default">
+      <div class="panel-body text-center">
+        <div style="font-size:11px;color:#718096;text-transform:uppercase;">Diajukan Kolektif</div>
+        <div style="font-size:22px;font-weight:bold;color:#2b6cb0;">{?=number_format(isset_or($stats.totalDiajukan, 0))?}</div>
+        <div style="font-size:12px;color:#4a5568;">Pasien dalam Batch</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="panel panel-default">
+      <div class="panel-body text-center">
+        <div style="font-size:11px;color:#718096;text-transform:uppercase;">Disetujui BPJS</div>
+        <div style="font-size:22px;font-weight:bold;color:#2f855a;">{?=number_format(isset_or($stats.totalDisetujui, 0))?}</div>
+        <div style="font-size:12px;color:#4a5568;">Lolos Verifikasi FPK</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="panel panel-default">
+      <div class="panel-body text-center">
+        <div style="font-size:11px;color:#718096;text-transform:uppercase;">Pending & Dispute</div>
+        <div style="font-size:22px;font-weight:bold;color:#c53030;">{?=number_format(isset_or($stats.totalPending, 0) + isset_or($stats.totalDispute, 0))?}</div>
+        <div style="font-size:12px;color:#4a5568;">Pending: {?=isset_or($stats.totalPending, 0)?} | Dispute: {?=isset_or($stats.totalDispute, 0)?}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="panel panel-default">
+      <div class="panel-body text-center">
+        <div style="font-size:11px;color:#718096;text-transform:uppercase;">Lunas Terbayar</div>
+        <div style="font-size:22px;font-weight:bold;color:#319795;">{?=number_format(isset_or($stats.totalDibayar, 0))?}</div>
+        <div style="font-size:12px;color:#4a5568;">Sesuai BAHP Bank</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KPI ROW 3: REKONSILIASI KEUANGAN -->
+<div class="row">
+  <div class="col-md-4">
+    <div class="panel panel-default">
+      <div class="panel-heading"><b class="text-primary"><i class="fa fa-paper-plane"></i> Total Nilai Diajukan</b></div>
+      <div class="panel-body">
+        <h3 style="margin:0;color:#2b6cb0;">Rp {?=number_format(isset_or($stats.totalNilaiDiajukan, 0), 0, ',', '.')?}</h3>
+        <small class="text-muted">Total estimasi tarif batch pengajuan ke BPJS</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="panel panel-default">
+      <div class="panel-heading"><b class="text-success"><i class="fa fa-check-square"></i> Total Disetujui (FPK)</b></div>
+      <div class="panel-body">
+        <h3 style="margin:0;color:#2f855a;">Rp {?=number_format(isset_or($stats.totalNilaiDisetujui, 0), 0, ',', '.')?}</h3>
+        <small class="text-muted">Nilai klaim disetujui hasil verifikasi BPJS</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="panel panel-default">
+      <div class="panel-heading"><b class="text-danger"><i class="fa fa-clock-o"></i> Sisa Belum Dibayar</b></div>
+      <div class="panel-body">
+        <h3 style="margin:0;color:#c53030;">Rp {?=number_format(isset_or($stats.totalNilaiBelumDibayar, 0), 0, ',', '.')?}</h3>
+        <small class="text-muted">Outstanding selisih menunggu transfer pencairan</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GRAFIK & MODUL CASEMIX -->
+<div class="row">
+  <div class="col-lg-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-bar-chart"></i> Maturasi Klaim BPJS ({?=bulan(date('m', strtotime($periode)))?} {?=date('Y', strtotime($periode))?})</h3>
+      </div>
+      <div class="panel-body">
+        <canvas id="line-chartcanvas" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODUL FITUR TERPADU KLAIM BPJS -->
+<h4><i class="fa fa-th-large text-primary"></i> Pusat Modul Persiapan & Pengelolaan Klaim BPJS</h4>
 <br>
 <div class="row">
-    <div class="col-md-3 col-sm-6 col-xs-12">
-        <div class="panel panel-default">
-              <div class="panel-body bg-danger">
-                    <span class="fa-3x fa-stack fa-lg pull-left">
-                        <i class="fa fa-calendar-plus-o fa-stack-1x"></i>
-                    </span>
-                    <div class="stat-title text-grey">Rencana Klaim</div>
-                    <div class="stat-bold">
-                      Ralan : <b>{?=isset_or($stats.KlaimRalan)?}</b> ({?=number_format(($stats.rencanaRalan/($stats.KlaimRalan ?: 1))*100, 2, '.', '')?}%)<br>
-                      Ranap: <b>{?=isset_or($stats.KlaimRanap)?}</b> ({?=number_format(($stats.rencanaRanap/($stats.KlaimRanap ?: 1))*100, 2, '.', '')?}%)
-                    </div>
-              </div>
+  {loop: $sub_modules}
+  <div class="col-md-3 col-sm-4 col-xs-6">
+    <div class="submodule-card">
+      <a href="{?=isset_or($value.url)?}" class="panel-body text-center" style="display:block;text-decoration:none;color:inherit;padding:20px 10px;">
+        <div class="submodule-icon">
+          <i class="fa fa-{?=isset_or($value.icon)?}"></i>
         </div>
-    </div>
-    <div class="col-md-3 col-sm-6 col-xs-12">
-        <div class="panel panel-default">
-              <div class="panel-body bg-info">
-                    <span class="fa-3x fa-stack fa-lg pull-left">
-                        <i class="fa fa-calendar fa-stack-1x"></i>
-                    </span>
-                    <div class="stat-title text-grey">Status Lengkap</div>
-                    <div class="stat-bold">
-                      Ralan : <b>{?=isset_or($stats.LengkapRalan)?}</b> ({?=number_format(($stats.LengkapRalan/($stats.KlaimRalan ?: 1))*100, 2, '.', '')?}%)<br>
-                      Ranap: <b>{?=isset_or($stats.LengkapRanap)?}</b> ({?=number_format(($stats.LengkapRanap/($stats.KlaimRanap ?: 1))*100, 2, '.', '')?}%)
-                    </div>
-              </div>
+        <h4 style="margin:5px 0;font-size:15px;font-weight:700;">{?=isset_or($value.name)?}</h4>
+        <div style="font-size:12px;color:#718096;min-height:30px;">
+          {?=isset_or($value.desc)?}
         </div>
+      </a>
     </div>
-    <div class="col-md-3 col-sm-6 col-xs-12">
-        <div class="panel panel-default">
-              <div class="panel-body bg-warning">
-                    <span class="fa-3x fa-stack fa-lg pull-left">
-                        <i class="fa fa-users fa-stack-1x"></i>
-                    </span>
-                    <div class="stat-title text-grey">Status Pengajuan</div>
-                    <div class="stat-bold">
-                      Ralan : <b>{?=isset_or($stats.PengajuanRalan)?}</b> ({?=number_format(($stats.PengajuanRalan/($stats.KlaimRalan ?: 1))*100, 2, '.', '')?}%)<br>
-                      Ranap: <b>{?=isset_or($stats.PengajuanRanap)?}</b> ({?=number_format(($stats.PengajuanRanap/($stats.KlaimRanap ?: 1))*100, 2, '.', '')?}%)
-                    </div>
-              </div>
-        </div>
-    </div>
-    <div class="col-md-3 col-sm-6 col-xs-12">
-        <div class="panel panel-default">
-              <div class="panel-body bg-success">
-                    <span class="fa-3x fa-stack fa-lg pull-left">
-                        <i class="fa fa-wheelchair fa-stack-1x"></i>
-                    </span>
-                    <div class="stat-title text-grey">Status Perbaikan</div>
-                    <div class="stat-bold">
-                      Ralan : <b>{?=isset_or($stats.PerbaikanRalan)?} / <span class="text-danger">{?=isset_or($stats.PerbaikanRalan1)?}</span></b> ({?=number_format(($stats.PerbaikanRalan/($stats.KlaimRalan ?: 1))*100, 2, '.', '')?}%)<br>
-                      Ranap: <b>{?=isset_or($stats.PerbaikanRanap)?} / <span class="text-danger">{?=isset_or($stats.PerbaikanRanap1)?}</span></b> ({?=number_format(($stats.PerbaikanRanap/($stats.KlaimRanap ?: 1))*100, 2, '.', '')?}%)
-                    </div>
-              </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-lg-12 col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Maturasi Klaim BPJS Dalam %</h3>
-            </div>
-            <div class="panel-body">
-                <canvas id="line-chartcanvas" height="250"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-12">
-        <ul class="modules" style="padding:0;margin:0;">
-            {loop: $sub_modules}
-            <li class="module">
-                <div class="panel panel-default">
-                    <a href="{?=isset_or($value.url)?}" class="panel-body text-center">
-                        <div class="panel-thumb">
-                            <i class="fa fa-{?=isset_or($value.icon)?}"></i>
-                            <div class="desc">
-                                {?=isset_or($value.desc)?}
-                            </div>
-                        </div>
-                        <h4><b>{?=isset_or($value.name)?}</b></h4>
-                    </a>
-                </div>
-            </li>
-            {/loop}
-        </ul>
-    </div>
+  </div>
+  {/loop}
 </div>
 
 <script>
-  $( function() {
+  $(function() {
     $('.tanggal').datetimepicker({
       format: 'YYYY-MM',
       locale: 'id'
     });
-  } );
-</script>
-<script type="text/javascript">
-    $(function () {
-        //line chart
-        var ctx = document.getElementById("line-chartcanvas");
-        const dataLabel = ["Rencana Klaim", "Rawat Jalan", "Rawat Inap"];
-        new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: dataLabel,
-            datasets: [{
-              data: [{?=number_format((($stats.rencanaRalan+$stats.rencanaRanap)/($stats.totalKlaim ?: 1))*100, 2, '.', '')?}, {?=number_format((($stats.LengkapRalan+$stats.PengajuanRalan)/($stats.KlaimRalan ?: 1))*100, 2, '.', '')?}, {?=number_format((($stats.LengkapRanap+$stats.PengajuanRanap)/($stats.KlaimRanap ?: 1))*100, 2, '.', '')?}],
-              backgroundColor: [
-                'rgba(255, 99, 132, 0.2)',
-                'rgba(54, 162, 235, 0.2)',
-                'rgba(255, 159, 64, 0.2)'
-              ],
-              borderColor: [
-                'rgba(255,99,132,1)',
-                'rgba(54, 162, 235, 1)',
-                'rgba(255, 159, 64, 1)'
-              ],
-              borderWidth: 1
-            }]
-          },
-          options: {
-            layout: {
-              padding: {
-                left: 0,
-                right: 0,
-                top: 15,
-                bottom: 0
-              }
-            },
-            events: [],
-            responsive: true,
-            maintainAspectRatio: false,
-            legend: {
-              display: false
-            },
-            scales: {
-              yAxes: [{
-                ticks: {
-                  beginAtZero: true,
-                  display: false
-                }
-              }]
-            },
-            animation: {
-              duration: 1,
-              onComplete: function() {
-                var chartInstance = this.chart,
-                  ctx = chartInstance.ctx;
 
-                ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontSize, Chart.defaults.global.defaultFontStyle, Chart.defaults.global.defaultFontFamily);
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'bottom';
-
-                this.data.datasets.forEach(function(dataset, i) {
-                  var meta = chartInstance.controller.getDatasetMeta(i);
-                  meta.data.forEach(function(bar, index) {
-                    if (dataset.data[index] > 0) {
-                      var data = dataset.data[index];
-                      ctx.fillText(data, bar._model.x, bar._model.y);
-                    }
-                  });
-                });
-              }
-            }
+    var ctx = document.getElementById("line-chartcanvas");
+    if (ctx) {
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ["Terdaftar BPJS", "Memiliki SEP", "Siap Klaim", "Terverifikasi", "Grouping", "Diajukan", "Disetujui"],
+          datasets: [{
+            label: 'Jumlah Pasien',
+            data: [
+              {?=intval(isset_or($stats.totalPasienBPJS, 0))?},
+              {?=intval(isset_or($stats.totalMemilikiSEP, 0))?},
+              {?=intval(isset_or($stats.totalSiapKlaim, 0))?},
+              {?=intval(isset_or($stats.totalVerifInternal, 0))?},
+              {?=intval(isset_or($stats.totalSudahGrouping, 0))?},
+              {?=intval(isset_or($stats.totalDiajukan, 0))?},
+              {?=intval(isset_or($stats.totalDisetujui, 0))?}
+            ],
+            backgroundColor: [
+              'rgba(30, 60, 114, 0.7)',
+              'rgba(42, 82, 152, 0.7)',
+              'rgba(0, 180, 219, 0.7)',
+              'rgba(17, 153, 142, 0.7)',
+              'rgba(242, 153, 74, 0.7)',
+              'rgba(101, 78, 163, 0.7)',
+              'rgba(56, 239, 125, 0.7)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          legend: { display: false },
+          scales: {
+            yAxes: [{ ticks: { beginAtZero: true } }]
           }
-        });
-
-    });
-
+        }
+      });
+    }
+  });
 </script>

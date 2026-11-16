@@ -112,15 +112,56 @@ class Admin extends AdminModule
           $bridging_sep = $this->db('bridging_sep')->where('no_rawat', $row['no_rawat'])->oneArray();
           $row['no_sep'] = isset_or($bridging_sep['no_sep']);
           
-          // Penanda jika pasien sudah dirujuk ke poli lain (dari fitur Set Poli Tujuan)
+          // Penanda jika pasien sudah dirujuk ke poli lain (dari fitur Set Poli Tujuan atau rujukan internal)
+          $row['is_referred'] = false;
+          $row['poli_rujukan'] = '';
+          $row['kd_poli_rujukan'] = '';
+          $row['kd_dokter_rujukan'] = '';
+          $row['dokter_rujukan'] = '';
+
           $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $row['no_rawat'])->oneArray();
-          if ($reg_periksa && $reg_periksa['kd_poli'] != $row['kd_poli']) {
-              $row['is_referred'] = true;
-              $poli_tujuan = $this->db('poliklinik')->where('kd_poli', $reg_periksa['kd_poli'])->oneArray();
-              $row['poli_rujukan'] = $poli_tujuan ? $poli_tujuan['nm_poli'] : '';
-          } else {
-              $row['is_referred'] = false;
-              $row['poli_rujukan'] = '';
+          $rujukan_internal = $this->db('mlite_rujukan_internal_poli')->where('no_rawat', $row['no_rawat'])->oneArray();
+
+          // 1. Cek dari reg_periksa jika poli atau dokter sudah diupdate ke poli spesialis
+          if ($reg_periksa) {
+              if ($reg_periksa['kd_poli'] != $row['kd_poli']) {
+                  $row['is_referred'] = true;
+                  $row['kd_poli_rujukan'] = $reg_periksa['kd_poli'];
+                  $poli_tujuan = $this->db('poliklinik')->where('kd_poli', $reg_periksa['kd_poli'])->oneArray();
+                  $row['poli_rujukan'] = $poli_tujuan ? $poli_tujuan['nm_poli'] : '';
+              }
+              if (!empty($reg_periksa['kd_dokter']) && $reg_periksa['kd_dokter'] != $row['kd_dokter'] && $reg_periksa['kd_dokter'] != '199403032202201') {
+                  $row['kd_dokter_rujukan'] = $reg_periksa['kd_dokter'];
+                  $dok_tujuan = $this->db('dokter')->where('kd_dokter', $reg_periksa['kd_dokter'])->oneArray();
+                  $row['dokter_rujukan'] = $dok_tujuan ? $dok_tujuan['nm_dokter'] : '';
+              }
+          }
+
+          // 2. Cek rujukan internal poli jika dokter atau poli belum didapat dari reg_periksa
+          if ($rujukan_internal) {
+              if (empty($row['kd_poli_rujukan']) && !empty($rujukan_internal['kd_poli']) && $rujukan_internal['kd_poli'] != $row['kd_poli']) {
+                  $row['is_referred'] = true;
+                  $row['kd_poli_rujukan'] = $rujukan_internal['kd_poli'];
+                  $poli_tujuan = $this->db('poliklinik')->where('kd_poli', $rujukan_internal['kd_poli'])->oneArray();
+                  $row['poli_rujukan'] = $poli_tujuan ? $poli_tujuan['nm_poli'] : '';
+              }
+              if (empty($row['kd_dokter_rujukan']) && !empty($rujukan_internal['kd_dokter']) && $rujukan_internal['kd_dokter'] != $row['kd_dokter'] && $rujukan_internal['kd_dokter'] != '199403032202201') {
+                  $row['kd_dokter_rujukan'] = $rujukan_internal['kd_dokter'];
+                  $dok_tujuan = $this->db('dokter')->where('kd_dokter', $rujukan_internal['kd_dokter'])->oneArray();
+                  $row['dokter_rujukan'] = $dok_tujuan ? $dok_tujuan['nm_dokter'] : '';
+              }
+          }
+
+          // 3. Fallback jika dokter rujukan belum ada tapi di SEP sudah tersimpan
+          if ($bridging_sep && empty($row['dokter_rujukan'])) {
+              $nmdok = !empty($bridging_sep['nmdpjppelayanan']) ? $bridging_sep['nmdpjppelayanan'] : (!empty($bridging_sep['nmdpdjp']) ? $bridging_sep['nmdpdjp'] : '');
+              if (!empty($nmdok)) {
+                  $row['dokter_rujukan'] = $nmdok;
+              }
+              if (empty($row['poli_rujukan']) && !empty($bridging_sep['nmpolitujuan'])) {
+                  $row['poli_rujukan'] = $bridging_sep['nmpolitujuan'];
+                  $row['kd_poli_rujukan'] = $bridging_sep['kdpolitujuan'];
+              }
           }
 
           $tgl_kunjungan = new \DateTime($row['tgl_registrasi']);

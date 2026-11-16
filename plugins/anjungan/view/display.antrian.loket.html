@@ -406,35 +406,41 @@
       </div>
     </section>
 
-    <!-- Right Column: Queue Numbers (Loket, CS, Apotek) -->
+    <!-- Right Column: Queue Numbers (Loket 1, Loket 2 / CS, Apotek) -->
     <section class="col-cards">
-      <!-- Card 1: Loket Pendaftaran (A) -->
-      <article class="queue-card card-loket" id="cardLoket">
+      <!-- Card 1: Loket Pendaftaran 1 (A) -->
+      <article class="queue-card card-loket" id="cardLoket1">
         <div class="card-header-bar">
-          <span class="card-title-text"><i class="fa fa-id-card"></i> Loket Pendaftaran</span>
+          <span class="card-title-text"><i class="fa fa-id-card"></i> {$nama_loket_1}</span>
           <span class="card-badge-letter">A</span>
         </div>
         <div class="card-body-number">
-          <div class="digital-number">A-<span class="antrian_Loket">{?=isset_or($init_loket_no, '001')?}</span></div>
+          <div class="digital-number">A-<span class="antrian_Loket1">{?=isset_or($init_loket1_no, '000')?}</span></div>
         </div>
         <div class="card-footer-bar">
-          <div class="footer-counter">KONTER <span class="get_Loket">{?=isset_or($init_loket_counter, '1')?}</span></div>
-          <span class="footer-status-label" id="statusLoket">Menunggu</span>
+          <div class="footer-counter">KONTER <span class="get_Loket1">1</span></div>
+          <span class="footer-status-label" id="statusLoket1">Menunggu</span>
         </div>
       </article>
 
-      <!-- Card 2: Customer Service / Informasi (B) -->
-      <article class="queue-card card-cs" id="cardCS">
+      <!-- Card 2: Loket Pendaftaran 2 (A) / Customer Service (B) -->
+      <article class="queue-card card-cs" id="cardLoket2">
         <div class="card-header-bar">
-          <span class="card-title-text"><i class="fa fa-headphones"></i> Customer Service / Pengaduan</span>
-          <span class="card-badge-letter">B</span>
+          <span class="card-title-text" id="titleCard2">
+            {if: $display_card2 == 'cs'}
+              <i class="fa fa-headphones"></i> Customer Service / CS
+            {else}
+              <i class="fa fa-id-card"></i> {$nama_loket_2}
+            {/if}
+          </span>
+          <span class="card-badge-letter" id="badgeCard2">{$card2_prefix}</span>
         </div>
         <div class="card-body-number">
-          <div class="digital-number">B-<span class="antrian_CS">{?=isset_or($init_cs_no, '001')?}</span></div>
+          <div class="digital-number"><span id="prefixCard2">{$card2_prefix}</span>-<span class="antrian_Loket2">{?=isset_or($init_card2_no, '000')?}</span></div>
         </div>
         <div class="card-footer-bar">
-          <div class="footer-counter">KONTER <span class="get_CS">{?=isset_or($init_cs_counter, '1')?}</span></div>
-          <span class="footer-status-label" id="statusCS">Menunggu</span>
+          <div class="footer-counter">KONTER <span class="get_Loket2">{?=isset_or($init_card2_counter, '2')?}</span></div>
+          <span class="footer-status-label" id="statusLoket2">Menunggu</span>
         </div>
       </article>
 
@@ -445,7 +451,7 @@
           <span class="card-badge-letter">F</span>
         </div>
         <div class="card-body-number">
-          <div class="digital-number">F-<span class="antrian_Apotek">{?=isset_or($init_apotek_no, '001')?}</span></div>
+          <div class="digital-number">F-<span class="antrian_Apotek">{?=isset_or($init_apotek_no, '000')?}</span></div>
         </div>
         <div class="card-footer-bar">
           <div class="footer-counter">KONTER <span class="get_Apotek">{?=isset_or($init_apotek_counter, '1')?}</span></div>
@@ -559,17 +565,32 @@
       cache: false,
       success: function(data) {
         if(!data) return;
+        if(data.loket1) {
+          $('.antrian_Loket1').html(data.loket1.antrian || '000');
+          $('.get_Loket1').html(data.loket1.counter || '1');
+        }
+        if(data.card2) {
+          $('.antrian_Loket2').html(data.card2.antrian || '000');
+          $('.get_Loket2').html(data.card2.counter || '2');
+          $('#prefixCard2').text(data.card2.prefix || 'A');
+          $('#badgeCard2').text(data.card2.prefix || 'A');
+          if (data.card2.title) {
+            var iconHtml = data.card2.mode === 'cs' ? '<i class="fa fa-headphones"></i> ' : '<i class="fa fa-id-card"></i> ';
+            $('#titleCard2').html(iconHtml + data.card2.title);
+          }
+        }
+        if(data.apotek) {
+          $('.antrian_Apotek').html(data.apotek.antrian || '000');
+          $('.get_Apotek').html(data.apotek.counter || '1');
+        }
+        // Backward compatibility
         if(data.loket) {
-          $('.antrian_Loket').html(data.loket.antrian || '001');
+          $('.antrian_Loket').html(data.loket.antrian || '000');
           $('.get_Loket').html(data.loket.counter || '1');
         }
         if(data.cs) {
-          $('.antrian_CS').html(data.cs.antrian || '001');
+          $('.antrian_CS').html(data.cs.antrian || '000');
           $('.get_CS').html(data.cs.counter || '1');
-        }
-        if(data.apotek) {
-          $('.antrian_Apotek').html(data.apotek.antrian || '001');
-          $('.get_Apotek').html(data.apotek.counter || '1');
         }
       },
       error: function(xhr) {
@@ -613,20 +634,32 @@
 
   function highlightCard(type, nomor, loket) {
     var typeLower = (type || '').toLowerCase();
-    var cardId = '#cardLoket';
-    var statusId = '#statusLoket';
+    var cardId = '#cardLoket1';
+    var statusId = '#statusLoket1';
 
     if(typeLower === 'cs') {
-      cardId = '#cardCS';
-      statusId = '#statusCS';
-      $('.antrian_CS').html(nomor);
-      $('.get_CS').html(loket);
+      cardId = '#cardLoket2';
+      statusId = '#statusLoket2';
+      $('.antrian_Loket2').html(nomor);
+      $('.get_Loket2').html(loket || '1');
     } else if(typeLower === 'apotek') {
       cardId = '#cardApotek';
       statusId = '#statusApotek';
       $('.antrian_Apotek').html(nomor);
-      $('.get_Apotek').html(loket);
+      $('.get_Apotek').html(loket || '1');
     } else {
+      // Type: Loket (Pendaftaran)
+      if(parseInt(loket) === 2) {
+        cardId = '#cardLoket2';
+        statusId = '#statusLoket2';
+        $('.antrian_Loket2').html(nomor);
+        $('.get_Loket2').html('2');
+      } else {
+        cardId = '#cardLoket1';
+        statusId = '#statusLoket1';
+        $('.antrian_Loket1').html(nomor);
+        $('.get_Loket1').html('1');
+      }
       $('.antrian_Loket').html(nomor);
       $('.get_Loket').html(loket);
     }
@@ -699,11 +732,16 @@
   function fallbackTTS(type, nomor, loket, callback) {
     if ('speechSynthesis' in window) {
       var letter = 'A';
-      var destination = 'Loket Pendaftaran';
-      if ((type || '').toLowerCase() === 'cs') { letter = 'B'; destination = 'Customer Service'; }
-      if ((type || '').toLowerCase() === 'apotek') { letter = 'F'; destination = 'Apotek Farmasi'; }
+      var destination = (parseInt(loket) === 2) ? 'Loket Pendaftaran 2' : 'Loket Pendaftaran 1';
+      if ((type || '').toLowerCase() === 'cs') {
+        letter = 'B';
+        destination = 'Customer Service';
+      } else if ((type || '').toLowerCase() === 'apotek') {
+        letter = 'F';
+        destination = 'Apotek Farmasi';
+      }
 
-      var utterance = new SpeechSynthesisUtterance('Nomor antrian ' + letter + ' ' + parseInt(nomor) + ', silakan menuju ke ' + destination + ' konter ' + loket);
+      var utterance = new SpeechSynthesisUtterance('Nomor antrian ' + letter + ' ' + parseInt(nomor) + ', silakan menuju ke ' + destination);
       utterance.lang = 'id-ID';
       utterance.rate = 0.9;
       utterance.onend = function() {

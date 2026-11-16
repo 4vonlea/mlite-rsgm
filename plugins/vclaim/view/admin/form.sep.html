@@ -754,7 +754,24 @@
       }
     }
 
+    var kd_dokter_bpjs = ($('#sep_dpjp_yang_melayani_kode').val() || '').trim();
+    var nm_dokter_bpjs = ($('#sep_dpjp_yang_melayani_nama').val() || '').trim();
+    var kd_poli_bpjs = ($('#sep_spesialis_kode').val() || '').trim();
+    var nm_poli_bpjs = ($('#sep_spesialis_nama').val() || '').trim();
+
     var loadURL = baseURL + '/vclaim/addantrian/' + encodeURIComponent(no_rkm_medis) + '/' + encodeURIComponent(no_rawat) + '/' + encodeURIComponent(nomor_rujukan) + '/' + encodeURIComponent(jenis_kunjungan) + '?t=' + mlite.token;
+    if (kd_dokter_bpjs && kd_dokter_bpjs !== '199403032202201') {
+      loadURL += '&kd_dokter_bpjs=' + encodeURIComponent(kd_dokter_bpjs);
+    }
+    if (nm_dokter_bpjs) {
+      loadURL += '&nm_dokter_bpjs=' + encodeURIComponent(nm_dokter_bpjs);
+    }
+    if (kd_poli_bpjs && kd_poli_bpjs !== 'OD') {
+      loadURL += '&kd_poli_bpjs=' + encodeURIComponent(kd_poli_bpjs);
+    }
+    if (nm_poli_bpjs) {
+      loadURL += '&nm_poli_bpjs=' + encodeURIComponent(nm_poli_bpjs);
+    }
 
     var modal = $('#add_antrianModal');
     var modalContent = $('#add_antrianModal .modal-content');

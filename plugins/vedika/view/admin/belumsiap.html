@@ -1,0 +1,269 @@
+<div class="row">
+  <div class="col-md-8">
+    <h3 style="margin-top:0;">
+      <i class="fa fa-exclamation-circle text-danger"></i> Daftar Pasien Belum Siap Klaim
+      <small style="display:block;margin-top:4px;color:#718096;">Identifikasi otomatis berkas klinis & administrasi yang belum memenuhi syarat klaim BPJS</small>
+    </h3>
+  </div>
+  <div class="col-md-5 text-right">
+    <a href="{?=url([ADMIN, 'vedika', 'auditperiode', '?periode=' . $periode])?}" class="btn btn-warning" onclick="return confirm('Jalankan audit kesiapan berkas & data klinis pasien BPJS untuk periode ini?');"><i class="fa fa-refresh"></i> Audit Massal Periode Ini</a>
+    <a href="{?=url([ADMIN, 'vedika', 'siapklaim'])?}" class="btn btn-success" style="margin-left:5px;"><i class="fa fa-check-circle"></i> Pasien Siap Klaim &raquo;</a>
+  </div>
+</div>
+<hr style="margin-top:10px;margin-bottom:20px;">
+
+<!-- FILTER BAR -->
+<div class="panel panel-default">
+  <div class="panel-body">
+    <form class="form-inline" action="" method="GET">
+      <div class="form-group">
+        <label>Periode:</label>
+        <input type="text" name="periode" class="form-control tanggal input-sm" value="{?=$periode?}" placeholder="YYYY-MM">
+      </div>
+      <div class="form-group" style="margin-left:10px;">
+        <label>Pelayanan:</label>
+        <select name="status_lanjut" class="form-control input-sm">
+          <option value="">Semua (Ralan & Ranap)</option>
+          <option value="Ralan" {if: $status_lanjut == 'Ralan'}selected{/if}>Rawat Jalan</option>
+          <option value="Ranap" {if: $status_lanjut == 'Ranap'}selected{/if}>Rawat Inap</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-left:10px;">
+        <label>Poli:</label>
+        <select name="kd_poli" class="form-control input-sm" style="max-width:200px;">
+          <option value="">Semua Poliklinik</option>
+          {loop: $polis}
+          <option value="{?=$value.kd_poli?}" {if: $kd_poli == $value.kd_poli}selected{/if}>{?=$value.nm_poli?}</option>
+          {/loop}
+        </select>
+      </div>
+      <div class="form-group" style="margin-left:10px;">
+        <input type="text" name="search" class="form-control input-sm" value="{?=$search?}" placeholder="Cari No Rawat / RM / Nama">
+      </div>
+      <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+      <button type="submit" class="btn btn-primary btn-sm" style="margin-left:10px;"><i class="fa fa-filter"></i> Saring Data</button>
+    </form>
+  </div>
+</div>
+
+<!-- TABEL PASIEN BELUM SIAP KLAIM -->
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <b>Ditemukan {?=$total?} Pasien Belum Memenuhi Persyaratan Klaim</b>
+    </h3>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover table-striped" style="margin-bottom:0;font-size:13px;">
+      <thead>
+        <tr class="active">
+          <th>No. Rawat / RM</th>
+          <th>Nama Pasien</th>
+          <th>Tgl Reg / Poli</th>
+          <th>Dokter DPJP</th>
+          <th>No. SEP</th>
+          <th>Kesiapan</th>
+          <th>Item Belum Lengkap</th>
+          <th class="text-center">Tindakan Cepat</th>
+        </tr>
+      </thead>
+      <tbody>
+        {if: count($rows) > 0}
+        {loop: $rows}
+        <tr>
+          <td>
+            <b>{?=$value.no_rawat?}</b><br>
+            <span class="label label-default">RM: {?=$value.no_rkm_medis?}</span>
+          </td>
+          <td>
+            <b>{?=$value.nm_pasien?}</b><br>
+            <small class="text-muted">Kartu: {?=$value.no_peserta ?: '-'?}</small>
+          </td>
+          <td>
+            {?=$value.tgl_registrasi?}<br>
+            <span class="text-primary">{?=$value.nm_poli?}</span> ({?=$value.status_lanjut?})
+          </td>
+          <td>{?=$value.nm_dokter?}</td>
+          <td>
+            {if: !empty($value.no_sep)}
+            <span class="label label-success">{?=$value.no_sep?}</span>
+            {else}
+            <span class="label label-danger"><i class="fa fa-times"></i> Belum Terbit</span>
+            {/if}
+          </td>
+          <td>
+            <div class="progress" style="margin-bottom:2px;height:14px;width:70px;">
+              <div class="progress-bar progress-bar-danger" style="width:{?=$value.score_percent?}%;"></div>
+            </div>
+            <small><b>{?=$value.score_percent?}%</b></small>
+          </td>
+          <td style="max-width:250px;">
+            <small class="text-danger">
+              <i class="fa fa-warning"></i> {?=$value.missing_items ?: 'Sedang dianalisis mesin kesiapan klaim'?}<br>
+            </small>
+          </td>
+          <td class="text-center" style="white-space:nowrap;">
+            <button type="button" class="btn btn-info btn-xs btn-audit" data-norawat="{?=$value.no_rawat?}" title="Buka Detail Checklist Kesiapan">
+              <i class="fa fa-stethoscope"></i> Checklist
+            </button>
+            <a href="{?=url([ADMIN, 'vedika', 'resume', convertNorawat($value.no_rawat)])?}" class="btn btn-warning btn-xs btn-open-modal-action" title="Lengkapi Resume Medis">
+              <i class="fa fa-pencil"></i> Resume
+            </a>
+            <a href="{?=url([ADMIN, 'vedika', 'ubahdiagnosa', convertNorawat($value.no_rawat)])?}" class="btn btn-primary btn-xs btn-open-modal-action" title="Kelola ICD-10">
+              <i class="fa fa-code"></i> Coding
+            </a>
+          </td>
+        </tr>
+        {/loop}
+        {else}
+        <tr>
+          <td colspan="8" class="text-center" style="padding:30px;">
+            <i class="fa fa-check-circle-o fa-3x text-success"></i><br>
+            <b style="font-size:16px;color:#2f855a;">Tidak ada pasien BPJS yang belum lengkap pada filter ini!</b><br>
+            <span class="text-muted">Semua berkas pasien pada periode ini sudah memenuhi persyaratan atau belum terdata.</span>
+          </td>
+        </tr>
+        {/if}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL AUDIT KESIAPAN KLAIM -->
+<div class="modal fade" id="modalAuditKlaim" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-primary" style="color:#fff;">
+        <button type="button" class="close" data-dismiss="modal" style="color:#fff;">&times;</button>
+        <h4 class="modal-title"><i class="fa fa-shield"></i> Hasil Pemeriksaan Otomatis Kesiapan Klaim (Claim Readiness Checker)</h4>
+      </div>
+      <div class="modal-body">
+        <div id="modalLoading" class="text-center" style="padding:40px;">
+          <i class="fa fa-spinner fa-spin fa-3x text-primary"></i><br>
+          <span style="margin-top:10px;display:block;">Memeriksa integrasi SEP, Resume Medis, DPJP, Koding, Odontogram & Billing...</span>
+        </div>
+        <div id="modalContent" style="display:none;">
+          <div class="well well-sm">
+            <div class="row">
+              <div class="col-md-6">
+                <div>No. Rawat: <b id="m_no_rawat"></b></div>
+                <div>Pasien: <b id="m_nm_pasien"></b> (<span id="m_no_rm"></span>)</div>
+                <div>Poliklinik: <b id="m_poli"></b></div>
+              </div>
+              <div class="col-md-6 text-right">
+                <div style="font-size:16px;">Skor Kesiapan: <b id="m_score" class="text-danger"></b></div>
+                <div>Status: <span id="m_status" class="label label-danger"></span></div>
+              </div>
+            </div>
+          </div>
+          <table class="table table-bordered table-striped" style="font-size:13px;">
+            <thead>
+              <tr class="active">
+                <th>Persyaratan Dokumen / Variabel</th>
+                <th>Sifat</th>
+                <th>Status Kesiapan</th>
+                <th>Alasan & Sumber Data</th>
+                <th>Aksi Perbaikan</th>
+              </tr>
+            </thead>
+            <tbody id="m_checklist_body">
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AKSI CEPAT (RESUME & CODING) -->
+<div class="modal fade" id="modalAction" tabindex="-1" role="dialog" style="z-index:1060;">
+  <div class="modal-dialog modal-lg" role="document" style="width:85%;">
+    <div class="modal-content">
+      <div class="modal-body text-center" style="padding:40px;">
+        <i class="fa fa-spinner fa-spin fa-2x"></i>
+        <p style="margin-top:10px;">Memuat formulir...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(function() {
+    $('.tanggal').datetimepicker({
+      format: 'YYYY-MM',
+      locale: 'id'
+    });
+
+    // Handler Buka Modal Aksi (Resume / Coding)
+    $(document).on('click', '.btn-open-modal-action', function(e) {
+      e.preventDefault();
+      var url = $(this).attr('href');
+      var modal = $('#modalAction');
+      var modalContent = modal.find('.modal-content');
+      modalContent.html('<div class="modal-body text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">Memuat formulir...</p></div>');
+      modal.modal('show');
+      modalContent.load(url);
+    });
+
+    $('.btn-audit').on('click', function() {
+      var no_rawat = $(this).data('norawat');
+      $('#modalAuditKlaim').modal('show');
+      $('#modalLoading').show();
+      $('#modalContent').hide();
+
+      $.ajax({
+        url: '{?=url([ADMIN, "vedika", "checkreadiness"])?}',
+        type: 'GET',
+        data: { no_rawat: no_rawat },
+        dataType: 'json',
+        success: function(res) {
+          $('#modalLoading').hide();
+          $('#modalContent').show();
+
+          if (res.status === 'success') {
+            $('#m_no_rawat').text(res.no_rawat);
+            $('#m_nm_pasien').text(res.pasien.nm_pasien);
+            $('#m_no_rm').text(res.pasien.no_rkm_medis);
+            $('#m_poli').text(res.pasien.nm_poli + ' (' + res.pasien.status_lanjut + ')');
+            $('#m_score').text(res.score_percent + '%');
+            $('#m_status').text(res.status_readiness.replace('_', ' ').toUpperCase());
+
+            var html = '';
+            $.each(res.checklist, function(k, item) {
+              var badge = item.is_ready 
+                ? '<span class="label label-success"><i class="fa fa-check"></i> Siap / Lengkap</span>' 
+                : '<span class="label label-danger"><i class="fa fa-times"></i> Belum Lengkap</span>';
+              
+              var reqBadge = (item.requirement.indexOf('Wajib') !== -1)
+                ? '<span class="label label-danger">Wajib</span>'
+                : '<span class="label label-default">' + item.requirement + '</span>';
+
+              var actionBtn = (item.action_url && !item.is_ready)
+                ? '<a href="' + item.action_url + '" class="btn btn-xs btn-primary btn-open-modal-action">' + item.action_label + '</a>'
+                : '-';
+
+              html += '<tr>' +
+                '<td><b>' + item.name + '</b><br><small class="text-muted">' + (item.detail || '') + '</small></td>' +
+                '<td>' + reqBadge + '</td>' +
+                '<td>' + badge + '<br><small>' + item.value + '</small></td>' +
+                '<td><small><b>Modul:</b> ' + item.source_module + '<br><b>PJ:</b> ' + item.pic + '<br>' + item.reason + '</small></td>' +
+                '<td class="text-center">' + actionBtn + '</td>' +
+                '</tr>';
+            });
+            $('#m_checklist_body').html(html);
+          } else {
+            alert(res.message || 'Gagal memuat status kesiapan');
+          }
+        },
+        error: function() {
+          $('#modalLoading').hide();
+          alert('Terjadi kesalahan koneksi ke server.');
+        }
+      });
+    });
+  });
+</script>
+

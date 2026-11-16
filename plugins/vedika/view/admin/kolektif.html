@@ -1,0 +1,154 @@
+<div class="row">
+  <div class="col-md-8">
+    <h3 style="margin-top:0;">
+      <i class="fa fa-cubes text-primary"></i> Pengajuan Klaim Kolektif (Batching Klaim)
+      <small style="display:block;margin-top:4px;color:#718096;">Pengelompokan pasien siap klaim ke dalam batch resmi bulanan, penguncian data, dan ekspor berkas pengajuan</small>
+    </h3>
+  </div>
+  <div class="col-md-4 text-right">
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalCreateBatch">
+      <i class="fa fa-plus"></i> Buat Batch Baru
+    </button>
+  </div>
+</div>
+<hr style="margin-top:10px;margin-bottom:20px;">
+
+<!-- DAFTAR BATCH KLAIM -->
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title"><b>Daftar Batch Pengajuan Klaim Kolektif</b></h3>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover table-striped" style="margin-bottom:0;font-size:13px;">
+      <thead>
+        <tr class="active">
+          <th>Kode & Nama Batch</th>
+          <th>Periode / Jenis</th>
+          <th>Total Pasien</th>
+          <th>Total Tarif RS</th>
+          <th>Total Tarif INA-CBG</th>
+          <th>Status Batch</th>
+          <th>Dibuat Oleh</th>
+          <th class="text-center">Aksi & Ekspor</th>
+        </tr>
+      </thead>
+      <tbody>
+        {if: count($batches) > 0}
+        {loop: $batches}
+        <tr>
+          <td>
+            <b>{?=$value.kode_batch?}</b><br>
+            <span class="text-primary">{?=$value.nama_batch?}</span>
+            {if: !empty($value.notes)}
+            <br><small class="text-muted">{?=$value.notes?}</small>
+            {/if}
+          </td>
+          <td>
+            {?=$value.periode_bulan?}<br>
+            <span class="label label-default">{?=$value.jenis_pelayanan?}</span>
+          </td>
+          <td>
+            <b style="font-size:15px;">{?=number_format($value.total_pasien, 0)?}</b> Pasien<br>
+            <small class="text-muted">({?=$value.detail_count?} tercatat)</small>
+          </td>
+          <td>
+            <b>Rp {?=number_format($value.total_tarif_rs, 0, ',', '.')?}</b>
+          </td>
+          <td>
+            <b class="text-success">Rp {?=number_format($value.total_tarif_inacbg, 0, ',', '.')?}</b>
+          </td>
+          <td>
+            {if: $value.status_batch == 'draft'}
+            <span class="label label-warning"><i class="fa fa-pencil"></i> DRAFT (Dapat Diedit)</span>
+            {elseif: $value.status_batch == 'locked'}
+            <span class="label label-info"><i class="fa fa-lock"></i> DIKUNCI (Siap Diajukan)</span><br>
+            <small>Kunci: {?=$value.locked_by?}</small>
+            {elseif: $value.status_batch == 'submitted'}
+            <span class="label label-primary"><i class="fa fa-paper-plane"></i> SUDAH DIAJUKAN</span>
+            {elseif: $value.status_batch == 'completed'}
+            <span class="label label-success"><i class="fa fa-check"></i> SELESAI / REKONSILIASI</span>
+            {/if}
+          </td>
+          <td>
+            <small><b>{?=$value.created_by?}</b><br>{?=$value.created_at?}</small>
+          </td>
+          <td class="text-center" style="white-space:nowrap;">
+            <a href="{?=url([ADMIN, 'vedika', 'exportbatch', $value.id])?}" class="btn btn-success btn-xs" title="Unduh CSV/Excel Batch Klaim">
+              <i class="fa fa-download"></i> Ekspor CSV
+            </a>
+            {if: $value.status_batch == 'draft'}
+            <form action="{?=url([ADMIN, 'vedika', 'kolektif'])?}" method="POST" style="display:inline-block;" onsubmit="return confirm('Kunci batch ini? Pasien tidak dapat ditambah atau diubah setelah batch dikunci.');">
+              <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+              <input type="hidden" name="batch_id" value="{?=$value.id?}">
+              <button type="submit" name="lock_batch" class="btn btn-warning btn-xs" title="Kunci Batch Klaim">
+                <i class="fa fa-lock"></i> Kunci Batch
+              </button>
+            </form>
+            {/if}
+          </td>
+        </tr>
+        {/loop}
+        {else}
+        <tr>
+          <td colspan="8" class="text-center" style="padding:30px;">
+            <i class="fa fa-cubes fa-3x text-muted"></i><br>
+            <b style="font-size:15px;color:#4a5568;">Belum ada Batch Pengajuan Klaim Kolektif.</b><br>
+            <span class="text-muted">Klik tombol "Buat Batch Baru" di atas untuk memulai siklus pengajuan klaim bulanan.</span>
+          </td>
+        </tr>
+        {/if}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL CREATE BATCH -->
+<div class="modal fade" id="modalCreateBatch" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form action="{?=url([ADMIN, 'vedika', 'kolektif'])?}" method="POST">
+        <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+        <div class="modal-header bg-primary" style="color:#fff;">
+          <button type="button" class="close" data-dismiss="modal" style="color:#fff;">&times;</button>
+          <h4 class="modal-title"><i class="fa fa-plus-circle"></i> Buat Batch Pengajuan Klaim Kolektif Baru</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Nama Batch Pengajuan:</label>
+            <input type="text" name="nama_batch" class="form-control" placeholder="Contoh: Klaim Rawat Jalan Reguler November 2026" required>
+          </div>
+          <div class="form-group">
+            <label>Periode Bulan Klaim:</label>
+            <input type="text" name="periode_bulan" class="form-control tanggal" value="{?=date('Y-m')?}" required>
+          </div>
+          <div class="form-group">
+            <label>Jenis Pelayanan:</label>
+            <select name="jenis_pelayanan" class="form-control" required>
+              <option value="Ralan">Rawat Jalan (Ralan)</option>
+              <option value="Ranap">Rawat Inap (Ranap)</option>
+              <option value="Campuran">Campuran</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Catatan Pengajuan / Keterangan:</label>
+            <textarea name="notes" class="form-control" rows="3" placeholder="Contoh: Pengajuan klaim reguler FKRTL RSGM Gusti Hasan Aman..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+          <button type="submit" name="create_batch" class="btn btn-primary"><i class="fa fa-save"></i> Buat Batch</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(function() {
+    $('.tanggal').datetimepicker({
+      format: 'YYYY-MM',
+      locale: 'id'
+    });
+  });
+</script>
+
