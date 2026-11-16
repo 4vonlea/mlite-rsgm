@@ -134,6 +134,564 @@ trait ClaimTrait
     }
 
     /**
+     * Helper mendapatkan kredensial BPJS VClaim dari pengaturan SIMRS
+     */
+    protected function getBpjsCredentials()
+    {
+        $consid = $this->consid ?: $this->settings->get('settings.BpjsConsID');
+        $secretkey = $this->secretkey ?: $this->settings->get('settings.BpjsSecretKey');
+        $user_key = $this->user_key ?: $this->settings->get('settings.BpjsUserKey');
+        $api_url = $this->api_url ?: $this->settings->get('settings.BpjsApiUrl');
+        $ppk = $this->settings->get('settings.ppk_bpjs');
+        $nm_instansi = $this->settings->get('settings.nama_instansi');
+
+        if (empty($api_url)) {
+            $api_url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/';
+        }
+        if (!str_ends_with($api_url, '/')) {
+            $api_url .= '/';
+        }
+
+        return [
+            'consid' => $consid,
+            'secretkey' => $secretkey,
+            'user_key' => $user_key,
+            'api_url' => $api_url,
+            'ppk' => $ppk,
+            'nm_instansi' => $nm_instansi
+        ];
+    }
+
+    /**
+     * Helper memanggil Web Service BPJS VClaim dan mendekripsi responnya
+     */
+    protected function callBpjsVclaim($endpoint, $method = 'GET', $datafields = [])
+    {
+        $cred = $this->getBpjsCredentials();
+        if (empty($cred['consid']) || empty($cred['secretkey']) || empty($cred['user_key'])) {
+            return [
+                'status' => 'error',
+                'message' => 'Konfigurasi BPJS VClaim (ConsID / SecretKey / UserKey) belum diatur di Pengaturan SIMRS.'
+            ];
+        }
+
+        $tStamp = strval(time());
+        $key = $cred['consid'] . $cred['secretkey'] . $tStamp;
+        $url = $cred['api_url'] . ltrim($endpoint, '/');
+
+        if ($method === 'GET') {
+            $output = \Systems\Lib\BpjsService::get($url, NULL, $cred['consid'], $cred['secretkey'], $cred['user_key'], $tStamp);
+        } else {
+            $output = \Systems\Lib\BpjsService::post($url, $datafields, $cred['consid'], $cred['secretkey'], $cred['user_key'], $tStamp);
+        }
+
+        if (empty($output)) {
+            $lastErr = \Systems\Lib\BpjsService::getStatus();
+            return [
+                'status' => 'error',
+                'message' => 'Gagal menghubungi server BPJS: ' . ($lastErr ?: 'Koneksi timeout atau tidak ada respon.')
+            ];
+        }
+
+        $json = json_decode($output, true);
+        if (!$json || !isset($json['metaData']['code'])) {
+            return [
+                'status' => 'error',
+                'message' => 'Respon BPJS tidak valid: ' . substr($output, 0, 200)
+            ];
+        }
+
+        $code = (int)$json['metaData']['code'];
+        $msg = $json['metaData']['message'] ?? '';
+
+        if ($code !== 200) {
+            return [
+                'status' => 'error',
+                'code' => $code,
+                'message' => "BPJS [$code]: " . $msg
+            ];
+        }
+
+        // Dekripsi data response BPJS VClaim
+        $resp = $json['response'] ?? null;
+        if (is_string($resp) && !empty($resp)) {
+            $stringDecrypt = stringDecrypt($key, $resp);
+            if (!empty($stringDecrypt)) {
+                $decompressed = \LZCompressor\LZString::decompressFromEncodedURIComponent($stringDecrypt);
+                $respData = json_decode($decompressed, true);
+                if ($respData !== null) {
+                    $resp = $respData;
+                } else {
+                    $resp = $decompressed;
+                }
+            }
+        }
+
+        return [
+            'status' => 'success',
+            'code' => 200,
+            'message' => $msg,
+            'response' => $resp
+        ];
+    }
+
+    /**
+     * Cari nomor SEP terkini di BPJS berdasarkan Nomor Kartu Peserta
+     */
+    protected function findRecentSepFromBpjs($noKartu, $tglMulai, $tglAkhir, $preferredDate = '')
+    {
+        if (empty($noKartu) || empty($tglMulai) || empty($tglAkhir)) {
+            return null;
+        }
+
+        $endpoint = 'monitoring/HistoriPelayanan/NoKartu/' . $noKartu . '/tglMulai/' . $tglMulai . '/tglAkhir/' . $tglAkhir;
+        $call = $this->callBpjsVclaim($endpoint, 'GET');
+
+        if ($call['status'] !== 'success' || empty($call['response'])) {
+            return null;
+        }
+
+        $resp = $call['response'];
+        $list = $resp['histori'] ?? ($resp['list'] ?? []);
+        if (empty($list) || !is_array($list)) {
+            return null;
+        }
+
+        // 1. Prioritaskan SEP yang tanggalnya sama persis dengan tanggal registrasi
+        if (!empty($preferredDate)) {
+            foreach ($list as $item) {
+                if (!empty($item['noSep']) && isset($item['tglSep']) && $item['tglSep'] === $preferredDate) {
+                    return $item['noSep'];
+                }
+            }
+        }
+
+        // 2. Jika tidak ada yang tanggalnya persis, ambil item teratas (paling relevan)
+        foreach ($list as $item) {
+            if (!empty($item['noSep'])) {
+                return $item['noSep'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Cari data peserta di BPJS berdasarkan NIK
+     */
+    protected function findPesertaByNikFromBpjs($nik, $tgl)
+    {
+        if (empty($nik) || empty($tgl)) {
+            return null;
+        }
+
+        $endpoint = 'Peserta/nik/' . $nik . '/tglSEP/' . $tgl;
+        $call = $this->callBpjsVclaim($endpoint, 'GET');
+
+        if ($call['status'] === 'success' && !empty($call['response'])) {
+            $resp = $call['response'];
+            return $resp['peserta'] ?? ($resp['response']['peserta'] ?? $resp);
+        }
+
+        return null;
+    }
+
+    /**
+     * Format dan bersihkan data SEP agar sesuai dengan skema tabel bridging_sep
+     */
+    protected function cleanSepRecord(array $input, $table = 'bridging_sep')
+    {
+        $user_db = mb_substr(isset_or($input['user'], 'Admin Vedika'), 0, 20, 'UTF-8');
+
+        $tglpulang = isset_or($input['tglpulang'], '');
+        if (empty($tglpulang) || $tglpulang == '0000-00-00' || $tglpulang == '0000-00-00 00:00:00') {
+            $tglpulang = '1900-01-01 00:00:00';
+        }
+
+        $tglkkl = isset_or($input['tglkkl'], '');
+        if (empty($tglkkl) || $tglkkl == '0000-00-00') {
+            $tglkkl = '1900-01-01';
+        }
+
+        $tglsep = !empty($input['tglsep']) ? $input['tglsep'] : date('Y-m-d');
+        $tglrujukan = !empty($input['tglrujukan']) ? $input['tglrujukan'] : $tglsep;
+
+        return [
+            'no_sep' => mb_substr(isset_or($input['no_sep'], ''), 0, 40, 'UTF-8'),
+            'no_rawat' => mb_substr(isset_or($input['no_rawat'], ''), 0, 17, 'UTF-8'),
+            'tglsep' => $tglsep,
+            'tglrujukan' => $tglrujukan,
+            'no_rujukan' => mb_substr(isset_or($input['no_rujukan'], isset_or($input['norujukan'], '')), 0, 40, 'UTF-8'),
+            'kdppkrujukan' => mb_substr(isset_or($input['kdppkrujukan'], ''), 0, 12, 'UTF-8'),
+            'nmppkrujukan' => mb_substr(isset_or($input['nmppkrujukan'], ''), 0, 200, 'UTF-8'),
+            'kdppkpelayanan' => mb_substr(isset_or($input['kdppkpelayanan'], ''), 0, 12, 'UTF-8'),
+            'nmppkpelayanan' => mb_substr(isset_or($input['nmppkpelayanan'], ''), 0, 200, 'UTF-8'),
+            'jnspelayanan' => (isset_or($input['jnspelayanan'], '2') == '1' || isset_or($input['jnspelayanan'], '2') == 'Rawat Inap') ? '1' : '2',
+            'catatan' => mb_substr(isset_or($input['catatan'], ''), 0, 100, 'UTF-8'),
+            'diagawal' => mb_substr(isset_or($input['diagawal'], ''), 0, 10, 'UTF-8'),
+            'nmdiagnosaawal' => mb_substr(isset_or($input['nmdiagnosaawal'], ''), 0, 400, 'UTF-8'),
+            'kdpolitujuan' => mb_substr(isset_or($input['kdpolitujuan'], ''), 0, 15, 'UTF-8'),
+            'nmpolitujuan' => mb_substr(isset_or($input['nmpolitujuan'], ''), 0, 50, 'UTF-8'),
+            'klsrawat' => in_array(isset_or($input['klsrawat'], ''), ['1', '2', '3']) ? $input['klsrawat'] : '3',
+            'klsnaik' => '',
+            'pembiayaan' => '',
+            'pjnaikkelas' => '',
+            'lakalantas' => in_array(isset_or($input['lakalantas'], ''), ['0', '1', '2', '3']) ? $input['lakalantas'] : '0',
+            'user' => $user_db,
+            'nomr' => mb_substr(isset_or($input['nomr'], ''), 0, 15, 'UTF-8'),
+            'nama_pasien' => mb_substr(isset_or($input['nama_pasien'], ''), 0, 100, 'UTF-8'),
+            'tanggal_lahir' => !empty($input['tanggal_lahir']) ? $input['tanggal_lahir'] : '1900-01-01',
+            'peserta' => mb_substr(isset_or($input['peserta'], ''), 0, 100, 'UTF-8'),
+            'jkel' => in_array(isset_or($input['jkel'], isset_or($input['jenis_kelamin'], '')), ['L', 'P']) ? isset_or($input['jkel'], isset_or($input['jenis_kelamin'], '')) : 'L',
+            'no_kartu' => mb_substr(isset_or($input['no_kartu'], ''), 0, 25, 'UTF-8'),
+            'tglpulang' => $tglpulang,
+            'asal_rujukan' => isset_or($input['asal_rujukan'], '1. Faskes 1') == '2. Faskes 2(RS)' ? '2. Faskes 2(RS)' : '1. Faskes 1',
+            'eksekutif' => (isset_or($input['eksekutif'], '0. Tidak') == '1.Ya' || isset_or($input['eksekutif'], '0') == '1') ? '1.Ya' : '0. Tidak',
+            'cob' => (isset_or($input['cob'], '0. Tidak') == '1.Ya' || isset_or($input['cob'], '0') == '1') ? '1.Ya' : '0. Tidak',
+            'notelep' => mb_substr(isset_or($input['notelep'], '-'), 0, 40, 'UTF-8'),
+            'katarak' => (isset_or($input['katarak'], '0. Tidak') == '1.Ya' || isset_or($input['katarak'], '0') == '1') ? '1.Ya' : '0. Tidak',
+            'tglkkl' => $tglkkl,
+            'keterangankkl' => mb_substr(isset_or($input['keterangankkl'], '-'), 0, 100, 'UTF-8'),
+            'suplesi' => (isset_or($input['suplesi'], '0. Tidak') == '1.Ya' || isset_or($input['suplesi'], '0') == '1') ? '1.Ya' : '0. Tidak',
+            'no_sep_suplesi' => mb_substr(isset_or($input['no_sep_suplesi'], '-'), 0, 40, 'UTF-8'),
+            'kdprop' => mb_substr(isset_or($input['kdprop'], '-'), 0, 10, 'UTF-8'),
+            'nmprop' => mb_substr(isset_or($input['nmprop'], '-'), 0, 50, 'UTF-8'),
+            'kdkab' => mb_substr(isset_or($input['kdkab'], '-'), 0, 10, 'UTF-8'),
+            'nmkab' => mb_substr(isset_or($input['nmkab'], '-'), 0, 50, 'UTF-8'),
+            'kdkec' => mb_substr(isset_or($input['kdkec'], '-'), 0, 10, 'UTF-8'),
+            'nmkec' => mb_substr(isset_or($input['nmkec'], '-'), 0, 50, 'UTF-8'),
+            'noskdp' => mb_substr(isset_or($input['noskdp'], '0'), 0, 40, 'UTF-8'),
+            'kddpjp' => mb_substr(isset_or($input['kddpjp'], '-'), 0, 10, 'UTF-8'),
+            'nmdpdjp' => mb_substr(isset_or($input['nmdpdjp'], '-'), 0, 100, 'UTF-8'),
+            'tujuankunjungan' => in_array(isset_or($input['tujuankunjungan'], '0'), ['0', '1', '2']) ? isset_or($input['tujuankunjungan'], '0') : '0',
+            'flagprosedur' => in_array(isset_or($input['flagprosedur'], ''), ['', '0', '1']) ? isset_or($input['flagprosedur'], '') : '',
+            'penunjang' => in_array(isset_or($input['penunjang'], ''), ['', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']) ? isset_or($input['penunjang'], '') : '',
+            'asesmenpelayanan' => in_array(isset_or($input['asesmenpelayanan'], ''), ['', '1', '2', '3', '4', '5']) ? isset_or($input['asesmenpelayanan'], '') : '',
+            'kddpjplayanan' => mb_substr(isset_or($input['kddpjplayanan'], '-'), 0, 10, 'UTF-8'),
+            'nmdpjplayanan' => mb_substr(isset_or($input['nmdpjplayanan'], '-'), 0, 100, 'UTF-8')
+        ];
+    }
+
+    /**
+     * Simpan data SEP ke tabel lokal bridging_sep
+     */
+    protected function saveSepToLocal(array $dataSep)
+    {
+        $record = $this->cleanSepRecord($dataSep, 'bridging_sep');
+        if (empty($record['no_sep'])) {
+            return false;
+        }
+
+        $existSep = $this->db('bridging_sep')->where('no_sep', $record['no_sep'])->oneArray();
+        if ($existSep) {
+            return $this->db('bridging_sep')->where('no_sep', $record['no_sep'])->update($record);
+        }
+
+        // Jika no_rawat sudah pernah tercatat tapi nomor SEP beda (misal placeholder atau kosong)
+        if (!empty($record['no_rawat'])) {
+            $existRawat = $this->db('bridging_sep')->where('no_rawat', $record['no_rawat'])->oneArray();
+            if ($existRawat) {
+                return $this->db('bridging_sep')->where('no_rawat', $record['no_rawat'])->update($record);
+            }
+        }
+
+        return $this->db('bridging_sep')->save($record);
+    }
+
+    /**
+     * Tarik detail SEP dari BPJS dan simpan ke database lokal
+     */
+    protected function pullAndSaveSepFromBpjs($noSep, $noRawat = '')
+    {
+        if (empty($noSep)) {
+            return ['status' => 'error', 'message' => 'Nomor SEP tidak valid'];
+        }
+
+        $endpoint = 'SEP/' . $noSep;
+        $call = $this->callBpjsVclaim($endpoint, 'GET');
+
+        if ($call['status'] !== 'success' || empty($call['response'])) {
+            return [
+                'status' => 'error',
+                'message' => $call['message'] ?? 'Gagal mengambil detail SEP dari server BPJS.'
+            ];
+        }
+
+        $resp = $call['response'];
+        $sep = $resp['sep'] ?? ($resp['response'] ?? $resp);
+        if (empty($sep['noSep'])) {
+            return ['status' => 'error', 'message' => 'Format data SEP BPJS tidak valid.'];
+        }
+
+        $no_kartu = $sep['peserta']['noKartu'] ?? ($sep['noKartu'] ?? '');
+        $tglsep = $sep['tglSep'] ?? date('Y-m-d');
+
+        // Look up no_rawat if not provided
+        if (empty($noRawat) && !empty($no_kartu)) {
+            $reg = $this->db('reg_periksa')
+                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                ->where('pasien.no_peserta', $no_kartu)
+                ->where('reg_periksa.tgl_registrasi', $tglsep)
+                ->desc('reg_periksa.jam_reg')
+                ->oneArray();
+            if ($reg) {
+                $noRawat = $reg['no_rawat'];
+            }
+        }
+
+        $jenis_pelayanan = '2';
+        if (($sep['jnsPelayanan'] ?? '') === 'Rawat Inap' || ($sep['jnsPelayanan'] ?? '') === '1') {
+            $jenis_pelayanan = '1';
+        }
+
+        $diag_raw = $sep['diagnosa'] ?? '';
+        $diag_parts = explode(' - ', $diag_raw, 2);
+        $diag_code = trim($diag_parts[0] ?? '');
+        $diag_name = trim($diag_parts[1] ?? $diag_raw);
+
+        $nm_poli = $sep['poli'] ?? '';
+        $kd_poli = '';
+        if (!empty($nm_poli)) {
+            $map_poli = $this->db('maping_poli_bpjs')->where('nm_poli_bpjs', $nm_poli)->orWhere('kd_poli_bpjs', $nm_poli)->oneArray();
+            $kd_poli = $map_poli['kd_poli_bpjs'] ?? $nm_poli;
+        }
+
+        $dpjp = $sep['dpjp'] ?? [];
+        $kd_dpjp = is_array($dpjp) ? ($dpjp['kdDPJP'] ?? '') : '';
+        $nm_dpjp = is_array($dpjp) ? ($dpjp['nmDPJP'] ?? '') : '';
+        if (empty($kd_dpjp) && isset($sep['kontrol'])) {
+            $kd_dpjp = $sep['kontrol']['kdDokter'] ?? '';
+            $nm_dpjp = $sep['kontrol']['nmDokter'] ?? '';
+        }
+
+        $kls_rawat = '3';
+        $kls_rawat_raw = $sep['kelasRawat'] ?? ($sep['klsRawat']['klsRawatHak'] ?? '3');
+        if (stripos($kls_rawat_raw, '1') !== false) $kls_rawat = '1';
+        elseif (stripos($kls_rawat_raw, '2') !== false) $kls_rawat = '2';
+
+        $cred = $this->getBpjsCredentials();
+        $userFullName = $this->core ? $this->core->getUserInfo('fullname', null, true) : '';
+        $userName = $this->core ? $this->core->getUserInfo('username', null, true) : '';
+        $userVal = !empty($userFullName) ? $userFullName : (!empty($userName) ? $userName : 'Admin Vedika');
+
+        $dataInsert = [
+            'no_sep' => $sep['noSep'],
+            'no_rawat' => $noRawat,
+            'tglsep' => $tglsep,
+            'tglrujukan' => $sep['tglRujukan'] ?? $tglsep,
+            'no_rujukan' => $sep['noRujukan'] ?? '',
+            'kdppkrujukan' => $sep['provPerujuk']['kdProvider'] ?? $cred['ppk'],
+            'nmppkrujukan' => $sep['provPerujuk']['nmProvider'] ?? $cred['nm_instansi'],
+            'kdppkpelayanan' => $cred['ppk'],
+            'nmppkpelayanan' => $cred['nm_instansi'],
+            'jnspelayanan' => $jenis_pelayanan,
+            'catatan' => $sep['catatan'] ?? '',
+            'diagawal' => $diag_code,
+            'nmdiagnosaawal' => $diag_name,
+            'kdpolitujuan' => $kd_poli,
+            'nmpolitujuan' => $nm_poli,
+            'klsrawat' => $kls_rawat,
+            'klsnaik' => '',
+            'pembiayaan' => '',
+            'pjnaikkelas' => '',
+            'lakalantas' => '0',
+            'user' => $userVal,
+            'nomr' => $sep['peserta']['noMr'] ?? ($sep['noMr'] ?? ''),
+            'nama_pasien' => $sep['peserta']['nama'] ?? '',
+            'tanggal_lahir' => $sep['peserta']['tglLahir'] ?? '1900-01-01',
+            'peserta' => $sep['peserta']['jnsPeserta'] ?? '',
+            'jkel' => ($sep['peserta']['kelamin'] ?? 'L') == 'P' ? 'P' : 'L',
+            'no_kartu' => $no_kartu,
+            'tglpulang' => '1900-01-01 00:00:00',
+            'asal_rujukan' => '1. Faskes 1',
+            'eksekutif' => ($sep['poliEksekutif'] ?? '0') == '1' ? '1.Ya' : '0. Tidak',
+            'cob' => '0. Tidak',
+            'notelep' => $sep['peserta']['noTelepon'] ?? ($sep['noTelp'] ?? '-'),
+            'katarak' => '0. Tidak',
+            'tglkkl' => '1900-01-01',
+            'keterangankkl' => '-',
+            'suplesi' => '0. Tidak',
+            'no_sep_suplesi' => '-',
+            'kdprop' => '-',
+            'nmprop' => '-',
+            'kdkab' => '-',
+            'nmkab' => '-',
+            'kdkec' => '-',
+            'nmkec' => '-',
+            'noskdp' => '0',
+            'kddpjp' => $kd_dpjp ?: '-',
+            'nmdpdjp' => $nm_dpjp ?: '-',
+            'tujuankunjungan' => '0',
+            'flagprosedur' => '',
+            'penunjang' => '',
+            'asesmenpelayanan' => '',
+            'kddpjplayanan' => $kd_dpjp ?: '-',
+            'nmdpjplayanan' => $nm_dpjp ?: '-'
+        ];
+
+        $saveRes = $this->saveSepToLocal($dataInsert);
+        if (!$saveRes) {
+            return ['status' => 'error', 'message' => 'Gagal menyimpan SEP ke database lokal bridging_sep.'];
+        }
+
+        // Update no_peserta pasien jika sebelumnya kosong
+        $nomr = $dataInsert['nomr'];
+        if (!empty($nomr) && !empty($no_kartu)) {
+            $this->db('pasien')->where('no_rkm_medis', $nomr)->update(['no_peserta' => $no_kartu]);
+        }
+
+        return [
+            'status' => 'success',
+            'no_sep' => $sep['noSep'],
+            'no_rawat' => $noRawat,
+            'data' => $dataInsert
+        ];
+    }
+
+    /**
+     * AJAX Endpoint: Tarik dan Sinkronisasi SEP langsung dari server BPJS Kesehatan
+     */
+    public function anyTariksepbpjs()
+    {
+        header('Content-Type: application/json');
+
+        $no_rawat = $_POST['no_rawat'] ?? ($_GET['no_rawat'] ?? '');
+        $manual_sep = trim((string)($_POST['no_sep'] ?? ($_GET['no_sep'] ?? '')));
+        $force = (int)($_POST['force'] ?? ($_GET['force'] ?? 0));
+
+        $no_rawat = str_replace('_', '/', trim((string)$no_rawat));
+        if (strpos($no_rawat, '/') === false && strlen($no_rawat) == 14) {
+            $no_rawat = revertNorawat($no_rawat);
+        }
+
+        if (empty($no_rawat)) {
+            echo json_encode(['status' => 'error', 'message' => 'Nomor rawat tidak disertakan.']);
+            exit();
+        }
+
+        // 1. Cek apakah di database lokal sudah ada SEP valid untuk no_rawat ini
+        if (!$force && empty($manual_sep)) {
+            $existing = $this->db('bridging_sep')->where('no_rawat', $no_rawat)->oneArray();
+            if ($existing && !empty($existing['no_sep']) && $existing['no_sep'] !== '-') {
+                $engine = $this->getClaimEngine();
+                $readiness = $engine->checkPatient($no_rawat);
+                echo json_encode([
+                    'status' => 'success',
+                    'is_cached' => true,
+                    'no_rawat' => $no_rawat,
+                    'no_sep' => $existing['no_sep'],
+                    'score_percent' => $readiness['score_percent'],
+                    'status_readiness' => $readiness['status_readiness'],
+                    'readiness' => $readiness,
+                    'message' => "SEP {$existing['no_sep']} sudah tersimpan di database lokal."
+                ]);
+                exit();
+            }
+        }
+
+        // 2. Jika user menginput nomor SEP manual
+        if (!empty($manual_sep)) {
+            $pullRes = $this->pullAndSaveSepFromBpjs($manual_sep, $no_rawat);
+            if ($pullRes['status'] === 'success') {
+                $engine = $this->getClaimEngine();
+                $readiness = $engine->checkPatient($no_rawat);
+                echo json_encode([
+                    'status' => 'success',
+                    'no_rawat' => $no_rawat,
+                    'no_sep' => $manual_sep,
+                    'score_percent' => $readiness['score_percent'],
+                    'status_readiness' => $readiness['status_readiness'],
+                    'readiness' => $readiness,
+                    'message' => "SEP {$manual_sep} berhasil ditarik dan dihubungkan ke nomor rawat {$no_rawat}!"
+                ]);
+                exit();
+            } else {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Gagal menarik SEP ' . $manual_sep . ' dari BPJS: ' . ($pullRes['message'] ?? 'Data tidak ditemukan.')
+                ]);
+                exit();
+            }
+        }
+
+        // 3. Pencarian otomatis berdasarkan identitas pasien (No. Peserta / NIK)
+        $reg = $this->db('reg_periksa')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->where('reg_periksa.no_rawat', $no_rawat)
+            ->select(['reg_periksa.no_rawat', 'reg_periksa.tgl_registrasi', 'reg_periksa.no_rkm_medis', 'pasien.nm_pasien', 'pasien.no_peserta', 'pasien.no_ktp'])
+            ->oneArray();
+
+        if (!$reg) {
+            echo json_encode(['status' => 'error', 'message' => 'Data registrasi pasien tidak ditemukan di SIMRS.']);
+            exit();
+        }
+
+        $noKartu = trim((string)$reg['no_peserta']);
+        $nik = trim((string)$reg['no_ktp']);
+        $tglReg = $reg['tgl_registrasi'];
+
+        // Jika nomor kartu kosong tetapi ada NIK, coba cari nomor kartu dari BPJS
+        if (empty($noKartu) && !empty($nik) && strlen($nik) >= 15) {
+            $pesertaBpjs = $this->findPesertaByNikFromBpjs($nik, $tglReg);
+            if ($pesertaBpjs && !empty($pesertaBpjs['noKartu'])) {
+                $noKartu = $pesertaBpjs['noKartu'];
+                // Update ke database pasien agar tersimpan permanen
+                $this->db('pasien')->where('no_rkm_medis', $reg['no_rkm_medis'])->update(['no_peserta' => $noKartu]);
+            }
+        }
+
+        if (empty($noKartu)) {
+            echo json_encode([
+                'status' => 'not_found',
+                'require_manual' => true,
+                'no_rawat' => $no_rawat,
+                'message' => "Pasien {$reg['nm_pasien']} belum memiliki No. Kartu BPJS maupun NIK pada database pasien. Silakan masukkan nomor SEP manual."
+            ]);
+            exit();
+        }
+
+        // Cari riwayat SEP di BPJS pada kurun waktu tanggal registrasi (+/- 3 hari)
+        $tglMulai = date('Y-m-d', strtotime($tglReg . ' -3 days'));
+        $tglAkhir = date('Y-m-d', strtotime($tglReg . ' +2 days'));
+
+        $foundSep = $this->findRecentSepFromBpjs($noKartu, $tglMulai, $tglAkhir, $tglReg);
+
+        if (!$foundSep) {
+            echo json_encode([
+                'status' => 'not_found',
+                'require_manual' => true,
+                'no_rawat' => $no_rawat,
+                'no_kartu' => $noKartu,
+                'message' => "Tidak ditemukan riwayat SEP untuk No. Kartu {$noKartu} di server BPJS antara {$tglMulai} s/d {$tglAkhir}."
+            ]);
+            exit();
+        }
+
+        // Tarik detail SEP dan simpan ke bridging_sep
+        $pullRes = $this->pullAndSaveSepFromBpjs($foundSep, $no_rawat);
+        if ($pullRes['status'] === 'success') {
+            $engine = $this->getClaimEngine();
+            $readiness = $engine->checkPatient($no_rawat);
+            echo json_encode([
+                'status' => 'success',
+                'no_rawat' => $no_rawat,
+                'no_sep' => $foundSep,
+                'score_percent' => $readiness['score_percent'],
+                'status_readiness' => $readiness['status_readiness'],
+                'readiness' => $readiness,
+                'message' => "Berhasil menarik SEP {$foundSep} dari BPJS! Skor kesiapan meningkat menjadi {$readiness['score_percent']}%."
+            ]);
+            exit();
+        } else {
+            echo json_encode([
+                'status' => 'error',
+                'message' => "Ditemukan nomor SEP {$foundSep}, namun gagal menarik detailnya: " . ($pullRes['message'] ?? 'Error BPJS')
+            ]);
+            exit();
+        }
+    }
+
+    /**
      * Sub-Menu 2: Pasien Belum Siap Klaim
      */
     public function anyBelumsiap()
@@ -204,7 +762,7 @@ trait ClaimTrait
 
         $sql = "
             SELECT reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, reg_periksa.jam_reg, reg_periksa.status_lanjut,
-                   pasien.nm_pasien, pasien.no_peserta, poliklinik.nm_poli, dokter.nm_dokter,
+                   pasien.nm_pasien, pasien.no_peserta, pasien.no_ktp, poliklinik.nm_poli, dokter.nm_dokter,
                    COALESCE(s.no_sep, si.no_sep, r.no_sep, '-') AS no_sep,
                    COALESCE(r.score_percent, 0) AS score_percent,
                    COALESCE(r.status_readiness, 'belum_lengkap') AS status_readiness,
@@ -361,7 +919,7 @@ trait ClaimTrait
 
         $sql = "
             SELECT reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, reg_periksa.jam_reg, reg_periksa.status_lanjut,
-                   pasien.nm_pasien, pasien.no_peserta, poliklinik.nm_poli, dokter.nm_dokter,
+                   pasien.nm_pasien, pasien.no_peserta, pasien.no_ktp, poliklinik.nm_poli, dokter.nm_dokter,
                    COALESCE(s.no_sep, si.no_sep, r.no_sep, '-') AS no_sep,
                    r.score_percent, r.status_readiness,
                    v.verif_admin_status, v.verif_medis_status, v.is_internal_verified,
