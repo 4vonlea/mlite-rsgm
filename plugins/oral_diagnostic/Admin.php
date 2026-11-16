@@ -503,6 +503,59 @@ class Admin extends AdminModule
       exit();
     }
 
+    public function postUbahDokter()
+    {
+        $role = $this->core->getUserInfo('role');
+        if ($role != 'admin' && $role != 'paramedis') {
+            echo json_encode(['status' => 'error', 'message' => 'Role Anda tidak diizinkan mengubah dokter']);
+            exit();
+        }
+
+        $no_rawat = $_POST['no_rawat'] ?? '';
+        $kd_dokter = $_POST['kd_dokter'] ?? '';
+
+        if (empty($no_rawat) || empty($kd_dokter)) {
+            echo json_encode(['status' => 'error', 'message' => 'Data tidak lengkap']);
+            exit();
+        }
+
+        // Check if data exists
+        $count1 = $this->db('rawat_jl_dr')->where('no_rawat', $no_rawat)->count();
+        $count2 = $this->db('rawat_jl_pr')->where('no_rawat', $no_rawat)->count();
+        $count3 = $this->db('rawat_jl_drpr')->where('no_rawat', $no_rawat)->count();
+        $count4 = $this->db('pemeriksaan_ralan')->where('no_rawat', $no_rawat)->count();
+        $count5 = $this->db('resep_obat')->where('no_rawat', $no_rawat)->count();
+
+        if (($count1 + $count2 + $count3 + $count4 + $count5) > 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Kunjungan sudah memiliki rincian tindakan atau data lainnya. Dokter tidak dapat diubah.']);
+            exit();
+        }
+
+        try {
+            $od = $this->db('mlite_pendaftaran_oral_diagnostic')->where('no_rawat', $no_rawat)->oneArray();
+            if ($od) {
+                $this->db('mlite_pendaftaran_oral_diagnostic')->where('no_rawat', $no_rawat)->save(['kd_dokter' => $kd_dokter]);
+            }
+
+            $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+            if ($reg) {
+                $this->db('reg_periksa')->where('no_rawat', $no_rawat)->save(['kd_dokter' => $kd_dokter]);
+
+                if (isset($reg['no_reg']) && isset($reg['tgl_registrasi'])) {
+                    $this->db('booking_registrasi')
+                        ->where('no_reg', $reg['no_reg'])
+                        ->where('tanggal_periksa', $reg['tgl_registrasi'])
+                        ->save(['kd_dokter' => $kd_dokter]);
+                }
+            }
+
+            echo json_encode(['status' => 'success', 'message' => 'Dokter berhasil diubah']);
+        } catch (\PDOException $e) {
+            echo json_encode(['status' => 'error', 'message' => 'Gagal mengubah dokter: ' . $e->getMessage()]);
+        }
+        exit();
+    }
+
     public function postCheckinPasien()
     {
       $no_rawat = $_POST['no_rawat'] ?? '';

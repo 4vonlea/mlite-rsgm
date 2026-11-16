@@ -158,6 +158,9 @@ $("#display").on("click",".riwayat_perawatan", function(event){
 
 // ketika baris data diklik
 $("#display").on("click", ".edit", function(event){
+  if ($(event.target).closest('a[href="#ubah_dokter"]').length) {
+    return;
+  }
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
   var url = baseURL + '/oral_diagnostic/form?t=' + mlite.token;
@@ -1241,6 +1244,65 @@ $("#form_soap").on("click",".assesment", function(event){
         $('.tampildata_assessment').load(baseURL + '/oral_diagnostic/assessmenttampil/' + set_no_rawat + '?t=' + mlite.token);
       });
   }).modal();
+  return false;
+});
+
+$(document).off('click', 'a[href="#ubah_dokter"]').on('click', 'a[href="#ubah_dokter"]', function(event){
+  var baseURL = mlite.url + '/' + mlite.admin;
+  event.preventDefault();
+  var no_rawat = $(this).attr("data-no_rawat");
+  var kd_dokter = $(this).attr("data-kd_dokter");
+  var url = baseURL + '/oral_diagnostic/ubahdokter?t=' + mlite.token;
+
+  var selectHtml = $('#hidden_dokter_select').html();
+
+  bootbox.dialog({
+    title: "Ubah Dokter Kunjungan",
+    message: "<p>Silahkan pilih dokter pengganti:</p>" + selectHtml,
+    buttons: {
+      cancel: {
+        label: "Batal",
+        className: 'btn-default'
+      },
+      ok: {
+        label: "Simpan",
+        className: 'btn-primary',
+        callback: function() {
+          var new_kd_dokter = $('.bootbox #pilih_ubah_dokter').val();
+          $.post(url, {
+            no_rawat: no_rawat,
+            kd_dokter: new_kd_dokter
+          }, function(data) {
+            var res = {};
+            try { res = typeof data === 'object' ? data : JSON.parse(data); } catch(e) { res = {}; }
+            if (res.status == 'success') {
+              $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+              res.message+
+              "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+              "</div>").show();
+              if ($('#submit_periode_rawat_jalan').length) {
+                $('#submit_periode_rawat_jalan').trigger('click');
+              } else {
+                $("#display").load(baseURL + '/oral_diagnostic/display?t=' + mlite.token);
+              }
+            } else {
+              bootbox.alert(res.message || 'Gagal mengubah dokter.');
+            }
+          });
+        }
+      }
+    }
+  });
+
+  $('.bootbox #pilih_ubah_dokter').val(kd_dokter);
+  $('.bootbox select').selectator({
+    useDimmer: false,
+    useSearch: true,
+    labels: {
+      search: 'Cari...'
+    }
+  });
+  event.stopPropagation();
   return false;
 });
 

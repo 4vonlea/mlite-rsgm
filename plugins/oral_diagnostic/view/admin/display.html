@@ -88,7 +88,11 @@
             {/if}
           </td>
           <td class="edit rsgm-cell-wrap" data-no_rawat="{?=isset_or($value.no_rawat)?}">
-            <span>{?=isset_or($value.nm_dokter)?}</span>
+            {if: $this->core->getUserInfo('role') == 'paramedis' || $this->core->getUserInfo('role') == 'admin'}
+              <a href="#ubah_dokter" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-kd_dokter="{?=isset_or($value.kd_dokter)?}" title="Klik untuk mengubah dokter" class="rsgm-doctor-link">{?=isset_or($value.nm_dokter)?}</a>
+            {else}
+              <span>{?=isset_or($value.nm_dokter)?}</span>
+            {/if}
             {if: !empty($value.dokter_rujukan)}
             <div><span class="rsgm-cell-sub-alert" title="Dokter Perujuk / Spesialis Tujuan"><i class="fa fa-user-md"></i> {$value.dokter_rujukan}</span></div>
             {/if}
@@ -763,4 +767,12 @@
   $('body').on('hidden.bs.modal', '.modal', function () {
       $(this).removeData('bs.modal');
   });
+</script>
+
+<script type="text/template" id="hidden_dokter_select">
+    <select id="pilih_ubah_dokter" class="form-control">
+        {loop: $rawat_jalan.dokter}
+        <option value="{?=isset_or($value.kd_dokter)?}">{?=isset_or($value.nm_dokter)?}</option>
+        {/loop}
+    </select>
 </script>
