@@ -87,7 +87,13 @@
             <div><span class="rsgm-cell-sub-alert"><i class="fa fa-share"></i> {$value.poli_rujukan}</span></div>
             {/if}
           </td>
-          <td class="edit rsgm-cell-wrap" data-no_rawat="{?=isset_or($value.no_rawat)?}">{?=isset_or($value.nm_dokter)?}</td>
+          <td class="edit rsgm-cell-wrap" data-no_rawat="{?=isset_or($value.no_rawat)?}">
+            {if: $this->core->getUserInfo('role') == 'paramedis' || $this->core->getUserInfo('role') == 'admin'}
+              <a href="#ubah_dokter" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-kd_dokter="{?=isset_or($value.kd_dokter)?}" title="Klik untuk mengubah dokter" class="rsgm-doctor-link">{?=isset_or($value.nm_dokter)?}</a>
+            {else}
+              {?=isset_or($value.nm_dokter)?}
+            {/if}
+          </td>
           <td style="white-space: nowrap;">
           {if: $value.kd_pj == 'BPJ'}
             {if: $cek_vclaim}
@@ -756,4 +762,12 @@
   $('body').on('hidden.bs.modal', '.modal', function () {
       $(this).removeData('bs.modal');
   });
+</script>
+
+<script type="text/template" id="hidden_dokter_select">
+    <select id="pilih_ubah_dokter" class="form-control">
+        {loop: $rawat_jalan.dokter}
+        <option value="{?=isset_or($value.kd_dokter)?}">{?=isset_or($value.nm_dokter)?}</option>
+        {/loop}
+    </select>
 </script>
