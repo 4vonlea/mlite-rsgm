@@ -1,126 +1,163 @@
-<div id="form_rincian">
-  <div class="col-md-6">
-    <div class="panel panel-default">
-      <div class="panel-body">
+<div id="form_rincian" class="rsgm-reg-form clearfix">
+  <div class="col-md-5">
+    <div class="rsgm-reg-shell">
+      <div class="rsgm-reg-header">
+        <h4 class="rsgm-reg-title">
+          <span class="rsgm-reg-icon"><i class="fa fa-search"></i></span>
+          <span>Cari Layanan &amp; Radiologi</span>
+        </h4>
+        <span class="rsgm-reg-badge-hint hidden-xs">Oral Diagnostic</span>
+      </div>
+      <div class="rsgm-reg-body">
         <div class="form-horizontal">
           <div class="form-group">
             <label for="tgl_perawatan" class="col-sm-3 control-label">Tanggal</label>
             <div class="col-sm-4">
-              <input type="text" id="tgl_perawatan" name="tgl_perawatan" class="form-control tanggal" value="{?=date('Y-m-d')?}">
+              <div class="rsgm-input-icon">
+                <i class="fa fa-calendar rsgm-field-icon"></i>
+                <input type="text" id="tgl_perawatan" name="tgl_perawatan" class="form-control tanggal" value="{?=date('Y-m-d')?}">
+              </div>
             </div>
-            <label for="pnd" class="col-sm-1 control-label">Jam</label>
+            <label for="jam_reg" class="col-sm-1 control-label rsgm-label-inline">Jam</label>
             <div class="col-sm-4">
-              <input type="text" id="jam_reg" name="jam_reg" class="form-control jam" value="{?=date('H:i:s')?}">
+              <div class="rsgm-input-icon">
+                <i class="fa fa-clock-o rsgm-field-icon"></i>
+                <input type="text" id="jam_reg" name="jam_reg" class="form-control jam" value="{?=date('H:i:s')?}">
+              </div>
             </div>
           </div>
           <div class="form-group">
-            <label for="taid_pendaftarannggal" class="col-sm-3 control-label">Id Rawat</label>
+            <label class="col-sm-3 control-label">Id Rawat</label>
             <div class="col-sm-9">
-              <input type="text" name="no_rawat" placeholder="ID Rawat Jalan" class="form-control" value="" readonly>
+              <div class="rsgm-input-icon">
+                <i class="fa fa-hashtag rsgm-field-icon"></i>
+                <input type="text" name="no_rawat" placeholder="ID Pendaftaran" class="form-control" value="" readonly>
+              </div>
             </div>
           </div>
           <div class="form-group">
-            <label for="name" class="col-sm-3 control-label">Tindakan</label>
+            <label class="col-sm-3 control-label">Tindakan</label>
             <div class="col-sm-9">
-              <input type="text" name="layanan" class="form-control" placeholder="Input tindakan/layanan" value="">
+              <div class="rsgm-input-icon">
+                <i class="fa fa-medkit rsgm-field-icon"></i>
+                <input type="text" name="layanan" class="form-control" placeholder="Ketik nama tindakan / layanan..." value="" autocomplete="off">
+              </div>
             </div>
           </div>
-          <div class="form-group">
-            <label for="radiologi" class="col-sm-3 control-label">Permintaan Radiologi</label>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="input_radiologi" class="col-sm-3 control-label">Radiologi</label>
             <div class="col-sm-9">
               <div class="input-group">
-                <input type="text" name="radiologi" id="input_radiologi" class="form-control" placeholder="Klik atau ketik nama tindakan radiologi..." value="">
+                <input type="text" name="radiologi" id="input_radiologi" class="form-control" placeholder="Klik atau ketik tindakan radiologi..." value="" autocomplete="off">
                 <span class="input-group-btn">
-                  <button class="btn btn-default" type="button" id="btn_toggle_radiologi" title="Tampilkan Daftar Tindakan Radiologi"><i class="fa fa-list text-primary"></i> Daftar</button>
+                  <button class="btn btn-default" type="button" id="btn_toggle_radiologi" title="Tampilkan Daftar Tindakan Radiologi" style="height: 34px !important; padding: 0 12px !important; display: inline-flex; align-items: center; gap: 5px; line-height: 1 !important; border-radius: 0 6px 6px 0 !important; border: 1px solid #cbd5e1 !important; border-left: 0 !important; box-shadow: none !important; transform: none !important;"><i class="fa fa-list text-primary"></i> Daftar</button>
                 </span>
               </div>
-              <span class="help-block" style="margin-bottom:0; font-size:11px; color:#777;"><i class="fa fa-info-circle text-info"></i> Klik kolom atau tombol [Daftar] untuk memilih tindakan radiologi pada panel kanan atas.</span>
+              <span class="help-block" style="margin-bottom:0; font-size:11px; color:#64748b;"><i class="fa fa-info-circle text-info"></i> Klik kolom atau tombol [Daftar] untuk memilih tindakan radiologi.</span>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <div class="col-md-6">
-    <div id="layanan"></div>
-    <div id="radiologi"></div>
-    <div class="panel panel-default">
-      <div class="panel-body">
+
+  <div class="col-md-7">
+    <div id="layanan" style="display: none;"></div>
+    <div id="radiologi" style="display: none;"></div>
+    <div class="rsgm-reg-shell">
+      <div class="rsgm-reg-header">
+        <h4 class="rsgm-reg-title">
+          <span class="rsgm-reg-icon"><i class="fa fa-clipboard"></i></span>
+          <span>Detail Input Rincian &amp; Provider</span>
+        </h4>
+        <span class="rsgm-reg-badge-hint hidden-xs">Billing Tindakan</span>
+      </div>
+      <div class="rsgm-reg-body">
         <div class="form-horizontal">
           <div class="form-group">
-            <label for="id_pasien" class="col-sm-3 control-label">Nomor RM</label>
-            <div class="col-sm-9">
-              <input type="text" name="no_rkm_medis" class="form-control" placeholder="Nomor Rekam Medik" value="" readonly>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="nama_pasien" class="col-sm-3 control-label">Nama Pasien</label>
-            <div class="col-sm-9">
-              <input type="text" name="nm_pasien" class="form-control" placeholder="Nama pasien" value="" readonly>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="tgl_perawatan" class="col-sm-3 control-label">Jenis</label>
+            <label class="col-sm-3 control-label">Pasien</label>
             <div class="col-sm-4">
+              <div class="rsgm-input-icon">
+                <i class="fa fa-address-card-o rsgm-field-icon"></i>
+                <input type="text" name="no_rkm_medis" class="form-control" placeholder="No. RM" value="" readonly>
+              </div>
+            </div>
+            <div class="col-sm-5">
+              <div class="rsgm-input-icon">
+                <i class="fa fa-user-o rsgm-field-icon"></i>
+                <input type="text" name="nm_pasien" class="form-control" placeholder="Nama pasien" value="" readonly>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-3 control-label">Item Terpilih</label>
+            <div class="col-sm-5">
               <input type="hidden" name="kd_jenis_prw" class="form-control" value="">
-              <input type="text" name="nm_perawatan" class="form-control" placeholder="Nama tindakan/layanan/obat/BHP" value="" readonly>
+              <input type="text" name="nm_perawatan" class="form-control" placeholder="Nama tindakan / layanan / radiologi" value="" readonly>
               <input type="hidden" name="kat" class="form-control" value="">
             </div>
-            <label for="pnd" class="col-sm-1 control-label">Biaya</label>
-            <div class="col-sm-4">
-              <input type="text" id="biaya" name="biaya" class="form-control" value="" readonly>
+            <label for="biaya" class="col-sm-1 control-label rsgm-label-inline">Biaya</label>
+            <div class="col-sm-3">
+              <input type="text" id="biaya" name="biaya" class="form-control text-right" style="font-variant-numeric: tabular-nums; font-weight: 600;" value="" readonly>
             </div>
           </div>
           <div class="form-group" id="provider">
-            <label for="jenis" class="col-sm-3 control-label">Jenis Provider</label>
+            <label for="pilih_provider" class="col-sm-3 control-label">Jenis Provider</label>
             <div class="col-sm-9">
+              <input type="hidden" id="kd_dokter_kunjungan" value="">
+              <input type="hidden" id="nm_dokter_kunjungan" value="">
+              <input type="hidden" id="nip_petugas_login" value="{?=isset_or($rawat_jalan.petugas_login.nip)?}">
+              <input type="hidden" id="nm_petugas_login" value="{?=isset_or($rawat_jalan.petugas_login.nama)?}">
               <select class="form-control" name="provider" id="pilih_provider">
-                <option>Pilih provider</option>
+                <option value="">Pilih provider</option>
                 <option value="rawat_jl_dr">Dokter</option>
                 <option value="rawat_jl_pr">Perawat</option>
-                <option value="rawat_jl_drpr">Dokter & Perawat</option>
+                <option value="rawat_jl_drpr">Dokter &amp; Perawat</option>
               </select>
             </div>
           </div>
           <div class="form-group" id="rawat_jl_dr">
-            <label for="" class="col-sm-3 control-label">Nama Dokter</label>
-            <div class="col-sm-6">
-              <input type="text" name="nama_provider" id="nama_provider" class="form-control" value="">
-              <ul class="list-group" id="kode_providerList" style="z-index:1000;position:absolute;width:100%;"></ul>
+            <label for="nama_provider" class="col-sm-3 control-label">Nama Dokter</label>
+            <div class="col-sm-6" style="position: relative;">
+              <input type="text" name="nama_provider" id="nama_provider" class="form-control" placeholder="Cari nama dokter..." value="" autocomplete="off">
+              <ul class="list-group rsgm-autocomplete-list" id="kode_providerList"></ul>
             </div>
-            <label for="" class="col-sm-1 control-label">Kode</label>
+            <label for="kode_provider" class="col-sm-1 control-label rsgm-label-inline">Kode</label>
             <div class="col-sm-2">
               <input type="text" name="kode_provider" id="kode_provider" class="form-control" value="">
             </div>
           </div>
           <div class="form-group" id="rawat_jl_pr">
-            <label for="" class="col-sm-3 control-label">Nama Perawat</label>
-            <div class="col-sm-6">
-              <input type="text" name="nama_provider2" id="nama_provider2" class="form-control" value="">
-              <ul class="list-group" id="kode_providerList2" style="z-index:1000;position:absolute;width:100%;"></ul>
+            <label for="nama_provider2" class="col-sm-3 control-label">Nama Perawat</label>
+            <div class="col-sm-6" style="position: relative;">
+              <input type="text" name="nama_provider2" id="nama_provider2" class="form-control" placeholder="Cari nama perawat/petugas..." value="" autocomplete="off">
+              <ul class="list-group rsgm-autocomplete-list" id="kode_providerList2"></ul>
             </div>
-            <label for="" class="col-sm-1 control-label">Kode</label>
+            <label for="kode_provider2" class="col-sm-1 control-label rsgm-label-inline">Kode</label>
             <div class="col-sm-2">
               <input type="text" name="kode_provider2" id="kode_provider2" class="form-control" value="">
             </div>
           </div>
           <div class="form-group" id="aturan_pakai">
-            <label class="col-md-3 control-label">Aturan Pakai</label>
-            <div class="col-sm-6">
+            <label class="col-sm-3 control-label">Aturan Pakai</label>
+            <div class="col-sm-6" style="position: relative;">
               <input type="text" class="form-control" name="aturan_pakai" id="aturan_pakai_input" value="">
-              <ul class="list-group" id="aturan_pakaiList" style="z-index:1000;position:absolute;width:100%;"></ul>
+              <ul class="list-group rsgm-autocomplete-list" id="aturan_pakaiList"></ul>
             </div>
-            <label for="" class="col-sm-1 control-label">Jml</label>
+            <label for="jml" class="col-sm-1 control-label rsgm-label-inline">Jml</label>
             <div class="col-sm-2">
               <input type="text" name="jml" id="jml" class="form-control" value="10">
             </div>
           </div>
-          <div id="info_tambahan" style="display:none;">
+          <div id="info_tambahan" class="rsgm-soap-section" style="display:none; margin-bottom: 0;">
+            <div class="rsgm-soap-sec-title">
+              <i class="fa fa-exclamation-circle text-warning"></i> <span>Catatan Permintaan Radiologi</span>
+            </div>
             <div class="form-group">
-              <label for="" class="col-sm-3 control-label">Info Tambahan</label>
+              <label for="informasi_tambahan" class="col-sm-3 control-label">Info Tambahan</label>
               <div class="col-sm-9">
                 <textarea name="informasi_tambahan" id="informasi_tambahan" rows="2" class="form-control" placeholder="Catatan kondisi khusus pasien / kewaspadaan PPI..."></textarea>
-                <div style="margin-top: 6px;">
+                <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px;">
                   <button type="button" class="btn btn-xs btn-danger btn-quick-tag-od" data-tag="Pasien HIV (+)"><i class="fa fa-tag"></i> HIV (+)</button>
                   <button type="button" class="btn btn-xs btn-warning btn-quick-tag-od" data-tag="Hepatitis B/C"><i class="fa fa-tag"></i> Hepatitis</button>
                   <button type="button" class="btn btn-xs btn-warning btn-quick-tag-od" data-tag="TB Paru (Airborne)"><i class="fa fa-tag"></i> TB Paru</button>
@@ -130,17 +167,20 @@
                 </div>
               </div>
             </div>
-            <div class="form-group">
-              <label for="" class="col-sm-3 control-label">Diagnosa Klinis</label>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="diagnosa_klinis_input" class="col-sm-3 control-label">Diagnosa Klinis</label>
               <div class="col-sm-9">
                 <input type="text" name="diagnosa_klinis" id="diagnosa_klinis_input" class="form-control" placeholder="Diagnosa Klinis" value="">
               </div>
             </div>
           </div>
-          <div class="m-t-xl">
-            <button type="button" name="button" class="btn btn-primary" id="simpan_rincian"><i class="fa fa-save"></i><span class="hidden-xs"> Masukkan Rincian</span></button>
-            <button type="button" name="button" class="btn btn-success" id="selesai"><i class="fa fa-check"></i><span class="hidden-xs"> Selesai</span></button>
-          </div>
+        </div>
+      </div>
+      <div class="rsgm-reg-footer">
+        <span class="rsgm-footer-hint hidden-xs"><i class="fa fa-info-circle"></i> Pilih tindakan lalu tentukan provider sebelum menyimpan</span>
+        <div class="rsgm-reg-actions">
+          <button type="button" name="button" class="btn btn-primary" id="simpan_rincian"><i class="fa fa-save"></i><span class="hidden-xs"> Masukkan Rincian</span></button>
+          <button type="button" name="button" class="btn btn-success" id="selesai"><i class="fa fa-check"></i><span class="hidden-xs"> Selesai</span></button>
         </div>
       </div>
     </div>
@@ -194,7 +234,6 @@
   $('#kode_providerList').on('click', 'li', function(){
        $('#nama_provider').val($(this).text().split(': ')[1]);
        $('#kode_provider').val($(this).text().split(': ')[0]);
-       var kode_provider = $('#kode_provider').val();
        $('#kode_providerList').fadeOut();
   });
 </script>
@@ -221,7 +260,6 @@
   $('#kode_providerList2').on('click', 'li', function(){
        $('#nama_provider2').val($(this).text().split(': ')[1]);
        $('#kode_provider2').val($(this).text().split(': ')[0]);
-       var kode_provider2 = $('#kode_provider2').val();
        $('#kode_providerList2').fadeOut();
   });
 </script>
@@ -233,26 +271,53 @@
         var baseURL = mlite.url + '/' + mlite.admin;
           var url    = baseURL + '/oral_diagnostic/getlayanan?t=' + mlite.token;
           var layanan = $('input:hidden[name=kd_jenis_prw]').val();
+          var prov = $('#pilih_provider').val();
+
+          if (!prov) {
+              $('#biaya').val("0");
+              $('#rawat_jl_dr').hide();
+              $('#rawat_jl_pr').hide();
+              return;
+          }
 
           $.post(url, {layanan: layanan} ,function(data) {
-            // console.log(data);
             data = JSON.parse(data);
-            var total_byrdr =data.total_byrdr;            
-            var total_byrpr = data.total_byrpr;            
-            var total_byrdrpr = data.total_byrdrpr;            
+            var total_byrdr =data.total_byrdr;
+            var total_byrpr = data.total_byrpr;
+            var total_byrdrpr = data.total_byrdrpr;
 
-            if($('#pilih_provider').val() == 'rawat_jl_dr') {
+            if(prov == 'rawat_jl_dr') {
                 $('#biaya').val(total_byrdr);
                 $('#rawat_jl_dr').show();
                 $('#rawat_jl_pr').hide();
-            } else if($('#pilih_provider').val() == 'rawat_jl_pr') {
+                if($('#kode_provider').val() == '' && $('#kd_dokter_kunjungan').val() != '') {
+                    $('#nama_provider').val($('#nm_dokter_kunjungan').val());
+                    $('#kode_provider').val($('#kd_dokter_kunjungan').val());
+                }
+            } else if(prov == 'rawat_jl_pr') {
                 $('#biaya').val(total_byrpr);
                 $('#rawat_jl_dr').hide();
                 $('#rawat_jl_pr').show();
-            } else {
+                if($('#kode_provider2').val() == '' && $('#nip_petugas_login').val() != '') {
+                    $('#nama_provider2').val($('#nm_petugas_login').val());
+                    $('#kode_provider2').val($('#nip_petugas_login').val());
+                }
+            } else if(prov == 'rawat_jl_drpr') {
                 $('#biaya').val(total_byrdrpr);
                 $('#rawat_jl_dr').show();
                 $('#rawat_jl_pr').show();
+                if($('#kode_provider').val() == '' && $('#kd_dokter_kunjungan').val() != '') {
+                    $('#nama_provider').val($('#nm_dokter_kunjungan').val());
+                    $('#kode_provider').val($('#kd_dokter_kunjungan').val());
+                }
+                if($('#kode_provider2').val() == '' && $('#nip_petugas_login').val() != '') {
+                    $('#nama_provider2').val($('#nm_petugas_login').val());
+                    $('#kode_provider2').val($('#nip_petugas_login').val());
+                }
+            } else {
+                $('#biaya').val("0");
+                $('#rawat_jl_dr').hide();
+                $('#rawat_jl_pr').hide();
             }
 
           });

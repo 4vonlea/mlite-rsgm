@@ -219,6 +219,12 @@ class Admin extends AdminModule
             'pekerjaan' => ''
           ];
         }
+
+        $login_nip = $this->core->getUserInfo('username', null, true);
+        $petugas_login = $login_nip
+          ? $this->db('petugas')->where('nip', $login_nip)->where('status', '1')->oneArray()
+          : null;
+        $this->assign['petugas_login'] = $petugas_login ?: ['nip' => '', 'nama' => ''];
     }
 
     public function anyForm()
@@ -868,57 +874,105 @@ class Admin extends AdminModule
 
     public function postSaveDetail()
     {
-      if($_POST['kat'] == 'tindakan') {
-        $jns_perawatan = $this->db('jns_perawatan')->where('kd_jenis_prw', $_POST['kd_jenis_prw'])->oneArray();
-        if($_POST['provider'] == 'rawat_jl_dr') {
-          $this->db('rawat_jl_dr')->save([
-            'no_rawat' => $_POST['no_rawat'],
-            'kd_jenis_prw' => $_POST['kd_jenis_prw'],
-            'kd_dokter' => $_POST['kode_provider'],
-            'tgl_perawatan' => $_POST['tgl_perawatan'],
-            'jam_rawat' => $_POST['jam_rawat'],
-            'material' => $jns_perawatan['material'],
-            'bhp' => $jns_perawatan['bhp'],
-            'tarif_tindakandr' => $jns_perawatan['tarif_tindakandr'],
-            'kso' => $jns_perawatan['kso'],
-            'menejemen' => $jns_perawatan['menejemen'],
-            'biaya_rawat' => $jns_perawatan['total_byrdr'],
-            'stts_bayar' => 'Belum'
-          ]);
+      if(($_POST['kat'] ?? '') == 'tindakan') {
+        $no_rawat = trim((string) ($_POST['no_rawat'] ?? ''));
+        $kd_jenis_prw = trim((string) ($_POST['kd_jenis_prw'] ?? ''));
+        $provider = trim((string) ($_POST['provider'] ?? ''));
+        $kode_provider = trim((string) ($_POST['kode_provider'] ?? ''));
+        $kode_provider2 = trim((string) ($_POST['kode_provider2'] ?? ''));
+
+        if ($no_rawat === '' || $kd_jenis_prw === '') {
+          echo json_encode(['status' => 'error', 'message' => 'Nomor rawat atau tindakan belum dipilih.']);
+          exit();
         }
-        if($_POST['provider'] == 'rawat_jl_pr') {
-          $this->db('rawat_jl_pr')->save([
-            'no_rawat' => $_POST['no_rawat'],
-            'kd_jenis_prw' => $_POST['kd_jenis_prw'],
-            'nip' => $_POST['kode_provider2'],
-            'tgl_perawatan' => $_POST['tgl_perawatan'],
-            'jam_rawat' => $_POST['jam_rawat'],
-            'material' => $jns_perawatan['material'],
-            'bhp' => $jns_perawatan['bhp'],
-            'tarif_tindakanpr' => $jns_perawatan['tarif_tindakanpr'],
-            'kso' => $jns_perawatan['kso'],
-            'menejemen' => $jns_perawatan['menejemen'],
-            'biaya_rawat' => $jns_perawatan['total_byrpr'],
-            'stts_bayar' => 'Belum'
-          ]);
+
+        $jns_perawatan = $this->db('jns_perawatan')->where('kd_jenis_prw', $kd_jenis_prw)->oneArray();
+        if (!$jns_perawatan) {
+          echo json_encode(['status' => 'error', 'message' => 'Data tindakan tidak ditemukan.']);
+          exit();
         }
-        if($_POST['provider'] == 'rawat_jl_drpr') {
-          $this->db('rawat_jl_drpr')->save([
-            'no_rawat' => $_POST['no_rawat'],
-            'kd_jenis_prw' => $_POST['kd_jenis_prw'],
-            'kd_dokter' => $_POST['kode_provider'],
-            'nip' => $_POST['kode_provider2'],
-            'tgl_perawatan' => $_POST['tgl_perawatan'],
-            'jam_rawat' => $_POST['jam_rawat'],
-            'material' => $jns_perawatan['material'],
-            'bhp' => $jns_perawatan['bhp'],
-            'tarif_tindakandr' => $jns_perawatan['tarif_tindakandr'],
-            'tarif_tindakanpr' => $jns_perawatan['tarif_tindakanpr'],
-            'kso' => $jns_perawatan['kso'],
-            'menejemen' => $jns_perawatan['menejemen'],
-            'biaya_rawat' => $jns_perawatan['total_byrdrpr'],
-            'stts_bayar' => 'Belum'
-          ]);
+
+        if (!in_array($provider, ['rawat_jl_dr', 'rawat_jl_pr', 'rawat_jl_drpr'], true)) {
+          echo json_encode(['status' => 'error', 'message' => 'Silakan pilih Jenis Provider terlebih dahulu.']);
+          exit();
+        }
+
+        if (($provider === 'rawat_jl_dr' || $provider === 'rawat_jl_drpr') && $kode_provider === '') {
+          $kunj = $this->db('mlite_pendaftaran_oral_diagnostic')->where('no_rawat', $no_rawat)->oneArray();
+          if (empty($kunj['kd_dokter'])) {
+            $kunj = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+          }
+          $kode_provider = trim((string) ($kunj['kd_dokter'] ?? ''));
+          if ($kode_provider === '') {
+            echo json_encode(['status' => 'error', 'message' => 'Silakan pilih Nama Dokter terlebih dahulu.']);
+            exit();
+          }
+        }
+
+        if (($provider === 'rawat_jl_pr' || $provider === 'rawat_jl_drpr') && $kode_provider2 === '') {
+          $login_nip = trim((string) $this->core->getUserInfo('username', null, true));
+          if ($login_nip !== '' && $this->db('petugas')->where('nip', $login_nip)->where('status', '1')->oneArray()) {
+            $kode_provider2 = $login_nip;
+          } else {
+            echo json_encode(['status' => 'error', 'message' => 'Silakan pilih Nama Perawat/Petugas terlebih dahulu.']);
+            exit();
+          }
+        }
+
+        try {
+          if($provider == 'rawat_jl_dr') {
+            $this->db('rawat_jl_dr')->save([
+              'no_rawat' => $no_rawat,
+              'kd_jenis_prw' => $kd_jenis_prw,
+              'kd_dokter' => $kode_provider,
+              'tgl_perawatan' => $_POST['tgl_perawatan'],
+              'jam_rawat' => $_POST['jam_rawat'],
+              'material' => $jns_perawatan['material'],
+              'bhp' => $jns_perawatan['bhp'],
+              'tarif_tindakandr' => $jns_perawatan['tarif_tindakandr'],
+              'kso' => $jns_perawatan['kso'],
+              'menejemen' => $jns_perawatan['menejemen'],
+              'biaya_rawat' => $jns_perawatan['total_byrdr'],
+              'stts_bayar' => 'Belum'
+            ]);
+          }
+          if($provider == 'rawat_jl_pr') {
+            $this->db('rawat_jl_pr')->save([
+              'no_rawat' => $no_rawat,
+              'kd_jenis_prw' => $kd_jenis_prw,
+              'nip' => $kode_provider2,
+              'tgl_perawatan' => $_POST['tgl_perawatan'],
+              'jam_rawat' => $_POST['jam_rawat'],
+              'material' => $jns_perawatan['material'],
+              'bhp' => $jns_perawatan['bhp'],
+              'tarif_tindakanpr' => $jns_perawatan['tarif_tindakanpr'],
+              'kso' => $jns_perawatan['kso'],
+              'menejemen' => $jns_perawatan['menejemen'],
+              'biaya_rawat' => $jns_perawatan['total_byrpr'],
+              'stts_bayar' => 'Belum'
+            ]);
+          }
+          if($provider == 'rawat_jl_drpr') {
+            $this->db('rawat_jl_drpr')->save([
+              'no_rawat' => $no_rawat,
+              'kd_jenis_prw' => $kd_jenis_prw,
+              'kd_dokter' => $kode_provider,
+              'nip' => $kode_provider2,
+              'tgl_perawatan' => $_POST['tgl_perawatan'],
+              'jam_rawat' => $_POST['jam_rawat'],
+              'material' => $jns_perawatan['material'],
+              'bhp' => $jns_perawatan['bhp'],
+              'tarif_tindakandr' => $jns_perawatan['tarif_tindakandr'],
+              'tarif_tindakanpr' => $jns_perawatan['tarif_tindakanpr'],
+              'kso' => $jns_perawatan['kso'],
+              'menejemen' => $jns_perawatan['menejemen'],
+              'biaya_rawat' => $jns_perawatan['total_byrdrpr'],
+              'stts_bayar' => 'Belum'
+            ]);
+          }
+        } catch (\Throwable $e) {
+          echo json_encode(['status' => 'error', 'message' => 'Gagal menyimpan tindakan: ' . $e->getMessage()]);
+          exit();
         }
       }
       if($_POST['kat'] == 'radiologi') {
@@ -1144,6 +1198,15 @@ class Admin extends AdminModule
       $row['nama_petugas'] = '';
       $row['departemen_petugas'] = '';
       $result = [];
+      $is_dokter_cache = [];
+      $check_dokter = function($nip) use (&$is_dokter_cache) {
+          if (!isset($is_dokter_cache[$nip])) {
+              $dok = $this->db('dokter')->where('kd_dokter', $nip)->oneArray();
+              $is_dokter_cache[$nip] = !empty($dok);
+          }
+          return $is_dokter_cache[$nip];
+      };
+
       foreach ($rows as $row) {
         $row['nomor'] = $i++;
         $row['nama_petugas'] = $this->core->getPegawaiInfo('nama',$row['nip']);
@@ -1152,6 +1215,24 @@ class Admin extends AdminModule
         if (empty($row['kasus_poli'])) {
           $row['kasus_poli'] = $od_reg['status_poli'] ?? 'Lama';
         }
+        $row['status_poli'] = $row['kasus_poli'];
+        $row['is_dokter'] = $check_dokter($row['nip']);
+
+        $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
+        try {
+            $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ralan')->where('ref_id', $ref_id)->oneArray();
+            if ($sig) {
+                $row['is_signed'] = true;
+                $row['signature_hash'] = $sig['signature_hash'];
+            } else {
+                $row['is_signed'] = false;
+                $row['sign_ref_id'] = $ref_id;
+            }
+        } catch (\Throwable $e) {
+            $row['is_signed'] = false;
+            $row['sign_ref_id'] = $ref_id;
+        }
+
         $result[] = $row;
       }
 
@@ -1163,10 +1244,35 @@ class Admin extends AdminModule
         $row['nomor'] = $i++;
         $row['nama_petugas'] = $this->core->getPegawaiInfo('nama',$row['nip']);
         $row['departemen_petugas'] = $this->core->getDepartemenInfo($this->core->getPegawaiInfo('departemen',$row['nip']));
+        $row['stts_daftar'] = $od_reg['stts_daftar'] ?? 'Lama';
+        $row['status_poli'] = $od_reg['status_poli'] ?? 'Lama';
+
+        $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
+        try {
+            $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ranap')->where('ref_id', $ref_id)->oneArray();
+            if ($sig) {
+                $row['is_signed'] = true;
+                $row['signature_hash'] = $sig['signature_hash'];
+            } else {
+                $row['is_signed'] = false;
+                $row['sign_ref_id'] = $ref_id;
+            }
+        } catch (\Throwable $e) {
+            $row['is_signed'] = false;
+            $row['sign_ref_id'] = $ref_id;
+        }
+
         $result_ranap[] = $row;
       }
 
-      echo $this->draw('soap.html', ['pemeriksaan' => htmlspecialchars_array($result), 'pemeriksaan_ranap' => htmlspecialchars_array($result_ranap), 'diagnosa' => htmlspecialchars_array($diagnosa), 'prosedur' => htmlspecialchars_array($prosedur), 'admin_mode' => $this->settings->get('settings.admin_mode')]);
+      echo $this->draw('soap.html', [
+        'pemeriksaan' => htmlspecialchars_array($result),
+        'pemeriksaan_ranap' => htmlspecialchars_array($result_ranap),
+        'diagnosa' => htmlspecialchars_array($diagnosa),
+        'prosedur' => htmlspecialchars_array($prosedur),
+        'admin_mode' => $this->settings->get('settings.admin_mode'),
+        'current_user' => $this->core->getUserInfo('username')
+      ]);
       exit();
     }
 
@@ -1293,6 +1399,7 @@ class Admin extends AdminModule
       $data = [];
       if ($current) {
         $data = $mapPemeriksaan($current);
+        $data['source_info'] = 'Diisi otomatis dari pemeriksaan terakhir pada kunjungan ini';
       }
       $data['stts_daftar'] = $reg['stts_daftar'] ?? 'Lama';
       if (!isset($data['kasus_poli']) || empty($data['kasus_poli'])) {
@@ -1314,16 +1421,20 @@ class Admin extends AdminModule
     public function anyLayanan()
     {
       $poliklinik = $this->db('poliklinik')->select('kd_poli')->where('status', '1')->toArray();
-      $poliklinik = implode(",", array_column($poliklinik, 'kd_poli'));
-      $poliklinik = explode(',', $poliklinik);
+      $poliklinik = array_column($poliklinik, 'kd_poli');
       if($this->core->getUserInfo('role', null, true) != 'admin') {
-        $poliklinik = explode(',', $this->core->getUserInfo('cap', null, true));
+        $poliklinik = array_values(array_filter(array_map('trim', explode(',', (string) $this->core->getUserInfo('cap', null, true)))));
+      }
+      if (empty($poliklinik)) {
+        echo $this->draw('layanan.html', ['layanan' => []]);
+        exit();
       }
       $layanan = $this->db('jns_perawatan')
         ->where('status', '1')
-        ->like('nm_perawatan', '%'.htmlspecialchars($_POST['layanan'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'%')
+        ->like('nm_perawatan', '%'.htmlspecialchars($_POST['layanan'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'%')
         ->in('kd_poli', $poliklinik)
-        ->limit(10)
+        ->asc('nm_perawatan')
+        ->limit(50)
         ->toArray();
       echo $this->draw('layanan.html', ['layanan' => htmlspecialchars_array($layanan)]);
       exit();
@@ -1346,7 +1457,7 @@ class Admin extends AdminModule
       if (!empty($search)) {
         $query = $query->like('nm_perawatan', '%' . $search . '%');
       }
-      $radiologi = $query->limit(50)->toArray();
+      $radiologi = $query->asc('nm_perawatan')->limit(100)->toArray();
       echo $this->draw('radiologi.html', ['radiologi' => htmlspecialchars_array($radiologi)]);
       exit();
     }
