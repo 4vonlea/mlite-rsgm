@@ -6,8 +6,8 @@
     </h3>
   </div>
   <div class="col-md-5 text-right">
-    <a href="{?=url([ADMIN, 'vedika', 'auditperiode', '?periode=' . $periode . '&from=belumsiap'])?}" class="btn btn-warning" onclick="return confirm('Jalankan audit kesiapan berkas & data klinis pasien BPJS untuk periode ini?');"><i class="fa fa-refresh"></i> Audit Massal Periode Ini</a>
-    <a href="{?=url([ADMIN, 'vedika', 'siapklaim', '?periode=' . $periode])?}" class="btn btn-success" style="margin-left:5px;"><i class="fa fa-check-circle"></i> Pasien Siap Klaim &raquo;</a>
+    <a href="{?=url([ADMIN, 'vedika', 'auditperiode', '?tgl_awal=' . $tgl_awal . '&tgl_akhir=' . $tgl_akhir . '&from=belumsiap'])?}" class="btn btn-warning" onclick="return confirm('Jalankan audit kesiapan berkas & data klinis pasien BPJS untuk periode/rentang tanggal ini?');"><i class="fa fa-refresh"></i> Audit Massal Tanggal Ini</a>
+    <a href="{?=url([ADMIN, 'vedika', 'siapklaim', '?tgl_awal=' . $tgl_awal . '&tgl_akhir=' . $tgl_akhir])?}" class="btn btn-success" style="margin-left:5px;"><i class="fa fa-check-circle"></i> Pasien Siap Klaim &raquo;</a>
   </div>
 </div>
 <hr style="margin-top:10px;margin-bottom:20px;">
@@ -17,10 +17,17 @@
   <div class="panel-body">
     <form class="form-inline" action="" method="GET">
       <div class="form-group">
-        <label>Periode:</label>
-        <input type="text" name="periode" class="form-control tanggal input-sm" value="{?=$periode?}" placeholder="YYYY-MM">
+        <label><i class="fa fa-calendar"></i> Tanggal:</label>
+        <input type="text" name="tgl_awal" class="form-control tanggal input-sm" style="width:110px;" value="{?=$tgl_awal?}" placeholder="YYYY-MM-DD">
+        <span> s/d </span>
+        <input type="text" name="tgl_akhir" class="form-control tanggal input-sm" style="width:110px;" value="{?=$tgl_akhir?}" placeholder="YYYY-MM-DD">
       </div>
-      <div class="form-group" style="margin-left:10px;">
+      <div class="btn-group btn-group-sm" style="margin-left:6px;margin-right:6px;">
+        <button type="button" class="btn btn-default btn-quick-date" data-range="today" title="Set tanggal hari ini"><i class="fa fa-clock-o"></i> Hari Ini</button>
+        <button type="button" class="btn btn-default btn-quick-date" data-range="yesterday" title="Set tanggal kemarin">Kemarin</button>
+        <button type="button" class="btn btn-default btn-quick-date" data-range="this_month" title="Set awal sampai akhir bulan ini">Bulan Ini</button>
+      </div>
+      <div class="form-group" style="margin-left:5px;">
         <label>Pelayanan:</label>
         <select name="status_lanjut" class="form-control input-sm">
           <option value="">Semua (Ralan & Ranap)</option>
@@ -28,20 +35,20 @@
           <option value="Ranap" {if: $status_lanjut == 'Ranap'}selected{/if}>Rawat Inap</option>
         </select>
       </div>
-      <div class="form-group" style="margin-left:10px;">
+      <div class="form-group" style="margin-left:5px;">
         <label>Poli:</label>
-        <select name="kd_poli" class="form-control input-sm" style="max-width:200px;">
+        <select name="kd_poli" class="form-control input-sm" style="max-width:180px;">
           <option value="">Semua Poliklinik</option>
           {loop: $polis}
           <option value="{?=$value.kd_poli?}" {if: $kd_poli == $value.kd_poli}selected{/if}>{?=$value.nm_poli?}</option>
           {/loop}
         </select>
       </div>
-      <div class="form-group" style="margin-left:10px;">
-        <input type="text" name="search" class="form-control input-sm" value="{?=$search?}" placeholder="Cari No Rawat / RM / Nama">
+      <div class="form-group" style="margin-left:5px;">
+        <input type="text" name="search" class="form-control input-sm" value="{?=$search?}" placeholder="Cari No Rawat/RM/Nama">
       </div>
       <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
-      <button type="submit" class="btn btn-primary btn-sm" style="margin-left:10px;"><i class="fa fa-filter"></i> Saring Data</button>
+      <button type="submit" class="btn btn-primary btn-sm" style="margin-left:5px;"><i class="fa fa-filter"></i> Saring</button>
     </form>
   </div>
 </div>
@@ -207,8 +214,35 @@
 <script>
   $(function() {
     $('.tanggal').datetimepicker({
-      format: 'YYYY-MM',
+      format: 'YYYY-MM-DD',
       locale: 'id'
+    });
+
+    // Quick filter shortcut buttons (Hari Ini, Kemarin, Bulan Ini)
+    $('.btn-quick-date').on('click', function(e) {
+      e.preventDefault();
+      var range = $(this).data('range');
+      var now = new Date();
+      var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+      var fmt = function(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+
+      if (range === 'today') {
+        var str = fmt(now);
+        $('input[name="tgl_awal"]').val(str);
+        $('input[name="tgl_akhir"]').val(str);
+      } else if (range === 'yesterday') {
+        var yest = new Date(now);
+        yest.setDate(yest.getDate() - 1);
+        var str = fmt(yest);
+        $('input[name="tgl_awal"]').val(str);
+        $('input[name="tgl_akhir"]').val(str);
+      } else if (range === 'this_month') {
+        var firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        var lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        $('input[name="tgl_awal"]').val(fmt(firstDay));
+        $('input[name="tgl_akhir"]').val(fmt(lastDay));
+      }
+      $(this).closest('form').submit();
     });
 
     // Helper update tampilan baris pasien di tabel secara real-time
@@ -239,7 +273,7 @@
         colMissing.html('<span class="label label-success"><i class="fa fa-check"></i> Siap Verifikasi (Lengkap)</span>');
         if (colAction.find('.btn-success').length === 0) {
           colAction.find('.btn-warning, .btn-primary').remove();
-          colAction.append(' <a href="{?=url([ADMIN, "vedika", "siapklaim", "?periode=" . $periode])?}" class="btn btn-success btn-xs" title="Buka di Antrian Siap Klaim"><i class="fa fa-arrow-right"></i> Siap Klaim</a>');
+          colAction.append(' <a href="{?=url([ADMIN, "vedika", "siapklaim", "?tgl_awal=" . $tgl_awal . "&tgl_akhir=" . $tgl_akhir])?}" class="btn btn-success btn-xs" title="Buka di Antrian Siap Klaim"><i class="fa fa-arrow-right"></i> Siap Klaim</a>');
         }
       } else {
         var missingText = (res.missing_items && res.missing_items.length) ? res.missing_items.join('; ') : 'Beberapa variabel belum lengkap';

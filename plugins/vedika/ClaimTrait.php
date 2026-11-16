@@ -16,29 +16,83 @@ trait ClaimTrait
     }
 
     /**
-     * Helper untuk mendapatkan periode aktif (default ke bulan transaksi terakhir jika bulan sekarang kosong)
+     * Helper untuk mendapatkan rentang tanggal aktif (tgl_awal dan tgl_akhir)
+     * Fleksibel: Mendukung harian (1 hari), rentang tanggal (jangka tanggal), maupun bulanan (YYYY-MM)
+     */
+    protected function getActiveDateRange()
+    {
+        $tgl_awal = $_GET['tgl_awal'] ?? '';
+        $tgl_akhir = $_GET['tgl_akhir'] ?? '';
+        $periode = $_GET['periode'] ?? '';
+
+        // 1. Jika user menginput periode lama berbentuk YYYY-MM
+        if (!empty($periode) && empty($tgl_awal) && empty($tgl_akhir)) {
+            $digits = preg_replace('/[^\d]/', '', $periode);
+            if (strlen($digits) >= 6) {
+                $ym = substr($digits, 0, 4) . '-' . substr($digits, 4, 2);
+                return [
+                    'tgl_awal' => $ym . '-01',
+                    'tgl_akhir' => date('Y-m-t', strtotime($ym . '-01')),
+                    'periode' => $ym
+                ];
+            }
+        }
+
+        // 2. Normalisasi input tanggal jika ada
+        if (!empty($tgl_awal)) {
+            $tgl_awal = date('Y-m-d', strtotime(str_replace('/', '-', $tgl_awal)));
+        }
+        if (!empty($tgl_akhir)) {
+            $tgl_akhir = date('Y-m-d', strtotime(str_replace('/', '-', $tgl_akhir)));
+        }
+
+        // 3. Jika salah satu diisi, samakan untuk pengecekan harian 1 hari
+        if (!empty($tgl_awal) && empty($tgl_akhir)) {
+            $tgl_akhir = $tgl_awal;
+        } elseif (empty($tgl_awal) && !empty($tgl_akhir)) {
+            $tgl_awal = $tgl_akhir;
+        }
+
+        // 4. Jika keduanya kosong (default load pertama kali)
+        if (empty($tgl_awal) && empty($tgl_akhir)) {
+            $today = date('Y-m-d');
+            $curMonth = date('Y-m');
+            // Cek apakah ada data di bulan ini
+            $chk = $this->db()->pdo()->query("SELECT COUNT(*) FROM reg_periksa WHERE tgl_registrasi LIKE '$curMonth%'")->fetchColumn();
+            if ($chk > 0) {
+                // Ada transaksi di bulan ini, defaultkan ke hari ini untuk kemudahan cek harian
+                $tgl_awal = $today;
+                $tgl_akhir = $today;
+            } else {
+                // Jika database demo belum ada data bulan ini, gunakan tanggal transaksi terakhir
+                $maxDate = $this->db()->pdo()->query("SELECT MAX(tgl_registrasi) FROM reg_periksa")->fetchColumn();
+                $defDate = !empty($maxDate) ? $maxDate : $today;
+                $tgl_awal = $defDate;
+                $tgl_akhir = $defDate;
+            }
+        }
+
+        // Pastikan urutan tgl_awal <= tgl_akhir
+        if ($tgl_awal > $tgl_akhir) {
+            $tmp = $tgl_awal;
+            $tgl_awal = $tgl_akhir;
+            $tgl_akhir = $tmp;
+        }
+
+        return [
+            'tgl_awal' => $tgl_awal,
+            'tgl_akhir' => $tgl_akhir,
+            'periode' => substr($tgl_awal, 0, 7)
+        ];
+    }
+
+    /**
+     * Backward-compatible helper untuk mendapatkan periode aktif (YYYY-MM)
      */
     protected function getActivePeriode()
     {
-        $periode = $_GET['periode'] ?? '';
-        if (!empty($periode)) {
-            $digits = preg_replace('/[^\d]/', '', $periode);
-            if (strlen($digits) >= 6) {
-                return substr($digits, 0, 4) . '-' . substr($digits, 4, 2);
-            }
-            $clean = preg_replace('/[\s\/\.]+/', '-', trim($periode));
-            if (preg_match('/^(\d{4})[-](\d{2})/', $clean, $m)) {
-                return $m[1] . '-' . $m[2];
-            }
-            return substr($clean, 0, 7);
-        }
-        $curMonth = date('Y-m');
-        $chk = $this->db()->pdo()->query("SELECT COUNT(*) FROM reg_periksa WHERE tgl_registrasi LIKE '$curMonth%'")->fetchColumn();
-        if ($chk > 0) {
-            return $curMonth;
-        }
-        $maxDate = $this->db()->pdo()->query("SELECT MAX(tgl_registrasi) FROM reg_periksa")->fetchColumn();
-        return !empty($maxDate) ? substr($maxDate, 0, 7) : $curMonth;
+        $range = $this->getActiveDateRange();
+        return $range['periode'];
     }
 
     /**
@@ -88,7 +142,11 @@ trait ClaimTrait
         $cleanPj = $this->getCleanCarabayar();
         $inPlaceholders = implode(',', array_fill(0, count($cleanPj), '?'));
 
-        $periode = $this->getActivePeriode();
+        $dateRange = $this->getActiveDateRange();
+        $tgl_awal = $dateRange['tgl_awal'];
+        $tgl_akhir = $dateRange['tgl_akhir'];
+        $periode = $dateRange['periode'];
+
         $status_lanjut = $_GET['status_lanjut'] ?? '';
         $kd_poli = $_GET['kd_poli'] ?? '';
         $search = $_GET['search'] ?? '';
@@ -109,11 +167,11 @@ trait ClaimTrait
             LEFT JOIN bridging_sep_internal si ON reg_periksa.no_rawat = si.no_rawat
             LEFT JOIN mlite_klaim_readiness r ON reg_periksa.no_rawat = r.no_rawat
             WHERE (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
-            AND reg_periksa.tgl_registrasi LIKE ?
+            AND reg_periksa.tgl_registrasi BETWEEN ? AND ?
             AND (r.status_readiness = 'belum_lengkap' OR r.status_readiness IS NULL)
         ";
 
-        $params = array_merge($cleanPj, [$periode . '%']);
+        $params = array_merge($cleanPj, [$tgl_awal, $tgl_akhir]);
 
         if (!empty($status_lanjut)) {
             $sql .= " AND reg_periksa.status_lanjut = ?";
@@ -170,6 +228,8 @@ trait ClaimTrait
 
         return $this->draw('belumsiap.html', [
             'rows' => $rows,
+            'tgl_awal' => $tgl_awal,
+            'tgl_akhir' => $tgl_akhir,
             'periode' => $periode,
             'status_lanjut' => $status_lanjut,
             'kd_poli' => $kd_poli,
@@ -188,7 +248,11 @@ trait ClaimTrait
         $cleanPj = $this->getCleanCarabayar();
         $inPlaceholders = implode(',', array_fill(0, count($cleanPj), '?'));
 
-        $periode = $this->getActivePeriode();
+        $dateRange = $this->getActiveDateRange();
+        $tgl_awal = $dateRange['tgl_awal'];
+        $tgl_akhir = $dateRange['tgl_akhir'];
+        $periode = $dateRange['periode'];
+
         $status_lanjut = $_GET['status_lanjut'] ?? '';
         $search = $_GET['search'] ?? '';
 
@@ -210,11 +274,11 @@ trait ClaimTrait
             LEFT JOIN mlite_klaim_verifikasi v ON reg_periksa.no_rawat = v.no_rawat
             LEFT JOIN mlite_billing b ON reg_periksa.no_rawat = b.no_rawat
             WHERE (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
-            AND reg_periksa.tgl_registrasi LIKE ?
+            AND reg_periksa.tgl_registrasi BETWEEN ? AND ?
             AND r.status_readiness IN ('siap_verifikasi', 'terverifikasi', 'siap_grouping', 'siap_batch')
         ";
 
-        $params = array_merge($cleanPj, [$periode . '%']);
+        $params = array_merge($cleanPj, [$tgl_awal, $tgl_akhir]);
 
         if (!empty($status_lanjut)) {
             $sql .= " AND reg_periksa.status_lanjut = ?";
@@ -232,13 +296,13 @@ trait ClaimTrait
         $stmt->execute($params);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        // Jika data siap klaim masih kosong, periksa apakah tabel readiness belum pernah diisi pada periode ini
+        // Jika data siap klaim masih kosong, periksa apakah tabel readiness belum pernah diisi pada rentang tanggal ini
         if (empty($rows)) {
-            $checkReadiness = $this->db()->pdo()->prepare("SELECT COUNT(*) FROM mlite_klaim_readiness WHERE tgl_registrasi LIKE ?");
-            $checkReadiness->execute([$periode . '%']);
+            $checkReadiness = $this->db()->pdo()->prepare("SELECT COUNT(*) FROM mlite_klaim_readiness WHERE tgl_registrasi BETWEEN ? AND ?");
+            $checkReadiness->execute([$tgl_awal, $tgl_akhir]);
             $auditedCount = (int)$checkReadiness->fetchColumn();
 
-            // Jika belum ada pasien yang diaudit sama sekali di periode ini, lakukan audit otomatis untuk 20 pasien pertama
+            // Jika belum ada pasien yang diaudit sama sekali di rentang ini, lakukan audit otomatis untuk 20 pasien pertama
             if ($auditedCount === 0) {
                 $engine = $this->getClaimEngine();
                 $findStmt = $this->db()->pdo()->prepare("
@@ -246,11 +310,11 @@ trait ClaimTrait
                     FROM reg_periksa
                     JOIN penjab ON reg_periksa.kd_pj = penjab.kd_pj
                     WHERE (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
-                    AND reg_periksa.tgl_registrasi LIKE ?
+                    AND reg_periksa.tgl_registrasi BETWEEN ? AND ?
                     ORDER BY reg_periksa.tgl_registrasi DESC
                     LIMIT 20
                 ");
-                $findStmt->execute(array_merge($cleanPj, [$periode . '%']));
+                $findStmt->execute(array_merge($cleanPj, [$tgl_awal, $tgl_akhir]));
                 $toAudit = $findStmt->fetchAll(\PDO::FETCH_COLUMN);
 
                 foreach ($toAudit as $nr) {
@@ -270,6 +334,8 @@ trait ClaimTrait
 
         return $this->draw('siapklaim.html', [
             'rows' => $rows,
+            'tgl_awal' => $tgl_awal,
+            'tgl_akhir' => $tgl_akhir,
             'periode' => $periode,
             'status_lanjut' => $status_lanjut,
             'search' => $search,
@@ -279,11 +345,15 @@ trait ClaimTrait
     }
 
     /**
-     * Audit Massal Kesiapan Klaim BPJS Periode Terpilih
+     * Audit Massal Kesiapan Klaim BPJS Rentang Tanggal Terpilih
      */
     public function anyAuditperiode()
     {
-        $periode = $this->getActivePeriode();
+        $dateRange = $this->getActiveDateRange();
+        $tgl_awal = $dateRange['tgl_awal'];
+        $tgl_akhir = $dateRange['tgl_akhir'];
+        $periode = $dateRange['periode'];
+
         $engine = $this->getClaimEngine();
         $cleanPj = $this->getCleanCarabayar();
         $inPlaceholders = implode(',', array_fill(0, count($cleanPj), '?'));
@@ -295,11 +365,11 @@ trait ClaimTrait
             JOIN penjab ON reg_periksa.kd_pj = penjab.kd_pj
             LEFT JOIN mlite_klaim_readiness r ON reg_periksa.no_rawat = r.no_rawat
             WHERE (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
-            AND reg_periksa.tgl_registrasi LIKE ?
+            AND reg_periksa.tgl_registrasi BETWEEN ? AND ?
             ORDER BY (r.id IS NULL) DESC, reg_periksa.tgl_registrasi DESC
             LIMIT 100
         ";
-        $params = array_merge($cleanPj, [$periode . '%']);
+        $params = array_merge($cleanPj, [$tgl_awal, $tgl_akhir]);
         $stmt = $this->db()->pdo()->prepare($sql);
         $stmt->execute($params);
         $patients = $stmt->fetchAll(\PDO::FETCH_COLUMN);
@@ -327,12 +397,14 @@ trait ClaimTrait
             exit();
         }
 
-        $this->notify('success', "Audit Massal Selesai: Berhasil mengevaluasi " . count($patients) . " data pasien periode {$periode}. Ditemukan {$siap} pasien Siap Klaim dan {$belum} pasien Belum Lengkap.");
+        $dateLabel = ($tgl_awal === $tgl_akhir) ? $tgl_awal : "$tgl_awal s/d $tgl_akhir";
+        $this->notify('success', "Audit Massal Selesai: Berhasil mengevaluasi " . count($patients) . " data pasien ($dateLabel). Ditemukan {$siap} pasien Siap Klaim dan {$belum} pasien Belum Lengkap.");
+
         $from = $_GET['from'] ?? '';
         if ($from === 'belumsiap') {
-            redirect(url([ADMIN, 'vedika', 'belumsiap', '?periode=' . $periode]));
+            redirect(url([ADMIN, 'vedika', 'belumsiap', '?tgl_awal=' . $tgl_awal . '&tgl_akhir=' . $tgl_akhir]));
         } else {
-            redirect(url([ADMIN, 'vedika', 'siapklaim', '?periode=' . $periode]));
+            redirect(url([ADMIN, 'vedika', 'siapklaim', '?tgl_awal=' . $tgl_awal . '&tgl_akhir=' . $tgl_akhir]));
         }
     }
 
@@ -354,7 +426,11 @@ trait ClaimTrait
             redirect(url([ADMIN, 'vedika', 'verifadmin']));
         }
 
-        $periode = $this->getActivePeriode();
+        $dateRange = $this->getActiveDateRange();
+        $tgl_awal = $dateRange['tgl_awal'];
+        $tgl_akhir = $dateRange['tgl_akhir'];
+        $periode = $dateRange['periode'];
+
         $sql = "
             SELECT reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, reg_periksa.status_lanjut,
                    pasien.nm_pasien, pasien.no_peserta, pasien.no_ktp, poliklinik.nm_poli, dokter.nm_dokter,
@@ -370,16 +446,18 @@ trait ClaimTrait
             LEFT JOIN bridging_sep s ON reg_periksa.no_rawat = s.no_rawat
             LEFT JOIN bridging_sep_internal si ON reg_periksa.no_rawat = si.no_rawat
             LEFT JOIN mlite_klaim_verifikasi v ON reg_periksa.no_rawat = v.no_rawat
-            WHERE reg_periksa.tgl_registrasi LIKE ?
+            WHERE reg_periksa.tgl_registrasi BETWEEN ? AND ?
             AND penjab.png_jawab LIKE '%BPJS%'
             ORDER BY reg_periksa.tgl_registrasi DESC LIMIT 100
         ";
         $stmt = $this->db()->pdo()->prepare($sql);
-        $stmt->execute([$periode . '%']);
+        $stmt->execute([$tgl_awal, $tgl_akhir]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         return $this->draw('verifadmin.html', [
             'rows' => $rows,
+            'tgl_awal' => $tgl_awal,
+            'tgl_akhir' => $tgl_akhir,
             'periode' => $periode
         ]);
     }
@@ -402,7 +480,11 @@ trait ClaimTrait
             redirect(url([ADMIN, 'vedika', 'verifmedis']));
         }
 
-        $periode = $this->getActivePeriode();
+        $dateRange = $this->getActiveDateRange();
+        $tgl_awal = $dateRange['tgl_awal'];
+        $tgl_akhir = $dateRange['tgl_akhir'];
+        $periode = $dateRange['periode'];
+
         $sql = "
             SELECT reg_periksa.no_rawat, reg_periksa.no_rkm_medis, reg_periksa.tgl_registrasi, reg_periksa.status_lanjut,
                    pasien.nm_pasien, poliklinik.nm_poli, dokter.nm_dokter,
@@ -420,16 +502,18 @@ trait ClaimTrait
             LEFT JOIN bridging_sep s ON reg_periksa.no_rawat = s.no_rawat
             LEFT JOIN bridging_sep_internal si ON reg_periksa.no_rawat = si.no_rawat
             LEFT JOIN mlite_klaim_verifikasi v ON reg_periksa.no_rawat = v.no_rawat
-            WHERE reg_periksa.tgl_registrasi LIKE ?
+            WHERE reg_periksa.tgl_registrasi BETWEEN ? AND ?
             AND penjab.png_jawab LIKE '%BPJS%'
             ORDER BY reg_periksa.tgl_registrasi DESC LIMIT 100
         ";
         $stmt = $this->db()->pdo()->prepare($sql);
-        $stmt->execute([$periode . '%']);
+        $stmt->execute([$tgl_awal, $tgl_akhir]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         return $this->draw('verifmedis.html', [
             'rows' => $rows,
+            'tgl_awal' => $tgl_awal,
+            'tgl_akhir' => $tgl_akhir,
             'periode' => $periode
         ]);
     }
@@ -440,7 +524,10 @@ trait ClaimTrait
     public function anyCoding()
     {
         $this->_addHeaderFiles();
-        $periode = $this->getActivePeriode();
+        $dateRange = $this->getActiveDateRange();
+        $tgl_awal = $dateRange['tgl_awal'];
+        $tgl_akhir = $dateRange['tgl_akhir'];
+        $periode = $dateRange['periode'];
         $search = $_GET['search'] ?? '';
 
         $sql = "
@@ -454,10 +541,10 @@ trait ClaimTrait
             JOIN penjab ON reg_periksa.kd_pj = penjab.kd_pj
             LEFT JOIN bridging_sep s ON reg_periksa.no_rawat = s.no_rawat
             LEFT JOIN bridging_sep_internal si ON reg_periksa.no_rawat = si.no_rawat
-            WHERE reg_periksa.tgl_registrasi LIKE ?
+            WHERE reg_periksa.tgl_registrasi BETWEEN ? AND ?
             AND penjab.png_jawab LIKE '%BPJS%'
         ";
-        $params = [$periode . '%'];
+        $params = [$tgl_awal, $tgl_akhir];
 
         if (!empty($search)) {
             $sql .= " AND (reg_periksa.no_rawat LIKE ? OR reg_periksa.no_rkm_medis LIKE ? OR pasien.nm_pasien LIKE ?)";
@@ -496,6 +583,8 @@ trait ClaimTrait
 
         return $this->draw('coding.html', [
             'rows' => $rows,
+            'tgl_awal' => $tgl_awal,
+            'tgl_akhir' => $tgl_akhir,
             'periode' => $periode,
             'search' => $search
         ]);
@@ -507,7 +596,10 @@ trait ClaimTrait
     public function anyGrouping()
     {
         $this->_addHeaderFiles();
-        $periode = $this->getActivePeriode();
+        $dateRange = $this->getActiveDateRange();
+        $tgl_awal = $dateRange['tgl_awal'];
+        $tgl_akhir = $dateRange['tgl_akhir'];
+        $periode = $dateRange['periode'];
         $status_grouping = $_GET['status_grouping'] ?? '';
         $search = $_GET['search'] ?? '';
 
@@ -530,11 +622,11 @@ trait ClaimTrait
             JOIN penjab ON reg_periksa.kd_pj = penjab.kd_pj
             LEFT JOIN bridging_sep s ON reg_periksa.no_rawat = s.no_rawat
             LEFT JOIN bridging_sep_internal si ON reg_periksa.no_rawat = si.no_rawat
-            WHERE reg_periksa.tgl_registrasi LIKE ?
+            WHERE reg_periksa.tgl_registrasi BETWEEN ? AND ?
             AND penjab.png_jawab LIKE '%BPJS%'
             AND (s.no_sep IS NOT NULL OR si.no_sep IS NOT NULL)
         ";
-        $params = [$periode . '%'];
+        $params = [$tgl_awal, $tgl_akhir];
 
         if (!empty($search)) {
             $sql .= " AND (reg_periksa.no_rawat LIKE ? OR reg_periksa.no_rkm_medis LIKE ? OR pasien.nm_pasien LIKE ? OR COALESCE(s.no_sep, si.no_sep) LIKE ?)";
@@ -615,6 +707,8 @@ trait ClaimTrait
 
         return $this->draw('grouping.html', [
             'rows' => $rows,
+            'tgl_awal' => $tgl_awal,
+            'tgl_akhir' => $tgl_akhir,
             'periode' => $periode,
             'search' => $search,
             'status_grouping' => $status_grouping,
@@ -631,7 +725,10 @@ trait ClaimTrait
     public function anyDokumen()
     {
         $this->_addHeaderFiles();
-        $periode = $this->getActivePeriode();
+        $dateRange = $this->getActiveDateRange();
+        $tgl_awal = $dateRange['tgl_awal'];
+        $tgl_akhir = $dateRange['tgl_akhir'];
+        $periode = $dateRange['periode'];
         $search = $_GET['search'] ?? '';
 
         $sql = "
@@ -645,10 +742,10 @@ trait ClaimTrait
             JOIN penjab ON reg_periksa.kd_pj = penjab.kd_pj
             LEFT JOIN bridging_sep s ON reg_periksa.no_rawat = s.no_rawat
             LEFT JOIN bridging_sep_internal si ON reg_periksa.no_rawat = si.no_rawat
-            WHERE reg_periksa.tgl_registrasi LIKE ?
+            WHERE reg_periksa.tgl_registrasi BETWEEN ? AND ?
             AND penjab.png_jawab LIKE '%BPJS%'
         ";
-        $params = [$periode . '%'];
+        $params = [$tgl_awal, $tgl_akhir];
 
         if (!empty($search)) {
             $sql .= " AND (reg_periksa.no_rawat LIKE ? OR reg_periksa.no_rkm_medis LIKE ? OR pasien.nm_pasien LIKE ?)";
@@ -675,6 +772,8 @@ trait ClaimTrait
 
         return $this->draw('dokumen.html', [
             'rows' => $rows,
+            'tgl_awal' => $tgl_awal,
+            'tgl_akhir' => $tgl_akhir,
             'periode' => $periode,
             'search' => $search
         ]);
@@ -874,7 +973,10 @@ trait ClaimTrait
     public function anyMonitoring()
     {
         $this->_addHeaderFiles();
-        $periode = $this->getActivePeriode();
+        $dateRange = $this->getActiveDateRange();
+        $tgl_awal = $dateRange['tgl_awal'];
+        $tgl_akhir = $dateRange['tgl_akhir'];
+        $periode = $dateRange['periode'];
 
         $sql = "
             SELECT 
@@ -890,15 +992,17 @@ trait ClaimTrait
             LEFT JOIN mlite_klaim_verifikasi v ON r.no_rawat = v.no_rawat
             LEFT JOIN mlite_klaim_batch_detail bd ON r.no_rawat = bd.no_rawat
             LEFT JOIN mlite_klaim_batch b ON bd.batch_id = b.id
-            WHERE r.tgl_registrasi LIKE ?
+            WHERE r.tgl_registrasi BETWEEN ? AND ?
             ORDER BY r.tgl_registrasi DESC LIMIT 100
         ";
         $stmt = $this->db()->pdo()->prepare($sql);
-        $stmt->execute([$periode . '%']);
+        $stmt->execute([$tgl_awal, $tgl_akhir]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         return $this->draw('monitoring.html', [
             'rows' => $rows,
+            'tgl_awal' => $tgl_awal,
+            'tgl_akhir' => $tgl_akhir,
             'periode' => $periode
         ]);
     }
@@ -1083,7 +1187,10 @@ trait ClaimTrait
     public function anyLaporan()
     {
         $this->_addHeaderFiles();
-        $periode = $this->getActivePeriode();
+        $dateRange = $this->getActiveDateRange();
+        $tgl_awal = $dateRange['tgl_awal'];
+        $tgl_akhir = $dateRange['tgl_akhir'];
+        $periode = $dateRange['periode'];
 
         // Rekap per Poliklinik
         $stmtPoli = $this->db()->pdo()->prepare("
@@ -1095,11 +1202,11 @@ trait ClaimTrait
             JOIN penjab ON reg_periksa.kd_pj = penjab.kd_pj
             LEFT JOIN bridging_sep s ON reg_periksa.no_rawat = s.no_rawat
             LEFT JOIN mlite_klaim_readiness r ON reg_periksa.no_rawat = r.no_rawat
-            WHERE reg_periksa.tgl_registrasi LIKE ? AND penjab.png_jawab LIKE '%BPJS%'
+            WHERE reg_periksa.tgl_registrasi BETWEEN ? AND ? AND penjab.png_jawab LIKE '%BPJS%'
             GROUP BY poliklinik.kd_poli
             ORDER BY total_kunjungan DESC
         ");
-        $stmtPoli->execute([$periode . '%']);
+        $stmtPoli->execute([$tgl_awal, $tgl_akhir]);
         $rekapPoli = $stmtPoli->fetchAll(\PDO::FETCH_ASSOC);
 
         // Rekap Top 10 Penyakit Gigi/Mulut (RSGM)
@@ -1108,14 +1215,16 @@ trait ClaimTrait
             FROM diagnosa_pasien
             JOIN penyakit ON diagnosa_pasien.kd_penyakit = penyakit.kd_penyakit
             JOIN reg_periksa ON diagnosa_pasien.no_rawat = reg_periksa.no_rawat
-            WHERE reg_periksa.tgl_registrasi LIKE ? AND diagnosa_pasien.prioritas = 1
+            WHERE reg_periksa.tgl_registrasi BETWEEN ? AND ? AND diagnosa_pasien.prioritas = 1
             GROUP BY diagnosa_pasien.kd_penyakit
             ORDER BY jumlah DESC LIMIT 10
         ");
-        $stmtPenyakit->execute([$periode . '%']);
+        $stmtPenyakit->execute([$tgl_awal, $tgl_akhir]);
         $topPenyakit = $stmtPenyakit->fetchAll(\PDO::FETCH_ASSOC);
 
         return $this->draw('laporan.html', [
+            'tgl_awal' => $tgl_awal,
+            'tgl_akhir' => $tgl_akhir,
             'periode' => $periode,
             'rekapPoli' => $rekapPoli,
             'topPenyakit' => $topPenyakit
