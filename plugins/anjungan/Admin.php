@@ -29,7 +29,10 @@ class Admin extends AdminModule
 
     public function getIndex()
     {
-        return $this->draw('index.html');
+        $polis = $this->db('poliklinik')->where('status', '1')->asc('nm_poli')->toArray();
+        return $this->draw('index.html', [
+            'polis' => $polis
+        ]);
     }
 
     public function getPemanggil()
