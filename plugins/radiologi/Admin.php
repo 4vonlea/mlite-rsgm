@@ -525,6 +525,9 @@ class Admin extends AdminModule
     if (!$this->core->checkPermission($username, 'can_update', 'radiologi')) {
       return ['status' => 'error', 'message' => 'Invalid User Permission Credentials'];
     }
+    if (!$this->canInputHasilForUsername((string) $username)) {
+      return ['status' => 'error', 'message' => 'Hanya dr. JANE, Sp.Rad yang diperbolehkan menginput atau mengubah hasil expertise radiologi.'];
+    }
 
     $input = json_decode(file_get_contents('php://input'), true);
     if (!is_array($input))
@@ -1127,11 +1130,19 @@ class Admin extends AdminModule
       }
     } else {
       $ref_id = 'radiologi_' . str_replace('/', '', $no_rawat) . '_' . $tgl . '_' . str_replace(':', '', $jam);
+      $ref_id_visit = 'radiologi_' . str_replace('/', '', $no_rawat);
       try {
           $signature = $this->db('mlite_esignatures')
             ->where('ref_type', 'radiologi_hasil')
             ->where('ref_id', $ref_id)
             ->oneArray();
+          if (!$signature) {
+            $signature = $this->db('mlite_esignatures')
+              ->where('ref_type', 'radiologi_hasil')
+              ->like('ref_id', $ref_id_visit . '%')
+              ->desc('id')
+              ->oneArray();
+          }
       } catch (\Throwable $e) {
           $signature = null;
       }
@@ -1282,7 +1293,7 @@ class Admin extends AdminModule
       $periksa_radiologi[] = $row;
     }
 
-    // Hubungkan nama pemeriksaan ke setiap hasil radiologi
+    // Hubungkan nama pemeriksaan ke setiap hasil radiologi & format tampilan surat expertise
     foreach ($hasil_radiologi as &$h) {
       $matched = $this->db('periksa_radiologi')
         ->join('jns_perawatan_radiologi', 'jns_perawatan_radiologi.kd_jenis_prw=periksa_radiologi.kd_jenis_prw')
@@ -1291,6 +1302,7 @@ class Admin extends AdminModule
         ->where('periksa_radiologi.jam', $h['jam'])
         ->oneArray();
       $h['nm_perawatan'] = $matched['nm_perawatan'] ?? '';
+      $h['formatted_html'] = $this->formatExpertiseHtml((string) ($h['hasil'] ?? ''));
     }
     unset($h);
 
@@ -1306,6 +1318,20 @@ class Admin extends AdminModule
     }
     unset($g);
 
+    $examNames = [];
+    foreach ($periksa_radiologi as $pr) {
+      if (!empty($pr['nm_perawatan'])) {
+        $examNames[$pr['nm_perawatan']] = $pr['nm_perawatan'];
+      }
+    }
+    $nama_pemeriksaan = !empty($examNames) ? implode(', ', array_values($examNames)) : '-';
+
+    $tgl_periksa_raw = $tgl ?: ($hasil_radiologi[0]['tgl_periksa'] ?? ($periksa_radiologi[0]['tgl_periksa'] ?? ($pasien['tgl_registrasi'] ?? '')));
+    $tanggal_pemeriksaan_indo = $this->formatTanggalIndo($tgl_periksa_raw);
+    $nama_dokter_ttd = !empty($pj_radiologi['nm_dokter'])
+      ? $pj_radiologi['nm_dokter']
+      : ($periksa_radiologi[0]['nm_dokter'] ?? '-');
+
     /* =======================
      * FILENAME PDF
      * ======================= */
@@ -1317,6 +1343,10 @@ class Admin extends AdminModule
         . '_' . ($dokter_perujuk['tgl_periksa'] ?? ($tgl ?: date('Y-m-d')));
     }
 
+    if (!is_dir(UPLOADS . '/radiologi')) {
+      mkdir(UPLOADS . '/radiologi', 0777, true);
+    }
+
     $pdfPath = UPLOADS . '/radiologi/' . $filename . '.pdf';
     if (file_exists($pdfPath)) {
       unlink($pdfPath);
@@ -1325,20 +1355,29 @@ class Admin extends AdminModule
     /* =======================
      * INJECT KE TEMPLATE
      * ======================= */
+    $is_pdf = (isset($_GET['action']) && $_GET['action'] === 'pdf');
+    $is_stream = ($is_pdf && !empty($_GET['stream']));
+    $kopPath = BASE_DIR . '/assets/img/KOP-SURAT.png';
+    $kopSrc = $is_pdf ? $kopPath : (url() . '/assets/img/KOP-SURAT.png');
+    $qrSrc = $is_pdf ? $qrPath : $qrCode;
 
-
-    if (!isset($_GET['action']) || $_GET['action'] != 'pdf') {
+    if (!$is_pdf) {
         echo $this->draw('cetakhasil.html', [
             'periksa_radiologi' => $periksa_radiologi,
             'hasil_radiologi' => $hasil_radiologi,
             'gambar_radiologi' => $gambar_radiologi,
             'jumlah_total_radiologi' => $jumlah_total_radiologi,
-            'qrCode' => $qrCode,
+            'qrCode' => $qrSrc,
+            'kopSrc' => $kopSrc,
             'pj_radiologi' => $pj_radiologi['nm_dokter'] ?? '',
+            'nama_dokter_ttd' => $nama_dokter_ttd,
+            'nama_pemeriksaan' => $nama_pemeriksaan,
+            'tanggal_pemeriksaan_indo' => $tanggal_pemeriksaan_indo,
             'dokter_perujuk' => htmlspecialchars_array($dokter_perujuk)['nama'] ?? ($dokter_perujuk['nm_dokter'] ?? '-'),
             'pasien' => $pasien,
             'filename' => $filename,
             'is_all' => $is_all,
+            'is_pdf' => false,
             'no_rawat' => htmlspecialchars($_GET['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             'wagateway' => $this->settings->get('wagateway'),
             'signature' => $signature
@@ -1350,71 +1389,130 @@ class Admin extends AdminModule
     $this->tpl->set('hasil_radiologi', $hasil_radiologi);
     $this->tpl->set('gambar_radiologi', $gambar_radiologi);
     $this->tpl->set('jumlah_total_radiologi', $jumlah_total_radiologi);
-    $this->tpl->set('qrCode', $qrCode);
+    $this->tpl->set('qrCode', $qrSrc);
+    $this->tpl->set('kopSrc', $kopSrc);
     $this->tpl->set('pj_radiologi', $pj_radiologi['nm_dokter'] ?? '');
+    $this->tpl->set('nama_dokter_ttd', $nama_dokter_ttd);
+    $this->tpl->set('nama_pemeriksaan', $nama_pemeriksaan);
+    $this->tpl->set('tanggal_pemeriksaan_indo', $tanggal_pemeriksaan_indo);
     $this->tpl->set('dokter_perujuk', $dokter_perujuk['nama'] ?? ($dokter_perujuk['nm_dokter'] ?? '-'));
     $this->tpl->set('pasien', $pasien);
     $this->tpl->set('is_all', $is_all);
+    $this->tpl->set('is_pdf', true);
     $this->tpl->set('filename', $filename);
     $this->tpl->set('no_rawat', $no_rawat);
     $this->tpl->set('wagateway', $this->settings->get('wagateway'));
     $this->tpl->set('signature', $signature);
 
-    // render HTML TANPA draw()
     $html = $this->draw('cetakhasil.html');
+    $html = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $html);
+    $html = preg_replace('/<link\b[^>]*rel=["\']stylesheet["\'][^>]*>/is', '', $html);
 
     /* =======================
      * mPDF
      * ======================= */
-    
-    // Release PHP session lock so user can navigate to other pages
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
     }
-    
-    // Return response immediately for background AJAX
-    if (function_exists('fastcgi_finish_request')) {
-        fastcgi_finish_request();
-    } else {
-        $size = ob_get_length();
-        if ($size !== false) {
-            header("Content-Length: $size");
-            header('Connection: close');
-            ob_end_flush();
-            @ob_flush();
-            flush();
-        }
+
+    if (!$is_stream) {
+      // Return response immediately for background AJAX (Kirim WA / Email)
+      if (function_exists('fastcgi_finish_request')) {
+          fastcgi_finish_request();
+      } else {
+          $size = ob_get_length();
+          if ($size !== false) {
+              header("Content-Length: $size");
+              header('Connection: close');
+              ob_end_flush();
+              @ob_flush();
+              flush();
+          }
+      }
     }
-    
+
     try {
       $mpdf = new \Mpdf\Mpdf([
         'mode' => 'utf-8',
         'format' => 'A4',
-        'orientation' => 'P'
+        'orientation' => 'P',
+        'margin_left' => 15,
+        'margin_right' => 15,
+        'margin_top' => 12,
+        'margin_bottom' => 15
       ]);
 
-      $mpdf->SetHTMLHeader($this->core->setPrintHeader());
-      $mpdf->SetHTMLFooter($this->core->setPrintFooter());
-
-      $css = '
-              del { display:none; }
-              table { padding-top:1cm; padding-bottom:1cm; }
-              td, th { border-bottom:1px solid #ddd; padding:5px; }
-          ';
-
-      $mpdf->WriteHTML(
-        $this->core->setPrintCss(),
-        \Mpdf\HTMLParserMode::HEADER_CSS
-      );
-      $mpdf->WriteHTML('<style>' . $css . '</style>');
       $mpdf->WriteHTML($html);
 
-      // simpan ke server
-      $mpdf->Output($pdfPath, 'F');
+      if ($is_stream) {
+        while (ob_get_level() > 0) {
+          ob_end_clean();
+        }
+        $mpdf->Output($filename . '.pdf', 'I');
+      } else {
+        $mpdf->Output($pdfPath, 'F');
+      }
     } catch (\Exception $e) {
       echo "<pre>mPDF Error: " . $e->getMessage() . "</pre>";
     }
     exit;
+  }
+
+  private function formatTanggalIndo(?string $tgl): string
+  {
+    $tgl = trim((string) $tgl);
+    if ($tgl === '' || $tgl === '0000-00-00') {
+      return '-';
+    }
+    $parts = explode('-', substr($tgl, 0, 10));
+    if (count($parts) !== 3) {
+      return $tgl;
+    }
+    $bulan = [
+      '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+      '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+      '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+    ];
+    return $parts[2] . ' ' . ($bulan[$parts[1]] ?? $parts[1]) . ' ' . $parts[0];
+  }
+
+  private function formatExpertiseHtml(string $text): string
+  {
+    $normalized = str_replace(["\r\n", "\r"], "\n", trim($text));
+    if ($normalized === '') {
+      return '';
+    }
+
+    $lines = explode("\n", $normalized);
+    $html = [];
+    $inKesan = false;
+    $sawHeader = false;
+
+    foreach ($lines as $rawLine) {
+      $trimmed = trim($rawLine);
+      if ($trimmed === '') {
+        $html[] = '<div style="height: 8px;"></div>';
+        continue;
+      }
+
+      $escaped = htmlspecialchars($trimmed, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      if (preg_match('/^Teman Sejawat,?\s*$/i', $trimmed)) {
+        $html[] = '<div style="font-style: italic; margin-bottom: 4px;">' . $escaped . '</div>';
+      } elseif (preg_match('/^Kesan\s*:?\s*$/i', $trimmed)) {
+        $inKesan = true;
+        $html[] = '<div style="font-weight: bold; margin-top: 12px; margin-bottom: 4px;">' . $escaped . '</div>';
+      } elseif ($inKesan) {
+        $html[] = '<div style="font-weight: bold; line-height: 1.6;">' . $escaped . '</div>';
+      } elseif (!$sawHeader && !preg_match('/^[-*•\d]/', $trimmed) && preg_match('/View$/i', $trimmed)) {
+        $sawHeader = true;
+        $html[] = '<div style="font-weight: bold; margin-bottom: 6px;">' . $escaped . '</div>';
+      } else {
+        $sawHeader = true;
+        $html[] = '<div style="line-height: 1.65;">' . $escaped . '</div>';
+      }
+    }
+
+    return implode("\n", $html);
   }
 
   public function getCetakPermintaan()
@@ -1819,15 +1917,18 @@ class Admin extends AdminModule
       $signature_all = null;
     }
 
+    $current_username = (string) $this->core->getUserInfo('username', null, true);
+
     echo $this->draw('rincian.html', [
       'periksa_radiologi' => htmlspecialchars_array($periksa_radiologi), 
       'jumlah_total_radiologi' => $jumlah_total_radiologi, 
       'no_rawat' => htmlspecialchars($_POST['no_rawat'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 
       'radiologi' => htmlspecialchars_array($radiologi),
       'mini_pacs' => htmlspecialchars_array($mini_pacs),
-      'current_user' => $this->core->getUserInfo('username'),
+      'current_user' => $current_username,
       'current_user_name' => $this->core->getUserInfo('fullname'),
       'pj_radiologi' => $this->settings->get('settings.pj_radiologi'),
+      'can_input_hasil' => $this->canInputHasilForUsername($current_username),
       'ref_id_all' => $ref_id_all,
       'signature_all' => htmlspecialchars_array($signature_all ?: [])
     ]);
@@ -1953,18 +2054,64 @@ class Admin extends AdminModule
     exit();
   }
 
+  private function canInputHasilForUsername(string $username): bool
+  {
+    $username = trim($username);
+    if ($username === '') {
+      return false;
+    }
+    $pj_radiologi = trim((string) $this->settings->get('settings.pj_radiologi'));
+    $allowed_username = $pj_radiologi !== '' ? $pj_radiologi : '198201192020122001';
+    return ($username === $allowed_username);
+  }
+
   public function postSaveHasil()
   {
-    $result = $this->db('hasil_radiologi')
-      ->save([
-        'no_rawat' => $_POST['no_rawat'],
-        'tgl_periksa' => $_POST['tgl_periksa'],
-        'jam' => $_POST['jam_periksa'],
-        'hasil' => $_POST['hasil']
-      ]);
+    $current_username = (string) $this->core->getUserInfo('username', null, true);
+    if (!$this->canInputHasilForUsername($current_username)) {
+      header('Content-type: application/json');
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Hanya dr. JANE, Sp.Rad yang diperbolehkan menginput atau mengubah hasil expertise radiologi.']);
+      exit();
+    }
 
-    if ($result) {
-      $this->db('permintaan_radiologi')->where('no_rawat', $_POST['no_rawat'])->where('noorder', $_POST['noorder'])->save(['tgl_hasil' => date('Y-m-d'), 'jam_hasil' => date('H:i:s')]);
+    $no_rawat = trim((string) ($_POST['no_rawat'] ?? ''));
+    $tgl_periksa = trim((string) ($_POST['tgl_periksa'] ?? ''));
+    $jam_periksa = trim((string) ($_POST['jam_periksa'] ?? ''));
+    $hasil = (string) ($_POST['hasil'] ?? '');
+
+    if ($no_rawat === '' || $tgl_periksa === '' || $jam_periksa === '') {
+      http_response_code(400);
+      echo json_encode(['status' => 'error', 'message' => 'Parameter pemeriksaan tidak lengkap.']);
+      exit();
+    }
+
+    $existing = $this->db('hasil_radiologi')
+      ->where('no_rawat', $no_rawat)
+      ->where('tgl_periksa', $tgl_periksa)
+      ->where('jam', $jam_periksa)
+      ->oneArray();
+
+    if ($existing) {
+      $result = $this->db('hasil_radiologi')
+        ->where('no_rawat', $no_rawat)
+        ->where('tgl_periksa', $tgl_periksa)
+        ->where('jam', $jam_periksa)
+        ->save([
+          'hasil' => $hasil
+        ]);
+    } else {
+      $result = $this->db('hasil_radiologi')
+        ->save([
+          'no_rawat' => $no_rawat,
+          'tgl_periksa' => $tgl_periksa,
+          'jam' => $jam_periksa,
+          'hasil' => $hasil
+        ]);
+    }
+
+    if ($result !== false && !empty($_POST['noorder'])) {
+      $this->db('permintaan_radiologi')->where('no_rawat', $no_rawat)->where('noorder', $_POST['noorder'])->save(['tgl_hasil' => date('Y-m-d'), 'jam_hasil' => date('H:i:s')]);
     }
     exit();
   }

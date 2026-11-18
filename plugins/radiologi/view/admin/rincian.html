@@ -764,10 +764,10 @@
             <span class="rsgm-badge-no">{?=isset_or($value.nomor)?}</span>
             {if: $value.periksa_radiologi}
             {loop: $value.periksa_radiologi as $data0}
-            <span>{?=isset_or($data0.nm_perawatan)?}</span>
+            <span class="rsgm-rad-exam-name">{?=isset_or($data0.nm_perawatan)?}</span>
             {/loop}
             {else}
-            <span>Pemeriksaan Radiologi</span>
+            <span class="rsgm-rad-exam-name">Pemeriksaan Radiologi</span>
             {/if}
             <span class="rsgm-rad-pay-badge"><i class="fa fa-credit-card"></i> {?=isset_or($value.png_jawab,
               '-')?}</span>
@@ -806,6 +806,7 @@
             </div>
             {loop: $value.hasil_radiologi as $data1}
             <div style="position: relative; padding-right: 36px; margin-bottom: 4px;">
+              <textarea class="hidden existing-hasil-input">{?=isset_or($data1.hasil)?}</textarea>
               <p class="rsgm-hasil-text">{?=nl2br(isset_or($data1.hasil))?}</p>
               <button type="button" class="btn btn-rad-action btn-rad-del hapus_hasil_radiologi"
                 data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}"
@@ -854,11 +855,19 @@
             {/if}
           </div>
           <div class="rsgm-btn-group">
+            {if: $can_input_hasil}
             <button type="button" class="btn btn-rad-action btn-rad-hasil hasil_radiologi"
               data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}"
               data-jam_periksa="{?=isset_or($value.jam)?}" data-status="{?=isset_or($value.status_periksa)?}"
-              title="Input expertise hasil radiologi &amp; upload gambar/DICOM">
-              <i class="fa fa-edit"></i> Input Hasil
+              title="Input expertise hasil radiologi">
+              <i class="fa fa-edit"></i> {if: $value.hasil_radiologi}Edit Hasil{else}Input Hasil{/if}
+            </button>
+            {/if}
+            <button type="button" class="btn btn-rad-action btn-rad-cetak cetak_expertise"
+              data-no_rawat="{?=isset_or($value.no_rawat)?}" data-tgl_periksa="{?=isset_or($value.tgl_periksa)?}"
+              data-jam_periksa="{?=isset_or($value.jam)?}" data-status="{?=isset_or($value.status_periksa)?}"
+              title="Buka PDF hasil expertise radiologi">
+              <i class="fa fa-file-pdf-o text-danger"></i> Expertise
             </button>
             <a href="{?=url([ADMIN,'orthanc','bridgingorthanc',convertNorawat($value.no_rawat), strtolower($value.status_periksa), $value.tgl_periksa, $value.jam])?}"
               class="btn btn-rad-action btn-rad-pacs" data-toggle="modal" data-target="#orthancModal"
@@ -1452,6 +1461,16 @@
     var no_rawat = $(this).attr("data-no_rawat") || $('input:text[name=no_rawat]').val() || $('input[name=no_rawat]').val();
     var status = $(this).attr("data-status") || $('input:text[name=status]').val() || 'Ralan';
     window.open(baseURL + '/radiologi/cetakhasil?no_rawat=' + encodeURIComponent(no_rawat) + '&jam=all&status=' + encodeURIComponent(status) + '&t=' + mlite.token);
+  });
+
+  $("#rincian").off("click", ".cetak_expertise").on("click", ".cetak_expertise", function (event) {
+    var baseURL = mlite.url + '/' + mlite.admin;
+    event.preventDefault();
+    var no_rawat = $(this).attr("data-no_rawat") || $('input:text[name=no_rawat]').val() || $('input[name=no_rawat]').val();
+    var tgl_periksa = $(this).attr("data-tgl_periksa") || '';
+    var jam = $(this).attr("data-jam_periksa") || '';
+    var status = $(this).attr("data-status") || $('input:text[name=status]').val() || 'Ralan';
+    window.open(baseURL + '/radiologi/cetakhasil?no_rawat=' + encodeURIComponent(no_rawat) + '&tgl_periksa=' + encodeURIComponent(tgl_periksa) + '&jam=' + encodeURIComponent(jam) + '&status=' + encodeURIComponent(status) + '&action=pdf&stream=1&t=' + mlite.token);
   });
 
   /* =========================================================
