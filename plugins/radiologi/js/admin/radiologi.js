@@ -567,103 +567,6 @@ $("#rincian").on("click",".hasil_radiologi", function(event){
   var nm_pasien = $.trim($('#form_rincian input[name=nm_pasien]').val()) || '-';
   var no_rkm_medis = $.trim($('#form_rincian input[name=no_rkm_medis]').val()) || '-';
 
-  var expertisePresets = {
-    panoramik: { view: 'Foto Panoramik View' },
-    periapical: { view: 'Foto Periapical View' },
-    cephalometri: { view: 'Foto Cephalometri View' },
-    cbct: { view: 'CBCT View' }
-  };
-
-  function detectPresetKey(examName) {
-    var lower = (examName || '').toLowerCase();
-    if (lower.indexOf('panor') !== -1) return 'panoramik';
-    if (lower.indexOf('periap') !== -1) return 'periapical';
-    if (lower.indexOf('cephal') !== -1 || lower.indexOf('sefal') !== -1) return 'cephalometri';
-    if (lower.indexOf('cbct') !== -1) return 'cbct';
-    return '';
-  }
-
-  function parseExistingExpertise(rawText, fallbackView) {
-    var normalized = (rawText || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
-    if (!normalized) {
-      return { useSapaan: true, view: fallbackView, temuan: '', kesan: '' };
-    }
-
-    var kesanMatch = normalized.split(/^\s*Kesan\s*:?\s*$/im);
-    var bodyPart = kesanMatch[0] ? kesanMatch[0].trim() : '';
-    var kesanPart = kesanMatch.length > 1 ? kesanMatch.slice(1).join('\nKesan :\n').trim() : '';
-
-    var lines = bodyPart ? bodyPart.split('\n') : [];
-    var useSapaan = false;
-    while (lines.length > 0 && $.trim(lines[0]) === '') {
-      lines.shift();
-    }
-    if (lines.length > 0 && /^Teman Sejawat,?\s*$/i.test($.trim(lines[0]))) {
-      useSapaan = true;
-      lines.shift();
-    }
-
-    while (lines.length > 0 && $.trim(lines[0]) === '') {
-      lines.shift();
-    }
-
-    var view = '';
-    if (lines.length > 0) {
-      var firstLine = $.trim(lines[0]);
-      var isBullet = /^[-*•\d]/.test(firstLine);
-      if (!isBullet && (/View$/i.test(firstLine) || useSapaan || kesanPart !== '')) {
-        view = firstLine;
-        lines.shift();
-      }
-    }
-
-    return {
-      useSapaan: useSapaan,
-      view: view,
-      temuan: lines.join('\n').trim(),
-      kesan: kesanPart
-    };
-  }
-
-  function composeExpertise() {
-    var parts = [];
-    if ($('#exp_sapaan').is(':checked')) {
-      parts.push('Teman Sejawat,');
-    }
-    var view = $.trim($('#exp_view').val());
-    if (view) {
-      parts.push(view);
-    }
-    var temuan = $.trim($('#exp_temuan').val());
-    if (temuan) {
-      parts.push(temuan);
-    }
-    var kesan = $.trim($('#exp_kesan').val());
-    if (kesan) {
-      if (parts.length > 0) {
-        parts.push('');
-      }
-      parts.push('Kesan :');
-      parts.push(kesan);
-    }
-    return parts.join('\n');
-  }
-
-  function appendBullet(selector) {
-    var el = $(selector);
-    var val = el.val();
-    if (!val || /\n\s*$/.test(val)) {
-      el.val(val + '- ');
-    } else {
-      el.val(val + '\n- ');
-    }
-    el.focus();
-  }
-
-  var detectedKey = detectPresetKey(nm_perawatan);
-  var defaultView = detectedKey ? expertisePresets[detectedKey].view : nm_perawatan;
-  var parsed = parseExistingExpertise(existing_hasil, defaultView);
-
   var set_stok = ''
       + '<div style="padding: 2px;">'
       + '  <div id="exp_form_error" class="alert alert-danger" style="display:none; margin-bottom:12px; padding:8px 12px; border-radius:8px; font-size:12.5px;"></div>'
@@ -672,46 +575,14 @@ $("#rincian").on("click",".hasil_radiologi", function(event){
       + '    <div><span style="color:#64748b;">Pemeriksaan:</span> <strong id="exp_info_exam"></strong></div>'
       + '    <div><span style="color:#64748b;">Tanggal:</span> <strong id="exp_info_tgl"></strong></div>'
       + '  </div>'
-      + '  <div class="form-group" style="margin-bottom: 14px;">'
-      + '    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px;">'
-      + '      <label for="exp_view" style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:#334155; margin:0;">'
-      + '        <i class="fa fa-stethoscope text-primary"></i> Jenis Pemeriksaan / View'
-      + '      </label>'
-      + '      <label style="font-size:12px; font-weight:600; color:#475569; margin:0; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">'
-      + '        <input type="checkbox" id="exp_sapaan" style="margin:0;"> Sertakan pembuka &ldquo;Teman Sejawat,&rdquo;'
-      + '      </label>'
-      + '    </div>'
-      + '    <input type="text" id="exp_view" class="form-control" placeholder="Contoh: Foto Panoramik View / Foto Periapical View / Foto Cephalometri View" style="border-radius:8px !important; border:1px solid #cbd5e1; font-size:13px; font-weight:600; padding:8px 12px; height:36px;">'
-      + '    <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:8px;">'
-      + '      <button type="button" class="btn btn-xs btn-default exp-view-preset" data-preset="panoramik" style="border-radius:999px !important; text-transform:none !important; transform:none !important; font-weight:600; padding:3px 10px;">Panoramik</button>'
-      + '      <button type="button" class="btn btn-xs btn-default exp-view-preset" data-preset="periapical" style="border-radius:999px !important; text-transform:none !important; transform:none !important; font-weight:600; padding:3px 10px;">Periapical</button>'
-      + '      <button type="button" class="btn btn-xs btn-default exp-view-preset" data-preset="cephalometri" style="border-radius:999px !important; text-transform:none !important; transform:none !important; font-weight:600; padding:3px 10px;">Cephalometri</button>'
-      + '      <button type="button" class="btn btn-xs btn-default exp-view-preset" data-preset="cbct" style="border-radius:999px !important; text-transform:none !important; transform:none !important; font-weight:600; padding:3px 10px;">CBCT</button>'
-      + '    </div>'
-      + '  </div>'
-      + '  <div class="form-group" style="margin-bottom: 14px;">'
-      + '    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">'
-      + '      <label for="exp_temuan" style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:#334155; margin:0;">'
-      + '        <i class="fa fa-list-ul text-primary"></i> Temuan / Deskripsi Radiografi'
-      + '      </label>'
-      + '      <button type="button" class="btn btn-xs btn-default" id="btn_add_temuan_bullet" style="border-radius:6px !important; text-transform:none !important; transform:none !important; font-weight:600;">+ Tambah Poin (- )</button>'
-      + '    </div>'
-      + '    <textarea id="exp_temuan" rows="6" class="form-control" placeholder="- Alignment maxilla dan mandibula baik&#10;- Tidak tampak fraktur maupun destruksi tulang&#10;- Tampak impaksi gigi ...&#10;- Sinus maxillaris bilateral baik" style="border-radius:8px !important; border:1px solid #cbd5e1; font-size:13px; padding:10px 12px; line-height:1.55;"></textarea>'
-      + '  </div>'
-      + '  <div class="form-group" style="margin-bottom: 10px;">'
-      + '    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">'
-      + '      <label for="exp_kesan" style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:#334155; margin:0;">'
-      + '        <i class="fa fa-check-square-o text-primary"></i> Kesan'
-      + '      </label>'
-      + '      <button type="button" class="btn btn-xs btn-default" id="btn_add_kesan_bullet" style="border-radius:6px !important; text-transform:none !important; transform:none !important; font-weight:600;">+ Tambah Poin (- )</button>'
-      + '    </div>'
-      + '    <textarea id="exp_kesan" rows="3" class="form-control" placeholder="- Periodontitis ec impaksi gigi ...&#10;- Caries gigi ..." style="border-radius:8px !important; border:1px solid #cbd5e1; font-size:13px; padding:10px 12px; line-height:1.55;"></textarea>'
-      + '  </div>'
-      + '  <div style="margin-top: 8px;">'
-      + '    <button type="button" class="btn btn-xs btn-default" id="btn_toggle_exp_preview" style="border-radius:6px !important; text-transform:none !important; transform:none !important; font-weight:600; color:#475569;">'
-      + '      <i class="fa fa-eye"></i> Preview Teks Hasil'
-      + '    </button>'
-      + '    <pre id="exp_preview_box" style="display:none; margin-top:8px; margin-bottom:0; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-family:inherit; font-size:12.5px; line-height:1.55; white-space:pre-wrap; color:#1e293b;"></pre>'
+      + '  <div class="form-group" style="margin-bottom: 4px;">'
+      + '    <label for="hasil" style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:#334155; display:block; margin-bottom:6px;">'
+      + '      <i class="fa fa-file-text-o text-primary"></i> Bacaan / Hasil Expertise Dokter Radiologi'
+      + '    </label>'
+      + '    <textarea name="hasil" id="hasil" rows="12" class="form-control" placeholder="Teman Sejawat,&#10;Foto Panoramik View&#10;- Alignment maxilla dan mandibula baik&#10;- Tidak tampak fraktur maupun destruksi tulang&#10;...&#10;&#10;Kesan :&#10;- ..." style="border-radius:8px !important; border:1px solid #cbd5e1; font-size:13px; padding:10px 12px; line-height:1.6;"></textarea>'
+      + '    <span class="help-block" style="margin-top:6px; margin-bottom:0; font-size:11.5px; color:#64748b;">'
+      + '      <i class="fa fa-info-circle text-info"></i> Gunakan baris <strong>Kesan :</strong> tersendiri agar bagian Kesan otomatis tercetak tebal di PDF Expertise.'
+      + '    </span>'
       + '  </div>'
       + '</div>';
 
@@ -725,10 +596,10 @@ $("#rincian").on("click",".hasil_radiologi", function(event){
         label: '<i class="fa fa-save"></i> Simpan Hasil Expertise',
         className: 'btn-primary',
         callback() {
-          var hasil = composeExpertise();
-          if (!$.trim($('#exp_temuan').val()) && !$.trim($('#exp_kesan').val())) {
-            $('#exp_form_error').text('Silakan isi Temuan atau Kesan terlebih dahulu.').show();
-            $('#exp_temuan').focus();
+          var hasil = $('#hasil').val() || '';
+          if ($.trim(hasil) === '') {
+            $('#exp_form_error').text('Silakan isi hasil bacaan / expertise radiologi terlebih dahulu.').show();
+            $('#hasil').focus();
             return false;
           }
           $('#exp_form_error').hide();
@@ -774,47 +645,7 @@ $("#rincian").on("click",".hasil_radiologi", function(event){
     $('#exp_info_rm').text(no_rkm_medis);
     $('#exp_info_exam').text(nm_perawatan);
     $('#exp_info_tgl').text(tgl_periksa + (jam_periksa ? ' ' + jam_periksa : ''));
-
-    $('#exp_sapaan').prop('checked', parsed.useSapaan);
-    $('#exp_view').val(parsed.view);
-    $('#exp_temuan').val(parsed.temuan);
-    $('#exp_kesan').val(parsed.kesan);
-
-    function syncPreview() {
-      if ($('#exp_preview_box').is(':visible')) {
-        $('#exp_preview_box').text(composeExpertise() || '(Belum ada teks)');
-      }
-    }
-
-    $('.exp-view-preset').on('click', function() {
-      var key = $(this).data('preset');
-      if (expertisePresets[key]) {
-        $('#exp_view').val(expertisePresets[key].view);
-        syncPreview();
-      }
-    });
-
-    $('#btn_add_temuan_bullet').on('click', function() {
-      appendBullet('#exp_temuan');
-      syncPreview();
-    });
-
-    $('#btn_add_kesan_bullet').on('click', function() {
-      appendBullet('#exp_kesan');
-      syncPreview();
-    });
-
-    $('#btn_toggle_exp_preview').on('click', function() {
-      var preview = $('#exp_preview_box');
-      if (preview.is(':visible')) {
-        preview.hide();
-      } else {
-        preview.text(composeExpertise() || '(Belum ada teks)').show();
-      }
-    });
-
-    $('#exp_sapaan, #exp_view, #exp_temuan, #exp_kesan').on('input change', syncPreview);
-    $('#exp_temuan').focus();
+    $('#hasil').val(existing_hasil).focus();
   });
 
   box.modal('show');
